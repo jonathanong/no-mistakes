@@ -91,32 +91,58 @@ fn check_file(
     let Some(content) = super::read_source(sources, path) else {
         return Vec::new();
     };
+    if !super::byte_prefilter::contains_hex_run(content.as_bytes(), 40) {
+        return Vec::new();
+    }
+    scan_sha_lines(root, path, &content, options)
+}
+
+fn scan_sha_lines(
+    root: &Path,
+    path: &Path,
+    content: &str,
+    options: &CompiledOptions,
+) -> Vec<RuleFinding> {
     let file = relative_slash_path(root, path);
-    content.lines().enumerate().flat_map(|(index, line_text)| {
-        let line = index + 1;
-        let allowed = options.contexts.iter().any(|context| context.is_match(line_text));
-        options
-            .sha
-            .find_iter(line_text)
-            .filter(|matched| {
-                let bytes = line_text.as_bytes();
-                (matched.start() == 0 || !bytes[matched.start() - 1].is_ascii_hexdigit())
-                    && (matched.end() == bytes.len()
-                        || !bytes[matched.end()].is_ascii_hexdigit())
-            })
-            .filter(|_| !allowed)
-            .map(|_| RuleFinding {
-                rule: RULE_ID.to_string(),
-                file: file.clone(),
-                line,
-                message: format!(
-                    "{file}:{line}: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead"
-                ),
-                import: None,
-                target: None,
-            })
-            .collect::<Vec<_>>()
-    }).collect()
+    content
+        .lines()
+        .enumerate()
+        .flat_map(|(index, line_text)| {
+            let line = index + 1;
+            let matches: Vec<_> = options
+                .sha
+                .find_iter(line_text)
+                .filter(|matched| {
+                    let bytes = line_text.as_bytes();
+                    (matched.start() == 0 || !bytes[matched.start() - 1].is_ascii_hexdigit())
+                        && (matched.end() == bytes.len() || !bytes[matched.end()].is_ascii_hexdigit())
+                })
+                .collect();
+            if matches.is_empty() {
+                return Vec::new();
+            }
+            if options
+                .contexts
+                .iter()
+                .any(|context| context.is_match(line_text))
+            {
+                return Vec::new();
+            }
+            matches
+                .into_iter()
+                .map(|_| RuleFinding {
+                    rule: RULE_ID.to_string(),
+                    file: file.clone(),
+                    line,
+                    message: format!(
+                        "{file}:{line}: test source embeds a full Git SHA; assert a generated or SHA-shaped ref instead"
+                    ),
+                    import: None,
+                    target: None,
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
 }
 
 #[cfg(test)]

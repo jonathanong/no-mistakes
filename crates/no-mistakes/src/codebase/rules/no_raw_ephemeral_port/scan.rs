@@ -10,6 +10,28 @@ pub(super) fn check_file(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Vec<RuleFinding> {
+    check_file_with_prefilter(root, path, opts, sources, defer_suppression, true)
+}
+
+#[cfg(test)]
+pub(super) fn check_file_unfiltered(
+    root: &Path,
+    path: &Path,
+    opts: &CompiledOptions,
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Vec<RuleFinding> {
+    check_file_with_prefilter(root, path, opts, sources, defer_suppression, false)
+}
+
+fn check_file_with_prefilter(
+    root: &Path,
+    path: &Path,
+    opts: &CompiledOptions,
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+    prefilter: bool,
+) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
     if opts.allow.is_match(&rel) {
         return Vec::new();
@@ -21,20 +43,36 @@ pub(super) fn check_file(
     {
         return Vec::new();
     }
+    collect_port_findings(path, &rel, &source, opts, defer_suppression, prefilter)
+}
+
+fn collect_port_findings(
+    path: &Path,
+    rel: &str,
+    source: &str,
+    opts: &CompiledOptions,
+    defer_suppression: bool,
+    prefilter: bool,
+) -> Vec<RuleFinding> {
     let mut seen = BTreeSet::new();
     let mut findings = Vec::new();
-    if is_tuple_bind_source(path) {
-        for line in super::python::scan_lines(&source, &opts.bind) {
-            push_finding(&mut findings, &mut seen, &rel, line, &opts.message);
+    let bytes = source.as_bytes();
+    if is_tuple_bind_source(path)
+        && (!prefilter || super::super::byte_prefilter::contains_bytes(bytes, b"bind"))
+    {
+        for line in super::python::scan_lines(source, &opts.bind) {
+            push_finding(&mut findings, &mut seen, rel, line, &opts.message);
         }
     }
-    if is_js_ts(path) {
-        for line in super::ast::scan_lines(path, &source) {
-            push_finding(&mut findings, &mut seen, &rel, line, &opts.message);
+    if is_js_ts(path)
+        && (!prefilter || super::super::byte_prefilter::contains_bytes(bytes, b"listen"))
+    {
+        for line in super::ast::scan_lines(path, source) {
+            push_finding(&mut findings, &mut seen, rel, line, &opts.message);
         }
     }
     if !defer_suppression {
-        super::super::suppress_rule_findings_with_source(&mut findings, &source);
+        super::super::suppress_rule_findings_with_source(&mut findings, source);
     }
     findings
 }

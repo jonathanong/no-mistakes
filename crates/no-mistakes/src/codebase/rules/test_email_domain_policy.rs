@@ -8,6 +8,9 @@ use serde::Deserialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+mod domain;
+use domain::{banned_domain_needles, email_domain, message, normalize_domain};
+
 pub const RULE_ID: &str = "test-email-domain-policy";
 
 const DEFAULT_EXTENSIONS: &[&str] = &[
@@ -29,6 +32,7 @@ pub(crate) struct Options {
 struct CompiledOptions {
     email: Regex,
     banned_domains: HashSet<String>,
+    domain_needles: Vec<Box<[u8]>>,
     allowed: Vec<Regex>,
     extensions: Vec<String>,
     replacement: Option<String>,
@@ -97,13 +101,16 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     } else {
         opts.extensions.clone()
     };
+    let banned_domains: HashSet<String> = opts
+        .banned_domains
+        .iter()
+        .map(|domain| normalize_domain(domain))
+        .collect();
+    let domain_needles = banned_domain_needles(&banned_domains);
     Ok(CompiledOptions {
         email: Regex::new(EMAIL_PATTERN).expect("email regex is valid"),
-        banned_domains: opts
-            .banned_domains
-            .iter()
-            .map(|domain| normalize_domain(domain))
-            .collect(),
+        banned_domains,
+        domain_needles,
         allowed: opts
             .allowed_email_patterns
             .iter()
@@ -131,7 +138,18 @@ fn check_file_with_sources(
     let Some(content) = super::read_source(sources, path) else {
         return Vec::new();
     };
+    if !opts.domain_needles.is_empty()
+        && !super::byte_prefilter::contains_any_ascii_ignore_case(
+            content.as_bytes(),
+            &opts.domain_needles,
+        )
+    {
+        return Vec::new();
+    }
+    scan_email_lines(&rel, &content, opts)
+}
 
+fn scan_email_lines(rel: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     for (index, line) in content.lines().enumerate() {
         for matched in opts.email.find_iter(line).map(|m| m.as_str()) {
@@ -144,49 +162,15 @@ fn check_file_with_sources(
             }
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
-                file: rel.clone(),
+                file: rel.to_string(),
                 line: index + 1,
-                message: message(&rel, &domain, opts.replacement.as_deref()),
+                message: message(rel, &domain, opts.replacement.as_deref()),
                 import: Some(matched.to_string()),
                 target: Some(domain),
             });
         }
     }
     findings
-}
-
-fn message(file: &str, domain: &str, replacement: Option<&str>) -> String {
-    match replacement {
-        Some(replacement) if !replacement.is_empty() => {
-            format!("{file}: test email fixtures must not use `{domain}`; use `{replacement}`")
-        }
-        _ => format!("{file}: test email fixtures must not use `{domain}`"),
-    }
-}
-
-fn email_domain(value: &str) -> String {
-    let decoded = value
-        .replace("%40", "@")
-        .replace("%2e", ".")
-        .replace("%2E", ".")
-        .to_lowercase();
-    let Some(index) = decoded.rfind('@') else {
-        return String::new();
-    };
-    let raw = &decoded[index + 1..];
-    let mut end = 0usize;
-    for (index, ch) in raw.char_indices() {
-        if ch.is_ascii_alphanumeric() || ch == '.' || ch == '-' {
-            end = index + ch.len_utf8();
-        } else {
-            break;
-        }
-    }
-    normalize_domain(&raw[..end])
-}
-
-fn normalize_domain(domain: &str) -> String {
-    domain.trim().trim_end_matches('.').to_lowercase()
 }
 
 #[cfg(test)]

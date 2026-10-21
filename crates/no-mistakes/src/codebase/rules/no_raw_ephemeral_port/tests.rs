@@ -400,6 +400,21 @@ fn same_line_bind_and_listen_dedup() {
 }
 
 #[test]
+fn prefilter_preserves_fixture_findings() {
+    let opts = compile_options(Options::default()).unwrap();
+    for name in ["fail-python", "fail-listen", "pass", "allow", "disable"] {
+        let root = fixture(name);
+        let files = crate::codebase::ts_source::discover_files(&root, &[]);
+        let sources = super::super::source_store_for_files(&files);
+        for path in &files {
+            let filtered = scan::check_file(&root, path, &opts, &sources, false);
+            let unfiltered = scan::check_file_unfiltered(&root, path, &opts, &sources, false);
+            assert_eq!(filtered, unfiltered, "{}", path.display());
+        }
+    }
+}
+
+#[test]
 fn js_function_bind_is_silent() {
     let dir = tempfile::tempdir().unwrap();
     let opts = compile_options(Options::default()).unwrap();

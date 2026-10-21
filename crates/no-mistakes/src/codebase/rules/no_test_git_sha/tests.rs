@@ -120,3 +120,33 @@ fn hexadecimal_boundaries_allow_underscores_but_reject_longer_hex_values() {
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].line, 1, "{findings:?}");
 }
+
+#[test]
+fn prefilter_preserves_fixture_findings() {
+    let cases = [
+        fixture("fail"),
+        fixture("pass"),
+        review_fixture("no-test-git-sha"),
+    ];
+    for root in cases {
+        let config =
+            crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+        let files = crate::codebase::ts_source::discover_files(&root, &[]);
+        let sources = super::super::source_store_for_files(&files);
+        let rule = config
+            .rule_applications(RULE_ID)
+            .into_iter()
+            .next()
+            .expect("fixture enables no-test-git-sha");
+        let options = compile_options(rule.try_rule_options().unwrap()).unwrap();
+        for path in &files {
+            let filtered = check_file(&root, path, &options, &sources);
+            let Some(content) = super::super::read_source(&sources, path) else {
+                assert!(filtered.is_empty(), "{}", path.display());
+                continue;
+            };
+            let unfiltered = scan_sha_lines(&root, path, &content, &options);
+            assert_eq!(filtered, unfiltered, "{}", path.display());
+        }
+    }
+}
