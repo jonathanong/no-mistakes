@@ -7,6 +7,7 @@ declare const agent: { responses: { create: (options?: object) => void } };
 export function rejected() {
   const missing = undefined;
   createResponse();
+  (0, createResponse)();
   createResponse?.(input);
   createResponse(input);
   createResponse("nope");

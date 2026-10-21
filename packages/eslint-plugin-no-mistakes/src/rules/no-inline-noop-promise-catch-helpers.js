@@ -2,6 +2,7 @@
 
 const { unwrapExpression } = require("./async-ast");
 const {
+  logicalCall,
   memberPropertyName,
   repoRelativeFilename,
   stringMatches,
@@ -18,15 +19,16 @@ function shouldCheckFile(filename, options) {
 }
 
 function promiseMethodName(call) {
-  const callee = unwrapExpression(call.callee);
-  if (callee?.type !== "MemberExpression" || callee.computed) return null;
-  return callee.property.name;
+  const invoked = logicalCall(call);
+  if (invoked?.callee?.type !== "MemberExpression") return null;
+  return memberPropertyName(invoked.callee);
 }
 
 function rejectionHandler(call) {
   const method = promiseMethodName(call);
-  if (method === "catch") return call.arguments[0] ?? null;
-  if (method === "then") return call.arguments[1] ?? null;
+  const args = logicalCall(call)?.arguments ?? [];
+  if (method === "catch") return args[0] ?? null;
+  if (method === "then") return args[1] ?? null;
   return null;
 }
 
@@ -85,24 +87,39 @@ function isInlineNoopFunction(node, sourceCode) {
   return current.body.body.every((statement) => isNoopStatement(statement, sourceCode));
 }
 
-function originatingCalleeName(call) {
-  let current = unwrapExpression(call);
+function chainOrigin(call) {
+  let current = call;
   while (current?.type === "CallExpression") {
-    const method = promiseMethodName(current);
+    const invoked = logicalCall(current);
+    const method = invoked ? memberPropertyName(invoked.callee) : null;
     if (!CHAIN_METHODS.has(method)) break;
-    const callee = unwrapExpression(current.callee);
-    current = unwrapExpression(callee?.object);
+    const object = unwrapExpression(invoked.callee?.object);
+    if (object?.type !== "CallExpression") return null;
+    current = object;
   }
-  if (current?.type !== "CallExpression") return null;
-  const callee = unwrapExpression(current.callee);
+  return current?.type === "CallExpression" ? current : null;
+}
+
+function originatingCalleeName(call) {
+  const current = chainOrigin(call);
+  if (!current) return null;
+  const callee = unwrapExpression(logicalCall(current)?.callee ?? current.callee);
   if (callee?.type === "Identifier") return callee.name;
   if (callee?.type === "MemberExpression") return memberPropertyName(callee);
   return null;
 }
 
+function spelledOriginName(call) {
+  const callee = unwrapExpression(chainOrigin(call)?.callee);
+  return callee?.type === "MemberExpression" ? memberPropertyName(callee) : null;
+}
+
 function isAllowedCallee(call, options) {
+  const patterns = options.allowedCalleeNamePatterns ?? [];
+  const spelled = spelledOriginName(call);
+  if ((spelled === "call" || spelled === "apply") && stringMatches(spelled, patterns)) return true;
   const name = originatingCalleeName(call);
-  return Boolean(name && stringMatches(name, options.allowedCalleeNamePatterns ?? []));
+  return Boolean(name && stringMatches(name, patterns));
 }
 
 module.exports = {

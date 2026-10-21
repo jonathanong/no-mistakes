@@ -53,7 +53,6 @@ export function ignored(
   client.chat.responses.create();
   client.#responses.create();
   globalThis.fetch();
-  (0, createResponse)();
   other();
   for (const { createResponse } of [] as object[]) createResponse();
 }

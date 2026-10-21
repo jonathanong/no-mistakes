@@ -1,5 +1,7 @@
 "use strict";
 
+const { propertyName } = require("./module-mock-helpers");
+
 const LOCAL_BINDING_TYPES = new Set([
   "Variable",
   "Parameter",
@@ -64,8 +66,15 @@ function bindingIdentifiers(node, identifiers = []) {
   return identifiers;
 }
 
+function isStaticFetchProperty(property) {
+  if (property?.type !== "Property") return false;
+  if (property.computed && property.key?.type === "Identifier") return false;
+  return propertyName(property.key) === "fetch";
+}
+
 module.exports = {
   bindingIdentifier,
+  isStaticFetchProperty,
   bindingIdentifiers,
   hasLocalBinding,
   isAmbientDeclaration,

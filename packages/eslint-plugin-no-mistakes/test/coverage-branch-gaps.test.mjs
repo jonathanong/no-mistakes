@@ -736,7 +736,7 @@ describe("preserve-null, react-node, and helper remaining arms", () => {
       body: { type: "Literal", value: null },
     });
     isFetchCall(
-      { callee: { type: "Identifier", name: "fetch" } },
+      { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } },
       {
         sourceCode: {
           getScope: () => ({
@@ -1115,7 +1115,7 @@ describe("null and visitor remaining arms", () => {
       },
     });
     isFetchCall(
-      { callee: { type: "Identifier", name: "fetch" } },
+      { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } },
       {
         sourceCode: {
           getScope: () => ({

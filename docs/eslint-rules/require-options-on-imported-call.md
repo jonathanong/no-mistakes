@@ -115,12 +115,16 @@ explicit key after a spread overwrites the earlier definition. Dynamic
 computed keys are ignored. This is the same property check for imported,
 global, and receiver targets.
 
-Optional calls (`createResponse?.()` and `client.responses?.create()`) are
+A string or expression-free template member, an optional call, a comma callee,
+and `.call` or a literal-array `.apply` are the same call. `.call` and
+`.apply` shift the options argument. Optional calls (`createResponse?.()` and
+`client.responses?.create()`) are
 still calls. A missing argument, a non-object argument, a spread argument,
 and a spread-only object all fail. Unknown identifiers, calls, and parameters
 stay accepted even if they might be undefined at runtime.
 
-Global and receiver selectors do not follow `const alias = createResponse` or
+A comma callee such as `(0, createResponse)()` is the same call. Global and
+receiver selectors do not follow `const alias = createResponse` or
 `const responses = client.responses`. They do follow a stable `const`, `let`,
 or `var` object destructure with one initialization and no later writes:
 `const { createResponse: respond } = globalThis` and
@@ -141,8 +145,10 @@ import or CommonJS namespace binding is followed when the property name is
 statically visible. CommonJS provenance supports `const`, `let`,
 and `var` bindings only when their binding has one initialization and no later
 writes. Parameter, catch, or function-name bindings that share a `var` name
-are treated as unstable. The rule does not follow `const alias = imported` or
-injected members such as `deps.validateUrl()`. Computed CommonJS members and
+are treated as unstable. A single `const alias = imported` is the same callee.
+Injected members such as `deps.validateUrl()` are not. A default import is the
+module object, so `import guard from "ssrf-guard/node"; guard.validateUrl(url)`
+matches `validateUrl`. Computed CommonJS members and
 destructuring keys must be string literals or expression-free template literals;
 numeric keys are not coerced into export names. Top-level script `var`
 bindings mutated through `globalThis` are unsupported.
@@ -164,6 +170,12 @@ properties, `propertyMatch`, `optionsPosition`, or message differ.
 Pass an object literal at the configured argument position that includes the
 required property names with values that are not definitely `undefined`.
 Spreads do not count as known keys.
+
+## Limits
+
+A receiver method named `call` or `apply`, such as `client.apply(input)`, is that method. Forwarding applies only when the direct callee is not itself a configured target. An `.apply` call with a spread argument is not rewritten, because the literal array may not be the runtime argument list.
+
+Another file's re-export is not visible here. `import { check } from "./barrel.mjs"; check(url)` stays unreported when `barrel.mjs` is `export { validateUrl as check } from "ssrf-guard/node"` or `export * from "ssrf-guard/node"`. A parameter default such as `function run({ validateUrl } = guard)` is not judged, because the caller can pass a different object. `const check = (0, validateUrl)` is still `validateUrl`. `const check = validateUrl<string>` is still `validateUrl`. `import * as guard from "ssrf-guard/node"; const api = guard; api.validateUrl(url)` is still `validateUrl`.
 
 ## Suppression
 

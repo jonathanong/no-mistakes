@@ -39,7 +39,7 @@ describe("configured global and receiver selectors", () => {
     const found = messages(code, RULE, selectorOptions, "selectors-invalid.ts");
     assert.deepEqual(
       found,
-      Array.from({ length: 32 }, () => "missingOptions"),
+      Array.from({ length: 33 }, () => "missingOptions"),
     );
     const texts = lint(
       code,

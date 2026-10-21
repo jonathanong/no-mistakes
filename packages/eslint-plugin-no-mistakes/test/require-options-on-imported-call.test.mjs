@@ -20,7 +20,7 @@ describe("require-options-on-imported-call", () => {
   it("reports imported calls without statically visible required options", () => {
     assert.deepEqual(
       messages(ruleFixture("invalid.ts"), RULE, ssrfOptions, "invalid.ts"),
-      Array.from({ length: 21 }, () => "missingOptions"),
+      Array.from({ length: 22 }, () => "missingOptions"),
     );
   });
 
@@ -192,12 +192,12 @@ validateUrl(url, { timeoutMs: 1 });
     ]);
   });
 
-  it("does not follow namespace identifier aliases", () => {
+  it("follows a const alias of a namespace receiver", () => {
     const code = `import * as ssrf from "ssrf-guard/node";
 const guard = ssrf;
 guard.validateUrl(url);
 `;
-    assert.deepEqual(messages(code, RULE, ssrfOptions, "ns-alias.ts"), []);
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "ns-alias.ts"), ["missingOptions"]);
   });
 
   it("ignores nested namespace destructure bindings", () => {

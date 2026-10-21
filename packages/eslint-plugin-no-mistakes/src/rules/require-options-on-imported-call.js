@@ -26,12 +26,12 @@ function requirementKey(target, fallback) {
   ]);
 }
 
-function reportMissing(context, node, target, resolved, suppressed, fallback, reported) {
+function reportMissing(context, node, target, resolved, suppressed, fallback, reported, args) {
   if (suppressed(node)) return;
   const key = requirementKey(target, fallback);
   const seen = reported.get(node);
   if (seen?.has(key)) return;
-  if (hasRequiredOptions(node.arguments[target.optionsPosition - 1], target, context.sourceCode)) {
+  if (hasRequiredOptions(args[target.optionsPosition - 1], target, context.sourceCode)) {
     return;
   }
   if (seen) seen.add(key);
@@ -88,16 +88,23 @@ module.exports = Object.assign(
           selectors.record(node);
         },
         CallExpression(node) {
-          if (matcher) {
-            const resolved = matcher.resolveCallTarget(node);
-            if (resolved) {
-              for (const target of matchingTargets(
-                optionTargets,
-                resolved.source,
-                resolved.calleeName,
-              )) {
-                reportMissing(context, node, target, resolved, suppressed, fallback, reported);
-              }
+          const resolved = matcher?.resolveCallTarget(node) || null;
+          if (matcher && resolved) {
+            for (const target of matchingTargets(
+              optionTargets,
+              resolved.source,
+              resolved.calleeName,
+            )) {
+              reportMissing(
+                context,
+                node,
+                target,
+                resolved,
+                suppressed,
+                fallback,
+                reported,
+                resolved.arguments,
+              );
             }
           }
           for (const match of selectors.matches(node)) {
@@ -109,6 +116,7 @@ module.exports = Object.assign(
               suppressed,
               fallback,
               reported,
+              match.arguments,
             );
           }
         },

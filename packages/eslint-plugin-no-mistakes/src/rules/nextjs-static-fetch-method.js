@@ -1,6 +1,6 @@
 "use strict";
 
-const { isFetchCall, isStaticString, literalString, rule } = require("../helpers");
+const { fetchInvocation, isStaticString, literalString, rule } = require("../helpers");
 
 function isMethodKey(property) {
   if (property.computed) return literalString(property.key) === "method";
@@ -25,8 +25,9 @@ module.exports = rule(
   },
   (context) => ({
     CallExpression(node) {
-      if (!isFetchCall(node, context)) return;
-      const opts = node.arguments[1];
+      const args = fetchInvocation(node, context);
+      if (!args) return;
+      const opts = args[1];
       if (!opts || opts.type !== "ObjectExpression") return;
       const methodProp = opts.properties.findLast((p) => p.type === "Property" && isMethodKey(p));
       if (!methodProp) return;
