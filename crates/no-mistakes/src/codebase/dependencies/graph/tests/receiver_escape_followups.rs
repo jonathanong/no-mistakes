@@ -190,3 +190,14 @@ fn super_method_rebind_uses_the_base_instead_of_the_override() {
         assert_export(&built, &root, "class-method-super", callee);
     }
 }
+
+#[test]
+fn guarded_array_unions_slots_by_position() {
+    let (built, root) = graph();
+    // Slot 0 is equal on both paths; slot 1 exists only on the guarded path.
+    assert_unknown(&built, &root, "array-reassign-union", "replica.get");
+    assert_unknown(&built, &root, "array-reassign-union", "untouched.get");
+    for callee in ["primary.get", "unrelated.get"] {
+        assert_export(&built, &root, "array-reassign-union", callee);
+    }
+}
