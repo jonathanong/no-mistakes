@@ -354,6 +354,9 @@ fn wrap_workflow_yaml(lang: &str, body: &str) -> String {
     if body.contains("jobs:") || body.contains("runs-on:") {
         return body.to_string();
     }
+    if body.contains("runs:") && body.contains("using:") {
+        return body.to_string();
+    }
     if body.contains("uses:")
         || body.contains("timeout-minutes:")
         || body.contains("sparse-checkout")

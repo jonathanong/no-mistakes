@@ -227,3 +227,24 @@ flowchart TD
     assert_eq!(extracted[0].0, "markdown");
     assert!(extracted[0].1.contains("```mermaid"));
 }
+
+#[test]
+fn composite_action_yaml_is_not_wrapped_as_a_workflow() {
+    let fixture = docs_rule_snippets::materialize_snippet(
+        "rules:\n  - rule: github-actions-composite-step-schema\n    scope: repository\n",
+        &[(
+            "yaml".into(),
+            "# actions/timeout/action.yml\nname: Timeout Action\nruns:\n  using: composite\n  steps:\n    - run: echo hello\n      shell: bash\n      timeout-minutes: 5\n"
+                .into(),
+        )],
+    );
+    let body = std::fs::read_to_string(fixture.path().join("actions/timeout/action.yml")).unwrap();
+    assert!(
+        body.contains("using: composite"),
+        "composite metadata must stay an action file: {body}"
+    );
+    assert!(
+        !body.contains("jobs:"),
+        "timeout-minutes on a composite step must not wrap the file as a workflow: {body}"
+    );
+}

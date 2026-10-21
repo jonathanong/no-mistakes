@@ -19,28 +19,35 @@ adds explicit denials. No other rule-specific options exist.
 
 ## Valid example
 
-The `Clean Action` example below is valid because each composite step uses only
-the documented step keys.
+Each composite step uses only the documented step keys.
 
 ```yaml
-name: composite
-description: ok
+# actions/clean/action.yml
+name: Clean Action
 runs:
   using: composite
   steps:
-    - run: echo ok
+    - name: Setup
+      uses: actions/checkout@main
+    - name: Run script
+      run: pnpm install
       shell: bash
 ```
 
-
 ## Counterexample
 
+`timeout-minutes` is a workflow-only key. GitHub ignores it on a composite step.
+
 ```yaml
-name: composite
+# actions/timeout/action.yml
+name: Timeout Action
 runs:
   using: composite
   steps:
-    - run: echo bad
+    - name: Do something
+      timeout-minutes: 5
+      run: echo hello
+      shell: bash
 ```
 
 ## Suppression
@@ -67,8 +74,8 @@ rules:
     scope: repository
     options:
       include:
-        - ".github/actions/**/action.yml"
-        - ".github/actions/**/action.yaml"
+        - "actions/**/action.yml"
+        - "actions/**/action.yaml"
       allowedKeys: []  # if empty, use defaults
       extraForbiddenKeys: []  # optional extra deny list
 ```

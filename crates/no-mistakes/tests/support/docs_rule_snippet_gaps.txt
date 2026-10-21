@@ -10,9 +10,6 @@ forbidden-calls.md: Valid example[0] run error:
 forbidden-calls.md: Counterexample[0] run error:
 forbidden-dependencies.md: Counterexample[0] expected 
 forbidden-workspace-closure.md: Valid example[0] expected 
-github-actions-action-timeout-pair.md: Counterexample[0] expected 
-github-actions-composite-step-schema.md: Counterexample[0] expected 
-github-actions-test-timeout-literals.md: Counterexample[0] expected 
 integration-test-no-mocks.md: Counterexample[0] expected 
 markdown-child-links.md: Counterexample[0] expected 
 markdown-link-display-text.md: Counterexample[0] expected 
