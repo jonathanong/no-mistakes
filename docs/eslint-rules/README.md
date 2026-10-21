@@ -12,16 +12,16 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 
 ## Async and module boundaries
 
-| Rule                                                                      | Purpose                                                                 |
-| ------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [`async-call-disposition`](async-call-disposition.md)                     | Make configured async calls awaited, returned, or explicitly detached.  |
-| [`async-try-catch-return-await`](async-try-catch-return-await.md)         | Keep configured promise rejections inside the intended `try`/`catch`.   |
-| [`await-array-methods`](await-array-methods.md)                           | Reject awaiting synchronous array helpers.                              |
-| [`no-inline-noop-promise-catch`](no-inline-noop-promise-catch.md)         | Reject inline Promise catch callbacks that do not handle the rejection. |
+| Rule                                                                      | Purpose                                                                      |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [`async-call-disposition`](async-call-disposition.md)                     | Make configured async calls awaited, returned, or explicitly detached.       |
+| [`async-try-catch-return-await`](async-try-catch-return-await.md)         | Keep configured promise rejections inside the intended `try`/`catch`.        |
+| [`await-array-methods`](await-array-methods.md)                           | Reject awaiting synchronous array helpers.                                   |
+| [`no-inline-noop-promise-catch`](no-inline-noop-promise-catch.md)         | Reject inline Promise catch callbacks that do not handle the rejection.      |
 | [`require-options-on-imported-call`](require-options-on-imported-call.md) | Require configured properties on imported, global, or receiver-shaped calls. |
-| [`test-no-delayed-rejects`](test-no-delayed-rejects.md)                   | Observe expected promise rejections before coordination awaits.         |
-| [`module-mock-boundary`](module-mock-boundary.md)                         | Restrict configured internal module mocks.                              |
-| [`module-mock-preserve-exports`](module-mock-preserve-exports.md)         | Preserve untouched exports in allowed internal module mocks.            |
+| [`test-no-delayed-rejects`](test-no-delayed-rejects.md)                   | Observe expected promise rejections before coordination awaits.              |
+| [`module-mock-boundary`](module-mock-boundary.md)                         | Restrict configured internal module mocks.                                   |
+| [`module-mock-preserve-exports`](module-mock-preserve-exports.md)         | Preserve untouched exports in allowed internal module mocks.                 |
 
 ## Next.js and server boundaries
 
@@ -56,13 +56,15 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 
 ## PostgreSQL safety
 
-| Rule                                                                          | Purpose                                            |
-| ----------------------------------------------------------------------------- | -------------------------------------------------- |
-| [`postgres-cursor-call-contract`](postgres-cursor-call-contract.md)           | Require direct annotated SQL for cursor executors. |
-| [`postgres-no-async-sql-builder`](postgres-no-async-sql-builder.md)           | Suggest removing `async` only when every return is judged SQL and the contract allows it. |
-| [`postgres-no-executor-adapter`](postgres-no-executor-adapter.md)             | Call a trusted executor on the SQL text instead of an adapter. |
-| [`postgres-no-manual-transaction`](postgres-no-manual-transaction.md)         | Keep transaction lifecycle in a dedicated helper.  |
-| [`postgres-no-unbounded-query-fanout`](postgres-no-unbounded-query-fanout.md) | Bound concurrent mapped database queries.          |
+| Rule                                                                                    | Purpose                                                                                   |
+| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [`postgres-cursor-call-contract`](postgres-cursor-call-contract.md)                     | Require direct annotated SQL for cursor executors.                                        |
+| [`postgres-no-async-sql-builder`](postgres-no-async-sql-builder.md)                     | Suggest removing `async` only when every return is judged SQL and the contract allows it. |
+| [`postgres-no-correlated-sql-builder`](postgres-no-correlated-sql-builder.md)           | Suggest one throwing switch instead of repeated SQL appends.                              |
+| [`postgres-no-executor-adapter`](postgres-no-executor-adapter.md)                       | Call a trusted executor on the SQL text instead of an adapter.                            |
+| [`postgres-no-manual-transaction`](postgres-no-manual-transaction.md)                   | Keep transaction lifecycle in a dedicated helper.                                         |
+| [`postgres-no-nonliteral-sql-registry-key`](postgres-no-nonliteral-sql-registry-key.md) | Suggest a throwing switch instead of a runtime registry key.                              |
+| [`postgres-no-unbounded-query-fanout`](postgres-no-unbounded-query-fanout.md)           | Bound concurrent mapped database queries.                                                 |
 
 ## React and tests
 

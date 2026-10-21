@@ -196,6 +196,17 @@ literal, or unresolved, and when the result is only tested for truthiness.
 See
 [the rule reference](eslint-rules/postgres-no-async-sql-builder.md).
 
+### `postgres-no-correlated-sql-builder`
+
+Opt-in and inert until configured. Not in `configs.recommended` or
+`configs.strict`. No autofix and no editor suggestion. `builderMethods` is the
+list of builder method names, and `tagNames` is the list of SQL tag
+identifiers. Both must be non-empty. A repeated `if` that appends a string,
+untagged template, or configured tag to one builder for one selector suggests
+one switch that returns a complete statement and throws in `default`.
+See
+[the rule reference](eslint-rules/postgres-no-correlated-sql-builder.md).
+
 ### `postgres-no-executor-adapter`
 
 `importSpecifier?: string` (default empty),
@@ -204,6 +215,16 @@ See
 scoped executors that also match imports from `importSpecifier` subpaths and relative imports that resolve into that package, see the [migration notes](migrations/explicit-postgres-executors.md#scoped-executors)),
 and `trustedSqlTags?: { module: string, name: string }[]` (default empty; accepted so a
 shared executor configuration validates; this rule does not read SQL text).
+
+### `postgres-no-nonliteral-sql-registry-key`
+
+Opt-in. Not in `configs.recommended` or `configs.strict`. No autofix and no
+editor suggestion. `importSpecifier` selects the executor module.
+`executorNames` defaults to `["query", "read", "write"]` when that module is
+set. A non-literal key into a `const` object of identifier strings, used as
+that executor's SQL argument, suggests a switch with one `return` per entry
+and a throwing `default`. See
+[the rule reference](eslint-rules/postgres-no-nonliteral-sql-registry-key.md).
 
 ### `postgres-no-manual-transaction`
 
