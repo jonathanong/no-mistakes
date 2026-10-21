@@ -32,6 +32,21 @@ test("user", () => {
 Create mutable values inside each test or reset them in the lifecycle hook that
 owns the test isolation boundary.
 
+## Limits
+
+A namespace `v.test`, a Playwright default import, `test["only"]`, optional chaining, and one top-level `const` alias are the same test callback. A top-level `const suite = v.describe` is still that suite, so a hook inside it does not cover tests outside it. A comma callee such as `(0, v.describe)` is that same suite. `const suite = v.describe.serial` keeps the serial modifier. A nested binding that reuses a namespace import's local name is not that namespace. Namespace setup hooks such as `v.beforeEach` are the same cleanup boundary as a named import. Vitest's default import is not a runner. A computed identifier key is not a static modifier. A top-level `const check = v.test` is recorded, so a nested parameter named `check` is not that test. `v.describe.configure({ mode: "serial" })` marks the file serial.
+
+A runner re-exported by another file is not visible here.
+
+```ts
+import { check } from "./barrel";
+check("hidden", () => {
+  counter += 1;
+});
+```
+
+`barrel` may be `export { test as check } from "vitest"` or `export * from "vitest"`.
+
 ## Suppression
 
 ```ts

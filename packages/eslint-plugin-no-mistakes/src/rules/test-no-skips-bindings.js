@@ -2,6 +2,7 @@
 const { options } = require("../helpers");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { importSpecifierName } = require("./test-no-shared-state-callees");
+const { literalString } = require("./module-mock-helpers");
 const { unwrapExpression, isFunction } = require("./async-ast");
 const NAMES = new Set(["it", "test", "describe"]);
 const MODULES = new Set(["vitest", "@playwright/test"]);
@@ -22,11 +23,8 @@ function admit(source, importedName, namespace, testModules) {
   return namespace ? CONFIGURED_NAMESPACE : { framework: "@playwright/test", name: "test" };
 }
 function memberName(node) {
-  return node.computed
-    ? node.property.type === "Literal" && typeof node.property.value === "string"
-      ? node.property.value
-      : null
-    : node.property.name;
+  if (!node.computed && node.property.type === "Identifier") return node.property.name;
+  return literalString(node.property);
 }
 function unwrapBinding(node) {
   let current = node;
@@ -34,9 +32,8 @@ function unwrapBinding(node) {
   return current;
 }
 function propertyKey(property) {
-  if (property.key.type === "Literal") return String(property.key.value);
   if (!property.computed && property.key.type === "Identifier") return property.key.name;
-  return null;
+  return literalString(property.key);
 }
 // The key that introduces the identifier, after defaults and nested objects.
 // `const { test: t = x } = require("vitest")` and
@@ -61,7 +58,9 @@ function testModulesFor(context) {
   return modules;
 }
 
-function imported(node, context, namespace = false) {
+function imported(node, context, namespace = false, seen = new Set()) {
+  if (!node || seen.has(node)) return null;
+  seen.add(node);
   const testModules = testModulesFor(context);
   const variable = resolveVariable(node, context);
   for (const def of variable?.defs || []) {
@@ -70,6 +69,8 @@ function imported(node, context, namespace = false) {
     if (def.type === "ImportBinding") {
       source = def.parent.source.value;
       if (def.node.type === "ImportNamespaceSpecifier") importedName = "*";
+      else if (def.node.type === "ImportDefaultSpecifier")
+        importedName = source === "@playwright/test" ? "test" : null;
       else importedName = importSpecifierName(def.node);
     } else if (def.type === "Variable") {
       const declaration = def.node;
@@ -92,6 +93,15 @@ function imported(node, context, namespace = false) {
         importedName = patternBindingName(declaration.id, node.name);
       } else if (declaration.id.type === "Identifier" && declaration.id.name === node.name) {
         importedName = "*";
+      }
+      if (!source && init.type === "Identifier" && declaration.id.type === "ObjectPattern") {
+        const namespaceSource = imported(init, context, true, seen);
+        if (
+          (namespaceSource === "vitest" || namespaceSource === "@playwright/test") &&
+          NAMES.has(importedName)
+        ) {
+          return { framework: namespaceSource, name: importedName };
+        }
       }
     }
     const admitted = admit(source, importedName, namespace, testModules);

@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { findContainingRoot, traverse, unwrapExpression } = require("./async-ast");
 const {
   chainIsSafelyObserved,
@@ -15,7 +16,7 @@ const {
   suspensionOccursBeforeMatcher,
 } = require("./test-no-delayed-rejects-suspensions");
 
-const EXPECT_MODULES = new Set(["vitest", "@jest/globals"]);
+const { EXPECT_MODULES, isExpectCallee } = require("./test-message-expect");
 
 function findVariable(scope, name) {
   let current = scope;
@@ -28,35 +29,20 @@ function findVariable(scope, name) {
   return null;
 }
 
-function isOrdinaryExpect(identifier, context) {
-  if (identifier.type !== "Identifier" || identifier.name !== "expect") return false;
-  const variable = findVariable(context.sourceCode.getScope(identifier), identifier.name);
-  if (!variable || variable.defs.length === 0) return true;
-  return variable.defs.every(
-    (definition) =>
-      definition.type === "ImportBinding" &&
-      EXPECT_MODULES.has(definition.parent?.source?.value) &&
-      definition.node?.imported?.name === "expect",
-  );
-}
-
-function isExpectCallee(callee, context) {
-  if (isOrdinaryExpect(callee, context)) return true;
-  return (
-    callee.type === "MemberExpression" &&
-    !callee.computed &&
-    callee.property.type === "Identifier" &&
-    callee.property.name === "soft" &&
-    isOrdinaryExpect(callee.object, context)
-  );
-}
-
 function expectedIdentifier(rejects, context) {
-  if (literalPropertyName(rejects) !== "rejects" || rejects.object.type !== "CallExpression") {
-    return null;
+  if (literalPropertyName(rejects) !== "rejects") return null;
+  const expectation = unwrapExpression(rejects.object);
+  if (expectation?.type !== "CallExpression") return null;
+  const callee = unwrapExpression(expectation.callee);
+  if (callee?.type === "MemberExpression") {
+    const name = literalPropertyName(callee);
+    // poll takes a function, and call/apply's first argument is this, not the promise.
+    if (name === "poll" || name === "call" || name === "apply") return null;
   }
-  const expectation = rejects.object;
-  if (expectation.arguments.length !== 1 || !isExpectCallee(expectation.callee, context))
+  if (
+    expectation.arguments.length !== 1 ||
+    !isExpectCallee(expectation.callee, context, new Set(), EXPECT_MODULES)
+  )
     return null;
   const [argument] = expectation.arguments;
   const unwrapped = unwrapExpression(argument);
@@ -65,7 +51,10 @@ function expectedIdentifier(rejects, context) {
 
 function matcherCall(rejects) {
   let current = rejects;
-  while (current.parent?.type === "MemberExpression" && current.parent.object === current) {
+  while (
+    current.parent?.type === "ChainExpression" ||
+    (current.parent?.type === "MemberExpression" && current.parent.object === current)
+  ) {
     current = current.parent;
   }
   return current.parent?.type === "CallExpression" && current.parent.callee === current
@@ -189,6 +178,7 @@ module.exports = rule(
   },
   (context) => {
     const observerCache = new WeakMap();
+    const suppressed = ruleSuppression(context, "test-no-delayed-rejects");
     return {
       MemberExpression(node) {
         const identifier = expectedIdentifier(node, context);
@@ -198,6 +188,8 @@ module.exports = rule(
         if (
           !declarator ||
           !call ||
+          suppressed(node) ||
+          suppressed(call) ||
           !hasInterveningAwait(context, declarator, call, observerCache)
         ) {
           return;

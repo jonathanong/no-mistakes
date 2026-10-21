@@ -31,6 +31,18 @@ This rule has no options.
 Let the runner discover each test file directly, or put real assertions in the
 file rather than using it as an import-only manifest.
 
+## Limits
+
+An optional `require?.()` call and a static `require["call"]` or `require["apply"]` key name the same test file as `require.call`. A template with an expression, or a computed identifier key, does not.
+
+A test file reached through another module's re-export is not visible here.
+
+```js
+require("./barrel");
+```
+
+`barrel.js` may be `module.exports = require("./users.test")`.
+
 ## Suppression
 
 ```ts

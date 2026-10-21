@@ -263,6 +263,18 @@ describe("shared-state callbacks", () => {
         },
         testCallees,
       ),
+      true,
+    );
+    assert.equal(
+      calleeHelpers.isKnownTestCallee(
+        {
+          computed: true,
+          object: { name: "myTest", type: "Identifier" },
+          property: { name: "describe", type: "Identifier" },
+          type: "MemberExpression",
+        },
+        testCallees,
+      ),
       false,
     );
     assert.equal(

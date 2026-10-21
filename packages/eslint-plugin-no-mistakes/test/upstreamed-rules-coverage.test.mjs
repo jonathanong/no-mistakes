@@ -65,6 +65,7 @@ describe("upstreamed generic rule coverage", () => {
       "shared",
       "shared",
     ]);
+    // test.sequential.each reports once, on the inner call.
     assert.deepEqual(messages(code, "no-vitest-sequential", undefined, "coverage.tsx"), [
       "sequential",
       "sequential",
