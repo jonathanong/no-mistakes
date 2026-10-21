@@ -219,3 +219,35 @@ fn indented_root_uses_is_not_rejected() {
     assert!(classified.lines.is_empty(), "{classified:?}");
     assert!(!classified.rejected_uses[0], "{classified:?}");
 }
+
+#[test]
+fn same_column_and_bare_dash_steps_are_action_lines() {
+    // The dash shares a column with `steps`. The include field is not a step.
+    let same = [
+        "jobs:",
+        "  build:",
+        "    strategy:",
+        "      matrix:",
+        "        include:",
+        "        - uses: ubuntu-latest",
+        "    steps:",
+        "    - uses: actions/checkout@v4",
+        "    - uses: actions/setup-node@v4",
+        "    timeout-minutes: 5",
+    ];
+    let classified = action_uses_lines(&same);
+    assert_eq!(classified.lines, vec![8, 9], "{classified:?}");
+    assert!(classified.rejected_uses[5], "{classified:?}");
+    assert!(!classified.rejected_uses[7], "{classified:?}");
+
+    let bare = [
+        "jobs:",
+        "  build:",
+        "    steps:",
+        "      -",
+        "        uses: actions/checkout@v4",
+        "      - # checkout",
+        "        uses: actions/setup-node@v4",
+    ];
+    assert_eq!(action_uses_lines(&bare).lines, vec![5, 7], "{bare:?}");
+}

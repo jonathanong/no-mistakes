@@ -116,7 +116,8 @@ impl PlaceStack {
         if self.only_root_map() && pending.is_none() {
             self.levels[0] = Level::root_sequence(split.dash_indent, false);
         } else if let Some(place) = pending {
-            if split.dash_indent > pending_indent {
+            // `steps:` then `- uses` in the same column is still that sequence.
+            if split.dash_indent >= pending_indent {
                 self.push(
                     place,
                     false,
@@ -128,14 +129,23 @@ impl PlaceStack {
             }
         }
         if is_block_key(split.body) {
-            let place = self.item_place();
-            self.push(place, true, false, split.key_indent, false, false);
+            self.push_sequence_item(self.item_place(), split.key_indent);
+        } else if self.in_sequence() && (split.body.is_empty() || split.body.starts_with('#')) {
+            // A bare `-`, or `- # note`, opens the item. The next key stays inside it.
+            self.push_sequence_item(self.item_place(), split.dash_indent);
         }
     }
 
     fn push_flow(&mut self, place: Place, sequence: bool) {
         let steps = sequence && place == Place::Steps;
         self.push(place, !sequence, true, 0, steps, false);
+    }
+
+    fn push_sequence_item(&mut self, place: Place, indent: usize) {
+        self.push(place, true, false, indent, false, false);
+        if let Some(top) = self.levels.last_mut() {
+            top.sequence_item = true;
+        }
     }
 
     fn push(
@@ -154,6 +164,7 @@ impl PlaceStack {
             indent,
             items_are_steps: steps,
             root,
+            sequence_item: false,
         });
     }
 
@@ -176,6 +187,10 @@ impl PlaceStack {
         })
     }
 
+    fn in_sequence(&self) -> bool {
+        self.levels.last().is_some_and(|level| !level.mapping)
+    }
+
     fn only_root_map(&self) -> bool {
         match self.levels.as_slice() {
             [level] => level.root && level.mapping && !level.flow,
@@ -188,8 +203,11 @@ impl PlaceStack {
             if top.root || top.flow {
                 break;
             }
-            let previous_item = sequence_item && top.mapping && top.indent == indent;
-            if top.indent > indent || previous_item {
+            let previous_item =
+                sequence_item && top.mapping && top.sequence_item && top.indent == indent;
+            // A key in the sequence's column ends it (`steps:` / `-` / `timeout-minutes:`).
+            let ended_sequence = !sequence_item && !top.mapping && top.indent == indent;
+            if top.indent > indent || previous_item || ended_sequence {
                 self.levels.pop();
                 continue;
             }

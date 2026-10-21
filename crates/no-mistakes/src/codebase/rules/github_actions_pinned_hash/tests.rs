@@ -555,3 +555,21 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
     assert!(chomp[1].message.contains("actions/checkout@v4"));
     assert!(!chomp[1].message.contains("trailing comment"));
 }
+
+#[test]
+fn same_column_and_bare_dash_steps_are_checked() {
+    // A dash in the steps column is still a step. The include field is not.
+    let same = check_yaml_shape("same-indent-steps-fail.yml");
+    assert_eq!(lines_of(&same), vec![10, 11], "{same:?}");
+    assert!(same[0].message.contains("actions/checkout@v4"));
+    assert!(same[1].message.contains("actions/setup-node@v4"));
+    assert!(!same
+        .iter()
+        .any(|finding| finding.message.contains("ubuntu")));
+
+    // The key on the line after a bare dash, including a commented dash, is the step.
+    let bare = check_yaml_shape("bare-dash-step-fail.yml");
+    assert_eq!(lines_of(&bare), vec![6, 8], "{bare:?}");
+    assert!(bare[0].message.contains("actions/checkout@v4"));
+    assert!(bare[1].message.contains("actions/setup-node@v4"));
+}

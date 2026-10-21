@@ -1,0 +1,8 @@
+# A dash with no key still opens the step. The comment form does too.
+jobs:
+  build:
+    steps:
+      -
+        uses: actions/checkout@v4
+      - # checkout
+        uses: actions/setup-node@v4

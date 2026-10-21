@@ -15,6 +15,8 @@ pub(super) struct Level {
     pub(super) indent: usize,
     pub(super) items_are_steps: bool,
     pub(super) root: bool,
+    /// This mapping is one sequence item, so the next dash at the same column replaces it.
+    pub(super) sequence_item: bool,
 }
 
 impl Level {
@@ -26,6 +28,7 @@ impl Level {
             indent: 0,
             items_are_steps: false,
             root: true,
+            sequence_item: false,
         }
     }
 
@@ -37,6 +40,7 @@ impl Level {
             indent,
             items_are_steps: true,
             root: true,
+            sequence_item: false,
         }
     }
 }
