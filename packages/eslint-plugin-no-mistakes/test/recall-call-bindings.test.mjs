@@ -115,6 +115,15 @@ describe("call-binding recall", () => {
     );
     assert.equal(
       messages(
+        fixture("no-inline-noop-promise-catch/asserted.ts"),
+        "no-inline-noop-promise-catch",
+        undefined,
+        "asserted.ts",
+      ).length,
+      2,
+    );
+    assert.equal(
+      messages(
         fixture("await-array-methods/recall.mjs"),
         "await-array-methods",
         undefined,

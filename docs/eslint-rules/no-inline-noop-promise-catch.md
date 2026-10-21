@@ -52,7 +52,7 @@ saveUser(input).catch(async function* () {});
 
 Values are glob or `/regex/` strings. Invalid regex patterns are ignored.
 
-A string or expression-free template `catch` or `then`, an optional call, and `.call` or a literal-array `.apply` are the same call.
+A string or expression-free template `catch` or `then`, an optional call, `.call`, a literal-array `.apply`, and a non-null or type assertion around that method are the same call.
 
 ## Fix
 

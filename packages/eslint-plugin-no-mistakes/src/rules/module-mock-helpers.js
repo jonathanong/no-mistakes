@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
 const { collectPatternNames } = require("./ast-pattern-names");
 const {
   expressionName,
@@ -34,15 +35,16 @@ function memberPropertyName(node) {
   return propertyName(current.property);
 }
 
-// The call that actually runs, after optional chaining, a comma callee, and
-// `.call` / a literal `.apply` array. Opaque `.apply` or a spread `.call`
-// returns null so callers do not read the wrong argument.
+// The call that actually runs, after optional chaining, a type or non-null
+// assertion, a comma callee, and `.call` / a literal `.apply` array. Opaque
+// `.apply` or a spread `.call` returns null so callers do not read the wrong
+// argument.
 function logicalCall(node) {
   if (node?.type !== "CallExpression") return null;
-  let callee = node.callee;
+  let callee = unwrapExpression(node.callee);
   let args = node.arguments;
   for (let depth = 0; depth < 4; depth += 1) {
-    while (callee?.type === "ChainExpression") callee = callee.expression;
+    callee = unwrapExpression(callee);
     if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
       callee = callee.expressions[callee.expressions.length - 1];
       continue;
@@ -56,7 +58,7 @@ function logicalCall(node) {
       args = args.slice(1);
       continue;
     }
-    const list = args[1]?.type === "ChainExpression" ? args[1].expression : args[1];
+    const list = unwrapExpression(args[1]);
     if (
       list?.type !== "ArrayExpression" ||
       list.elements.some((element) => !element || element.type === "SpreadElement")
@@ -66,8 +68,7 @@ function logicalCall(node) {
     callee = callee.object;
     args = list.elements;
   }
-  while (callee?.type === "ChainExpression") callee = callee.expression;
-  return { callee, arguments: args };
+  return { callee: unwrapExpression(callee), arguments: args };
 }
 
 function literalString(node) {

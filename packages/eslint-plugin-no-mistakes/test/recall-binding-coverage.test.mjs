@@ -375,6 +375,20 @@ describe("logical call forwarding", () => {
         ],
       }).arguments,
     ).toEqual([{ type: "Literal", value: "gh" }]);
+    expect(
+      logicalCall({
+        type: "CallExpression",
+        callee: {
+          type: "TSNonNullExpression",
+          expression: {
+            type: "MemberExpression",
+            property: ident("catch"),
+            object: ident("work"),
+          },
+        },
+        arguments: [],
+      }).callee.property.name,
+    ).toBe("catch");
     expect(memberPropertyName({ type: "Identifier", name: "mock" })).toBeNull();
     expect(
       memberPropertyName({
