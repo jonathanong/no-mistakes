@@ -417,6 +417,27 @@ fn prefilter_preserves_fixture_findings() {
 }
 
 #[test]
+fn prefilter_skips_files_without_bind_or_listen() {
+    scan::BIND_PREFILTER_SKIPS.with(|skips| skips.set(0));
+    scan::LISTEN_PREFILTER_SKIPS.with(|skips| skips.set(0));
+    let root = fixture("pass");
+    let opts = compile_options(Options::default()).unwrap();
+    let py = root.join("plain.py");
+    let ts = root.join("plain.ts");
+    let sources = super::super::source_store_for_files(&[py.clone(), ts.clone()]);
+    assert!(scan::check_file(&root, &py, &opts, &sources, false).is_empty());
+    assert!(scan::check_file(&root, &ts, &opts, &sources, false).is_empty());
+    assert!(
+        scan::BIND_PREFILTER_SKIPS.with(|skips| skips.get()) >= 1,
+        "Python files without bind must skip the tuple-bind regex"
+    );
+    assert!(
+        scan::LISTEN_PREFILTER_SKIPS.with(|skips| skips.get()) >= 1,
+        "JS/TS files without listen or a backslash must skip the AST scan"
+    );
+}
+
+#[test]
 fn js_function_bind_is_silent() {
     let dir = tempfile::tempdir().unwrap();
     let opts = compile_options(Options::default()).unwrap();

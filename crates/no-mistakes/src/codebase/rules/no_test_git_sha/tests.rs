@@ -150,3 +150,25 @@ fn prefilter_preserves_fixture_findings() {
         }
     }
 }
+
+#[test]
+fn prefilter_skips_files_without_hex_runs() {
+    super::PREFILTER_SKIPS.with(|skips| skips.set(0));
+    let root = fixture("pass");
+    let path = root.join("src/plain.ts");
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
+    let rule = config
+        .rule_applications(RULE_ID)
+        .into_iter()
+        .next()
+        .expect("fixture enables no-test-git-sha");
+    let options = compile_options(rule.try_rule_options().unwrap()).unwrap();
+    let findings = check_file(&root, &path, &options, &sources);
+    assert!(findings.is_empty(), "{findings:?}");
+    assert!(
+        super::PREFILTER_SKIPS.with(|skips| skips.get()) >= 1,
+        "files without a 40-digit hex run must skip the SHA regex"
+    );
+}

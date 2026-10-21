@@ -5,8 +5,13 @@ use anyhow::{Context, Result};
 use rayon::prelude::*;
 use regex::Regex;
 use serde::Deserialize;
+use std::cell::Cell;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+
+thread_local! {
+    pub(super) static PREFILTER_SKIPS: Cell<u32> = const { Cell::new(0) };
+}
 
 mod domain;
 use domain::{banned_domain_needles, email_domain, message, normalize_domain};
@@ -145,6 +150,7 @@ fn check_file_with_sources(
             &opts.domain_needles,
         )
     {
+        PREFILTER_SKIPS.with(|skips| skips.set(skips.get() + 1));
         return Vec::new();
     }
     scan_email_lines(&rel, &content, opts)

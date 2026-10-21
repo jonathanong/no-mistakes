@@ -5,7 +5,12 @@ use anyhow::{Context, Result};
 use rayon::prelude::*;
 use regex::Regex;
 use serde::Deserialize;
+use std::cell::Cell;
 use std::path::{Path, PathBuf};
+
+thread_local! {
+    pub(super) static PREFILTER_SKIPS: Cell<u32> = const { Cell::new(0) };
+}
 
 pub const RULE_ID: &str = "no-test-git-sha";
 
@@ -92,6 +97,7 @@ fn check_file(
         return Vec::new();
     };
     if !super::byte_prefilter::contains_hex_run(content.as_bytes(), 40) {
+        PREFILTER_SKIPS.with(|skips| skips.set(skips.get() + 1));
         return Vec::new();
     }
     scan_sha_lines(root, path, &content, options)

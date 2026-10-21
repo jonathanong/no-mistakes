@@ -126,6 +126,7 @@ fn prefilter_preserves_fixture_findings() {
         fixture("empty"),
         fixture("custom"),
         fixture("unicode"),
+        fixture("no-domain"),
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/test-email-domain-policy/fixture"),
     ];
@@ -180,6 +181,19 @@ fn non_ascii_source_disables_the_domain_prefilter() {
     assert_eq!(filtered, unfiltered);
     assert_eq!(filtered.len(), 1, "{filtered:?}");
     assert_eq!(filtered[0].target.as_deref(), Some("okta.com"));
+}
+
+#[test]
+fn prefilter_skips_ascii_files_without_domain_needles() {
+    super::PREFILTER_SKIPS.with(|skips| skips.set(0));
+    let root = fixture("no-domain");
+    let path = root.join("src/send.test.mts");
+    let findings = check_file(&root, &path, &compiled());
+    assert!(findings.is_empty(), "{findings:?}");
+    assert!(
+        super::PREFILTER_SKIPS.with(|skips| skips.get()) >= 1,
+        "ASCII files without a banned-domain label must skip the email regex"
+    );
 }
 
 #[test]
