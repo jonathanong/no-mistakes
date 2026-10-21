@@ -39,7 +39,8 @@ fn command_hits(words: &[Word]) -> Vec<Hit> {
 
 fn docker_hits(words: &[Word]) -> Option<Vec<Hit>> {
     let mut index = lead::skip_prefix(words);
-    if basename(lead::command_text(words.get(index)?.text.as_str())) != "docker" {
+    let engine = basename(lead::command_text(words.get(index)?.text.as_str()));
+    if !matches!(engine, "docker" | "podman" | "nerdctl") {
         return Some(Vec::new());
     }
     index += 1;
