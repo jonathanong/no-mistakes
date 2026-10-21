@@ -1,10 +1,12 @@
 mod analysis;
+mod exact;
+mod gate;
+mod sql_sources;
 mod substitute;
+mod verdicts;
 
 use super::{CompiledOptions, RULE_ID};
-use crate::codebase::postgres::{
-    postgres_sql_paths, recovered_sql_needs_insert_check, EmbeddedSqlKind,
-};
+use crate::codebase::postgres::{recovered_sql_needs_insert_check, EmbeddedSqlKind};
 use crate::codebase::rules::postgres_lock_ordering::directive::has_safe_directive;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
@@ -38,14 +40,12 @@ pub(super) fn scan_with_sources(
         })?;
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path).unwrap_or_default();
-        let statements = file
-            .calls
-            .iter()
-            .any(|call| !call.variants.is_empty())
-            .then(|| facts.postgres_statements(path, Some(&opts.embedded)))
-            .transpose()?
-            .map(crate::codebase::rules::index_sql_variants)
-            .unwrap_or_default();
+        let statements = crate::codebase::rules::index_sql_variants(
+            facts.postgres_statements(path, Some(&opts.embedded))?,
+        );
+        if facts.wants_sql_verdicts() {
+            verdicts::record(&rel, &source, file, opts, catalog, &statements, facts);
+        }
         for (call_index, variant_index, original, call) in
             file.calls
                 .iter()
@@ -88,26 +88,46 @@ pub(super) fn scan_with_sources(
                 }
                 continue;
             };
-            if !recovered_sql_needs_insert_check(Some(sql)) {
+            // Conflict-only preparation omits exact statements without a possible
+            // INSERT conflict, including ordinary INSERTs. Dynamic SQL stays above.
+            if !crate::codebase::postgres::may_have_insert_conflict(sql) {
                 continue;
             }
+            let statement = statements.get(&(call_index, variant_index)).copied();
+            let has_prepared_conflict = statement
+                .and_then(|statement| statement.variant_locations.as_ref())
+                .is_some_and(|locations| !locations.conflicts.is_empty());
+            // A data-modifying CTE can execute INSERT while its outer statement
+            // is SELECT. Its prepared conflict facts still require this policy.
+            let missing_conflict = statement.is_none() && analysis::contains_insert_conflict(sql);
+            if !recovered_sql_needs_insert_check(Some(sql))
+                && !has_prepared_conflict
+                && !missing_conflict
+            {
+                continue;
+            }
+            let statement = statement.ok_or_else(|| {
+                let missing = if original.variants.is_empty() {
+                    "prepared SQL facts are missing"
+                } else {
+                    "prepared SQL variant facts are missing"
+                };
+                anyhow::anyhow!("{RULE_ID}: {missing} for {rel}:{}", call.line)
+            })?;
             if original.variants.is_empty() {
-                findings.extend(analysis::findings_for_sql_with_binds(
+                findings.extend(exact::findings(
                     &rel,
                     call.line as usize,
                     sql,
-                    &call.recovered_placeholder_positions,
+                    statement,
                     catalog,
                     opts.fail_unanalyzable,
-                ));
+                )?);
                 continue;
             }
-            let statement = statements
-                .get(&(call_index, variant_index))
-                .copied()
-                .ok_or_else(|| anyhow::anyhow!("prepared SQL variant facts are missing"))?;
-            let locations = statement.variant_locations.as_ref().unwrap();
-            if locations.conflict_error.is_some()
+            let locations = exact::locations(statement, &rel, call.line as usize)?;
+            let prepared = gate::prepared_conflicts(locations, statement.parse_failed);
+            if prepared.unanalyzable
                 && opts.fail_unanalyzable
                 && analysis::contains_insert_conflict(sql)
             {
@@ -116,7 +136,7 @@ pub(super) fn scan_with_sources(
             for (index, finding) in analysis::findings_for_inserts(
                 &rel,
                 call.line as usize,
-                &locations.conflicts,
+                prepared.conflicts,
                 catalog,
             ) {
                 dedup.push(
@@ -129,24 +149,7 @@ pub(super) fn scan_with_sources(
             }
         }
     }
-    if let Some(sql_sources) = &opts.sql_sources {
-        for path in postgres_sql_paths(root, files, sql_sources)? {
-            let rel = relative_slash_path(root, &path);
-            let source = crate::codebase::rules::read_source(sources, &path).unwrap_or_default();
-            for (line, statement) in analysis::sql_statements(&source) {
-                if has_safe_directive(statement, 1, statement, &opts.safe_directive) {
-                    continue;
-                }
-                findings.extend(analysis::findings_for_sql(
-                    &rel,
-                    line as usize,
-                    statement,
-                    catalog,
-                    opts.fail_unanalyzable,
-                ));
-            }
-        }
-    }
+    sql_sources::scan(root, opts, files, sources, catalog, &mut findings)?;
     findings.sort();
     Ok(findings)
 }
@@ -154,3 +157,6 @@ pub(super) fn scan_with_sources(
 fn unanalyzable_sql(rel: &str, line: u32, message: &'static str) -> RuleFinding {
     analysis::finding(rel, line as usize, "unanalyzable-sql", message)
 }
+
+#[cfg(test)]
+mod tests;

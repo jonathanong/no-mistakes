@@ -39,6 +39,7 @@ pub(crate) struct CompiledOptions {
     schema: PostgresSchemaOptions,
     embedded: EmbeddedSqlOptions,
     fail_unanalyzable: bool,
+    advise_unanalyzable: bool,
     shapes: BannedShapes,
     iteration: iteration::IterationOptions,
     banned_functions: Vec<functions::CompiledFunction>,
@@ -89,6 +90,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             RULE_ID,
             &opts.unanalyzable_sql,
         )?,
+        advise_unanalyzable: opts.unanalyzable_sql.trim().eq_ignore_ascii_case("advise"),
         shapes,
         banned_functions: functions::compile(
             &opts.shape_options.banned_function_call,

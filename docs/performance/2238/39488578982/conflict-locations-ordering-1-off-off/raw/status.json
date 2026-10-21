@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "eligibleForGate": false,
+  "rows": 24,
+  "completedArms": 24,
+  "deadlineCensoredArms": 0,
+  "invalidArms": 0,
+  "blocksPerStage": 3,
+  "stages": [
+    "aa",
+    "bccb"
+  ],
+  "order": "BCCB"
+}

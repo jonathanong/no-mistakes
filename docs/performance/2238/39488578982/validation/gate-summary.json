@@ -1,0 +1,19 @@
+{
+  "head": "bcbbf58d69f8157aab60e5f1e61decf68ad278b5",
+  "base": "4d4deb9423111f6bd97f2501bdf508ef17536dc0",
+  "complete": true,
+  "targetDeleted": true,
+  "postgresStoppedAndDeleted": true,
+  "peakTargetBytes": 9608611857,
+  "cliSha256": "33a607371c77e82ece31696bd744e04b93120c21429d2df9d65b660d1bba5389",
+  "coverage": {
+    "lines": 99.34401281537846,
+    "functions": 99.33886781112655,
+    "regions": 98.5361254331611
+  },
+  "patch": {
+    "covered": 2542,
+    "missing": 5,
+    "percentage": 99.80369061641146
+  }
+}

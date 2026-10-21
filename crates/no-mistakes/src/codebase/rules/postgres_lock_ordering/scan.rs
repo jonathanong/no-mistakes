@@ -3,11 +3,12 @@ use super::directive::{contains_for_update, has_safe_directive};
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::postgres::{
     extract_locking_select_metadata_with_placeholders, EmbeddedSqlKind, LockingSelectMetadata,
-    SchemaCatalog,
+    SchemaCatalog, SqlStatementFileFacts,
 };
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
+use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 
 pub(super) const UNPARSEABLE_TARGET: &str = "unparseable";
@@ -15,6 +16,7 @@ pub(super) const UNRESOLVED_RELATION_TARGET: &str = "unresolved-relation";
 pub(super) const LOCK_ORDERING_TARGET: &str = "lock-ordering";
 pub(super) const UNANALYZABLE_TARGET: &str = "unanalyzable";
 mod messages;
+mod verdicts;
 mod versions;
 use messages::{
     canonical_order_message, interpolated_relation_message, lock_ordering_message,
@@ -47,12 +49,10 @@ pub(super) fn scan_with_sources(
         })?;
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path).unwrap_or_default();
-        let statements = file
-            .calls
-            .iter()
-            .any(|call| !call.variants.is_empty())
-            .then(|| facts.postgres_statements(path, Some(&opts.embedded)))
-            .transpose()?;
+        let statements = facts.postgres_statements(path, Some(&opts.embedded))?;
+        if facts.wants_sql_verdicts() {
+            verdicts::record(&rel, &source, file, opts, catalog, Some(statements), facts);
+        }
         findings.extend(versions::findings_for_file(
             &rel, &source, file, opts, catalog, statements, &mut dedup,
         )?);
@@ -61,12 +61,13 @@ pub(super) fn scan_with_sources(
     Ok(findings)
 }
 
-pub(super) fn findings_for_call_with_catalog(
+pub(super) fn findings_for_prepared_call(
     file: &str,
     source: &str,
     call: &crate::codebase::postgres::EmbeddedSqlCall,
     opts: &CompiledOptions,
     catalog: Option<&SchemaCatalog>,
+    prepared: Option<&SqlStatementFileFacts>,
 ) -> Vec<RuleFinding> {
     let Some(sql) = call.sql_text.as_deref() else {
         // Opaque executor text could take a FOR UPDATE lock. A recovered prefix
@@ -90,10 +91,21 @@ pub(super) fn findings_for_call_with_catalog(
     if has_safe_directive(source, call.line, sql, &opts.safe_directive) {
         return Vec::new();
     }
-    match extract_locking_select_metadata_with_placeholders(
-        sql,
-        &call.recovered_placeholder_positions,
-    ) {
+    let metadata: std::result::Result<Cow<'_, [LockingSelectMetadata]>, ()> = match prepared {
+        Some(statement) if statement.parse_failed => Err(()),
+        Some(statement) => statement
+            .variant_locations
+            .as_ref()
+            .map(|locations| Cow::Borrowed(locations.locking.as_slice()))
+            .ok_or(()),
+        None => extract_locking_select_metadata_with_placeholders(
+            sql,
+            &call.recovered_placeholder_positions,
+        )
+        .map(Cow::Owned)
+        .map_err(|_| ()),
+    };
+    match metadata {
         Err(_) => vec![finding(
             file,
             call.line,

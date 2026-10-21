@@ -96,6 +96,22 @@ fn honors_disable_comments() {
 }
 
 #[test]
+fn prepared_embedded_facts_missing_errors() {
+    let root = fixture("fail");
+    let file = root.join("src/query.ts");
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&file));
+    let error = check_with_files_sources_and_facts(
+        &root,
+        &default_config(),
+        std::slice::from_ref(&file),
+        &sources,
+        &crate::codebase::check_facts::CheckFactMap::default(),
+    )
+    .expect_err("embedded facts");
+    assert!(error.to_string().contains("prepared"), "{error}");
+}
+
+#[test]
 fn missing_source_file_errors() {
     let root = fixture("fail");
     let missing = root.join("sql/does-not-exist.sql");

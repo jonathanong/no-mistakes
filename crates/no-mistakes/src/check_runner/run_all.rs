@@ -16,6 +16,24 @@ pub(crate) fn run_all_with_evidence(
     include_suppressed: bool,
     include_runner_config_deadlines: bool,
 ) -> Result<CheckResults> {
+    run_all_with_sql_verdicts(
+        root,
+        config_path,
+        tsconfig_path,
+        include_suppressed,
+        include_runner_config_deadlines,
+        false,
+    )
+}
+
+pub(crate) fn run_all_with_sql_verdicts(
+    root: PathBuf,
+    config_path: Option<PathBuf>,
+    tsconfig_path: Option<PathBuf>,
+    include_suppressed: bool,
+    include_runner_config_deadlines: bool,
+    include_sql_verdicts: bool,
+) -> Result<CheckResults> {
     no_mistakes::invocation::set_timeout_phase("check.prepare");
     no_mistakes::invocation::check_timeout()?;
     let root = root.canonicalize().unwrap_or(root);
@@ -56,6 +74,7 @@ pub(crate) fn run_all_with_evidence(
         fact_collection::release_extract_programs(&session);
         let mut results = empty_results([None]);
         results.include_suppressed = include_suppressed;
+        results.include_sql_verdicts = include_sql_verdicts;
         results.runner_config_deadlines = runner_deadline_plan
             .as_ref()
             .map(|plan| plan.deadline_evidence(&Default::default()));
@@ -97,7 +116,7 @@ pub(crate) fn run_all_with_evidence(
     // whichever of them is active; it does not drop files from the result.
     no_mistakes::invocation::set_timeout_phase("check.parse");
     no_mistakes::invocation::check_timeout()?;
-    let ((fs_files, facts), facts_duration) =
+    let ((fs_files, mut facts), facts_duration) =
         fact_collection::collect(fact_collection::CollectInput {
             session: &session,
             root: &root,
@@ -110,6 +129,9 @@ pub(crate) fn run_all_with_evidence(
             playwright_fact_plan,
             sources: std::sync::Arc::clone(&sources),
         });
+    if include_sql_verdicts || no_mistakes::codebase::postgres::has_sql_advice(config) {
+        facts.enable_sql_verdicts();
+    }
     no_mistakes::invocation::set_timeout_phase("check.analysis");
     no_mistakes::invocation::check_timeout()?;
     let (react, queues, rules, integration, codebase, filesystem_rules) =
@@ -167,5 +189,7 @@ pub(crate) fn run_all_with_evidence(
         ))?,
         include_suppressed,
         unproven_member_query_sql: facts.unproven_member_query_sql(),
+        sql_verdicts: facts.sql_verdicts(),
+        include_sql_verdicts,
     })
 }

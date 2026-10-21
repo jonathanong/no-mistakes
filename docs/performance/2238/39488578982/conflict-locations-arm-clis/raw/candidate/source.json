@@ -1,0 +1,43 @@
+{
+  "source": "bcbbf58d69f8157aab60e5f1e61decf68ad278b5",
+  "tree": "baf99c6b4929f7d473585cf0c8d8b698f739ba73",
+  "lockSha256": "5a17a012a19343e0096c0e3a05e34489071934bb21b14a7f30d886a6fa42ceaf",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+  "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+  "features": "default",
+  "profile": {
+    "lto": true,
+    "codegen-units": 1
+  },
+  "command": [
+    "cargo",
+    "build",
+    "--release",
+    "--locked",
+    "-p",
+    "no-mistakes",
+    "--bin",
+    "no-mistakes"
+  ],
+  "buildJobs": 2,
+  "incremental": false,
+  "machine": {
+    "uname": [
+      "Linux",
+      "runnervmidgih",
+      "6.17.0-1022-azure",
+      "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+      "aarch64"
+    ],
+    "affinity": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "imageOS": "ubuntu24-arm64",
+    "imageVersion": "20261012.149.1",
+    "cpuinfo": "processor\t: 0\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 1\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 2\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 3\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\n",
+    "meminfo": "MemTotal:       16330088 kB\nMemFree:        14067944 kB\nMemAvailable:   15381180 kB\nBuffers:          228608 kB\nCached:          1123528 kB\nSwapCached:           96 kB\nActive:           726824 kB\nInactive:         923772 kB\nActive(anon):     353428 kB\nInactive(anon):     3248 kB\nActive(file):     373396 kB\nInactive(file):   920524 kB\nUnevictable:       45724 kB\nMlocked:           42652 kB\nSwapTotal:       3145724 kB\nSwapFree:        3145628 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:             76964 kB\nWriteback:             0 kB\nAnonPages:        344096 kB\nMapped:           251652 kB\nShmem:             50872 kB\nKReclaimable:     279964 kB\nSlab:             378536 kB\nSReclaimable:     279964 kB\nSUnreclaim:        98572 kB\nKernelStack:        3940 kB\nShadowCallStack:     988 kB\nPageTables:         7032 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    11310768 kB\nCommitted_AS:    2385628 kB\nVmallocTotal:   135288315904 kB\nVmallocUsed:       37928 kB\nVmallocChunk:          0 kB\nPercpu:             1840 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:    299008 kB\nFilePmdMapped:         0 kB\nCmaTotal:          32768 kB\nCmaFree:           26624 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\n"
+  }
+}

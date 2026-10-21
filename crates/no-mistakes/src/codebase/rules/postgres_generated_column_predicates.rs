@@ -1,21 +1,21 @@
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
 use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
-use crate::codebase::ts_source::relative_slash_path;
+use crate::codebase::ts_source::{relative_slash_path, TS_JS_EXTENSIONS};
 use crate::config::v2::NoMistakesConfig;
-use anyhow::{bail, Result};
+use anyhow::Result;
 use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod compile;
+use compile::compile_options;
 mod scan;
 mod validate;
 
 pub const RULE_ID: &str = "postgres-generated-column-predicates";
 
 pub(crate) use check_with_files as check;
-
-use crate::codebase::ts_source::TS_JS_EXTENSIONS;
 
 #[derive(Deserialize, Default, Clone)]
 #[serde(default, rename_all = "camelCase")]
@@ -49,6 +49,7 @@ pub(crate) struct CompiledOptions {
     schema: PostgresSchemaOptions,
     embedded: EmbeddedSqlOptions,
     fail_unanalyzable: bool,
+    advise_unanalyzable: bool,
     functions: Vec<String>,
     require_primary_key: bool,
     where_clause: bool,
@@ -102,7 +103,8 @@ fn check_applications(
     let all: Result<Vec<super::PostgresFindings>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
-        .map(|rule| -> Result<super::PostgresFindings> {
+        .enumerate()
+        .map(|(index, rule)| -> Result<super::PostgresFindings> {
             let opts: Options = rule.try_rule_options()?;
             let compiled = compile_options(&opts)?;
             let target_roots = super::target_roots(root, config, rule);
@@ -130,7 +132,15 @@ fn check_applications(
                 .into_iter()
                 .filter(|path| query_set.contains(path) || schema_set.contains(path))
                 .collect();
-            scan::scan(root, &compiled, &files, &query_files, sources, facts)
+            let view = facts.for_sql_application(index, rule.name.as_deref());
+            scan::scan(
+                root,
+                &compiled,
+                &files,
+                &query_files,
+                sources,
+                view.as_ref().unwrap_or(facts),
+            )
         })
         .collect();
     let findings: super::PostgresFindings = all?.into_iter().flatten().collect();
@@ -149,45 +159,11 @@ fn allowed(root: &Path, path: &Path, include: &GlobMatcher, exclude: &GlobMatche
     included && (exclude.is_empty() || !exclude.is_match(&rel))
 }
 
-fn compile_options(opts: &Options) -> Result<CompiledOptions> {
-    let functions = match &opts.functions {
-        None => vec!["uuid_extract_timestamp".to_string()],
-        Some(values) if values.is_empty() => {
-            bail!("{RULE_ID} option functions: must not be empty")
-        }
-        Some(values) => validate::unique_names(values, "functions", "function")?,
-    };
-    let (where_clause, join_clause, order_clause) = validate::clauses(opts.clauses.as_deref())?;
-    Ok(CompiledOptions {
-        schema: PostgresSchemaOptions {
-            sql_include: crate::codebase::postgres::effective_sql_include(
-                &opts.sql_include,
-                opts.sql_include_locked,
-            ),
-        },
-        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
-            .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
-            .with_trusted_sql_tags(&opts.trusted_sql_tags),
-        fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
-            RULE_ID,
-            &opts.unanalyzable_sql,
-        )?,
-        functions,
-        require_primary_key: opts.require_argument_is_primary_key.unwrap_or(true),
-        where_clause,
-        join_clause,
-        order_clause,
-        extras: validate::extras(&opts.extra_generated_columns)?,
-    })
-}
-
+#[cfg(test)]
+mod followup_tests;
+#[cfg(test)]
+mod history_tests;
 #[cfg(test)]
 mod options_tests;
 #[cfg(test)]
 mod tests;
-
-#[cfg(test)]
-mod followup_tests;
-
-#[cfg(test)]
-mod history_tests;

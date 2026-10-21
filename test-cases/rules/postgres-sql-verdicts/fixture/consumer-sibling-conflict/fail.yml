@@ -1,0 +1,8 @@
+rules:
+- rule: postgres-conflict-ordering
+  scope: repository
+  options:
+    importSpecifier: '@example/db'
+    include: ['src/query.ts', 'src/broken.ts', 'src/before.ts', 'src/exact.ts', 'src/quoted.ts']
+    schemaCatalogPath: schema.json
+    unanalyzableSql: fail

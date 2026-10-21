@@ -19,6 +19,7 @@ pub fn configure_prepared_postgres_plan(
     config: &NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
+    plan.record_general_sql_locations();
     let annotation_options =
         configured_embedded_sql_options(config, &["postgres-require-query-annotation"])?;
     if !annotation_options.is_empty() {
@@ -40,7 +41,21 @@ pub fn configure_prepared_postgres_plan(
     ]
     .iter()
     .any(|id| !config.rule_applications(id).is_empty());
+    let ordering = ["postgres-lock-ordering", "postgres-conflict-ordering"]
+        .iter()
+        .any(|id| !config.rule_applications(id).is_empty());
+    plan.postgres_dml |= ordering;
+    plan.postgres_exact_locations |= !config
+        .rule_applications("postgres-lock-ordering")
+        .is_empty();
+    plan.postgres_conflict_locations |= !config
+        .rule_applications("postgres-conflict-ordering")
+        .is_empty();
+    plan.postgres_general_locations |= super::PREPARED_EMBEDDED_SQL_RULE_IDS
+        .iter()
+        .any(|id| *id != "postgres-conflict-ordering" && !config.rule_applications(id).is_empty());
     let dml_rules = [
+        "postgres-idempotent-insert",
         "postgres-required-predicates",
         "postgres-no-offset",
         "postgres-generated-column-predicates",
@@ -60,6 +75,7 @@ pub fn configure_prepared_postgres_plan(
         .rule_applications("postgres-sql-shape-policy")
         .is_empty();
     let schema_rules = [
+        "postgres-idempotent-insert",
         "postgres-generated-column-predicates",
         "postgres-no-generated-column-writes",
         "postgres-identifier-length",

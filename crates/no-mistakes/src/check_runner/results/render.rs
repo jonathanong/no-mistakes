@@ -10,6 +10,8 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         codebase,
         warnings,
         advisories,
+        sql_verdicts,
+        include_sql_verdicts,
         suppressed,
         include_suppressed,
         timings,
@@ -28,6 +30,10 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
     if let Some(evidence) = runner_config_deadlines {
         value["runnerConfigDeadlines"] = serde_json::to_value(evidence)
             .expect("finite declared deadline evidence serialization never fails");
+    }
+    if *include_sql_verdicts {
+        value["sqlVerdicts"] = serde_json::to_value(sql_verdicts)
+            .expect("SQL verdicts contain only serializable evidence");
     }
     if *include_suppressed {
         value["suppressed"] = serde_json::to_value(suppressed)

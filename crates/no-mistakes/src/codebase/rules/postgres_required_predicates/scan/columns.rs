@@ -103,7 +103,7 @@ fn equality_hint(predicate_sql: &str, required: &str) -> String {
     )
 }
 
-fn contains_predicate(haystack: &str, needle: &str) -> bool {
+pub(super) fn contains_predicate(haystack: &str, needle: &str) -> bool {
     normalize(haystack).contains(&normalize(needle))
 }
 

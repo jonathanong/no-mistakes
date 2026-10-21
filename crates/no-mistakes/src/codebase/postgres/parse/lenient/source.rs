@@ -14,6 +14,12 @@ pub(crate) struct LocatedStatement {
     pub(crate) synthetic_select: bool,
     pub(crate) recovered_functions: Vec<crate::codebase::postgres::SqlFunctionCallFact>,
     pub(crate) policy_arbiter: Option<crate::codebase::postgres::source::PolicyArbiter>,
+    /// The statement is the entire semicolon-delimited chunk, not a recovery from a failed chunk.
+    pub(crate) complete: bool,
+    /// Tokens of the semicolon chunk this statement was recovered from.
+    /// Shared by every statement that came from that chunk, including a marker
+    /// left behind when the chunk produced no statement.
+    pub(crate) chunk_tokens: Option<Arc<[TokenWithSpan]>>,
 }
 
 impl LocatedStatement {
@@ -25,6 +31,8 @@ impl LocatedStatement {
             synthetic_select: false,
             recovered_functions: Vec::new(),
             policy_arbiter: None,
+            complete: false,
+            chunk_tokens: None,
         }
     }
 

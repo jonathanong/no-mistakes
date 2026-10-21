@@ -9,6 +9,7 @@ use super::options::{
 use anyhow::{bail, Context, Result as AnyhowResult};
 
 include!("cli_parity_builders.rs");
+include!("cli_parity_check.rs");
 
 mod playwright_wrappers;
 
@@ -35,20 +36,6 @@ pub(crate) fn fetches_json_impl(options: serde_json::Value) -> napi::Result<Stri
     let report =
         crate::fetches::analyze_with_base_root(&base_root, &args).map_err(to_napi_error)?;
     to_pretty_json(&report)
-}
-
-pub(crate) fn check_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let results = crate::check_runner::run_all_with_evidence(
-        root,
-        options.config.map(PathBuf::from),
-        options.tsconfig.map(PathBuf::from),
-        options.include_suppressed,
-        options.include_runner_config_deadlines,
-    )
-    .map_err(to_napi_error)?;
-    to_pretty_json(&crate::check_runner::json_value(&results))
 }
 
 pub(crate) fn resolve_config_json_impl(options: serde_json::Value) -> napi::Result<String> {

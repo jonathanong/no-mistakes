@@ -8,12 +8,18 @@ use std::collections::{BTreeMap, BTreeSet};
 
 mod collect;
 mod prepared;
-pub(in crate::codebase::postgres) use prepared::analyze_parsed;
+pub(in crate::codebase::postgres) use prepared::{
+    analyze_parsed, reliable_chunk_tokens, ConflictChunks,
+};
 mod pinned;
 pub use pinned::{expression_is_constant, SqlPinnedRelation};
 mod raw;
 mod scope;
 pub use scope::SqlSourceRelation;
+#[cfg(test)]
+mod consumer_recovery_tests;
+#[cfg(test)]
+mod prepared_tests;
 mod single_row;
 #[cfg(test)]
 mod single_row_tests;
@@ -52,6 +58,24 @@ pub struct SqlInsertSourceShape {
     pub constant_projections: BTreeSet<String>,
     /// The `FROM` relations, or `None` when they cannot be listed.
     pub relations: Option<Vec<SqlSourceRelation>>,
+}
+
+/// Recall-safe prefilter: quoted/commented text may retain extra calls, never
+/// discard a real INSERT, including one inside a data-modifying CTE.
+pub(crate) fn may_have_insert(sql: &str) -> bool {
+    sql.as_bytes()
+        .windows(b"insert".len())
+        .any(|word| word.eq_ignore_ascii_case(b"insert"))
+}
+
+/// A conflict-only request can omit ordinary INSERTs, including malformed ones:
+/// without CONFLICT text the existing policy has no clause to analyze.
+pub(crate) fn may_have_insert_conflict(sql: &str) -> bool {
+    may_have_insert(sql)
+        && sql
+            .as_bytes()
+            .windows(b"conflict".len())
+            .any(|word| word.eq_ignore_ascii_case(b"conflict"))
 }
 
 pub fn analyze_conflict_inserts(sql: &str) -> Result<Vec<SqlConflictInsertFact>> {

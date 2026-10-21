@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-require-query-annotation
+    name: leading-prefix
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      unanalyzableSql: advise

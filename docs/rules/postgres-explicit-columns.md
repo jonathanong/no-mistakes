@@ -67,6 +67,9 @@ Opaque or over-cap calls retain `unanalyzableSql` behavior.
 
 ## Options and defaults
 
+`unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
+`--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
+
 `include`, `exclude`, `importSpecifier`, `executorNames`, and `unanalyzableSql`
 match `postgres-required-predicates`. `unanalyzableSql` defaults to `fail`.
 

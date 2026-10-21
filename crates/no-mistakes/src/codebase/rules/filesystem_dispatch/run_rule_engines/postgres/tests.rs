@@ -45,6 +45,7 @@ fn missing_facts_use_the_file_checkers() {
         EXPLICIT_COLUMNS_RULE,
         BOUNDED_STATEMENTS_RULE,
         NO_OFFSET_RULE,
+        POSTGRES_IDEMPOTENT_INSERT,
     ] {
         assert!(run(rule_id, Path::new("."), &config, files, &sources, None).is_some());
     }

@@ -13,6 +13,7 @@ pub(super) fn collect(
     facts: &SqlStatementFileFacts,
     tokens: &[TokenWithSpan],
 ) -> SqlVariantLocations {
+    super::work::full_projection();
     let mut out = SqlVariantLocations::default();
     out.insert(Site::Origin, 1, 1);
     selects::collect(index, facts, &mut out);
@@ -121,4 +122,12 @@ fn matches_relation(relations: &[Relation], table: &str, qualifier: &str) -> boo
                 || relation.table == qualifier
                 || relation.table.rsplit('.').next() == Some(qualifier))
     })
+}
+
+pub(super) fn conflicts(tokens: &[TokenWithSpan]) -> SqlVariantLocations {
+    super::work::conflict_projection();
+    let mut out = SqlVariantLocations::default();
+    out.insert(Site::Origin, 1, 1);
+    ordering::conflicts(tokens, &mut out);
+    out
 }

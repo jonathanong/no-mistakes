@@ -1,0 +1,30 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "name": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    }
+  },
+  "functions": {},
+  "enums": {},
+  "views": {}
+}

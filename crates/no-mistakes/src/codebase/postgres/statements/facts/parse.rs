@@ -1,8 +1,16 @@
 //! One prepared SQL parse feeds every requested statement projection.
+use super::sources::StatementProjection;
 use super::SqlStatementFileFacts;
-use crate::codebase::postgres::parse::{parse_postgres_sql_lenient_with_sources, PreparedSql};
+use crate::codebase::postgres::conflict::ConflictChunks;
+use crate::codebase::postgres::parse::{
+    orphan_chunk_tokens, parse_postgres_sql_lenient_with_sources, partition_function_sources,
+    PreparedSql,
+};
+use crate::codebase::postgres::statement_facts::SqlLocationDemand;
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
 use sqlparser::ast::Statement;
+use sqlparser::tokenizer::TokenWithSpan;
+use std::sync::Arc;
 
 /// Extract INSERT/SELECT/trigger facts from one SQL source.
 pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
@@ -14,7 +22,13 @@ pub(crate) fn extract_sql_statement_facts_with_bounds(
     sql: &str,
     collect_bounds: bool,
 ) -> SqlStatementFileFacts {
-    extract_sql_statement_facts_with_placeholder_positions(sql, collect_bounds, None, false)
+    extract_sql_statement_facts_with_placeholder_positions(
+        sql,
+        collect_bounds,
+        None,
+        SqlLocationDemand::None,
+        StatementProjection::Complete,
+    )
 }
 
 /// Extract facts while identifying the SQL-local positions of recovered interpolation markers.
@@ -27,7 +41,8 @@ pub(crate) fn extract_sql_statement_facts_with_recovered_placeholders(
         sql,
         collect_bounds,
         Some(recovered_placeholder_positions),
-        false,
+        SqlLocationDemand::None,
+        StatementProjection::Complete,
     )
 }
 
@@ -40,7 +55,37 @@ pub(crate) fn extract_sql_variant_statement_facts(
         sql,
         collect_bounds,
         Some(positions),
-        true,
+        SqlLocationDemand::Full,
+        StatementProjection::Complete,
+    )
+}
+
+pub(crate) fn extract_sql_statement_facts_with_location_demand(
+    sql: &str,
+    collect_bounds: bool,
+    positions: &[(u32, u32)],
+    demand: SqlLocationDemand,
+) -> SqlStatementFileFacts {
+    extract_sql_statement_facts_with_placeholder_positions(
+        sql,
+        collect_bounds,
+        Some(positions),
+        demand,
+        StatementProjection::Complete,
+    )
+}
+
+/// Prepare only the fields consumed by the sole conflict-ordering policy.
+pub(crate) fn extract_sql_conflict_policy_facts(
+    sql: &str,
+    positions: &[(u32, u32)],
+) -> SqlStatementFileFacts {
+    extract_sql_statement_facts_with_placeholder_positions(
+        sql,
+        false,
+        Some(positions),
+        SqlLocationDemand::Conflicts,
+        StatementProjection::ConflictPolicy,
     )
 }
 
@@ -48,17 +93,20 @@ fn extract_sql_statement_facts_with_placeholder_positions(
     sql: &str,
     collect_bounds: bool,
     placeholder_positions: PlaceholderPositions<'_>,
-    locations: bool,
+    locations: SqlLocationDemand,
+    projection: StatementProjection,
 ) -> SqlStatementFileFacts {
+    super::locations::work::statement_extraction();
     let prepared = PreparedSql::new(sql);
     let parsed = prepared.parse_policy();
     let parse_failed = parsed.is_err();
     match parsed {
-        Ok(statements) => super::extract_from_parsed_and_sources(
+        Ok(statements) => super::projection::extract(
             sql,
             &prepared,
             &statements,
             super::StatementSources {
+                projection,
                 locations,
                 ..Default::default()
             },
@@ -67,22 +115,33 @@ fn extract_sql_statement_facts_with_placeholder_positions(
             placeholder_positions,
         ),
         Err(_) => {
-            let (mut located, functions) =
-                crate::codebase::postgres::parse::partition_function_sources(
-                    parse_postgres_sql_lenient_with_sources(sql, prepared.normalized()),
-                );
+            let parsed = parse_postgres_sql_lenient_with_sources(sql, prepared.normalized());
+            let orphans = orphan_chunk_tokens(&parsed);
+            let (mut located, functions) = partition_function_sources(parsed);
             prepared.adopt_recovered_arbiters(&mut located);
+            let complete: Vec<bool> = located.iter().map(|statement| statement.complete).collect();
+            let chunks: Vec<Option<Arc<[TokenWithSpan]>>> = located
+                .iter()
+                .map(|statement| statement.chunk_tokens.clone())
+                .collect();
+            let recovery = ConflictChunks {
+                complete: &complete,
+                chunks: &chunks,
+                orphans: &orphans,
+            };
             let (statements, sources): (Vec<_>, Vec<_>) = located
                 .into_iter()
                 .map(|located| (located.statement, located.source))
                 .unzip();
-            super::extract_from_parsed_and_sources(
+            super::projection::extract(
                 sql,
                 &prepared,
                 &statements,
                 super::StatementSources {
+                    projection,
                     locations,
                     tokens: Some(&sources),
+                    recovery: Some(&recovery),
                     policy: super::StatementPolicySources {
                         schema: None,
                         functions: &functions,
@@ -110,12 +169,23 @@ pub(crate) fn extract_from_parsed_with_recovered_placeholders(
         prepared,
         statements,
         super::StatementSources {
-            locations: false,
+            locations: SqlLocationDemand::None,
             tokens: None,
+            recovery: None,
             policy,
+            ..Default::default()
         },
         parse_failed,
         collect_bounds,
         placeholder_positions,
     )
 }
+
+#[cfg(test)]
+mod location_demand_tests;
+
+#[cfg(test)]
+mod mapped_demand_tests;
+
+#[cfg(test)]
+mod policy_projection_tests;

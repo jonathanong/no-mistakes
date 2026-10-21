@@ -24,6 +24,7 @@ fn cli_check_surfaces_precise_invalid_rule_option_type() {
         json: false,
         include_suppressed: false,
         include_runner_config_deadlines: false,
+        include_sql_verdicts: false,
         timings: false,
         verbose_timings: false,
     })

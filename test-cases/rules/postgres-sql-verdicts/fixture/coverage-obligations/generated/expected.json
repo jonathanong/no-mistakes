@@ -1,0 +1,36 @@
+[
+  {
+    "line": 2,
+    "subcheck": "generated-write",
+    "status": "proven-clear",
+    "residualReasons": []
+  },
+  {
+    "line": 3,
+    "subcheck": "generated-write",
+    "status": "violation",
+    "residualReasons": []
+  },
+  {
+    "line": 4,
+    "subcheck": "generated-write",
+    "status": "abstain",
+    "residualReasons": [
+      "unknown-relation-or-write-width"
+    ]
+  },
+  {
+    "line": 5,
+    "subcheck": "generated-write",
+    "status": "abstain",
+    "residualReasons": [
+      "unknown-relation-or-write-width"
+    ]
+  },
+  {
+    "line": 6,
+    "subcheck": "generated-write",
+    "status": "violation",
+    "residualReasons": []
+  }
+]

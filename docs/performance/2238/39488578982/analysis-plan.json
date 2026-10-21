@@ -1,0 +1,54 @@
+{
+  "harness": "510a88d5102b230b4fb626051c4141f670aedf10",
+  "sourcePins": {
+    "base": "4d4deb9423111f6bd97f2501bdf508ef17536dc0",
+    "candidate": "bcbbf58d69f8157aab60e5f1e61decf68ad278b5"
+  },
+  "expectedCells": 12,
+  "expectedRawArms": 288,
+  "pairsPerStagePerCell": 6,
+  "stageNames": [
+    "aa",
+    "bccb"
+  ],
+  "descriptiveWallComparison": "Absolute mean adjacent candidate/main paired wall delta is compared with maximum observed absolute same-VM main/main adjacent paired wall delta. This finite sample statistic is not a confidence bound or full-config gate clearance.",
+  "sha256": {
+    "collect.py": "d6c24ca1d1964cad81b4a799e1f8d3e3d0659b32ab872e2c6b6f8e4b16121119",
+    "proof.py": "ae789d7c54e1731bd1a3f82b7ad52b06547d4c947337a084122ecf374d9d114d",
+    "analyze.py": "ccbccff4a195b49372f21ccff789da0e8cc341f322748216286ad73a4ba8cada",
+    "render.py": "bfb975d6fbf71085bfdd1bd533939b72bb61a2ce781c7e11b23f2055ff0637b1",
+    "ledger_contract.py": "23bc9bd89e4480e365f9d2c7e62da5d2c708ba7a005ea23c03ae170a2ee72bb4",
+    "oracle-report.json": "18e1a03030f90d27bc5262c049772ffc4be6f9ff3a1ce6446583e48c10746600",
+    "ledger-contract.json": "f1df87159f3ed1271b1e91119cfdae8d240ac7981ca0656427bc87ae0e180dff"
+  },
+  "transportNote": "GitHub CLI requires --allow-escape-sequences for exact raw log/archive responses; binary downloads are redirected to disk and API SHA256 verified.",
+  "frozenHarnessCheckout": "/tmp/nm2238-measured-harness-510a8",
+  "harnessHelperSha256": {
+    ".github/scripts/matched-arm/frozen.py": "3ee22d1d2e540b2ce6e4b98bc08134c3e14a3349559f34d5b2dee7ab9a57f0f2",
+    ".github/scripts/matched-arm/test_harness.py": "49195d11d06b5b35910edfa40652f23a39e56fd2b04f26a011d9c8a6ec87808f",
+    ".github/scripts/matched-arm/common.py": "accfca259293f1a4f694273c8dac02feb05114e6dbedb5efb9a037cd101b53c6",
+    ".github/scripts/matched-arm/test_long_frozen.py": "cf486b733aeae552337fa4a79cdccffc6cbf3ec407c6cf3cc5ea30b3da30cf77",
+    ".github/scripts/matched-arm/build_size.py": "45a5b5811a2b2e7103817bf9888479cc8f53d4429ab59489241d4b33304159f5",
+    ".github/scripts/matched-arm/prepare.py": "3d2e14ca77380892af8354476c614f14439a31297ad86d128468f4e41b5f978e",
+    ".github/scripts/matched-arm/feasibility.py": "33767a56325c938a6092f524dbe2f0ee37676804e917f6d60dfc5b79428b8f95",
+    ".github/scripts/matched-arm/build.py": "7b19f4f16e41a4504efdac8507684acb39eeadec3abc9404e4d8988292a9efb1",
+    ".github/scripts/matched-arm/worker.py": "ad529f3b4461d9cf9bd9b4d03c95ee87fd59ec2aa4185c6e71e9df90b81690d0",
+    ".github/scripts/matched-arm/test_build_size.py": "b18354cf8f35b602fdf715ace032b01dfc23a4732bb69f790980a75d180a985e",
+    ".github/scripts/matched-arm/measure.py": "68798737e75cb454be69b267546ed4b6d72d4134076a8a30df78babf156f10de",
+    ".github/scripts/matched-arm/report.py": "25e782d12d3ad06293539cbf03989923a76322264c5b961dcf995366457b4a97",
+    ".github/scripts/matched-arm/long_frozen.py": "e98fd49ab73945ad55f42038e1903f19885eb563a8013fb5b8a5be904a894fe9",
+    ".github/scripts/conflict-locations-arm/inputs.py": "e9ebed5a93fe918ce96c06509dd254ba97258950ef13317cc6607fd67cad9bf5",
+    ".github/scripts/conflict-locations-arm/measure_repeated.py": "abafbd17758cf16fcae5727cbd68fb1cf166397f33a40c6850f8b1f33fb8a058",
+    ".github/scripts/conflict-locations-arm/test_ordering.py": "6077214c30ceb02c1ac0b58036e776aac708b4f1ebc5123fe60a78874fbad851",
+    ".github/scripts/conflict-locations-arm/image_contract.py": "18cad021abda22cf72bc69a4630f184df3d95e44b268f7279f98af003aa44507",
+    ".github/scripts/conflict-locations-arm/build.py": "09e58d853c1e0674db72212ada5f6edfbe1d9e1325423ada4f9229235fcf1cd1",
+    ".github/scripts/conflict-locations-arm/ordering.py": "400c2c44b3065b0410dc30e482b4e4a612cbd418e8b1f6b859edd8305ef6cd82",
+    ".github/scripts/conflict-locations-arm/measure.py": "beb2f29886c5f7a35903bf06fb9836242d1f639aea1e2158a8ea077d86956c52",
+    ".github/scripts/conflict-locations-arm/test_image_contract.py": "becd89b13602a247c6df8ea76120a75f9ed2b249614f93639b2089c7ebc7c780"
+  },
+  "oracleStatus": "Verified before dispatch: exact-source full consumer report byte-identical to c8 and canonical 2,155 obligations unchanged.",
+  "runUrl": "https://github.com/jonathanong/no-mistakes/actions/runs/39488578982",
+  "runRecordedBeforeDataUtc": "2026-10-20T20:02:58.353480+00:00",
+  "preparedBeforeDispatchUtc": "2026-10-20T19:54:29Z",
+  "run": 39488578982
+}

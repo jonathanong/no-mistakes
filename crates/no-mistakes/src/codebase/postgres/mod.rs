@@ -6,6 +6,7 @@ mod annotation;
 mod catalog;
 mod collect;
 mod conflict;
+pub(crate) use conflict::may_have_insert_conflict;
 pub mod dml;
 pub(crate) mod embedded;
 mod function_calls;
@@ -113,6 +114,8 @@ pub(crate) use profiles::{
     prepare_rule_sql_facts,
 };
 pub use rule_options::fail_unanalyzable_sql;
+pub use rule_options::{has_sql_advice, unanalyzable_sql_mode, UnanalyzableSqlMode};
+mod verdict;
 pub use schema::extract_create_table_metadata;
 pub use source::*;
 pub(crate) use sql_include_policy::{effective_sql_include, profile_sql_include};
@@ -133,6 +136,11 @@ pub use types::{
     SqlDropIndexMetadata, SqlForeignKeyMetadata, SqlIndexParam, SqlNamedConstraint,
     SqlSchemaFileFacts, SqlSettingUse, SqlStatementKind, SqlTableSchemaEvent, SqlUnnamedConstraint,
 };
+pub(crate) use verdict::sql_evidence_for_call;
+pub use verdict::{
+    combine_sql_verdicts, record_sql_policy_verdicts, SqlBranchJudgment, SqlEvidenceKind,
+    SqlObligationVerdict, SqlPolicyVerdictContext, SqlRuleApplication, SqlVerdictStatus,
+};
 
 #[cfg(test)]
 pub(crate) mod tests;
@@ -140,3 +148,4 @@ pub(crate) mod tests;
 pub(crate) use collect::collect_prepared_schema_facts;
 
 pub(crate) use on_conflict::judge_file_with_insert_indices;
+pub(crate) use on_conflict::judge_subcheck as judge_idempotent_subcheck;

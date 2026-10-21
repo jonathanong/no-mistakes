@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "id": { "dataType": "integer", "ordinalPosition": 1 },
+        "tenant_id": { "dataType": "integer", "ordinalPosition": 2 }
+      }
+    }
+  }
+}

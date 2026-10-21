@@ -1,3 +1,4 @@
+pub(crate) mod allocations;
 mod git;
 mod git_extended;
 mod gitignore_fixture;

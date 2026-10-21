@@ -39,6 +39,8 @@ no-mistakes resolve-check <file...> --format json
 no-mistakes check --format json
 ```
 
+`no-mistakes check --include-sql-verdicts --format json` adds the opt-in SQL verdict ledger and does not change findings.
+
 For Next.js routes, pages, selectors, or Playwright tests, also run
 `no-mistakes tests plan playwright --changed-file <file> --format json` and
 `no-mistakes playwright check --json`. See

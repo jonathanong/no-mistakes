@@ -17,7 +17,12 @@ fn combined_catalog_reports_both_column_kinds() {
     combined.extend_from(&generated);
     let catalogs = Catalogs {
         catalog: generated,
+        trigger,
         combined,
+        known_tables: tables
+            .iter()
+            .map(|(name, table)| (name.clone(), table.complete))
+            .collect(),
     };
     let source = sources.read_path(&paths[1]).unwrap();
     let statements = crate::codebase::postgres::extract_sql_statement_facts(&source);

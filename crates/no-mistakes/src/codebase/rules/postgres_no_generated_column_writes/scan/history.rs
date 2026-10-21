@@ -5,7 +5,9 @@ use std::collections::BTreeMap;
 
 pub(super) struct Catalogs {
     pub(super) catalog: GeneratedTableColumns,
+    pub(super) trigger: GeneratedTableColumns,
     pub(super) combined: GeneratedTableColumns,
+    pub(super) known_tables: BTreeMap<String, bool>,
 }
 
 impl Catalogs {
@@ -15,12 +17,30 @@ impl Catalogs {
     ) -> Self {
         let catalog =
             super::super::catalog::catalog_from_tables(tables, &opts.extra_generated_columns);
-        let mut combined = super::super::catalog::trigger_catalog_from_tables(
+        let trigger = super::super::catalog::trigger_catalog_from_tables(
             tables,
             &opts.trigger_maintained_columns,
         );
+        let mut combined = trigger.clone();
         combined.extend_from(&catalog);
-        Self { catalog, combined }
+        let known_tables = tables
+            .iter()
+            .map(|(name, table)| (name.clone(), table.complete))
+            .collect();
+        Self {
+            catalog,
+            trigger,
+            combined,
+            known_tables,
+        }
+    }
+
+    pub(super) fn known_complete(&self, name: &str) -> bool {
+        let key = crate::codebase::postgres::idents::resolve_relation_key(
+            self.known_tables.keys().map(String::as_str),
+            name,
+        );
+        key.and_then(|key| self.known_tables.get(&key)) == Some(&true)
     }
 }
 

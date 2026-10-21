@@ -1,0 +1,4 @@
+[
+  {"line": 2, "status": "violation", "residualReasons": []},
+  {"line": 4, "status": "abstain", "residualReasons": ["unresolved-column-owner"]}
+]

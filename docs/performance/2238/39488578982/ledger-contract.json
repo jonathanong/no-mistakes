@@ -1,0 +1,34 @@
+{
+  "obligations": 2155,
+  "requiredViolations": [
+    {
+      "file": "backend/services/post-publication/identity-bridge-cleanup.mts",
+      "span": [
+        636,
+        891
+      ],
+      "rule": "postgres-conflict-ordering",
+      "subcheck": "canonical-conflict-order",
+      "status": "violation",
+      "evidence": "exact"
+    },
+    {
+      "file": "backend/services/posts/review-successions/mutations.mts",
+      "span": [
+        3666,
+        6160
+      ],
+      "rule": "postgres-conflict-ordering",
+      "subcheck": "canonical-conflict-order",
+      "status": "violation",
+      "evidence": "exact"
+    }
+  ],
+  "candidateSource": "bcbbf58d69f8157aab60e5f1e61decf68ad278b5",
+  "candidateDebugBinarySha256": "6c64e37ec2b42221fae7e536a3131005eb5b1f9498b9cb212012f87238886da4",
+  "consumer": "f38a048f5eeff0438fc59a15e9eb742def575a36",
+  "configSha256": "14fd858598a1a18607ce0a50442f0ae7b2050f98e1edcd5bd05ba967983d23ab",
+  "canonicalLedgerSha256": "ef0528d475e6d022051b6b0c383330108ec036c23e1a5d10660334d902f66c79",
+  "oracleReportSha256": "18e1a03030f90d27bc5262c049772ffc4be6f9ff3a1ce6446583e48c10746600",
+  "oracleKind": "exact-source uninstrumented all-feature debug semantic canary; no resource comparison"
+}

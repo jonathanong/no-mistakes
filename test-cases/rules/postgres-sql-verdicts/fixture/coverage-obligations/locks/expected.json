@@ -1,0 +1,62 @@
+[
+  {
+    "line": 3,
+    "subcheck": "row-lock-order",
+    "status": "abstain",
+    "residualReasons": [
+      "unresolved-locking-select"
+    ]
+  },
+  {
+    "line": 3,
+    "subcheck": "catalog-key-order",
+    "status": "abstain",
+    "residualReasons": [
+      "unresolved-locking-select"
+    ]
+  },
+  {
+    "line": 4,
+    "subcheck": "row-lock-order",
+    "status": "abstain",
+    "residualReasons": [
+      "invalid-sql"
+    ]
+  },
+  {
+    "line": 4,
+    "subcheck": "catalog-key-order",
+    "status": "abstain",
+    "residualReasons": [
+      "invalid-sql"
+    ]
+  },
+  {
+    "line": 5,
+    "subcheck": "row-lock-order",
+    "status": "abstain",
+    "residualReasons": [
+      "unknown-locked-relation"
+    ]
+  },
+  {
+    "line": 5,
+    "subcheck": "catalog-key-order",
+    "status": "abstain",
+    "residualReasons": [
+      "unknown-locked-relation"
+    ]
+  },
+  {
+    "line": 6,
+    "subcheck": "row-lock-order",
+    "status": "proven-clear",
+    "residualReasons": []
+  },
+  {
+    "line": 6,
+    "subcheck": "catalog-key-order",
+    "status": "violation",
+    "residualReasons": []
+  }
+]

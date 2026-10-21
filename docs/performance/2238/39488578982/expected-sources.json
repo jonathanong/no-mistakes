@@ -1,0 +1,12 @@
+{
+  "base": {
+    "source": "4d4deb9423111f6bd97f2501bdf508ef17536dc0",
+    "tree": "94e440ae9c47f5aeab4fe65e59ffa08e730c9ef9",
+    "lockSha256": "5a17a012a19343e0096c0e3a05e34489071934bb21b14a7f30d886a6fa42ceaf"
+  },
+  "candidate": {
+    "source": "bcbbf58d69f8157aab60e5f1e61decf68ad278b5",
+    "tree": "baf99c6b4929f7d473585cf0c8d8b698f739ba73",
+    "lockSha256": "5a17a012a19343e0096c0e3a05e34489071934bb21b14a7f30d886a6fa42ceaf"
+  }
+}

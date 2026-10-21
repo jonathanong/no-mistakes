@@ -10,6 +10,7 @@ pub use bounds::{
     SqlQualifiedRead, SqlQualifiedScope,
 };
 pub use iteration::{SqlConjunctFact, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact};
+pub(crate) use locations::SqlLocationDemand;
 pub use locations::{SqlFactPosition, SqlFactSite, SqlVariantLocations};
 pub use select::{
     SqlColumnClause, SqlColumnUseFact, SqlCountExistenceFact, SqlExistsSetOpFact,

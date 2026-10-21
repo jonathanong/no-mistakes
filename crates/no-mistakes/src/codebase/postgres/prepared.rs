@@ -33,6 +33,14 @@ pub(crate) fn prepare(
     plan: &CheckFactPlan,
     facts: &CheckFactMap,
 ) -> PreparedPostgresFacts {
+    use super::statement_facts::SqlLocationDemand;
+    let demand = if plan.wants_full_sql_locations() {
+        SqlLocationDemand::Full
+    } else if plan.postgres_conflict_locations {
+        SqlLocationDemand::Conflicts
+    } else {
+        SqlLocationDemand::None
+    };
     let mut out = PreparedPostgresFacts::default();
     if plan.postgres_schema || plan.postgres_dml {
         sql::collect(root, files, sources, plan, &mut out);
@@ -63,10 +71,11 @@ pub(crate) fn prepare(
                 }
                 let entry = file
                     .map(|file| {
-                        Arc::new(super::collect::dml::embedded_call_facts(
+                        Arc::new(super::collect::dml::embedded_call_facts_with_demand(
                             file,
                             plan.postgres_bounds,
                             !plan.postgres_dml,
+                            demand,
                         ))
                     })
                     .map_err(|error| {

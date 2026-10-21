@@ -54,7 +54,7 @@ rules:
 ```
 
 `importSpecifier` has no default. `executorNames` defaults to `query`, `read`, and `write` only when `importSpecifier` is configured.
-`unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other values are a
+`unanalyzableSql` defaults to `fail` (`fail`, `ignore`, or `advise`; other values are a
 configuration error).
 
 An object or array destructuring assignment invalidates any earlier SQL
@@ -111,6 +111,9 @@ See [Unanalyzable SQL](postgres-no-offset-dynamic.md) and
 [mutable SQL builder recovery](../postgres-builder-mutations.md).
 
 ## Options and defaults
+
+`unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
+`--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
 
 `include` and `exclude` select source files. `sqlInclude` defaults to `[]`,
 so `.sql` files are not scanned unless a glob selects them. `importSpecifier`

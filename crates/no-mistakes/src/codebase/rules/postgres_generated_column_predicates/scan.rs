@@ -5,7 +5,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 mod catalog;
+mod messages;
+mod verdicts;
 use catalog::Tracked;
+use messages::sql_finding;
 
 pub(super) fn scan(
     root: &Path,
@@ -45,6 +48,11 @@ pub(super) fn scan(
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     if tracked.is_empty() {
         return Ok(findings);
+    }
+    if prepared.wants_sql_verdicts() {
+        verdicts::record(
+            root, opts, &embedded, &queries, &tracked, &columns, prepared,
+        )?;
     }
     for file in embedded.iter().filter(|file| queries.contains(&file.path)) {
         let rel = relative_slash_path(root, &file.path);
@@ -186,15 +194,4 @@ fn message(clause: SqlColumnClause, column: &Tracked) -> String {
         .map(|function| format!("{function}({})", column.source))
         .unwrap_or_else(|| format!("a configured expression using {}", column.source));
     format!("{context}, which is generated from {expression}; consider using {source} directly with a bound or ordering that preserves the generation expression's semantics and uses an appropriate index", source = column.source)
-}
-
-fn sql_finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {
-    RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: file.to_string(),
-        line,
-        message: format!("{file}:{line}: {message}"),
-        import: None,
-        target: Some(target.to_string()),
-    }
 }

@@ -35,6 +35,7 @@ struct CompiledOptions {
     safe_directive: String,
     schema_catalog_path: Option<String>,
     fail_unanalyzable: bool,
+    advise_unanalyzable: bool,
 }
 
 super::prepared_rule_entrypoints!(super::check_prepared_sql_rule);
@@ -69,6 +70,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         schema_catalog_path: (!opts.schema_catalog_path.is_empty())
             .then(|| opts.schema_catalog_path.clone()),
         fail_unanalyzable: fail_unanalyzable_sql(RULE_ID, &opts.unanalyzable_sql)?,
+        advise_unanalyzable: opts.unanalyzable_sql.trim().eq_ignore_ascii_case("advise"),
     })
 }
 

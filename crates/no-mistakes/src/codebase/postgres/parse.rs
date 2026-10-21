@@ -7,7 +7,7 @@ mod derived_table;
 mod distinct_group;
 pub(super) mod fetch_expression;
 mod function_sources;
-pub(crate) use function_sources::partition as partition_function_sources;
+pub(crate) use function_sources::{orphan_chunk_tokens, partition as partition_function_sources};
 mod lenient;
 mod lock_of_list;
 mod lock_strength;

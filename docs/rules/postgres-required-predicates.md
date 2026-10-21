@@ -20,7 +20,7 @@ physical branch-fragment lines for suppressions. Versions sharing a physical
 SQL token and finding target merge into one diagnostic. Its message preserves
 every distinct missing requirement, including requirements missing on
 different versions. Opaque, over-cap, or unparseable SQL fails closed unless
-`unanalyzableSql` is `ignore`.
+`unanalyzableSql` is `ignore` or `advise`.
 
 ```yaml
 rules:
@@ -88,6 +88,9 @@ scope.
 
 ## Options and defaults
 
+`unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
+`--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
+
 `include` / `exclude` select source files (empty include means all files).
 `sqlInclude` defaults to `**/*.sql`. `relations` defaults to `[]`. Each
 relation's `require` and `requireColumns` default to `[]`. An empty
@@ -99,7 +102,7 @@ an empty table, an empty reason, or a duplicate table is a configuration
 error. `allow` defaults to `[]` and suppresses catalog findings by object ref
 (`table:<name>`); an invalid object reference, an empty reason, or a duplicate object is
 a configuration error, and an unmatched entry is reported stale.
-`unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other values are a
+`unanalyzableSql` defaults to `fail` (`fail`, `ignore`, or `advise`; other values are a
 configuration error). `importSpecifier` has no default.
 `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 

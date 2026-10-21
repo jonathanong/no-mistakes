@@ -1,3 +1,7 @@
+mod location_demand;
+mod rule_scans;
+use rule_scans::merge_embedded_sql_rule_ids;
+
 use std::sync::Arc;
 use std::{collections::HashSet, path::PathBuf};
 
@@ -53,6 +57,12 @@ pub struct CheckFactPlan {
     pub postgres_dml: bool,
     /// Demand concrete alternatives for rules that retain legacy direct SQL handling.
     pub postgres_variants: bool,
+    /// Exact executor SQL needs source-aware lock/conflict metadata in the shared parse.
+    pub postgres_exact_locations: bool,
+    /// Conflict-only exact SQL location projection, unless a broader consumer joins.
+    pub postgres_conflict_locations: bool,
+    /// General SQL consumers require Full when sharing conflict-location demand.
+    pub postgres_general_locations: bool,
     /// Opted-in row-bound projection within the shared SQL statement fact pass.
     pub postgres_bounds: bool,
     /// Opted-in builder-fragment statement facts for shape-policy consumers.
@@ -63,20 +73,6 @@ pub struct CheckFactPlan {
     pub postgres_sql_include: Vec<String>,
     pub graph: crate::codebase::ts_source::facts::TsFactPlan,
     pub graph_context: crate::codebase::ts_source::facts::TsFactContext,
-}
-
-fn merge_embedded_sql_rule_ids(
-    existing: &mut crate::codebase::postgres::EmbeddedSqlRuleScans,
-    additional: crate::codebase::postgres::EmbeddedSqlRuleScans,
-) {
-    for (options, scans) in additional {
-        let slot = existing.entry(options).or_default();
-        for scan in scans {
-            if !slot.iter().any(|existing| existing.same_application(&scan)) {
-                slot.push(scan);
-            }
-        }
-    }
 }
 
 impl CheckFactPlan {
@@ -93,6 +89,7 @@ impl CheckFactPlan {
     }
 
     pub(crate) fn include(&mut self, other: Self) {
+        self.merge_location_demand(&other);
         self.imports |= other.imports;
         self.companion_import_plans =
             crate::codebase::rules::required_companion_imports::merge_plans(
@@ -168,6 +165,8 @@ impl CheckFactPlan {
         self.postgres_schema_catalog_paths.dedup();
         self.postgres_dml |= other.postgres_dml;
         self.postgres_variants |= other.postgres_variants;
+        self.postgres_exact_locations |= other.postgres_exact_locations;
+        self.postgres_conflict_locations |= other.postgres_conflict_locations;
         self.postgres_bounds |= other.postgres_bounds;
         self.postgres_fragments |= other.postgres_fragments;
         self.postgres_write_sql_include

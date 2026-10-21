@@ -1,0 +1,227 @@
+{
+  "purpose": "ordering-only measurement; not a full-config or full-consumer gate",
+  "eligibleForGate": false,
+  "sourcePins": {
+    "base": "4d4deb9423111f6bd97f2501bdf508ef17536dc0",
+    "candidate": "bcbbf58d69f8157aab60e5f1e61decf68ad278b5"
+  },
+  "consumer": {
+    "commit": "f38a048f5eeff0438fc59a15e9eb742def575a36",
+    "tree": "d811b8d2299b36192996a2944c1ea13c1c9bf9ad",
+    "configSha256": "c9fe0bae7cb65b06cbe89b66773bac19b3176a8601f4860e857d42dce169897c",
+    "lockSha256": "000a40975d95b994e55d7c53ca43912d74dcd90f859b7010674f0661ebaf29e5",
+    "sourceFiles": 16933,
+    "sourceBytes": 58311687,
+    "sourceLines": 1590430
+  },
+  "consumerArtifact": {
+    "id": 12158768554,
+    "name": "matched-consumer",
+    "digest": "sha256:080223598499563b3f21bdd29e450536db72183c5ef65e3d3f221976273c6911",
+    "workflowRun": {
+      "id": 39189171362,
+      "repository_id": 1235521884,
+      "head_repository_id": 1235521884,
+      "head_branch": "eval/2215-2118-matched-arm",
+      "head_sha": "76b3a95fa47490371eeeaa9e0eb8794fd7a9ad98"
+    }
+  },
+  "consumerArtifactZipSha256": "080223598499563b3f21bdd29e450536db72183c5ef65e3d3f221976273c6911",
+  "fixtureTarSha256": "122e1702d8d644b44fb440f1ab951fd2bb895a5df99cfe1612ca49960edca45c",
+  "imageVersions": {
+    "builder": "20261012.149.1",
+    "measurement": "20261012.149.1",
+    "versionsMatch": true,
+    "comparisonBoundary": "BCCB arms on one VM; both binaries from one builder"
+  },
+  "orderingConfig": {
+    "consumer": "f38a048f5eeff0438fc59a15e9eb742def575a36",
+    "originalConfigSha256": "c9fe0bae7cb65b06cbe89b66773bac19b3176a8601f4860e857d42dce169897c",
+    "orderingConfigSha256": "14fd858598a1a18607ce0a50442f0ae7b2050f98e1edcd5bd05ba967983d23ab",
+    "originalRuleApplications": 133,
+    "selectedRuleApplications": 1,
+    "selectedRule": "production PostgreSQL writers acquire conflicts in catalog order",
+    "unchangedNonRulePayload": true,
+    "configPathOutsideFixture": true,
+    "gitignoreSha256": "116a90411abf2bb9f2efef56dd64f7ba8a02ab13cc4caa047c5bfcba55e68e57",
+    "gitignoreCopiedAlongsideConfig": true
+  },
+  "builds": {
+    "base": {
+      "source": "4d4deb9423111f6bd97f2501bdf508ef17536dc0",
+      "tree": "94e440ae9c47f5aeab4fe65e59ffa08e730c9ef9",
+      "lockSha256": "5a17a012a19343e0096c0e3a05e34489071934bb21b14a7f30d886a6fa42ceaf",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+      "features": "default",
+      "profile": {
+        "lto": true,
+        "codegen-units": 1
+      },
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--locked",
+        "-p",
+        "no-mistakes",
+        "--bin",
+        "no-mistakes"
+      ],
+      "buildJobs": 2,
+      "incremental": false,
+      "machine": {
+        "uname": [
+          "Linux",
+          "runnervmidgih",
+          "6.17.0-1022-azure",
+          "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+          "aarch64"
+        ],
+        "affinity": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "imageOS": "ubuntu24-arm64",
+        "imageVersion": "20261012.149.1",
+        "cpuinfo": "processor\t: 0\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 1\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 2\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 3\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\n",
+        "meminfo": "MemTotal:       16330088 kB\nMemFree:        12427376 kB\nMemAvailable:   14762868 kB\nBuffers:          251888 kB\nCached:          2129384 kB\nSwapCached:            0 kB\nActive:           978008 kB\nInactive:        1934312 kB\nActive(anon):     585632 kB\nInactive(anon):        0 kB\nActive(file):     392376 kB\nInactive(file):  1934312 kB\nUnevictable:       45724 kB\nMlocked:           42652 kB\nSwapTotal:       3145724 kB\nSwapFree:        3145724 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:           1098880 kB\nWriteback:             0 kB\nAnonPages:        576516 kB\nMapped:           301476 kB\nShmem:             47236 kB\nKReclaimable:     269452 kB\nSlab:             363896 kB\nSReclaimable:     269452 kB\nSUnreclaim:        94444 kB\nKernelStack:        4160 kB\nShadowCallStack:    1056 kB\nPageTables:         6940 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    11310768 kB\nCommitted_AS:    2315740 kB\nVmallocTotal:   135288315904 kB\nVmallocUsed:       37784 kB\nVmallocChunk:          0 kB\nPercpu:             1792 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:    602112 kB\nFilePmdMapped:         0 kB\nCmaTotal:          32768 kB\nCmaFree:           26624 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\n"
+      },
+      "binarySha256": "c8249bf051dfc8ba7840e27c34d569e7d0e59677df2869fb82554939dca4a1bf",
+      "cpuProbeSha256": "45f3c5bb35a722e59f6437fd5b3429aa6012cea3653746689db34b63fa8639fb",
+      "cpuProbeBuild": {
+        "fixtureLockSha256": "267faeaf4590d94c73b189e3ff5b3b5e131619005110eb6c1c50cfa64500dedc",
+        "fixtureManifestSha256": "6a6246200bd266e0b4867675f84f4133692186d4de233c789b0decddfa65cb4c",
+        "dependencyVersions": {
+          "hermit-abi": "0.5.2",
+          "libc": "0.2.190",
+          "num_cpus": "1.17.0"
+        },
+        "dependencyPackages": {
+          "hermit-abi": {
+            "version": "0.5.2",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "checksum": "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
+          },
+          "libc": {
+            "version": "0.2.190",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "checksum": "ce5d3ddc6d3fa000eb1536d85e147bfe31aacaba692ed6a876f95cb7c855be78"
+          },
+          "num_cpus": {
+            "version": "1.17.0",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "checksum": "91df4bbde75afed763b708b7eee1e8e7651e02d97f6d5dd763e89367e957b23b"
+          }
+        }
+      },
+      "artifactHarnessCommit": "510a88d5102b230b4fb626051c4141f670aedf10",
+      "effectiveDefaultJobs": 4
+    },
+    "candidate": {
+      "source": "bcbbf58d69f8157aab60e5f1e61decf68ad278b5",
+      "tree": "baf99c6b4929f7d473585cf0c8d8b698f739ba73",
+      "lockSha256": "5a17a012a19343e0096c0e3a05e34489071934bb21b14a7f30d886a6fa42ceaf",
+      "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: aarch64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1",
+      "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+      "features": "default",
+      "profile": {
+        "lto": true,
+        "codegen-units": 1
+      },
+      "command": [
+        "cargo",
+        "build",
+        "--release",
+        "--locked",
+        "-p",
+        "no-mistakes",
+        "--bin",
+        "no-mistakes"
+      ],
+      "buildJobs": 2,
+      "incremental": false,
+      "machine": {
+        "uname": [
+          "Linux",
+          "runnervmidgih",
+          "6.17.0-1022-azure",
+          "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+          "aarch64"
+        ],
+        "affinity": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "imageOS": "ubuntu24-arm64",
+        "imageVersion": "20261012.149.1",
+        "cpuinfo": "processor\t: 0\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 1\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 2\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 3\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\n",
+        "meminfo": "MemTotal:       16330088 kB\nMemFree:        14067944 kB\nMemAvailable:   15381180 kB\nBuffers:          228608 kB\nCached:          1123528 kB\nSwapCached:           96 kB\nActive:           726824 kB\nInactive:         923772 kB\nActive(anon):     353428 kB\nInactive(anon):     3248 kB\nActive(file):     373396 kB\nInactive(file):   920524 kB\nUnevictable:       45724 kB\nMlocked:           42652 kB\nSwapTotal:       3145724 kB\nSwapFree:        3145628 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:             76964 kB\nWriteback:             0 kB\nAnonPages:        344096 kB\nMapped:           251652 kB\nShmem:             50872 kB\nKReclaimable:     279964 kB\nSlab:             378536 kB\nSReclaimable:     279964 kB\nSUnreclaim:        98572 kB\nKernelStack:        3940 kB\nShadowCallStack:     988 kB\nPageTables:         7032 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    11310768 kB\nCommitted_AS:    2385628 kB\nVmallocTotal:   135288315904 kB\nVmallocUsed:       37928 kB\nVmallocChunk:          0 kB\nPercpu:             1840 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:    299008 kB\nFilePmdMapped:         0 kB\nCmaTotal:          32768 kB\nCmaFree:           26624 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\n"
+      },
+      "binarySha256": "f5d554552608e3a6a73805635c988ffdbcd1b06f4413f637ed06823e4733e154",
+      "cpuProbeSha256": "45f3c5bb35a722e59f6437fd5b3429aa6012cea3653746689db34b63fa8639fb",
+      "cpuProbeBuild": {
+        "fixtureLockSha256": "267faeaf4590d94c73b189e3ff5b3b5e131619005110eb6c1c50cfa64500dedc",
+        "fixtureManifestSha256": "6a6246200bd266e0b4867675f84f4133692186d4de233c789b0decddfa65cb4c",
+        "dependencyVersions": {
+          "hermit-abi": "0.5.2",
+          "libc": "0.2.190",
+          "num_cpus": "1.17.0"
+        },
+        "dependencyPackages": {
+          "hermit-abi": {
+            "version": "0.5.2",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "checksum": "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
+          },
+          "libc": {
+            "version": "0.2.190",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "checksum": "ce5d3ddc6d3fa000eb1536d85e147bfe31aacaba692ed6a876f95cb7c855be78"
+          },
+          "num_cpus": {
+            "version": "1.17.0",
+            "source": "registry+https://github.com/rust-lang/crates.io-index",
+            "checksum": "91df4bbde75afed763b708b7eee1e8e7651e02d97f6d5dd763e89367e957b23b"
+          }
+        }
+      },
+      "artifactHarnessCommit": "510a88d5102b230b4fb626051c4141f670aedf10",
+      "effectiveDefaultJobs": 4
+    }
+  },
+  "machine": {
+    "uname": [
+      "Linux",
+      "runnervmidgih",
+      "6.17.0-1022-azure",
+      "#22-Ubuntu SMP Mon Jul 27 17:12:01 UTC 2026",
+      "aarch64"
+    ],
+    "affinity": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "imageOS": "ubuntu24-arm64",
+    "imageVersion": "20261012.149.1",
+    "cpuinfo": "processor\t: 0\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 1\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 2\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\nprocessor\t: 3\nBogoMIPS\t: 2000.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 sm3 sm4 asimddp sha512 sve asimdfhm uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svebitperm svesha3 svesm4 flagm2 frint svei8mm svebf16 i8mm bf16\nCPU implementer\t: 0x41\nCPU architecture: 8\nCPU variant\t: 0x0\nCPU part\t: 0xd49\nCPU revision\t: 0\n\n",
+    "meminfo": "MemTotal:       16330088 kB\nMemFree:         9099296 kB\nMemAvailable:   14368500 kB\nBuffers:          255260 kB\nCached:          4884200 kB\nSwapCached:            0 kB\nActive:           957800 kB\nInactive:        4719964 kB\nActive(anon):     591456 kB\nInactive(anon):        0 kB\nActive(file):     366344 kB\nInactive(file):  4719964 kB\nUnevictable:       44940 kB\nMlocked:           41868 kB\nSwapTotal:       3145724 kB\nSwapFree:        3145724 kB\nZswap:                 0 kB\nZswapped:              0 kB\nDirty:           1328572 kB\nWriteback:             0 kB\nAnonPages:        583492 kB\nMapped:           301556 kB\nShmem:             46588 kB\nKReclaimable:     443544 kB\nSlab:             556588 kB\nSReclaimable:     443544 kB\nSUnreclaim:       113044 kB\nKernelStack:        3952 kB\nShadowCallStack:    1008 kB\nPageTables:         6492 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    11310768 kB\nCommitted_AS:    2322988 kB\nVmallocTotal:   135288315904 kB\nVmallocUsed:       34432 kB\nVmallocChunk:          0 kB\nPercpu:             1792 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nCmaTotal:          32768 kB\nCmaFree:           25768 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\n"
+  },
+  "harnessCommit": "510a88d5102b230b4fb626051c4141f670aedf10",
+  "cliBuilderHarnessCommit": "510a88d5102b230b4fb626051c4141f670aedf10",
+  "jobs": "4",
+  "blocks": 3,
+  "sameVmAA": true,
+  "diagnostics": "on",
+  "ledger": "on",
+  "order": "BCCB",
+  "collectionCapSecondsPerArm": 3600,
+  "stepBudgetMinutes": 245,
+  "jobBudgetMinutes": 260
+}

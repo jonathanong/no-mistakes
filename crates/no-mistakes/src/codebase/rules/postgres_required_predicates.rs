@@ -55,6 +55,7 @@ pub(crate) struct CompiledOptions {
     embedded: EmbeddedSqlOptions,
     relations: Vec<RelationOption>,
     fail_unanalyzable: bool,
+    advise_unanalyzable: bool,
     schema_catalog_path: Option<String>,
     partition_keys: bool,
     partition_key_exemptions: Vec<PartitionExemption>,
@@ -110,6 +111,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             RULE_ID,
             &opts.unanalyzable_sql,
         )?,
+        advise_unanalyzable: opts.unanalyzable_sql.trim().eq_ignore_ascii_case("advise"),
         schema_catalog_path: (!opts.schema_catalog_path.trim().is_empty())
             .then(|| opts.schema_catalog_path.clone()),
         partition_keys,

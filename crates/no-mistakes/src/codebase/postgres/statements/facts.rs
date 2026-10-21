@@ -6,36 +6,28 @@ mod lifecycle;
 mod locations;
 mod parse;
 mod policy;
+mod projection;
+mod sources;
 use crate::codebase::postgres::parse::PreparedSql;
+use crate::codebase::postgres::statement_facts::SqlLocationDemand;
 use collect::{collect_one, FactOut};
 pub(crate) use lifecycle::project_bounds;
 use lifecycle::LifecycleBuilder;
 pub use parse::extract_sql_statement_facts;
 pub(crate) use parse::{
-    extract_from_parsed_with_recovered_placeholders, extract_sql_statement_facts_with_bounds,
+    extract_from_parsed_with_recovered_placeholders, extract_sql_conflict_policy_facts,
+    extract_sql_statement_facts_with_bounds, extract_sql_statement_facts_with_location_demand,
     extract_sql_statement_facts_with_recovered_placeholders, extract_sql_variant_statement_facts,
 };
 use policy::table_keyword;
+pub(crate) use sources::StatementPolicySources;
+use sources::StatementSources;
 use sqlparser::ast::{Spanned, Statement};
-use sqlparser::tokenizer::TokenWithSpan;
 use std::collections::HashMap;
 use std::sync::Arc;
 
 mod prepared;
 use prepared::PreparedStatements;
-
-#[derive(Default)]
-pub(crate) struct StatementPolicySources<'a> {
-    pub(crate) schema: Option<&'a crate::codebase::postgres::SqlSchemaFileFacts>,
-    pub(crate) functions: &'a [crate::codebase::postgres::SqlFunctionCallFact],
-}
-
-#[derive(Default)]
-struct StatementSources<'a> {
-    locations: bool,
-    tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
-    policy: StatementPolicySources<'a>,
-}
 
 fn extract_from_parsed_and_sources(
     sql: &str,
@@ -46,17 +38,16 @@ fn extract_from_parsed_and_sources(
     collect_bounds: bool,
     placeholder_positions: super::value::PlaceholderPositions<'_>,
 ) -> SqlStatementFileFacts {
+    locations::work::general_fact_collection();
     let masked = fallback::mask_quoted_sql(sql);
     let insert_keyword_count = fallback::insert_keyword_count(&masked);
     let mut writes = Vec::new();
-    let mut locations = sources
-        .locations
-        .then(|| locations::Locations::new(placeholder_positions.unwrap_or_default()));
+    let mut locations = (sources.locations != SqlLocationDemand::None).then(|| {
+        locations::Locations::new(placeholder_positions.unwrap_or_default(), sources.locations)
+    });
     let mut inserts = Vec::new();
-    let mut selects = Vec::new();
-    let mut updates = Vec::new();
-    let mut deletes = Vec::new();
-    let mut triggers = Vec::new();
+    let (mut selects, mut updates) = (Vec::new(), Vec::new());
+    let (mut deletes, mut triggers) = (Vec::new(), Vec::new());
     let mut returning_stars = Vec::new();
     let mut bounds = Vec::new();
     let mut mutation_column_uses = Vec::new();
@@ -195,6 +186,7 @@ fn extract_from_parsed_and_sources(
             sql,
             statements,
             placeholder_positions.unwrap_or_default(),
+            sources.recovery,
         )
     });
     facts

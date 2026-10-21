@@ -1,0 +1,23 @@
+[
+  {"span": [97, 129], "subcheck": "delete", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [97, 129], "subcheck": "select", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [97, 129], "subcheck": "update", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [131, 170], "subcheck": "delete", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [131, 170], "subcheck": "select", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [131, 170], "subcheck": "update", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [172, 201], "subcheck": "delete", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [172, 201], "subcheck": "select", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [172, 201], "subcheck": "update", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [203, 249], "subcheck": "delete", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [203, 249], "subcheck": "select", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [203, 249], "subcheck": "update", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [251, 304], "subcheck": "delete", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [251, 304], "subcheck": "select", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [251, 304], "subcheck": "update", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [306, 349], "subcheck": "delete", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [306, 349], "subcheck": "select", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [306, 349], "subcheck": "update", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [351, 382], "subcheck": "delete", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [351, 382], "subcheck": "select", "status": "abstain", "evidence": null, "residualReasons": ["unknown-relation"]},
+  {"span": [351, 382], "subcheck": "update", "status": "proven-clear", "evidence": "exact", "residualReasons": []}
+]

@@ -4,79 +4,18 @@ use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use serde::Deserialize;
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-
+mod options;
+pub(crate) use options::Options;
 mod scan;
-
 pub const RULE_ID: &str = "postgres-idempotent-insert";
-
-fn default_true() -> bool {
-    true
-}
-
-#[derive(Deserialize)]
-#[serde(default, rename_all = "camelCase")]
-pub(crate) struct Options {
-    pub(crate) include: Vec<String>,
-    pub(crate) exclude: Vec<String>,
-    pub(crate) sql_include: Vec<String>,
-    #[serde(default)]
-    pub(crate) sql_include_locked: bool,
-    pub(crate) import_specifier: String,
-    pub(crate) executor_names: Vec<String>,
-    pub(crate) executor_factory_names: Vec<String>,
-    pub(crate) executor_type_names: Vec<String>,
-    pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
-    pub(crate) unanalyzable_sql: String,
-    #[serde(default = "default_true")]
-    pub(crate) scan_embedded: bool,
-    #[serde(default = "default_true")]
-    pub(crate) check_convergence: bool,
-    #[serde(default = "default_true")]
-    pub(crate) check_volatility: bool,
-    #[serde(default = "default_true")]
-    pub(crate) check_arbiter: bool,
-    #[serde(default = "default_true")]
-    pub(crate) check_triggers: bool,
-    #[serde(default = "default_true")]
-    pub(crate) check_generated: bool,
-    pub(crate) replay_safe_trigger_functions: Vec<String>,
-    pub(crate) trigger_written_columns: HashMap<String, Vec<String>>,
-}
-
-impl Default for Options {
-    fn default() -> Self {
-        Self {
-            include: Vec::new(),
-            exclude: Vec::new(),
-            sql_include: Vec::new(),
-            sql_include_locked: false,
-            import_specifier: String::new(),
-            executor_names: Vec::new(),
-            executor_factory_names: Vec::new(),
-            executor_type_names: Vec::new(),
-            trusted_sql_tags: Vec::new(),
-            unanalyzable_sql: String::new(),
-            scan_embedded: true,
-            check_convergence: true,
-            check_volatility: true,
-            check_arbiter: true,
-            check_triggers: true,
-            check_generated: true,
-            replay_safe_trigger_functions: Vec::new(),
-            trigger_written_columns: HashMap::new(),
-        }
-    }
-}
-
 pub(crate) struct CompiledOptions {
     include: GlobMatcher,
     exclude: GlobMatcher,
     schema: PostgresSchemaOptions,
     embedded: EmbeddedSqlOptions,
     fail_unanalyzable: bool,
+    advise_unanalyzable: bool,
     scan_embedded: bool,
     check_convergence: bool,
     check_volatility: bool,
@@ -109,8 +48,28 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    check_with_files_sources_and_optional_facts(root, config, all_files, sources, None)
+}
+
+pub(crate) fn check_with_files_sources_and_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
+) -> Result<Vec<RuleFinding>> {
+    check_with_files_sources_and_optional_facts(root, config, all_files, sources, Some(facts))
+}
+
+fn check_with_files_sources_and_optional_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
     let mut findings = super::PostgresFindings::default();
-    for rule in config.rule_applications(RULE_ID) {
+    for (index, rule) in config.rule_applications(RULE_ID).into_iter().enumerate() {
         let opts: Options = rule.try_rule_options()?;
         let compiled = compile_options(&opts)?;
         let target_roots = super::target_roots(root, config, rule);
@@ -125,7 +84,19 @@ pub(crate) fn check_with_files_and_sources(
             .into_iter()
             .filter(|path| compiled.includes(&relative_slash_path(root, path)))
             .collect();
-        findings.extend(scan::scan(root, &compiled, &files, sources)?);
+        findings.extend(match facts {
+            Some(facts) => {
+                let view = facts.for_sql_application(index, rule.name.as_deref());
+                scan::prepared(
+                    root,
+                    &compiled,
+                    &files,
+                    sources,
+                    view.as_ref().unwrap_or(facts),
+                )?
+            }
+            None => scan::scan(root, &compiled, &files, sources)?,
+        });
     }
     Ok(findings.finish())
 }
@@ -149,6 +120,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             RULE_ID,
             &opts.unanalyzable_sql,
         )?,
+        advise_unanalyzable: opts.unanalyzable_sql.trim().eq_ignore_ascii_case("advise"),
         scan_embedded: opts.scan_embedded,
         check_convergence: opts.check_convergence,
         check_volatility: opts.check_volatility,

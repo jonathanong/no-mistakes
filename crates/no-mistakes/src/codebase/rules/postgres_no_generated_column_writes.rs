@@ -46,6 +46,7 @@ struct CompiledOptions {
     extra_generated_columns: Vec<ExtraGeneratedColumn>,
     trigger_maintained_columns: Vec<String>,
     fail_unanalyzable: bool,
+    advise_unanalyzable: bool,
 }
 
 impl CompiledOptions {
@@ -76,11 +77,19 @@ pub(crate) fn check_with_files_sources_and_facts(
     let all: Result<Vec<super::PostgresFindings>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
-        .map(|rule| -> Result<super::PostgresFindings> {
+        .enumerate()
+        .map(|(index, rule)| -> Result<super::PostgresFindings> {
             let opts: Options = rule.try_rule_options()?;
             let compiled = compile_options(&opts)?;
             let files = super::selected_rule_files(root, config, rule, all_files)?;
-            scan::scan(root, &compiled, &files, sources, facts)
+            let view = facts.for_sql_application(index, rule.name.as_deref());
+            scan::scan(
+                root,
+                &compiled,
+                &files,
+                sources,
+                view.as_ref().unwrap_or(facts),
+            )
         })
         .collect();
     let findings: super::PostgresFindings = all?.into_iter().flatten().collect();
@@ -101,6 +110,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         extra_generated_columns: opts.extra_generated_columns.clone(),
         trigger_maintained_columns: trigger_columns(&opts.trigger_maintained_columns)?,
         fail_unanalyzable: fail_unanalyzable_sql(RULE_ID, &opts.unanalyzable_sql)?,
+        advise_unanalyzable: opts.unanalyzable_sql.trim().eq_ignore_ascii_case("advise"),
     })
 }
 

@@ -10,6 +10,10 @@ pub(super) fn collect(index: &Locations, tokens: &[TokenWithSpan], out: &mut Sql
         out.insert(Site::Lock(i), line, column);
         out.locking.push(metadata.clone());
     }
+    conflicts(tokens, out);
+}
+
+pub(super) fn conflicts(tokens: &[TokenWithSpan], out: &mut SqlVariantLocations) {
     let words: Vec<_> = tokens
         .iter()
         .filter(|token| !matches!(token.token, Token::Whitespace(_)))

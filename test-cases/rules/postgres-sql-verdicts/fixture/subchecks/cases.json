@@ -1,0 +1,11 @@
+[
+  "explicit",
+  "locks",
+  "writes",
+  "generated-predicates",
+  "required",
+  "shapes",
+  "statements",
+  "bounded",
+  "idempotent"
+]

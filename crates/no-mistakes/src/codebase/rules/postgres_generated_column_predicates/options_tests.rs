@@ -83,7 +83,7 @@ fn config_errors_name_the_option() {
         ),
         (
             "unanalyzableSql: sideways\n",
-            "unanalyzableSql must be `fail` or `ignore`",
+            "unanalyzableSql must be `fail`, `ignore`, or `advise`",
         ),
     ];
     for (yaml, expected) in cases {

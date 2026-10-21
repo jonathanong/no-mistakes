@@ -1,0 +1,12 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      partitionKeys: require
+      relations:
+        - table: events
+          requireColumns: [owner_id]
+        - table: missing_table
+          requireColumns: [id]

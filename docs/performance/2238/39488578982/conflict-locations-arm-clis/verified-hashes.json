@@ -1,0 +1,17 @@
+{
+  "zipSha256": "a891dbb7309770e5b243cc1cca27fbe627cb0305cc5a78a3db8d69b911fb8663",
+  "files": {
+    "base/build.log": "427b451f9d6183d32ab7153b90a7ed58583d1b0badd0b7bfbd2aaa37f092f3ee",
+    "base/cpu-probe.build.log": "e07a65f1fda750c41309ca9f35d7740c17a2fab60121adc3b445ac718ddf9c00",
+    "base/cpu-probe": "45f3c5bb35a722e59f6437fd5b3429aa6012cea3653746689db34b63fa8639fb",
+    "base/no-mistakes": "c8249bf051dfc8ba7840e27c34d569e7d0e59677df2869fb82554939dca4a1bf",
+    "base/provenance.json": "113b3d3a0c35d3c411f404de4743b18f59de9eacd92d52a97bd59a2bf816e95c",
+    "base/source.json": "d81153fc5516bce3024e9bf15df6b7d4eefc8384104e73d38bd29a6d76bd611a",
+    "candidate/build.log": "60fc6ade0f4bc9ada39a0c903a9f0a27b8b6265e5b3ce033a606843937d4dda5",
+    "candidate/cpu-probe": "45f3c5bb35a722e59f6437fd5b3429aa6012cea3653746689db34b63fa8639fb",
+    "candidate/cpu-probe.build.log": "3034191651b1e0e3e57d8241ba97d95ebfb2d3cea06305b7fa1cb560444215aa",
+    "candidate/no-mistakes": "f5d554552608e3a6a73805635c988ffdbcd1b06f4413f637ed06823e4733e154",
+    "candidate/provenance.json": "a394709619827f55fe7141d54074a670e2b26638f25fe5cd4ed88c4578b5c8fd",
+    "candidate/source.json": "9a9a39df9efe0c955159d4877ab50a7fe41306d1583dbcdfecb210c13ede8a7b"
+  }
+}

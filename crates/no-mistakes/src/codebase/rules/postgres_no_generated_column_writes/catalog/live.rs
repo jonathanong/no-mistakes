@@ -13,7 +13,7 @@ pub(crate) struct LiveColumn<'a> {
 pub(crate) struct LiveTable<'a> {
     pub(super) name: &'a str,
     pub(super) columns: Vec<LiveColumn<'a>>,
-    pub(super) complete: bool,
+    pub(crate) complete: bool,
     pub(super) temporary: bool,
 }
 

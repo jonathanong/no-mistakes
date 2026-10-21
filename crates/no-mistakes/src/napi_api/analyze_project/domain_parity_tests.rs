@@ -59,6 +59,7 @@ include!("domain_parity_tests/companion_imports.rs");
 include!("domain_parity_tests/finite_set_consistency.rs");
 include!("domain_parity_tests/declared_payload.rs");
 include!("domain_parity_tests/check_isolation.rs");
+include!("domain_parity_tests/sql_verdicts.rs");
 include!("domain_parity_tests/repository_inventory.rs");
 include!("domain_parity_tests/playwright_react_server.rs");
 include!("domain_parity_tests/symbols.rs");

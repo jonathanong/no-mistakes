@@ -33,7 +33,7 @@ same SQL constant or fragment remains checked, including when its findings
 point to the same physical SQL token. A directive on that shared SQL token's
 line suppresses the clause wherever it is reused.
 Unparseable SQL or dynamic SQL without complete alternatives, including builder fragments, fails closed
-unless `unanalyzableSql` is `ignore`.
+unless `unanalyzableSql` is `ignore` or `advise`.
 An unknown call receiving a mutable builder invalidates its complete SQL snapshots;
 when evaluated in an `if` test, conditional test, or logical left operand, it
 also clears the affected SQL prefix. Ordinary calls invalidate legacy SQL fields too. See the
@@ -67,7 +67,7 @@ rules:
 `literal-limit`, `keyset-only-sweep`, and `banned-function-call` are opt-in.
 Numeric digit separators in literal limits are decoded (`LIMIT 1_000` is
 `LIMIT 1000`). Unknown `bannedShapes` values are a configuration error.
-`unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
+`unanalyzableSql` defaults to `fail` (`fail`, `ignore`, or `advise`;
 other values are a configuration error).
 `importSpecifier` has no default; `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 
@@ -111,12 +111,15 @@ scopes are not tracked.
 
 ## Options and defaults
 
+`unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
+`--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
+
 `include` / `exclude` select source files (empty include means all files).
 `sqlInclude` defaults to `**/*.sql`. `bannedShapes` defaults to
 `[correlated-exists-set-operation]`. Also accepted, and off unless listed:
 `not-in-subquery`, `count-for-existence`, `literal-limit`, `keyset-only-sweep`,
 `banned-function-call`.
-Unknown `bannedShapes` values are a configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
+Unknown `bannedShapes` values are a configuration error. `unanalyzableSql` defaults to `fail` (`fail`, `ignore`, or `advise`;
 other values are a configuration error). `importSpecifier` has no default. `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
 
 ### Executor configuration

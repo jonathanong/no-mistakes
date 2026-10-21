@@ -24,7 +24,8 @@ pub(crate) fn run_sql_rule_with_glob_filters<O: DeserializeOwned + Default, C>(
     let all: Result<Vec<super::PostgresFindings>> = config
         .rule_applications(rule_id)
         .into_par_iter()
-        .map(|rule| {
+        .enumerate()
+        .map(|(index, rule)| {
             let opts: O = rule.try_rule_options()?;
             let compiled = compile(&opts)?;
             let files = super::selected_rule_files(root, config, rule, all_files)?;
@@ -41,7 +42,14 @@ pub(crate) fn run_sql_rule_with_glob_filters<O: DeserializeOwned + Default, C>(
                         && (exclude.is_empty() || !exclude.is_match(&rel))
                 })
                 .collect();
-            scan(root, &compiled, &files, sources, facts)
+            let view = facts.for_sql_application(index, rule.name.as_deref());
+            scan(
+                root,
+                &compiled,
+                &files,
+                sources,
+                view.as_ref().unwrap_or(facts),
+            )
         })
         .collect();
     let findings: super::PostgresFindings = all?.into_iter().flatten().collect();

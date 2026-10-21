@@ -1,0 +1,10 @@
+[
+  {"span": [97, 128], "subcheck": "returning-star", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [97, 128], "subcheck": "select-star", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [130, 181], "subcheck": "returning-star", "status": "violation", "evidence": "exact", "residualReasons": []},
+  {"span": [130, 181], "subcheck": "select-star", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [183, 215], "subcheck": "returning-star", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [183, 215], "subcheck": "select-star", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [217, 247], "subcheck": "returning-star", "status": "proven-clear", "evidence": "exact", "residualReasons": []},
+  {"span": [217, 247], "subcheck": "select-star", "status": "abstain", "evidence": null, "residualReasons": ["unknown-relation"]}
+]
