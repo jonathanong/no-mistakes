@@ -361,6 +361,16 @@ describe("logical call forwarding", () => {
       { type: "Literal", value: "gh" },
     ]);
     expect(apply([null])).toBeNull();
+    expect(
+      logicalCall({
+        type: "CallExpression",
+        callee: { type: "MemberExpression", property: ident("apply"), object: ident("execFile") },
+        arguments: [
+          { type: "SpreadElement" },
+          { type: "ArrayExpression", elements: [{ type: "Literal", value: "gh" }] },
+        ],
+      }),
+    ).toBeNull();
     expect(apply([{ type: "SpreadElement" }])).toBeNull();
     expect(
       logicalCall({

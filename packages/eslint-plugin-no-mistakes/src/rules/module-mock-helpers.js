@@ -58,6 +58,7 @@ function logicalCall(node) {
       args = args.slice(1);
       continue;
     }
+    if (args.some((arg) => arg?.type === "SpreadElement")) return null;
     const list = unwrapExpression(args[1]);
     if (
       list?.type !== "ArrayExpression" ||
