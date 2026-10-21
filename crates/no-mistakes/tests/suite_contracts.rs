@@ -2,6 +2,8 @@
 
 #[path = "ci_complexity_gate.rs"]
 mod ci_complexity_gate;
+#[path = "ci_standalone_lib.rs"]
+mod ci_standalone_lib;
 #[path = "docs_coverage.rs"]
 mod docs_coverage;
 #[path = "support/integration_suites.rs"]
