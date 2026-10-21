@@ -218,6 +218,35 @@ fn doc_section_passes_when_heading_present() {
 }
 
 #[test]
+fn doc_section_fails_when_heading_level_does_not_match() {
+    // Saved #2434 repro: `# Perf` must not satisfy `requiredHeading: "## Perf"`.
+    let root = fixture("rules/required-doc-section/fail");
+    let readme = root.join("agents/demo/README.md");
+    let opts = DocSectionOptions {
+        glob: "agents/*/README.md".to_string(),
+        required_heading: "## Perf".to_string(),
+    };
+    let findings = scan_doc_section(&root, &opts, &[readme]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("missing required heading"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn doc_section_passes_saved_exact_heading_fixture() {
+    let root = fixture("rules/required-doc-section/pass");
+    let readme = root.join("agents/demo/README.md");
+    let opts = DocSectionOptions {
+        glob: "agents/*/README.md".to_string(),
+        required_heading: "## Perf".to_string(),
+    };
+    let findings = scan_doc_section(&root, &opts, &[readme]).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
 fn doc_section_fails_when_heading_missing() {
     let tmp = tempfile::tempdir().unwrap();
     let root = tmp.path();

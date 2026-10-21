@@ -88,3 +88,12 @@ fn test_heading_with_mixed_text_and_code() {
     assert_eq!(sections.len(), 1);
     assert_eq!(sections[0].heading, "Run cargo test first");
 }
+
+#[test]
+fn atx_required_heading_matches_level() {
+    let content = "# Perf\n\nbody\n";
+    assert!(has_required_heading(content, "# Perf"));
+    assert!(!has_required_heading(content, "## Perf"));
+    assert!(has_required_heading("# Email\n\n## Perf\n", "## Perf"));
+    assert!(has_required_heading(content, "Perf"));
+}

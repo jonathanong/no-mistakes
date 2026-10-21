@@ -55,6 +55,19 @@ pub fn has_section(content: &str, heading: &str) -> bool {
         .any(|s| s.heading == heading)
 }
 
+/// Return `true` when `content` satisfies `required`.
+///
+/// An ATX `required` value such as `## Perf` must appear as that exact heading
+/// line. `# Perf` does not satisfy `## Perf`. A bare heading name still matches
+/// any level through [`has_section`].
+pub fn has_required_heading(content: &str, required: &str) -> bool {
+    let required = required.trim();
+    if required.starts_with('#') {
+        return content.lines().any(|line| line.trim() == required);
+    }
+    has_section(content, required)
+}
+
 fn heading_level_to_u32(level: HeadingLevel) -> u32 {
     match level {
         HeadingLevel::H1 => 1,
