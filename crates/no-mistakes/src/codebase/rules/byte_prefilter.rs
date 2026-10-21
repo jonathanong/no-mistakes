@@ -8,6 +8,10 @@ pub(crate) fn contains_bytes(haystack: &[u8], needle: &[u8]) -> bool {
     memmem::Finder::new(needle).find(haystack).is_some()
 }
 
+pub(crate) fn is_ascii(haystack: &[u8]) -> bool {
+    haystack.iter().all(|byte| byte.is_ascii())
+}
+
 pub(crate) fn contains_hex_run(haystack: &[u8], min_len: usize) -> bool {
     let mut run = 0usize;
     for &byte in haystack {

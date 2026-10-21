@@ -125,6 +125,7 @@ fn prefilter_preserves_fixture_findings() {
         fixture("skipped"),
         fixture("empty"),
         fixture("custom"),
+        fixture("unicode"),
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/test-email-domain-policy/fixture"),
     ];
@@ -159,6 +160,26 @@ fn prefilter_preserves_fixture_findings() {
             assert_eq!(filtered, unfiltered, "{}", path.display());
         }
     }
+}
+
+#[test]
+fn non_ascii_source_disables_the_domain_prefilter() {
+    let opts = compile_options(&Options {
+        banned_domains: vec!["okta.com".to_string()],
+        allowed_email_patterns: Vec::new(),
+        replacement: None,
+        extensions: Vec::new(),
+    })
+    .unwrap();
+    let root = fixture("unicode");
+    let path = root.join("src/send.test.mts");
+    let filtered = check_file(&root, &path, &opts);
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
+    let content = super::super::read_source(&sources, &path).expect("unicode fixture");
+    let unfiltered = scan_email_lines("src/send.test.mts", &content, &opts);
+    assert_eq!(filtered, unfiltered);
+    assert_eq!(filtered.len(), 1, "{filtered:?}");
+    assert_eq!(filtered[0].target.as_deref(), Some("okta.com"));
 }
 
 #[test]

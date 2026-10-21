@@ -94,6 +94,7 @@ fn listen_zero_forms_are_findings() {
     assert!(files.contains(&"options.ts"), "{findings:?}");
     assert!(files.contains(&"trailing.ts"), "{findings:?}");
     assert!(files.contains(&"app.jsx"), "{findings:?}");
+    assert!(files.contains(&"escaped.ts"), "{findings:?}");
 }
 
 #[test]

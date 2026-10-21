@@ -139,6 +139,7 @@ fn check_file_with_sources(
         return Vec::new();
     };
     if !opts.domain_needles.is_empty()
+        && super::byte_prefilter::is_ascii(content.as_bytes())
         && !super::byte_prefilter::contains_any_ascii_ignore_case(
             content.as_bytes(),
             &opts.domain_needles,

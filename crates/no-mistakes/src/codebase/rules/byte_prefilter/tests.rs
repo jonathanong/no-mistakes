@@ -31,4 +31,6 @@ fn ascii_ignore_case_finds_mixed_case_needles() {
     assert!(contains_bytes(b"server.listen(0)", b"listen"));
     assert!(!contains_bytes(b"server.bind((h, 0))", b"listen"));
     assert!(contains_ascii_ignore_case(b"", b""));
+    assert!(is_ascii(b"user@okta.com"));
+    assert!(!is_ascii("user@oKta.com".as_bytes()));
 }

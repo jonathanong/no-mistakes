@@ -54,7 +54,9 @@ fn collect_port_findings(
         }
     }
     if is_js_ts(path)
-        && (!prefilter || super::super::byte_prefilter::contains_bytes(bytes, b"listen"))
+        && (!prefilter
+            || super::super::byte_prefilter::contains_bytes(bytes, b"listen")
+            || super::super::byte_prefilter::contains_bytes(bytes, b"\\"))
     {
         for line in super::ast::scan_lines(path, source) {
             push_finding(&mut findings, &mut seen, rel, line, &opts.message);
