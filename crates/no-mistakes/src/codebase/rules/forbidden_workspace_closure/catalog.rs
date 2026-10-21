@@ -3,7 +3,16 @@ use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use std::path::Path;
 
-pub(super) fn duplicate_setting_findings(root: &Path, sources: &SourceStore) -> Vec<RuleFinding> {
+pub(super) fn duplicate_setting_findings(
+    root: &Path,
+    sources: &SourceStore,
+    source_filter: &crate::codebase::rules::path_filter::RulePathFilter,
+) -> Vec<RuleFinding> {
+    // Catalog data stays readable for traversal. The diagnostic is owned by
+    // the workspace file, so a narrowed include must not report it.
+    if !source_filter.is_match(&root.join("pnpm-workspace.yaml")) {
+        return Vec::new();
+    }
     let Ok(Some(resolved)) =
         crate::codebase::workspaces::resolve_pnpm_include_at_root(root, sources)
     else {

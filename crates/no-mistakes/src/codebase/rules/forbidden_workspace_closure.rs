@@ -147,7 +147,7 @@ fn scan_with_sources(
     };
 
     let workspace_names: BTreeSet<String> = nodes.keys().cloned().collect();
-    let mut findings = catalog::duplicate_setting_findings(root, sources);
+    let mut findings = catalog::duplicate_setting_findings(root, sources, source_filter);
     let traversal = traversal::Traversal::new(
         root,
         nodes,
