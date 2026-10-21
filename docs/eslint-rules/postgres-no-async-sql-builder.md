@@ -183,7 +183,7 @@ async function buildQuery(id: string) {
     "error",
     {
       builders: [
-        { names: ["buildQuery"] },
+        { names: ["buildQuery", "build"] },
         { source: "@example/db", callees: ["sql"] },
       ],
     },

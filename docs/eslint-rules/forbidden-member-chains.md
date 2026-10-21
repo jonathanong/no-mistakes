@@ -26,17 +26,17 @@ function f(records) {
 
 ## Allowed
 
-```ts
+```tsx
 records.entries;
 panel.open;
 other.panel.close;
-const label = 'other.panel.open';
-// other.panel.open
+const label = "other.panel.open";
+// comment mentioning other.panel.open is not a member access
 other.panel[method];
 const { close } = other.panel;
 const { open } = panel;
 const { [name]: open } = other.panel;
-const { ['open']: show } = other.panel;
+const { ["open"]: show } = other.panel;
 function f(records) {
   return records.entries;
 }

@@ -14,8 +14,14 @@ Computed IDs cannot be reliably matched to Playwright assertions.
 ## Allowed
 
 ```tsx
-<button data-pw="save-button">Save</button>
-<button data-pw={testId}>Save</button>; // when testId has a literal default
+function SaveButton({ testId = "save-button" }) {
+  return (
+    <>
+      <button data-pw="save-button">Save</button>
+      <button data-pw={testId}>Save</button>
+    </>
+  );
+}
 ```
 
 ## Options

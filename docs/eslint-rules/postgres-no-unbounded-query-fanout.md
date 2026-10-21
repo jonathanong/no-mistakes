@@ -8,18 +8,31 @@ from an input-sized list.
 ## Disallowed
 
 ```ts
+import { query } from "@example/db";
+
 await Promise.all(userIds.map((id) => query("SELECT * FROM users WHERE id = $1", [id])));
 ```
 
 ## Allowed
 
 ```ts
-for (const ids of chunkArray(userIds, 50)) {
-  await Promise.all(ids.map((id) => query("SELECT * FROM users WHERE id = $1", [id])));
+import { query } from "@example/db";
+
+for (const id of userIds) {
+  await query("SELECT * FROM users WHERE id = $1", [id]);
 }
 ```
 
 ## Options
+
+```js
+{
+  "no-mistakes/postgres-no-unbounded-query-fanout": [
+    "error",
+    { importSpecifier: "@example/db" },
+  ],
+}
+```
 
 - `importSpecifier` identifies the database module; it defaults to empty. Set
   it explicitly to select imports from a module.
