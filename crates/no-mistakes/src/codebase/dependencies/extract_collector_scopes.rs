@@ -1,6 +1,9 @@
 impl ImportCollector {
     fn record_exported_resource_root(&mut self, name: &str) {
         if self.collect_resource_roots {
+            if cfg!(test) {
+                RESOURCE_ROOT_CONSTRUCTIONS.with(|count| count.set(count.get() + 1));
+            }
             self.exported_resource_roots.insert(name.to_string());
         }
     }

@@ -1,7 +1,7 @@
 //! Historical production-import syntax projection within the union fact pass.
 
 use super::{CheckFactVariant, CheckFileFacts};
-use crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source;
+use crate::codebase::dependencies::extract::extract_imports_from_program_with_source;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -56,7 +56,7 @@ pub(crate) fn project(
     session.record_work("production_dependencies.legacy_import_projections", 1);
     let imports = session
         .with_legacy_symbols_program(path, source, |program, parsed, _| {
-            extract_import_facts_from_program_with_source(program, parsed).imports
+            extract_imports_from_program_with_source(program, parsed)
         })
         .unwrap_or_default();
     let imports = Arc::new(imports);
@@ -68,3 +68,6 @@ pub(crate) fn project(
         }
     }
 }
+
+#[cfg(test)]
+mod tests;
