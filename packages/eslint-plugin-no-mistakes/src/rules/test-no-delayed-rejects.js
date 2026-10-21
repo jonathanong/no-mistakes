@@ -1,7 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
-const { findContainingFunction, traverse, unwrapExpression } = require("./async-ast");
+const { findContainingRoot, traverse, unwrapExpression } = require("./async-ast");
 const {
   chainIsSafelyObserved,
   literalPropertyName,
@@ -132,8 +132,8 @@ function hasObserverBeforeSuspension(observers, suspension) {
 }
 
 function hasInterveningAwait(context, declarator, matcher, observerCache) {
-  const functionNode = findContainingFunction(declarator);
-  if (!functionNode || functionNode !== findContainingFunction(matcher)) return false;
+  const functionNode = findContainingRoot(declarator);
+  if (!functionNode || functionNode !== findContainingRoot(matcher)) return false;
   let observers = observerCache.get(declarator);
   if (!observers) {
     observers = collectObserverSites(context, functionNode, declarator);

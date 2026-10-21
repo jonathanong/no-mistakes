@@ -159,7 +159,7 @@ function isConditionalBoundary(node, child, observer, suspension) {
 }
 
 function statementsFor(container) {
-  return container.type === "BlockStatement" ? container.body : container.consequent;
+  return container.type === "SwitchCase" ? container.consequent : container.body;
 }
 
 function directChildIn(node, container) {
@@ -185,7 +185,12 @@ function executesBefore(observer, suspension) {
   while (current.parent) {
     const parent = current.parent;
     if (!conditional && childExecutesBefore(parent, current, suspension)) return true;
-    if ((parent.type === "BlockStatement" || parent.type === "SwitchCase") && !conditional) {
+    if (
+      (parent.type === "BlockStatement" ||
+        parent.type === "SwitchCase" ||
+        parent.type === "Program") &&
+      !conditional
+    ) {
       const suspensionStatement = directChildIn(suspension, parent);
       if (suspensionStatement) {
         const statements = statementsFor(parent);

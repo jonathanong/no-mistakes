@@ -59,6 +59,18 @@ function isChunkCall(node, chunkFunctionNames) {
   return Boolean(name && chunkFunctionNames.includes(name));
 }
 
+function forOfRightHandSide(defNode) {
+  const declaration = defNode?.parent;
+  if (declaration?.type !== "VariableDeclaration") return undefined;
+  const loop = declaration.parent;
+  if (loop?.type !== "ForOfStatement" || loop.left !== declaration) return undefined;
+  return loop.right;
+}
+
+function isReassignedBinding(variable) {
+  return (variable?.references ?? []).some((reference) => reference.isWrite() && !reference.init);
+}
+
 function isStaticallyBounded(source, chunkFunctionNames, context) {
   source = unwrapTs(source);
   if (!source) return false;
@@ -67,10 +79,17 @@ function isStaticallyBounded(source, chunkFunctionNames, context) {
   if (source.type === "CallExpression" && isChunkCall(source, chunkFunctionNames)) return true;
   if (source.type === "Identifier" && context) {
     const variable = resolveVariable(source, context);
-    const init = variable?.defs?.find(
-      (def) => def.type === "Variable" && def.node?.id?.type === "Identifier",
-    )?.node?.init;
+    const def = variable?.defs?.find(
+      (item) => item.type === "Variable" && item.node?.id?.type === "Identifier",
+    );
+    const init = def?.node?.init;
     if (init && init !== source) return isStaticallyBounded(init, chunkFunctionNames, null);
+    const iterated = forOfRightHandSide(def?.node);
+    if (iterated) {
+      if (isReassignedBinding(variable)) return false;
+      const right = unwrapTs(iterated);
+      return Boolean(right?.type === "CallExpression" && isChunkCall(right, chunkFunctionNames));
+    }
   }
   return false;
 }

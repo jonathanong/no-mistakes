@@ -272,6 +272,36 @@ describe("test-no-delayed-rejects", () => {
     );
   });
 
+  it("reports a delayed rejects observer at module scope", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "module-level-invalid.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "module-level-invalid.ts",
+      ),
+      ["delayedReject"],
+    );
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "module-level-valid.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "module-level-valid.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "module-level-catch-before-await.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "module-level-catch-before-await.ts",
+      ),
+      [],
+    );
+  });
+
   it("recognizes the ordinary global expect binding", () => {
     assert.deepEqual(
       messages(

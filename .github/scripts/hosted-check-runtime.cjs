@@ -7,10 +7,12 @@ const { dirname, join } = require("node:path");
 const CHECK_ARGS = ["exec", "no-mistakes", "--timeout", "0", "--lock-timeout", "0", "check"];
 // Collection safety cap; regression limits come from reviewed measured budgets.
 const COLLECTION_DEADLINE_SECONDS = 600;
-// Stay in the caller's process group so SIGTERM reaches pnpm, which relays to
-// `pnpm exec` (no TTY). GNU timeout's default group does not include that child.
-// `--foreground` does not time out descendants; leftover analyzers are killed
-// separately after each sample because the JS launcher does not forward signals.
+// `--foreground` sends SIGTERM to the timeout child (pnpm) instead of creating a
+// new process group. GNU timeout's default is to signal that group;
+// `--foreground` then does not time out descendants. Whether a default group
+// would include `pnpm exec`'s analyzer is unverified (pnpm may setpgid). Keep
+// `--foreground` so pnpm can relay SIGTERM, and sweep leftover analyzer argv
+// that sits under the consumer fixture.
 const TIMEOUT_ARGS = ["--foreground", "--signal=TERM", "--kill-after=5s"];
 const LEFTOVER_KILL_GRACE_MS = 5000;
 
@@ -57,25 +59,31 @@ function command(executable, args, cwd) {
   return result.stdout.trim();
 }
 
-function leftoverCheckPids(psOutput, nativePath, selfPid = process.pid) {
+function argvUnderRoot(token, root) {
+  return token === root || token.startsWith(`${root}/`);
+}
+
+function leftoverCheckPids(psOutput, nativePath, selfPid = process.pid, fixturePath) {
   if (typeof nativePath !== "string" || nativePath.length === 0) {
     throw new Error("nativePath is required");
+  }
+  if (typeof fixturePath !== "string" || fixturePath.length === 0) {
+    throw new Error("fixturePath is required");
   }
   const pids = [];
   for (const line of psOutput.split("\n")) {
     const match = line.trim().match(/^(\d+)\s+(\S+)\s+(.*)$/);
     if (!match) continue;
     const pid = Number(match[1]);
-    const comm = match[2];
     const args = match[3];
     if (!Number.isInteger(pid) || pid <= 1 || pid === selfPid) continue;
     if (args.includes("hosted-check.cjs")) continue;
     const tokens = args.split(/\s+/);
-    const native =
-      comm === "no-mistakes" ||
-      tokens.includes(nativePath) ||
-      tokens.some((token) => token.endsWith("/bin/no-mistakes.js") || token === "no-mistakes.js");
-    if (native) pids.push(pid);
+    const native = tokens.includes(nativePath) && argvUnderRoot(nativePath, fixturePath);
+    const launcher = tokens.some(
+      (token) => token.endsWith("/bin/no-mistakes.js") && argvUnderRoot(token, fixturePath),
+    );
+    if (native || launcher) pids.push(pid);
   }
   return pids.sort((a, b) => a - b);
 }
@@ -87,12 +95,13 @@ function sleepMs(ms) {
 function terminateLeftoverCheckProcesses({
   psOutput,
   nativePath,
+  fixturePath,
   kill = (pid, signal) => process.kill(pid, signal),
   sleep = sleepMs,
   selfPid = process.pid,
   graceMs = LEFTOVER_KILL_GRACE_MS,
 } = {}) {
-  const pids = leftoverCheckPids(psOutput, nativePath, selfPid);
+  const pids = leftoverCheckPids(psOutput, nativePath, selfPid, fixturePath);
   for (const pid of pids) {
     try {
       kill(pid, "SIGTERM");
