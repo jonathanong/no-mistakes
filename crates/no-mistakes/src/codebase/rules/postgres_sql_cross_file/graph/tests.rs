@@ -64,7 +64,14 @@ fn unique_export_abstains_on_unproven_or_ambiguous_producers() {
         Default::default(),
         Default::default(),
     );
-    assert!(unique_export(&graph, &facts, &importer, "tables").is_none());
+    assert!(unique_export(
+        &graph,
+        &facts,
+        &RegistryRoutes::new(&facts),
+        &importer,
+        "tables"
+    )
+    .is_none());
 
     facts.ts.insert(
         importer.clone(),
@@ -93,7 +100,14 @@ fn unique_export_abstains_on_unproven_or_ambiguous_producers() {
     .into_iter()
     .collect();
     let graph = from_typed_maps(PathBuf::from("/repo"), forward, Default::default());
-    assert!(unique_export(&graph, &facts, &importer, "tables").is_none());
+    assert!(unique_export(
+        &graph,
+        &facts,
+        &RegistryRoutes::new(&facts),
+        &importer,
+        "tables"
+    )
+    .is_none());
 
     facts.ts.insert(
         producer.clone(),
@@ -119,7 +133,14 @@ fn unique_export_abstains_on_unproven_or_ambiguous_producers() {
     .into_iter()
     .collect();
     let graph = from_typed_maps(PathBuf::from("/repo"), forward, Default::default());
-    assert!(unique_export(&graph, &facts, &importer, "tables").is_none());
+    assert!(unique_export(
+        &graph,
+        &facts,
+        &RegistryRoutes::new(&facts),
+        &importer,
+        "tables"
+    )
+    .is_none());
 
     facts.ts.insert(
         importer.clone(),
@@ -134,7 +155,7 @@ fn unique_export_abstains_on_unproven_or_ambiguous_producers() {
             ..Default::default()
         }),
     );
-    assert!(unique_export(&graph, &facts, &importer, "t").is_none());
+    assert!(unique_export(&graph, &facts, &RegistryRoutes::new(&facts), &importer, "t").is_none());
 }
 
 #[test]
@@ -187,7 +208,14 @@ fn unique_export_follows_named_reexports_stars_and_namespace_members() {
     .into_iter()
     .collect();
     let graph = from_typed_maps(PathBuf::from("/repo"), forward, Default::default());
-    let unique = unique_export(&graph, &facts, &importer, "registry").unwrap();
+    let unique = unique_export(
+        &graph,
+        &facts,
+        &RegistryRoutes::new(&facts),
+        &importer,
+        "registry",
+    )
+    .unwrap();
     assert_eq!(unique.producer, producer);
     assert_eq!(unique.exported, "registry");
 
@@ -205,7 +233,14 @@ fn unique_export_follows_named_reexports_stars_and_namespace_members() {
             ..Default::default()
         }),
     );
-    let unique = unique_export(&graph, &facts, &importer, "tables").unwrap();
+    let unique = unique_export(
+        &graph,
+        &facts,
+        &RegistryRoutes::new(&facts),
+        &importer,
+        "tables",
+    )
+    .unwrap();
     assert_eq!(unique.producer, producer);
     assert_eq!(unique.exported, "tables");
 
@@ -295,5 +330,12 @@ fn unique_export_follows_named_reexports_stars_and_namespace_members() {
     .into_iter()
     .collect();
     let graph = from_typed_maps(PathBuf::from("/repo"), forward, Default::default());
-    assert!(unique_export(&graph, &facts, &importer, "registry").is_none());
+    assert!(unique_export(
+        &graph,
+        &facts,
+        &RegistryRoutes::new(&facts),
+        &importer,
+        "registry"
+    )
+    .is_none());
 }

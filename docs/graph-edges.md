@@ -711,3 +711,14 @@ Plain effect-name queries retain their scoped path for callable-only facts;
 missing, partial, failed, default, and foreign receiver facts keep conservative
 canonical call resolution. Callable-only storage does not create repeat regions
 or unsafe receiver owners. CLI and asynchronous Node report shapes are unchanged.
+
+Template interpolations, conditional value branches, and string concatenation retain
+opaque derived-value provenance in prepared facts. They do not expose array elements
+or callable/receiver identities to runtime value flow. Provenance checks can follow
+their inputs; indexing or spreading a template string cannot project its interpolated
+objects into call arguments.
+
+Rust fact consumers can inspect `ValueExpression::Derived` for these input
+expressions and `ValueFlowFacts::iteration_bindings` for iterable-source
+provenance. `ValueBinding::immutable` records an immutable lexical binding;
+it does not mean the referenced object is frozen or its members cannot change.

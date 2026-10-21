@@ -1,7 +1,7 @@
-use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::dependencies::extract::{ExportedBinding, ImportedBindingKind};
-use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId, TsFactLookup};
-use std::path::{Path, PathBuf};
+pub(super) use crate::codebase::check_facts::CheckFactMap;
+pub(super) use crate::codebase::dependencies::extract::{ExportedBinding, ImportedBindingKind};
+pub(super) use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId, TsFactLookup};
+pub(super) use std::path::{Path, PathBuf};
 
 /// A uniquely resolved local export imported by `importer` under `local`.
 pub(crate) struct UniqueExport {
@@ -12,10 +12,17 @@ pub(crate) struct UniqueExport {
 pub(crate) fn unique_export(
     graph: &DepGraph,
     facts: &CheckFactMap,
+    routes: &super::route_index::RegistryRoutes<'_>,
     importer: &Path,
     local: &str,
 ) -> Option<UniqueExport> {
-    let binding = imported(facts, importer, local)?;
+    let Some(binding) = routes
+        .file(importer)
+        .and_then(|file| file.imports(routes).get(local))
+        .copied()
+    else {
+        return super::routes::registry_route(graph, routes, importer, local, &[]);
+    };
     if binding.kind == ImportedBindingKind::Namespace {
         return None;
     }
@@ -36,7 +43,7 @@ pub(crate) fn unique_namespace_member(
     unique_from_imports(graph, facts, importer, member)
 }
 
-fn imported<'a>(
+pub(super) fn imported<'a>(
     facts: &'a CheckFactMap,
     importer: &Path,
     local: &str,

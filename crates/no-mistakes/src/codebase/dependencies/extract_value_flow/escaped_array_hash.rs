@@ -10,6 +10,12 @@ pub(super) fn fingerprint((slot, value): &(usize, ValueExpression)) -> u64 {
 fn expression(value: &ValueExpression, hash: &mut impl Hasher) {
     std::mem::discriminant(value).hash(hash);
     match value {
+        ValueExpression::Derived(parts) => {
+            parts.len().hash(hash);
+            for part in parts.iter() {
+                expression(part, hash);
+            }
+        }
         ValueExpression::Named {
             name,
             scope,
