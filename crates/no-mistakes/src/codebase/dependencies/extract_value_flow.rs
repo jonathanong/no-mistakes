@@ -69,6 +69,8 @@ mod expressions;
 mod adapters;
 #[path = "extract_value_flow/assigned_members.rs"]
 mod assigned_members;
+#[path = "extract_value_flow/bind_prefix.rs"]
+mod bind_prefix;
 #[path = "extract_value_flow/completion.rs"]
 mod completion;
 #[path = "extract_value_flow/mutations.rs"]

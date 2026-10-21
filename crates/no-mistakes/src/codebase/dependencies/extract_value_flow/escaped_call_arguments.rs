@@ -8,7 +8,21 @@ impl ImportCollector {
         let mut uncertain_raw = None;
         let bound =
             simple_callee_name(&call.callee).is_some_and(|raw| self.is_builtin_bind_callee(&raw));
-        for (raw_index, argument) in call.arguments.iter().skip(usize::from(bound)).enumerate() {
+        let start = if bound {
+            let prefix = self.bound_prefix(call);
+            arguments.position = prefix.leading.len();
+            if prefix.uncertain {
+                arguments.open_at = Some(0);
+                arguments.guarded_open_tail = true;
+                uncertain_raw = Some(0);
+            }
+            prefix.start
+        } else {
+            0
+        };
+        let leading = arguments.position;
+        for (offset, argument) in call.arguments.iter().skip(start).enumerate() {
+            let raw_index = leading + offset;
             match argument {
                 Argument::SpreadElement(spread) => {
                     let was_uncertain = arguments.guarded_open_tail;

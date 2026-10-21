@@ -640,6 +640,10 @@ Fixed arguments before that tail keep their slots, including ordinary arguments
 between an earlier fixed spread and the spread that introduces uncertainty.
 Built-in `.call` and `.bind` remove their receiver argument before those slots
 and the uncertain-spread boundary are interpreted.
+For `.bind`, the receiver is the first expanded argument: an empty leading
+spread leaves the next argument as the receiver, while a fixed spread retains
+its remaining values as bound parameters. An uncertain leading spread keeps
+candidate parameter origins possible.
 A suffix after an open prefix and guarded
 spread is also possible: it need not occupy a parameter that the callee writes.
 An arbitrary prefix can itself contain the same receiver, so it does not prove

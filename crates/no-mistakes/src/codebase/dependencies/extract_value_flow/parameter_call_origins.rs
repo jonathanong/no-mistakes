@@ -30,6 +30,7 @@ impl ParameterCallOrigins {
             }
         }
         let mut values: FxHashMap<(usize, String), Vec<ValueExpression>> = fx_map();
+        let mut uncertain_defaults = fx_set();
         for call in &collector.value_flow.calls {
             let Some(parameters) =
                 callable_owner(collector, &call.callee).and_then(|owner| slots.get(&owner))
@@ -40,6 +41,13 @@ impl ParameterCallOrigins {
                 .receiver_escapes
                 .uncertain_spreads
                 .get(&(call.offset, call.end));
+            if let Some(spread) = shifted {
+                for (index, key) in parameters {
+                    if spread.skips(*index) {
+                        uncertain_defaults.insert(key.clone());
+                    }
+                }
+            }
             for (index, argument) in call.arguments.iter().enumerate() {
                 if shifted.is_some_and(|spread| spread.skips(index)) {
                     continue;
@@ -52,19 +60,30 @@ impl ParameterCallOrigins {
                 }
             }
         }
+        let mut possible_defaults = Vec::new();
         for parameter in &collector.value_flow.parameters {
             if parameter.projection.is_empty()
                 && !matches!(parameter.default, ValueExpression::Unknown)
             {
-                values
-                    .entry((parameter.scope, parameter.name.clone()))
-                    .or_default()
-                    .push(parameter.default.clone());
+                let key = (parameter.scope, parameter.name.clone());
+                if uncertain_defaults.contains(&key) {
+                    possible_defaults.push((key, parameter.default.clone()));
+                } else {
+                    values
+                        .entry(key)
+                        .or_default()
+                        .push(parameter.default.clone());
+                }
             }
         }
         let captures = super::receiver_escapes::absorb(collector, &slots, &mut values);
         let mut possible = fx_map();
         super::receiver_escapes::absorb_possible(collector, &slots, &values, &mut possible);
+        for (key, default) in possible_defaults {
+            // An uncertain spread can supply this parameter, so its default
+            // cannot prove a definite receiver write.
+            possible.entry(key).or_insert_with(Vec::new).push(default);
+        }
         let mut recovered: FxHashMap<_, Vec<_>> = fx_map();
         for event in collector
             .receiver_escapes

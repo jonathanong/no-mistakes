@@ -15,7 +15,7 @@ mod escaped_class_lookup;
 #[path = "escaped_class_methods.rs"]
 mod escaped_class_methods;
 #[path = "escaped_guarded_arrays.rs"]
-mod escaped_guarded_arrays;
+pub(super) mod escaped_guarded_arrays;
 #[path = "escaped_higher_order.rs"]
 mod escaped_higher_order;
 #[path = "escaped_origin_absorb.rs"]

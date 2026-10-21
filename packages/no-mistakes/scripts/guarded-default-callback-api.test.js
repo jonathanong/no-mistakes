@@ -46,15 +46,19 @@ test(
       __dirname,
       "../../../test-cases/codebase-analysis/value-flow-optional-prefixes/fixture",
     );
-    const entries = [
-      "array-bind-varying-width",
-      "array-bind-optional-push",
-      "array-bind-known-empty",
+    const scenarios = [
+      ["array-bind-varying-width", null],
+      ["array-bind-optional-push", null],
+      ["array-bind-known-empty", "untouched.get"],
+      ["array-bind-packed-first-spread", "replica.get"],
+      ["array-bind-empty-first-spread", "untouched.get"],
+      ["array-bind-multi-value-spread-suffix", "replica.get"],
+      ["array-bind-conditional-first-spread", null],
     ];
     const options = {
       root,
       config: join(root, "effects.yml"),
-      reports: entries.map((entry) => ({
+      reports: scenarios.map(([entry]) => ({
         type: "effects",
         kind: "receiver",
         entry: `src/${entry}.mts`,
@@ -66,9 +70,9 @@ test(
     for (const [index, { result }] of batch.reports.entries()) {
       assert.deepEqual(
         result.callSites.map(({ callee }) => callee),
-        index === 2
-          ? ["replica.get", "primary.get", "replica.info", "unrelated.get"]
-          : ["replica.get", "untouched.get", "primary.get", "replica.info", "unrelated.get"],
+        ["replica.get", "untouched.get", "primary.get", "replica.info", "unrelated.get"].filter(
+          (callee) => callee !== scenarios[index][1],
+        ),
       );
     }
     assert.deepEqual(await esm.analyzeProject(options), batch);

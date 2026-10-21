@@ -354,3 +354,42 @@ fn bound_spreads_remove_this_arg_before_projecting_possible_slots() {
         }
     }
 }
+
+#[test]
+fn bind_consumes_one_expanded_receiver_and_keeps_the_remaining_parameters() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    for (file, replaced, retained) in [
+        (
+            "array-bind-packed-first-spread",
+            "replica.get",
+            "untouched.get",
+        ),
+        (
+            "array-bind-empty-first-spread",
+            "untouched.get",
+            "replica.get",
+        ),
+        (
+            "array-bind-multi-value-spread-suffix",
+            "replica.get",
+            "untouched.get",
+        ),
+    ] {
+        assert_unknown(&built, &root, file, replaced);
+        assert_export(&built, &root, file, retained);
+    }
+    let conditional = "array-bind-conditional-first-spread";
+    for callee in ["replica.get", "untouched.get"] {
+        possible(&built, &root, conditional, callee);
+    }
+    for file in [
+        "array-bind-packed-first-spread",
+        "array-bind-empty-first-spread",
+        "array-bind-multi-value-spread-suffix",
+        conditional,
+    ] {
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+}

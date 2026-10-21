@@ -35,7 +35,15 @@ impl ImportCollector {
         if let Some(raw) = simple_callee_name(&call.callee) {
             if let Some(receiver) = raw.strip_suffix(".bind") {
                 if self.is_builtin_bind_callee(&raw) {
-                    let (arguments, spread) = self.value_arguments(&call.arguments);
+                    let prefix = self.bound_prefix(call);
+                    let (arguments, spread) = self.value_arguments(&call.arguments[prefix.start..]);
+                    let spread = if prefix.uncertain {
+                        Some(0)
+                    } else {
+                        spread.map(|index| index + prefix.leading.len())
+                    };
+                    let mut leading = prefix.leading;
+                    leading.extend(arguments);
                     return (
                         ValueExpression::Named {
                             name: receiver.to_string(),
@@ -43,8 +51,8 @@ impl ImportCollector {
                             offset: call.span.start,
                             context: self.current_function_id(),
                         },
-                        arguments.into_iter().skip(1).collect(),
-                        spread.map(|index| index.saturating_sub(1)),
+                        leading,
+                        spread,
                         true,
                     );
                 }

@@ -121,6 +121,9 @@ pub(super) struct Projection {
     pub(super) entries: Vec<(usize, ValueExpression, bool)>,
     pub(super) tail: Option<(usize, Vec<ValueExpression>)>,
 }
+#[path = "escaped_exact_spread.rs"]
+mod exact;
+pub(in super::super) use exact::entries as exact_entries;
 /// Keep the proven prefix fixed. After the first optional push, later known
 /// values form one possible open tail rather than enumerating branch lengths.
 pub(super) fn entries(
