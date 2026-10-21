@@ -38,6 +38,7 @@ fn remaining_identifier_shapes_preserve_finite_bind_and_unknown_controls() {
         "pass-array-destructured-http-row",
         "pass-array-destructured-mutable-row",
         "pass-array-destructured-mutable-result",
+        "pass-empty-and-computed-patterns",
         "pass-comma-discarded-env",
         "pass-alias-cycle",
         "pass-alias-shadow",

@@ -1,0 +1,5 @@
+version: 2
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    options:
+      importSpecifier: "@example/db"

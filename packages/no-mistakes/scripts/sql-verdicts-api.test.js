@@ -18,6 +18,7 @@ test(
       ["pass-array-destructured-http-row", []],
       ["pass-array-destructured-mutable-row", []],
       ["pass-array-destructured-mutable-result", []],
+      ["pass-empty-and-computed-patterns", []],
     ]) {
       const root = join(
         __dirname,

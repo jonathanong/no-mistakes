@@ -134,6 +134,7 @@ fn unbounded_identifier_remaining_shapes_use_the_public_cli() {
         "pass-array-destructured-http-row",
         "pass-array-destructured-mutable-row",
         "pass-array-destructured-mutable-result",
+        "pass-empty-and-computed-patterns",
         "pass-comma-discarded-env",
         "pass-alias-cycle",
         "pass-alias-shadow",
