@@ -59,7 +59,8 @@ function findAppend(node, methods, tags) {
   const visit = (current) => {
     if (!current || builder || isFunction(current)) return;
     if (current.type === "CallExpression") {
-      builder = appendBuilder(current, methods, tags);
+      const object = appendBuilder(current, methods, tags);
+      if (object) builder = { object, call: current };
     }
     for (const child of childNodes(current)) visit(child);
   };
@@ -74,7 +75,7 @@ function readGuard(statement, methods, tags) {
   if (!builder) return null;
   const test = unwrapTs(statement.test);
   const value = stringText(test.left) ?? stringText(test.right);
-  return { node: statement, selector, builder, value };
+  return { node: statement, selector, builder: builder.object, call: builder.call, value };
 }
 
 function guardsOf(func, methods, tags) {

@@ -59,7 +59,9 @@ throws, and on direct guards that each return followed by an unconditional
 throw at the end of the function. These shapes exclude an unknown selector
 without publishing an empty builder. Completion is checked only through direct
 statements and straight-line blocks; a conditional throw or an earlier return
-inside the final `else` does not prove completion.
+inside the final `else` does not prove completion. Every arm must execute its
+recognized append unconditionally. A chain under another condition or a loop
+is still reported because that outer construct can bypass the whole chain.
 
 ```ts
 if (access === "owned") query.append(sql`AND account_id = $1`);

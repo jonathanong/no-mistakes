@@ -8,9 +8,10 @@ export function chain(query: Builder, access: string) {
   return query;
 }
 export function blockChain(query: Builder, access: string) {
+  const label = access;
   if (access === "owned") query.append(sql`A`);
   else if (access === "member") query.append(sql`B`);
-  else { console.error(access); throw new Error("unknown"); }
+  else { console.error(label); throw new Error("unknown"); }
   return query;
 }
 // Each known selector returns; all remaining values reach the unconditional throw.
@@ -24,11 +25,3 @@ export const arrow = (query: Builder, access: string) => {
   if (access === "member") return query.append(sql`B`);
   throw new Error("unknown");
 };
-// This chain is complete when reached, even as a direct consequent of another if.
-export function nestedChain(query: Builder, access: string, flag: boolean) {
-  if (flag)
-    if (access === "owned") query.append(sql`A`);
-    else if (access === "member") query.append(sql`B`);
-    else throw new Error("unknown");
-  return query;
-}

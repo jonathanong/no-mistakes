@@ -90,7 +90,7 @@ function rewrite(entries, key) {
   const arms = entries.map(
     ([name, value]) => `case ${JSON.stringify(name)}: return ${JSON.stringify(value)};`,
   );
-  return `(() => { switch (${key}) { ${arms.join(" ")} default: throw new Error("unknown"); } })()`;
+  return `((key) => { switch (key) { ${arms.join(" ")} default: throw new Error("unknown"); } })((${key}))`;
 }
 
 module.exports = rule(

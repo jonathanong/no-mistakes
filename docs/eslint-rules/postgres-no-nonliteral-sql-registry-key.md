@@ -73,19 +73,20 @@ empty. Scoped factories and `trustedSqlTags` are not options of this rule.
 
 This rule has no autofix and no editor suggestion. Write the switch by hand.
 The message provides a complete immediately invoked function containing
-`switch (<key expression>)`, one `case` / `return` per key, and a throwing
+`switch (key)`, one `case` / `return` per key, and a throwing
 `default`. Duplicate property keys produce one case using their final value,
 matching object-literal overwrite behavior. The expression can replace the
-lookup at the current scope:
+lookup at the current scope. The original key is evaluated as the function
+argument, so `await` and `yield` retain their surrounding function context:
 
 ```ts
-(() => {
-  switch (kind) {
+((key) => {
+  switch (key) {
     case "orders": return "orders";
     case "accounts": return "accounts";
     default: throw new Error("unknown");
   }
-})()
+})(kind)
 ```
 
 ## Suppression

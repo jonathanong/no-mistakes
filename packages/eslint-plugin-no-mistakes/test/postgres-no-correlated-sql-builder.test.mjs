@@ -42,7 +42,7 @@ describe("postgres-no-correlated-sql-builder", () => {
 
   it("abstains on complete throwing chains and returning guards", () => {
     assert.equal(check("complete-guards.ts").length, 0);
-    assert.equal(check("incomplete-guards.ts").length, 6);
+    assert.equal(check("incomplete-guards.ts").length, 13);
   });
 
   it("is inert until both builder methods and tag names are configured", () => {
