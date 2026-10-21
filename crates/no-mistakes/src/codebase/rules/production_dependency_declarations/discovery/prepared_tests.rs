@@ -1,5 +1,5 @@
+use super::super::preparation_work;
 use super::*;
-use crate::codebase::workspaces::preparation_work;
 
 fn fixture() -> (PathBuf, Vec<PathBuf>, std::sync::Arc<SourceStore>) {
     let root = fixture_root("prepared-workspace");
@@ -27,16 +27,14 @@ fn fixture() -> (PathBuf, Vec<PathBuf>, std::sync::Arc<SourceStore>) {
 }
 
 #[test]
-fn visibility_is_prepared_once_across_packages_and_overlapping_roots() {
+fn workspace_selection_keeps_root_order_entrypoints_and_exclusions() {
     let (root, files, sources) = fixture();
-    preparation_work::reset();
     let roots = [
         root.join("packages"),
         root.join("packages/a"),
         root.join("packages"),
     ];
     let workspace = load_workspace(&roots, &files, &sources).unwrap();
-    assert_eq!(preparation_work::counts().visible_paths, files.len());
     assert_eq!(workspace.packages.len(), 3);
     let duplicate = workspace.package_by_name("@fixture/duplicate").unwrap();
     assert_eq!(duplicate.dir, root.join("packages/a"));
@@ -86,16 +84,14 @@ fn ownership_prepares_each_directory_once_and_probes_only_ancestors() {
 }
 
 #[test]
-fn empty_selection_never_prepares_full_visibility() {
+fn empty_selection_has_no_packages() {
     let (root, files, sources) = fixture();
-    preparation_work::reset();
     assert!(
         load_workspace(&[root.join("not-selected")], &files, &sources)
             .unwrap()
             .packages
             .is_empty()
     );
-    assert_eq!(preparation_work::counts().visible_paths, 0);
 }
 
 #[test]
@@ -122,7 +118,7 @@ fn saved_workspace_keeps_exact_dependency_findings() {
 }
 
 #[test]
-fn prepared_visibility_keeps_the_application_scope_and_normalizes_members() {
+fn workspace_selection_keeps_the_application_scope_and_normalizes_members() {
     let (root, _, sources) = fixture();
     // The SourceStore also contains the higher-priority export and other packages.
     // Only this application's explicit paths may answer entry resolution.
@@ -130,16 +126,7 @@ fn prepared_visibility_keeps_the_application_scope_and_normalizes_members() {
         root.join("packages/a/package.json"),
         root.join("packages/a/src/../module.mts"),
     ];
-    let visible = std::sync::OnceLock::new();
-    preparation_work::reset();
-    let workspace =
-        super::super::load_workspace(&[root.join("packages/a")], &files, &sources, &visible)
-            .unwrap();
+    let workspace = load_workspace(&[root.join("packages/a")], &files, &sources).unwrap();
     let package = workspace.package_by_name("@fixture/duplicate").unwrap();
     assert_eq!(package.entry, Some(root.join("packages/a/module.mts")));
-    let visible = visible.get().unwrap();
-    assert_eq!(visible.len(), files.len());
-    assert!(visible.contains(&root.join("packages/a/module.mts")));
-    assert!(!visible.contains(&root.join("packages/a/src/main.mts")));
-    assert_eq!(preparation_work::counts().visible_paths, files.len());
 }

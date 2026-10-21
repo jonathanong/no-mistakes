@@ -8,6 +8,14 @@ use crate::fx::PathSet;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+#[cfg(not(test))]
+macro_rules! record_preparation {
+    ($kind:ident) => {};
+}
+#[cfg(test)]
+#[macro_use]
+mod preparation_work;
+
 /// Discover every `package.json` under `workspace_roots`, bypassing the root
 /// manifest's `workspaces` glob membership so a package not (yet) listed
 /// there is still checked. `workspace_roots` is the sole discovery scope —
@@ -17,7 +25,6 @@ pub(super) fn load_workspace(
     workspace_roots: &[PathBuf],
     files: &[PathBuf],
     sources: &SourceStore,
-    visible: &std::sync::OnceLock<HashSet<PathBuf>>,
 ) -> anyhow::Result<WorkspaceMap> {
     let mut roots: Vec<&Path> = Vec::new();
     for workspace_root in workspace_roots {
@@ -35,11 +42,8 @@ pub(super) fn load_workspace(
             let Some(package_root) = manifest.parent() else {
                 continue;
             };
-            let Some(package) = workspaces::load_root_package_from_visible_sources(
-                package_root,
-                visible.get_or_init(|| normalized_visible_files(files)),
-                sources,
-            )?
+            let Some(package) =
+                workspaces::load_root_package_from_source_store(package_root, files, sources)?
             else {
                 continue;
             };
@@ -49,18 +53,6 @@ pub(super) fn load_workspace(
     Ok(WorkspaceMap::from_packages(
         packages.into_values().collect(),
     ))
-}
-
-/// Keep the application's exact scoped visibility shared across package loading
-/// and reachability, retaining the manifest loader's standard hash semantics.
-fn normalized_visible_files(files: &[PathBuf]) -> HashSet<PathBuf> {
-    files
-        .iter()
-        .map(|path| {
-            workspaces::record_preparation!(visible_path);
-            normalize_path(path)
-        })
-        .collect()
 }
 
 /// The nearest workspace package (by ancestor directory) owning each file,
@@ -73,7 +65,7 @@ pub(super) fn compute_owners(
         .packages
         .iter()
         .map(|package| {
-            workspaces::record_preparation!(package_dir);
+            record_preparation!(package_dir);
             normalize_path(&package.dir)
         })
         .collect();
@@ -88,7 +80,7 @@ pub(super) fn compute_owners(
 
 fn nearest_package_dir(directories: &PathSet, file: &Path) -> Option<PathBuf> {
     file.ancestors().find_map(|dir| {
-        workspaces::record_preparation!(ancestor_lookup);
+        record_preparation!(ancestor_lookup);
         directories.get(dir).cloned()
     })
 }

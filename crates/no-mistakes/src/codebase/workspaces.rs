@@ -13,15 +13,6 @@ include!("workspaces/types.rs");
 include!("workspaces/globs.rs");
 include!("workspaces/loading.rs");
 include!("workspaces/package.rs");
-#[cfg(not(test))]
-macro_rules! record_preparation {
-    ($kind:ident) => {};
-}
-#[cfg(test)]
-#[macro_use]
-pub(crate) mod preparation_work;
-pub(crate) use record_preparation;
-include!("workspaces/visible.rs");
 include!("workspaces/exports.rs");
 include!("workspaces/path.rs");
 

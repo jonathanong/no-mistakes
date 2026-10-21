@@ -163,7 +163,7 @@ suppression does not make a pruned production install safe.
 [`required-entrypoint-reachability`](required-entrypoint-reachability.md)
 checks that selected runtime files are registered.
 
-The rule prepares package visibility once per application and indexes package
-ownership by directory. This retains the configured `workspaceRoots`, manifest
-selection order, and entrypoint resolution while reusing the request's file
-inventory and source store.
+The rule indexes normalized package directories once per application for file
+ownership lookups. Each lookup follows only the file's ancestors, retaining
+nearest-package ownership and the configured `workspaceRoots`, manifest order,
+and entrypoint resolution while reusing the request's inventory and source store.

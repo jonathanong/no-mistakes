@@ -1,14 +1,5 @@
 use super::*;
 
-fn load_workspace(
-    roots: &[PathBuf],
-    files: &[PathBuf],
-    sources: &SourceStore,
-) -> anyhow::Result<WorkspaceMap> {
-    let visible = std::sync::OnceLock::new();
-    super::load_workspace(roots, files, sources, &visible)
-}
-
 fn fixture_root(name: &str) -> PathBuf {
     normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))

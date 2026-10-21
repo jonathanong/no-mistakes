@@ -72,7 +72,7 @@ fn file_imports_omits_computed_specifiers() {
 #[test]
 fn try_resolve_matches_an_exact_visible_path() {
     let candidate = PathBuf::from("/repo/packages/lib/helper.mts");
-    let visible: std::collections::HashSet<PathBuf> = [candidate.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [candidate.clone()].into_iter().collect();
 
     assert_eq!(try_resolve(&candidate, &visible), Some(candidate));
 }
@@ -81,7 +81,7 @@ fn try_resolve_matches_an_exact_visible_path() {
 fn try_resolve_appends_a_resolve_extension() {
     let candidate = PathBuf::from("/repo/packages/lib/helper");
     let resolved = PathBuf::from("/repo/packages/lib/helper.mts");
-    let visible: std::collections::HashSet<PathBuf> = [resolved.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [resolved.clone()].into_iter().collect();
 
     assert_eq!(try_resolve(&candidate, &visible), Some(resolved));
 }
@@ -90,7 +90,7 @@ fn try_resolve_appends_a_resolve_extension() {
 fn try_resolve_falls_back_to_a_directory_index_file() {
     let candidate = PathBuf::from("/repo/packages/lib/sub");
     let resolved = PathBuf::from("/repo/packages/lib/sub/index.mts");
-    let visible: std::collections::HashSet<PathBuf> = [resolved.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [resolved.clone()].into_iter().collect();
 
     assert_eq!(try_resolve(&candidate, &visible), Some(resolved));
 }
