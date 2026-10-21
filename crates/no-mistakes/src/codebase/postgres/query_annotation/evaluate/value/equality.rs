@@ -4,6 +4,7 @@ mod hooks;
 #[cfg(test)]
 #[path = "equality/test_hooks.rs"]
 mod hooks;
+mod prefix_order;
 
 // Shared Scope snapshots can return the very same Value reference. Avoid descending
 // into strings and record labels; distinct references retain structural equality.

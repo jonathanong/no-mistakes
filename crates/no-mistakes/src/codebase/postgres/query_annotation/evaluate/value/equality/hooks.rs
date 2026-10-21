@@ -6,9 +6,10 @@ macro_rules! identity {
 macro_rules! fallback {
     () => {};
 }
-macro_rules! prefix {
-    ($a:expr, $b:expr, $c:expr, $a2:expr, $b2:expr, $c2:expr) => {
-        $b == $b2 && $c == $c2 && $a == $a2
+pub(super) use super::prefix_order::compare as prefix;
+macro_rules! sql_component {
+    ($a:expr, $b:expr) => {
+        $a == $b
     };
 }
-pub(super) use {fallback, identity, prefix};
+pub(super) use {fallback, identity, sql_component};
