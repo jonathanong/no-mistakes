@@ -11,4 +11,4 @@ rules:
     scope: repository
     options:
       unanalyzable: advise
-      unanalyzableSql: invalid-overridden-alias
+      unanalyzableSql: ignore

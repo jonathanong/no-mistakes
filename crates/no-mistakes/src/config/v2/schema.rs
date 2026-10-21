@@ -51,6 +51,8 @@ pub struct NoMistakesConfig {
     pub effort_override: Option<super::Effort>,
     #[serde(skip)]
     pub analysis_warnings: Vec<String>,
+    #[serde(skip)]
+    pub analysis_fallbacks: Vec<super::AnalysisFallback>,
     /// Legacy React analyzer root retained for compatibility with the
     /// standalone `react` commands and the aggregate `check` command.
     #[serde(skip_serializing_if = "Option::is_none")]

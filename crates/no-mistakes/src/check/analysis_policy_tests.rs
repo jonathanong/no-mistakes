@@ -37,16 +37,23 @@ fn shared_unanalyzable_policies_route_actual_sql_failures_advisories_and_skips()
 }
 
 #[test]
-fn explicit_max_and_non_adopting_low_are_byte_identical_to_default() {
+fn explicit_max_stays_identical_and_non_adopting_low_is_a_nonfailing_note() {
     for mode in ["report", "advise", "ignore"] {
         let config = format!("sql-{mode}.yml");
         let default = check_runner::json_value(&report(&config, None));
-        for effort in [Effort::Max, Effort::Low] {
-            assert_eq!(
-                check_runner::json_value(&report(&config, Some(effort))),
-                default
-            );
-        }
+        assert_eq!(
+            check_runner::json_value(&report(&config, Some(Effort::Max))),
+            default
+        );
+        assert!(default.get("analysisFallbacks").is_none());
+        let low = report(&config, Some(Effort::Low));
+        assert_eq!(has_failures(&low), mode == "report");
+        let mut low = check_runner::json_value(&low);
+        assert_eq!(low["warnings"], serde_json::json!([
+            "postgres-require-query-annotation: requested effort low; effective effort max because this rule has no low implementation"
+        ]));
+        low["warnings"] = serde_json::json!([]);
+        assert_eq!(low, default);
     }
 }
 
@@ -157,4 +164,34 @@ fn inherited_ignored_sql_aliases_preserve_both_cross_file_rule_reports() {
             "{config}"
         );
     }
+}
+
+#[test]
+fn structured_analysis_fallbacks_are_typed_and_omitted_when_empty() {
+    let mut results = check_runner::empty_results([None]);
+    assert!(check_runner::json_value(&results)
+        .get("analysisFallbacks")
+        .is_none());
+    results
+        .analysis_fallbacks
+        .push(no_mistakes::config::v2::AnalysisFallback {
+            rule: "test-effort-adopter".into(),
+            partner: "test-partner".into(),
+            requested: Effort::Low,
+            effective: Effort::Max,
+        });
+    assert_eq!(
+        check_runner::json_value(&results)["analysisFallbacks"],
+        serde_json::json!([
+            {"rule": "test-effort-adopter", "partner": "test-partner", "requested": "low", "effective": "max"}
+        ])
+    );
+}
+
+#[test]
+fn canonical_policy_wins_valid_alias_conflicts_on_actual_sql() {
+    assert_eq!(
+        check_runner::json_value(&report("shared-valid-annotation.yml", None)),
+        check_runner::json_value(&report("sql-advise.yml", None))
+    );
 }

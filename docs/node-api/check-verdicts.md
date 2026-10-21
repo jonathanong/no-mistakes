@@ -40,9 +40,18 @@ Pass `effort: "low"` or `effort: "max"` to `check()` or a check report in
 `analyzeProject()`. The default is `max`; invocation effort takes precedence
 over per-rule and repository defaults. If a low-effort rule's required partner
 check is missing or out of scope, the report includes a warning and that rule
-runs at `max`. Rule options may set `effort` and the shared `unanalyzable`
-policy. `unanalyzableSql` is a backward-compatible SQL alias for the same
-policy. Legacy PostgreSQL rules that use `fail` keep that spelling; shared
-`report` maps to the legacy parser's accepted value.
+runs at `max`. The exported `CheckReport.analysisFallbacks` field contains one
+`AnalysisFallback` record for each such partner fallback, with the rule,
+unavailable partner, requested effort, and effective effort. It is omitted when
+there are no partner fallbacks. Rules without a low-effort implementation
+continue at `max` and add a named, non-failing warning when low was requested;
+they do not produce a partner fallback record.
+`effort` is also accepted and ignored by other N-API commands because they
+share general project options; it changes analysis only for check reports.
+
+Rule options may set `effort` and the shared `unanalyzable` policy.
+`unanalyzableSql` is a backward-compatible SQL alias for the same policy.
+Legacy PostgreSQL rules that use `fail` keep that spelling; shared `report`
+maps to the legacy parser's accepted value.
 
 [Node/N-API guide](../node-api.md)

@@ -26,6 +26,11 @@ Key options: `--root`, `--config`, `--tsconfig`, `--format`, `--json`, and
 Invocation effort overrides rule and repository defaults. A rule that requires
 a partner check warns and falls back to `max` when that partner is absent or
 outside its configured scope.
+JSON output includes `analysisFallbacks` rows for partner-backed fallbacks,
+with the rule, unavailable partner, requested effort, and effective effort;
+the field is omitted when there are no such fallbacks. A rule without a low
+implementation also emits a named, non-failing warning when low was requested
+and continues at `max`; it has no partner fallback row.
 `--include-suppressed` is opt-in and adds deterministic directive accounting to
 JSON/YAML output without changing the default report schema.
 `unprovenMemberQuerySql` is an optional count of member `.query` calls that were not proven, omitted when zero, and not a failure.

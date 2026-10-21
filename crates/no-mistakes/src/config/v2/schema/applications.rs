@@ -26,9 +26,7 @@ impl RuleDef {
             options.remove("effort");
             options.remove("unanalyzable");
             if !super::super::analysis_policy::legacy_sql_options(&self.rule) {
-                if self.options.get("unanalyzable").is_none() {
-                    super::super::analysis_policy::validate_low_alias(self)?;
-                }
+                super::super::analysis_policy::validate_low_alias(self)?;
                 options.remove("unanalyzableSql");
             }
         }

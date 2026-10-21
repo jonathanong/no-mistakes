@@ -1,11 +1,24 @@
 import type { QueueCheckFinding } from "./queue-report-types";
 import type { ReactViolation } from "./react-report-types";
+import type { Effort } from "./traversal-types";
+
+/** A low-effort rule that used maximum analysis because a required partner was unavailable. */
+export interface AnalysisFallback {
+  /** Canonical rule identifier. */
+  rule: string;
+  /** Required partner check that could not be validated in scope. */
+  partner: string;
+  requested: Effort;
+  effective: Effort;
+}
 
 export interface CheckReport {
   react: ReactViolation[];
   queues: QueueCheckFinding[];
   rules: RuleFinding[];
   integration: IntegrationFinding[];
+  /** Partner-backed low-effort rules that fell back to maximum analysis; omitted when empty. */
+  analysisFallbacks?: AnalysisFallback[];
   /** Present only when requested; declaration evidence, not runtime closure. */
   runnerConfigDeadlines?: RunnerConfigDeadlineEvidence[];
   codebase: UniqueExportFinding[];

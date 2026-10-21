@@ -44,6 +44,9 @@ no-mistakes check --format json
 rules that implement it; `max` is the default and preserves current analysis.
 If a low-effort rule's required partner check is missing or outside its
 configured scope, the check warns and falls back to `max` for that rule.
+JSON reports include `analysisFallbacks` for these partner fallbacks and omit
+the field when none occurred. A rule without a low implementation emits a
+named, non-failing warning when low was requested and stays at `max`.
 Repository and rule settings use `effort` and `unanalyzable`; the older
 SQL-specific `unanalyzableSql` setting remains an alias.
 
