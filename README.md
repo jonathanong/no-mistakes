@@ -173,7 +173,7 @@ This repository is a huge token sink. Thus, contributions are welcomed.
 2. Annotate which AI harness + model was used, `Co-Authored-By` is preferred
 3. Maintain 98% project and patch test coverage
 
-<!-- cspell:ignore rustup Clippy -->
+<!-- cspell:ignore rustup Clippy mimalloc -->
 Development, CI, release builds, and benchmarks use the latest stable Rust.
 Run `rustup update stable` before local validation; `rust-toolchain.toml` selects
 that channel and installs Clippy and rustfmt. Workflows select `toolchain: stable`

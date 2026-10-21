@@ -1,5 +1,7 @@
 # Node/N-API Guide
 
+<!-- cspell:ignore mimalloc dlopen -->
+
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
