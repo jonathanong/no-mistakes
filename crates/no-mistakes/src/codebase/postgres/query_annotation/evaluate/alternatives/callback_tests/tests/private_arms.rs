@@ -5,7 +5,7 @@ use crate::codebase::ts_source::FileIdMap;
 use std::collections::BTreeSet;
 
 #[path = "private_arms/support.rs"]
-mod support;
+pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) mod support;
 use support::fixture;
 
 fn private_ids<F: Fn(&str, &std::path::Path) -> Option<std::path::PathBuf>>(

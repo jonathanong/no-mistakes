@@ -5,13 +5,14 @@ use crate::fx::FxHashSet;
 use std::path::Path;
 
 impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
-    pub(in super::super) fn alternatives(
+    pub(in super::super) fn alternatives_prepared(
         &mut self,
         arms: &[Expr],
         path: &Path,
         env: &Environment,
         depth: u8,
         generic: bool,
+        prepared: Option<Vec<super::parallel::Outcome>>,
     ) -> Value {
         let precise_records = self.files[path].facts.precise_records;
         let scopes = self.scopes.clone();
@@ -48,6 +49,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let mut final_live = None;
         let mut prefix_roots = super::reachable::Prefix::default();
         let mut changed = FxHashSet::default();
+        let mut prepared = prepared.map(Vec::into_iter);
         for (arm_index, arm) in arms.iter().enumerate() {
             self.untrusted_array_intrinsics = untrusted;
             // Keep arm-created frames alive for callbacks returned from helpers.
@@ -77,7 +79,10 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             // an arm (including restored module initials) need reader updates.
             self.add_alternative_captured_readers(scopes.len());
             self.rebuild_compacted_binding_indexes(false);
-            returned.push(self.expr(arm, path, env, depth, generic));
+            returned.push(match &mut prepared {
+                Some(outcomes) => outcomes.next().unwrap().install(self),
+                None => self.expr(arm, path, env, depth, generic),
+            });
             self.join_builder_updates(&mut joined_updates, &baselines, original_ids, path);
             joined_untrusted |= self.untrusted_array_intrinsics;
             deleted_changed.extend(self.deleted_argument_slots.iter().copied());

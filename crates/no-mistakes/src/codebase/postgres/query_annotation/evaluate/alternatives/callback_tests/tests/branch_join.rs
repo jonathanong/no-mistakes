@@ -31,6 +31,7 @@ fn callback_seen_in_one_arm_remains_available_after_join() {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

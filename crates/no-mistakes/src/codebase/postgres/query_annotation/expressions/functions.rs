@@ -1,3 +1,4 @@
+mod closed;
 use super::super::{Expr, Function, Step};
 use oxc_ast::ast::{ArrowFunctionBody, ArrowFunctionExpression, BindingPattern, FormalParameters};
 
@@ -80,7 +81,9 @@ pub(super) fn function(
     if let Some(rest) = &params.rest {
         names.extend(super::super::trust::bound_names(&rest.rest.argument));
     }
+    let closed_factory = supported && !arrow && !asynchronous && closed::factory(&names, &body);
     std::sync::Arc::new(Function {
+        closed_factory,
         start,
         params: names,
         body,

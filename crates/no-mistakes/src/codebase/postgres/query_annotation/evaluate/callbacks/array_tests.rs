@@ -38,6 +38,7 @@ fn with_arrays(
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: (|_: &str, _: &std::path::Path| -> Option<PathBuf> { None })
             as fn(&str, &std::path::Path) -> Option<PathBuf>,

@@ -33,6 +33,7 @@ fn precise_records_with_reference_bearing_arms_create_no_prefix_observer_work() 
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

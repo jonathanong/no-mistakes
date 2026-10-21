@@ -31,6 +31,7 @@ fn slot_owner_lookup_preserves_duplicates_arity_and_canonical_inherited_origins(
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

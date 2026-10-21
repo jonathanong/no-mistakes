@@ -49,6 +49,7 @@ fn definite_parameter_assignments_remain_fresh_until_another_container_escape() 
             },
         )]);
         let mut evaluator = Evaluator {
+            parallel_arms: None,
             files: &files,
             resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
             events: Default::default(),

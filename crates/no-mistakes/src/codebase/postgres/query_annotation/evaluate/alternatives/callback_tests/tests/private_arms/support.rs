@@ -13,10 +13,11 @@ use std::path::{Path, PathBuf};
 fn resolve(_: &str, _: &Path) -> Option<PathBuf> {
     None
 }
-pub(super) fn evaluator<'a>(
+pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn evaluator<'a>(
     files: &'a FxHashMap<PathBuf, File<'a>>,
 ) -> Evaluator<'a, fn(&str, &Path) -> Option<PathBuf>> {
     Evaluator {
+        parallel_arms: None,
         files,
         resolve,
         events: Default::default(),
@@ -46,14 +47,16 @@ pub(super) fn evaluator<'a>(
     }
 }
 
-pub(super) fn root() -> PathBuf {
+pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn root() -> PathBuf {
     crate::test_support::rule_fixture_root("postgres-require-query-annotation")
         .join("helper-tracing-arm-private-callbacks")
         .canonicalize()
         .unwrap()
 }
 
-pub(super) fn functions(value: &Value) -> Vec<(u32, Environment)> {
+pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn functions(
+    value: &Value,
+) -> Vec<(u32, Environment)> {
     let mut result = Vec::new();
     match value {
         Value::Function(function, _, env) => result.push((function.start, *env)),
@@ -68,7 +71,7 @@ pub(super) fn functions(value: &Value) -> Vec<(u32, Environment)> {
     result
 }
 
-pub(super) fn files<'a>(
+pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn files<'a>(
     path: &Path,
     facts: &'a query_annotation::QueryAnnotationFileFacts,
     embedded: &crate::codebase::postgres::EmbeddedSqlFileFacts,
@@ -83,7 +86,9 @@ pub(super) fn files<'a>(
     )])
 }
 
-pub(super) fn fixture(name: &str) -> (std::path::PathBuf, String, CheckFileFacts) {
+pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn fixture(
+    name: &str,
+) -> (std::path::PathBuf, String, CheckFileFacts) {
     let path = root().join(format!("src/{name}.mts"));
     let source = std::fs::read_to_string(&path).unwrap();
     let options = EmbeddedSqlOptions::configured("@app/db", &[]);
@@ -117,7 +122,7 @@ pub(super) fn fixture(name: &str) -> (std::path::PathBuf, String, CheckFileFacts
 }
 
 #[cfg(feature = "test-instrumentation")]
-pub(super) fn assert_report() {
+pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn assert_report() {
     let off = crate::benchmark_support::check_json(&root()).unwrap();
     let (on, _) = crate::benchmark_support::check_json_observed(&root(), true).unwrap();
     assert_eq!(off, on);

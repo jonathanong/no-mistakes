@@ -36,6 +36,7 @@ fn returned_closures_observe_live_bindings_without_crossing_parameter_shadows() 
             },
         )]);
         let mut evaluator = Evaluator {
+            parallel_arms: None,
             files: &files,
             resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
             events: Default::default(),

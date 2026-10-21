@@ -9,6 +9,7 @@ pub(super) mod frames;
 mod freshness;
 mod merge;
 pub(super) mod modules;
+pub(super) mod parallel;
 mod prune;
 mod reachable;
 mod run;

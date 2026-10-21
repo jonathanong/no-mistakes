@@ -56,6 +56,7 @@ fn imported_callback_state_is_observed_without_another_fact_pass() {
         })
         .collect::<FxHashMap<_, _>>();
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |specifier: &str, _: &std::path::Path| -> Option<PathBuf> {
             (specifier == "./helper.mjs").then(|| helper.clone())

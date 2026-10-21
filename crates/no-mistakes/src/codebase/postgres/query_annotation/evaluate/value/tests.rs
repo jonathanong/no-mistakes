@@ -75,6 +75,7 @@ fn environment_memo_follows_nested_functions_and_detached_writes() {
     use crate::codebase::postgres::query_annotation::Function;
     let function = Value::Function(
         Arc::new(Function {
+            closed_factory: false,
             start: 0,
             params: vec![],
             body: vec![],
@@ -113,6 +114,7 @@ fn environment_memo_follows_nested_functions_and_detached_writes() {
 fn prepared_function_summaries_remain_shared_across_expression_snapshots() {
     use crate::codebase::postgres::query_annotation::{Expr, Function};
     let function = Arc::new(Function {
+        closed_factory: false,
         start: 0,
         params: vec![],
         body: vec![],

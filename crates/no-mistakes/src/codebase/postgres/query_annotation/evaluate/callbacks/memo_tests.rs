@@ -31,6 +31,7 @@ fn shared_callback_read_profiles_construct_one_projection_per_iteration() {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

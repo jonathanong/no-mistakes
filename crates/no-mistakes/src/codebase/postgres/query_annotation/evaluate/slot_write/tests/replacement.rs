@@ -17,6 +17,7 @@ fn sloppy_fixture_slot_write_updates_its_actual_mapped_parameter() {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -116,6 +117,7 @@ fn appending_a_builder_updates_its_sparse_argument_slot_alias() {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

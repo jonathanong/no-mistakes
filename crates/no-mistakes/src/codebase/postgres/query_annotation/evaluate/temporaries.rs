@@ -2,7 +2,7 @@ use super::{Environment, Evaluator, Value};
 use crate::fx::FxHashSet;
 use std::path::{Path, PathBuf};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub(in crate::codebase::postgres::query_annotation) enum TransientRoot {
     Argument(u64),
     Builder(u64),

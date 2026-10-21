@@ -40,6 +40,7 @@ fn only_deletions_on_every_alternative_disconnect_mapped_parameters() {
             },
         )]);
         let mut evaluator = Evaluator {
+            parallel_arms: None,
             files: &files,
             resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
             events: Default::default(),

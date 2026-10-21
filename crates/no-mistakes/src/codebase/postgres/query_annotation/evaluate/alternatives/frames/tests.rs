@@ -6,6 +6,7 @@ use std::sync::Arc;
 fn function_value(env: Environment) -> Value {
     Value::Function(
         Arc::new(Function {
+            closed_factory: false,
             start: 0,
             params: vec![],
             body: vec![],

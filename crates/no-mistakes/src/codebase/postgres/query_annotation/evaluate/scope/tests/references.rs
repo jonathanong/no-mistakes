@@ -51,6 +51,7 @@ fn every_prefix_reachable_value_kind_is_conservative() {
     }
     let function = Value::Function(
         Arc::new(crate::codebase::postgres::query_annotation::Function {
+            closed_factory: false,
             start: 0,
             params: vec![],
             body: vec![],

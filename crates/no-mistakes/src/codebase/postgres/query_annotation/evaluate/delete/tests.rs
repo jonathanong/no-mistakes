@@ -30,6 +30,7 @@ fn outputs() -> FxHashMap<String, Value> {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -124,6 +125,7 @@ fn handled_effect_checks_fail_closed_on_mismatched_evaluated_shapes() {
         },
     )]);
     let evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

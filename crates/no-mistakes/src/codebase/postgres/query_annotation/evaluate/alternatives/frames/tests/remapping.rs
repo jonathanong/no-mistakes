@@ -16,6 +16,7 @@ fn remapping_preserves_shared_values_without_environments() {
 fn remapping_changes_function_environments_only_in_written_snapshot() {
     let function = Value::Function(
         Arc::new(Function {
+            closed_factory: false,
             start: 0,
             params: vec![],
             body: vec![],

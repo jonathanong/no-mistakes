@@ -163,6 +163,7 @@ fn evaluator<'a>(
     files: &'a FxHashMap<PathBuf, File<'a>>,
 ) -> Evaluator<'a, fn(&str, &Path) -> Option<PathBuf>> {
     Evaluator {
+        parallel_arms: None,
         files,
         resolve: |_specifier, _from| None,
         events: Default::default(),

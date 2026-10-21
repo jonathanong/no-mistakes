@@ -26,6 +26,7 @@ fn lazy_module_argument_ids_use_shared_definite_intersections() {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

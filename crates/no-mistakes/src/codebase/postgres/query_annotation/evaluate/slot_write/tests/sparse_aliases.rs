@@ -24,6 +24,7 @@ fn replacing_arguments_slot_does_not_invalidate_the_detached_strict_formal() {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

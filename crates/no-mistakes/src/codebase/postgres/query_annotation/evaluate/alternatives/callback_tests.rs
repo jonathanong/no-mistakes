@@ -6,7 +6,7 @@ mod branch_join;
 mod computed_receiver;
 #[cfg(test)]
 #[path = "callback_tests/tests/private_arms.rs"]
-mod private_arms;
+pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) mod private_arms;
 #[cfg(test)]
 #[path = "callback_tests/tests/siblings.rs"]
 mod siblings;

@@ -9,6 +9,7 @@ mod legacy;
 fn function() -> Value {
     Value::Function(
         Arc::new(Function {
+            closed_factory: false,
             start: 0,
             params: vec![],
             body: vec![],

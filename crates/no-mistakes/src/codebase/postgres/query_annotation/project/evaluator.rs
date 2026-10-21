@@ -1,13 +1,14 @@
 use super::super::evaluate::{Evaluator, File};
 use crate::fx::FxHashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-pub(super) fn new<'a, F>(
+pub(super) fn new<'a, F: Fn(&str, &Path) -> Option<PathBuf> + Sync>(
     files: &'a FxHashMap<PathBuf, File<'a>>,
     resolve: F,
     untrusted_array_intrinsics: bool,
 ) -> Evaluator<'a, F> {
-    Evaluator {
+    let mut evaluator = Evaluator {
+        parallel_arms: None,
         files,
         resolve,
         untrusted_array_intrinsics,
@@ -44,5 +45,7 @@ pub(super) fn new<'a, F>(
         definite_deleted_argument_slots: Default::default(),
         recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
-    }
+    };
+    evaluator.enable_parallel_arms();
+    evaluator
 }

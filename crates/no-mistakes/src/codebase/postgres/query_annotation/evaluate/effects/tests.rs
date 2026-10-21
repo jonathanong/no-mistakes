@@ -8,6 +8,7 @@ pub(super) fn evaluator<'a>(
     scope: FxHashMap<String, Value>,
 ) -> Evaluator<'a, fn(&str, &Path) -> Option<PathBuf>> {
     Evaluator {
+        parallel_arms: None,
         files,
         resolve: |_name, _path| None,
         events: Default::default(),

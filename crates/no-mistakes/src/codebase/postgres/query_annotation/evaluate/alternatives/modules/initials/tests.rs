@@ -24,6 +24,7 @@ fn pristine_module_snapshots_restore_and_remap_sloppy_argument_callback_state() 
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

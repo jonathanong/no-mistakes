@@ -29,6 +29,7 @@ fn precise_record_arms_never_construct_reference_binding_indexes() {
             },
         )]);
         let mut evaluator = Evaluator {
+            parallel_arms: None,
             files: &files,
             resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
             events: Default::default(),

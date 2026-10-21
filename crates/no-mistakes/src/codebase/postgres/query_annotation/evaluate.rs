@@ -48,6 +48,7 @@ pub(super) struct File<'a> {
 pub(super) struct Evaluator<'a, F> {
     pub files: &'a FxHashMap<PathBuf, File<'a>>,
     pub resolve: F,
+    pub parallel_arms: Option<alternatives::parallel::Handler<'a, F>>,
     // Immutable request-wide trust; branch snapshots cannot restore intrinsics.
     pub untrusted_array_intrinsics: bool,
     pub events: ExecutionEvents,

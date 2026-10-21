@@ -26,6 +26,7 @@ fn run_prunes_dead_argument_objects_before_speculative_snapshots() {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
@@ -119,6 +120,7 @@ fn run_drops_dead_frames_before_later_imported_module_initialization() {
         ),
     ]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |specifier: &str, from: &Path| {
             (specifier == "./later.mts" && from == root.as_path()).then(|| later.clone())

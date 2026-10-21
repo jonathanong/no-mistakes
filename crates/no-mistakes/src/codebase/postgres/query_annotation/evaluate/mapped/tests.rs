@@ -25,6 +25,7 @@ fn evaluated(name: &str) -> (FxHashMap<String, Value>, usize, usize) {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

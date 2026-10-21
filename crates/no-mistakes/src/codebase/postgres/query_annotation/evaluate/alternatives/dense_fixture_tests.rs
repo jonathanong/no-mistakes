@@ -45,6 +45,7 @@ fn saved_dense_helper_retains_callback_and_cyclic_argument_state() {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

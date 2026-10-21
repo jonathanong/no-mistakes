@@ -93,6 +93,7 @@ pub(super) enum DeleteKey {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(super) struct Function {
+    pub closed_factory: bool,
     pub start: u32,
     pub params: Vec<String>,
     pub body: Vec<Step>,

@@ -46,6 +46,7 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

@@ -69,6 +69,7 @@ fn static_slot_replacement_preserves_strict_formal_and_updates_sloppy_alias() {
     scope.insert("arguments".into(), Value::Arguments(1));
     scope.insert("statement".into(), original.clone());
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

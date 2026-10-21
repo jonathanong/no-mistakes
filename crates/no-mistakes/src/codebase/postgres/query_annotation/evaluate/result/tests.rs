@@ -34,6 +34,7 @@ fn outputs_file(scenario: &str, name: &str) -> Vec<(String, Value)> {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

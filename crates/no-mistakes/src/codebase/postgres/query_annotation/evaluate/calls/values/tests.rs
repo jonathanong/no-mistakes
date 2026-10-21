@@ -31,6 +31,7 @@ fn earlier_arguments_follow_later_builder_mutations_through_result_wrappers() {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),

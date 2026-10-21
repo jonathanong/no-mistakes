@@ -35,6 +35,7 @@ fn resolve(_: &str, _: &Path) -> Option<PathBuf> {
 type TestEvaluator<'a> = Evaluator<'a, fn(&str, &Path) -> Option<PathBuf>>;
 fn evaluator<'a>(files: &'a FxHashMap<PathBuf, File<'a>>) -> TestEvaluator<'a> {
     Evaluator {
+        parallel_arms: None,
         files,
         resolve,
         events: Default::default(),

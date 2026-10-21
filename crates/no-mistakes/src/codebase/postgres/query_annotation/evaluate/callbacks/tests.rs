@@ -31,6 +31,7 @@ fn callback_depth_limit_invalidates_captures_without_executing_the_body() {
         },
     )]);
     let mut evaluator = Evaluator {
+        parallel_arms: None,
         files: &files,
         resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
         events: Default::default(),
