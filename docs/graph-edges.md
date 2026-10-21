@@ -669,6 +669,11 @@ declaration order does not establish execution.
 Origins recovered through a later assigned-callback invocation extend the initial
 parameter capture even when a direct call already populated it. They remain
 separate from later parameter-reassignment generations.
+This does not prove conditional caller reachability. In the saved late-forwarded
+example, changing `invoke(b)` to `if (flag) invoke(b)` can still omit `untouched.get`
+when `flag` is false, although that receiver is untouched at runtime. This is a
+pre-existing limitation; the unconditional controls do not establish this broader
+guarantee. See [the audit](https://github.com/jonathanong/no-mistakes/issues/2445).
 An immutable repository export alias of an external receiver, such as
 `export const receiver = shared`, keeps that external receiver's canonical
 identity through named re-exports. Repeated foreign helper reads of a written
