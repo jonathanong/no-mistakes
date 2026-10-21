@@ -36,7 +36,7 @@ fn invisible_primary_hit_vetoes_workspace_replacement_and_traversal() {
     fallback.prepare(&fixture.files, |specifier, _| {
         (specifier == "@p/leaf").then(|| fixture.path("invisible.mts"))
     });
-    assert_eq!(fallback.prepared.len(), 1);
+    assert_eq!(fallback.prepared.len(), fixture.files.len());
     assert_eq!(fallback.importers.as_deref().unwrap().len(), 1);
     assert!(matches!(
         fallback.prepared[&helper]["@p/leaf"],

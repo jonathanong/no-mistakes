@@ -161,8 +161,8 @@ The deterministic `postgres.annotation.workspace_closure` pre-pass is included i
 count configured seeds, permission files, retained modules, scanned modules,
 unique import lookups, and raw workspace edges resolved by that pre-pass. Finding
 reverse callers requires resolving runtime imports in all prepared modules once;
-disconnected components stay blocked. Retained targets, including failures, are
-reused during evaluation; type-only imports cannot widen the closure.
+disconnected components stay blocked. All raw targets, including failures and blocked
+components, are cached for evaluation; type-only imports cannot widen the closure.
 `postgres.annotation.reachability_walks` counts the
 branch-state liveness traversals. This helps distinguish source extraction
 from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`

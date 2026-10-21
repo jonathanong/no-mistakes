@@ -75,7 +75,16 @@ fn assert_cached(fallback: &WorkspaceFallback<'_>) {
         for (specifier, target) in targets {
             assert_eq!(
                 fallback.resolve(specifier, from, |_, _| panic!("cached edge resolved again")),
-                target.path().cloned()
+                target
+                    .path()
+                    .filter(|_| {
+                        matches!(target, ResolvedTarget::Primary(_))
+                            || fallback
+                                .importers
+                                .as_deref()
+                                .is_none_or(|paths| paths.contains(from))
+                    })
+                    .cloned()
             );
         }
     }

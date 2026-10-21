@@ -32,13 +32,15 @@ fn seed_order_is_irrelevant_and_diamond_cycle_modules_resolve_once() {
         assert!(counts.values().all(|count| *count == 1));
         assert_eq!(
             fallback.prepared.len(),
-            5,
-            "diamond and cycle visit five modules once"
+            fixture.files.len(),
+            "every prepared module is resolved once to discover reverse callers"
         );
         assert_eq!(fallback.importers.as_deref().unwrap().len(), 5);
         assert!(!fallback
-            .prepared
-            .contains_key(&fixture.path("packages/type-only/src/index.mts")));
+            .importers
+            .as_deref()
+            .unwrap()
+            .contains(&fixture.path("packages/type-only/src/index.mts")));
         assert!(!trace
             .iter()
             .any(|(_, specifier)| specifier == "@p/type-only"));

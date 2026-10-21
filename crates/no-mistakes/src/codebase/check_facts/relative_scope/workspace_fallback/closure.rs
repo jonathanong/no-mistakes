@@ -96,11 +96,15 @@ fn expand<const OBSERVED: bool>(
             }
         }
     }
-    prepared.retain(|path, _| allowed.contains(path));
+    // Keep blocked targets cached too: projecting their rejection must not
+    // repeat a lookup already needed to discover reverse callers.
     note::<OBSERVED>(
         fallback,
         "postgres.annotation.closure_modules",
-        prepared.len() as u64,
+        prepared
+            .keys()
+            .filter(|path| allowed.contains(*path))
+            .count() as u64,
     );
     note::<OBSERVED>(
         fallback,
