@@ -337,7 +337,7 @@ fn escaping_root_is_one_finding_and_skips_outside_files() {
     let opts: Options = config.rule_applications(RULE_ID)[0]
         .try_rule_options()
         .unwrap();
-    let findings = super::scan(&root, &opts, &[inside.clone(), outside.clone()]).unwrap();
+    let findings = super::scan(&root, &config, &opts, &[inside.clone(), outside.clone()]).unwrap();
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].file, ".no-mistakes.yml");
     assert!(
@@ -358,6 +358,38 @@ fn escaping_root_is_one_finding_and_skips_outside_files() {
     assert_eq!(checked.len(), 1, "{checked:?}");
     assert!(checked[0].message.contains("escapes the repository"));
     assert_eq!(checked[0].file, ".no-mistakes.yml");
+}
+
+#[test]
+fn escaping_root_ignores_a_shorter_markdown_name() {
+    let root = fixture("escape-markdown");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let files = vec![
+        root.join(".no-mistakes.md"),
+        root.join(".no-mistakes.yml"),
+        root.join("agents/email/index.mts"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, ".no-mistakes.yml");
+}
+
+#[test]
+fn escaping_root_stays_on_a_custom_config_excluded_from_the_scan() {
+    let root = fixture("escape-custom");
+    let config_path = root.join("tools/check.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let files = vec![
+        config_path,
+        root.join(".no-mistakes.md"),
+        root.join("agents/email/index.mts"),
+    ];
+    let mut findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "tools/check.yml");
+    let sources = super::super::source_store_for_files(&files);
+    super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+    assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]

@@ -1,0 +1,10 @@
+# no-mistakes-disable-file require-test-per-subdir
+rules:
+  - rule: require-test-per-subdir
+    scope: repository
+    include:
+      - agents/**
+    options:
+      # `..` leaves this repository. The finding stays on this custom config.
+      roots: [".."]
+      testGlob: "*.test.mts"

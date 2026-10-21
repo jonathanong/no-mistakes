@@ -39,24 +39,15 @@ pub(crate) fn escape_finding(rule: &str, configured: &Path, config_file: &str) -
     }
 }
 
-/// The config file that declared the root, so `no-mistakes-disable-file` can load it.
-pub(crate) fn config_file_for_finding(root: &Path, files: &[PathBuf]) -> String {
-    let mut best: Option<String> = None;
-    for file in files {
-        let rel = crate::codebase::ts_source::relative_slash_path(root, file);
-        let name = rel.rsplit('/').next().unwrap_or(rel.as_str());
-        if !(name.starts_with(".no-mistakes.") || name == "no-mistakes.yml") {
-            continue;
-        }
-        let replace = match &best {
-            Some(current) => rel.len() < current.len(),
-            None => true,
-        };
-        if replace {
-            best = Some(rel);
-        }
-    }
-    best.unwrap_or_else(|| ".no-mistakes.yml".to_string())
+/// The config file the loader read, so `no-mistakes-disable-file` applies to it.
+pub(crate) fn config_file_for_finding(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+) -> String {
+    config
+        .loaded_config_path
+        .relative_to(root)
+        .unwrap_or_else(|| ".no-mistakes.yml".to_string())
 }
 
 #[cfg(test)]

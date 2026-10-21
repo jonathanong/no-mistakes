@@ -12,6 +12,7 @@ mod applications;
 mod ci_checks;
 mod effects;
 mod infra_config;
+pub mod loaded_path;
 pub(crate) mod postgres_executors;
 mod project_postgres;
 mod queues;
@@ -73,6 +74,9 @@ pub struct NoMistakesConfig {
     /// Set after PostgreSQL project scope inheritance. Not configuration.
     #[serde(skip, default)]
     pub postgres_project_scope_materialized: bool,
+    /// Config file the loader read. Not part of the declared configuration.
+    #[serde(skip, default)]
+    pub loaded_config_path: loaded_path::LoadedConfigPath,
     /// GitHub Actions workflow analysis configuration (`no-mistakes ci`).
     pub ci: CiConfig,
     /// Changed-file validation command mappings (`no-mistakes impacted-checks`).

@@ -134,7 +134,9 @@ fn opts_with_roots(roots: &[&str]) -> Options {
 #[test]
 fn scan_empty_roots_returns_empty() {
     let opts = Options::default();
-    assert!(scan(Path::new("/tmp"), &opts, &[]).is_empty());
+    assert!(
+        scan_with_config(Path::new("/tmp"), &NoMistakesConfig::default(), &opts, &[]).is_empty()
+    );
 }
 
 #[test]
@@ -147,7 +149,7 @@ fn scan_subdir_with_code_and_readme_passes() {
     std::fs::write(dir.join("README.md"), "# hi").unwrap();
     let files: Vec<PathBuf> = vec![dir.join("index.mts"), dir.join("README.md")];
     let opts = opts_with_roots(&["agents"]);
-    let findings = scan(root, &opts, &files);
+    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
     assert!(findings.is_empty(), "unexpected findings: {findings:#?}");
 }
 
@@ -161,7 +163,7 @@ fn scan_subdir_without_readme_fails() {
     std::fs::write(&code_file, "").unwrap();
     let files = vec![code_file];
     let opts = opts_with_roots(&["agents"]);
-    let findings = scan(root, &opts, &files);
+    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("missing README.md"));
 }
@@ -176,7 +178,7 @@ fn scan_skips_files_directly_under_root() {
     std::fs::write(&code_file, "").unwrap();
     let files = vec![code_file];
     let opts = opts_with_roots(&["agents"]);
-    let findings = scan(root, &opts, &files);
+    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
     assert!(
         findings.is_empty(),
         "direct root children should not require docs"
@@ -193,7 +195,7 @@ fn scan_skips_test_files() {
     std::fs::write(&test_file, "").unwrap();
     let files = vec![test_file];
     let opts = opts_with_roots(&["agents"]);
-    let findings = scan(root, &opts, &files);
+    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
     assert!(
         findings.is_empty(),
         "test files should not trigger missing docs"
@@ -426,7 +428,7 @@ fn scan_config_uses_defaults_when_fields_empty() {
         code_extensions: Vec::new(),  // → DEFAULT_CODE_EXTENSIONS
         test_exclude_patterns: Vec::new(), // → DEFAULT_TEST_EXCLUDE
     };
-    let findings = scan(root, &opts, &files);
+    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
     // Should flag because README.md is missing
     assert_eq!(findings.len(), 1, "missing README.md should be flagged");
     assert!(findings[0].message.contains("README.md"));
@@ -449,7 +451,7 @@ fn scan_with_absolute_root_path() {
         code_extensions: vec!["ts".to_string()],
         test_exclude_patterns: vec!["*.test.*".to_string()],
     };
-    let findings = scan(root, &opts, &files);
+    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
     assert_eq!(
         findings.len(),
         1,

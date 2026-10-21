@@ -149,6 +149,8 @@ pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMista
             policy.declaration_path = Some(crate::codebase::ts_resolver::normalize_path(path));
         }
     }
+    config.loaded_config_path =
+        super::schema::loaded_path::LoadedConfigPath(Some(path.to_path_buf()));
     Ok(config)
 }
 

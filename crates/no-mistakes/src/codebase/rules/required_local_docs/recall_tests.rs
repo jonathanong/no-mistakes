@@ -78,7 +78,7 @@ fn escaping_root_is_one_finding_and_skips_outside_files() {
     let opts: Options = config.rule_applications(RULE_ID)[0]
         .try_rule_options()
         .unwrap();
-    let findings = scan(&root, &opts, &[inside, outside.clone()]);
+    let findings = scan_with_config(&root, &config, &opts, &[inside, outside.clone()]);
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(
         findings[0].message.contains("escapes the repository"),

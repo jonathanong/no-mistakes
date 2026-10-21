@@ -50,7 +50,7 @@ pub(crate) fn check_with_files(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files)
+            scan(root, config, &opts, &files)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -58,10 +58,15 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
+fn scan(
+    root: &Path,
+    config: &NoMistakesConfig,
+    opts: &Options,
+    files: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
     let file_set: HashSet<&PathBuf> = files.iter().collect();
     let mut findings = Vec::new();
-    let config_file = super::configured_root::config_file_for_finding(root, files);
+    let config_file = super::configured_root::config_file_for_finding(root, config);
 
     for spec in &opts.packages {
         let abs_root = super::configured_root::normalize_configured_root(root, &spec.root);
