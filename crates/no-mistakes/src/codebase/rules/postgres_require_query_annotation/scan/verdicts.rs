@@ -1,5 +1,5 @@
 use super::RULE_ID;
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     combine_sql_verdicts, leading_query_annotation, sql_requires_query_annotation,
     EmbeddedSqlFileFacts, EmbeddedSqlKind, EmbeddedSqlOptions, SqlEvidenceKind,
@@ -11,7 +11,7 @@ pub(super) fn record(
     embedded: &EmbeddedSqlFileFacts,
     profile: &EmbeddedSqlOptions,
     advisory: bool,
-    facts: &CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) {
     for (call, span) in embedded.calls.iter().zip(&embedded.call_spans) {
         let (status, evidence, residual_reasons) = if !call.variants.is_empty() {

@@ -1,0 +1,26 @@
+rules:
+  # Coincident applications intentionally share names and options. Identity is
+  # the configured index, even when findings/advisories are deduplicated.
+  - rule: postgres-explicit-columns
+    name: coincident
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      maxColumns: 0
+      unanalyzableSql: advise
+  - rule: postgres-explicit-columns
+    name: coincident
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      maxColumns: 0
+      unanalyzableSql: advise
+  - rule: postgres-explicit-columns
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      maxColumns: 100
+      unanalyzableSql: advise

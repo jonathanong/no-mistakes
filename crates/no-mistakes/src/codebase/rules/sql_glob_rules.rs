@@ -1,5 +1,5 @@
 use super::RuleFinding;
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::ts_source::SourceStore;
 use anyhow::Result;
 use rayon::prelude::*;
@@ -11,7 +11,13 @@ pub(crate) fn run_sql_rule_with_glob_filters<O: DeserializeOwned + Default, C>(
     rule_id: &str,
     compile: impl Fn(&O) -> Result<C> + Sync,
     patterns: impl for<'a> Fn(&'a O) -> (&'a [String], &'a [String]) + Sync,
-    scan: impl Fn(&Path, &C, &[PathBuf], &SourceStore, &CheckFactMap) -> Result<super::PostgresFindings>
+    scan: impl Fn(
+            &Path,
+            &C,
+            &[PathBuf],
+            &SourceStore,
+            &dyn SqlFactContext,
+        ) -> Result<super::PostgresFindings>
         + Sync,
 ) -> Result<Vec<RuleFinding>> {
     let super::PreparedRuleContext {
@@ -48,7 +54,8 @@ pub(crate) fn run_sql_rule_with_glob_filters<O: DeserializeOwned + Default, C>(
                 &compiled,
                 &files,
                 sources,
-                view.as_ref().unwrap_or(facts),
+                view.as_ref()
+                    .map_or(facts as &dyn SqlFactContext, |view| view),
             )
         })
         .collect();

@@ -1,5 +1,5 @@
 use super::{combine_sql_verdicts, SqlEvidenceKind, SqlObligationVerdict, SqlVerdictStatus};
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     EmbeddedSqlCall, EmbeddedSqlFileFacts, EmbeddedSqlKind, EmbeddedSqlOptions,
     SqlStatementFileFacts,
@@ -47,7 +47,7 @@ enum Branch<'a> {
 
 /// Prepared inputs shared by the owning rule's per-subcheck judgments.
 pub struct SqlPolicyVerdictContext<'a> {
-    pub facts: &'a CheckFactMap,
+    pub facts: &'a dyn SqlFactContext,
     pub embedded: &'a EmbeddedSqlFileFacts,
     pub statements: &'a [SqlStatementFileFacts],
 }

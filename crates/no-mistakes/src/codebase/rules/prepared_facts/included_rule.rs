@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::check_facts::SqlFactContext;
 use rayon::prelude::*;
 
 pub(crate) fn run_included_postgres_rule<C>(
@@ -11,7 +12,7 @@ pub(crate) fn run_included_postgres_rule<C>(
             &C,
             &[PathBuf],
             &SourceStore,
-            &CheckFactMap,
+            &dyn SqlFactContext,
         ) -> Result<super::super::PostgresFindings>
         + Sync,
 ) -> Result<Vec<RuleFinding>> {
@@ -44,7 +45,8 @@ pub(crate) fn run_included_postgres_rule<C>(
                 &compiled,
                 &files,
                 sources,
-                view.as_ref().unwrap_or(facts),
+                view.as_ref()
+                    .map_or(facts as &dyn SqlFactContext, |view| view),
             )
         })
         .collect();

@@ -1,4 +1,5 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::statements::{SqlColumnClause, SqlColumnUseFact, SqlFactSite};
 use crate::codebase::ts_source::relative_slash_path;
 use std::collections::{BTreeMap, BTreeSet};
@@ -16,8 +17,9 @@ pub(super) fn scan(
     files: &[PathBuf],
     query_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-    prepared: &crate::codebase::check_facts::CheckFactMap,
+    context: &dyn SqlFactContext,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
+    let prepared = context.prepared();
     let sql_paths = crate::codebase::postgres::postgres_sql_paths(root, files, &opts.schema)?;
     let schema = sql_paths
         .iter()
@@ -49,10 +51,8 @@ pub(super) fn scan(
     if tracked.is_empty() {
         return Ok(findings);
     }
-    if prepared.wants_sql_verdicts() {
-        verdicts::record(
-            root, opts, &embedded, &queries, &tracked, &columns, prepared,
-        )?;
+    if context.wants_sql_verdicts() {
+        verdicts::record(root, opts, &embedded, &queries, &tracked, &columns, context)?;
     }
     for file in embedded.iter().filter(|file| queries.contains(&file.path)) {
         let rel = relative_slash_path(root, &file.path);

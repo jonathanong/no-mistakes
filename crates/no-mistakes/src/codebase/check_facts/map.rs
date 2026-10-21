@@ -18,6 +18,7 @@ use crate::playwright::analysis::text_types::AppTextTarget;
 use crate::playwright::selectors::{AppSelector, StaticExportValues};
 use crate::react_traits::analyze::file::FileAnalysis as ReactFileAnalysis;
 use dashmap::DashMap;
+pub use sql_verdicts::{SqlApplicationFacts, SqlFactContext};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};

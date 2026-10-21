@@ -3,7 +3,7 @@ use super::super::catalog_check::{
 };
 use super::super::directive::{contains_for_update, has_safe_directive};
 use super::{CompiledOptions, RULE_ID};
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     combine_sql_verdicts, sql_evidence_for_call, EmbeddedSqlCall, EmbeddedSqlFileFacts,
     EmbeddedSqlKind, LockingSelectMetadata, SchemaCatalog, SqlBranchJudgment, SqlEvidenceKind,
@@ -18,7 +18,7 @@ pub(super) fn record(
     opts: &CompiledOptions,
     catalog: Option<&SchemaCatalog>,
     statements: Option<&[SqlStatementFileFacts]>,
-    facts: &CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) {
     let prepared = statements
         .map(crate::codebase::rules::index_sql_variants)

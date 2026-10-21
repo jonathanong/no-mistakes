@@ -1,5 +1,5 @@
 use super::{analysis, has_safe_directive, CompiledOptions, RULE_ID};
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     combine_sql_verdicts, sql_evidence_for_call, EmbeddedSqlCall, EmbeddedSqlFileFacts,
     EmbeddedSqlKind, SchemaCatalog, SqlBranchJudgment, SqlConflictInsertFact, SqlEvidenceKind,
@@ -15,7 +15,7 @@ pub(super) fn record(
     opts: &CompiledOptions,
     catalog: &SchemaCatalog,
     prepared: &FxHashMap<(usize, usize), &SqlStatementFileFacts>,
-    facts: &CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) {
     if !facts.wants_sql_verdicts() {
         return;

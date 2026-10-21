@@ -1,3 +1,4 @@
+use crate::codebase::check_facts::SqlFactContext;
 mod analysis;
 mod exact;
 mod gate;
@@ -23,25 +24,28 @@ pub(super) fn scan_with_sources(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-    facts: &crate::codebase::check_facts::CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) -> Result<crate::codebase::rules::PostgresFindings> {
-    let catalog = facts.postgres_ordering_catalog(&opts.schema_catalog_path)?;
+    let prepared = facts.prepared();
+    let catalog = prepared.postgres_ordering_catalog(&opts.schema_catalog_path)?;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     for path in files
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
     {
-        let file = facts.embedded_sql(path, &opts.embedded).with_context(|| {
-            format!(
-                "{RULE_ID} failed to collect embedded SQL facts from prepared analysis for {}",
-                path.display()
-            )
-        })?;
+        let file = prepared
+            .embedded_sql(path, &opts.embedded)
+            .with_context(|| {
+                format!(
+                    "{RULE_ID} failed to collect embedded SQL facts from prepared analysis for {}",
+                    path.display()
+                )
+            })?;
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path).unwrap_or_default();
         let statements = crate::codebase::rules::index_sql_variants(
-            facts.postgres_statements(path, Some(&opts.embedded))?,
+            prepared.postgres_statements(path, Some(&opts.embedded))?,
         );
         if facts.wants_sql_verdicts() {
             verdicts::record(&rel, &source, file, opts, catalog, &statements, facts);

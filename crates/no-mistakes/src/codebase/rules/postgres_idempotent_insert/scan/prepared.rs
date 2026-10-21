@@ -1,5 +1,5 @@
 use super::{collect_findings, is_embedded_source, CompiledOptions, RULE_ID};
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     judge_idempotent_subcheck, postgres_sql_paths, record_sql_policy_verdicts, IdempotentCatalog,
     SqlStatementFileFacts,
@@ -12,12 +12,13 @@ pub(crate) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &SourceStore,
-    facts: &CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
+    let prepared = facts.prepared();
     let sql_paths = postgres_sql_paths(root, files, &opts.schema)?;
     let schema = sql_paths
         .iter()
-        .map(|path| facts.postgres_readable_schema(path))
+        .map(|path| prepared.postgres_readable_schema(path))
         .collect::<anyhow::Result<Vec<_>>>()?
         .into_iter()
         .flatten()
@@ -26,14 +27,16 @@ pub(crate) fn scan(
     let mut embedded = Vec::new();
     let mut statements: Vec<&SqlStatementFileFacts> = Vec::new();
     for path in &sql_paths {
-        if let Some(file) = facts.postgres_readable_statements(path, None)? {
+        if let Some(file) = prepared.postgres_readable_statements(path, None)? {
             statements.extend(file);
         }
     }
     for path in files.iter().filter(|path| is_embedded_source(path)) {
-        let file = facts.embedded_sql(path, &opts.embedded)?;
+        let file = prepared.embedded_sql(path, &opts.embedded)?;
         embedded.push(file);
-        if let Some(projected) = facts.postgres_readable_statements(path, Some(&opts.embedded))? {
+        if let Some(projected) =
+            prepared.postgres_readable_statements(path, Some(&opts.embedded))?
+        {
             statements.extend(projected);
         }
     }
@@ -73,7 +76,7 @@ pub(crate) fn scan(
                 crate::codebase::postgres::SqlPolicyVerdictContext {
                     facts,
                     embedded: file,
-                    statements: facts.postgres_statements(&file.path, Some(&opts.embedded))?,
+                    statements: prepared.postgres_statements(&file.path, Some(&opts.embedded))?,
                 },
                 RULE_ID,
                 &relative_slash_path(root, &file.path),

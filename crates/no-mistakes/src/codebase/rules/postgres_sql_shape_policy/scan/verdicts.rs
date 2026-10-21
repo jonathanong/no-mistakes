@@ -1,6 +1,6 @@
 use super::super::{functions, iteration, select_findings, CompiledOptions};
 use super::RULE_ID;
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     record_sql_policy_verdicts, EmbeddedSqlFileFacts, SqlBranchJudgment, SqlStatementFileFacts,
 };
@@ -11,14 +11,15 @@ pub(super) fn record(
     root: &Path,
     opts: &CompiledOptions,
     embedded: &EmbeddedSqlFileFacts,
-    facts: &CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) -> anyhow::Result<()> {
+    let prepared = facts.prepared();
     let checks = enabled_shapes(opts);
     record_sql_policy_verdicts(
         crate::codebase::postgres::SqlPolicyVerdictContext {
             facts,
             embedded,
-            statements: facts.postgres_statements(&embedded.path, Some(&opts.embedded))?,
+            statements: prepared.postgres_statements(&embedded.path, Some(&opts.embedded))?,
         },
         RULE_ID,
         &relative_slash_path(root, &embedded.path),

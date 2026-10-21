@@ -1,5 +1,5 @@
 use super::CompiledOptions;
-use crate::codebase::check_facts::CheckFactMap;
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::dependencies::extract::is_indexable;
 use crate::codebase::ts_source::relative_slash_path;
 use history::{events_before, snapshots, Catalogs};
@@ -10,8 +10,9 @@ pub(super) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-    facts: &CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
+    let prepared = facts.prepared();
     let schema_files = crate::codebase::postgres::postgres_sql_paths(root, files, &opts.schema)
         .map_err(|error| {
             anyhow::anyhow!(
@@ -21,7 +22,7 @@ pub(super) fn scan(
         })?;
     let schema: Vec<_> = schema_files
         .iter()
-        .map(|path| facts.postgres_readable_schema(path))
+        .map(|path| prepared.postgres_readable_schema(path))
         .collect::<anyhow::Result<Vec<_>>>()?
         .into_iter()
         .flatten()
@@ -49,7 +50,7 @@ pub(super) fn scan(
                 continue;
             }
             // Source/TS parse failures keep the rule's existing per-file tolerance.
-            let Some(statements) = facts.postgres_readable_statements(path, profile)? else {
+            let Some(statements) = prepared.postgres_readable_statements(path, profile)? else {
                 continue;
             };
             // Migrations that define schema are matched against the catalog as of each write.
@@ -65,7 +66,7 @@ pub(super) fn scan(
             };
             let rel = relative_slash_path(root, path);
             if let Some(profile) = profile.filter(|_| facts.wants_sql_verdicts()) {
-                let embedded = facts.embedded_sql(path, profile)?;
+                let embedded = prepared.embedded_sql(path, profile)?;
                 verdicts::record(
                     crate::codebase::postgres::SqlPolicyVerdictContext {
                         facts,
@@ -90,7 +91,7 @@ pub(super) fn scan(
             );
             if let Some(embedded) = profile
                 .filter(|_| opts.fail_unanalyzable)
-                .and_then(|profile| facts.embedded_sql(path, profile).ok())
+                .and_then(|profile| prepared.embedded_sql(path, profile).ok())
             {
                 extend_unanalyzable(&mut findings, &rel, embedded, statements, &lookup);
             }

@@ -2,6 +2,16 @@ use super::CheckFactMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+#[cfg(not(test))]
+macro_rules! record_view_composition {
+    () => {};
+}
+
+#[cfg(test)]
+#[macro_use]
+#[path = "map/composition_metrics_tests.rs"]
+mod composition_metrics_tests;
+
 impl CheckFactMap {
     pub(super) fn view_with_supplemental(
         &self,
@@ -23,6 +33,7 @@ impl CheckFactMap {
         graph_files: Vec<PathBuf>,
         overwrite: bool,
     ) -> Self {
+        record_view_composition!();
         let mut ts = self.ts.clone();
         for (path, facts) in supplemental.ts.iter() {
             if overwrite || !ts.contains_key(path) {

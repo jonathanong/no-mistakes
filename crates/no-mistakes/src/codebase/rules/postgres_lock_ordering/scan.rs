@@ -1,6 +1,7 @@
 use super::catalog_check::{locks_interpolated_relation, locks_single_row, orders_by_catalog_key};
 use super::directive::{contains_for_update, has_safe_directive};
 use super::{CompiledOptions, RULE_ID};
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     extract_locking_select_metadata_with_placeholders, EmbeddedSqlKind, LockingSelectMetadata,
     SchemaCatalog, SqlStatementFileFacts,
@@ -28,12 +29,13 @@ pub(super) fn scan_with_sources(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-    facts: &crate::codebase::check_facts::CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) -> Result<crate::codebase::rules::PostgresFindings> {
+    let prepared = facts.prepared();
     let catalog = opts
         .schema_catalog_path
         .as_deref()
-        .map(|path| facts.postgres_ordering_catalog(path))
+        .map(|path| prepared.postgres_ordering_catalog(path))
         .transpose()?;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
@@ -41,15 +43,17 @@ pub(super) fn scan_with_sources(
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
     {
-        let file = facts.embedded_sql(path, &opts.embedded).with_context(|| {
-            format!(
-                "{RULE_ID} failed to collect embedded SQL facts from prepared analysis for {}",
-                path.display()
-            )
-        })?;
+        let file = prepared
+            .embedded_sql(path, &opts.embedded)
+            .with_context(|| {
+                format!(
+                    "{RULE_ID} failed to collect embedded SQL facts from prepared analysis for {}",
+                    path.display()
+                )
+            })?;
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path).unwrap_or_default();
-        let statements = facts.postgres_statements(path, Some(&opts.embedded))?;
+        let statements = prepared.postgres_statements(path, Some(&opts.embedded))?;
         if facts.wants_sql_verdicts() {
             verdicts::record(&rel, &source, file, opts, catalog, Some(statements), facts);
         }

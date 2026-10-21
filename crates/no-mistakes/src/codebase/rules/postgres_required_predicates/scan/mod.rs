@@ -1,3 +1,4 @@
+use crate::codebase::check_facts::SqlFactContext;
 mod catalog;
 mod check;
 mod columns;
@@ -13,13 +14,14 @@ pub(super) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-    prepared: Option<&crate::codebase::check_facts::CheckFactMap>,
+    prepared: Option<&dyn SqlFactContext>,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     if opts.relations.is_empty() && !opts.partition_keys {
         return Ok(crate::codebase::rules::PostgresFindings::default());
     }
-    let prepared =
+    let context =
         prepared.ok_or_else(|| anyhow::anyhow!("prepared PostgreSQL facts are required"))?;
+    let prepared = context.prepared();
     let catalog = opts
         .schema_catalog_path
         .as_deref()
@@ -44,8 +46,8 @@ pub(super) fn scan(
     }
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
-    if prepared.wants_sql_verdicts() {
-        verdicts::record(root, opts, &embedded, catalog, prepared)?;
+    if context.wants_sql_verdicts() {
+        verdicts::record(root, opts, &embedded, catalog, context)?;
     }
     if let Some(catalog) = &catalog {
         if opts.partition_keys {

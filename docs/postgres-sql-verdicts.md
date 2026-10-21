@@ -61,3 +61,11 @@ Existing `fail` and `ignore` choices keep their behavior; query annotation's def
 Proven violations continue to fail even when the same call has residual
 uncertainty. `no-mistakes` file and line suppression directives apply to
 advisories as they do to findings.
+
+Application identity borrows the request's prepared facts and report-local sink.
+Creating another configured application does not copy the prepared file/TS
+containers or recount unproven member queries. Concurrent applications retain
+separate configured indices and names; separate check reports retain separate
+sinks. Actual supplemental fact/catalog projections still compose their own
+requested view. The disabled ledger returns before constructing an application
+view or allocating its name.

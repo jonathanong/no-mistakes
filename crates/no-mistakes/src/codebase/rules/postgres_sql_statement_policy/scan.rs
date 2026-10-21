@@ -1,4 +1,5 @@
 use super::{sql_rel, CompiledOptions, RuleFinding, RULE_ID};
+use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::collect_prepared_schema_facts;
 use crate::codebase::ts_source::SourceStore;
 use anyhow::Context;
@@ -9,9 +10,10 @@ pub(super) fn scan(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &SourceStore,
-    facts: &crate::codebase::check_facts::CheckFactMap,
+    facts: &dyn SqlFactContext,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
-    let schema_facts = collect_prepared_schema_facts(root, files, &opts.schema, facts)
+    let prepared = facts.prepared();
+    let schema_facts = collect_prepared_schema_facts(root, files, &opts.schema, prepared)
         .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
@@ -43,9 +45,9 @@ pub(super) fn scan(
         .iter()
         .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
     {
-        let embedded = facts.embedded_sql(path, &opts.embedded)?;
+        let embedded = prepared.embedded_sql(path, &opts.embedded)?;
         let rel = sql_rel(root, path);
-        let statements = facts.postgres_statements(path, Some(&opts.embedded))?;
+        let statements = prepared.postgres_statements(path, Some(&opts.embedded))?;
         if facts.wants_sql_verdicts() {
             let mut checks = opts
                 .banned
