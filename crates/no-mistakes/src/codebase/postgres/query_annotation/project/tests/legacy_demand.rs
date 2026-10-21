@@ -1,7 +1,9 @@
 // Frozen pre-pruning selector: parity tests must keep its uncertainty seeds.
 use super::super::File;
 use crate::codebase::dependencies::extract::ImportKind;
-use crate::codebase::postgres::{embedded::from_configured_module, EmbeddedSqlOptions};
+use crate::codebase::postgres::{
+    embedded::scoped_bindings::from_configured_module, EmbeddedSqlOptions,
+};
 use crate::fx::{fx_map, FxHashMap};
 use std::path::{Path, PathBuf};
 
