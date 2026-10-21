@@ -208,3 +208,22 @@ fn unconditional_parameter_rebinding_does_not_write_the_original_argument() {
     assert_export(&built, &root, file, "untouched.get");
     assert_export(&built, &root, file, "primary.get");
 }
+
+#[test]
+fn optional_pushes_keep_later_pushes_and_suffixes_possible() {
+    let (built, root) = graph();
+    for file in [
+        "array-optional-push-then-push",
+        "array-optional-push-then-suffix",
+        "array-optional-push-forwarded",
+        "array-optional-push-function-call",
+        "array-optional-push-method-call",
+    ] {
+        for callee in ["replica.get", "untouched.get"] {
+            possible(&built, &root, file, callee);
+        }
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+}

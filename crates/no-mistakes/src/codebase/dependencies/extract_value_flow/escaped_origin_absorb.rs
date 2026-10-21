@@ -65,7 +65,14 @@ pub(in super::super) fn absorb(
             continue;
         }
         if let Some(parameters) = slots.get(method) {
+            let shifted = collector
+                .receiver_escapes
+                .uncertain_spreads
+                .get(&(*offset, *end));
             for (index, argument) in arguments.iter().enumerate() {
+                if shifted.is_some_and(|start| index >= start.raw.saturating_sub(start.shift)) {
+                    continue;
+                }
                 if let Some(key) = parameters.get(&index) {
                     values
                         .entry(key.clone())
@@ -77,7 +84,12 @@ pub(in super::super) fn absorb(
         }
     }
     let captures = super::super::parameter_call_origins::CaptureOrigins::new(collector, values);
-    for event in &collector.receiver_escapes.reassigned {
+    for event in collector
+        .receiver_escapes
+        .reassigned
+        .iter()
+        .filter(|event| !event.recovered)
+    {
         values
             .entry(event.key.clone())
             .or_default()
@@ -106,16 +118,24 @@ fn callback_array(
     Some(ValueExpression::Array(std::sync::Arc::new(fields)))
 }
 
-fn apply_escaped(
+pub(super) fn apply_escaped(
     values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>,
     parameters: &FxHashMap<usize, (usize, String)>,
     collector: &ImportCollector,
     offset: u32,
     end: u32,
 ) {
+    let shift = collector
+        .receiver_escapes
+        .uncertain_spreads
+        .get(&(offset, end))
+        .map_or(0, |spread| spread.shift);
     if let Some(extras) = collector.receiver_escapes.escaped.get(&(offset, end)) {
         for (index, extra) in extras {
-            if let Some(key) = parameters.get(index) {
+            if let Some(key) = index
+                .checked_sub(shift)
+                .and_then(|index| parameters.get(&index))
+            {
                 values
                     .entry(key.clone())
                     .or_default()
@@ -125,7 +145,7 @@ fn apply_escaped(
     }
     if let Some((start, extra)) = collector.receiver_escapes.open.get(&(offset, end)) {
         for (index, key) in parameters {
-            if *index >= *start {
+            if *index >= start.saturating_sub(shift) {
                 values
                     .entry(key.clone())
                     .or_default()

@@ -125,3 +125,16 @@ fn uncertain_parameter_captures_retain_both_candidates() {
         }
     }
 }
+
+#[test]
+fn newly_recovered_pattern_writes_keep_the_previously_reported_candidate() {
+    let (built, root) = graph();
+    let file = "array-parameter-destructure-unguarded";
+    assert_export(&built, &root, file, "replica.get");
+    // Pattern projection is newly recovered evidence. Retain the old candidate
+    // with Unknown rather than turning an existing finding silent.
+    possible(&built, &root, file, "untouched.get");
+    for callee in ["primary.get", "replica.info", "unrelated.get"] {
+        assert_export(&built, &root, file, callee);
+    }
+}

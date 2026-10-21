@@ -6,7 +6,7 @@ pub(super) struct Arguments {
     pub(super) open_at: Option<usize>,
     pub(super) extras: FxHashMap<usize, Vec<ValueExpression>>,
     pub(super) open_vals: Vec<ValueExpression>,
-    guarded_open_tail: bool,
+    pub(super) guarded_open_tail: bool,
     pub(super) guarded_extras: FxHashMap<usize, Vec<ValueExpression>>,
     pub(super) guarded_open: Vec<ValueExpression>,
 }
@@ -68,9 +68,10 @@ impl Arguments {
         }
         let value = collector.value_expression(expression);
         match super::escaped_guarded_arrays::entries(collector, &value, before) {
-            Some(entries) if self.open_at.is_none() => {
+            Some(projection) if self.open_at.is_none() => {
+                let start = self.position;
                 let mut next = self.position;
-                for (slot, value, possible) in entries {
+                for (slot, value, possible) in projection.entries {
                     let at = self.position + slot;
                     let channel = if possible {
                         &mut self.guarded_extras
@@ -81,17 +82,27 @@ impl Arguments {
                     next = next.max(at + 1);
                 }
                 self.position = next;
+                if let Some((minimum, tail)) = projection.tail {
+                    self.open_at = Some(start + minimum);
+                    self.position = start + minimum;
+                    self.guarded_open_tail = true;
+                    self.guarded_open.extend(tail);
+                }
             }
-            Some(entries) => {
+            Some(projection) => {
                 // An unknown prefix can shift the guarded spread and its suffix
                 // beyond a written parameter; these are possible destinations.
-                self.guarded_open_tail |= entries.iter().any(|(_, _, possible)| *possible);
-                for (_, value, possible) in entries {
+                self.guarded_open_tail |= projection.tail.is_some()
+                    || projection.entries.iter().any(|(_, _, possible)| *possible);
+                for (_, value, possible) in projection.entries {
                     if possible || self.guarded_open_tail {
                         self.guarded_open.push(value);
                     } else {
                         self.open_vals.push(value);
                     }
+                }
+                if let Some((_, tail)) = projection.tail {
+                    self.guarded_open.extend(tail);
                 }
             }
             None => {

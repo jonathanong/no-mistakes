@@ -26,12 +26,14 @@ fn capture_generations_use_indexed_completion_predecessors() {
                     completed_at: 2 * generation,
                     context: Some(CallableId(1)),
                     certain: true,
+                    recovered: false,
                 })
                 .collect(),
         },
     );
     for at in 0..=192 {
-        let values = origins.at(&key, (at, Some(CallableId(1)))).unwrap();
+        let (values, possible) = origins.at(&key, (at, Some(CallableId(1)))).unwrap();
+        assert!(!possible);
         let expected = if at < 2 {
             "initial".into()
         } else {
@@ -52,6 +54,15 @@ fn capture_generations_use_indexed_completion_predecessors() {
             .load(std::sync::atomic::Ordering::Relaxed)
     );
     assert!(origins.at(&key, (192, Some(CallableId(2)))).is_none());
+    origins
+        .bindings
+        .get_mut(&key)
+        .unwrap()
+        .events
+        .last_mut()
+        .unwrap()
+        .recovered = true;
+    assert!(origins.at(&key, (192, Some(CallableId(1)))).unwrap().1);
     let captures = origins.bindings.get_mut(&key).unwrap();
     captures.events.last_mut().unwrap().certain = false;
     assert!(origins.at(&key, (192, Some(CallableId(1)))).is_none());

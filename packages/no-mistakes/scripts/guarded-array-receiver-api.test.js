@@ -107,3 +107,46 @@ test(
     assert.deepEqual(await esm.analyzeProject(options), batch);
   },
 );
+
+test(
+  "compiled async recovered patterns and optional widths preserve prior candidates",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const [suite, entries] of [
+      ["value-flow-guarded-parameters", ["array-parameter-destructure-unguarded"]],
+      [
+        "value-flow-receiver-escapes",
+        [
+          "array-optional-push-then-push",
+          "array-optional-push-then-suffix",
+          "array-optional-push-forwarded",
+          "array-optional-push-function-call",
+          "array-optional-push-method-call",
+        ],
+      ],
+    ]) {
+      const root = join(__dirname, "../../../test-cases/codebase-analysis", suite, "fixture");
+      const options = {
+        root,
+        config: join(root, "effects.yml"),
+        reports: entries.map((entry) => ({
+          type: "effects",
+          kind: "receiver",
+          entry: `src/${entry}.mts`,
+        })),
+      };
+      const pending = cjs.analyzeProject(options);
+      assert.ok(pending instanceof Promise);
+      const batch = await pending;
+      for (const { result } of batch.reports) {
+        assert.deepEqual(
+          result.callSites.map(({ callee }) => callee),
+          ["replica.get", "untouched.get", "primary.get", "replica.info", "unrelated.get"],
+        );
+      }
+      assert.deepEqual(await esm.analyzeProject(options), batch);
+    }
+  },
+);

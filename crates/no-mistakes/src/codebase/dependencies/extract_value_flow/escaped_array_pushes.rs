@@ -7,7 +7,7 @@ pub(super) fn append_pushes(
     declared_at: u32,
     before: u32,
     found: &mut Vec<(usize, ValueExpression)>,
-    optional: &mut FxHashSet<usize>,
+    optional: &mut Option<usize>,
 ) {
     let mut next = found.iter().map(|(slot, _)| slot + 1).max().unwrap_or(0);
     for index in collector
@@ -32,7 +32,7 @@ pub(super) fn append_pushes(
                 .optional_pushes
                 .contains(&call.offset)
             {
-                optional.insert(next);
+                optional.get_or_insert(next);
             }
             super::flatten(argument, next, found);
             next += 1;

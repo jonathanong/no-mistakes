@@ -613,10 +613,18 @@ through `args` affects `other`, not the original argument. In
 `const args = [box]; box = other`, the array still holds the original argument;
 the rebinding does not rewrite its stored entry. Assignment completion, rather
 than the start of its right-hand side, separates these captures.
+Newly recovered destructuring writes remain possible evidence. Their method
+candidates stay alongside unknown evidence even when a captured assignment can
+be selected; retaining that candidate does not assert that the original method
+runs on a concrete path.
 A later unconditional array assignment replaces these alternatives; unconditional
 pushes retain their existing write precision. When passed through a spread,
 conditional and repeated pushes provide possible receiver origins, preserving
 original methods alongside unknown evidence when the push may not execute.
+After a push makes the array length uncertain, the proven prefix remains fixed
+and later pushed values and trailing arguments become a possible open tail.
+This covers a later value shifting into an earlier parameter when the optional
+push is skipped, without enumerating combinations of branch lengths.
 A suffix after an open prefix and guarded
 spread is also possible: it need not occupy a parameter that the callee writes.
 An arbitrary prefix can itself contain the same receiver, so it does not prove

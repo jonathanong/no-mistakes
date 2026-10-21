@@ -46,6 +46,8 @@ impl ImportCollector {
             };
             self.receiver_escapes.reassigned.push(
                 super::super::parameter_call_origins::Reassignment {
+                    recovered: super::super::mutable_receivers::mutable_root_name(&assignment.left)
+                        .is_none(),
                     key: (*scope, name),
                     value,
                     completed_at: assignment.span.end,

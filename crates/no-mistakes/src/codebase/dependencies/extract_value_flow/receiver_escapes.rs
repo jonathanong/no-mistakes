@@ -43,6 +43,11 @@ type StoredArray = (
     bool,
 );
 
+pub(super) struct UncertainSpread {
+    pub(super) raw: usize,
+    pub(super) shift: usize,
+}
+
 #[derive(Default)]
 pub(in super::super) struct Side {
     /// `const api = new Api()` — write origins only, not a callable binding.
@@ -80,6 +85,7 @@ pub(in super::super) struct Side {
     /// Values that can occupy every parameter at or after the index, because a
     /// spread ahead of them had no known elements.
     open: FxHashMap<(u32, u32), (usize, Vec<ValueExpression>)>,
+    pub(super) uncertain_spreads: FxHashMap<(u32, u32), UncertainSpread>,
     pub(super) reassigned: Vec<super::parameter_call_origins::Reassignment>,
     possible_escaped: FxHashMap<(u32, u32), FxHashMap<usize, Vec<ValueExpression>>>,
     possible_open: FxHashMap<(u32, u32), (usize, Vec<ValueExpression>)>,

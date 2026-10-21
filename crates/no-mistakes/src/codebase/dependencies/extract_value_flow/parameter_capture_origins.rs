@@ -7,6 +7,7 @@ pub(in super::super) struct Reassignment {
     pub(in super::super) completed_at: u32,
     pub(in super::super) context: Option<CallableId>,
     pub(in super::super) certain: bool,
+    pub(in super::super) recovered: bool,
 }
 struct Captures {
     initial: Vec<ValueExpression>,
@@ -67,6 +68,7 @@ impl CaptureOrigins {
                 completed_at: event.completed_at,
                 context: event.context,
                 certain: event.certain,
+                recovered: event.recovered,
             });
         }
         for (key, captures) in &mut result.bindings {
@@ -82,7 +84,11 @@ impl CaptureOrigins {
     }
     /// Only ordered writes in the same invocation select a capture generation.
     /// Unknown execution order retains the historical union at the caller.
-    pub(super) fn at(&self, key: &Key, read: nested::RootRead) -> Option<&[ValueExpression]> {
+    pub(super) fn at(
+        &self,
+        key: &Key,
+        read: nested::RootRead,
+    ) -> Option<(&[ValueExpression], bool)> {
         let captures = self.bindings.get(key)?;
         if captures.foreign || read.1 != Some(captures.owner) {
             return None;
@@ -94,11 +100,11 @@ impl CaptureOrigins {
             event.completed_at <= read.0
         });
         if index == 0 {
-            return Some(captures.initial.as_slice());
+            return Some((captures.initial.as_slice(), false));
         }
         let event = &captures.events[index - 1];
         (event.certain && matches!(event.value, ValueExpression::Named { .. }))
-            .then_some(std::slice::from_ref(&event.value))
+            .then_some((std::slice::from_ref(&event.value), event.recovered))
     }
 }
 
