@@ -85,6 +85,7 @@ fn missing_alternative_bindings_stay_unproven() {
         },
         &mut changed,
         &Default::default(),
+        &mut None,
     );
     assert!(
         changed.is_empty(),

@@ -32,3 +32,6 @@ mod callback_tests;
 
 #[cfg(test)]
 mod dense_fixture_tests;
+
+#[cfg(test)]
+mod observer_tests;

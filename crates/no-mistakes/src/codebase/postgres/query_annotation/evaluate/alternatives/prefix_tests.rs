@@ -99,6 +99,7 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
         },
         &mut changed,
         &Default::default(),
+        &mut None,
     );
     assert!(changed.contains(id));
     let mut rebound = crate::fx::FxHashSet::default();
@@ -116,6 +117,7 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
         },
         &mut rebound,
         &Default::default(),
+        &mut None,
     );
     assert!(
         rebound.is_empty(),

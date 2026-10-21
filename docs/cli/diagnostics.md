@@ -115,24 +115,24 @@ caller that can reach a prepared executor, including cycles. Unresolved and
 computed loads cannot enter another prepared module and do not seed roots.
 Executor-free callers that supply SQL literals to imported helpers remain roots.
 
-With `--progress`, annotation preparation separates module construction, root
-demand and evaluation. Live annotation activities name the current root,
-initializing module, entrypoint byte offset or legacy prefix-comparison binding.
-These activities increment span counts without retaining a completed timing for
-every location. Repeated registry initialization across roots therefore remains
-visible without an unbounded history of file or binding labels.
+With `--progress`, preparation separates module construction, root demand and
+evaluation. Activities identify the root, initializing module, entrypoint byte
+offset or legacy prefix-comparison arm. `postgres.annotation.completed_activities`
+counts these coarse spans, without per-binding activities or completed location
+timing history. Repeated registry initialization across roots remains visible.
 
-`--verbose-timings` also counts annotation roots started/completed, module
-initializations, prefix walks, visited prefix nodes and container visits. With
-both flags, long prefix walks periodically emit
-`postgres.annotation.prefix_nodes_current_walk` and
-`postgres.annotation.prefix_unique_containers_current_walk` work lines through
-the bounded progress writer. These local counts reset for each comparison;
-distinct containers are immutable value identities, not bytes or allocations.
-Completed shared records reuse their direct prefix writes within each walk;
-these counters count actual visits, including memo lookups. Progress alone
-creates no prefix-walk work ledger. See the saved
-[shared-record reproduction](../../fixtures/performance/annotation-shared-record-dag/README.md).
+`--verbose-timings` counts roots started/completed, module initializations,
+prefix comparisons, visited nodes and container visits. `postgres.annotation.prefix_compare`,
+`prefix_walks` and `prefix_walks_completed` retain exact comparison counts, collected
+locally per arm and published on completion or unwinding. `postgres.annotation.prefix_observer_batches`
+counts nonempty publications. Verbose-only observation publishes no shared
+counters per binding or node.
+
+With both flags, long comparisons also publish at coarse node intervals and emit
+`postgres.annotation.prefix_nodes_current_arm` and `postgres.annotation.prefix_containers_current_arm`
+through the bounded writer. Totals reset per arm and include memo lookups;
+no unique-container set is retained. Progress alone creates no prefix-work ledger.
+See the saved [shared-record reproduction](../../fixtures/performance/annotation-shared-record-dag/README.md).
 
 - **Seeds.** Prepared executor call spans seed demand. Importing a configured
   executor or trusted-tag package without a reachable executor call does not.

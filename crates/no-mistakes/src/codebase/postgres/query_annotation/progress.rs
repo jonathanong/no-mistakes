@@ -7,27 +7,13 @@ pub(super) fn trace<T>(
     offset: Option<u32>,
     operation: impl FnOnce() -> T,
 ) -> T {
-    located(label, path, offset.map(Location::Offset), operation)
-}
-
-enum Location<'a> {
-    Offset(u32),
-    Binding(&'a str),
-}
-
-pub(super) fn binding<T>(path: &Path, name: &str, operation: impl FnOnce() -> T) -> T {
-    located(
-        "postgres.annotation.prefix_compare",
-        path,
-        Some(Location::Binding(name)),
-        operation,
-    )
+    located(label, path, offset, operation)
 }
 
 fn located<T>(
     label: &'static str,
     path: &Path,
-    location: Option<Location<'_>>,
+    location: Option<u32>,
     operation: impl FnOnce() -> T,
 ) -> T {
     let Some(observer) = crate::diagnostics::current().filter(|observer| observer.detailed())
@@ -37,8 +23,7 @@ fn located<T>(
     observer.increment(label, 1);
     let result = if observer.progress_enabled() {
         let location = match location {
-            Some(Location::Offset(offset)) => format!("{label} {}:{offset}", path.display()),
-            Some(Location::Binding(name)) => format!("{label} {} binding={name}", path.display()),
+            Some(offset) => format!("{label} {}:{offset}", path.display()),
             None => format!("{label} {}", path.display()),
         };
         observer.activity(

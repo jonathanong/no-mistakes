@@ -89,32 +89,44 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 &mut disconnected_common,
                 &mut private_disconnected,
             );
-            for (before, after) in scopes.iter().zip(&self.scopes) {
-                // With no reference in the entry scope, every previous prefix map
-                // is empty. New arm-local builders are rebinds, not mutations.
-                if !precise_records && !before.contains_reference() {
-                    continue;
-                }
-                for (name, value) in before {
-                    // An arm can drop a name the other branch still has.
-                    if !precise_records {
-                        super::super::super::progress::binding(path, name, || {
-                            super::values::changes(
-                                value,
-                                super::bindings::binding_or_unproven(after, name),
-                                super::arena::Arena {
-                                    objects: &objects,
-                                    extras: &extra_slots,
-                                },
-                                super::arena::Arena {
-                                    objects: &self.argument_objects,
-                                    extras: &self.argument_extra_slots,
-                                },
-                                &mut changed,
-                                &self.definite_deleted_argument_slots,
-                            );
-                        });
-                    }
+            {
+                let mut comparisons = scopes
+                    .iter()
+                    .zip(&self.scopes)
+                    .filter(|(before, _)| !precise_records && before.contains_reference())
+                    .peekable();
+                // Peek retains the first eligible scope without a second scan.
+                if comparisons.peek().is_some() {
+                    super::super::super::progress::trace(
+                        "postgres.annotation.prefix_compare_arm",
+                        path,
+                        None,
+                        || {
+                            let mut work = super::values::Walk::new();
+                            for (before, after) in comparisons {
+                                for (name, value) in before {
+                                    // An arm can drop a name the other branch still has.
+                                    if !precise_records {
+                                        super::values::changes(
+                                            value,
+                                            super::bindings::binding_or_unproven(after, name),
+                                            super::arena::Arena {
+                                                objects: &objects,
+                                                extras: &extra_slots,
+                                            },
+                                            super::arena::Arena {
+                                                objects: &self.argument_objects,
+                                                extras: &self.argument_extra_slots,
+                                            },
+                                            &mut changed,
+                                            &self.definite_deleted_argument_slots,
+                                            &mut work,
+                                        );
+                                    }
+                                }
+                            }
+                        },
+                    );
                 }
             }
             super::freshness::unchanged(
