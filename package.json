@@ -32,7 +32,7 @@
   "devDependencies": {
     "@emnapi/core": "^1.11.3",
     "@emnapi/runtime": "^1.11.3",
-    "@storybook/addon-vitest": "10.6.1",
+    "@storybook/addon-vitest": "10.6.2",
     "@storybook/react": "10.6.1",
     "@storybook/react-vite": "10.6.1",
     "@vitest/browser-playwright": "5.0.4",
