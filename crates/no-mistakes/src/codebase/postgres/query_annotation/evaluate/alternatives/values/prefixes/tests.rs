@@ -70,3 +70,52 @@ fn saved_shared_dags_visit_records_instead_of_expanding_every_container_path() {
         assert!(visits <= 2 * 31 + 2, "{name}: {visits}");
     }
 }
+
+#[test]
+fn unchanged_argument_scope_still_compares_distinct_mutable_arenas() {
+    use crate::codebase::postgres::query_annotation::evaluate::Scope;
+    let before = fixture::load("arena_before");
+    let after = fixture::load("arena_after");
+    let scope = Scope::from(FxHashMap::from_iter([(
+        "arguments".into(),
+        before.root.clone(),
+    )]));
+    let snapshot = scope.clone();
+    assert!(std::ptr::eq(&*scope, &*snapshot));
+    assert!(scope.contains_reference());
+    let mut changed = FxHashSet::default();
+    // Scope identity proves nothing about the externally stored argument arena.
+    super::super::changes(
+        &before.root,
+        &before.root,
+        before.arena(),
+        after.arena(),
+        &mut changed,
+        &FxHashSet::default(),
+    );
+    assert_eq!(changed, FxHashSet::from_iter([1]));
+}
+
+#[test]
+fn reference_free_entry_cannot_mutate_an_arm_created_builder() {
+    use crate::codebase::postgres::query_annotation::evaluate::Scope;
+    let before = fixture::load("reference_free_before");
+    let after = fixture::load("rebound_builder_after");
+    let scope = Scope::from(FxHashMap::from_iter([(
+        "binding".into(),
+        before.root.clone(),
+    )]));
+    assert!(!scope.contains_reference());
+    assert!(after.root.contains_reference());
+    assert!(legacy::collect(&before.root, before.arena(), &before.definite).is_empty());
+    let mut changed = FxHashSet::default();
+    super::super::changes(
+        &before.root,
+        &after.root,
+        before.arena(),
+        after.arena(),
+        &mut changed,
+        &before.definite,
+    );
+    assert!(changed.is_empty());
+}

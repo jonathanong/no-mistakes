@@ -73,3 +73,5 @@ fn builder_index_handles_shared_container_dag_and_detached_mutation() {
     assert!(!original.contains_builders(&new));
     assert!(original.contains_builders(&old));
 }
+
+mod references;

@@ -1,0 +1,6 @@
+{
+  "name": "rebound_builder_after",
+  "nodes": [],
+  "root": ["prefix", 17, "SELECT new builder", true],
+  "expected": {"17": ["SELECT new builder", true]}
+}

@@ -107,9 +107,10 @@ executor profiles and their demanded roots share one Rayon pool. Each completed
 profile releases its prepared file map and reduces its root events to owned
 results before the full pass ends. Results are applied in deterministic profile
 and source order.
-Unresolved, computed, and dynamic imports conservatively retain their modules
-and importers, including cycles. Executor-free callers that supply SQL literals
-to imported helpers remain roots.
+Resolved runtime imports, re-exports, and literal dynamic loads retain every
+caller that can reach a prepared executor, including cycles. Unresolved and
+computed loads cannot enter another prepared module and do not seed roots.
+Executor-free callers that supply SQL literals to imported helpers remain roots.
 
 With `--progress`, annotation preparation separates module construction, root
 demand and evaluation. Live annotation activities name the current root,
@@ -125,13 +126,13 @@ both flags, long prefix walks periodically emit
 `postgres.annotation.prefix_unique_containers_current_walk` work lines through
 the bounded progress writer. These local counts reset for each comparison;
 distinct containers are immutable value identities, not bytes or allocations.
-They observe the existing traversal without skipping shared subtrees. Progress
-alone creates no prefix-walk work ledger. See the saved
+Completed shared records reuse their direct prefix writes within each walk;
+these counters count actual visits, including memo lookups. Progress alone
+creates no prefix-walk work ledger. See the saved
 [shared-record reproduction](../../fixtures/performance/annotation-shared-record-dag/README.md).
 
-- **Seeds.** Configured executor and trusted-tag modules remain demand seeds.
-  An empty `importSpecifier` is not a seed: `executorNames` without a module
-  still selects calls, but a non-type import of an unrelated module does not.
+- **Seeds.** Prepared executor call spans seed demand. Importing a configured
+  executor or trusted-tag package without a reachable executor call does not.
 - **Dead ends.** A successfully resolved import outside the prepared annotation
   catalog is a dead end. A parse-failed inventory file is absent from that
   catalog, so a resolved import of it is a dead end only while parse failure
@@ -141,10 +142,11 @@ alone creates no prefix-walk work ledger. See the saved
   workspace map when the TypeScript resolver has no target, the same way
   imported SQL helpers do. That fallback lives in relative executor scope
   projection, so embedded SQL and annotation demand share it. A package the
-  workspace does not declare stays unresolved and keeps its importer.
-- **Conservative.** Resolver targets without an exact prepared inventory
-  identity (including ambiguous symlink spellings) stay conservative and are
-  not replaced by a workspace target.
+  workspace does not declare stays unresolved and cannot enter another module.
+- **Catalog identity.** Resolver targets without an exact prepared inventory
+  identity (including ambiguous symlink spellings) cannot enter a prepared
+  module and are not replaced by a workspace target. The complete module catalog
+  remains available to every retained evaluator.
 `postgres.annotation.reachability_walks` counts the
 branch-state liveness traversals. This helps distinguish source extraction
 from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`

@@ -70,7 +70,7 @@ pub(super) fn profiles<'a>(
                 .values()
                 .any(|file| file.facts.array_prototype_exposed);
             let roots = crate::perf_trace::trace("postgres.annotation.prepare.roots", || {
-                demand::roots(&collected, &options, resolve)
+                demand::roots(&collected, resolve)
             });
             if let Some(observer) = crate::diagnostics::current() {
                 observer.increment("postgres.annotation.roots", roots.len() as u64);

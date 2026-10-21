@@ -176,7 +176,7 @@ fn final_live_guard_keeps_captures_and_moved_transient_environments_conservative
     evaluator.transient_roots.clear();
     evaluator
         .captured_bindings
-        .insert(0, FxHashMap::from_iter([("x".into(), 0)]));
+        .insert(0, FxHashMap::from_iter([("x".into(), 0)]).into());
     assert!(!evaluator.can_reuse_final_live(1, true, true, &identity));
     evaluator.captured_bindings.clear();
     evaluator.scopes[0].insert("arguments".into(), Value::Arguments(7));

@@ -1,7 +1,7 @@
 use super::super::temporaries::TransientRoot;
 use super::super::{Environment, Value};
 use super::arena::Arena;
-use crate::codebase::postgres::query_annotation::evaluate::Scope;
+use crate::codebase::postgres::query_annotation::evaluate::{CapturedBindings, Scope};
 use crate::fx::{FxHashMap, FxHashSet};
 
 #[derive(Default)]
@@ -60,7 +60,7 @@ pub(super) fn collect_from_roots(
     returned: &[Value],
     arena: Arena<'_>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: &CapturedBindings,
 ) -> Reachable {
     if let Some(observer) = crate::diagnostics::current() {
         observer.increment("postgres.annotation.reachability_walks", 1);

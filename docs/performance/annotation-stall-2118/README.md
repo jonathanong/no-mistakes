@@ -185,3 +185,7 @@ with byte-identical analyzer source and unchanged third-party Rust packages;
 `version-only-rebase.json` records all three patch-equivalent feature commits.
 Local native probes and full gates remain attributed to version 0.93.0 at
 `633724ce9`; the rebased version is not described as sampled.
+
+Archived gzip logs are stored as `.gz.b64` text to satisfy committed-file policy.
+Use `python3 -m base64 -d FILE.gz.b64 > FILE.gz` before replaying archived scripts.
+The manifest records both transport and decoded gzip identities.

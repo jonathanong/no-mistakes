@@ -1,12 +1,12 @@
 use super::*;
-use crate::codebase::postgres::query_annotation::evaluate::Scope;
+use crate::codebase::postgres::query_annotation::evaluate::{CapturedBindings, Scope};
 pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn prune_state(
     scopes: &[Scope],
     returned: &[Value],
     state: MutationState<'_>,
     mapped: &FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,
-    captured: &FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: &CapturedBindings,
     transient: &[super::super::super::temporaries::TransientRoot],
 ) {
     // Scalar-only branches have no heap or mutation state to discard.
@@ -62,7 +62,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,
     fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
-    captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: &mut CapturedBindings,
 ) -> Compaction {
     let roots = modules.values().copied().collect::<Vec<_>>();
     let indices = compact_from_roots(

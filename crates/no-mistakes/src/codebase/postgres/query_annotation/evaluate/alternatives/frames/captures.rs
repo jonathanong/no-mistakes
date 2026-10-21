@@ -3,7 +3,7 @@ use super::*;
 /// Full identity coverage preserves every valid reader frame. Out-of-range
 /// origins keep their old meaning; only stale reader keys require the fallback.
 pub(super) fn remap_after_compaction(
-    captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: &mut CapturedBindings,
     old_scope_count: usize,
     preserved: Environment,
     indices: &FxHashMap<Environment, Environment>,
@@ -31,7 +31,7 @@ pub(super) fn remap_after_compaction(
 /// Registration maintains reverse readers incrementally. Compaction only
 /// invalidates them when ownership entries disappear or environment IDs move.
 pub(super) fn remap(
-    captured: &mut FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: &mut CapturedBindings,
     preserved: Environment,
     indices: &FxHashMap<Environment, Environment>,
     origin_probe: &mut impl FnMut(Environment),
@@ -54,11 +54,7 @@ pub(super) fn remap(
             } else {
                 indices.get(&env).copied()
             }?;
-            for origin in origins.values_mut() {
-                if let Some(index) = indices.get(origin) {
-                    *origin = *index;
-                }
-            }
+            origins.remap(indices);
             Some((key, origins))
         })
         .collect();

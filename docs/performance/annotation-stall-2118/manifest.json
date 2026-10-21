@@ -2,7 +2,7 @@
   "purpose": "Diagnostic localization and saved reductions only; concurrent builds; not matched performance measurements or infinite-loop proof. Prototype source differs from final bounded activity implementation.",
   "prototypeRawSha256": "d83f34e4dab2e448435c4e62d0e4092d7b4d43ed3742b1ff78a5d92dce6c6ab2",
   "files": {
-    "README.md": "70eb2f01ae499e05d334bc0a398d5d47854f038603fe7b3c7bdf4baba0cd1dc5",
+    "README.md": "16202d79822464a01aa385dcb575a0dc9ded8457063b2d94daff8f84e4cb92e8",
     "all-dependents.json": "8b55313a822d3a8aae9471a434c5869d7d28a6b8bf3ac8556e24204999aba40e",
     "all-dependents.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "all-impacted.json": "fb3a375b31cbe520241692455543f5d881313898a1579468bf6c26b68ebade32",
@@ -11,7 +11,6 @@
     "baseline-root-stack.log": "967413d076c07b2587440ac2457ffae06bbff60f40f706ba525dd23366508268",
     "baseline-roots.gdb": "4d3f275bbefe959b2a894e5a1ee5622c89994d29088fd2b06d571300c149f8f7",
     "env-control-tmp-ancestor.log": "5b01a0400a4816184ee680e196b88d4112df878a953b1ba22d91722722a76e91",
-    "env-control-var-tmp.log.gz": "1e55e9086879c12d343917a369fed9bae38cdd8762bfa98398f641627c72118b",
     "excluded-root-events.jsonl": "8959a148984c9d4514a713b782606eb13b0941ea6ef2764091f887471b9297c7",
     "excluded-root-proof.json": "5f3605f28c6f1dddaafd119dbfad8129a262a29b4ffd3b85eeb1644010fd6796",
     "excluded-root-stack.log": "7b031d24c07ff8a2e9789529bd48bfc80ef90e8835d330e84ef7f1075cfdd742",
@@ -181,7 +180,6 @@
     "native-counter-probe.py": "75e942d8648af083cdd16886ec4bbbf9c55cf9826a4c4b4ab0cceeeec2b1bba7",
     "prototype-argv.json": "4c9580f222cf8bcd44756e5530af8d617587b5793426a25f16e6c8837045cf9e",
     "prototype-build-proof.json": "85da9bc4316dc9f0669e0f907027970213861c8d2c67dc8c6872a86d683a519b",
-    "prototype-progress.log.gz": "ab0b443082b98d69c71d674f40d1aae6e2006af8a4b2f5787403e40d1f07aeed",
     "prototype-progress.rs.txt": "fc4a30806e17ad0defc138424019a6f19b4c4114bee055ff912cec1c17896f62",
     "prototype-resource.jsonl": "55adbee98c87b43ef0e32c296d037bb55db58d0e5ec526e1e586fa75884f5276",
     "prototype-root-summary.json": "3b408c63f0e98f33a6dc35b2d9f203223411b8a310dfeb4e06366369388a31de",
@@ -197,7 +195,6 @@
     "validation/clippy.log": "da0f190d8522c5839d2ca55d807bd00fd582fca6ec64b6c1607eecb29d601f7a",
     "validation/complexity.log": "722235db810522bfde71846ac3704834ebfe71046e1642f1e189fc0b59eef9c5",
     "validation/crap.log": "f471e9e74aa4e5f54f216dbcb5a878c7b3ab6a478195ffcc8926aa2da942ce1f",
-    "validation/doc.log.gz": "0963d08c73ca131e0d98c2e5d507b7decda6773ebc559ec37344cb93b876a5c9",
     "validation/floors.log": "12d4f1b019951d5f0ab0fc5a696736093689e3d64fb90d4dff633010edf728c1",
     "validation/patch-coverage.json": "9632f38f6f4ff34045a8192ce7eba7b63a94d19877ad3a4dfcfbb8bc0d925871",
     "validation/patch.py": "d87fc6515a1604e10b641eb2f11244053e3c7b9ae270e8f3722820598198c2b3",
@@ -208,11 +205,31 @@
     "validation-dependents.json": "d2f08bcd85249c02d405b1bccc1caf4073db9af92e7d9dd28377663e5d5e107a",
     "validation-impacted-checks.json": "172b986b812ed6a2ab413601981cd67e96f7cf0e9859aaea58f81521b5f98d72",
     "validation-test-plan.json": "a4e32207ee0b50a824dc7a1b330b4db0e6cf8aa94478495aab775a92ea9e254b",
-    "version-only-rebase.json": "bea951e591c61a768c0d813b2bbea5b6cbd4f414ba96d020c21a02f82ecf5a54"
+    "version-only-rebase.json": "bea951e591c61a768c0d813b2bbea5b6cbd4f414ba96d020c21a02f82ecf5a54",
+    "env-control-var-tmp.log.gz.b64": "920d37b38ef1b7fb9268ef345eef2bb275dbfd2c14741f7a03442265de7828f8",
+    "prototype-progress.log.gz.b64": "de9bc4eb870858bc0abf1a6b7d4b36eee2291e542528044d7f83fe4f222df34a",
+    "validation/doc.log.gz.b64": "09eb60e4323496e18a568fc71719fdd73932e321a9ba15f7d6ec6a25451e2b83"
   },
   "gzipExpandedSha256": {
     "prototype-progress.log.gz": "d83f34e4dab2e448435c4e62d0e4092d7b4d43ed3742b1ff78a5d92dce6c6ab2",
     "env-control-var-tmp.log.gz": "edb4984adf7e1588b79842b8d52024b3b75e8c40f3f2a45eab58a6bffa4dda59",
     "validation/doc.log.gz": "d7e92102600469f0a510ddf868927a4aa2d0a8d66e31200a6de9249bcb827cd5"
+  },
+  "base64DecodedFiles": {
+    "env-control-var-tmp.log.gz": {
+      "storedAs": "env-control-var-tmp.log.gz.b64",
+      "encoding": "base64",
+      "decodedSha256": "1e55e9086879c12d343917a369fed9bae38cdd8762bfa98398f641627c72118b"
+    },
+    "prototype-progress.log.gz": {
+      "storedAs": "prototype-progress.log.gz.b64",
+      "encoding": "base64",
+      "decodedSha256": "ab0b443082b98d69c71d674f40d1aae6e2006af8a4b2f5787403e40d1f07aeed"
+    },
+    "validation/doc.log.gz": {
+      "storedAs": "validation/doc.log.gz.b64",
+      "encoding": "base64",
+      "decodedSha256": "0963d08c73ca131e0d98c2e5d507b7decda6773ebc559ec37344cb93b876a5c9"
+    }
   }
 }

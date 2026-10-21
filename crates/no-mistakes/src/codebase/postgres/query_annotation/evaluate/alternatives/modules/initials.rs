@@ -1,4 +1,4 @@
-use crate::codebase::postgres::query_annotation::evaluate::Scope;
+use crate::codebase::postgres::query_annotation::evaluate::{CapturedBindings, Scope};
 mod remap;
 use super::super::super::{Environment, Evaluator, Value};
 use super::super::{arena::Arena, reachable};
@@ -16,7 +16,7 @@ pub(in crate::codebase::postgres::query_annotation) struct Initials {
     objects: FxHashMap<u64, Vec<Value>>,
     extras: FxHashMap<u64, BTreeMap<usize, Value>>,
     mapped: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    captured: FxHashMap<Environment, FxHashMap<String, Environment>>,
+    captured: CapturedBindings,
     fresh: FxHashMap<Environment, FxHashSet<String>>,
     identities: FxHashSet<u64>,
     updates: FxHashMap<u64, Value>,
