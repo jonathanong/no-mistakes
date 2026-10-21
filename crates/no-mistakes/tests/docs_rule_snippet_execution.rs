@@ -183,3 +183,68 @@ fn known_gap_prefixes_fail_once_they_stop_reproducing() {
         [] as [String; 0]
     );
 }
+
+#[test]
+fn heading_section_skips_hashes_inside_fences_and_accepts_suffixes() {
+    let body = "\
+## Valid example
+
+```md
+## Perf
+content
+```
+
+## Counterexample and fix
+
+```yaml
+bad: true
+```
+";
+    let valid = docs_rule_snippets::heading_section(body, "Valid example");
+    assert!(
+        valid.contains("## Perf"),
+        "heading inside a fence must stay in the Valid example: {valid}"
+    );
+    let counter = docs_rule_snippets::heading_section(body, "Counterexample");
+    assert!(
+        counter.contains("bad: true"),
+        "Counterexample and fix must match Counterexample: {counter}"
+    );
+}
+
+#[test]
+fn fences_keep_inner_backticks_inside_a_longer_opening() {
+    let section = "\
+````markdown
+```mermaid
+flowchart TD
+  A --> B
+```
+````
+";
+    let extracted = docs_rule_snippets::fences(section);
+    assert_eq!(extracted.len(), 1, "{extracted:?}");
+    assert_eq!(extracted[0].0, "markdown");
+    assert!(extracted[0].1.contains("```mermaid"));
+}
+
+#[test]
+fn composite_action_yaml_is_not_wrapped_as_a_workflow() {
+    let fixture = docs_rule_snippets::materialize_snippet(
+        "rules:\n  - rule: github-actions-composite-step-schema\n    scope: repository\n",
+        &[(
+            "yaml".into(),
+            "# actions/timeout/action.yml\nname: Timeout Action\nruns:\n  using: composite\n  steps:\n    - run: echo hello\n      shell: bash\n      timeout-minutes: 5\n"
+                .into(),
+        )],
+    );
+    let body = std::fs::read_to_string(fixture.path().join("actions/timeout/action.yml")).unwrap();
+    assert!(
+        body.contains("using: composite"),
+        "composite metadata must stay an action file: {body}"
+    );
+    assert!(
+        !body.contains("jobs:"),
+        "timeout-minutes on a composite step must not wrap the file as a workflow: {body}"
+    );
+}

@@ -1,9 +1,6 @@
 # Known check-rule doc execution gaps tracked by #2416.
 # Remove a prefix only after that snippet executes as documented.
-banned-renamed-files.md: Counterexample[0] expected 
 config-path-references.md: Counterexample[0] expected 
-csharp-no-async-void-delegate.md: Counterexample[0] expected 
-declared-payload-compatibility.md: Valid example needs an executable fence
 doc-consistency.md: Valid example[0] expected 
 finite-set-consistency.md: Valid example[0] run error:
 finite-set-consistency.md: Counterexample[0] run error:
@@ -11,21 +8,9 @@ forbidden-calls.md: Valid example[0] run error:
 forbidden-calls.md: Counterexample[0] run error:
 forbidden-dependencies.md: Counterexample[0] expected 
 forbidden-workspace-closure.md: Valid example[0] expected 
-github-actions-action-timeout-pair.md: Counterexample[0] expected 
-github-actions-checkout-credentials.md: Counterexample needs an executable fence
-github-actions-composite-step-schema.md: Counterexample[0] expected 
-github-actions-docker-host-ports.md: Counterexample needs an executable fence
-github-actions-download-integrity.md: Counterexample needs an executable fence
-github-actions-job-timeouts.md: Counterexample needs an executable fence
-github-actions-pinned-hash.md: Valid example needs an executable fence
-github-actions-script-expressions.md: Counterexample needs an executable fence
-github-actions-step-timeouts.md: Counterexample needs an executable fence
-github-actions-test-timeout-literals.md: Counterexample[0] expected 
 integration-test-no-mocks.md: Counterexample[0] expected 
 markdown-child-links.md: Counterexample[0] expected 
-markdown-eval-tests.md: Valid example needs an executable fence
 markdown-link-display-text.md: Counterexample[0] expected 
-markdown-mermaid-validation.md: Counterexample needs an executable fence
 markdown-structure-budget.md: Counterexample[0] expected 
 nextjs-redirect-destinations.md: Valid example[0] expected 
 nextjs-redirect-destinations.md: Counterexample[0] expected 
@@ -49,7 +34,7 @@ postgres-bounded-statements.md: Valid example[0] run error:
 postgres-bounded-statements.md: Counterexample[0] run error:
 postgres-column-naming.md: Valid example[0] expected 
 postgres-column-requires-trigger.md: Valid example[0] expected 
-postgres-conflict-ordering.md: Counterexample needs an executable fence
+postgres-conflict-ordering.md: Counterexample[0] expected 
 postgres-constraint-validate.md: Counterexample[0] expected 
 postgres-duplicate-function-body.md: Valid example[0] expected 
 postgres-explicit-columns.md: Valid example[0] run error:
@@ -86,7 +71,6 @@ query-reached-per-item.md: Counterexample[0] run error:
 require-storybook-stories.md: Valid example[0] run error:
 require-storybook-stories.md: Counterexample[0] run error:
 required-companion-imports.md: Counterexample[0] expected 
-required-doc-section.md: Valid example needs an executable fence
 required-entrypoint-reachability.md: Valid example[0] expected 
 server-route-client-boundary.md: Counterexample[0] expected 
 shellcheck-runner.md: Counterexample[0] expected 

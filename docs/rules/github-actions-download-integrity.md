@@ -87,6 +87,15 @@ single command token such as `ci_download_to`.
 rules:
   - rule: github-actions-download-integrity
     scope: repository
+```
+
+An explicit `trustedHosts` list replaces the default. `downloadHelpers` is extra
+on top of `curl` and `wget`:
+
+```yaml
+rules:
+  - rule: github-actions-download-integrity
+    scope: repository
     options:
       trustedHosts:
         - example.invalid
@@ -126,20 +135,30 @@ runs:
         sha256sum -c tool.sha256
 ```
 
-## Counterexample and fix
+## Counterexample
 
 This step downloads an untrusted tarball and never checks the bytes:
 
 ```yaml
-- run: curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
 ```
+
+## Fix
 
 Pin the download in the same step:
 
 ```yaml
-- run: |
-    curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
-    sha256sum -c tool.tgz.sha256
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -fsSL https://example.invalid/tool.tgz -o tool.tgz
+          sha256sum -c tool.tgz.sha256
 ```
 
 `wget`, `shasum -a 256 -c`, and a configured helper use the same fix. A single

@@ -36,6 +36,7 @@ document set or heading. `roots`, `requiredFile`, `codeExtensions`, and
 ## Valid example
 
 ```md
+// agents/demo/README.md
 ## Perf
 
 This agent keeps its query under 100 ms.
@@ -44,6 +45,7 @@ This agent keeps its query under 100 ms.
 ## Counterexample
 
 ```md
+// agents/demo/README.md
 # Perf
 ```
 

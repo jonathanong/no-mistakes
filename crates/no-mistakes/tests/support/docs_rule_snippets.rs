@@ -34,23 +34,67 @@ pub fn labeled_section(body: &str, labels: &[&str]) -> String {
 }
 
 pub fn heading_section(body: &str, title: &str) -> String {
-    let header = format!("## {title}");
-    let start = body
-        .lines()
-        .enumerate()
-        .find(|(_, line)| line.eq_ignore_ascii_case(&header))
-        .map(|(idx, _)| idx);
-    let Some(start) = start else {
-        return String::new();
-    };
+    let header = format!("## {title}").to_ascii_lowercase();
+    let mut in_fence: Option<usize> = None;
+    let mut collecting = false;
     let mut collected = Vec::new();
-    for line in body.lines().skip(start + 1) {
-        if line.starts_with("## ") {
-            break;
+    for line in body.lines() {
+        if let Some(mark) = in_fence {
+            if close_fence(line, mark) {
+                in_fence = None;
+            }
+            if collecting {
+                collected.push(line);
+            }
+            continue;
         }
-        collected.push(line);
+        if let Some((mark, _)) = open_fence(line) {
+            in_fence = Some(mark);
+            if collecting {
+                collected.push(line);
+            }
+            continue;
+        }
+        if collecting {
+            if line.starts_with("## ") {
+                break;
+            }
+            collected.push(line);
+            continue;
+        }
+        if heading_matches(line, &header) {
+            collecting = true;
+        }
     }
     collected.join("\n")
+}
+
+fn heading_matches(line: &str, header_lc: &str) -> bool {
+    let line_lc = line.to_ascii_lowercase();
+    line_lc == header_lc
+        || line_lc.starts_with(&format!("{header_lc} "))
+        || line_lc.starts_with(&format!("{header_lc},"))
+}
+
+fn open_fence(line: &str) -> Option<(usize, String)> {
+    let trimmed = line.trim_start();
+    let mark = trimmed.chars().take_while(|c| *c == '`').count();
+    if mark < 3 {
+        return None;
+    }
+    let rest = trimmed[mark..].trim();
+    let lang = rest
+        .split_whitespace()
+        .next()
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    Some((mark, lang))
+}
+
+fn close_fence(line: &str, mark: usize) -> bool {
+    let trimmed = line.trim_start();
+    let n = trimmed.chars().take_while(|c| *c == '`').count();
+    n >= mark && trimmed.chars().skip(n).all(char::is_whitespace)
 }
 
 pub fn counterexample_section(body: &str) -> String {
@@ -69,17 +113,12 @@ pub fn fences(section: &str) -> Vec<(String, String)> {
     let mut out = Vec::new();
     let mut lines = section.lines().peekable();
     while let Some(line) = lines.next() {
-        let Some(rest) = line.strip_prefix("```") else {
+        let Some((mark, lang)) = open_fence(line) else {
             continue;
         };
-        let lang = rest
-            .split_whitespace()
-            .next()
-            .unwrap_or("")
-            .to_ascii_lowercase();
         let mut code = Vec::new();
         for inner in lines.by_ref() {
-            if inner.starts_with("```") {
+            if close_fence(inner, mark) {
                 break;
             }
             code.push(inner);
@@ -297,8 +336,10 @@ fn default_filename(lang: &str, code: &str, catalog: Option<&str>) -> String {
             ".github/workflows/ci.yml".into()
         }
         "yml" | "yaml" => "config.yml".into(),
-        "md" if code.contains("# AGENTS.md") || code.contains("# CLAUDE.md") => "AGENTS.md".into(),
-        "md" => "README.md".into(),
+        "md" | "markdown" if code.contains("# AGENTS.md") || code.contains("# CLAUDE.md") => {
+            "AGENTS.md".into()
+        }
+        "md" | "markdown" => "README.md".into(),
         "cs" | "csharp" => "src/App.cs".into(),
         "sh" | "bash" => "scripts/run.sh".into(),
         "toml" => "Cargo.toml".into(),
@@ -311,6 +352,9 @@ fn wrap_workflow_yaml(lang: &str, body: &str) -> String {
         return body.to_string();
     }
     if body.contains("jobs:") || body.contains("runs-on:") {
+        return body.to_string();
+    }
+    if body.contains("runs:") && body.contains("using:") {
         return body.to_string();
     }
     if body.contains("uses:")

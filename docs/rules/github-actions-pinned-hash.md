@@ -15,17 +15,6 @@ without a version-shaped trailing comment. Local and Docker actions are exempt.
 `excludePaths` is the only rule-specific option and defaults to an empty list.
 The built-in workflow and composite-action locations remain the default scope.
 
-## Valid example
-
-The two `uses:` lines in the pass example are valid because each has a full SHA
-and a version comment.
-
-## Related rules
-
-[`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)
-and [`github-actions-job-timeouts`](github-actions-job-timeouts.md) enforce
-the other per-step and per-job workflow contracts.
-
 Requires every `uses:` step in GitHub Actions workflow files to reference a
 40-char commit SHA with a version comment. Tag- or branch-pinned actions are
 mutable — an upstream owner can move the ref at any time, silently swapping
@@ -37,7 +26,10 @@ rules:
     scope: repository
 ```
 
-**Pass:**
+## Valid example
+
+The two `uses:` lines below are valid because each has a full SHA and a
+version comment.
 
 ```yaml
 - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -46,7 +38,7 @@ rules:
     toolchain: stable
 ```
 
-**Counterexample:**
+## Counterexample
 
 ```yaml
 - uses: actions/checkout@v6.0.2         # tag — fails
@@ -55,7 +47,9 @@ rules:
 - uses: actions/checkout@de0fac2e45...  # main  # comment not a version — fails
 ```
 
-**Fix:** Pin to the commit SHA for the desired tag and record the version in a
+## Fix
+
+Pin to the commit SHA for the desired tag and record the version in a
 trailing comment:
 
 ```bash
@@ -94,3 +88,9 @@ single line.
 
 **Scope:** Checks `.github/workflows/*.{yml,yaml}` and
 `.github/actions/**/action.{yml,yaml}` composite action files.
+
+## Related rules
+
+[`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)
+and [`github-actions-job-timeouts`](github-actions-job-timeouts.md) enforce
+the other per-step and per-job workflow contracts.

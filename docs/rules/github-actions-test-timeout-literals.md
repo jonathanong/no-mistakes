@@ -18,17 +18,12 @@ rule-specific options exist.
 
 ## Valid example
 
-The relational assertion in the fix below is valid because it compares values
-without restating the owned timeout literal.
+A relational assertion compares values without restating the owned timeout
+literal.
 
-```yaml
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - run: pnpm test
-        timeout-minutes: 8
+```ts
+// .github/workflows/ci.test.mts
+expect(step?.['timeout-minutes']).toBeLessThanOrEqual(job?.['timeout-minutes'])
 ```
 
 
@@ -47,6 +42,16 @@ rules:
     scope: repository
     options:
       include: [".github/workflows/**/*.test.mts"]
+```
+
+An `allow` entry pins one exact test line. It is a finding when that line is
+absent from the scanned file:
+
+```yaml
+rules:
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    options:
       allow:
         - file: .github/workflows/ci.test.mts
           text: "timeout-minutes: 20"
@@ -74,13 +79,13 @@ expect(step?.['timeout-minutes']).toBeLessThanOrEqual(job?.['timeout-minutes'])
 
 ## Counterexample
 
-```yaml
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - run: pnpm test --testTimeout=${{ inputs.ms }}
+A workflow test embeds `timeout-minutes: 15` in a string, or asserts equality
+against the owned literal.
+
+```ts
+// .github/workflows/ci.test.mts
+expect(workflowSource).toContain('timeout-minutes: 15')
+expect(step?.['timeout-minutes']).toBe(10)
 ```
 
 ## Suppression

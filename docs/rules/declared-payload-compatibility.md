@@ -25,12 +25,17 @@ rules:
         - name: queue user-notifications
           producer: {file: api/payloads.json, pointer: /notification}
           consumer: {file: worker/payloads.json, pointer: /notification}
-        - name: HTTP request POST /users
-          producer: {file: client/request.json}
-          consumer: {file: server/request.json}
-        - name: HTTP response GET /users
-          producer: {file: server/response.json}
-          consumer: {file: client/response.json}
+```
+
+Additional contracts can name HTTP request and response pairs the same way:
+
+```text
+- name: HTTP request POST /users
+  producer: {file: client/request.json}
+  consumer: {file: server/request.json}
+- name: HTTP response GET /users
+  producer: {file: server/response.json}
+  consumer: {file: client/response.json}
 ```
 
 `contracts` defaults to empty, so analysis is opt-in. Every contract requires a
@@ -53,27 +58,53 @@ that member, and `/a~1b~0c` selects the member named `a/b~c`. The pointed value
 must be a supported schema. Wrapper keys outside the selected schema are not
 interpreted; selecting a definition does not resolve its references.
 
-## Valid example, counterexample, and fix
+## Valid example
 
 This producer and consumer are compatible:
 
 ```json
+// api/payloads.json
 {
-  "type": "object",
-  "properties": {"userId": {"type": "string"}},
-  "required": ["userId"],
-  "additionalProperties": false
+  "notification": {
+    "type": "object",
+    "properties": {"userId": {"type": "string"}},
+    "required": ["userId"],
+    "additionalProperties": false
+  }
+}
+// worker/payloads.json
+{
+  "notification": {
+    "type": "object",
+    "properties": {"userId": {"type": "string"}},
+    "required": ["userId"],
+    "additionalProperties": false
+  }
 }
 ```
+
+## Counterexample
 
 Renaming only the producer property to `accountId` is a counterexample:
 
 ```json
+// api/payloads.json
 {
-  "type": "object",
-  "properties": {"accountId": {"type": "string"}},
-  "required": ["accountId"],
-  "additionalProperties": false
+  "notification": {
+    "type": "object",
+    "properties": {"accountId": {"type": "string"}},
+    "required": ["accountId"],
+    "additionalProperties": false
+  }
+}
+// worker/payloads.json
+{
+  "notification": {
+    "type": "object",
+    "properties": {"userId": {"type": "string"}},
+    "required": ["userId"],
+    "additionalProperties": false
+  }
 }
 ```
 
@@ -134,12 +165,6 @@ The existing asynchronous `check()` and `analyzeProject()` check report expose
 the same `RuleFinding` entries. Named configuration types are exported as
 `DeclaredPayloadCompatibilityOptions`, `DeclaredPayloadContract`, and
 `DeclaredPayloadSchema`.
-
-## Counterexample
-
-```ts
-export type User = { id: number };
-```
 
 ## Suppression
 

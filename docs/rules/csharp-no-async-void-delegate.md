@@ -25,7 +25,7 @@ rules:
   - rule: csharp-no-async-void-delegate
     scope: repository
     include:
-      - "src/App/**/*.cs"
+      - "src/**/*.cs"
 ```
 
 Counterexample: `new Command(async () => await RefreshAsync())` or
@@ -43,7 +43,8 @@ Fix: wrap the work as `() => _ = FooAsync()` so the delegate stays synchronous.
 ## Counterexample
 
 ```cs
-class Bad { async void Run() { } }
+// src/App.cs
+new Command(async () => await RefreshAsync());
 ```
 
 ## Suppression

@@ -89,7 +89,7 @@ A container port alone also asks Docker to allocate the host port:
       - run: docker run --publish 5432 postgres
 ```
 
-## Counterexample and fix
+## Counterexample
 
 This mapping pins host port 5432 on the runner:
 
@@ -100,6 +100,8 @@ jobs:
     steps:
       - run: docker run -p 5432:5432 postgres
 ```
+
+## Fix
 
 Publish with a Docker-allocated host port:
 

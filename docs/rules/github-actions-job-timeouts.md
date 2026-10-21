@@ -48,6 +48,15 @@ rules:
       maxMinutes: 10
       rejectStepExceedingJob: true
       rejectJobAtOrAboveStepSum: true
+```
+
+An `allow` entry can raise the cap for one job. It does not skip the sum check:
+
+```yaml
+rules:
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
       allow:
         - job: ".github/workflows/ci.yml#coverage"
           maxMinutes: 20
@@ -74,7 +83,7 @@ jobs:
         timeout-minutes: 8
 ```
 
-## Counterexample and fix
+## Counterexample
 
 This job fails the sum check because its job timeout equals the two step bounds
 combined (5 + 8 = 13).
@@ -90,6 +99,8 @@ jobs:
       - run: echo last
         timeout-minutes: 8
 ```
+
+## Fix
 
 With both timeout relationship checks enabled, set a literal job timeout that
 is at least the longest step and strictly below the sum. Under the example cap

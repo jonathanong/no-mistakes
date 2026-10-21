@@ -43,6 +43,16 @@ rules:
     scope: repository
     options:
       maxMinutes: 15
+```
+
+An `allow` entry names one step. It does not belong on a workflow that does not
+contain that step:
+
+```yaml
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
       allow:
         - step: ".github/workflows/ci.yml#build#download"
           reason: "The input matrix selects a bounded timeout."
@@ -61,14 +71,19 @@ jobs:
         timeout-minutes: 10
 ```
 
-## Counterexample and fix
+## Counterexample
 
 The checkout below can hang until the job deadline:
 
 ```yaml
-steps:
-  - uses: actions/checkout@v4
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 ```
+
+## Fix
 
 Set a literal timeout on the step:
 
