@@ -5,19 +5,21 @@ const {
   findContainingFunction,
   isFunction,
   isTransparentExpression,
+  unwrapExpression,
   unwrapTransparentParent,
 } = require("./async-ast");
 const { targetOptionsSchema } = require("./async-schema");
 const { createTargetMatcher, memberPropertyName } = require("./async-targets");
 
 function isPromiseAllCall(node) {
+  const callee = unwrapExpression(node?.callee);
+  const object = unwrapExpression(callee?.object);
   return (
     node?.type === "CallExpression" &&
-    node.callee.type === "MemberExpression" &&
-    !node.callee.computed &&
-    node.callee.object.type === "Identifier" &&
-    node.callee.object.name === "Promise" &&
-    memberPropertyName(node.callee) === "all"
+    callee?.type === "MemberExpression" &&
+    object?.type === "Identifier" &&
+    object.name === "Promise" &&
+    memberPropertyName(callee) === "all"
   );
 }
 

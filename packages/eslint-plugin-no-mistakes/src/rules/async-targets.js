@@ -1,6 +1,6 @@
 "use strict";
 
-const { unwrapExpression } = require("./async-ast");
+const { unwrapExpression, unwrapSequence } = require("./async-ast");
 const {
   isLocalRequire,
   isReassigned,
@@ -8,9 +8,10 @@ const {
   namespaceSourceFromInit,
   recordObjectPatternBindings,
   resolveVariable,
+  stableConstInitializer,
 } = require("./async-target-bindings");
 const { compileTargets, matchesAny, targetMatches } = require("./async-patterns");
-const { literalString } = require("./module-mock-helpers");
+const { literalString, logicalCall } = require("./module-mock-helpers");
 
 function importSpecifierName(specifier) {
   const imported = specifier.imported;
@@ -104,6 +105,7 @@ function createTargetMatcher(context, optionKey = "targets") {
       if (specifier.type === "ImportNamespaceSpecifier") {
         recordNamespace(specifier.local, source);
       } else if (specifier.type === "ImportDefaultSpecifier") {
+        recordNamespace(specifier.local, source);
         recordDirect(specifier.local, source, specifier.local.name);
       } else if (specifier.type === "ImportSpecifier") {
         const imported = importSpecifierName(specifier);
@@ -145,22 +147,44 @@ function createTargetMatcher(context, optionKey = "targets") {
     return (variable && directBindings.get(variable)) || null;
   }
 
-  function resolveNamespaceTarget(node) {
+  function resolveNamespaceTarget(node, seen) {
     if (node.type !== "MemberExpression") return null;
     const name = memberPropertyName(node);
     if (!name) return null;
-    const object = unwrapExpression(node.object);
-    const source =
-      requireSource(object, context) ||
-      (object.type === "Identifier"
-        ? namespaceBindings.get(resolveVariable(object, context))
-        : null);
-    return source && targetMatches(targets, source, name) ? { source, calleeName: name } : null;
+    let object = unwrapExpression(node.object);
+    for (;;) {
+      const source =
+        requireSource(object, context) ||
+        (object?.type === "Identifier"
+          ? namespaceBindings.get(resolveVariable(object, context))
+          : null);
+      if (source) {
+        return targetMatches(targets, source, name) ? { source, calleeName: name } : null;
+      }
+      const init = stableConstInitializer(object, context, seen);
+      if (!init) return null;
+      object = unwrapSequence(init);
+    }
+  }
+
+  function resolveCallee(callee, seen = new Set()) {
+    callee = unwrapSequence(callee);
+    if (!callee) return null;
+    const found = resolveDirectTarget(callee) || resolveNamespaceTarget(callee, seen);
+    if (found) return found;
+    const init = stableConstInitializer(callee, context, seen);
+    if (!init) return null;
+    return resolveCallee(init, seen);
   }
 
   function resolveCallTarget(node) {
-    const callee = unwrapExpression(node.callee);
-    return resolveDirectTarget(callee) || resolveNamespaceTarget(callee);
+    if (node?.type !== "CallExpression") return null;
+    const direct = resolveCallee(node.callee);
+    if (direct) return { ...direct, arguments: node.arguments };
+    const invoked = logicalCall(node);
+    if (!invoked) return null;
+    const forwarded = resolveCallee(invoked.callee);
+    return forwarded ? { ...forwarded, arguments: invoked.arguments } : null;
   }
 
   return {

@@ -87,8 +87,9 @@ module.exports = {
       CallExpression(node) {
         let array;
         let includesApi = true;
-        if (matcher.resolveCallTarget(node) && token(node.arguments[0]) === "gh") {
-          array = unwrapExpression(node.arguments[1]);
+        const resolved = matcher.resolveCallTarget(node);
+        if (resolved && token(resolved.arguments[0]) === "gh") {
+          array = unwrapExpression(resolved.arguments[1]);
         } else {
           const name = wrapperName(node.callee, context, stable);
           const wrapper = (options.wrappers || []).find((entry) => entry.callee === name);

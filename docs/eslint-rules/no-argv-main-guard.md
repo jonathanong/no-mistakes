@@ -63,6 +63,8 @@ are recognized only from their corresponding Node `url`, `path`, and `fs`
 imports or CommonJS bindings. Same-spelled local wrappers are not assumed
 transparent. Transparent TypeScript assertions and optional chains are supported.
 
+A named `argv` import, `const { argv }` from `process`, a string or expression-free template index, `.at` with a static `1`, and `fileURLToPath.call` or a literal-array `.apply` are the same access.
+
 ## Fix
 
 Use `import.meta.main` on a runtime that supports it, or inject an explicit
@@ -70,6 +72,10 @@ Use `import.meta.main` on a runtime that supports it, or inject an explicit
 CommonJS and older Node runtimes need their own supported entrypoint check; do
 not copy ESM syntax into them blindly. The rule has no automatic fix and does
 not execute filesystem or symlink probes.
+
+## Limits
+
+Another file's re-export is not visible here. `import { toPath } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { fileURLToPath as toPath } from "node:url"` or `export * from "node:url"`. A parameter default such as `function run({ argv } = process)` is not judged, because the caller can pass a different object.
 
 ## Suppression
 

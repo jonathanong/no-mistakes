@@ -773,7 +773,7 @@ describe("module-mock-boundary", () => {
       import { mock as directMock, vi } from "vitest";
       let mockLater;
       mockLater = vi.mock;
-      mockLater += vi.doMock;
+      mockLater += vi.doMock; // a later write drops the vi.mock alias
       const mockCall = vi.mock;
       directMock("@app/imported", () => ({ run: vi.fn() }));
       mockCall.call(undefined, "@app/called", () => ({ run: vi.fn() }));
@@ -789,7 +789,7 @@ describe("module-mock-boundary", () => {
         { internalSpecifiers: ["@app/**"] },
         "module-mock-boundary.test.ts",
       ),
-      ["boundary", "boundary", "boundary", "boundary", "boundary"],
+      ["boundary", "boundary"],
     );
   });
 

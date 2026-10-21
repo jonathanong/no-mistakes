@@ -1,25 +1,31 @@
 "use strict";
 
-const { isModuleMockMemberCall, propertyName } = require("./module-mock-helpers");
+const { unwrapExpression } = require("./async-ast");
+const { isModuleMockMemberCall, memberPropertyName } = require("./module-mock-helpers");
 
 function matchDirectMockCallApply(node, context, methods) {
+  const callee = unwrapExpression(node.callee);
+  const object = unwrapExpression(callee?.object);
+  const name = callee?.type === "MemberExpression" ? memberPropertyName(callee) : null;
+  if (!["call", "apply"].includes(name) || object?.type !== "MemberExpression") return null;
+  const direct = isModuleMockMemberCall({ callee: object }, context);
+  if (!direct || !methods.has(direct.method)) return null;
+  const args = node.arguments ?? [];
+  if (args.some((arg) => arg?.type === "SpreadElement")) return null;
+  if (name === "call") {
+    return { factory: args[2], mock: direct, specifierNode: args[1] };
+  }
+  const list = unwrapExpression(args[1]);
   if (
-    node.callee.type !== "MemberExpression" ||
-    !["call", "apply"].includes(propertyName(node.callee.property)) ||
-    node.callee.object.type !== "MemberExpression"
+    list?.type === "ArrayExpression" &&
+    list.elements.some((element) => !element || element.type === "SpreadElement")
   ) {
     return null;
   }
-  const direct = isModuleMockMemberCall({ callee: node.callee.object }, context);
-  if (!direct || !methods.has(direct.method)) return null;
-  if (propertyName(node.callee.property) === "call") {
-    return { factory: node.arguments[2], mock: direct, specifierNode: node.arguments[1] };
-  }
-  const args = node.arguments[1];
   return {
-    factory: args?.type === "ArrayExpression" ? args.elements[1] : undefined,
+    factory: list?.type === "ArrayExpression" ? list.elements[1] : undefined,
     mock: direct,
-    specifierNode: args?.type === "ArrayExpression" ? args.elements[0] : undefined,
+    specifierNode: list?.type === "ArrayExpression" ? list.elements[0] : undefined,
   };
 }
 

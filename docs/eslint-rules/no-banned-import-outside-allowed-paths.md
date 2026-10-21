@@ -29,10 +29,16 @@ import { fetchUser } from "@app/data";
 
 All lists default to empty, so configure the project policy explicitly.
 
+A string or expression-free template member on a banned binding is the same member.
+
 ## Fix
 
 Move the use into an allowed helper and export a project-specific wrapper;
 avoid re-exporting the banned binding.
+
+## Limits
+
+Another file's re-export is not visible here. `import { load } from "./barrel.mjs"; load(id)` stays unreported when `barrel.mjs` is `export { fetchUser as load } from "@app/data"` or `export * from "@app/data"`. A parameter default such as `function run({ fetchUser } = api)` is not judged, because the caller can pass a different object. `.call`, `.apply`, and a comma callee are not the banned binding.
 
 ## Suppression
 

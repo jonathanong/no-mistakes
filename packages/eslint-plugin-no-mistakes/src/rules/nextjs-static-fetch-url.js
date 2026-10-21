@@ -1,6 +1,6 @@
 "use strict";
 
-const { isFetchCall, isStaticString, rule } = require("../helpers");
+const { fetchInvocation, isStaticString, rule } = require("../helpers");
 
 module.exports = rule(
   {
@@ -17,8 +17,9 @@ module.exports = rule(
   },
   (context) => ({
     CallExpression(node) {
-      if (!isFetchCall(node, context)) return;
-      const url = node.arguments[0];
+      const args = fetchInvocation(node, context);
+      if (!args) return;
+      const url = args[0];
       if (!isStaticString(url)) {
         context.report({ node: url ?? node, messageId: "dynamic" });
       }

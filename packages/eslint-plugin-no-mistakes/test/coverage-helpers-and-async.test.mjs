@@ -26,7 +26,7 @@ describe("helpers coverage", () => {
   });
 
   it("uses the fetch-shadow fallback when scope.set.get is missing", () => {
-    const node = { callee: { type: "Identifier", name: "fetch" } };
+    const node = { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } };
     const shadowed = {
       sourceCode: {
         getScope: () => ({

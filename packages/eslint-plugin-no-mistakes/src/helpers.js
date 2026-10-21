@@ -1,5 +1,7 @@
 "use strict";
 
+const { fetchInvocation, isFetchCall } = require("./fetch-call");
+
 const DEFAULT_SELECTOR_ATTRIBUTES = ["data-testid", "data-pw"];
 const DEFAULT_NAMING_PATTERN = "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$";
 const INTERACTIVE_ELEMENTS = new Set(["button", "input", "select", "textarea"]);
@@ -134,40 +136,6 @@ function selectorValueNode(attribute) {
   return expression && expression.type !== "JSXEmptyExpression" ? expression : null;
 }
 
-const LOCAL_BINDING_TYPES = new Set([
-  "Variable",
-  "Parameter",
-  "CatchClause",
-  "FunctionName",
-  "ImportBinding",
-  "ClassName",
-]);
-
-function isFetchShadowed(scope) {
-  while (scope) {
-    const get = scope.set?.get;
-    const variable = typeof get === "function" ? get.call(scope.set, "fetch") : null;
-    if (variable) {
-      return variable.defs.some((def) => LOCAL_BINDING_TYPES.has(def.type));
-    }
-    if (!scope.set || typeof get !== "function") {
-      const fallback = scope.variables?.find((item) => item.name === "fetch");
-      if (fallback) {
-        return fallback.defs.some((def) => LOCAL_BINDING_TYPES.has(def.type));
-      }
-    }
-    scope = scope.upper;
-  }
-  return false;
-}
-
-function isFetchCall(node, context) {
-  if (node.callee.type !== "Identifier" || node.callee.name !== "fetch") {
-    return false;
-  }
-  return !isFetchShadowed(context.sourceCode.getScope(node));
-}
-
 function rule(meta, create) {
   return { meta, create };
 }
@@ -179,6 +147,7 @@ module.exports = {
   canonicalAttribute,
   cssSelectorValues,
   INTERACTIVE_ELEMENTS,
+  fetchInvocation,
   isFetchCall,
   isSelectorAttribute,
   isSelectorCall,

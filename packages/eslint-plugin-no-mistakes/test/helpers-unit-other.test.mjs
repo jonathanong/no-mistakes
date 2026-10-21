@@ -88,12 +88,12 @@ describe("helpers", () => {
 
   describe("isFetchCall", () => {
     it("returns false if callee is not Identifier 'fetch'", () => {
-      const node = { callee: { type: "Identifier", name: "axios" } };
+      const node = { type: "CallExpression", callee: { type: "Identifier", name: "axios" } };
       expect(isFetchCall(node, {})).toBe(false);
     });
 
     it("returns true if it is a global fetch call", () => {
-      const node = { callee: { type: "Identifier", name: "fetch" } };
+      const node = { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } };
       const context = {
         sourceCode: {
           getScope: () => ({
@@ -106,7 +106,7 @@ describe("helpers", () => {
     });
 
     it("returns true when scope.set exists but does not shadow fetch", () => {
-      const node = { callee: { type: "Identifier", name: "fetch" } };
+      const node = { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } };
       const context = {
         sourceCode: {
           getScope: () => ({
@@ -119,7 +119,7 @@ describe("helpers", () => {
     });
 
     it("returns false if fetch is shadowed by a local variable", () => {
-      const node = { callee: { type: "Identifier", name: "fetch" } };
+      const node = { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } };
       const context = {
         sourceCode: {
           getScope: () => ({
@@ -137,7 +137,7 @@ describe("helpers", () => {
     });
 
     it("returns false if scope.set.get finds a local variable binding", () => {
-      const node = { callee: { type: "Identifier", name: "fetch" } };
+      const node = { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } };
       const context = {
         sourceCode: {
           getScope: () => ({
@@ -150,7 +150,7 @@ describe("helpers", () => {
     });
 
     it("checks upper scopes for shadowing", () => {
-      const node = { callee: { type: "Identifier", name: "fetch" } };
+      const node = { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } };
       const context = {
         sourceCode: {
           getScope: () => ({
@@ -171,7 +171,7 @@ describe("helpers", () => {
     });
 
     it("returns true if fetch is in scope but not a local binding (e.g. built-in)", () => {
-      const node = { callee: { type: "Identifier", name: "fetch" } };
+      const node = { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } };
       const context = {
         sourceCode: {
           getScope: () => ({

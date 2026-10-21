@@ -1,7 +1,7 @@
 "use strict";
 const { unwrapExpression } = require("./async-ast");
 const { resolveVariable, memberPropertyName, isLocalRequire } = require("./async-target-bindings");
-const { literalString } = require("./module-mock-helpers");
+const { literalString, logicalCall } = require("./module-mock-helpers");
 
 function globalName(node, name, context) {
   if (node?.type !== "Identifier" || node.name !== name) return false;
@@ -51,6 +51,25 @@ function createClassifier(context, wrappers) {
       if (nodeProcess(node, context)) return PROCESS;
       if (globalName(node, "__filename", context)) return MAIN;
       const def = variable.defs.length === 1 ? variable.defs[0] : null;
+      if (def?.type === "ImportBinding" && def.node?.type === "ImportSpecifier") {
+        const imported = def.node.imported;
+        const importedName = imported?.type === "Literal" ? String(imported.value) : imported?.name;
+        if (
+          importedName === "argv" &&
+          ["process", "node:process"].includes(def.parent?.source?.value)
+        ) {
+          return ARGUMENTS;
+        }
+      }
+      if (
+        def?.type === "Variable" &&
+        def.parent?.kind === "const" &&
+        def.node?.id?.type === "ObjectPattern"
+      ) {
+        const key = objectPatternKey(def.node.id, node.name);
+        if (key === "argv" && classify(def.node.init, depth + 1) === PROCESS) return ARGUMENTS;
+        return 0;
+      }
       if (
         def?.type !== "Variable" ||
         def.parent.kind !== "const" ||
@@ -75,13 +94,7 @@ function createClassifier(context, wrappers) {
         return MAIN;
       const object = classify(node.object, depth + 1);
       if (object === PROCESS && name === "argv") return ARGUMENTS;
-      if (
-        object === ARGUMENTS &&
-        node.computed &&
-        node.property.type === "Literal" &&
-        node.property.value === 1
-      )
-        return ARGV;
+      if (object === ARGUMENTS && node.computed && staticIndexOne(node.property)) return ARGV;
       // A URL conversion's href preserves the same module/argv identity.
       if (
         name === "href" &&
@@ -91,19 +104,20 @@ function createClassifier(context, wrappers) {
         return object;
     }
     if (node.type === "CallExpression") {
-      const callee = unwrapExpression(node.callee);
+      const invoked = logicalCall(node);
+      if (!invoked) return 0;
+      const callee = unwrapExpression(invoked.callee);
       if (
         callee?.type === "MemberExpression" &&
         memberPropertyName(callee) === "at" &&
         classify(callee.object, depth + 1) === ARGUMENTS &&
-        node.arguments.length === 1 &&
-        node.arguments[0].type === "Literal" &&
-        node.arguments[0].value === 1
+        invoked.arguments.length === 1 &&
+        staticIndexOne(invoked.arguments[0])
       )
         return ARGV;
-      if (node.arguments.length !== 1 || node.arguments[0].type === "SpreadElement") return 0;
+      if (invoked.arguments.length !== 1 || invoked.arguments[0].type === "SpreadElement") return 0;
       if (globalName(callee, "Boolean", context) || wrappers.resolveCallTarget(node)) {
-        const value = classify(node.arguments[0], depth + 1);
+        const value = classify(invoked.arguments[0], depth + 1);
         return value === ARGV || value === MAIN ? value : 0;
       }
     }
@@ -111,4 +125,23 @@ function createClassifier(context, wrappers) {
   }
   return (node) => classify(node);
 }
+function staticIndexOne(node) {
+  if (!node) return false;
+  if (node.type === "Literal") return node.value === 1 || node.value === "1";
+  return literalString(node) === "1";
+}
+
+function objectPatternKey(pattern, name) {
+  for (const property of pattern.properties) {
+    if (property.type !== "Property") continue;
+    const value =
+      property.value.type === "AssignmentPattern" ? property.value.left : property.value;
+    if (value.type !== "Identifier" || value.name !== name) continue;
+    if (property.key.type === "Identifier" && !property.computed) return property.key.name;
+    if (property.key.type === "Literal") return String(property.key.value);
+    return literalString(property.key);
+  }
+  return null;
+}
+
 module.exports = { createClassifier, ARGV, MAIN };

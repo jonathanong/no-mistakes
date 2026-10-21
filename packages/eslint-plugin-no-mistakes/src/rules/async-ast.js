@@ -6,6 +6,7 @@ const transparentExpressionTypes = new Set([
   "TSAsExpression",
   "TSTypeAssertion",
   "TSSatisfiesExpression",
+  "TSInstantiationExpression",
 ]);
 
 function isFunction(node) {
@@ -43,6 +44,14 @@ function isTransparentExpression(node) {
 function unwrapExpression(node) {
   let current = node;
   while (isTransparentExpression(current)) current = current.expression;
+  return current;
+}
+
+function unwrapSequence(node) {
+  let current = unwrapExpression(node);
+  while (current?.type === "SequenceExpression") {
+    current = unwrapExpression(current.expressions.at(-1));
+  }
   return current;
 }
 
@@ -99,5 +108,6 @@ module.exports = {
   isUnconditionalBeforeReturn,
   traverse,
   unwrapExpression,
+  unwrapSequence,
   unwrapTransparentParent,
 };
