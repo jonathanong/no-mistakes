@@ -1,0 +1,15 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - name: rule-exclude-filters-findings-only
+    rule: forbidden-calls
+    scope: repository
+    exclude:
+      - src/root-exclusion/mock-only.mock.test.mts
+    options:
+      roots:
+        - vitest: [root-exclusion]
+      traversal: transitive
+      targets:
+        - global: setTimeout

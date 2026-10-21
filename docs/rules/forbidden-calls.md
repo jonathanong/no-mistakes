@@ -39,9 +39,14 @@ root. Catalog roots select runner-config projects and explicit
 `tests.vitest.projects` / `tests.playwright.projects` entries through those
 projects' include paths (`testDir` and `testMatch` for Playwright).
 `vitest: true` or `playwright: true` includes that merged set, and a named
-list still errors for names present in neither source. Rule-level `include`
-and `exclude` still filter findings after expansion; they cannot select the
-root collection.
+list still errors for names present in neither source. `options.excludeRoots`
+removes matching source files from the initial root collection before
+call-graph traversal. Patterns are relative to the repository root and accept
+one glob or a list. It applies to all root selector kinds. If it removes every
+configured root, the rule fails with a configuration error. Excluded root files
+can still produce findings when another retained root reaches them. Rule-level
+`include` and `exclude` continue to filter findings after traversal; they do
+not remove traversal roots.
 
 `traversal` is `direct`, `file`, or `transitive`; `maxDepth`
 caps the selected traversal. `direct` always stops after one call hop. Call
@@ -62,6 +67,7 @@ roots:
   - glob: e2e/**/*.spec.ts
   - vitest: [unit, integration]
   - playwright: true
+excludeRoots: ["**/*.mock.test.*"]
 targets:
   - global: setTimeout
   - exact: page.waitForTimeout

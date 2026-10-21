@@ -1,0 +1,13 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - name: roots-include-mocks
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - vitest: [root-exclusion]
+      traversal: transitive
+      targets:
+        - global: setTimeout

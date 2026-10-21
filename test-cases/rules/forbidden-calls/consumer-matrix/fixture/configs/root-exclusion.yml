@@ -1,0 +1,16 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - name: roots-exclude-mocks
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - vitest: [root-exclusion]
+      excludeRoots:
+        - "**/*.mock.test.mts"
+        - "**/shared.mts"
+      traversal: transitive
+      targets:
+        - global: setTimeout

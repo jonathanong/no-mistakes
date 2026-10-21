@@ -1,0 +1,10 @@
+rules:
+  - name: invalid-root-exclusion
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - glob: src/**/*.mts
+      excludeRoots: "["
+      targets:
+        - global: setTimeout

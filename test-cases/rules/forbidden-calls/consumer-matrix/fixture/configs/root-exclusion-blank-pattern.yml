@@ -1,0 +1,10 @@
+rules:
+  - name: blank-root-exclusion
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - file: src/unit/timers.test.mts
+      excludeRoots: "  "
+      targets:
+        - global: setTimeout
