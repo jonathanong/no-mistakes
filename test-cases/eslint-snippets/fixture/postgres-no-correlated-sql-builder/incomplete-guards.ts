@@ -86,3 +86,10 @@ export function optionalReceiver(query: Builder | undefined, access: string) {
   else throw new Error("unknown");
   return query;
 }
+// An initializer can bypass its append while every guard arm still completes.
+export function initializerAppend(query: Builder, access: string, flag: boolean) {
+  if (access === "owned") { const appended = flag && query.append(sql`A`); }
+  else if (access === "member") query.append(sql`B`);
+  else throw new Error("unknown");
+  return query;
+}
