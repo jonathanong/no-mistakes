@@ -34,6 +34,12 @@ For a PostgreSQL rule application, `unanalyzableSql: advise` reports residual
 uncertainty in non-failing `advisories`, including its reason, known SQL prefix,
 and helper lines when available. Existing `fail`/`ignore` behavior and defaults
 stay unchanged. See [SQL verdicts](../postgres-sql-verdicts.md).
+
+SQL residual advice is grouped per executor call, rule, configured application,
+and executor profile. Advice uses the executor call line; proven findings keep
+their SQL origin lines. Checks and reasons are sorted and deduplicated in the
+advisory, while the optional ledger remains per obligation.
+
 The root-global `--timings` and `--verbose-timings` flags work here and on every
 other CLI leaf. Verbose mode implies timings, includes rule/graph/Playwright
 sub-phases and work counts, and marks overlapping check-domain spans as

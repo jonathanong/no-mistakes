@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { join } = require("node:path");
+const { dirname, join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
@@ -93,6 +93,70 @@ test(
       assert.equal(detailed.sqlVerdicts.length, 1);
       assert.equal(detailed.sqlVerdicts[0].status, "violation");
       assert.equal(detailed.sqlVerdicts[0].evidence, "exact");
+    }
+  },
+);
+
+test(
+  "compiled advice aggregates obligations and matches CLI with either ledger flag",
+  { skip: !compiled },
+  async () => {
+    const { execFileSync } = require("node:child_process");
+    const { mkdtempSync, rmSync } = require("node:fs");
+    const { tmpdir } = require("node:os");
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-sql-verdicts/fixture/advisory-aggregation",
+    );
+    const cli =
+      process.env.NO_MISTAKES_TEST_CLI_PATH ||
+      join(
+        dirname(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH),
+        process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes",
+      );
+    const runtime = mkdtempSync(join(tmpdir(), "no-mistakes-sql-advice-"));
+    try {
+      for (const configName of [".no-mistakes.yml", "fail.yml"]) {
+        const config = join(root, configName);
+        for (const includeSqlVerdicts of [false, true]) {
+          const pending = cjs.check({ root, config, includeSqlVerdicts });
+          assert.ok(pending instanceof Promise);
+          const report = await pending;
+          assert.deepEqual(await esm.check({ root, config, includeSqlVerdicts }), report);
+          const args = ["check", "--root", root, "--config", config, "--format", "json"];
+          if (includeSqlVerdicts) args.push("--include-sql-verdicts");
+          // This saved fixture deliberately contains proven violations (exit 1).
+          let stdout;
+          try {
+            stdout = execFileSync(cli, args, {
+              env: { ...process.env, XDG_RUNTIME_DIR: runtime },
+              encoding: "utf8",
+            });
+          } catch (error) {
+            assert.equal(error.status, 1);
+            stdout = error.stdout;
+          }
+          assert.deepEqual(report, JSON.parse(stdout));
+          if (configName === "fail.yml") {
+            assert.equal(report.advisories.length, 0);
+            assert.ok(
+              report.rules.some(({ line, target }) => line === 10 && target === "unanalyzable-sql"),
+            );
+          } else {
+            assert.equal(report.advisories.length, 12);
+            assert.equal(report.advisories.filter(({ line }) => line === 7).length, 2);
+            assert.equal(report.advisories.filter(({ line }) => line === 13).length, 4);
+          }
+          assert.ok(
+            report.rules.some(({ line, target }) => line === 9 && target === "CREATE TABLE"),
+          );
+          if (includeSqlVerdicts) assert.equal(report.sqlVerdicts.length, 84);
+        }
+      }
+    } finally {
+      rmSync(runtime, { recursive: true, force: true });
     }
   },
 );

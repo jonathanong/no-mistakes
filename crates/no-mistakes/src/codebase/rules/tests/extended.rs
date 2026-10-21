@@ -301,9 +301,13 @@ fn filesystem_rule_ids_are_distinct() {
 
 #[test]
 fn run_filesystem_rules_returns_empty_when_not_configured() {
-    assert!(run_filesystem_rules(std::path::Path::new("/tmp"), None)
-        .unwrap()
-        .is_empty());
+    // A shared temporary directory can contain unrelated projects and build trees.
+    assert!(run_filesystem_rules(
+        &fixture("codebase-analysis/filesystem-rules/unconfigured"),
+        None
+    )
+    .unwrap()
+    .is_empty());
 }
 
 #[test]

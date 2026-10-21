@@ -1,0 +1,13 @@
+rules:
+  - rule: postgres-sql-statement-policy
+    name: first
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      unanalyzableSql: fail
+  - rule: postgres-sql-statement-policy
+    name: overlapping
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      unanalyzableSql: fail

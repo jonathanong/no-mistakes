@@ -34,3 +34,8 @@ It is a raw proof inventory: suppressed calls remain in `sqlVerdicts` while
 their findings and advisories follow normal suppression directives.
 
 [Node/N-API guide](../node-api.md)
+
+SQL residual advice is grouped per executor call, rule, configured application,
+and executor profile. Advice uses the executor call line; proven findings keep
+their SQL origin lines. Checks and reasons are sorted and deduplicated in the
+advisory, while the optional ledger remains per obligation.

@@ -69,6 +69,14 @@ See [Imported and literal-identifier helpers](postgres-facts/imported-and-litera
 
 See [Imported and literal-identifier helpers](postgres-facts/imported-and-literal-identifier-helpers.md).
 
+Residual `unanalyzableSql: advise` diagnostics use the executor call's starting
+line, including finite SQL alternatives whose branch origins differ. One
+advisory combines the unresolved obligations for each call/rule/application/profile;
+helper lines and known prefixes remain in its message. Proven findings retain
+their existing origin attribution. Separate calls on the same line remain
+separate because aggregation uses the original call span. See
+[SQL verdicts](postgres-sql-verdicts.md).
+
 ### Executor bindings
 
 See [Executor bindings](postgres-facts/executor-bindings.md).

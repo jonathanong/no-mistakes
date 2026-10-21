@@ -42,9 +42,22 @@ another reachable invocation remains unknown; the row does not promote one
 observed context into proof for every execution.
 
 Each PostgreSQL rule application accepts `unanalyzableSql: advise` to place its
-residual uncertainty in the non-failing `advisories` list, with reason, known
-prefix, and helper lines when available. Existing `fail` and `ignore` choices
-keep their behavior; query annotation's default name for `fail` is `report`.
+residual uncertainty in the non-failing `advisories` list. Each executor call,
+rule, configured application, and executor profile produces at most one residual
+advisory. Its `target` lists unresolved checks in sorted, comma-separated
+order; the message combines sorted, deduplicated checks, residual reasons,
+known prefixes, and helper lines. A single subcheck keeps its existing target.
+The optional ledger remains one row per obligation.
+
+Advice is attributed to the executor call's starting line, including multiline
+finite alternatives and imported SQL. The original half-open call span remains
+the aggregation identity, so separate calls on one line stay separate. Proven
+findings retain their existing SQL branch/helper origin lines. Fail-mode parse
+errors retain the invalid alternative's origin line as well. Suppress advice
+at its executor call line; helper lines remain contextual evidence in its message.
+This avoids moving existing failures when a call also has unresolved SQL.
+
+Existing `fail` and `ignore` choices keep their behavior; query annotation's default name for `fail` is `report`.
 Proven violations continue to fail even when the same call has residual
 uncertainty. `no-mistakes` file and line suppression directives apply to
 advisories as they do to findings.

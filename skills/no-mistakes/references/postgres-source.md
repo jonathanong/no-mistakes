@@ -123,3 +123,8 @@ arithmetic or unknown function operands, `SOME`, and unsupported operators remai
 with query diagnostics. Quantified equality does not add an ordinary equality
 fact or evaluate array contents. An otherwise supported `INSERT ... SELECT`
 with `x = ANY(t.aliases)` can therefore be complete.
+
+SQL residual advice is grouped per executor call, rule, configured application,
+and executor profile. Advice uses the executor call line; proven findings keep
+their SQL origin lines. Checks and reasons are sorted and deduplicated in the
+advisory, while the optional ledger remains per obligation.

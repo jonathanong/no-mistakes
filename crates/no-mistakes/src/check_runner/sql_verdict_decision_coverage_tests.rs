@@ -109,7 +109,7 @@ fn leading_violation_and_opaque_tail_keep_finding_and_advisory_distinct() {
     assert_eq!(report.advisories[0].line, 3);
     assert!(report.advisories[0]
         .message
-        .contains("proved a violation, but remaining SQL is unresolved"));
+        .contains("has unresolved SQL for"));
     assert!(report.advisories[0]
         .message
         .contains("application \"leading-prefix\""));
