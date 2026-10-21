@@ -5,3 +5,8 @@ const Alias = Save;
 <pw.SaveButton />;
 <Save />;
 <Alias />;
+
+function Local() {
+  const Save = () => <span />;
+  return <Save />;
+}

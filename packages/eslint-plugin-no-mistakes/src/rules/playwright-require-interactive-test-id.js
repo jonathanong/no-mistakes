@@ -52,7 +52,7 @@ module.exports = rule(
       },
       JSXOpeningElement(node) {
         const elementNames = jsxCandidateNames(node.name).flatMap((name) => {
-          const imported = importedNames.get(name);
+          const imported = mappedImport(name, node, context, importedNames);
           return imported && imported !== name ? [name, imported] : [name];
         });
         const hasSelector = node.attributes.some((attr) =>
@@ -70,6 +70,37 @@ module.exports = rule(
     };
   },
 );
+
+function variableNamed(name, node, context) {
+  if (!context?.sourceCode?.getScope) return null;
+  let scope = context.sourceCode.getScope(node);
+  while (scope) {
+    const variable = scope.set?.get(name) ?? scope.variables?.find((item) => item.name === name);
+    if (variable) return variable;
+    scope = scope.upper;
+  }
+  return null;
+}
+
+// The file-wide rename map applies only to the import or a single const alias
+// of that import. A nested component that reuses the local name is not that import.
+function mappedImport(name, node, context, importedNames) {
+  const imported = importedNames.get(name);
+  if (!imported || imported === name) return null;
+  const variable = variableNamed(name, node, context);
+  if (!variable || variable.defs?.length !== 1) return null;
+  const def = variable.defs[0];
+  if (def.type === "ImportBinding") return imported;
+  if (
+    def.type === "Variable" &&
+    def.parent?.kind === "const" &&
+    def.node?.init?.type === "Identifier" &&
+    importedNames.get(def.node.init.name) === imported
+  ) {
+    return imported;
+  }
+  return null;
+}
 
 function isInteractiveElement(elementNames, attributes, interactiveComponents) {
   const names = Array.isArray(elementNames) ? elementNames : [elementNames];

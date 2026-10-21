@@ -49,7 +49,7 @@ describe("playwright same-file recall", () => {
         undefined,
         "recall.tsx",
       ).length,
-      3,
+      4,
     );
     assert.equal(
       messages(

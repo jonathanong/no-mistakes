@@ -78,6 +78,34 @@ function methodFromCallee(callee, context, seen = new Set()) {
   return methodFromCallee(def.node.init, context, seen) || callee.name;
 }
 
+// A configured factory keeps its own name when that name is also a const
+// alias of another function. The resolved target is used only when the
+// spelled callee is not itself configured.
+function configuredFactory(callee, context, factoryNames, seen = new Set()) {
+  while (callee?.type === "ChainExpression") callee = callee.expression;
+  if (callee?.type === "Identifier" && factoryNames.has(callee.name)) return callee.name;
+  const direct = memberName(callee);
+  if (direct && factoryNames.has(direct)) return direct;
+  if (callee?.type !== "Identifier") return null;
+  const variable = variableFor(callee, context);
+  if (!variable || seen.has(variable) || variable.defs?.length !== 1) return null;
+  const def = variable.defs[0];
+  if (def.type !== "Variable" || def.parent?.kind !== "const" || !def.node?.init) return null;
+  seen.add(variable);
+  if (def.node.id?.type === "ObjectPattern") {
+    for (const item of def.node.id.properties) {
+      if (item.type !== "Property") continue;
+      const value = item.value?.type === "AssignmentPattern" ? item.value.left : item.value;
+      if (value?.type !== "Identifier" || value.name !== callee.name) continue;
+      const key = patternKey(item);
+      if (key && factoryNames.has(key)) return key;
+    }
+    return null;
+  }
+  if (def.node.id?.type !== "Identifier") return null;
+  return configuredFactory(def.node.init, context, factoryNames, seen);
+}
+
 function invokedCall(node) {
   if (node?.type !== "CallExpression") return null;
   let callee = node.callee;
@@ -133,6 +161,7 @@ module.exports = {
   invokedCall,
   isBeforeAllCall,
   memberName,
+  configuredFactory,
   methodFromCallee,
   patternKey,
   variableFor,

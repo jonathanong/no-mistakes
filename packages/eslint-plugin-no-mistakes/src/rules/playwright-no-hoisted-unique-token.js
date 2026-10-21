@@ -8,7 +8,7 @@ const {
   importSpecifierName,
   setupCallbackKind,
 } = require("./test-no-shared-state-callees");
-const { invokedCall, isBeforeAllCall, methodFromCallee } = require("./playwright-static-call");
+const { configuredFactory, invokedCall, isBeforeAllCall } = require("./playwright-static-call");
 const {
   collectEvents,
   writeReusesTrackedValue,
@@ -144,14 +144,11 @@ module.exports = rule(
         }
       },
       VariableDeclarator(node) {
-        if (
-          node.id.type !== "Identifier" ||
-          node.init?.type !== "CallExpression" ||
-          !factoryNames.has(methodFromCallee(invokedCall(node.init)?.callee, context))
-        ) {
-          return;
-        }
-        const factory = methodFromCallee(invokedCall(node.init).callee, context);
+        const factory =
+          node.id.type === "Identifier" && node.init?.type === "CallExpression"
+            ? configuredFactory(invokedCall(node.init)?.callee, context, factoryNames)
+            : null;
+        if (!factory) return;
         const fn = nearestOwnFunction(node);
         if (
           (!fn || !isSharedScopeShield(fn, testCalleeNames)) &&

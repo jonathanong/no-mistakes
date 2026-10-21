@@ -11,3 +11,6 @@ export const Memoed = React["memo"](function Memoed() {
 export const Forwarded = React.memo.call(React, function Forwarded() {
   return <button>Call</button>;
 });
+
+export const Plain = () => <div data-pw="plain" />,
+  Other = () => <button />;

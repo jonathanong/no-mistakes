@@ -1,6 +1,7 @@
 import test from "@playwright/test";
 import * as pw from "@playwright/test";
 
+const randomSuffix = crypto.randomUUID;
 const suffix = randomSuffix();
 const mint = randomSuffix;
 const other = mint();

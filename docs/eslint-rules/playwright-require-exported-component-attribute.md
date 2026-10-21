@@ -39,7 +39,7 @@ configuration to the component surface that needs coverage hooks.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name.
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. Every declarator in one `const` or `export const` statement is collected. A computed identifier key is not a static name.
 
 Another file's re-export is not visible here.
 
