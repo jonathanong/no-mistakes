@@ -185,9 +185,10 @@ fn call_clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, call: &oxc_ast
     super::super::super::limit::bounded(values)
 }
 
-#[cfg(test)]
-#[path = "clauses/tests.rs"]
-mod tests;
 }
 
 pub(in crate::codebase::postgres::embedded::walk::variants) use literal::{observe_const, recover};
+
+#[cfg(test)]
+#[path = "clauses/tests.rs"]
+mod tests;
