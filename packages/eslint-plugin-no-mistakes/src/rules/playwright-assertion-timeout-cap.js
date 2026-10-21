@@ -46,12 +46,30 @@ function isPlaywrightPath(filename) {
   return PLAYWRIGHT_PATH_PATTERN.test(filename.replace(/\\/g, "/"));
 }
 
+function isPlaywrightNamespace(node, context, seen = new Set()) {
+  while (node?.type === "ChainExpression") node = node.expression;
+  if (node?.type !== "Identifier") return false;
+  const variable = variableFor(node, context);
+  if (!variable || seen.has(variable) || variable.defs?.length !== 1) return false;
+  const def = variable.defs[0];
+  if (
+    def.type === "ImportBinding" &&
+    def.node?.type === "ImportNamespaceSpecifier" &&
+    def.parent?.source?.value === "@playwright/test"
+  ) {
+    return true;
+  }
+  if (def.type !== "Variable" || def.parent?.kind !== "const" || !def.node?.init) return false;
+  seen.add(variable);
+  return isPlaywrightNamespace(def.node.init, context, seen);
+}
+
 function expectRoot(node, context, expectNames, seen = new Set()) {
   while (node?.type === "ChainExpression") node = node.expression;
   if (!node) return false;
   if (node.type === "CallExpression") return expectRoot(node.callee, context, expectNames, seen);
   if (node.type === "MemberExpression") {
-    if (memberName(node) === "expect") return true;
+    if (memberName(node) === "expect") return isPlaywrightNamespace(node.object, context);
     return expectRoot(node.object, context, expectNames, seen);
   }
   if (node.type !== "Identifier") return false;

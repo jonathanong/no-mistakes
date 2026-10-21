@@ -8,3 +8,5 @@ check(locator).toBeVisible.call(check(locator), { timeout: 20000 });
 function helper(check) {
   check(locator).toBeVisible({ timeout: 20000 });
 }
+const customAssertions = { expect };
+customAssertions.expect(locator).toHaveText("text", { timeout: 30000 });
