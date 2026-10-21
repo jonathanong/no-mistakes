@@ -1,0 +1,84 @@
+# `postgres-no-unbounded-sql-identifier`
+
+A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, or `trustedSqlTags` on the rule. `include` and `exclude` may only narrow the project scope.
+
+Flags `process.env`, imported config, request parameters, query result rows, or a local alias of those values interpolated into a SQL relation without a runtime finite-domain validator. A TypeScript union, `satisfies`, or `as const` assertion around external data is not validation. Generated bind values remain allowed.
+
+The request prepares embedded SQL, import edges, and value-flow facts once. This rule borrows those facts and the canonical graph. Recovered switch/validator alternatives that splice literal schemas pass. A call is a validator only when the callee is a proven finite helper (literal returns, typically a switch whose default throws). Identity wrappers, `String()`, and `.toLowerCase()` are not validators. Unknown provenance and HTTP `.query` collisions are not proven violations. There is no autofix.
+
+```yaml
+projects:
+  app:
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    projects: [app]
+```
+
+## Why and when
+
+Use this when `config.schema`, `process.env.SCHEMA`, a request parameter, or a database row is concatenated into a relation. Agents otherwise treat the identifier as a closed set.
+
+## What it catches
+
+A configured executor interpolates `process.env.*` (including `process.env["SCHEMA"]`, `import { env } from "node:process"`, and `import { process } from "node:process"`), a local alias of it, a uniquely imported export whose initializer reads `process.env`, a function parameter (`req.params.schema`), or a query-result binding (`result.rows[0].schema`) into a recovered SQL relation. Findings name the producer and the SQL sink and ask for a throwing switch.
+
+A helper call around those values is reported unless the callee is a proven finite validator. Interpolations come from prepared template-expression facts, not a lexical `${...}` scan of the call span.
+
+## Valid example
+
+```ts
+export function schemaOf(value: string) {
+  switch (value) {
+    case "app":
+      return "app";
+    case "public":
+      return "public";
+    default:
+      throw new Error("unsupported schema");
+  }
+}
+```
+
+```ts
+import { query } from "@example/db";
+import { schemaOf } from "./schema";
+export function list() {
+  return query(`SELECT id FROM ${schemaOf(process.env.SCHEMA ?? "")}.users`);
+}
+```
+
+A bind-value interpolation (`WHERE tenant = ${process.env.SCHEMA}`), an HTTP `req.query(...)`, or a recovered finite helper stays silent.
+
+## Counterexample
+
+```ts
+import { query } from "@example/db";
+export function list() {
+  return query(`SELECT id FROM ${process.env.SCHEMA}.users`);
+}
+```
+
+`const schema = process.env.SCHEMA as "app" | "public"` is the same violation. So are `${identity(process.env.SCHEMA)}`, `${process.env.SCHEMA.toLowerCase()}`, `${process.env["SCHEMA"]}`, `${env.SCHEMA}` after `import { env } from "node:process"`, `${req.params.schema}`, and `${result.rows[0].schema}`.
+
+## Fix
+
+Map accepted runtime values to literal schemas with a switch whose default throws, then interpolate that helper. Keep values in tagged binds.
+
+## Options and defaults
+
+`importSpecifier` defaults to empty and must be set (or set `executorNames`) to select executor calls when the rule does not inherit a project postgres block. `executorNames` defaults to `query`, `read`, and `write` when a specifier is set. `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default to empty. `include` and `exclude` default to empty (all indexable files).
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-no-unbounded-sql-identifier` or
+`no-mistakes-disable-line` at the executor call, or
+`no-mistakes-disable-file` for a justified file exception.
+
+## Related rules
+
+[`postgres-no-mutable-sql-registry`](postgres-no-mutable-sql-registry.md) covers cross-file registry member writes.
+[`postgres-no-offset`](postgres-no-offset.md) covers pagination clauses.
+[`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) covers statement shapes.

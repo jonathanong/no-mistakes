@@ -17,6 +17,8 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-explicit-columns",
     "postgres-bounded-statements",
     "postgres-no-offset",
+    "postgres-no-mutable-sql-registry",
+    "postgres-no-unbounded-sql-identifier",
     "postgres-sql-shape-policy",
     "postgres-sql-statement-policy",
     "postgres-no-generated-column-writes",

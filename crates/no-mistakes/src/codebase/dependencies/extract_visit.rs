@@ -7,14 +7,34 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_expression_with_annex_b_initializer(self, expression);
     }
 
-    fn visit_statement(&mut self, statement: &Statement<'a>) { visit_statement_with_type_binding(self, statement); }
+    fn visit_statement(&mut self, statement: &Statement<'a>) {
+        visit_statement_with_type_binding(self, statement);
+    }
 
-    fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) { visit_if_with_execution(self, statement); }
-    fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'a>) { visit_logical_with_execution(self, expression); }
-    fn visit_conditional_expression(&mut self, expression: &oxc_ast::ast::ConditionalExpression<'a>) { visit_conditional_with_execution(self, expression); }
-    fn visit_assignment_pattern(&mut self, pattern: &oxc_ast::ast::AssignmentPattern<'a>) { visit_binding_default_with_execution(self, pattern); }
-    fn visit_assignment_target_with_default(&mut self, target: &oxc_ast::ast::AssignmentTargetWithDefault<'a>) { visit_target_default_with_execution(self, target); }
-    fn visit_formal_parameter(&mut self, parameter: &oxc_ast::ast::FormalParameter<'a>) { visit_parameter_default_with_execution(self, parameter); }
+    fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) {
+        visit_if_with_execution(self, statement);
+    }
+    fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'a>) {
+        visit_logical_with_execution(self, expression);
+    }
+    fn visit_conditional_expression(
+        &mut self,
+        expression: &oxc_ast::ast::ConditionalExpression<'a>,
+    ) {
+        visit_conditional_with_execution(self, expression);
+    }
+    fn visit_assignment_pattern(&mut self, pattern: &oxc_ast::ast::AssignmentPattern<'a>) {
+        visit_binding_default_with_execution(self, pattern);
+    }
+    fn visit_assignment_target_with_default(
+        &mut self,
+        target: &oxc_ast::ast::AssignmentTargetWithDefault<'a>,
+    ) {
+        visit_target_default_with_execution(self, target);
+    }
+    fn visit_formal_parameter(&mut self, parameter: &oxc_ast::ast::FormalParameter<'a>) {
+        visit_parameter_default_with_execution(self, parameter);
+    }
 
     fn visit_function(
         &mut self,
@@ -100,8 +120,12 @@ impl<'a> Visit<'a> for ImportCollector {
         with_repeat_execution(self, statement, visit_do_while_statement_per_item);
     }
 
-    fn visit_try_statement(&mut self, statement: &oxc_ast::ast::TryStatement<'a>) { visit_try_with_receiver_execution(self, statement); }
-    fn visit_labeled_statement(&mut self, statement: &oxc_ast::ast::LabeledStatement<'a>) { visit_label_with_receiver_execution(self, statement); }
+    fn visit_try_statement(&mut self, statement: &oxc_ast::ast::TryStatement<'a>) {
+        visit_try_with_receiver_execution(self, statement);
+    }
+    fn visit_labeled_statement(&mut self, statement: &oxc_ast::ast::LabeledStatement<'a>) {
+        visit_label_with_receiver_execution(self, statement);
+    }
     fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
         visit_catch_clause_with_scope(self, clause);
     }
@@ -163,76 +187,33 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_ts_import_type_with_scope(self, import);
     }
 
-    fn visit_return_statement(&mut self, statement: &oxc_ast::ast::ReturnStatement<'a>) { self.visit_value_return(statement); }
+    fn visit_return_statement(&mut self, statement: &oxc_ast::ast::ReturnStatement<'a>) {
+        self.visit_value_return(statement);
+    }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.visit_receiver_call(call);
     }
 
     fn visit_await_expression(&mut self, expression: &oxc_ast::ast::AwaitExpression<'a>) {
-        self.invalidate_replacement_expression();
-        self.record_unknown_fresh_call(expression.span.end);
-        walk::walk_await_expression(self, expression);
-        // Operand evaluation can create the first capture; completion must
-        // invalidate it even when the pre-operand path was still cold.
-        self.record_descriptor_call(expression.span.end);
+        visit_await_expression_with_capture(self, expression);
     }
 
     fn visit_yield_expression(&mut self, expression: &oxc_ast::ast::YieldExpression<'a>) {
-        self.invalidate_replacement_expression();
-        self.record_unknown_fresh_call(expression.span.end);
-        walk::walk_yield_expression(self, expression);
-        self.record_descriptor_call(expression.span.end);
+        visit_yield_expression_with_capture(self, expression);
     }
 
     fn visit_unary_expression(&mut self, expression: &oxc_ast::ast::UnaryExpression<'a>) {
-        if expression.operator == oxc_syntax::operator::UnaryOperator::Delete {
-            self.invalidate_replacement_expression();
-        }
-        walk::walk_unary_expression(self, expression);
+        visit_unary_expression_with_delete(self, expression);
     }
 
     fn visit_new_expression(&mut self, new: &NewExpression<'a>) {
-        visit_new_expression_with_imports_and_calls(self, new);
+        visit_new_expression_with_calls(self, new);
     }
 
     fn visit_tagged_template_expression(&mut self, tagged: &TaggedTemplateExpression<'a>) {
-        self.visit_receiver_tagged(tagged);
+        visit_tagged_template_with_receiver(self, tagged);
     }
 
-    fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {
-        visit_identifier_reference_with_namespaces(self, identifier);
-    }
-
-    fn visit_static_member_expression(&mut self, member: &StaticMemberExpression<'a>) {
-        visit_static_member_expression_with_getters(self, member);
-    }
-
-    fn visit_computed_member_expression(&mut self, member: &ComputedMemberExpression<'a>) {
-        visit_computed_member_expression_with_getters(self, member);
-    }
-
-    fn visit_ts_type_reference(&mut self, reference: &TSTypeReference<'a>) {
-        visit_ts_type_reference_without_name_walk(self, reference);
-    }
-
-    fn visit_ts_type_query(&mut self, query: &oxc_ast::ast::TSTypeQuery<'a>) {
-        self.walk_as_type_names(|collector| walk::walk_ts_type_query(collector, query));
-    }
-
-    fn visit_ts_class_implements(&mut self, implements: &oxc_ast::ast::TSClassImplements<'a>) {
-        self.walk_as_type_names(|collector| walk::walk_ts_class_implements(collector, implements));
-    }
-
-    fn visit_ts_interface_heritage(&mut self, heritage: &oxc_ast::ast::TSInterfaceHeritage<'a>) {
-        self.walk_as_type_names(|collector| walk::walk_ts_interface_heritage(collector, heritage));
-    }
-
-    fn visit_ts_type_parameter(&mut self, parameter: &TSTypeParameter<'a>) {
-        visit_ts_type_parameter_without_name_walk(self, parameter);
-    }
-
-    fn visit_jsx_opening_element(&mut self, opening: &JSXOpeningElement<'a>) {
-        visit_jsx_opening_element_with_value_reference(self, opening);
-    }
+    visit_import_collector_tail!();
 }
