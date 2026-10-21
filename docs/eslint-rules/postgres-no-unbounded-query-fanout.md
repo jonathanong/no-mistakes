@@ -57,7 +57,10 @@ for (const id of userIds) {
 ## Fix
 
 Use a static array, a SCREAMING_CASE bounded collection, sequential work, or a
-configured chunk helper before the mapped executor calls.
+configured chunk helper before the mapped executor calls. Only the loop
+variable itself is bounded: `for (const ids of chunkArray(...))`. A `let` or
+`var` declared in the loop body, or a reassigned loop binding, is still
+unbounded.
 
 ## Suppression
 

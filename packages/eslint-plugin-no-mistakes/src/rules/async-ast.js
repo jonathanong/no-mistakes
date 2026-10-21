@@ -24,6 +24,18 @@ function findContainingFunction(node) {
   }
 }
 
+function findContainingRoot(node) {
+  return findContainingFunction(node) ?? findProgram(node);
+}
+
+function findProgram(node) {
+  let current = node;
+  while (current) {
+    if (current.type === "Program") return current;
+    current = current.parent;
+  }
+}
+
 function isTransparentExpression(node) {
   return transparentExpressionTypes.has(node?.type);
 }
@@ -81,6 +93,7 @@ function isUnconditionalBeforeReturn(node, block) {
 
 module.exports = {
   findContainingFunction,
+  findContainingRoot,
   isFunction,
   isTransparentExpression,
   isUnconditionalBeforeReturn,

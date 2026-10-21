@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { describe, it } from "vitest";
-import { lint, messages, plugin, require } from "./helpers.mjs";
+import { fixture, lint, messages, plugin, require } from "./helpers.mjs";
 
 const helpers = require("../src/rules/postgres-runtime-helpers");
 
@@ -548,6 +548,99 @@ describe("postgres runtime helpers", () => {
     assert.equal(
       isStaticallyBounded({ type: "Identifier", name: "ids" }, ["chunkArray"], {
         sourceCode: { getScope: () => ({ set: { get: () => null }, upper: null }) },
+      }),
+      false,
+    );
+    const loopLeft = { type: "VariableDeclaration" };
+    const shadowed = {
+      type: "VariableDeclaration",
+      parent: {
+        type: "ForOfStatement",
+        left: loopLeft,
+        right: {
+          type: "CallExpression",
+          callee: { type: "Identifier", name: "chunkArray" },
+        },
+      },
+    };
+    assert.equal(
+      isStaticallyBounded({ type: "Identifier", name: "ids" }, ["chunkArray"], {
+        sourceCode: {
+          getScope: () => ({
+            set: {
+              get: () => ({
+                defs: [
+                  { type: "Variable", node: { id: { type: "Identifier" }, parent: shadowed } },
+                ],
+                references: [],
+              }),
+            },
+            upper: null,
+          }),
+        },
+      }),
+      false,
+    );
+    const forDecl = { type: "VariableDeclaration" };
+    const forLoop = {
+      type: "ForOfStatement",
+      left: forDecl,
+      right: {
+        type: "CallExpression",
+        callee: { type: "Identifier", name: "chunkArray" },
+      },
+    };
+    forDecl.parent = forLoop;
+    assert.equal(
+      isStaticallyBounded({ type: "Identifier", name: "ids" }, ["chunkArray"], {
+        sourceCode: {
+          getScope: () => ({
+            set: {
+              get: () => ({
+                defs: [{ type: "Variable", node: { id: { type: "Identifier" }, parent: forDecl } }],
+                references: [{ isWrite: () => true, init: false }],
+              }),
+            },
+            upper: null,
+          }),
+        },
+      }),
+      false,
+    );
+    assert.equal(
+      isStaticallyBounded({ type: "Identifier", name: "ids" }, ["chunkArray"], {
+        sourceCode: {
+          getScope: () => ({
+            set: {
+              get: () => ({
+                defs: [{ type: "Variable", node: { id: { type: "Identifier" }, parent: forDecl } }],
+                references: [{ isWrite: () => true, init: true }],
+              }),
+            },
+            upper: null,
+          }),
+        },
+      }),
+      true,
+    );
+    assert.equal(
+      isStaticallyBounded({ type: "Identifier", name: "ids" }, ["chunkArray"], {
+        sourceCode: {
+          getScope: () => ({
+            set: {
+              get: () => ({
+                defs: [
+                  {
+                    type: "Variable",
+                    node: { id: { type: "Identifier" }, parent: { type: "BlockStatement" } },
+                  },
+                ],
+                references: [],
+              }),
+            },
+            upper: null,
+          }),
+        },
       }),
       false,
     );
@@ -1194,6 +1287,44 @@ describe("postgres-no-unbounded-query-fanout", () => {
       Promise.all(chunks.map((id) => query("SELECT 1")));
     `;
     assert.deepEqual(ids(code, "postgres-no-unbounded-query-fanout"), []);
+    assert.deepEqual(
+      ids(
+        fixture("postgres-no-unbounded-query-fanout/for-of-chunk.ts"),
+        "postgres-no-unbounded-query-fanout",
+      ),
+      [],
+    );
+  });
+
+  it("reports body-declared and reassigned for-of bindings", () => {
+    assert.deepEqual(
+      ids(
+        fixture("postgres-no-unbounded-query-fanout/for-of-body-let.ts"),
+        "postgres-no-unbounded-query-fanout",
+      ),
+      ["unboundedFanout"],
+    );
+    assert.deepEqual(
+      ids(
+        fixture("postgres-no-unbounded-query-fanout/for-of-body-var.ts"),
+        "postgres-no-unbounded-query-fanout",
+      ),
+      ["unboundedFanout"],
+    );
+    assert.deepEqual(
+      ids(
+        fixture("postgres-no-unbounded-query-fanout/for-of-reassigned.ts"),
+        "postgres-no-unbounded-query-fanout",
+      ),
+      ["unboundedFanout"],
+    );
+    assert.deepEqual(
+      ids(
+        fixture("postgres-no-unbounded-query-fanout/for-of-array-of-ids.ts"),
+        "postgres-no-unbounded-query-fanout",
+      ),
+      ["unboundedFanout"],
+    );
   });
 
   it("ignores maps without executors and non-map Promise.all", () => {
