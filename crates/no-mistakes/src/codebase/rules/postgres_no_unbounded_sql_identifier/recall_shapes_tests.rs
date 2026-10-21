@@ -31,6 +31,8 @@ fn remaining_identifier_shapes_preserve_finite_bind_and_unknown_controls() {
         "pass-alias-cycle",
         "pass-alias-shadow",
         "pass-finite-alias",
+        "pass-process-namespace-shadow",
+        "pass-env-alias-process-parameter",
     ] {
         assert!(
             findings(scenario).is_empty(),

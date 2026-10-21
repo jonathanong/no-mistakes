@@ -152,3 +152,41 @@ fn opaque_and_projected_fact_containers_preserve_input_references() {
         }])
     );
 }
+
+#[test]
+fn alias_roots_require_global_or_import_binding_identity() {
+    let file = PathBuf::from("/repo/src/query.ts");
+    let facts = CheckFactMap::default();
+    let members = ["env".into(), "SCHEMA".into()];
+    assert_eq!(
+        env::alias_env_from_chain(&facts, &file, &named("process"), &members),
+        Some("SCHEMA".into())
+    );
+    for scope in [0, 7] {
+        let local = ValueExpression::Named {
+            name: "process".into(),
+            scope: Some(scope),
+            offset: 0,
+            context: None,
+        };
+        assert_eq!(
+            env::alias_env_from_chain(&facts, &file, &local, &members),
+            None
+        );
+    }
+    assert_eq!(
+        env::alias_env_from_chain(&facts, &file, &ValueExpression::Unknown, &members),
+        None
+    );
+    let imported = imported("process", "default", "node:process");
+    let root = ValueExpression::Named {
+        name: "process".into(),
+        scope: Some(0),
+        offset: 0,
+        context: None,
+    };
+    assert_eq!(
+        env::alias_env_from_chain(&imported, &file, &root, &members),
+        Some("SCHEMA".into())
+    );
+}

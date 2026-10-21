@@ -29,7 +29,7 @@ impl Bindings<'_> {
                 ..
             } => {
                 let Some(binding) = self.value(file, scope.unwrap_or(0), name, *offset) else {
-                    return env_from_chain(self.facts, file, value, members);
+                    return env::alias_env_from_chain(self.facts, file, value, members);
                 };
                 #[cfg(feature = "test-instrumentation")]
                 {

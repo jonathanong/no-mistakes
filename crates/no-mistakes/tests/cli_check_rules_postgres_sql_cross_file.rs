@@ -127,6 +127,8 @@ fn unbounded_identifier_remaining_shapes_use_the_public_cli() {
         "pass-alias-cycle",
         "pass-alias-shadow",
         "pass-finite-alias",
+        "pass-process-namespace-shadow",
+        "pass-env-alias-process-parameter",
         "pass-stale-mutable-row",
         "pass-dynamic-env-key",
         "pass-diamond-alias",

@@ -33,7 +33,9 @@ pub(super) fn env_key<'a>(
                 Some(key.as_str())
             }
             ValueExpression::Member(root, env) if env == "env" => match root.as_ref() {
-                ValueExpression::Named { name, .. } if imported_process(facts, file, name) => {
+                ValueExpression::Named { name, scope, .. }
+                    if imported_process(facts, file, name, *scope) =>
+                {
                     Some(key.as_str())
                 }
                 _ => None,
@@ -49,12 +51,12 @@ pub(super) fn env_from_chain(
     root: &ValueExpression,
     members: &[String],
 ) -> Option<String> {
-    let ValueExpression::Named { name, .. } = root else {
+    let ValueExpression::Named { name, scope, .. } = root else {
         return None;
     };
     if members.first().map(String::as_str) == Some("env")
         && members.len() >= 2
-        && (name == "process" || imported_process(facts, file, name))
+        && (name == "process" || imported_process(facts, file, name, *scope))
     {
         return Some(members[1].clone());
     }
@@ -72,8 +74,28 @@ fn imported_env(facts: &CheckFactMap, file: &Path, local: &str) -> bool {
     imported_from_process(facts, file, local, &["env"])
 }
 
-fn imported_process(facts: &CheckFactMap, file: &Path, local: &str) -> bool {
-    imported_from_process(facts, file, local, &["process", "default", "*"])
+fn imported_process(facts: &CheckFactMap, file: &Path, local: &str, scope: Option<usize>) -> bool {
+    imported_from_process(facts, file, local, &["process", "default"])
+        || (scope.unwrap_or(0) == 0 && imported_from_process(facts, file, local, &["*"]))
+}
+
+/// Alias expansion is additive; unlike legacy direct checks it requires the
+/// selected root to be global process or a module import, never a local parameter.
+pub(super) fn alias_env_from_chain(
+    facts: &CheckFactMap,
+    file: &Path,
+    root: &ValueExpression,
+    members: &[String],
+) -> Option<String> {
+    let ValueExpression::Named { name, scope, .. } = root else {
+        return None;
+    };
+    if scope.is_some_and(|scope| scope != 0)
+        || (name == "process" && scope.is_some() && !imported_process(facts, file, name, *scope))
+    {
+        return None;
+    }
+    env_from_chain(facts, file, root, members)
 }
 
 fn imported_from_process(facts: &CheckFactMap, file: &Path, local: &str, names: &[&str]) -> bool {
