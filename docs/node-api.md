@@ -12,7 +12,7 @@ const { analyzeProject } = require("no-mistakes");
 
 - [Getting started](node-api/getting-started.md)
 - [PostgreSQL executor extraction](node-api/postgres-extraction.md)
-- [Check SQL verdicts](node-api/check-verdicts.md)
+- [Check SQL verdicts](node-api/check-verdicts.md): per-obligation proof ledger and residual advice grouped per executor call/application
 - [PostgreSQL catalog generation](node-api/postgres-catalog.md)
 - [Planning and graph APIs](node-api/planning-and-graphs.md)
 - [Test selection and analysis scope](node-api/test-selection.md)

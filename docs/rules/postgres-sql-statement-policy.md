@@ -190,3 +190,9 @@ SQL recovered from an imported helper is reported in the helper's module at the 
 [`postgres-no-add-column`](postgres-no-add-column.md) governs migration column
 shape; [`postgres-constraint-validate`](postgres-constraint-validate.md)
 checks phased constraint rollout.
+
+With `unanalyzableSql: advise`, opaque or parse-failed SQL produces one residual
+advisory per executor call and configured application, including all unresolved
+statement kinds/settings. The advisory uses the executor call line, and its
+`target` lists sorted unresolved checks. Proven violations retain their SQL
+origin lines. The optional SQL verdict ledger still records every obligation.

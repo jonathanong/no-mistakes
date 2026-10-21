@@ -25,6 +25,10 @@ The real-addon API steps load `inline-owned-member-api.test.js` through
 `real-napi-api.test.js` on Linux, macOS, and Windows with
 `NO_MISTAKES_TEST_NAPI_ADDON_PATH` pointing to the compiled addon. This exercises async CJS/ESM method-acquisition parity; ordinary
 JavaScript discovery alone skips the native behavior test without that addon.
+Those steps also run `sql-verdicts-api.test.js` to compare async CJS/ESM check
+reports with the sibling compiled CLI, including SQL advisory aggregation.
+The Linux JavaScript job builds the CLI before the addon so both artifacts are
+available to these parity tests, as in the native platform matrix.
 
 ## Hosted measurement
 

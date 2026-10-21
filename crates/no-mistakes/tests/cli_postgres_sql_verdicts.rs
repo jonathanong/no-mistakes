@@ -10,23 +10,32 @@ fn fixture() -> PathBuf {
 }
 
 fn report(include_verdicts: bool) -> serde_json::Value {
-    let root = fixture();
+    fixture_report(&fixture(), ".no-mistakes.yml", include_verdicts, 0)
+}
+
+fn fixture_report(
+    root: &std::path::Path,
+    config: &str,
+    include_verdicts: bool,
+    expected_exit: i32,
+) -> serde_json::Value {
     // Isolate the CLI invocation lock while keeping the saved SQL fixture intact.
     let runtime = tempfile::tempdir().unwrap();
     let mut command = Command::new(env!("CARGO_BIN_EXE_no-mistakes"));
     command.env("XDG_RUNTIME_DIR", runtime.path());
     command
         .args(["check", "--root"])
-        .arg(&root)
+        .arg(root)
         .arg("--config")
-        .arg(root.join(".no-mistakes.yml"))
+        .arg(root.join(config))
         .args(["--format", "json"]);
     if include_verdicts {
         command.arg("--include-sql-verdicts");
     }
     let output = command.output().unwrap();
-    assert!(
-        output.status.success(),
+    assert_eq!(
+        output.status.code(),
+        Some(expected_exit),
         "{}",
         String::from_utf8_lossy(&output.stderr)
     );
@@ -56,6 +65,74 @@ fn sql_verdict_flag_only_adds_confirmed_call_evidence() {
         }),
         "{detailed}"
     );
+    detailed.as_object_mut().unwrap().remove("sqlVerdicts");
+    assert_eq!(detailed, plain);
+}
+
+#[test]
+fn residuals_aggregate_per_call_and_application_with_call_line_attribution() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-sql-verdicts/fixture/advisory-aggregation");
+    let plain = fixture_report(&root, ".no-mistakes.yml", false, 1);
+    let mut detailed = fixture_report(&root, ".no-mistakes.yml", true, 1);
+    let rows = detailed["sqlVerdicts"].as_array().unwrap();
+    assert_eq!(rows.len(), 84, "{detailed}");
+    let advice = detailed["advisories"].as_array().unwrap();
+    assert_eq!(advice.len(), 12, "{detailed}");
+    for line in [4, 5, 7, 14] {
+        assert_eq!(advice.iter().filter(|row| row["line"] == line).count(), 2);
+    }
+    assert_eq!(advice.iter().filter(|row| row["line"] == 13).count(), 4);
+    for row in advice {
+        let message = row["message"].as_str().unwrap();
+        assert!(message.contains("statement:ALTER TABLE"), "{row}");
+        assert!(message.contains("statement:DROP VIEW"), "{row}");
+        assert!(message.contains("application"), "{row}");
+    }
+    assert!(advice
+        .iter()
+        .any(|row| row["line"] == 5 && row["message"].as_str().unwrap().contains("invalid-sql")));
+    assert!(advice.iter().any(|row| row["line"] == 14
+        && row["message"]
+            .as_str()
+            .unwrap()
+            .contains("known SQL prefix")));
+    // Finite alternatives keep their own violation origin; advice stays at the call.
+    assert!(detailed["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|row| row["line"] == 9 && row["target"] == "CREATE TABLE"));
+    detailed.as_object_mut().unwrap().remove("sqlVerdicts");
+    assert_eq!(detailed, plain);
+}
+
+#[test]
+fn fail_mode_keeps_finite_branch_origins_with_either_ledger_flag() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-sql-verdicts/fixture/advisory-aggregation");
+    let plain = fixture_report(&root, "fail.yml", false, 1);
+    let mut detailed = fixture_report(&root, "fail.yml", true, 1);
+    assert!(plain["advisories"].as_array().unwrap().is_empty());
+    let advice = fixture_report(&root, ".no-mistakes.yml", false, 1);
+    let proven = |report: &serde_json::Value| {
+        report["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|row| row["target"] == "CREATE TABLE")
+            .cloned()
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(proven(&plain), proven(&advice));
+    assert!(proven(&plain).iter().any(|row| row["line"] == 9));
+    // Fail-mode parse errors retain the invalid finite branch's origin line.
+    assert!(plain["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|row| row["line"] == 10 && row["target"] == "unanalyzable-sql"));
+    assert_eq!(detailed["sqlVerdicts"].as_array().unwrap().len(), 84);
     detailed.as_object_mut().unwrap().remove("sqlVerdicts");
     assert_eq!(detailed, plain);
 }
