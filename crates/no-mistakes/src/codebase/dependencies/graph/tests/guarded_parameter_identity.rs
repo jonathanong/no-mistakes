@@ -154,3 +154,19 @@ fn default_callbacks_seed_captures_before_parameter_reassignment_unions() {
         }
     }
 }
+
+#[test]
+fn assigned_callbacks_add_origins_to_nonempty_initial_captures() {
+    let (built, root) = graph();
+    for suffix in ["before", "after"] {
+        let file = format!("array-forwarded-late-captured-{suffix}");
+        // Both invocations overwrite their receivers; the indirect invocation
+        // must not disappear behind the direct call's nonempty snapshot.
+        for callee in ["replica.get", "untouched.get"] {
+            assert_unknown(&built, &root, &file, callee);
+        }
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, &file, callee);
+        }
+    }
+}

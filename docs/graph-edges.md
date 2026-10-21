@@ -666,6 +666,9 @@ Callable bodies can refer to receiver aliases declared later: pending writes
 reuse the completed binding facts and each initializer's acquisition coordinates.
 Uncalled, unavailable, and escaped writers retain conservative unknown targets;
 declaration order does not establish execution.
+Origins recovered through a later assigned-callback invocation extend the initial
+parameter capture even when a direct call already populated it. They remain
+separate from later parameter-reassignment generations.
 An immutable repository export alias of an external receiver, such as
 `export const receiver = shared`, keeps that external receiver's canonical
 identity through named re-exports. Repeated foreign helper reads of a written

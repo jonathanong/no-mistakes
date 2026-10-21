@@ -78,3 +78,34 @@ test(
     assert.deepEqual(await esm.analyzeProject(options), batch);
   },
 );
+
+test(
+  "compiled async assigned callbacks retain late origins in nonempty captures",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/codebase-analysis/value-flow-guarded-parameters/fixture",
+    );
+    const options = {
+      root,
+      config: join(root, "effects.yml"),
+      reports: ["before", "after"].map((suffix) => ({
+        type: "effects",
+        kind: "receiver",
+        entry: `src/array-forwarded-late-captured-${suffix}.mts`,
+      })),
+    };
+    const pending = cjs.analyzeProject(options);
+    assert.ok(pending instanceof Promise);
+    const batch = await pending;
+    for (const { result } of batch.reports)
+      assert.deepEqual(
+        result.callSites.map(({ callee }) => callee),
+        ["primary.get", "replica.info", "unrelated.get"],
+      );
+    assert.deepEqual(await esm.analyzeProject(options), batch);
+  },
+);

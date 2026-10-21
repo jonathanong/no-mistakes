@@ -82,6 +82,34 @@ impl CaptureOrigins {
         }
         result
     }
+
+    /// Add only origins discovered by forwarding after reassignment. Raw
+    /// reassignment values are already in `values` before this call and must
+    /// remain separate from the initial capture generation.
+    pub(in super::super) fn include_late_forwarded(
+        &mut self,
+        values: &mut FxHashMap<Key, Vec<ValueExpression>>,
+        forward: impl FnOnce(&mut FxHashMap<Key, Vec<ValueExpression>>),
+    ) {
+        let starts = self
+            .bindings
+            .keys()
+            .map(|key| (key.clone(), values.get(key).map_or(0, Vec::len)))
+            .collect::<Vec<_>>();
+        forward(values);
+        for (key, start) in starts {
+            let Some(additions) = values.get(&key).and_then(|values| values.get(start..)) else {
+                continue;
+            };
+            let initial = &mut self.bindings.get_mut(&key).expect("captured key").initial;
+            for value in additions {
+                if !initial.contains(value) {
+                    initial.push(value.clone());
+                }
+            }
+        }
+    }
+
     /// Only ordered writes in the same invocation select a capture generation.
     /// Unknown execution order retains the historical union at the caller.
     pub(super) fn at(

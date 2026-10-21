@@ -86,7 +86,7 @@ pub(in super::super) fn absorb(
     // Default callbacks are not call arguments. Recover their forwarded inputs
     // before captures freeze the initial parameter generation.
     super::escaped_higher_order::forward(collector, slots, values);
-    let captures = super::super::parameter_call_origins::CaptureOrigins::new(collector, values);
+    let mut captures = super::super::parameter_call_origins::CaptureOrigins::new(collector, values);
     let mut reassigned = false;
     for event in collector
         .receiver_escapes
@@ -102,7 +102,9 @@ pub(in super::super) fn absorb(
     }
     if reassigned {
         // Preserve forwarding through callees recovered from reassignment facts.
-        super::escaped_higher_order::forward(collector, slots, values);
+        captures.include_late_forwarded(values, |values| {
+            super::escaped_higher_order::forward(collector, slots, values);
+        });
     }
     captures
 }
