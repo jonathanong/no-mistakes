@@ -52,6 +52,14 @@ test.describe.configure({ mode: "serial" });
 test("tagged", { tag: "@slow", annotation: { type: "issue" } }, async () => {});
 ```
 
+Same-file `const test = <binding>.extend(...)` (and chained
+`.extend().extend()`) remains the original Playwright or Vitest `test`
+binding, including declaration annotations. Cross-file fixture modules are not
+inferred and have no hardcoded path conventions: list their import specifiers
+in `testModules`. Only the exported `test` from those modules is admitted as
+Playwright's `test`; a named `describe` import from the same module stays
+ordinary.
+
 `const` destructuring follows a default and a nested object pattern when the
 key that introduces the identifier is `it`, `test`, or `describe`:
 
@@ -74,6 +82,9 @@ import { test as pw } from "@playwright/test";
 check.skipIf(!process.env.API_KEY)("requires API access", () => {});
 describe.only("temporary focus", () => {});
 pw.fixme("known issue", async ({ page }) => {});
+
+const browser = pw.extend({ account: async ({}, use) => { await use("owner"); } });
+browser.skip("same-file fixture skip", async () => {});
 ```
 
 ## Allowed
@@ -102,6 +113,26 @@ declaration-annotation finding.
 
 ```js
 "no-mistakes/test-no-skips": ["error", { allow: ["todo"] }]
+```
+
+`testModules` names import specifiers whose exported `test` is Playwright's,
+matching the specifier as written. It defaults to `[]`.
+
+```js
+"no-mistakes/test-no-skips": ["error", { testModules: ["./fixtures", "@app/test"] }]
+```
+
+```ts
+import { test } from "./fixtures";
+test.skip("configured fixture skip", async () => {});
+test("configured annotation skip", { annotation: { type: "skip" } }, async () => {});
+```
+
+A fixture module omitted from `testModules` stays silent:
+
+```ts
+import { test } from "./fixtures";
+test.skip("not reported without testModules", async () => {});
 ```
 
 ## Scope

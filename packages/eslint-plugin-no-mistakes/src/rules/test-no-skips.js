@@ -102,7 +102,10 @@ module.exports = rule(
     schema: [
       {
         type: "object",
-        properties: { allow: { type: "array", items: { enum: MODIFIERS }, uniqueItems: true } },
+        properties: {
+          allow: { type: "array", items: { enum: MODIFIERS }, uniqueItems: true },
+          testModules: { type: "array", items: { type: "string" }, uniqueItems: true },
+        },
         additionalProperties: false,
       },
     ],

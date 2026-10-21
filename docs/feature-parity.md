@@ -27,11 +27,12 @@ coverage. See [integration route coverage](configuration/integration-route-cover
 
 The ESLint/Oxlint plugin also provides the file-local `test-no-skips` rule for
 Vitest and Playwright. It bans `skip`, `skipIf`, `runIf`, `only`, `todo`, and
-`fixme` by default, with an explicit `allow` option. ESLint `files` globs
-determine which test files are checked; the rule does not discover tests or
-infer repository-wide scope. This remains a plugin capability and adds no
-`no-mistakes` CLI or N-API command. See
-[test-no-skips](eslint-rules/test-no-skips.md).
+`fixme` by default, with an explicit `allow` option. Same-file `.extend()`
+fixture wrappers remain test bindings; `testModules` admits Playwright `test`
+exports from named modules. ESLint `files` globs determine which test files
+are checked; the rule does not discover tests or infer repository-wide scope.
+This remains a plugin capability and adds no `no-mistakes` CLI or N-API
+command. See [test-no-skips](eslint-rules/test-no-skips.md).
 
 The opt-in ESLint/Oxlint `vitest-timeout-cap` rule checks effective Vitest
 configuration and test/hook timeout overrides in files selected by ESLint

@@ -1,14 +1,24 @@
 "use strict";
+const { options } = require("../helpers");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { importSpecifierName } = require("./test-no-shared-state-callees");
 const { unwrapExpression, isFunction } = require("./async-ast");
 const NAMES = new Set(["it", "test", "describe"]);
 const MODULES = new Set(["vitest", "@playwright/test"]);
+// extend is a transparent Playwright/Vitest fixture wrapper, including chained .extend().
 const CHAIN = new Set(
-  "skip skipIf runIf only todo fixme each for concurrent sequential fails fail serial parallel describe".split(
+  "skip skipIf runIf only todo fixme each for concurrent sequential fails fail serial parallel describe extend".split(
     " ",
   ),
 );
+function admit(source, importedName, namespace, testModules) {
+  if (MODULES.has(source)) {
+    if (namespace) return importedName === "*" ? source : null;
+    return NAMES.has(importedName) ? { framework: source, name: importedName } : null;
+  }
+  if (!testModules.has(source) || importedName !== (namespace ? "*" : "test")) return null;
+  return namespace ? "@playwright/test" : { framework: "@playwright/test", name: "test" };
+}
 function memberName(node) {
   return node.computed
     ? node.property.type === "Literal" && typeof node.property.value === "string"
@@ -42,6 +52,7 @@ function patternBindingName(pattern, name) {
   return null;
 }
 function imported(node, context, namespace = false) {
+  const testModules = new Set(options(context).testModules || []);
   const variable = resolveVariable(node, context);
   for (const def of variable?.defs || []) {
     let source = null;
@@ -73,12 +84,8 @@ function imported(node, context, namespace = false) {
         importedName = "*";
       }
     }
-    if (!MODULES.has(source)) continue;
-    if (namespace) {
-      if (importedName === "*") return source;
-    } else {
-      if (NAMES.has(importedName)) return { framework: source, name: importedName };
-    }
+    const admitted = admit(source, importedName, namespace, testModules);
+    if (admitted) return admitted;
   }
   // Unbound runner globals are considered only in files selected by lint config.
   if (!namespace && !variable?.defs.length && NAMES.has(node.name))
