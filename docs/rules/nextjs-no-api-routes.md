@@ -1,5 +1,12 @@
 # `nextjs-no-api-routes`
 
+## Counterexample
+
+```ts
+// pages/api/users.ts
+export default function handler() {}
+```
+
 ## Suppression
 
 Use a file directive only for a deliberate legacy API route during migration;
@@ -23,6 +30,12 @@ omitted values use the documented Pages Router root defaults.
 
 `app/users/page.tsx` passes because it is a page rather than an App Router
 route handler or a Pages Router API route.
+
+```ts
+// app/page.tsx
+export default function Page() { return null; }
+```
+
 
 ## Related rules
 

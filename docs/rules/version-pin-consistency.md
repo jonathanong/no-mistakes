@@ -86,6 +86,11 @@ EXAMPLE_TOOL_VERSION: 0.24.2
 
 The structured source says `0.24.2` while an anchor captures `0.24.1`.
 
+```json
+{ "name": "app", "version": "1.0.0", "dependencies": { "left-pad": "^1.3.0" } }
+```
+
+
 ## Fix
 
 Update every anchor in the same change, or change the source ownership and

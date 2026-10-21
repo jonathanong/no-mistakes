@@ -23,6 +23,19 @@ blocked targets, and `relationships` selects graph edge kinds. Omitted
 The public-boundary import in the compliant example passes because its selected
 relationships cannot reach the server-only implementation.
 
+```ts
+// web/app/page.ts
+export const page = true;
+```
+
+
+## Counterexample
+
+```ts
+// web/app/page.ts
+import 'server-only';
+```
+
 ## Related rules
 
 [`forbidden-workspace-closure`](forbidden-workspace-closure.md) checks package

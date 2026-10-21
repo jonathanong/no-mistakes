@@ -22,11 +22,22 @@ filters still apply.
 
 A package beneath `packages/*` with a matching root workspace glob passes.
 
+```json
+{ "name": "root", "private": true, "workspaces": ["packages/*"] }
+```
+
+
 ## Related rules
 
 [`package-json-nested-workspace-coverage`](package-json-nested-workspace-coverage.md)
 checks nested workspace declarations; [`strict-package-layout`](strict-package-layout.md)
 checks each package's internal layout.
+
+## Counterexample
+
+```json
+{ "name": "root", "private": true, "workspaces": ["packages/missing"] }
+```
 
 ## Suppression
 

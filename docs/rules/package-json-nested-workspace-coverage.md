@@ -1,5 +1,11 @@
 # `package-json-nested-workspace-coverage`
 
+## Counterexample
+
+```json
+{ "name": "root", "private": true }
+```
+
 ## Suppression
 
 Manifest findings are file-level. Narrow `roots`, dependency fields, or package
@@ -27,6 +33,11 @@ apply.
 
 A selected package whose nested workspace entries exactly cover its configured
 workspace dependencies passes.
+
+```json
+{ "name": "root", "private": true, "workspaces": ["packages/*"] }
+```
+
 
 ## Related rules
 

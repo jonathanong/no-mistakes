@@ -29,6 +29,17 @@ closure exceptions.
 The compliant manifest pair below passes because the `@acme/app` closure never
 reaches `@acme/secret`.
 
+```json
+{ "name": "@app/web", "version": "1.0.0", "dependencies": { "@app/ui": "workspace:*" } }
+```
+
+
+## Counterexample
+
+```json
+{ "name": "@app/web", "version": "1.0.0", "dependencies": { "@app/server": "workspace:*" } }
+```
+
 ## Related rules
 
 [`forbidden-dependencies`](forbidden-dependencies.md) enforces equivalent

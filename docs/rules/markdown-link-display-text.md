@@ -22,6 +22,17 @@ no rule-local `allow` option.
 `[feature-parity.md](feature-parity.md)` passes because its visible label names
 the destination.
 
+```md
+[Why](why.md)
+```
+
+
+## Counterexample
+
+```md
+[click here](why.md)
+```
+
 ## Related rules
 
 [`markdown-child-links`](markdown-child-links.md) requires missing links;

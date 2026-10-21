@@ -397,6 +397,11 @@ An applicable workflow job runs the same project with a propagating shell.
 A tracked `web/tsconfig.json` exists, but CI only type-checks the root config and
 the local `checks.commands` block has no web project command.
 
+```json
+{ "compilerOptions": { "strict": true } }
+```
+
+
 ## Fix
 
 Add a static project-specific `tsc --noEmit` command and an enforcing workflow

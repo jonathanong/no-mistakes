@@ -67,11 +67,21 @@ A non-empty rule `message` replaces the finding text and keeps the
 `receipts` has `sent_at` and `paid_at` and no status column. `orders` has
 `status` plus `created_at` and `updated_at`, and those verbs are not listed.
 
+```sql
+CREATE TABLE orders (id uuid PRIMARY KEY, status text NOT NULL, created_at timestamptz, updated_at timestamptz);
+```
+
+
 ## Counterexample
 
 `deliveries` stores `state text` next to `sent_at` and `failed_at`.
 `payments` stores `status payment_statuses` next to `paid_at` and
 `payment_failed_at`.
+
+```sql
+CREATE TABLE orders (id uuid PRIMARY KEY, status text NOT NULL);
+```
+
 
 ## Fix
 

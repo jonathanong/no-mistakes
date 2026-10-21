@@ -22,11 +22,26 @@ Shared rule `include`/`exclude` filters further scope Markdown files.
 
 A parent list linking every matching child exactly once passes.
 
+```md
+# Index
+
+- [Child](child.md)
+```
+
+
 ## Related rules
 
 [`markdown-reachability`](markdown-reachability.md) verifies a document can be
 found from instruction roots; [`markdown-link-display-text`](markdown-link-display-text.md)
 checks the quality of those links.
+
+## Counterexample
+
+```md
+# Index
+
+No child links.
+```
 
 ## Suppression
 

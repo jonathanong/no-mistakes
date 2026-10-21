@@ -25,6 +25,17 @@ rule-local exceptions.
 `git config user.email` without a value reads identity and passes; configuring
 identity outside the repository script also passes.
 
+```sh
+git status
+```
+
+
+## Counterexample
+
+```sh
+git config user.email ci@example.com
+```
+
 ## Suppression
 
 Use a line directive for an exceptional command or a file directive only for a
