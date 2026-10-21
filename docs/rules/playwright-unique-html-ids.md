@@ -69,6 +69,19 @@ Use `no-mistakes-disable-line playwright-unique-html-ids`,
 `no-mistakes-disable-next-line`, or the file directive for a documented legacy
 exception. `htmlIds: false` is not suppression.
 
+## Limitations
+
+Playwright file discovery skips a directory segment named `.git`,
+`node_modules`, `target`, `dist`, `build`, `coverage`, or `test-results`,
+even when the file is tracked. Duplicate HTML IDs that live only under
+`src/components/build/` are not reported.
+
+```tsx
+// src/components/build/Results.tsx
+<section id="results" />
+<aside id="results" />
+```
+
 ## Related rules
 
 [`playwright-unique-test-ids`](playwright-unique-test-ids.md) checks configured

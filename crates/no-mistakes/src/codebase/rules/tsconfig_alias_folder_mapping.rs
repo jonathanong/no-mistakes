@@ -74,9 +74,20 @@ pub(crate) fn check_with_files(
 
 fn check_tsconfig(root: &Path, opts: &Options) -> Result<Vec<RuleFinding>> {
     let tsconfig_path = root.join(&opts.tsconfig);
+    // A missing path is an intentional skip. A file that exists but cannot be
+    // loaded must not pass silently: its alias mappings were not checked.
+    if !tsconfig_path.is_file() {
+        return Ok(Vec::new());
+    }
     let ts_config = match crate::codebase::ts_resolver::load_tsconfig(&tsconfig_path) {
-        Ok(c) => c,
-        Err(_) => return Ok(Vec::new()),
+        Ok(config) => config,
+        Err(err) => {
+            let file = relative_slash_path(root, &tsconfig_path);
+            let message = format!(
+                "{file}: tsconfig could not be loaded and alias mappings were not checked: {err}"
+            );
+            return Ok(vec![make_finding(&file, &message)]);
+        }
     };
     if ts_config.paths.is_empty() {
         return Ok(Vec::new());
