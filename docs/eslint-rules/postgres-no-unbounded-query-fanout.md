@@ -56,7 +56,7 @@ for (const id of userIds) {
 
 ## Limits
 
-`Promise["all"]` and a no-expression `` Promise[`all`] `` are `Promise.all`. A computed identifier key is not.
+`Promise["all"]` and a no-expression ``Promise[`all`]`` are `Promise.all`. A computed identifier, a template with an expression, or a tagged template is not.
 
 ## Fix
 

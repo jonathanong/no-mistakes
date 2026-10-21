@@ -689,6 +689,44 @@ describe("postgres runtime helpers", () => {
     assert.equal(
       isPromiseAllCallee({
         type: "MemberExpression",
+        computed: true,
+        property: {
+          type: "TaggedTemplateExpression",
+          quasi: {
+            type: "TemplateLiteral",
+            expressions: [],
+            quasis: [{ value: { cooked: "all", raw: "all" } }],
+          },
+        },
+        object: { type: "Identifier", name: "Promise" },
+      }),
+      false,
+    );
+    assert.equal(
+      isPromiseAllCallee({
+        type: "MemberExpression",
+        computed: true,
+        property: {
+          type: "TemplateLiteral",
+          expressions: [{ type: "Literal", value: "" }],
+          quasis: [{ value: { cooked: "al", raw: "al" } }, { value: { cooked: "l", raw: "l" } }],
+        },
+        object: { type: "Identifier", name: "Promise" },
+      }),
+      false,
+    );
+    assert.equal(
+      isPromiseAllCallee({
+        type: "MemberExpression",
+        computed: true,
+        property: { type: "Literal", value: 1 },
+        object: { type: "Identifier", name: "Promise" },
+      }),
+      false,
+    );
+    assert.equal(
+      isPromiseAllCallee({
+        type: "MemberExpression",
         computed: false,
         property: { name: "race" },
         object: { type: "Identifier", name: "Promise" },
@@ -1430,7 +1468,11 @@ describe("postgres-no-unbounded-query-fanout", () => {
         `${IMPORT}Promise["all"](ids.map((id) => query("SELECT 1")));
          Promise[\`all\`](ids.map((id) => query("SELECT 1")));
          const name = "all";
-         Promise[name](ids.map((id) => query("SELECT 1")));`,
+         Promise[name](ids.map((id) => query("SELECT 1")));
+         function chooseMethod(text) {
+           return text;
+         }
+         Promise[chooseMethod\`all\`](ids.map((id) => query("SELECT 1")));`,
         "postgres-no-unbounded-query-fanout",
       ),
       ["unboundedFanout", "unboundedFanout"],

@@ -20,6 +20,7 @@ const {
 const {
   childNodes,
   executedQueryText,
+  quasiText,
   resolveVariable,
   sqlStatementBindings,
   sqlText,
@@ -94,10 +95,21 @@ function isStaticallyBounded(source, chunkFunctionNames, context) {
   return false;
 }
 
+function staticPromiseMember(node) {
+  if (!node || node.type !== "MemberExpression") return null;
+  if (!node.computed) return node.property?.name ?? null;
+  const key = unwrapTs(node.property);
+  if (key?.type === "Literal" && typeof key.value === "string") return key.value;
+  if (key?.type === "TemplateLiteral" && key.expressions.length === 0) {
+    return quasiText(key.quasis[0]);
+  }
+  return null;
+}
+
 function isPromiseAllCallee(node) {
   const callee = unwrapTs(node);
   if (callee?.type !== "MemberExpression") return false;
-  if (memberPropertyName(callee) !== "all") return false;
+  if (staticPromiseMember(callee) !== "all") return false;
   const object = unwrapTs(callee.object);
   return object?.type === "Identifier" && object.name === "Promise";
 }
