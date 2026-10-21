@@ -1,0 +1,52 @@
+{
+  "name": "argument_writes_not_replayed",
+  "nodes": [
+    [
+      [
+        "prefix",
+        1,
+        "old",
+        true
+      ],
+      [
+        "arguments",
+        1
+      ]
+    ]
+  ],
+  "root": [
+    "record",
+    [
+      [
+        "node",
+        0
+      ],
+      [
+        "prefix",
+        1,
+        "new",
+        true
+      ],
+      [
+        "node",
+        0
+      ]
+    ]
+  ],
+  "objects": {
+    "1": [
+      [
+        "prefix",
+        1,
+        "argument",
+        true
+      ]
+    ]
+  },
+  "expected": {
+    "1": [
+      "old",
+      true
+    ]
+  }
+}

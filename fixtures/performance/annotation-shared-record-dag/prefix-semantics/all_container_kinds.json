@@ -1,0 +1,54 @@
+{
+  "name": "all_container_kinds",
+  "nodes": [
+    [
+      [
+        "promise",
+        [
+          "evaluated",
+          [
+            "prefix",
+            1,
+            "kept",
+            false
+          ]
+        ]
+      ]
+    ]
+  ],
+  "root": [
+    "record",
+    [
+      [
+        "aggregate",
+        0
+      ],
+      [
+        "references",
+        0
+      ],
+      [
+        "object",
+        0
+      ],
+      [
+        "record_ref",
+        0
+      ],
+      [
+        "joined",
+        0
+      ],
+      [
+        "possible",
+        0
+      ]
+    ]
+  ],
+  "expected": {
+    "1": [
+      "kept",
+      false
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "reference_free_and_unidentified",
+  "nodes": [
+    [
+      [
+        "primitive"
+      ],
+      [
+        "prefix",
+        null,
+        "ignored",
+        true
+      ]
+    ]
+  ],
+  "root": [
+    "record",
+    [
+      [
+        "node",
+        0
+      ],
+      [
+        "prefix",
+        2,
+        "kept",
+        true
+      ]
+    ]
+  ],
+  "expected": {
+    "2": [
+      "kept",
+      true
+    ]
+  }
+}

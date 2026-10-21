@@ -1,0 +1,31 @@
+{
+  "name": "arena_after",
+  "nodes": [
+    [
+      [
+        "arguments",
+        1
+      ]
+    ]
+  ],
+  "root": [
+    "node",
+    0
+  ],
+  "objects": {
+    "1": [
+      [
+        "prefix",
+        1,
+        "after",
+        false
+      ]
+    ]
+  },
+  "expected": {
+    "1": [
+      "after",
+      false
+    ]
+  }
+}

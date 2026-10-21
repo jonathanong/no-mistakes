@@ -1,58 +1,9 @@
 use super::super::Value;
 use super::arena::Arena;
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
-use crate::fx::{FxHashMap, FxHashSet};
+use crate::fx::FxHashSet;
+mod prefixes;
 mod progress;
-
-fn prefixes<'a>(
-    value: &'a Value,
-    arena: Arena<'a>,
-    visited: &mut FxHashSet<u64>,
-    found: &mut FxHashMap<u64, (&'a str, bool)>,
-    definite: &FxHashSet<(u64, usize)>,
-    work: &mut Option<progress::Walk>,
-) {
-    if let Some(work) = work {
-        work.visit(value);
-    }
-    match value {
-        Value::Prefix(text, complete, Some(id)) => {
-            found.insert(*id, (text, *complete));
-        }
-        Value::Promise(value) | Value::Evaluated(value, _) => {
-            prefixes(value, arena, visited, found, definite, work)
-        }
-        Value::Aggregate(values)
-        | Value::References(values)
-        | Value::Object(values)
-        | Value::Record(values, _)
-        | Value::Joined(values)
-        | Value::Possible(values) => {
-            // A reference-free shared subtree cannot affect either map or visited set.
-            if !values.contains_reference() {
-                return;
-            }
-            for value in values {
-                prefixes(value, arena, visited, found, definite, work);
-            }
-        }
-        Value::Arguments(id) | Value::Array(id) if visited.insert(*id) => {
-            for (index, value) in arena.objects[id].iter().enumerate().chain(
-                arena
-                    .extras
-                    .get(id)
-                    .into_iter()
-                    .flat_map(|slots| slots.iter().map(|(index, value)| (*index, value))),
-            ) {
-                // Removing a reference does not mutate the builder it held.
-                if !definite.contains(&(*id, index)) {
-                    prefixes(value, arena, visited, found, definite, work);
-                }
-            }
-        }
-        _ => {}
-    }
-}
 
 pub(super) fn changes(
     before: &Value,
@@ -62,25 +13,41 @@ pub(super) fn changes(
     changed: &mut FxHashSet<u64>,
     definite: &FxHashSet<(u64, usize)>,
 ) {
-    let mut previous = FxHashMap::default();
-    let mut current = FxHashMap::default();
-    let mut work = progress::Walk::new();
-    prefixes(
-        before,
-        before_arena,
-        &mut FxHashSet::default(),
-        &mut previous,
-        definite,
-        &mut work,
-    );
-    prefixes(
-        after,
-        after_arena,
-        &mut FxHashSet::default(),
-        &mut current,
-        definite,
-        &mut work,
-    );
+    let work = progress::Walk::new();
+    if work.is_some() {
+        compare::<true>(
+            before,
+            after,
+            before_arena,
+            after_arena,
+            changed,
+            definite,
+            work,
+        );
+    } else {
+        compare::<false>(
+            before,
+            after,
+            before_arena,
+            after_arena,
+            changed,
+            definite,
+            None,
+        );
+    }
+}
+
+fn compare<const OBSERVED: bool>(
+    before: &Value,
+    after: &Value,
+    before_arena: Arena<'_>,
+    after_arena: Arena<'_>,
+    changed: &mut FxHashSet<u64>,
+    definite: &FxHashSet<(u64, usize)>,
+    mut work: Option<progress::Walk>,
+) {
+    let previous = prefixes::collect::<OBSERVED>(before, before_arena, definite, &mut work);
+    let current = prefixes::collect::<OBSERVED>(after, after_arena, definite, &mut work);
     if let Some(work) = &work {
         work.complete();
     }

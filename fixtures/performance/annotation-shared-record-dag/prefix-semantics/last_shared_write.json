@@ -1,0 +1,44 @@
+{
+  "name": "last_shared_write",
+  "nodes": [
+    [
+      [
+        "prefix",
+        1,
+        "old",
+        true
+      ]
+    ],
+    [
+      [
+        "prefix",
+        1,
+        "new",
+        true
+      ]
+    ]
+  ],
+  "root": [
+    "record",
+    [
+      [
+        "node",
+        0
+      ],
+      [
+        "node",
+        1
+      ],
+      [
+        "node",
+        0
+      ]
+    ]
+  ],
+  "expected": {
+    "1": [
+      "old",
+      true
+    ]
+  }
+}

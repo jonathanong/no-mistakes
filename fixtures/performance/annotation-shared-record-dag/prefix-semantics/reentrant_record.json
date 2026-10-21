@@ -1,0 +1,47 @@
+{
+  "name": "reentrant_record",
+  "nodes": [
+    [
+      [
+        "arguments",
+        1
+      ],
+      [
+        "array",
+        2
+      ]
+    ]
+  ],
+  "root": [
+    "node",
+    0
+  ],
+  "objects": {
+    "1": [
+      [
+        "node",
+        0
+      ],
+      [
+        "prefix",
+        1,
+        "old",
+        true
+      ]
+    ],
+    "2": [
+      [
+        "prefix",
+        1,
+        "new",
+        true
+      ]
+    ]
+  },
+  "expected": {
+    "1": [
+      "old",
+      true
+    ]
+  }
+}

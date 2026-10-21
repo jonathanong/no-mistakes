@@ -72,6 +72,10 @@ impl Values {
         Arc::as_ptr(&self.0).cast()
     }
 
+    pub(super) fn is_shared(&self) -> bool {
+        Arc::strong_count(&self.0) > 1
+    }
+
     pub(super) fn contains_reference(&self) -> bool {
         *self.0.contains_reference.get_or_init(|| {
             fn references(value: &Value) -> bool {

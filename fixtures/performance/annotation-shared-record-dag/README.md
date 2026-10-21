@@ -35,8 +35,8 @@ these fixtures need no installed dependencies or consumer checkout.
 
 The observations do not justify a blanket visited-container shortcut. Prefix
 map overwrites have ordering semantics, and before/after walks may use different
-mutable argument arenas. The diagnostics preserve the existing traversal and
-overwrite order; algorithm changes require separate semantic regression guards.
+mutable argument arenas. The archived diagnostic baseline preserves the original traversal. The optimized
+walk now has saved semantic regression guards under `prefix-semantics/`.
 
 The `excluded-test-root` case separates evaluator demand from finding scope.
 Its configuration excludes `**/*.test.mts`, yet the excluded test becomes an
@@ -46,3 +46,17 @@ findings, while removing the exclusion produces exactly one missing-annotation
 finding. Those controls show that the exclusion is valid but does not currently
 limit evaluator roots. An eventual scope fix must retain excluded modules in
 the import catalog: selected roots can still depend on them.
+
+The optimized walk memoizes completed shared immutable records within each prefix
+collection. A revisit replays only the record's direct prefix writes, preserving
+last-writer order; argument-derived writes retain their original first-visit
+behavior. Unfinished records reached through argument cycles are not cached.
+Before and after collections use separate caches and argument arenas. Uniquely
+owned records forward writes without retaining overlapping ancestor summaries.
+
+The saved 30-level prefix and arguments DAGs have deterministic work-count tests
+bounded by twice the 31 records plus two leaf visits. Small cases compare exact
+prefix maps with the frozen original walk, including overwrite order, argument
+cycles, sparse/deleted slots, both arenas, and a 128-record distinct-prefix chain.
+These work bounds establish the reduced-case improvement; full-consumer resource
+measurements and findings parity remain the acceptance gate.

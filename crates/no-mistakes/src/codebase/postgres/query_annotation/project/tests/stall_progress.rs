@@ -15,6 +15,7 @@ fn saved_shared_record_fixture_retains_report_and_exposes_walk_work() {
         1
     );
     assert!(enabled.work["postgres.annotation.prefix_nodes"] > 1);
+    assert!(enabled.work["postgres.annotation.prefix_nodes"] <= 2_000);
     assert!(enabled.work["postgres.annotation.prefix_containers"] > 1);
     assert_eq!(
         enabled.work["postgres.annotation.prefix_walks"],
