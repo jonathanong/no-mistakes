@@ -224,6 +224,7 @@ fn nested_timings_inherit_parallel_context() {
 #[test]
 fn timing_order_preserves_every_exact_rank() {
     let expected = [
+        ("check.prepare", 5),
         ("discovery", 10),
         ("read", 20),
         ("parse", 30),
@@ -261,6 +262,7 @@ fn timing_order_preserves_every_exact_rank() {
 #[test]
 fn timing_order_preserves_every_prefix_fallback_rank() {
     let expected = [
+        ("check.prepare.catalog", 6),
         ("discovery.files", 11),
         ("read.source", 21),
         ("parse.source", 31),

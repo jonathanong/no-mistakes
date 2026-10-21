@@ -5,6 +5,8 @@ use std::path::Path;
 use std::sync::Arc;
 
 mod catalog;
+mod independent;
+mod parallel;
 
 pub(crate) struct PreparedCheckInputs {
     pub(crate) visible_paths: Arc<VisiblePathSnapshot>,
@@ -74,63 +76,41 @@ pub(crate) fn prepare_from_shared(
     let (
         tsconfig_catalog,
         (inferred_roots, codebase_config, react, workflow_documents, tsconfig_gate_project_inputs),
-    ) = rayon::join(
+    ) = no_mistakes::diagnostics::measure_if_enabled(
+        "check.prepare",
+        no_mistakes::diagnostics::TimingKind::Serial,
         || {
-            no_mistakes::diagnostics::with_observer(observer.clone(), || {
-                if let Some(observer) = no_mistakes::diagnostics::current() {
-                    observer.increment("check.prepare.catalog", 1);
-                }
-                catalog::prepare(
-                    root,
-                    tsconfig_path,
-                    &tsconfig,
-                    &config,
-                    root_paths.as_ref(),
-                    &sources,
-                    workspace.as_deref(),
-                )
-            })
+            rayon::join(
+                || {
+                    parallel::branch(observer.clone(), "check.prepare.catalog", || {
+                        catalog::prepare(
+                            root,
+                            tsconfig_path,
+                            &tsconfig,
+                            &config,
+                            root_paths.as_ref(),
+                            &sources,
+                            workspace.as_deref(),
+                        )
+                    })
+                },
+                || {
+                    parallel::branch(observer.clone(), "check.prepare.independent", || {
+                        independent::prepare(
+                            root,
+                            config_path,
+                            root_paths.as_ref(),
+                            &config,
+                            visible_paths.as_ref(),
+                            &sources,
+                            workspace.as_deref(),
+                        )
+                    })
+                },
+            )
         },
-        || {
-            no_mistakes::diagnostics::with_observer(observer.clone(), || {
-                if let Some(observer) = no_mistakes::diagnostics::current() {
-                    observer.increment("check.prepare.independent", 1);
-                }
-                let inferred_roots = no_mistakes::codebase::config::InferredRoots::from_visible(
-                    root,
-                    root_paths.as_ref(),
-                );
-                let codebase_config = no_mistakes::codebase::config::config_from_loaded_v2(
-                    root,
-                    config_path,
-                    &config,
-                );
-                let react =
-                    no_mistakes::react_traits::prepare_check_from_loaded_config(&config, false);
-                let workflow_documents =
-                no_mistakes::codebase::ci_workflows::PreparedWorkflowTopologyInputs::for_config(
-                    root,
-                    &config,
-                    visible_paths.as_ref(),
-                    &sources,
-                )
-                .map(Arc::new);
-                let tsconfig_gate_project_inputs = config
-                .rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE)
-                .then(|| no_mistakes::codebase::rules::tsconfig_gate_coverage::prepare_project_source_inputs(
-                    root, root_paths.as_ref(), &sources,
-                    workspace.as_deref().expect("tsconfig gate coverage requires a workspace projection"),
-                ));
-                (
-                    inferred_roots,
-                    codebase_config,
-                    react,
-                    workflow_documents,
-                    tsconfig_gate_project_inputs,
-                )
-            })
-        },
-    );
+    )
+    .0;
     let playwright = no_mistakes::playwright::rules::configured(&config)
         .then(|| {
             no_mistakes::playwright::rules::prepare_from_snapshot_with_catalog(

@@ -6,7 +6,11 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
         include_str!("../../check_runner.rs"),
         include_str!("../run_all.rs"),
     );
-    let prepared = include_str!("../prepared.rs");
+    // The independent Rayon branch lives beside this entrypoint. Count its calls too.
+    let prepared = concat!(
+        include_str!("../prepared.rs"),
+        include_str!("../prepared/independent.rs"),
+    );
     let graph_plan = include_str!("../graph_plan.rs");
     let parallel = include_str!("../../check_parallel.rs");
     let tasks = check_task_sources();
@@ -73,7 +77,10 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
 
 #[test]
 fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
-    let prepared = include_str!("../prepared.rs");
+    let prepared = concat!(
+        include_str!("../prepared.rs"),
+        include_str!("../prepared/independent.rs"),
+    );
     let runner = concat!(
         include_str!("../../check_runner.rs"),
         include_str!("../run_all.rs"),
