@@ -77,7 +77,7 @@ function leftoverCheckPids(psOutput, nativePath, selfPid = process.pid) {
       tokens.some((token) => token.endsWith("/bin/no-mistakes.js") || token === "no-mistakes.js");
     if (native) pids.push(pid);
   }
-  return pids;
+  return pids.sort((a, b) => a - b);
 }
 
 function sleepMs(ms) {

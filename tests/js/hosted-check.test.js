@@ -43,44 +43,45 @@ test("keeps the consumer's exact default command and separate collection cap", (
 });
 
 test("kills leftover analyzers that timeout --foreground cannot reach", () => {
-  const nativePath = "/opt/no-mistakes-linux-x64-gnu/bin/no-mistakes";
-  const listing = [
-    "    PID COMMAND         COMMAND",
-    "     1 systemd         /sbin/init",
-    `   ${process.pid} node            node .github/scripts/hosted-check.cjs measure /tmp/no-mistakes-consumer`,
-    "    88 node            node .github/scripts/hosted-check.cjs measure /tmp/no-mistakes-consumer",
-    `    91 no-mistakes     ${nativePath} --timeout 0 --lock-timeout 0 check`,
-    "    92 node            node /tmp/node_modules/no-mistakes/bin/no-mistakes.js --timeout 0 check",
-    "    93 bash            bash -c echo no-mistakes",
-    `    94 node            node /tmp/other.js ${nativePath}-not`,
-  ].join("\n");
-  assert.deepEqual(leftoverCheckPids(listing, nativePath, process.pid), [91, 92]);
-  assert.throws(() => leftoverCheckPids(listing, "", process.pid), /nativePath/);
+  // Prefix binaries, pnpm exec, the npm shim, and the harness itself must stay unmatched.
+  const nativePath = "/tmp/fixture/node_modules/no-mistakes-linux-x64-gnu/bin/no-mistakes";
+  const leftover = readFileSync(
+    join(__dirname, "../../fixtures/hosted-check/leftover-processes.ps"),
+    "utf8",
+  );
+  const clean = readFileSync(
+    join(__dirname, "../../fixtures/hosted-check/leftover-processes-clean.ps"),
+    "utf8",
+  );
+  assert.deepEqual(leftoverCheckPids(leftover, nativePath, 4242), [77, 88]);
+  assert.throws(() => leftoverCheckPids(leftover, "", 4242), /nativePath/);
 
   const signals = [];
   const sleeps = [];
   assert.deepEqual(
     terminateLeftoverCheckProcesses({
-      psOutput: listing,
+      psOutput: leftover,
       nativePath,
-      selfPid: process.pid,
+      selfPid: 4242,
       kill: (pid, signal) => {
-        if (pid === 91 && signal === "SIGTERM") throw new Error("ESRCH");
         signals.push([pid, signal]);
+        if (pid === 77 && signal === "SIGTERM") throw new Error("ESRCH");
+        if (pid === 88 && signal === "SIGKILL") throw new Error("ESRCH");
       },
       sleep: (ms) => sleeps.push(ms),
     }),
-    [91, 92],
+    [77, 88],
   );
   assert.deepEqual(signals, [
-    [92, "SIGTERM"],
-    [91, "SIGKILL"],
-    [92, "SIGKILL"],
+    [77, "SIGTERM"],
+    [88, "SIGTERM"],
+    [77, "SIGKILL"],
+    [88, "SIGKILL"],
   ]);
   assert.deepEqual(sleeps, [LEFTOVER_KILL_GRACE_MS]);
   assert.deepEqual(
     terminateLeftoverCheckProcesses({
-      psOutput: "    PID COMMAND COMMAND\n    7 bash bash",
+      psOutput: clean,
       nativePath,
       kill: () => {
         throw new Error("should not kill");
