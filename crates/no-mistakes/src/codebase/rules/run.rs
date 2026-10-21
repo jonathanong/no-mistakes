@@ -4,9 +4,10 @@ use super::{
     required_entrypoint_reachability, rule_enabled, server_route_client_boundary,
     suppress_rule_findings_with_sources, test_no_unmocked_dynamic_imports,
     unconstructed_error_class, RuleFinding, FORBIDDEN_CALLS, FORBIDDEN_DEPENDENCIES,
-    NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, QUERY_REACHED_PER_ITEM,
-    REQUIRED_ENTRYPOINT_REACHABILITY, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
-    TEST_NO_UNMOCKED_DYNAMIC_IMPORTS, UNCONSTRUCTED_ERROR_CLASS,
+    NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, POSTGRES_NO_MUTABLE_SQL_REGISTRY,
+    POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER, QUERY_REACHED_PER_ITEM, REQUIRED_ENTRYPOINT_REACHABILITY,
+    REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    UNCONSTRUCTED_ERROR_CLASS,
 };
 use anyhow::Result;
 use std::path::Path;
@@ -172,4 +173,6 @@ fn any_codebase_rule_enabled(config: &crate::config::v2::NoMistakesConfig) -> bo
         || rule_enabled(config, REQUIRED_ENTRYPOINT_REACHABILITY)
         || rule_enabled(config, UNCONSTRUCTED_ERROR_CLASS)
         || rule_enabled(config, QUERY_REACHED_PER_ITEM)
+        || rule_enabled(config, POSTGRES_NO_MUTABLE_SQL_REGISTRY)
+        || rule_enabled(config, POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER)
 }

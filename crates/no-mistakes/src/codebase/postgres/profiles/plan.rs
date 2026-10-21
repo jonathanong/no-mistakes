@@ -100,6 +100,12 @@ pub fn configure_prepared_postgres_plan(
     plan.postgres_write_sql_include.dedup();
     plan.postgres_sql_include.sort();
     plan.postgres_sql_include.dedup();
+    plan.source |= [
+        "postgres-no-mutable-sql-registry",
+        "postgres-no-unbounded-sql-identifier",
+    ]
+    .iter()
+    .any(|id| !config.rule_applications(id).is_empty());
     Ok(())
 }
 

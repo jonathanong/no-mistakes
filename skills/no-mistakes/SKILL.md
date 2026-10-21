@@ -173,6 +173,13 @@ for all 23 supported kinds and `bannedSettings` for named SET/set_config changes
 Unknown statement kinds or groups fail configuration validation. See the
 [statement policy](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-statement-policy.md).
 
+To catch cross-file SQL identifier registries and unbounded env/config sources,
+enable `postgres-no-mutable-sql-registry` and
+`postgres-no-unbounded-sql-identifier` with `importSpecifier`. They use prepared
+import, value-flow, and embedded-SQL facts. Unknown provenance stays silent.
+See [mutable SQL registries](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-mutable-sql-registry.md)
+and [unbounded SQL identifiers](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-unbounded-sql-identifier.md).
+
 To ban SQL sleeps or another configured function family, enable
 `postgres-sql-shape-policy` with `bannedShapes: [banned-function-call]` and a
 nonempty `shapeOptions.bannedFunctionCall.functions` list. Calls in expressions,

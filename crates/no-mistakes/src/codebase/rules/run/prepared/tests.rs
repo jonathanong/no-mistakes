@@ -50,6 +50,25 @@ fn canonical_graph_plans_include_calls_and_extends_for_unconstructed_error_class
 }
 
 #[test]
+fn canonical_graph_plans_include_calls_and_imports_for_sql_cross_file_rules() {
+    for rule in [
+        crate::codebase::rules::POSTGRES_NO_MUTABLE_SQL_REGISTRY,
+        crate::codebase::rules::POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER,
+    ] {
+        let mut config = crate::config::v2::NoMistakesConfig::default();
+        config.rules.push(crate::config::v2::schema::RuleDef {
+            rule: rule.to_string(),
+            scope: Some(crate::config::v2::schema::RuleScope::Repository),
+            options: serde_yaml::from_str("importSpecifier: '@example/db'").unwrap(),
+            ..Default::default()
+        });
+        let plan = canonical_graph_plan(&config).expect(rule);
+        assert!(plan.calls && plan.imports, "{rule}");
+        assert!(super::canonical_graph_requires_full_file_universe(&config));
+    }
+}
+
+#[test]
 fn legacy_prepared_request_without_sources_uses_the_request_session() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check-runner/empty");

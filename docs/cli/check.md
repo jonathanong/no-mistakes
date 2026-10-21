@@ -45,6 +45,12 @@ The opt-in [query-reached-per-item](../rules/query-reached-per-item.md) rule
 uses configured effect families and canonical call paths to identify repeated
 single-item round trips through helpers.
 
+Opt-in [postgres-no-mutable-sql-registry](../rules/postgres-no-mutable-sql-registry.md)
+and [postgres-no-unbounded-sql-identifier](../rules/postgres-no-unbounded-sql-identifier.md)
+use prepared import, value-flow, and embedded-SQL facts with the canonical graph
+to prove cross-file registry writes and unbounded identifier interpolations.
+Unknown provenance is never a finding.
+
 Rules must be explicitly configured. See [no-mistakes rules](../rules/README.md)
 and [configuration](../configuration/README.md).
 `path-regex-capture` matches visible symlink paths, including directory-target

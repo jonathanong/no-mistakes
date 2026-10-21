@@ -1,4 +1,4 @@
-use super::super::query_reached_per_item;
+use super::super::{postgres_sql_cross_file, query_reached_per_item};
 use super::{
     any_codebase_rule_enabled, forbidden_calls, forbidden_dependencies, nextjs_no_api_routes,
     nextjs_no_caching, require_storybook_stories, required_entrypoint_reachability, rule_enabled,
@@ -88,6 +88,10 @@ fn graph_plan_with_forbidden(
         plan.include(query_plan);
         needed = true;
     }
+    if let Some(sql_plan) = postgres_sql_cross_file::graph_plan(config) {
+        plan.include(sql_plan);
+        needed = true;
+    }
     needed.then_some(plan)
 }
 
@@ -97,6 +101,7 @@ pub fn canonical_graph_requires_full_file_universe(
     config: &crate::config::v2::NoMistakesConfig,
 ) -> bool {
     config.rule_configured(query_reached_per_item::RULE_ID)
+        || postgres_sql_cross_file::enabled(config)
         || required_entrypoint_reachability::graph_plan(config).is_some()
         || config.rule_configured(FORBIDDEN_DEPENDENCIES)
         || config.rule_configured(FORBIDDEN_CALLS)

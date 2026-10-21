@@ -120,6 +120,11 @@ through asynchronous `check()` and `analyzeProject()` check queries. Configure
 effect families, transaction sinks, batch exemptions, and rollout allowlists in
 the same config used by the CLI; finding and suppression shapes are unchanged.
 
+Opt-in [`postgres-no-mutable-sql-registry`](../rules/postgres-no-mutable-sql-registry.md)
+and [`postgres-no-unbounded-sql-identifier`](../rules/postgres-no-unbounded-sql-identifier.md)
+use the same async `check()` path. They borrow prepared import, value-flow, and
+embedded-SQL facts plus the canonical graph; report fields are unchanged.
+
 `parsePostgresSql()` exposes structured trigger `eventFacts`, cast
 `dataTypeFacts`, and literal EXECUTE `using` expressions through the same async
 single and batch APIs. The exported `PostgresSqlTriggerEvent`,

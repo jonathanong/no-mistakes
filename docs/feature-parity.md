@@ -57,6 +57,15 @@ and the default `unanalyzableSql: report` policy; explicitly choose `ignore` for
 opaque leading SQL. This annotation evidence does not imply complete SQL for
 structural PostgreSQL rules.
 
+Opt-in `postgres-no-mutable-sql-registry` and
+`postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes
+and env/config identifier interpolations through prepared import, value-flow,
+and embedded-SQL facts plus the canonical graph. CLI `check`, Node `check()`,
+and batched `analyzeProject()` share findings. Unknown provenance and HTTP
+`.query` collisions stay silent. See
+[mutable SQL registries](rules/postgres-no-mutable-sql-registry.md) and
+[unbounded SQL identifiers](rules/postgres-no-unbounded-sql-identifier.md).
+
 Import-aware executed SQL extraction follows named private callables returned
 from nested branches of exported factories through the same Rust and async Node
 ESM/CJS API. Static callable wrappers and cyclic return references retain their
