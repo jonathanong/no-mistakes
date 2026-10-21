@@ -8,6 +8,7 @@ use std::sync::{Arc, OnceLock};
 /// Executor profiles share this data, but never share mutable evaluator state.
 pub(crate) struct Module {
     pub ts: Arc<TsFileFacts>,
+    pub(super) module_ids: Option<Arc<super::module_ids::ModuleIds>>,
     pub imports: FxHashMap<String, usize>,
     pub exports: FxHashMap<String, usize>,
     targets: FxHashMap<String, OnceLock<Option<PathBuf>>>,
@@ -58,10 +59,16 @@ impl Module {
         }
         Self {
             ts,
+            module_ids: None,
             imports,
             exports,
             targets,
         }
+    }
+
+    pub(super) fn with_module_ids(mut self, ids: Arc<super::module_ids::ModuleIds>) -> Self {
+        self.module_ids = Some(ids);
+        self
     }
 
     pub fn target(

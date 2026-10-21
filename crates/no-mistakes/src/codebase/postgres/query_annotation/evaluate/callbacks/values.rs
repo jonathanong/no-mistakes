@@ -44,7 +44,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     }
                     for next_depth in depth.checked_sub(1).into_iter() {
                         let key = (
-                            path.clone(),
+                            self.module_ids().id(path),
                             function.start,
                             *captured,
                             function.params.clone(),

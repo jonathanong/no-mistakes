@@ -1,4 +1,4 @@
-use super::super::{Environment, Evaluator, Value};
+use super::super::{ArgumentObjects, Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::codebase::postgres::query_annotation::Expr;
 use crate::fx::FxHashSet;
@@ -13,6 +13,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         depth: u8,
         generic: bool,
     ) -> Value {
+        let precise_records = self.files[path].facts.precise_records;
         let scopes = self.scopes.clone();
         let seen = self.active_callback_functions.clone();
         let executions = self.active_callback_executions.clone();
@@ -40,11 +41,12 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let mut fresh_joined = fresh.clone();
         let mut definite_common = None;
         let mut private_definite = FxHashSet::default();
-        let mut joined = crate::fx::FxHashMap::default();
+        let mut joined = ArgumentObjects::default();
         let deleted = self.deleted_argument_slots.clone();
         let mut deleted_changed = deleted.clone();
         let mut returned = Vec::new();
         let mut final_live = None;
+        let mut prefix_roots = super::reachable::Prefix::default();
         let mut changed = FxHashSet::default();
         for (arm_index, arm) in arms.iter().enumerate() {
             self.untrusted_array_intrinsics = untrusted;
@@ -90,12 +92,12 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             for (before, after) in scopes.iter().zip(&self.scopes) {
                 // With no reference in the entry scope, every previous prefix map
                 // is empty. New arm-local builders are rebinds, not mutations.
-                if !self.files[path].facts.precise_records && !before.contains_reference() {
+                if !precise_records && !before.contains_reference() {
                     continue;
                 }
                 for (name, value) in before {
                     // An arm can drop a name the other branch still has.
-                    if !self.files[path].facts.precise_records {
+                    if !precise_records {
                         super::super::super::progress::binding(path, name, || {
                             super::values::changes(
                                 value,
@@ -123,19 +125,9 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             );
             super::merge::objects(&mut joined, &self.argument_objects);
             super::extras::join(&mut joined_extras, &self.argument_extra_slots, &objects);
-            module_states.join(
-                &self.scopes,
-                &self.modules,
-                scopes.len(),
-                self.files[path].facts.precise_records,
-            );
+            module_states.join(&self.scopes, &self.modules, scopes.len(), precise_records);
             if let Some(joined) = &mut joined_scopes {
-                super::bindings::join_with_sql(
-                    joined,
-                    &self.scopes,
-                    &scopes,
-                    self.files[path].facts.precise_records,
-                );
+                super::bindings::join_with_sql(joined, &self.scopes, &scopes, precise_records);
             } else {
                 joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
             }
@@ -147,7 +139,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.argument_extra_slots
                 .clone_from(joined_extras.as_ref().unwrap());
             self.accumulate_callback_seen(&mut joined_seen, arm_index == 0);
-            let indices = self.compact_alternative_frames(scopes.len(), &mut returned);
+            let indices =
+                self.compact_alternative_frames(scopes.len(), &mut returned, &mut prefix_roots);
             self.remap_active_callbacks(scopes.len(), &indices.indices);
             super::callback_seen::remap(&mut joined_seen, scopes.len(), &indices.indices);
             modules.clone_from(&self.modules);

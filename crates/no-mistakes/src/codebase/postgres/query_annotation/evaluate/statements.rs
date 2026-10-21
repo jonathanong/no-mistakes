@@ -125,7 +125,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             && !self.proven_append_only_effect(expr, path, *env, depth, generic)
         {
             if self.files[path].facts.precise_records
-                && (self.modules.get(path).is_some_and(|module| *module == *env)
+                && (self
+                    .modules
+                    .get(&self.module_ids().id(path))
+                    .is_some_and(|module| *module == *env)
                     || effects::contains_accessor_read(expr))
             {
                 self.invalidate_live_builders();

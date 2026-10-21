@@ -113,3 +113,16 @@ pub(super) fn collect_from_roots(
     }
     found
 }
+
+mod prefix;
+pub(super) use prefix::Prefix;
+mod cached;
+pub(super) use cached::collect_cached;
+
+#[cfg(test)]
+#[path = "reachable/cached_tests.rs"]
+mod cached_tests;
+
+#[cfg(test)]
+#[path = "reachable/cached_guards_tests.rs"]
+mod cached_guards_tests;

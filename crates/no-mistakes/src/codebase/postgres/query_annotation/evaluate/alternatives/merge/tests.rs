@@ -1,12 +1,13 @@
 use super::*;
+use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
 
 #[test]
 fn dense_join_copies_only_new_and_changed_slots() {
     let original = (0..64)
         .map(|index| Value::Prefix(format!("SELECT {index}"), true, None))
         .collect::<Vec<_>>();
-    let first = FxHashMap::from_iter([(7, original.clone())]);
-    let mut joined = FxHashMap::default();
+    let first = ArgumentObjects::from_iter([(7, original.clone())]);
+    let mut joined = ArgumentObjects::default();
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
 
@@ -14,17 +15,17 @@ fn dense_join_copies_only_new_and_changed_slots() {
     objects(&mut joined, &first);
     assert_eq!(
         observer.snapshot().work["postgres.annotation.incoming_dense_slots_copied"],
-        64,
-        "the second, identical arm borrows all existing slots"
+        0,
+        "both identical arm joins share their immutable slots"
     );
 
     let mut changed = original;
     changed[3] = Value::Unknown;
-    objects(&mut joined, &FxHashMap::from_iter([(7, changed)]));
+    objects(&mut joined, &ArgumentObjects::from_iter([(7, changed)]));
     assert_eq!(
         observer.snapshot().work["postgres.annotation.incoming_dense_slots_copied"],
         65,
-        "only the changed arm slot is copied"
+        "a shared arena detaches 64 slots before joining one changed value"
     );
     assert!(matches!(&joined[&7][3], Value::Possible(values)
         if values.contains(&Value::Prefix("SELECT 3".into(), true, None))
@@ -35,14 +36,14 @@ fn dense_join_copies_only_new_and_changed_slots() {
 
 #[test]
 fn divergent_shape_remains_unknown_after_later_single_slot_arms() {
-    let mut joined = FxHashMap::from_iter([(7, vec![Value::Primitive])]);
+    let mut joined = ArgumentObjects::from_iter([(7, vec![Value::Primitive])]);
     objects(
         &mut joined,
-        &FxHashMap::from_iter([(7, vec![Value::Primitive, Value::Primitive])]),
+        &ArgumentObjects::from_iter([(7, vec![Value::Primitive, Value::Primitive])]),
     );
     objects(
         &mut joined,
-        &FxHashMap::from_iter([(7, vec![Value::Primitive])]),
+        &ArgumentObjects::from_iter([(7, vec![Value::Primitive])]),
     );
     assert!(matches!(
         joined[&7].as_slice(),
@@ -50,7 +51,23 @@ fn divergent_shape_remains_unknown_after_later_single_slot_arms() {
     ));
 
     // Joining a previously failed arm into a fresh one must preserve its shape.
-    let mut fresh = FxHashMap::from_iter([(7, vec![Value::Primitive])]);
+    let mut fresh = ArgumentObjects::from_iter([(7, vec![Value::Primitive])]);
     objects(&mut fresh, &joined);
     assert!(fresh[&7] == joined[&7]);
+}
+
+#[test]
+fn disabled_copy_ledger_does_no_counting_and_keeps_the_same_join() {
+    let original = ArgumentObjects::from_iter([(7, vec![Value::Unknown; 64])]);
+    let mut incoming = original.clone();
+    incoming.get_mut(&7).unwrap()[3] = Value::Prefix("SELECT 1".into(), false, None);
+    let mut off = original.clone();
+    let mut on = original.clone();
+    assert_eq!(join_objects::<false>(&mut off, &incoming), 0);
+    assert_eq!(join_objects::<true>(&mut on, &incoming), 65);
+    assert!(
+        off == on,
+        "disabling accounting must retain the same candidates"
+    );
+    assert!(original[&7].iter().all(|value| *value == Value::Unknown));
 }

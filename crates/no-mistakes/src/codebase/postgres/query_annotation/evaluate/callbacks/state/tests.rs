@@ -8,8 +8,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         captured: Environment,
         function: &Function,
     ) -> Snapshot {
-        self.callback_view()
-            .snapshot(Path::new(""), captured, function, &FxHashMap::default())
+        let ids = super::ModuleIds::new(self.files.keys().cloned().chain([PathBuf::new()]));
+        let mut view = self.callback_view();
+        view.module_ids = &ids;
+        view.snapshot(Path::new(""), captured, function, &FxHashMap::default())
             .0
     }
 }

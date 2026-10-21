@@ -34,53 +34,18 @@ use remap::remap_changed;
 /// Keep only frames and heap objects reachable from restored scopes or callback
 /// results. Original frame identities and all argument identities stay stable.
 pub(super) struct ModuleRoots<'a> {
+    pub prefix: &'a mut reachable::Prefix,
     pub original: usize,
-    pub modules: &'a mut FxHashMap<std::path::PathBuf, Environment>,
+    pub modules: &'a mut FxHashMap<
+        crate::codebase::postgres::query_annotation::module_ids::ModuleId,
+        Environment,
+    >,
     pub initials: &'a mut [super::modules::Initials],
     pub transient: &'a [super::super::temporaries::TransientRoot],
 }
 
-pub(super) fn compact(
-    scopes: &mut Vec<Scope>,
-    cache: ModuleRoots<'_>,
-    returned: &mut [Value],
-    mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    arena: ArenaMut<'_>,
-    fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
-    captured: &mut CapturedBindings,
-) -> Compaction {
-    let original = cache.original;
-    let mut roots = (0..original).collect::<Vec<_>>();
-    roots.extend(cache.modules.values().copied());
-    let mut argument_roots = Vec::new();
-    for initial in cache.initials.iter() {
-        roots.extend(initial.roots());
-        argument_roots.extend(initial.arguments());
-    }
-    let indices = compact_from_roots(
-        scopes,
-        Roots {
-            environments: &roots,
-            arguments: &argument_roots,
-            preserved: original,
-            transient: cache.transient,
-        },
-        returned,
-        mapped,
-        arena,
-        fresh,
-        captured,
-    );
-    for initial in cache.initials.iter_mut() {
-        initial.remap(&indices.indices);
-    }
-    for env in cache.modules.values_mut() {
-        if let Some(remapped) = indices.indices.get(env) {
-            *env = *remapped;
-        }
-    }
-    indices
-}
+mod compact;
+pub(super) use compact::compact;
 
 fn compact_from_roots(
     scopes: &mut Vec<Scope>,
@@ -103,16 +68,48 @@ fn compact_from_roots(
         mapped,
         captured,
     );
+    compact_collected(
+        scopes,
+        roots.preserved,
+        returned,
+        mapped,
+        arena,
+        fresh,
+        Collected {
+            captured,
+            reachable,
+        },
+    )
+}
+
+struct Collected<'a> {
+    captured: &'a mut CapturedBindings,
+    reachable: reachable::Reachable,
+}
+
+fn compact_collected(
+    scopes: &mut Vec<Scope>,
+    preserved: usize,
+    returned: &mut [Value],
+    mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
+    arena: ArenaMut<'_>,
+    fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
+    collected: Collected<'_>,
+) -> Compaction {
+    let Collected {
+        captured,
+        reachable,
+    } = collected;
     let mut retained = reachable
         .environments
         .into_iter()
-        .filter(|env| *env >= roots.preserved)
+        .filter(|env| *env >= preserved)
         .collect::<Vec<_>>();
     retained.sort_unstable();
     let indices = retained
         .iter()
         .enumerate()
-        .map(|(index, old)| (*old, roots.preserved + index))
+        .map(|(index, old)| (*old, preserved + index))
         .collect::<FxHashMap<_, _>>();
     let environments_changed = indices.iter().any(|(before, after)| before != after);
     let mut frames = retained
@@ -154,7 +151,7 @@ fn compact_from_roots(
     *mapped = std::mem::take(mapped)
         .into_iter()
         .filter_map(|(env, value)| {
-            if env < roots.preserved {
+            if env < preserved {
                 Some((env, value))
             } else {
                 indices.get(&env).map(|new| (*new, value))
@@ -164,14 +161,14 @@ fn compact_from_roots(
     let captured_changed = captures::remap_after_compaction(
         captured,
         scopes.len(),
-        roots.preserved,
+        preserved,
         &indices,
         environments_changed,
         &mut std::mem::drop::<Environment>,
         &mut std::mem::drop::<Environment>,
     );
-    freshness::remap(fresh, roots.preserved, &indices);
-    scopes.truncate(roots.preserved);
+    freshness::remap(fresh, preserved, &indices);
+    scopes.truncate(preserved);
     scopes.extend(frames);
     Compaction {
         indices,
@@ -189,3 +186,6 @@ mod tests;
 
 #[cfg(test)]
 mod identity_tests;
+
+#[cfg(test)]
+mod cached_tests;

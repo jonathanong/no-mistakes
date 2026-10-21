@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
 use crate::codebase::postgres::query_annotation::evaluate::Value;
 use crate::fx::{FxHashMap, FxHashSet};
 
@@ -6,6 +7,15 @@ use crate::fx::{FxHashMap, FxHashSet};
 fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates() {
     let path = PathBuf::from("module.mts");
     let files = FxHashMap::default();
+    let ids = std::sync::Arc::new(
+        crate::codebase::postgres::query_annotation::module_ids::ModuleIds::new([path.clone()]),
+    );
+    let module_id = ids.id(&path);
+    let mut modules =
+        crate::codebase::postgres::query_annotation::evaluate::module_cache::ModuleCache::with_ids(
+            ids,
+        );
+    modules.insert(module_id, 1);
     let mut evaluator = Evaluator {
         files: &files,
         resolve: |_: &str, _: &Path| -> Option<PathBuf> { None },
@@ -21,7 +31,7 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
             .into(),
             FxHashMap::from_iter([("arguments".into(), Value::Arguments(43))]).into(),
         ],
-        modules: FxHashMap::from_iter([(path.clone(), 1)]),
+        modules,
         active_module_initials: Default::default(),
         transient_roots: Default::default(),
         active_callback_functions: Default::default(),
@@ -41,7 +51,7 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
         mapped_argument_owners: Default::default(),
         mapped_parameter_indices: Default::default(),
         deleted_argument_slots: FxHashSet::from_iter([(42, None), (99, Some(0))]),
-        argument_objects: FxHashMap::from_iter([
+        argument_objects: ArgumentObjects::from_iter([
             (42, vec![Value::Arguments(43)]),
             (
                 43,
@@ -76,7 +86,7 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
     let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
     evaluator.prune_snapshot_state();
     assert_eq!(evaluator.scopes.len(), 2);
-    assert_eq!(evaluator.modules[&path], 0);
+    assert_eq!(evaluator.modules[&module_id], 0);
     assert!(matches!(
         evaluator.scopes[0]["live"],
         Value::Prefix(_, _, Some(7))

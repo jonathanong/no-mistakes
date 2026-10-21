@@ -1,5 +1,6 @@
 use super::super::Value;
-use crate::fx::{FxHashMap, FxHashSet};
+use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
+use crate::fx::FxHashSet;
 
 fn alternatives(value: Value, values: &mut Vec<Value>) {
     match value {
@@ -19,35 +20,54 @@ fn alternatives(value: Value, values: &mut Vec<Value>) {
     }
 }
 
-pub(super) fn objects(
-    joined: &mut FxHashMap<u64, Vec<Value>>,
-    current: &FxHashMap<u64, Vec<Value>>,
-) {
+pub(super) fn objects(joined: &mut ArgumentObjects, current: &ArgumentObjects) {
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment(
+            "postgres.annotation.incoming_dense_slots_copied",
+            join_objects::<true>(joined, current) as u64,
+        );
+    } else {
+        join_objects::<false>(joined, current);
+    }
+}
+
+fn join_objects<const OBSERVED: bool>(
+    joined: &mut ArgumentObjects,
+    current: &ArgumentObjects,
+) -> usize {
     let mut copied_slots = 0;
     for (id, after) in current {
         // Canonical module objects created in an arm can survive into later arms.
         // Current live IDs are joined; pruned objects are never resurrected.
         match joined.entry(*id) {
             std::collections::hash_map::Entry::Vacant(entry) => {
+                // This shares immutable slots; it does not copy a dense vector.
                 entry.insert(after.clone());
-                copied_slots += after.len();
             }
             std::collections::hash_map::Entry::Occupied(mut entry) => {
+                if entry.get() == after {
+                    continue;
+                }
                 if entry.get().len() != after.len()
-                    || entry.get() == &[Value::Failure("conditional-collection-shape")]
-                    || after == &[Value::Failure("conditional-collection-shape")]
+                    || entry.get().as_slice() == [Value::Failure("conditional-collection-shape")]
+                    || after.as_slice() == [Value::Failure("conditional-collection-shape")]
                 {
                     // A missing element is not an empty SQL fragment. Retain
                     // shape uncertainty rather than zip away a possible write.
-                    *entry.get_mut() = vec![Value::Failure("conditional-collection-shape")];
+                    *entry.get_mut() = vec![Value::Failure("conditional-collection-shape")].into();
                     continue;
+                }
+                if OBSERVED && entry.get().shared() {
+                    copied_slots += entry.get().len();
                 }
                 for (before, after) in entry.get_mut().iter_mut().zip(after) {
                     if &*before != after {
                         let mut values = Vec::new();
                         alternatives(before.clone(), &mut values);
                         alternatives(after.clone(), &mut values);
-                        copied_slots += 1;
+                        if OBSERVED {
+                            copied_slots += 1;
+                        }
                         // Differing dense slots are candidates, not an opaque
                         // aggregate. prefix() inspects Possible, so an
                         // unannotated arm stays a violation under ignore mode.
@@ -57,12 +77,7 @@ pub(super) fn objects(
             }
         }
     }
-    if let Some(observer) = crate::diagnostics::current() {
-        observer.increment(
-            "postgres.annotation.incoming_dense_slots_copied",
-            copied_slots as u64,
-        );
-    }
+    copied_slots
 }
 
 pub(super) fn definite(
@@ -103,7 +118,7 @@ pub(super) fn value(before: Value, after: Value) -> Value {
 }
 
 pub(super) fn shared_ids(
-    objects: &FxHashMap<u64, Vec<Value>>,
+    objects: &ArgumentObjects,
     initial: &super::modules::Initials,
 ) -> FxHashSet<u64> {
     let mut shared = objects.keys().copied().collect::<FxHashSet<_>>();

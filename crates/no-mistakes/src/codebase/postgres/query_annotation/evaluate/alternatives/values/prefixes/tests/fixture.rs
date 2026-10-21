@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 
 pub(super) struct Case {
     pub root: Value,
-    pub objects: FxHashMap<u64, Vec<Value>>,
+    pub objects: crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects,
     pub extras: FxHashMap<u64, BTreeMap<usize, Value>>,
     pub definite: FxHashSet<(u64, usize)>,
     pub expected: BTreeMap<u64, (String, bool)>,
@@ -81,7 +81,7 @@ pub(super) fn load(name: &str) -> Case {
                         .unwrap()
                         .iter()
                         .map(|x| value(x, &nodes))
-                        .collect(),
+                        .collect::<Vec<_>>(),
                 )
             })
             .collect(),

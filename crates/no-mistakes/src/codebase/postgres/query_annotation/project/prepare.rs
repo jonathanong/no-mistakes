@@ -28,6 +28,12 @@ pub(super) fn profiles<'a>(
         .collect::<Vec<_>>();
     profiles.sort();
     profiles.dedup();
+    let module_ids = Arc::new(super::super::module_ids::ModuleIds::new(
+        files
+            .into_iter()
+            .filter(|(_, file)| file.parse_error.is_none() && !file.query_annotation.is_empty())
+            .map(|(path, _)| normalize_path(path)),
+    ));
     if let Some(observer) = crate::diagnostics::current() {
         observer.increment("postgres.annotation.profiles", profiles.len() as u64);
     }
@@ -35,7 +41,14 @@ pub(super) fn profiles<'a>(
         files
             .into_iter()
             .filter(|(_, file)| file.parse_error.is_none() && !file.query_annotation.is_empty())
-            .map(|(path, file)| (path.clone(), Arc::new(Module::new(Arc::clone(&file.ts)))))
+            .map(|(path, file)| {
+                (
+                    path.clone(),
+                    Arc::new(
+                        Module::new(Arc::clone(&file.ts)).with_module_ids(Arc::clone(&module_ids)),
+                    ),
+                )
+            })
             .collect::<FxHashMap<_, _>>()
     });
     profiles

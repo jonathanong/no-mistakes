@@ -154,10 +154,21 @@ creates no prefix-walk work ledger. See the saved
 branch-state liveness traversals. This helps distinguish source extraction
 from helper and callback evaluation. `postgres.annotation.captured_reader_rebuilds`
 counts reverse capture-index reconstruction; unchanged compaction retains the
-existing index. `postgres.annotation.incoming_dense_slots_copied` counts incoming
-argument slots cloned into a branch join, including every slot of a new object
-and only changed slots of an existing object. It excludes clones of prior
-values needed to build candidate sets for changed slots.
+existing index. `postgres.annotation.incoming_dense_slots_copied` counts physical slot copies
+needed by dense branch joins. Sharing an unchanged immutable argument vector
+copies zero slots; a write to shared storage copies its prior slots, followed by
+copies of differing incoming candidates. Other candidate-value cloning is not
+included. `postgres.annotation.dense_arena_slots_copied` counts physical dense
+vector copies across all evaluator operations, including those same join
+copies; these counters overlap and must not be added.
+
+Alternative arms reuse direct references from unchanged prefix scopes and dense
+vectors. `postgres.annotation.prefix_scope_scans` and
+`postgres.annotation.prefix_binding_scans` count actual cache construction;
+`postgres.annotation.dense_reference_slots_scanned` counts dense slots scanned
+when building their immutable reference summary. Mutations invalidate the
+summary. Mutable captures, mapped arguments and sparse slots remain live inputs
+to each arm walk. These work ledgers are created only by the request observer.
 
 File-scoped forbidden call checks report `forbidden_calls.path_filter_checks`
 once per selected file instead of once per call occurrence.

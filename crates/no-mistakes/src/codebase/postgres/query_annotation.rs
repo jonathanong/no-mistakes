@@ -123,3 +123,5 @@ pub(crate) fn collect(
 ) -> QueryAnnotationFileFacts {
     statements::collect(program, source, options)
 }
+
+mod module_ids;

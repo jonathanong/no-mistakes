@@ -1,4 +1,6 @@
-use crate::codebase::postgres::query_annotation::evaluate::{CapturedBindings, Scope};
+use crate::codebase::postgres::query_annotation::evaluate::{
+    ArgumentObjects, CapturedBindings, Scope,
+};
 mod remap;
 use super::super::super::{Environment, Evaluator, Value};
 use super::super::{arena::Arena, reachable};
@@ -11,9 +13,9 @@ use std::{
 #[derive(Default)]
 pub(in crate::codebase::postgres::query_annotation) struct Initials {
     pub base: usize,
-    pub known: FxHashSet<PathBuf>,
+    pub known: FxHashSet<crate::codebase::postgres::query_annotation::module_ids::ModuleId>,
     frames: FxHashMap<Environment, Scope>,
-    objects: FxHashMap<u64, Vec<Value>>,
+    objects: ArgumentObjects,
     extras: FxHashMap<u64, BTreeMap<usize, Value>>,
     mapped: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     captured: CapturedBindings,
@@ -40,7 +42,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     ) {
         let initial = Initials {
             base,
-            known: self.modules.keys().cloned().collect(),
+            known: self.modules.keys().copied().collect(),
             ..Initials::default()
         };
         self.active_module_initials.push(initial);
@@ -67,11 +69,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             &self.mapped_arguments,
             &self.captured_bindings,
         );
+        let module_id = self.module_ids().id(path);
         for snapshot in &mut self.active_module_initials {
-            if snapshot.known.contains(path) {
+            if snapshot.known.contains(&module_id) {
                 continue;
             }
-            snapshot.known.insert(path.to_path_buf());
+            snapshot.known.insert(module_id);
             for frame in live
                 .environments
                 .iter()

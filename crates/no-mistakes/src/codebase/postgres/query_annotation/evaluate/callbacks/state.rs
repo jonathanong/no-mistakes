@@ -1,5 +1,8 @@
+use super::super::super::module_ids::{ModuleId, ModuleIds};
 use super::super::{Environment, Evaluator, Function, Value};
-use crate::codebase::postgres::query_annotation::evaluate::{CapturedBindings, Scope};
+use crate::codebase::postgres::query_annotation::evaluate::{
+    ArgumentObjects, CapturedBindings, Scope,
+};
 use crate::fx::{FxHashMap, FxHashSet};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -8,7 +11,7 @@ use std::path::{Path, PathBuf};
 pub(in crate::codebase::postgres::query_annotation::evaluate) struct Snapshot {
     untrusted_array_intrinsics: bool,
     scopes: FxHashMap<Environment, FxHashMap<String, Value>>,
-    objects: FxHashMap<u64, Vec<Value>>,
+    objects: ArgumentObjects,
     extras: FxHashMap<u64, BTreeMap<usize, Value>>,
     updates: FxHashMap<u64, Value>,
     possible: FxHashSet<(u64, Option<usize>)>,
@@ -20,9 +23,10 @@ pub(in crate::codebase::postgres::query_annotation::evaluate) struct Snapshot {
 }
 
 pub(super) struct View<'a> {
+    module_ids: &'a ModuleIds,
     untrusted_array_intrinsics: bool,
     scopes: &'a [Scope],
-    objects: &'a FxHashMap<u64, Vec<Value>>,
+    objects: &'a ArgumentObjects,
     extras: &'a FxHashMap<u64, BTreeMap<usize, Value>>,
     updates: &'a FxHashMap<u64, Value>,
     possible: &'a FxHashSet<(u64, Option<usize>)>,
@@ -37,6 +41,7 @@ pub(super) struct View<'a> {
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn callback_view(&self) -> View<'_> {
         View {
+            module_ids: self.module_ids(),
             untrusted_array_intrinsics: self.untrusted_array_intrinsics,
             scopes: &self.scopes,
             objects: &self.argument_objects,
@@ -59,8 +64,8 @@ impl View<'_> {
         path: &Path,
         captured: Environment,
         function: &Function,
-        imports: &FxHashMap<PathBuf, FxHashMap<String, Value>>,
-    ) -> (Snapshot, FxHashSet<(PathBuf, String)>) {
+        imports: &FxHashMap<ModuleId, FxHashMap<String, Value>>,
+    ) -> (Snapshot, FxHashSet<(ModuleId, String)>) {
         let mut missing = FxHashSet::default();
         let mut found = Snapshot {
             untrusted_array_intrinsics: self.untrusted_array_intrinsics,
@@ -71,7 +76,8 @@ impl View<'_> {
         let mut values = Vec::new();
         while !functions.is_empty() || !values.is_empty() {
             while let Some((path, env, function)) = functions.pop() {
-                if !visited.insert((path, env, function.start)) {
+                let module_id = self.module_ids.id(path);
+                if !visited.insert((module_id, env, function.start)) {
                     continue;
                 }
                 let reads = super::dependencies::names(function);
@@ -87,11 +93,13 @@ impl View<'_> {
                         .and_then(|origins| origins.get(&name))
                         .copied()
                         .unwrap_or(env);
-                    let value = self.scopes[origin]
-                        .get(&name)
-                        .or_else(|| imports.get(path).and_then(|bindings| bindings.get(&name)));
+                    let value = self.scopes[origin].get(&name).or_else(|| {
+                        imports
+                            .get(&module_id)
+                            .and_then(|bindings| bindings.get(&name))
+                    });
                     if value.is_none() {
-                        missing.insert((path.to_path_buf(), name.clone()));
+                        missing.insert((module_id, name.clone()));
                     }
                     if let Some(value) = value {
                         found

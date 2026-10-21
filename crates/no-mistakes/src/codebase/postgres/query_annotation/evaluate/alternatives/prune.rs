@@ -1,5 +1,6 @@
 use super::super::Evaluator;
 use super::{arena, frames};
+use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
 use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
@@ -7,10 +8,12 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         &mut self,
         original: usize,
         returned: &mut [super::super::Value],
+        prefix: &mut super::reachable::Prefix,
     ) -> frames::Compaction {
         frames::compact(
             &mut self.scopes,
             frames::ModuleRoots {
+                prefix,
                 original,
                 modules: &mut self.modules,
                 initials: &mut self.active_module_initials,
@@ -92,7 +95,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
     pub(super) fn merge_alternative_masks(
         &self,
-        objects: &crate::fx::FxHashMap<u64, Vec<super::super::Value>>,
+        objects: &ArgumentObjects,
         definite_common: &mut Option<crate::fx::FxHashSet<(u64, usize)>>,
         private_definite: &mut crate::fx::FxHashSet<(u64, usize)>,
         disconnected_common: &mut Option<crate::fx::FxHashSet<(u64, usize)>>,

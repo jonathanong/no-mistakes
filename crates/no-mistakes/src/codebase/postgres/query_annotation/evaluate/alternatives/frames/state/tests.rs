@@ -1,9 +1,10 @@
 use super::*;
+use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
 
 #[test]
 fn pruning_shares_one_walk_for_heap_mutations_and_builder_updates() {
     let scopes = vec![FxHashMap::from_iter([("args".into(), Value::Arguments(8))]).into()];
-    let mut objects = FxHashMap::from_iter([
+    let mut objects = ArgumentObjects::from_iter([
         (8, vec![Value::Prefix("SELECT 1".into(), true, Some(7))]),
         (9, vec![Value::Unknown]),
     ]);
@@ -69,7 +70,7 @@ fn pruning_skips_only_completely_empty_state() {
     // Each independent state table must force a walk, even when the others
     // are empty. A builder update alone still needs liveness filtering.
     for populated in 0..=7 {
-        let mut objects = FxHashMap::default();
+        let mut objects = ArgumentObjects::default();
         let mut extras = FxHashMap::default();
         let mut deleted = FxHashSet::default();
         let mut definite = FxHashSet::default();

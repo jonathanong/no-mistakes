@@ -1,4 +1,5 @@
 use super::super::{Evaluator, File};
+use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
 use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{query_annotation, EmbeddedSqlOptions};
 use crate::codebase::ts_source::facts::TsFileFacts;
@@ -128,14 +129,14 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
     assert!(matches!(scopes[0]["annotated"], Value::Unknown));
     assert!(matches!(scopes[0]["bare"], Value::Prefix(_, _, Some(_))));
     let callback = evaluator.scopes[root]["callback"].clone();
-    let mut dense_joined = FxHashMap::default();
+    let mut dense_joined = ArgumentObjects::default();
     super::merge::objects(
         &mut dense_joined,
-        &FxHashMap::from_iter([(1000, vec![callback.clone()])]),
+        &ArgumentObjects::from_iter([(1000, vec![callback.clone()])]),
     );
     super::merge::objects(
         &mut dense_joined,
-        &FxHashMap::from_iter([(1000, vec![Value::Unknown])]),
+        &ArgumentObjects::from_iter([(1000, vec![Value::Unknown])]),
     );
     assert!(
         matches!(&dense_joined[&1000][0], Value::Possible(values) if values.contains(&callback) && values.contains(&Value::Unknown))

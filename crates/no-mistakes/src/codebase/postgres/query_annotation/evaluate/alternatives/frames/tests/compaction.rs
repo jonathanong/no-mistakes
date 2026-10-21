@@ -24,7 +24,8 @@ fn changed_compaction_remaps_shared_scopes_results_and_heap_metadata() {
     )))]);
     let returned_snapshot = returned_values.clone();
     let mut returned = vec![Value::Possible(returned_values)];
-    let mut objects = FxHashMap::from_iter([(42, vec![function_value(2), Value::Arguments(42)])]);
+    let mut objects =
+        ArgumentObjects::from_iter([(42, vec![function_value(2), Value::Arguments(42)])]);
     let mut extras = FxHashMap::from_iter([(
         42,
         std::collections::BTreeMap::from_iter([(1000, function_value(2))]),
@@ -82,7 +83,8 @@ fn initial_argument_roots_preserve_cycles_and_callbacks_without_copying_returns(
         unreachable!()
     };
     let return_buffer = text.as_ptr();
-    let mut objects = FxHashMap::from_iter([(42, vec![Value::Arguments(42), function_value(2)])]);
+    let mut objects =
+        ArgumentObjects::from_iter([(42, vec![Value::Arguments(42), function_value(2)])]);
     let mut extras = FxHashMap::default();
     let mut mapped = FxHashMap::default();
     let mut fresh = FxHashMap::default();

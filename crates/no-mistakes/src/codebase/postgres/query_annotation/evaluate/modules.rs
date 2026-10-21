@@ -13,7 +13,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     // Any new non-import route into another file must also be represented there
     // before executor-free roots can safely be pruned.
     pub(super) fn module_environment(&mut self, path: &Path) -> Environment {
-        if let Some(env) = self.modules.get(path) {
+        let module_id = self.module_ids().id(path);
+        if let Some(env) = self.modules.get(&module_id) {
             return *env;
         }
         super::super::progress::trace("postgres.annotation.module", path, None, || {
@@ -22,10 +23,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     }
 
     fn initialize_module(&mut self, path: &Path) -> Environment {
+        let module_id = self.module_ids().id(path);
         let mut env = self.environment(fx_map());
         // Publish before initialization: cycles and TDZ references share the
         // reserved module bindings instead of recursively initializing again.
-        self.modules.insert(path.to_path_buf(), env);
+        self.modules.insert(module_id, env);
         let files = self.files;
         if files[path].facts.precise_records {
             let module = &files[path].module;
