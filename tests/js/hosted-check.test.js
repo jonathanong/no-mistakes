@@ -12,6 +12,7 @@ const {
 } = require("../../.github/scripts/hosted-check-metrics.cjs");
 const {
   CHECK_ARGS,
+  TIMEOUT_ARGS,
   COLLECTION_DEADLINE_SECONDS,
   parseTime,
   successful,
@@ -32,6 +33,7 @@ test("keeps the consumer's exact default command and separate collection cap", (
     "check",
   ]);
   assert.equal(COLLECTION_DEADLINE_SECONDS, 600);
+  assert.deepEqual(TIMEOUT_ARGS, ["--foreground", "--signal=TERM", "--kill-after=5s"]);
 });
 
 test("finds the published manifest without requesting a private package export", () => {
@@ -303,7 +305,7 @@ test("retains valid calibration proposals and reports every failed cohort", () =
   groups.delete(`${fixtures[1]}/auto/baseline`);
   const report = budgetReport(groups, budgets, false);
   assert.equal(report.failures.length, 3);
-  assert.ok(report.failures.some((failure) => failure.includes("Calibration requires")));
+  assert.ok(report.failures.some((failure) => failure.includes("Candidate did not complete")));
   assert.ok(report.failures.some((failure) => failure.includes("elapsed 50 exceeds")));
   assert.ok(report.failures.some((failure) => failure.includes(`${fixtures[1]}/auto/baseline`)));
   assert.equal(Object.keys(report.proposed).length, 5);

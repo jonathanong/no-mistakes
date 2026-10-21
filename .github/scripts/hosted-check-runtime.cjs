@@ -7,6 +7,9 @@ const { dirname, join } = require("node:path");
 const CHECK_ARGS = ["exec", "no-mistakes", "--timeout", "0", "--lock-timeout", "0", "check"];
 // Collection safety cap; regression limits come from reviewed measured budgets.
 const COLLECTION_DEADLINE_SECONDS = 600;
+// Stay in the caller's process group so SIGTERM reaches pnpm, which relays to
+// `pnpm exec` (no TTY). GNU timeout's default group does not include that child.
+const TIMEOUT_ARGS = ["--foreground", "--signal=TERM", "--kill-after=5s"];
 
 function successful(sample) {
   const deadline = sample.deadlineSeconds ?? COLLECTION_DEADLINE_SECONDS;
@@ -108,6 +111,7 @@ module.exports = {
   hashFile,
   packageManifest,
   CHECK_ARGS,
+  TIMEOUT_ARGS,
   COLLECTION_DEADLINE_SECONDS,
   successful,
   resourceAccountingComplete,

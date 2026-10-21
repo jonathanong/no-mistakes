@@ -133,10 +133,13 @@ against healthy runs and the deliberate-slowdown regression tests before landing
 ## Failures and retained evidence
 
 The 600-second collection deadline is separate from the budgets. A timeout sends
-SIGTERM, followed by forced termination after a five-second grace period.
-Candidate timeouts, signals, nonzero exits, missing samples and invalid
-measurements fail the gate, including calibration mode. A failing baseline never
-excuses a candidate failure.
+SIGTERM to `pnpm` (`timeout --foreground`), which relays it to `pnpm exec`,
+followed by forced termination after a five-second grace period. Candidate
+timeouts, signals, nonzero exits, missing samples and invalid measurements fail
+the gate with `Candidate did not complete successfully`, not a calibration-helper
+error. Timeout cohorts still write a `*.processes.txt` snapshot. A failing
+baseline never excuses a candidate failure. Calibration proposals are emitted
+only from six completed successful candidate samples.
 
 Timeout or signal resource counters are censored: exclude them from resource maxima,
 calibration and ratios. Per-sample JSON/logs label their CPU and RSS as
