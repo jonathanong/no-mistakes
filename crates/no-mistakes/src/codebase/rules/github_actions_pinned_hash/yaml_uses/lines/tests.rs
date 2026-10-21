@@ -75,6 +75,21 @@ fn matrix_include_uses_is_not_an_action_line() {
     let classified = action_uses_lines(&block);
     assert_eq!(classified.lines, vec![3, 9], "{classified:?}");
     assert!(classified.rejected_uses[6], "{classified:?}");
+
+    let next_line = [
+        "jobs:",
+        "  build:",
+        "    strategy:",
+        "      matrix:",
+        "        include:",
+        "          - uses:",
+        "              ubuntu-latest",
+        "    steps:",
+        "      - { uses: actions/checkout@v4 }",
+    ];
+    let classified = action_uses_lines(&next_line);
+    assert_eq!(classified.lines, vec![9], "{classified:?}");
+    assert!(classified.rejected_uses[5], "{classified:?}");
 }
 
 #[test]
@@ -339,6 +354,33 @@ fn hash_inside_a_flow_value_keeps_the_version_comment() {
         findings
             .iter()
             .all(|finding| !finding.message.contains("trailing comment")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn matrix_next_line_value_does_not_steal_the_step_comment() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes");
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.rules.push(crate::config::v2::schema::RuleDef {
+        rule: super::super::super::RULE_ID.to_string(),
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        ..Default::default()
+    });
+    let file = root.join(".github/workflows/matrix-next-line-fail.yml");
+    let findings = super::super::super::check_with_files(&root, &config, &[file]).unwrap();
+    let lines: Vec<_> = findings.iter().map(|finding| finding.line).collect();
+    assert_eq!(lines, vec![12], "{findings:?}");
+    assert!(
+        findings[0].message.contains("actions/checkout@v4"),
+        "{findings:?}"
+    );
+    assert!(
+        findings.iter().all(|finding| {
+            !finding.message.contains("trailing comment")
+                && !finding.message.contains("ubuntu-latest")
+        }),
         "{findings:?}"
     );
 }

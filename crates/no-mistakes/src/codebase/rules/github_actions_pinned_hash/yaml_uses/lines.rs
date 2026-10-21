@@ -54,8 +54,10 @@ pub(super) fn action_uses_lines(lines: &[&str]) -> ClassifiedUses {
         let value_here = is_value_line(lines[index]) && !is_nested_key(lines[index]);
         let previous_in_flow = index > 0 && flow_input_at_start[index - 1];
         // `uses:` then `nested: true` is a mapping, not the action scalar.
+        // A rejected matrix `uses:` must not claim the next indented value.
         let continued = index > 0
             && bare_uses_key(lines[index - 1])
+            && !rejected_uses[index - 1]
             && !in_input_block(lines, index - 1)
             && !previous_in_flow
             && value_here
