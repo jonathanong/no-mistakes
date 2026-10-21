@@ -1,0 +1,22 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+  playwright:
+    configs: playwright.config.ts
+rules:
+  - name: all-root-selectors-excluded
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - file: src/unit/timers.test.mts
+        - module: src/unit/timers.test.mts
+        - function: { file: src/unit/timers.test.mts, symbol: run }
+        - glob: src/unit/timers.test.mts
+        - vitest: true
+        - playwright: true
+      excludeRoots:
+        - "**/*.mts"
+        - "**/*.ts"
+      targets:
+        - global: setTimeout

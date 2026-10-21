@@ -58,6 +58,109 @@ fn exclude_filters_findings_without_changing_root_expansion() {
 }
 
 #[test]
+fn exclude_roots_removes_mock_roots_without_hiding_reachable_helpers() {
+    let root = git_tracked_rule::materialize_rule("forbidden-calls", "consumer-matrix");
+    let (_, _, excluded) = check(root.path(), &config(root.path(), "root-exclusion.yml"));
+    let excluded_files: Vec<_> = rules(&excluded)
+        .iter()
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect();
+    assert_eq!(excluded_files, ["src/root-exclusion/shared.mts"]);
+
+    let (_, _, included) = check(
+        root.path(),
+        &config(root.path(), "root-exclusion-unfiltered.yml"),
+    );
+    let included_files: Vec<_> = rules(&included)
+        .iter()
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        included_files,
+        [
+            "src/root-exclusion/mock-only.mock.test.mts",
+            "src/root-exclusion/mock-only.mts",
+            "src/root-exclusion/shared.mts",
+        ]
+    );
+}
+
+#[test]
+fn exclude_roots_matches_the_whole_path_not_a_prefix() {
+    let root = git_tracked_rule::materialize_rule("forbidden-calls", "consumer-matrix");
+    let (_, body, report) = check(
+        root.path(),
+        &config(root.path(), "root-exclusion-partial-path.yml"),
+    );
+    assert!(!body.contains("excluded all configured roots"), "{body}");
+    let files: Vec<_> = rules(&report)
+        .iter()
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        files,
+        [
+            "src/root-exclusion/mock-only.mock.test.mts",
+            "src/root-exclusion/mock-only.mts",
+            "src/root-exclusion/shared.mts",
+        ]
+    );
+}
+
+#[test]
+fn rule_exclude_filters_findings_without_removing_traversal_roots() {
+    let root = git_tracked_rule::materialize_rule("forbidden-calls", "consumer-matrix");
+    let (_, _, report) = check(
+        root.path(),
+        &config(root.path(), "root-exclusion-rule-exclude.yml"),
+    );
+    let files: Vec<_> = rules(&report)
+        .iter()
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect();
+
+    assert_eq!(
+        files,
+        [
+            "src/root-exclusion/mock-only.mts",
+            "src/root-exclusion/shared.mts",
+        ]
+    );
+}
+
+#[test]
+fn exclude_roots_applies_to_every_root_selector_and_rejects_an_empty_result() {
+    let root = git_tracked_rule::materialize_rule("forbidden-calls", "consumer-matrix");
+    let (ok, body, _) = check(
+        root.path(),
+        &config(root.path(), "root-exclusion-all-selectors.yml"),
+    );
+
+    assert!(!ok, "{body}");
+    assert!(
+        body.contains("excludeRoots excluded all configured roots"),
+        "{body}"
+    );
+}
+
+#[test]
+fn exclude_roots_rejects_invalid_globs() {
+    let root = git_tracked_rule::materialize_rule("forbidden-calls", "consumer-matrix");
+    for (name, expected) in [
+        ("root-exclusion-invalid.yml", "contains invalid glob"),
+        ("root-exclusion-empty-list.yml", "non-empty glob patterns"),
+        (
+            "root-exclusion-blank-pattern.yml",
+            "non-empty glob patterns",
+        ),
+    ] {
+        let (ok, body, _) = check(root.path(), &config(root.path(), name));
+        assert!(!ok, "{name}: {body}");
+        assert!(body.contains(expected), "{name}: {body}");
+    }
+}
+
+#[test]
 fn same_name_explicit_project_replaces_runner_include() {
     let root = git_tracked_rule::materialize_rule("forbidden-calls", "consumer-matrix");
     let (_, _, report) = check(root.path(), &config(root.path(), "overlap-unit.yml"));

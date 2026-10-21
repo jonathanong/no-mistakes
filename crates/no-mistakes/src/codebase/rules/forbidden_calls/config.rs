@@ -1,4 +1,5 @@
 use super::RULE_ID;
+use crate::config::v2::schema::StringOrList;
 use anyhow::{bail, Result};
 use serde::Deserialize;
 
@@ -11,6 +12,7 @@ pub(super) use root::{catalog_names, PlaywrightRoot, Root};
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Options {
     pub(super) roots: Vec<Root>,
+    pub(super) exclude_roots: Option<StringOrList>,
     pub(super) traversal: Traversal,
     pub(super) max_depth: Option<usize>,
     pub(super) unknown_calls: UnknownCalls,
@@ -107,6 +109,12 @@ pub(super) fn validate(options: &Options) -> Result<()> {
         bail!("{RULE_ID}: maxDepth must be greater than zero");
     }
     root::validate_roots(&options.roots)?;
+    if let Some(exclude_roots) = &options.exclude_roots {
+        let patterns = exclude_roots.values();
+        if patterns.is_empty() || patterns.iter().any(|pattern| pattern.trim().is_empty()) {
+            bail!("{RULE_ID}: excludeRoots must contain non-empty glob patterns");
+        }
+    }
     for target in &options.targets {
         if let Some(conditions) = target.arguments() {
             arguments::validate(conditions)?;
