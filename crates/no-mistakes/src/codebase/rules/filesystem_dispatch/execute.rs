@@ -3,6 +3,7 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 mod special;
+mod timing;
 pub(super) type ResultAccumulator = Mutex<Vec<(&'static str, Result<Vec<RuleFinding>>)>>;
 
 pub(super) struct RuleRunInputs<'a> {
@@ -183,14 +184,11 @@ pub(super) fn trace_rule<T>(
     rule_id: &str,
     run: impl FnOnce() -> T,
 ) -> T {
-    match sources.observer().filter(|observer| observer.detailed()) {
-        Some(observer) => observer.trace(
-            &format!("rules.{rule_id}"),
-            crate::diagnostics::TimingKind::Parallel,
-            run,
-        ),
-        None => run(),
-    }
+    timing::trace_rule(
+        sources.observer().map(|observer| observer.as_ref()),
+        || format!("rules.{rule_id}"),
+        run,
+    )
 }
 
 #[cfg(test)]
