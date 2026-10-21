@@ -5,7 +5,9 @@
     "elapsed": 181,
     "rss_kib": 100,
     "exit": 0,
-    "deadlineSeconds": 600
+    "deadlineSeconds": 600,
+    "user": 100,
+    "system": 2
   },
   {
     "sampleNumber": 2,
@@ -13,7 +15,9 @@
     "elapsed": 182,
     "rss_kib": 101,
     "exit": 0,
-    "deadlineSeconds": 600
+    "deadlineSeconds": 600,
+    "user": 101,
+    "system": 2
   },
   {
     "sampleNumber": 3,
@@ -21,7 +25,9 @@
     "elapsed": 183,
     "rss_kib": 102,
     "exit": 0,
-    "deadlineSeconds": 600
+    "deadlineSeconds": 600,
+    "user": 102,
+    "system": 2
   },
   {
     "sampleNumber": 4,
@@ -29,7 +35,9 @@
     "elapsed": 184,
     "rss_kib": 103,
     "exit": 0,
-    "deadlineSeconds": 600
+    "deadlineSeconds": 600,
+    "user": 103,
+    "system": 2
   },
   {
     "sampleNumber": 5,
@@ -37,7 +45,9 @@
     "elapsed": 185,
     "rss_kib": 104,
     "exit": 0,
-    "deadlineSeconds": 600
+    "deadlineSeconds": 600,
+    "user": 104,
+    "system": 2
   },
   {
     "sampleNumber": 6,
@@ -45,6 +55,8 @@
     "elapsed": 186,
     "rss_kib": 105,
     "exit": 0,
-    "deadlineSeconds": 600
+    "deadlineSeconds": 600,
+    "user": 105,
+    "system": 2
   }
 ]

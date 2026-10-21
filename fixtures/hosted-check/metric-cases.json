@@ -1,0 +1,368 @@
+{
+  "healthy": [
+    {
+      "sampleNumber": 1,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 2,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 3,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 4,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 5,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 6,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    }
+  ],
+  "noisy": [
+    {
+      "sampleNumber": 1,
+      "elapsed": 10,
+      "user": 8,
+      "system": 2.0,
+      "rss_kib": 100,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 2,
+      "elapsed": 11,
+      "user": 9,
+      "system": 2.1,
+      "rss_kib": 110,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 3,
+      "elapsed": 12,
+      "user": 10,
+      "system": 2.2,
+      "rss_kib": 120,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 4,
+      "elapsed": 13,
+      "user": 11,
+      "system": 2.3,
+      "rss_kib": 130,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 5,
+      "elapsed": 14,
+      "user": 12,
+      "system": 2.4,
+      "rss_kib": 140,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 6,
+      "elapsed": 15,
+      "user": 13,
+      "system": 2.5,
+      "rss_kib": 150,
+      "exit": 0
+    }
+  ],
+  "cpuMax": [
+    {
+      "elapsed": 100,
+      "user": 100,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "elapsed": 100,
+      "user": 1,
+      "system": 100,
+      "rss_kib": 1000,
+      "exit": 0
+    }
+  ],
+  "cpuSlow36": [
+    {
+      "sampleNumber": 1,
+      "elapsed": 100,
+      "user": 324,
+      "system": 36,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 2,
+      "elapsed": 100,
+      "user": 324,
+      "system": 36,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 3,
+      "elapsed": 100,
+      "user": 324,
+      "system": 36,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 4,
+      "elapsed": 100,
+      "user": 324,
+      "system": 36,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 5,
+      "elapsed": 100,
+      "user": 324,
+      "system": 36,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 6,
+      "elapsed": 100,
+      "user": 324,
+      "system": 36,
+      "rss_kib": 1000,
+      "exit": 0
+    }
+  ],
+  "wallSlow": [
+    {
+      "sampleNumber": 1,
+      "elapsed": 200,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 2,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 3,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 4,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 5,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 6,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    }
+  ],
+  "rssSlow": [
+    {
+      "sampleNumber": 1,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 2000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 2,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 3,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 4,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 5,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 6,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    }
+  ],
+  "censored": [
+    {
+      "sampleNumber": 1,
+      "elapsed": 600.01,
+      "user": 0,
+      "system": 0,
+      "rss_kib": 0,
+      "exit": 124
+    },
+    {
+      "sampleNumber": 2,
+      "elapsed": 600.01,
+      "user": 0,
+      "system": 0,
+      "rss_kib": 0,
+      "exit": 124
+    },
+    {
+      "sampleNumber": 3,
+      "elapsed": 600.01,
+      "user": 0,
+      "system": 0,
+      "rss_kib": 0,
+      "exit": 124
+    },
+    {
+      "sampleNumber": 4,
+      "elapsed": 600.01,
+      "user": 0,
+      "system": 0,
+      "rss_kib": 0,
+      "exit": 124
+    },
+    {
+      "sampleNumber": 5,
+      "elapsed": 600.01,
+      "user": 0,
+      "system": 0,
+      "rss_kib": 0,
+      "exit": 124
+    },
+    {
+      "sampleNumber": 6,
+      "elapsed": 600.01,
+      "user": 0,
+      "system": 0,
+      "rss_kib": 0,
+      "exit": 124
+    }
+  ],
+  "failed": [
+    {
+      "sampleNumber": 1,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 1
+    },
+    {
+      "sampleNumber": 2,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 3,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 4,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 5,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    },
+    {
+      "sampleNumber": 6,
+      "elapsed": 100,
+      "user": 9,
+      "system": 1,
+      "rss_kib": 1000,
+      "exit": 0
+    }
+  ]
+}

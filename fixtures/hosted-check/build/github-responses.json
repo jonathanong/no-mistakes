@@ -1,0 +1,18 @@
+{
+  "repos/jonathanong/no-mistakes/commits/main": {
+    "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "commit": { "tree": { "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" } }
+  },
+  "repos/jonathanong/no-mistakes/releases/latest": {
+    "id": 12345,
+    "draft": false,
+    "prerelease": false,
+    "tag_name": "v0.94.0",
+    "target_commitish": "main",
+    "html_url": "https://github.com/jonathanong/no-mistakes/releases/tag/v0.94.0"
+  },
+  "repos/jonathanong/no-mistakes/commits/v0.94.0": {
+    "sha": "cccccccccccccccccccccccccccccccccccccccc",
+    "commit": { "tree": { "sha": "dddddddddddddddddddddddddddddddddddddddd" } }
+  }
+}

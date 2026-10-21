@@ -7,7 +7,6 @@ const {
   openSync,
   closeSync,
 } = require("node:fs");
-const { availableParallelism, cpus } = require("node:os");
 const { createRequire } = require("node:module");
 const { join, resolve, dirname } = require("node:path");
 
@@ -22,8 +21,12 @@ const {
   aggregate,
   summarize,
 } = require("./hosted-check-metrics.cjs");
+const { replaceNative, measurementEnvironment } = require("./hosted-check-runtime.cjs");
+const { artifactBuilds } = require("./hosted-check-provenance.cjs");
 
 function measure(fixture, artifact, output, sampleNumber, expectedTree) {
+  if (!Number.isInteger(sampleNumber) || sampleNumber < 1 || sampleNumber > 6)
+    throw new Error("Expected sample number 1 through 6");
   mkdirSync(output, { recursive: true });
   const fixtureCommit = command("git", ["rev-parse", "HEAD"], fixture);
   const fixtureTree = command("git", ["rev-parse", "HEAD^{tree}"], fixture);
@@ -35,61 +38,38 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
   const nativePackage = require.resolve("no-mistakes-linux-x64-gnu/package.json", {
     paths: [dirname(rootPackage)],
   });
-  for (const path of [rootPackage, nativePackage]) {
-    if (JSON.parse(readFileSync(path, "utf8")).version !== "0.86.2")
-      throw new Error(`Expected published 0.86.2: ${path}`);
-  }
+  const builds = artifactBuilds(artifact);
   const native = join(dirname(nativePackage), "bin", "no-mistakes");
-  const baseline = join(output, "published-no-mistakes");
-  copyFileSync(native, baseline);
+  const original = join(output, "launcher-original-no-mistakes");
+  copyFileSync(native, original);
+  const cpuProbes = Object.fromEntries(
+    ["baseline", "candidate"].map((variant) => [
+      variant,
+      Number(command(join(artifact, variant, "cpu-probe"), [], fixture)),
+    ]),
+  );
+  if (!Object.values(cpuProbes).every((count) => Number.isInteger(count) && count > 0))
+    throw new Error("Invalid source-built CPU probe result");
   const configBefore = hashFile(join(fixture, ".no-mistakes.yml"));
   const jobs = process.env.HOSTED_CHECK_JOBS || "auto";
   if (!["1", "4", "auto"].includes(jobs)) throw new Error(`Invalid jobs: ${jobs}`);
   const checkArgs = jobs === "auto" ? CHECK_ARGS : [...CHECK_ARGS, "--jobs", jobs];
-  const metadata = {
+  const metadata = measurementEnvironment(fixture, rootPackage, checkArgs, {
     jobs,
     fixtureCommit,
     fixtureTree,
     configSha256: configBefore,
-    command: ["pnpm", ...checkArgs],
-    deadlineSeconds: COLLECTION_DEADLINE_SECONDS,
     sampleNumber,
-    imageOS: process.env.ImageOS,
-    imageVersion: process.env.ImageVersion,
-    runnerOS: process.env.RUNNER_OS,
-    runnerArch: process.env.RUNNER_ARCH,
-    cpuModel: cpus()[0].model,
-    logicalCpus: cpus().length,
-    availableCpus: availableParallelism(),
-    nproc: command("nproc", [], fixture),
-    rayonEnvironment: process.env.RAYON_NUM_THREADS || null,
-    numCpus: Number(command(join(artifact, "cpu-probe"), [], fixture)),
-    rayonJobs:
-      jobs !== "auto"
-        ? Number(jobs)
-        : process.env.RAYON_NUM_THREADS
-          ? Number(process.env.RAYON_NUM_THREADS)
-          : Number(command(join(artifact, "cpu-probe"), [], fixture)),
-    rayonPolicy:
-      jobs === "auto"
-        ? "automatic (--jobs omitted; exact source-built num_cpus::get probe)"
-        : "explicit --jobs",
-    node: process.version,
-    pnpm: command("pnpm", ["--version"], fixture),
-    baselineNpm: JSON.parse(
-      command("pnpm", ["view", "no-mistakes-linux-x64-gnu@0.86.2", "--json"], fixture),
-    ),
-    currentBuild: JSON.parse(readFileSync(join(artifact, "provenance.json"), "utf8")),
-    wrapper:
-      "Published npm no-mistakes@0.86.2 launcher for both binaries; only its untracked native CLI is replaced",
-  };
+    cpuProbes,
+    builds,
+  });
   writeFileSync(join(output, "environment.json"), JSON.stringify(metadata, null, 2));
   writeFileSync(join(output, "cpu.txt"), command("lscpu", [], fixture));
-  const variants = sampleNumber % 2 ? ["published", "current"] : ["current", "published"];
+  const variants = sampleNumber % 2 ? ["baseline", "candidate"] : ["candidate", "baseline"];
   let failed = false;
   try {
     for (const [order, variant] of variants.entries()) {
-      copyFileSync(variant === "published" ? baseline : join(artifact, "no-mistakes"), native);
+      replaceNative(join(artifact, variant, "no-mistakes"), native);
       const prefix = join(output, variant);
       const stdout = openSync(`${prefix}.stdout`, "w");
       const stderr = openSync(`${prefix}.stderr`, "w");
@@ -120,7 +100,15 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
         ...parseTime(readFileSync(`${prefix}.time`, "utf8"), result.status),
         variant,
         jobs,
-        candidateCommit: metadata.currentBuild.commit,
+        candidateCommit: builds.candidate.commit,
+        sourceCommit: builds[variant].commit,
+        sourceTree: builds[variant].tree,
+        provenance: builds[variant],
+        numCpus: cpuProbes[variant],
+        rayonJobs:
+          jobs === "auto"
+            ? Number(process.env.RAYON_NUM_THREADS || cpuProbes[variant])
+            : Number(jobs),
         order,
         sampleNumber,
         fixtureCommit,
@@ -133,17 +121,17 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
       };
       writeFileSync(`${prefix}.sample.json`, JSON.stringify(sample, null, 2));
       console.log(JSON.stringify(sample));
-      if (variant === "current" && !successful(sample)) failed = true;
+      if (variant === "candidate" && !successful(sample)) failed = true;
     }
   } finally {
-    copyFileSync(baseline, native);
+    replaceNative(original, native);
   }
   if (hashFile(join(fixture, ".no-mistakes.yml")) !== configBefore)
     throw new Error("Consumer config changed");
   command("git", ["diff", "--exit-code", "HEAD"], fixture);
   if (failed)
     throw new Error(
-      `Current check did not exit successfully within the ${COLLECTION_DEADLINE_SECONDS}-second collection cap`,
+      `Candidate check did not exit successfully within the ${COLLECTION_DEADLINE_SECONDS}-second collection cap`,
     );
 }
 

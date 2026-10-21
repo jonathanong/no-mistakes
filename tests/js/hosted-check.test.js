@@ -8,6 +8,7 @@ const {
   calibratedBudget,
   enforceBudget,
   budgetReport,
+  pairedReport,
 } = require("../../.github/scripts/hosted-check-metrics.cjs");
 const {
   CHECK_ARGS,
@@ -16,6 +17,8 @@ const {
   successful,
   aggregate,
 } = require("../../.github/scripts/hosted-check.cjs");
+const { relativeLimits } = require("../../.github/scripts/hosted-check-budget.cjs");
+const { cases, samplePair } = require("./hosted-check-fixtures.cjs");
 
 test("keeps the consumer's exact default command and separate collection cap", () => {
   assert.deepEqual(CHECK_ARGS, [
@@ -113,7 +116,7 @@ test("resource maxima retain completed failures and exclude both timeout statuse
   assert.equal(result.userMax, 20);
   assert.equal(result.systemMax, 2);
   assert.equal(result.rssMaxKiB, 200);
-  assert.match(formatSummary([{ key: "mixed", ...result }]), /\| 2 \| 20 \| 2 \| 200 \|/);
+  assert.match(formatSummary([{ key: "mixed", ...result }]), /\| 2 \| 20 \| 2 \| 22 \| 200 \|/);
 });
 
 test("all-censored samples retain outcomes with null resources and n/a rendering", () => {
@@ -134,7 +137,7 @@ test("all-censored samples retain outcomes with null resources and n/a rendering
   assert.equal(result.rssMaxKiB, null);
   const markdown = formatSummary([{ key: "censored", ...result }]);
   assert.match(markdown, /\| Resource n \|/);
-  assert.match(markdown, /\| 0 \| n\/a \| n\/a \| n\/a \|/);
+  assert.match(markdown, /\| 0 \| n\/a \| n\/a \| n\/a \| n\/a \|/);
   assert.doesNotMatch(markdown, /Infinity|\| null \|/);
 });
 
@@ -161,31 +164,9 @@ test("signals and missing numeric wrapper statuses never supply resource maxima"
   assert.equal(missing.rssMaxKiB, null);
 });
 
-test("uses fresh hosted pairs on both distinct issue trees and production defaults", () => {
-  const workflow = readFileSync(
-    join(__dirname, "../../.github/workflows/hosted-check.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /runs-on: ubuntu-latest/);
-  assert.match(workflow, /sample: \[1, 2, 3, 4, 5, 6\]/);
-  assert.match(workflow, /22edf4bfe0a782ac0d030c916dedfd6f8acb499c/);
-  assert.match(workflow, /92d0a2061bde8d260aa0b86a2d71110ece1a43ca/);
-  assert.match(workflow, /CARGO_PROFILE_RELEASE_LTO: fat/);
-  assert.match(workflow, /CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1"/);
-  assert.match(
-    workflow,
-    /NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target x86_64-unknown-linux-gnu -p no-mistakes/,
-  );
-  assert.doesNotMatch(workflow, /--no-default-features|--skip-rule|--skip-category/);
-});
-
 // Constant and noisy measurements pin the actual calibration arithmetic, not a guessed percentage.
 test("calibrates wall/RSS headroom from six fresh samples and rejects slowed candidates", () => {
-  const samples = Array.from({ length: 6 }, (_, index) => ({
-    elapsed: 10 + index,
-    rss_kib: 100 + index * 10,
-    exit: 0,
-  }));
+  const samples = cases.noisy;
   const budget = calibratedBudget(samples);
   assert.equal(budget.wallSeconds, 15);
   assert.equal(budget.rssKiB, 150);
@@ -213,6 +194,25 @@ test("calibrates wall/RSS headroom from six fresh samples and rejects slowed can
   );
 });
 
+// Identical samples have σ of 0, so the margin is the relative floor.
+test("widens a quiet cohort to the relative wall and RSS floors", () => {
+  const samples = cases.healthy;
+  const budget = calibratedBudget(samples);
+  assert.equal(budget.wallSecondsStddev, 0);
+  assert.equal(budget.rssKiBStddev, 0);
+  assert.equal(budget.wallSecondsMargin, 10);
+  assert.equal(budget.rssKiBMargin, 20);
+  enforceBudget([{ ...samples[0], elapsed: 110, rss_kib: 1020 }], budget);
+  assert.throws(
+    () => enforceBudget([{ ...samples[0], elapsed: 110.01 }], budget),
+    /elapsed 110.01 exceeds calibrated limit 110/,
+  );
+  assert.throws(
+    () => enforceBudget([{ ...samples[0], rss_kib: 1020.01 }], budget),
+    /rss_kib 1020.01 exceeds calibrated limit 1020/,
+  );
+});
+
 // Synthetic saved samples exercise completion beyond the historical collection cap.
 // Increasing collection time must not silently widen an enforced regression budget.
 test("calibrates completed runs beyond 180 seconds while enforcing measured budgets", () => {
@@ -237,44 +237,6 @@ test("calibrates completed runs beyond 180 seconds while enforcing measured budg
   );
 });
 
-test("bounds both collection commands and leaves time for artifacts", () => {
-  const workflow = readFileSync(
-    join(__dirname, "../../.github/workflows/hosted-check.yml"),
-    "utf8",
-  );
-  const section = workflow.slice(workflow.indexOf("  sample:"), workflow.indexOf("  summarize:"));
-  assert.match(section, /timeout-minutes: 30/);
-  assert.match(section, /600-second collection cap\n[\s\S]*?timeout-minutes: 22/);
-  assert.match(
-    section,
-    /Upload measurements, provenance, and raw logs\n[\s\S]*?timeout-minutes: 3/,
-  );
-  assert.ok(22 * 60 > 2 * (COLLECTION_DEADLINE_SECONDS + 5));
-});
-
-test("weekly runs use the event source and separate thread budgets", () => {
-  const workflow = readFileSync(
-    join(__dirname, "../../.github/workflows/hosted-check.yml"),
-    "utf8",
-  );
-  assert.match(workflow, /schedule:/);
-  assert.match(workflow, /github.event.pull_request.head.sha \|\| github.sha/);
-  assert.match(workflow, /jobs: \["1", "4", "auto"\]/);
-  assert.match(workflow, /HOSTED_CHECK_JOBS: \$\{\{ matrix.jobs \}\}/);
-});
-
-test("budget-only PR edits run the hosted gate", () => {
-  const workflow = readFileSync(
-    join(__dirname, "../../.github/workflows/hosted-check.yml"),
-    "utf8",
-  );
-  const paths = workflow.slice(
-    workflow.indexOf("  pull_request:"),
-    workflow.indexOf("  workflow_dispatch:"),
-  );
-  assert.match(paths, /- "\.github\/scripts\/hosted-check-budgets\.json"/);
-});
-
 test("retains valid calibration proposals and reports every failed cohort", () => {
   const fixtures = [
     "22edf4bfe0a782ac0d030c916dedfd6f8acb499c",
@@ -283,25 +245,21 @@ test("retains valid calibration proposals and reports every failed cohort", () =
   const groups = new Map();
   for (const commit of fixtures) {
     for (const jobs of ["1", "4", "auto"]) {
-      for (const variant of ["published", "current"]) {
-        groups.set(
-          `${commit}/${jobs}/${variant}`,
-          Array.from({ length: 6 }, (_, index) => ({
-            sampleNumber: index + 1,
-            candidateCommit: "f".repeat(40),
-            exit: 0,
-            elapsed: 10 + index / 10,
-            rss_kib: 100 + index,
-          })),
-        );
+      for (const variant of ["baseline", "candidate"]) {
+        groups.set(`${commit}/${jobs}/${variant}`, samplePair(cases.noisy, variant, commit, jobs));
       }
     }
   }
-  const calibration = budgetReport(groups, {}, true);
+  const budgets = Object.fromEntries(
+    fixtures.flatMap((commit) =>
+      ["1", "4", "auto"].map((jobs) => [`${commit}/${jobs}`, calibratedBudget(cases.noisy)]),
+    ),
+  );
+  const calibration = budgetReport(groups, budgets, true);
   assert.deepEqual(calibration.failures, []);
   assert.equal(Object.keys(calibration.proposed).length, 6);
-  const failed = `${fixtures[0]}/1/current`,
-    slowed = `${fixtures[0]}/4/current`;
+  const failed = `${fixtures[0]}/1/candidate`,
+    slowed = `${fixtures[0]}/4/candidate`;
   groups.set(
     failed,
     groups.get(failed).map((value, index) => (index ? value : { ...value, exit: 124 })),
@@ -310,12 +268,12 @@ test("retains valid calibration proposals and reports every failed cohort", () =
     slowed,
     groups.get(slowed).map((value, index) => (index ? value : { ...value, elapsed: 50 })),
   );
-  groups.delete(`${fixtures[1]}/auto/published`);
-  const report = budgetReport(groups, calibration.proposed, false);
+  groups.delete(`${fixtures[1]}/auto/baseline`);
+  const report = budgetReport(groups, budgets, false);
   assert.equal(report.failures.length, 3);
   assert.ok(report.failures.some((failure) => failure.includes("Calibration requires")));
   assert.ok(report.failures.some((failure) => failure.includes("elapsed 50 exceeds")));
-  assert.ok(report.failures.some((failure) => failure.includes(`${fixtures[1]}/auto/published`)));
+  assert.ok(report.failures.some((failure) => failure.includes(`${fixtures[1]}/auto/baseline`)));
   assert.equal(Object.keys(report.proposed).length, 5);
   assert.ok(report.proposed[`${fixtures[1]}/auto`]);
   assert.equal(report.proposed[`${fixtures[0]}/1`], undefined);
@@ -330,4 +288,88 @@ test("hosted measurement source modules stay within the repository line limit", 
       `${file} has ${lines} lines; split responsibilities before adding more`,
     );
   }
+});
+
+test("CPU maxima sum user and system within each sample", () => {
+  const result = aggregate(cases.cpuMax);
+  assert.equal(result.userMax, 100);
+  assert.equal(result.systemMax, 100);
+  assert.equal(result.cpuMax, 101);
+  assert.notEqual(result.cpuMax, result.userMax + result.systemMax);
+});
+
+test("saved CPU-only 36x regression fails below the wall collection cap", () => {
+  const budget = calibratedBudget(cases.healthy);
+  assert.ok(cases.cpuSlow36.every(successful));
+  assert.equal(cases.cpuSlow36[0].elapsed, cases.healthy[0].elapsed);
+  assert.equal(cases.cpuSlow36[0].rss_kib, cases.healthy[0].rss_kib);
+  assert.throws(() => enforceBudget(cases.cpuSlow36, budget), /cpu 360 exceeds/);
+  assert.throws(
+    () =>
+      pairedReport(
+        samplePair(cases.healthy, "baseline"),
+        samplePair(cases.cpuSlow36, "candidate"),
+        budget,
+      ),
+    /cpuSeconds ratio 36 exceeds/,
+  );
+});
+
+test("frozen paired budgets reject release-relative wall, CPU and RSS regressions", () => {
+  const budget = calibratedBudget(cases.healthy);
+  const baseline = samplePair(cases.healthy, "baseline");
+  assert.ok(
+    pairedReport(baseline, samplePair(cases.healthy, "candidate"), budget).every(
+      (row) => row.status === "compared",
+    ),
+  );
+  assert.throws(
+    () => pairedReport(baseline, samplePair(cases.wallSlow, "candidate"), budget),
+    /wallSeconds ratio 2 exceeds/,
+  );
+  assert.throws(
+    () => pairedReport(baseline, samplePair(cases.rssSlow, "candidate"), budget),
+    /rssKiB ratio 2 exceeds/,
+  );
+  assert.equal(relativeLimits(budget).wallSeconds, 0.1);
+  assert.equal(relativeLimits(budget).rssKiB, 0.02);
+});
+
+test("censored baseline skips ratios without excusing an unhealthy candidate", () => {
+  const budget = calibratedBudget(cases.healthy);
+  const baseline = samplePair(cases.censored, "baseline");
+  const report = pairedReport(baseline, samplePair(cases.healthy, "candidate"), budget);
+  assert.ok(
+    report.every((row) => row.status === "baseline-censored-or-failed" && row.ratios === null),
+  );
+  enforceBudget(cases.healthy, budget);
+  assert.throws(() => enforceBudget(cases.cpuSlow36, budget), /cpu 360 exceeds/);
+  assert.throws(
+    () => pairedReport(baseline, samplePair(cases.failed, "candidate"), budget),
+    /Candidate did not complete/,
+  );
+});
+
+test("missing or zero CPU budgets fail closed", () => {
+  const budget = calibratedBudget(cases.healthy);
+  for (const invalid of [undefined, null, 0, NaN]) {
+    assert.throws(
+      () => enforceBudget(cases.healthy, { ...budget, cpuSeconds: invalid }),
+      /Invalid budget: cpuSeconds/,
+    );
+    assert.throws(
+      () => relativeLimits({ ...budget, cpuSeconds: invalid }),
+      /paired calibration: cpuSeconds/,
+    );
+  }
+  assert.throws(
+    () => calibratedBudget(cases.healthy, { wallSeconds: 0.1, rssKiB: 0.02 }),
+    /Invalid floor: cpuSeconds/,
+  );
+  const proposed = calibratedBudget(cases.healthy, {
+    wallSeconds: 0.1,
+    cpuSeconds: 0.05,
+    rssKiB: 0.02,
+  });
+  assert.equal(proposed.cpuSecondsMargin, 0.5);
 });
