@@ -36,6 +36,15 @@ describe("test and react same-file recall", () => {
         ["sequential"],
       );
     }
+    assert.deepEqual(
+      messages(
+        snippet("no-vitest-sequential/const-alias.test.ts"),
+        "no-vitest-sequential",
+        undefined,
+        "const-alias.test.ts",
+      ),
+      ["sequential", "sequential"],
+    );
   });
 
   it("treats an expression-free template require as a test import", () => {
@@ -114,6 +123,15 @@ describe("test and react same-file recall", () => {
       ),
       ["unnecessaryMock"],
     );
+    assert.deepEqual(
+      messages(
+        snippet("vitest-mock-test-file-naming/suppressed.test.ts"),
+        "vitest-mock-test-file-naming",
+        undefined,
+        "suppressed.test.ts",
+      ),
+      [],
+    );
   });
 
   it("reports error message assertions through expect aliases and static keys", () => {
@@ -163,6 +181,15 @@ describe("test and react same-file recall", () => {
         "binary-suppressed.test.ts",
       ),
       ["message"],
+    );
+    assert.deepEqual(
+      messages(
+        snippet("test-no-error-message-matching/matcher-call.test.ts"),
+        "test-no-error-message-matching",
+        undefined,
+        "matcher-call.test.ts",
+      ),
+      ["message", "message"],
     );
     assert.deepEqual(
       messages(
@@ -250,6 +277,15 @@ describe("test and react same-file recall", () => {
       ),
       [],
     );
+    assert.equal(
+      messages(
+        snippet("test-no-shared-state/suppressed-alias.test.ts"),
+        "test-no-shared-state",
+        undefined,
+        "suppressed-alias.test.ts",
+      ).length,
+      1,
+    );
   });
 
   it("reports delayed rejects through renamed expect and static keys", () => {
@@ -270,6 +306,15 @@ describe("test and react same-file recall", () => {
         "poll.ts",
       ),
       [],
+    );
+    assert.equal(
+      messages(
+        snippet("test-no-delayed-rejects/suppressed.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "suppressed.ts",
+      ).length,
+      1,
     );
   });
 });

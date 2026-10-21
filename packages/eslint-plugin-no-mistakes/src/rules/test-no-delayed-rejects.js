@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { findContainingRoot, traverse, unwrapExpression } = require("./async-ast");
 const {
   chainIsSafelyObserved,
@@ -177,6 +178,7 @@ module.exports = rule(
   },
   (context) => {
     const observerCache = new WeakMap();
+    const suppressed = ruleSuppression(context, "test-no-delayed-rejects");
     return {
       MemberExpression(node) {
         const identifier = expectedIdentifier(node, context);
@@ -186,6 +188,8 @@ module.exports = rule(
         if (
           !declarator ||
           !call ||
+          suppressed(node) ||
+          suppressed(call) ||
           !hasInterveningAwait(context, declarator, call, observerCache)
         ) {
           return;

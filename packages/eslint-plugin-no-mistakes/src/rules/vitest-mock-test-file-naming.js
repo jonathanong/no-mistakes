@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { literalString } = require("./module-mock-helpers");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
@@ -130,10 +131,11 @@ module.exports = Object.assign(
       },
     },
     (context) => {
+      const suppressed = ruleSuppression(context, "vitest-mock-test-file-naming");
       let usesMocking = false;
       return {
         CallExpression(node) {
-          if (isMockingCall(node, context)) usesMocking = true;
+          if (isMockingCall(node, context) && !suppressed(node)) usesMocking = true;
         },
         "Program:exit"(node) {
           if (!isTestFile(context.filename)) return;

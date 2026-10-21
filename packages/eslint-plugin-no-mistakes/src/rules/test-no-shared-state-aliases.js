@@ -119,11 +119,65 @@ function recordImportedTests(node, testCalleeNames, namespaces, testAliases) {
   }
 }
 
+function recordTopLevelBindings(node, tools) {
+  const {
+    calleeHasProperty,
+    collectPatternNames,
+    isKnownTestCallee,
+    isMutableInitializer,
+    isTestExtendCall,
+    mutableTopLevel,
+    namespaces,
+    testAliases,
+    testCalleeNames,
+    viMockTracker,
+  } = tools;
+  for (const declaration of node.declarations) {
+    if (isTestExtendCall(declaration.init, testCalleeNames, namespaces)) {
+      for (const name of collectPatternNames(declaration.id)) testCalleeNames.add(name);
+      if (declaration.id.type === "Identifier") testAliases.add(declaration.id, "test");
+    }
+    if (
+      node.kind === "const" &&
+      declaration.id.type === "Identifier" &&
+      declaration.init &&
+      declaration.init.type !== "CallExpression" &&
+      isKnownTestCallee(declaration.init, testCalleeNames, namespaces)
+    ) {
+      testCalleeNames.add(declaration.id.name);
+      if (
+        isDescribeBinding(
+          declaration.init,
+          testAliases,
+          testCalleeNames,
+          namespaces,
+          calleeHasProperty,
+          isKnownTestCallee,
+        )
+      ) {
+        testAliases.add(
+          declaration.id,
+          "describe",
+          testAliases.hasProperty(declaration.init, "serial"),
+        );
+      } else {
+        testAliases.add(declaration.id, "test");
+      }
+    }
+    if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;
+    for (const name of collectPatternNames(declaration.id)) {
+      mutableTopLevel.add(name);
+      viMockTracker.markIfCaptured(name);
+    }
+  }
+}
+
 module.exports = {
   createImportedTestAliases,
   hasOwnProperty,
   hasProperty,
   isDescribeBinding,
   recordImportedTests,
+  recordTopLevelBindings,
   resolveVariable,
 };

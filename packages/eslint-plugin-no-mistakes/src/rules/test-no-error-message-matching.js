@@ -97,7 +97,6 @@ module.exports = rule(
         let callee = unwrap(node.callee);
         if (
           callee?.type === "MemberExpression" &&
-          !callee.computed &&
           (memberName(callee) === "call" || memberName(callee) === "apply")
         ) {
           callee = unwrap(callee.object);

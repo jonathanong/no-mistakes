@@ -43,7 +43,7 @@ function chainInfo(node, context, seen = new Set()) {
   if (init) current = unwrap(init);
   if (current?.type === "MemberExpression") {
     const forwarded = staticName(current.property, current.computed);
-    if (!current.computed && (forwarded === "call" || forwarded === "apply")) {
+    if (forwarded === "call" || forwarded === "apply") {
       current = unwrap(current.object);
     }
   }
@@ -55,6 +55,8 @@ function chainInfo(node, context, seen = new Set()) {
     }
     names.push(staticName(current.property, current.computed));
     current = unwrap(current.object);
+    const init = constInit(current, context, seen);
+    if (init) current = unwrap(init);
   }
   return { names, root: current?.type === "Identifier" ? current : null };
 }

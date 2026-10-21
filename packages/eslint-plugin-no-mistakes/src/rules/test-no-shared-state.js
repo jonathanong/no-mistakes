@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 
 const {
   createRegistryReports,
@@ -24,8 +25,8 @@ const {
 const { createMutationHandlers } = require("./test-no-shared-state-mutations");
 const {
   createImportedTestAliases,
-  isDescribeBinding,
   recordImportedTests,
+  recordTopLevelBindings,
 } = require("./test-no-shared-state-aliases");
 const { createRuleHelpers } = require("./test-no-shared-state-rule-helpers");
 
@@ -49,11 +50,13 @@ module.exports = rule(
     const ruleOptions = context.options?.[0] ?? {};
     const cleanupTracker = createCleanupTracker(ruleOptions);
     const viMockTracker = createViMockTracker(context, mutableTopLevel);
+    const suppressed = ruleSuppression(context, "test-no-shared-state");
     const registryReports = createRegistryReports(
       context,
       mutableTopLevel,
       cleanupTracker,
       (name) => viMockTracker.isCaptured(name),
+      suppressed,
     );
     let testDepth = 0;
     let setupDepth = 0;
@@ -70,48 +73,23 @@ module.exports = rule(
       depths: { setup: () => setupDepth, test: () => testDepth },
       mutableTopLevel,
       registryReports,
+      suppressed,
       viMockTracker,
     });
 
     function visitTopLevelVariableDeclaration(node) {
-      for (const declaration of node.declarations) {
-        if (isTestExtendCall(declaration.init, testCalleeNames, namespaces)) {
-          for (const name of collectPatternNames(declaration.id)) testCalleeNames.add(name);
-          if (declaration.id.type === "Identifier") testAliases.add(declaration.id, "test");
-        }
-        if (
-          node.kind === "const" &&
-          declaration.id.type === "Identifier" &&
-          declaration.init &&
-          declaration.init.type !== "CallExpression" &&
-          isKnownTestCallee(declaration.init, testCalleeNames, namespaces)
-        ) {
-          testCalleeNames.add(declaration.id.name);
-          if (
-            isDescribeBinding(
-              declaration.init,
-              testAliases,
-              testCalleeNames,
-              namespaces,
-              calleeHasProperty,
-              isKnownTestCallee,
-            )
-          ) {
-            testAliases.add(
-              declaration.id,
-              "describe",
-              testAliases.hasProperty(declaration.init, "serial"),
-            );
-          } else {
-            testAliases.add(declaration.id, "test");
-          }
-        }
-        if (node.kind === "const" && !isMutableInitializer(declaration.init)) continue;
-        for (const name of collectPatternNames(declaration.id)) {
-          mutableTopLevel.add(name);
-          viMockTracker.markIfCaptured(name);
-        }
-      }
+      recordTopLevelBindings(node, {
+        calleeHasProperty,
+        collectPatternNames,
+        isKnownTestCallee,
+        isMutableInitializer,
+        isTestExtendCall,
+        mutableTopLevel,
+        namespaces,
+        testAliases,
+        testCalleeNames,
+        viMockTracker,
+      });
     }
 
     return {
