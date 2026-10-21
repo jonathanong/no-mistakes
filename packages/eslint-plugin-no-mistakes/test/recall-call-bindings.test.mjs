@@ -176,6 +176,15 @@ describe("call-binding recall", () => {
       ),
       ["awaited", "awaited"],
     );
+    assert.deepEqual(
+      messages(
+        fixture("await-array-methods/shadowed-alias.mjs"),
+        "await-array-methods",
+        undefined,
+        "shadowed-alias.mjs",
+      ),
+      ["awaited", "awaited"],
+    );
     assert.equal(
       messages(
         fixture("nextjs-static-fetch-method/recall.mjs"),

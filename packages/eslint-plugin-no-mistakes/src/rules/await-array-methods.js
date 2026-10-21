@@ -40,10 +40,10 @@ function isKnownArrayReceiver(node, context, seen = new Set()) {
   node = unwrapExpression(node);
   if (!node) return false;
   if (node.type === "ArrayExpression") return true;
-  if (node.type !== "Identifier" || seen.has(node.name)) return false;
-  seen.add(node.name);
+  if (node.type !== "Identifier") return false;
   const variable = findVariable(node, context);
-  if (!variable || isReassignedBeforeUse(variable, node)) return false;
+  if (!variable || seen.has(variable) || isReassignedBeforeUse(variable, node)) return false;
+  seen.add(variable);
   return variable.defs.some((def) => {
     if (def.type !== "Variable" || def.node?.id?.type !== "Identifier") return false;
     if (def.node.init?.type === "ArrayExpression") return true;

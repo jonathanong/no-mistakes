@@ -31,7 +31,7 @@ Remove the unnecessary `await`, or collect async work with `map` and await
 
 ## Limits
 
-`const { sort } = items; await sort()` is not the same call: destructuring a method drops the receiver. `.apply` with a non-literal argument list is not rewritten. `const alias = items as number[]` is still `items`.
+`const { sort } = items; await sort()` is not the same call: destructuring a method drops the receiver. `.apply` with a non-literal argument list is not rewritten. `const alias = items as number[]` is still `items`. A shadowed spelling does not hide that array: `const values = []; { const alias = values; { const values = alias; await values.sort(); } }` is still the outer array.
 
 ## Suppression
 
