@@ -67,9 +67,19 @@ fn overlapping_mdx_code_block_reuses_already_scanned_source() {
         !collector.recover_overlapping_mdx_code_block(source.len()..source.len()),
         "a range at the scanned end is not overlapping"
     );
-    // The overlap predicate above only returns a boolean. The parsed document
-    // must still report the real fence once and ignore the tilde fence in the
-    // JavaScript template.
+}
+
+#[cfg(feature = "mermaid-validation")]
+#[test]
+fn overlapping_mdx_document_reports_the_saved_fence_once() {
+    // The overlap predicate only returns a boolean. This parsed document must
+    // still report the real fence once and ignore the tilde fence in the
+    // JavaScript template. The wrapper exists only with mermaid-validation,
+    // and the no-default-features lib tests still compile this module.
+    let source = fixture("mdx-expression-fence-text.mdx");
+    let mermaid_at = source
+        .find("```mermaid")
+        .expect("saved fixture keeps a real Mermaid fence");
     let fences = super::extract_mermaid_fences_with_mdx_html_fallback(&source);
     assert_eq!(
         fences.len(),
