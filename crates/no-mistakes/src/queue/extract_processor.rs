@@ -7,6 +7,7 @@ use oxc_ast::ast::{
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::operator::BinaryOperator;
+use std::collections::HashSet;
 
 pub(super) fn visit_binary<'a>(visitor: &mut QueueVisitor<'a>, expr: &BinaryExpression<'a>) {
     if matches!(
@@ -87,6 +88,7 @@ pub(super) fn visit_identifier(visitor: &mut QueueVisitor<'_>, id: &IdentifierRe
 }
 
 fn note_job(visitor: &mut QueueVisitor<'_>, job: String) {
+    record_dispatch_scope(&mut visitor.dispatch_scopes, &visitor.function_stack);
     visitor.facts.referenced_jobs.push(job.clone());
     if let Some(&worker) = visitor.worker_stack.last() {
         visitor.dispatch_jobs.entry(worker).or_default().push(job);
@@ -94,15 +96,26 @@ fn note_job(visitor: &mut QueueVisitor<'_>, job: String) {
 }
 
 fn note_dynamic(visitor: &mut QueueVisitor<'_>) {
+    record_dispatch_scope(&mut visitor.dispatch_scopes, &visitor.function_stack);
     visitor.facts.referenced_jobs_dynamic = true;
     if let Some(&worker) = visitor.worker_stack.last() {
         visitor.dispatch_dynamic_workers.insert(worker);
     }
 }
 
+/// Record the innermost function that noted a job. A note outside every
+/// function records nothing.
+pub(super) fn record_dispatch_scope(scopes: &mut HashSet<u32>, function_stack: &[u32]) {
+    if let Some(&span) = function_stack.last() {
+        scopes.insert(span);
+    }
+}
+
 pub(super) fn finish(visitor: &mut QueueVisitor<'_>) {
-    // File-level imports cannot select between dispatching callables soundly.
-    if visitor.dispatch_scopes.len() > 1 {
+    // Several top-level callables, or notes in more than one function, cannot
+    // be tied to one imported processor. A nested callback that does not note
+    // a job is not one of those callables.
+    if visitor.dispatch_scopes.len() > 1 || visitor.top_level_callables > 1 {
         visitor.facts.referenced_jobs.clear();
         visitor.facts.referenced_jobs_dynamic = true;
     }

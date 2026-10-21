@@ -160,6 +160,15 @@ impl QueueVisitor<'_> {
         }
     }
 
+    pub fn tracks_job_object(&self, expr: &Expression<'_>) -> bool {
+        let Expression::Identifier(id) = expr else {
+            return false;
+        };
+        self.job_frames
+            .iter()
+            .any(|frame| frame.object.as_deref() == Some(id.name.as_str()))
+    }
+
     pub fn tracks_job_token(&self, expr: &Expression<'_>) -> bool {
         match expr {
             Expression::Identifier(id) => self

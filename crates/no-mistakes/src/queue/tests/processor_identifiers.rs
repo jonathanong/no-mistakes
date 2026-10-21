@@ -17,6 +17,8 @@ fn named_processors_and_copied_const_tokens_keep_their_worker_ownership() {
             "constructed-token",
             "copied-dedup",
             "copied-id",
+            "destructured-dedup",
+            "destructured-id",
             "function-token",
             "nested-own-queue",
             "scope-restored",

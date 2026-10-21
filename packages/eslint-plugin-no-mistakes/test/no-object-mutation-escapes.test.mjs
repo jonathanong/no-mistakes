@@ -70,6 +70,7 @@ describe("no-object-mutation escapes", () => {
           rows.push.call(box, 3);
           Object.assign.call(null, box, { c: 1 });
           Object.assign.apply(null, [box, { c: 1 }]);
+          Object.assign.bind(null)(box, { c: 1 });
           Object.assign.call(box, { c: 1 });
           Object.assign.apply(box, [{ c: 1 }]);
         }
@@ -84,6 +85,7 @@ describe("no-object-mutation escapes", () => {
         function shadowed(Reflect, Object, rows) {
           Reflect.set(rows, "a", 1);
           Object.assign(rows, {});
+          Object.assign.bind(null)(rows, {});
         }
         function missing(box) {
           Reflect.set();
@@ -94,9 +96,17 @@ describe("no-object-mutation escapes", () => {
           Object.assign.call(box);
           Object.assign.apply(box, ...rows);
           Object.assign.apply(box, [...rows]);
+          Object.assign.apply(null, []);
+          Object.assign.bind(null)();
+          Object.assign.bind(null)(...box);
+          bind(null)(box);
+          Object.assign.call(null)(box, { c: 1 });
+          fn.bind(null)(box);
+          box.push.bind(box)(1);
+          box[missingName].bind(null)(box);
         }
       `),
-      repeated(7),
+      repeated(8),
     );
     assert.deepEqual(
       ids(

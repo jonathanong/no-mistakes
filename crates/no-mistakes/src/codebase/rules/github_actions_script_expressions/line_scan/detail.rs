@@ -127,6 +127,7 @@ pub(super) fn flush_step(scanner: &mut Scanner<'_>) {
         }
     }
     if scanner.collect_runs && !run_lines.is_empty() {
+        // The run-block work counter must stay next to every scanner.runs.push.
         stored_runs::note_stored_run_block();
         scanner.runs.push(StepRun {
             job: scanner.job.clone(),

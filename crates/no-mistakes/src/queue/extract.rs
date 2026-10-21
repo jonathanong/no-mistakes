@@ -37,6 +37,8 @@ pub(crate) fn extract_program_with_factories(
         dispatch_dynamic_workers: HashSet::new(),
         dispatch_jobs: HashMap::new(),
         dispatch_scopes: HashSet::new(),
+        function_stack: Vec::new(),
+        top_level_callables: 0,
         worker_stack: Vec::new(),
     };
     visitor.visit_program(program);

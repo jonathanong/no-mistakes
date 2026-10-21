@@ -70,6 +70,31 @@ describe("no-object-mutation", () => {
       ),
       null,
     );
+    assert.equal(mutationCall({ callee: null, arguments: [] }, scope), null);
+    const bind = {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: objectAssign,
+        property: { type: "Identifier", name: "bind" },
+      },
+      arguments: [{ type: "Literal", value: null }],
+    };
+    assert.equal(
+      mutationCall(
+        {
+          callee: bind,
+          arguments: [
+            { type: "Identifier", name: "box" },
+            { type: "ObjectExpression", properties: [] },
+          ],
+        },
+        scope,
+      )?.targetNode.name,
+      "box",
+    );
+    assert.equal(mutationCall({ callee: bind, arguments: [] }, scope), null);
   });
 
   it("names the static rewrite in the report", () => {

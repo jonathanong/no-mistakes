@@ -34,7 +34,12 @@ pub(super) struct QueueVisitor<'a> {
     pub worker_stack: Vec<usize>,
     pub dispatch_jobs: HashMap<usize, Vec<String>>,
     pub dispatch_dynamic_workers: HashSet<usize>,
+    /// Innermost function spans where `note_job` or `note_dynamic` fired.
     pub dispatch_scopes: HashSet<u32>,
+    /// Function spans from the module root down to the function being visited.
+    pub function_stack: Vec<u32>,
+    /// Functions and arrows that are not nested inside another function.
+    pub top_level_callables: u32,
 }
 
 impl<'a> Visit<'a> for QueueVisitor<'a> {
