@@ -1,6 +1,7 @@
 "use strict";
 
 const { literalString, rule } = require("../helpers");
+const { unwrapExpression } = require("./async-ast");
 const { logicalCall } = require("./module-mock-helpers");
 
 const BANNED_METHODS = new Set(["sort", "toSorted", "every", "findIndex", "slice", "toSpliced"]);
@@ -36,7 +37,7 @@ function isReassignedBeforeUse(variable, node) {
 }
 
 function isKnownArrayReceiver(node, context, seen = new Set()) {
-  node = unwrapChain(node);
+  node = unwrapExpression(node);
   if (!node) return false;
   if (node.type === "ArrayExpression") return true;
   if (node.type !== "Identifier" || seen.has(node.name)) return false;
