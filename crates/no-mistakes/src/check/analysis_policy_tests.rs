@@ -91,7 +91,14 @@ fn shared_defaults_preserve_malformed_options_errors_instead_of_panicking() {
         let legacy = format!("{:#}", execute(format!("{name}-legacy.yml")));
         let shared = format!("{:#}", execute(format!("{name}.yml")));
         assert_eq!(shared, legacy);
-        assert!(shared.contains("invalid options for rule `postgres-require-query-annotation`"));
-        assert!(shared.contains("options"));
+        assert_eq!(
+            shared,
+            concat!(
+                "postgres-require-query-annotation option importSpecifier: ",
+                "set importSpecifier (or executorNames) to select executor calls; ",
+                "set executorNames: [] to scan only SQL files and native SQL ",
+                "(see docs/migrations/explicit-postgres-executors.md)"
+            )
+        );
     }
 }
