@@ -9,7 +9,10 @@ const CHECK_ARGS = ["exec", "no-mistakes", "--timeout", "0", "--lock-timeout", "
 const COLLECTION_DEADLINE_SECONDS = 600;
 // Stay in the caller's process group so SIGTERM reaches pnpm, which relays to
 // `pnpm exec` (no TTY). GNU timeout's default group does not include that child.
+// `--foreground` does not time out descendants; leftover analyzers are killed
+// separately after each sample because the JS launcher does not forward signals.
 const TIMEOUT_ARGS = ["--foreground", "--signal=TERM", "--kill-after=5s"];
+const LEFTOVER_KILL_GRACE_MS = 5000;
 
 function successful(sample) {
   const deadline = sample.deadlineSeconds ?? COLLECTION_DEADLINE_SECONDS;
@@ -52,6 +55,60 @@ function command(executable, args, cwd) {
     throw new Error(`${executable} ${args.join(" ")}: ${result.error || result.stderr}`);
   }
   return result.stdout.trim();
+}
+
+function leftoverCheckPids(psOutput, nativePath, selfPid = process.pid) {
+  if (typeof nativePath !== "string" || nativePath.length === 0) {
+    throw new Error("nativePath is required");
+  }
+  const pids = [];
+  for (const line of psOutput.split("\n")) {
+    const match = line.trim().match(/^(\d+)\s+(\S+)\s+(.*)$/);
+    if (!match) continue;
+    const pid = Number(match[1]);
+    const comm = match[2];
+    const args = match[3];
+    if (!Number.isInteger(pid) || pid <= 1 || pid === selfPid) continue;
+    if (args.includes("hosted-check.cjs")) continue;
+    const tokens = args.split(/\s+/);
+    const native =
+      comm === "no-mistakes" ||
+      tokens.includes(nativePath) ||
+      tokens.some((token) => token.endsWith("/bin/no-mistakes.js") || token === "no-mistakes.js");
+    if (native) pids.push(pid);
+  }
+  return pids;
+}
+
+function sleepMs(ms) {
+  spawnSync("sleep", [String(ms / 1000)], { encoding: "utf8" });
+}
+
+function terminateLeftoverCheckProcesses({
+  psOutput,
+  nativePath,
+  kill = (pid, signal) => process.kill(pid, signal),
+  sleep = sleepMs,
+  selfPid = process.pid,
+  graceMs = LEFTOVER_KILL_GRACE_MS,
+} = {}) {
+  const pids = leftoverCheckPids(psOutput, nativePath, selfPid);
+  for (const pid of pids) {
+    try {
+      kill(pid, "SIGTERM");
+    } catch {
+      // Already gone or not owned by this runner.
+    }
+  }
+  if (pids.length > 0) sleep(graceMs);
+  for (const pid of pids) {
+    try {
+      kill(pid, "SIGKILL");
+    } catch {
+      // Already gone or not owned by this runner.
+    }
+  }
+  return pids;
 }
 
 function hashFile(path) {
@@ -110,8 +167,11 @@ module.exports = {
   command,
   hashFile,
   packageManifest,
+  leftoverCheckPids,
+  terminateLeftoverCheckProcesses,
   CHECK_ARGS,
   TIMEOUT_ARGS,
+  LEFTOVER_KILL_GRACE_MS,
   COLLECTION_DEADLINE_SECONDS,
   successful,
   resourceAccountingComplete,

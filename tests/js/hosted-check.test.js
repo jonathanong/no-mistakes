@@ -19,7 +19,12 @@ const {
   aggregate,
 } = require("../../.github/scripts/hosted-check.cjs");
 const { relativeLimits } = require("../../.github/scripts/hosted-check-budget.cjs");
-const { reportedSample } = require("../../.github/scripts/hosted-check-runtime.cjs");
+const {
+  reportedSample,
+  leftoverCheckPids,
+  terminateLeftoverCheckProcesses,
+  LEFTOVER_KILL_GRACE_MS,
+} = require("../../.github/scripts/hosted-check-runtime.cjs");
 const { cases, samplePair } = require("./hosted-check-fixtures.cjs");
 
 test("keeps the consumer's exact default command and separate collection cap", () => {
@@ -34,6 +39,61 @@ test("keeps the consumer's exact default command and separate collection cap", (
   ]);
   assert.equal(COLLECTION_DEADLINE_SECONDS, 600);
   assert.deepEqual(TIMEOUT_ARGS, ["--foreground", "--signal=TERM", "--kill-after=5s"]);
+  assert.equal(LEFTOVER_KILL_GRACE_MS, 5000);
+});
+
+test("kills leftover analyzers that timeout --foreground cannot reach", () => {
+  const nativePath = "/opt/no-mistakes-linux-x64-gnu/bin/no-mistakes";
+  const listing = [
+    "    PID COMMAND         COMMAND",
+    "     1 systemd         /sbin/init",
+    `   ${process.pid} node            node .github/scripts/hosted-check.cjs measure /tmp/no-mistakes-consumer`,
+    "    88 node            node .github/scripts/hosted-check.cjs measure /tmp/no-mistakes-consumer",
+    `    91 no-mistakes     ${nativePath} --timeout 0 --lock-timeout 0 check`,
+    "    92 node            node /tmp/node_modules/no-mistakes/bin/no-mistakes.js --timeout 0 check",
+    "    93 bash            bash -c echo no-mistakes",
+    `    94 node            node /tmp/other.js ${nativePath}-not`,
+  ].join("\n");
+  assert.deepEqual(leftoverCheckPids(listing, nativePath, process.pid), [91, 92]);
+  assert.throws(() => leftoverCheckPids(listing, "", process.pid), /nativePath/);
+
+  const signals = [];
+  const sleeps = [];
+  assert.deepEqual(
+    terminateLeftoverCheckProcesses({
+      psOutput: listing,
+      nativePath,
+      selfPid: process.pid,
+      kill: (pid, signal) => {
+        if (pid === 91 && signal === "SIGTERM") throw new Error("ESRCH");
+        signals.push([pid, signal]);
+      },
+      sleep: (ms) => sleeps.push(ms),
+    }),
+    [91, 92],
+  );
+  assert.deepEqual(signals, [
+    [92, "SIGTERM"],
+    [91, "SIGKILL"],
+    [92, "SIGKILL"],
+  ]);
+  assert.deepEqual(sleeps, [LEFTOVER_KILL_GRACE_MS]);
+  assert.deepEqual(
+    terminateLeftoverCheckProcesses({
+      psOutput: "    PID COMMAND COMMAND\n    7 bash bash",
+      nativePath,
+      kill: () => {
+        throw new Error("should not kill");
+      },
+      sleep: () => {
+        throw new Error("should not sleep");
+      },
+    }),
+    [],
+  );
+
+  const measure = readFileSync(join(__dirname, "../../.github/scripts/hosted-check.cjs"), "utf8");
+  assert.equal(measure.split("terminateLeftoverCheckProcesses").length - 1, 3);
 });
 
 test("finds the published manifest without requesting a private package export", () => {

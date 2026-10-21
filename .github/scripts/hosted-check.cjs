@@ -26,6 +26,7 @@ const {
   measurementEnvironment,
   reportedSample,
   TIMEOUT_ARGS,
+  terminateLeftoverCheckProcesses,
 } = require("./hosted-check-runtime.cjs");
 const { artifactBuilds } = require("./hosted-check-provenance.cjs");
 
@@ -134,10 +135,26 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
           writeFileSync(`${prefix}.processes.txt`, String(error));
         }
       }
+      try {
+        terminateLeftoverCheckProcesses({
+          psOutput: command("ps", ["-eo", "pid,comm,args"], fixture),
+          nativePath: native,
+        });
+      } catch (error) {
+        writeFileSync(`${prefix}.leftover-kill.txt`, String(error));
+      }
       console.log(JSON.stringify(sample));
       if (variant === "candidate" && !successful(sample)) failed = true;
     }
   } finally {
+    try {
+      terminateLeftoverCheckProcesses({
+        psOutput: command("ps", ["-eo", "pid,comm,args"], fixture),
+        nativePath: native,
+      });
+    } catch {
+      // Restore the consumer launcher even if leftover cleanup fails.
+    }
     replaceNative(original, native);
   }
   if (hashFile(join(fixture, ".no-mistakes.yml")) !== configBefore)

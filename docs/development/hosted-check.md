@@ -134,12 +134,17 @@ against healthy runs and the deliberate-slowdown regression tests before landing
 
 The 600-second collection deadline is separate from the budgets. A timeout sends
 SIGTERM to `pnpm` (`timeout --foreground`), which relays it to `pnpm exec`,
-followed by forced termination after a five-second grace period. Candidate
-timeouts, signals, nonzero exits, missing samples and invalid measurements fail
-the gate with `Candidate did not complete successfully`, not a calibration-helper
-error. Timeout cohorts still write a `*.processes.txt` snapshot. A failing
-baseline never excuses a candidate failure. Calibration proposals are emitted
-only from six completed successful candidate samples.
+followed by forced termination after a five-second grace period. `--foreground`
+does not time out descendants, and the npm launcher does not forward signals to
+the native analyzer, so a timed-out sample can leave a reparented analyzer
+running. After each sample, and again before restoring the consumer launcher,
+the harness SIGTERM/SIGKILL leftover `no-mistakes` processes (native binary and
+`bin/no-mistakes.js`) so the next variant does not share CPU/RSS with a stalled
+predecessor. Candidate timeouts, signals, nonzero exits, missing samples and
+invalid measurements fail the gate with `Candidate did not complete successfully`,
+not a calibration-helper error. Timeout cohorts still write a `*.processes.txt`
+snapshot. A failing baseline never excuses a candidate failure. Calibration
+proposals are emitted only from six completed successful candidate samples.
 
 Timeout or signal resource counters are censored: exclude them from resource maxima,
 calibration and ratios. Per-sample JSON/logs label their CPU and RSS as
