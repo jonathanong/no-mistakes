@@ -311,7 +311,9 @@ Enable this single-file rule in a flat-config block with explicit test `files`
 globs. It reports Vitest/Playwright skip, conditional, focus, pending, and fixme
 modifiers, bound Vitest context `skip()` calls, and Playwright `skip` / `fixme`
 declaration annotations. `allow` defaults to `[]` and accepts `skip`,
-`skipIf`, `runIf`, `only`, `todo`, and `fixme`.
+`skipIf`, `runIf`, `only`, `todo`, and `fixme`. Same-file `.extend()` fixture
+wrappers stay bound; `testModules` names import specifiers whose exported
+`test` is Playwright's, matching the specifier as written.
 See [the rule reference](eslint-rules/test-no-skips.md) for import matching,
 table callbacks, configuration, and `no-mistakes` suppression directives.
 

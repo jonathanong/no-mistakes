@@ -20,6 +20,46 @@ describe(rule, () => {
   it("handles Playwright aliases and namespaces without mistaking fixtures for contexts", () => {
     assert.equal(messages(code("playwright"), rule, undefined, "suite.spec.ts").length, 6);
   });
+  it("follows same-file Playwright extend and chained extend", () => {
+    const findings = lint(
+      code("playwright-extend"),
+      { [`no-mistakes/${rule}`]: "error" },
+      "suite.spec.ts",
+    );
+    assert.deepEqual(
+      findings.map(({ line, messageId }) => [line, messageId]),
+      [
+        [14, "modifier"],
+        [15, "modifier"],
+        [16, "modifier"],
+        [17, "annotation"],
+        [18, "modifier"],
+      ],
+    );
+  });
+  it("admits Playwright test exports only from configured testModules", () => {
+    assert.deepEqual(
+      messages(code("playwright-test-modules"), rule, undefined, "suite.spec.ts"),
+      [],
+    );
+    const findings = lint(
+      code("playwright-test-modules"),
+      {
+        [`no-mistakes/${rule}`]: ["error", { testModules: ["./fixtures", "@app/test"] }],
+      },
+      "suite.spec.ts",
+    );
+    assert.deepEqual(
+      findings.map(({ line, messageId }) => [line, messageId]),
+      [
+        [7, "modifier"],
+        [8, "annotation"],
+        [9, "modifier"],
+        [10, "modifier"],
+        [12, "modifier"],
+      ],
+    );
+  });
   it("reports Playwright declaration skip/fixme annotations through const aliases", () => {
     const findings = lint(
       code("annotations"),
@@ -148,6 +188,11 @@ describe(rule, () => {
       "todo",
       "fixme",
     ]);
+    assert.deepEqual(plugin.rules[rule].meta.schema[0].properties.testModules, {
+      type: "array",
+      items: { type: "string" },
+      uniqueItems: true,
+    });
   });
 });
 

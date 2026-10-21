@@ -181,7 +181,9 @@ Configure `trustedSqlTags` for custom named SQL tag imports. See
 For test files that must always run in CI, enable the ESLint/Oxlint
 `no-mistakes/test-no-skips` rule in explicit flat-config `files` globs.
 It checks Vitest/Playwright modifiers and bound Vitest context `skip()` calls;
-`allow` permits named exceptions such as `todo`. See
+`allow` permits named exceptions such as `todo`. Same-file `.extend()` wrappers
+stay bound; `testModules` names Playwright fixture modules whose exported
+`test` should be checked. See
 [the plugin options reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-plugin.md#test-no-skips). This is a
 single-file plugin rule, so invoke the configured linter rather than a
 `no-mistakes check` catalog scan.
