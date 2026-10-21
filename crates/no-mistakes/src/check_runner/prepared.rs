@@ -139,28 +139,25 @@ pub(crate) fn prepare_from_shared(
         })
         .transpose()?
         .flatten();
-    let vitest_projects = (config
-        .rule_configured(no_mistakes::codebase::rules::VITEST_PROJECT_MAPPING)
-        || config.rule_configured(no_mistakes::codebase::rules::VITEST_CI_PATH_COVERAGE)
-        || config.rule_configured(no_mistakes::codebase::rules::FORBIDDEN_CALLS))
-    .then(|| {
-        no_mistakes::codebase::rules::prepare_vitest_project_catalog(
+    let (vitest_from_calls, playwright_projects) =
+        no_mistakes::codebase::rules::forbidden_calls::prepare_root_catalogs(
             root,
             &config,
             visible_paths.as_ref(),
             &tsconfig_catalog,
-        )
-    });
-    let playwright_projects = config
-        .rule_configured(no_mistakes::codebase::rules::FORBIDDEN_CALLS)
+        );
+    let vitest_projects = vitest_from_calls.or_else(|| {
+        (config.rule_configured(no_mistakes::codebase::rules::VITEST_PROJECT_MAPPING)
+            || config.rule_configured(no_mistakes::codebase::rules::VITEST_CI_PATH_COVERAGE))
         .then(|| {
-            no_mistakes::codebase::rules::prepare_playwright_project_catalog(
+            no_mistakes::codebase::rules::prepare_vitest_project_catalog(
                 root,
                 &config,
                 visible_paths.as_ref(),
                 &tsconfig_catalog,
             )
-        });
+        })
+    });
     Ok(PreparedCheckInputs {
         visible_paths,
         inferred_roots,

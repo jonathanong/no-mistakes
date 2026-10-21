@@ -1,8 +1,7 @@
 use super::{
     any_codebase_rule_enabled, canonical_graph_requires_full_file_universe, rule_enabled,
-    try_canonical_graph_plan, PreparedRulesCheck, FORBIDDEN_CALLS, NEXTJS_NO_API_ROUTES,
-    NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
-    TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    try_canonical_graph_plan, PreparedRulesCheck, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
+    REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use crate::codebase::check_facts::{
     collect_check_facts_with_graph_files_playwright_and_sources, CheckFactPlan,
@@ -112,22 +111,13 @@ pub(super) fn run_check(
             ),
         ));
     }
-    let prepared_vitest_projects = config.rule_configured(FORBIDDEN_CALLS).then(|| {
-        crate::codebase::rules::prepare_vitest_project_catalog(
+    let (prepared_vitest_projects, prepared_playwright_projects) =
+        crate::codebase::rules::forbidden_calls::prepare_root_catalogs(
             root,
             &config,
             snapshot.as_ref(),
             &prepared_tsconfig_catalog,
-        )
-    });
-    let prepared_playwright_projects = config.rule_configured(FORBIDDEN_CALLS).then(|| {
-        crate::codebase::rules::prepare_playwright_project_catalog(
-            root,
-            &config,
-            snapshot.as_ref(),
-            &prepared_tsconfig_catalog,
-        )
-    });
+        );
     let shared = collect_check_facts_with_graph_files_playwright_and_sources(
         root,
         files,
