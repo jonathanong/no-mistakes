@@ -96,9 +96,12 @@ pub(super) fn scan_with_sources(
             let statement = statements.get(&(call_index, variant_index)).copied();
             let has_prepared_conflict = statement
                 .and_then(|statement| statement.variant_locations.as_ref())
-                .is_some_and(|locations| !locations.conflicts.is_empty());
+                .is_some_and(|locations| {
+                    !locations.conflicts.is_empty() || locations.conflict_failure_overlaps
+                });
             // A data-modifying CTE can execute INSERT while its outer statement
-            // is SELECT. Its prepared conflict facts still require this policy.
+            // is SELECT; a failed SELECT prefix can also precede a broken INSERT.
+            // Both prepared conflict facts still require this policy.
             let missing_conflict = statement.is_none() && analysis::contains_insert_conflict(sql);
             if !recovered_sql_needs_insert_check(Some(sql))
                 && !has_prepared_conflict

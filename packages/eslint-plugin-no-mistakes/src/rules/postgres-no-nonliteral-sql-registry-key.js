@@ -38,15 +38,15 @@ function propertyKey(property) {
 function objectEntries(node) {
   const object = unwrapTs(node);
   if (!object || object.type !== "ObjectExpression" || object.properties.length === 0) return null;
-  const entries = [];
+  const entries = new Map();
   for (const property of object.properties) {
     if (property.type !== "Property" || property.kind !== "init" || property.method) return null;
     const key = propertyKey(property);
     const value = stringText(property.value);
     if (key == null || value == null) return null;
-    entries.push([key, value]);
+    entries.set(key, value);
   }
-  return entries;
+  return [...entries];
 }
 
 function registryEntries(identifier, context) {
@@ -65,11 +65,32 @@ function visitSql(node, visit) {
   for (const child of childNodes(current)) visitSql(child, visit);
 }
 
-function rewrite(entries) {
-  const arms = entries.map(
-    ([key, value]) => `case ${JSON.stringify(key)}: return ${JSON.stringify(value)};`,
+function finiteKey(property, object, context) {
+  if (property.type !== "TSAsExpression") return false;
+  const type = property.typeAnnotation;
+  if (type.type !== "TSTypeOperator" || type.operator !== "keyof") return false;
+  const query = type.typeAnnotation;
+  return (
+    query.type === "TSTypeQuery" &&
+    query.exprName.type === "Identifier" &&
+    resolveVariable(query.exprName, context) === resolveVariable(object, context)
   );
-  return `${arms.join(" ")} default: throw new Error("unknown");`;
+}
+
+function sqlArgument(argument, context) {
+  const current = unwrapTs(argument);
+  if (current.type !== "Identifier") return current;
+  const def = resolveVariable(current, context)?.defs.find(
+    (item) => item.node?.type === "VariableDeclarator" && item.node.id.type === "Identifier",
+  );
+  return def?.parent.kind === "const" ? def.node.init : null;
+}
+
+function rewrite(entries, key) {
+  const arms = entries.map(
+    ([name, value]) => `case ${JSON.stringify(name)}: return ${JSON.stringify(value)};`,
+  );
+  return `((key) => { switch (key) { ${arms.join(" ")} default: throw new Error("unknown"); } })((${key}))`;
 }
 
 module.exports = rule(
@@ -97,25 +118,36 @@ module.exports = rule(
   (context) => {
     const options = executorOptionDefaults(context.options?.[0] ?? {});
     const suppressed = ruleSuppression(context, RULE_ID);
+    const reported = new WeakSet();
     const bindings = executorBindings(context.sourceCode.ast, options, context.filename);
 
     return {
       CallExpression(node) {
         if (!isDatabaseCall(node, bindings)) return;
         const argument = firstCallArgument(node);
-        if (!argument) return;
-        visitSql(argument, (piece) => {
-          if (piece.type !== "MemberExpression" || !piece.computed || stringText(piece.property)) {
+        if (!argument || suppressed(node)) return;
+        visitSql(sqlArgument(argument, context), (piece) => {
+          if (
+            piece.type !== "MemberExpression" ||
+            !piece.computed ||
+            stringText(piece.property) != null
+          ) {
             return;
           }
           const object = unwrapTs(piece.object);
-          if (!object || object.type !== "Identifier" || suppressed(piece)) return;
+          if (!object || object.type !== "Identifier" || suppressed(piece) || reported.has(piece))
+            return;
+          if (finiteKey(piece.property, object, context)) return;
           const entries = registryEntries(object, context);
           if (!entries) return;
+          reported.add(piece);
           context.report({
             node: piece,
             messageId: "dynamicKey",
-            data: { registry: object.name, rewrite: rewrite(entries) },
+            data: {
+              registry: object.name,
+              rewrite: rewrite(entries, context.sourceCode.getText(piece.property)),
+            },
           });
         });
       },

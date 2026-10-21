@@ -51,8 +51,18 @@ export function byKind(kind: string, id: string) {
 
 A literal key (`TABLES["orders"]` or `TABLES.orders`) is already finite. A
 `let` registry, a spread, a method, a non-string value, an alias of the
-object, or a lookup that is not an argument of a configured executor is left
-alone.
+object, or a lookup outside a configured executor's SQL argument is left alone.
+The rule also follows one local `const` identifier passed as the SQL argument;
+it reports the registry lookup at the initializer, once even if the statement
+is executed more than once. A mutable SQL binding, an imported SQL value, or a
+chain of SQL aliases is left alone.
+
+An explicit `TABLES[kind as keyof typeof TABLES]` assertion is left alone when
+the type query refers to that exact registry binding. A cast to another
+registry's keys or to `string` is still reported. This is a syntactic contract
+for the type checker and the caller to uphold, not runtime key validation.
+A plain `string` cast this way is trusted even when it names an unknown key;
+the rule does not validate that key at runtime.
 
 ## Options
 
@@ -64,8 +74,25 @@ empty. Scoped factories and `trustedSqlTags` are not options of this rule.
 ## Fix
 
 This rule has no autofix and no editor suggestion. Write the switch by hand.
-The message lists `case "orders": return "orders";` for every entry on the
-const, then `default: throw new Error("unknown");`.
+The message provides a complete immediately invoked function containing
+`switch (key)`, one `case` / `return` per key, and a throwing
+`default`. Duplicate property keys produce one case using their final value,
+matching object-literal overwrite behavior. The expression can replace the
+lookup at the current scope. The original key is evaluated as the function
+argument, so `await` and `yield` retain their surrounding function context:
+
+```ts
+((key) => {
+  switch (key) {
+    case "orders":
+      return "orders";
+    case "accounts":
+      return "accounts";
+    default:
+      throw new Error("unknown");
+  }
+})(kind);
+```
 
 ## Suppression
 
@@ -76,6 +103,10 @@ read(`SELECT ${TABLES[kind]}`);
 
 `no-mistakes-disable-line` and `no-mistakes-disable-file` work the same way.
 A string that only contains the directive does not suppress the lookup.
+A directive on the executor call suppresses every lookup reached through that
+call, including a followed `const` initializer. A directive on the lookup's own
+line suppresses that lookup. Another unsuppressed call can still report a shared
+initializer whose executor call was suppressed.
 
 ## Related rules
 

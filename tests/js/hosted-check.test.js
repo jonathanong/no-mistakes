@@ -18,6 +18,7 @@ const {
   aggregate,
 } = require("../../.github/scripts/hosted-check.cjs");
 const { relativeLimits } = require("../../.github/scripts/hosted-check-budget.cjs");
+const { reportedSample } = require("../../.github/scripts/hosted-check-runtime.cjs");
 const { cases, samplePair } = require("./hosted-check-fixtures.cjs");
 
 test("keeps the consumer's exact default command and separate collection cap", () => {
@@ -60,6 +61,37 @@ test("retains deadline failures and GNU time resource measurements", () => {
   assert.equal(successful({ ...sample, elapsed: 179, exit: 0, signal: "SIGTERM" }), false);
   assert.equal(successful({ ...sample, elapsed: 179, exit: 1 }), false);
   assert.throws(() => parseTime("elapsed=1\n"), /Missing GNU time field/);
+});
+
+test("labels unreaped analyzer resources without changing deadline outcomes", () => {
+  // The tiny counters belong to the killed launcher, not its busy analyzer.
+  const raw = parseTime(
+    readFileSync(join(__dirname, "../../fixtures/hosted-check/unreaped-analyzer.time"), "utf8"),
+  );
+  for (const status of [
+    { exit: 124 },
+    { exit: 137 },
+    { exit: 0, signal: "SIGTERM" },
+    { exit: null },
+  ]) {
+    const measured = { ...raw, ...status };
+    const reported = reportedSample(measured);
+    assert.equal(
+      reported.resourceStatus,
+      status.exit === null ? "n/a (missing wrapper status)" : "n/a (killed)",
+    );
+    assert.equal(reported.user, null);
+    assert.equal(reported.system, null);
+    assert.equal(reported.rss_kib, null);
+    assert.equal(reported.elapsed, raw.elapsed);
+    assert.equal(successful(reported), successful(measured));
+    assert.deepEqual(aggregate([reported]), aggregate([measured]));
+  }
+  for (const exit of [0, 1]) {
+    const completed = { ...raw, exit, elapsed: 100 };
+    assert.equal(reportedSample(completed), completed);
+  }
+  assert.equal(raw.user, 0.05);
 });
 
 test("includes censored timeouts in the observed tail instead of dropping them", () => {

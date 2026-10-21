@@ -2,8 +2,8 @@
 
 ## Why
 
-Two or more guards that append to the same builder for the same selector do
-not describe one statement. An unknown selector can take none of those guards
+Independent guards that append to the same builder for the same selector can
+leave the statement incomplete. An unknown selector can take none of those guards
 and leave the builder empty, or take a path the file never wrote.
 
 Return a complete statement from one switch with a throwing default. That
@@ -54,6 +54,21 @@ export function byAccess(access: string) {
 One guard, two selectors, two builders, or an append that is not a string,
 template, or configured tag is not this pattern.
 
+The rule also abstains on a complete `if` / `else if` chain whose final `else`
+throws, and on direct guards that each return followed by an unconditional
+throw at the end of the function. These shapes exclude an unknown selector
+without publishing an empty builder. Completion is checked only through direct
+statements and straight-line blocks; a conditional throw or an earlier return
+inside the final `else` does not prove completion. Every arm must execute its
+recognized append unconditionally. A chain under another condition or a loop
+is still reported because that outer construct can bypass the whole chain.
+
+```ts
+if (access === "owned") query.append(sql`AND account_id = $1`);
+else if (access === "member") query.append(sql`AND member_id = $1`);
+else throw new Error("unknown access");
+```
+
 ## Options
 
 The rule reports nothing until both lists are non-empty. `builderMethods` is
@@ -65,7 +80,8 @@ template passed to one of those methods counts as SQL text too.
 
 This rule has no autofix and no editor suggestion. Replace the guards with a
 switch that returns a complete statement from every arm and throws in
-`default`. Do not suggest an own-key check; that form is not judged.
+`default`. The diagnostic includes the guarded literal `case` labels, with
+duplicates removed. Do not suggest an own-key check; that form is not judged.
 
 ## Suppression
 

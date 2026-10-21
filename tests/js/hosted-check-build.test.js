@@ -6,6 +6,7 @@ const {
   resolveRefs,
   validateCompiler,
   commitIdentity,
+  sourceSummary,
 } = require("../../.github/scripts/hosted-check-refs.cjs");
 const {
   ARGS,
@@ -116,6 +117,8 @@ test("resolves current main and GitHub's latest stable tag once, ignoring releas
   assert.equal(result.baseline.release.endpoint, "repos/jonathanong/no-mistakes/releases/latest");
   assert.equal(result.compiler, compiler);
   assert.equal(result.harnessCommit, harness);
+  assert.match(sourceSummary(result), /Baseline: release \[v0.94.0\]/);
+  assert.doesNotMatch(sourceSummary(result), /Warning/);
 });
 
 test("allows latest stable release and main to legitimately share an immutable source", () => {
@@ -130,6 +133,7 @@ test("allows latest stable release and main to legitimately share an immutable s
   );
   assert.equal(result.baseline.commit, result.candidate.commit);
   assert.equal(result.baseline.kind, "release");
+  assert.match(sourceSummary(result), /Warning.*same commit.*Absolute budgets still apply/);
 });
 
 test("rejects prereleases, drafts, malformed tags, non-GitHub releases, mutable identities and compiler aliases", () => {

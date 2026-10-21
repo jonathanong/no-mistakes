@@ -18,6 +18,31 @@ function successful(sample) {
     !sample.signal
   );
 }
+function resourceAccountingComplete(sample) {
+  return (
+    Number.isInteger(sample.exit) &&
+    sample.exit >= 0 &&
+    sample.exit !== 124 &&
+    sample.exit !== 137 &&
+    !sample.signal
+  );
+}
+
+function reportedSample(sample) {
+  if (resourceAccountingComplete(sample)) return sample;
+  // A killed launcher may not reap its analyzer: tiny wrapper counters mislead.
+  // Preserve the original GNU time record separately in the .time artifact.
+  return {
+    ...sample,
+    user: null,
+    system: null,
+    rss_kib: null,
+    resourceStatus:
+      sample.exit === 124 || sample.exit === 137 || sample.signal
+        ? "n/a (killed)"
+        : "n/a (missing wrapper status)",
+  };
+}
 function command(executable, args, cwd) {
   const result = spawnSync(executable, args, { cwd, encoding: "utf8" });
   if (result.error || result.status !== 0) {
@@ -85,4 +110,6 @@ module.exports = {
   CHECK_ARGS,
   COLLECTION_DEADLINE_SECONDS,
   successful,
+  resourceAccountingComplete,
+  reportedSample,
 };

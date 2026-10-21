@@ -21,6 +21,8 @@ env:
   RUSTFLAGS: "-D warnings"
   NO_MISTAKES_BUILD_NAPI: "1"
 
+# Standard measurement VMs preserve the calibrated CPU/RSS population.
+# ubuntu-22.04 builds require an older glibc compatible with ubuntu-latest measurements.
 jobs:
   resolve:
     name: Resolve main and latest stable release once
@@ -284,6 +286,7 @@ jobs:
           package_json_file: fixture/package.json
 
       - name: Install complete pinned consumer dependencies
+        # Third-party install scripts run with contents: read and persist-credentials: false.
         timeout-minutes: 10
         working-directory: fixture
         run: pnpm install --frozen-lockfile --loglevel=warn

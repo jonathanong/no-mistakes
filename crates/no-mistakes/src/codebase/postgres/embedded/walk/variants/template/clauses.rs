@@ -1,5 +1,19 @@
 //! Literal ternaries and logical clauses in an untagged template become SQL alternatives.
 //! A reached unknown branch abstains for the whole template.
+use super::super::super::resolve::functions::LocalFunctions;
+
+// Unknown helpers abstain before argument classification walks their subtrees.
+fn known_helper_args<T>(
+    functions: &LocalFunctions,
+    name: &str,
+    classify: impl FnOnce() -> Option<T>,
+) -> Option<T> {
+    if !functions.has_program(name) {
+        return None;
+    }
+    classify()
+}
+
 #[rustfmt::skip]
 mod literal {
 use super::super::super::super::ScopeVisitor;
@@ -156,12 +170,17 @@ fn scope_index(visitor: &ScopeVisitor<'_>, name: &str) -> Option<usize> {
 fn call_clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, call: &oxc_ast::ast::CallExpression<'_>, line: u32) -> Option<Vec<Recovered>> {
     let oxc_ast::ast::Expression::Identifier(name) = unwrap_ts_wrappers(&call.callee) else { return None };
     if call.optional || visitor.shadowed_locally(name.name.as_str()) { return None; }
-    let args = super::super::super::super::imported::clause_args(visitor, call)?;
+    let args = super::known_helper_args(&visitor.functions, name.name.as_str(), || super::super::super::super::imported::clause_args(visitor, call))?;
     let strings = visitor.functions.identifier_clauses(name.name.as_str(), &args)?;
     let mut values = Vec::new();
     for sql in strings { values.extend(text(visitor, expr, sql, line)?); }
     super::super::super::limit::bounded(values)
 }
+
 }
 
 pub(in crate::codebase::postgres::embedded::walk::variants) use literal::{observe_const, recover};
+
+#[cfg(test)]
+#[path = "clauses/tests.rs"]
+mod tests;

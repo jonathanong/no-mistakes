@@ -39,6 +39,61 @@ describe("postgres-no-nonliteral-sql-registry-key", () => {
     assert.match(messages[2].message, /case "order items": return "order items";/);
   });
 
+  it("recognizes a finite-key cast only for the same registry", () => {
+    assert.equal(check("finite-key.ts").length, 0);
+    assert.equal(check("other-key.ts").length, 4);
+  });
+
+  it("follows one const SQL argument without duplicate reports", () => {
+    assert.equal(check("bound-sql.ts").length, 2);
+    assert.equal(check("bound-silent.ts").length, 0);
+  });
+
+  it("suppresses a call or lookup without hiding another use of a shared initializer", () => {
+    const messages = check("bound-suppression.ts");
+    assert.equal(messages.length, 1);
+    assert.equal(messages[0].line, 15);
+    assert.equal(messages[0].messageId, "dynamicKey");
+  });
+
+  it("emits a complete switch expression with deduplicated final values", () => {
+    const [message] = check("duplicate-keys.ts");
+    assert.match(message.message, /switch \(key\) \{/);
+    assert.equal(message.message.match(/case "orders"/g).length, 1);
+    assert.ok(message.message.includes(JSON.stringify('order "items"')));
+    assert.ok(message.message.includes('return "{{accounts}}";'));
+    const expression = message.message.slice(
+      message.message.indexOf("((key) => {"),
+      message.message.indexOf("). A runtime"),
+    );
+    const select = new Function("kind", `return ${expression};`);
+    assert.equal(select("orders"), 'order "items"');
+    assert.equal(select("accounts"), "{{accounts}}");
+    assert.throws(() => select("other"), /unknown/);
+  });
+
+  it("keeps await and yield selectors in their original evaluation context", async () => {
+    const messages = check("selector-contexts.ts");
+    assert.equal(messages.length, 3);
+    const expressions = messages.map(({ message }) =>
+      message.slice(message.indexOf("((key) => {"), message.indexOf("). A runtime")),
+    );
+    const awaited = new Function("choose", `return (async () => ${expressions[0]})();`);
+    assert.equal(await awaited(async () => "orders"), "orders");
+    const iterator = new Function(`return (function* () { return ${expressions[1]}; })();`)();
+    assert.deepEqual(iterator.next(), { value: "key", done: false });
+    assert.deepEqual(iterator.next("accounts"), { value: "accounts", done: true });
+    let calls = 0;
+    const sequence = new Function("chooseSync", "kind", `return ${expressions[2]};`);
+    assert.equal(
+      sequence(() => {
+        calls++;
+      }, "orders"),
+      "orders",
+    );
+    assert.equal(calls, 1);
+  });
+
   it("ignores literal keys, mutated registries, and lookups outside the executor", () => {
     assert.equal(check("silent.ts").length, 0);
     assert.equal(check("dynamic.ts", { executorNames: [] }).length, 0);
