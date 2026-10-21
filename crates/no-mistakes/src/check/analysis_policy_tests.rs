@@ -129,3 +129,32 @@ fn cli_effort_override_preserves_policy_exit_status_on_saved_sql() {
         }
     }
 }
+
+#[test]
+fn inherited_ignored_sql_aliases_preserve_both_cross_file_rule_reports() {
+    let baseline = report("project-no-policy.yml", None);
+    let findings: Vec<_> = baseline
+        .rules
+        .iter()
+        .map(|finding| (finding.rule.as_str(), finding.line))
+        .collect();
+    assert_eq!(
+        findings,
+        [
+            ("postgres-no-mutable-sql-registry", 4),
+            ("postgres-no-unbounded-sql-identifier", 5),
+        ]
+    );
+    let baseline = check_runner::json_value(&baseline);
+    for config in [
+        "project-fail.yml",
+        "project-previously-ignored.yml",
+        "opaque-legacy.yml",
+    ] {
+        assert_eq!(
+            check_runner::json_value(&report(config, None)),
+            baseline,
+            "{config}"
+        );
+    }
+}

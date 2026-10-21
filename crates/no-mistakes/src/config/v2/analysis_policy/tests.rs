@@ -153,3 +153,22 @@ fn shared_defaults_leave_malformed_rule_options_for_the_original_parser() {
         assert_eq!(malformed.rules[0].options, options);
     }
 }
+
+#[test]
+fn inherited_ignored_postgres_alias_payloads_remain_opaque() {
+    #[derive(Deserialize, Default)]
+    struct IgnoredOptions {}
+    let inherited = config("project-fail.yml");
+    for rule in &inherited.rules {
+        assert_eq!(rule.options["unanalyzableSql"].as_str(), Some("fail"));
+        rule.try_rule_options::<IgnoredOptions>().unwrap();
+    }
+    let opaque = config("opaque-legacy.yml");
+    for rule in &opaque.rules {
+        rule.try_rule_options::<IgnoredOptions>().unwrap();
+        assert_eq!(
+            opaque.requested_rule_analysis(rule).unwrap().unanalyzable,
+            Unanalyzable::Report
+        );
+    }
+}

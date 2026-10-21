@@ -25,7 +25,7 @@ impl RuleDef {
         if let Some(options) = options.as_mapping_mut() {
             options.remove("effort");
             options.remove("unanalyzable");
-            if !super::super::analysis_policy::sql_policy_rule(&self.rule) {
+            if !super::super::analysis_policy::legacy_sql_options(&self.rule) {
                 if self.options.get("unanalyzable").is_none() {
                     super::super::analysis_policy::validate_low_alias(self)?;
                 }

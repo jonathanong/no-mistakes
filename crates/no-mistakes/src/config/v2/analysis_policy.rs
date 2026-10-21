@@ -119,6 +119,14 @@ fn option<T: serde::de::DeserializeOwned>(rule: &RuleDef, key: &str) -> Result<O
 
 fn legacy_policy(rule: &RuleDef) -> Result<Option<Unanalyzable>> {
     if !sql_policy_rule(&rule.rule) {
+        if legacy_sql_options(&rule.rule) {
+            // Project scope historically copied this key to rules that ignored
+            // it. Those opaque payloads must remain valid at maximum effort.
+            return Ok(rule
+                .options
+                .get("unanalyzableSql")
+                .and_then(|value| serde_yaml::from_value(value.clone()).ok()));
+        }
         return option(rule, "unanalyzableSql");
     }
     let Some(value) = rule
@@ -154,6 +162,10 @@ pub(crate) fn validate_low_alias(rule: &RuleDef) -> Result<()> {
         anyhow::bail!("{}: invalid options.unanalyzableSql", rule.rule);
     }
     Ok(())
+}
+
+pub(super) fn legacy_sql_options(rule: &str) -> bool {
+    rule.starts_with("postgres-")
 }
 
 pub(super) fn sql_policy_rule(rule: &str) -> bool {

@@ -65,6 +65,20 @@ test(
       for (const report of batch.reports) assert.equal(JSON.stringify(report.result), encoded);
       assert.deepEqual(await esm.analyzeProject(request), batch);
     }
+    const inherited = await cjs.check({ root, config: "project-no-policy.yml" });
+    assert.deepEqual(
+      inherited.rules.map(({ rule, line }) => [rule, line]),
+      [
+        ["postgres-no-mutable-sql-registry", 4],
+        ["postgres-no-unbounded-sql-identifier", 5],
+      ],
+    );
+    for (const config of [
+      "project-fail.yml",
+      "project-previously-ignored.yml",
+      "opaque-legacy.yml",
+    ])
+      for (const api of [cjs, esm]) assert.deepEqual(await api.check({ root, config }), inherited);
     await assert.rejects(cjs.check({ root, effort: "high" }), /effort|variant|high/i);
   },
 );
