@@ -54,7 +54,8 @@ function isSharedScopeShield(fn, testCalleeNames) {
 // never a hoisting hazard regardless of how many function boundaries separate it from the hook.
 function isWithinBeforeAllCallback(node, beforeAll) {
   for (let fn = nearestOwnFunction(node); fn; fn = nearestOwnFunction(fn)) {
-    const parent = fn.parent;
+    let parent = fn.parent;
+    if (parent?.type === "ArrayExpression") parent = parent.parent;
     if (parent?.type === "CallExpression" && beforeAll(parent)) return true;
   }
   return false;

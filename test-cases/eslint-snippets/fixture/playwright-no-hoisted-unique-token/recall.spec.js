@@ -15,3 +15,9 @@ pw.test.beforeAll(async () => {
 (test?.beforeAll)(async () => {
   await createPost({ slug: suffix });
 });
+test.beforeAll.apply(test, [
+  async () => {
+    const fresh = randomSuffix();
+    await createPost({ slug: fresh });
+  },
+]);
