@@ -65,6 +65,51 @@ fn fail_package_json_overrides() {
 }
 
 #[test]
+fn fail_included_overrides_are_banned() {
+    let findings = findings_for("fail-included-overrides");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file == "pnpm/security.yaml"
+                && finding
+                    .message
+                    .contains("top-level \"overrides\" is banned")
+                && finding.line == 1
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.file != "pnpm-workspace.yaml"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn fail_duplicate_overrides_reports_every_definition() {
+    let findings = findings_for("fail-duplicate-overrides");
+    let body = findings
+        .iter()
+        .map(|finding| finding.message.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        body.contains("pnpm-workspace.yaml: top-level \"overrides\" is banned"),
+        "{body}"
+    );
+    assert!(
+        body.contains("pnpm/security.yaml: top-level \"overrides\" is banned"),
+        "{body}"
+    );
+    assert!(
+        body.contains(
+            "pnpm-workspace.yaml: setting \"overrides\" is claimed by more than one pnpm source"
+        ),
+        "{body}"
+    );
+}
+
+#[test]
 fn fail_package_json_pnpm_overrides() {
     let findings = findings_for("fail-pnpm-overrides");
     assert!(

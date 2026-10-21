@@ -8,7 +8,22 @@ workspace list so installs and graph analysis agree.
 ## What it catches
 
 It reports selected package directories omitted from configured workspace globs
-or workspace entries that do not correspond to a package directory.
+or workspace entries that do not correspond to a package directory. `*` does
+not match across `/`, so `packages/*` covers `packages/api` and leaves
+`packages/group/app` uncovered. Each non-negated pattern is checked on its
+own: a pattern that matches a package directory is not "unmatched" when a
+later `!` exclusion removes that directory from the workspace. Negated
+patterns are not reported. The finding is attached to `pnpm-workspace.yaml`
+when that file is in the file list, and otherwise to the root `package.json`.
+
+A root `pnpm-workspace.yaml` may `include` a local `./` or `../` YAML file
+that owns `packages`. Patterns in that file are relative to the included
+file, then normalized, and a glob that escapes the workspace root is dropped.
+`packages` delegated to a local file does not fall back to `["*"]` when the
+file omits the key. The same setting in the root file and a local include is
+a conflict: the check reports that `packages` is claimed twice and does not
+guess which list wins. An omitted `packages` key with no local include still
+means `["*"]`.
 
 ## Options
 
@@ -67,3 +82,16 @@ or `pnpm-workspace.yaml` patterns do not include `packages/api`. An unnamed
 Fix: add the package directory to the workspace patterns, move the package
 outside the configured package roots, or add a deliberate `allowlist` entry.
 For unnamed manifests, set a non-empty `name`.
+
+## Limitations
+
+Settings owned by a pnpm config dependency cannot be loaded without an install.
+This rule does not read `node_modules`. A source whose key does not start with
+`./` or `../` is ignored. When `packages` is delegated only to that kind of
+source, the omitted-packages default `["*"]` stays in effect.
+
+```yaml
+include:
+  "@acme/pnpm-policy":
+    - packages
+```

@@ -1,14 +1,18 @@
 use super::RuleFinding;
-use crate::codebase::glob_normalize;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspaces;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use globset::{Glob, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+
+mod patterns;
+use patterns::{
+    config_finding, covered_workspace_dirs, normalize_relative_path, package_directories,
+    path_under_package_roots, unmatched_patterns, workspace_config_file,
+};
 
 pub const RULE_ID: &str = "package-json-workspace-coverage";
 
@@ -66,19 +70,53 @@ fn scan(
         return Ok(Vec::new());
     }
 
+    let mut findings = Vec::new();
+    if workspace_config_file(root, files) == "pnpm-workspace.yaml" {
+        if let Some(resolved) = workspaces::resolve_pnpm_include_at_root(root, sources)? {
+            if resolved.packages_invalid {
+                anyhow::bail!("pnpm-workspace.yaml packages field must be a list of strings");
+            }
+            let config_file = "pnpm-workspace.yaml";
+            for issue in resolved
+                .load_errors
+                .iter()
+                .filter(|issue| issue.affects("packages"))
+            {
+                findings.push(config_finding(config_file, &issue.message));
+            }
+            if resolved
+                .duplicates
+                .iter()
+                .any(|setting| setting == "packages")
+            {
+                findings.push(config_finding(
+                    config_file,
+                    "setting \"packages\" is claimed by more than one pnpm source",
+                ));
+                return Ok(findings);
+            }
+        }
+    }
+
     let workspace_dirs: HashSet<String> = workspaces::load_from_source_store(root, sources)?
         .packages
         .iter()
         .map(|pkg| relative_slash_path(root, &pkg.dir))
         .collect();
-    let covered_workspace_dirs = covered_workspace_dirs(root, files, sources)?;
+    let workspace_globs = workspaces::load_workspace_globs_from_source_store(root, sources)?;
+    let covered_workspace_dirs = covered_workspace_dirs(root, files, &workspace_globs)?;
+    for pattern in unmatched_patterns(&workspace_globs, &package_directories(root, files))? {
+        findings.push(config_finding(
+            &workspace_config_file(root, files),
+            &format!("workspace pattern \"{pattern}\" does not correspond to a package directory"),
+        ));
+    }
     let allowlist: HashSet<String> = opts
         .allowlist
         .iter()
         .map(|path| normalize_relative_path(path))
         .collect();
 
-    let mut findings = Vec::new();
     for path in files {
         if path.file_name().and_then(|name| name.to_str()) != Some("package.json") {
             continue;
@@ -127,54 +165,6 @@ fn scan(
     }
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
-}
-
-fn covered_workspace_dirs(
-    root: &Path,
-    files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<HashSet<String>> {
-    let workspace_globs = workspaces::load_workspace_globs_from_source_store(root, sources)?;
-    let include = build_workspace_globset(&workspace_globs, false)?;
-    let exclude = build_workspace_globset(&workspace_globs, true)?;
-    Ok(files
-        .iter()
-        .filter(|path| path.file_name().and_then(|name| name.to_str()) == Some("package.json"))
-        .filter_map(|path| path.parent())
-        .filter_map(|dir| {
-            let rel = relative_slash_path(root, dir);
-            (include.is_match(rel.as_str()) && !exclude.is_match(rel.as_str())).then_some(rel)
-        })
-        .collect())
-}
-
-fn build_workspace_globset(patterns: &[String], excluded: bool) -> Result<GlobSet> {
-    let mut builder = GlobSetBuilder::new();
-    for pattern in patterns {
-        let pattern = if excluded {
-            let Some(stripped) = pattern.strip_prefix('!') else {
-                continue;
-            };
-            stripped
-        } else if pattern.starts_with('!') {
-            continue;
-        } else {
-            pattern.as_str()
-        };
-        builder.add(Glob::new(&normalize_relative_path(pattern))?);
-    }
-    Ok(builder.build()?)
-}
-
-fn path_under_package_roots(path: &str, package_roots: &[String]) -> bool {
-    package_roots.iter().any(|root| {
-        let root = normalize_relative_path(root);
-        !root.is_empty() && (path == root || path.starts_with(&format!("{root}/")))
-    })
-}
-
-fn normalize_relative_path(path: &str) -> String {
-    glob_normalize::normalize(path)
 }
 
 fn package_name_with_sources(

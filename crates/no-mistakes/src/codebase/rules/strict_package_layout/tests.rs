@@ -4,7 +4,7 @@ use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn fixture(path: &str) -> PathBuf {
     let mut parts = path.splitn(3, '/');
@@ -350,6 +350,82 @@ fn scan_with_absolute_package_root() {
     assert!(
         findings.is_empty(),
         "allowed root file should pass: {findings:#?}"
+    );
+}
+
+fn normalized_package_root_selects_the_same_files(root_spec: &str) {
+    let root = Path::new("/repo");
+    let files = [
+        "packages/api/package.json",
+        "packages/api/index.ts",
+        "packages/api/index.js",
+        "packages/api/tmp/debug.ts",
+        "other/note.ts",
+    ]
+    .into_iter()
+    .map(|file| root.join(file))
+    .collect::<Vec<_>>();
+    let opts = Options {
+        packages: vec![spec(
+            root_spec,
+            ".ts",
+            &["package.json", "README.md", "index.ts"],
+            &["src", "__tests__"],
+        )],
+        ..Options::default()
+    };
+    let files_flagged: Vec<_> = scan(root, &opts, &files)
+        .into_iter()
+        .map(|finding| finding.file)
+        .collect();
+    assert_eq!(
+        files_flagged,
+        vec![
+            "packages/api/index.js".to_string(),
+            "packages/api/tmp/debug.ts".to_string(),
+        ]
+    );
+}
+
+#[test]
+fn dot_slash_and_parent_roots_match_packages() {
+    normalized_package_root_selects_the_same_files("./packages");
+    normalized_package_root_selects_the_same_files("packages/../packages");
+    normalized_package_root_selects_the_same_files("packages");
+}
+
+#[test]
+fn escaping_root_does_not_match_files_inside_or_outside_the_repo() {
+    let root = Path::new("/repo");
+    let files = vec![
+        root.join("packages/api/tmp/debug.ts"),
+        root.join("other/note.ts"),
+    ];
+    for root_spec in ["..", "../outside", "/"] {
+        let opts = Options {
+            packages: vec![spec(root_spec, ".ts", &["package.json"], &["src"])],
+            ..Options::default()
+        };
+        assert!(
+            scan(root, &opts, &files).is_empty(),
+            "{root_spec} matched files"
+        );
+    }
+}
+
+#[test]
+fn dot_root_fixture_flags_only_files_under_packages() {
+    let root = fixture("rules/strict-package-layout/dot-root");
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let findings = check(&root, &config).unwrap();
+    let files: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.file.as_str())
+        .collect();
+    assert_eq!(
+        files,
+        vec!["packages/api/index.js", "packages/api/tmp/debug.ts"]
     );
 }
 

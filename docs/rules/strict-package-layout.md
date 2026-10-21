@@ -29,7 +29,10 @@ surface and keep tests, source, and metadata in known directories.
 
 Each configured package must contain the required root files and keep source
 files and subdirectories within the declared layout. Test patterns identify
-test files for the test-directory policy.
+test files for the test-directory policy. `root` is lexically normalized before
+it is compared to files, so `./packages` and `packages/../packages` select the
+same tree as `packages`. A root that normalizes outside the repository selects
+nothing.
 
 ## Options and defaults
 

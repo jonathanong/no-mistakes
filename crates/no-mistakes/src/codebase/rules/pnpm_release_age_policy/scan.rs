@@ -56,18 +56,22 @@ pub(super) fn scan(
             }
         }
     }
+    let (exclude, mut findings) =
+        super::included_exclude::included_exclude(root, workspace, sources, exclude_entries(&yaml));
     let snapshot = Snapshot {
-        exclude: exclude_entries(&yaml),
+        exclude,
         cooldown: by_rel
             .get(opts.dependabot_path())
             .and_then(|path| cooldown(sources, path)),
         active_names,
         lockfile_keys,
     };
-    check(opts, &snapshot)
-        .into_iter()
-        .map(|issue| issue_finding(root, opts, &by_rel, issue))
-        .collect()
+    findings.extend(
+        check(opts, &snapshot)
+            .into_iter()
+            .map(|issue| issue_finding(root, opts, &by_rel, issue)),
+    );
+    findings
 }
 
 fn exclude_entries(yaml: &Yaml) -> Vec<ExcludeEntry> {

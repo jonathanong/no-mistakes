@@ -5,6 +5,7 @@ use anyhow::Result;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
+mod included;
 mod keys;
 use keys::{json_key_line, json_nested_key_line, yaml_has_key, yaml_top_level_key_line};
 
@@ -81,16 +82,19 @@ fn check_workspace(
     };
     match serde_yaml::from_str::<serde_yaml::Value>(&source) {
         Ok(value) => {
+            let mut findings = Vec::new();
             if yaml_has_key(&value, "overrides") {
-                vec![finding(
+                findings.push(finding(
                     root,
                     path,
                     yaml_top_level_key_line(&source, "overrides"),
                     format!("top-level \"overrides\" is banned. {FIX}"),
-                )]
-            } else {
-                Vec::new()
+                ));
             }
+            findings.extend(included::included_override_findings(
+                root, path, &source, sources,
+            ));
+            findings
         }
         Err(error) => {
             let detail = error
