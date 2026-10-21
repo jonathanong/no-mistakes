@@ -54,7 +54,7 @@ function createRuleHelpers(context, testCalleeNames, namespaces) {
       const parent = node.parent;
       return (
         parent?.type === "CallExpression" &&
-        (setupCallbackKind(parent, testCalleeNames) ||
+        (setupCallbackKind(parent, testCalleeNames, namespaces) ||
           isTestCall(parent, testCalleeNames, namespaces))
       );
     },

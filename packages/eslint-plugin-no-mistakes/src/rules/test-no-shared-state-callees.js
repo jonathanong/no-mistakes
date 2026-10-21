@@ -88,14 +88,31 @@ function isTestCall(node, testCallees = TEST_CALLEES, namespaces) {
   return isKnownTestCallee(node.callee, testCallees, namespaces);
 }
 
-function setupCallbackKind(node, testCallees = TEST_CALLEES) {
-  const name = calleeName(node.callee);
+function setupHook(callee) {
+  while (callee?.type === "ChainExpression") callee = callee.expression;
+  if (callee?.type === "SequenceExpression" && callee.expressions?.length) {
+    callee = callee.expressions.at(-1);
+  }
+  if (callee?.type === "MemberExpression" && !callee.computed) {
+    const forwarded = staticPropertyName(callee.property);
+    if (forwarded === "call" || forwarded === "apply") return setupHook(callee.object);
+  }
+  return callee;
+}
+
+function setupCallbackKind(node, testCallees = TEST_CALLEES, namespaces = new Set()) {
+  const callee = setupHook(node?.callee);
+  const name = calleeName(callee);
   if (PER_TEST_CALLEES.has(name)) return "per-test";
   if (name === "beforeAll") return "before-once";
   if (name === "afterAll") return "once";
-  if (node.callee.type !== "MemberExpression" || !testCallees.has(name)) return null;
-  if (node.callee.computed && node.callee.property?.type === "Identifier") return null;
-  const prop = propertyName(node.callee.property);
+  if (callee?.type !== "MemberExpression") return null;
+  if (callee.computed && callee.property?.type === "Identifier") return null;
+  const object =
+    callee.object?.type === "ChainExpression" ? callee.object.expression : callee.object;
+  const objectName = object?.type === "Identifier" ? object.name : name;
+  if (!testCallees.has(objectName) && !namespaces.has(objectName)) return null;
+  const prop = propertyName(callee.property);
   if (PER_TEST_CALLEES.has(prop)) return "per-test";
   if (prop === "beforeAll") return "before-once";
   return prop === "afterAll" ? "once" : null;

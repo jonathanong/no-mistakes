@@ -23,5 +23,12 @@ suite("option", { sequential: true }, () => {});
 suite("template option", { [`sequential`]: true }, () => {});
 vitest.sequential("default import is not a runner", () => {});
 describe[sequentialName]("computed identifier", () => {});
+function helper(suite) {
+  suite.sequential("shadowed parameter", () => {});
+}
+function shadowedNamespace(v) {
+  const { it: nested } = v;
+  nested.sequential("shadowed namespace", () => {});
+}
 // no-mistakes-disable-next-line no-vitest-sequential -- retained probe
 suite.sequential("suppressed", () => {});

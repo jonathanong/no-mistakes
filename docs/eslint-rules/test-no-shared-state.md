@@ -34,7 +34,7 @@ owns the test isolation boundary.
 
 ## Limits
 
-A namespace `v.test`, a Playwright default import, `test["only"]`, optional chaining, and one top-level `const` alias are the same test callback. Vitest's default import is not a runner. A computed identifier key is not a static modifier.
+A namespace `v.test`, a Playwright default import, `test["only"]`, optional chaining, and one top-level `const` alias are the same test callback. Namespace setup hooks such as `v.beforeEach` are the same cleanup boundary as a named import. Vitest's default import is not a runner. A computed identifier key is not a static modifier.
 
 A runner re-exported by another file is not visible here.
 

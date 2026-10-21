@@ -27,3 +27,10 @@ vitest("vitest default is not a runner", () => {
 test[name]("computed identifier", () => {
   counter += 1;
 });
+const items = new Map();
+v.beforeEach(() => {
+  items.clear();
+});
+v.test("namespace cleanup", () => {
+  items.set("a", 1);
+});

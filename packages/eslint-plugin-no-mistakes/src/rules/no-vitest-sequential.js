@@ -83,13 +83,34 @@ function hasSequentialOption(node) {
   });
 }
 
+function acceptsRunner(root, context, namespaces) {
+  if (!root || root.type !== "Identifier") return false;
+  const variable = resolveVariable(root, context);
+  if (!variable || variable.defs.length === 0) return true;
+  if (variable.defs.length !== 1) return false;
+  const def = variable.defs[0];
+  if (def.type !== "ImportBinding") return false;
+  if (def.node?.type === "ImportNamespaceSpecifier") return namespaces.has(root.name);
+  if (def.node?.type !== "ImportSpecifier") return false;
+  return TEST_NAMES.has(staticName(def.node.imported, false));
+}
+
+function isUnshadowedNamespace(identifier, context, namespaces) {
+  if (!namespaces.has(identifier?.name)) return false;
+  const variable = resolveVariable(identifier, context);
+  if (!variable || variable.defs.length === 0) return true;
+  if (variable.defs.length !== 1) return false;
+  const def = variable.defs[0];
+  return def.type === "ImportBinding" && def.node?.type === "ImportNamespaceSpecifier";
+}
+
 function destructuredTest(node, context, namespaces) {
   if (node?.type !== "Identifier") return false;
   const variable = resolveVariable(node, context);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
   if (def?.type !== "Variable" || def.node?.parent?.kind !== "const") return false;
   if (def.node.id?.type !== "ObjectPattern" || def.node.init?.type !== "Identifier") return false;
-  if (!namespaces.has(def.node.init.name)) return false;
+  if (!isUnshadowedNamespace(def.node.init, context, namespaces)) return false;
   return def.node.id.properties.some((property) => {
     if (property.type !== "Property") return false;
     let value = property.value;
@@ -103,9 +124,13 @@ function isSequentialCall(node, context, roots, namespaces) {
   const info = chainInfo(node.callee, context);
   if (!info.root) return false;
   const namespaceTest =
-    namespaces.has(info.root.name) && info.names.some((name) => TEST_NAMES.has(name));
+    acceptsRunner(info.root, context, namespaces) &&
+    namespaces.has(info.root.name) &&
+    info.names.some((name) => TEST_NAMES.has(name));
   const known =
-    roots.has(info.root.name) || namespaceTest || destructuredTest(info.root, context, namespaces);
+    (acceptsRunner(info.root, context, namespaces) && roots.has(info.root.name)) ||
+    namespaceTest ||
+    destructuredTest(info.root, context, namespaces);
   if (!known) return false;
   return info.names.includes("sequential") || hasSequentialOption(node);
 }

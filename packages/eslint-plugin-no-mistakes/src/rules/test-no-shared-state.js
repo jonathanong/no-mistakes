@@ -146,14 +146,14 @@ module.exports = rule(
         if (!isShadowed && isTestCall(node, testCalleeNames, namespaces)) {
           testDepth += 1;
           const callback = namedCallbackArgument(node.arguments);
-          if (callback && !setupCallbackKind(node, testCalleeNames)) {
+          if (callback && !setupCallbackKind(node, testCalleeNames, namespaces)) {
             pendingNamedCallbacks.push({
               declaration: resolveFunctionCallback(node, callback),
               suiteKey: cleanupTracker.currentSuiteKey(),
             });
           }
         }
-        const setupKind = !isShadowed && setupCallbackKind(node, testCalleeNames);
+        const setupKind = !isShadowed && setupCallbackKind(node, testCalleeNames, namespaces);
         const setupCallback = setupKind && firstNamedCallbackArgument(node.arguments);
         if (setupCallback) {
           pendingNamedSetupCallbacks.push({
@@ -179,7 +179,7 @@ module.exports = rule(
       "CallExpression:exit"(node) {
         const isShadowed = testAliases.isShadowed(node.callee);
         if (!isShadowed && isTestCall(node, testCalleeNames, namespaces)) testDepth -= 1;
-        if (!isShadowed && setupCallbackKind(node, testCalleeNames)) {
+        if (!isShadowed && setupCallbackKind(node, testCalleeNames, namespaces)) {
           setupDepth -= 1;
           cleanupTracker.endSetup();
         }
