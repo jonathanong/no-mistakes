@@ -4,6 +4,8 @@
 mod ci_complexity_gate;
 #[path = "docs_coverage.rs"]
 mod docs_coverage;
+#[path = "docs_rule_snippet_execution.rs"]
+mod docs_rule_snippet_execution;
 #[path = "support/integration_suites.rs"]
 mod integration_suites;
 #[path = "mermaid_validation.rs"]

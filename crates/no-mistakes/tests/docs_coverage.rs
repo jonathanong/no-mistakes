@@ -14,8 +14,6 @@ use std::path::{Path, PathBuf};
 mod cli_docs_helpers;
 #[path = "support/docs_review_regressions.rs"]
 mod docs_review_regressions;
-#[path = "support/docs_rule_snippets.rs"]
-mod docs_rule_snippets;
 use cli_docs_helpers::{
     consumer_identifier_paths, enum_block, enum_variants, kebab_case, reachable_cli_pages,
     rust_sources, subcommand_enums,
@@ -264,84 +262,6 @@ fn no_mistakes_rules_have_docs() {
             "{file} must state every option default or that no default exists"
         );
     }
-}
-
-#[test]
-fn rule_docs_execute_valid_and_counterexample_snippets() {
-    let root = repo_root();
-    let mut failures = Vec::new();
-    for rule_id in rule_ids_from_source(&root) {
-        if docs_rule_snippets::skip_open_pr(&rule_id) {
-            continue;
-        }
-        let page = docs_rule_snippets::load_page(&root, &rule_id);
-        let mut valid = docs_rule_snippets::heading_section(&page.body, "Valid example");
-        if docs_rule_snippets::fences(&valid).is_empty() {
-            valid = docs_rule_snippets::labeled_section(&page.body, &["Valid example", "Pass"]);
-        }
-        let mut counter = docs_rule_snippets::counterexample_section(&page.body);
-        if docs_rule_snippets::fences(&counter).is_empty() {
-            counter = docs_rule_snippets::labeled_section(&page.body, &["Counterexample", "Fail"]);
-        }
-        let valid_fences = docs_rule_snippets::fences(&valid);
-        let counter_fences = docs_rule_snippets::fences(&counter);
-        if valid_fences.is_empty() {
-            failures.push(format!(
-                "{}: Valid example needs an executable fence",
-                page.file
-            ));
-            continue;
-        }
-        if counter_fences.is_empty() {
-            failures.push(format!(
-                "{}: Counterexample needs an executable fence",
-                page.file
-            ));
-            continue;
-        }
-        let config = docs_rule_snippets::rule_config_yaml(&page.body, &rule_id);
-        for (label, expect_report, snippet) in [
-            ("Valid example", false, valid_fences.as_slice()),
-            ("Counterexample", true, counter_fences.as_slice()),
-        ] {
-            for (index, fence) in snippet.iter().enumerate() {
-                let fixture =
-                    docs_rule_snippets::materialize_snippet(&config, std::slice::from_ref(fence));
-                match docs_rule_snippets::run_rule(fixture.path(), &rule_id) {
-                    Ok(hits) => {
-                        if hits.is_empty() == expect_report {
-                            failures.push(format!(
-                                "{}: {label}[{index}] expected {} but hits={hits:?}",
-                                page.file,
-                                if expect_report {
-                                    "a finding"
-                                } else {
-                                    "silence"
-                                },
-                            ));
-                        }
-                    }
-                    Err(err) => {
-                        failures.push(format!("{}: {label}[{index}] run error: {err}", page.file))
-                    }
-                }
-            }
-        }
-    }
-    let gaps = read(&root.join("crates/no-mistakes/tests/support/docs_rule_snippet_gaps.txt"));
-    let known: Vec<&str> = gaps
-        .lines()
-        .filter(|line| !line.is_empty() && !line.starts_with('#'))
-        .collect();
-    let unexpected: Vec<_> = failures
-        .into_iter()
-        .filter(|failure| !known.iter().any(|prefix| failure.starts_with(prefix)))
-        .collect();
-    assert!(
-        unexpected.is_empty(),
-        "rule documentation snippets must execute as documented (see #2416 for known gaps):\n{}",
-        unexpected.join("\n")
-    );
 }
 
 #[test]
