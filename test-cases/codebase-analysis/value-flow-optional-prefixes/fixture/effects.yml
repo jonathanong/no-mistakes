@@ -1,0 +1,11 @@
+# Keep definite receiver writes in this separate project: shared imported
+# receivers intentionally block copied replacement payloads in other files.
+effects:
+  receiver:
+    targets:
+      - { module: '@vendor/valkey', export: primary.get }
+      - { module: '@vendor/valkey', export: replica.get }
+      - { module: '@vendor/valkey', export: primary.info }
+      - { module: '@vendor/valkey', export: replica.info }
+      - { module: '@vendor/valkey', export: unrelated.get }
+      - { module: '@vendor/valkey', export: untouched.get }

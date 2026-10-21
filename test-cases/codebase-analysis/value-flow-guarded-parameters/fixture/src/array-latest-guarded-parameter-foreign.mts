@@ -3,6 +3,7 @@ declare const flag: boolean;
 function replacement() {}
 function mutate(value) { value.client.get = replacement; }
 function run(box, other) {
+  // Captures precede replace(); the other candidate records a conservative foreign union.
   function replace() { box = other; }
   let args = [box];
   if (flag) { args = [box]; }

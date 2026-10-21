@@ -8,6 +8,7 @@ pub(super) enum ArgumentValue {
 pub(super) struct Pending {
     pub(super) span: (u32, u32),
     arguments: Vec<ArgumentValue>,
+    uncertain_receiver: bool,
 }
 impl ImportCollector {
     /// Keep facts from this visit; final binding identities own their projection.
@@ -20,23 +21,40 @@ impl ImportCollector {
         {
             return;
         }
-        let arguments = call
-            .arguments
-            .iter()
-            .map(|argument| match argument {
-                Argument::SpreadElement(spread) => {
-                    ArgumentValue::Spread(self.value_expression(&spread.argument))
-                }
-                other => ArgumentValue::Value(
-                    other.as_expression().map_or_else(Vec::new, |expression| {
-                        super::escaped_call_arguments::argument_values(self, expression)
-                    }),
-                ),
+        let bound =
+            simple_callee_name(&call.callee).is_some_and(|raw| self.is_builtin_bind_callee(&raw));
+        let prefix = bound.then(|| self.bound_prefix(call));
+        let start = prefix.as_ref().map_or(0, |prefix| prefix.start);
+        let uncertain_receiver = prefix.as_ref().is_some_and(|prefix| prefix.uncertain);
+        let mut arguments: Vec<_> = prefix
+            .into_iter()
+            .flat_map(|prefix| {
+                prefix
+                    .leading
+                    .into_iter()
+                    .map(|value| ArgumentValue::Value(vec![value]))
             })
             .collect();
+        arguments.extend(
+            call.arguments
+                .iter()
+                .skip(start)
+                .map(|argument| match argument {
+                    Argument::SpreadElement(spread) => {
+                        ArgumentValue::Spread(self.value_expression(&spread.argument))
+                    }
+                    other => ArgumentValue::Value(other.as_expression().map_or_else(
+                        Vec::new,
+                        |expression| {
+                            super::escaped_call_arguments::argument_values(self, expression)
+                        },
+                    )),
+                }),
+        );
         self.receiver_escapes.pending_possible.push(Pending {
             span: (call.span.start, call.span.end),
             arguments,
+            uncertain_receiver,
         });
     }
     pub(in super::super::super) fn finish_possible_arguments(&mut self) {
@@ -75,7 +93,7 @@ impl ImportCollector {
         owners: &[CallableId],
         replay: &mut ReplayIndex,
     ) {
-        let (mut position, mut open) = (0, None);
+        let (mut position, mut open) = (0, call.uncertain_receiver.then_some(0));
         let mut extras: FxHashMap<usize, Vec<ValueExpression>> = fx_map();
         let mut shifted = Vec::new();
         for argument in call.arguments {

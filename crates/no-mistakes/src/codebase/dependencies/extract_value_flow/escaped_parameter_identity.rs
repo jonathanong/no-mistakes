@@ -50,6 +50,19 @@ impl ImportCollector {
             completion.filter(|_| certain).and(context),
         );
     }
+    pub(in super::super) fn parameter_capture_writes_covered(
+        &self,
+        key: &(usize, String),
+        completions: &FxHashSet<u32>,
+    ) -> bool {
+        self.receiver_escapes
+            .parameter_epochs
+            .get(&key.0)
+            .and_then(|names| names.get(&key.1))
+            .is_none_or(|epochs| {
+                !epochs.foreign && epochs.writes.keys().all(|at| completions.contains(at))
+            })
+    }
     pub(in super::super) fn guarded_parameter_epoch(
         &self,
         binding: &(usize, String),
@@ -77,3 +90,7 @@ impl ImportCollector {
         }
     }
 }
+
+#[cfg(test)]
+#[path = "parameter_capture_epoch_tests.rs"]
+mod capture_tests;

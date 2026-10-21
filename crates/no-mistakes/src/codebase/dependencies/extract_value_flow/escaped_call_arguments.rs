@@ -5,10 +5,31 @@ impl ImportCollector {
         self.note_class_method(call);
         self.note_possible_arguments(call);
         let mut arguments = super::escaped_spread_arguments::Arguments::default();
-        for (raw_index, argument) in call.arguments.iter().enumerate() {
+        let mut uncertain_raw = None;
+        let bound =
+            simple_callee_name(&call.callee).is_some_and(|raw| self.is_builtin_bind_callee(&raw));
+        let start = if bound {
+            let prefix = self.bound_prefix(call);
+            arguments.position = prefix.leading.len();
+            if prefix.uncertain {
+                arguments.open_at = Some(0);
+                arguments.guarded_open_tail = true;
+                uncertain_raw = Some(0);
+            }
+            prefix.start
+        } else {
+            0
+        };
+        let leading = arguments.position;
+        for (offset, argument) in call.arguments.iter().skip(start).enumerate() {
+            let raw_index = leading + offset;
             match argument {
                 Argument::SpreadElement(spread) => {
+                    let was_uncertain = arguments.guarded_open_tail;
                     arguments.spread(self, &spread.argument, call.span.start);
+                    if !was_uncertain && arguments.guarded_open_tail {
+                        uncertain_raw = Some(raw_index);
+                    }
                 }
                 other => {
                     let values = other
@@ -19,6 +40,28 @@ impl ImportCollector {
             }
         }
         let span = (call.span.start, call.span.end);
+        if let Some(index) = uncertain_raw {
+            let method_shift = self
+                .receiver_escapes
+                .methods
+                .last()
+                .filter(|(start, end, _, _, _)| (*start, *end) == span)
+                .map_or(0, |(_, _, _, values, _)| {
+                    call.arguments.len().saturating_sub(values.len())
+                });
+            let normalized_call = simple_callee_name(&call.callee).is_some_and(|raw| {
+                raw.ends_with(".call")
+                    && recorded_call_callee(self, call).is_some_and(|name| name != raw)
+            });
+            self.receiver_escapes.uncertain_spreads.insert(
+                span,
+                UncertainSpread {
+                    raw: index,
+                    shift: method_shift.max(usize::from(normalized_call)),
+                    redirected: arguments.redirected,
+                },
+            );
+        }
         if !arguments.extras.is_empty() {
             self.receiver_escapes.escaped.insert(span, arguments.extras);
         }

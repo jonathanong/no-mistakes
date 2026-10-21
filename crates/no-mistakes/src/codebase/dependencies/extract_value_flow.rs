@@ -10,55 +10,23 @@ mod assignment_member_values;
 pub(super) mod assignment_rhs_frame;
 use super::*;
 
-pub(super) type DefaultOriginIndex =
-    FxHashMap<usize, FxHashMap<String, Vec<default_origins::ReceiverOrigin>>>;
-#[path = "extract_value_flow/receiver_histories.rs"]
-mod receiver_histories;
-pub(super) type PriorMemberMutations = receiver_histories::ReceiverHistories;
+include!("extract_value_flow/declarations.rs");
 #[path = "extract_value_flow/mutation_sources.rs"]
 mod mutation_sources;
+#[path = "extract_value_flow/receiver_histories.rs"]
+mod receiver_histories;
 #[path = "extract_value_flow/reference_output.rs"]
 mod reference_output;
-pub use mutation_sources::{
-    ValueDefaultMutationSource, ValueDefaultMutations, ValueMutationInfo, ValueMutationPath,
-    ValueReceiverMutations,
-};
-pub(super) type ReceiverBindingOrigins = mutable_origins::ReceiverBindingOrigins;
-pub(super) type ForeignReceiverWrites = mutable_origins::ForeignReceiverWrites;
-
-pub(super) type ReferenceLinks = FxHashMap<usize, FxHashMap<String, Vec<(usize, String)>>>;
 
 include!("extract_value_flow/value_flow_facts.rs");
-/// Small syntactic annotation shapes; resolution uses the prepared fact catalog.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ValueType {
-    Reference(String),
-    Member(Box<ValueType>, String),
-    Object(FxHashMap<String, ValueType>),
-    Unknown,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CallableAssignment {
-    pub scope: usize,
-    pub name: String,
-    pub completed_at: u32,
-    pub callable: Option<CallableId>,
-    pub owner: Option<CallableId>,
-    pub region_start: Option<u32>,
-    pub guaranteed: bool,
-}
-#[path = "extract_value_flow/value_descriptors.rs"]
-mod value_descriptors;
-pub use value_descriptors::{
-    ValueBinding, ValueCall, ValueExpression, ValueParameter, ValueProjection,
-};
 #[path = "extract_value_flow/collect.rs"]
 mod collect;
 #[path = "extract_value_flow/collect_helpers.rs"]
 mod collect_helpers;
 #[path = "extract_value_flow/receiver_escapes.rs"]
 pub(super) mod receiver_escapes;
+#[path = "extract_value_flow/value_descriptors.rs"]
+mod value_descriptors;
 
 #[path = "extract_value_flow/assignment_root_values.rs"]
 mod assignment_root_values;
@@ -69,6 +37,8 @@ mod expressions;
 mod adapters;
 #[path = "extract_value_flow/assigned_members.rs"]
 mod assigned_members;
+#[path = "extract_value_flow/bind_prefix.rs"]
+mod bind_prefix;
 #[path = "extract_value_flow/completion.rs"]
 mod completion;
 #[path = "extract_value_flow/mutations.rs"]
@@ -95,16 +65,12 @@ mod parameter_patterns;
 #[path = "extract_value_flow/default_origins.rs"]
 mod default_origins;
 
-#[path = "extract_value_flow/mutation_history.rs"]
-mod mutation_history;
-pub use mutation_history::ValueMutationHistory;
 #[path = "extract_value_flow/module_provider_guards.rs"]
 mod module_provider_guards;
-pub(crate) use module_provider_guards::ModuleAssignedMutations;
 #[path = "extract_value_flow/module_provider_intervals.rs"]
 mod module_provider_intervals;
-pub(crate) use module_provider_intervals::ModuleProviderTarget;
-pub(crate) use mutation_history::ValueAssignedMutations;
+#[path = "extract_value_flow/mutation_history.rs"]
+mod mutation_history;
 
 #[cfg(test)]
 #[path = "extract_value_flow/from_expression_tests.rs"]
@@ -120,13 +86,10 @@ mod destructuring_order;
 #[path = "extract_value_flow/mutation_assignments.rs"]
 mod mutation_assignments;
 
-#[path = "extract_value_flow/replacements.rs"]
-mod replacements;
-pub use replacements::{
-    ValueRepeatCall, ValueRepeatRegion, ValueReplacementFacts, ValueReplacementWrite,
-};
 #[path = "extract_value_flow/reference_replacements.rs"]
 mod reference_replacements;
+#[path = "extract_value_flow/replacements.rs"]
+mod replacements;
 
 #[path = "extract_value_flow/phase_catalog.rs"]
 mod phase_catalog;

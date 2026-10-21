@@ -606,18 +606,74 @@ the same receiver in corresponding live slots retain definite-write behavior.
 Unchanged parameters captured within their owning function count as the same
 receiver; reassignment separates their identities, while uncertain or
 cross-function writes keep the conservative possible-origin behavior.
+For a proven unconditional parameter assignment from another named value in
+the same function, receiver projection uses the parameter's value when the
+array entry was captured. In `box = other; const args = [box]`, a later write
+through `args` affects `other`, not the original argument. In
+`const args = [box]; box = other`, the array still holds the original argument;
+the rebinding does not rewrite its stored entry. Assignment completion, rather
+than the start of its right-hand side, separates these captures.
+Default callbacks forward their input origins before these snapshots are formed;
+parameter reassignment unions are added separately.
+Newly recovered destructuring writes remain possible evidence. Their method
+candidates stay alongside unknown evidence even when a captured assignment can
+be selected; retaining that candidate does not assert that the original method
+runs on a concrete path.
 A later unconditional array assignment replaces these alternatives; unconditional
-pushes retain their existing write precision. Receiver writes recovered through
+pushes at proven array lengths retain their existing write precision. When passed
+through a spread, conditional and repeated pushes provide possible receiver origins, preserving
+original methods alongside unknown evidence when the push may not execute.
+After a push or guarded width change makes the array length uncertain, proven
+common slots remain fixed, while later pushed values and trailing arguments
+become a possible open tail. This also applies to varying widths without a push.
+This covers a later value shifting into an earlier parameter when the optional
+push is skipped, without enumerating combinations of branch lengths.
+Pushes written in another function are possible: this projection does not prove
+helper reachability, even when the helper has no local invocation.
+Repeated reads of the same guard are not correlated. For example, the saved
+`interleaved-correlated-width.mts` fixture always replaces `tail.get` before its
+final reads, but the projection can retain that vendor candidate through an
+infeasible combination of guarded array widths. Its test requires unknown
+evidence without asserting that the vendor method can run. The separate
+`interleaved.mts` exact-target control uses an explicit unconditional write.
+Fixed arguments before that tail keep their slots, including ordinary arguments
+between an earlier fixed spread and the spread that introduces uncertainty.
+Built-in `.call` and `.bind` remove their receiver argument before those slots
+and the uncertain-spread boundary are interpreted.
+For `.bind`, the receiver is the first expanded argument: an empty leading
+spread leaves the next argument as the receiver, while a fixed spread retains
+its remaining values as bound parameters. An uncertain leading spread keeps
+candidate parameter origins possible.
+A suffix after an open prefix and guarded
+spread is also possible: it need not occupy a parameter that the callee writes.
+An arbitrary prefix can itself contain the same receiver, so it does not prove
+the suffix's receiver is untouched. Receiver writes recovered through
 these alternatives or explicit
 `super` calls retain previously reported call targets as possibilities
 alongside unknown evidence, rather than claiming one known callee or hiding the call.
 Array assignment and push discovery still use source-offset windows: writes in
 a function declared after its consumer can execute earlier at runtime, so this
 ordering remains an approximation.
+These projections do not prove correlations between separate guards or execute
+callbacks to establish their exact invocation state. For example,
+`if (flag) args = [box]; args.push(other); if (flag) args = [other]` can retain
+`box` as a possible origin even though the final array always starts with
+`other`. Foreign writes, nested captures, callback forwarding, and unsupported
+parameter assignments retain conservative origin unions. The saved controls
+record these limits; a possible candidate is not a claim that a concrete runtime
+path reaches it, and missing findings do not establish safety.
 Callable bodies can refer to receiver aliases declared later: pending writes
 reuse the completed binding facts and each initializer's acquisition coordinates.
 Uncalled, unavailable, and escaped writers retain conservative unknown targets;
 declaration order does not establish execution.
+Origins recovered through a later assigned-callback invocation extend the initial
+parameter capture even when a direct call already populated it. They remain
+separate from later parameter-reassignment generations.
+This does not prove conditional caller reachability. In the saved late-forwarded
+example, changing `invoke(b)` to `if (flag) invoke(b)` can still omit `untouched.get`
+when `flag` is false, although that receiver is untouched at runtime. This is a
+pre-existing limitation; the unconditional controls do not establish this broader
+guarantee. See [the audit](https://github.com/jonathanong/no-mistakes/issues/2445).
 An immutable repository export alias of an external receiver, such as
 `export const receiver = shared`, keeps that external receiver's canonical
 identity through named re-exports. Repeated foreign helper reads of a written

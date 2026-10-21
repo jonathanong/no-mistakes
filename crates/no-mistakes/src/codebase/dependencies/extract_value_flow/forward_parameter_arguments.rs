@@ -9,9 +9,12 @@ pub(super) fn expand(
     let (mut definite, mut possible, mut seen) = (Vec::new(), Vec::new(), fx_set());
     while let Some((source, uncertain)) = pending.pop() {
         let key = (source.0 .0 .0 .0, source.0 .0 .0 .1.clone());
-        let values = origins.values(&key);
-        let extra = origins.possible_values(&key);
-        if !seen.insert((key, uncertain)) || (values.is_none() && extra.is_none()) {
+        let read = source.0 .2;
+        let selected = origins.values_at(&key, read);
+        let uncertain = uncertain || selected.uncertain;
+        if !seen.insert((key, read, uncertain))
+            || (selected.values.is_none() && selected.possible.iter().all(Option::is_none))
+        {
             if uncertain {
                 possible.push(source);
             } else {
@@ -20,7 +23,11 @@ pub(super) fn expand(
             continue;
         }
         let ((((_, _), path), reads, _), exiting, _, propagated) = source;
-        for (values, newly_uncertain) in [(values, false), (extra, true)] {
+        for (values, newly_uncertain) in [
+            (selected.values, false),
+            (selected.possible[0], true),
+            (selected.possible[1], true),
+        ] {
             let mut references = Vec::new();
             for value in values.into_iter().flatten() {
                 nested::write_receiver_references(value, &path, &reads, &mut references);
@@ -28,9 +35,7 @@ pub(super) fn expand(
             for reference in references {
                 let item = (reference, exiting, true, propagated);
                 let uncertain = uncertain || newly_uncertain;
-                if origins.values(&item.0 .0 .0).is_some()
-                    || origins.possible_values(&item.0 .0 .0).is_some()
-                {
+                if origins.has_values(&item.0 .0 .0) {
                     pending.push((item, uncertain));
                 } else if uncertain {
                     possible.push(item);

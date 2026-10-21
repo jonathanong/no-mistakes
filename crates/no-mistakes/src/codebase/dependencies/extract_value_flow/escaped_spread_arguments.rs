@@ -3,17 +3,24 @@ use super::*;
 #[derive(Default)]
 pub(super) struct Arguments {
     pub(super) position: usize,
+    pub(super) redirected: FxHashSet<usize>,
     pub(super) open_at: Option<usize>,
     pub(super) extras: FxHashMap<usize, Vec<ValueExpression>>,
     pub(super) open_vals: Vec<ValueExpression>,
+    pub(super) guarded_open_tail: bool,
     pub(super) guarded_extras: FxHashMap<usize, Vec<ValueExpression>>,
     pub(super) guarded_open: Vec<ValueExpression>,
 }
 impl Arguments {
     pub(super) fn ordinary(&mut self, values: Vec<ValueExpression>, raw_index: usize) {
         if self.open_at.is_some() {
-            self.open_vals.extend(values);
+            if self.guarded_open_tail {
+                self.guarded_open.extend(values);
+            } else {
+                self.open_vals.extend(values);
+            }
         } else if values.len() != 1 || self.position != raw_index {
+            self.redirected.insert(raw_index);
             if !values.is_empty() {
                 self.extras.entry(self.position).or_default().extend(values);
             }
@@ -47,7 +54,11 @@ impl Arguments {
                             super::escaped_call_arguments::argument_values(collector, expression)
                         });
                         if self.open_at.is_some() {
-                            self.open_vals.extend(values);
+                            if self.guarded_open_tail {
+                                self.guarded_open.extend(values);
+                            } else {
+                                self.open_vals.extend(values);
+                            }
                         } else {
                             self.extras.entry(self.position).or_default().extend(values);
                             self.position += 1;
@@ -59,9 +70,10 @@ impl Arguments {
         }
         let value = collector.value_expression(expression);
         match super::escaped_guarded_arrays::entries(collector, &value, before) {
-            Some(entries) if self.open_at.is_none() => {
+            Some(projection) if self.open_at.is_none() => {
+                let start = self.position;
                 let mut next = self.position;
-                for (slot, value, possible) in entries {
+                for (slot, value, possible) in projection.entries {
                     let at = self.position + slot;
                     let channel = if possible {
                         &mut self.guarded_extras
@@ -72,14 +84,27 @@ impl Arguments {
                     next = next.max(at + 1);
                 }
                 self.position = next;
+                if let Some((minimum, tail)) = projection.tail {
+                    self.open_at = Some(start + minimum);
+                    self.position = start + minimum;
+                    self.guarded_open_tail = true;
+                    self.guarded_open.extend(tail);
+                }
             }
-            Some(entries) => {
-                for (_, value, possible) in entries {
-                    if possible {
+            Some(projection) => {
+                // An unknown prefix can shift the guarded spread and its suffix
+                // beyond a written parameter; these are possible destinations.
+                self.guarded_open_tail |= projection.tail.is_some()
+                    || projection.entries.iter().any(|(_, _, possible)| *possible);
+                for (_, value, possible) in projection.entries {
+                    if possible || self.guarded_open_tail {
                         self.guarded_open.push(value);
                     } else {
                         self.open_vals.push(value);
                     }
+                }
+                if let Some((_, tail)) = projection.tail {
+                    self.guarded_open.extend(tail);
                 }
             }
             None => {
