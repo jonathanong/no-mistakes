@@ -199,3 +199,12 @@ fn literal_suffix_after_an_open_guarded_spread_remains_possible() {
         assert_export(&built, &root, file, callee);
     }
 }
+
+#[test]
+fn unconditional_parameter_rebinding_does_not_write_the_original_argument() {
+    let (built, root) = graph();
+    let file = "reassigned-parameter";
+    assert_unknown(&built, &root, file, "replica.get");
+    assert_export(&built, &root, file, "untouched.get");
+    assert_export(&built, &root, file, "primary.get");
+}

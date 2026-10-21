@@ -3,6 +3,7 @@
 use super::*;
 #[path = "escaped_array_pushes.rs"]
 mod pushes;
+type GuardedEntries = (Vec<(usize, ValueExpression)>, FxHashSet<usize>);
 
 impl ImportCollector {
     pub(in super::super::super) fn note_array_value(
@@ -41,7 +42,7 @@ pub(super) fn guarded_entries(
     collector: &ImportCollector,
     value: &ValueExpression,
     before: u32,
-) -> Option<(Vec<(usize, ValueExpression)>, FxHashSet<usize>)> {
+) -> Option<GuardedEntries> {
     let (declared_at, items) = live_items(collector, value, before)?;
     let mut optional = fx_set();
     let mut found = Vec::new();

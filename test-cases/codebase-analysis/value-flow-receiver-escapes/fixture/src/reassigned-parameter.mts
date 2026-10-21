@@ -2,7 +2,7 @@ import { primary, replica, untouched } from '@vendor/valkey';
 function replacement() {}
 let box = { client: primary };
 function mutate(value) {
-  // The original argument and this reassignment are both possible receivers.
+  // This unconditional rebind excludes the original argument from the later write.
   value = box;
   value.client.get = replacement;
 }
