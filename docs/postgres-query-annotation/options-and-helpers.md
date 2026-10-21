@@ -45,10 +45,10 @@ functions. Namespace imports remain unanalyzable. Captured local bindings use th
 value available when the helper runs; calling before initialization remains opaque.
 Imported helpers share their module bindings during tracing, so an opaque mutator
 invalidates a module builder before a later helper reads it.
-Existing local `sql` template-tag implementations retain their previous behavior
-and can forward annotation prefixes through imported helpers. Unary and sequence
-expressions are traversed for nested executor calls without treating those
-wrappers as SQL values.
+A locally defined `sql` helper is not a configured tag. Its calls stay
+unanalyzable. Only the intrinsic `String.raw` tag and configured imports
+forward annotation prefixes. Unary and sequence expressions are traversed
+for nested executor calls without treating those wrappers as SQL values.
 Await an async helper before passing its returned SQL to an executor; a promise passed
 without awaiting it remains unanalyzable. Template substitutions are traversed for nested
 executor calls. Unknown calls or untrusted template tags that receive a mutable
