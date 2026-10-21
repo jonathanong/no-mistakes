@@ -50,6 +50,7 @@ fn bench_shard_unset_and_general_memory_run_every_named_surface() {
         GRAPH_FINALIZATION,
         GRAPH_PRODUCTION,
         QUERY,
+        QUERY_INDEXES,
     ];
     for current in [None, Some(""), Some(GENERAL_MEMORY)] {
         assert_eq!(parse_bench_shard(current), Ok(BenchShard::All));
@@ -72,6 +73,7 @@ fn bench_shard_named_values_isolate_one_surface() {
         GRAPH_FINALIZATION,
         GRAPH_PRODUCTION,
         QUERY,
+        QUERY_INDEXES,
     ];
     for requested in named {
         assert_eq!(

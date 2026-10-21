@@ -7,7 +7,7 @@ use no_mistakes::codebase::ts_source::discover_visible_paths;
 use no_mistakes::codebase::workspaces;
 
 pub(super) fn bench_symbols(c: &mut Criterion) {
-    if !shard::should_run(shard::QUERY) {
+    if !shard::should_run(shard::QUERY_INDEXES) {
         return;
     }
     let root = fixture_root();
@@ -50,7 +50,7 @@ pub(super) fn bench_symbols(c: &mut Criterion) {
 }
 
 pub(super) fn bench_workspace(c: &mut Criterion) {
-    if !shard::should_run(shard::QUERY) {
+    if !shard::should_run(shard::QUERY_INDEXES) {
         return;
     }
     let root = fixture_root();
