@@ -165,6 +165,8 @@ fn flatten(value: &ValueExpression, slot: usize, found: &mut Vec<(usize, ValueEx
             flatten(left, slot, found);
             flatten(right, slot, found);
         }
+        // SQL provenance inputs are opaque values for receiver argument replay.
+        ValueExpression::Derived(_) => found.push((slot, ValueExpression::Unknown)),
         other => found.push((slot, other.clone())),
     }
 }

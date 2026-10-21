@@ -92,6 +92,17 @@ Make project globs mutually exclusive, add the missing include, or enable
 Prefer correcting project ownership. Use a file directive only for a generated
 test artifact that should not be selected by Vitest.
 
+## Limitations
+
+Discovery skips any directory segment named `node_modules`, `dist`, `.git`,
+`.next`, `coverage`, `fixtures`, `target`, or `build`. A test under one of
+those names is not visible, so it is not reported as unmapped or multiply
+mapped.
+
+```text
+src/build/users.test.ts
+```
+
 ## Related rules
 
 [`vitest-test-correspondence`](vitest-test-correspondence.md) checks source/test

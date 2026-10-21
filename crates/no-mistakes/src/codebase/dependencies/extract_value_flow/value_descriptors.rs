@@ -2,6 +2,8 @@ use super::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ValueExpression {
+    /// Opaque computed value: parts retain data provenance, never runtime elements.
+    Derived(std::sync::Arc<[ValueExpression]>),
     Named {
         name: String,
         scope: Option<usize>,
@@ -35,6 +37,8 @@ pub enum ValueExpression {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValueBinding {
+    /// Lexical const identity is retained even when members are mutated.
+    pub immutable: bool,
     /// Declaring callable; distinct from a nested closure reading this binding.
     pub owner: Option<CallableId>,
     pub name: String,

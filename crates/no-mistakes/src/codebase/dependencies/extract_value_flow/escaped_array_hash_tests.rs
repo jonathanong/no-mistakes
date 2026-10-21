@@ -33,6 +33,8 @@ fn exact_candidate_hashing_covers_values_and_map_order_without_erasing_identity(
         assert_eq!(fingerprint(&(0, left)), fingerprint(&(0, right)));
     }
     let values = vec![
+        ValueExpression::Derived(vec![ValueExpression::Null, ValueExpression::Undefined].into()),
+        ValueExpression::Derived(vec![ValueExpression::Undefined, ValueExpression::Null].into()),
         (*base).clone(),
         named(Some(1), 4, None),
         named(Some(0), 5, None),

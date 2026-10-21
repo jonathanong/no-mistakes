@@ -55,6 +55,39 @@ pub fn has_section(content: &str, heading: &str) -> bool {
         .any(|s| s.heading == heading)
 }
 
+/// Return `true` when `content` satisfies `required`.
+///
+/// An ATX `required` value such as `## Perf` must appear as a parsed heading
+/// at that level. `# Perf` does not satisfy `## Perf`. A fenced or four-space
+/// example of `## Perf` is not a heading. A bare heading name still matches
+/// any level through [`has_section`].
+pub fn has_required_heading(content: &str, required: &str) -> bool {
+    let required = required.trim();
+    if let Some((level, heading)) = parse_atx_heading_spec(required) {
+        return parse_markdown_sections(content)
+            .iter()
+            .any(|s| s.level == level && s.heading == heading);
+    }
+    has_section(content, required)
+}
+
+/// Parse `## Perf` into `(2, "Perf")`. Requires CommonMark ATX shape: 1–6
+/// hashes, then a space or tab before the heading text (or an empty heading).
+fn parse_atx_heading_spec(required: &str) -> Option<(u32, &str)> {
+    let hashes = required.bytes().take_while(|&b| b == b'#').count();
+    if !(1..=6).contains(&hashes) {
+        return None;
+    }
+    let rest = &required[hashes..];
+    if rest.is_empty() {
+        return Some((hashes as u32, ""));
+    }
+    if !rest.starts_with(' ') && !rest.starts_with('\t') {
+        return None;
+    }
+    Some((hashes as u32, rest.trim()))
+}
+
 fn heading_level_to_u32(level: HeadingLevel) -> u32 {
     match level {
         HeadingLevel::H1 => 1,

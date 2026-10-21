@@ -12,6 +12,27 @@ impl ImportCollector {
         let ForStatementLeft::VariableDeclaration(declaration) = left else {
             return;
         };
+        if declaration.kind == VariableDeclarationKind::Const {
+            let source = self.value_expression(right);
+            for declarator in &declaration.declarations {
+                for name in binding_names(&declarator.id) {
+                    let scope = self
+                        .callee_binding_scope(&name)
+                        .unwrap_or(self.current_lexical_scope_id());
+                    self.value_flow.iteration_bindings.push(ValueBinding {
+                        immutable: true,
+                        owner: self.current_function_id(),
+                        name,
+                        scope,
+                        declared_at: declarator.span.end,
+                        repeated: true,
+                        invalidated_at: None,
+                        mutation_contexts: fx_set(),
+                        value: source.clone(),
+                    });
+                }
+            }
+        }
         let Some(mut values) = super::super::receiver_escapes::array_elements(
             self,
             &self.value_expression(right),

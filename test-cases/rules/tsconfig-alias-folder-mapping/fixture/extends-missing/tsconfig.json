@@ -1,0 +1,8 @@
+{
+  "extends": "./missing.json",
+  "compilerOptions": {
+    "paths": {
+      "@api/*": ["src/services/*"]
+    }
+  }
+}

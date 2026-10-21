@@ -56,6 +56,29 @@ fn no_options_is_noop() {
 }
 
 #[test]
+fn existing_unloadable_tsconfig_is_a_finding() {
+    let root = fixture("extends-missing");
+    let config = config_from_yaml(
+        "tsconfig: tsconfig.json\nbaseDir: src\nmappings:\n  - prefix: \"@api\"\n    root: api\n",
+    );
+    let findings = check(&root, &config).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 1);
+    assert!(
+        findings[0].file.ends_with("tsconfig.json"),
+        "{}",
+        findings[0].file
+    );
+    assert!(
+        findings[0]
+            .message
+            .contains("tsconfig could not be loaded and alias mappings were not checked"),
+        "{}",
+        findings[0].message
+    );
+}
+
+#[test]
 fn missing_tsconfig_is_skipped() {
     let tmp = tempfile::tempdir().unwrap();
     let config = config_from_yaml(

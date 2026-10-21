@@ -153,6 +153,19 @@ an intentional whole-file exception. Prefer `coverage.routes: false`,
 `coverage.selectors: false`, or a narrower app/selector scope when the policy
 does not apply to the entire rule.
 
+## Limitations
+
+Playwright file discovery skips a directory segment named `.git`,
+`node_modules`, `target`, `dist`, `build`, `coverage`, or `test-results`,
+even when the file is tracked. `node_modules` is already not scanned; the
+other names are dropped the same way. A violation that lives only under
+`src/components/build/` is not reported.
+
+```tsx
+// src/components/build/SaveButton.tsx
+<button data-pw="save-profile">Save</button>
+```
+
 ## Related rules
 
 See [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md)

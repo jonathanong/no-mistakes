@@ -94,8 +94,10 @@ pub(super) fn scan_doc_section_with_sources(
         let Some(content) = crate::codebase::rules::read_source(sources, file) else {
             continue;
         };
-        let heading_text = opts.required_heading.trim_start_matches('#').trim();
-        if !crate::codebase::markdown_sections::has_section(&content, heading_text) {
+        if !crate::codebase::markdown_sections::has_required_heading(
+            &content,
+            &opts.required_heading,
+        ) {
             findings.push(RuleFinding {
                 rule: REQUIRED_DOC_SECTION_RULE_ID.to_string(),
                 file: rel.clone(),

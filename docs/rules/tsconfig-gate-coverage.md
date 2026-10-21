@@ -414,6 +414,17 @@ Prefer `allowProjects` for dependency-cruiser or generated configs. Use a
 top-of-file `no-mistakes-disable-file tsconfig-gate-coverage` directive only
 when the exception cannot be expressed as policy.
 
+## Limitations
+
+Discovery skips any directory segment named `node_modules`, `dist`, `.git`,
+`.next`, `coverage`, `fixtures`, `target`, or `build`. A tracked tsconfig
+under one of those names is not visible, so a missing `tsc` gate for it is
+not reported.
+
+```text
+fixtures/pkg/tsconfig.json
+```
+
 ## Related rules
 
 [`tsconfig-file-coverage`](tsconfig-file-coverage.md) checks membership in a

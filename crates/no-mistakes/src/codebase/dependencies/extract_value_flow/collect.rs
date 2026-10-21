@@ -34,7 +34,7 @@ impl ImportCollector {
                 self.record_mutable_receiver_binding(&declarator.id, value, declarator.span.end);
                 return;
             }
-            self.record_value_pattern(&declarator.id, value, declarator.span.start);
+            self.record_value_pattern(&declarator.id, value, declarator.span.start, immutable);
         }
     }
     pub(super) fn record_value_pattern(
@@ -42,6 +42,7 @@ impl ImportCollector {
         pattern: &BindingPattern<'_>,
         value: ValueExpression,
         declared_at: u32,
+        immutable: bool,
     ) {
         match pattern {
             BindingPattern::BindingIdentifier(identifier) => {
@@ -57,6 +58,7 @@ impl ImportCollector {
                     .push(self.value_flow.bindings.len());
                 self.record_value_reference(scope, &name, &value);
                 self.value_flow.bindings.push(ValueBinding {
+                    immutable,
                     owner: self.current_function_id(),
                     name,
                     scope,
@@ -81,6 +83,7 @@ impl ImportCollector {
                                     key.to_string(),
                                 ),
                                 declared_at,
+                                immutable,
                             );
                         }
                     }
@@ -93,6 +96,7 @@ impl ImportCollector {
                     std::sync::Arc::new(self.value_expression(&assignment.right)),
                 ),
                 declared_at,
+                immutable,
             ),
             BindingPattern::ArrayPattern(_) => {}
         }

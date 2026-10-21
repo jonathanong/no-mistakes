@@ -7,9 +7,14 @@ mod sql;
 mod validators;
 
 pub(crate) use expressions::walk_expression;
-pub(crate) use graph::{graph_plan, unique_export, unique_namespace_member, UniqueExport};
+pub(crate) use graph::{
+    graph_plan, registry_route, unique_export, unique_namespace_member, RegistryRoutes,
+    UniqueExport,
+};
 pub(crate) use options::{compile, CompiledOptions, Options};
-pub(crate) use provenance::{interpolations, is_process_env, is_process_specifier, Provenance};
+pub(crate) use provenance::{
+    interpolations, is_process_env, is_process_specifier, Bindings, Provenance,
+};
 pub(crate) use sql::{identifier_placeholder, sql_calls, SqlCall};
 
 use crate::codebase::check_facts::CheckFactMap;
