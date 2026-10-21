@@ -263,6 +263,13 @@ describe("nullable option helpers", () => {
         object: { type: "Identifier", name: "opts" },
       }),
     ).toEqual({ object: "opts", property: "timeout" });
+    expect(
+      memberRootAndProperty({
+        type: "MemberExpression",
+        object: { type: "Identifier", name: "opts" },
+        property: { type: "CallExpression" },
+      }),
+    ).toBe(null);
     expect(objectPropertyName({ type: "SpreadElement" })).toBe(null);
     expect(
       objectPropertyName({
