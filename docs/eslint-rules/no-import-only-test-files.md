@@ -8,6 +8,7 @@ duplicates the runner's built-in test discovery.
 ## Disallowed
 
 ```ts
+// suite.test.ts
 import "./users.test";
 import "./orders.test";
 ```
@@ -15,6 +16,7 @@ import "./orders.test";
 ## Allowed
 
 ```ts
+// users.test.ts
 test("users are listed", () => {
   expect(listUsers()).toEqual([]);
 });

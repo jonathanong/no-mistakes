@@ -31,6 +31,7 @@ function's body and is not scanned.
 ## Disallowed
 
 ```ts
+// e2e/feed.spec.ts
 const waitForNextPage = page.waitForRequest(
   (req) => req.url().includes("/api/v1/posts") && req.url().includes("after="),
 );
@@ -41,6 +42,7 @@ await waitForNextPage;
 ## Allowed
 
 ```ts
+// e2e/feed.spec.ts
 const waitForNextPage = page.waitForRequest(
   (req) => req.url().includes("/api/v1/posts") && req.url().includes("after="),
 );
@@ -49,6 +51,7 @@ await waitForNextPage;
 ```
 
 ```ts
+// e2e/scroll-top.spec.ts
 // No paginated wait anywhere in this file — a raw scroll here is just testing scroll-to-top.
 await page.evaluate(() => window.scrollTo(0, 0));
 ```

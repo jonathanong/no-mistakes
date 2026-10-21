@@ -8,12 +8,16 @@ rendering code without providing an async boundary or useful suspension.
 ## Disallowed
 
 ```tsx
+import React from "react";
+
 const user = React.use(Promise.resolve(initialUser));
 ```
 
 ## Allowed
 
 ```tsx
+import React from "react";
+
 const user = initialUser;
 const userFromServer = React.use(userPromise);
 ```

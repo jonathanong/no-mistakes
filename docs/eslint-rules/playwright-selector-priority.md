@@ -8,6 +8,7 @@ than raw CSS, tag, or `text=` selectors.
 ## Disallowed
 
 ```ts
+// e2e/save.spec.ts
 page.locator("button.submit");
 page.locator("text=Save");
 page.locator("h2");
@@ -16,6 +17,7 @@ page.locator("h2");
 ## Allowed
 
 ```ts
+// e2e/save.spec.ts
 page.getByRole("button", { name: "Save" });
 page.getByText("Save");
 page.getByRole("heading", { level: 2 });

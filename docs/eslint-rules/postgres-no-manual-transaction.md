@@ -8,6 +8,8 @@ cleanup, and nesting difficult to audit.
 ## Disallowed
 
 ```ts
+import { query } from "@example/db";
+
 await query("BEGIN");
 await query("COMMIT");
 ```
@@ -15,6 +17,8 @@ await query("COMMIT");
 ## Allowed
 
 ```ts
+import { withTransaction } from "@example/db";
+
 await withTransaction(async (tx) => {
   await tx.query("/* update-user */ UPDATE users SET active = true");
 });
@@ -31,6 +35,15 @@ This distinction does not certify that a client's
 query wrapper supports recovery; the owner must preserve that wrapper's contract.
 
 ## Options
+
+```js
+{
+  "no-mistakes/postgres-no-manual-transaction": [
+    "error",
+    { importSpecifier: "@example/db" },
+  ],
+}
+```
 
 - `importSpecifier` identifies the database module and defaults to
   empty (configure your database module explicitly).

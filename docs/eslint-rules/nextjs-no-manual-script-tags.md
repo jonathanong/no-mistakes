@@ -8,6 +8,7 @@
 ## Disallowed
 
 ```tsx
+// app/page.tsx
 export function Page() {
   return <script src="https://example.test/widget.js" />;
 }
@@ -16,6 +17,7 @@ export function Page() {
 ## Allowed
 
 ```tsx
+// app/page.tsx
 import Script from "next/script";
 
 export function Page() {

@@ -8,6 +8,7 @@ shared state that fails under normal parallel execution.
 ## Disallowed
 
 ```ts
+// users.test.ts
 describe.sequential("users", () => {
   test("creates", () => {});
 });
@@ -16,6 +17,7 @@ describe.sequential("users", () => {
 ## Allowed
 
 ```ts
+// users.test.ts
 describe("users", () => {
   test("creates", () => {});
 });
