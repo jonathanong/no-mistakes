@@ -99,13 +99,14 @@ pub(super) fn project_relative_executor_scopes(
             });
         }
         if annotation {
-            let fallback = workspace_fallback::WorkspaceFallback::new(
-                &workspace,
-                &visible,
-                annotation_workspace_importers,
-                files,
-            );
             crate::perf_trace::trace("postgres.annotation.project", || {
+                let mut fallback = workspace_fallback::WorkspaceFallback::new(
+                    &workspace,
+                    &visible,
+                    annotation_workspace_importers,
+                    files,
+                );
+                fallback.prepare(files, |spec, file| resolver.resolve(spec, file));
                 crate::codebase::postgres::query_annotation::project::project(
                     files,
                     |specifier, from| {

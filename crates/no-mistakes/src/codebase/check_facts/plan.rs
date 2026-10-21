@@ -1,5 +1,6 @@
 mod location_demand;
 mod rule_scans;
+mod ts_plan;
 use rule_scans::merge_embedded_sql_rule_ids;
 
 use std::sync::Arc;
@@ -43,7 +44,7 @@ pub struct CheckFactPlan {
     /// The owning request's ordinary importer catalog, including explicit overrides.
     #[doc(hidden)]
     pub query_annotation_catalog: Option<Arc<crate::codebase::ts_resolver::TsConfigCatalog>>,
-    /// Configured workspace importers: `None` is direct/unrestricted; `Some(empty)` fails closed.
+    /// Configured transitive-workspace seeds: `None` is direct/unrestricted; `Some(empty)` fails closed.
     #[doc(hidden)]
     pub query_annotation_workspace_importers: Option<Arc<crate::fx::PathSet>>,
     /// Distinct configured embedded-SQL projections collected from each
@@ -187,24 +188,6 @@ impl CheckFactPlan {
         self.postgres_sql_include.dedup();
         self.graph.include(other.graph);
         self.graph_context.include(other.graph_context);
-    }
-
-    /// TS graph fact shapes guaranteed for every file collected with this
-    /// plan. Several check-only flags populate the canonical `TsFileFacts`
-    /// fields too; recording only `graph` would make a strict prepared graph
-    /// reject facts that were already collected in the same parse pass.
-    pub(super) fn collected_ts_plan(&self) -> crate::codebase::ts_source::facts::TsFactPlan {
-        let mut plan = self.graph;
-        plan.imports |=
-            self.query_annotation || self.embedded_sql || !self.embedded_sql_options.is_empty();
-        if self.imports {
-            plan.include(crate::codebase::ts_source::facts::TsFactPlan::imports());
-        }
-        plan.symbols |= self.symbols;
-        plan.source |= self.source || self.raw_source;
-        plan.react |= self.react;
-        plan.queue_project |= self.queue;
-        plan
     }
 }
 #[cfg(test)]

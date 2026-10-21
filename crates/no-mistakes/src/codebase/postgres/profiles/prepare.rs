@@ -41,7 +41,9 @@ pub(crate) fn prepare_rule_sql_facts(
             )
         }),
         postgres_dml: !profiles.is_empty()
-            && dml_ids.iter().any(|id| !matches!(*id, "postgres-require-query-annotation")),
+            && dml_ids
+                .iter()
+                .any(|id| !matches!(*id, "postgres-require-query-annotation")),
         postgres_variants: dml_ids.iter().any(|id| {
             matches!(
                 *id,
