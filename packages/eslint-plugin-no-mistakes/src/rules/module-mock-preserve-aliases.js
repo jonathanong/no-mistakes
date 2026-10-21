@@ -1,7 +1,7 @@
 "use strict";
 
 const { collectPatternNames } = require("./ast-pattern-names");
-const { unwrapExpression } = require("./async-ast");
+const { unwrapExpression, unwrapSequence } = require("./async-ast");
 const {
   frameworkBindingModule,
   expressionName,
@@ -124,16 +124,20 @@ function createMockAliases(context, methods) {
       return entry.mock;
     },
     matchCall(node) {
-      const direct = this.get(node.callee);
-      if (direct) return { mock: direct };
+      const callee = unwrapSequence(node.callee);
+      if (callee?.type === "Identifier") {
+        const direct = this.get(callee);
+        if (direct) return { mock: direct };
+      }
       if (
-        node.callee.type !== "MemberExpression" ||
-        node.callee.object.type !== "Identifier" ||
+        node.callee?.type !== "MemberExpression" ||
         !["call", "apply"].includes(memberPropertyName(node.callee))
       ) {
         return null;
       }
-      const mock = this.get(node.callee.object);
+      const object = unwrapSequence(node.callee.object);
+      if (object?.type !== "Identifier") return null;
+      const mock = this.get(object);
       if (!mock) return null;
       const args = node.arguments ?? [];
       if (args.some((arg) => arg?.type === "SpreadElement")) return null;

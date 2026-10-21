@@ -356,6 +356,24 @@ describe("call-binding recall", () => {
       ),
       ["boundary", "boundary"],
     );
+    assert.deepEqual(
+      messages(
+        fixture("module-mock-preserve-exports/comma-alias.mjs"),
+        "module-mock-preserve-exports",
+        undefined,
+        "comma-alias.mjs",
+      ),
+      ["preserve", "preserve"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("module-mock-preserve-exports/comma-alias.mjs"),
+        "module-mock-boundary",
+        undefined,
+        "comma-alias.mjs",
+      ),
+      ["boundary", "boundary"],
+    );
     assert.equal(
       messages(
         fixture("no-global-fetch-outside-helper/recall.mjs"),
