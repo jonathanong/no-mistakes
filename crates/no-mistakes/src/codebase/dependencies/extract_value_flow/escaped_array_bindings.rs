@@ -8,6 +8,7 @@ impl ImportCollector {
         scope: usize,
         name: &str,
         at: u32,
+        ready_at: u32,
         value: &ValueExpression,
     ) {
         if let ValueExpression::Array(items) = value {
@@ -15,7 +16,7 @@ impl ImportCollector {
                 || self.conditional_execution
                 || self.repeat_depth > self.call_repeat_base;
             self.receiver_escapes.guarded_arrays |= guarded;
-            self.note_guarded_array(scope, name, at, items, guarded);
+            self.note_guarded_array(scope, name, at, ready_at, items, guarded);
             self.receiver_escapes.arrays.push((
                 scope,
                 name.to_string(),
@@ -137,7 +138,7 @@ fn append_pushes(
 }
 
 impl ImportCollector {
-    pub(in super::super::super) fn note_array_push(&mut self, call: &ValueCall) {
+    pub(in super::super::super) fn note_array_push(&mut self, call: &ValueCall, ordinary: bool) {
         let ValueExpression::Member(receiver, method) = &call.callee else {
             return;
         };
@@ -147,6 +148,7 @@ impl ImportCollector {
         let ValueExpression::Named { name, scope, .. } = receiver.as_ref() else {
             return;
         };
+        self.note_guarded_array_push(scope.unwrap_or(0), name, call, ordinary);
         self.receiver_escapes
             .pushes
             .entry(scope.unwrap_or(0))

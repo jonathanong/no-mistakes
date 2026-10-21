@@ -23,7 +23,7 @@ impl ImportCollector {
         let scope = self
             .callee_binding_scope(name)
             .unwrap_or(self.current_lexical_scope_id());
-        self.note_array_value(scope, name, identifier.span.start, &value);
+        self.note_array_value(scope, name, identifier.span.start, completed_at, &value);
         self.capture_mutable_root_phase((scope, name), identifier.span.start, &value, true);
         self.retain_receiver_origin(scope, name, value, completed_at, true);
     }
@@ -43,7 +43,8 @@ impl ImportCollector {
                         return;
                     }
                     let value = self.root_value_expression(&assignment.right);
-                    self.note_array_value(scope, name, assignment.span.start, &value);
+                    let span = assignment.span;
+                    self.note_array_value(scope, name, span.start, span.end, &value);
                     self.capture_mutable_root_phase(
                         (scope, name),
                         assignment.left.span().start,

@@ -1,4 +1,6 @@
 use super::*;
+#[path = "escaped_guarded_pushes.rs"]
+mod pushes;
 
 type Fields = std::sync::Arc<FxHashMap<String, ValueExpression>>;
 #[derive(Clone, PartialEq, Eq)]
@@ -8,8 +10,11 @@ struct Identity {
 }
 pub(super) struct Summary {
     at: u32,
+    ready_at: u32,
     guarded: bool,
     width: usize,
+    length: Option<usize>,
+    context: Option<CallableId>,
     seed: Fields,
     common: Option<FxHashMap<String, Identity>>,
 }
@@ -52,15 +57,30 @@ impl ImportCollector {
         scope: usize,
         name: &str,
         at: u32,
+        ready_at: u32,
         fields: &Fields,
         guarded: bool,
     ) {
+        let width = fields
+            .keys()
+            .filter_map(|key| key.parse::<usize>().ok())
+            .map(|slot| slot + 1)
+            .max()
+            .unwrap_or(0);
         let previous = self
             .receiver_escapes
             .guarded_summaries
             .entry(scope)
             .or_default()
             .remove(name);
+        let length = if guarded {
+            previous
+                .as_ref()
+                .and_then(|summary| summary.length)
+                .filter(|old| *old == width)
+        } else {
+            Some(width)
+        };
         let common = if guarded {
             let incoming = self.array_identities(fields);
             let mut common = previous.map_or_else(fx_map, |summary| {
@@ -73,12 +93,7 @@ impl ImportCollector {
         } else {
             None
         };
-        let width = fields
-            .keys()
-            .filter_map(|key| key.parse::<usize>().ok())
-            .map(|slot| slot + 1)
-            .max()
-            .unwrap_or(0);
+        let context = self.current_function_id();
         self.receiver_escapes
             .guarded_summaries
             .entry(scope)
@@ -87,8 +102,11 @@ impl ImportCollector {
                 name.to_owned(),
                 Summary {
                     at,
+                    ready_at,
                     guarded,
                     width,
+                    length,
+                    context,
                     seed: std::sync::Arc::clone(fields),
                     common,
                 },

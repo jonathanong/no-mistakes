@@ -102,3 +102,73 @@ fn guarded_latest_common_const_is_definite_before_its_declaration() {
         }
     }
 }
+
+#[test]
+fn guarded_latest_common_push_is_definite() {
+    let (built, root) = graph();
+    let file = "array-latest-guarded-common-push";
+    assert_unknown(&built, &root, file, "replica.get");
+    for callee in [
+        "replica.info",
+        "primary.get",
+        "untouched.get",
+        "unrelated.get",
+    ] {
+        assert_export(&built, &root, file, callee);
+    }
+}
+
+#[test]
+fn guarded_push_common_proof_keeps_optional_tails_possible() {
+    let (built, root) = graph();
+    for file in [
+        "array-latest-guarded-push-tail",
+        "array-latest-guarded-conditional-push-prefix",
+    ] {
+        assert_unknown(&built, &root, file, "replica.get");
+        possible(&built, &root, file, "untouched.get");
+        assert_export(&built, &root, file, "replica.info");
+        assert_export(&built, &root, file, "unrelated.get");
+    }
+    possible(
+        &built,
+        &root,
+        "array-latest-guarded-push-tail",
+        "primary.get",
+    );
+    assert_export(
+        &built,
+        &root,
+        "array-latest-guarded-conditional-push-prefix",
+        "primary.get",
+    );
+    for callee in ["replica.get", "untouched.get"] {
+        possible(&built, &root, "array-latest-guarded-varying-push", callee);
+    }
+    assert_export(
+        &built,
+        &root,
+        "array-latest-guarded-varying-push",
+        "primary.get",
+    );
+}
+
+#[test]
+fn guarded_push_common_proof_requires_certain_execution_and_width() {
+    let (built, root) = graph();
+    let file = "array-latest-guarded-uncertain-push";
+    for callee in ["replica.get", "untouched.info", "primary.del"] {
+        possible(&built, &root, file, callee);
+    }
+    assert_export(&built, &root, file, "unrelated.get");
+}
+
+#[test]
+fn guarded_push_proof_excludes_replacement_initializer_calls() {
+    let (built, root) = graph();
+    let file = "array-latest-guarded-push-initializer";
+    possible(&built, &root, file, "replica.get");
+    for callee in ["primary.get", "replica.info", "unrelated.get"] {
+        assert_export(&built, &root, file, callee);
+    }
+}

@@ -158,7 +158,7 @@ impl ImportCollector {
                 && self.repeat_depth == 0
                 && collect_helpers::direct_arrow(&call.callee),
         };
-        self.note_array_push(&value_call);
+        self.note_array_push(&value_call, true);
         self.value_flow.calls.push(value_call);
     }
 }
