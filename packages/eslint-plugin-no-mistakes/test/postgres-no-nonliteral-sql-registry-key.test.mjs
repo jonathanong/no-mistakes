@@ -39,6 +39,32 @@ describe("postgres-no-nonliteral-sql-registry-key", () => {
     assert.match(messages[2].message, /case "order items": return "order items";/);
   });
 
+  it("recognizes a finite-key cast only for the same registry", () => {
+    assert.equal(check("finite-key.ts").length, 0);
+    assert.equal(check("other-key.ts").length, 4);
+  });
+
+  it("follows one const SQL argument without duplicate reports", () => {
+    assert.equal(check("bound-sql.ts").length, 2);
+    assert.equal(check("bound-silent.ts").length, 0);
+  });
+
+  it("emits a complete switch expression with deduplicated final values", () => {
+    const [message] = check("duplicate-keys.ts");
+    assert.match(message.message, /switch \(kind\) \{/);
+    assert.equal(message.message.match(/case "orders"/g).length, 1);
+    assert.ok(message.message.includes(JSON.stringify('order "items"')));
+    assert.ok(message.message.includes('return "{{accounts}}";'));
+    const expression = message.message.slice(
+      message.message.indexOf("(() => {"),
+      message.message.indexOf("). A runtime"),
+    );
+    const select = new Function("kind", `return ${expression};`);
+    assert.equal(select("orders"), 'order "items"');
+    assert.equal(select("accounts"), "{{accounts}}");
+    assert.throws(() => select("other"), /unknown/);
+  });
+
   it("ignores literal keys, mutated registries, and lookups outside the executor", () => {
     assert.equal(check("silent.ts").length, 0);
     assert.equal(check("dynamic.ts", { executorNames: [] }).length, 0);

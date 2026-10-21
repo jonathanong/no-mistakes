@@ -34,9 +34,15 @@ describe("postgres-no-correlated-sql-builder", () => {
     assert.match(reported[0].message, /appends on query/);
     assert.match(reported[0].message, /empty path for access/);
     assert.match(reported[0].message, /throwing default/);
+    assert.match(reported[0].message, /case "owned": case "member":/);
     assert.match(reported[0].message, /own-key check/);
     assert.equal(check("silent.ts").length, 0);
     assert.equal(check("suppression.ts").length, 1);
+  });
+
+  it("abstains on complete throwing chains and returning guards", () => {
+    assert.equal(check("complete-guards.ts").length, 0);
+    assert.equal(check("incomplete-guards.ts").length, 6);
   });
 
   it("is inert until both builder methods and tag names are configured", () => {

@@ -4,6 +4,8 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
 
+const { completeGuards } = require("./postgres-correlated-completion");
+
 const RULE_ID = "postgres-no-correlated-sql-builder";
 
 function isFunction(node) {
@@ -70,7 +72,9 @@ function readGuard(statement, methods, tags) {
   if (!selector) return null;
   const builder = findAppend(statement.consequent, methods, tags);
   if (!builder) return null;
-  return { node: statement, selector, builder };
+  const test = unwrapTs(statement.test);
+  const value = stringText(test.left) ?? stringText(test.right);
+  return { node: statement, selector, builder, value };
 }
 
 function guardsOf(func, methods, tags) {
@@ -110,7 +114,7 @@ module.exports = rule(
     ],
     messages: {
       correlated:
-        "Independent appends on {{builder}} can leave an unknown or empty path for {{selector}}. Return a complete statement from one switch with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "Independent appends on {{builder}} can leave an unknown or empty path for {{selector}}. Return a complete statement from one switch ({{cases}}) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
     },
   },
   (context) => {
@@ -132,11 +136,17 @@ module.exports = rule(
         groups.set(id, group);
       }
       for (const group of groups.values()) {
-        if (group.length < 2 || suppressed(group[0].node)) continue;
+        if (group.length < 2 || completeGuards(group, func) || suppressed(group[0].node)) continue;
         context.report({
           node: group[0].node,
           messageId: "correlated",
-          data: { selector: group[0].selector.name, builder: group[0].builder.name },
+          data: {
+            selector: group[0].selector.name,
+            builder: group[0].builder.name,
+            cases: [...new Set(group.map((guard) => guard.value))]
+              .map((value) => `case ${JSON.stringify(value)}:`)
+              .join(" "),
+          },
         });
       }
     }
