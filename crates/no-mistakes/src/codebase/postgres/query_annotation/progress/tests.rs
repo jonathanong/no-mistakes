@@ -8,20 +8,26 @@ fn fixture() -> std::path::PathBuf {
 }
 
 #[test]
-fn annotation_locations_expose_active_file_offset_and_binding() {
+fn annotation_locations_expose_active_file_offset_and_arm() {
     let path = fixture();
     assert!(path.is_file());
     let observer = InvocationObserver::with_progress(true, true);
     with_observer(Some(observer.clone()), || {
         trace("postgres.annotation.root", &path, None, || {
             trace("postgres.annotation.entrypoint", &path, Some(42), || {
-                binding(&path, "shared", || {
-                    let snapshot = observer.progress_snapshot().unwrap();
-                    let phase = &snapshot.active.last().unwrap().phase;
-                    assert!(phase[0].ends_with("root.mts"));
-                    assert!(phase[1].ends_with("root.mts:42"));
-                    assert!(phase[2].ends_with("root.mts binding=shared"));
-                });
+                trace(
+                    "postgres.annotation.prefix_compare_arm",
+                    &path,
+                    None,
+                    || {
+                        let snapshot = observer.progress_snapshot().unwrap();
+                        let phase = &snapshot.active.last().unwrap().phase;
+                        assert!(phase[0].ends_with("root.mts"));
+                        assert!(phase[1].ends_with("root.mts:42"));
+                        assert!(phase[2].ends_with("root.mts"));
+                        assert!(phase[2].starts_with("postgres.annotation.prefix_compare_arm"));
+                    },
+                );
             });
         });
     });

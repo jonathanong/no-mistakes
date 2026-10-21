@@ -92,6 +92,7 @@ fn unchanged_argument_scope_still_compares_distinct_mutable_arenas() {
         after.arena(),
         &mut changed,
         &FxHashSet::default(),
+        &mut None,
     );
     assert_eq!(changed, FxHashSet::from_iter([1]));
 }
@@ -116,6 +117,7 @@ fn reference_free_entry_cannot_mutate_an_arm_created_builder() {
         after.arena(),
         &mut changed,
         &before.definite,
+        &mut None,
     );
     assert!(changed.is_empty());
 }

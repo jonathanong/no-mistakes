@@ -60,3 +60,12 @@ prefix maps with the frozen original walk, including overwrite order, argument
 cycles, sparse/deleted slots, both arenas, and a 128-record distinct-prefix chain.
 These work bounds establish the reduced-case improvement; full-consumer resource
 measurements and findings parity remain the acceptance gate.
+
+`observer-batching` keeps 32 aliases of one builder before an unknown conditional.
+The aliases remain reference-bearing so binding pruning cannot erase the
+publication-bound workload. Its ordinary legacy evaluator compares all aliases.
+The observer-on/off test retains the same missing-annotation finding while
+publishing two nonempty prefix-counter batches for the two arms. This establishes
+publication bounds and report parity, not measured CPU improvement.
+Its branch-only `precise-root.mts` keeps references live for the prepared
+precise-records control, which must create no legacy prefix observation.

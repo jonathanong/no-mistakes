@@ -4,6 +4,7 @@ use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::fx::FxHashSet;
 mod prefixes;
 mod progress;
+pub(super) use progress::Walk;
 
 pub(super) fn changes(
     before: &Value,
@@ -12,8 +13,11 @@ pub(super) fn changes(
     after_arena: Arena<'_>,
     changed: &mut FxHashSet<u64>,
     definite: &FxHashSet<(u64, usize)>,
+    work: &mut Option<Walk>,
 ) {
-    let work = progress::Walk::new();
+    if let Some(work) = work.as_mut() {
+        work.comparison();
+    }
     if work.is_some() {
         compare::<true>(
             before,
@@ -32,7 +36,7 @@ pub(super) fn changes(
             after_arena,
             changed,
             definite,
-            None,
+            work,
         );
     }
 }
@@ -44,11 +48,11 @@ fn compare<const OBSERVED: bool>(
     after_arena: Arena<'_>,
     changed: &mut FxHashSet<u64>,
     definite: &FxHashSet<(u64, usize)>,
-    mut work: Option<progress::Walk>,
+    work: &mut Option<Walk>,
 ) {
-    let previous = prefixes::collect::<OBSERVED>(before, before_arena, definite, &mut work);
-    let current = prefixes::collect::<OBSERVED>(after, after_arena, definite, &mut work);
-    if let Some(work) = &work {
+    let previous = prefixes::collect::<OBSERVED>(before, before_arena, definite, work);
+    let current = prefixes::collect::<OBSERVED>(after, after_arena, definite, work);
+    if let Some(work) = work.as_mut() {
         work.complete();
     }
     for (id, (text, complete)) in previous {
