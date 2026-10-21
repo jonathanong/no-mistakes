@@ -194,6 +194,64 @@ describe("fetch invocation recall branches", () => {
       ),
     ).toBe(true);
 
+    const dynamicKey = variable("schedule", {
+      type: "Variable",
+      parent: { kind: "const" },
+      node: {
+        id: {
+          type: "ObjectPattern",
+          properties: [
+            {
+              type: "Property",
+              computed: true,
+              key: ident("fetch"),
+              value: ident("schedule"),
+            },
+          ],
+        },
+        init: ident("globalThis"),
+      },
+    });
+    expect(
+      isFetchCall(
+        { type: "CallExpression", callee: ident("schedule"), arguments: [] },
+        context([dynamicKey]),
+      ),
+    ).toBe(false);
+
+    function keyed(name, key) {
+      return variable(name, {
+        type: "Variable",
+        parent: { kind: "const" },
+        node: {
+          id: {
+            type: "ObjectPattern",
+            properties: [{ type: "Property", computed: true, key, value: ident(name) }],
+          },
+          init: ident("globalThis"),
+        },
+      });
+    }
+    const call = (name) => ({ type: "CallExpression", callee: ident(name), arguments: [] });
+    expect(
+      isFetchCall(
+        call("fromLiteral"),
+        context([keyed("fromLiteral", { type: "Literal", value: "fetch" })]),
+      ),
+    ).toBe(true);
+    expect(
+      isFetchCall(
+        call("fromTemplate"),
+        context([
+          keyed("fromTemplate", {
+            type: "TemplateLiteral",
+            expressions: [],
+            quasis: [{ value: { cooked: "fetch", raw: "fetch" } }],
+          }),
+        ]),
+      ),
+    ).toBe(true);
+
     const mutable = variable("load", {
       type: "Variable",
       parent: { kind: "let" },

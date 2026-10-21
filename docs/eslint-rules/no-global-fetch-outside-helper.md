@@ -36,7 +36,13 @@ application code.
 
 ## Limits
 
-`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. `.apply` with a non-literal argument list is not rewritten.
+`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. `.apply` with a non-literal argument list is not rewritten. A computed identifier key is not the `fetch` property:
+
+```js
+const key = "setTimeout";
+const { [key]: schedule } = globalThis;
+schedule(() => {}, 0);
+```
 
 ## Suppression
 

@@ -72,6 +72,8 @@ function fetchCallee(node, context, seen) {
     for (const item of def.node.id.properties) {
       if (item.type === "Property") {
         const value = item.value.type === "AssignmentPattern" ? item.value.left : item.value;
+        // `const { [name]: schedule }` names an expression, not the fetch property.
+        if (item.computed && item.key?.type === "Identifier") continue;
         if (
           value.type === "Identifier" &&
           value.name === node.name &&

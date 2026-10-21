@@ -165,7 +165,7 @@ describe("call-binding recall", () => {
         { checkedPathPatterns: ["**"] },
         "recall.mjs",
       ).length,
-      3,
+      5,
     );
     assert.equal(
       messages(
