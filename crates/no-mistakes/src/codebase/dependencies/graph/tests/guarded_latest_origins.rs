@@ -278,3 +278,30 @@ fn empty_and_wide_prefixes_preserve_actual_argument_positions() {
         "untouched.get",
     );
 }
+
+#[test]
+fn deferred_pushes_keep_shifted_suffixes_and_receiver_candidates() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    let file = "array-optional-push-conditional-helper";
+    for callee in ["replica.get", "untouched.get"] {
+        possible(&built, &root, file, callee);
+    }
+    let file = "array-optional-push-uncalled-helper";
+    // The projection does not prove helper reachability: keep the untouched
+    // original receiver while still recording that the suffix may be written.
+    possible(&built, &root, file, "replica.get");
+    let sites = built.call_sites_in_file(&root.join(format!("src/{file}.mts")));
+    assert!(sites
+        .iter()
+        .find(|site| site.source_callee == "untouched.get")
+        .unwrap()
+        .has_unknown_target());
+    for file in [
+        "array-optional-push-uncalled-helper",
+        "array-optional-push-conditional-helper",
+    ] {
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+}

@@ -9,8 +9,8 @@ impl ImportCollector {
         name: &str,
         call: &ValueCall,
         ordinary: bool,
-    ) {
-        let Some(mut summary) = self
+    ) -> Option<bool> {
+        let mut summary = self
             .receiver_escapes
             .guarded_summaries
             .get_mut(&scope)
@@ -20,10 +20,7 @@ impl ImportCollector {
                     return None;
                 }
                 names.remove(name)
-            })
-        else {
-            return;
-        };
+            })?;
         let mut common = summary
             .common
             .take()
@@ -52,5 +49,6 @@ impl ImportCollector {
             .entry(scope)
             .or_default()
             .insert(name.to_owned(), summary);
+        Some(certain)
     }
 }

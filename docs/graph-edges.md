@@ -627,6 +627,8 @@ After a push makes the array length uncertain, the proven prefix remains fixed
 and later pushed values and trailing arguments become a possible open tail.
 This covers a later value shifting into an earlier parameter when the optional
 push is skipped, without enumerating combinations of branch lengths.
+Pushes written in another function are possible: this projection does not prove
+helper reachability, even when the helper has no local invocation.
 Fixed arguments before that tail keep their slots, including ordinary arguments
 between an earlier fixed spread and the spread that introduces uncertainty.
 A suffix after an open prefix and guarded

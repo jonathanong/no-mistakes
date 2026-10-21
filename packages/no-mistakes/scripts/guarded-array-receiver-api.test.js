@@ -118,7 +118,11 @@ test(
       ["value-flow-guarded-parameters", ["array-parameter-destructure-unguarded"]],
       [
         "value-flow-optional-prefixes",
-        ["array-optional-push-after-empty-prefix", "array-optional-push-after-wide-prefix"],
+        [
+          "array-optional-push-after-empty-prefix",
+          "array-optional-push-after-wide-prefix",
+          "array-optional-push-conditional-helper",
+        ],
       ],
       [
         "value-flow-receiver-escapes",
@@ -192,5 +196,4 @@ test(
   },
 );
 
-// Register the saved default-callback controls in the existing native CI suite.
 require("./guarded-default-callback-api.test.js");

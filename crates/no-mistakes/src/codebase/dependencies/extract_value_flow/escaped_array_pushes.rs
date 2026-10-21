@@ -51,10 +51,30 @@ impl ImportCollector {
         let ValueExpression::Named { name, scope, .. } = receiver.as_ref() else {
             return;
         };
-        self.note_guarded_array_push(scope.unwrap_or(0), name, call, ordinary);
-        if ordinary
-            && (self.conditional_execution || self.receiver_write_is_conditional || call.repeated)
-        {
+        // Immutable arrays use value bindings rather than guarded summaries.
+        let context_matches = self
+            .value_binding_indexes
+            .get(&scope.unwrap_or(0))
+            .and_then(|names| names.get(name))
+            .and_then(|indexes| {
+                let before = indexes.partition_point(|index| {
+                    self.value_flow.bindings[*index].declared_at < call.offset
+                });
+                before
+                    .checked_sub(1)
+                    .map(|last| &self.value_flow.bindings[indexes[last]])
+            })
+            .filter(|binding| matches!(binding.value, ValueExpression::Array(_)))
+            .is_none_or(|binding| binding.owner == call.context);
+        let certain = self
+            .note_guarded_array_push(scope.unwrap_or(0), name, call, ordinary)
+            .unwrap_or(
+                !self.conditional_execution
+                    && !self.receiver_write_is_conditional
+                    && !call.repeated
+                    && context_matches,
+            );
+        if ordinary && !certain {
             self.receiver_escapes.optional_pushes.insert(call.offset);
         }
         self.receiver_escapes
