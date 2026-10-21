@@ -27,12 +27,30 @@ For Playwright, the rule also reports statically visible `skip` and `fixme`
 `const` aliases for the test/describe callee, details object, annotation object,
 and annotation array. This rule only treats the Playwright `skip` and `fixme`
 annotation types as coverage-removing declarations; other annotation values
-are outside this rule's check. This is syntax analysis, not runtime evaluation:
-mutable bindings, computed or spread properties, and dynamically produced
-annotation values are not resolved and may not be reported. It does not prove
-aliased objects are immutable; mutation through another alias or a helper call
-is not tracked. `test.step.skip()` skips only a step, so this rule leaves it
-alone.
+are outside this rule's check. A no-substitution template literal is read like
+a string. A conditional type is reported when every branch is a banned `skip`
+or `fixme` literal. When those branches name different types, the finding names
+both. A modifier that does not itself skip the test, such as
+`only`, does not hide an annotation on that call. `skip` and `fixme` modifiers
+already remove the test, so an annotation on that same call is not reported
+again. This is syntax analysis, not runtime evaluation: mutable bindings,
+computed or spread properties, and other dynamic annotation values are not
+resolved and may not be reported. `test.describe.configure` and `tag` do not
+remove the test, so they are ignored. It does not prove aliased objects are
+immutable; mutation through another alias or a helper call is not tracked.
+`test.step.skip()` skips only a step, so this rule leaves it alone.
+
+```ts
+import { test } from "@playwright/test";
+
+test("known flake", { annotation: { type: "skip" } }, async ({ page }) => {});
+test.describe("blocked suite", { annotation: [{ type: "fixme" }] }, () => {});
+test.only("focused and skipped", { annotation: { type: `skip` } }, async () => {});
+
+// `configure` and `tag` do not remove the test.
+test.describe.configure({ mode: "serial" });
+test("tagged", { tag: "@slow", annotation: { type: "issue" } }, async () => {});
+```
 
 `const` destructuring follows a default and a nested object pattern when the
 key that introduces the identifier is `it`, `test`, or `describe`:
@@ -107,12 +125,12 @@ these globs are not checked by this rule.
 
 ## Fix
 
-Remove the modifier and make the test runnable. If a test needs credentials,
-provide them in the test environment and fail setup clearly when required
-credentials are missing. Replace timer-based waits with an explicit completion
-signal or test fixture barrier. For a known defect, keep an ordinary failing
-test that records the behavior to restore; use `todo` only when the team has
-explicitly allowed it.
+Remove the modifier or the `skip` / `fixme` declaration annotation and make
+the test runnable. If a test needs credentials, provide them in the test
+environment and fail setup clearly when required credentials are missing.
+Replace timer-based waits with an explicit completion signal or test fixture
+barrier. For a known defect, keep an ordinary failing test that records the
+behavior to restore; use `todo` only when the team has explicitly allowed it.
 
 ## Suppression
 

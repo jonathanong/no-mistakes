@@ -309,8 +309,9 @@ with custom executor names. See the [migration notes](migrations/explicit-postgr
 
 Enable this single-file rule in a flat-config block with explicit test `files`
 globs. It reports Vitest/Playwright skip, conditional, focus, pending, and fixme
-modifiers and bound Vitest context `skip()` calls. `allow` defaults to `[]` and
-accepts `skip`, `skipIf`, `runIf`, `only`, `todo`, and `fixme`.
+modifiers, bound Vitest context `skip()` calls, and Playwright `skip` / `fixme`
+declaration annotations. `allow` defaults to `[]` and accepts `skip`,
+`skipIf`, `runIf`, `only`, `todo`, and `fixme`.
 See [the rule reference](eslint-rules/test-no-skips.md) for import matching,
 table callbacks, configuration, and `no-mistakes` suppression directives.
 

@@ -20,6 +20,28 @@ function repeated(count) {
 }
 
 describe("no-object-mutation", () => {
+  it("loads mutationCall when forward is required before syntax", () => {
+    const forward = resolve(__dirname, "../src/rules/no-object-mutation-forward.js");
+    const syntax = resolve(__dirname, "../src/rules/no-object-mutation-syntax.js");
+    const result = spawnSync(
+      process.execPath,
+      [
+        "-e",
+        `const forward = require(${JSON.stringify(forward)});
+        if (Object.keys(require.cache).some((file) => file.endsWith("no-object-mutation-syntax.js"))) {
+          throw new Error("forward required syntax");
+        }
+        if (typeof forward.mutationCall !== "function") throw new Error("mutationCall missing");
+        const syntax = require(${JSON.stringify(syntax)});
+        if (typeof syntax.unwrap !== "function" || typeof syntax.methodName !== "function") {
+          throw new Error("syntax helpers missing after forward");
+        }`,
+      ],
+      { encoding: "utf8" },
+    );
+    assert.equal(result.status, 0, `${result.stdout || ""}${result.stderr || ""}`);
+  });
+
   it("stays out of the recommended and strict presets", () => {
     assert.equal(plugin.rules[RULE].meta.docs.recommended, false);
     assert.equal(plugin.configs.recommended.rules[`no-mistakes/${RULE}`], undefined);

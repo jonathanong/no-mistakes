@@ -1,7 +1,7 @@
 "use strict";
 
 const { lookup } = require("./no-object-mutation-values");
-const { methodName, unwrap } = require("./no-object-mutation-syntax");
+const { methodName, unwrap } = require("./no-object-mutation-ast");
 
 const ARRAY_METHODS = new Set([
   "copyWithin",
