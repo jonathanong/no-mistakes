@@ -13,18 +13,7 @@ pub(super) fn check_file(
     check_file_with_prefilter(root, path, opts, sources, defer_suppression, true)
 }
 
-#[cfg(test)]
-pub(super) fn check_file_unfiltered(
-    root: &Path,
-    path: &Path,
-    opts: &CompiledOptions,
-    sources: &crate::codebase::ts_source::SourceStore,
-    defer_suppression: bool,
-) -> Vec<RuleFinding> {
-    check_file_with_prefilter(root, path, opts, sources, defer_suppression, false)
-}
-
-fn check_file_with_prefilter(
+pub(super) fn check_file_with_prefilter(
     root: &Path,
     path: &Path,
     opts: &CompiledOptions,

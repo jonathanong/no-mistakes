@@ -408,7 +408,8 @@ fn prefilter_preserves_fixture_findings() {
         let sources = super::super::source_store_for_files(&files);
         for path in &files {
             let filtered = scan::check_file(&root, path, &opts, &sources, false);
-            let unfiltered = scan::check_file_unfiltered(&root, path, &opts, &sources, false);
+            let unfiltered =
+                scan::check_file_with_prefilter(&root, path, &opts, &sources, false, false);
             assert_eq!(filtered, unfiltered, "{}", path.display());
         }
     }
