@@ -6,7 +6,7 @@ fn disabled_observers_skip_label_formatting_and_run_once() {
     for observer in [None, Some(InvocationObserver::new(false))] {
         let runs = Cell::new(0);
         let value = trace_rule(
-            observer.as_ref(),
+            observer.as_deref(),
             || panic!("disabled observer formatted a rule timing label"),
             || {
                 runs.set(runs.get() + 1);
