@@ -94,6 +94,7 @@ fn listen_zero_forms_are_findings() {
     assert!(files.contains(&"options.ts"), "{findings:?}");
     assert!(files.contains(&"trailing.ts"), "{findings:?}");
     assert!(files.contains(&"app.jsx"), "{findings:?}");
+    assert!(files.contains(&"escaped.ts"), "{findings:?}");
 }
 
 #[test]
@@ -397,6 +398,43 @@ fn same_line_bind_and_listen_dedup() {
     let findings = scan::check_file(dir.path(), &path, &opts, &sources, false);
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].line, 1);
+}
+
+#[test]
+fn prefilter_preserves_fixture_findings() {
+    let opts = compile_options(Options::default()).unwrap();
+    for name in ["fail-python", "fail-listen", "pass", "allow", "disable"] {
+        let root = fixture(name);
+        let files = crate::codebase::ts_source::discover_files(&root, &[]);
+        let sources = super::super::source_store_for_files(&files);
+        for path in &files {
+            let filtered = scan::check_file(&root, path, &opts, &sources, false);
+            let unfiltered =
+                scan::check_file_with_prefilter(&root, path, &opts, &sources, false, false);
+            assert_eq!(filtered, unfiltered, "{}", path.display());
+        }
+    }
+}
+
+#[test]
+fn prefilter_skips_files_without_bind_or_listen() {
+    scan::BIND_PREFILTER_SKIPS.with(|skips| skips.set(0));
+    scan::LISTEN_PREFILTER_SKIPS.with(|skips| skips.set(0));
+    let root = fixture("pass");
+    let opts = compile_options(Options::default()).unwrap();
+    let py = root.join("plain.py");
+    let ts = root.join("plain.ts");
+    let sources = super::super::source_store_for_files(&[py.clone(), ts.clone()]);
+    assert!(scan::check_file(&root, &py, &opts, &sources, false).is_empty());
+    assert!(scan::check_file(&root, &ts, &opts, &sources, false).is_empty());
+    assert!(
+        scan::BIND_PREFILTER_SKIPS.with(|skips| skips.get()) >= 1,
+        "Python files without bind must skip the tuple-bind regex"
+    );
+    assert!(
+        scan::LISTEN_PREFILTER_SKIPS.with(|skips| skips.get()) >= 1,
+        "JS/TS files without listen or a backslash must skip the AST scan"
+    );
 }
 
 #[test]

@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
@@ -113,6 +114,98 @@ fn covers_custom_extensions_no_replacement_invalid_regex_and_missing_files() {
 
     assert_eq!(email_domain("not-an-email"), "");
     assert_eq!(email_domain("person%40EXAMPLE%2ECOM%26otp"), "example.com");
+}
+
+#[test]
+fn prefilter_preserves_fixture_findings() {
+    let roots = [
+        fixture("raw"),
+        fixture("react"),
+        fixture("allowed"),
+        fixture("skipped"),
+        fixture("empty"),
+        fixture("custom"),
+        fixture("unicode"),
+        fixture("no-domain"),
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/test-email-domain-policy/fixture"),
+    ];
+    let default_opts = compiled();
+    let custom_opts = compile_options(&Options {
+        banned_domains: vec!["example.com.".to_string()],
+        allowed_email_patterns: Vec::new(),
+        replacement: None,
+        extensions: vec![".fixture".to_string()],
+    })
+    .unwrap();
+    for root in roots {
+        let files = crate::codebase::ts_source::discover_files(&root, &[]);
+        let sources = super::super::source_store_for_files(&files);
+        let opts = if root.ends_with("custom") {
+            &custom_opts
+        } else {
+            &default_opts
+        };
+        for path in &files {
+            let filtered = check_file_with_sources(&root, path, opts, &sources);
+            let rel = relative_slash_path(&root, path);
+            if !opts.extensions.iter().any(|ext| rel.ends_with(ext)) {
+                assert!(filtered.is_empty(), "{}", path.display());
+                continue;
+            }
+            let Some(content) = super::super::read_source(&sources, path) else {
+                assert!(filtered.is_empty(), "{}", path.display());
+                continue;
+            };
+            let unfiltered = scan_email_lines(&rel, &content, opts);
+            assert_eq!(filtered, unfiltered, "{}", path.display());
+        }
+    }
+}
+
+#[test]
+fn non_ascii_source_disables_the_domain_prefilter() {
+    let opts = compile_options(&Options {
+        banned_domains: vec!["okta.com".to_string()],
+        allowed_email_patterns: Vec::new(),
+        replacement: None,
+        extensions: Vec::new(),
+    })
+    .unwrap();
+    let root = fixture("unicode");
+    let path = root.join("src/send.test.mts");
+    let filtered = check_file(&root, &path, &opts);
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
+    let content = super::super::read_source(&sources, &path).expect("unicode fixture");
+    let unfiltered = scan_email_lines("src/send.test.mts", &content, &opts);
+    assert_eq!(filtered, unfiltered);
+    assert_eq!(filtered.len(), 1, "{filtered:?}");
+    assert_eq!(filtered[0].target.as_deref(), Some("okta.com"));
+}
+
+#[test]
+fn prefilter_skips_ascii_files_without_domain_needles() {
+    super::PREFILTER_SKIPS.with(|skips| skips.set(0));
+    let root = fixture("no-domain");
+    let path = root.join("src/send.test.mts");
+    let findings = check_file(&root, &path, &compiled());
+    assert!(findings.is_empty(), "{findings:?}");
+    assert!(
+        super::PREFILTER_SKIPS.with(|skips| skips.get()) >= 1,
+        "ASCII files without a banned-domain label must skip the email regex"
+    );
+}
+
+#[test]
+fn empty_first_label_disables_the_domain_prefilter() {
+    let opts = compile_options(&Options {
+        banned_domains: vec![".".to_string()],
+        allowed_email_patterns: Vec::new(),
+        replacement: None,
+        extensions: Vec::new(),
+    })
+    .unwrap();
+    assert!(opts.domain_needles.is_empty());
 }
 
 #[test]
