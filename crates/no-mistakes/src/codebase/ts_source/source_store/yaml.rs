@@ -197,5 +197,4 @@ fn extra_document_error() -> Arc<serde_yaml::Error> {
 }
 
 #[cfg(test)]
-#[path = "yaml_tests.rs"]
 mod tests;

@@ -8,6 +8,10 @@ mod carry;
 mod indent;
 mod lines;
 
+pub(super) fn is_block_header(scalar: &str) -> bool {
+    carry::is_block_header(scalar)
+}
+
 /// Pair job and step `uses` values, in document order, with action `uses`
 /// lines. The regex already judged `seen_lines`. Once a document parses, a
 /// `uses` line under `with` or `env` is an input and is dropped. A missing
@@ -39,7 +43,8 @@ pub(super) fn append_parsed_uses(
             .get(index)
             .copied()
             .unwrap_or(false);
-        !indent::in_input_block(&source_lines, index) && !flow_input
+        let in_block = classified.block_scalar.get(index).copied().unwrap_or(false);
+        !indent::in_input_block(&source_lines, index) && !flow_input && !in_block
     });
     let action_lines = classified.lines;
     for (uses_value, line_num) in uses_values.iter().zip(action_lines) {
@@ -137,7 +142,10 @@ fn collect_in(value: &Value, place: Place, at_root: bool, out: &mut Vec<String>)
                 for (key, child) in mapping {
                     if key.as_str() == Some("uses") {
                         if let Some(text) = child.as_str() {
-                            out.push(text.to_owned());
+                            let text = text.trim();
+                            if !text.is_empty() {
+                                out.push(text.to_owned());
+                            }
                         }
                     }
                 }

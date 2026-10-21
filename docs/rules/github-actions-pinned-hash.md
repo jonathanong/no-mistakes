@@ -15,7 +15,9 @@ same way. An alias is judged as the action reference it resolves to. Each YAML
 document is walked, so a flow `uses` in a later document is still checked. A
 quoted flow scalar folded across lines is reported on the `uses` key line. A
 `uses` key nested under `with` or `env` is an action input, not an action
-reference, including when that flow mapping continues on the next line.
+reference, including when that flow mapping continues on the next line. Every
+`uses` on one physical line is checked. A `|` or `>` script is not an action
+reference; the following line of a block `uses` is.
 
 ## Options
 

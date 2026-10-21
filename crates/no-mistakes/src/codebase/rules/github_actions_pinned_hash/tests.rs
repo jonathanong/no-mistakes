@@ -455,4 +455,20 @@ fn yaml_flow_quoted_and_next_line_uses_are_checked() {
     assert_eq!(lines_of(&flow_input), vec![11], "{flow_input:?}");
     assert!(flow_input[0].message.contains("actions/checkout@v4"));
     assert!(!flow_input[0].message.contains("de0fac2e"));
+
+    // Two uses values on one line both stay paired. The tag is the finding.
+    let same_line = check_yaml_shape("same-line-uses-fail.yml");
+    assert_eq!(lines_of(&same_line), vec![2], "{same_line:?}");
+    assert!(same_line[0].message.contains("actions/checkout@v4"));
+    assert!(!same_line[0].message.contains("de0fac2e"));
+
+    // A run script is not an action line. The block uses value still fails.
+    let script = check_yaml_shape("block-script-fail.yml");
+    assert_eq!(lines_of(&script), vec![8, 11], "{script:?}");
+    assert!(script
+        .iter()
+        .all(|finding| finding.message.contains("actions/checkout@v4")));
+    assert!(script
+        .iter()
+        .all(|finding| !finding.message.contains("de0fac2e")));
 }

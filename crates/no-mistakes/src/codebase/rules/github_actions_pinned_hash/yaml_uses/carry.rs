@@ -12,37 +12,38 @@ pub(super) struct Carry {
     value_key_is_input: bool,
     skip_anchor: bool,
     alias: bool,
+    block_header: bool,
 }
 
 pub(super) struct LineMark {
     pub starts_in_flow_input: bool,
-    pub kind: LineKind,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum LineKind {
-    None,
-    Present,
-    Awaits,
+    pub present_count: usize,
+    pub awaits: bool,
+    pub opens_block: bool,
+    pub block_uses: bool,
 }
 
 impl Carry {
     pub(super) fn scan_line(&mut self, line: &str) -> LineMark {
         let starts_in_flow_input = self.in_flow_input();
-        let mut present = false;
+        let mut hits = 0usize;
         for ch in line.chars() {
-            if self.consume(ch, &mut present) {
+            if self.consume(ch, &mut hits) {
                 break;
             }
         }
-        if (self.alias && self.key_was_uses) || finish_scalar(&self.scalar, self.key_was_uses) {
-            present = true;
+        let header = self.block_header && is_block_header(&self.scalar);
+        let block_uses = header && self.key_was_uses && !self.in_flow_input();
+        let finished =
+            (self.alias && self.key_was_uses) || finish_scalar(&self.scalar, self.key_was_uses);
+        if !header && finished {
+            hits += 1;
+            // A quoted scalar that already has text stays on this line.
+            if self.quote.is_some() {
+                self.key_was_uses = false;
+            }
         }
-        // A quoted scalar that already has text stays on this line.
-        if present && self.quote.is_some() {
-            self.key_was_uses = false;
-        }
-        let awaits = !present
+        let awaits = !header
             && self.key_was_uses
             && self.scalar.is_empty()
             && self.flow_depth > 0
@@ -50,16 +51,12 @@ impl Carry {
         if self.quote.is_none() {
             self.reset_token();
         }
-        let kind = if present {
-            LineKind::Present
-        } else if awaits {
-            LineKind::Awaits
-        } else {
-            LineKind::None
-        };
         LineMark {
             starts_in_flow_input,
-            kind,
+            present_count: hits,
+            awaits,
+            opens_block: header,
+            block_uses,
         }
     }
 
@@ -74,11 +71,30 @@ impl Carry {
         self.key_was_uses = false;
         self.skip_anchor = false;
         self.alias = false;
+        self.block_header = false;
     }
 }
 
 fn finish_scalar(scalar: &str, key_was_uses: bool) -> bool {
     key_was_uses && !scalar.is_empty()
+}
+
+/// `|`, `>`, and the one optional chomp or indent digit YAML allows after them.
+pub(super) fn is_block_header(scalar: &str) -> bool {
+    let bytes = scalar.as_bytes();
+    if bytes.first().is_none_or(|ch| *ch != b'|' && *ch != b'>') {
+        return false;
+    }
+    let mut digit = false;
+    let mut chomp = false;
+    for ch in bytes.iter().skip(1) {
+        match ch {
+            b'+' | b'-' if !chomp => chomp = true,
+            b'1'..=b'9' if !digit => digit = true,
+            _ => return false,
+        }
+    }
+    true
 }
 
 #[path = "carry_chars.rs"]

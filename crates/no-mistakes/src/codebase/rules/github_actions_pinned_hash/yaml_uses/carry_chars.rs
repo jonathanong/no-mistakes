@@ -2,9 +2,9 @@ use super::{finish_scalar, Carry};
 
 impl Carry {
     /// Returns true when the rest of this line cannot change the flow stack.
-    pub(super) fn consume(&mut self, ch: char, present: &mut bool) -> bool {
+    pub(super) fn consume(&mut self, ch: char, hits: &mut usize) -> bool {
         if let Some(active) = self.quote {
-            return self.consume_quoted(ch, active, present);
+            return self.consume_quoted(ch, active, hits);
         }
         if matches!(ch, '"' | '\'') {
             self.quote = Some(ch);
@@ -16,7 +16,7 @@ impl Carry {
         if ch == '#' {
             return true;
         }
-        if self.consume_anchor(ch, present) {
+        if self.consume_anchor(ch, hits) {
             return false;
         }
         if matches!(ch, '{' | '[') {
@@ -24,14 +24,23 @@ impl Carry {
             return false;
         }
         if matches!(ch, '}' | ']' | ',') {
-            self.close_flow(ch, present);
+            self.close_flow(ch, hits);
             return false;
         }
-        if let Some(stop) = self.consume_space(ch, present) {
+        if let Some(stop) = self.consume_space(ch, hits) {
             return stop;
         }
         if ch == ':' && !self.after_colon {
             self.finish_key();
+            return false;
+        }
+        if self.after_colon
+            && self.scalar.is_empty()
+            && self.flow_depth == 0
+            && matches!(ch, '|' | '>')
+        {
+            self.block_header = true;
+            self.scalar.push(ch);
             return false;
         }
         if self.after_colon {
@@ -44,7 +53,7 @@ impl Carry {
         false
     }
 
-    fn consume_quoted(&mut self, ch: char, active: char, present: &mut bool) -> bool {
+    fn consume_quoted(&mut self, ch: char, active: char, hits: &mut usize) -> bool {
         if ch != active {
             if self.after_colon {
                 self.scalar.push(ch);
@@ -55,10 +64,12 @@ impl Carry {
         }
         self.quote = None;
         if self.after_colon && finish_scalar(&self.scalar, self.key_was_uses) {
-            *present = true;
-            if self.flow_depth == 0 {
-                return true;
-            }
+            *hits += 1;
+            // Clear before stopping so the end of the line does not count again.
+            self.scalar.clear();
+            self.key_was_uses = false;
+            self.after_colon = false;
+            return self.flow_depth == 0;
         }
         if self.after_colon {
             self.scalar.clear();
@@ -70,7 +81,7 @@ impl Carry {
 
     /// An anchor or alias sits between `uses:` and the scalar. Returns true
     /// when this character was consumed as part of that name.
-    fn consume_anchor(&mut self, ch: char, present: &mut bool) -> bool {
+    fn consume_anchor(&mut self, ch: char, hits: &mut usize) -> bool {
         if self.skip_anchor {
             let boundary = ch.is_whitespace() || matches!(ch, '}' | ']' | ',' | ':');
             if !boundary {
@@ -80,7 +91,7 @@ impl Carry {
             self.skip_anchor = false;
             self.alias = false;
             if was_alias {
-                *present = true;
+                *hits += 1;
                 self.key_was_uses = false;
             }
             return ch.is_whitespace();
@@ -104,9 +115,9 @@ impl Carry {
         self.key_was_uses = false;
     }
 
-    fn close_flow(&mut self, ch: char, present: &mut bool) {
+    fn close_flow(&mut self, ch: char, hits: &mut usize) {
         if (self.alias && self.key_was_uses) || finish_scalar(&self.scalar, self.key_was_uses) {
-            *present = true;
+            *hits += 1;
         }
         if ch != ',' {
             self.flow_depth -= 1;
@@ -122,7 +133,7 @@ impl Carry {
     }
 
     /// `Some` when this character is a word break. The bool stops the line.
-    fn consume_space(&mut self, ch: char, present: &mut bool) -> Option<bool> {
+    fn consume_space(&mut self, ch: char, hits: &mut usize) -> Option<bool> {
         let word_break = ch.is_whitespace()
             || (ch == '-' && !self.after_colon && self.flow_depth == 0 && self.token.is_empty());
         if !word_break {
@@ -130,14 +141,14 @@ impl Carry {
         }
         if self.after_colon && !self.scalar.is_empty() {
             if finish_scalar(&self.scalar, self.key_was_uses) {
-                *present = true;
+                *hits += 1;
             }
-            if self.flow_depth == 0 {
-                return Some(true);
-            }
+            // Clear before stopping so the end of the line does not count again.
+            let stop = self.flow_depth == 0;
             self.scalar.clear();
             self.key_was_uses = false;
             self.after_colon = false;
+            return Some(stop);
         } else if !self.after_colon {
             self.token.clear();
         }

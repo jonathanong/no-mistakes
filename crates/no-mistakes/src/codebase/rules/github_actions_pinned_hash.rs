@@ -115,8 +115,8 @@ fn check_source(
             continue;
         };
         let raw = caps.get(1).map_or("", |m| m.as_str());
-        // `&anchor value` and `*alias` are resolved by the parsed walk.
-        if raw.starts_with('&') || raw.starts_with('*') {
+        // Anchors, aliases, and block-scalar headers are resolved by the parsed walk.
+        if raw.starts_with('&') || raw.starts_with('*') || yaml_uses::is_block_header(raw) {
             continue;
         }
         seen_lines.insert(line_num);
