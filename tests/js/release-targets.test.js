@@ -310,7 +310,7 @@ test("release publication requires both parallel validation suites", () => {
   ])
     assert.ok(rust.includes(`run: ${command}\n`), command);
   assert.match(rust, /shared-key: validate/);
-  assert.match(rust, /postgresql-18/);
+  assert.match(rust, /uses: \.\/\.github\/actions\/start-test-postgres/);
   for (const command of [
     "pnpm run build:js",
     "pnpm run fmt:js:check",

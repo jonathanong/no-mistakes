@@ -53,8 +53,10 @@ test("kills leftover analyzers that timeout --foreground cannot reach", () => {
     join(__dirname, "../../fixtures/hosted-check/leftover-processes-clean.ps"),
     "utf8",
   );
-  assert.deepEqual(leftoverCheckPids(leftover, nativePath, 4242), [77, 88]);
-  assert.throws(() => leftoverCheckPids(leftover, "", 4242), /nativePath/);
+  const fixturePath = "/tmp/fixture";
+  assert.deepEqual(leftoverCheckPids(leftover, nativePath, 4242, fixturePath), [77, 88]);
+  assert.throws(() => leftoverCheckPids(leftover, "", 4242, fixturePath), /nativePath/);
+  assert.throws(() => leftoverCheckPids(leftover, nativePath, 4242, ""), /fixturePath/);
 
   const signals = [];
   const sleeps = [];
@@ -62,6 +64,7 @@ test("kills leftover analyzers that timeout --foreground cannot reach", () => {
     terminateLeftoverCheckProcesses({
       psOutput: leftover,
       nativePath,
+      fixturePath,
       selfPid: 4242,
       kill: (pid, signal) => {
         signals.push([pid, signal]);
@@ -83,6 +86,7 @@ test("kills leftover analyzers that timeout --foreground cannot reach", () => {
     terminateLeftoverCheckProcesses({
       psOutput: clean,
       nativePath,
+      fixturePath,
       kill: () => {
         throw new Error("should not kill");
       },
@@ -94,7 +98,7 @@ test("kills leftover analyzers that timeout --foreground cannot reach", () => {
   );
 
   const measure = readFileSync(join(__dirname, "../../.github/scripts/hosted-check.cjs"), "utf8");
-  assert.equal(measure.split("terminateLeftoverCheckProcesses").length - 1, 3);
+  assert.match(measure, /fixturePath: fixture/);
 });
 
 test("finds the published manifest without requesting a private package export", () => {
