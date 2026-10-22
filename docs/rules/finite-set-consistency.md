@@ -1,5 +1,8 @@
 # `finite-set-consistency`
 
+Compares named finite string sets extracted from source files, structured
+config, docs, and file paths.
+
 ## Why and when
 
 Use this rule when two explicit inventories must remain synchronized without
@@ -66,9 +69,6 @@ export const STATUS = ['open'] as const;
 [`pnpm-release-age-policy`](pnpm-release-age-policy.md) uses policy-specific
 cross-file consistency; [`structured-config-policy`](structured-config-policy.md)
 checks individual config shapes.
-
-Compares named finite string sets extracted from source files, structured
-config, docs, and file paths.
 
 The following block is an extended reference of extractor kinds. The Options
 example above is the one Valid and Counterexample execute.

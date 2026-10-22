@@ -27,8 +27,20 @@ rules:
       importSpecifier: "@example/db"
       executorNames: [query, read, write]
       safeDirective: deadlock-safe
-      schemaCatalogPath: db/schema.json
       unanalyzableSql: fail
+```
+
+The following block is an extended reference of catalog-backed prefix checks.
+Valid and Counterexample execute the Options example above; an empty
+`schemaCatalogPath` catalog would itself fail the ordered `FOR UPDATE`.
+
+```yaml
+rules:
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: db/schema.json
 ```
 
 `importSpecifier` has no default. `executorNames` defaults to `query`, `read`, and `write` only when `importSpecifier` is configured. `safeDirective` defaults to `deadlock-safe`.
@@ -130,13 +142,21 @@ their existing scopes. See [the migration notes](../migrations/explicit-postgres
 ## Valid example
 
 ```ts
-query(`SELECT * FROM jobs WHERE id = ANY($1) ORDER BY id FOR UPDATE`);
+import { query } from "@example/db";
+
+export function lockRows(ids: string[]) {
+  return query(`SELECT * FROM jobs WHERE id = ANY($1) ORDER BY id FOR UPDATE`);
+}
 ```
 
 ## Counterexample
 
 ```ts
-query(`SELECT * FROM jobs WHERE id = ANY($1) FOR UPDATE`);
+import { query } from "@example/db";
+
+export function lockRows(ids: string[]) {
+  return query(`SELECT * FROM jobs WHERE id = ANY($1) FOR UPDATE`);
+}
 ```
 
 ## Fix

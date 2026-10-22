@@ -28,12 +28,25 @@ rules:
 ```
 
 `roots` accepts literal directories and directory globs. Each matching tracked
-`package.json` is a separate root. `dependencyFields` is optional and defaults
-to `dependencies`, `devDependencies`, and `optionalDependencies`.
+`package.json` is a separate root.
 
 `no-mistakes-config` validates every `roots` entry against the tracked
 repository inventory, so a deleted directory or a glob that matches nothing
 fails before it can silently disable nested-workspace coverage.
+
+The following block is an extended reference of glob roots and field
+selection. The Options example above is the one Valid and Counterexample
+execute.
+
+```yaml
+rules:
+  - rule: package-json-nested-workspace-coverage
+    scope: repository
+    options:
+      roots: [apps, lambdas/*]
+      dependencyNamePrefixes: ['@shared/']
+      dependencyFields: [dependencies, devDependencies, optionalDependencies]
+```
 
 ## Valid example
 

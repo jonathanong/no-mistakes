@@ -22,6 +22,22 @@ included SQL file, not only the file that declares the foreign key. A
 schema-qualified index table such as `public.child` still covers an
 unqualified foreign-key table name `child`.
 
+The following block is an allowlist reference. Valid and Counterexample execute
+the `sqlInclude` glob in the first example. Stale `allowedColumns` or
+`allowedTables` entries are findings, so they stay out of the executed config.
+
+```yaml
+rules:
+  - rule: postgres-fk-index
+    scope: repository
+    options:
+      sqlInclude: ["db/migrations/**/*.sql"]
+      allowDirective: fk-index-allow
+      allowedColumns:
+        - posts.legacy_user_id
+      allowedTables: []
+```
+
 Same-line `-- allowDirective:` comments (default `fk-index-allow`) skip that
 foreign key. `allowedColumns` entries are `table.column`. `allowedTables`
 skips every foreign key on that table. Stale allowlist entries are findings.

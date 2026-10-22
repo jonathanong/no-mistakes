@@ -20,12 +20,33 @@ rules:
         - jobId: ".github/workflows/ci.yml#lint"
           steps:
             - uses: actions/checkout@v4
+```
+
+The following block is an extended reference of secret inventory and unlocked
+workflows. The Options example above is the one Valid and Counterexample
+execute.
+
+```yaml
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
       secretInventory:
         repository: [DEPLOY_TOKEN]
         environments:
           production: [RELEASE_KEY]
       unlockedWorkflowReasons:
         .github/workflows/ci.yml: "single-job lint has no overlapping work"
+```
+
+For secret names, this workflow-level use is undeclared unless `DEPLOY_TOKEN`
+is listed in the repository inventory. Whether top-level `env` is evaluated
+with each job's `environment` secrets is not verified, so the undeclared
+finding stays and that environment name is not reported unused.
+
+```yaml
+env:
+  DEPLOY_TOKEN: "${{ secrets.DEPLOY_TOKEN }}"
 ```
 
 `jobInventory`, `exactCallerJobs`, and `unlockedWorkflowReasons` are
@@ -132,27 +153,36 @@ and a job lock in the same file.
 ## Valid example
 
 ```yaml
+# .github/workflows/ci.yml
+name: ci
+on: push
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
   test:
     needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test
 ```
 
 ## Counterexample
 
 ```yaml
+# .github/workflows/ci.yml
+name: ci
+on: push
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
   test:
-    steps: [{run: pnpm test}]
-```
-
-For secret names, this workflow-level use is undeclared unless `DEPLOY_TOKEN`
-is listed in the repository inventory. Whether top-level `env` is evaluated
-with each job's `environment` secrets is not verified, so the undeclared
-finding stays and that environment name is not reported unused.
-
-```yaml
-env:
-  DEPLOY_TOKEN: "${{ secrets.DEPLOY_TOKEN }}"
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test
 ```
 
 ## Fix

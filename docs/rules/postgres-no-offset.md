@@ -133,25 +133,35 @@ See [Executor configuration](postgres-no-offset-executors.md) and
 ## Valid example
 
 ```sql
+-- db/views/recent.sql
 CREATE VIEW view_recent_orders AS
 WITH o AS MATERIALIZED (SELECT id, account_id FROM orders WHERE id > '0190')
 SELECT o.id FROM o JOIN accounts a ON a.id = o.account_id;
 ```
 
 ```ts
-query(`SELECT id FROM posts ORDER BY id DESC LIMIT $1`, [limit + 1]);
+import { query } from "@example/db";
+
+export function page(limit: number) {
+  return query(`SELECT id FROM posts ORDER BY id DESC LIMIT $1`, [limit + 1]);
+}
 ```
 
 ## Counterexample
 
 ```sql
+-- db/views/recent.sql
 CREATE VIEW view_recent_orders AS
 SELECT * FROM (SELECT id, account_id FROM orders WHERE id > '0190' OFFSET 0) o
 JOIN accounts a ON a.id = o.account_id;
 ```
 
 ```ts
-query(`SELECT id FROM posts ORDER BY id DESC OFFSET 10`);
+import { query } from "@example/db";
+
+export function page() {
+  return query(`SELECT id FROM posts ORDER BY id DESC OFFSET 10`);
+}
 ```
 
 ## Fix
