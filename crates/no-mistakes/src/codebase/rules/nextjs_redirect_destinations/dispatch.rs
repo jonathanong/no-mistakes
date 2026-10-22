@@ -6,6 +6,7 @@ use crate::codebase::rules::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 pub(super) fn collect(
@@ -33,18 +34,18 @@ pub(super) fn collect(
                 .collect();
             let files = super::super::path_filter::filter_rule_files(root, config, rule, &files)?;
             if opts.tracked_routes_only && snapshot.is_some() {
-                tracked(
+                tracked(TrackedScan {
                     root,
                     config,
                     rule,
-                    &opts,
+                    opts: &opts,
                     analysis,
-                    &files,
+                    files: &files,
                     sources,
                     snapshot,
-                    &target_roots,
-                    &skip,
-                )
+                    target_roots: &target_roots,
+                    skip: &skip,
+                })
             } else if opts.tracked_routes_only && require_tracked_snapshot {
                 Err(missing_tracked_inventory(root))
             } else {
@@ -67,22 +68,25 @@ pub(super) fn collect(
     Ok(diagnostics)
 }
 
-#[allow(clippy::too_many_arguments)]
-fn tracked(
-    root: &Path,
-    config: &NoMistakesConfig,
-    rule: &crate::config::v2::schema::RuleDef,
-    opts: &Options,
+struct TrackedScan<'a> {
+    root: &'a Path,
+    config: &'a NoMistakesConfig,
+    rule: &'a crate::config::v2::schema::RuleDef,
+    opts: &'a Options,
     analysis: crate::config::v2::EffectiveRuleAnalysis,
-    files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-    snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
-    target_roots: &[PathBuf],
-    skip: &std::collections::HashSet<&str>,
-) -> Result<AnalysisDiagnostics> {
-    let snapshot = snapshot.ok_or_else(|| missing_tracked_inventory(root))?;
+    files: &'a [PathBuf],
+    sources: &'a crate::codebase::ts_source::SourceStore,
+    snapshot: Option<&'a crate::codebase::ts_source::VisiblePathSnapshot>,
+    target_roots: &'a [PathBuf],
+    skip: &'a HashSet<&'a str>,
+}
+
+fn tracked(scan: TrackedScan<'_>) -> Result<AnalysisDiagnostics> {
+    let snapshot = scan
+        .snapshot
+        .ok_or_else(|| missing_tracked_inventory(scan.root))?;
     let mut diagnostics = AnalysisDiagnostics::default();
-    for target_root in target_roots {
+    for target_root in scan.target_roots {
         if !snapshot.git_index_available_for(target_root) {
             return Err(missing_tracked_inventory(target_root));
         }
@@ -93,35 +97,54 @@ fn tracked(
             .iter()
             .filter(|path| {
                 path.starts_with(target_root)
-                    && super::super::file_allowed_by_roots_and_skip(root, skip, path, target_roots)
+                    && super::super::file_allowed_by_roots_and_skip(
+                        scan.root,
+                        scan.skip,
+                        path,
+                        scan.target_roots,
+                    )
             })
             .cloned()
             .collect::<Vec<_>>();
-        let tracked = super::super::path_filter::filter_rule_files(root, config, rule, &tracked)?;
-        let mut target_files = files.to_vec();
+        let tracked = super::super::path_filter::filter_rule_files(
+            scan.root,
+            scan.config,
+            scan.rule,
+            &tracked,
+        )?;
+        let mut target_files = scan.files.to_vec();
         target_files.extend(
             snapshot
                 .paths_for(target_root)
                 .iter()
                 .filter(|path| {
-                    super::super::file_allowed_by_roots_and_skip(root, skip, path, target_roots)
+                    super::super::file_allowed_by_roots_and_skip(
+                        scan.root,
+                        scan.skip,
+                        path,
+                        scan.target_roots,
+                    )
                 })
                 .cloned(),
         );
         target_files.sort();
         target_files.dedup();
-        let target_files =
-            super::super::path_filter::filter_rule_files(root, config, rule, &target_files)?;
+        let target_files = super::super::path_filter::filter_rule_files(
+            scan.root,
+            scan.config,
+            scan.rule,
+            &target_files,
+        )?;
         // Supplemental scoped configs still read through the one request
         // store, retaining shared success/failure identity.
         diagnostics.append(scan_diagnostics(
-            root,
-            opts,
+            scan.root,
+            scan.opts,
             &target_files,
             &tracked,
             std::slice::from_ref(target_root),
-            sources,
-            analysis,
+            scan.sources,
+            scan.analysis,
         ));
     }
     Ok(diagnostics)

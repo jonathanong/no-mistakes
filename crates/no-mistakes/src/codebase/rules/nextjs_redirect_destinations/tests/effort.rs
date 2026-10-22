@@ -129,7 +129,7 @@ export default {
   },
 };
 "#;
-    let max = extract::extract_named_destinations(path, source, "redirects");
+    let max = extract::extract_named_destinations_with(path, source, "redirects", false);
     let low = extract::extract_named_destinations_with(path, source, "redirects", true);
     assert_eq!(max.destinations[0].value, "/about");
     assert!(!max.incomplete);
