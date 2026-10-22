@@ -60,8 +60,10 @@ INSERT INTO items (id, note) VALUES ($1, $2);
 
 ## Counterexample
 
+Run each counterexample independently in a SQL file under `db/`. Each includes
+its own schema so a finding for one write cannot cover for the other.
+
 ```sql
--- db/schema.sql
 CREATE TABLE items (
   id bigint PRIMARY KEY,
   note text,
@@ -69,14 +71,12 @@ CREATE TABLE items (
 );
 CREATE TABLE orders (id bigint PRIMARY KEY, status text, updated_at timestamptz);
 
--- db/generated-write.sql
 UPDATE items SET normalized_note = 'override' WHERE id = $1;
 ```
 
 With `triggerMaintainedColumns: [updated_at]`, this also fails:
 
 ```sql
--- db/schema.sql
 CREATE TABLE items (
   id bigint PRIMARY KEY,
   note text,
@@ -84,7 +84,6 @@ CREATE TABLE items (
 );
 CREATE TABLE orders (id bigint PRIMARY KEY, status text, updated_at timestamptz);
 
--- db/trigger-write.sql
 UPDATE orders SET status = 'paid', updated_at = now() WHERE id = $1;
 ```
 
