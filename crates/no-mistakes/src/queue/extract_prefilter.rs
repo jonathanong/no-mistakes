@@ -23,11 +23,11 @@ pub(crate) fn source_may_have_queue_facts(
     let haystack = source.as_bytes();
     contains_bytes(haystack, b"bullmq")
         || contains_bytes(haystack, b"glide-mq")
-        // `.add(` / `.add (` miss generics (`queue.add<T>(...)`) and optional
-        // chaining. addBulk / addAndWait / waitUntilFinished / FlowProducer are
-        // already identifier needles, so `addBulk<T>(` still matches. `new Queue<T>`
-        // still contains `new Queue`.
-        || contains_bytes(haystack, b".add")
+        // Seed on the identifier, not `.add`: whitespace or `/* */` after the
+        // dot (`q.\n add`, `q. add`, `q./*c*/add`) is still a static member
+        // call. `add` also covers addBulk / addAndWait. `new Queue<T>` still
+        // contains `new Queue`.
+        || contains_bytes(haystack, b"add")
         || contains_bytes(haystack, b"addBulk")
         || contains_bytes(haystack, b"addAndWait")
         || contains_bytes(haystack, b"waitUntilFinished")
