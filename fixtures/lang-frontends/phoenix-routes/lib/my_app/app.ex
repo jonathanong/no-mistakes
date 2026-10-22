@@ -1,5 +1,6 @@
 defmodule MyApp.App do
-  alias MyApp.User
+  # Brace aliases expand to exact module imports; nested braces stay non-edges.
+  alias MyApp.{User, Role}
 
   def run, do: User.list()
 end

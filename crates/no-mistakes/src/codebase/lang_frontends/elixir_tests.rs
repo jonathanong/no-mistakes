@@ -11,8 +11,24 @@ use Phoenix.Controller
 "#;
     assert_eq!(
         extract_elixir_imports(source),
-        vec!["MyApp.Accounts", "MyApp.User", "Phoenix.Controller"]
+        vec![
+            "MyApp.Accounts",
+            "MyApp.Role",
+            "MyApp.Team",
+            "MyApp.User",
+            "Phoenix.Controller"
+        ]
     );
+}
+
+#[test]
+fn nested_brace_and_wildcard_aliases_are_non_edges() {
+    let source = r#"
+alias MyApp.{Foo.{Bar, Baz}}
+alias MyApp.*
+import MyApp.{User, *}
+"#;
+    assert!(extract_elixir_imports(source).is_empty());
 }
 
 #[test]
@@ -75,6 +91,7 @@ fn elixir_collects_aliases_and_phoenix_routes() {
         .find(|file| file.path.ends_with("app.ex"))
         .expect("app");
     assert!(app.imports.iter().any(|import| import == "MyApp.User"));
+    assert!(app.imports.iter().any(|import| import == "MyApp.Role"));
     assert_eq!(app.module.as_deref(), Some("MyApp.App"));
     let router = facts
         .files

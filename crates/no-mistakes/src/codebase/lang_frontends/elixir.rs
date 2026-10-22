@@ -105,23 +105,46 @@ fn elixir_pascal_case(stem: &str) -> String {
 }
 
 pub(super) fn extract_elixir_imports(source: &str) -> Vec<String> {
-    let mut values: Vec<String> = elixir_import_re()
-        .captures_iter(source)
-        .filter_map(|cap| {
-            let matched = cap.get(1)?;
-            let path = matched.as_str();
-            let rest = source.get(matched.end()..).unwrap_or("");
-            let rest = rest.trim_start();
-            (!path.contains('{')
-                && !path.contains('*')
-                && !rest.starts_with('{')
-                && !rest.starts_with(".{"))
-            .then_some(path.to_string())
-        })
-        .collect();
+    let mut values = Vec::new();
+    for cap in elixir_import_re().captures_iter(source) {
+        let Some(matched) = cap.get(1) else {
+            continue;
+        };
+        let path = matched.as_str();
+        if path.contains('*') || path.contains('{') {
+            continue;
+        }
+        let rest = source.get(matched.end()..).unwrap_or("").trim_start();
+        if rest.starts_with('*') || rest.starts_with(".*") {
+            continue;
+        }
+        if rest.starts_with('{') || rest.starts_with(".{") {
+            values.extend(expand_brace_members(path, rest.trim_start_matches('.')));
+        } else {
+            values.push(path.to_string());
+        }
+    }
     values.sort();
     values.dedup();
     values
+}
+
+fn expand_brace_members(prefix: &str, rest: &str) -> Vec<String> {
+    let Some(body) = rest
+        .strip_prefix('{')
+        .and_then(|s| s.split_once('}'))
+        .map(|(body, _)| body)
+    else {
+        return Vec::new();
+    };
+    if body.contains('{') || body.contains('*') {
+        return Vec::new();
+    }
+    body.split(',')
+        .map(str::trim)
+        .filter(|ident| elixir_module_re().is_match(ident))
+        .map(|ident| format!("{prefix}.{ident}"))
+        .collect()
 }
 
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {
@@ -147,6 +170,13 @@ fn elixir_import_re() -> &'static Regex {
     RE.get_or_init(|| {
         Regex::new(r"(?m)^\s*(?:alias|import|use)\s+([A-Z][A-Za-z0-9_]*(?:\.[A-Z][A-Za-z0-9_]*)*)")
             .expect("import")
+    })
+}
+
+fn elixir_module_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"^[A-Z][A-Za-z0-9_]*(?:\.[A-Z][A-Za-z0-9_]*)*$").expect("elixir module")
     })
 }
 
