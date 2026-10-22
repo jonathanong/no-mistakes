@@ -10,11 +10,12 @@ const modified = (paths) => paths.map((path) => ({ status: "M", path }));
 
 const BROWSER_TESTS = [
   "packages/no-mistakes/test-timeout-policy/browser-route.test.mjs",
-  "packages/no-mistakes/test-timeout-policy/browser-policy-contracts.test.mjs",
   // These also spawn Vitest Browser Mode; leaving them in test:ci would still need Chromium.
   "packages/no-mistakes/test-timeout-policy/storybook-route.test.mjs",
   "packages/no-mistakes/test-timeout-policy/review-context-options.test.mjs",
 ];
+const NODE_POLICY_CONTRACTS =
+  "packages/no-mistakes/test-timeout-policy/browser-policy-contracts.test.mjs";
 
 function pkg(vitest = "^5.0.4", playwright = "1.64.0") {
   return JSON.stringify({
@@ -107,6 +108,15 @@ test("test:ci excludes Chromium browser-mode files that release still runs", () 
       new RegExp(file.replaceAll(".", "\\.")),
     );
   }
+  // Node plugin contracts cover plugin.mjs; excluding them drops the 98% branch floor.
+  assert.doesNotMatch(
+    pkgJson.scripts["test:ci"],
+    new RegExp(`--exclude ${NODE_POLICY_CONTRACTS.replaceAll(".", "\\.")}`),
+  );
+  assert.doesNotMatch(
+    pkgJson.scripts["test:timeout-policy-browser"],
+    new RegExp(NODE_POLICY_CONTRACTS.replaceAll(".", "\\.")),
+  );
 });
 
 test("CI installs Chromium only on the path-filtered browser job", () => {
