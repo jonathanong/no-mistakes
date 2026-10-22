@@ -15,7 +15,7 @@ rules:
   - rule: postgres-require-fk-on-delete
     scope: repository
     options:
-      sqlInclude: ["backend/data-stores/psql/migrations/**/*.sql"]
+      sqlInclude: ["db/migrations/**/*.sql"]
 ```
 
 `sqlInclude` defaults to `**/*.sql`.
@@ -58,6 +58,7 @@ supported `DO $$` blocks are included in the same schema-fact pass.
 ## Valid example
 
 ```sql
+-- db/migrations/001.sql
 ALTER TABLE children ADD CONSTRAINT fk_children_parent
   FOREIGN KEY (parent_id) REFERENCES parents(id) ON DELETE CASCADE;
 ```
@@ -65,6 +66,7 @@ ALTER TABLE children ADD CONSTRAINT fk_children_parent
 ## Counterexample
 
 ```sql
+-- db/migrations/001.sql
 CREATE TABLE children (
   parent_id uuid REFERENCES parents(id)
 );

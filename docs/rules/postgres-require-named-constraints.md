@@ -16,7 +16,7 @@ rules:
   - rule: postgres-require-named-constraints
     scope: repository
     options:
-      sqlInclude: ["backend/data-stores/psql/migrations/**/*.sql"]
+      sqlInclude: ["db/migrations/**/*.sql"]
 ```
 
 `sqlInclude` defaults to `**/*.sql`.
@@ -62,6 +62,7 @@ inside `DO $$` blocks are included in the same migration fact pass.
 ## Valid example
 
 ```sql
+-- db/migrations/001.sql
 ALTER TABLE children ADD CONSTRAINT fk_children_parent
   FOREIGN KEY (parent_id) REFERENCES parents(id);
 ```
@@ -69,6 +70,7 @@ ALTER TABLE children ADD CONSTRAINT fk_children_parent
 ## Counterexample
 
 ```sql
+-- db/migrations/001.sql
 ALTER TABLE children ADD CHECK (parent_id IS NOT NULL);
 ```
 

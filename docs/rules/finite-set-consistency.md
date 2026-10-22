@@ -1,7 +1,22 @@
 # `finite-set-consistency`
 
-Compares named finite string sets extracted from source files, structured
-config, docs, and file paths.
+## Why and when
+
+Use this rule when two explicit inventories must remain synchronized without
+maintaining a private script or a hand-reviewed diff.
+
+## What it catches
+
+It extracts configured finite string sets and reports missing, stale, empty, or
+non-static members according to the selected comparison mode.
+
+## Options
+
+`sets` entries require `name` and `kind` plus that extractor's documented
+fields (`file`, `target`, `key`, `pattern`, `property`, `minSize`,
+`stripPrefix`, or `excludePrefix`). `comparisons` entries require `left` and
+`right` and default `mode` to `equal-set`; supported modes are documented
+below.
 
 ```yaml
 rules:
@@ -21,24 +36,6 @@ rules:
         - left: left
           right: right
 ```
-
-## Why and when
-
-Use this rule when two explicit inventories must remain synchronized without
-maintaining a private script or a hand-reviewed diff.
-
-## What it catches
-
-It extracts configured finite string sets and reports missing, stale, empty, or
-non-static members according to the selected comparison mode.
-
-## Options
-
-`sets` entries require `name` and `kind` plus that extractor's documented
-fields (`file`, `target`, `key`, `pattern`, `property`, `minSize`,
-`stripPrefix`, or `excludePrefix`). `comparisons` entries require `left` and
-`right` and default `mode` to `equal-set`; supported modes are documented
-below.
 
 ## Valid example
 
@@ -69,6 +66,12 @@ export const STATUS = ['open'] as const;
 [`pnpm-release-age-policy`](pnpm-release-age-policy.md) uses policy-specific
 cross-file consistency; [`structured-config-policy`](structured-config-policy.md)
 checks individual config shapes.
+
+Compares named finite string sets extracted from source files, structured
+config, docs, and file paths.
+
+The following block is an extended reference of extractor kinds. The Options
+example above is the one Valid and Counterexample execute.
 
 ```yaml
 rules:

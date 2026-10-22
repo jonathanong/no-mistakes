@@ -15,7 +15,7 @@ rules:
   - rule: postgres-no-add-column
     scope: repository
     options:
-      sqlInclude: ["backend/data-stores/psql/migrations/**/*.sql"]
+      sqlInclude: ["db/migrations/**/*.sql"]
 ```
 
 When a deployed schema needs a deliberately narrow exception, `allowedMigrations`
@@ -23,6 +23,9 @@ declares the complete parsed operation. Every configured entry must match one
 analyzed `ALTER TABLE … ADD COLUMN`, and every analyzed add-column must match a
 configured entry while the list is present. This makes unexpected migrations and
 stale exceptions both fail.
+
+The following block is an allowlist reference. Valid and Counterexample execute
+the `sqlInclude` glob in the first example.
 
 ```yaml
 rules:
@@ -91,6 +94,7 @@ list, meaning no add-column operation is allowed. Entries compare `path`,
 ## Valid example
 
 ```sql
+-- db/migrations/001.sql
 CREATE TABLE posts (
   id uuid PRIMARY KEY,
   status text NOT NULL DEFAULT 'draft'
@@ -100,6 +104,7 @@ CREATE TABLE posts (
 ## Counterexample
 
 ```sql
+-- db/migrations/001.sql
 ALTER TABLE posts ADD COLUMN status text;
 ```
 

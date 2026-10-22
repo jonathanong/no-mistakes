@@ -77,21 +77,83 @@ flat list; selectors must not repeat across it and `temporaryGroups`.
 
 ## Valid example
 
+Permanent packages, flattened temporary selectors, Dependabot cooldown
+exclusions, and lockfile keys agree.
+
 ```yaml
-temporaryGroups:
-  - selectors: ["acme-parser@2.4.1"]
-    reason: upstream security release
-    eligibleForRemovalAt: "2027-03-01T00:00:00Z"
+# pnpm-workspace.yaml
+minimumReleaseAgeExclude:
+  - acme-lib
+  - '@acme/core'
+  - demo-temporary-package@9.9.9
+```
+
+```yaml
+# .github/dependabot.yml
+updates:
+  - package-ecosystem: npm
+    directory: /
+    cooldown:
+      exclude:
+        - acme-lib
+        - '@acme/*'
+```
+
+```json
+// package.json
+{ "dependencies": { "acme-lib": "1.0.0", "@acme/core": "1.0.0" } }
+```
+
+```yaml
+# pnpm-lock.yaml
+lockfileVersion: '9.0'
+packages:
+  'acme-lib@1.0.0':
+    resolution: {}
+  '@acme/core@1.0.0':
+    resolution: {}
+  'demo-temporary-package@9.9.9':
+    resolution: {}
 ```
 
 ## Counterexample
 
 ```yaml
-minimumReleaseAgeExclude: [acme-parser]
+# pnpm-workspace.yaml
+minimumReleaseAgeExclude:
+  - acme-lib
 ```
 
-The package is excluded from pnpm aging but absent from the declared permanent
-or temporary policy.
+```yaml
+# .github/dependabot.yml
+updates:
+  - package-ecosystem: npm
+    directory: /
+    cooldown:
+      exclude:
+        - acme-lib
+        - '@acme/*'
+```
+
+```json
+// package.json
+{ "dependencies": { "acme-lib": "1.0.0", "@acme/core": "1.0.0" } }
+```
+
+```yaml
+# pnpm-lock.yaml
+lockfileVersion: '9.0'
+packages:
+  'acme-lib@1.0.0':
+    resolution: {}
+  '@acme/core@1.0.0':
+    resolution: {}
+  'demo-temporary-package@9.9.9':
+    resolution: {}
+```
+
+`@acme/core` and the temporary selector are missing from
+`minimumReleaseAgeExclude`.
 
 ## Fix
 
