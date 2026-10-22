@@ -320,7 +320,8 @@ test("release publication requires both parallel validation suites", () => {
   ]) {
     assert.ok(js.includes(`run: ${command}\n`), command);
   }
-  assert.match(js, /playwright install --with-deps chromium/);
+  assert.match(js, /playwright install chromium/);
+  assert.doesNotMatch(js, /playwright install --with-deps/);
   assert.match(js, /pnpm --filter "\$pkg" pack --dry-run/);
   assert.doesNotMatch(js, /cargo|Install Rust/);
   assert.match(gate, /needs:\n {6}- validate-rust\n {6}- validate-js/);
