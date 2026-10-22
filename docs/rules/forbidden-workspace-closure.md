@@ -3,6 +3,16 @@
 Reports when a configured workspace package can reach a forbidden dependency
 through its package.json dependency closure.
 
+```yaml
+rules:
+  - rule: forbidden-workspace-closure
+    scope: repository
+    options:
+      packages: ["@acme/app"]
+      forbidden: ["@acme/secret"]
+      dependencyTypes: [dependencies]
+```
+
 ## Why and when
 
 Use this rule when package manifests must prevent a selected workspace package
@@ -37,14 +47,22 @@ The compliant manifest pair below passes because the `@acme/app` closure never
 reaches `@acme/secret`.
 
 ```json
-{ "name": "@app/web", "version": "1.0.0", "dependencies": { "@app/ui": "workspace:*" } }
+// packages/app/package.json
+{ "name": "@acme/app", "version": "1.0.0", "dependencies": { "@acme/ui": "workspace:*" } }
+
+// packages/ui/package.json
+{ "name": "@acme/ui", "version": "1.0.0" }
 ```
 
 
 ## Counterexample
 
 ```json
-{ "name": "@app/web", "version": "1.0.0", "dependencies": { "@app/server": "workspace:*" } }
+// packages/app/package.json
+{ "name": "@acme/app", "version": "1.0.0", "dependencies": { "@acme/domain": "workspace:*" } }
+
+// packages/domain/package.json
+{ "name": "@acme/domain", "version": "1.0.0", "dependencies": { "@acme/secret": "^1.0.0" } }
 ```
 
 ## Related rules

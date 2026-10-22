@@ -43,15 +43,35 @@ under `tests.playwright` determine which values are considered.
 ## Valid example
 
 ```tsx
-<button data-pw="save-profile">Save</button>
-<button data-pw="cancel-profile">Cancel</button>
+// next.config.ts
+export default {};
+
+// app/page.tsx
+export default function Page() {
+  return (
+    <>
+      <button data-pw="save-profile">Save</button>
+      <button data-pw="cancel-profile">Cancel</button>
+    </>
+  );
+}
 ```
 
 ## Counterexample
 
 ```tsx
-<SaveButton data-pw="save" />
-<DeleteButton data-pw="save" />
+// next.config.ts
+export default {};
+
+// app/page.tsx
+export default function Page() {
+  return (
+    <>
+      <SaveButton data-pw="save" />
+      <DeleteButton data-pw="save" />
+    </>
+  );
+}
 ```
 
 ## Fix

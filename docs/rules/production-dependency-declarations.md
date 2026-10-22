@@ -79,7 +79,7 @@ include/exclude filters further bound the scan.
 `@acme/app` imports `@acme/lib`, so `packages/lib/index.mts` is
 production-reachable. `@acme/tool` is declared in `dependencies`.
 
-```ts
+```json
 // packages/app/package.json
 {
   "name": "@acme/app",
@@ -88,18 +88,20 @@ production-reachable. `@acme/tool` is declared in `dependencies`.
   }
 }
 
-// packages/app/index.mts
-import { helper } from "@acme/lib";
-export function run() {
-  return helper();
-}
-
 // packages/lib/package.json
 {
   "name": "@acme/lib",
   "dependencies": {
     "@acme/tool": "workspace:^"
   }
+}
+```
+
+```mts
+// packages/app/index.mts
+import { helper } from "@acme/lib";
+export function run() {
+  return helper();
 }
 
 // packages/lib/index.mts
@@ -114,7 +116,7 @@ export function helper() {
 The same graph with `@acme/tool` only in `devDependencies` is a `dev-only`
 finding: a production install can prune it.
 
-```ts
+```json
 // packages/app/package.json
 {
   "name": "@acme/app",
@@ -123,18 +125,20 @@ finding: a production install can prune it.
   }
 }
 
-// packages/app/index.mts
-import { helper } from "@acme/lib";
-export function run() {
-  return helper();
-}
-
 // packages/lib/package.json
 {
   "name": "@acme/lib",
   "devDependencies": {
     "@acme/tool": "workspace:^"
   }
+}
+```
+
+```mts
+// packages/app/index.mts
+import { helper } from "@acme/lib";
+export function run() {
+  return helper();
 }
 
 // packages/lib/index.mts

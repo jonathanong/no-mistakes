@@ -15,15 +15,6 @@ rules:
           valueAssertions:
             - key: runtime.enabled
               kind: boolean
-            - key: overrides.[].files.[]
-              kind: string-prefix
-              prefix: "**/"
-            - key: overrides.[].files.[]
-              kind: not-single-file
-            - key: rules.[]
-              kind: object-shape
-              requiredValues:
-                severity: error
 ```
 
 Supported assertion kinds are `boolean`, `positive-number`, `string-array`,
@@ -91,6 +82,17 @@ policies:
         kind: equals-file
         file: .oxlintrc.json
         fromKey: plugins
+  - files: [globs.yml]
+    valueAssertions:
+      - key: overrides.[].files.[]
+        kind: string-prefix
+        prefix: "**/"
+      - key: overrides.[].files.[]
+        kind: not-single-file
+      - key: rules.[]
+        kind: object-shape
+        requiredValues:
+          severity: error
 ```
 
 Counterexample: a config file omits a required key, still contains a banned
@@ -137,16 +139,21 @@ support `boolean`, `positive-number`, `string-array`, `record-of-boolean`,
 ## Valid example
 
 ```yaml
+# app.yml
 runtime:
+  version: "1"
   enabled: true
 ```
 
-With `runtime.enabled` asserted as boolean, this file satisfies the policy.
+With `runtime.version` present and `runtime.enabled` a boolean, this file
+satisfies the policy.
 
 ## Counterexample
 
 ```yaml
+# app.yml
 runtime:
+  version: "1"
   enabled: "yes"
 ```
 

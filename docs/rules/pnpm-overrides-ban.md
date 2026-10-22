@@ -40,6 +40,7 @@ workspace manifests.
 ## Valid example
 
 ```yaml
+# pnpm-workspace.yaml
 packageExtensions:
   "react-dom@*":
     peerDependencies:
@@ -49,6 +50,7 @@ packageExtensions:
 ## Counterexample
 
 ```yaml
+# pnpm-workspace.yaml
 overrides:
   lodash: 4.17.21
 ```

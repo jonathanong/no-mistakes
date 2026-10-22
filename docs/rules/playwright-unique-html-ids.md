@@ -46,15 +46,35 @@ repository scope and scans the configured source universe; Playwright
 ## Valid example
 
 ```tsx
-<label htmlFor="email">Email</label>
-<input id="email" />
+// next.config.ts
+export default {};
+
+// app/page.tsx
+export default function Page() {
+  return (
+    <>
+      <label htmlFor="email">Email</label>
+      <input id="email" />
+    </>
+  );
+}
 ```
 
 ## Counterexample
 
 ```tsx
-<section id="results" />
-<aside id="results" />
+// next.config.ts
+export default {};
+
+// app/page.tsx
+export default function Page() {
+  return (
+    <>
+      <section id="results" />
+      <aside id="results" />
+    </>
+  );
+}
 ```
 
 ## Fix

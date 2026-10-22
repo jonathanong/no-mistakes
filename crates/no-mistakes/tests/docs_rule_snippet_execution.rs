@@ -103,9 +103,8 @@ fn rule_docs_execute_valid_and_counterexample_snippets() {
             ("Valid example", false, valid_fences.as_slice()),
             ("Counterexample", true, counter_fences.as_slice()),
         ] {
-            for (index, fence) in snippet.iter().enumerate() {
-                let fixture =
-                    docs_rule_snippets::materialize_snippet(&config, std::slice::from_ref(fence));
+            for (index, fences) in docs_rule_snippets::snippet_runs(snippet) {
+                let fixture = docs_rule_snippets::materialize_snippet(&config, &fences);
                 match docs_rule_snippets::run_rule(fixture.path(), &rule_id) {
                     Ok(hits) => {
                         if hits.is_empty() == expect_report {
@@ -226,6 +225,28 @@ flowchart TD
     assert_eq!(extracted.len(), 1, "{extracted:?}");
     assert_eq!(extracted[0].0, "markdown");
     assert!(extracted[0].1.contains("```mermaid"));
+}
+
+#[test]
+fn named_file_fences_in_one_section_materialize_together() {
+    let runs = docs_rule_snippets::snippet_runs(&[
+        ("toml".into(), "# .mise.toml\n[tools]\nfoo = \"1\"\n".into()),
+        (
+            "yaml".into(),
+            "# .github/actions/setup/action.yml\nVERSION: 1\n".into(),
+        ),
+    ]);
+    assert_eq!(runs.len(), 1, "{runs:?}");
+    assert_eq!(runs[0].0, 0);
+    let fixture = docs_rule_snippets::materialize_snippet(
+        "rules:\n  - rule: version-pin-consistency\n    scope: repository\n",
+        &runs[0].1,
+    );
+    assert!(fixture.path().join(".mise.toml").exists());
+    assert!(fixture
+        .path()
+        .join(".github/actions/setup/action.yml")
+        .exists());
 }
 
 #[test]

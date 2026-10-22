@@ -272,12 +272,39 @@ fn looks_like_email_line(line: &str) -> bool {
     line.contains('@') && !line.contains('/')
 }
 
-fn split_named_files(code: &str, lang: &str, catalog: Option<&str>) -> Vec<(String, String)> {
-    let comment = match lang {
+pub fn starts_with_path_comment(lang: &str, code: &str) -> bool {
+    code.lines()
+        .map(str::trim)
+        .find(|line| !line.is_empty())
+        .is_some_and(|line| path_comment(line, path_comment_prefix(lang)).is_some())
+}
+
+/// Named-file fences in one Valid/Counterexample section are one fixture.
+pub fn snippet_runs(fences: &[(String, String)]) -> Vec<(usize, Vec<(String, String)>)> {
+    if fences.len() > 1
+        && fences
+            .iter()
+            .all(|(lang, code)| starts_with_path_comment(lang, code))
+    {
+        return vec![(0, fences.to_vec())];
+    }
+    fences
+        .iter()
+        .enumerate()
+        .map(|(index, fence)| (index, vec![fence.clone()]))
+        .collect()
+}
+
+fn path_comment_prefix(lang: &str) -> &'static str {
+    match lang {
         "sql" => "-- ",
-        "yaml" | "yml" | "sh" | "bash" | "py" => "# ",
+        "yaml" | "yml" | "sh" | "bash" | "py" | "toml" => "# ",
         _ => "// ",
-    };
+    }
+}
+
+fn split_named_files(code: &str, lang: &str, catalog: Option<&str>) -> Vec<(String, String)> {
+    let comment = path_comment_prefix(lang);
     let mut files = Vec::new();
     let mut current_name = default_filename(lang, code, catalog);
     let mut current = String::new();

@@ -1,5 +1,27 @@
 # `finite-set-consistency`
 
+Compares named finite string sets extracted from source files, structured
+config, docs, and file paths.
+
+```yaml
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: left
+          file: src/left.ts
+          kind: ts-array-literal
+          target: STATUS
+        - name: right
+          file: src/right.ts
+          kind: ts-array-literal
+          target: STATUS
+      comparisons:
+        - left: left
+          right: right
+```
+
 ## Why and when
 
 Use this rule when two explicit inventories must remain synchronized without
@@ -20,10 +42,14 @@ below.
 
 ## Valid example
 
-Two configured route inventories containing the same static values pass an
+Two configured `STATUS` arrays containing the same static values pass an
 `equal-set` comparison.
 
 ```ts
+// src/left.ts
+export const STATUS = ['open', 'closed'] as const;
+
+// src/right.ts
 export const STATUS = ['open', 'closed'] as const;
 ```
 
@@ -31,6 +57,10 @@ export const STATUS = ['open', 'closed'] as const;
 ## Counterexample
 
 ```ts
+// src/left.ts
+export const STATUS = ['open', 'closed'] as const;
+
+// src/right.ts
 export const STATUS = ['open'] as const;
 ```
 
@@ -39,9 +69,6 @@ export const STATUS = ['open'] as const;
 [`pnpm-release-age-policy`](pnpm-release-age-policy.md) uses policy-specific
 cross-file consistency; [`structured-config-policy`](structured-config-policy.md)
 checks individual config shapes.
-
-Compares named finite string sets extracted from source files, structured
-config, docs, and file paths.
 
 ```yaml
 rules:

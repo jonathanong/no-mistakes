@@ -39,7 +39,11 @@ filters still apply.
 A package beneath `packages/*` with a matching root workspace glob passes.
 
 ```json
+// package.json
 { "name": "root", "private": true, "workspaces": ["packages/*"] }
+
+// packages/web/package.json
+{ "name": "web", "version": "1.0.0" }
 ```
 
 ## Related rules
@@ -51,7 +55,11 @@ checks each package's internal layout.
 ## Counterexample
 
 ```json
+// package.json
 { "name": "root", "private": true, "workspaces": ["packages/missing"] }
+
+// packages/web/package.json
+{ "name": "web", "version": "1.0.0" }
 ```
 
 ## Suppression
