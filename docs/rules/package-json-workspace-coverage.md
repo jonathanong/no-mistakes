@@ -22,8 +22,9 @@ file, then normalized, and a glob that escapes the workspace root is dropped.
 `packages` delegated to a local file does not fall back to `["*"]` when the
 file omits the key. The same setting in the root file and a local include is
 a conflict: the check reports that `packages` is claimed twice and does not
-guess which list wins. An omitted `packages` key with no local include still
-means `["*"]`.
+guess which list wins. Coverage is still judged against the root file's own
+`packages` list, so a directory that list omits stays a finding. An omitted
+`packages` key with no local include still means `["*"]`.
 
 ## Options
 
@@ -40,7 +41,6 @@ A package beneath `packages/*` with a matching root workspace glob passes.
 ```json
 { "name": "root", "private": true, "workspaces": ["packages/*"] }
 ```
-
 
 ## Related rules
 

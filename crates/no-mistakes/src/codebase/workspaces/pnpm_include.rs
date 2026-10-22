@@ -76,6 +76,9 @@ impl CatalogIndex {
 
 pub(crate) struct PnpmInclude {
     pub packages: PackageGlobs,
+    /// The root file's own `packages` list. A conflict still reports both
+    /// claimants; this list is not a chosen winner.
+    pub root_packages: Vec<String>,
     pub packages_invalid: bool,
     pub duplicates: Vec<String>,
     pub included_override_paths: Vec<PathBuf>,
@@ -127,6 +130,7 @@ pub(crate) fn resolve_pnpm_include(
     );
     let mut duplicates = Vec::new();
     let packages_invalid = packages_field_invalid(&root_map);
+    let root_packages = root_package_list(&root_map);
     let packages = package_globs(&docs, &phantoms, &mut duplicates);
     let included_override_paths = override_paths(&docs, &phantoms, &mut duplicates);
     let release_age_exclude = release_age(&docs, &phantoms, &mut duplicates);
@@ -135,6 +139,7 @@ pub(crate) fn resolve_pnpm_include(
     duplicates.dedup();
     Ok(PnpmInclude {
         packages,
+        root_packages,
         packages_invalid,
         duplicates,
         included_override_paths,

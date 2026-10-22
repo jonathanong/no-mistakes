@@ -1,3 +1,9 @@
+fn root_package_list(map: &serde_yaml::Mapping) -> Vec<String> {
+    map.get("packages")
+        .and_then(yaml_string_list)
+        .unwrap_or_default()
+}
+
 fn packages_field_invalid(map: &serde_yaml::Mapping) -> bool {
     match map.get("packages") {
         None => false,

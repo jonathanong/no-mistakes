@@ -336,7 +336,7 @@ fn included_package_globs_are_relative_to_the_included_file() {
 }
 
 #[test]
-fn duplicate_package_settings_do_not_guess_coverage() {
+fn duplicate_package_settings_keep_the_root_coverage_finding() {
     let root = fixture_root("duplicate-packages");
     let findings = check_with_files(
         &root,
@@ -352,11 +352,25 @@ fn duplicate_package_settings_do_not_guess_coverage() {
         ),
     )
     .unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].file, "pnpm-workspace.yaml");
-    assert!(findings[0]
-        .message
-        .contains("setting \"packages\" is claimed by more than one pnpm source"));
+    let files: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.file.as_str())
+        .collect();
+    assert_eq!(
+        files,
+        vec!["pnpm-workspace.yaml", "services/package.json"],
+        "{findings:?}"
+    );
+    assert!(findings.iter().any(|finding| {
+        finding.file == "pnpm-workspace.yaml"
+            && finding
+                .message
+                .contains("setting \"packages\" is claimed by more than one pnpm source")
+    }));
+    assert!(findings.iter().any(|finding| {
+        finding.file == "services/package.json"
+            && finding.message.contains("package directory is not covered")
+    }));
 }
 
 #[test]

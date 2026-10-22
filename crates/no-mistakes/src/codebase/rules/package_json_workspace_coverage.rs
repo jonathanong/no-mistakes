@@ -72,13 +72,15 @@ fn scan(
     }
 
     let mut findings = Vec::new();
-    // Conflict is a property of the workspace. Scope decides whether the
-    // diagnostic is reported, not whether coverage may guess past it.
+    // A packages conflict is reported when the workspace file is in scope.
+    // Coverage still uses that file's own list, so an omitted directory is
+    // not hidden behind the conflict.
     let owner = workspace_config_file(root, all_files);
     let owner_path = crate::codebase::ts_resolver::normalize_path(&root.join(&owner));
     let owner_in_scope = files
         .iter()
         .any(|candidate| crate::codebase::ts_resolver::normalize_path(candidate) == owner_path);
+    let mut root_packages_on_conflict = None;
     if owner == "pnpm-workspace.yaml" {
         if let Some(resolved) = workspaces::resolve_pnpm_include_at_root(root, sources)? {
             if resolved.packages_invalid {
@@ -104,17 +106,25 @@ fn scan(
                         "setting \"packages\" is claimed by more than one pnpm source",
                     ));
                 }
-                return Ok(findings);
+                root_packages_on_conflict = Some(resolved.root_packages);
             }
         }
     }
 
-    let workspace_dirs: HashSet<String> = workspaces::load_from_source_store(root, sources)?
-        .packages
-        .iter()
-        .map(|pkg| relative_slash_path(root, &pkg.dir))
-        .collect();
-    let workspace_globs = workspaces::load_workspace_globs_from_source_store(root, sources)?;
+    let workspace_globs = if let Some(globs) = &root_packages_on_conflict {
+        globs.clone()
+    } else {
+        workspaces::load_workspace_globs_from_source_store(root, sources)?
+    };
+    let workspace_dirs: HashSet<String> = if root_packages_on_conflict.is_some() {
+        covered_workspace_dirs(root, all_files, &workspace_globs)?
+    } else {
+        workspaces::load_from_source_store(root, sources)?
+            .packages
+            .iter()
+            .map(|pkg| relative_slash_path(root, &pkg.dir))
+            .collect()
+    };
     let covered_workspace_dirs = covered_workspace_dirs(root, files, &workspace_globs)?;
     // Existence uses the unfiltered inventory. The finding is still owned by
     // the workspace file, and a narrowed include must not report it when that
