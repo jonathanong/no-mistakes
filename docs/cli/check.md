@@ -12,6 +12,9 @@ The `postgres-require-query-annotation` rule traces straight-line SQL helpers an
 callback forwarding. Unknown leading SQL reports by default; use the rule option
 `unanalyzableSql: ignore` explicitly to skip opaque executor arguments. Findings
 point to the executor call. See [the rule](../rules/postgres-require-query-annotation.md).
+`nextjs-redirect-destinations` also supports `effort: low`: literal destination
+arrays and objects stay checked, and every other construction follows the shared
+unanalyzable policy. See [the rule](../rules/nextjs-redirect-destinations.md#effort).
 
 ```sh
 no-mistakes check --root . --format json

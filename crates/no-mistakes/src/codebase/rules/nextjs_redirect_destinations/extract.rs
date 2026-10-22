@@ -8,6 +8,7 @@ use crate::codebase::ts_source::{
 use oxc_ast::ast::{Expression, MethodDefinition, ObjectProperty, Program, PropertyDefinition};
 use oxc_ast_visit::{walk, Visit};
 use std::collections::BTreeMap;
+use std::path::Path;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(super) struct ExtractedDestinations {
@@ -23,10 +24,23 @@ pub(super) struct ExtractedDestination {
     pub(super) line: usize,
 }
 
-pub(super) fn extract_named_destinations_from_program(
+pub(super) fn extract_named_destinations_with(
+    path: &Path,
+    source: &str,
+    name: &str,
+    literals_only: bool,
+) -> ExtractedDestinations {
+    crate::ast::with_program(path, source, |program, source| {
+        extract_named_destinations_from_program(program, source, name, literals_only)
+    })
+    .unwrap_or_default()
+}
+
+fn extract_named_destinations_from_program(
     program: &Program<'_>,
     source: &str,
     name: &str,
+    literals_only: bool,
 ) -> ExtractedDestinations {
     let mut finder = BodyFinder {
         name,
@@ -35,6 +49,7 @@ pub(super) fn extract_named_destinations_from_program(
         destinations: BTreeMap::new(),
         saw_destination_property: false,
         incomplete: false,
+        literals_only,
         environment: program_environment(program),
     };
     finder.visit_program(program);
@@ -57,12 +72,20 @@ struct BodyFinder<'a, 'n> {
     destinations: BTreeMap<String, usize>,
     saw_destination_property: bool,
     incomplete: bool,
+    literals_only: bool,
     environment: Environment,
 }
 
 impl BodyFinder<'_, '_> {
+    fn evaluator(&self) -> Evaluator {
+        if self.literals_only {
+            Evaluator::literals_only()
+        } else {
+            Evaluator::new()
+        }
+    }
     fn collect_from_expression(&mut self, expression: &Expression<'_>) -> bool {
-        let mut evaluator = Evaluator::new();
+        let mut evaluator = self.evaluator();
         let value = match unwrap_ts_wrappers(expression) {
             Expression::FunctionExpression(function) => {
                 evaluator.function(function, &self.environment)
@@ -130,7 +153,7 @@ impl<'a> Visit<'a> for BodyFinder<'a, '_> {
         }
         if static_property_key_name(&method.key) == Some(self.name) {
             self.body_found = true;
-            let value = Evaluator::new().function(&method.value, &self.environment);
+            let value = self.evaluator().function(&method.value, &self.environment);
             self.collect(value);
             return;
         }

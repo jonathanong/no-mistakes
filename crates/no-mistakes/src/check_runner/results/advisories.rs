@@ -13,11 +13,22 @@ pub(super) fn collect(
     if !enabled {
         return Ok(Vec::new());
     }
-    if include_suppressed {
-        no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_sources_and_deferred_suppression(root, config, files, sources)
+    let mut advisories = if include_suppressed {
+        no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_sources_and_deferred_suppression(root, config, files, sources)?
     } else {
         no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_and_sources(
             root, config, files, sources,
-        )
-    }
+        )?
+    };
+    let nextjs = if include_suppressed {
+        no_mistakes::codebase::rules::nextjs_redirect_destinations::advisories_with_files_sources_and_deferred_suppression(root, config, files, sources)?
+    } else {
+        no_mistakes::codebase::rules::nextjs_redirect_destinations::advisories_with_files_and_sources(
+            root, config, files, sources,
+        )?
+    };
+    advisories.extend(nextjs);
+    advisories.sort();
+    advisories.dedup();
+    Ok(advisories)
 }

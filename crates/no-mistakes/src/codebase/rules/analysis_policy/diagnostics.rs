@@ -18,4 +18,8 @@ impl AnalysisDiagnostics {
     pub fn has_failures(&self) -> bool {
         !self.findings.is_empty()
     }
+    pub fn append(&mut self, other: Self) {
+        self.findings.extend(other.findings);
+        self.advisories.extend(other.advisories);
+    }
 }

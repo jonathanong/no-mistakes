@@ -61,6 +61,11 @@ to this rule's low-effort analysis and does not affect `max` or other SQL rules.
 Other shapes use the selected unanalyzable policy. These syntax proofs do not
 require a companion rule.
 
+[`nextjs-redirect-destinations`](../rules/nextjs-redirect-destinations.md#effort)
+supports `low`: keep literal arrays and objects of string destinations, and
+route every other construction through the selected unanalyzable policy. It
+also has no companion rule.
+
 [`test-no-unmocked-dynamic-imports`](../rules/test-no-unmocked-dynamic-imports.md#effort)
 supports `low`: accept a top-level static import, a `vi.mock` or `jest.mock`
 call, or a literal `require()` in setup files. Every other setup-reachability

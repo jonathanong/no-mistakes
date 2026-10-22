@@ -34,6 +34,10 @@ warnings.
 For `postgres-require-query-annotation`, `low` uses the same
 [literal-head proofs](rules/postgres-require-query-annotation.md#effort) and
 unanalyzable policy in both APIs; it omits annotation evaluator preparation.
+For `nextjs-redirect-destinations`, `low` keeps
+[literal arrays and objects](rules/nextjs-redirect-destinations.md#effort) and
+routes every other destination construction through the same unanalyzable
+policy.
 For `test-no-unmocked-dynamic-imports`, `low` accepts a top-level static
 import, a `vi.mock` or `jest.mock` call, or a literal `require()` in setup
 files; other setup-reachability shapes use the same unanalyzable policy. See

@@ -46,6 +46,9 @@ impl Evaluator {
         }
     }
     fn body(&mut self, body: &FunctionBody<'_>, mut env: Environment, depth: usize) -> Value {
+        if self.literals_only {
+            return self.literal_body(body, &env, depth);
+        }
         // Predeclare locals so a forward reference never falls back to an outer binding.
         for statement in &body.statements {
             if let Statement::VariableDeclaration(var) = statement {
@@ -70,6 +73,24 @@ impl Evaluator {
             }
         }
         Value::Array(Arc::new(Vec::new()))
+    }
+    fn literal_body(&mut self, body: &FunctionBody<'_>, env: &Environment, depth: usize) -> Value {
+        let mut returned = None;
+        for statement in &body.statements {
+            match statement {
+                Statement::EmptyStatement(_) => {}
+                Statement::ReturnStatement(ret) if returned.is_none() => {
+                    returned = Some(
+                        ret.argument
+                            .as_ref()
+                            .map(|expr| self.expression(expr, env, depth))
+                            .unwrap_or(Value::Unknown),
+                    );
+                }
+                _ => return Value::Unknown,
+            }
+        }
+        returned.unwrap_or_else(|| Value::Array(Arc::new(Vec::new())))
     }
     pub(super) fn map(
         &mut self,
