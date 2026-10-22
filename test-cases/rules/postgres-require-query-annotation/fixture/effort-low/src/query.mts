@@ -25,7 +25,7 @@ read("BEGIN"); // EXPECT_REPORT_TRANSACTION
 read(body); // EXPECT_LINE_SUPPRESSED
 read(body); // no-mistakes-disable-line postgres-require-query-annotation: same-line suppression
 
-// Configured tag identity, including aliases/subpaths, is distinct from spelling.
+// Low effort judges literal heads independently of tag identity or configuration.
 import { sql as subpathTag } from "@bench/db/sql";
 import { sql as unrelatedTag } from "@other/db";
 import builtinTag from "sql-template-strings";
@@ -35,10 +35,10 @@ const taggedStatement = renamedTag`/* one tagged const */ SELECT ${body}`;
 read(taggedStatement); // EXPECT_ACCEPTED_TAG
 const subpathStatement = subpathTag`/* subpath const */ SELECT ${body}`;
 read(subpathStatement); // EXPECT_ACCEPTED_TAG
-read(unrelatedTag`/* unrelated */ SELECT 1`); // EXPECT_REPORT_UNCONFIGURED EXPECT_OTHER_TAG_ACCEPTED
-read(builtinTag`/* default builtin is not configured */ SELECT 1`); // EXPECT_REPORT_BUILTIN
-function tagShadow(renamedTag: unknown) { read(renamedTag`/* shadow */ SELECT 1`); } // EXPECT_REPORT_SHADOW
-{ const renamedTag = helper; read(renamedTag`/* block shadow */ SELECT 1`); } // EXPECT_REPORT_SHADOW
+read(unrelatedTag`/* unrelated */ SELECT 1`); // EXPECT_ACCEPTED_TAG
+read(builtinTag`/* default builtin is not configured */ SELECT 1`); // EXPECT_ACCEPTED_TAG
+function tagShadow(renamedTag: unknown) { read(renamedTag`/* shadow */ SELECT 1`); } // EXPECT_ACCEPTED_TAG
+{ const renamedTag = helper; read(renamedTag`/* block shadow */ SELECT 1`); } // EXPECT_ACCEPTED_TAG
 read(sql`/* open ${body} */ SELECT 1`); // EXPECT_REPORT_OPEN_TAG
 read(sql`/*  */ SELECT 1`); // EXPECT_REPORT_EMPTY_TAG
 const aliasSource = renamedTag`/* alias source */ SELECT ${body}`;
@@ -47,7 +47,7 @@ read(taggedAlias); // EXPECT_REPORT_TAG_ALIAS
 const openTag = sql`/* incomplete ${body} */ SELECT 1`;
 read(openTag); // EXPECT_REPORT_OPEN_CONST_TAG
 const wrongTag = unrelatedTag`/* unconfigured const */ SELECT 1`;
-read(wrongTag); // EXPECT_REPORT_UNCONFIGURED_CONST EXPECT_OTHER_TAG_ACCEPTED
+read(wrongTag); // EXPECT_ACCEPTED_TAG
 const changedTag = renamedTag`/* changed builder */ SELECT 1`;
 changedTag.text = "SELECT unsafe";
 read(changedTag); // EXPECT_REPORT_MUTATED_TAG
