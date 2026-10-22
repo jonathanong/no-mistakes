@@ -51,13 +51,11 @@ pub(super) fn with_import_closure(
 }
 
 fn source_has_unresolved_local_alias(source: &str) -> bool {
-    quoted_specifiers(source).any(|specifier| {
-        !specifier.starts_with('.')
-            && !QUEUE_PACKAGES.contains(&specifier)
-            && (specifier.starts_with("@/")
-                || specifier.starts_with('#')
-                || specifier.starts_with("~/"))
-    })
+    // Workspace packages (`@scope/pkg`) and tsconfig paths cannot be
+    // distinguished from npm specifiers without the prepared resolver, so any
+    // non-relative, non-queue specifier conservatively widens to All.
+    quoted_specifiers(source)
+        .any(|specifier| !specifier.starts_with('.') && !QUEUE_PACKAGES.contains(&specifier))
 }
 
 fn relative_specifiers(source: &str) -> Vec<String> {
@@ -68,9 +66,11 @@ fn relative_specifiers(source: &str) -> Vec<String> {
 }
 
 fn quoted_specifiers(source: &str) -> impl Iterator<Item = &str> {
-    const PREFIXES: [&str; 6] = [
+    const PREFIXES: [&str; 8] = [
         "from '",
         "from \"",
+        "import '",
+        "import \"",
         "import('",
         "import(\"",
         "require('",

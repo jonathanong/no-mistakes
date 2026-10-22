@@ -19,6 +19,7 @@ mod suppression;
 mod types;
 
 use colocated_tests::covered_components as colocated_test_covered_components;
+pub(crate) use config::configured_story_files;
 use config::effective_story_patterns;
 use coverage::{all_react_component_keys, directly_covered_components, reachable_story_files};
 use coverage_graph::{dynamic_or_mock_boundary_files, transitive_covered_components};

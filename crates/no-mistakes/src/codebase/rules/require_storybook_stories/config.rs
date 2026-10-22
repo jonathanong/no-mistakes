@@ -1,5 +1,9 @@
-use super::types::Options;
+use super::types::{GlobMatcher, Options};
+use crate::codebase::ts_resolver::normalize_path;
+use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::NoMistakesConfig;
+use anyhow::Result;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 mod story_patterns;
@@ -25,6 +29,39 @@ pub(super) fn authorize_configured_sources(
             }
         }
     }
+}
+
+pub(crate) fn configured_story_files(
+    root: &Path,
+    files: &[PathBuf],
+    config: &NoMistakesConfig,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<BTreeSet<PathBuf>> {
+    let mut matched = BTreeSet::new();
+    for rule in config.rule_applications(super::RULE_ID) {
+        let opts: Options = rule.try_rule_options()?;
+        for name in &rule.projects {
+            let Some(project) = config.projects.get(name) else {
+                continue;
+            };
+            let project_root = project
+                .root
+                .as_deref()
+                .map(|path| root.join(path))
+                .unwrap_or_else(|| root.to_path_buf());
+            let project_root = normalize_path(&project_root);
+            let patterns = effective_story_patterns(root, &project_root, config, &opts, sources);
+            let stories = GlobMatcher::new(&patterns)?;
+            for path in files {
+                if path.starts_with(&project_root)
+                    && stories.is_match(&relative_slash_path(&project_root, path))
+                {
+                    matched.insert(normalize_path(path));
+                }
+            }
+        }
+    }
+    Ok(matched)
 }
 
 pub(super) fn effective_story_patterns(

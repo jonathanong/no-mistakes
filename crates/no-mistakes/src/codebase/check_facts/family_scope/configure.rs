@@ -23,12 +23,7 @@ pub fn configure_family_path_scopes(
         plan.symbols_paths = symbols_scope(root, files, sources, config, plan.storybook)?;
     }
     if plan.storybook {
-        plan.storybook_paths = scoped_or_closure(
-            root,
-            files,
-            sources,
-            from_rule_ids(root, files, config, &[REQUIRE_STORYBOOK_STORIES])?,
-        );
+        plan.storybook_paths = storybook_scope(root, files, sources, config)?;
     }
     if plan.server_route_client_boundary {
         plan.boundary_paths = from_rule_ids(root, files, config, &[SERVER_ROUTE_CLIENT_BOUNDARY])?;
@@ -68,13 +63,29 @@ fn symbols_scope(
         true,
         &unique,
         true,
-        &scoped_or_closure(
-            root,
-            files,
-            sources,
-            from_rule_ids(root, files, config, &[REQUIRE_STORYBOOK_STORIES])?,
-        ),
+        &storybook_scope(root, files, sources, config)?,
     ))
+}
+
+fn storybook_scope(
+    root: &Path,
+    files: &[PathBuf],
+    sources: &SourceStore,
+    config: &NoMistakesConfig,
+) -> Result<FamilyPathScope> {
+    let selected = from_rule_ids(root, files, config, &[REQUIRE_STORYBOOK_STORIES])?;
+    // Component include/project filters do not reach stories that import those
+    // components. Coverage reads story facts independently via story patterns.
+    let mut seeds = crate::codebase::rules::require_storybook_stories::configured_story_files(
+        root, files, config, sources,
+    )?;
+    match selected {
+        FamilyPathScope::All => Ok(FamilyPathScope::All),
+        FamilyPathScope::Only(paths) => {
+            seeds.extend(paths.iter().cloned());
+            Ok(with_import_closure(root, files, sources, seeds))
+        }
+    }
 }
 
 fn scoped_or_closure(

@@ -47,6 +47,16 @@ fn package_and_factory_needles_are_required_substrings() {
         &["createQueue".to_string()],
         &roles,
     ));
+    assert!(source_may_have_queue_facts(
+        "background.addAndWait(\"page\", {});",
+        &["createQueue".to_string()],
+        &roles,
+    ));
+    assert!(source_may_have_queue_facts(
+        "job.waitUntilFinished(queue.events);",
+        &["createQueue".to_string()],
+        &roles,
+    ));
 }
 
 #[test]

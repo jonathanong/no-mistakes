@@ -1,0 +1,15 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: "."
+rules:
+  # Top-level include selects components and excludes stories on purpose:
+  # story facts still have to be extracted from the configured stories glob.
+  - rule: require-storybook-stories
+    projects: [web]
+    include:
+      - components/**/*.tsx
+    options:
+      stories: ["stories/**/*.stories.tsx"]
+      include_all_react_named_exports: true

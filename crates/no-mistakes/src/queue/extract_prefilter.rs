@@ -26,6 +26,8 @@ pub(crate) fn source_may_have_queue_facts(
         || contains_bytes(haystack, b".add(")
         || contains_bytes(haystack, b".add (")
         || contains_bytes(haystack, b"addBulk")
+        || contains_bytes(haystack, b"addAndWait")
+        || contains_bytes(haystack, b"waitUntilFinished")
         || contains_bytes(haystack, b"new Queue")
         || contains_bytes(haystack, b"new Worker")
         || contains_bytes(haystack, b"FlowProducer")
