@@ -18,8 +18,9 @@ import * as db from "@example/db";
 
 const { query } = db;
 const q = query;
-const execute = (sql) => q(sql);
+const execute = (sql, values) => q(sql, values);
 await Promise.all(userIds.map((id) => execute("SELECT * FROM users WHERE id = $1", [id])));
+await Promise.all(statements.map(db.read));
 ```
 
 ## Allowed

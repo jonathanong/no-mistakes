@@ -13,3 +13,5 @@ Promise.all(items.map(foreign));
 Promise.all(items.map((read) => read("SELECT 1")));
 Promise.all(items.map(() => read.apply(null, args)));
 Promise.all(items.map(() => read.call(...args)));
+Promise.all(items.map(other.read));
+Promise.all(items.map(db[key]));

@@ -14,3 +14,6 @@ Promise.all(items.map(() => db["query"]("SELECT 1")));
 Promise.all(items.map(() => (0, alias)("SELECT 1")));
 Promise.all(items.map(alias));
 Promise.all(items.map(destructured));
+// Passing a static namespace member is the same executor as its const alias.
+Promise.all(items.map(db.read));
+Promise.all(items.map(db[`query`]));

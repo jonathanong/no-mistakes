@@ -16,7 +16,7 @@ describe("PostgreSQL same-file executor calls", () => {
   for (const [name, rule, count] of [
     ["manual", "manual-transaction", 9],
     ["registry", "nonliteral-sql-registry-key", 9],
-    ["fanout", "unbounded-query-fanout", 10],
+    ["fanout", "unbounded-query-fanout", 12],
   ]) {
     it(`${rule} follows static aliases and one forwarder`, () => {
       const messages = check(name, rule);

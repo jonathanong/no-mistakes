@@ -164,11 +164,13 @@ function callbackContainsExecutor(callback, bindings, context) {
   ) {
     return containsDatabaseCall(callback, bindings);
   }
+  if (
+    bindings?.resolveCall &&
+    isDatabaseCall({ type: "CallExpression", callee: callback, arguments: [] }, bindings)
+  )
+    return true;
   if (callback.type !== "Identifier") return false;
-  if (bindings?.resolveCall) {
-    if (isDatabaseCall({ type: "CallExpression", callee: callback, arguments: [] }, bindings))
-      return true;
-  } else if (bindings?.has(callback.name)) return true;
+  if (!bindings?.resolveCall && bindings?.has(callback.name)) return true;
   if (!context) return false;
   const variable = resolveVariable(callback, context);
   if (
