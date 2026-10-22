@@ -65,6 +65,7 @@ impl MemberArguments {
                 (selected.values, false),
                 (selected.possible[0], true),
                 (selected.possible[1], true),
+                (selected.possible[2], true),
             ] {
                 for value in values.into_iter().flatten() {
                     let mut projected = Vec::new();

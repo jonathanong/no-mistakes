@@ -17,6 +17,7 @@ fn capture_generations_use_indexed_completion_predecessors() {
         key.clone(),
         Captures {
             initial: vec![named("initial")],
+            possible_initial: Vec::new(),
             owner: CallableId(1),
             foreign: false,
             events: (1..=96)
@@ -32,7 +33,7 @@ fn capture_generations_use_indexed_completion_predecessors() {
         },
     );
     for at in 0..=192 {
-        let (values, possible) = origins.at(&key, (at, Some(CallableId(1)))).unwrap();
+        let (values, possible, _) = origins.at(&key, (at, Some(CallableId(1)))).unwrap();
         assert!(!possible);
         let expected = if at < 2 {
             "initial".into()
@@ -79,6 +80,7 @@ fn missing_initial_origins_retain_later_forwarding_fallback() {
         key.clone(),
         Captures {
             initial: Vec::new(),
+            possible_initial: Vec::new(),
             owner: CallableId(1),
             foreign: false,
             events: vec![Reassignment {
@@ -92,7 +94,7 @@ fn missing_initial_origins_retain_later_forwarding_fallback() {
         },
     );
     assert!(origins.at(&key, (9, Some(CallableId(1)))).is_none());
-    let (values, possible) = origins.at(&key, (10, Some(CallableId(1)))).unwrap();
+    let (values, possible, _) = origins.at(&key, (10, Some(CallableId(1)))).unwrap();
     assert!(!possible);
     assert!(matches!(&values[0], ValueExpression::Named { name, .. } if name == "replacement"));
 }

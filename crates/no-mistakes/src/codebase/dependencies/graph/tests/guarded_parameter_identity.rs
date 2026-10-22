@@ -170,3 +170,19 @@ fn assigned_callbacks_add_origins_to_nonempty_initial_captures() {
         }
     }
 }
+
+#[test]
+fn conditional_assigned_callbacks_keep_late_captured_origins_possible() {
+    let (built, root) = graph();
+    for file in [
+        "array-forwarded-late-captured-conditional",
+        "array-forwarded-late-captured-conditional-chain",
+        "array-forwarded-late-captured-member-conditional",
+    ] {
+        assert_unknown(&built, &root, file, "replica.get");
+        possible(&built, &root, file, "untouched.get");
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+}

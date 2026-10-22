@@ -92,6 +92,7 @@ pub(in super::super) struct Side {
     /// Values that can occupy every parameter at or after the index, because a
     /// spread ahead of them had no known elements.
     open: FxHashMap<(u32, u32), (usize, Vec<ValueExpression>)>,
+    pub(super) conditional_calls: FxHashSet<(u32, u32)>,
     pub(super) uncertain_spreads: FxHashMap<(u32, u32), UncertainSpread>,
     pub(super) reassigned: Vec<super::parameter_call_origins::Reassignment>,
     possible_escaped: FxHashMap<(u32, u32), FxHashMap<usize, Vec<ValueExpression>>>,

@@ -2,6 +2,11 @@ use super::*;
 
 impl ImportCollector {
     pub(in super::super::super) fn note_escaped_call(&mut self, call: &CallExpression<'_>) {
+        if self.conditional_execution || self.receiver_write_is_conditional {
+            self.receiver_escapes
+                .conditional_calls
+                .insert((call.span.start, call.span.end));
+        }
         self.note_class_method(call);
         self.note_possible_arguments(call);
         let mut arguments = super::escaped_spread_arguments::Arguments::default();

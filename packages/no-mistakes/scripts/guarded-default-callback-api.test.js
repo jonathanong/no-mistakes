@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
-const { join } = require("node:path");
+const { dirname, join } = require("node:path");
+const { spawnSync } = require("node:child_process");
 const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
@@ -107,5 +108,72 @@ test(
         ["primary.get", "replica.info", "unrelated.get"],
       );
     assert.deepEqual(await esm.analyzeProject(options), batch);
+  },
+);
+
+test(
+  "compiled async conditional callbacks keep late captured receiver candidates",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/codebase-analysis/value-flow-guarded-parameters/fixture",
+    );
+    for (const [suffix, firstLine] of [
+      ["conditional", 20],
+      ["conditional-chain", 21],
+      ["member-conditional", 21],
+    ]) {
+      const entry = `src/array-forwarded-late-captured-${suffix}.mts`;
+      const options = { root, config: join(root, "effects.yml"), kind: "receiver", entry };
+      const pending = cjs.effects(options);
+      assert.ok(pending instanceof Promise);
+      const expected = {
+        kind: "receiver",
+        entry,
+        callSites: [
+          { file: entry, line: firstLine, callee: "untouched.get", depth: 0 },
+          { file: entry, line: firstLine + 1, callee: "primary.get", depth: 0 },
+          { file: entry, line: firstLine + 2, callee: "replica.info", depth: 0 },
+          { file: entry, line: firstLine + 3, callee: "unrelated.get", depth: 0 },
+        ],
+        byCategory: { uncategorized: 4 },
+      };
+      assert.deepEqual(await pending, expected);
+      assert.deepEqual(await esm.effects(options), expected);
+      const batch = await cjs.analyzeProject({
+        root,
+        config: options.config,
+        reports: [{ type: "effects", kind: "receiver", entry }],
+      });
+      assert.deepEqual(batch.reports[0].result, expected);
+      const cli =
+        process.env.NO_MISTAKES_TEST_CLI_PATH ||
+        join(
+          dirname(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH),
+          process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes",
+        );
+      const child = spawnSync(
+        cli,
+        [
+          "effects",
+          "receiver",
+          "--entry",
+          entry,
+          "--root",
+          root,
+          "--config",
+          options.config,
+          "--format",
+          "json",
+        ],
+        { encoding: "utf8", env: process.env },
+      );
+      assert.equal(child.error, undefined);
+      assert.equal(child.status, 0, child.stderr);
+      assert.deepEqual(JSON.parse(child.stdout), expected);
+    }
   },
 );
