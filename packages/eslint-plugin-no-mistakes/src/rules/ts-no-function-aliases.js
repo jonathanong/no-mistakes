@@ -1,107 +1,45 @@
 "use strict";
 
 const { rule } = require("../helpers");
-
-function unwrapExpression(expression) {
-  let current = expression;
-  while (
-    current &&
-    (current.type === "AwaitExpression" ||
-      current.type === "ChainExpression" ||
-      current.type === "TSNonNullExpression")
-  ) {
-    current = current.type === "AwaitExpression" ? current.argument : current.expression;
-  }
-  return current;
-}
+const { ruleSuppression } = require("../rule-suppression");
+const {
+  unwrapExpression,
+  isSameArgumentList,
+  callableTarget,
+} = require("./ts-no-function-aliases-ast");
+const { isNamedWrapper, isSelfCall, patternHasName } = require("./ts-no-function-aliases-self");
+const { forwardedCall } = require("./ts-no-function-aliases-forwarding");
 
 function expressionStatementCall(statement) {
-  if (statement.type !== "ExpressionStatement") return null;
-  return unwrapExpression(statement.expression);
+  return statement.type === "ExpressionStatement" ? unwrapExpression(statement.expression) : null;
 }
 
 function returnStatementCall(statement) {
-  if (statement.type !== "ReturnStatement") return null;
-  return unwrapExpression(statement.argument);
+  return statement.type === "ReturnStatement" ? unwrapExpression(statement.argument) : null;
 }
 
 function onlyCallExpression(body) {
   if (!body) return null;
-  if (body.type !== "BlockStatement") {
-    return unwrapExpression(body);
-  }
+  if (body.type !== "BlockStatement") return unwrapExpression(body);
   if (body.body.length !== 1) return null;
   const statement = body.body[0];
   return returnStatementCall(statement) || expressionStatementCall(statement);
 }
 
-function identifierName(node) {
-  return node && node.type === "Identifier" ? node.name : null;
-}
-
-function directCalleeName(call) {
-  return identifierName(unwrapExpression(call.callee));
-}
-
-function isSameArgumentList(params, args) {
-  if (params.length !== args.length) return false;
-  return params.every((param, index) => {
-    if (param.type === "RestElement") {
-      return (
-        args[index].type === "SpreadElement" &&
-        identifierName(param.argument) === identifierName(args[index].argument)
-      );
-    }
-    if (param.type === "AssignmentPattern") return false;
-    const name = identifierName(param);
-    return name && args[index].type === "Identifier" && args[index].name === name;
-  });
-}
-
-function isSelfCall(node, call) {
-  const callee = directCalleeName(call);
-  if (!callee) return false;
-  const wrapper = variableWrapperName(node);
-  if (wrapper) return wrapper === callee;
-  return Boolean(node.id && node.id.name === callee);
-}
-
-function assignmentWrapperName(node) {
-  if (node.parent?.type !== "AssignmentExpression" || node.parent.right !== node) return null;
-  const left = node.parent.left;
-  if (left.type === "Identifier") return left.name;
-  if (left.type === "MemberExpression" && !left.computed) return identifierName(left.property);
-  if (left.type === "MemberExpression" && left.property.type === "Literal") {
-    return String(left.property.value);
-  }
-  return null;
-}
-
-function variableWrapperName(node) {
-  return node.parent?.type === "VariableDeclarator" && node.parent.id.type === "Identifier"
-    ? node.parent.id.name
-    : null;
-}
-
-function wrapperName(node) {
-  return variableWrapperName(node) || assignmentWrapperName(node);
-}
-
-function isNamedWrapper(node) {
-  if (node.type === "FunctionDeclaration") {
-    return true;
-  }
-  return Boolean(wrapperName(node));
-}
-
-function reportIfAlias(node, context) {
-  if (!isNamedWrapper(node)) return;
+function reportIfAlias(node, context, suppressed) {
+  if (suppressed(node) || !isNamedWrapper(node)) return;
   const call = onlyCallExpression(node.body);
   if (!call || call.type !== "CallExpression") return;
-  if (!directCalleeName(call)) return;
-  if (isSelfCall(node, call)) return;
-  if (isSameArgumentList(node.params || [], call.arguments)) {
+  const sourceCode = context.sourceCode;
+  const forwarded = forwardedCall(call, sourceCode);
+  if (isSelfCall(node, call, sourceCode, forwarded)) return;
+  const directTarget = callableTarget(call.callee);
+  const directForward = directTarget ? { target: directTarget, args: call.arguments } : null;
+  for (const candidate of [directForward, forwarded]) {
+    if (!candidate) continue;
+    if (!isSameArgumentList(node.params || [], candidate.args)) continue;
     context.report({ node, messageId: "alias" });
+    return;
   }
 }
 
@@ -119,17 +57,20 @@ module.exports = Object.assign(
           "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
       },
     },
-    (context) => ({
-      ArrowFunctionExpression(node) {
-        reportIfAlias(node, context);
-      },
-      FunctionDeclaration(node) {
-        reportIfAlias(node, context);
-      },
-      FunctionExpression(node) {
-        reportIfAlias(node, context);
-      },
-    }),
+    (context) => {
+      const suppressed = ruleSuppression(context, "ts-no-function-aliases");
+      return {
+        ArrowFunctionExpression(node) {
+          reportIfAlias(node, context, suppressed);
+        },
+        FunctionDeclaration(node) {
+          reportIfAlias(node, context, suppressed);
+        },
+        FunctionExpression(node) {
+          reportIfAlias(node, context, suppressed);
+        },
+      };
+    },
   ),
-  { __test: { onlyCallExpression, isSelfCall } },
+  { __test: { onlyCallExpression, isSelfCall, patternHasName } },
 );
