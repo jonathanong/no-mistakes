@@ -186,7 +186,7 @@ fn recovered_error_facts(
             program,
             plan,
         ),
-        embedded_sql: super::program::prepared_embedded_sql(
+        embedded_sql: super::embedded_sql::prepared_embedded_sql(
             variant.root,
             path,
             parsed_source,

@@ -3,6 +3,7 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::Path;
 use std::sync::Arc;
 
+mod embedded_sql;
 mod plan;
 mod playwright_source;
 mod prepared_program;
@@ -132,7 +133,7 @@ fn collect_file_facts_from_source(
                     )
                 });
             let embedded_sql =
-                program::prepared_embedded_sql(root, path, parsed_source, program, plan);
+                embedded_sql::prepared_embedded_sql(root, path, parsed_source, program, plan);
             return CheckFileFacts {
                 sql_identifier_syntax: sql_identifier::invalid(
                     root,
