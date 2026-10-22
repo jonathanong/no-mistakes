@@ -51,6 +51,7 @@ pub(crate) fn run_react_check(
         findings,
         react_suppression_targets,
         suppression_sources: Vec::new(),
+        advisories: Vec::new(),
         warning,
         duration,
     })

@@ -7,6 +7,7 @@ use crate::diagnostics::{with_observer, with_timing_kind, TimingKind};
 pub(super) struct RuleChunk {
     pub findings: Vec<RuleFinding>,
     pub suppression_sources: Vec<Option<String>>,
+    pub advisories: Vec<RuleFinding>,
 }
 
 impl RuleChunk {
@@ -15,6 +16,7 @@ impl RuleChunk {
         Self {
             findings,
             suppression_sources,
+            advisories: Vec::new(),
         }
     }
 }
@@ -37,9 +39,7 @@ pub(super) struct IndependentRuleRequest<'a> {
     pub defer_suppression: bool,
 }
 
-pub(super) fn collect(
-    req: IndependentRuleRequest<'_>,
-) -> Result<(Vec<RuleFinding>, Vec<Option<String>>)> {
+pub(super) fn collect(req: IndependentRuleRequest<'_>) -> Result<RuleChunk> {
     let observer = crate::diagnostics::current();
     let run = |collect: fn(&IndependentRuleRequest<'_>) -> Result<RuleChunk>| {
         with_observer(observer.clone(), || {
@@ -81,12 +81,18 @@ pub(super) fn collect(
     ])
 }
 
-fn merge_chunks(chunks: [RuleChunk; 7]) -> Result<(Vec<RuleFinding>, Vec<Option<String>>)> {
+fn merge_chunks(chunks: [RuleChunk; 7]) -> Result<RuleChunk> {
     let mut findings = Vec::new();
     let mut suppression_sources = Vec::new();
+    let mut advisories = Vec::new();
     for chunk in chunks {
         findings.extend(chunk.findings);
         suppression_sources.extend(chunk.suppression_sources);
+        advisories.extend(chunk.advisories);
     }
-    Ok((findings, suppression_sources))
+    Ok(RuleChunk {
+        findings,
+        suppression_sources,
+        advisories,
+    })
 }

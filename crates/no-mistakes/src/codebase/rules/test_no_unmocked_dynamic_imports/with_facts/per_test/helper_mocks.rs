@@ -38,6 +38,7 @@ pub(in super::super) fn collect(request: Request<'_>) -> anyhow::Result<HashSet<
                 .unwrap_or_default())
         },
         |file| eager_requires(&request, file),
+        |_| {},
     )
 }
 
@@ -74,6 +75,7 @@ pub(in super::super) fn collect_strict(request: Request<'_>) -> anyhow::Result<H
             ))
         },
         |file| eager_requires(&request, file),
+        |_| {},
     )
 }
 

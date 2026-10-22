@@ -18,6 +18,7 @@ mod standalone;
 pub struct PreparedRuleFindings {
     pub findings: Vec<RuleFinding>,
     pub suppression_sources: Vec<Option<String>>,
+    pub advisories: Vec<RuleFinding>,
 }
 
 #[doc(hidden)]

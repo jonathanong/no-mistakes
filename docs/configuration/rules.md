@@ -49,6 +49,12 @@ const, including explicitly configured trusted tags, without helper evaluation.
 Other shapes use the selected unanalyzable policy. These syntax proofs do not
 require a companion rule.
 
+[`test-no-unmocked-dynamic-imports`](../rules/test-no-unmocked-dynamic-imports.md#effort)
+supports `low`: accept a top-level static import, a `vi.mock` or `jest.mock`
+call, or a literal `require()` in setup files. Every other setup-reachability
+shape uses the selected unanalyzable policy and names that static rewrite.
+These syntax proofs do not require a companion rule.
+
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.

@@ -31,6 +31,7 @@ pub(super) fn collect(
             ))
         },
         |_| HashSet::new(),
+        |_| {},
     )
 }
 
@@ -57,5 +58,6 @@ pub(super) fn collect_setup(
             ))
         },
         |_| HashSet::new(),
+        |_| {},
     )
 }

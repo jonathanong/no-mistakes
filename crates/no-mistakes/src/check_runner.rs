@@ -42,3 +42,6 @@ mod sql_verdict_subchecks_tests;
 mod sql_verdict_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+#[path = "check_runner/unmocked_import_effort/tests.rs"]
+mod unmocked_import_effort;

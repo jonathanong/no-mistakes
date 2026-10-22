@@ -20,6 +20,7 @@ pub(crate) struct CheckTask<T> {
     pub(crate) react_suppression_targets:
         Vec<Vec<no_mistakes::react_traits::ReactSuppressionTarget>>,
     pub(crate) suppression_sources: Vec<Option<String>>,
+    pub(crate) advisories: Vec<RuleFinding>,
     pub(crate) warning: Option<String>,
     pub(crate) duration: Duration,
 }
@@ -54,6 +55,7 @@ pub(crate) fn run_queue_check(
         findings,
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
+        advisories: Vec::new(),
         warning: None,
         duration,
     })
@@ -65,7 +67,7 @@ pub(crate) fn run_rules_check(
     sources: &no_mistakes::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<CheckTask<Vec<RuleFinding>>> {
-    let (((findings, suppression_sources), warning), duration) =
+    let (((findings, suppression_sources, advisories), warning), duration) =
         no_mistakes::diagnostics::measure_if_enabled(
             "analysis.rules",
             no_mistakes::diagnostics::TimingKind::Parallel,
@@ -75,9 +77,16 @@ pub(crate) fn run_rules_check(
                 sources,
                 defer_suppression,
             ) {
-                Ok(findings) => ((findings.findings, findings.suppression_sources), None),
+                Ok(findings) => (
+                    (
+                        findings.findings,
+                        findings.suppression_sources,
+                        findings.advisories,
+                    ),
+                    None,
+                ),
                 Err(err) => (
-                    (Vec::new(), Vec::new()),
+                    (Vec::new(), Vec::new(), Vec::new()),
                     Some(format!("warning: rules check skipped: {err:#}")),
                 ),
             },
@@ -86,6 +95,7 @@ pub(crate) fn run_rules_check(
         findings,
         react_suppression_targets: Vec::new(),
         suppression_sources,
+        advisories,
         warning,
         duration,
     })
@@ -123,6 +133,7 @@ pub(crate) fn run_integration_check(
         findings,
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
+        advisories: Vec::new(),
         warning: None,
         duration,
     })
@@ -177,6 +188,7 @@ pub(crate) fn run_codebase_check_with_catalog(
         findings,
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
+        advisories: Vec::new(),
         warning: None,
         duration,
     })

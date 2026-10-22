@@ -16,11 +16,18 @@ pub struct RuleEffortSupport {
 
 // These positive syntax proofs need no companion rule: every other shape is
 // explicitly unanalyzable under the caller's policy, rather than inferred clear.
-const SUPPORT: &[RuleEffortSupport] = &[RuleEffortSupport {
-    rule: "postgres-require-query-annotation",
-    partners: &[],
-    partner_scope: |_, _| false,
-}];
+const SUPPORT: &[RuleEffortSupport] = &[
+    RuleEffortSupport {
+        rule: "postgres-require-query-annotation",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
+        rule: "test-no-unmocked-dynamic-imports",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+];
 
 pub fn prepare_rule_analysis(
     root: &Path,

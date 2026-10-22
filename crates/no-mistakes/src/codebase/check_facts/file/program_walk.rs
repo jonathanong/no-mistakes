@@ -7,7 +7,7 @@ use crate::codebase::storybook::StorybookFileFacts;
 use oxc_ast::ast::{
     AssignmentExpression, CallExpression, ExportDeclaration, ExportDefaultDeclaration,
     ExportNamedDeclaration, FunctionBody, IdentifierReference, ImportDeclaration, ImportExpression,
-    Program,
+    Program, TSImportEqualsDeclaration, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashSet;
@@ -33,7 +33,9 @@ pub(super) fn collect_fused_check_program(
         };
     }
     let mut visitor = CheckProgramVisitor {
-        dynamic: plan.dynamic_imports.then(|| Collector::new(source)),
+        dynamic: plan
+            .dynamic_imports
+            .then(|| Collector::new(source, program)),
         nextjs: plan
             .nextjs_caching
             .then(|| prepare_visitor(path, source, program)),
@@ -75,6 +77,20 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
             dynamic.record_import_expression(import);
         }
         walk::walk_import_expression(self, import);
+    }
+
+    fn visit_variable_declarator(&mut self, declarator: &VariableDeclarator<'a>) {
+        if let Some(dynamic) = &mut self.dynamic {
+            dynamic.record_variable_declarator(declarator);
+        }
+        walk::walk_variable_declarator(self, declarator);
+    }
+
+    fn visit_ts_import_equals_declaration(&mut self, declaration: &TSImportEqualsDeclaration<'a>) {
+        if let Some(dynamic) = &mut self.dynamic {
+            dynamic.record_import_equals(declaration);
+        }
+        walk::walk_ts_import_equals_declaration(self, declaration);
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {

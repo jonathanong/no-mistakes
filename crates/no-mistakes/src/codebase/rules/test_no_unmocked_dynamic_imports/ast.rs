@@ -1,7 +1,8 @@
 use anyhow::{Context, Result};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Argument, CallExpression, Expression, ImportExpression, Program, TemplateLiteral,
+    Argument, CallExpression, Expression, ImportExpression, Program, TSImportEqualsDeclaration,
+    TemplateLiteral, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::SourceType;
@@ -18,6 +19,8 @@ pub struct DynamicImport {
 pub struct TestFacts {
     pub dynamic_imports: Vec<DynamicImport>,
     pub mock_specifiers: Vec<String>,
+    /// Low-effort setup shapes recorded during the shared program walk.
+    pub setup_reachability: super::with_facts::setup_low::classify::SetupReachability,
 }
 
 pub fn extract(path: &Path, source: &str) -> Result<TestFacts> {
@@ -31,9 +34,9 @@ pub fn extract(path: &Path, source: &str) -> Result<TestFacts> {
 }
 
 pub(crate) fn extract_program(source: &str, program: &Program<'_>) -> TestFacts {
-    let mut visitor = Collector::new(source);
+    let mut visitor = Collector::new(source, program);
     visitor.visit_program(program);
-    visitor.facts
+    visitor.into_facts()
 }
 
 pub(crate) struct Collector<'s> {
@@ -44,22 +47,27 @@ pub(crate) struct Collector<'s> {
     /// mocked module, not runtime dynamic imports, so `visit_import_expression` skips
     /// recording them into `TestFacts.dynamic_imports`. See issue #506.
     mock_import_starts: HashSet<u32>,
+    reachability: super::with_facts::setup_low::classify::Scan<'s>,
 }
 
 impl<'s> Collector<'s> {
-    pub(crate) fn new(source: &'s str) -> Self {
+    pub(crate) fn new(source: &'s str, program: &Program<'_>) -> Self {
         Self {
             source,
             facts: TestFacts::default(),
             mock_import_starts: HashSet::new(),
+            reachability: super::with_facts::setup_low::classify::Scan::new(source, program),
         }
     }
 
     pub(crate) fn into_facts(self) -> TestFacts {
-        self.facts
+        let mut facts = self.facts;
+        facts.setup_reachability = self.reachability.into_reachability();
+        facts
     }
 
     pub(crate) fn record_import_expression(&mut self, import: &ImportExpression<'_>) {
+        self.reachability.record_import(import);
         if self.mock_import_starts.contains(&import.span.start) {
             return;
         }
@@ -73,7 +81,16 @@ impl<'s> Collector<'s> {
         });
     }
 
+    pub(crate) fn record_variable_declarator(&mut self, declarator: &VariableDeclarator<'_>) {
+        self.reachability.record_declarator(declarator);
+    }
+
+    pub(crate) fn record_import_equals(&mut self, declaration: &TSImportEqualsDeclaration<'_>) {
+        self.reachability.record_import_equals(declaration);
+    }
+
     pub(crate) fn record_call_expression(&mut self, call: &CallExpression<'_>) {
+        self.reachability.record_call(call);
         if !is_mock_call(call) {
             return;
         }
@@ -102,6 +119,16 @@ impl<'a> Visit<'a> for Collector<'_> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.record_call_expression(call);
         walk::walk_call_expression(self, call);
+    }
+
+    fn visit_variable_declarator(&mut self, declarator: &VariableDeclarator<'a>) {
+        self.record_variable_declarator(declarator);
+        walk::walk_variable_declarator(self, declarator);
+    }
+
+    fn visit_ts_import_equals_declaration(&mut self, declaration: &TSImportEqualsDeclaration<'a>) {
+        self.record_import_equals(declaration);
+        walk::walk_ts_import_equals_declaration(self, declaration);
     }
 }
 

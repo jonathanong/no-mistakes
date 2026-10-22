@@ -41,6 +41,7 @@ pub(crate) fn run_codebase_check(
         findings: findings?,
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
+        advisories: Vec::new(),
         warning: None,
         duration,
     })
