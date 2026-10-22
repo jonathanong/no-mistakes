@@ -51,6 +51,38 @@ fn import_closure_keeps_dotted_module_names() {
 }
 
 #[test]
+fn import_closure_follows_backtick_and_multiline_call_specifiers() {
+    let root = fixture("check-facts/family-scope-dynamic-import");
+    let files = discover_files(&root, &[]);
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let start = normalize_path(&root.join("src/entry.ts"));
+    let scope = super::super::closure::with_import_closure(
+        &root,
+        &files,
+        sources.as_ref(),
+        [start.clone()].into_iter().collect(),
+    );
+    let included = [
+        "src/backtick.ts",
+        "src/multiline.ts",
+        "src/spaced.ts",
+        "src/required.ts",
+    ];
+    let unrelated = normalize_path(&root.join("src/unrelated.ts"));
+    assert!(
+        matches!(&scope, FamilyPathScope::Only(_))
+            && included.iter().all(|rel| {
+                crate::codebase::check_facts::family_scope::applies(
+                    &scope,
+                    &normalize_path(&root.join(rel)),
+                )
+            })
+            && !crate::codebase::check_facts::family_scope::applies(&scope, &unrelated),
+        "import()/require() must keep backtick, whitespace, and multiline specifiers: {scope:?}"
+    );
+}
+
+#[test]
 fn empty_import_seeds_stay_all() {
     let root = fixture("check-facts/family-scope-alias");
     let files = discover_files(&root, &[]);
