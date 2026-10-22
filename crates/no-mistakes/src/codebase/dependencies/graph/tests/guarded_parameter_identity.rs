@@ -163,6 +163,7 @@ fn assigned_callbacks_add_origins_to_nonempty_initial_captures() {
         "after",
         "assignment-later",
         "assignment-overwritten",
+        "duplicate-mutate",
         "finally",
     ] {
         let file = format!("array-forwarded-late-captured-{suffix}");
@@ -189,6 +190,10 @@ fn conditional_assigned_callbacks_keep_late_captured_origins_possible() {
         "array-forwarded-late-captured-inner-return",
         "array-forwarded-late-captured-forward-return",
         "array-forwarded-late-captured-assignment-conditional",
+        "array-forwarded-late-captured-assignment-nested",
+        "array-forwarded-late-captured-assignment-future",
+        "array-forwarded-late-captured-assignment-mixed",
+        "array-forwarded-late-captured-duplicate-noop",
         "array-forwarded-late-captured-direct-conditional",
         "array-forwarded-late-captured-finally-outer-return",
         "array-forwarded-late-captured-finally-inner-return",

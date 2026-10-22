@@ -9,34 +9,45 @@ pub(super) fn keys(
 ) -> FxHashSet<Key> {
     let calls = &collector.receiver_escapes.conditional_calls;
     let mut possible = fx_set();
-    let mut assignments: FxHashMap<Key, Vec<_>> = fx_map();
+    let mut assignments: FxHashMap<Key, (Option<CallableId>, bool, Vec<_>)> = fx_map();
     for event in &collector.receiver_escapes.reassigned {
-        assignments
+        let (context, mixed, events) = assignments
             .entry(event.key.clone())
-            .or_default()
-            .push(event);
+            .or_insert_with(|| (event.context, false, Vec::new()));
+        *mixed |= *context != event.context;
+        events.push(event);
     }
     if calls.is_empty() && assignments.is_empty() {
         return possible;
     }
-    for events in assignments.values_mut() {
-        events.sort_unstable_by_key(|event| event.completed_at);
+    for (_, _, events) in assignments.values_mut() {
+        events.sort_by_key(|event| event.completed_at);
     }
     for call in &collector.value_flow.calls {
-        if calls.contains(&(call.offset, call.end))
-            || key(&call.callee)
-                .and_then(|key| assignments.get(&key))
-                .is_some_and(|events| {
-                    let before = events.partition_point(|event| event.completed_at <= call.offset);
-                    events[..before]
-                        .last()
-                        .is_some_and(|event| !event.certain || event.context != call.context)
-                })
-        {
-            for owner in owners(collector, values, &call.callee) {
-                if let Some(parameters) = slots.get(&owner) {
-                    possible.extend(parameters.values().cloned());
+        let guarded = calls.contains(&(call.offset, call.end));
+        // No history keeps the existing projection. A history only proves one
+        // callee when its acquisition is certain and in this execution owner.
+        let acquired = key(&call.callee).and_then(|key| assignments.get(&key)).map(
+            |(context, mixed, events)| {
+                if *mixed || *context != call.context {
+                    return None;
                 }
+                let before = events.partition_point(|event| event.completed_at <= call.offset);
+                events[..before]
+                    .last()
+                    .filter(|event| event.certain)
+                    .and_then(|event| super::super::callable_owner(collector, &event.value))
+            },
+        );
+        if !guarded && acquired.is_none() {
+            continue;
+        }
+        for owner in owners(collector, values, &call.callee) {
+            if !guarded && acquired == Some(Some(owner)) {
+                continue;
+            }
+            if let Some(parameters) = slots.get(&owner) {
+                possible.extend(parameters.values().cloned());
             }
         }
     }
