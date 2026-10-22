@@ -5,7 +5,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 mod catalog;
-mod consumers;
+pub(crate) mod consumers;
 mod independent;
 mod parallel;
 

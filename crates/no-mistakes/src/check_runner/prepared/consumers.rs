@@ -33,7 +33,7 @@ const CATALOG_RULES: &[&str] = &[
     rules::VITEST_TEST_CORRESPONDENCE,
 ];
 
-pub(super) fn needs_tsconfig_catalog(config: &NoMistakesConfig) -> bool {
+pub(crate) fn needs_tsconfig_catalog(config: &NoMistakesConfig) -> bool {
     playwright::rules::configured(config)
         || unique_exports_configured(config)
         || queues_configured(config)
@@ -46,7 +46,7 @@ pub(super) fn needs_tsconfig_catalog(config: &NoMistakesConfig) -> bool {
         )
 }
 
-pub(super) fn needs_workspace(
+pub(crate) fn needs_workspace(
     config: &NoMistakesConfig,
     tsconfig_path: Option<&std::path::Path>,
 ) -> bool {
@@ -55,7 +55,7 @@ pub(super) fn needs_workspace(
         || (tsconfig_path.is_none() && needs_tsconfig_catalog(config))
 }
 
-pub(super) fn needs_inferred_roots(config: &NoMistakesConfig) -> bool {
+pub(crate) fn needs_inferred_roots(config: &NoMistakesConfig) -> bool {
     needs_tsconfig_catalog(config) || config.projects.values().any(infers_framework_root)
 }
 
