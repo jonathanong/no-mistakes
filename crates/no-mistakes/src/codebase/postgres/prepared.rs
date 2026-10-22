@@ -50,7 +50,11 @@ pub(crate) fn prepare(
             .iter()
             .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
         {
+            let relative_path = crate::codebase::ts_source::relative_slash_path(root, path);
             for profile in &plan.embedded_sql_options {
+                if !plan.scans_embedded_sql(profile, &relative_path) {
+                    continue;
+                }
                 let file = facts.embedded_sql(path, profile);
                 if plan.postgres_fragments {
                     let entry = file

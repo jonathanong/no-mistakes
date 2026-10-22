@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-require-query-annotation
+    name: low-annotation
+    scope: repository
+    options:
+      importSpecifier: '@db'
+      executorNames: [pool]
+      trustedSqlTags: [{ module: '@db', name: sql }]
+      include: ['low/query.ts']
+      effort: low
+      unanalyzable: report

@@ -181,3 +181,100 @@ fn coincident_applications_preserve_identity_and_every_other_report_field() {
     detailed.as_object_mut().unwrap().remove("sqlVerdicts");
     assert_eq!(detailed, plain);
 }
+
+#[test]
+fn narrowed_preparation_preserves_imported_sql_and_excludes_private_executors() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-sql-verdicts/fixture/narrowed-preparation");
+    let plain = fixture_report(&root, ".no-mistakes.yml", false, 1);
+    let mut detailed = fixture_report(&root, ".no-mistakes.yml", true, 1);
+    let rules = plain["rules"].as_array().unwrap();
+    assert_eq!(rules.len(), 3, "{plain}");
+    assert!(
+        rules
+            .iter()
+            .all(|row| row["target"].as_str().unwrap().starts_with("offset")),
+        "{plain}"
+    );
+    assert!(
+        rules.iter().any(|row| row["file"] == "selected/query.ts"),
+        "{plain}"
+    );
+    assert!(
+        rules.iter().any(|row| row["file"] == "other/query.ts"),
+        "{plain}"
+    );
+    assert!(!rules
+        .iter()
+        .any(|row| row["file"].as_str().unwrap().starts_with("unselected/")));
+    assert_eq!(plain["suppressed"].as_array().unwrap().len(), 1, "{plain}");
+    let rows = detailed["sqlVerdicts"].as_array().unwrap();
+    assert_eq!(rows.len(), 6, "{detailed}");
+    assert!(
+        rows.iter().all(|row| row["status"] == "violation"),
+        "{detailed}"
+    );
+    for (index, name) in [(0, "selected"), (1, "overlap"), (2, "other-profile")] {
+        assert!(
+            rows.iter().any(|row| row["application"]["index"] == index
+                && row["application"]["name"] == name
+                && row["status"] == "violation"),
+            "{detailed}"
+        );
+    }
+    detailed.as_object_mut().unwrap().remove("sqlVerdicts");
+    assert_eq!(detailed, plain);
+}
+
+#[test]
+fn scoped_annotation_keeps_private_module_summaries_with_other_sql_profiles() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-sql-verdicts/fixture/narrowed-preparation");
+    let plain = fixture_report(&root, "annotation.yml", false, 1);
+    let mut detailed = fixture_report(&root, "annotation.yml", true, 1);
+    let rules = plain["rules"].as_array().unwrap();
+    assert_eq!(rules.len(), 3, "{plain}");
+    assert_eq!(
+        rules
+            .iter()
+            .filter(|row| row["target"] == "annotation")
+            .count(),
+        2
+    );
+    let rows = detailed["sqlVerdicts"].as_array().unwrap();
+    assert_eq!(rows.len(), 3, "{detailed}");
+    assert!(rows
+        .iter()
+        .all(|row| row["status"] == "violation" && row["evidence"] == "exact"));
+    detailed.as_object_mut().unwrap().remove("sqlVerdicts");
+    assert_eq!(detailed, plain);
+}
+
+#[test]
+fn low_annotation_heads_preserve_literal_outcomes_with_mixed_sql_scans() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-sql-verdicts/fixture/narrowed-preparation");
+    for (config, count) in [("low.yml", 1), ("low-mixed.yml", 2)] {
+        let plain = fixture_report(&root, config, false, 1);
+        let mut detailed = fixture_report(&root, config, true, 1);
+        let rules = plain["rules"].as_array().unwrap();
+        assert_eq!(rules.len(), count, "{plain}");
+        // The mixed file uses one tagged const at two executor profiles, but
+        // only the annotation profile scans it. Both raw call spans are needed.
+        assert!(
+            !rules.iter().any(|row| row["file"] == "low/shared.ts"),
+            "{plain}"
+        );
+        let low = rules
+            .iter()
+            .find(|row| row["file"] == "low/query.ts")
+            .unwrap();
+        assert_eq!(low["line"], 2);
+        assert!(low["message"].as_str().unwrap().contains("const statement"));
+        assert!(!rules
+            .iter()
+            .any(|row| row["file"] == "low/query.ts" && row["line"] == 3));
+        detailed.as_object_mut().unwrap().remove("sqlVerdicts");
+        assert_eq!(detailed, plain);
+    }
+}

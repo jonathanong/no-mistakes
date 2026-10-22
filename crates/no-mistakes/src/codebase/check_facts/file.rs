@@ -8,6 +8,7 @@ mod playwright_source;
 pub(crate) mod production_imports;
 mod program;
 mod program_walk;
+mod sql_scope;
 mod variants;
 
 use plan::{requires_parse, should_store_source, ts_source};

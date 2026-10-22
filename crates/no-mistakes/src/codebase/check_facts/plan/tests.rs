@@ -99,6 +99,56 @@ fn embedded_sql_rule_ids_union_without_duplicating_a_rule() {
 }
 
 #[test]
+fn unrestricted_embedded_profiles_dominate_scoped_plans_in_both_merge_orders() {
+    use crate::codebase::postgres::EmbeddedSqlRuleScan;
+    let profile = EmbeddedSqlOptions::configured("@db", &["pool".into()]);
+    let scoped = || CheckFactPlan {
+        embedded_sql_options: vec![profile.clone()],
+        embedded_sql_rule_ids: [(
+            profile.clone(),
+            vec![
+                EmbeddedSqlRuleScan::new("postgres-no-offset", &["selected/**".into()], &[])
+                    .unwrap(),
+            ],
+        )]
+        .into(),
+        ..Default::default()
+    };
+    let direct = || CheckFactPlan {
+        embedded_sql_options: vec![profile.clone()],
+        ..Default::default()
+    };
+    for (mut first, second) in [(scoped(), direct()), (direct(), scoped())] {
+        first.include(second);
+        first.include(scoped());
+        assert!(first.scans_embedded_sql(&profile, "outside.ts"));
+        assert!(!first.embedded_sql_rule_ids.contains_key(&profile));
+    }
+}
+
+#[test]
+fn implicit_default_profile_retains_unspecified_scope_after_merge() {
+    use crate::codebase::postgres::EmbeddedSqlRuleScan;
+    let mut plan = CheckFactPlan {
+        embedded_sql: true,
+        ..Default::default()
+    };
+    plan.include(CheckFactPlan {
+        embedded_sql_options: vec![EmbeddedSqlOptions::default()],
+        embedded_sql_rule_ids: [(
+            EmbeddedSqlOptions::default(),
+            vec![
+                EmbeddedSqlRuleScan::new("postgres-no-offset", &["selected/**".into()], &[])
+                    .unwrap(),
+            ],
+        )]
+        .into(),
+        ..Default::default()
+    });
+    assert!(plan.scans_embedded_sql(&EmbeddedSqlOptions::default(), "outside.ts"));
+}
+
+#[test]
 fn inactive_plan_does_not_widen_explicit_annotation_demand() {
     let read = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
     let write = EmbeddedSqlOptions::configured("@example/db", &["write".into()]);

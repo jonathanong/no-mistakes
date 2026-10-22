@@ -2,10 +2,8 @@ mod collected;
 mod location_demand;
 mod rule_scans;
 use rule_scans::merge_embedded_sql_rule_ids;
-
 use std::sync::Arc;
 use std::{collections::HashSet, path::PathBuf};
-
 #[derive(Clone, Default)]
 pub struct CheckFactPlan {
     pub imports: bool,
@@ -77,7 +75,6 @@ pub struct CheckFactPlan {
     pub graph: crate::codebase::ts_source::facts::TsFactPlan,
     pub graph_context: crate::codebase::ts_source::facts::TsFactContext,
 }
-
 impl CheckFactPlan {
     pub(super) fn with_production_files(
         &self,
@@ -91,7 +88,8 @@ impl CheckFactPlan {
         files
     }
 
-    pub(crate) fn include(&mut self, other: Self) {
+    pub(crate) fn include(&mut self, mut other: Self) {
+        merge_embedded_sql_rule_ids(self, &mut other);
         self.merge_location_demand(&other);
         self.imports |= other.imports;
         self.query_annotation_heads |= other.query_annotation_heads;
@@ -162,7 +160,6 @@ impl CheckFactPlan {
         self.embedded_sql_options.extend(other.embedded_sql_options);
         self.embedded_sql_options.sort();
         self.embedded_sql_options.dedup();
-        merge_embedded_sql_rule_ids(&mut self.embedded_sql_rule_ids, other.embedded_sql_rule_ids);
         self.postgres_schema_catalog_paths
             .extend(other.postgres_schema_catalog_paths);
         self.postgres_schema_catalog_paths.sort();

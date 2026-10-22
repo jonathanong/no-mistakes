@@ -1,0 +1,22 @@
+rules:
+  - rule: postgres-no-offset
+    name: selected
+    scope: repository
+    options:
+      importSpecifier: '@db'
+      executorNames: [pool]
+      include: ['selected/**/*.ts']
+  - rule: postgres-no-offset
+    name: overlap
+    scope: repository
+    options:
+      importSpecifier: '@db'
+      executorNames: [pool]
+      include: ['selected/query.ts']
+  - rule: postgres-no-offset
+    name: other-profile
+    scope: repository
+    options:
+      importSpecifier: '@other'
+      executorNames: [client]
+      include: ['other/**/*.ts']

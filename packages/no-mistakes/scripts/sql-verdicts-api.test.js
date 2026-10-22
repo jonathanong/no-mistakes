@@ -5,6 +5,81 @@ const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
 test(
+  "narrowed SQL preparation preserves imported providers in async and batched reports",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-sql-verdicts/fixture/narrowed-preparation",
+    );
+    const options = { root, config: join(root, ".no-mistakes.yml"), includeSuppressed: true };
+    const pending = cjs.check(options);
+    assert.ok(pending instanceof Promise);
+    const plain = await pending;
+    const detailed = await cjs.check({ ...options, includeSqlVerdicts: true });
+    assert.deepEqual(await esm.check({ ...options, includeSqlVerdicts: true }), detailed);
+    const { sqlVerdicts, ...otherFields } = detailed;
+    assert.deepEqual(otherFields, plain);
+    assert.equal(plain.rules.length, 3);
+    assert.ok(plain.rules.every(({ target }) => target.startsWith("offset")));
+    assert.ok(plain.rules.some(({ file }) => file === "selected/query.ts"));
+    assert.ok(plain.rules.some(({ file }) => file === "other/query.ts"));
+    assert.ok(plain.rules.every(({ file }) => !file.startsWith("unselected/")));
+    assert.equal(plain.suppressed.length, 1);
+    assert.equal(sqlVerdicts.length, 6);
+    assert.ok(sqlVerdicts.every(({ status }) => status === "violation"));
+    for (const [index, name] of [
+      [0, "selected"],
+      [1, "overlap"],
+      [2, "other-profile"],
+    ]) {
+      assert.ok(
+        sqlVerdicts.some(
+          ({ application, status }) =>
+            application.index === index && application.name === name && status === "violation",
+        ),
+      );
+    }
+    const batch = await cjs.analyzeProject({
+      root,
+      config: options.config,
+      reports: [
+        { type: "check", includeSqlVerdicts: true, includeSuppressed: true },
+        { type: "check", includeSuppressed: true },
+      ],
+    });
+    assert.deepEqual(
+      batch.reports.map(({ result }) => result),
+      [detailed, plain],
+    );
+    const annotationOptions = { ...options, config: join(root, "annotation.yml") };
+    const annotationPlain = await cjs.check(annotationOptions);
+    const annotation = await cjs.check({ ...annotationOptions, includeSqlVerdicts: true });
+    assert.equal(annotation.rules.length, 3);
+    assert.equal(annotation.sqlVerdicts.length, 3);
+    assert.ok(
+      annotation.sqlVerdicts.every(
+        ({ status, evidence }) => status === "violation" && evidence === "exact",
+      ),
+    );
+    const annotationBatch = await cjs.analyzeProject({
+      root,
+      config: annotationOptions.config,
+      reports: [
+        { type: "check", includeSqlVerdicts: true, includeSuppressed: true },
+        { type: "check", includeSuppressed: true },
+      ],
+    });
+    assert.deepEqual(
+      annotationBatch.reports.map(({ result }) => result),
+      [annotation, annotationPlain],
+    );
+  },
+);
+
+test(
   "compiled identifier checks retain array rows and comma result provenance",
   { skip: !compiled },
   async () => {
@@ -313,5 +388,39 @@ test(
       batch.reports.map(({ result }) => result),
       [first, baseline, first],
     );
+  },
+);
+
+test(
+  "low annotation heads keep tagged const proofs across excluded executor profiles",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-sql-verdicts/fixture/narrowed-preparation",
+    );
+    for (const [config, count] of [
+      ["low.yml", 1],
+      ["low-mixed.yml", 2],
+    ]) {
+      const options = { root, config: join(root, config), includeSuppressed: true };
+      const plain = await cjs.check(options);
+      const detailed = await cjs.check({ ...options, includeSqlVerdicts: true });
+      assert.equal(plain.rules.length, count);
+      assert.ok(!plain.rules.some(({ file }) => file === "low/shared.ts"));
+      assert.equal(plain.rules.find(({ file }) => file === "low/query.ts").line, 2);
+      assert.deepEqual(await esm.check({ ...options, includeSqlVerdicts: true }), detailed);
+      const { sqlVerdicts, ...otherFields } = detailed;
+      assert.ok(sqlVerdicts.length > 0);
+      assert.deepEqual(otherFields, plain);
+      const batch = await cjs.analyzeProject({
+        root,
+        config: options.config,
+        reports: [{ type: "check", includeSqlVerdicts: true, includeSuppressed: true }],
+      });
+      assert.deepEqual(batch.reports[0].result, detailed);
+    }
   },
 );

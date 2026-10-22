@@ -60,6 +60,18 @@ rules above about soundness and unanalyzable reporting still apply. It keeps
 noise from code that cannot be the thing being checked, and it keeps runs fast
 on large repositories.
 
+Embedded SQL statement and fragment preparation follows the union of each
+executor profile's rule scans. SQL helper extraction also retains every file
+whose shared import facts expose exports or re-exports, including unreachable
+exporters. This conservative provider superset preserves imported helpers and
+constants without parsing files again or building a separate import graph. Parser
+recovery stays broad, and direct fact plans with unspecified scopes keep their
+historical all-file behavior.
+Full annotation profiles also retain embedded SQL wherever their module summaries
+require it; this demand does not widen other executor profiles. Low-effort head
+collection conservatively retains every raw SQL profile because its input call
+spans are not declared per profile.
+
 ### Unprovable selections
 
 Recall inside a declared framework still comes first. When a Vitest setup
