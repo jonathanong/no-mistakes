@@ -39,7 +39,38 @@ root. Catalog roots select runner-config projects and explicit
 `tests.vitest.projects` / `tests.playwright.projects` entries through those
 projects' include paths (`testDir` and `testMatch` for Playwright).
 `vitest: true` or `playwright: true` includes that merged set, and a named
-list still errors for names present in neither source. `options.excludeRoots`
+list still errors for names present in neither source.
+
+The executable examples below use a `glob` root so they do not need a runner
+catalog. Catalog roots belong in a repository that already configures
+`tests.vitest` or `tests.playwright`.
+
+```yaml
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - glob: src/**/*.ts
+      traversal: file
+      unknownCalls: ignore
+      targets:
+        - global: setTimeout
+```
+
+A `glob` root selects the same prepared file universe without a runner
+catalog, for example `glob: e2e/**/*.spec.ts` or a list of patterns. Use
+`playwright: true` when the repository already has Playwright `testDir` /
+`testMatch` selection paths. The catalog form is configuration, not a snippet
+fixture:
+
+```yaml
+roots:
+  - vitest: true
+  - playwright: true
+```
+
+`options.excludeRoots`
 removes matching source files from the initial root collection before
 call-graph traversal. Patterns are relative to the repository root and accept
 one glob or a list, and match the whole repository-relative path (`*` also
@@ -114,45 +145,14 @@ graph without changing what `forbidden-calls` reports.
 
 ## Valid example
 
-Compliant example: a test injects a clock or imports an approved timer wrapper
-instead of invoking a forbidden timer API directly.
+A selected file that does not invoke a forbidden timer API passes. Inject a
+clock or import an approved wrapper instead of calling `setTimeout` directly.
 
-```yaml
-rules:
-  - name: vitest-no-real-timers
-    rule: forbidden-calls
-    scope: repository
-    options:
-      roots:
-        - vitest: true
-      traversal: file
-      unknownCalls: ignore
-      targets:
-        - global: setTimeout
-        - moduleExport:
-            module: node:timers/promises
-            export: setTimeout
-  - name: playwright-no-set-timeout
-    rule: forbidden-calls
-    scope: repository
-    options:
-      roots:
-        - playwright: true
-      traversal: file
-      unknownCalls: ignore
-      targets:
-        - global: setTimeout
-        - exact: page.waitForTimeout
-        - terminal: waitForTimeout
-        - moduleExport:
-            module: node:timers/promises
-            export: setTimeout
+```ts
+export function wait(clock: { sleep(ms: number): void }) {
+  clock.sleep(1);
+}
 ```
-
-A `glob` root selects the same prepared file universe without a runner
-catalog, for example `glob: e2e/**/*.spec.ts` or a list of patterns. Use
-`playwright: true` when the repository already has Playwright `testDir` /
-`testMatch` selection paths.
 
 The consumer acceptance matrix in
 `test-cases/rules/forbidden-calls/consumer-matrix/` is the packaged-CLI

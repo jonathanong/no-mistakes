@@ -2,15 +2,10 @@
 # Remove a prefix only after that snippet executes as documented.
 finite-set-consistency.md: Valid example[0] run error:
 finite-set-consistency.md: Counterexample[0] run error:
-forbidden-calls.md: Valid example[0] run error:
-forbidden-calls.md: Counterexample[0] run error:
 forbidden-dependencies.md: Counterexample[0] expected 
 forbidden-workspace-closure.md: Valid example[0] expected 
 no-mistakes-config.md: Counterexample[0] expected 
 package-json-nested-workspace-coverage.md: Counterexample[0] expected 
-package-json-registry-only.md: Counterexample[0] expected 
-package-json-required-fields.md: Valid example[0] expected 
-package-json-required-fields.md: Counterexample[0] expected 
 package-json-workspace-coverage.md: Counterexample[0] expected 
 playwright-coverage.md: Valid example[0] run error:
 playwright-coverage.md: Counterexample[0] run error:
@@ -56,7 +51,6 @@ postgres-sql-shape-policy.md: Counterexample[0] run error:
 postgres-sql-statement-policy.md: Counterexample[0] expected 
 postgres-status-with-lifecycle-timestamps.md: Valid example[0] expected 
 postgres-table-shape.md: Valid example[0] expected 
-production-dependency-declarations.md: Counterexample[0] expected 
 query-reached-per-item.md: Valid example[0] run error:
 query-reached-per-item.md: Counterexample[0] run error:
 require-storybook-stories.md: Valid example[0] run error:
@@ -73,4 +67,3 @@ version-pin-consistency.md: Counterexample[0] expected
 vitest-ci-path-coverage.md: Counterexample[0] expected 
 vitest-project-mapping.md: Counterexample[0] expected 
 workflow-topology-policy.md: Valid example[0] expected 
-workspace-package-cycles.md: Counterexample[0] expected 
