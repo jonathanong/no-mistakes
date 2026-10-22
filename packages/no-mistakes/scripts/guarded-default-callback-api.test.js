@@ -121,7 +121,7 @@ test(
       __dirname,
       "../../../test-cases/codebase-analysis/value-flow-guarded-parameters/fixture",
     );
-    for (const [suffix, firstLine] of [
+    for (const [suffix, firstLine, retained = true] of [
       ["conditional", 20],
       ["conditional-chain", 21],
       ["member-conditional", 21],
@@ -131,6 +131,13 @@ test(
       ["forward-return", 21],
       ["assignment-conditional", 20],
       ["direct-conditional", 16],
+      ["direct-conditional-member", 17],
+      ["assignment-later", 21, false],
+      ["assignment-overwritten", 21, false],
+      ["finally", 19, false],
+      ["finally-outer-return", 21],
+      ["finally-inner-return", 23],
+      ["finally-post-return", 21],
     ]) {
       const entry = `src/array-forwarded-late-captured-${suffix}.mts`;
       const options = { root, config: join(root, "effects.yml"), kind: "receiver", entry };
@@ -140,12 +147,14 @@ test(
         kind: "receiver",
         entry,
         callSites: [
-          { file: entry, line: firstLine, callee: "untouched.get", depth: 0 },
+          ...(retained
+            ? [{ file: entry, line: firstLine, callee: "untouched.get", depth: 0 }]
+            : []),
           { file: entry, line: firstLine + 1, callee: "primary.get", depth: 0 },
           { file: entry, line: firstLine + 2, callee: "replica.info", depth: 0 },
           { file: entry, line: firstLine + 3, callee: "unrelated.get", depth: 0 },
         ],
-        byCategory: { uncategorized: 4 },
+        byCategory: { uncategorized: retained ? 4 : 3 },
       };
       assert.deepEqual(await pending, expected);
       assert.deepEqual(await esm.effects(options), expected);

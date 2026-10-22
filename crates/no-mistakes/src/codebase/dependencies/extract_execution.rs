@@ -167,6 +167,7 @@ fn visit_try_with_receiver_execution<'a>(
     collector: &mut ImportCollector,
     statement: &oxc_ast::ast::TryStatement<'a>,
 ) {
+    let incoming = collector.parameter_return_offset();
     with_conditional_receiver_write(collector, |collector| {
         collector.visit_block_statement(&statement.block)
     });
@@ -174,7 +175,7 @@ fn visit_try_with_receiver_execution<'a>(
         collector.visit_catch_clause(handler);
     }
     if let Some(finalizer) = &statement.finalizer {
-        collector.visit_block_statement(finalizer);
+        collector.visit_finalizer_with_parameter_returns(finalizer, incoming);
     }
 }
 

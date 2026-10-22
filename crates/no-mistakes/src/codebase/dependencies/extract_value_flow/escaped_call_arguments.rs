@@ -120,3 +120,33 @@ pub(super) fn argument_values(
         other => vec![collector.value_expression(other)],
     }
 }
+
+impl ImportCollector {
+    pub(in super::super::super) fn parameter_return_offset(&self) -> Option<u32> {
+        self.current_function_id()
+            .and_then(|owner| self.receiver_escapes.return_offsets.get(&owner))
+            .copied()
+    }
+
+    pub(in super::super::super) fn visit_finalizer_with_parameter_returns(
+        &mut self,
+        finalizer: &BlockStatement<'_>,
+        incoming: Option<u32>,
+    ) {
+        let owner = self.current_function_id();
+        let outgoing = owner.and_then(|owner| self.receiver_escapes.return_offsets.remove(&owner));
+        if let (Some(owner), Some(offset)) = (owner, incoming) {
+            self.receiver_escapes.return_offsets.insert(owner, offset);
+        }
+        // A return in this try/catch runs its finalizer. Earlier returns still
+        // bypass the entire try, and returns inside the finalizer guard its tail.
+        self.visit_block_statement(finalizer);
+        if let (Some(owner), Some(offset)) = (owner, outgoing) {
+            self.receiver_escapes
+                .return_offsets
+                .entry(owner)
+                .and_modify(|current| *current = (*current).min(offset))
+                .or_insert(offset);
+        }
+    }
+}

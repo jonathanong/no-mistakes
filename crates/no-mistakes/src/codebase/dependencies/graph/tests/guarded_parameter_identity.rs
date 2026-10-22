@@ -158,7 +158,13 @@ fn default_callbacks_seed_captures_before_parameter_reassignment_unions() {
 #[test]
 fn assigned_callbacks_add_origins_to_nonempty_initial_captures() {
     let (built, root) = graph();
-    for suffix in ["before", "after"] {
+    for suffix in [
+        "before",
+        "after",
+        "assignment-later",
+        "assignment-overwritten",
+        "finally",
+    ] {
         let file = format!("array-forwarded-late-captured-{suffix}");
         // Both invocations overwrite their receivers; the indirect invocation
         // must not disappear behind the direct call's nonempty snapshot.
@@ -184,6 +190,10 @@ fn conditional_assigned_callbacks_keep_late_captured_origins_possible() {
         "array-forwarded-late-captured-forward-return",
         "array-forwarded-late-captured-assignment-conditional",
         "array-forwarded-late-captured-direct-conditional",
+        "array-forwarded-late-captured-finally-outer-return",
+        "array-forwarded-late-captured-finally-inner-return",
+        "array-forwarded-late-captured-finally-post-return",
+        "array-forwarded-late-captured-direct-conditional-member",
     ] {
         assert_unknown(&built, &root, file, "replica.get");
         possible(&built, &root, file, "untouched.get");
