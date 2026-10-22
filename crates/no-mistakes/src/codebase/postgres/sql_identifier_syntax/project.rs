@@ -37,6 +37,7 @@ pub(crate) fn collect(
             }
         }
     }
+    aliases::collect(program, module, &selections, &mut syntax);
     syntax.visit_program(program);
     let mut owners = FxHashMap::default();
     for binding in &module.bindings {
@@ -80,4 +81,5 @@ pub(crate) fn collect(
     output
 }
 
+mod aliases;
 mod calls;

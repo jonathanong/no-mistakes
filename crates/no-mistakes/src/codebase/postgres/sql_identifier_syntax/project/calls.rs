@@ -47,6 +47,11 @@ fn direct_calls(
         };
         let owner = owners.get(root).copied();
         let named = owner.is_some_and(|binding| selected.contains(&binding.id)) && parts.len() == 1;
+        let alias = parts.len() == 1
+            && syntax
+                .aliases
+                .get(root)
+                .is_some_and(|id| selected.contains(id));
         let namespace = owner.is_some_and(|binding| namespaces.contains(&binding.id))
             && parts.len() == 2
             && parts[1] == "query";
@@ -55,11 +60,12 @@ fn direct_calls(
             && parts.len() > 1
             && parts.last().is_some_and(|name| name == "query")
             && profile.executor_names.iter().any(|name| name == "query");
-        if !(named || namespace || loose) {
+        if !(named || alias || namespace || loose) {
             continue;
         }
         direct.insert(*root);
         let mut value = if gaps
+            || alias
             || namespace
             || loose
             || unsupported
@@ -138,8 +144,20 @@ fn append_escapes(
             if direct.contains(&at) || (!usage.runtime && !unsupported.contains(&binding.id)) {
                 continue;
             }
+            if syntax.alias_initializers.get(&at) == Some(&binding.id) {
+                continue;
+            }
             calls.push(SqlCall {
                 span: at,
+                line: crate::codebase::ts_source::byte_offset_to_line(source, at.0 as usize),
+                input: Input::Unknown,
+            });
+        }
+    }
+    for (at, owner) in &syntax.aliases {
+        if selected.contains(owner) && !direct.contains(at) {
+            calls.push(SqlCall {
+                span: *at,
                 line: crate::codebase::ts_source::byte_offset_to_line(source, at.0 as usize),
                 input: Input::Unknown,
             });

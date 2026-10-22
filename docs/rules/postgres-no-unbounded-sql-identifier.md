@@ -49,6 +49,9 @@ a template such as `SELECT * FROM public.users WHERE id = ${id}` stays clear.
 
 Helpers, tags, alias chains, imported SQL values, computed executor selections,
 factory/type executors, and CommonJS loaders are unanalyzable at low.
+A single local `const run = query` executor alias also remains unanalyzable;
+its diagnostic uses the invocation line so a disable-next-line comment above
+`run(sql)` suppresses that call.
 The existing configured-module `withTransaction` and `withTransactionOptions`
 imports also imply executor selection at max. Low conservatively reports their
 uses as unknown, including a SQL-free callback, because it does not interpret

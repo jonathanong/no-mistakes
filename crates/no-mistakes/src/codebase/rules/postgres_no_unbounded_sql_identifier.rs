@@ -172,12 +172,14 @@ fn message(root: &Path, call: &SqlCall<'_>, producer: &str, import: Option<Strin
         RULE_ID,
         &call.file,
         call.call.line,
-        format!(
-            "Unbounded identifier source `{producer}` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed."
-        ),
+        diagnostic_message(producer),
         import,
         Some(producer.to_string()),
     )
+}
+
+pub(super) fn diagnostic_message(producer: &str) -> String {
+    format!("Unbounded identifier source `{producer}` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.")
 }
 
 fn shadowed_process(facts: &CheckFactMap, file: &Path) -> bool {

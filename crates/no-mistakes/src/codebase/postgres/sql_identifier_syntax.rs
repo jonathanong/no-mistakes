@@ -1,5 +1,5 @@
 //! Low-effort SQL inputs from the request's parsed program and semantic bindings.
-//! This deliberately does not evaluate JavaScript or follow executor/value aliases.
+//! This does not evaluate JavaScript or infer provenance through executor/value aliases.
 use super::EmbeddedSqlOptions;
 use crate::codebase::ts_source::{facts::TsFileFacts, unwrap_ts_wrappers};
 use crate::fx::{FxHashMap, FxHashSet};
@@ -44,6 +44,8 @@ struct Syntax {
     constants: FxHashMap<Span, Input>,
     env_references: FxHashMap<String, Span>,
     namespace_members: FxHashMap<Span, String>,
+    aliases: FxHashMap<Span, usize>,
+    alias_initializers: FxHashMap<Span, usize>,
 }
 fn chain(expression: &Expression<'_>) -> Option<(Span, Vec<String>)> {
     match unwrap_ts_wrappers(expression) {
@@ -92,7 +94,7 @@ impl<'a> Visit<'a> for Syntax {
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
         let callee = chain(&value.callee);
         let selected = callee.as_ref().is_some_and(|(root, parts)| {
-            (parts.len() == 1 && self.targets.contains(root))
+            (parts.len() == 1 && (self.targets.contains(root) || self.aliases.contains_key(root)))
                 || (parts.len() == 2
                     && self
                         .namespace_targets

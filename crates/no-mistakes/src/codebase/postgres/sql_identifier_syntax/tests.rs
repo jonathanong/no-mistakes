@@ -27,6 +27,23 @@ fn fixture(name: &str, visit: impl FnOnce(&Program<'_>, &str, TsFileFacts)) {
     .unwrap();
 }
 #[test]
+fn low_syntax_executor_alias_is_unknown_only_at_configured_call_sites() {
+    fixture("executor-alias.ts", |program, source, ts| {
+        let selected = EmbeddedSqlOptions::configured("@example/db", &[]);
+        let unrelated = EmbeddedSqlOptions::configured("@unrelated/db", &[]);
+        let result = collect(program, &ts, source, &[selected, unrelated]);
+        let calls = &result.profiles[0].1;
+        assert_eq!(
+            calls.iter().map(|call| call.line).collect::<Vec<_>>(),
+            vec![4, 6]
+        );
+        assert!(calls
+            .iter()
+            .all(|call| matches!(call.input, Input::Unknown)));
+        assert!(result.profiles[1].1.is_empty());
+    });
+}
+#[test]
 fn low_syntax_recovery_selects_only_configured_imports() {
     fixture("selection.ts", |program, source, _| {
         let target = EmbeddedSqlOptions::configured("@example/db", &[]);

@@ -28,40 +28,56 @@ pub(crate) fn check(
     let policy = config.effective_rule_analysis(application)?;
     let context = facts.for_sql_application(index, application.name.as_deref());
     let observer = crate::diagnostics::current();
-    let batches = facts.files().par_iter().map(|path| -> Result<Vec<RuleFinding>> {
-        let mut findings = Vec::new();
-        let rel = relative_slash_path(root, path);
-        if !options.includes(&rel) || !filter.is_match(path) {
-            return Ok(findings);
-        }
-        let Some(file) = facts.ts.get(path) else {
-            anyhow::bail!("{rule_id}: prepared facts are missing for {rel}");
-        };
-        let calls = file
-            .sql_identifier_syntax
-            .profiles
-            .iter()
-            .find(|(profile, _)| *profile == options.embedded)
-            .map(|(_, calls)| calls.as_slice());
-        let calls = if let Some(calls) = calls {
-            calls
-        } else if file.parse_error.is_some() || file.ts.parse_error.is_some() {
-            // Parser diagnostics are authoritative; a malformed unrelated file
-            // supplies no proof that a configured SQL executor exists.
-            return Ok(findings);
-        } else {
-            anyhow::bail!(
-                "{rule_id}: prepared low-effort SQL syntax projection is missing for {rel}"
-            );
-        };
-        for call in calls {
-            if let Some(observer) = &observer { observer.increment("postgres.sql_identifier.low.calls", 1); }
-            let (sources, unknown) = classify(&call.input, rule_id);
-            for source in &sources {
-                findings.push(finding(root, rule_id, path, call.line, format!("Unbounded identifier source `{source}` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed."), Some(source.clone()), Some(source.clone())));
-            }
-            if unknown && policy.unanalyzable == Unanalyzable::Report {
-                findings.push(finding(
+    let batches =
+        facts
+            .files()
+            .par_iter()
+            .map(|path| -> Result<Vec<RuleFinding>> {
+                let mut findings = Vec::new();
+                let rel = relative_slash_path(root, path);
+                if !options.includes(&rel) || !filter.is_match(path) {
+                    return Ok(findings);
+                }
+                let Some(file) = facts.ts.get(path) else {
+                    anyhow::bail!("{rule_id}: prepared facts are missing for {rel}");
+                };
+                let calls = file
+                    .sql_identifier_syntax
+                    .profiles
+                    .iter()
+                    .find(|(profile, _)| *profile == options.embedded)
+                    .map(|(_, calls)| calls.as_slice());
+                let calls = if let Some(calls) = calls {
+                    calls
+                } else if file.parse_error.is_some() || file.ts.parse_error.is_some() {
+                    // Parser diagnostics are authoritative; a malformed unrelated file
+                    // supplies no proof that a configured SQL executor exists.
+                    return Ok(findings);
+                } else {
+                    anyhow::bail!(
+                        "{rule_id}: prepared low-effort SQL syntax projection is missing for {rel}"
+                    );
+                };
+                for call in calls {
+                    if let Some(observer) = &observer {
+                        observer.increment("postgres.sql_identifier.low.calls", 1);
+                    }
+                    let (sources, unknown) = classify(&call.input, rule_id);
+                    for source in &sources {
+                        findings.push(finding(
+                            root,
+                            rule_id,
+                            path,
+                            call.line,
+                            super::super::postgres_no_unbounded_sql_identifier::diagnostic_message(
+                                source,
+                            ),
+                            Some(source.clone()),
+                            Some(source.clone()),
+                        ));
+                    }
+                    if unknown && policy.unanalyzable == Unanalyzable::Report {
+                        findings.push(finding(
                     root,
                     rule_id,
                     path,
@@ -70,38 +86,39 @@ pub(crate) fn check(
                     None,
                     None,
                 ));
-            }
-            if let Some(context) = &context {
-                context.record_sql_verdict(SqlObligationVerdict {
-                    profile: options.embedded.clone(),
-                    rule: rule_id.into(),
-                    application: None,
-                    subcheck: "identifier-provenance".into(),
-                    file: rel.clone(),
-                    span: call.span,
-                    status: if !sources.is_empty() {
-                        SqlVerdictStatus::Violation
-                    } else if unknown {
-                        SqlVerdictStatus::Abstain
-                    } else {
-                        SqlVerdictStatus::ProvenClear
-                    },
-                    advisory: unknown && policy.unanalyzable == Unanalyzable::Advise,
-                    evidence: None,
-                    known_prefix: None,
-                    helper_lines: Vec::new(),
-                    residual_reasons: if unknown {
-                        vec![format!(
+                    }
+                    if let Some(context) = &context {
+                        context.record_sql_verdict(SqlObligationVerdict {
+                            profile: options.embedded.clone(),
+                            rule: rule_id.into(),
+                            application: None,
+                            subcheck: "identifier-provenance".into(),
+                            file: rel.clone(),
+                            span: call.span,
+                            status: if !sources.is_empty() {
+                                SqlVerdictStatus::Violation
+                            } else if unknown {
+                                SqlVerdictStatus::Abstain
+                            } else {
+                                SqlVerdictStatus::ProvenClear
+                            },
+                            advisory: unknown && policy.unanalyzable == Unanalyzable::Advise,
+                            evidence: None,
+                            known_prefix: None,
+                            helper_lines: Vec::new(),
+                            residual_reasons: if unknown {
+                                vec![format!(
                             "SQL identifier provenance is unanalyzable at effort low; {REWRITE}"
                         )]
-                    } else {
-                        Vec::new()
-                    },
-                });
-            }
-        }
-        Ok(findings)
-    }).collect::<Vec<_>>();
+                            } else {
+                                Vec::new()
+                            },
+                        });
+                    }
+                }
+                Ok(findings)
+            })
+            .collect::<Vec<_>>();
     let mut findings = Vec::new();
     for batch in batches {
         findings.extend(batch?);

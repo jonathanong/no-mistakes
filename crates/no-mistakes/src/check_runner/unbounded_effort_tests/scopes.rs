@@ -1,6 +1,31 @@
 use super::*;
 
 #[test]
+fn unbounded_effort_executor_alias_unknown_uses_call_line_suppression() {
+    let report = run(".no-mistakes.yml", false);
+    let findings = report
+        .rules
+        .iter()
+        .filter(|row| row.file == "src/executor-alias.ts")
+        .collect::<Vec<_>>();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 4);
+    assert!(findings[0].message.contains("unanalyzable at effort low"));
+    let advice = run(".no-mistakes-advise.yml", false);
+    let advice = advice
+        .advisories
+        .iter()
+        .filter(|row| row.file == "src/executor-alias.ts")
+        .collect::<Vec<_>>();
+    assert_eq!(advice.len(), 1, "{advice:?}");
+    assert_eq!(advice[0].line, 4);
+    assert!(!run(".no-mistakes-ignore.yml", false)
+        .rules
+        .iter()
+        .any(|row| row.file == "src/executor-alias.ts"));
+}
+
+#[test]
 fn unbounded_effort_narrows_files_profiles_and_input_synthesis() {
     let root = root().parent().unwrap().join("effort-narrow");
     let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
