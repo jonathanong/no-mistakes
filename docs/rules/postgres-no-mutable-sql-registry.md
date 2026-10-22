@@ -131,8 +131,9 @@ export const tables = { users: "app.users" } as const;
 ## Effort
 
 `effort: max` is the default and preserves cross-file registry analysis.
-`effort: low` avoids the call graph, helper evaluator, and mutation/provenance
-analysis. It accepts SQL written directly as a literal, or through one local
+`effort: low` does not request the call graph, helper evaluator, or
+mutation/provenance analysis. Other checks can still require that shared
+preparation. It accepts SQL written directly as a literal, or through one local
 `const` initialized with that literal. Direct templates with interpolations only
 in SQL value positions also qualify: their parsed relation names contain no
 interpolation. These calls cannot interpolate a registry into a relation:

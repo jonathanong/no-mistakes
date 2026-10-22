@@ -25,12 +25,9 @@ pub(crate) fn check_with_graph(
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut findings = Vec::new();
-    for (index, application) in config
-        .rules
-        .iter()
-        .enumerate()
-        .filter(|(_, rule)| rule.enabled && rule.rule == RULE_ID)
-    {
+    for (index, application) in config.rules.iter().enumerate().filter(|(_, rule)| {
+        rule.enabled && rule.rule == RULE_ID && config.rule_has_effective_target(rule)
+    }) {
         let policy = config.effective_rule_analysis(application)?;
         if policy.effort == crate::config::v2::Effort::Low {
             findings.extend(super::postgres_sql_cross_file::low::check(

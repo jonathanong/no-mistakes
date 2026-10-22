@@ -11,4 +11,5 @@ export interface PostgresNoMutableSqlRegistryOptions {
   trustedSqlTags?: { module: string; name: string }[];
   effort?: Effort;
   unanalyzable?: Unanalyzable;
+  unanalyzableSql?: Unanalyzable;
 }

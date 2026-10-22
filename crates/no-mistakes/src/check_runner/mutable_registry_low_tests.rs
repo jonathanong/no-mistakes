@@ -136,3 +136,19 @@ fn requesting_sql_evidence_preserves_findings_and_advisories() {
         assert_eq!(plain.advisories, evidence.advisories, "{mode}");
     }
 }
+
+#[test]
+fn inactive_application_does_not_parse_its_unselected_options() {
+    let selected = run("decidable-low");
+    let with_inactive = run("inactive-target");
+    assert_eq!(selected.rules, with_inactive.rules);
+    assert_eq!(selected.advisories, with_inactive.advisories);
+}
+
+#[test]
+fn legacy_unanalyzable_alias_routes_the_same_advisories() {
+    let canonical = run("advise");
+    let alias = run("alias");
+    assert_eq!(canonical.rules, alias.rules);
+    assert_eq!(canonical.advisories, alias.advisories);
+}
