@@ -34,7 +34,7 @@ use a test ID only when a semantic locator is not appropriate.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name.
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name. A parameter named `locator`, including a `const` alias of that parameter, does not establish a Playwright method binding.
 
 Another file's re-export is not visible here.
 

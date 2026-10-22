@@ -21,3 +21,6 @@ named(locator).toBeVisible({ timeout: 20000 });
 const a = b;
 const b = a;
 a(locator).toBeVisible({ timeout: 20000 });
+
+// Modifiers preserve the Playwright expect receiver and its timeout policy.
+check(locator).not.toBeVisible({ timeout: 20000 });

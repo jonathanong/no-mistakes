@@ -59,6 +59,7 @@ function methodFromCallee(callee, context, seen = new Set()) {
   const variable = variableFor(callee, context);
   if (!variable || seen.has(variable) || variable.defs?.length !== 1) return callee.name;
   const def = variable.defs[0];
+  if (def.type === "Parameter") return null;
   if (def.type !== "Variable" || def.parent?.kind !== "const" || !def.node?.init)
     return callee.name;
   seen.add(variable);
@@ -73,7 +74,7 @@ function methodFromCallee(callee, context, seen = new Set()) {
     return callee.name;
   }
   if (def.node.id.type !== "Identifier") return callee.name;
-  return methodFromCallee(def.node.init, context, seen) || callee.name;
+  return methodFromCallee(def.node.init, context, seen);
 }
 
 // A configured factory keeps its own name when that name is also a const

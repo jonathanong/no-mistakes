@@ -12,3 +12,7 @@ page.locator.apply(page, ["[data-pw=save]"]?.concat());
 page.click('[data-testid="save"]');
 // no-mistakes-disable-next-line playwright-prefer-get-by-test-id
 page.click('[data-testid="edit"]');
+
+// Unknown and empty arguments do not establish an exact selector.
+page.locator(selector);
+page.locator("");

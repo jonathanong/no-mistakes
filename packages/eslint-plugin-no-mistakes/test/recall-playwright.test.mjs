@@ -3,6 +3,17 @@ import { describe, it } from "vitest";
 import { fixture, messages } from "./helpers.mjs";
 
 describe("playwright same-file recall", () => {
+  it("ignores cursor waits through unrelated parameters and their aliases", () => {
+    assert.deepEqual(
+      messages(
+        fixture("playwright-no-raw-scroll-pagination/shadowed-cursor.spec.js"),
+        "playwright-no-raw-scroll-pagination",
+        undefined,
+        "e2e/shadowed-cursor.spec.js",
+      ),
+      [],
+    );
+  });
   it("follows static keys, aliases, and forwarded Playwright calls", () => {
     assert.equal(
       messages(fixture("playwright-literals/recall.jsx"), "playwright-literals").length,
@@ -116,7 +127,7 @@ describe("playwright same-file recall", () => {
         undefined,
         "e2e/branches.spec.ts",
       ),
-      ["timeout"],
+      ["timeout", "timeout"],
     );
     assert.deepEqual(
       messages(

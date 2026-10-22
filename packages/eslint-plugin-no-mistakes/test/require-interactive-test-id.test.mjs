@@ -2,7 +2,7 @@ import { RuleTester } from "eslint";
 import assert from "node:assert/strict";
 import { afterAll, describe, it } from "vitest";
 import rule from "../src/rules/playwright-require-interactive-test-id.js";
-import { messages } from "./helpers.mjs";
+import { fixture, messages } from "./helpers.mjs";
 
 RuleTester.describe = describe;
 RuleTester.it = it;
@@ -54,6 +54,16 @@ tester.run("playwright-require-interactive-test-id", rule, {
     },
   ],
   invalid: [
+    {
+      code: fixture("playwright-require-interactive-test-id/branches.jsx"),
+      options: [{ interactiveComponents: ["/(/"] }],
+      errors: Array.from({ length: 4 }, () => ({ messageId: "missing" })),
+    },
+    {
+      code: fixture("playwright-require-interactive-test-id/branches.jsx"),
+      options: [{ interactiveComponents: ["Button", "Card"] }],
+      errors: Array.from({ length: 10 }, () => ({ messageId: "missing" })),
+    },
     {
       code: "<div role='button' />;",
       errors: [{ messageId: "missing" }],
