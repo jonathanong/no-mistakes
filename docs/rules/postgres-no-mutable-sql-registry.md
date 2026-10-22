@@ -131,6 +131,8 @@ export const tables = { users: "app.users" } as const;
 ## Effort
 
 `effort: max` is the default and preserves cross-file registry analysis.
+Low effort never emits a cross-file write finding; it only emits unanalyzable diagnostics for unsupported inputs.
+
 `effort: low` does not request the call graph, helper evaluator, or
 mutation/provenance analysis. Other checks can still require that shared
 preparation. At a directly imported named executor, it accepts SQL written as a
