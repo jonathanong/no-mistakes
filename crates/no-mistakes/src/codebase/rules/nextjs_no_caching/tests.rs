@@ -35,6 +35,14 @@ fn config() -> NoMistakesConfig {
 }
 
 #[test]
+fn const_scope_ignores_records_when_no_scope_is_open() {
+    let mut scopes = Vec::new();
+    super::const_values::record_unknown(&mut scopes, "mode");
+    super::const_values::pop_scope(&mut scopes);
+    assert!(scopes.is_empty());
+}
+
+#[test]
 fn reports_nextjs_cache_surfaces() {
     let root = fixture();
     let findings = check(&root, &config()).unwrap();

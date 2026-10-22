@@ -23,3 +23,14 @@ export default async function Page(mode: string) {
   await fetch('/api/hidden', { cache: hidden })
   return policy
 }
+
+async function extra(mode = 'force-cache', ...rest: string[]) {
+  const { cache: local, ...ignored } = { cache: 'force-cache' }
+  const [first, ...more] = ['force-cache']
+  const peek = (value: string) => fetch('/api/peek', { cache: value })
+  await peek(mode)
+  await fetch('/api/bound', { cache: local })
+  await fetch('/api/first', { cache: first })
+  await fetch('/api/computed-key', { [`cache-${kind}`]: 'force-cache' })
+  return rest.length + more.length + ignored.cache + first
+}
