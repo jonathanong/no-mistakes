@@ -189,11 +189,16 @@ test("query annotation configuration exposes the unknown SQL policy", () => {
   );
 });
 
-
 test("unbounded SQL identifier options expose shared analysis policy", () => {
   const types = readFileSync(join(packageRoot, "postgres-unbounded-identifier-types.d.ts"), "utf8");
   assert.match(types, /export interface PostgresNoUnboundedSqlIdentifierOptions/);
-  for (const field of ["include", "exclude", "executorNames", "executorFactoryNames", "executorTypeNames"]) {
+  for (const field of [
+    "include",
+    "exclude",
+    "executorNames",
+    "executorFactoryNames",
+    "executorTypeNames",
+  ]) {
     assert.ok(types.includes(`${field}?: string[];`));
   }
   assert.match(types, /importSpecifier\?: string;/);
@@ -201,5 +206,9 @@ test("unbounded SQL identifier options expose shared analysis policy", () => {
   assert.match(types, /unanalyzable\?: Unanalyzable;/);
   assert.match(types, /unanalyzableSql\?: Unanalyzable;/);
   assert.match(types, /trustedSqlTags\?: \{ module: string; name: string \}\[\];/);
-  assert.ok(readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes('export * from "./postgres-unbounded-identifier-types";'));
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      'export * from "./postgres-unbounded-identifier-types";',
+    ),
+  );
 });
