@@ -70,6 +70,25 @@ await page.evaluate(() => window.scrollTo(0, 0));
 Replace the raw scroll with a helper that scrolls repeatedly until the
 paginated request fires, instead of a single synthetic scroll.
 
+## Limits
+
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. `url.searchParams.has.call(url.searchParams, "cursor")` and `url.searchParams.get.apply(url.searchParams, ["after"])` still see the cursor argument. A computed identifier key is not a static name. A parameter named `waitForRequest` or `waitForResponse`, including a `const` alias of that parameter, does not establish a Playwright cursor wait.
+
+Another file's re-export is not visible here.
+
+```js
+// waits.mjs (page-methods.mjs exports a bound waitForResponse helper)
+export { waitForResponse as wait } from "./page-methods.mjs";
+```
+
+```js
+// e2e/feed.spec.js
+import { wait } from "../waits.mjs";
+// This imported alias does not establish the cursor-wait gate in this file.
+await wait((response) => response.url().includes("?cursor=1"));
+window.scrollTo(0, document.body.scrollHeight);
+```
+
 ## Suppression
 
 ```ts

@@ -29,6 +29,24 @@ coverage and automation intent explicit.
 Add a configured literal test ID to the interactive element, or configure a
 project-specific interactive component name.
 
+## Limits
+
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A nested component that reuses an imported local name is that local component, not the import. `const Alias = Save` is the import only when that `Save` binding is the import, so `function Wrapper(Save) { const Alias = Save; return <Alias />; }` is not `SaveButton`. A computed identifier key is not a static name.
+
+Another file's re-export is not visible here.
+
+```tsx
+// controls.tsx
+export { Button as Action } from "./button";
+```
+
+```tsx
+// form.tsx
+import { Action } from "./controls";
+// With interactiveComponents: ["Button"], Action cannot be traced to Button here.
+export function Form() { return <Action />; }
+```
+
 ## Suppression
 
 ```tsx

@@ -7,6 +7,7 @@ const {
 } = require("../exported-components");
 const { nonEmptyStrings } = require("../component-functions");
 const { options, rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { jsxTreeHasAttribute, returnedJsxBranches } = require("../returned-jsx");
 
 const DEFAULT_ATTRIBUTES = ["data-pw"];
@@ -43,9 +44,13 @@ module.exports = rule(
   },
   (context) => ({
     Program(node) {
+      const suppressed = ruleSuppression(
+        context,
+        "playwright-require-exported-component-attribute",
+      );
       const opts = normalizedOptions(options(context));
       for (const component of collectExportedComponents(node, opts)) {
-        reportMissingBranches(context, component, opts);
+        reportMissingBranches(context, component, opts, suppressed);
       }
     },
   }),
@@ -59,10 +64,11 @@ function normalizedOptions(option) {
   };
 }
 
-function reportMissingBranches(context, component, opts) {
+function reportMissingBranches(context, component, opts, suppressed) {
   if (shouldCheckComponent(component, opts)) {
     for (const jsx of returnedJsxBranches(component.fn)) {
       if (!jsxTreeHasAttribute(jsx, opts)) {
+        if (suppressed(jsx)) continue;
         context.report({
           node: jsx,
           messageId: "missing",

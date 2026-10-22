@@ -37,6 +37,23 @@ export function SaveButton() {
 Add one configured attribute to each returned JSX branch, or narrow the rule
 configuration to the component surface that needs coverage hooks.
 
+## Limits
+
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. Every declarator in one `const` or `export const` statement is collected. `export const Later = Early; function Early() { return <button />; }` is still `Early`. `React.memo.apply(React, [() => <button />])` is the wrapped callback. A spread argument list is not. A computed identifier key is not a static name.
+
+Another file's re-export is not visible here.
+
+```tsx
+// button.tsx
+export function Button() { return <button>Save</button>; }
+```
+
+```tsx
+// index.tsx
+// This file has no local component implementation for the rule to inspect.
+export { Button } from "./button";
+```
+
 ## Suppression
 
 ```tsx

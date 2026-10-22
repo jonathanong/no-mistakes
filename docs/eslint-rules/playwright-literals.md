@@ -38,6 +38,24 @@ function SaveButton({ testId = "save-button" }) {
 Use a literal selector, or expose a prop with a literal default when a component
 needs a controlled override.
 
+## Limits
+
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name.
+
+Another file's re-export is not visible here.
+
+```js
+// selectors.mjs (page-methods.mjs exports a bound getByTestId helper)
+export { getByTestId as find } from "./page-methods.mjs";
+```
+
+```js
+// e2e/save.spec.js
+import { find } from "../selectors.mjs";
+// The imported alias is not known to be getByTestId in this file.
+find(`save-${user.id}`);
+```
+
 ## Suppression
 
 ```tsx

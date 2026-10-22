@@ -1,6 +1,7 @@
 import { RuleTester } from "eslint";
 import { describe, it } from "vitest";
 import rule from "../src/rules/playwright-prefer-get-by-test-id.js";
+import { fixture } from "./helpers.mjs";
 
 RuleTester.describe = describe;
 RuleTester.it = it;
@@ -34,6 +35,11 @@ ruleTester.run("playwright-prefer-get-by-test-id", rule, {
     { code: "page.locator(``)" },
   ],
   invalid: [
+    {
+      code: fixture("playwright-prefer-get-by-test-id/suppressed-drag.jsx"),
+      // Suppressing the source must leave the target selector visible.
+      errors: [{ messageId: "prefer" }],
+    },
     {
       code: 'locator("[data-pw=\\"direct\\"]")',
       errors: [{ messageId: "prefer", data: { value: "direct" } }],
