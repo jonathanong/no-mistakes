@@ -1,7 +1,9 @@
 use super::collect;
+use no_mistakes::codebase::ts_source::{FileInventory, SourceStore};
 use no_mistakes::config::v2::schema::{RuleDef, RuleScope};
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::Path;
+use std::sync::Arc;
 
 fn redirect_config(options: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
@@ -16,14 +18,14 @@ fn redirect_config(options: &str) -> NoMistakesConfig {
 
 #[test]
 fn nextjs_advisory_collection_covers_suppressed_and_ordinary_paths() {
-    let root = crate::codebase::ts_resolver::normalize_path(
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/nextjs-redirect-destinations/fixture/dest-non-string"),
     );
-    let files = crate::codebase::ts_source::walk_files(&root, &[]);
-    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let files = no_mistakes::codebase::ts_source::walk_files(&root, &[]);
+    let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&files)));
     let mut config = redirect_config("{ effort: low, unanalyzable: advise }");
-    crate::codebase::rules::analysis_policy::prepare_rule_analysis(
+    no_mistakes::codebase::rules::analysis_policy::prepare_rule_analysis(
         &root,
         &mut config,
         &files,
