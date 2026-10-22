@@ -35,6 +35,7 @@ pub(super) fn run_all_with_session_options(
         config_path.as_deref(),
         tsconfig_path.as_deref(),
         options.effort,
+        include_runner_config_deadlines,
     );
     let prepared = prepared?;
     let config_path = prepared.config_path.clone();

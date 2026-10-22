@@ -9,6 +9,7 @@ fn prepare(root: &Path) -> prepared::PreparedCheckInputs {
         Some(&root.join(".no-mistakes.yml")),
         None,
         None,
+        false,
     )
     .unwrap()
 }

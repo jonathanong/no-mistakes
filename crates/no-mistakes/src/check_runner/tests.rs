@@ -8,12 +8,11 @@ use no_mistakes::codebase::unique_exports::PreparedUniqueExportFinding;
 use no_mistakes::integration_tests::IntegrationFinding;
 use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
-use std::collections::BTreeMap;
-use std::path::PathBuf;
-use std::time::Duration;
+use std::{collections::BTreeMap, path::PathBuf, time::Duration};
 
 mod architecture;
 mod config_path;
+mod consumers;
 mod graph_scope;
 mod integration_gitignore;
 mod parse_cache;

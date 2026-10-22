@@ -1,6 +1,6 @@
+use super::SharedWorkspace;
 use no_mistakes::codebase::ts_resolver::{TsConfig, TsConfigCatalog};
 use no_mistakes::codebase::ts_source::SourceStore;
-use no_mistakes::codebase::workspaces::IndexedWorkspaceMap;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -12,7 +12,7 @@ pub(super) fn prepare(
     config: &NoMistakesConfig,
     root_paths: &[PathBuf],
     sources: &SourceStore,
-    workspace: Option<&IndexedWorkspaceMap>,
+    workspace: &SharedWorkspace,
 ) -> Arc<TsConfigCatalog> {
     let catalog = if let Some(path) = tsconfig_path {
         let path = if path.is_absolute() {
@@ -25,6 +25,8 @@ pub(super) fn prepare(
             tsconfig.clone(),
             Some(no_mistakes::codebase::ts_resolver::normalize_path(&path)),
         )
+    } else if !super::consumers::needs_tsconfig_catalog(config, workspace.deadlines) {
+        TsConfigCatalog::forced(root, tsconfig.clone(), None)
     } else {
         let mut candidate_roots = vec![root.to_path_buf()];
         candidate_roots.extend(
@@ -42,7 +44,10 @@ pub(super) fn prepare(
             &candidate_roots,
             root_paths,
             sources,
-            workspace.expect("automatic tsconfig catalog requires a workspace projection"),
+            workspace
+                .map
+                .as_ref()
+                .expect("automatic tsconfig catalog requires a workspace projection"),
         )
     };
     Arc::new(catalog)
