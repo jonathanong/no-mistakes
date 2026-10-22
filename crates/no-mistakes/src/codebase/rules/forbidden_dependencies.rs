@@ -3,8 +3,8 @@ use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, NodeId};
 use crate::codebase::dependencies::{relationship_filter, EdgeKind, RelationshipArg};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use helpers::{build_globset, edge_kind_str, repro_command, resolve_root_path};
-use std::collections::HashSet;
+use helpers::{build_globset, edge_kind_str, repro_command, resolve_root_paths};
+use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 
 mod config_check;
@@ -142,10 +142,13 @@ fn check_rule_application(
     );
     let source_filter = source_filter?;
     let mut findings = Vec::new();
+    let mut selected_roots = BTreeMap::new();
     for root_str in &opts.roots {
-        let Some(resolved_path) = resolve_root_path(root, root_str) else {
-            continue;
-        };
+        for path in resolve_root_paths(root, root_str, graph) {
+            selected_roots.entry(path).or_insert(root_str);
+        }
+    }
+    for (resolved_path, root_str) in selected_roots {
         if !source_filter.is_match(&resolved_path) {
             continue;
         }
@@ -186,7 +189,7 @@ fn check_rule_application(
                 NodeId::Module(_) => "module",
                 _ => "file",
             };
-            let repro = repro_command(root_str, &target_name, &entry.node, &opts.relationships);
+            let repro = repro_command(&file, &target_name, &entry.node, &opts.relationships);
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
                 file: file.clone(),

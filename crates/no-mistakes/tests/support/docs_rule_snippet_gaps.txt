@@ -1,6 +1,5 @@
 # Known check-rule doc execution gaps tracked by #2416.
 # Remove a prefix only after that snippet executes as documented.
-forbidden-dependencies.md: Counterexample[0] expected 
 no-mistakes-config.md: Counterexample[0] expected 
 playwright-coverage.md: Valid example[0] run error:
 playwright-coverage.md: Counterexample[0] run error:

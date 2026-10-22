@@ -14,9 +14,16 @@ reports a path that reaches a forbidden file or module.
 
 ## Options
 
-`roots` selects boundary origins, `forbiddenModules` and `forbiddenFiles` name
-blocked targets, and `relationships` selects graph edge kinds. Omitted
-`relationships` follows all standard edge families; other lists default empty.
+`roots` selects file or directory boundary origins. `forbiddenModules` and
+`forbiddenFiles` name blocked targets, and `relationships` selects graph edge
+kinds. Omitted `relationships` follows all standard edge families; other lists
+default empty.
+
+Directory roots select source files recursively from the request's discovered
+graph, within the rule's project, include, and exclude filters. File roots remain
+valid, missing roots are skipped, and overlapping roots select each source once.
+Each finding names its source file and includes a query for that file.
+Reachability may follow dependencies outside the origin directory.
 
 ## Valid example
 

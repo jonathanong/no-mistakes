@@ -28,6 +28,7 @@ fn legacy_graph_plan_keeps_default_fallback() {
 }
 use std::path::{Path, PathBuf};
 
+mod directory_roots;
 mod shared_facts;
 
 fn fixture(name: &str) -> PathBuf {
@@ -304,7 +305,7 @@ fn nonexistent_root_is_silently_skipped() {
 }
 
 #[test]
-fn directory_root_is_silently_skipped() {
+fn directory_root_selects_graph_sources() {
     let root = fixture("forbidden-dependencies-basic");
     let opts = Options {
         roots: vec!["entrypoints".to_string()],
@@ -325,10 +326,9 @@ fn directory_root_is_silently_skipped() {
     )
     .unwrap();
     let findings = check_application(&root, &opts, &graph).unwrap();
-    assert!(
-        findings.is_empty(),
-        "directory root should produce no findings (not a file)"
-    );
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "entrypoints/api.mts");
+    assert_eq!(findings[0].target.as_deref(), Some("sharp"));
 }
 
 #[test]
