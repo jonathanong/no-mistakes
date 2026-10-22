@@ -5,7 +5,7 @@ use crate::config::v2::{
 };
 use std::path::{Path, PathBuf};
 
-fn fixture(name: &str) -> PathBuf {
+pub(super) fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/no-raw-ephemeral-port/fixture")
@@ -25,12 +25,12 @@ fn config(yaml: &str) -> NoMistakesConfig {
     }
 }
 
-fn run(root: &Path, yaml: &str) -> Vec<RuleFinding> {
+pub(super) fn run(root: &Path, yaml: &str) -> Vec<RuleFinding> {
     let files = crate::codebase::ts_source::discover_files(root, &[]);
     check_with_files(root, &config(yaml), &files).unwrap()
 }
 
-fn run_deferred(root: &Path, yaml: &str, defer_suppression: bool) -> Vec<RuleFinding> {
+pub(super) fn run_deferred(root: &Path, yaml: &str, defer_suppression: bool) -> Vec<RuleFinding> {
     let files = crate::codebase::ts_source::discover_files(root, &[]);
     let sources = super::super::source_store_for_files(&files);
     check_with_files_sources_and_deferred_suppression(

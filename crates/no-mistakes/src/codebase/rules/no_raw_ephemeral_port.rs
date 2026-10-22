@@ -112,3 +112,6 @@ fn scan_files(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod literal_recall_tests;

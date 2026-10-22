@@ -11,8 +11,13 @@ range and raw OS-selected ports would make parallel execution nondeterministic.
 ## What it catches
 
 It catches literal port `0` binds in supported Python, shell, YAML, JavaScript,
-and TypeScript forms, including Node `listen(0)` and `{ port: 0 }`. An
-assignment such as `export const port = 0` is not a bind.
+and TypeScript forms, including Node `listen(0)` and `{ port: 0 }`. A
+parenthesized or TypeScript-asserted callee still counts, as do static string
+and no-substitution template members such as `server["listen"](0)` and
+``server[`listen`](0)``. Python tuple binds accept literal integer zero with
+unary `+` or `-`, including base-prefixed zero spellings. Dynamic member names
+and variable ports are not inferred. An assignment such as
+`export const port = 0` is not a bind.
 
 ## Options
 

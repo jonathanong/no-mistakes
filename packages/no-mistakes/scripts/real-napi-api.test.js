@@ -22,6 +22,7 @@ require("./postgres-metadata-api.test.js");
 require("./tests-audit-native-api.test.js");
 require("./cargo-target-ownership-api.test.js");
 require("./analysis-policy-api.test.js");
+require("./ephemeral-port-literal-api.test.js");
 
 const repositoryRoot = join(__dirname, "..", "..", "..");
 const fixtureRoot = join(repositoryRoot, "fixtures", "napi", "real-addon-dependencies");
