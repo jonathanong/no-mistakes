@@ -1,7 +1,7 @@
 mod graph_files;
 use super::{
-    any_codebase_rule_enabled, rule_enabled, try_canonical_graph_plan, PreparedRulesCheck,
-    NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
+    any_codebase_rule_enabled, rule_enabled, try_canonical_graph_plan_for_files,
+    PreparedRulesCheck, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
     SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use crate::codebase::check_facts::{
@@ -39,7 +39,7 @@ pub(super) fn run_check(
         Arc::new(prepared_tsconfig.clone()),
     );
     let prepared_playwright = prepared_playwright?;
-    let graph_plan = try_canonical_graph_plan(&config)?;
+    let graph_plan = try_canonical_graph_plan_for_files(root, &config, &visible_paths)?;
     let codebase_config =
         crate::codebase::config::config_from_loaded_v2(root, config_path, &config);
     let prepared_graph = graph_plan
@@ -138,22 +138,25 @@ pub(super) fn run_check(
 
     let session =
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    super::run_check_with_config_and_facts_and_playwright(PreparedRulesCheck {
-        session,
-        root,
-        config_path,
-        tsconfig_path,
-        shared: &shared,
-        prepared_playwright: prepared_playwright.as_ref(),
-        config: &config,
-        prepared_graph: prepared_graph.as_ref(),
-        prepared_tsconfig: &prepared_tsconfig,
-        prepared_tsconfig_catalog: &prepared_tsconfig_catalog,
-        prepared_vitest_projects: prepared_vitest_projects.as_ref(),
-        prepared_playwright_projects: prepared_playwright_projects.as_ref(),
-        inferred_roots: Some(&inferred_roots),
-        sources: Some(&sources),
-    })
+    super::prepared::run_with_declared_plan(
+        PreparedRulesCheck {
+            session,
+            root,
+            config_path,
+            tsconfig_path,
+            shared: &shared,
+            prepared_playwright: prepared_playwright.as_ref(),
+            config: &config,
+            prepared_graph: prepared_graph.as_ref(),
+            prepared_tsconfig: &prepared_tsconfig,
+            prepared_tsconfig_catalog: &prepared_tsconfig_catalog,
+            prepared_vitest_projects: prepared_vitest_projects.as_ref(),
+            prepared_playwright_projects: prepared_playwright_projects.as_ref(),
+            inferred_roots: Some(&inferred_roots),
+            sources: Some(&sources),
+        },
+        graph_plan,
+    )
 }
 
 #[cfg(test)]

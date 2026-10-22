@@ -16,7 +16,9 @@ pub use super::playwright_project_catalog::{
 pub use super::run::{
     canonical_graph_plan, canonical_graph_requires_full_file_universe,
     run_check_with_config_facts_playwright_and_graph,
-    run_check_with_config_facts_playwright_and_graph_with_suppression, try_canonical_graph_plan,
+    run_check_with_config_facts_playwright_and_graph_with_suppression,
+    run_check_with_declared_plan_and_suppression, try_canonical_graph_plan,
+    try_canonical_graph_plan_for_files,
 };
 pub use super::run::{
     run_check, run_check_with_config_and_facts_and_playwright, run_check_with_facts,

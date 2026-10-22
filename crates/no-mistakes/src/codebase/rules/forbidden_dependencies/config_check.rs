@@ -1,5 +1,5 @@
-use super::{check_rule_application, union_allowed_set, Options, RULE_ID};
-use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, GraphFiles};
+use super::{check_rule_application, Options, RULE_ID};
+use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_resolver::TsConfig;
 use crate::config::v2::NoMistakesConfig;
@@ -42,8 +42,13 @@ fn check_with_config_tsconfig_and_files(
         .iter()
         .map(|rule| rule.try_rule_options())
         .collect::<Result<_>>()?;
-    let union_allowed = union_allowed_set(&opts_list);
-    let plan = GraphBuildPlan::from_allowed(union_allowed.as_ref());
+    let plan = super::plan::graph_plan_for_options_with_graph_config(
+        root,
+        config,
+        graph_files.all(),
+        &opts_list,
+        false,
+    );
     let graph =
         DepGraph::build_with_plan_and_files_config(root, tsconfig, plan, graph_files, config_path)?;
     let mut findings = Vec::new();

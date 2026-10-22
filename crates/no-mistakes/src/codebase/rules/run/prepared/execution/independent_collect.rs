@@ -136,6 +136,7 @@ pub(super) fn graph_rules(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk>
             inferred_roots: req.inferred_roots,
             prepared_vitest_projects: req.prepared_vitest_projects,
             prepared_playwright_projects: req.prepared_playwright_projects,
+            declared_plan_is_trusted: req.declared_plan_is_trusted,
         },
     )?))
 }

@@ -45,6 +45,14 @@ include!("builder_edges.rs");
 include!("builder_edge_requirements.rs");
 include!("builder_core_edges_independent.rs");
 include!("builder_remaining_edges.rs");
+#[cfg(not(test))]
+macro_rules! record_markdown_dispatch {
+    ($root:expr) => {};
+}
+#[cfg(test)]
+#[macro_use]
+#[path = "markdown_dispatch_probe.rs"]
+pub(crate) mod markdown_dispatch_probe;
 include!("builder_remaining_edges_independent.rs");
 include!("builder_remaining_edges_fact_domain.rs");
 include!("builder_helpers.rs");

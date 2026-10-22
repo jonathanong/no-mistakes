@@ -1,0 +1,7 @@
+name: Inventory check
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: cargo run --bin fixture-tool

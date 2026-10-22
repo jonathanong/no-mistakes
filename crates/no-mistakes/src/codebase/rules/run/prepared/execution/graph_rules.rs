@@ -13,6 +13,7 @@ pub(super) struct GraphRuleRequest<'a> {
         Option<&'a crate::codebase::rules::PreparedVitestProjectCatalog>,
     pub(super) prepared_playwright_projects:
         Option<&'a crate::codebase::rules::PreparedPlaywrightProjectCatalog>,
+    pub(super) declared_plan_is_trusted: bool,
 }
 
 pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
@@ -26,6 +27,7 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
         inferred_roots,
         prepared_vitest_projects,
         prepared_playwright_projects,
+        declared_plan_is_trusted,
     } = request;
     let mut findings = Vec::new();
     if rule_enabled(config, FORBIDDEN_CALLS) {
@@ -45,12 +47,15 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
         findings.extend(crate::perf_trace::trace(
             "rules.forbidden_dependencies",
             || {
-                forbidden_dependencies::check_with_prepared_facts_and_graph(
+                forbidden_dependencies::check_with_prepared_facts_and_graph_declared(
                     root,
                     config,
                     config_path,
                     shared,
-                    prepared_graph,
+                    forbidden_dependencies::SharedGraphScope {
+                        prepared_graph,
+                        declared_plan_is_trusted,
+                    },
                     inferred_roots,
                     dependency_graph.expect("forbidden-dependencies requires canonical graph"),
                 )

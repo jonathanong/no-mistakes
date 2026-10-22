@@ -15,6 +15,29 @@ fn canonical_graph_plan_preserves_legacy_fallback_while_try_is_strict() {
 }
 
 #[test]
+fn public_fact_plan_keeps_config_sensitive_families_when_graph_config_is_separate() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/forbidden-dependencies-basic/fixture");
+    let discovered = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let supplied = crate::config::v2::NoMistakesConfig {
+        rules: discovered.rules,
+        ..Default::default()
+    };
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    // Public callers may supply rules separately from the graph's prepared
+    // settings, including externally configured language projects.
+    let public = try_canonical_graph_plan_for_public_facts(&root, &supplied, &files)
+        .unwrap()
+        .unwrap();
+    let trusted = try_canonical_graph_plan_for_files(&root, &supplied, &files)
+        .unwrap()
+        .unwrap();
+    assert!(public.ci && public.terraform && public.dotnet && public.swift);
+    assert!(!trusted.ci && !trusted.terraform && !trusted.dotnet && !trusted.swift);
+    assert!(!public.markdown && public.package);
+}
+
+#[test]
 fn canonical_graph_plans_include_forbidden_call_edges() {
     let mut config = crate::config::v2::NoMistakesConfig::default();
     config.rules.push(crate::config::v2::schema::RuleDef {
@@ -101,6 +124,32 @@ fn legacy_prepared_request_without_sources_uses_the_request_session() {
     .unwrap();
 
     assert!(findings.is_empty());
+
+    let visible = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = visible.source_store_for(&root);
+    let legacy = run_check_with_config_facts_playwright_and_graph_with_suppression(
+        PreparedRulesCheck {
+            session: crate::codebase::analysis_session::AnalysisSession::disabled(),
+            root: &root,
+            config_path: None,
+            tsconfig_path: None,
+            shared: &shared,
+            prepared_playwright: None,
+            config: &config,
+            prepared_graph: None,
+            prepared_tsconfig: &tsconfig,
+            prepared_tsconfig_catalog: &catalog,
+            prepared_vitest_projects: None,
+            prepared_playwright_projects: None,
+            inferred_roots: None,
+            sources: Some(&sources),
+        },
+        None,
+        sources.as_ref(),
+        false,
+    )
+    .unwrap();
+    assert!(legacy.findings.is_empty());
 }
 
 #[test]

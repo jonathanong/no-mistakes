@@ -13,6 +13,18 @@ fn configure_shared_family_scopes(
     )
 }
 
+fn plan_shared_graph(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    prepared: &crate::check_runner::prepared::PreparedCheckInputs,
+) -> Result<Option<GraphBuildPlan>> {
+    crate::codebase::rules::try_canonical_graph_plan_for_files(
+        root,
+        config,
+        prepared.visible_paths.paths_for(root).as_ref(),
+    )
+}
+
 fn prepare_shared_graph(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,

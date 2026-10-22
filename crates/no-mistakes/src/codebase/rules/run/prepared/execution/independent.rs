@@ -37,6 +37,7 @@ pub(super) struct IndependentRuleRequest<'a> {
     pub sources: &'a crate::codebase::ts_source::SourceStore,
     pub dependency_graph: Option<&'a DepGraph>,
     pub defer_suppression: bool,
+    pub declared_plan_is_trusted: bool,
 }
 
 pub(super) fn collect(req: IndependentRuleRequest<'_>) -> Result<RuleChunk> {

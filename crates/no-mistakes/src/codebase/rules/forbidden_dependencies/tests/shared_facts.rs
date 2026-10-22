@@ -1,4 +1,6 @@
+use super::super::plan::union_allowed_set;
 use super::*;
+use crate::codebase::dependencies::graph::GraphBuildPlan;
 
 pub(super) fn check_with_prepared_facts_and_session(
     root: &Path,
@@ -48,12 +50,15 @@ pub(super) fn check_with_prepared_facts_and_session(
             session.clone(),
         )?,
     };
-    check_with_prepared_facts_and_graph(
+    check_with_prepared_facts_and_graph_declared(
         root,
         config,
         config_path,
         shared,
-        prepared_graph,
+        SharedGraphScope {
+            prepared_graph,
+            declared_plan_is_trusted: false,
+        },
         None,
         &graph,
     )

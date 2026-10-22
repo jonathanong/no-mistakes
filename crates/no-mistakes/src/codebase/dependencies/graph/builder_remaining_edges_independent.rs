@@ -21,6 +21,7 @@ fn collect_independent_remaining_edges(
                 collect_unless_timed_out(|| {
                     crate::perf_trace::trace("graph.markdown", || {
                         if edge_inputs.plan.markdown {
+                            record_markdown_dispatch!(edge_inputs.root);
                             collect_md_edges(
                                 edge_inputs.graph_files.all(),
                                 edge_inputs.graph_files,

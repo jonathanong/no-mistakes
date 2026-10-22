@@ -32,6 +32,7 @@ fn error_from(config: &crate::config::v2::NoMistakesConfig) -> anyhow::Error {
         inferred_roots: None,
         prepared_vitest_projects: None,
         prepared_playwright_projects: None,
+        declared_plan_is_trusted: false,
     })
     .unwrap_err()
 }
@@ -64,6 +65,7 @@ fn panic_without_graph(rule: &str) {
         inferred_roots: None,
         prepared_vitest_projects: None,
         prepared_playwright_projects: None,
+        declared_plan_is_trusted: false,
     });
 }
 

@@ -1,6 +1,7 @@
 /// Config-derived graph settings prepared once for an aggregate check request.
 #[doc(hidden)]
 pub struct PreparedGraphConfig {
+    declared_plan: GraphBuildPlan,
     options: Option<GraphConfigOptions>,
     playwright_settings: Vec<crate::playwright::config::Settings>,
     workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
@@ -10,6 +11,12 @@ pub struct PreparedGraphConfig {
 }
 
 impl PreparedGraphConfig {
+    /// Plan used to prepare this request's graph settings and facts.
+    #[doc(hidden)]
+    pub fn declared_plan(&self) -> GraphBuildPlan {
+        self.declared_plan
+    }
+
     /// Build the Playwright fact scope required by prepared graph edge
     /// producers, merging one fact plan per resolved frontend app so a
     /// multi-app repository's route/selector facts all get collected
@@ -148,6 +155,7 @@ fn prepare_graph_config_inner(
         )?]
     };
     Ok(PreparedGraphConfig {
+        declared_plan: plan,
         options,
         playwright_settings,
         workspace: workspace.unwrap_or_else(|| {

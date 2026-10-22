@@ -34,7 +34,7 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
 
     for shared_entrypoint in [
         "run_check_with_prepared_facts_for_aggregate",
-        "run_check_with_config_facts_playwright_and_graph",
+        "run_check_with_declared_plan_and_suppression",
         "queue::analyze_project_with_prepared_facts_and_catalog_and_session",
         "integration_tests::check_with_prepared_facts_catalog_and_session",
         "unique_exports::analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_check",

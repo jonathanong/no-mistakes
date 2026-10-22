@@ -1,6 +1,6 @@
 use super::RuleFinding;
-use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, NodeId};
-use crate::codebase::dependencies::{relationship_filter, EdgeKind, RelationshipArg};
+use crate::codebase::dependencies::graph::{DepGraph, NodeId};
+use crate::codebase::dependencies::{relationship_filter, RelationshipArg};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use helpers::{build_globset, edge_kind_str, repro_command, resolve_root_paths};
@@ -9,9 +9,21 @@ use std::path::Path;
 
 mod config_check;
 mod helpers;
+#[cfg(not(test))]
+macro_rules! record_inventory_scan {
+    ($root:expr) => {};
+}
+#[cfg(test)]
+#[macro_use]
+mod inventory_scan_tests;
+mod plan;
 mod shared;
 pub(crate) use config_check::check_with_config;
-pub(crate) use shared::check_with_prepared_facts_and_graph;
+pub(crate) use plan::try_graph_plan_for_files;
+pub(crate) use plan::try_graph_plan_for_files_inventory_only;
+pub use plan::{graph_plan, try_graph_plan};
+pub(crate) use shared::check_with_prepared_facts_and_graph_declared;
+pub(crate) use shared::SharedGraphScope;
 
 pub const RULE_ID: &str = "forbidden-dependencies";
 
@@ -35,51 +47,6 @@ pub fn check(
     tsconfig_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
     check_with_config(root, config, None, tsconfig_path)
-}
-
-/// Builds the graph plan with the historical default fallback for malformed
-/// options. Check entrypoints should use [`try_graph_plan`] instead.
-pub fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
-    let applications = config.rule_applications(RULE_ID);
-    if applications.is_empty() {
-        return None;
-    }
-    let opts_list: Vec<Options> = applications
-        .iter()
-        .map(|rule| rule.rule_options())
-        .collect();
-    let union_allowed = union_allowed_set(&opts_list);
-    Some(GraphBuildPlan::from_allowed(union_allowed.as_ref()))
-}
-
-/// Fallible graph-plan construction for check, CLI, and N-API request paths.
-pub fn try_graph_plan(config: &NoMistakesConfig) -> Result<Option<GraphBuildPlan>> {
-    let applications = config.rule_applications(RULE_ID);
-    if applications.is_empty() {
-        return Ok(None);
-    }
-    let opts_list: Vec<Options> = applications
-        .iter()
-        .map(|rule| rule.try_rule_options())
-        .collect::<Result<_>>()?;
-    let union_allowed = union_allowed_set(&opts_list);
-    Ok(Some(GraphBuildPlan::from_allowed(union_allowed.as_ref())))
-}
-
-fn union_allowed_set(opts_list: &[Options]) -> Option<HashSet<EdgeKind>> {
-    let mut any_all = false;
-    let mut union: HashSet<EdgeKind> = HashSet::new();
-    for opts in opts_list {
-        match relationship_filter(&opts.relationships) {
-            Some(set) => union.extend(set),
-            None => any_all = true,
-        }
-    }
-    if any_all || union.is_empty() {
-        None
-    } else {
-        Some(union)
-    }
 }
 
 fn check_rule_application(
@@ -207,5 +174,9 @@ fn check_rule_application(
     Ok(findings)
 }
 
+#[cfg(test)]
+mod inventory_tests;
+#[cfg(test)]
+mod public_prepared_tests;
 #[cfg(test)]
 mod tests;

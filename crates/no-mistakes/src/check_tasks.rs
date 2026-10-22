@@ -1,6 +1,6 @@
 use anyhow::Result;
 use no_mistakes::codebase::check_facts::CheckFactMap;
-use no_mistakes::codebase::rules::{self, RuleFinding};
+use no_mistakes::codebase::rules::RuleFinding;
 use no_mistakes::codebase::unique_exports::{self, PreparedUniqueExportFinding};
 use no_mistakes::config::v2::NoMistakesConfig;
 use no_mistakes::integration_tests::{self, IntegrationFinding};
@@ -9,11 +9,13 @@ use std::time::Duration;
 
 mod filesystem;
 mod react;
+mod rules_task;
 #[cfg(test)]
 mod tests;
 
 pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_check_with_facts};
 pub(crate) use react::run_react_check;
+pub(crate) use rules_task::run_rules_check;
 
 pub(crate) struct CheckTask<T> {
     pub(crate) findings: T,
@@ -57,46 +59,6 @@ pub(crate) fn run_queue_check(
         suppression_sources: Vec::new(),
         advisories: Vec::new(),
         warning: None,
-        duration,
-    })
-}
-
-pub(crate) fn run_rules_check(
-    inputs: rules::PreparedRulesCheck<'_>,
-    dependency_graph: Option<&no_mistakes::codebase::dependencies::graph::DepGraph>,
-    sources: &no_mistakes::codebase::ts_source::SourceStore,
-    defer_suppression: bool,
-) -> Result<CheckTask<Vec<RuleFinding>>> {
-    let (((findings, suppression_sources, advisories), warning), duration) =
-        no_mistakes::diagnostics::measure_if_enabled(
-            "analysis.rules",
-            no_mistakes::diagnostics::TimingKind::Parallel,
-            || match rules::run_check_with_config_facts_playwright_and_graph_with_suppression(
-                inputs,
-                dependency_graph,
-                sources,
-                defer_suppression,
-            ) {
-                Ok(findings) => (
-                    (
-                        findings.findings,
-                        findings.suppression_sources,
-                        findings.advisories,
-                    ),
-                    None,
-                ),
-                Err(err) => (
-                    (Vec::new(), Vec::new(), Vec::new()),
-                    Some(format!("warning: rules check skipped: {err:#}")),
-                ),
-            },
-        );
-    Ok(CheckTask {
-        findings,
-        react_suppression_targets: Vec::new(),
-        suppression_sources,
-        advisories,
-        warning,
         duration,
     })
 }

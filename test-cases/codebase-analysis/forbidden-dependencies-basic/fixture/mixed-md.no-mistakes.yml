@@ -1,0 +1,19 @@
+# The explicit Markdown application must retain its demand even though this
+# fixture has no Markdown file and the preceding application is unfiltered.
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - entrypoints/api.mts
+      forbiddenModules:
+        - sharp
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - entrypoints/api.mts
+      forbiddenFiles:
+        - lib/image.mts
+      relationships:
+        - md

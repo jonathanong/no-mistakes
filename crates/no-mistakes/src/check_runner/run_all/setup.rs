@@ -30,7 +30,11 @@ pub(super) fn build(
     let unique_exports_enabled = check_tasks::unique_exports_configured(config);
     let enabled = enabled::ConfiguredChecks::from_config(config);
     let filesystem_rules_enabled = check_tasks::filesystem_rules_configured(config);
-    let canonical_graph_plan = no_mistakes::codebase::rules::try_canonical_graph_plan(config)?;
+    let canonical_graph_plan = no_mistakes::codebase::rules::try_canonical_graph_plan_for_files(
+        root,
+        config,
+        prepared.visible_paths.paths_for(root).as_ref(),
+    )?;
     let graph_requires_full_file_universe =
         no_mistakes::codebase::rules::canonical_graph_requires_full_file_universe(config);
     let playwright_built = super::playwright::fact_plan(

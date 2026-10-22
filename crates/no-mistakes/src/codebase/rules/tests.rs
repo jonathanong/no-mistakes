@@ -3,6 +3,7 @@ use crate::config::v2::schema::{RuleDef, RuleScope};
 
 mod extended;
 mod gitignore_tsconfig;
+mod standalone_architecture;
 
 fn fixture(path: &str) -> std::path::PathBuf {
     let mut parts = path.splitn(3, '/');
@@ -336,49 +337,6 @@ fn prepared_run_check_matches_the_individual_forbidden_dependency_api() {
     let individual =
         forbidden_dependencies::check_with_config(&root, &config, None, Some(&tsconfig)).unwrap();
     assert_eq!(prepared, individual);
-}
-
-#[test]
-fn standalone_rules_prepare_one_request_without_nested_rule_discovery() {
-    let source = include_str!("run/standalone.rs");
-    assert_eq!(source.matches("VisiblePathSnapshot::new(root)").count(), 1);
-    assert_eq!(source.matches("load_v2_config_from_visible(").count(), 1);
-    assert_eq!(source.matches("InferredRoots::from_visible(").count(), 1);
-    assert_eq!(source.matches("resolve_tsconfig_from_visible(").count(), 1);
-    assert_eq!(source.matches("prepare_from_snapshot(").count(), 1);
-    assert_eq!(
-        source
-            .matches("prepare_graph_config_with_test_filter(")
-            .count(),
-        1
-    );
-    assert_eq!(source.matches("standalone_fact_plan(&config)").count(), 1);
-    assert_eq!(
-        source
-            .matches("collect_check_facts_with_graph_files_playwright_and_sources(")
-            .count(),
-        1
-    );
-    assert_eq!(
-        source
-            .matches("run_check_with_config_and_facts_and_playwright(")
-            .count(),
-        1
-    );
-    for nested in [
-        "test_no_unmocked_dynamic_imports::check(",
-        "server_route_client_boundary::check(",
-        "nextjs_no_api_routes::check(",
-        "nextjs_no_caching::check(",
-        "require_storybook_stories::check(",
-        "playwright::rules::check(",
-        "forbidden_dependencies::check_with_config(",
-    ] {
-        assert!(
-            !source.contains(nested),
-            "standalone fanout called {nested}"
-        );
-    }
 }
 
 #[test]

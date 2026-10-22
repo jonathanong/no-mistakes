@@ -12,6 +12,7 @@ pub(super) fn run(
     dependency_graph: Option<&DepGraph>,
     aggregate_sources: Option<&crate::codebase::ts_source::SourceStore>,
     defer_suppression: bool,
+    declared_plan: Option<GraphBuildPlan>,
 ) -> Result<PreparedRuleFindings> {
     let provided_sources = aggregate_sources.or(inputs.sources);
     let fallback_sources = provided_sources
@@ -43,7 +44,16 @@ pub(super) fn run(
             advisories: Vec::new(),
         });
     }
-    if let Some(graph_plan) = try_canonical_graph_plan(config)? {
+    let declared_plan_is_trusted = declared_plan.is_some();
+    let graph_plan = match declared_plan {
+        Some(plan) => Some(plan),
+        None => super::try_canonical_graph_plan_for_public_facts(
+            root,
+            config,
+            shared.graph_file_universe(),
+        )?,
+    };
+    if let Some(graph_plan) = graph_plan {
         let (mut required_facts, _) =
             required_graph_facts(root, graph_plan, config_path, prepared_graph, &session);
         required_facts.call_arguments |=
@@ -57,7 +67,7 @@ pub(super) fn run(
     let owned_graph;
     let dependency_graph = if let Some(graph) = dependency_graph {
         Some(graph)
-    } else if let Some(plan) = try_canonical_graph_plan(config)? {
+    } else if let Some(plan) = graph_plan {
         owned_graph =
             crate::perf_trace::trace(
                 "rules.canonical_dependency_graph",
@@ -112,6 +122,7 @@ pub(super) fn run(
         sources,
         dependency_graph,
         defer_suppression,
+        declared_plan_is_trusted,
     })?;
     if !defer_suppression {
         suppress_findings(root, &mut findings, sources);

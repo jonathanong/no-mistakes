@@ -1,0 +1,12 @@
+infra:
+  terraform:
+    moduleRoots:
+      - infra
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots:
+        - src/entry.mts
+      forbiddenModules:
+        - sharp

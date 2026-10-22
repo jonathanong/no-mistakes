@@ -10,7 +10,7 @@ use super::{
 };
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use anyhow::Result;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 mod execution;
 #[cfg(test)]
@@ -55,6 +55,31 @@ pub fn try_canonical_graph_plan(
     Ok(graph_plan_with_forbidden(
         config,
         forbidden_dependencies::try_graph_plan(config)?,
+    ))
+}
+
+/// Plan the default forbidden-dependencies families against the request's
+/// complete visible inventory before either facts or graph settings prepare.
+#[doc(hidden)]
+pub fn try_canonical_graph_plan_for_files(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    all_files: &[PathBuf],
+) -> Result<Option<GraphBuildPlan>> {
+    Ok(graph_plan_with_forbidden(
+        config,
+        forbidden_dependencies::try_graph_plan_for_files(root, config, all_files)?,
+    ))
+}
+
+fn try_canonical_graph_plan_for_public_facts(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    all_files: &[PathBuf],
+) -> Result<Option<GraphBuildPlan>> {
+    Ok(graph_plan_with_forbidden(
+        config,
+        forbidden_dependencies::try_graph_plan_for_files_inventory_only(root, config, all_files)?,
     ))
 }
 
@@ -114,11 +139,18 @@ pub fn run_check_with_config_and_facts_and_playwright(
     run_check_with_config_facts_playwright_and_graph(inputs, None)
 }
 
+pub(crate) fn run_with_declared_plan(
+    inputs: PreparedRulesCheck<'_>,
+    plan: Option<GraphBuildPlan>,
+) -> Result<Vec<RuleFinding>> {
+    Ok(execution::run(inputs, None, None, false, plan)?.findings)
+}
+
 pub fn run_check_with_config_facts_playwright_and_graph(
     inputs: PreparedRulesCheck<'_>,
     dependency_graph: Option<&DepGraph>,
 ) -> Result<Vec<RuleFinding>> {
-    Ok(execution::run(inputs, dependency_graph, None, false)?.findings)
+    Ok(execution::run(inputs, dependency_graph, None, false, None)?.findings)
 }
 
 #[doc(hidden)]
@@ -128,5 +160,29 @@ pub fn run_check_with_config_facts_playwright_and_graph_with_suppression(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<PreparedRuleFindings> {
-    execution::run(inputs, dependency_graph, Some(sources), defer_suppression)
+    execution::run(
+        inputs,
+        dependency_graph,
+        Some(sources),
+        defer_suppression,
+        None,
+    )
+}
+
+/// Use only when `plan` was declared by this same prepared request.
+#[doc(hidden)]
+pub fn run_check_with_declared_plan_and_suppression(
+    inputs: PreparedRulesCheck<'_>,
+    dependency_graph: Option<&DepGraph>,
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+    plan: Option<GraphBuildPlan>,
+) -> Result<PreparedRuleFindings> {
+    execution::run(
+        inputs,
+        dependency_graph,
+        Some(sources),
+        defer_suppression,
+        plan,
+    )
 }

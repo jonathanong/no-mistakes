@@ -1,4 +1,4 @@
-use super::{check_rule_application, union_allowed_set, Options, RULE_ID};
+use super::{check_rule_application, Options, RULE_ID};
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
@@ -34,12 +34,17 @@ pub(super) fn validate_shared_graph_plan(
     Ok(())
 }
 
-pub(crate) fn check_with_prepared_facts_and_graph(
+pub(crate) struct SharedGraphScope<'a> {
+    pub prepared_graph: Option<&'a crate::codebase::dependencies::graph::PreparedGraphConfig>,
+    pub declared_plan_is_trusted: bool,
+}
+
+pub(crate) fn check_with_prepared_facts_and_graph_declared(
     root: &Path,
     config: &NoMistakesConfig,
     config_path: Option<&Path>,
     shared: &crate::codebase::check_facts::CheckFactMap,
-    prepared_graph: Option<&crate::codebase::dependencies::graph::PreparedGraphConfig>,
+    scope: SharedGraphScope<'_>,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     graph: &DepGraph,
 ) -> Result<Vec<RuleFinding>> {
@@ -51,8 +56,19 @@ pub(crate) fn check_with_prepared_facts_and_graph(
         .iter()
         .map(|rule| rule.try_rule_options())
         .collect::<Result<_>>()?;
-    let plan = GraphBuildPlan::from_allowed(union_allowed_set(&opts_list).as_ref());
-    validate_shared_graph_plan(root, config_path, shared, prepared_graph, plan)?;
+    // The aggregate path already validated the same request's declared
+    // canonical plan before building this graph. Public prepared-facts calls
+    // must derive the requested plan again: their config may differ.
+    if !scope.declared_plan_is_trusted {
+        let plan = super::plan::graph_plan_for_options_with_graph_config(
+            root,
+            config,
+            shared.graph_file_universe(),
+            &opts_list,
+            false,
+        );
+        validate_shared_graph_plan(root, config_path, shared, scope.prepared_graph, plan)?;
+    }
     let file_universe = shared
         .graph_file_universe()
         .iter()
