@@ -76,6 +76,19 @@ fn scan_target(
             &app_root_label,
         ));
     }
+    super::delegate::append_delegated(
+        &super::delegate::DelegateRequest {
+            root,
+            config_path: &config_path,
+            source: &source,
+            files,
+            sources,
+            route_set: &route_set,
+            app_root_label: &app_root_label,
+            include_rewrites: opts.include_rewrites,
+        },
+        &mut findings,
+    );
     findings
 }
 

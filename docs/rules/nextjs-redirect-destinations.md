@@ -110,6 +110,13 @@ If `redirects` or `rewrites` text exists but the extractor cannot find a
 method/function body or string destinations, the rule reports extractor drift
 instead of silently passing.
 
+A config entry that does not itself contain `redirects` or `rewrites` is
+followed one hop when it re-exports a relative default (`export { default }
+from "./next-shared"`) or default-imports that binding and exports it
+(`import nextConfig from "./next-shared"; export default nextConfig`). The
+shared file is then checked with the same extractor. A second hop, a package
+specifier, and a tsconfig path such as `@/next-shared` are not followed.
+
 Counterexample: `next.config.ts` redirects `/old` to `/gone`, and
 `app/gone/page.tsx` does not exist. A destination of `/secret` also fails when
 the only page is `app/_secret/page.tsx`, because `_` segments are private.
