@@ -107,14 +107,8 @@ fn elixir_pascal_case(stem: &str) -> String {
 pub(super) fn extract_elixir_imports(source: &str) -> Vec<String> {
     let mut values = Vec::new();
     for cap in elixir_import_re().captures_iter(source) {
-        let Some(matched) = cap.get(1) else {
-            continue;
-        };
-        let path = matched.as_str();
-        if path.contains('*') || path.contains('{') {
-            continue;
-        }
-        let rest = source.get(matched.end()..).unwrap_or("").trim_start();
+        let path = &cap[1];
+        let rest = source[cap.get(1).expect("module path").end()..].trim_start();
         if rest.starts_with('*') || rest.starts_with(".*") {
             continue;
         }

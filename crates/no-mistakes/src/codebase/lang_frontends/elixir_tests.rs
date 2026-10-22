@@ -26,9 +26,31 @@ fn nested_brace_and_wildcard_aliases_are_non_edges() {
     let source = r#"
 alias MyApp.{Foo.{Bar, Baz}}
 alias MyApp.*
+alias MyApp*
 import MyApp.{User, *}
+alias MyApp.{User
 "#;
     assert!(extract_elixir_imports(source).is_empty());
+}
+
+#[test]
+fn space_brace_import_and_dotted_members_expand() {
+    let source = r#"
+alias MyApp {User, Role}
+import MyApp.{Accounts}
+use MyApp.{Repo.Reader}
+alias MyApp.{skip_me, Team}
+"#;
+    assert_eq!(
+        extract_elixir_imports(source),
+        vec![
+            "MyApp.Accounts",
+            "MyApp.Repo.Reader",
+            "MyApp.Role",
+            "MyApp.Team",
+            "MyApp.User",
+        ]
+    );
 }
 
 #[test]
