@@ -142,6 +142,7 @@ test("test plan declarations require current results but accept saved legacy pla
     /export type SavedTestPlan = TestPlan;/,
     /planJson\?: SavedTestPlan \| string;/,
     /export interface TestsWhyOptions \{[\s\S]*plan\?: string;\n  planJson\?: SavedTestPlan \| string;/,
+    /export interface TestsPlanOptionsBase \{/,
     /export type TestsPlanOptions =/,
     /export type TestPlanFramework =\n  \| "vitest"\n  \| "playwright"\n  \| "dotnet"\n  \| "swift"\n  \| "python"\n  \| "go"\n  \| "cargo"\n  \| "rails"\n  \| "php"\n  \| "java"\n  \| "kotlin"\n  \| "elixir"\n  \| "dart"\n  \| "jest";/,
     /directTestOwner: true;[\s\S]*framework: TestPlanFramework;/,

@@ -45,7 +45,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedTraverseOptions = TraverseOptions & Pick<ProjectOptions, "config">/,
+    /export type BatchedTraverseOptions = TraverseOptions & Pick<ProjectOptions, "config">/,
   );
   assert.match(
     analyzeProjectDeclarations,
@@ -69,11 +69,11 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedQueueRelatedOptions = BatchedProjectOptions & \{ files: string\[\] \}/,
+    /export type BatchedQueueRelatedOptions = BatchedProjectOptions & \{ files: string\[\] \}/,
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedServerRouteRelatedOptions = BatchedProjectOptions &\n  \(\{ files: string\[\] \} \| \{ roots: string\[\] \}\)/,
+    /export type BatchedServerRouteRelatedOptions = BatchedProjectOptions &\n  \(\{ files: string\[\] \} \| \{ roots: string\[\] \}\)/,
   );
   assert.match(
     analyzeProjectDeclarations,
@@ -81,7 +81,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedReactUsagesOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "targets" \| "include" \| "effort"[\s\S]*?Required<Pick<ProjectOptions, "target">>/,
+    /export type BatchedReactUsagesOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "targets" \| "include" \| "effort"[\s\S]*?Required<Pick<ProjectOptions, "target">>/,
   );
   assert.match(
     analyzeProjectDeclarations,
@@ -93,11 +93,11 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedCheckOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "includeSuppressed" \| "effort"[\s\S]*?>/,
+    /export type BatchedCheckOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "includeSuppressed" \| "effort"[\s\S]*?>/,
   );
   assert.doesNotMatch(
     analyzeProjectDeclarations,
-    /type BatchedCheckOptions = Pick<[\s\S]*?"include" \| "includeSuppressed"/,
+    /export type BatchedCheckOptions = Pick<[\s\S]*?"include" \| "includeSuppressed"/,
   );
   assert.match(analyzeProjectDeclarations, /type: "check"; id\?: string } & BatchedCheckOptions/);
   assert.match(
@@ -148,6 +148,20 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
     /export \* from "\.\/types";/,
   );
+  assert.match(
+    analyzeProjectDeclarations,
+    /export type AnalyzeProjectReportType = AnalyzeProjectReportRequest\["type"\];/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /export type AnalyzeProjectReportResult = unknown \| EffectsReport \| RscCallersReport;/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /export interface AnalyzeProjectReport \{\n  id\?: string;\n  type: AnalyzeProjectReportType;\n  result: AnalyzeProjectReportResult;\n\}/,
+  );
+  assert.match(analyzeProjectDeclarations, /reports: AnalyzeProjectReport\[\];/);
+  assert.doesNotMatch(analyzeProjectDeclarations, /type: AnalyzeProjectReportRequest\[/);
 });
 
 test("query annotation configuration exposes the unknown SQL policy", () => {
