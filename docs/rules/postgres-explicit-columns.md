@@ -153,6 +153,16 @@ their existing scopes. See [the migration notes](../migrations/explicit-postgres
           "dataType": "text"
         }
       }
+    },
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "name": {
+          "dataType": "text"
+        }
+      }
     }
   }
 }
@@ -202,6 +212,16 @@ though its catalog lists only three columns.
           "dataType": "text"
         },
         "slug": {
+          "dataType": "text"
+        }
+      }
+    },
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "name": {
           "dataType": "text"
         }
       }
