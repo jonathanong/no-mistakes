@@ -30,6 +30,8 @@ rules:
   - rule: postgres-no-generated-column-writes
     options:
       importSpecifier: "@app/db"
+      sqlInclude: ["db/**/*.sql"]
+      triggerMaintainedColumns: [updated_at]
 ```
 
 The configured `importSpecifier` limits executor calls to proven receivers from
@@ -44,18 +46,45 @@ See [details](postgres-no-generated-column-writes-options.md).
 ## Valid example
 
 ```sql
+-- db/schema.sql
+CREATE TABLE items (
+  id bigint PRIMARY KEY,
+  note text,
+  normalized_note text GENERATED ALWAYS AS (lower(note)) STORED
+);
+CREATE TABLE orders (id bigint PRIMARY KEY, status text, updated_at timestamptz);
+
+-- db/write.sql
 INSERT INTO items (id, note) VALUES ($1, $2);
 ```
 
 ## Counterexample
 
 ```sql
-UPDATE items SET created_at = now() WHERE id = $1;
+-- db/schema.sql
+CREATE TABLE items (
+  id bigint PRIMARY KEY,
+  note text,
+  normalized_note text GENERATED ALWAYS AS (lower(note)) STORED
+);
+CREATE TABLE orders (id bigint PRIMARY KEY, status text, updated_at timestamptz);
+
+-- db/generated-write.sql
+UPDATE items SET normalized_note = 'override' WHERE id = $1;
 ```
 
 With `triggerMaintainedColumns: [updated_at]`, this also fails:
 
 ```sql
+-- db/schema.sql
+CREATE TABLE items (
+  id bigint PRIMARY KEY,
+  note text,
+  normalized_note text GENERATED ALWAYS AS (lower(note)) STORED
+);
+CREATE TABLE orders (id bigint PRIMARY KEY, status text, updated_at timestamptz);
+
+-- db/trigger-write.sql
 UPDATE orders SET status = 'paid', updated_at = now() WHERE id = $1;
 ```
 
