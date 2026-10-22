@@ -37,7 +37,7 @@ function reportIfAlias(node, context, suppressed) {
   const directForward = directTarget ? { target: directTarget, args: call.arguments } : null;
   for (const candidate of [directForward, forwarded]) {
     if (!candidate) continue;
-    if (!isSameArgumentList(node.params || [], candidate.args)) continue;
+    if (!isSameArgumentList(node.params, candidate.args)) continue;
     context.report({ node, messageId: "alias" });
     return;
   }
