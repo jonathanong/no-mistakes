@@ -18,3 +18,8 @@ read.call(...args);
 const forward = (sql) => read(sql);
 const second = (sql) => forward(sql);
 second(`SELECT ${TABLES[kind]}`);
+// A type-only namespace supplies no value executor, even when used in invalid TS.
+import type * as typedDb from "@example/db";
+const { read: typedRead } = typedDb;
+typedDb.read(`SELECT ${TABLES[kind]}`);
+typedRead(`SELECT ${TABLES[kind]}`);

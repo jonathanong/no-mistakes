@@ -18,6 +18,7 @@ function namespaceImport(node, context, options, seen = new Set()) {
   if (def.type === "ImportBinding") {
     return (
       def.node.type === "ImportNamespaceSpecifier" &&
+      def.parent.importKind !== "type" &&
       (!options.importSpecifier || def.parent.source.value === options.importSpecifier)
     );
   }

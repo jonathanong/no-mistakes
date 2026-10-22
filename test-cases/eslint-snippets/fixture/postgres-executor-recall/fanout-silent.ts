@@ -19,3 +19,8 @@ Promise.all(items.map(db[key]));
 Promise.all(items.map(read.call));
 Promise.all(items.map(read["call"]));
 Promise.all(items.map(read.apply));
+// A type-only namespace supplies no value executor, even when used in invalid TS.
+import type * as typedDb from "@example/db";
+const { read: typedRead } = typedDb;
+Promise.all(items.map(typedDb.read));
+Promise.all(items.map(typedRead));

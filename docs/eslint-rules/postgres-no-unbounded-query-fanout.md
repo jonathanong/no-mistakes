@@ -67,7 +67,7 @@ for (const id of userIds) {
 ## Limits
 
 The executor calls above include same-file immutable `const` aliases,
-namespace imports from the configured module, and `const { query } = db` (or
+value namespace imports from the configured module, and `const { query } = db` (or
 another configured namespace export). String and expression-free template keys,
 optional calls, TypeScript wrappers, comma callees, `.call`, and `.apply` with a
 literal array are supported. A configured namespace export named `call` or
@@ -83,6 +83,7 @@ Cross-file re-exports and `export *` are not followed. For example,
 `export { read as execute } from "@example/db"` in `db.ts`, then
 `import { execute } from "./db"; execute(sql)` in another file does not prove
 that `execute` is the configured import. A default import is not a namespace.
+A type-only namespace import does not establish a value executor.
 A computed identifier key (`const { [key]: q } = db`) or a property default
 (`const { query: q = fallback } = db`) is not a static executor alias.
 `function run({ query: q } = db) { q(sql); }` is a parameter-default

@@ -67,3 +67,8 @@ Promise.all(items.map(mutableCallback));
 query[key](null, "BEGIN");
 query[`ca${suffix}`](null, "BEGIN");
 query[tag`call`](null, "BEGIN");
+// A type-only namespace supplies no value executor, even when used in invalid TS.
+import type * as typedDb from "@example/db";
+const { read: typedRead } = typedDb;
+typedDb.read("BEGIN");
+typedRead("BEGIN");
