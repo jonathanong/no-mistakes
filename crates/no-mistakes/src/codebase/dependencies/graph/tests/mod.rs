@@ -112,6 +112,7 @@ mod inline_call_context;
 
 #[path = "inline_member_precision.rs"]
 mod inline_member_precision;
+mod per_file_fact_lookup;
 mod remaining_edges;
 mod selector_fact_plan;
 mod selector_optimization;
