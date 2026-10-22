@@ -277,4 +277,94 @@ fn missing_setup_facts_and_cached_failures_keep_their_messages() {
         .unwrap_err()
         .to_string()
         .contains("missing setup classification"));
+    assert!(super::ready(&cache, &file)
+        .unwrap_err()
+        .to_string()
+        .contains("explode"));
+}
+
+#[test]
+fn cached_setup_success_is_reused() {
+    let cache = RefCell::new(HashMap::new());
+    let file = PathBuf::from("setup.mts");
+    let first = super::remember(&cache, &file, || Ok(classified("vi.mock('./x.mts');")));
+    assert_eq!(first.unwrap().accepted_mocks, vec!["./x.mts".to_string()]);
+    let second = super::remember(&cache, &file, || anyhow::bail!("nope"));
+    assert_eq!(second.unwrap().accepted_mocks, vec!["./x.mts".to_string()]);
+    assert_eq!(
+        super::ready(&cache, &file).unwrap().accepted_mocks,
+        vec!["./x.mts".to_string()]
+    );
+}
+
+#[test]
+fn aliased_computed_and_import_equals_shapes_name_the_rewrite() {
+    // These forms are not mock coverage. Each one names the static rewrite,
+    // and a typed import() inside the mock call is not a second shape.
+    let source = r#"
+        let unbound;
+        const { mock } = vi;
+        mock("./aliased.mts");
+        const { mock: renamed = fallback } = jest;
+        renamed("./renamed.mts");
+        function hidden() {
+            const { mock } = vi;
+            mock("./nested-alias.mts");
+        }
+        vi["mock"]("./computed.mts");
+        jest['mock'](import("./computed-typed.mts"));
+        module.require("./mod.cjs");
+        module["require"]("./mod-computed.cjs");
+        const requireAlias = require;
+        requireAlias("./alias-req.cjs");
+        vi["fn"]();
+        vi[name]();
+        const alias = vi;
+        alias.mock("./not-the-vi-binding.mts");
+        const { fn } = vi;
+        fn();
+        const { mock: localMock } = other;
+        localMock("./not-an-alias.mts");
+        const { mock: [skipped] } = vi;
+        skipped("./pattern.mts");
+        other["mock"]("./nope.mts");
+        ns.vi["mock"]("./member.mts");
+        module.exports("./nope.cjs");
+        foo.require("./nope.cjs");
+        import equalsTarget = require("./helper.cjs");
+        import local = vi;
+        import qualified = vi.mocked;
+        "#;
+    let path = Path::new("setup.ts");
+    let found = classify(path, source).unwrap();
+    assert_eq!(
+        found
+            .rejected
+            .iter()
+            .map(|shape| shape.target)
+            .collect::<Vec<_>>(),
+        vec!["mock", "mock", "mock", "mock", "mock", "require", "require", "require", "require",]
+    );
+    assert!(
+        found.accepted_mocks.is_empty(),
+        "{:?}",
+        found.accepted_mocks
+    );
+    assert!(found.accepted_requires.is_empty());
+    let extracted =
+        crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::extract(path, source)
+            .unwrap();
+    assert_eq!(
+        extracted
+            .setup_reachability
+            .rejected
+            .iter()
+            .map(|shape| shape.target)
+            .collect::<Vec<_>>(),
+        found
+            .rejected
+            .iter()
+            .map(|shape| shape.target)
+            .collect::<Vec<_>>()
+    );
 }

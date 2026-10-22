@@ -191,9 +191,12 @@ require("./require-helper.cjs");
 ```
 
 Every other setup-reachability shape is unanalyzable. That includes a
-non-literal `vi.mock` or `jest.mock` specifier, a conditional, sequence,
-`void`, or nested `require()`, a runtime `import()`, and `vi.doMock`,
-`jest.doMock`, `jest.setMock`, or `jest.unstable_mockModule`.
+non-literal `vi.mock` or `jest.mock` specifier, an aliased call such as
+`const { mock } = vi`, a computed `vi["mock"]` or `jest["mock"]` call,
+`module.require()`, an aliased `require` such as `const alias = require`,
+`import name = require("...")`, a conditional, sequence, `void`, or nested
+`require()`, a runtime `import()`, and `vi.doMock`, `jest.doMock`,
+`jest.setMock`, or `jest.unstable_mockModule`.
 `require.resolve()` is not a reachability shape. The diagnostic names the
 rewrite:
 

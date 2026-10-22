@@ -1,5 +1,8 @@
-use super::syntax;
-use oxc_ast::ast::{Argument, CallExpression, ImportExpression, Program};
+use super::{aliases, syntax};
+use oxc_ast::ast::{
+    Argument, CallExpression, ImportExpression, Program, TSImportEqualsDeclaration,
+    VariableDeclarator,
+};
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashSet;
 
@@ -38,6 +41,8 @@ pub(crate) struct Scan<'a> {
     source: &'a str,
     accepted_require_spans: HashSet<u32>,
     mock_import_starts: HashSet<u32>,
+    aliased_mocks: HashSet<String>,
+    aliased_requires: HashSet<String>,
     accepted_mocks: Vec<String>,
     accepted_requires: Vec<String>,
     rejected: Vec<Rejected>,
@@ -54,6 +59,8 @@ impl<'a> Scan<'a> {
             source,
             accepted_require_spans,
             mock_import_starts: HashSet::new(),
+            aliased_mocks: HashSet::new(),
+            aliased_requires: HashSet::new(),
             accepted_mocks: Vec::new(),
             accepted_requires: Vec::new(),
             rejected: Vec::new(),
@@ -84,11 +91,23 @@ impl Scan<'_> {
         }
     }
 
+    pub(crate) fn record_declarator(&mut self, declarator: &VariableDeclarator<'_>) {
+        aliases::note_declarator(
+            declarator,
+            &mut self.aliased_mocks,
+            &mut self.aliased_requires,
+        );
+    }
+
+    pub(crate) fn record_import_equals(&mut self, declaration: &TSImportEqualsDeclaration<'_>) {
+        if aliases::is_require_equals(declaration) {
+            self.reject(declaration.span.start, "require");
+        }
+    }
+
     pub(crate) fn record_call(&mut self, call: &CallExpression<'_>) {
         if let Some(method) = syntax::mock_method(call) {
-            if let Some(Argument::ImportExpression(import)) = call.arguments.first() {
-                self.mock_import_starts.insert(import.span.start);
-            }
+            self.note_mock_carrier(call);
             if method == "mock" {
                 if let Some(specifier) = syntax::mock_specifier(call) {
                     self.accepted_mocks.push(specifier);
@@ -102,6 +121,26 @@ impl Scan<'_> {
             }
             return;
         }
+        if aliases::is_computed_vi_mock(&call.callee) {
+            self.note_mock_carrier(call);
+            self.reject(call.span.start, "mock");
+            return;
+        }
+        if aliases::is_module_require(&call.callee) {
+            self.reject(call.span.start, "require");
+            return;
+        }
+        if let Some(name) = aliases::callee_name(&call.callee) {
+            if self.aliased_mocks.contains(name) {
+                self.note_mock_carrier(call);
+                self.reject(call.span.start, "mock");
+                return;
+            }
+            if self.aliased_requires.contains(name) {
+                self.reject(call.span.start, "require");
+                return;
+            }
+        }
         if !syntax::is_require(&call.callee) {
             return;
         }
@@ -114,6 +153,12 @@ impl Scan<'_> {
         }
         self.reject(call.span.start, "require");
     }
+
+    fn note_mock_carrier(&mut self, call: &CallExpression<'_>) {
+        if let Some(Argument::ImportExpression(import)) = call.arguments.first() {
+            self.mock_import_starts.insert(import.span.start);
+        }
+    }
 }
 
 impl<'a> Visit<'a> for Scan<'_> {
@@ -125,5 +170,15 @@ impl<'a> Visit<'a> for Scan<'_> {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         self.record_call(call);
         walk::walk_call_expression(self, call);
+    }
+
+    fn visit_variable_declarator(&mut self, declarator: &VariableDeclarator<'a>) {
+        self.record_declarator(declarator);
+        walk::walk_variable_declarator(self, declarator);
+    }
+
+    fn visit_ts_import_equals_declaration(&mut self, declaration: &TSImportEqualsDeclaration<'a>) {
+        self.record_import_equals(declaration);
+        walk::walk_ts_import_equals_declaration(self, declaration);
     }
 }

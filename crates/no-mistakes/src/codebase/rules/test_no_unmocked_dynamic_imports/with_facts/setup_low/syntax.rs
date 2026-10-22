@@ -85,7 +85,7 @@ pub(super) fn literal_arg(argument: &Argument<'_>) -> Option<String> {
     })
 }
 
-fn literal_expr(expression: &Expression<'_>) -> Option<String> {
+pub(super) fn literal_expr(expression: &Expression<'_>) -> Option<String> {
     match expression {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::TemplateLiteral(template) => static_template(template),

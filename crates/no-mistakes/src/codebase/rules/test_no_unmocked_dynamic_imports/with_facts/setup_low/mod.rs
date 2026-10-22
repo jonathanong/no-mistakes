@@ -1,3 +1,4 @@
+mod aliases;
 pub(crate) mod classify;
 mod syntax;
 
