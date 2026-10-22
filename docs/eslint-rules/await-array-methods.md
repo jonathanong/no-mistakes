@@ -44,8 +44,10 @@ alias, so an unknown parameter such as `users` is outside the rule's evidence.
 ## Suppression
 
 ```ts
+const values = [2, 1];
+
 // eslint-disable-next-line no-mistakes/await-array-methods -- compatibility code; no async callback
-await values.forEach(record);
+await values.sort();
 ```
 
 ## Related rules
