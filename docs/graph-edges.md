@@ -675,6 +675,13 @@ The saved
 [`array-forwarded-late-captured-conditional.mts`](../test-cases/codebase-analysis/value-flow-guarded-parameters/fixture/src/array-forwarded-late-captured-conditional.mts)
 control covers `if (flag) invoke(b)`. These origins remain separate from later
 parameter-reassignment generations. See [issue #2467](https://github.com/jonathanong/no-mistakes/issues/2467).
+Conditional execution is still limited: origins can be dropped for
+`if (flag) callback(value)` inside a forwarder, a loop that calls
+`callback(value)` but runs zero times, an early return before `callback(value)`,
+conditional `callback = mutate` with an installed no-op callback, and direct
+`if (flag) mutate(b)`. Skipped or no-op paths leave the original method live;
+its absence from reported candidates is no safety proof. These remaining shapes
+are tracked in [issue #2480](https://github.com/jonathanong/no-mistakes/issues/2480).
 An immutable repository export alias of an external receiver, such as
 `export const receiver = shared`, keeps that external receiver's canonical
 identity through named re-exports. Repeated foreign helper reads of a written
