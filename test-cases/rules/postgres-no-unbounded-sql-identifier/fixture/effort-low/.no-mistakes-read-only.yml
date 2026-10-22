@@ -1,0 +1,8 @@
+effort: low
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorNames: [read]
+      include: [src/namespace-read.ts]

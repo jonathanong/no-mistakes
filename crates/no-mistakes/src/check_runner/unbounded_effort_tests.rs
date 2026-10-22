@@ -79,18 +79,20 @@ fn unbounded_effort_max_is_unchanged_and_decidable_findings_match_low() {
     assert_eq!(default.rules, max.rules);
     assert_eq!(default.advisories, max.advisories);
     let low = run(".no-mistakes-ignore.yml", false);
-    // Max historically reports the shadowed process spelling; that unsupported
-    // low shape is deliberately excluded from the common positive-proof domain.
+    // Compare only the declared common positive-proof domain. Unsupported low
+    // shapes (including shadowed process and composite relation tokens) retain
+    // max's historical behavior without becoming low positive proofs.
     let source = std::fs::read_to_string(root().join("src/query.ts")).unwrap();
-    let shadowed = source
-        .lines()
-        .position(|line| line.contains("unsupported: shadowed process"))
-        .unwrap()
-        + 1;
     let common = max
         .rules
         .iter()
-        .filter(|row| row.line != shadowed)
+        .filter(|row| {
+            row.file == "src/query.ts"
+                && source
+                    .lines()
+                    .nth(row.line - 1)
+                    .is_some_and(|line| line.contains("// violation:"))
+        })
         .cloned()
         .collect::<Vec<_>>();
     assert_eq!(
@@ -197,4 +199,20 @@ fn unbounded_effort_project_scope_prunes_other_sources_before_parse() {
     };
     assert!(report.rules.is_empty());
     assert_eq!(observer.snapshot().work.get("parse.files"), Some(&1));
+}
+
+#[test]
+fn unbounded_effort_loose_member_selection_does_not_select_unrelated_loads() {
+    let report = run(".no-mistakes-loose.yml", false);
+    assert_eq!(report.rules.len(), 1, "{:?}", report.rules);
+    assert_eq!(report.rules[0].file, "src/loose.ts");
+    assert_eq!(report.rules[0].line, 4);
+}
+
+#[test]
+fn unbounded_effort_namespace_members_keep_max_query_only_selection() {
+    let report = run(".no-mistakes-read-only.yml", false);
+    assert_eq!(report.rules, run(".no-mistakes-read-max.yml", false).rules);
+    assert!(report.rules.is_empty(), "{:?}", report.rules);
+    assert!(report.advisories.is_empty());
 }

@@ -42,9 +42,9 @@ call-graph construction, and cross-file provenance for this rule. It reads
 the shared parsed program and semantic binding facts instead.
 
 Low accepts a literal SQL string or untagged template directly at a configured
-imported executor, or through one same-file lexical `const` initialized with
+named imported executor, or through one same-file lexical `const` initialized with
 that syntax. SQL parsing distinguishes relation interpolation from bound values.
-Direct, unshadowed `process.env.KEY` relation inputs remain proven violations;
+Direct `process.env.KEY` relation inputs whose `process` binding is not shadowed remain proven violations;
 a template such as `SELECT * FROM public.users WHERE id = ${id}` stays clear.
 
 Helpers, tags, alias chains, imported SQL values, computed executor selections,
@@ -52,8 +52,8 @@ factory/type executors, and CommonJS loaders are unanalyzable at low.
 The existing configured-module `withTransaction` and `withTransactionOptions`
 imports also imply executor selection at max. Low conservatively reports their
 uses as unknown, including a SQL-free callback, because it does not interpret
-callbacks. Choose max for that form or expose a direct configured executor. Namespace
-executor escapes are also unanalyzable; unrelated named methods stay outside
+callbacks or namespace receiver mutation. Choose max for that form or expose a direct configured executor. Namespace
+executor calls and escapes are also unanalyzable; unrelated named methods stay outside
 the configured target scope. Rewrite SQL at the direct imported call, keep
 relation names literal, and pass external values as bind parameters. For example:
 

@@ -13,12 +13,14 @@ pub(crate) fn collect(
         .iter()
         .map(|profile| Selection::new(profile, module))
         .collect::<Vec<_>>();
-    let mut syntax = Syntax::default();
-    syntax.loose_query = profiles.iter().any(|profile| {
-        profile.import_specifier.is_empty()
-            && profile.executor_names.iter().any(|name| name == "query")
-    });
-    for (profile, selection) in profiles.iter().zip(&selections) {
+    let mut syntax = Syntax {
+        loose_query: profiles.iter().any(|profile| {
+            profile.import_specifier.is_empty()
+                && profile.executor_names.iter().any(|name| name == "query")
+        }),
+        ..Default::default()
+    };
+    for selection in &selections {
         for binding in &module.bindings {
             for reference in &binding.references {
                 let at = (reference.span.start, reference.span.end);
@@ -30,7 +32,7 @@ pub(crate) fn collect(
                         .namespace_targets
                         .entry(at)
                         .or_default()
-                        .extend(profile.executor_names.iter().cloned());
+                        .insert("query".to_string());
                 }
             }
         }
@@ -89,9 +91,8 @@ pub(crate) fn collect(
                 owner.is_some_and(|binding| selected.contains(&binding.id)) && parts.len() == 1;
             let namespace = owner.is_some_and(|binding| namespaces.contains(&binding.id))
                 && parts.len() == 2
-                && profile.executor_names.contains(&parts[1]);
-            // With no module restriction, explicitly configured member names are a
-            // supported selection mode, but ownership is not a positive low proof.
+                && parts[1] == "query";
+            // Broad member selection has no positive receiver ownership proof.
             let loose = profile.import_specifier.is_empty()
                 && parts.len() > 1
                 && parts.last().is_some_and(|name| name == "query")
@@ -101,6 +102,7 @@ pub(crate) fn collect(
             }
             direct.insert(*root);
             let mut value = if gaps
+                || namespace
                 || loose
                 || unsupported
                     .iter()
@@ -155,7 +157,7 @@ pub(crate) fn collect(
                     && syntax
                         .namespace_members
                         .get(&at)
-                        .is_some_and(|name| !profile.executor_names.contains(name))
+                        .is_some_and(|name| name != "query")
                 {
                     continue;
                 }
@@ -171,8 +173,11 @@ pub(crate) fn collect(
         }
         if profile.selects_executors() {
             for load in &module.loads {
-                if (profile.import_specifier.is_empty()
-                    || load.specifier == profile.import_specifier)
+                if !profile.import_specifier.is_empty()
+                    && crate::codebase::postgres::embedded::scoped_bindings::from_configured_module(
+                        &load.specifier,
+                        &profile.import_specifier,
+                    )
                     && matches!(load.kind.as_str(), "require" | "dynamicImport")
                 {
                     let at = (load.span.start, load.span.end);

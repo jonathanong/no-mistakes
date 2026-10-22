@@ -46,7 +46,9 @@ pub(crate) fn collect_invalid(
                                     .any(|target| target == name.as_str())
                         }
                         ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => {
-                            !profile.import_specifier.is_empty() && !import.import_kind.is_type()
+                            !profile.import_specifier.is_empty()
+                                && profile.executor_names.iter().any(|name| name == "query")
+                                && !import.import_kind.is_type()
                         }
                         _ => false,
                     });

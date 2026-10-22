@@ -161,3 +161,6 @@ impl Visitor for Relations {
         ControlFlow::Continue(())
     }
 }
+
+#[cfg(test)]
+mod tests;

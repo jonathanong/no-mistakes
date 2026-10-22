@@ -64,51 +64,8 @@ fn chain(expression: &Expression<'_>) -> Option<(Span, Vec<String>)> {
         _ => None,
     }
 }
-fn input(expression: &Expression<'_>, env: &mut FxHashMap<String, Span>) -> Input {
-    match unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(value) => Input::Sql {
-            text: value.value.to_string(),
-            holes: Vec::new(),
-        },
-        Expression::TemplateLiteral(value) => {
-            let mut text = String::new();
-            let mut holes = Vec::new();
-            let mut prefix = "no_mistakes_low_hole_".to_string();
-            while value.quasis.iter().any(|part| {
-                part.value
-                    .cooked
-                    .as_ref()
-                    .is_some_and(|text| text.contains(&prefix))
-            }) {
-                prefix.push('_');
-            }
-            for (index, quasi) in value.quasis.iter().enumerate() {
-                let Some(cooked) = &quasi.value.cooked else {
-                    return Input::Unknown;
-                };
-                text.push_str(cooked);
-                if let Some(expression) = value.expressions.get(index) {
-                    // Placeholder identity preserves which SQL position owns each input.
-                    let placeholder = format!("{prefix}{index}");
-                    text.push_str(&placeholder);
-                    let source = chain(expression).and_then(|(root, parts)| {
-                        (parts.len() == 3 && parts[0] == "process" && parts[1] == "env").then(
-                            || {
-                                let key = format!("process.env.{}", parts[2]);
-                                env.insert(format!("{key}@{}", root.0), root);
-                                format!("{key}@{}", root.0)
-                            },
-                        )
-                    });
-                    holes.push((placeholder, source));
-                }
-            }
-            Input::Sql { text, holes }
-        }
-        Expression::Identifier(id) => Input::Reference(span(id.span)),
-        _ => Input::Unknown,
-    }
-}
+mod input;
+use input::input;
 impl<'a> Visit<'a> for Syntax {
     fn visit_static_member_expression(&mut self, value: &oxc_ast::ast::StaticMemberExpression<'a>) {
         if let Some((root, parts)) = chain(&value.object) {
@@ -148,14 +105,21 @@ impl<'a> Visit<'a> for Syntax {
         if selected {
             self.calls.push(Call {
                 span: span(value.span),
+                input: if callee
+                    .as_ref()
+                    .is_some_and(|(root, parts)| parts.len() == 1 && self.targets.contains(root))
+                {
+                    value
+                        .arguments
+                        .first()
+                        .and_then(|arg| arg.as_expression())
+                        .map_or(Input::Unknown, |value| {
+                            input(value, &mut self.env_references)
+                        })
+                } else {
+                    Input::Unknown
+                },
                 callee,
-                input: value
-                    .arguments
-                    .first()
-                    .and_then(|arg| arg.as_expression())
-                    .map_or(Input::Unknown, |value| {
-                        input(value, &mut self.env_references)
-                    }),
             });
         }
         walk::walk_call_expression(self, value);
@@ -194,3 +158,6 @@ mod invalid;
 pub(crate) use invalid::collect_invalid;
 
 pub(crate) mod plan;
+
+#[cfg(test)]
+mod tests;

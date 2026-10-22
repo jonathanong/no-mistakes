@@ -23,6 +23,7 @@ impl Selection {
             }
             for binding in &import.bindings {
                 if !profile.import_specifier.is_empty()
+                    && profile.executor_names.iter().any(|name| name == "query")
                     && binding.kind == "namespace"
                     && !binding.type_only
                 {
