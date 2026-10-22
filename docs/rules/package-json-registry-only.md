@@ -31,8 +31,7 @@ rules:
       lockfile: pnpm-lock.yaml
 ```
 
-`scopes: [packages]` limits the check to manifests under `packages/`. A
-configured `lockfile` that does not exist is skipped.
+`scopes: [packages]` limits the check to manifests under `packages/`.
 
 ## Valid example
 

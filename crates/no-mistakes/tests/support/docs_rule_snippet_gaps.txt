@@ -1,14 +1,11 @@
 # Known check-rule doc execution gaps tracked by #2416.
 # Remove a prefix only after that snippet executes as documented.
 forbidden-dependencies.md: Counterexample[0] expected 
-forbidden-workspace-closure.md: Valid example[0] expected 
 no-mistakes-config.md: Counterexample[0] expected 
 package-json-nested-workspace-coverage.md: Counterexample[0] expected 
-package-json-workspace-coverage.md: Counterexample[0] expected 
 playwright-coverage.md: Valid example[0] run error:
 playwright-coverage.md: Counterexample[0] run error:
 playwright-prefer-test-id-locators.md: Counterexample[0] expected 
-pnpm-overrides-ban.md: Counterexample[0] expected 
 pnpm-release-age-policy.md: Counterexample[0] expected 
 postgres-bounded-statements.md: Valid example[0] run error:
 postgres-bounded-statements.md: Counterexample[0] run error:

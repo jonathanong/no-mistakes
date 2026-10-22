@@ -70,9 +70,8 @@ roots:
   - playwright: true
 ```
 
-`options.excludeRoots`
-removes matching source files from the initial root collection before
-call-graph traversal. Patterns are relative to the repository root and accept
+`options.excludeRoots` removes matching source files from the initial root
+collection before call-graph traversal. Patterns are relative to the repository root and accept
 one glob or a list, and match the whole repository-relative path (`*` also
 crosses `/`), so excluding a directory needs `dir/**` and
 `src/mocks/mock-only` does not exclude `src/mocks/mock-only.mock.test.mts`. It
@@ -185,6 +184,7 @@ Counterexample: configuring a root without a target (and without
 ## Counterexample
 
 ```ts
+// src/timers.ts
 setTimeout(() => {}, 0);
 ```
 

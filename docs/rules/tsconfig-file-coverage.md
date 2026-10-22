@@ -97,7 +97,9 @@ be repository-relative and reasons non-empty.
 ```json
 // tsconfig.json
 {"include":["src/**/*.ts"]}
+```
 
+```ts
 // src/index.ts
 export const ok = 1;
 ```
@@ -107,7 +109,9 @@ export const ok = 1;
 ```json
 // tsconfig.json
 {"include":["src"]}
+```
 
+```ts
 // orphan.ts
 export const orphan = 1;
 ```
