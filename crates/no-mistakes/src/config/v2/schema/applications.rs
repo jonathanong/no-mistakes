@@ -99,7 +99,7 @@ impl NoMistakesConfig {
             .collect()
     }
 
-    fn rule_has_effective_target(&self, rule: &RuleDef) -> bool {
+    pub(crate) fn rule_has_effective_target(&self, rule: &RuleDef) -> bool {
         rule.scope == Some(RuleScope::Repository)
             || rule
                 .projects

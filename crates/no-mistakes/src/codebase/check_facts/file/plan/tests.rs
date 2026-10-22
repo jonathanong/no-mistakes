@@ -66,7 +66,10 @@ fn ts_extract_plan_mirrors_collected_ts_plan() {
         ..CheckFactPlan::default()
     };
 
-    assert_eq!(ts_extract_plan(&plan, path, None), plan.collected_ts_plan());
+    assert_eq!(
+        ts_extract_plan(Path::new("/repo"), &plan, path, None),
+        plan.collected_ts_plan()
+    );
 }
 
 #[test]
@@ -156,7 +159,7 @@ fn playwright_test_files_request_shared_import_facts() {
         demands_text_imports: true,
     });
 
-    let ts_plan = ts_extract_plan(&plan, &file, Some(&playwright));
+    let ts_plan = ts_extract_plan(Path::new("/repo"), &plan, &file, Some(&playwright));
 
     assert!(ts_plan.imports);
     assert!(ts_plan.function_calls);

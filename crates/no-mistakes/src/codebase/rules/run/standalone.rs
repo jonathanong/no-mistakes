@@ -57,7 +57,7 @@ pub(super) fn run_check(
         .transpose()?;
 
     let mut fact_plan = standalone_fact_plan(&config);
-    crate::codebase::postgres::configure_prepared_postgres_plan(&config, &mut fact_plan)?;
+    crate::codebase::postgres::configure_prepared_postgres_plan(root, &config, &mut fact_plan)?;
     crate::codebase::postgres::assign_prepared_embedded_sql_options(&config, &mut fact_plan)?;
     fact_plan.embedded_sql = !fact_plan.embedded_sql_options.is_empty();
     fact_plan.postgres_schema_catalog_paths =

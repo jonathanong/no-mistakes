@@ -37,6 +37,9 @@ struct Call {
 }
 #[derive(Default)]
 struct Syntax {
+    targets: FxHashSet<Span>,
+    namespace_targets: FxHashMap<Span, FxHashSet<String>>,
+    loose_query: bool,
     calls: Vec<Call>,
     constants: FxHashMap<Span, Input>,
     env_references: FxHashMap<String, Span>,
@@ -109,7 +112,7 @@ fn input(expression: &Expression<'_>, env: &mut FxHashMap<String, Span>) -> Inpu
 impl<'a> Visit<'a> for Syntax {
     fn visit_static_member_expression(&mut self, value: &oxc_ast::ast::StaticMemberExpression<'a>) {
         if let Some((root, parts)) = chain(&value.object) {
-            if parts.len() == 1 {
+            if parts.len() == 1 && self.namespace_targets.contains_key(&root) {
                 self.namespace_members
                     .insert(root, value.property.name.to_string());
             }
@@ -121,7 +124,7 @@ impl<'a> Visit<'a> for Syntax {
         value: &oxc_ast::ast::ComputedMemberExpression<'a>,
     ) {
         if let Some((root, parts)) = chain(&value.object) {
-            if parts.len() == 1 {
+            if parts.len() == 1 && self.namespace_targets.contains_key(&root) {
                 if let Expression::StringLiteral(key) = unwrap_ts_wrappers(&value.expression) {
                     self.namespace_members.insert(root, key.value.to_string());
                 }
@@ -130,28 +133,51 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_computed_member_expression(self, value);
     }
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
-        self.calls.push(Call {
-            span: span(value.span),
-            callee: chain(&value.callee),
-            input: value
-                .arguments
-                .first()
-                .and_then(|arg| arg.as_expression())
-                .map_or(Input::Unknown, |value| {
-                    input(value, &mut self.env_references)
-                }),
+        let callee = chain(&value.callee);
+        let selected = callee.as_ref().is_some_and(|(root, parts)| {
+            (parts.len() == 1 && self.targets.contains(root))
+                || (parts.len() == 2
+                    && self
+                        .namespace_targets
+                        .get(root)
+                        .is_some_and(|names| names.contains(&parts[1])))
+                || (self.loose_query
+                    && parts.len() > 1
+                    && parts.last().is_some_and(|name| name == "query"))
         });
+        if selected {
+            self.calls.push(Call {
+                span: span(value.span),
+                callee,
+                input: value
+                    .arguments
+                    .first()
+                    .and_then(|arg| arg.as_expression())
+                    .map_or(Input::Unknown, |value| {
+                        input(value, &mut self.env_references)
+                    }),
+            });
+        }
         walk::walk_call_expression(self, value);
     }
+}
+struct Constants<'s> {
+    wanted: &'s FxHashSet<Span>,
+    syntax: &'s mut Syntax,
+}
+impl<'a> Visit<'a> for Constants<'_> {
     fn visit_variable_declaration(&mut self, value: &VariableDeclaration<'a>) {
         if value.kind.is_const() {
             for declaration in &value.declarations {
                 if let BindingPattern::BindingIdentifier(binding) = &declaration.id {
+                    if !self.wanted.contains(&span(binding.span)) {
+                        continue;
+                    }
                     let value = declaration.init.as_ref().map_or(Input::Unknown, |value| {
-                        input(value, &mut self.env_references)
+                        input(value, &mut self.syntax.env_references)
                     });
                     if matches!(value, Input::Sql { .. }) {
-                        self.constants.insert(span(binding.span), value);
+                        self.syntax.constants.insert(span(binding.span), value);
                     }
                 }
             }
@@ -159,5 +185,12 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_variable_declaration(self, value);
     }
 }
+mod selection;
+use selection::Selection;
 mod project;
 pub(crate) use project::collect;
+
+mod invalid;
+pub(crate) use invalid::collect_invalid;
+
+pub(crate) mod plan;

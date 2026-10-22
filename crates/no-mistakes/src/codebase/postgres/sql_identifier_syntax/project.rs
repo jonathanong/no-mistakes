@@ -9,7 +9,32 @@ pub(crate) fn collect(
     let Some(module) = ts.module_bindings.as_deref() else {
         return FileFacts::default();
     };
+    let selections = profiles
+        .iter()
+        .map(|profile| Selection::new(profile, module))
+        .collect::<Vec<_>>();
     let mut syntax = Syntax::default();
+    syntax.loose_query = profiles.iter().any(|profile| {
+        profile.import_specifier.is_empty()
+            && profile.executor_names.iter().any(|name| name == "query")
+    });
+    for (profile, selection) in profiles.iter().zip(&selections) {
+        for binding in &module.bindings {
+            for reference in &binding.references {
+                let at = (reference.span.start, reference.span.end);
+                if selection.selected.contains(&binding.id) {
+                    syntax.targets.insert(at);
+                }
+                if selection.namespaces.contains(&binding.id) {
+                    syntax
+                        .namespace_targets
+                        .entry(at)
+                        .or_default()
+                        .extend(profile.executor_names.iter().cloned());
+                }
+            }
+        }
+    }
     syntax.visit_program(program);
     let mut owners = FxHashMap::default();
     for binding in &module.bindings {
@@ -17,53 +42,42 @@ pub(crate) fn collect(
             owners.insert((usage.span.start, usage.span.end), binding);
         }
     }
+    let wanted = syntax
+        .calls
+        .iter()
+        .filter_map(|call| match &call.input {
+            Input::Reference(at) => owners
+                .get(at)
+                .map(|binding| (binding.span.start, binding.span.end)),
+            _ => None,
+        })
+        .collect::<FxHashSet<_>>();
+    if !wanted.is_empty() {
+        Constants {
+            wanted: &wanted,
+            syntax: &mut syntax,
+        }
+        .visit_program(program);
+    }
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("postgres.sql_identifier.syntax_files", 1);
+        observer.increment(
+            "postgres.sql_identifier.syntax_inputs",
+            (syntax.calls.len() + syntax.constants.len()) as u64,
+        );
+    }
     let gaps = !module.diagnostics.is_empty();
     let mut output = FileFacts::default();
-    for profile in profiles {
+    for (profile, selection) in profiles.iter().zip(selections) {
         if !profile.selects_executors() {
             output.profiles.push((profile.clone(), Vec::new()));
             continue;
         }
-        let mut selected = FxHashMap::default();
-        let mut namespaces = FxHashSet::default();
-        let mut unsupported = FxHashSet::default();
-        for import in &module.imports {
-            let exact =
-                profile.import_specifier.is_empty() || import.specifier == profile.import_specifier;
-            let scoped = exact
-                || import
-                    .specifier
-                    .starts_with(&format!("{}/", profile.import_specifier));
-            if !scoped {
-                continue;
-            }
-            for binding in &import.bindings {
-                if !profile.import_specifier.is_empty()
-                    && binding.kind == "namespace"
-                    && !binding.type_only
-                {
-                    namespaces.insert(binding.binding_id);
-                }
-                if exact
-                    && !binding.type_only
-                    && binding.kind == "named"
-                    && profile.executor_names.contains(&binding.imported)
-                {
-                    selected.insert(binding.binding_id, false);
-                }
-                if !profile.import_specifier.is_empty()
-                    && ["withTransaction", "withTransactionOptions"]
-                        .contains(&binding.imported.as_str())
-                {
-                    unsupported.insert(binding.binding_id);
-                }
-                if profile.executor_factory_names.contains(&binding.imported)
-                    || profile.executor_type_names.contains(&binding.imported)
-                {
-                    unsupported.insert(binding.binding_id);
-                }
-            }
-        }
+        let Selection {
+            selected,
+            namespaces,
+            unsupported,
+        } = selection;
         let mut calls = Vec::new();
         let mut direct = FxHashSet::default();
         for call in &syntax.calls {
@@ -72,7 +86,7 @@ pub(crate) fn collect(
             };
             let owner = owners.get(root).copied();
             let named =
-                owner.is_some_and(|binding| selected.contains_key(&binding.id)) && parts.len() == 1;
+                owner.is_some_and(|binding| selected.contains(&binding.id)) && parts.len() == 1;
             let namespace = owner.is_some_and(|binding| namespaces.contains(&binding.id))
                 && parts.len() == 2
                 && profile.executor_names.contains(&parts[1]);
@@ -80,9 +94,8 @@ pub(crate) fn collect(
             // supported selection mode, but ownership is not a positive low proof.
             let loose = profile.import_specifier.is_empty()
                 && parts.len() > 1
-                && parts
-                    .last()
-                    .is_some_and(|name| profile.executor_names.contains(name));
+                && parts.last().is_some_and(|name| name == "query")
+                && profile.executor_names.iter().any(|name| name == "query");
             if !(named || namespace || loose) {
                 continue;
             }
@@ -130,7 +143,7 @@ pub(crate) fn collect(
         // Reporting the imported reference catches aliases and factories without
         // interpreting their result or silently losing their downstream sinks.
         for binding in &module.bindings {
-            if !(selected.contains_key(&binding.id)
+            if !(selected.contains(&binding.id)
                 || unsupported.contains(&binding.id)
                 || namespaces.contains(&binding.id))
             {

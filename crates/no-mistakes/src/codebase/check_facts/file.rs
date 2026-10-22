@@ -9,6 +9,7 @@ mod prepared_program;
 pub(crate) mod production_imports;
 mod program;
 mod program_walk;
+mod sql_identifier;
 mod variants;
 
 use plan::{requires_parse, should_store_source, ts_source};
@@ -87,14 +88,14 @@ fn collect_file_facts_from_source(
             ..CheckFileFacts::default()
         });
     }
-    if plan.raw_source && !requires_parse(plan, path, playwright) {
+    if plan.raw_source && !requires_parse(root, plan, path, playwright) {
         return Some(CheckFileFacts {
             ts: Arc::new(ts_source(Some(Arc::clone(&source)))),
             source: Some(Arc::clone(&source)),
             ..CheckFileFacts::default()
         });
     }
-    if !requires_parse(plan, path, playwright) {
+    if !requires_parse(root, plan, path, playwright) {
         return Some(CheckFileFacts::default());
     }
     let legacy_symbols = plan
@@ -133,6 +134,13 @@ fn collect_file_facts_from_source(
             let embedded_sql =
                 program::prepared_embedded_sql(root, path, parsed_source, program, plan);
             return CheckFileFacts {
+                sql_identifier_syntax: sql_identifier::invalid(
+                    root,
+                    path,
+                    parsed_source,
+                    program,
+                    plan,
+                ),
                 ts: Arc::new(ts),
                 source: stored_source,
                 symbols,

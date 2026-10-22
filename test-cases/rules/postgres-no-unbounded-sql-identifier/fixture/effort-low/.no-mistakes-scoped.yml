@@ -1,0 +1,9 @@
+effort: low
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorFactoryNames: [createExecutor]
+      executorTypeNames: [Executor]
+      include: [src/scoped.ts, src/loaders.ts]

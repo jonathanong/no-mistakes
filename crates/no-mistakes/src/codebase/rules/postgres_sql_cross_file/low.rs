@@ -2,14 +2,13 @@
 use super::{compile, finding, Options};
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::{
-    parse_postgres_sql,
-    sql_identifier_syntax::{Input, SqlCall},
-    SqlObligationVerdict, SqlVerdictStatus,
+    parse_postgres_sql, sql_identifier_syntax::Input, SqlObligationVerdict, SqlVerdictStatus,
 };
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
+use rayon::prelude::*;
 use sqlparser::ast::{ObjectName, ObjectNamePart, Visit, Visitor};
 use std::{ops::ControlFlow, path::Path};
 
@@ -28,14 +27,15 @@ pub(crate) fn check(
     let filter = super::super::path_filter::RulePathFilter::new(root, config, application)?;
     let policy = config.effective_rule_analysis(application)?;
     let context = facts.for_sql_application(index, application.name.as_deref());
-    let mut findings = Vec::new();
-    for path in facts.files() {
+    let observer = crate::diagnostics::current();
+    let batches = facts.files().par_iter().map(|path| -> Result<Vec<RuleFinding>> {
+        let mut findings = Vec::new();
         let rel = relative_slash_path(root, path);
         if !options.includes(&rel) || !filter.is_match(path) {
-            continue;
+            return Ok(findings);
         }
         let Some(file) = facts.ts.get(path) else {
-            continue;
+            anyhow::bail!("{rule_id}: prepared facts are missing for {rel}");
         };
         let calls = file
             .sql_identifier_syntax
@@ -43,23 +43,19 @@ pub(crate) fn check(
             .iter()
             .find(|(profile, _)| *profile == options.embedded)
             .map(|(_, calls)| calls.as_slice());
-        let invalid;
         let calls = if let Some(calls) = calls {
             calls
         } else if file.parse_error.is_some() || file.ts.parse_error.is_some() {
-            invalid = [SqlCall {
-                span: (0, 0),
-                line: 1,
-                input: Input::Unknown,
-            }];
-            &invalid
+            // Parser diagnostics are authoritative; a malformed unrelated file
+            // supplies no proof that a configured SQL executor exists.
+            return Ok(findings);
         } else {
             anyhow::bail!(
                 "{rule_id}: prepared low-effort SQL syntax projection is missing for {rel}"
             );
         };
         for call in calls {
-            super::count("postgres.sql_identifier.low.calls", 1);
+            if let Some(observer) = &observer { observer.increment("postgres.sql_identifier.low.calls", 1); }
             let (sources, unknown) = classify(&call.input, rule_id);
             for source in &sources {
                 findings.push(finding(root, rule_id, path, call.line, format!("Unbounded identifier source `{source}` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed."), Some(source.clone()), Some(source.clone())));
@@ -104,7 +100,13 @@ pub(crate) fn check(
                 });
             }
         }
+        Ok(findings)
+    }).collect::<Vec<_>>();
+    let mut findings = Vec::new();
+    for batch in batches {
+        findings.extend(batch?);
     }
+    super::super::sort_findings(&mut findings);
     Ok(findings)
 }
 fn classify(input: &Input, rule_id: &str) -> (Vec<String>, bool) {

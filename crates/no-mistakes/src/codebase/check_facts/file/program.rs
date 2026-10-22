@@ -112,16 +112,8 @@ pub(crate) fn collect_file_facts_from_program(
                 .flat_map(|(_, file)| file.call_spans.iter().copied()),
         ))
     });
-    let sql_identifier_syntax = if plan.sql_identifier_profiles.is_empty() {
-        Default::default()
-    } else {
-        crate::codebase::postgres::sql_identifier_syntax::collect(
-            program,
-            &ts,
-            source,
-            &plan.sql_identifier_profiles,
-        )
-    };
+    let sql_identifier_syntax =
+        super::sql_identifier::collect(root, path, source, program, &ts, plan);
     let symbols = ts.symbols.clone();
     CheckFileFacts {
         ts: ts.into(),

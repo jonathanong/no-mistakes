@@ -17,28 +17,42 @@ pub fn assign_prepared_embedded_sql_options(
 
 /// Declare SQL projections before the shared request fact pass.
 pub fn configure_prepared_postgres_plan(
+    root: &Path,
     config: &NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
     plan.record_general_sql_locations();
-    for rule in config.rule_applications("postgres-no-unbounded-sql-identifier") {
+    for (index, rule) in config.rules.iter().enumerate().filter(|(_, rule)| {
+        rule.enabled
+            && rule.rule == "postgres-no-unbounded-sql-identifier"
+            && config.rule_has_effective_target(rule)
+    }) {
         if config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low {
             let options: EmbeddedSqlRuleOptions = rule.try_rule_options()?;
-            plan.sql_identifier_profiles.push(
-                EmbeddedSqlOptions::configured(
-                    options.import_specifier.as_deref().unwrap_or_default(),
-                    &options.executor_names,
-                )
-                .with_scoped_executors(
-                    &options.executor_factory_names,
-                    &options.executor_type_names,
-                )
-                .with_trusted_sql_tags(&options.trusted_sql_tags),
-            );
+            let profile = EmbeddedSqlOptions::configured(
+                options.import_specifier.as_deref().unwrap_or_default(),
+                &options.executor_names,
+            )
+            .with_scoped_executors(
+                &options.executor_factory_names,
+                &options.executor_type_names,
+            )
+            .with_trusted_sql_tags(&options.trusted_sql_tags);
+            let scan =
+                crate::codebase::postgres::sql_identifier_syntax::plan::SqlIdentifierScan::new(
+                    root,
+                    config,
+                    rule,
+                    index,
+                    &options.include,
+                    &options.exclude,
+                )?;
+            plan.sql_identifier_profiles
+                .entry(profile)
+                .or_default()
+                .push(scan);
         }
     }
-    plan.sql_identifier_profiles.sort();
-    plan.sql_identifier_profiles.dedup();
     let (_, annotation_options, _) = super::configured_embedded_sql_options_with_annotation(
         config,
         &["postgres-require-query-annotation"],
@@ -125,7 +139,14 @@ pub fn configure_prepared_postgres_plan(
         "postgres-no-unbounded-sql-identifier",
     ]
     .iter()
-    .any(|id| !config.rule_applications(id).is_empty());
+    .any(|id| {
+        config.rule_applications(id).iter().any(|rule| {
+            config.effective_rule_analysis(rule).map_or(true, |policy| {
+                policy.effort != crate::config::v2::Effort::Low
+            })
+        })
+    });
+    plan.raw_source |= !plan.sql_identifier_profiles.is_empty();
     Ok(())
 }
 

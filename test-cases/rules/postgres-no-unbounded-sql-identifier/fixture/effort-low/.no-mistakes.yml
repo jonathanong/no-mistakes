@@ -1,0 +1,8 @@
+effort: low
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      include: ["src/**/*.ts"]
+      exclude: ["src/excluded.ts"]

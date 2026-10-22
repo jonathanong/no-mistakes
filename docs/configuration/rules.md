@@ -115,3 +115,5 @@ parameters (`ctx.db.query`), and typed array elements (`clients[0].query`) remai
 unanalyzable when executor ownership is unresolved. They follow the selected
 `unanalyzable` policy, including at low effort. Use a supported explicitly typed
 parameter to make the receiver eligible for SQL analysis.
+
+`postgres-no-unbounded-sql-identifier` also supports [low effort](../rules/postgres-no-unbounded-sql-identifier.md#effort): direct SQL literals/templates or one lexical const, with unsupported syntax routed through the shared unanalyzable policy. No partner rule is required.

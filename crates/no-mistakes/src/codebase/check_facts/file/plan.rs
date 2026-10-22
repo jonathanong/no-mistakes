@@ -12,11 +12,13 @@ pub(super) fn should_store_source(plan: &CheckFactPlan) -> bool {
 /// Graph/check TS extract demand for one file. Playwright test files also need
 /// import facts even when the shared plan did not request them.
 pub(super) fn ts_extract_plan(
+    root: &Path,
     plan: &CheckFactPlan,
     path: &Path,
     playwright: Option<&PlaywrightFactPlan>,
 ) -> TsFactPlan {
     let mut ts_plan = plan.collected_ts_plan();
+    ts_plan.module_bindings |= super::sql_identifier::selected(root, path, plan);
     ts_plan.imports |= plan.production_import_paths.contains(path);
     if playwright.is_some_and(|plan| plan.file(path).is_some()) {
         ts_plan.include(TsFactPlan::imports());
@@ -65,6 +67,7 @@ pub(super) fn ts_source(source: Option<std::sync::Arc<str>>) -> TsFileFacts {
 }
 
 pub(super) fn requires_parse(
+    root: &Path,
     plan: &CheckFactPlan,
     path: &Path,
     playwright: Option<&PlaywrightFactPlan>,
@@ -73,7 +76,7 @@ pub(super) fn requires_parse(
         || plan.production_import_paths.contains(path)
         || plan.query_annotation
         || plan.query_annotation_heads
-        || !plan.sql_identifier_profiles.is_empty()
+        || super::sql_identifier::selected(root, path, plan)
         || plan.symbols
         || plan.react
         || plan.react_usages

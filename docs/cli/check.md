@@ -110,3 +110,5 @@ per-phase allocation total. Unsupported platforms omit the line. Basic timings
 and diagnostics-disabled runs do not sample memory. Individual configured
 codebase rules emit `rules.<id>` spans; filesystem rules retain
 `filesystem_rule.<id>`. Parallel span durations overlap.
+
+`postgres-no-unbounded-sql-identifier` supports [`--effort low`](../rules/postgres-no-unbounded-sql-identifier.md#effort) with direct SQL syntax proofs and no call graph or cross-file provenance work. Its unknown inputs use `unanalyzable: report | advise | ignore`; proven environment relation inputs remain failures.
