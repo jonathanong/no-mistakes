@@ -87,8 +87,10 @@ A computed identifier key (`const { [key]: q } = db`) or a property default
 (`const { query: q = fallback } = db`) is not a static executor alias.
 `function run({ query: q } = db) { q(sql); }` is a parameter-default
 destructure, so its default does not prove the caller supplied that executor.
-A nested parameter named `query` shadows the configured import. Direct local
-callback bodies are also scanned for executor calls; that existing check does
+A nested parameter named `query` shadows the configured import.
+An executor reference passed directly to `map` is checked, including `db.read`.
+Passing `query.call` or `query.apply` as an unbound callback does not establish
+an executor invocation. Direct local callback bodies are also scanned for executor calls; that existing check does
 not need to recover SQL arguments through the callback's parameters.
 
 

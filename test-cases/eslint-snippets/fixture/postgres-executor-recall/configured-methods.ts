@@ -4,3 +4,5 @@ db.call("BEGIN");
 db["apply"]("COMMIT");
 const { call: execute } = db;
 execute("ROLLBACK");
+Promise.all(items.map(db.call));
+Promise.all(items.map(db[`apply`]));

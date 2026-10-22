@@ -147,6 +147,9 @@ function executorCallResolver(bindings, context, options, propertyName, scopedEx
     }
     return { name: inner.name, arguments: mapped };
   }
+  // A callback passed as a value retains executor identity, not an invocation's
+  // Function.prototype.call/apply receiver or argument forwarding semantics.
+  resolve.reference = (expression) => Boolean(target(expression)?.name);
   return resolve;
 }
 

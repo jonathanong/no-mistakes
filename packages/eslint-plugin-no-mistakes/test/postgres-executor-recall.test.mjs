@@ -38,6 +38,12 @@ describe("PostgreSQL same-file executor calls", () => {
         executorNames: ["call", "apply"],
       }),
     ).toHaveLength(3);
+    expect(
+      check("configured-methods", "unbounded-query-fanout", {
+        ...DB,
+        executorNames: ["call", "apply"],
+      }),
+    ).toHaveLength(2);
   });
   it("preserves scoped factory/type executors and their lexical boundaries", () => {
     expect(

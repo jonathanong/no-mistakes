@@ -15,3 +15,7 @@ Promise.all(items.map(() => read.apply(null, args)));
 Promise.all(items.map(() => read.call(...args)));
 Promise.all(items.map(other.read));
 Promise.all(items.map(db[key]));
+// Passing Function.prototype.call loses its receiver; it is not invoking read.call.
+Promise.all(items.map(read.call));
+Promise.all(items.map(read["call"]));
+Promise.all(items.map(read.apply));
