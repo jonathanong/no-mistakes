@@ -84,5 +84,69 @@ describe("playwright same-file recall", () => {
       ).length,
       3,
     );
+    assert.deepEqual(
+      messages(
+        fixture("playwright-prefer-get-by-test-id/branches.jsx"),
+        "playwright-prefer-get-by-test-id",
+      ),
+      ["prefer", "prefer", "prefer"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("playwright-no-hoisted-unique-token/branches.spec.js"),
+        "playwright-no-hoisted-unique-token",
+        { tokenFactories: ["randomSuffix"] },
+        "playwright/branches.spec.js",
+      ),
+      ["hoisted"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("playwright-no-raw-scroll-pagination/branches.spec.js"),
+        "playwright-no-raw-scroll-pagination",
+        undefined,
+        "e2e/branches.spec.js",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("playwright-assertion-timeout-cap/branches.spec.ts"),
+        "playwright-assertion-timeout-cap",
+        undefined,
+        "e2e/branches.spec.ts",
+      ),
+      ["timeout"],
+    );
+    assert.equal(
+      messages(
+        fixture("playwright-require-interactive-test-id/branches.jsx"),
+        "playwright-require-interactive-test-id",
+        { interactiveComponents: ["Button", "Card"] },
+      ).length,
+      10,
+    );
+    assert.deepEqual(
+      messages(
+        fixture("playwright-test-timeout-cap/binding-branches.ts"),
+        "playwright-test-timeout-cap",
+        undefined,
+        "e2e/binding-branches.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(fixture("playwright-literals/branches.jsx"), "playwright-literals"),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("playwright-selector-priority/branches.spec.js"),
+        "playwright-selector-priority",
+        undefined,
+        "e2e/branches.spec.js",
+      ),
+      ["semantic"],
+    );
   });
 });

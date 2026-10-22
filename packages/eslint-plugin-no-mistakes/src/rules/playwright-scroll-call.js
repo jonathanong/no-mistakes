@@ -11,7 +11,6 @@ function unbound(node, context) {
 
 function globalScrollInit(declarator, context) {
   const init = declarator.init;
-  if (!init) return false;
   if (init.type === "Identifier" && RAW_SCROLL_NAMES.has(init.name)) return unbound(init, context);
   let object = init;
   while (object?.type === "ChainExpression") object = object.expression;
@@ -46,7 +45,6 @@ function isRawScrollCall(node, context) {
     if (def.type !== "Variable" || def.parent?.kind !== "const") return false;
     return globalScrollInit(def.node, context);
   }
-  if (callee?.type !== "MemberExpression") return false;
   const object =
     callee.object?.type === "ChainExpression" ? callee.object.expression : callee.object;
   return object?.type === "Identifier" && object.name === "window" && unbound(object, context);

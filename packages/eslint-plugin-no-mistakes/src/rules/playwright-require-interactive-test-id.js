@@ -3,13 +3,18 @@
 const { ruleSuppression } = require("../rule-suppression");
 const {
   attributeName,
-  INTERACTIVE_ELEMENTS,
   isSelectorAttribute,
   options,
   rule,
   selectorAttributes,
-  selectorLiteral,
 } = require("../helpers");
+const {
+  isInteractiveElement,
+  jsxCandidateNames,
+  mappedImport,
+  rememberAlias,
+  rememberImport,
+} = require("./playwright-interactive-names");
 
 module.exports = rule(
   {
@@ -35,29 +40,18 @@ module.exports = rule(
     const suppressed = ruleSuppression(context, "playwright-require-interactive-test-id");
     return {
       ImportDeclaration(node) {
-        for (const specifier of node.specifiers) {
-          if (specifier.type !== "ImportSpecifier" || !specifier.local?.name) continue;
-          const imported =
-            specifier.imported?.type === "Identifier"
-              ? specifier.imported.name
-              : specifier.imported?.value;
-          if (typeof imported === "string") importedNames.set(specifier.local.name, imported);
-        }
+        for (const specifier of node.specifiers) rememberImport(specifier, importedNames);
       },
       VariableDeclarator(node) {
-        if (node.parent?.kind !== "const") return;
-        if (node.id?.type !== "Identifier" || node.init?.type !== "Identifier") return;
-        const imported = importedNames.get(node.init.name);
-        if (!imported || importedNames.has(node.id.name)) return;
-        const source = variableNamed(node.init.name, node.init, context);
-        if (source?.defs?.length === 1 && source.defs[0].type === "ImportBinding") {
-          importedNames.set(node.id.name, imported);
-        }
+        rememberAlias(node, importedNames, context);
       },
       JSXOpeningElement(node) {
         const elementNames = jsxCandidateNames(node.name).flatMap((name) => {
           const imported = mappedImport(name, node, context, importedNames);
-          return imported && imported !== name ? [name, imported] : [name];
+          if (imported && imported !== name) {
+            return [name, imported];
+          }
+          return [name];
         });
         const hasSelector = node.attributes.some((attr) =>
           isSelectorAttribute(attributeName(attr), attrs),
@@ -68,110 +62,18 @@ module.exports = rule(
         ) {
           return;
         }
-        if (suppressed(node)) return;
+        const hidden = suppressed(node);
+        if (hidden) {
+          return;
+        }
         context.report({ node: node.name, messageId: "missing" });
       },
     };
   },
 );
 
-function variableNamed(name, node, context) {
-  if (!context?.sourceCode?.getScope) return null;
-  let scope = context.sourceCode.getScope(node);
-  while (scope) {
-    const variable = scope.set?.get(name) ?? scope.variables?.find((item) => item.name === name);
-    if (variable) return variable;
-    scope = scope.upper;
-  }
-  return null;
-}
-
-// The file-wide rename map applies only to the import or a single const alias
-// of that import. A nested component that reuses the local name is not that import.
-function mappedImport(name, node, context, importedNames) {
-  const imported = importedNames.get(name);
-  if (!imported || imported === name) return null;
-  const variable = variableNamed(name, node, context);
-  if (!variable || variable.defs?.length !== 1) return null;
-  const def = variable.defs[0];
-  if (def.type === "ImportBinding") return imported;
-  const source =
-    def.node?.init?.type === "Identifier"
-      ? variableNamed(def.node.init.name, def.node.init, context)
-      : null;
-  if (
-    def.type === "Variable" &&
-    def.parent?.kind === "const" &&
-    source?.defs?.length === 1 &&
-    source.defs[0].type === "ImportBinding" &&
-    importedNames.get(def.node.init.name) === imported
-  ) {
-    return imported;
-  }
-  return null;
-}
-
-function isInteractiveElement(elementNames, attributes, interactiveComponents) {
-  const names = Array.isArray(elementNames) ? elementNames : [elementNames];
-  if (names.some((name) => matchesAny(name, interactiveComponents))) {
-    return true;
-  }
-  if (names.some((name) => INTERACTIVE_ELEMENTS.has(name))) {
-    return true;
-  }
-  if (names.includes("a") && attributes.some((attr) => attributeName(attr) === "href")) {
-    return true;
-  }
-  return attributes.some((attr) => {
-    if (attributeName(attr) === "onClick") {
-      return true;
-    }
-    if (attributeName(attr) !== "role") {
-      return false;
-    }
-    return [
-      "button",
-      "checkbox",
-      "link",
-      "menuitem",
-      "option",
-      "radio",
-      "switch",
-      "tab",
-      "textbox",
-    ].includes(selectorLiteral(attr));
-  });
-}
-
-function jsxCandidateNames(name) {
-  if (!name) return [];
-  if (name.type === "JSXIdentifier") return [name.name];
-  if (name.type === "JSXMemberExpression") {
-    const object = jsxElementName(name.object);
-    const property = jsxElementName(name.property);
-    const names = [];
-    if (object && property) names.push(`${object}.${property}`);
-    if (property) names.push(property);
-    return names;
-  }
-  return [];
-}
-
-function jsxElementName(name) {
-  if (name.type === "JSXIdentifier") {
-    return name.name;
-  }
-  if (name.type === "JSXMemberExpression") {
-    const object = jsxElementName(name.object);
-    const property = jsxElementName(name.property);
-    return object && property ? `${object}.${property}` : null;
-  }
-}
-
 function compileMatchers(values) {
-  if (!Array.isArray(values)) {
-    return [];
-  }
+  if (!Array.isArray(values)) return [];
   return values
     .filter((value) => typeof value === "string" && value.length > 0)
     .map((value) => {
@@ -181,28 +83,13 @@ function compileMatchers(values) {
 }
 
 function regexLiteral(value) {
-  if (!value.startsWith("/") || value.lastIndexOf("/") === 0) {
-    return null;
-  }
+  if (!value.startsWith("/") || value.lastIndexOf("/") === 0) return null;
   const lastSlash = value.lastIndexOf("/");
   try {
     return new RegExp(value.slice(1, lastSlash), value.slice(lastSlash + 1));
   } catch {
     return null;
   }
-}
-
-function matchesAny(name, matchers) {
-  return Boolean(
-    name &&
-    matchers.some((matcher) => {
-      if (!matcher.regex) {
-        return matcher.exact === name;
-      }
-      matcher.regex.lastIndex = 0;
-      return matcher.regex.test(name);
-    }),
-  );
 }
 
 module.exports.__test = { compileMatchers };

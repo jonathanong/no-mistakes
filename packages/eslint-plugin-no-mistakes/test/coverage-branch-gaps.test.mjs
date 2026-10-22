@@ -1369,6 +1369,10 @@ describe("null and visitor remaining arms", () => {
       value: { type: "JSXExpressionContainer", expression: { type: "Literal", value: "x" } },
     });
     require("../src/rules/playwright-assertion-timeout-cap.js").__test.propertyName({
+      name: "timeout",
+      type: "Identifier",
+    });
+    require("../src/rules/playwright-assertion-timeout-cap.js").__test.propertyName({
       type: "Unknown",
     });
     require("../src/rules/playwright-assertion-timeout-cap.js").__test.propertyName({

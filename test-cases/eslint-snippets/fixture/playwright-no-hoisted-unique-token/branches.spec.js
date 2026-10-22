@@ -1,0 +1,54 @@
+import { test as base } from "@playwright/test";
+import * as pw from "@playwright/test";
+
+const test = base;
+
+const runner = pw;
+const outer = pw;
+function registerNamespace() {
+  const pw = outer;
+  pw.test.beforeAll(() => {
+    use(suffix);
+  });
+}
+const alias = test;
+let loose = pw;
+var twice;
+var twice = test;
+
+const suffix = helpers.randomSuffix();
+const nested = randomSuffix()();
+let mint = randomSuffix;
+const fromLet = mint();
+const { other: skip, randomSuffix: make = fallback, ...rest } = helpers;
+const fromMake = make();
+const dynamic = "randomSuffix";
+const { [dynamic]: hidden } = helpers;
+const fromHidden = hidden();
+const [first] = [randomSuffix];
+const fromFirst = first();
+randomSuffix.call(...args);
+randomSuffix.apply(null, ["a"]?.concat());
+
+test.beforeAll(async () => {
+  await createPost({ slug: suffix });
+});
+runner.test.beforeAll(async () => {
+  await createPost({ slug: suffix });
+});
+alias.beforeAll(async () => {
+  await createPost({ slug: suffix });
+});
+loose.test.beforeAll(async () => {
+  await createPost({ slug: suffix });
+});
+twice.beforeAll(async () => {
+  await createPost({ slug: suffix });
+});
+void fromLet;
+void fromMake;
+void fromHidden;
+void fromFirst;
+void nested;
+void skip;
+void rest;

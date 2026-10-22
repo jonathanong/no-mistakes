@@ -66,7 +66,6 @@ function isPlaywrightNamespace(node, context, seen = new Set()) {
 
 function expectRoot(node, context, expectNames, seen = new Set()) {
   while (node?.type === "ChainExpression") node = node.expression;
-  if (!node) return false;
   if (node.type === "CallExpression") return expectRoot(node.callee, context, expectNames, seen);
   if (node.type === "MemberExpression") {
     if (memberName(node) === "expect") return isPlaywrightNamespace(node.object, context);
@@ -97,7 +96,6 @@ function numericLiteral(node) {
 }
 
 function propertyName(node) {
-  if (!node) return null;
   if (typeof node.name === "string" && node.type !== "Literal") return node.name;
   return patternKey({ type: "Property", computed: true, key: node });
 }

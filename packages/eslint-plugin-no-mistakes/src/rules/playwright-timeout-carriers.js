@@ -68,7 +68,6 @@ function createCarriers(context, evaluate, check, max, fixtureMax) {
   }
   function booleanValue(node, seen = new Set()) {
     node = unwrapExpression(node);
-    if (!node) return null;
     if (node.type === "Literal" && typeof node.value === "boolean") return node.value;
     if (node.type === "UnaryExpression" && node.operator === "!") {
       const value = booleanValue(node.argument, seen);

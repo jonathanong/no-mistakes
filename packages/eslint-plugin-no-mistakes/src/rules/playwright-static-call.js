@@ -35,17 +35,16 @@ function memberName(node) {
 }
 
 function patternKey(property) {
-  if (!property || property.type !== "Property") return null;
-  if (property.computed && property.key?.type === "Identifier") return null;
-  if (!property.computed && typeof property.key?.name === "string") return property.key.name;
-  return literalString(property.key);
+  const key = property.key;
+  if (property.computed && key.type === "Identifier") return null;
+  if (!property.computed && typeof key.name === "string") return key.name;
+  return literalString(key);
 }
 
 function variableFor(node, context) {
-  if (node?.type !== "Identifier" || !context?.sourceCode?.getScope) return null;
   let scope = context.sourceCode.getScope(node);
   while (scope) {
-    const variable = scope.variables?.find((item) => item.name === node.name);
+    const variable = scope.variables.find((item) => item.name === node.name);
     if (variable) return variable;
     scope = scope.upper;
   }
@@ -63,18 +62,17 @@ function methodFromCallee(callee, context, seen = new Set()) {
   if (def.type !== "Variable" || def.parent?.kind !== "const" || !def.node?.init)
     return callee.name;
   seen.add(variable);
-  if (def.node.id?.type === "ObjectPattern") {
+  if (def.node.id.type === "ObjectPattern") {
     for (const item of def.node.id.properties) {
-      if (item.type !== "Property") continue;
-      const value = item.value?.type === "AssignmentPattern" ? item.value.left : item.value;
-      if (value?.type === "Identifier" && value.name === callee.name) {
+      const value = item.value.type === "AssignmentPattern" ? item.value.left : item.value;
+      if (value.type === "Identifier" && value.name === callee.name) {
         const key = patternKey(item);
         if (key) return key;
       }
     }
     return callee.name;
   }
-  if (def.node.id?.type !== "Identifier") return callee.name;
+  if (def.node.id.type !== "Identifier") return callee.name;
   return methodFromCallee(def.node.init, context, seen) || callee.name;
 }
 
@@ -92,17 +90,16 @@ function configuredFactory(callee, context, factoryNames, seen = new Set()) {
   const def = variable.defs[0];
   if (def.type !== "Variable" || def.parent?.kind !== "const" || !def.node?.init) return null;
   seen.add(variable);
-  if (def.node.id?.type === "ObjectPattern") {
+  if (def.node.id.type === "ObjectPattern") {
     for (const item of def.node.id.properties) {
-      if (item.type !== "Property") continue;
-      const value = item.value?.type === "AssignmentPattern" ? item.value.left : item.value;
-      if (value?.type !== "Identifier" || value.name !== callee.name) continue;
+      const value = item.value.type === "AssignmentPattern" ? item.value.left : item.value;
+      if (value.type !== "Identifier" || value.name !== callee.name) continue;
       const key = patternKey(item);
       if (key && factoryNames.has(key)) return key;
     }
     return null;
   }
-  if (def.node.id?.type !== "Identifier") return null;
+  if (def.node.id.type !== "Identifier") return null;
   return configuredFactory(def.node.init, context, factoryNames, seen);
 }
 
@@ -142,13 +139,12 @@ function invokedCall(node) {
 function isNamespaceBinding(node, context, namespaces, seen = new Set()) {
   if (node?.type !== "Identifier" || !namespaces.has(node.name) || seen.has(node)) return false;
   const variable = variableFor(node, context);
-  if (!variable || variable.defs?.length !== 1) return false;
   const def = variable.defs[0];
-  if (def.type === "ImportBinding" && def.node?.type === "ImportNamespaceSpecifier") return true;
+  if (def.type === "ImportBinding" && def.node.type === "ImportNamespaceSpecifier") return true;
   if (
     def.type !== "Variable" ||
-    def.parent?.kind !== "const" ||
-    def.node?.init?.type !== "Identifier"
+    def.parent.kind !== "const" ||
+    def.node.init.type !== "Identifier"
   ) {
     return false;
   }
@@ -160,14 +156,13 @@ function isTestBinding(node, context, testNames, seen = new Set()) {
   if (node?.type !== "Identifier" || !testNames.has(node.name) || seen.has(node)) return false;
   const variable = variableFor(node, context);
   if (!variable || variable.defs.length === 0) return true;
-  if (variable.defs.length !== 1) return false;
   const def = variable.defs[0];
   if (def.type === "Parameter") return false;
   if (def.type === "ImportBinding") return true;
   if (
     def.type === "Variable" &&
-    def.parent?.kind === "const" &&
-    def.node?.init?.type === "Identifier"
+    def.parent.kind === "const" &&
+    def.node.init.type === "Identifier"
   ) {
     seen.add(node);
     return isTestBinding(def.node.init, context, testNames, seen);

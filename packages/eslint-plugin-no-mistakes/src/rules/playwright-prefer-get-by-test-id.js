@@ -29,7 +29,10 @@ module.exports = rule(
     return {
       CallExpression(node) {
         const invoked = invokedCall(node);
-        const methodName = invoked ? methodFromCallee(invoked.callee, context) : null;
+        let methodName = null;
+        if (invoked) {
+          methodName = methodFromCallee(invoked.callee, context);
+        }
         if (!methodName || !SELECTOR_METHODS.has(methodName) || methodName === "getByTestId") {
           return;
         }
@@ -40,7 +43,10 @@ module.exports = rule(
           }
           for (const selector of cssSelectorValues(source, attrs)) {
             if (selector.operator === "=") {
-              if (suppressed(arg)) continue;
+              const hidden = suppressed(arg);
+              if (hidden) {
+                continue;
+              }
               context.report({ node: arg, messageId: "prefer", data: { value: selector.value } });
             }
           }

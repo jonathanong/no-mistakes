@@ -41,7 +41,6 @@ function createBindings(context, modules, exportRoles = {}, calls = []) {
   }
   function name(node, seen = new Set()) {
     node = unwrapExpression(node);
-    if (!node) return null;
     const literal = literalString(node);
     if (literal !== null) return literal;
     if (node.type === "BinaryExpression" && node.operator === "+") {
