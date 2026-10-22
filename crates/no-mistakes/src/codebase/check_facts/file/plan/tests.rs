@@ -39,11 +39,11 @@ fn ts_extract_plan_clears_family_flags_outside_path_scope() {
         symbols_paths: scope,
         ..CheckFactPlan::default()
     };
-    let ts = ts_extract_plan(&plan, &outside, None);
+    let ts = ts_extract_plan(Path::new("/repo"), &plan, &outside, None);
     assert!(!ts.react, "{ts:?}");
     assert!(!ts.queue_project, "{ts:?}");
     assert!(!ts.symbols, "{ts:?}");
-    let ts = ts_extract_plan(&plan, &inside, None);
+    let ts = ts_extract_plan(Path::new("/repo"), &plan, &inside, None);
     assert!(ts.react);
     assert!(ts.queue_project);
     assert!(ts.symbols);
