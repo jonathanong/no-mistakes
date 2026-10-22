@@ -1,0 +1,14 @@
+use super::Carry;
+
+#[test]
+fn a_shallower_uses_does_not_join_a_flow_sequence_anchor() {
+    // Closing the flow clears the anchor. This guard still refuses a uses key
+    // that is already outside the anchored sequence.
+    let mut carry = Carry::default();
+    carry.flow_sequence_anchor = true;
+    carry.anchor_name = "shared".to_string();
+    carry.anchor_depth = 2;
+    carry.flow_depth = 1;
+    carry.bump_anchor_uses();
+    assert!(carry.anchor_use_counts.is_empty());
+}

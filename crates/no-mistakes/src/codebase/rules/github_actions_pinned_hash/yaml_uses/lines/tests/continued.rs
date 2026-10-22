@@ -43,3 +43,59 @@ fn folded_quote_reads_the_comment_on_the_closing_line() {
     let findings = yaml_shape_findings("folded-quote-comment-pass.yml");
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+#[test]
+fn block_comment_before_the_value_keeps_the_header_comment() {
+    // Two block-scalar lines: the comment, then the value. The version comment
+    // stays on the header, and the value is still the action line.
+    let lines = [
+        "- uses: | # v6.0.2",
+        "    # still the block",
+        "    actions/checkout@sha",
+    ];
+    let classified = action_uses_lines(&lines);
+    assert_eq!(classified.lines, vec![3], "{classified:?}");
+    assert!(classified.block_scalar[1] && classified.block_scalar[2]);
+    assert_eq!(
+        super::super::comment_at(&classified, &lines, 3),
+        "- uses: | # v6.0.2"
+    );
+}
+
+#[test]
+fn root_with_is_not_an_action() {
+    // No `jobs:` above this `with:`, so the nested uses is an input.
+    let lines = ["with:", "  uses: actions/checkout@v4"];
+    assert!(action_uses_lines(&lines).lines.is_empty(), "{lines:?}");
+}
+
+#[test]
+fn a_word_after_uses_replaces_the_key() {
+    // `uses extra:` is not the uses key. The following action is still checked.
+    let lines = [
+        "- uses extra: actions/checkout@v4",
+        "- uses: actions/checkout@v4",
+    ];
+    assert_eq!(action_uses_lines(&lines).lines, vec![2], "{lines:?}");
+}
+
+#[test]
+fn a_comment_under_an_anchor_keeps_the_step() {
+    let lines = [
+        "- &checkout",
+        "  # version comes later",
+        "  uses: actions/checkout@v4",
+    ];
+    assert_eq!(action_uses_lines(&lines).lines, vec![3], "{lines:?}");
+}
+
+#[test]
+fn an_empty_anchor_name_does_not_hide_the_next_action() {
+    // `& {` has no anchor name, so it is neither a key nor an anchor-only step.
+    let lines = [
+        "- uses: actions/checkout@v4",
+        "- & {",
+        "- uses: actions/setup-node@v4",
+    ];
+    assert_eq!(action_uses_lines(&lines).lines, vec![1, 3], "{lines:?}");
+}
