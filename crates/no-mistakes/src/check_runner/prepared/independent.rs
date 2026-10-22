@@ -16,10 +16,9 @@ pub(super) fn prepare(
     config: &no_mistakes::config::v2::NoMistakesConfig,
     visible_paths: &no_mistakes::codebase::ts_source::VisiblePathSnapshot,
     sources: &no_mistakes::codebase::ts_source::SourceStore,
-    workspace: Option<&no_mistakes::codebase::workspaces::IndexedWorkspaceMap>,
-    deadlines: bool,
+    workspace: &super::SharedWorkspace,
 ) -> PreparedIndependent {
-    let inferred_roots = if super::consumers::needs_inferred_roots(config, deadlines) {
+    let inferred_roots = if super::consumers::needs_inferred_roots(config, workspace.deadlines) {
         no_mistakes::codebase::config::InferredRoots::from_visible(root, root_paths)
     } else {
         no_mistakes::codebase::config::InferredRoots::default()
@@ -42,7 +41,10 @@ pub(super) fn prepare(
                 root,
                 root_paths,
                 sources,
-                workspace.expect("tsconfig gate coverage requires a workspace projection"),
+                workspace
+                    .map
+                    .as_ref()
+                    .expect("tsconfig gate coverage requires a workspace projection"),
             )
         });
     (

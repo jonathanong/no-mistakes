@@ -32,8 +32,10 @@ impl SharedCheckContext {
             visible_paths,
             config,
             tsconfig.clone(),
-            Some(workspace),
-            deadlines,
+            crate::check_runner::prepared::SharedWorkspace {
+                map: Some(workspace),
+                deadlines,
+            },
         )?;
         let config = &prepared.config;
         let queues_enabled = queues_configured(config);
