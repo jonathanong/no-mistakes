@@ -1,0 +1,8 @@
+  1 0 1 Ss 00:20 0.0 1000 /sbin/init
+  41 1 41 Ss 00:10 0.0 1000 node unrelated.cjs
+  50 1 50 S 00:09 0.0 1000 /usr/bin/time timeout 600s pnpm exec no-mistakes check
+  51 50 50 S 00:09 0.0 1000 timeout --foreground 600s pnpm exec no-mistakes check
+  52 51 50 S 00:09 0.1 30000 pnpm exec no-mistakes check
+  53 52 53 Sl 00:09 99.0 4000000 /tmp/fixture/node_modules/no-mistakes-linux-x64-gnu/bin/no-mistakes check
+  54 41 54 S 00:08 0.0 1000 /tmp/other/node_modules/no-mistakes-linux-x64-gnu/bin/no-mistakes check
+  55 1 55 Sl 00:07 90.0 3900000 /tmp/fixture/node_modules/no-mistakes-linux-x64-gnu/bin/no-mistakes check
