@@ -1,0 +1,9 @@
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    include: ["web/app/page.ts", "web/app/nested/**"]
+    exclude: ["web/app/nested/excluded.ts"]
+    options:
+      # Omitted relationships exercise absent-family pruning with directory roots.
+      roots: ["web/app", "web/app/.", "web/app/page.ts", "missing"]
+      forbiddenModules: ["fs", "node:*"]

@@ -1,4 +1,36 @@
 use super::*;
+use crate::codebase::dependencies::graph::GraphBuildPlan;
+
+#[test]
+fn directory_roots_expand_when_default_families_are_pruned() {
+    let root = fixture("forbidden-dependencies-directory");
+    let config_path = root.join("default-relationships.no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let visible = crate::codebase::ts_source::discover_files(&root, &[]);
+    let plan = try_graph_plan_for_files(&root, &config, &visible)
+        .unwrap()
+        .unwrap();
+    assert!(plan.imports);
+    assert!(!plan.markdown);
+    assert!(!plan.package);
+    assert!(!plan.ci);
+    assert!(!plan.workflow_topology);
+    assert!(!plan.terraform);
+    assert!(!plan.dotnet);
+    assert!(!plan.swift);
+
+    let findings = check_with_config(&root, &config, Some(&config_path), None).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.file.as_str(), finding.target.as_deref()))
+            .collect::<Vec<_>>(),
+        [
+            ("web/app/nested/page.ts", Some("fs")),
+            ("web/app/page.ts", Some("fs"))
+        ],
+    );
+}
 
 #[test]
 fn directory_roots_are_recursive_filtered_and_deduplicated() {

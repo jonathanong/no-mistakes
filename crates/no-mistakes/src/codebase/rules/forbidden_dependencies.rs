@@ -4,7 +4,7 @@ use crate::codebase::dependencies::{relationship_filter, RelationshipArg};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use helpers::{build_globset, edge_kind_str, repro_command, resolve_root_paths};
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::path::Path;
 
 mod config_check;
