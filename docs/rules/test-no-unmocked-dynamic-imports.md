@@ -170,6 +170,7 @@ whether a dynamic import is mocked.
 ## Valid example
 
 ```ts
+// src/index.test.ts
 vi.mock("external-lib", () => ({ run: vi.fn() }));
 const module = await import("external-lib");
 ```
@@ -177,6 +178,7 @@ const module = await import("external-lib");
 ## Counterexample
 
 ```ts
+// src/index.test.ts
 const module = await import("external-lib");
 ```
 
