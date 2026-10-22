@@ -74,11 +74,11 @@ include/exclude filters apply; there are no implicit source or anchor files.
 ## Valid example
 
 ```yaml
-tools:
-  aqua:example-org/example-tool: 0.24.2
-```
+# .mise.toml
+[tools]
+"aqua:example-org/example-tool" = "0.24.2"
 
-```yaml
+# .github/actions/setup-example-tool/action.yml
 EXAMPLE_TOOL_VERSION: 0.24.2
 ```
 
@@ -86,8 +86,13 @@ EXAMPLE_TOOL_VERSION: 0.24.2
 
 The structured source says `0.24.2` while an anchor captures `0.24.1`.
 
-```json
-{ "name": "app", "version": "1.0.0", "dependencies": { "left-pad": "^1.3.0" } }
+```yaml
+# .mise.toml
+[tools]
+"aqua:example-org/example-tool" = "0.24.2"
+
+# .github/actions/setup-example-tool/action.yml
+EXAMPLE_TOOL_VERSION: 0.24.1
 ```
 
 
