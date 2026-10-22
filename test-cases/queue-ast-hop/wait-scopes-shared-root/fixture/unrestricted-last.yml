@@ -1,0 +1,10 @@
+version: 2
+projects:
+  narrow:
+    root: api
+    queues:
+      waitScopes: ["routes/**"]
+  unrestricted:
+    root: ./api/
+    queues:
+      waitScopes: []
