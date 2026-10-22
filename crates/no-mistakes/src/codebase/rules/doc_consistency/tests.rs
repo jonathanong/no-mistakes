@@ -352,3 +352,43 @@ fn empty_engine_matches_are_not_findings() {
 }
 
 mod patterns;
+
+#[test]
+fn required_heading_uses_parsed_level_and_ignores_code_examples() {
+    let root = fixture_root("heading-levels");
+    let files = [
+        "exact.md",
+        "shallow.md",
+        "deep.md",
+        "fenced.md",
+        "indented.md",
+    ]
+    .map(|name| root.join(name));
+    let config = config_with_rule(
+        "requiredFiles: [exact.md, shallow.md, deep.md, fenced.md, indented.md]\nrequiredHeading: \"## Related issues\"",
+    );
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.file.as_str())
+            .collect::<Vec<_>>(),
+        ["deep.md", "fenced.md", "indented.md", "shallow.md"],
+        "only a parsed heading at the configured level satisfies the requirement"
+    );
+
+    for heading in [
+        "Related issues",
+        "#Related issues",
+        "####### Related issues",
+    ] {
+        // Legacy non-ATX hash prefixes retain bare-name matching at any level.
+        let config = config_with_rule(&format!(
+            "requiredFiles: [exact.md, shallow.md, deep.md]\nrequiredHeading: {heading:?}"
+        ));
+        assert!(
+            check_with_files(&root, &config, &files).unwrap().is_empty(),
+            "{heading}"
+        );
+    }
+}

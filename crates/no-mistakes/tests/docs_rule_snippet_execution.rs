@@ -309,3 +309,23 @@ fn composite_action_yaml_is_not_wrapped_as_a_workflow() {
         "timeout-minutes on a composite step must not wrap the file as a workflow: {body}"
     );
 }
+
+#[test]
+fn heading_sections_and_fences_share_delimiter_and_title_boundaries() {
+    // Fake headings and malformed closers must remain inside their saved fence.
+    let body = read(&repo_root().join("fixtures/docs-coverage/fence-sections/page.md"));
+    for (title, expected) in [
+        ("Valid example", "## Inside tilde fence"),
+        ("Counterexample", "## Inside backtick fence"),
+    ] {
+        let section = docs_rule_snippets::heading_section(&body, title);
+        assert!(section.contains(expected), "{title}: {section}");
+        assert!(!section.contains("wrong section"), "{title}: {section}");
+        assert!(!section.contains("outside sections"), "{title}: {section}");
+        let fences = docs_rule_snippets::fences(&section);
+        assert_eq!(fences.len(), 1, "{title}: {fences:?}");
+        assert_eq!(fences[0].0, "markdown");
+        assert!(fences[0].1.contains(expected), "{title}: {fences:?}");
+        assert!(fences[0].1.contains("## Shorter"), "{title}: {fences:?}");
+    }
+}

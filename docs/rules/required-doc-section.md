@@ -23,7 +23,7 @@ operational section, such as performance notes or ownership guidance.
 ## What it catches/requires
 
 Every file matching `glob` must contain the exact `requiredHeading` Markdown
-heading. When `requiredHeading` starts with `#`, the ATX level and the text
+heading. When `requiredHeading` is a valid ATX heading, the level and the text
 must both match, so `### Perf` does not satisfy `## Perf`. A value without
 `#` matches any level. An underlined heading, and a heading that ends with
 hashes, use the parsed level and text. A fenced or four-space-indented
@@ -36,6 +36,12 @@ rule.
 empty string, which disables the rule application rather than inferring a
 document set or heading. `roots`, `requiredFile`, `codeExtensions`, and
 `testExcludePatterns` belong to sibling `required-local-docs`, not this rule.
+
+A value without leading `#` characters matches a heading of that text at any
+level. A valid ATX value (`## Perf`) requires that exact level. For compatibility,
+a leading-hash value that is not valid ATX syntax (`#Perf` or `####### Perf`)
+strips its leading hashes and matches the remaining text at any level. Prefer
+`Perf` for any level or `## Perf` for an exact level.
 
 ## Valid example
 

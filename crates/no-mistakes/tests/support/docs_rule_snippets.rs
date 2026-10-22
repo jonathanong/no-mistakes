@@ -35,7 +35,7 @@ pub fn labeled_section(body: &str, labels: &[&str]) -> String {
 
 pub fn heading_section(body: &str, title: &str) -> String {
     let header = format!("## {title}").to_ascii_lowercase();
-    let mut in_fence: Option<usize> = None;
+    let mut in_fence: Option<(u8, usize)> = None;
     let mut collecting = false;
     let mut collected = Vec::new();
     for line in body.lines() {
@@ -72,13 +72,17 @@ pub fn heading_section(body: &str, title: &str) -> String {
 fn heading_matches(line: &str, header_lc: &str) -> bool {
     let line_lc = line.to_ascii_lowercase();
     line_lc == header_lc
-        || line_lc.starts_with(&format!("{header_lc} "))
+        || line_lc.starts_with(&format!("{header_lc} and "))
         || line_lc.starts_with(&format!("{header_lc},"))
 }
 
-fn open_fence(line: &str) -> Option<(usize, String)> {
+fn open_fence(line: &str) -> Option<((u8, usize), String)> {
     let trimmed = line.trim_start();
-    let mark = trimmed.chars().take_while(|c| *c == '`').count();
+    let character = *trimmed.as_bytes().first()?;
+    if !matches!(character, b'`' | b'~') {
+        return None;
+    }
+    let mark = trimmed.bytes().take_while(|&c| c == character).count();
     if mark < 3 {
         return None;
     }
@@ -88,12 +92,12 @@ fn open_fence(line: &str) -> Option<(usize, String)> {
         .next()
         .unwrap_or("")
         .to_ascii_lowercase();
-    Some((mark, lang))
+    Some(((character, mark), lang))
 }
 
-fn close_fence(line: &str, mark: usize) -> bool {
+fn close_fence(line: &str, (character, mark): (u8, usize)) -> bool {
     let trimmed = line.trim_start();
-    let n = trimmed.chars().take_while(|c| *c == '`').count();
+    let n = trimmed.bytes().take_while(|&c| c == character).count();
     n >= mark && trimmed.chars().skip(n).all(char::is_whitespace)
 }
 

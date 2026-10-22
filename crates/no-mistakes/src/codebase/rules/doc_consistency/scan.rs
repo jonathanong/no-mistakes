@@ -65,8 +65,7 @@ fn required_file_findings(
     };
     let mut local = Vec::new();
     if let Some(heading) = &opts.required_heading {
-        let heading_text = heading.trim_start_matches('#').trim();
-        if !crate::codebase::markdown_sections::has_section(&content, heading_text) {
+        if !crate::codebase::markdown_sections::has_required_heading(&content, heading) {
             local.push(RuleFinding {
                 rule: RULE_ID.to_string(),
                 file: req_file.to_string(),
