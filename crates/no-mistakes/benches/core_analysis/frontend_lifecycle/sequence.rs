@@ -66,7 +66,7 @@ pub(super) fn validate_relationships(
         edges,
         LanguageFrontendSummary {
             files: 117,
-            edges: 129;
+            edges: 129,
             queue_edges: 14,
             ..LanguageFrontendSummary::default()
         }
