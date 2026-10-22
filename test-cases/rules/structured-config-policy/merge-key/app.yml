@@ -1,0 +1,6 @@
+# `<<` is not expanded, so `runtime.legacy.enabled` is not present.
+defaults: &defaults
+  legacy:
+    enabled: true
+runtime:
+  <<: *defaults

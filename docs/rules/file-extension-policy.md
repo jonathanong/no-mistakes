@@ -8,7 +8,11 @@ boundary that names alone cannot enforce.
 ## What it catches
 
 It rejects a configured extension under a matching scope unless the exact path
-is allowlisted; TypeScript declaration files are exempt.
+is allowlisted; TypeScript declaration files are exempt. Scope paths collapse
+`./`, empty segments, and in-repo `..`, so `./src` is `src`. A leading `/` is
+repository-relative (`/src` is `src`). A scope that leaves the repository,
+such as `../outside`, is one finding on the config file at line 1
+(`../outside: configured root escapes the repository`) and matches no file.
 
 ## Options
 

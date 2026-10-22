@@ -53,6 +53,18 @@ fn run(name: &str) -> Vec<RuleFinding> {
 }
 
 #[test]
+fn merge_key_does_not_supply_the_project_root() {
+    // `<<: *shared` is not expanded, so the anchored root is not checked.
+    let findings = run("merge-key");
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("apps/missing")),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn missing_project_root_is_a_finding() {
     let findings = run("missing-path");
     assert!(

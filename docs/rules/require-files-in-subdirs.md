@@ -26,7 +26,12 @@ and expose a predictable entrypoint contract.
 ## What it catches/requires
 
 Each directory selected by `packages` must contain every `requiredFiles` entry
-and at least one file from each `requireAnyOf` group.
+and at least one file from each `requireAnyOf` group. Each `root` is
+normalized before the scan: `./`, empty segments, and in-repo `..` collapse,
+so `services/../packages` is `packages`. A root that leaves the repository,
+such as `..`, is one finding on the config file at line 1
+(`..: configured root escapes the repository`). The parent directory is not
+scanned.
 
 ## Options and defaults
 

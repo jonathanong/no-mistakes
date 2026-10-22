@@ -1,0 +1,6 @@
+# `<<` is not expanded. `apps/missing` must not be reported as a project root.
+shared: &shared
+  root: apps/missing
+projects:
+  web:
+    <<: *shared
