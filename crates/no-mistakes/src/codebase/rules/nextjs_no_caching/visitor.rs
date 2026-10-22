@@ -1,6 +1,6 @@
 use super::ast::is_cache_directive;
 use super::bindings::TopLevelBindings;
-use super::const_values::{record_const, StaticValue};
+use super::const_values::{record_const, ConstMap};
 use super::patterns::{banned_segment_config, fetch_cache_findings, single_binding_name};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::ts_source::byte_offset_to_line;
@@ -19,7 +19,7 @@ pub(crate) struct NextjsCachingVisitor<'a> {
     local_fetch: bool,
     segment_config: bool,
     next_config: bool,
-    pub(super) const_scopes: Vec<HashMap<String, StaticValue>>,
+    pub(super) const_scopes: Vec<ConstMap>,
 }
 
 impl<'a> NextjsCachingVisitor<'a> {

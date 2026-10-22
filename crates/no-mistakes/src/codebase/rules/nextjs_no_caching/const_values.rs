@@ -1,42 +1,60 @@
 use crate::codebase::ts_source::unwrap_ts_wrappers;
+use crate::fx::FxHashMap;
 use oxc_ast::ast::{Expression, PropertyKey, TemplateLiteral};
-use std::collections::HashMap;
+
+pub(super) type ConstMap = FxHashMap<String, StaticValue>;
 
 #[derive(Clone, Debug)]
 pub(super) enum StaticValue {
     String(String),
     Number(f64),
     Bool(bool),
+    /// A declared name with no tracked static value. It hides outer constants.
+    Unknown,
 }
 
-pub(super) fn push_scope(scopes: &mut Vec<HashMap<String, StaticValue>>) {
-    scopes.push(HashMap::new());
+pub(super) fn push_scope(scopes: &mut Vec<ConstMap>) {
+    scopes.push(ConstMap::default());
 }
 
-pub(super) fn pop_scope(scopes: &mut Vec<HashMap<String, StaticValue>>) {
+pub(super) fn pop_scope(scopes: &mut Vec<ConstMap>) {
     if scopes.len() > 1 {
         scopes.pop();
     }
 }
 
-pub(super) fn record_const(
-    scopes: &mut [HashMap<String, StaticValue>],
-    name: &str,
-    init: &Expression<'_>,
-) {
+pub(super) fn record_const(scopes: &mut [ConstMap], name: &str, init: &Expression<'_>) {
     let Some(value) = static_value(init, scopes) else {
+        record_unknown(scopes, name);
         return;
     };
+    insert_new(scopes, name, value);
+}
+
+pub(super) fn record_unknown(scopes: &mut [ConstMap], name: &str) {
+    insert_new(scopes, name, StaticValue::Unknown);
+}
+
+pub(super) fn try_record_resolved(
+    scopes: &mut [ConstMap],
+    name: &str,
+    init: &Expression<'_>,
+) -> bool {
+    let Some(value) = static_value(init, scopes) else {
+        return false;
+    };
+    insert_new(scopes, name, value);
+    true
+}
+
+fn insert_new(scopes: &mut [ConstMap], name: &str, value: StaticValue) {
     let Some(scope) = scopes.last_mut() else {
         return;
     };
     scope.entry(name.to_string()).or_insert(value);
 }
 
-pub(super) fn static_value(
-    expr: &Expression<'_>,
-    scopes: &[HashMap<String, StaticValue>],
-) -> Option<StaticValue> {
+pub(super) fn static_value(expr: &Expression<'_>, scopes: &[ConstMap]) -> Option<StaticValue> {
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(StaticValue::String(literal.value.to_string())),
         Expression::BooleanLiteral(literal) => Some(StaticValue::Bool(literal.value)),
@@ -44,22 +62,19 @@ pub(super) fn static_value(
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             Some(StaticValue::String(template_text(template)))
         }
-        Expression::Identifier(identifier) => lookup(scopes, identifier.name.as_str()).cloned(),
+        Expression::Identifier(identifier) => match lookup(scopes, identifier.name.as_str()) {
+            Some(StaticValue::Unknown) | None => None,
+            Some(value) => Some(value.clone()),
+        },
         _ => None,
     }
 }
 
-pub(super) fn lookup<'a>(
-    scopes: &'a [HashMap<String, StaticValue>],
-    name: &str,
-) -> Option<&'a StaticValue> {
+pub(super) fn lookup<'a>(scopes: &'a [ConstMap], name: &str) -> Option<&'a StaticValue> {
     scopes.iter().rev().find_map(|scope| scope.get(name))
 }
 
-pub(super) fn resolved_bool(
-    expr: &Expression<'_>,
-    scopes: &[HashMap<String, StaticValue>],
-) -> Option<bool> {
+pub(super) fn resolved_bool(expr: &Expression<'_>, scopes: &[ConstMap]) -> Option<bool> {
     match static_value(expr, scopes)? {
         StaticValue::Bool(value) => Some(value),
         _ => None,

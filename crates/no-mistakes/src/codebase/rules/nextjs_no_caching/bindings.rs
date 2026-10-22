@@ -1,4 +1,4 @@
-use super::const_values::{record_const, StaticValue};
+use super::const_values::{record_const, ConstMap};
 use super::patterns::{banned_segment_config, single_binding_name};
 use oxc_ast::ast::{
     Declaration, ImportDeclarationSpecifier, Program, Statement, VariableDeclaration,
@@ -10,7 +10,7 @@ pub(super) struct TopLevelBindings {
     pub(super) next_config: HashMap<String, Vec<(u32, String)>>,
     pub(super) segment_config: HashMap<String, String>,
     pub(super) local_fetch: bool,
-    pub(super) static_consts: Vec<HashMap<String, StaticValue>>,
+    pub(super) static_consts: Vec<ConstMap>,
 }
 
 pub(super) fn top_level_bindings(program: &Program<'_>, segment_config: bool) -> TopLevelBindings {
@@ -18,7 +18,7 @@ pub(super) fn top_level_bindings(program: &Program<'_>, segment_config: bool) ->
         next_config: HashMap::new(),
         segment_config: HashMap::new(),
         local_fetch: false,
-        static_consts: vec![HashMap::new()],
+        static_consts: vec![ConstMap::default()],
     };
     for statement in &program.body {
         match statement {

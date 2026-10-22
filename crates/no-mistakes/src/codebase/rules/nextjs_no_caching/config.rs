@@ -1,4 +1,4 @@
-use super::const_values::{property_name, resolved_bool, StaticValue};
+use super::const_values::{property_name, resolved_bool, ConstMap};
 use oxc_ast::ast::{
     Argument, AssignmentExpression, AssignmentTarget, CallExpression, ExportDefaultDeclarationKind,
     Expression, ObjectExpression, ObjectPropertyKind,
@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 pub(super) fn object_findings(
     obj: &ObjectExpression<'_>,
-    scopes: &[HashMap<String, StaticValue>],
+    scopes: &[ConstMap],
 ) -> Vec<(u32, String)> {
     let mut findings = Vec::new();
     for prop in &obj.properties {
@@ -41,7 +41,7 @@ pub(super) fn object_findings(
 pub(super) fn call_findings_with_bindings(
     call: &CallExpression<'_>,
     bindings: &HashMap<String, Vec<(u32, String)>>,
-    scopes: &[HashMap<String, StaticValue>],
+    scopes: &[ConstMap],
 ) -> Vec<(u32, String)> {
     call.arguments
         .iter()
@@ -51,7 +51,7 @@ pub(super) fn call_findings_with_bindings(
 
 pub(super) fn expression_findings(
     expr: &Expression<'_>,
-    scopes: &[HashMap<String, StaticValue>],
+    scopes: &[ConstMap],
 ) -> Vec<(u32, String)> {
     match expr {
         Expression::ObjectExpression(obj) => object_findings(obj, scopes),
@@ -65,7 +65,7 @@ pub(super) fn expression_findings(
 pub(super) fn assignment_findings(
     assignment: &AssignmentExpression<'_>,
     bindings: &HashMap<String, Vec<(u32, String)>>,
-    scopes: &[HashMap<String, StaticValue>],
+    scopes: &[ConstMap],
 ) -> Vec<(u32, String)> {
     if assignment_target_path(&assignment.left)
         .as_deref()
@@ -79,7 +79,7 @@ pub(super) fn assignment_findings(
 pub(super) fn default_export_findings(
     export: &ExportDefaultDeclarationKind<'_>,
     bindings: &HashMap<String, Vec<(u32, String)>>,
-    scopes: &[HashMap<String, StaticValue>],
+    scopes: &[ConstMap],
 ) -> Vec<(u32, String)> {
     match export {
         ExportDefaultDeclarationKind::Identifier(id) => {
@@ -105,7 +105,7 @@ pub(super) fn default_export_findings(
 fn expression_findings_with_bindings(
     expr: &Expression<'_>,
     bindings: &HashMap<String, Vec<(u32, String)>>,
-    scopes: &[HashMap<String, StaticValue>],
+    scopes: &[ConstMap],
 ) -> Vec<(u32, String)> {
     match expr {
         Expression::Identifier(id) => bindings.get(id.name.as_str()).cloned().unwrap_or_default(),
@@ -126,7 +126,7 @@ fn expression_findings_with_bindings(
 fn argument_findings(
     argument: &Argument<'_>,
     bindings: &HashMap<String, Vec<(u32, String)>>,
-    scopes: &[HashMap<String, StaticValue>],
+    scopes: &[ConstMap],
 ) -> Vec<(u32, String)> {
     match argument {
         Argument::Identifier(id) => bindings.get(id.name.as_str()).cloned().unwrap_or_default(),

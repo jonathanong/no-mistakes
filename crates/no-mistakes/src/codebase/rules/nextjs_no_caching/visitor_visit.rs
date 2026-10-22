@@ -1,8 +1,17 @@
 use super::visitor::NextjsCachingVisitor;
 use oxc_ast::ast::{
-    AssignmentExpression, BlockStatement, CallExpression, FunctionBody, VariableDeclaration,
+    ArrowFunctionBody, ArrowFunctionExpression, AssignmentExpression, BlockStatement,
+    CallExpression, Function, FunctionBody, Statement, VariableDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
+use oxc_syntax::scope::ScopeFlags;
+
+fn arrow_statements<'a, 'b>(body: &'b ArrowFunctionBody<'a>) -> Option<&'b [Statement<'a>]> {
+    match body {
+        ArrowFunctionBody::FunctionBody(body) => Some(body.statements.as_slice()),
+        _ => None,
+    }
+}
 
 impl<'a> Visit<'a> for NextjsCachingVisitor<'a> {
     fn visit_import_declaration(&mut self, import: &oxc_ast::ast::ImportDeclaration<'a>) {
@@ -31,15 +40,30 @@ impl<'a> Visit<'a> for NextjsCachingVisitor<'a> {
         walk::walk_export_default_declaration(self, export);
     }
 
+    fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
+        let statements = function
+            .body
+            .as_ref()
+            .map(|body| body.statements.as_slice());
+        self.open_function_scope(&function.params, statements);
+        walk::walk_function(self, function, flags);
+        self.pop_const_scope();
+    }
+
+    fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
+        self.open_function_scope(&arrow.params, arrow_statements(&arrow.body));
+        walk::walk_arrow_function_expression(self, arrow);
+        self.pop_const_scope();
+    }
+
     fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
         self.check_function_body_directives(body);
-        self.push_const_scope();
         walk::walk_function_body(self, body);
-        self.pop_const_scope();
     }
 
     fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
         self.push_const_scope();
+        self.precollect_statements(&block.body);
         walk::walk_block_statement(self, block);
         self.pop_const_scope();
     }

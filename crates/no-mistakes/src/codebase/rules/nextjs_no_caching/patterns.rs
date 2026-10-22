@@ -1,6 +1,5 @@
-use super::const_values::{property_name, static_value, StaticValue};
+use super::const_values::{property_name, static_value, ConstMap, StaticValue};
 use oxc_ast::ast::{BindingPattern, Expression, ObjectExpression, ObjectPropertyKind};
-use std::collections::HashMap;
 
 pub(super) fn banned_next_cache_import(name: &str) -> bool {
     matches!(
@@ -16,7 +15,7 @@ pub(super) fn banned_next_cache_import(name: &str) -> bool {
 
 pub(super) fn fetch_cache_findings(
     options: &ObjectExpression<'_>,
-    scopes: &[HashMap<String, StaticValue>],
+    scopes: &[ConstMap],
 ) -> Vec<String> {
     let mut findings = Vec::new();
     for prop in &options.properties {
@@ -45,10 +44,7 @@ pub(super) fn fetch_cache_findings(
     findings
 }
 
-fn next_fetch_cache_findings(
-    next: &ObjectExpression<'_>,
-    scopes: &[HashMap<String, StaticValue>],
-) -> Vec<String> {
+fn next_fetch_cache_findings(next: &ObjectExpression<'_>, scopes: &[ConstMap]) -> Vec<String> {
     let mut findings = Vec::new();
     for prop in &next.properties {
         let ObjectPropertyKind::ObjectProperty(prop) = prop else {
@@ -76,7 +72,7 @@ fn next_fetch_cache_findings(
 pub(super) fn banned_segment_config(
     name: &str,
     value: &Expression<'_>,
-    scopes: &[HashMap<String, StaticValue>],
+    scopes: &[ConstMap],
 ) -> bool {
     match name {
         "revalidate" => banned_revalidate_value(value, scopes),
@@ -92,10 +88,7 @@ pub(super) fn banned_segment_config(
     }
 }
 
-fn banned_revalidate_value(
-    value: &Expression<'_>,
-    scopes: &[HashMap<String, StaticValue>],
-) -> bool {
+fn banned_revalidate_value(value: &Expression<'_>, scopes: &[ConstMap]) -> bool {
     match static_value(value, scopes) {
         Some(StaticValue::Bool(enabled)) => !enabled,
         Some(StaticValue::Number(number)) => number > 0.0,
@@ -103,10 +96,7 @@ fn banned_revalidate_value(
     }
 }
 
-fn resolved_string(
-    value: &Expression<'_>,
-    scopes: &[HashMap<String, StaticValue>],
-) -> Option<String> {
+fn resolved_string(value: &Expression<'_>, scopes: &[ConstMap]) -> Option<String> {
     match static_value(value, scopes)? {
         StaticValue::String(text) => Some(text),
         _ => None,

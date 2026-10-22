@@ -10,6 +10,9 @@ export const dynamic = policy
 export const fetchCache = fetchMode
 
 export default async function Page() {
+  const loadLater = () => fetch('/api/later', { cache: laterMode })
+  const laterMode = 'force-cache'
+  await loadLater()
   const localMode = 'force-cache'
   await fetch('/api/template', { cache: `force-cache` })
   await fetch('/api/key', { [`cache`]: alias })
