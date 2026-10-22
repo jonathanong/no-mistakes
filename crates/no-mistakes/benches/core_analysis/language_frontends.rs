@@ -12,8 +12,8 @@ pub(super) const EXPECTED_LANGUAGE_FRONTEND_PARSED: usize = 69;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_IMPORTS: usize = 66;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_ENQUEUES: usize = 7;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_WORKERS: usize = 6;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_ROUTES: usize = 41;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_EDGES: usize = 125;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_ROUTES: usize = 43;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_EDGES: usize = 129;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_QUEUE_EDGES: usize = 14;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_GLOB_MATCHES: usize = 117;
 
