@@ -70,7 +70,7 @@ Opt-in [postgres-no-mutable-sql-registry](../rules/postgres-no-mutable-sql-regis
 and [postgres-no-unbounded-sql-identifier](../rules/postgres-no-unbounded-sql-identifier.md)
 use prepared import, value-flow, and embedded-SQL facts with the canonical graph
 to prove cross-file registry writes and unbounded identifier interpolations.
-Unknown provenance is never a finding.
+At maximum effort, unknown provenance is never a finding.
 
 Rules must be explicitly configured. See [no-mistakes rules](../rules/README.md)
 and [configuration](../configuration/README.md).
