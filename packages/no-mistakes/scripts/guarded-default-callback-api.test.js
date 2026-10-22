@@ -111,39 +111,40 @@ test(
   },
 );
 
-test(
-  "compiled async conditional callbacks keep late captured receiver candidates",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const root = join(
-      __dirname,
-      "../../../test-cases/codebase-analysis/value-flow-guarded-parameters/fixture",
-    );
-    for (const [suffix, firstLine, retained = true] of [
-      ["conditional", 20],
-      ["conditional-chain", 21],
-      ["member-conditional", 21],
-      ["inner-conditional", 20],
-      ["inner-loop", 20],
-      ["inner-return", 21],
-      ["forward-return", 21],
-      ["assignment-conditional", 20],
-      ["assignment-nested", 21],
-      ["assignment-future", 21],
-      ["assignment-mixed", 22],
-      ["duplicate-noop", 21],
-      ["duplicate-mutate", 21, false],
-      ["direct-conditional", 16],
-      ["direct-conditional-member", 17],
-      ["assignment-later", 21, false],
-      ["assignment-overwritten", 21, false],
-      ["finally", 19, false],
-      ["finally-outer-return", 21],
-      ["finally-inner-return", 23],
-      ["finally-post-return", 21],
-    ]) {
+// Give each saved scenario its own deadline on slower native runners.
+for (const [suffix, firstLine, retained = true] of [
+  ["conditional", 20],
+  ["conditional-chain", 21],
+  ["member-conditional", 21],
+  ["inner-conditional", 20],
+  ["inner-loop", 20],
+  ["inner-return", 21],
+  ["forward-return", 21],
+  ["assignment-conditional", 20],
+  ["assignment-nested", 21],
+  ["assignment-future", 21],
+  ["assignment-mixed", 22],
+  ["duplicate-noop", 21],
+  ["duplicate-mutate", 21, false],
+  ["direct-conditional", 16],
+  ["direct-conditional-member", 17],
+  ["assignment-later", 21, false],
+  ["assignment-overwritten", 21, false],
+  ["finally", 19, false],
+  ["finally-outer-return", 21],
+  ["finally-inner-return", 23],
+  ["finally-post-return", 21],
+]) {
+  test(
+    `compiled async conditional callbacks keep late captured receiver candidates: ${suffix}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const root = join(
+        __dirname,
+        "../../../test-cases/codebase-analysis/value-flow-guarded-parameters/fixture",
+      );
       const entry = `src/array-forwarded-late-captured-${suffix}.mts`;
       const options = { root, config: join(root, "effects.yml"), kind: "receiver", entry };
       const pending = cjs.effects(options);
@@ -194,6 +195,6 @@ test(
       assert.equal(child.error, undefined);
       assert.equal(child.status, 0, child.stderr);
       assert.deepEqual(JSON.parse(child.stdout), expected);
-    }
-  },
-);
+    },
+  );
+}
