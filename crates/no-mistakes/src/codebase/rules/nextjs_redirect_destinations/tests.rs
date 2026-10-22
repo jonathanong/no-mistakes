@@ -1,18 +1,19 @@
+mod named_section;
 mod static_values;
 mod tracked_routes;
-use super::extract::{extract_named_destinations, ExtractedDestinations};
+use super::extract::ExtractedDestinations;
 use super::options::Options;
 use super::routes::{
     build_route_set, destination_matches, is_page_file, matches_route_segments,
     route_from_page_relative, should_skip_destination, strip_query_and_hash,
 };
-use super::scan::check_named_section;
 use super::words::{contains_word, word_line};
 use super::*;
 use crate::config::v2::{
     schema::{Project, RuleDef, RuleScope},
     NoMistakesConfig,
 };
+use named_section::{check_named_section, extract_named_destinations};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 

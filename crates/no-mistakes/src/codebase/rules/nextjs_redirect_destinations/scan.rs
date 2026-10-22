@@ -1,7 +1,5 @@
 use super::super::RuleFinding;
 use super::config::{display_app_root, resolve_config_path, resolved_app_root};
-#[cfg(test)]
-use super::extract::extract_named_destinations;
 use super::options::Options;
 use super::routes::{
     build_route_set, destination_matches, should_skip_destination, strip_query_and_hash,
@@ -92,28 +90,6 @@ fn scan_target(
         &mut findings,
     );
     findings
-}
-
-#[cfg(test)]
-pub(super) fn check_named_section(
-    rel: &str,
-    source: &str,
-    config_path: &Path,
-    name: &str,
-    kind: &str,
-    route_set: &BTreeSet<String>,
-    app_root_label: &str,
-) -> Vec<RuleFinding> {
-    let extracted = extract_named_destinations(config_path, source, name);
-    section_findings(
-        rel,
-        source,
-        name,
-        kind,
-        &extracted,
-        route_set,
-        app_root_label,
-    )
 }
 
 pub(super) fn section_findings(

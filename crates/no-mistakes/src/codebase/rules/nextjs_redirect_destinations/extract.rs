@@ -8,8 +8,6 @@ use crate::codebase::ts_source::{
 use oxc_ast::ast::{Expression, MethodDefinition, ObjectProperty, Program, PropertyDefinition};
 use oxc_ast_visit::{walk, Visit};
 use std::collections::BTreeMap;
-#[cfg(test)]
-use std::path::Path;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(super) struct ExtractedDestinations {
@@ -23,18 +21,6 @@ pub(super) struct ExtractedDestinations {
 pub(super) struct ExtractedDestination {
     pub(super) value: String,
     pub(super) line: usize,
-}
-
-#[cfg(test)]
-pub(super) fn extract_named_destinations(
-    path: &Path,
-    source: &str,
-    name: &str,
-) -> ExtractedDestinations {
-    crate::ast::with_program(path, source, |program, source| {
-        extract_named_destinations_from_program(program, source, name)
-    })
-    .unwrap_or_default()
 }
 
 pub(super) fn extract_named_destinations_from_program(
