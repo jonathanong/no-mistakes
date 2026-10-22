@@ -48,7 +48,7 @@ describe("postgres-no-async-sql-builder", () => {
         `,
         SQL,
       ),
-      [],
+      ["removeAsync"],
     );
     assert.deepEqual(
       ids(

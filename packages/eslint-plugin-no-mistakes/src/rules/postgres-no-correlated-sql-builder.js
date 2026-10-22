@@ -4,6 +4,7 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
 
+const { findAppend } = require("./postgres-no-correlated-sql-builder-append");
 const { completeGuards } = require("./postgres-correlated-completion");
 
 const RULE_ID = "postgres-no-correlated-sql-builder";
@@ -35,55 +36,22 @@ function selectorOf(test) {
   return null;
 }
 
-function sqlPiece(node, tags) {
-  const value = unwrapTs(node);
-  if (value.type === "Literal" && typeof value.value === "string") return true;
-  if (value.type === "TemplateLiteral") return true;
-  if (value.type !== "TaggedTemplateExpression") return false;
-  const tag = unwrapTs(value.tag);
-  return tag?.type === "Identifier" && tags.has(tag.name);
-}
-
-function appendBuilder(call, methods, tags) {
-  const callee = unwrapTs(call.callee);
-  if (!callee || callee.type !== "MemberExpression" || callee.computed) return null;
-  if (!methods.has(callee.property?.name)) return null;
-  const object = unwrapTs(callee.object);
-  if (!object || object.type !== "Identifier") return null;
-  if (call.arguments.length !== 1 || !sqlPiece(call.arguments[0], tags)) return null;
-  return object;
-}
-
-function findAppend(node, methods, tags) {
-  let builder = null;
-  const visit = (current) => {
-    if (!current || builder || isFunction(current)) return;
-    if (current.type === "CallExpression") {
-      const object = appendBuilder(current, methods, tags);
-      if (object) builder = { object, call: current };
-    }
-    for (const child of childNodes(current)) visit(child);
-  };
-  visit(node);
-  return builder;
-}
-
-function readGuard(statement, methods, tags) {
+function readGuard(statement, methods, tags, context) {
   const selector = selectorOf(unwrapTs(statement.test));
   if (!selector) return null;
-  const builder = findAppend(statement.consequent, methods, tags);
+  const builder = findAppend(statement.consequent, methods, tags, context);
   if (!builder) return null;
   const test = unwrapTs(statement.test);
   const value = stringText(test.left) ?? stringText(test.right);
   return { node: statement, selector, builder: builder.object, call: builder.call, value };
 }
 
-function guardsOf(func, methods, tags) {
+function guardsOf(func, methods, tags, context) {
   const found = [];
   const visit = (node) => {
     if (!node || typeof node !== "object" || isFunction(node)) return;
     if (node.type === "IfStatement") {
-      const guard = readGuard(node, methods, tags);
+      const guard = readGuard(node, methods, tags, context);
       if (guard) found.push(guard);
     }
     for (const child of childNodes(node)) visit(child);
@@ -127,7 +95,7 @@ module.exports = rule(
 
     function check(func) {
       const groups = new Map();
-      for (const guard of guardsOf(func, methods, tags)) {
+      for (const guard of guardsOf(func, methods, tags, context)) {
         const selector = resolveVariable(guard.selector, context);
         const builder = resolveVariable(guard.builder, context);
         if (!selector || !builder) continue;

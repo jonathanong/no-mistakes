@@ -81,9 +81,24 @@ else throw new Error("unknown access");
 ```
 
 The rule reports nothing until both lists are non-empty. `builderMethods` is
-the method names that append SQL, such as `["append"]`. `tagNames` is the tag
-identifiers that produce SQL text, such as `["sql"]`. A string or untagged
-template passed to one of those methods counts as SQL text too.
+the method names that append SQL, such as `["append"]`. A string literal or
+expression-free template is that method (`query["append"]` and
+``query[`append`]``). A computed identifier key is not. `query.append.call(query, text)` forwards to `append`. The SQL text is the
+second argument, and the builder is the receiver in the first argument. A
+receiver that is not an identifier, a spread argument, or a different object
+on each guard does not count as one builder. A configured method whose name
+is `call` stays that method. A call or tag that is not a member, such as
+`helper.call` or `` factory()`...` ``, stays silent.
+
+`tagNames` is the tag names that produce SQL text, such as `["sql"]`. An
+identifier tag and a member tag (`db.sql`, `db["sql"]`, ``db[`sql`]``) both
+count. A string or untagged template passed to one of those methods counts as
+SQL text too.
+
+A `const` arrow or a function declaration whose body is only that append of
+its single parameter counts as the append (`const add = (text) =>
+query.append(text)`). A `let`, a parameter, a second hop, or any other
+statement in that function does not.
 
 ## Fix
 

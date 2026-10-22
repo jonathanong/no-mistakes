@@ -109,8 +109,10 @@ That includes any of these:
 - `throw`, `new`, a loop, `switch`, `try`, a destructured parameter, a
   parameter default, or any call that is not a configured callee or tag. The
   callee of a judged tag is not one of these reads when it is a bare identifier
-  or a member chain rooted outside the function, such as `(db.sql)`. A tag on
-  a parameter or local, such as ``id.sql`SELECT 1` ``, stays silent
+  or a member chain rooted outside the function, such as `(db.sql)`,
+  `db["sql"]`, or ``db[`sql`]``. A computed identifier key, such as
+  `db[name]`, stays silent. A tag on a parameter or local, such as
+  ``id.sql`SELECT 1` ``, stays silent
 - an exported builder, or an explicit `Promise<...>`, `any`, `unknown`,
   `object`, or Promise-compatible type-literal return type, including a
   same-file alias it cannot resolve
@@ -171,11 +173,19 @@ async function buildQuery(id: string) {
   A later declarator in the same statement runs after the initializer and
   still reports. A module-level binding that is not that shape, including a
   module-level configured tag, is not judged SQL.
-- `source`, when set, limits `callees` to a named import or a namespace member
-  imported from that exact module specifier. Renamed imports match the imported
-  name (`import { sql as tag }` matches `sql`). Type-only and default imports
-  do not match. Without `source`, `callees` match the local identifier or
-  member name as written.
+
+- `source`, when set, limits `callees` to a named import, a namespace member,
+  or a `const` destructure of that namespace (`const { sql } = db`,
+  `const { sql: tag } = db`, `const { ["sql"]: tag } = db`, and
+  ``const { [`sql`]: tag } = db``) imported from that exact module specifier.
+  A string literal or expression-free template is that member (`db["sql"]` and
+  ``db[`sql`]``). A computed identifier key (`db[name]`,
+  `const { [name]: tag } = db`), a default on the destructured property
+  (`const { sql = other } = db`), a `let` or `var`, and a default import do
+  not match. Renamed imports match the imported name
+  (`import { sql as tag }` matches `sql`). Type-only and default imports do
+  not match. Without `source`, `callees` match the local identifier or member
+  name as written, including those static keys.
 
 ```js
 {
