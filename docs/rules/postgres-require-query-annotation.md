@@ -163,6 +163,9 @@ methods, helper escapes, aliases, returns, stores, and exports make it
 unanalyzable because a const binding does not make its builder immutable.
 Literal string consts retain their head when passed elsewhere.
 
+A tagged-template left operand of `+` also keeps its literal head, directly or
+through one local const. A tag on the right cannot repair an unknown left head.
+
 The first complete block comment must contain a nonempty name. Parentheses and
 TypeScript assertions do not add indirection. The const must resolve to the same
 file's lexical declaration; a second alias, import, destructured binding, or

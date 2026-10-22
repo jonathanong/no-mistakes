@@ -35,7 +35,7 @@ pub(super) fn scan(
             observer.increment("postgres.annotation.low.calls", file.calls.len() as u64);
         }
         for (call, span) in file.calls.iter().zip(&file.call_spans) {
-            let visible = heads.is_some_and(|heads| heads.accepts(*span, &opts.embedded));
+            let visible = heads.is_some_and(|heads| heads.accepts(*span));
             if facts.wants_sql_verdicts() {
                 facts.record_sql_verdict(SqlObligationVerdict {
                     profile: opts.embedded.clone(),

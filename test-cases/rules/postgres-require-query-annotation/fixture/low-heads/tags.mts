@@ -33,8 +33,8 @@ read(mutable); // low: false
 const tagAlias = named;
 read(tagAlias`/* alias tag */ SELECT ${value}`); // low: true
 const concatenated = named`/* tag plus */ SELECT ${value}` + tail;
-read(concatenated); // low: false
-read(named`/* direct tag plus */ SELECT ${value}` + tail); // low: false
+read(concatenated); // low: true
+read(named`/* direct tag plus */ SELECT ${value}` + tail); // low: true
 function shadow(named: unknown) {
   read(named`/* parameter shadow */ SELECT ${value}`); // low: true
 }
@@ -59,3 +59,10 @@ read(namespace["sql"]`/* computed tag */ SELECT ${value}`); // low: true
 read(makeTag()`/* factory tag */ SELECT ${value}`); // low: true
 const computedStatement = namespace["sql"]`/* computed const */ SELECT ${value}`;
 read(computedStatement); // low: true
+
+// Concatenation keeps the first head; a later tag cannot repair an unknown one.
+read((named`/* nested tag plus */ SELECT ${value}` + tail) + tail); // low: true
+read(tail + named`/* right tag */ SELECT ${value}`); // low: false
+read(named`/* ${value} incomplete */ SELECT 1` + tail); // low: false
+const wrappedPlus = (defaultTag`/* wrapped const plus */ SELECT ${value}` + tail) as string;
+read(wrappedPlus); // low: true

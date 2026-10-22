@@ -1,5 +1,4 @@
 //! Original syntax proofs for annotation low effort; no helper value evaluation.
-use crate::codebase::postgres::EmbeddedSqlOptions;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use oxc_ast::ast::Program;
 use std::collections::BTreeMap;
@@ -20,7 +19,7 @@ pub(crate) struct AnnotationHeads {
     pub(crate) calls: BTreeMap<Span, HeadProof>,
 }
 impl AnnotationHeads {
-    pub(crate) fn accepts(&self, span: Span, _options: &EmbeddedSqlOptions) -> bool {
+    pub(crate) fn accepts(&self, span: Span) -> bool {
         matches!(self.calls.get(&span), Some(HeadProof::Literal))
     }
 }

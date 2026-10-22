@@ -24,25 +24,15 @@ fn named(text: &str) -> bool {
         .and_then(|tail| tail.find("*/").map(|end| !tail[..end].trim().is_empty()))
         .unwrap_or(false)
 }
-fn literal<'a>(mut expression: &'a Expression<'a>) -> bool {
-    loop {
-        expression = unwrap_ts_wrappers(expression);
-        match expression {
-            Expression::StringLiteral(value) => return named(&value.value),
-            Expression::TemplateLiteral(value) => {
-                return value
-                    .quasis
-                    .first()
-                    .and_then(|part| part.value.cooked.as_ref())
-                    .is_some_and(|text| named(text))
-            }
-            Expression::BinaryExpression(value)
-                if value.operator == oxc_ast::ast::BinaryOperator::Addition =>
-            {
-                expression = &value.left;
-            }
-            _ => return false,
-        }
+fn literal(expression: &Expression<'_>) -> bool {
+    match expression {
+        Expression::StringLiteral(value) => named(&value.value),
+        Expression::TemplateLiteral(value) => value
+            .quasis
+            .first()
+            .and_then(|part| part.value.cooked.as_ref())
+            .is_some_and(|text| named(text)),
+        _ => false,
     }
 }
 #[derive(Clone, Copy)]
@@ -60,13 +50,27 @@ impl Head {
         }
     }
 }
-fn head(expression: &Expression<'_>) -> Head {
-    let expression = unwrap_ts_wrappers(expression);
+// Preserve Tag through concatenation so local constants still require safe uses.
+fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
+    let mut concatenated = false;
+    loop {
+        expression = unwrap_ts_wrappers(expression);
+        if let Expression::BinaryExpression(value) = expression {
+            if value.operator == oxc_ast::ast::BinaryOperator::Addition {
+                concatenated = true;
+                expression = &value.left;
+                continue;
+            }
+        }
+        break;
+    }
     if literal(expression) {
         return Head::Literal;
     }
-    if let Expression::Identifier(id) = expression {
-        return Head::Reference(span(id.span));
+    if !concatenated {
+        if let Expression::Identifier(id) = expression {
+            return Head::Reference(span(id.span));
+        }
     }
     if let Expression::TaggedTemplateExpression(value) = expression {
         if value
