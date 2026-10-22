@@ -89,7 +89,11 @@ fn scalar_containers_skip_reachability_walks_even_through_result_wrappers() {
 fn mixed_containers_keep_environment_argument_and_builder_roots() {
     let mut mixed = Value::Possible(
         vec![
-            Value::Function(saved_function(), "reads.mts".into(), 42),
+            Value::Function(
+                saved_function(),
+                std::path::Path::new("reads.mts").into(),
+                42,
+            ),
             Value::Arguments(8),
             Value::Prefix("SELECT 1".into(), true, Some(7)),
         ]
@@ -120,7 +124,11 @@ fn detached_function_only_container_retains_its_environment() {
     assert!(!values.contains_environment());
     let scalar_snapshot = values.clone();
     values.push(Value::Promise(Box::new(Value::Evaluated(
-        Box::new(Value::Function(saved_function(), "reads.mts".into(), 42)),
+        Box::new(Value::Function(
+            saved_function(),
+            std::path::Path::new("reads.mts").into(),
+            42,
+        )),
         true,
     ))));
 

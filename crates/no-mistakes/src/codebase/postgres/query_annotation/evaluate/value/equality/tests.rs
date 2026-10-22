@@ -18,7 +18,7 @@ fn function() -> Value {
             arrow: false,
             self_name: None,
         }),
-        "helper.mts".into(),
+        std::path::Path::new("helper.mts").into(),
         7,
     )
 }
@@ -70,7 +70,7 @@ fn frozen_derived_oracle_matches_all_variant_pairs_and_function_fields() {
     ));
     values.push(Value::Function(
         summary.clone(),
-        "different.mts".into(),
+        std::path::Path::new("different.mts").into(),
         env,
     ));
     values.push(Value::Function(summary.clone(), path.clone(), env + 1));
@@ -126,3 +126,6 @@ fn memo_warmth_is_not_semantic_and_cow_does_not_reuse_identity() {
     cold.push(Value::Unknown);
     assert!(a != Value::Record(cold, vec!["name".into()]));
 }
+
+mod owner_evaluator;
+mod owners;

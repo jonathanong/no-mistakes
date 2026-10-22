@@ -24,7 +24,7 @@ fn remapping_changes_function_environments_only_in_written_snapshot() {
             arrow: false,
             self_name: None,
         }),
-        "helper.ts".into(),
+        std::path::Path::new("helper.ts").into(),
         7,
     );
     let original = Values::from(vec![Value::Promise(Box::new(Value::Evaluated(

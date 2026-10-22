@@ -83,7 +83,7 @@ fn environment_memo_follows_nested_functions_and_detached_writes() {
             arrow: false,
             self_name: None,
         }),
-        "helper.ts".into(),
+        std::path::Path::new("helper.ts").into(),
         7,
     );
     let mut values = Values::from(vec![Value::Arguments(8), prefix("plain")]);

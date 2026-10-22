@@ -76,3 +76,5 @@ fn missing_saved_module_reports_the_identity_table_invariant() {
     // Keep the file real while deliberately omitting it from this request table.
     ModuleIds::new(paths).id(&missing);
 }
+
+mod owners;

@@ -146,7 +146,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             };
         };
         if !function.supported
-            || (!self.files[&function_path].facts.precise_records
+            || (!self.files[function_path.as_ref()].facts.precise_records
                 && function.body.iter().any(|step| {
                     matches!(
                         step,
@@ -183,7 +183,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let mut scope = self.environment(locals);
         self.register_mappings(scope, captured, &function, mapping);
         self.register_captured_bindings(scope, captured, &function);
-        let suspended = self.files[&function_path].facts.precise_records
+        let suspended = self.files[function_path.as_ref()].facts.precise_records
             && function.asynchronous
             && async_suspension::has_suspension(&function.body);
         let prior_events = suspended.then(|| async_suspension::event_lengths(&self.events));

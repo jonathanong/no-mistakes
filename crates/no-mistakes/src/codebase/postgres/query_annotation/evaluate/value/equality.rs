@@ -4,6 +4,7 @@ mod hooks;
 #[cfg(test)]
 #[path = "equality/test_hooks.rs"]
 mod hooks;
+mod owner_order;
 mod prefix_order;
 
 // Shared Scope snapshots can return the very same Value reference. Avoid descending
@@ -44,7 +45,9 @@ fn composite(a: &Value, b: &Value) -> bool {
         }
         (Value::Evaluated(a, b), Value::Evaluated(a2, b2)) => a == a2 && b == b2,
         (Value::Record(a, b), Value::Record(a2, b2)) => a == a2 && b == b2,
-        (Value::Function(a, b, c), Value::Function(a2, b2, c2)) => a == a2 && b == b2 && c == c2,
+        (Value::Function(a, b, c), Value::Function(a2, b2, c2)) => {
+            a == a2 && owner_order::compare(b, b2) && c == c2
+        }
         _ => false,
     }
 }

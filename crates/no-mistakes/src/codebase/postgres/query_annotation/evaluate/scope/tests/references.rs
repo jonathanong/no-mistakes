@@ -59,7 +59,7 @@ fn every_prefix_reachable_value_kind_is_conservative() {
             arrow: false,
             self_name: None,
         }),
-        "helper.mts".into(),
+        std::path::Path::new("helper.mts").into(),
         0,
     );
     for value in [

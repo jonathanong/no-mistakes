@@ -34,6 +34,16 @@ impl ModuleIds {
             .expect("module path missing from the request's identity table")
     }
 
+    pub fn shared_path(&self, path: &Path) -> Arc<Path> {
+        self.indices
+            .get(path)
+            .map(|id| &self.paths[id.0])
+            // Path equality can normalize spellings; source locations must not.
+            .filter(|owner| owner.as_os_str() == path.as_os_str())
+            .cloned()
+            .unwrap_or_else(|| Arc::from(path))
+    }
+
     pub fn path(&self, id: ModuleId) -> &Path {
         &self.paths[id.0]
     }

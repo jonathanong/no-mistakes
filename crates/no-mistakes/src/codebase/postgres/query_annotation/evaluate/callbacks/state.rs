@@ -129,7 +129,7 @@ impl View<'_> {
             while let Some(value) = values.pop() {
                 match value {
                     Value::Function(function, path, env) => {
-                        functions.push((path.as_path(), *env, function))
+                        functions.push((path.as_ref(), *env, function))
                     }
                     Value::Arguments(id) | Value::Array(id) => {
                         self.snapshot_argument(*id, &mut found, &mut values)

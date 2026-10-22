@@ -1,5 +1,7 @@
 use std::cell::Cell;
 thread_local! {
+    static OWNER_LEGACY: Cell<bool> = const { Cell::new(false) };
+    static OWNER_COMPARISONS: Cell<usize> = const { Cell::new(0) };
     static LEGACY: Cell<bool> = const { Cell::new(false) };
     static SQL_COMPARISONS: Cell<usize> = const { Cell::new(0) };
     static FALLBACKS: Cell<usize> = const { Cell::new(0) };
@@ -59,3 +61,37 @@ macro_rules! fallback {
     };
 }
 pub(super) use {fallback, identity, prefix, sql_component};
+
+pub(super) fn same_owner(
+    a: &std::sync::Arc<std::path::Path>,
+    b: &std::sync::Arc<std::path::Path>,
+) -> bool {
+    !OWNER_LEGACY.get() && std::sync::Arc::ptr_eq(a, b)
+}
+pub(super) fn compare_owner(a: &std::path::Path, b: &std::path::Path) -> bool {
+    OWNER_COMPARISONS.set(OWNER_COMPARISONS.get() + 1);
+    a == b
+}
+pub(super) fn measure_owner<T>(legacy: bool, f: impl FnOnce() -> T) -> (T, usize) {
+    struct Reset(bool);
+    impl Drop for Reset {
+        fn drop(&mut self) {
+            OWNER_LEGACY.set(self.0);
+        }
+    }
+    let _reset = Reset(OWNER_LEGACY.replace(legacy));
+    OWNER_COMPARISONS.set(0);
+    let value = f();
+    (value, OWNER_COMPARISONS.get())
+}
+macro_rules! owner_identity {
+    ($a:expr,$b:expr) => {
+        hooks::same_owner($a, $b)
+    };
+}
+macro_rules! owner_component {
+    ($a:expr,$b:expr) => {
+        hooks::compare_owner($a, $b)
+    };
+}
+pub(super) use {owner_component, owner_identity};

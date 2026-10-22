@@ -2,7 +2,11 @@ use super::*;
 use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
 
 fn callback(env: usize) -> Value {
-    Value::Function(tests::saved_function(), "reads.mts".into(), env)
+    Value::Function(
+        tests::saved_function(),
+        std::path::Path::new("reads.mts").into(),
+        env,
+    )
 }
 
 fn parity(

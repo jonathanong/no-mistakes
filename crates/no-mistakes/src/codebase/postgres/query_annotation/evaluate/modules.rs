@@ -78,9 +78,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         for (name, expr) in &facts.globals {
             match expr {
                 Expr::Function(function) => {
+                    let owner = self.module_ids().shared_path(path);
                     self.scopes[env].insert(
                         name.clone(),
-                        Value::Function(std::sync::Arc::clone(function), path.to_path_buf(), env),
+                        Value::Function(std::sync::Arc::clone(function), owner, env),
                     );
                 }
                 Expr::Unknown => {

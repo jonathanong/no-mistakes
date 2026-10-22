@@ -3,7 +3,7 @@ use crate::codebase::postgres::query_annotation::Function;
 use crate::fx::FxHashSet;
 use std::{
     ops::{Deref, DerefMut},
-    path::PathBuf,
+    path::Path,
     sync::{Arc, OnceLock},
 };
 
@@ -153,7 +153,7 @@ pub(in crate::codebase::postgres::query_annotation) enum Value {
     Possible(Values),
     Arguments(u64),
     Array(u64),
-    Function(Arc<Function>, PathBuf, Environment),
+    Function(Arc<Function>, Arc<Path>, Environment),
     Number(i64),
     Boolean(bool),
     Failure(&'static str),
