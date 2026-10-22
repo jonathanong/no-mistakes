@@ -23,6 +23,11 @@ const SUPPORT: &[RuleEffortSupport] = &[
         partner_scope: |_, _| false,
     },
     RuleEffortSupport {
+        rule: "postgres-no-unbounded-sql-identifier",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
         rule: "postgres-require-query-annotation",
         partners: &[],
         partner_scope: |_, _| false,

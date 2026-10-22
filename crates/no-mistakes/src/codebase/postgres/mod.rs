@@ -27,6 +27,7 @@ mod profiles;
 mod rule_options;
 mod schema;
 mod source;
+pub(crate) mod sql_identifier_syntax;
 mod sql_include_policy;
 mod statement_facts;
 pub use statement_facts::SqlLifecycleFacts;

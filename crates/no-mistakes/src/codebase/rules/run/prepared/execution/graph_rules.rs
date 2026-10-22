@@ -133,8 +133,7 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
                 crate::codebase::rules::postgres_no_unbounded_sql_identifier::check_with_graph(
                     root,
                     config,
-                    dependency_graph
-                        .expect("postgres-no-unbounded-sql-identifier requires canonical graph"),
+                    dependency_graph,
                     shared,
                 )
             },

@@ -104,6 +104,7 @@ pub(crate) struct CheckFileFacts {
         crate::codebase::postgres::EmbeddedSqlOptions,
         crate::codebase::postgres::EmbeddedSqlFileFacts,
     )>,
+    pub(crate) sql_identifier_syntax: crate::codebase::postgres::sql_identifier_syntax::FileFacts,
     pub(crate) query_annotation_heads:
         Option<Arc<crate::codebase::postgres::query_annotation::heads::AnnotationHeads>>,
     pub(crate) query_annotation: Vec<(

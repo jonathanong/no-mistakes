@@ -9,6 +9,7 @@ pub fn assign_prepared_embedded_sql_options(
         config,
         super::PREPARED_EMBEDDED_SQL_RULE_IDS,
     )?;
+    plan.embedded_sql = !options.is_empty();
     plan.embedded_sql_options = options;
     plan.embedded_sql_rule_ids = rule_ids;
     Ok(())
@@ -20,6 +21,24 @@ pub fn configure_prepared_postgres_plan(
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
     plan.record_general_sql_locations();
+    for rule in config.rule_applications("postgres-no-unbounded-sql-identifier") {
+        if config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low {
+            let options: EmbeddedSqlRuleOptions = rule.try_rule_options()?;
+            plan.sql_identifier_profiles.push(
+                EmbeddedSqlOptions::configured(
+                    options.import_specifier.as_deref().unwrap_or_default(),
+                    &options.executor_names,
+                )
+                .with_scoped_executors(
+                    &options.executor_factory_names,
+                    &options.executor_type_names,
+                )
+                .with_trusted_sql_tags(&options.trusted_sql_tags),
+            );
+        }
+    }
+    plan.sql_identifier_profiles.sort();
+    plan.sql_identifier_profiles.dedup();
     let (_, annotation_options, _) = super::configured_embedded_sql_options_with_annotation(
         config,
         &["postgres-require-query-annotation"],

@@ -73,6 +73,7 @@ pub(super) fn requires_parse(
         || plan.production_import_paths.contains(path)
         || plan.query_annotation
         || plan.query_annotation_heads
+        || !plan.sql_identifier_profiles.is_empty()
         || plan.symbols
         || plan.react
         || plan.react_usages

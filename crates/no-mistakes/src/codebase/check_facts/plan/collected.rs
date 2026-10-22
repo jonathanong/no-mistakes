@@ -16,7 +16,8 @@ impl CheckFactPlan {
         if self.imports {
             plan.include(crate::codebase::ts_source::facts::TsFactPlan::imports());
         }
-        plan.module_bindings |= self.query_annotation_heads;
+        plan.module_bindings |=
+            self.query_annotation_heads || !self.sql_identifier_profiles.is_empty();
         plan.symbols |= self.symbols;
         plan.source |= self.source || self.raw_source;
         plan.react |= self.react;

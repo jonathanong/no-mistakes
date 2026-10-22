@@ -101,7 +101,7 @@ pub fn canonical_graph_requires_full_file_universe(
     config: &crate::config::v2::NoMistakesConfig,
 ) -> bool {
     config.rule_configured(query_reached_per_item::RULE_ID)
-        || postgres_sql_cross_file::enabled(config)
+        || postgres_sql_cross_file::needs_deep_analysis(config)
         || required_entrypoint_reachability::graph_plan(config).is_some()
         || config.rule_configured(FORBIDDEN_DEPENDENCIES)
         || config.rule_configured(FORBIDDEN_CALLS)
