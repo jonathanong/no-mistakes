@@ -28,6 +28,8 @@ vi.mock("@app/payments", async () => ({
 
 ## Options
 
+The schema accepts an options object.
+
 ```js
 {
   rules: {

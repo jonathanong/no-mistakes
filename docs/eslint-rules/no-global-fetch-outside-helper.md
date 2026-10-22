@@ -21,6 +21,8 @@ export const listUsers = () => fetch("/api/users");
 
 ## Options
 
+The schema accepts an options object.
+
 ```js
 {
   rules: {

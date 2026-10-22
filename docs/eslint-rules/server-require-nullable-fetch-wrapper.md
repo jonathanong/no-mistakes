@@ -29,6 +29,8 @@ export async function getUserRoute(id: string): Promise<MaybeUser> {
 
 ## Options
 
+The schema accepts an options object.
+
 ```js
 {
   rules: {

@@ -25,6 +25,8 @@ vi.mock("stripe", () => ({ Stripe: vi.fn() }));
 
 ## Options
 
+The schema accepts an options object.
+
 ```js
 {
   rules: {
