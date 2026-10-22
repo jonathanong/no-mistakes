@@ -20,6 +20,7 @@ function controls(rows, key, replacement) {
   original.apply(local, [1]);
   const localBound = original.bind(local);
   localBound(1);
+  localBound.call();
   localBound.ready = true; // Binding creates a separate local function object.
   original.bind(null)(1);
   original.apply(...rows);
@@ -32,6 +33,7 @@ function controls(rows, key, replacement) {
   original.bind(...rows)();
   const rebound = localBound.bind(rows, 1, ...local);
   rebound.call(rows, 1);
+  rebound.call();
   rebound.apply(rows, [1]);
   const cycle = {};
   cycle.self = cycle;

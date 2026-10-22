@@ -20,8 +20,8 @@ function visitAliasedMutation(state, node, scope, method, forward) {
     const thisNode = node.arguments[0];
     const list = forward === "apply" ? unwrap(node.arguments[1]) : null;
     if (
-      !thisNode ||
-      thisNode.type === "SpreadElement" ||
+      (!thisNode && !method.bound) ||
+      thisNode?.type === "SpreadElement" ||
       (forward === "apply" &&
         (list?.type !== "ArrayExpression" ||
           list.elements.some((item) => !item || item.type === "SpreadElement")))

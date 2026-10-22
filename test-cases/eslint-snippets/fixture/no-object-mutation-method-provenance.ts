@@ -45,6 +45,7 @@ function boundShared(rows) {
   const local = [];
   const push = rows.push.bind(rows, 1);
   push.call(local);
+  push.call(); // A bound function ignores an omitted thisArg as well.
   push.apply(local, []);
   const rebound = push.bind(local);
   rebound();

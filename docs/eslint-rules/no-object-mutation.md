@@ -84,6 +84,7 @@ function append(rows, otherRows, row) {
   alias.apply(otherRows, [row]);
   const bound = alias.bind(otherRows);
   bound(row);
+  bound.call();
 }
 ```
 

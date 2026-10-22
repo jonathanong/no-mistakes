@@ -30,7 +30,7 @@ describe("no-object-mutation method aliases", () => {
   it("retains captured receiver identity, escape state, and known function bodies", () => {
     assert.deepEqual(
       messages(fixture("no-object-mutation-method-provenance.ts"), rule, undefined, "fixture.ts"),
-      mutations(18),
+      mutations(19),
     );
   });
   it("walks inner writes even when forwarding cannot prove an outer mutation", () => {
@@ -44,7 +44,7 @@ describe("no-object-mutation method aliases", () => {
     const disallowed = sourceFences(headingSection(page.body, "Disallowed")).find((snippet) =>
       snippet.code.includes("function append("),
     );
-    assert.deepEqual(messages(disallowed.code, rule, undefined, "fixture.ts"), mutations(5));
+    assert.deepEqual(messages(disallowed.code, rule, undefined, "fixture.ts"), mutations(6));
     for (const snippet of sourceFences(headingSection(page.body, "Limits"))) {
       assert.deepEqual(messages(snippet.code, rule, undefined, "fixture.ts"), []);
     }
