@@ -42,6 +42,7 @@ impl CheckFactMap {
         }
         let mut graph_plan = self.graph_plan;
         graph_plan.include(supplemental.graph_plan);
+        let call_site_paths = merged_call_site_paths(self, supplemental, overwrite);
         let unproven_member_query_sql =
             crate::codebase::check_facts::relative_scope::count_unproven_member_queries(
                 ts.values().map(|facts| facts.as_ref()),
@@ -60,6 +61,7 @@ impl CheckFactMap {
             graph_files_complete: self.graph_files_complete,
             ts,
             graph_plan,
+            call_site_paths,
             integration_runner_configs: self.integration_runner_configs.clone(),
             playwright_source_files: Arc::clone(&self.playwright_source_files),
             playwright_test_files_by_project: Arc::clone(&self.playwright_test_files_by_project),
@@ -72,4 +74,39 @@ impl CheckFactMap {
             unproven_member_query_sql,
         }
     }
+}
+
+fn merged_call_site_paths(
+    primary: &CheckFactMap,
+    supplemental: &CheckFactMap,
+    overwrite: bool,
+) -> Arc<Vec<PathBuf>> {
+    let mut selected = Arc::clone(&primary.call_site_paths);
+    if Arc::ptr_eq(&selected, &supplemental.call_site_paths) {
+        return selected;
+    }
+    // An overwritten entry no longer carries its original projection.
+    if overwrite
+        && selected
+            .iter()
+            .any(|path| supplemental.ts.contains_key(path))
+    {
+        Arc::make_mut(&mut selected).retain(|path| !supplemental.ts.contains_key(path));
+    }
+    let additions = supplemental
+        .call_site_paths
+        .iter()
+        .filter(|path| overwrite || !primary.ts.contains_key(path))
+        .collect::<Vec<_>>();
+    if additions.is_empty() {
+        return selected;
+    }
+    if selected.is_empty() && additions.len() == supplemental.call_site_paths.len() {
+        return Arc::clone(&supplemental.call_site_paths);
+    }
+    let paths = Arc::make_mut(&mut selected);
+    paths.extend(additions.into_iter().cloned());
+    paths.sort();
+    paths.dedup();
+    selected
 }

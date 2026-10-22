@@ -18,6 +18,7 @@ pub(super) fn ts_extract_plan(
 ) -> TsFactPlan {
     let mut ts_plan = plan.collected_ts_plan();
     ts_plan.imports |= plan.production_import_paths.contains(path);
+    ts_plan.call_sites |= plan.includes_call_site_path(path);
     if playwright.is_some_and(|plan| plan.file(path).is_some()) {
         ts_plan.include(TsFactPlan::imports());
     }
@@ -53,6 +54,7 @@ pub(super) fn requires_parse(
 ) -> bool {
     plan.imports
         || plan.production_import_paths.contains(path)
+        || plan.includes_call_site_path(path)
         || plan.query_annotation
         || plan.query_annotation_heads
         || plan.symbols

@@ -176,6 +176,29 @@ fn collect_file_facts_populates_call_sites_for_the_graph_plan() {
 }
 
 #[test]
+fn graph_function_calls_remain_when_finite_call_sites_select_another_file() {
+    let root = super::fixture_path("");
+    let file = root.join("src/everything.tsx");
+    let facts = collect_file_facts(
+        &root,
+        &file,
+        &CheckFactPlan {
+            call_site_paths: std::sync::Arc::new(vec![root.join("src/widget.tsx")]),
+            graph: crate::codebase::ts_source::facts::TsFactPlan {
+                function_calls: true,
+                value_flow: true,
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        None,
+    )
+    .expect("graph facts");
+    assert!(!facts.ts.function_calls.is_empty());
+    assert!(facts.ts.call_sites.is_empty());
+}
+
+#[test]
 fn collect_file_facts_retains_prepared_runner_config_parse_errors() {
     use crate::config::v2::schema::{NoMistakesConfig, StringOrList, TestProjectPolicy};
 
@@ -366,4 +389,111 @@ fn prepared_postgres_fact_accessors_preserve_missing_and_load_errors() {
     facts
         .postgres_schema_catalog("./valid.json")
         .expect("normalized prepared catalog is returned");
+}
+#[test]
+fn fact_view_coverage_tracks_the_saved_call_facts_entry_it_retains() {
+    use crate::codebase::check_facts::collect_check_facts;
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use crate::codebase::ts_source::facts::TsFactPlan;
+    use std::sync::Arc;
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/finite-set-consistency/call-literals/supplemental-skipped"),
+    );
+    let selected = root.join("generated/schedules.test.mts");
+    let files = vec![selected.clone()];
+    let rich = collect_check_facts(
+        &root,
+        files.clone(),
+        CheckFactPlan {
+            call_site_paths: Arc::new(files.clone()),
+            ..Default::default()
+        },
+    );
+    let sparse = collect_check_facts(
+        &root,
+        files,
+        CheckFactPlan {
+            graph: TsFactPlan::imports(),
+            ..Default::default()
+        },
+    );
+    let call_sites = TsFactPlan {
+        call_sites: true,
+        ..Default::default()
+    };
+    assert!(rich
+        .get_ts_facts(&selected)
+        .is_some_and(|facts| !facts.call_sites.is_empty()));
+    assert!(sparse
+        .get_ts_facts(&selected)
+        .is_some_and(|facts| facts.call_sites.is_empty()));
+
+    let retained_sparse = sparse.fact_view_filling_missing(&rich);
+    assert!(!retained_sparse.covers_ts_fact_plan_for_file(&selected, call_sites));
+    assert!(retained_sparse
+        .get_ts_facts(&selected)
+        .unwrap()
+        .call_sites
+        .is_empty());
+    let replaced_with_rich = sparse.fact_view_with_supplemental(&rich);
+    assert!(replaced_with_rich.covers_ts_fact_plan_for_file(&selected, call_sites));
+    assert!(!replaced_with_rich
+        .get_ts_facts(&selected)
+        .unwrap()
+        .call_sites
+        .is_empty());
+
+    let retained_rich = rich.fact_view_filling_missing(&sparse);
+    assert!(retained_rich.covers_ts_fact_plan_for_file(&selected, call_sites));
+    let replaced_with_sparse = rich.fact_view_with_supplemental(&sparse);
+    assert!(!replaced_with_sparse.covers_ts_fact_plan_for_file(&selected, call_sites));
+    assert!(replaced_with_sparse
+        .get_ts_facts(&selected)
+        .unwrap()
+        .call_sites
+        .is_empty());
+    assert!(!rich.covers_ts_fact_plan(call_sites));
+}
+
+#[test]
+fn disjoint_selected_call_fact_maps_keep_both_paths() {
+    use crate::codebase::check_facts::collect_check_facts;
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use crate::codebase::ts_source::facts::TsFactPlan;
+    use std::sync::Arc;
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/finite-set-consistency/call-literals/supplemental-skipped"),
+    );
+    let paths = [
+        root.join("generated/schedules.test.mts"),
+        root.join("vitest.config.mts"),
+    ];
+    let selected = |path: &PathBuf| {
+        collect_check_facts(
+            &root,
+            vec![path.clone()],
+            CheckFactPlan {
+                call_site_paths: Arc::new(vec![path.clone()]),
+                ..Default::default()
+            },
+        )
+    };
+    let primary = selected(&paths[0]);
+    let supplemental = selected(&paths[1]);
+    let merged = primary.fact_view_filling_missing(&supplemental);
+    let demand = TsFactPlan {
+        call_sites: true,
+        ..Default::default()
+    };
+    for path in &paths {
+        assert!(merged.covers_ts_fact_plan_for_file(path, demand));
+        assert!(!merged.get_ts_facts(path).unwrap().call_sites.is_empty());
+    }
+    assert_eq!(merged.call_site_paths.len(), 2);
+    assert!(Arc::ptr_eq(
+        &primary.call_site_paths,
+        &primary.fact_view_filling_missing(&primary).call_site_paths
+    ));
 }

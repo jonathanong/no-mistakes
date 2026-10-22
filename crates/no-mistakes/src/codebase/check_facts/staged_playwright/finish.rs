@@ -70,6 +70,7 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         } else {
             plan.collected_ts_plan()
         },
+        call_site_paths: Arc::clone(&plan.call_site_paths),
         integration_runner_configs,
         playwright_source_files,
         playwright_test_files_by_project,

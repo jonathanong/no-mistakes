@@ -35,14 +35,12 @@ fn check_call_literal_fixture(case: &str, target: &str) -> anyhow::Result<Vec<Ru
     let files = vec![root.join("schedules.mts"), root.join("registry.mts")];
     let sources = crate::codebase::rules::source_store_for_files(&files);
     let config = call_literal_config(target);
+    let call_site_paths = std::sync::Arc::new(try_required_call_site_fact_files(&root, &config)?);
     let facts = crate::codebase::check_facts::collect_check_facts(
         &root,
-        try_required_call_site_fact_files(&root, &config)?,
+        call_site_paths.as_ref().clone(),
         crate::codebase::check_facts::CheckFactPlan {
-            graph: crate::codebase::ts_source::facts::TsFactPlan {
-                call_sites: true,
-                ..Default::default()
-            },
+            call_site_paths,
             ..Default::default()
         },
     );

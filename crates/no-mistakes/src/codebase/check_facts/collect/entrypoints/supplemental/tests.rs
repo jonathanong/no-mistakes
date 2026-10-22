@@ -1,7 +1,136 @@
 use super::*;
+use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::facts::TsFactPlan;
 use crate::codebase::ts_source::FileInventory;
+
+fn call_site_plan() -> TsFactPlan {
+    TsFactPlan {
+        call_sites: true,
+        ..Default::default()
+    }
+}
+
+#[test]
+fn finite_call_source_collects_one_domain_visitor_amid_unrelated_graph_facts() {
+    let root = normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/finite-set-consistency/call-literals/supplemental-skipped"),
+    );
+    let selected = root.join("generated/schedules.test.mts");
+    let registry = root.join("registry.mts");
+    let unrelated = root.join("src/lazy.mts");
+    let paths = vec![selected.clone(), registry.clone(), unrelated.clone()];
+    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
+        &paths,
+    ))));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+    let facts = crate::diagnostics::with_observer(Some(observer.clone()), || {
+        collect_check_facts_with_supplemental_call_sites(
+            &session,
+            &root,
+            (vec![registry.clone(), unrelated.clone()], Vec::new()),
+            vec![selected.clone()],
+            CheckFactPlan {
+                graph: TsFactPlan::imports(),
+                ..Default::default()
+            },
+            None,
+            sources,
+        )
+    });
+    assert_eq!(facts.stats.files_parsed, 3);
+    assert_eq!(
+        observer.snapshot().work.get("call_sites.collect_files"),
+        Some(&1)
+    );
+    assert!(!facts.graph_plan().call_sites);
+    assert!(facts.covers_ts_fact_plan_for_file(&selected, call_site_plan()));
+    assert!(!facts.covers_ts_fact_plan_for_file(&registry, call_site_plan()));
+    assert!(!facts.covers_ts_fact_plan_for_file(&unrelated, call_site_plan()));
+    assert!(facts
+        .get_ts_facts(&selected)
+        .is_some_and(|facts| !facts.call_sites.is_empty()));
+}
+
+#[test]
+fn finite_call_source_in_graph_only_scope_keeps_its_single_parse_facts() {
+    let root = normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/finite-set-consistency/call-literals/supplemental-skipped"),
+    );
+    let selected = root.join("generated/schedules.test.mts");
+    let registry = root.join("registry.mts");
+    let paths = vec![selected.clone(), registry.clone()];
+    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
+        &paths,
+    ))));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+    let facts = crate::diagnostics::with_observer(Some(observer.clone()), || {
+        collect_check_facts_with_supplemental_call_sites(
+            &session,
+            &root,
+            (vec![registry.clone()], vec![selected.clone()]),
+            Vec::new(),
+            CheckFactPlan {
+                graph: TsFactPlan::imports(),
+                call_site_paths: Arc::new(vec![selected.clone()]),
+                ..Default::default()
+            },
+            None,
+            sources,
+        )
+    });
+    assert_eq!(facts.stats.files_parsed, 2);
+    assert_eq!(
+        observer.snapshot().work.get("call_sites.collect_files"),
+        Some(&1)
+    );
+    assert!(!facts.graph_plan().call_sites);
+    assert!(facts.covers_ts_fact_plan_for_file(&selected, call_site_plan()));
+    assert!(facts
+        .get_ts_facts(&selected)
+        .is_some_and(|facts| !facts.call_sites.is_empty()));
+}
+
+#[test]
+fn graph_owned_call_site_demand_still_collects_all_graph_files() {
+    let root = normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/finite-set-consistency/call-literals/supplemental-skipped"),
+    );
+    let selected = root.join("generated/schedules.test.mts");
+    let unrelated = root.join("registry.mts");
+    let paths = vec![selected.clone(), unrelated.clone()];
+    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
+        &paths,
+    ))));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+    let facts = crate::diagnostics::with_observer(Some(observer.clone()), || {
+        collect_check_facts_with_supplemental_call_sites(
+            &session,
+            &root,
+            (vec![unrelated.clone()], vec![selected.clone()]),
+            Vec::new(),
+            CheckFactPlan {
+                graph: call_site_plan(),
+                call_site_paths: Arc::new(vec![selected.clone()]),
+                ..Default::default()
+            },
+            None,
+            sources,
+        )
+    });
+    assert_eq!(
+        observer.snapshot().work.get("call_sites.collect_files"),
+        Some(&2)
+    );
+    assert!(facts.covers_ts_fact_plan(call_site_plan()));
+    assert!(facts.covers_ts_fact_plan_for_file(&unrelated, call_site_plan()));
+}
 
 #[test]
 fn supplemental_call_source_keeps_its_richer_production_import_facts() {
@@ -120,13 +249,7 @@ fn playwright_only_test_source_keeps_supplemental_call_sites() {
         &root,
         (Vec::new(), Vec::new()),
         vec![call_source.clone()],
-        CheckFactPlan {
-            graph: TsFactPlan {
-                call_sites: true,
-                ..Default::default()
-            },
-            ..Default::default()
-        },
+        CheckFactPlan::default(),
         Some(playwright),
         sources,
     );

@@ -18,7 +18,7 @@ pub(super) fn collect_partitions(
         facts,
         call_sites: supplemental_call_sites,
     } = supplemental;
-    let call_tests = if supplemental_call_sites.is_empty() {
+    let call_tests = if supplemental_call_sites.is_empty() && plan.call_site_paths.is_empty() {
         Vec::new()
     } else {
         let supplemental =
@@ -26,7 +26,7 @@ pub(super) fn collect_partitions(
         partitions
             .playwright_only_tests
             .iter()
-            .filter(|path| supplemental.contains(path))
+            .filter(|path| supplemental.contains(path) || plan.includes_call_site_path(path))
             .cloned()
             .collect::<Vec<_>>()
     };
@@ -62,7 +62,7 @@ pub(super) fn collect_partitions(
     }
     if !call_tests.is_empty() {
         let mut call_plan = with_imports(CheckFactPlan::default());
-        call_plan.graph.call_sites = true;
+        call_plan.call_site_paths = std::sync::Arc::new(call_tests.clone());
         collect_test_partition(
             session,
             root,
@@ -107,12 +107,44 @@ pub(super) fn collect_partitions(
             sources,
             facts,
         );
+    } else if !plan.call_site_paths.is_empty() {
+        let selected = partitions
+            .remaining_scoped
+            .iter()
+            .filter(|path| plan.includes_call_site_path(path))
+            .cloned()
+            .collect::<Vec<_>>();
+        collect_test_partition(
+            session,
+            root,
+            &selected,
+            plan.clone(),
+            playwright,
+            sources,
+            facts,
+        );
     }
     if !plan.graph.is_empty() {
         collect_test_partition(
             session,
             root,
             &partitions.remaining_graph,
+            graph_plan(plan),
+            playwright,
+            sources,
+            facts,
+        );
+    } else if !plan.call_site_paths.is_empty() {
+        let selected = partitions
+            .remaining_graph
+            .iter()
+            .filter(|path| plan.includes_call_site_path(path))
+            .cloned()
+            .collect::<Vec<_>>();
+        collect_test_partition(
+            session,
+            root,
+            &selected,
             graph_plan(plan),
             playwright,
             sources,

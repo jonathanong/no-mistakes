@@ -1,3 +1,4 @@
+mod call_sites;
 mod collected;
 mod location_demand;
 mod rule_scans;
@@ -13,6 +14,9 @@ pub struct CheckFactPlan {
     /// Their import projection preserves the historical TypeScript/TSX parse mode.
     #[doc(hidden)]
     pub production_import_paths: Arc<std::collections::BTreeSet<std::path::PathBuf>>,
+    /// Sorted finite-set call sources. Graph-wide call-site demand stays in `graph`.
+    #[doc(hidden)]
+    pub call_site_paths: Arc<Vec<PathBuf>>,
     #[doc(hidden)]
     pub companion_import_plans: Arc<
         Vec<Arc<crate::codebase::rules::required_companion_imports::PreparedCompanionImportPlan>>,
@@ -94,6 +98,7 @@ impl CheckFactPlan {
     pub(crate) fn include(&mut self, other: Self) {
         self.merge_location_demand(&other);
         self.imports |= other.imports;
+        self.include_call_site_plan(&other);
         self.query_annotation_heads |= other.query_annotation_heads;
         self.companion_import_plans =
             crate::codebase::rules::required_companion_imports::merge_plans(

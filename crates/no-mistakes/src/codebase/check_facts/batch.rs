@@ -1,4 +1,5 @@
 use super::{CheckFactMap, CheckFactPlan, PlaywrightFactPlan};
+use crate::codebase::ts_resolver::normalize_path as normalize;
 use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -135,12 +136,7 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
         .take_while(|_| crate::invocation::check_timeout().is_ok())
     {
         let graph_only = super::graph_only_files(&request.files, &request.graph_files);
-        let graph_plan = CheckFactPlan {
-            graph: request.plan.graph,
-            graph_context: request.plan.graph_context.clone(),
-            integration_runner_configs: request.plan.integration_runner_configs.clone(),
-            ..CheckFactPlan::default()
-        };
+        let graph_plan = request.plan.graph_only_projection();
         let mut plans = BTreeMap::new();
         for path in &request.files {
             plans.insert(normalize(path), request.plan.clone());
@@ -200,8 +196,4 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
         }
     }
     demands
-}
-
-fn normalize(path: &std::path::Path) -> PathBuf {
-    crate::codebase::ts_resolver::normalize_path(path)
 }

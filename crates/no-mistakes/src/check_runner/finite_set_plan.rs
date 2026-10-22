@@ -2,11 +2,12 @@ use anyhow::Result;
 use no_mistakes::codebase::check_facts::CheckFactPlan;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub(crate) struct PreparedFactDemand {
     companion_import_files: Vec<PathBuf>,
     has_companion_plan: bool,
-    call_site_files: Vec<PathBuf>,
+    call_site_files: Arc<Vec<PathBuf>>,
     runner_config_files: Vec<PathBuf>,
     needs_other_facts: bool,
 }
@@ -39,7 +40,7 @@ impl PreparedFactDemand {
         if self.needs_other_facts {
             return discovered;
         }
-        let mut requested = self.call_site_files.clone();
+        let mut requested = self.call_site_files.as_ref().clone();
         requested.extend(self.companion_import_files.iter().cloned());
         requested.extend(self.runner_config_files.iter().cloned());
         no_mistakes::codebase::check_facts::ordered_path_intersection(&requested, &discovered)
@@ -76,9 +77,8 @@ pub(crate) fn prepare(
         no_mistakes::codebase::rules::finite_set_consistency::try_required_call_site_fact_files(
             root, config,
         )?;
-    if !files.is_empty() {
-        plan.graph.call_sites = true;
-    }
+    let files = Arc::new(files);
+    plan.call_site_paths = Arc::clone(&files);
     let mut demand = PreparedFactDemand {
         companion_import_files: Vec::new(),
         has_companion_plan: false,

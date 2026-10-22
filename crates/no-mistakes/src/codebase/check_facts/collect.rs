@@ -51,12 +51,7 @@ fn collect_check_facts_inner(
         ..CheckFactStats::default()
     };
     let playwright = playwright.as_ref();
-    let graph_plan = CheckFactPlan {
-        graph: plan.graph,
-        graph_context: plan.graph_context.clone(),
-        integration_runner_configs: plan.integration_runner_configs.clone(),
-        ..CheckFactPlan::default()
-    };
+    let graph_plan = plan.graph_only_projection();
     let ((collected, mut integration_runner_configs), helper_facts) =
         super::collect_prepared_runner_facts(
             session,
@@ -117,6 +112,7 @@ fn collect_check_facts_inner(
         graph_files_complete,
         ts: ts.map_values(Arc::new),
         graph_plan: collected_ts_plan,
+        call_site_paths: Arc::clone(&plan.call_site_paths),
         integration_runner_configs,
         playwright_source_files: Arc::new(Vec::new()),
         playwright_test_files_by_project: Arc::new(Vec::new()),

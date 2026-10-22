@@ -58,6 +58,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
     CheckFactPlan {
         imports: enabled.dynamic_import_rules,
         production_import_paths: Default::default(),
+        call_site_paths: Default::default(),
         companion_import_plans: Default::default(),
         symbols: enabled.unique_exports || enabled.storybook_stories,
         legacy_symbol_paths: Default::default(),

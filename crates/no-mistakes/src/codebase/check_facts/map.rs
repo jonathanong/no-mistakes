@@ -56,6 +56,8 @@ pub struct CheckFactMap {
     pub(crate) graph_files_complete: bool,
     pub(crate) ts: FileIdMap<Arc<CheckFileFacts>>,
     pub(crate) graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
+    /// Per-file call-site coverage, separate from graph-wide fact coverage.
+    pub(crate) call_site_paths: Arc<Vec<PathBuf>>,
     pub(crate) integration_runner_configs: std::collections::BTreeMap<
         PathBuf,
         crate::integration_tests::runner_config::RunnerConfigFileFacts,

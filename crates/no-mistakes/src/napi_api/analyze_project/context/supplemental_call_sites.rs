@@ -16,15 +16,12 @@ fn supplemental_call_site_plan(
         graph_files,
     );
     ScopeFactPlan {
-        files,
-        graph_files: Vec::new(),
         plan: crate::codebase::check_facts::CheckFactPlan {
-            graph: crate::codebase::ts_source::facts::TsFactPlan {
-                call_sites: true,
-                ..Default::default()
-            },
+            call_site_paths: std::sync::Arc::new(files.clone()),
             ..Default::default()
         },
+        files,
+        graph_files: Vec::new(),
         playwright: None,
         sources,
     }

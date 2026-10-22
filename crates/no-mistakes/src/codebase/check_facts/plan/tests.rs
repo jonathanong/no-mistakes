@@ -2,6 +2,32 @@ use super::CheckFactPlan;
 use crate::codebase::postgres::EmbeddedSqlOptions;
 
 #[test]
+fn finite_call_paths_union_without_changing_global_graph_demand() {
+    use std::{path::PathBuf, sync::Arc};
+    let first = PathBuf::from("src/first.ts");
+    let second = PathBuf::from("src/second.ts");
+    let mut plan = CheckFactPlan {
+        call_site_paths: Arc::new(vec![first.clone()]),
+        ..Default::default()
+    };
+    let mut empty = CheckFactPlan::default();
+    empty.include(plan.clone());
+    assert!(Arc::ptr_eq(&empty.call_site_paths, &plan.call_site_paths));
+    let shared = Arc::clone(&plan.call_site_paths);
+    plan.include(CheckFactPlan {
+        call_site_paths: Arc::clone(&shared),
+        ..Default::default()
+    });
+    assert!(Arc::ptr_eq(&shared, &plan.call_site_paths));
+    plan.include(CheckFactPlan {
+        call_site_paths: Arc::new(vec![second.clone(), first.clone()]),
+        ..Default::default()
+    });
+    assert_eq!(plan.call_site_paths.as_ref(), &[first, second]);
+    assert!(!plan.graph.call_sites);
+}
+
+#[test]
 fn production_path_demand_is_shared_across_plan_clones_and_combined_once() {
     use std::sync::Arc;
     let paths = Arc::new(

@@ -44,6 +44,29 @@ fn ts_extract_plan_mirrors_collected_ts_plan() {
 }
 
 #[test]
+fn selected_call_sites_do_not_widen_graph_fact_demand() {
+    let selected = PathBuf::from("src/selected.ts");
+    let unrelated = PathBuf::from("src/unrelated.ts");
+    let plan = CheckFactPlan {
+        graph: TsFactPlan::imports(),
+        call_site_paths: Arc::new(vec![selected.clone()]),
+        ..Default::default()
+    };
+    assert!(ts_extract_plan(&plan, &selected, None).call_sites);
+    assert!(!ts_extract_plan(&plan, &unrelated, None).call_sites);
+    assert!(!plan.collected_ts_plan().call_sites);
+
+    let global = CheckFactPlan {
+        graph: TsFactPlan {
+            call_sites: true,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    assert!(ts_extract_plan(&global, &unrelated, None).call_sites);
+}
+
+#[test]
 fn ts_extract_context_uses_check_root_and_queue_factories() {
     let root = Path::new("/repo");
     let plan = CheckFactPlan {

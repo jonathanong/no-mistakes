@@ -32,6 +32,12 @@ pub(crate) trait TsFactLookup: Sync {
         false
     }
 
+    /// Per-file coverage for projections whose configured paths are narrower
+    /// than the graph's all-file fact guarantee.
+    fn covers_ts_fact_plan_for_file(&self, _path: &Path, required: TsFactPlan) -> bool {
+        self.covers_ts_fact_plan(required)
+    }
+
     /// Complete pre-discovered file universe associated with these facts.
     fn graph_files(&self) -> Option<&[PathBuf]> {
         None

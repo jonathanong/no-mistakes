@@ -23,6 +23,34 @@ fn companion_fixture() -> CompanionFixtureInputs {
 }
 
 #[test]
+fn finite_set_preparation_keeps_graph_call_sites_independent() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/finite-set-consistency/call-literals/supplemental-skipped"),
+    );
+    let config = no_mistakes::config::v2::load_v2_config(&root, None).unwrap();
+    let selected = root.join("generated/schedules.test.mts");
+    let unrelated = root.join("registry.mts");
+    let mut plan = CheckFactPlan::default();
+    let demand = super::prepare(&root, &config, &mut plan, false, false).unwrap();
+    assert!(Arc::ptr_eq(&demand.call_site_files, &plan.call_site_paths));
+    assert!(plan.call_site_paths.contains(&selected));
+    assert!(!plan.call_site_paths.contains(&unrelated));
+    assert!(!plan.graph.call_sites);
+    assert_eq!(
+        demand.supplemental_call_site_files(&[], &[]),
+        vec![selected]
+    );
+
+    plan.graph.call_sites = true;
+    let _ = super::prepare(&root, &config, &mut plan, true, false).unwrap();
+    assert!(
+        plan.graph.call_sites,
+        "graph-owned all-file demand must survive"
+    );
+}
+
+#[test]
 fn production_only_demand_never_copies_companion_membership() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/performance/dependency-checks");

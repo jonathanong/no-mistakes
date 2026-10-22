@@ -6,6 +6,16 @@ use oxc_ast::ast::{CallExpression, ExportDefaultDeclaration, Function, Program};
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 
+#[cfg(test)]
+#[macro_use]
+#[path = "domain_walk/call_site_collection_tests.rs"]
+mod call_site_collection_tests;
+
+#[cfg(not(test))]
+macro_rules! record_call_site_collection {
+    () => {};
+}
+
 #[derive(Default)]
 pub(super) struct FusedDomainCalls {
     pub http_calls: Vec<HttpCall>,
@@ -21,6 +31,9 @@ pub(super) fn collect_fused_domain_calls(
 ) -> FusedDomainCalls {
     if !plan.http_calls && !plan.trpc_calls && !plan.call_sites {
         return FusedDomainCalls::default();
+    }
+    if plan.call_sites {
+        record_call_site_collection!();
     }
     let mut visitor = DomainCallVisitor {
         source,

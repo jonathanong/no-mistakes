@@ -34,10 +34,13 @@ pub(super) fn extract_call_first_string_argument(
         return;
     };
     if !facts.is_some_and(|facts| {
-        facts.covers_ts_fact_plan(crate::codebase::ts_source::facts::TsFactPlan {
-            call_sites: true,
-            ..Default::default()
-        })
+        facts.covers_ts_fact_plan_for_file(
+            path,
+            crate::codebase::ts_source::facts::TsFactPlan {
+                call_sites: true,
+                ..Default::default()
+            },
+        )
     }) {
         issues.push(ExtractionIssue {
             file,

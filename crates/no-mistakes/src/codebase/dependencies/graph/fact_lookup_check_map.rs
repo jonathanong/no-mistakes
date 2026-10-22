@@ -22,6 +22,18 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         self.graph_plan().covers(required)
     }
 
+    fn covers_ts_fact_plan_for_file(&self, path: &Path, mut required: TsFactPlan) -> bool {
+        if required.call_sites
+            && self
+                .call_site_paths
+                .binary_search_by(|candidate| candidate.as_path().cmp(path))
+                .is_ok()
+        {
+            required.call_sites = false;
+        }
+        self.graph_plan().covers(required)
+    }
+
     fn graph_files(&self) -> Option<&[PathBuf]> {
         self.graph_files_complete
             .then_some(self.graph_files.as_slice())
