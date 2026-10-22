@@ -6,15 +6,17 @@ const { callFunction, escapeFunction } = require("./no-object-mutation-fn");
 const { finishGet, visitKnownCall } = require("./no-object-mutation-invoke");
 const { mutationCall } = require("./no-object-mutation-forward");
 const { readOnlyFresh } = require("./no-object-mutation-join");
-const { callable, lookup, shared, unknown, unwrap } = require("./no-object-mutation-model");
+const { visitAliasedMutation, visitArgument } = require("./no-object-mutation-method");
+const {
+  callable,
+  lookup,
+  memberKey,
+  readMember,
+  shared,
+  unknown,
+  unwrap,
+} = require("./no-object-mutation-model");
 const { considerWrite } = require("./no-object-mutation-write");
-
-function visitArgument(state, argument, scope, role) {
-  if (argument.type === "SpreadElement") {
-    return api.visit(state, argument.argument, scope, role);
-  }
-  return api.visit(state, argument, scope, role);
-}
 
 function visitNew(state, node, scope, role) {
   const callee = unwrap(node.callee);
@@ -80,11 +82,17 @@ function visitCall(state, node, scope, role) {
   if (known !== undefined) {
     return known;
   }
-  const calleeTag = api.visit(state, node.callee, scope, "read");
+  const callee = unwrap(node.callee);
+  const forward = callee.type === "MemberExpression" ? memberKey(callee) : null;
+  const forwarded = forward === "call" || forward === "apply";
+  const calleeTag = api.visit(state, forwarded ? callee.object : node.callee, scope, "read");
+  if (calleeTag.mutator) {
+    return visitAliasedMutation(state, node, scope, calleeTag.mutator, forwarded ? forward : null);
+  }
   for (const argument of node.arguments) {
     visitArgument(state, argument, scope, "escape");
   }
-  invokeCallable(state, calleeTag);
+  invokeCallable(state, forwarded ? readMember(calleeTag, forward) : calleeTag);
   return finishGet(node, calleeTag) || unknown();
 }
 
@@ -138,6 +146,10 @@ function captureOuter(scope, tag, seen) {
       captureOuter(scope, member, local);
     }
     return;
+  }
+  if (tag.mutator) {
+    captureOuter(scope, tag.mutator.receiver, local);
+    for (const value of tag.mutator.boundArgs || []) captureOuter(scope, value, local);
   }
   if (tag.type === "fresh" && tag.ownerEnv !== scope.ownerEnv) {
     scope.fnTag.captured.push(tag);

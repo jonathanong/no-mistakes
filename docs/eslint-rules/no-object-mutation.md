@@ -48,8 +48,8 @@ function touch(box, rows) {
 const cache = new Map();
 cache.get(1).ready = true;
 
-const tables = {};
-for (const row of Object.values(tables)) {
+const tableRows = {};
+for (const row of Object.values(tableRows)) {
   row.ready = true;
 }
 
@@ -67,6 +67,24 @@ const api = {
     this.dirty = true;
   },
 };
+```
+
+Same-file method aliases retain the receiver they were read from. Static string
+and expression-free template keys, optional calls, and a direct destructure without a
+default are included. A forwarded call uses its actual `this` receiver:
+
+```ts
+function append(rows, otherRows, row) {
+  const push = rows["push"];
+  const alias = push;
+  alias?.(row);
+  const { [`push`]: appendRow } = rows;
+  appendRow(row);
+  alias.call(otherRows, row);
+  alias.apply(otherRows, [row]);
+  const bound = alias.bind(otherRows);
+  bound(row);
+}
 ```
 
 A conditional escape counts: `if (cond) sink(box); box.a = 1` is still a write
@@ -104,6 +122,24 @@ function localClass(value) {
   }
   new Writer().set();
   return box;
+}
+```
+
+```ts
+function buildRows(row) {
+  const rows = [];
+  const push = rows.push;
+  push(row);
+  return rows;
+}
+
+function forwardToLocal(sharedRows, row) {
+  const push = sharedRows.push;
+  const local = [];
+  push.call(local, row);
+  const bound = push.bind(local);
+  bound(row);
+  return local;
 }
 ```
 
@@ -175,6 +211,43 @@ declaration inside a nested block stays a local builder until the value
 escapes, because that block is not the module environment. Writes through
 `module.exports`, `exports`, `globalThis`, `window`, and `process.env` are
 not flagged.
+
+Aliases of the listed array mutators use the existing receiver provenance and
+options. A later reassignment of the receiver name does not change the object
+captured by an earlier alias. Reassigning the alias replaces its provenance.
+Passing or returning an alias escapes its retained receiver; an unknown caller's
+later invocation is not analyzed. `.call`, literal-array `.apply` (without holes
+or spreads), and `.bind` use their explicit receiver, rather than the object
+from which the method was extracted. Binding alone does not mutate it. A bound alias keeps its first bound receiver
+across later `.call`, `.apply`, or `.bind` wrappers.
+
+A computed identifier key, a destructuring default, a rest pattern, a
+parameter-default destructure, and another file's re-export do not establish a
+mutator alias. For example, none of these calls proves a mutation of `rows`:
+
+```ts
+function unknown(rows, key, fallback) {
+  const dynamic = rows[key];
+  dynamic(1);
+  const { push = fallback } = rows;
+  push(1);
+  const { ...rest } = rows;
+  rest.push(1);
+}
+
+function defaulted({ push } = rows) {
+  push(1);
+}
+
+export { push } from "./mutators";
+```
+
+A conditional or logical choice between different method values does not
+establish one mutator alias. Nested destructuring patterns and method values stored in
+object or array fields are also outside this binding-alias tracking.
+
+Static aliases of `Object` and `Reflect` methods are outside this alias tracking;
+the directly spelled forms in Options retain their existing behavior.
 
 ## Suppression
 

@@ -105,11 +105,12 @@ describe("no-object-mutation escapes", () => {
           bind(null)(box);
           Object.assign.call(null)(box, { c: 1 });
           fn.bind(null)(box);
+          // Binding a statically known mutator retains its actual receiver.
           box.push.bind(box)(1);
           box[missingName].bind(null)(box);
         }
       `),
-      repeated(10),
+      repeated(11),
     );
     assert.deepEqual(
       ids(

@@ -41,7 +41,46 @@ function visitKnownCall(state, node, scope, role) {
   if (!bound) {
     return undefined;
   }
-  const tag = boundTag(api.visit(state, bound.object, scope, "read"));
+  const source = api.visit(state, bound.object, scope, "read");
+  if (source.mutator) {
+    const thisNode = node.arguments[0];
+    const thisValue = thisNode
+      ? api.visit(
+          state,
+          thisNode.type === "SpreadElement" ? thisNode.argument : thisNode,
+          scope,
+          "read",
+        )
+      : unknown();
+    const boundArgs = [...(source.mutator.boundArgs || [])];
+    for (const argument of node.arguments.slice(1)) {
+      boundArgs.push(
+        api.visit(
+          state,
+          argument.type === "SpreadElement" ? argument.argument : argument,
+          scope,
+          "read",
+        ),
+      );
+    }
+    const tag = {
+      type: "unknown",
+      mutator: {
+        receiver: source.mutator.bound
+          ? source.mutator.receiver
+          : thisNode?.type === "SpreadElement"
+            ? unknown()
+            : thisValue,
+        receiverNode: source.mutator.bound ? source.mutator.receiverNode : thisNode,
+        bound: true,
+        boundArgs,
+        member: unknown(),
+      },
+    };
+    if (role === "escape") api.releaseEscaping(state, tag);
+    return tag;
+  }
+  const tag = boundTag(source);
   for (const argument of node.arguments) {
     api.visit(
       state,

@@ -11,7 +11,9 @@ function moduleTag(tag) {
     tag.contents = shared("module");
     return tag;
   }
-  return shared("module");
+  const result = shared("module");
+  if (tag?.mutator) result.mutator = { ...tag.mutator, member: shared("module") };
+  return result;
 }
 
 function bindName(name, tag, scope, kind) {
@@ -114,7 +116,7 @@ function assignPattern(state, pattern, tag, scope) {
   }
 }
 
-function bindPattern(state, pattern, tag, scope, kind) {
+function bindPattern(state, pattern, tag, scope, kind, objectNode) {
   if (pattern.type === "TSParameterProperty") {
     bindPattern(
       state,
@@ -153,7 +155,12 @@ function bindPattern(state, pattern, tag, scope, kind) {
       } else {
         key = staticKey(property.key);
       }
-      const field = kind === "param" ? shared("parameter") : key ? readMember(tag, key) : tag;
+      const field =
+        kind === "param"
+          ? shared("parameter")
+          : key
+            ? readMember(tag, key, property.value.type === "Identifier" ? objectNode : null)
+            : tag;
       bindPattern(state, property.value, field, scope, kind);
     }
     return;
