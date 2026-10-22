@@ -133,8 +133,8 @@ export const tables = { users: "app.users" } as const;
 `effort: max` is the default and preserves cross-file registry analysis.
 `effort: low` does not request the call graph, helper evaluator, or
 mutation/provenance analysis. Other checks can still require that shared
-preparation. It accepts SQL written directly as a literal, or through one local
-`const` initialized with that literal. Direct templates with interpolations only
+preparation. At a directly imported named executor, it accepts SQL written as a
+literal, or through one local `const` initialized with that literal. Direct templates with interpolations only
 in SQL value positions also qualify: their parsed relation names contain no
 interpolation. These calls cannot interpolate a registry into a relation:
 
@@ -151,7 +151,11 @@ unanalyzable at low effort, including when the registry uses `as const` or
 a freeze does not establish the whole imported object's provenance or nested
 immutability. Helpers, aliases, and other indirect SQL also require maximum
 effort. Rewrite SQL as a literal at the executor call or one local literal
-`const`, or select `max` to inspect the cross-file registry.
+`const`, or select `max` to inspect the cross-file registry. Unsupported executor
+aliases, factories, and type-based receivers are diagnosed at their configured
+binding reference; place a line suppression at that reported location.
+Namespace executor calls are also unanalyzable: low effort does not track writes
+to the namespace receiver or its method.
 
 `unanalyzable: report` produces a finding for unsupported inputs;
 `advise` places the same diagnostic in report advisories; `ignore` suppresses it.
