@@ -261,3 +261,38 @@ fn an_invalid_template_escape_is_not_spliced() {
             .is_none_or(|sql| !sql.contains("ORDER BY"))
     }));
 }
+
+#[test]
+fn imported_helper_arguments_accept_shallow_values_and_reject_untracked_shapes() {
+    let facts = extract("argument-boundaries.ts");
+    assert_eq!(facts.calls.len(), 11);
+    let accepted = pending_for(&facts, 0).expect("shallow values have a helper hole");
+    assert_eq!(accepted.sites.len(), 1);
+    assert_eq!(
+        accepted.sites[0].1.args,
+        vec![
+            SiteArg::Undefined,
+            SiteArg::Scalar,
+            SiteArg::Array(vec![
+                SiteArg::Scalar,
+                SiteArg::Bool(true),
+                SiteArg::Null,
+                SiteArg::Undefined,
+            ]),
+            SiteArg::Object(vec![("id".into(), SiteArg::Scalar)]),
+        ]
+    );
+    // Builders in containers, nested containers, spread, computed/numeric keys,
+    // methods and accessors cannot be tracked as literal helper arguments.
+    for index in 1..facts.calls.len() {
+        assert!(pending_for(&facts, index).is_none(), "call {index}");
+        assert_eq!(call(&facts, index).kind, EmbeddedSqlKind::Dynamic);
+        assert_eq!(
+            call(&facts, index).sql_text.as_deref(),
+            Some("SELECT 1 WHERE "),
+            "call {index}"
+        );
+        assert!(call(&facts, index).variants.is_empty(), "call {index}");
+    }
+    assert_eq!(facts.pending_imported.len(), 1);
+}
