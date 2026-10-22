@@ -1,6 +1,5 @@
 use super::{
     diagnostics::Gaps,
-    imports,
     syntax::{Head, Syntax},
     HeadProof, Span,
 };
@@ -8,7 +7,6 @@ use crate::codebase::ts_source::{facts::TsFileFacts, module_facts::ModuleBinding
 use crate::fx::{FxHashMap, FxHashSet};
 pub(super) struct Bindings<'a> {
     owners: FxHashMap<Span, Option<&'a ModuleBinding>>,
-    imports: FxHashMap<usize, HeadProof>,
     constants: &'a FxHashMap<Span, Head>,
     gaps: Option<Gaps>,
     safe_tags: FxHashSet<Span>,
@@ -31,7 +29,6 @@ impl<'a> Bindings<'a> {
             .collect::<FxHashSet<_>>();
         let mut index = Self {
             owners: FxHashMap::default(),
-            imports: FxHashMap::default(),
             constants: &syntax.constants,
             gaps: None,
             safe_tags: FxHashSet::default(),
@@ -55,13 +52,6 @@ impl<'a> Bindings<'a> {
                 }
             }
         }
-        let tags = candidates()
-            .filter_map(|head| match head {
-                Head::Tag(span) => index.owner(span).map(|binding| binding.id),
-                _ => None,
-            })
-            .collect::<FxHashSet<_>>();
-        index.imports = imports::identities(module, &tags);
         index
     }
     fn owner(&self, span: Span) -> Option<&ModuleBinding> {
@@ -72,27 +62,20 @@ impl<'a> Bindings<'a> {
             && !gaps.overlaps((owner.span.start, owner.span.end)))
         .then_some(owner)
     }
-    fn tag(&self, span: Span) -> HeadProof {
-        self.owner(span)
-            .filter(|owner| owner.imported)
-            .and_then(|owner| self.imports.get(&owner.id))
-            .cloned()
-            .unwrap_or(HeadProof::Unproven)
-    }
     pub fn proof(&self, head: Head) -> HeadProof {
         match head {
             Head::Literal => HeadProof::Literal,
-            Head::Tag(span) => self.tag(span),
+            Head::Tag => HeadProof::Literal,
             Head::Reference(span) => {
                 let Some(owner) = self.owner(span).filter(|owner| !owner.imported) else {
                     return HeadProof::Unproven;
                 };
                 match self.constants.get(&(owner.span.start, owner.span.end)) {
                     Some(Head::Literal) => HeadProof::Literal,
-                    Some(Head::Tag(tag))
+                    Some(Head::Tag)
                         if self.safe_tags.contains(&(owner.span.start, owner.span.end)) =>
                     {
-                        self.tag(*tag)
+                        HeadProof::Literal
                     }
                     _ => HeadProof::Unproven,
                 }

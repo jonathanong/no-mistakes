@@ -156,6 +156,10 @@ test("query annotation configuration exposes the unknown SQL policy", () => {
   assert.match(types, /import type \{ Effort, Unanalyzable \} from "\.\/traversal-types";/);
   assert.match(types, /export interface PostgresRequireQueryAnnotationOptions/);
   assert.match(types, /effort\?: Effort;/);
+  assert.match(
+    types,
+    /@deprecated At effort "low" only; ignored there and warns when configured\. Still used at effort "max"\./,
+  );
   assert.match(types, /unanalyzable\?: Unanalyzable;/);
   assert.match(types, /unanalyzableSql\?: PostgresUnanalyzableSql/);
   const traversal = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");

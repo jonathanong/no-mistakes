@@ -1,3 +1,4 @@
+// Low effort deliberately ignores tag identity; only the first literal head matters.
 import { read } from "@bench/db";
 import { sql as named } from "@bench/tags";
 import { sql as subpath } from "@bench/tags/statements";
@@ -14,12 +15,12 @@ read(named`/* wrapped tag */ SELECT ${value}`); // low: true
 read(subpath`/* subpath */ SELECT ${value}`); // low: true
 const subpathConst = subpath`/* subpath const */ SELECT ${value}`;
 read(subpathConst); // low: true
-read(sibling`/* sibling */ SELECT ${value}`); // low: false
-read(other`/* other */ SELECT ${value}`); // low: false
-read(defaultTag`/* builtin default */ SELECT ${value}`); // low: false
-read(builtinNamed`/* builtin named */ SELECT ${value}`); // low: false
-read(namespace.sql`/* namespace */ SELECT ${value}`); // low: false
-read(onlyType`/* type import */ SELECT ${value}`); // low: false
+read(sibling`/* sibling */ SELECT ${value}`); // low: true
+read(other`/* other */ SELECT ${value}`); // low: true
+read(defaultTag`/* builtin default */ SELECT ${value}`); // low: true
+read(builtinNamed`/* builtin named */ SELECT ${value}`); // low: true
+read(namespace.sql`/* namespace */ SELECT ${value}`); // low: true
+read(onlyType`/* type import */ SELECT ${value}`); // low: true
 read(named`/* open ${value} */ SELECT 1`); // low: false
 read(named`${value} /* late head */ SELECT 1`); // low: false
 read(named`/* */ /* later */ SELECT 1`); // low: false
@@ -30,16 +31,16 @@ read(alias); // low: false
 let mutable = named`/* let tag */ SELECT ${value}`;
 read(mutable); // low: false
 const tagAlias = named;
-read(tagAlias`/* alias tag */ SELECT ${value}`); // low: false
+read(tagAlias`/* alias tag */ SELECT ${value}`); // low: true
 const concatenated = named`/* tag plus */ SELECT ${value}` + tail;
 read(concatenated); // low: false
 read(named`/* direct tag plus */ SELECT ${value}` + tail); // low: false
 function shadow(named: unknown) {
-  read(named`/* parameter shadow */ SELECT ${value}`); // low: false
+  read(named`/* parameter shadow */ SELECT ${value}`); // low: true
 }
 {
   const named = localTag;
-  read(named`/* block shadow */ SELECT ${value}`); // low: false
+  read(named`/* block shadow */ SELECT ${value}`); // low: true
 }
 function captureLater() {
   read(laterTagged); // low: true
@@ -47,3 +48,14 @@ function captureLater() {
 const laterTagged = named`/* later captured const */ SELECT ${value}`;
 captureLater();
 read("/* plain literal */ SELECT 1"); // low: true
+
+const defaultStatement = defaultTag`/* default const */ SELECT ${value}`;
+read(defaultStatement); // low: true
+const namespaceStatement = namespace.sql`/* namespace const */ SELECT ${value}`;
+read(namespaceStatement); // low: true
+read(defaultTag`SELECT ${value}`); // low: false
+read(defaultTag`${value} /* late default */ SELECT 1`); // low: false
+read(namespace["sql"]`/* computed tag */ SELECT ${value}`); // low: true
+read(makeTag()`/* factory tag */ SELECT ${value}`); // low: true
+const computedStatement = namespace["sql"]`/* computed const */ SELECT ${value}`;
+read(computedStatement); // low: true

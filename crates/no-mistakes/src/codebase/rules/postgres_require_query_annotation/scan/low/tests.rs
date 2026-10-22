@@ -52,3 +52,42 @@ fn borrowed_observer_counts_calls_on_a_worker_without_diagnostic_tls() {
         Some(&(expected_calls as u64))
     );
 }
+
+#[test]
+fn default_sql_template_tag_heads_pass_and_missing_names_report() {
+    let saved = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+        .join("low-heads");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = fixture.path();
+    let files = vec![root.join("default-tags.mts")];
+    let opts = compile_options(&Options {
+        import_specifier: "@bench/db".into(),
+        executor_names: vec!["read".into()],
+        ..Default::default()
+    })
+    .unwrap();
+    let facts = collect_check_facts(
+        root,
+        files.clone(),
+        CheckFactPlan {
+            query_annotation_heads: true,
+            embedded_sql_options: vec![opts.embedded.clone()],
+            ..Default::default()
+        },
+    );
+    let findings = super::scan(root, &opts, &files, &facts, None)
+        .unwrap()
+        .finish();
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        vec![7, 9]
+    );
+    assert!(findings.iter().all(|finding| {
+        finding
+            .message
+            .contains("query annotation is unanalyzable at effort low")
+    }));
+}

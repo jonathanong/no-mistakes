@@ -48,14 +48,14 @@ fn literal<'a>(mut expression: &'a Expression<'a>) -> bool {
 #[derive(Clone, Copy)]
 pub(super) enum Head {
     Literal,
-    Tag(Span),
+    Tag,
     Reference(Span),
     Unproven,
 }
 impl Head {
     pub fn reference(self) -> Option<Span> {
         match self {
-            Self::Tag(span) | Self::Reference(span) => Some(span),
+            Self::Reference(span) => Some(span),
             _ => None,
         }
     }
@@ -76,9 +76,8 @@ fn head(expression: &Expression<'_>) -> Head {
             .and_then(|part| part.value.cooked.as_ref())
             .is_some_and(|text| named(text))
         {
-            if let Expression::Identifier(tag) = unwrap_ts_wrappers(&value.tag) {
-                return Head::Tag(span(tag.span));
-            }
+            // Low effort judges the literal head, independently of the tag.
+            return Head::Tag;
         }
     }
     Head::Unproven
@@ -100,7 +99,7 @@ impl<'a> Visit<'a> for Syntax {
             for declaration in &value.declarations {
                 if let BindingPattern::BindingIdentifier(binding) = &declaration.id {
                     let head = declaration.init.as_ref().map_or(Head::Unproven, head);
-                    if matches!(head, Head::Literal | Head::Tag(_)) {
+                    if matches!(head, Head::Literal | Head::Tag) {
                         self.constants.insert(span(binding.span), head);
                     }
                 }

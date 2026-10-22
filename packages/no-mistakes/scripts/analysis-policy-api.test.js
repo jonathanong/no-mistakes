@@ -120,3 +120,55 @@ test(
       );
   },
 );
+
+test(
+  "compiled low annotation accepts default tags and preserves warnings and suppressions",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const cli =
+      process.env.NO_MISTAKES_TEST_CLI_PATH ||
+      join(dirname(addon), process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-require-query-annotation/fixture/low-heads",
+    );
+    const warningRoot = join(
+      __dirname,
+      "../../../test-cases/codebase-analysis/rule-analysis-policy/fixture",
+    );
+    for (const [options, locations, warningCount] of [
+      [
+        { root },
+        [
+          ["default-tags.mts", 7],
+          ["default-tags.mts", 9],
+        ],
+        0,
+      ],
+      [{ root: warningRoot, config: "sql-tags.yml" }, [], 1],
+      [{ root: warningRoot, config: "sql-tags.yml", effort: "max" }, [], 0],
+    ]) {
+      const pending = cjs.check(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(
+        report.rules.map(({ file, line }) => [file, line]),
+        locations,
+      );
+      assert.deepEqual(report.advisories, []);
+      assert.equal(report.warnings.length, warningCount);
+      if (warningCount)
+        assert.match(report.warnings[0], /trustedSqlTags is deprecated and ignored at effort low/);
+      assert.deepEqual(await esm.check(options), report);
+      const args = ["check", "--root", options.root, "--format", "json"];
+      if (options.config) args.push("--config", join(options.root, options.config));
+      if (options.effort) args.push("--effort", options.effort);
+      const child = spawnSync(cli, args, { encoding: "utf8", env: process.env });
+      assert.equal(child.error, undefined);
+      assert.equal(child.status, locations.length ? 1 : 0, child.stderr);
+      assert.deepEqual(JSON.parse(child.stdout), report);
+    }
+  },
+);
