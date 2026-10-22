@@ -47,6 +47,7 @@ fn max_matches_unprepared_output_on_saved_fixtures() {
         ("static-tuples-pass", STATIC),
         ("static-tuples-fail", STATIC),
         ("partial-dynamic", STATIC),
+        ("mixed-literal-unanalyzable", "{}"),
     ] {
         let baseline = run(name, options);
         let (max_default, advisories) = run_prepared(name, options);
@@ -103,6 +104,86 @@ fn low_routes_non_literal_destinations_through_unanalyzable_policy() {
         for finding in residuals {
             assert!(finding.message.contains("effort low"), "{finding:?}");
             assert!(finding.message.contains(REWRITE), "{finding:?}");
+        }
+    }
+}
+
+fn missing_mixed_destinations(findings: &[RuleFinding]) {
+    for destination in [
+        "/missing-literal",
+        "/missing-tpl",
+        "/missing-rw-literal",
+        "/missing-rw-tpl",
+    ] {
+        assert!(
+            findings.iter().any(|finding| finding
+                .message
+                .contains(&format!("destination '{destination}'"))),
+            "missing {destination}: {findings:?}"
+        );
+    }
+    assert!(
+        findings.iter().all(|finding| {
+            !finding.message.contains("/x/")
+                && !finding.message.contains("/y/")
+                && !finding.message.contains("/nope")
+        }),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn low_mixed_literal_and_unanalyzable_still_flags_missing_pages() {
+    for (policy, options) in [
+        (
+            Unanalyzable::Report,
+            "{ effort: low, unanalyzable: report }",
+        ),
+        (
+            Unanalyzable::Advise,
+            "{ effort: low, unanalyzable: advise }",
+        ),
+        (
+            Unanalyzable::Ignore,
+            "{ effort: low, unanalyzable: ignore }",
+        ),
+    ] {
+        let (findings, advisories) = run_prepared("mixed-literal-unanalyzable", options);
+        missing_mixed_destinations(&findings);
+        match policy {
+            Unanalyzable::Report => {
+                assert!(
+                    findings
+                        .iter()
+                        .any(|finding| finding.message.contains("unanalyzable")),
+                    "{findings:?}"
+                );
+                assert!(advisories.is_empty(), "{advisories:?}");
+            }
+            Unanalyzable::Advise => {
+                assert!(
+                    findings
+                        .iter()
+                        .all(|finding| !finding.message.contains("unanalyzable")),
+                    "{findings:?}"
+                );
+                assert!(!advisories.is_empty(), "{advisories:?}");
+                assert!(
+                    advisories
+                        .iter()
+                        .all(|finding| finding.message.contains("unanalyzable")),
+                    "{advisories:?}"
+                );
+            }
+            Unanalyzable::Ignore => {
+                assert!(
+                    findings
+                        .iter()
+                        .all(|finding| !finding.message.contains("unanalyzable")),
+                    "{findings:?}"
+                );
+                assert!(advisories.is_empty(), "{advisories:?}");
+            }
         }
     }
 }
@@ -188,13 +269,13 @@ fn public_advisory_wrapper_surfaces_low_advise() {
 }
 
 #[test]
-fn low_incomplete_extraction_does_not_check_recovered_destinations() {
+fn low_incomplete_extraction_still_flags_literal_missing_pages() {
     let path = Path::new("next.config.ts");
     let source = r#"
 export default {
   async redirects() {
     return [
-      { source: "/a", destination: "/about", permanent: true },
+      { source: "/a", destination: "/missing-literal", permanent: true },
       { source: "/b", destination: dest, permanent: true },
     ];
   },
@@ -202,7 +283,7 @@ export default {
 "#;
     let analysis = crate::config::v2::EffectiveRuleAnalysis {
         effort: Effort::Low,
-        unanalyzable: Unanalyzable::Report,
+        unanalyzable: Unanalyzable::Ignore,
     };
     let routes = std::collections::BTreeSet::from(["/about".into()]);
     let diagnostics = scan::check_named_section(scan::NamedCheck {
@@ -215,8 +296,15 @@ export default {
         app_root_label: "app",
         analysis,
     });
+    assert!(
+        diagnostics.advisories.is_empty(),
+        "{:?}",
+        diagnostics.advisories
+    );
     assert_eq!(diagnostics.findings.len(), 1, "{:?}", diagnostics.findings);
-    assert!(diagnostics.findings[0].message.contains("unanalyzable"));
+    assert!(diagnostics.findings[0]
+        .message
+        .contains("redirect destination '/missing-literal'"));
 }
 
 #[test]

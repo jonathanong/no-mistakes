@@ -161,7 +161,8 @@ can recover them. Rewrite them as a literal array of objects with string
 `return [{ source: '/a', destination: '/b', permanent: true }]`.
 
 Missing pages for recovered literal destinations remain ordinary findings at
-both efforts.
+both efforts, including when the same `redirects()` / `rewrites()` array also
+has unanalyzable entries. `unanalyzable` only governs the undecidable rows.
 
 The shared `unanalyzable` policy controls unsupported shapes: `report` fails,
 `advise` emits a non-failing advisory, and `ignore` skips them. For example,

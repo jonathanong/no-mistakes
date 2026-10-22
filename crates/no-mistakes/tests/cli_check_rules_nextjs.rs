@@ -149,3 +149,25 @@ fn nextjs_redirect_effort_max_matches_default_and_low_keeps_literals() {
         stdout(&missing_low)
     );
 }
+
+#[test]
+fn nextjs_redirect_low_mixed_literals_stay_checked_under_unanalyzable() {
+    let root = fixture("nextjs-redirect-destinations", "mixed-literal-unanalyzable");
+    for yaml in [
+        ".no-mistakes-low-report.yml",
+        ".no-mistakes-low-advise.yml",
+        ".no-mistakes-low-ignore.yml",
+    ] {
+        let out = check_fixture_config(&root, yaml);
+        let body = stdout(&out);
+        assert_eq!(out.status.code(), Some(1), "{yaml}: {body}");
+        for destination in [
+            "/missing-literal",
+            "/missing-tpl",
+            "/missing-rw-literal",
+            "/missing-rw-tpl",
+        ] {
+            assert!(body.contains(destination), "{yaml} {destination}: {body}");
+        }
+    }
+}

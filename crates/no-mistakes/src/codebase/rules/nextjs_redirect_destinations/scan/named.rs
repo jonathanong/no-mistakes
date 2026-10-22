@@ -38,9 +38,6 @@ pub fn check_named_section(check: NamedCheck<'_>) -> AnalysisDiagnostics {
             check.analysis.unanalyzable,
             incomplete_finding(&check, low),
         );
-        if low {
-            return diagnostics;
-        }
     }
     collect_destinations(
         &mut diagnostics,
