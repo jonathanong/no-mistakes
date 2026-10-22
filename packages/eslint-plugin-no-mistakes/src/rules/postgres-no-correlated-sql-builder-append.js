@@ -12,6 +12,9 @@ function isFunction(node) {
 }
 
 function staticMemberName(node) {
+  if (node?.type !== "MemberExpression") {
+    return null;
+  }
   if (!node.computed) return node.property.name;
   return literalString(unwrapTs(node.property));
 }
@@ -74,6 +77,14 @@ function pieceMatches(call, invoked, tags, parameterName) {
 function directAppend(call, methods, tags, parameterName) {
   const invoked = invocation(call.callee, methods);
   if (!invoked || !pieceMatches(call, invoked, tags, parameterName)) return null;
+  // `.call(receiver, text)` mutates the receiver, not the object the method was read from.
+  if (invoked.argument === 1) {
+    const receiver = unwrapTs(call.arguments[0]);
+    if (receiver?.type !== "Identifier") {
+      return null;
+    }
+    return receiver;
+  }
   return invoked.object;
 }
 

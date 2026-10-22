@@ -46,7 +46,9 @@ describe("postgres-no-correlated-sql-builder", () => {
   });
 
   it("reports static keys, member tags, call forwarding, and a one-step forwarder", () => {
-    assert.equal(check("static-calls.ts").length, 8);
+    const reported = check("static-calls.ts");
+    assert.equal(reported.length, 9);
+    assert.ok(reported.some((message) => /appends on other/.test(message.message)));
     assert.equal(
       check("call-method.ts", { builderMethods: ["call"], tagNames: ["sql"] }).length,
       1,

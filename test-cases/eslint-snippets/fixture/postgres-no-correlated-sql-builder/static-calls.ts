@@ -29,6 +29,11 @@ export function templateTag(query: Builder, access: string) {
   if (access === "member") query.append(db[`sql`]`AND member_id = $1`);
 }
 
+export function otherReceiver(other: Builder, query: Builder, access: string) {
+  if (access === "owned") query.append.call(other, sql`AND account_id = $1`);
+  if (access === "member") query.append.call(other, sql`AND member_id = $1`);
+}
+
 export function forwardedCall(query: Builder, access: string) {
   if (access === "owned") query.append.call(query, sql`AND account_id = $1`);
   if (access === "member") query.append.call(query, sql`AND member_id = $1`);
