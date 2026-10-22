@@ -16,6 +16,7 @@ pub(crate) mod resolve;
 mod scope;
 mod scope_visits;
 mod state;
+mod undeclared;
 mod variants;
 pub(super) use state::{collect_calls, BindingState, ScopeVisitor};
 

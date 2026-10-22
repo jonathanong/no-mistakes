@@ -1,3 +1,4 @@
+mod undeclared;
 use super::super::relative::PendingRelativeSpan;
 use super::candidates::ImportClassification;
 use super::owners::{self, NameHit};
@@ -16,6 +17,7 @@ use std::collections::{HashMap, HashSet};
 pub(super) struct ScopeCollector {
     factories: HashSet<String>,
     types: HashSet<String>,
+    undeclared: HashMap<String, super::super::UndeclaredExecutorType>,
     provisional_factories: HashMap<String, Vec<u32>>,
     provisional_types: HashMap<String, Vec<u32>>,
     scopes: Vec<Span>,
@@ -24,18 +26,9 @@ pub(super) struct ScopeCollector {
 }
 
 impl ScopeCollector {
-    pub(super) fn from_imports(imports: ImportClassification) -> Self {
-        Self {
-            factories: imports.factories,
-            types: imports.types,
-            provisional_factories: imports.provisional_factories,
-            provisional_types: imports.provisional_types,
-            ..Self::default()
-        }
-    }
-
     pub(super) fn needs_walk(&self) -> bool {
-        !self.factories.is_empty()
+        !self.undeclared.is_empty()
+            || !self.factories.is_empty()
             || !self.types.is_empty()
             || !self.provisional_factories.is_empty()
             || !self.provisional_types.is_empty()
@@ -62,6 +55,11 @@ impl ScopeCollector {
             let annotated = &annotation.type_annotation;
             match &param.pattern {
                 BindingPattern::BindingIdentifier(ident) => {
+                    self.record_undeclared(
+                        ident.name.as_str(),
+                        param.pattern.span().start,
+                        annotated,
+                    );
                     let hit = owners::type_hit(&self.types, &self.provisional_types, annotated);
                     self.record(
                         ident.name.as_str(),
@@ -110,6 +108,11 @@ impl ScopeCollector {
                 let Some(annotation) = &signature.type_annotation else {
                     return false;
                 };
+                self.record_undeclared(
+                    local.name.as_str(),
+                    scope.start,
+                    &annotation.type_annotation,
+                );
                 hit = owners::type_hit(
                     &self.types,
                     &self.provisional_types,
@@ -167,6 +170,11 @@ impl<'a> Visit<'a> for ScopeCollector {
     fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
         self.bind_params(&arrow.params, arrow.span);
         walk::walk_arrow_function_expression(self, arrow);
+    }
+
+    fn visit_variable_declarator(&mut self, declaration: &oxc_ast::ast::VariableDeclarator<'a>) {
+        self.record_undeclared_variable(declaration);
+        walk::walk_variable_declarator(self, declaration);
     }
 
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {

@@ -204,6 +204,23 @@ empty for the rules that previously expanded an empty list to `**/*.sql`; set
 `returnedMembers` on the effect. See
 [PostgreSQL scope](../configuration/projects.md#postgresql-scope).
 
+### Undeclared receiver types
+
+A typed receiver from the configured executor module can no longer disappear
+silently when its type is missing from `executorTypeNames`. A matching member
+call produces an undeclared-executor-type diagnostic through the shared
+`unanalyzable: report|advise|ignore` policy. Add the imported type name to
+`executorTypeNames`, or to the project's `postgres.executors.typeNames` list.
+For an inferred receiver, also add an explicit imported type annotation, such as
+`const client: PoolClient = new PoolClient()`. The diagnostic itself does not
+admit the call or analyze its SQL.
+
+Source-only consumers can request `extractExecutedPostgresSql({ ...options,
+includeDiagnostics: true })` and inspect the report's `undeclaredExecutorTypes`
+array before claiming complete read coverage. The existing array response stays
+unchanged when the flag is omitted or false. See
+[Node extraction](../node-api/postgres-extraction.md#undeclared-executor-types).
+
 ### Reporting unmatched names
 
 A configured `executorFactoryNames` or `executorTypeNames` entry that no scanned

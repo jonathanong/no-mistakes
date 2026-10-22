@@ -19,6 +19,7 @@ impl<'a> ScopeVisitor<'a> {
     }
 
     pub(super) fn visit_sql_call(&mut self, call: &CallExpression<'a>) {
+        self.record_undeclared_executor_call(call);
         // `helper(builder)` on an imported builder helper appends its fixed
         // fragments to `builder`, so it composes like `builder.append(...)`.
         let statement_append = super::imported::builder_statement(self, call);

@@ -18,13 +18,35 @@ pub(crate) fn project_relative_scoped_facts(
         return;
     }
     let pending = std::mem::take(&mut facts.pending_relative);
+    if package_root.is_none() {
+        facts
+            .undeclared_executor_types
+            .retain(|entry| entry.owner.is_none());
+    }
     let Some(root) = package_root else {
         add_unproven(facts, source, diagnostic::unproven_spans(&pending, &[]));
         return;
     };
+    let mut diagnostic_owners: crate::fx::FxHashSet<u32> = facts
+        .undeclared_executor_types
+        .iter()
+        .filter_map(|entry| entry.owner)
+        .collect();
+    diagnostic_owners.extend(
+        pending
+            .calls
+            .iter()
+            .flat_map(|call| call.owners.iter().copied()),
+    );
     let mut kept = vec![false; pending.candidates.len()];
     let mut added_name = false;
     for (index, candidate) in pending.candidates.iter().enumerate() {
+        if !candidate.factory
+            && !candidate.type_import
+            && !diagnostic_owners.contains(&(index as u32))
+        {
+            continue;
+        }
         let Some(file) = resolve(&candidate.specifier) else {
             continue;
         };
@@ -45,6 +67,13 @@ pub(crate) fn project_relative_scoped_facts(
             added_name = true;
         }
     }
+    facts.undeclared_executor_types.retain_mut(|entry| {
+        let Some(owner) = entry.owner.take() else {
+            return true;
+        };
+        let proven = kept.get(owner as usize).copied().unwrap_or(false);
+        proven
+    });
     if added_name {
         sort_dedup(&mut facts.matched_factory_names);
         sort_dedup(&mut facts.matched_type_names);

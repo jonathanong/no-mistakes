@@ -27,6 +27,13 @@ configured; any tagged template qualifies when its first quasi starts with a
 literal named annotation, regardless of tag identity or import form. See the
 [low-effort contract](../rules/postgres-require-query-annotation.md#effort).
 
+A receiver type imported from the configured executor module but omitted from
+`executorTypeNames` is an undeclared executor type. The shared `unanalyzable`
+policy controls its finding or advisory; `ignore` suppresses both. Add the named
+type to `executorTypeNames` and explicitly annotate inferred receivers to analyze
+its calls. This diagnostic does not infer
+an executor or run its SQL argument.
+
 ### SQL helpers and callbacks
 
 Straight-line same-file and imported helpers can return SQL assembled from strings,

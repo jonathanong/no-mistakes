@@ -30,10 +30,29 @@ pub(super) struct ScopedCollection {
     pub(super) spans: Vec<PendingRelativeSpan>,
 }
 
+impl ScopedCollection {
+    /// Unused helper imports must not initialize a resolver projection.
+    pub(super) fn prune_unused_diagnostic_candidates(
+        &mut self,
+        calls: &[super::UndeclaredExecutorType],
+    ) {
+        if calls.is_empty()
+            && self
+                .candidates
+                .iter()
+                .all(|candidate| !candidate.factory && !candidate.type_import)
+        {
+            self.candidates.clear();
+        }
+    }
+}
+
 /// Binding name to the source spans in which it is an executor.
 #[derive(Debug, Default)]
 pub(super) struct ScopedExecutors {
     spans: HashMap<String, Vec<Span>>,
+    pub(super) undeclared: HashMap<(String, u32), super::UndeclaredExecutorType>,
+    pub(super) undeclared_imports: HashMap<String, super::UndeclaredExecutorType>,
 }
 
 impl ScopedExecutors {

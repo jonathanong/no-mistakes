@@ -51,6 +51,8 @@ struct ExecutedSqlRequest {
     #[serde(default)]
     resolve_imports: bool,
     #[serde(default)]
+    include_diagnostics: bool,
+    #[serde(default)]
     resolved_imports: Vec<ExecutedPostgresResolvedImport>,
 }
 
@@ -71,7 +73,7 @@ pub(crate) fn extract_executed_postgres_sql_json_impl(
             "resolvedImports requires resolveImports: true".to_string(),
         ));
     }
-    let statements = if request.resolve_imports {
+    let report = if request.resolve_imports {
         extract_executed_postgres_sql_with_imports_and_session(
             &request.sources,
             &options,
@@ -82,7 +84,12 @@ pub(crate) fn extract_executed_postgres_sql_json_impl(
         extract_executed_postgres_sql_with_session(&request.sources, &options, &session)
     }
     .map_err(|error| napi::Error::from_reason(error.to_string()))?;
-    serde_json::to_string(&statements).map_err(|error| napi::Error::from_reason(error.to_string()))
+    let serialized = if request.include_diagnostics {
+        serde_json::to_string(&report)
+    } else {
+        serde_json::to_string(&report.statements)
+    };
+    serialized.map_err(|error| napi::Error::from_reason(error.to_string()))
 }
 
 json_binding!(

@@ -21,6 +21,8 @@ pub struct EmbeddedSqlFileFacts {
     pub path: PathBuf,
     pub executor_bindings: Vec<String>,
     pub calls: Vec<EmbeddedSqlCall>,
+    /// Calls through imported types absent from executorTypeNames; never executed.
+    pub undeclared_executor_types: Vec<super::UndeclaredExecutorType>,
     /// Private call identities, parallel to `calls`; public summaries stay unchanged.
     pub(crate) call_spans: Vec<(u32, u32)>,
     /// Summaries of this file's helpers, collected during its single AST pass.

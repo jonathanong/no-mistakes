@@ -130,9 +130,18 @@ impl<'a> ScopeVisitor<'a> {
         self.builder_reference_exemptions.truncate(exemptions);
         self.initialize_variants(declaration, variants);
         self.initialize_executor_alias(declaration, executor, namespace);
+        if let ast::BindingPattern::BindingIdentifier(name) = &declaration.id {
+            self.bind_undeclared_declaration(
+                name.name.as_str(),
+                oxc_span::GetSpan::span(&declaration.id).start,
+            );
+        }
         if let (ast::BindingPattern::BindingIdentifier(name), Some(init)) =
             (&declaration.id, &declaration.init)
         {
+            if declaration.type_annotation.is_none() {
+                self.bind_undeclared_alias(name.name.as_str(), init);
+            }
             self.bind_receiver_alias(name.name.as_str(), init);
         }
         self.leave_iife(&declaration.id, outer);

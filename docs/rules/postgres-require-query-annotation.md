@@ -7,6 +7,15 @@ slow-query logs and `EXPLAIN ANALYZE` can name the statement. Line comments
 (`-- name`) do not count. At the default `effort: max`, `BEGIN`, `COMMIT`, and
 `ROLLBACK` are exempt.
 
+If a member call uses a receiver type imported from the configured executor
+module but omitted from `executorTypeNames`, the rule reports an undeclared
+executor type under `unanalyzable: report`, advises under `advise`, and stays
+silent under `ignore`. Add the imported type name to `executorTypeNames` (or the
+project's `postgres.executors.typeNames`) and explicitly annotate inferred
+receivers. These calls are diagnosed without
+being evaluated as SQL; adding a leading comment alone does not declare the
+receiver type. See [executor bindings](../postgres-facts/executor-bindings.md).
+
 At `effort: max`, the rule consumes prepared embedded-SQL and helper summaries from the request's
 shared TypeScript parse. Imported helpers use the request's prepared importer
 project catalog and source session. Package-local TypeScript aliases resolve from

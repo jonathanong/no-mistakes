@@ -17,7 +17,11 @@ pub(crate) use placeholders::{
     INTERNAL_PLACEHOLDER,
 };
 pub(crate) mod relative;
+mod undeclared;
 mod unproven;
+pub use undeclared::{
+    summarize_undeclared_executor_types, UndeclaredExecutorType, UndeclaredExecutorTypeSummary,
+};
 pub(crate) use unproven::retain_unproven_spans;
 pub(super) mod scoped_bindings;
 mod source_positions;
@@ -58,7 +62,7 @@ pub fn extract_embedded_sql_from_program(
         .cloned()
         .collect();
     executor_bindings.sort();
-    let scoped = scoped_bindings::collect(program, options);
+    let mut scoped = scoped_bindings::collect(program, options);
     let mut collected = walk::collect_calls(
         program,
         source,
@@ -67,6 +71,7 @@ pub fn extract_embedded_sql_from_program(
         &scoped.spans,
         options,
     );
+    scoped.prune_unused_diagnostic_candidates(&collected.undeclared_executor_types);
     let mut fragments = collected.fragments;
     for fragment in &mut fragments {
         if let Some(sql_text) = fragment.sql_text.take() {
@@ -83,6 +88,7 @@ pub fn extract_embedded_sql_from_program(
         path: path.to_path_buf(),
         executor_bindings,
         calls: collected.calls,
+        undeclared_executor_types: collected.undeclared_executor_types,
         call_spans: collected.call_spans,
         exported_helpers: collected.exported_helpers,
         exported_programs: collected.exported_programs,
@@ -206,3 +212,6 @@ mod trusted_sql_tag_tests;
 #[cfg(test)]
 #[path = "embedded/variants/tests.rs"]
 mod variants_tests;
+
+#[cfg(test)]
+mod undeclared_tests;

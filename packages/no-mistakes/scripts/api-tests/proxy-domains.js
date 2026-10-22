@@ -77,6 +77,15 @@ async function assertProxyDomains(api) {
     resolvedImports: [{ fromFileName: "a.ts", specifier: "@sql", toFileName: "b.ts" }],
   };
   assert.deepEqual((await api.extractExecutedPostgresSql(importAware)).options, importAware);
+  assert.deepEqual(
+    await api.extractExecutedPostgresSql({ ...importAware, includeDiagnostics: true }),
+    {
+      statements: [],
+      undeclaredExecutorTypes: [{ type: "PoolClient", module: "@db", count: 1 }],
+    },
+  );
+  const noDiagnostics = { ...importAware, includeDiagnostics: false };
+  assert.deepEqual((await api.extractExecutedPostgresSql(noDiagnostics)).options, noDiagnostics);
   assert.equal((await api.serverContracts({ root: "." })).command, "serverContracts");
   assert.equal((await api.flow({ target: "src/api.ts#handler" })).command, "flow");
   assert.equal((await api.reactAnalyze({ targets: ["*.tsx"] })).command, "reactAnalyze");

@@ -6,7 +6,11 @@ fn relative_imports_stay_unresolved_until_projection() {
     assert!(pending.calls.is_empty());
     assert!(pending.matched_factory_names.is_empty());
     assert!(pending.matched_type_names.is_empty());
-    assert_eq!(pending.pending_relative.candidates.len(), 2);
+    // An unlisted import is retained only as a diagnostic ownership candidate.
+    assert_eq!(pending.pending_relative.candidates.len(), 3);
+    assert!(pending.pending_relative.candidates.iter().any(|candidate| {
+        candidate.imported_name == "other" && !candidate.factory && !candidate.type_import
+    }));
     assert_eq!(pending.pending_relative.calls.len(), 9);
     assert!(pending.pending_relative.candidates.iter().any(|candidate| {
         candidate.imported_name == "openTransaction" && candidate.factory && !candidate.type_import

@@ -12,6 +12,7 @@ impl ScopeVisitor<'_> {
             .scope_ids
             .push(self.member_query_proof.next_scope_id);
         self.scopes.push(HashMap::new());
+        self.undeclared_scopes.push(HashMap::new());
         self.relative_proofs.push(HashMap::new());
         self.namespace_proofs.push(Default::default());
     }
@@ -22,6 +23,7 @@ impl ScopeVisitor<'_> {
         self.literal_objects.pop_frame();
         self.member_query_proof.scope_ids.pop();
         self.scopes.pop();
+        self.undeclared_scopes.pop();
         self.relative_proofs.pop();
         self.namespace_proofs.pop();
     }
@@ -56,6 +58,7 @@ impl ScopeVisitor<'_> {
         let mut names = Vec::new();
         resolve::for_each_bound_name(pattern, &mut |name| names.push(name.to_string()));
         for name in names {
+            self.bind_undeclared_declaration(&name, pattern.span().start);
             let executor = self
                 .scoped
                 .contains_declaration(&name, pattern.span().start);
@@ -118,6 +121,7 @@ impl ScopeVisitor<'_> {
     }
 
     pub(super) fn mark_dynamic(&mut self, name: &str) {
+        self.clear_undeclared_binding(name);
         self.forget_receiver_alias(name);
         for scope in self.scopes.iter_mut().rev() {
             if let Some(binding) = scope.get_mut(name) {

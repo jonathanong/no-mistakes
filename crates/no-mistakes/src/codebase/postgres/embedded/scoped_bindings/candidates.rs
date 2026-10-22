@@ -9,6 +9,8 @@ use std::collections::{HashMap, HashSet};
 pub(super) struct ImportClassification {
     pub(super) factories: HashSet<String>,
     pub(super) types: HashSet<String>,
+    pub(super) undeclared_runtime: HashMap<String, super::super::UndeclaredExecutorType>,
+    pub(super) undeclared: HashMap<String, super::super::UndeclaredExecutorType>,
     pub(super) provisional_factories: HashMap<String, Vec<u32>>,
     pub(super) provisional_types: HashMap<String, Vec<u32>>,
     pub(super) candidates: Vec<RelativeScopedCandidate>,
@@ -66,6 +68,37 @@ fn classify_import(
         let factory = !type_only && contains(&options.executor_factory_names, imported.as_str());
         let type_import = contains(&options.executor_type_names, imported.as_str());
         if !factory && !type_import {
+            if !options.import_specifier.is_empty() && (confirmed || relative) {
+                let owner = relative.then(|| {
+                    let index = classified.candidates.len() as u32;
+                    classified.candidates.push(RelativeScopedCandidate {
+                        specifier: source.to_string(),
+                        imported_name: imported.to_string(),
+                        local_name: local.clone(),
+                        factory: false,
+                        type_import: false,
+                    });
+                    index
+                });
+                let identity = super::super::UndeclaredExecutorType {
+                    type_name: imported.to_string(),
+                    module: if relative {
+                        options.import_specifier.clone()
+                    } else {
+                        source.to_string()
+                    },
+                    line: 0,
+                    span: (0, 0),
+                    owner,
+                    explicit_annotation: false,
+                };
+                if !type_only {
+                    classified
+                        .undeclared_runtime
+                        .insert(local.clone(), identity.clone());
+                }
+                classified.undeclared.insert(local, identity);
+            }
             continue;
         }
         if confirmed {

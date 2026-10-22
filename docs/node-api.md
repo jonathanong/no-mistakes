@@ -54,7 +54,7 @@ files; other setup-reachability shapes use the same unanalyzable policy. See
 | `fetches`                                  | `fetches(options)`                                                                                                                                                                                                                                                         |
 | `postgres catalog` | `generatePostgresCatalog(options)` |
 | Source-only library capability | `parsePostgresSql(sourceOrSources)` |
-| Source-only TS/JS executor SQL extraction | `extractExecutedPostgresSql({ sources, importSpecifier })` |
+| Source-only TS/JS executor SQL extraction | `extractExecutedPostgresSql({ sources, importSpecifier, includeDiagnostics: true })` |
 | Selected TS/JS modules | `analyzeTypeScriptModules({ root, files })` |
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |

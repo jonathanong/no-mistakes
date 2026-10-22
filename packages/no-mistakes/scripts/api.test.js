@@ -5,6 +5,7 @@ require("./api-tests/declarations-core");
 require("./api-tests/declarations-export-invariants");
 require("./api-tests/declarations-postgres");
 require("./api-tests/declarations-graph");
+require("./api-tests/declarations-executor-diagnostics");
 require("./api-tests/declarations-analysis");
 require("./api-tests/declarations-sql");
 require("./api-tests/declarations-audit");

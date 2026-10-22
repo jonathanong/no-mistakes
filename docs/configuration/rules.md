@@ -31,6 +31,13 @@ For rule applications that consume the shared policy, when both
 invalid alias remains a configuration error even when the canonical key is
 valid. Legacy PostgreSQL applications that historically ignored this
 `unanalyzableSql` payload continue to ignore it for compatibility.
+PostgreSQL member calls whose imported receiver type comes from the configured
+executor module but is missing from `executorTypeNames` also use this shared
+policy: `report` fails, `advise` emits a non-failing advisory, and `ignore` stays
+silent. Add the named type to the executor list and explicitly annotate inferred
+receivers, for example `const client: PoolClient = new PoolClient()`, to analyze
+those calls. The policy never promotes an undeclared type into an executor.
+
 Helper and callback tracing still checks every recovered leading prefix.
 Grouped advice, including a `target` that may list several checks, is described
 in [SQL verdicts](../postgres-sql-verdicts.md).

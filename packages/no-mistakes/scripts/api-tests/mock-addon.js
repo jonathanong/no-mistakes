@@ -108,7 +108,14 @@ function createMockAddon(collectionGap) {
     parsePostgresSqlJson: async (json) =>
       JSON.stringify({ command: "parsePostgresSql", options: JSON.parse(json) }),
     extractExecutedPostgresSqlJson: async (json) =>
-      JSON.stringify({ command: "extractExecutedPostgresSql", options: JSON.parse(json) }),
+      JSON.stringify(
+        JSON.parse(json).includeDiagnostics === true
+          ? {
+              statements: [],
+              undeclaredExecutorTypes: [{ type: "PoolClient", module: "@db", count: 1 }],
+            }
+          : { command: "extractExecutedPostgresSql", options: JSON.parse(json) },
+      ),
     generatePostgresCatalogJson: async (json) =>
       JSON.stringify({ command: "generatePostgresCatalog", options: JSON.parse(json) }),
     infraOutputsJson: async (json) =>
