@@ -1,0 +1,56 @@
+[
+  {
+    "sampleNumber": 1,
+    "elapsed": 600.21,
+    "user": null,
+    "system": null,
+    "rss_kib": null,
+    "exit": 124,
+    "deadlineSeconds": 600
+  },
+  {
+    "sampleNumber": 2,
+    "elapsed": 600.22,
+    "user": null,
+    "system": null,
+    "rss_kib": null,
+    "exit": 124,
+    "deadlineSeconds": 600
+  },
+  {
+    "sampleNumber": 3,
+    "elapsed": 600.23,
+    "user": null,
+    "system": null,
+    "rss_kib": null,
+    "exit": 124,
+    "deadlineSeconds": 600
+  },
+  {
+    "sampleNumber": 4,
+    "elapsed": 600.24,
+    "user": null,
+    "system": null,
+    "rss_kib": null,
+    "exit": 124,
+    "deadlineSeconds": 600
+  },
+  {
+    "sampleNumber": 5,
+    "elapsed": 600.25,
+    "user": null,
+    "system": null,
+    "rss_kib": null,
+    "exit": 124,
+    "deadlineSeconds": 600
+  },
+  {
+    "sampleNumber": 6,
+    "elapsed": 600.26,
+    "user": null,
+    "system": null,
+    "rss_kib": null,
+    "exit": 124,
+    "deadlineSeconds": 600
+  }
+]

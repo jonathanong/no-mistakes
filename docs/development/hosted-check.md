@@ -145,7 +145,14 @@ cannot kill unrelated `no-mistakes` sessions. Production measurements still run
 on a dedicated hosted runner. Candidate timeouts, signals, nonzero exits, missing samples and
 invalid measurements fail the gate with `Candidate did not complete successfully`,
 not a calibration-helper error. Timeout cohorts still write a `*.processes.txt`
-snapshot. A failing baseline never excuses a candidate failure. Calibration
+snapshot. If a command remains alive at 540 seconds, the harness also saves a
+`*.live-processes.txt` snapshot of its descendant tree and the exact fixture
+native executable before the 600-second cap terminates it. That snapshot
+includes process-group IDs and command lines, so a stalled pnpm launcher and
+its analyzer remain distinguishable even when the post-timeout snapshot contains
+neither process. The process probe has a separate two-second limit and cannot
+turn a failed check into a success. A
+failing baseline never excuses a candidate failure. Calibration
 proposals are emitted only from six completed successful candidate samples.
 
 Timeout or signal resource counters are censored: exclude them from resource maxima,
