@@ -281,7 +281,10 @@ pub fn starts_with_path_comment(lang: &str, code: &str) -> bool {
 
 /// Named-file fences in one Valid/Counterexample section are one fixture.
 pub fn snippet_runs(fences: &[(String, String)]) -> Vec<(usize, Vec<(String, String)>)> {
-    if fences.len() > 1 && fences.iter().all(|(lang, code)| starts_with_path_comment(lang, code))
+    if fences.len() > 1
+        && fences
+            .iter()
+            .all(|(lang, code)| starts_with_path_comment(lang, code))
     {
         return vec![(0, fences.to_vec())];
     }

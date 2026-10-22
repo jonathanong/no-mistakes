@@ -243,12 +243,10 @@ fn named_file_fences_in_one_section_materialize_together() {
         &runs[0].1,
     );
     assert!(fixture.path().join(".mise.toml").exists());
-    assert!(
-        fixture
-            .path()
-            .join(".github/actions/setup/action.yml")
-            .exists()
-    );
+    assert!(fixture
+        .path()
+        .join(".github/actions/setup/action.yml")
+        .exists());
 }
 
 #[test]
