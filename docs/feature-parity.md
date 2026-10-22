@@ -100,7 +100,7 @@ language CLIs are not started.
 | Kafka                   | n/a                                            | n/a                                                                      | n/a                                                             | static topic produce/consume                              | shipped (v1 extractors)          |
 | Rust                    | `rust-use`, `rust-mod`                         | `tests plan cargo`                                                       | Axum, Actix, Rocket literals                                    | no                                                        | shipped (v1 extractors + plan)   |
 | Ruby on Rails           | `ruby-require`, `ruby-ref`                     | `tests plan rails`                                                       | `routes.rb` `to:` / `resources`                                 | Active Job `perform_later`, Sidekiq `perform_async`       | shipped (v1 extractors + plan)   |
-| PHP                     | `php-use`, `php-package`                       | `tests plan php`                                                         | Laravel `Route::` / `Route::resource` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan)   |
+| PHP                     | `php-use`, `php-package`                       | `tests plan php`                                                         | Laravel `Route::` / `Route::resource` / `Route::apiResource` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan)   |
 | Java, Spring            | `java-import`, `java-ref`                      | `tests plan java`                                                        | Spring `@RequestMapping` / `@GetMapping` literals               | no                                                        | shipped (v1 extractors + plan)   |
 | Kotlin, Spring          | `kotlin-import`, `kotlin-ref`                  | `tests plan kotlin`                                                      | Spring `@RequestMapping` / `@GetMapping` literals on `.kt`      | no                                                        | shipped (v1 extractors + plan)   |
 | Elixir, Phoenix         | `elixir-import`, `elixir-ref`                  | `tests plan elixir`                                                      | Phoenix `get`/`post`/`put`/`patch`/`delete` literals            | no                                                        | shipped (v1 extractors + plan)   |
@@ -462,13 +462,14 @@ framework from files, and do not enable both extractors from a missing value.
 | Module graph     | `import`            | `use`, `require`/`include` of local files, PSR-4 from configured `composer.json`       |
 | Package identity | workspace packages  | configured Composer packages / path repositories                                       |
 | Tests            | `tests plan vitest` | `tests plan php` over PHPUnit / Pest files                                             |
-| HTTP routes      | `server routes`     | configured Laravel `Route::` / bare `Route::resource` or Symfony attribute/YAML routes |
+| HTTP routes      | `server routes`     | configured Laravel `Route::` / bare `Route::resource` / `Route::apiResource` or Symfony attribute/YAML routes |
 | Queues           | BullMQ              | Laravel `SomeJob::dispatch()` / `ShouldQueue`, or Symfony Messenger handlers           |
 | Lockfile         | npm-family          | later (`lockfile diff` is npm-family; `composer.lock` diffs are not started)           |
 
 ```php
 Route::get('/api/users', [UserController::class, 'index']);
 Route::resource('users', UserController::class);
+Route::apiResource('accounts', UserController::class);
 SomeJob::dispatch($user);
 #[Route('/health', methods: ['GET'])]
 class HealthController {}
@@ -478,7 +479,8 @@ $bus->dispatch(new WelcomeMessage());
 `__DIR__ . '/' . $name`, `app($abstract)`, `#[Route($prefix . '/users')]`,
 `$bus->dispatch($message)` lookups, `Route::resource(..., ['only' => ...])`,
 `Route::resource(...)->only([...])`, nested dotted `Route::resource` names,
-named-argument `Route::resource` calls, and `Route::apiResource` are non-edges. Missing `tests.php.framework`
+named-argument `Route::resource` / `Route::apiResource` calls, and
+`Route::apiResources` maps are non-edges. Missing `tests.php.framework`
 still enables neither Laravel nor Symfony extractors.
 
 ## Java, Spring
@@ -729,7 +731,7 @@ Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients besides
 Dart/Flutter `Uri.parse` / `http.*` literals, Laravel
-`Route::resource` `only`/`except`, nested dotted names, named arguments, and `Route::apiResource`, Kafka
+`Route::resource` / `Route::apiResource` `only`/`except`, nested dotted names, named arguments, and `Route::apiResources`, Kafka
 outside TS/Python literal shapes, language `symbols`/`call-sites`, and
 dedicated `no-mistakes python|go|rust|rails|php|java|kotlin|elixir|dart` CLIs.
 

@@ -166,6 +166,24 @@ fn kotlin_spring_fixture_lists_literal_routes() {
 }
 
 #[test]
+fn laravel_fixture_lists_literal_resource_and_api_resource_routes() {
+    let report = analyze_project(&lang_fixture("php-laravel"), None, &[]).unwrap();
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| { route.route == "/users" && route.file.ends_with("web.php") }));
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| { route.route == "/accounts" && route.file.ends_with("web.php") }));
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| { route.route == "/accounts/*" && route.file.ends_with("web.php") }));
+    assert!(report.routes.iter().all(|route| route.route != "/hidden"));
+}
+
+#[test]
 fn phoenix_fixture_lists_literal_routes() {
     let report = analyze_project(&lang_fixture("phoenix-routes"), None, &[]).unwrap();
     assert!(report
