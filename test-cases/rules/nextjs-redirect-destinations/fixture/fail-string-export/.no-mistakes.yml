@@ -1,0 +1,4 @@
+rules:
+  - rule: nextjs-redirect-destinations
+    scope: repository
+    options: {}

@@ -177,11 +177,9 @@ fn resolve_relative(from: &Path, specifier: &str, files: &[PathBuf]) -> Option<P
 }
 
 fn typescript_extension(extension: &str) -> Option<&'static str> {
-    match extension {
-        "js" => Some("ts"),
-        "jsx" => Some("tsx"),
-        "mjs" => Some("mts"),
-        "cjs" => Some("cts"),
-        _ => None,
-    }
+    const PAIRS: &[(&str, &str)] = &[("js", "ts"), ("jsx", "tsx"), ("mjs", "mts"), ("cjs", "cts")];
+    PAIRS
+        .iter()
+        .find(|(javascript, _)| *javascript == extension)
+        .map(|(_, typescript)| *typescript)
 }

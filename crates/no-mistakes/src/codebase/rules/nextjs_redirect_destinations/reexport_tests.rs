@@ -64,6 +64,14 @@ fn exported_default_is_followed_when_another_default_import_is_present() {
 }
 
 #[test]
+fn string_export_names_follow_the_shared_module() {
+    let findings = run("fail-string-export");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "next-shared.ts");
+    assert!(findings[0].message.contains("redirect destination '/gone'"));
+}
+
+#[test]
 fn extensionless_index_and_js_specifier_resolve_the_typescript_module() {
     let index = run("fail-index");
     assert_eq!(index.len(), 1, "{index:?}");
