@@ -1,0 +1,12 @@
+# A reusable-workflow uses sits directly under a job named env or with.
+on: [push]
+jobs:
+  env:
+    uses: owner/repo/.github/workflows/reuse.yml@v4
+  with:
+    uses: owner/repo/.github/workflows/other.yml@v4
+  build:
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        env:
+          USES: actions/checkout@v4

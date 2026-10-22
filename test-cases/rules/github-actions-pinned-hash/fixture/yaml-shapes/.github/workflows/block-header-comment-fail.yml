@@ -1,0 +1,7 @@
+# The comment after the header is not an action line. Its tag must not cover the step.
+- run: | # explain
+    echo { uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd } # v6.0.2
+- uses: actions/checkout@v4
+# A commented block header still carries the action ref on the next line.
+- uses: | # kept
+    actions/checkout@v4

@@ -98,6 +98,19 @@ fn malformed_jobs_container_is_incomplete_instead_of_proving_every_secret_unused
 }
 
 #[test]
+fn dotted_local_action_paths_reach_the_undeclared_action_secret() {
+    // `./.` and in-repo `..` both name `.github/actions/deploy`. DEPLOY_TOKEN
+    // is not in the inventory; the reached action.yml is the finding.
+    let findings = run("dotted-local-action", ".no-mistakes.yml").unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, ".github/actions/deploy/action.yml");
+    assert_eq!(findings[0].line, 4);
+    assert!(findings[0]
+        .message
+        .contains("composite actions cannot access the secrets context directly"));
+}
+
+#[test]
 fn scalar_job_value_cannot_prove_unused_inventory() {
     let findings = run("malformed-job", ".no-mistakes.yml").unwrap();
     assert_eq!(findings.len(), 1, "{findings:?}");

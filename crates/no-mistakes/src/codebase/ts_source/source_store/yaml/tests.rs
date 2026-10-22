@@ -132,11 +132,11 @@ fn parse_counters_are_request_scoped_and_json_counters_stay_independent() {
         Some(Arc::clone(&first_observer)),
     );
     assert!(
-        first.yaml_parses.get().is_none(),
+        first.yaml_documents.get().is_none(),
         "non-YAML requests allocate no YAML slots"
     );
     first.parse_yaml_path(&yaml).unwrap();
-    assert!(first.yaml_parses.get().is_some());
+    assert!(first.yaml_documents.get().is_some());
     assert_eq!(first.yaml_parse_count(), 1);
     assert_eq!(first.json_parse_count(), 0);
 
@@ -157,4 +157,130 @@ fn parse_counters_are_request_scoped_and_json_counters_stay_independent() {
     json_store.parse_json_path(&json).unwrap();
     assert_eq!(json_store.json_parse_count(), 1);
     assert_eq!(json_store.yaml_parse_count(), 0);
+}
+
+#[test]
+fn yaml_documents_keep_parsed_documents_and_cache_one_read() {
+    let multi = fixture("multi.yml");
+    let sources = store(&multi);
+    let first = sources.parse_yaml_documents_path(&multi).unwrap();
+    let second = sources.parse_yaml_documents_path(&multi).unwrap();
+    assert!(Arc::ptr_eq(&first, &second));
+    assert_eq!(first.len(), 2);
+    assert_eq!(first[0]["name"].as_str(), Some("first"));
+    assert_eq!(first[1]["name"].as_str(), Some("second"));
+    assert_eq!(sources.yaml_parse_count(), 1);
+    assert_eq!(sources.physical_read_count(), 1);
+
+    let partial = fixture("partial.yml");
+    let kept = store(&partial).parse_yaml_documents_path(&partial).unwrap();
+    assert_eq!(kept.len(), 1);
+    assert_eq!(kept[0]["name"].as_str(), Some("kept"));
+
+    let comments = fixture("comments.yml");
+    let only_comments = store(&comments)
+        .parse_yaml_documents_path(&comments)
+        .unwrap();
+    assert!(
+        only_comments.is_empty() || only_comments.iter().all(|document| !document.is_mapping()),
+        "{only_comments:?}"
+    );
+
+    let malformed = fixture("malformed.yml");
+    let syntax = store(&malformed)
+        .parse_yaml_documents_path(&malformed)
+        .unwrap_err();
+    assert!(!syntax.is_io());
+
+    let missing = fixture("missing.yml");
+    let io_error = store(&missing)
+        .parse_yaml_documents_path(&missing)
+        .unwrap_err();
+    assert!(io_error.is_io());
+}
+
+#[test]
+fn yaml_views_share_one_parse() {
+    let path = fixture("valid.yml");
+    let sources = store(&path);
+    let single = sources.parse_yaml_path(&path).unwrap();
+    let documents = sources.parse_yaml_documents_path(&path).unwrap();
+    assert_eq!(documents.len(), 1);
+    assert!(Arc::ptr_eq(&single, &documents[0]));
+    assert_eq!(single["name"].as_str(), Some("yaml source"));
+    assert_eq!(sources.yaml_parse_count(), 1);
+    assert_eq!(sources.physical_read_count(), 1);
+
+    let multi = fixture("multi.yml");
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let multi_store = SourceStore::new_observed(
+        Arc::new(FileInventory::from_paths(std::slice::from_ref(&multi))),
+        Some(Arc::clone(&observer)),
+    );
+    let docs = multi_store.parse_yaml_documents_path(&multi).unwrap();
+    assert_eq!(docs.len(), 2);
+    assert_eq!(
+        observer
+            .snapshot()
+            .work
+            .get("yaml.errors")
+            .copied()
+            .unwrap_or(0),
+        0
+    );
+    let strict = multi_store.parse_yaml_path(&multi).unwrap_err();
+    assert!(!strict.is_io());
+    let raw = std::fs::read_to_string(&multi).unwrap();
+    let expected = serde_yaml::from_str::<serde_yaml::Value>(&raw).unwrap_err();
+    assert_eq!(strict.to_string(), expected.to_string());
+    let again = multi_store.parse_yaml_path(&multi).unwrap_err();
+    assert_eq!(again.to_string(), strict.to_string());
+    assert_eq!(multi_store.yaml_parse_count(), 1);
+    assert_eq!(multi_store.physical_read_count(), 1);
+    let work = observer.snapshot().work;
+    assert_eq!(work["yaml.parses"], 1);
+    assert_eq!(work["yaml.errors"], 1);
+    assert_eq!(work["yaml.requests"], 3);
+    assert_eq!(work["yaml.cache_hits"], 2);
+
+    let partial = fixture("partial.yml");
+    let partial_store = store(&partial);
+    let partial_strict = partial_store.parse_yaml_path(&partial).unwrap_err();
+    let partial_raw = std::fs::read_to_string(&partial).unwrap();
+    let partial_expected = serde_yaml::from_str::<serde_yaml::Value>(&partial_raw).unwrap_err();
+    assert_eq!(partial_strict.to_string(), partial_expected.to_string());
+    let kept = partial_store.parse_yaml_documents_path(&partial).unwrap();
+    assert_eq!(kept.len(), 1);
+    assert_eq!(kept[0]["name"].as_str(), Some("kept"));
+    assert_eq!(partial_store.yaml_parse_count(), 1);
+
+    let comments = fixture("comments.yml");
+    let comments_store = store(&comments);
+    let comments_strict = comments_store.parse_yaml_path(&comments).unwrap();
+    assert!(comments_strict.is_null());
+    let only_comments = comments_store.parse_yaml_documents_path(&comments).unwrap();
+    assert_eq!(only_comments.len(), 1);
+    assert!(Arc::ptr_eq(&comments_strict, &only_comments[0]));
+    assert_eq!(comments_store.yaml_parse_count(), 1);
+
+    let empty = fixture("empty.yml");
+    let empty_store = store(&empty);
+    let empty_strict = empty_store.parse_yaml_path(&empty).unwrap();
+    assert!(empty_strict.is_null());
+    let empty_docs = empty_store.parse_yaml_documents_path(&empty).unwrap();
+    assert_eq!(empty_docs.len(), 1);
+    assert!(Arc::ptr_eq(&empty_strict, &empty_docs[0]));
+    assert_eq!(empty_store.yaml_parse_count(), 1);
+}
+
+#[test]
+fn strict_view_of_no_documents_is_null() {
+    let split = super::SplitYaml {
+        documents: Vec::new(),
+        failure: None,
+    };
+    let strict = super::single_view(&split).unwrap();
+    assert!(strict.is_null());
+    let documents = super::document_view(&split).unwrap();
+    assert!(documents.is_empty());
 }

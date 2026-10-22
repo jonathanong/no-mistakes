@@ -1,0 +1,6 @@
+# `&checkout` and `name` share the dash line. The next key is still that step.
+jobs:
+  build:
+    steps:
+      - &checkout name: Checkout
+        uses: actions/checkout@v4

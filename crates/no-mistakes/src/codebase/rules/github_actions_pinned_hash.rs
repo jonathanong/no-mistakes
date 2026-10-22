@@ -5,7 +5,10 @@ use globset::{Glob, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use regex::Regex;
 use serde::Deserialize;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+
+mod yaml_uses;
 
 pub const RULE_ID: &str = "github-actions-pinned-hash";
 
@@ -85,28 +88,23 @@ fn check_file_with_sources(
     let Some(content) = super::read_source(sources, path) else {
         return Vec::new();
     };
-    check_source(
-        path,
-        root,
-        exclude_set,
-        uses_re,
-        sha_re,
-        version_re,
-        &content,
-    )
+    check_source(path, root, uses_re, sha_re, version_re, &content, sources)
 }
 
 fn check_source(
     path: &Path,
     root: &Path,
-    _exclude_set: &GlobSet,
     uses_re: &Regex,
     sha_re: &Regex,
     version_re: &Regex,
     content: &str,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
     let file = relative_slash_path(root, path);
     let mut findings = Vec::new();
+    // Lines the regex already accepted or flagged. Parsed `uses` values must
+    // not report those lines again.
+    let mut seen_lines = BTreeSet::new();
 
     for (i, line) in content.lines().enumerate() {
         let line_num = i + 1;
@@ -117,6 +115,11 @@ fn check_source(
             continue;
         };
         let raw = caps.get(1).map_or("", |m| m.as_str());
+        // Anchors, aliases, and block-scalar headers are resolved by the parsed walk.
+        if raw.starts_with('&') || raw.starts_with('*') || yaml_uses::is_block_header(raw) {
+            continue;
+        }
+        seen_lines.insert(line_num);
         let uses_value = raw
             .strip_prefix('"')
             .and_then(|s| s.strip_suffix('"'))
@@ -124,37 +127,33 @@ fn check_source(
             .unwrap_or(raw);
         let trailing = caps.get(2).map_or("", |m| m.as_str()).trim();
 
-        if uses_value.starts_with("./")
-            || uses_value.starts_with("../")
-            || uses_value.starts_with("docker://")
-        {
+        if yaml_uses::exempt(uses_value) {
             continue;
         }
-
-        let ref_part = uses_value.rsplit_once('@').map_or("", |(_, r)| r);
-        let sha_ok = sha_re.is_match(ref_part);
-        let comment_ok = version_re.is_match(trailing);
-
-        if !sha_ok || !comment_ok {
-            let reason = if !sha_ok {
-                format!("`{ref_part}` is not a 40-char commit SHA")
-            } else {
-                format!("trailing comment must be `# v1.2.3` or `# 1.87.0`, got `{trailing}`")
-            };
-            findings.push(RuleFinding {
-                rule: RULE_ID.to_string(),
-                file: file.clone(),
-                line: line_num,
-                message: format!(
-                    "{file}:{line_num}: `uses: {uses_value}` — {reason} \
-                    (pin with `owner/repo@<40-char-sha> # v1.2.3`)"
-                ),
-                import: None,
-                target: None,
-            });
+        if let Some(finding) =
+            yaml_uses::unpinned_finding(&file, line_num, uses_value, sha_re, version_re, trailing)
+        {
+            findings.push(finding);
         }
     }
 
+    // Parse failures keep the line-scan findings. Each document that parses
+    // is walked, including a flow `uses` in a later document.
+    let documents = sources.parse_yaml_documents_path(path).ok();
+    yaml_uses::append_parsed_uses(
+        content,
+        documents.as_deref().unwrap_or(&[]),
+        &file,
+        sha_re,
+        version_re,
+        &seen_lines,
+        &mut findings,
+    );
+    findings.sort_by(|left, right| {
+        left.line
+            .cmp(&right.line)
+            .then(left.message.cmp(&right.message))
+    });
     findings
 }
 

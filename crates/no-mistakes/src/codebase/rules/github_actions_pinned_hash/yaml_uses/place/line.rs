@@ -1,0 +1,157 @@
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum Place {
+    Root,
+    Jobs,
+    Job,
+    Steps,
+    Step,
+}
+
+#[derive(Clone, Copy)]
+pub(super) struct Level {
+    pub(super) place: Place,
+    pub(super) mapping: bool,
+    pub(super) flow: bool,
+    pub(super) indent: usize,
+    pub(super) items_are_steps: bool,
+    pub(super) root: bool,
+    /// This mapping is one sequence item, so the next dash at the same column replaces it.
+    pub(super) sequence_item: bool,
+}
+
+impl Level {
+    pub(super) fn root_map() -> Self {
+        Self {
+            place: Place::Root,
+            mapping: true,
+            flow: false,
+            indent: 0,
+            items_are_steps: false,
+            root: true,
+            sequence_item: false,
+        }
+    }
+
+    pub(super) fn root_sequence(indent: usize, flow: bool) -> Self {
+        Self {
+            place: Place::Root,
+            mapping: false,
+            flow,
+            indent,
+            items_are_steps: true,
+            root: true,
+            sequence_item: false,
+        }
+    }
+}
+
+pub(super) fn child_place(place: Place, key: &str) -> Place {
+    // Under `jobs`, every key is a job id, including a job named `steps` or `jobs`.
+    if place == Place::Jobs {
+        return Place::Job;
+    }
+    match key {
+        "jobs" => Place::Jobs,
+        "steps" => Place::Steps,
+        _ => Place::Root,
+    }
+}
+
+pub(super) struct Split<'a> {
+    pub dash_indent: usize,
+    pub sequence: bool,
+    pub key_indent: usize,
+    pub body: &'a str,
+}
+
+pub(super) fn split_line(line: &str) -> Split<'_> {
+    let mut count = 0usize;
+    let mut indices = line.char_indices().peekable();
+    while indices.peek().is_some_and(|(_, ch)| ch.is_whitespace()) {
+        count += 1;
+        indices.next();
+    }
+    let dash_indent = count;
+    let mut sequence = false;
+    if let Some((offset, '-')) = indices.peek().copied() {
+        let rest = &line[offset + '-'.len_utf8()..];
+        if rest.is_empty() || rest.starts_with(char::is_whitespace) {
+            sequence = true;
+            indices.next();
+            count += 1;
+            while indices.peek().is_some_and(|(_, ch)| ch.is_whitespace()) {
+                count += 1;
+                indices.next();
+            }
+        }
+    }
+    let body = match indices.peek() {
+        Some((offset, _)) => &line[*offset..],
+        None => "",
+    };
+    Split {
+        dash_indent,
+        sequence,
+        key_indent: count,
+        body,
+    }
+}
+
+/// `&name key:` keeps the key. `&name` alone stays an anchor for the next line.
+pub(super) fn without_leading_anchor(text: &str) -> &str {
+    let trimmed = text.trim_start();
+    let Some(rest) = trimmed.strip_prefix('&') else {
+        return text;
+    };
+    let name_end = rest
+        .find(|ch: char| ch.is_whitespace() || matches!(ch, '#' | '{' | '['))
+        .unwrap_or(rest.len());
+    if name_end == 0 {
+        return text;
+    }
+    let tail = rest[name_end..].trim_start();
+    if tail.is_empty() || tail.starts_with(['#', '{', '[']) {
+        return text;
+    }
+    tail
+}
+
+/// `&name` alone, or `&name # note`, is an anchor for the following mapping.
+pub(super) fn anchor_only(text: &str) -> bool {
+    let Some(rest) = text.trim_start().strip_prefix('&') else {
+        return false;
+    };
+    let name_end = rest
+        .find(|ch: char| ch.is_whitespace() || ch == '#')
+        .unwrap_or(rest.len());
+    if name_end == 0 {
+        return false;
+    }
+    let tail = rest[name_end..].trim_start();
+    tail.is_empty() || tail.starts_with('#')
+}
+
+pub(super) fn is_block_key(text: &str) -> bool {
+    let text = text.trim_start();
+    if text.is_empty() || text.starts_with(['#', '{', '[', '|', '>', '*', '&']) {
+        return false;
+    }
+    if let Some(quote) = text.chars().next().filter(|ch| *ch == '"' || *ch == '\'') {
+        let bytes = text.as_bytes();
+        let mut end = 1;
+        while end < bytes.len() && bytes[end] != quote as u8 {
+            end += 1;
+        }
+        if end >= bytes.len() {
+            return false;
+        }
+        return text[end + 1..].trim_start().starts_with(':');
+    }
+    match text.find(':') {
+        Some(index) => {
+            let after = &text[index + 1..];
+            after.is_empty() || after.starts_with([' ', '\t', '#'])
+        }
+        None => false,
+    }
+}

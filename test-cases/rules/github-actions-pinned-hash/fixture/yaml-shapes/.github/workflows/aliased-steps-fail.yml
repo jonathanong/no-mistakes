@@ -1,0 +1,10 @@
+# The alias repeats the local action, so the later checkout keeps its own line.
+jobs:
+  one:
+    steps: &shared
+      - uses: ./local
+  two:
+    steps: *shared
+  three:
+    steps:
+      - { uses: actions/checkout@v4 }

@@ -182,6 +182,19 @@ one source finding with `no-mistakes-disable-line workflow-topology-policy` or
 `no-mistakes-disable-file workflow-topology-policy` only for a whole-file
 exception such as a generated workflow.
 
+## Limitations
+
+A directory symlink is not followed. `uses: ./actions/link`, where
+`actions/link` is a symlink to `actions/real` and the undeclared secret exists
+only in `actions/real/action.yml`, is not a finding.
+
+Local `uses` paths collapse `.`, empty segments, and in-repo `..` before the
+action file is resolved. `uses: ./.github/actions/../actions/deploy` is
+`.github/actions/deploy`. A normalized path that is `..` or starts with `../`
+leaves the repository and is not a local action, so its secrets are not
+inventoried. A directory whose name only begins with `..`, such as
+`..actions`, stays inside the repository.
+
 ## Related rules
 
 [`tsconfig-gate-coverage`](tsconfig-gate-coverage.md) checks typecheck gates;

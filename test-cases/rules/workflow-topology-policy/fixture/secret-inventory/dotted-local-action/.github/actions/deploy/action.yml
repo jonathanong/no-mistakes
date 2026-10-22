@@ -1,0 +1,5 @@
+runs:
+  using: composite
+  steps:
+    - run: echo '${{ secrets.DEPLOY_TOKEN }}'
+      shell: bash
