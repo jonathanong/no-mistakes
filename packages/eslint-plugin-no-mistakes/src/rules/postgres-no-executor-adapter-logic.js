@@ -111,7 +111,10 @@ function propertyText(member) {
 // A callback receiver is not judged: bind can change `this`.
 function boundExecutor(call, resolve) {
   const callee = call.callee;
-  if (callee.type !== "MemberExpression" || callee.optional) return null;
+  // `read?.bind` is still bind. The chain is peeled by the caller.
+  if (callee.type !== "MemberExpression") {
+    return null;
+  }
   if (propertyText(callee) !== "bind") return null;
   if (call.arguments.length > 1) return null;
   const object = resolve(callee.object);
@@ -165,4 +168,5 @@ function logicalPassed(node, resolve, context, combine) {
 module.exports = {
   boundExecutor,
   logicalPassed,
+  propertyText,
 };

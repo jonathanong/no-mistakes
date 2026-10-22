@@ -1,5 +1,6 @@
 "use strict";
 
+const { propertyText } = require("./postgres-no-executor-adapter-logic");
 const {
   TS_ASSERTIONS,
   containsThis,
@@ -8,23 +9,35 @@ const {
   unwrapArgument,
 } = require("./postgres-no-executor-adapter-ref");
 
+// `.call` / `.apply` shift arguments only when the object is already an executor.
+// A static key (`read["call"]`, `read[\`apply\`]`) is that method. A member
+// named `call` whose object is not an executor stays the member.
+function forwardedMember(call, callee, context, bindings, options) {
+  const name = propertyText(callee);
+  if (name !== "call" && name !== "apply") {
+    return null;
+  }
+  const leaves = executorLeaves(callee.object, context, bindings, options);
+  if (!leaves) {
+    return null;
+  }
+  const args = name === "call" ? call.arguments.slice(1) : applyArguments(call);
+  const object = callee.object;
+  return {
+    leaves,
+    args,
+    receiver: true,
+    conditionalText:
+      object.type === "ConditionalExpression" ? context.sourceCode.getText(object) : null,
+  };
+}
+
 function calleeForward(call, context, bindings, options) {
-  if (call.optional || call.callee.type === "ChainExpression") return null;
   const callee = call.callee;
-  if (callee?.type === "MemberExpression" && !callee.optional && !callee.computed) {
-    const property = callee.property?.name;
-    if (property === "call" || property === "apply") {
-      const leaves = executorLeaves(callee.object, context, bindings, options);
-      if (!leaves) return null;
-      const args = property === "call" ? call.arguments.slice(1) : applyArguments(call);
-      const object = callee.object;
-      return {
-        leaves,
-        args,
-        receiver: true,
-        conditionalText:
-          object.type === "ConditionalExpression" ? context.sourceCode.getText(object) : null,
-      };
+  if (callee?.type === "MemberExpression") {
+    const forwarded = forwardedMember(call, callee, context, bindings, options);
+    if (forwarded) {
+      return forwarded;
     }
   }
   const leaves = executorLeaves(callee, context, bindings, options);
@@ -70,7 +83,10 @@ function classifyCall(call, fn, context, bindings, options, flags) {
 }
 
 function classifyExpr(expr, fn, context, bindings, options, flags) {
-  if (!expr || expr.type === "ChainExpression") return null;
+  // `read?.(statement)` is the same forward as `read(statement)`.
+  if (expr.type === "ChainExpression") {
+    return classifyExpr(expr.expression, fn, context, bindings, options, flags);
+  }
   if (TS_ASSERTIONS.has(expr.type)) {
     const inner = classifyExpr(expr.expression, fn, context, bindings, options, flags);
     if (!inner) return null;

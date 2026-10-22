@@ -89,11 +89,10 @@ module.exports = rule(
       if (!argument || argument.type === "SpreadElement") return;
       let expr = argument;
       let wrapped = false;
-      while (expr && TS_ASSERTIONS.has(expr.type)) {
-        wrapped = true;
+      while (expr && (TS_ASSERTIONS.has(expr.type) || expr.type === "ChainExpression")) {
+        if (TS_ASSERTIONS.has(expr.type)) wrapped = true;
         expr = expr.expression;
       }
-      if (!expr || expr.type === "ChainExpression") return;
       if (expr.type === "ObjectExpression" || expr.type === "ArrayExpression") {
         visitFresh(expr, call, index);
         return;

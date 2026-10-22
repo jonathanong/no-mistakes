@@ -11,8 +11,9 @@ const {
 
 function unwrapPassed(node) {
   let current = node;
-  while (current && TS_ASSERTIONS.has(current.type)) current = current.expression;
-  if (!current || current.type === "ChainExpression") return null;
+  while (current && (TS_ASSERTIONS.has(current.type) || current.type === "ChainExpression")) {
+    current = current.expression;
+  }
   return current;
 }
 
@@ -54,7 +55,6 @@ function combineConditional(consequent, alternate) {
 // && / || / ??. Fresh objects and constructor arguments are visited by the rule.
 function resolvePassed(node, context, bindings, options, seen) {
   const current = unwrapPassed(node);
-  if (!current) return null;
   if (
     current.type === "Identifier" ||
     current.type === "MemberExpression" ||

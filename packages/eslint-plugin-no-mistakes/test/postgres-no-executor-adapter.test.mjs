@@ -405,7 +405,7 @@ describe("postgres-no-executor-adapter", () => {
     );
     assert.deepEqual(
       ids(`import * as db from "@example/db";\nrun((statement) => db.read(statement), account);`),
-      [],
+      ["blocked"],
     );
     assert.deepEqual(
       ids(
@@ -418,7 +418,7 @@ describe("postgres-no-executor-adapter", () => {
     assert.deepEqual(ids(`${IMPORT}run((statement) => read(), account);`), []);
     assert.deepEqual(ids(`${IMPORT}run((statement) => read("SELECT 1"), account);`), []);
     assert.deepEqual(ids(`${IMPORT}run((statement) => () => read(statement), account);`), []);
-    assert.deepEqual(ids(`${IMPORT}run((statement) => read?.(statement), account);`), []);
+    assert.deepEqual(ids(`${IMPORT}run((statement) => read?.(statement), account);`), ["forward"]);
     assert.deepEqual(ids(`${IMPORT}run((statement) => read(statement?.trim()), account);`), []);
     assert.deepEqual(ids(`${IMPORT}run(read?.(statement), account);`), []);
     const assertedMember = check(
