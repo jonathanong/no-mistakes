@@ -24,15 +24,6 @@ pub(crate) struct Rejected {
     pub(crate) target: &'static str,
 }
 
-#[cfg(test)]
-pub(super) fn classify(path: &std::path::Path, source: &str) -> anyhow::Result<Classified> {
-    crate::ast::with_program(path, source, |program, source| {
-        let mut scan = Scan::new(source, program);
-        scan.visit_program(program);
-        scan.finish()
-    })
-}
-
 impl From<SetupReachability> for Classified {
     fn from(reachability: SetupReachability) -> Self {
         Self {
@@ -75,11 +66,6 @@ impl<'a> Scan<'a> {
             accepted_requires: self.accepted_requires,
             rejected: self.rejected,
         }
-    }
-
-    #[cfg(test)]
-    fn finish(self) -> Classified {
-        self.into_reachability().into()
     }
 }
 

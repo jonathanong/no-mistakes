@@ -1,10 +1,19 @@
-use super::classify::classify;
+use super::classify::Classified;
 use super::{policy, REWRITE};
 use crate::config::v2::schema::RuleDef;
 use crate::config::v2::{EffectiveRuleAnalysis, Effort, NoMistakesConfig, Unanalyzable};
+use oxc_ast_visit::Visit;
 use std::path::Path;
 
-fn classified(source: &str) -> super::classify::Classified {
+fn classify(path: &Path, source: &str) -> anyhow::Result<Classified> {
+    crate::ast::with_program(path, source, |program, source| {
+        let mut scan = super::classify::Scan::new(source, program);
+        scan.visit_program(program);
+        Classified::from(scan.into_reachability())
+    })
+}
+
+fn classified(source: &str) -> Classified {
     classify(Path::new("setup.mts"), source).unwrap()
 }
 
