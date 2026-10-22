@@ -3,7 +3,7 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { childNodes } = require("./test-no-shared-state-helpers");
-const { invokedCall, memberName } = require("./playwright-static-call");
+const { invokedCall, memberName, methodFromCallee } = require("./playwright-static-call");
 const { isRawScrollCall } = require("./playwright-scroll-call");
 
 const PLAYWRIGHT_PATH_PATTERN =
@@ -28,9 +28,10 @@ function isPlaywrightPath(filename) {
   return PLAYWRIGHT_PATH_PATTERN.test(filename.replace(/\\/g, "/"));
 }
 
-function isCursorWaitCall(node) {
+function isCursorWaitCall(node, context) {
   const invoked = invokedCall(node);
-  return invoked && CURSOR_WAIT_PROPERTIES.has(memberName(invoked.callee)) ? invoked : null;
+  if (!invoked) return null;
+  return CURSOR_WAIT_PROPERTIES.has(methodFromCallee(invoked.callee, context)) ? invoked : null;
 }
 
 // `<something>.searchParams.has("after")` / `.get("after")` / `.getAll("after")` — the cursor
@@ -40,7 +41,7 @@ function isCursorWaitCall(node) {
 function searchParamsAccessorCall(node) {
   const invoked = invokedCall(node);
   const callee = invoked?.callee;
-  let object = callee?.type === "ChainExpression" ? callee.expression : callee;
+  const object = callee;
   if (object?.type !== "MemberExpression" || !SEARCH_PARAMS_ACCESSORS.has(memberName(object))) {
     return null;
   }
@@ -184,7 +185,7 @@ module.exports = rule(
         if (node.source.value === "@playwright/test") isPlaywrightFile = true;
       },
       CallExpression(node) {
-        const wait = isCursorWaitCall(node);
+        const wait = isCursorWaitCall(node, context);
         if (wait && mentionsCursorParam(wait.arguments[0], cursorParams)) {
           hasCursorWait = true;
         }

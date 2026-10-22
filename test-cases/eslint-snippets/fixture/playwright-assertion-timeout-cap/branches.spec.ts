@@ -10,6 +10,12 @@ let expect = check;
 expect(locator).toBeVisible({ timeout: 20000 });
 const alias = alias;
 alias(locator).toBeVisible({ timeout: 20000 });
+function nested(customAssertions) {
+  const check = customAssertions.expect;
+  check(locator).toBeVisible({ timeout: 20000 });
+}
+const { test: renamed } = playwright;
+renamed(locator).toBeVisible({ timeout: 20000 });
 const { expect: named } = playwright;
 named(locator).toBeVisible({ timeout: 20000 });
 const a = b;

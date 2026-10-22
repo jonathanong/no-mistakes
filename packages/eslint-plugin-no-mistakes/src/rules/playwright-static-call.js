@@ -137,10 +137,13 @@ function invokedCall(node) {
 }
 
 function isNamespaceBinding(node, context, namespaces, seen = new Set()) {
-  if (node?.type !== "Identifier" || !namespaces.has(node.name) || seen.has(node)) return false;
+  if (node?.type !== "Identifier" || seen.has(node)) return false;
   const variable = variableFor(node, context);
+  if (!variable || variable.defs.length !== 1) return false;
   const def = variable.defs[0];
-  if (def.type === "ImportBinding" && def.node.type === "ImportNamespaceSpecifier") return true;
+  if (def.type === "ImportBinding" && def.node.type === "ImportNamespaceSpecifier") {
+    return namespaces.has(node.name);
+  }
   if (
     def.type !== "Variable" ||
     def.parent.kind !== "const" ||
@@ -153,12 +156,12 @@ function isNamespaceBinding(node, context, namespaces, seen = new Set()) {
 }
 
 function isTestBinding(node, context, testNames, seen = new Set()) {
-  if (node?.type !== "Identifier" || !testNames.has(node.name) || seen.has(node)) return false;
+  if (node?.type !== "Identifier" || seen.has(node)) return false;
   const variable = variableFor(node, context);
-  if (!variable || variable.defs.length === 0) return true;
+  if (!variable || variable.defs.length === 0) return testNames.has(node.name);
   const def = variable.defs[0];
   if (def.type === "Parameter") return false;
-  if (def.type === "ImportBinding") return true;
+  if (def.type === "ImportBinding") return testNames.has(node.name);
   if (
     def.type === "Variable" &&
     def.parent.kind === "const" &&

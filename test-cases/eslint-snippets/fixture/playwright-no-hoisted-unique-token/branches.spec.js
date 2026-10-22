@@ -36,6 +36,13 @@ test.beforeAll(async () => {
 runner.test.beforeAll(async () => {
   await createPost({ slug: suffix });
 });
+const hook = test;
+hook.beforeAll(async () => {
+  await createPost({ slug: suffix });
+});
+mystery.test.beforeAll(() => {
+  use(suffix);
+});
 alias.beforeAll(async () => {
   await createPost({ slug: suffix });
 });

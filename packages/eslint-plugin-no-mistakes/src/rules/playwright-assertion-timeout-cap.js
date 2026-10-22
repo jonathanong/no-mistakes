@@ -75,17 +75,27 @@ function expectRoot(node, context, expectNames, seen = new Set()) {
   if (expectNames.has(node.name) || node.name === "expect") {
     const variable = variableFor(node, context);
     if (!variable || variable.defs.length === 0) return true;
-    if (variable.defs.length !== 1) return false;
     const def = variable.defs[0];
     if (def.type === "ImportBinding") return true;
-    return def.type === "Variable" && def.parent?.kind === "const";
+    if (def.type === "Variable" && def.parent?.kind === "const" && def.node?.init) {
+      seen.add(node.name);
+      return expectRoot(def.node.init, context, expectNames, seen);
+    }
+    return false;
   }
   if (seen.has(node.name)) return false;
   seen.add(node.name);
   const variable = variableFor(node, context);
   const def = variable?.defs?.length === 1 ? variable.defs[0] : null;
   if (def?.type === "Variable" && def.parent?.kind === "const" && def.node?.init) {
-    if (def.node.id?.type === "ObjectPattern") return isPlaywrightNamespace(def.node.init, context);
+    if (def.node.id?.type === "ObjectPattern") {
+      let key = null;
+      for (const item of def.node.id.properties) {
+        const value = item.value;
+        if (value.type === "Identifier" && value.name === node.name) key = patternKey(item);
+      }
+      return key === "expect" && isPlaywrightNamespace(def.node.init, context);
+    }
     return expectRoot(def.node.init, context, expectNames, seen);
   }
   return methodFromCallee(node, context, seen) === "expect";

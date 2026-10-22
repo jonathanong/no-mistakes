@@ -98,7 +98,7 @@ describe("playwright same-file recall", () => {
         { tokenFactories: ["randomSuffix"] },
         "playwright/branches.spec.js",
       ),
-      ["hoisted"],
+      ["hoisted", "hoisted", "hoisted", "hoisted", "hoisted"],
     );
     assert.deepEqual(
       messages(
@@ -107,7 +107,7 @@ describe("playwright same-file recall", () => {
         undefined,
         "e2e/branches.spec.js",
       ),
-      [],
+      ["rawScroll"],
     );
     assert.deepEqual(
       messages(
@@ -117,6 +117,14 @@ describe("playwright same-file recall", () => {
         "e2e/branches.spec.ts",
       ),
       ["timeout"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("playwright-require-interactive-test-id/before-import.jsx"),
+        "playwright-require-interactive-test-id",
+        { interactiveComponents: ["SaveButton"] },
+      ),
+      ["missing"],
     );
     assert.equal(
       messages(

@@ -40,15 +40,22 @@ function rememberAlias(node, importedNames, context) {
 
 // The rename map applies to the import or one const alias of it. A nested
 // component that reuses the local name is not that import.
+function bindingImportName(def) {
+  if (!def || def.type !== "ImportBinding") return null;
+  return importedSpecifierName(def.node);
+}
+
 function mappedImport(name, node, context, importedNames) {
+  const variable = variableNamed(name, node, context);
+  if (!variable || variable.defs.length !== 1) return null;
+  const def = variable.defs[0];
+  const fromBinding = bindingImportName(def);
+  if (fromBinding && fromBinding !== name) return fromBinding;
   const imported = importedNames.get(name);
   if (!imported || imported === name) return null;
-  const variable = variableNamed(name, node, context);
-  const defs = variable.defs;
-  const def = defs[0];
-  if (def.type === "ImportBinding") return imported;
   const init = def.node.init;
-  const source = init.type === "Identifier" ? variableNamed(init.name, init, context) : null;
+  const source =
+    init && init.type === "Identifier" ? variableNamed(init.name, init, context) : null;
   const sourceDefs = source ? source.defs : [];
   const kind = def.parent.kind;
   if (
