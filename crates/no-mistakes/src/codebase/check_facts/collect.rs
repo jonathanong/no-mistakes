@@ -117,6 +117,10 @@ fn collect_check_facts_inner(
         graph_files_complete,
         ts: ts.map_values(Arc::new),
         graph_plan: collected_ts_plan,
+        argument_projection: plan
+            .graph
+            .call_arguments
+            .then(|| plan.graph_context.argument_projection.clone()),
         integration_runner_configs,
         playwright_source_files: Arc::new(Vec::new()),
         playwright_test_files_by_project: Arc::new(Vec::new()),

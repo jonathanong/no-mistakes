@@ -1,0 +1,15 @@
+rules:
+  - name: exact
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: exact-projection.mjs }]
+      traversal: file
+      targets: [{ exact: selected }]
+  - name: terminal
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: exact-projection.mjs }]
+      traversal: file
+      targets: [{ terminal: ignored }]

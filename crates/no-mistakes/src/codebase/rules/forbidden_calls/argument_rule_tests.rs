@@ -1,6 +1,6 @@
 use crate::codebase::rules::run_check;
 
-fn check(config: &str) -> Vec<crate::codebase::rules::RuleFinding> {
+pub(super) fn check(config: &str) -> Vec<crate::codebase::rules::RuleFinding> {
     let source = crate::test_support::rule_fixture_root("forbidden-calls/argument-predicates");
     let saved = crate::test_support::materialize_saved_fixture(&source);
     run_check(saved.path(), Some(&saved.path().join(config)), None).unwrap()

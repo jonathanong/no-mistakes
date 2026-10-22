@@ -10,6 +10,7 @@ mod module_resolution;
 mod partition_collection;
 mod partitions;
 mod precollect;
+mod precollected_coverage;
 
 pub(super) use entrypoints::collect_with_precollected_ts;
 pub(crate) use entrypoints::{collect_precollected_route_facts, PrecollectedRouteFacts};
@@ -94,10 +95,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
     if playwright.integration_route_settings().next().is_some() {
         plan.graph.imports = true;
     }
-    assert!(
-        precollected_ts.is_empty() || precollected_ts.plan().covers(plan.graph),
-        "precollected graph facts must cover the staged graph plan"
-    );
+    precollected_coverage::assert_covers(&precollected_ts, &plan);
     let partitions = FilePartitions::new(&files, &graph_files, &playwright);
     let playwright_source_files = playwright.source_files();
     let playwright_test_files_by_project = playwright.test_files_by_project();

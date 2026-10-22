@@ -1,0 +1,8 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: exact-projection.mjs }]
+      excludeRoots: ['[']
+      traversal: file
+      targets: [{ exact: selected }]

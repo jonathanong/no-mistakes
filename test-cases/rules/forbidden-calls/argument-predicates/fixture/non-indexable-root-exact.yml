@@ -1,0 +1,7 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: non-indexable-root.md }]
+      traversal: file
+      targets: [{ exact: selected }]

@@ -2,7 +2,9 @@ use super::super::config::Invocation;
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite};
 
-pub(super) fn allowed_invocations(configured: &[Invocation]) -> Vec<InvocationKind> {
+pub(in crate::codebase::rules::forbidden_calls) fn allowed_invocations(
+    configured: &[Invocation],
+) -> Vec<InvocationKind> {
     let values = configured
         .iter()
         .map(|kind| match kind {

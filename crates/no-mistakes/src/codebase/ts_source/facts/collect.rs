@@ -118,7 +118,8 @@ pub(crate) fn collect_ts_facts_with_context_sources_and_session_serializing_path
                 .collect::<Vec<_>>(),
             plan,
             std::sync::Arc::clone(sources.inventory()),
-        );
+        )
+        .with_argument_projection(&context.argument_projection);
     }
     let serial_paths = serial_paths
         .iter()
@@ -164,4 +165,5 @@ pub(crate) fn collect_ts_facts_with_context_sources_and_session_serializing_path
         plan,
         std::sync::Arc::clone(sources.inventory()),
     )
+    .with_argument_projection(&context.argument_projection)
 }

@@ -1,0 +1,12 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: exact-projection-callback.mjs }]
+      traversal: file
+      unknownCalls: ignore
+      unknownArguments: finding
+      targets:
+        - exact: execute
+          whenArguments:
+            all: [{ position: 0, equals: yes }]

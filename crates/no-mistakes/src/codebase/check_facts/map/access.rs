@@ -67,6 +67,15 @@ impl CheckFactMap {
         self.graph_plan
     }
 
+    pub(crate) fn covers_argument_projection(
+        &self,
+        required: &crate::codebase::ts_source::facts::ArgumentProjection,
+    ) -> bool {
+        self.argument_projection
+            .as_ref()
+            .is_some_and(|collected| collected.covers(required))
+    }
+
     pub(crate) fn graph_view_with_supplemental(&self, supplemental: &Self) -> Self {
         let mut graph_files = self.graph_files.clone();
         graph_files.extend(supplemental.ts.keys().cloned());

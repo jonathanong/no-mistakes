@@ -11,7 +11,7 @@ fn read(name: &str, requested: bool) -> TypeScriptModuleFacts {
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, SourceType::mjs()).parse();
     assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
-    extract_with_arguments(&parsed.program, requested)
+    test_helpers::extract_with_arguments(&parsed.program, requested)
 }
 
 #[test]

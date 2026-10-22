@@ -33,6 +33,47 @@ pub(super) fn finding_for_site_with_arguments(
         target: Some(target),
     })
 }
+
+pub(super) fn finding_for_source_call(
+    root: &Path,
+    application: &RuleDef,
+    label: &str,
+    options: &Options,
+    file: &Path,
+    call: &crate::codebase::dependencies::extract::FunctionCall,
+    arguments: Option<&crate::codebase::ts_source::module_facts::arguments::ArgumentValues>,
+) -> Option<RuleFinding> {
+    let target = options.targets.iter().find_map(|target| {
+        let Target::Exact(exact) = target else {
+            return None;
+        };
+        if exact.exact != call.callee {
+            return None;
+        }
+        let description = describe_target(target);
+        let Some(conditions) = exact.when_arguments.as_ref() else {
+            return Some(description);
+        };
+        match super::arguments::matches(conditions, arguments) {
+            super::arguments::Match::Yes => Some(description),
+            super::arguments::Match::Unknown
+                if options.unknown_arguments == UnknownArguments::Finding =>
+            {
+                Some(format!("unknown arguments for {description}"))
+            }
+            _ => None,
+        }
+    })?;
+    let message = application.message.as_deref().unwrap_or("forbidden call");
+    Some(RuleFinding {
+        rule: RULE_ID.to_string(),
+        file: relative_slash_path(root, file),
+        line: call.line as usize,
+        message: format!("{message} ({label}): {target}"),
+        import: Some(call.callee.clone()),
+        target: Some(target),
+    })
+}
 fn target_label(
     root: &Path,
     site: &ResolvedCallSite,

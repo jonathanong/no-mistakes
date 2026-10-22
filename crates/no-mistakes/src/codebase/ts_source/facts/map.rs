@@ -4,12 +4,15 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 
+mod argument_projection;
+
 impl Default for TsFactMap {
     fn default() -> Self {
         Self {
             integration_route_links: Default::default(),
             facts: FileIdMap::default(),
             plan: TsFactPlan::default(),
+            argument_projection: None,
             // Start at 1 so the first bump cannot reuse generation 0.
             playwright_scan_epoch: Arc::new(AtomicU64::new(1)),
             playwright_scan_generation: 0,
@@ -37,6 +40,9 @@ impl TsFactMap {
                     .map(|(path, facts)| (path, TsFactSlot::Owned(Box::new(facts)))),
             ),
             plan,
+            argument_projection: plan
+                .call_arguments
+                .then_some(super::ArgumentProjection::default()),
             ..Self::default()
         }
     }
@@ -54,6 +60,9 @@ impl TsFactMap {
                 inventory,
             ),
             plan,
+            argument_projection: plan
+                .call_arguments
+                .then_some(super::ArgumentProjection::default()),
             ..Self::default()
         }
     }
@@ -69,6 +78,9 @@ impl TsFactMap {
                     .map(|(path, facts)| (path, TsFactSlot::Shared(facts))),
             ),
             plan,
+            argument_projection: plan
+                .call_arguments
+                .then_some(super::ArgumentProjection::default()),
             ..Self::default()
         }
     }
@@ -150,6 +162,11 @@ impl TsFactMap {
     pub(crate) fn extend(&mut self, other: Self) {
         if other.is_empty() {
             return;
+        }
+        if !self.is_empty() && self.argument_projection != other.argument_projection {
+            self.argument_projection = None;
+        } else if self.is_empty() {
+            self.argument_projection = other.argument_projection.clone();
         }
         self.facts.extend(other.facts);
         self.bump_playwright_scan_generation();

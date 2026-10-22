@@ -10,19 +10,10 @@ use crate::fx::FxHashSet;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
-mod invocations;
+pub(super) mod invocations;
+mod plan;
 use invocations::{allowed_invocations, site_source_node};
-
-pub(crate) fn graph_plan(
-    config: &NoMistakesConfig,
-) -> Option<crate::codebase::dependencies::graph::GraphBuildPlan> {
-    config
-        .rule_configured(RULE_ID)
-        .then(|| crate::codebase::dependencies::graph::GraphBuildPlan {
-            calls: true,
-            ..Default::default()
-        })
-}
+pub(crate) use plan::graph_plan;
 pub(crate) fn check_with_graph(
     root: &Path,
     config: &NoMistakesConfig,
@@ -34,6 +25,7 @@ pub(crate) fn check_with_graph(
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut findings = Vec::new();
+    let source_files = plan::source_files(config, graph_files);
     for (index, application) in config.rule_applications(RULE_ID).into_iter().enumerate() {
         let options: Options = application.try_rule_options()?;
         findings.extend(check_application(ApplicationCheck {
@@ -47,6 +39,7 @@ pub(crate) fn check_with_graph(
             playwright,
             graph_files,
             facts,
+            source_files: source_files.as_ref(),
         })?);
     }
     Ok(findings)
@@ -62,6 +55,7 @@ struct ApplicationCheck<'a> {
     playwright: Option<&'a super::super::PreparedPlaywrightProjectCatalog>,
     graph_files: &'a [PathBuf],
     facts: Option<&'a dyn crate::codebase::dependencies::graph::TsFactLookup>,
+    source_files: Option<&'a crate::codebase::check_facts::PathMembership<'a>>,
 }
 fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
     let ApplicationCheck {
@@ -75,8 +69,25 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
         playwright,
         graph_files,
         facts,
+        source_files,
     } = input;
     config::validate(options)?;
+    if let Some(source_files) = source_files {
+        let source_facts = facts.ok_or_else(|| {
+            anyhow::anyhow!(
+                "{RULE_ID}: prepared facts are missing source calls required by file traversal"
+            )
+        })?;
+        return super::source_only::check(
+            root,
+            config,
+            application,
+            index,
+            options,
+            source_files,
+            source_facts,
+        );
+    }
     let target_roots = super::super::target_roots(root, config, application);
     let roots = roots::expand(roots::ExpandRequest {
         root,

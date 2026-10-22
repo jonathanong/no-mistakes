@@ -29,14 +29,18 @@ type RouteReachableFilesCache = Arc<
     >,
 >;
 
+mod argument_projection;
 pub(crate) mod call_sites;
 mod collect;
 pub(crate) mod domain;
 mod map;
 mod map_iter;
+mod slot;
 pub use map_iter::{TsFactMapIntoIter, TsFactMapIter, TsFactMapIterMut};
+use slot::TsFactSlot;
 mod plan;
 
+pub use argument_projection::ArgumentProjection;
 pub use call_sites::CallSiteFact;
 pub(crate) use collect::{
     collect_file_facts_from_program, collect_ts_facts_with_context_sources_and_session,
@@ -163,49 +167,11 @@ pub struct TsFileFacts {
 }
 
 #[derive(Clone)]
-enum TsFactSlot {
-    Owned(Box<TsFileFacts>),
-    Shared(Arc<TsFileFacts>),
-}
-
-impl TsFactSlot {
-    fn as_facts(&self) -> &TsFileFacts {
-        match self {
-            Self::Owned(facts) => facts,
-            Self::Shared(facts) => facts.as_ref(),
-        }
-    }
-
-    fn into_owned(self) -> TsFileFacts {
-        match self {
-            Self::Owned(facts) => *facts,
-            Self::Shared(facts) => Arc::unwrap_or_clone(facts),
-        }
-    }
-
-    fn materialize_owned(&mut self) {
-        if matches!(self, Self::Owned(_)) {
-            return;
-        }
-        // Take the slot first so a uniquely owned Shared Arc can unwrap
-        // instead of cloning after a temporary extra strong count.
-        let taken = std::mem::replace(self, Self::Owned(Box::default()));
-        *self = Self::Owned(Box::new(taken.into_owned()));
-    }
-
-    fn as_facts_mut(&mut self) -> &mut TsFileFacts {
-        match self {
-            Self::Owned(facts) => facts,
-            Self::Shared(_) => unreachable!("shared slots were materialized"),
-        }
-    }
-}
-
-#[derive(Clone)]
 pub struct TsFactMap {
     pub(crate) integration_route_links: crate::playwright::integration_routes::PreparedLinks,
     facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>,
     plan: TsFactPlan,
+    argument_projection: Option<ArgumentProjection>,
     /// Shared by clones. `bump_playwright_scan_generation` takes the next
     /// unique value so independently mutated clones cannot collide on
     /// `(generation, settings)` while still sharing the DashMap Arcs.

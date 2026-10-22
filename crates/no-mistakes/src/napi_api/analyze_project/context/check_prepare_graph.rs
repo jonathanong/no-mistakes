@@ -37,3 +37,14 @@ fn prepare_shared_graph(
     }
     Ok(prepared_graph)
 }
+
+fn configure_forbidden_call_facts(
+    config: &crate::config::v2::NoMistakesConfig,
+    plan: &mut crate::codebase::check_facts::CheckFactPlan,
+) {
+    plan.require_call_arguments(
+        crate::codebase::rules::forbidden_calls::argument_projection(config),
+    );
+    plan.graph.function_calls |=
+        crate::codebase::rules::forbidden_calls::source_only_eligible(config);
+}

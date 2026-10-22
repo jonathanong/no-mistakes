@@ -35,13 +35,27 @@ impl CheckFactMap {
     ) -> Self {
         record_view_composition!();
         let mut ts = self.ts.clone();
+        let mut missing_graph_argument_file = false;
         for (path, facts) in supplemental.ts.iter() {
+            if !overwrite && !ts.contains_key(path) && graph_files.contains(path) {
+                missing_graph_argument_file = true;
+            }
             if overwrite || !ts.contains_key(path) {
                 ts.insert(path.clone(), Arc::clone(facts));
             }
         }
         let mut graph_plan = self.graph_plan;
         graph_plan.include(supplemental.graph_plan);
+        let argument_projection =
+            if (!overwrite && !missing_graph_argument_file) || supplemental.ts.is_empty() {
+                self.argument_projection.clone()
+            } else if self.ts.is_empty() {
+                supplemental.argument_projection.clone()
+            } else if self.argument_projection == supplemental.argument_projection {
+                self.argument_projection.clone()
+            } else {
+                None
+            };
         let unproven_member_query_sql =
             crate::codebase::check_facts::relative_scope::count_unproven_member_queries(
                 ts.values().map(|facts| facts.as_ref()),
@@ -60,6 +74,7 @@ impl CheckFactMap {
             graph_files_complete: self.graph_files_complete,
             ts,
             graph_plan,
+            argument_projection,
             integration_runner_configs: self.integration_runner_configs.clone(),
             playwright_source_files: Arc::clone(&self.playwright_source_files),
             playwright_test_files_by_project: Arc::clone(&self.playwright_test_files_by_project),

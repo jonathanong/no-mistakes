@@ -1,0 +1,6 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      traversal: file
+      targets: [{ exact: selected }]

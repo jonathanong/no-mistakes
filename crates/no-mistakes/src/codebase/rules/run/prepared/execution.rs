@@ -48,10 +48,18 @@ pub(super) fn run(
             required_graph_facts(root, graph_plan, config_path, prepared_graph, &session);
         required_facts.call_arguments |=
             crate::codebase::rules::forbidden_calls::argument_facts_required(config);
+        required_facts.function_calls |=
+            crate::codebase::rules::forbidden_calls::source_only_eligible(config);
         if !shared.graph_plan().covers(required_facts) {
             anyhow::bail!(
                 "shared check facts are missing graph facts required by configured codebase rules"
             );
+        }
+        if let Some(required) = crate::codebase::rules::forbidden_calls::argument_projection(config)
+        {
+            if !shared.covers_argument_projection(&required) {
+                anyhow::bail!("shared check facts are missing argument facts required by configured codebase rules");
+            }
         }
     }
     let owned_graph;

@@ -1,6 +1,15 @@
 /// One resolution pass over every indexable file, split by what the plan
 /// asked for: `Call` edges and call sites for `calls`, `Extends` edges and
 /// class declarations for `extends`. A class base is never a call.
+#[cfg(test)]
+#[macro_use]
+#[path = "collector_probe.rs"]
+pub(crate) mod call_collector_probe;
+#[cfg(not(test))]
+#[macro_use]
+#[path = "collector_probe_release.rs"]
+mod call_collector_probe_release;
+
 #[derive(Default)]
 struct CallPass {
     edges: Vec<Edge>,
@@ -30,6 +39,7 @@ fn collect_call_edges_for_core(
     >,
     module_files: &mut FxHashMap<String, FxHashSet<std::path::PathBuf>>,
 ) -> CallPass {
+    record_call_collector_entry!();
     use rayon::prelude::*;
     let plan = edge_inputs.plan;
     let indexes = CallableResolutionIndexes::default();

@@ -6,6 +6,7 @@ use std::sync::Arc;
 #[derive(Debug, Clone)]
 pub struct TsFactContext {
     pub root: PathBuf,
+    pub argument_projection: super::super::ArgumentProjection,
     pub backend_route_extractors: Vec<BackendRouteExtractor>,
     pub queue_factory_specifier: Option<String>,
     pub queue_factory_function: Option<String>,
@@ -191,23 +192,6 @@ impl TsFactContext {
     }
 }
 
-impl Default for TsFactContext {
-    fn default() -> Self {
-        Self {
-            root: PathBuf::new(),
-            backend_route_extractors: Vec::new(),
-            queue_factory_specifier: None,
-            queue_factory_function: None,
-            queue_factory_glob: None,
-            queue_project_factory_names: Vec::new(),
-            queue_factory_roles: crate::config::v2::schema::QueueFactoryRoles::default(),
-            http_prefixes: Vec::new(),
-            effect_functions: HashMap::new(),
-            visible_files: None,
-            server_route_filter: None,
-            trpc_router_glob: None,
-        }
-    }
-}
+include!("domain_default.rs");
 
 include!("domain_visible.rs");

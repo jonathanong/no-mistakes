@@ -9,9 +9,13 @@ pub use report::*;
 mod types;
 pub use types::*;
 
-pub(crate) fn extract_with_arguments(
+#[cfg(test)]
+mod test_helpers;
+
+pub(crate) fn extract_with_argument_offsets(
     program: &Program<'_>,
     collect: bool,
+    offsets: Option<&std::collections::BTreeSet<u32>>,
 ) -> TypeScriptModuleFacts {
     let built = SemanticBuilder::new()
         .with_build_nodes(true)
@@ -76,7 +80,10 @@ pub(crate) fn extract_with_arguments(
         .collect();
     modules::collect(&semantic, &mut facts);
     if collect && facts.diagnostics.is_empty() {
-        facts.call_arguments = Some(std::sync::Arc::new(arguments::collect(&semantic, &facts)));
+        facts.call_arguments = Some(std::sync::Arc::new(match offsets {
+            Some(offsets) if offsets.is_empty() => Default::default(),
+            _ => arguments::collect_selected(&semantic, &facts, offsets),
+        }));
     }
     facts
 }

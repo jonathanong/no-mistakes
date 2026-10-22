@@ -56,7 +56,8 @@ fn saved_projection_matrix_preserves_every_value_offset_and_spread_boundary() {
             .semantic;
         // Exercise the private projector's own defensive contract directly;
         // prepared semantic diagnostics are separately required to suppress proof.
-        let projected = arguments::collect(&semantic, &TypeScriptModuleFacts::default());
+        let projected =
+            arguments::test_helpers::collect(&semantic, &TypeScriptModuleFacts::default());
         let mut calls: Vec<_> = projected.iter().map(|(offset, values)| json!({
             "offset":offset,"line":source[..*offset as usize].bytes().filter(|b|*b==b'\n').count()+1,
             "values":values.values.iter().map(tagged).collect::<Vec<_>>(),"spreadFrom":values.spread_from,

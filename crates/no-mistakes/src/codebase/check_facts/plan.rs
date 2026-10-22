@@ -104,6 +104,7 @@ impl CheckFactPlan {
     }
 
     pub(crate) fn include(&mut self, other: Self) {
+        let argument_projection = self.merged_argument_projection(&other);
         self.merge_location_demand(&other);
         super::family_scope::include_scopes(self, &other);
         self.imports |= other.imports;
@@ -189,8 +190,11 @@ impl CheckFactPlan {
         self.postgres_sql_include.dedup();
         self.graph.include(other.graph);
         self.graph_context.include(other.graph_context);
+        self.graph_context.argument_projection = argument_projection;
     }
 }
 
 #[cfg(test)]
 mod tests;
+
+include!("plan/argument_projection.rs");

@@ -1,0 +1,7 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: empty-call-root.mjs }]
+      traversal: file
+      targets: [{ exact: selected }]

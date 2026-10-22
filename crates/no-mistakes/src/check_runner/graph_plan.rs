@@ -62,7 +62,10 @@ pub(super) fn prepare(
     }
     plan.graph.per_item_calls |=
         config.rule_configured(no_mistakes::codebase::rules::QUERY_REACHED_PER_ITEM);
-    plan.graph.call_arguments |=
-        no_mistakes::codebase::rules::forbidden_calls::argument_facts_required(config);
+    plan.require_call_arguments(
+        no_mistakes::codebase::rules::forbidden_calls::argument_projection(config),
+    );
+    plan.graph.function_calls |=
+        no_mistakes::codebase::rules::forbidden_calls::source_only_eligible(config);
     Ok(prepared_graph)
 }

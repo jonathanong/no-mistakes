@@ -1,33 +1,36 @@
 //! Binding-aware call policy projected from the prepared canonical graph.
 
+mod argument_demand;
 mod arguments;
 mod config;
 mod findings;
 mod roots;
 mod selection;
+mod source_eligibility;
+mod source_only;
 
 pub const RULE_ID: &str = "forbidden-calls";
 
 pub(crate) use selection::{check_with_graph, graph_plan};
+
+#[doc(hidden)]
+pub fn source_only_eligible(config: &crate::config::v2::NoMistakesConfig) -> bool {
+    source_eligibility::eligible(config)
+}
 
 #[cfg(test)]
 mod tests;
 
 /// Declares opt-in argument demand without parsing application options twice.
 pub fn argument_facts_required(config: &crate::config::v2::NoMistakesConfig) -> bool {
-    config.rule_applications(RULE_ID).iter().any(|application| {
-        application
-            .options
-            .get("targets")
-            .and_then(serde_yaml::Value::as_sequence)
-            .is_some_and(|targets| {
-                targets.iter().any(|target| {
-                    target
-                        .get("whenArguments")
-                        .is_some_and(|value| !value.is_null())
-                })
-            })
-    })
+    argument_projection(config).is_some()
+}
+
+#[doc(hidden)]
+pub fn argument_projection(
+    config: &crate::config::v2::NoMistakesConfig,
+) -> Option<crate::codebase::ts_source::facts::ArgumentProjection> {
+    argument_demand::projection(config)
 }
 
 /// True when a forbidden-calls application names a `vitest:` collection root.
@@ -71,6 +74,9 @@ pub fn prepare_root_catalogs(
     )
 }
 
+#[cfg(test)]
+#[path = "forbidden_calls/tests/argument_projection.rs"]
+mod argument_projection_tests;
 #[cfg(test)]
 mod argument_rule_tests;
 #[cfg(test)]

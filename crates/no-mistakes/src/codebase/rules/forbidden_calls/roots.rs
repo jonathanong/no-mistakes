@@ -142,7 +142,7 @@ fn collection_root(
     Ok(Some(CallRoot::Files { files }))
 }
 
-fn excludes_root(root: &Path, file: &Path, exclude_roots: &GlobMatcher) -> bool {
+pub(super) fn excludes_root(root: &Path, file: &Path, exclude_roots: &GlobMatcher) -> bool {
     exclude_roots.is_match(&relative_slash_path(root, file))
 }
 
@@ -156,7 +156,7 @@ fn reject_parse_error(graph: &DepGraph, root: &Path, path: &Path) -> Result<()> 
     );
 }
 
-fn require_file(root: &Path, configured: &str, kind: &str) -> Result<PathBuf> {
+pub(super) fn require_file(root: &Path, configured: &str, kind: &str) -> Result<PathBuf> {
     let path = Path::new(configured);
     let path = if path.is_absolute() {
         path.to_path_buf()

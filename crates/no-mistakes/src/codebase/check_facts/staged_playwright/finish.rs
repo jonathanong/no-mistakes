@@ -70,6 +70,10 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         } else {
             plan.collected_ts_plan()
         },
+        argument_projection: plan
+            .graph
+            .call_arguments
+            .then(|| plan.graph_context.argument_projection.clone()),
         integration_runner_configs,
         playwright_source_files,
         playwright_test_files_by_project,

@@ -123,6 +123,9 @@ pub(crate) use runner::{collect_prepared_runner_facts, runner_config_facts, Runn
 pub use stats::CheckFactStats;
 
 #[cfg(test)]
+#[path = "check_facts/tests/argument_projection_plan.rs"]
+mod argument_projection_plan_tests;
+#[cfg(test)]
 mod parse_cache_tests;
 #[cfg(test)]
 mod path_membership_tests;
