@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const helpers = require("./postgres-runtime-helpers");
 
 const {
@@ -35,18 +36,20 @@ module.exports = Object.assign(
     },
     (context) => {
       const options = executorOptionDefaults(context.options?.[0] ?? {});
+      const suppressed = ruleSuppression(context, "postgres-no-manual-transaction");
       if (isOwnerFile(context.filename, options.owners)) return {};
       let bindings = new Set();
       let statements = new Map();
 
       return {
         Program(node) {
-          bindings = executorBindings(node, options, context.filename);
+          bindings = executorBindings(node, options, context.filename, context);
           statements = sqlStatementBindings(node);
         },
         CallExpression(node) {
+          if (suppressed(node)) return;
           if (!isDatabaseCall(node, bindings)) return;
-          const argument = firstCallArgument(node);
+          const argument = firstCallArgument(node, bindings);
           const text = executedQueryText(argument, statements, context);
           if (!isManualTransactionText(text)) return;
           context.report({ node, messageId: "manualTransaction" });

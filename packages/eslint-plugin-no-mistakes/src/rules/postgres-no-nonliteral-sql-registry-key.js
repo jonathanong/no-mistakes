@@ -119,12 +119,12 @@ module.exports = rule(
     const options = executorOptionDefaults(context.options?.[0] ?? {});
     const suppressed = ruleSuppression(context, RULE_ID);
     const reported = new WeakSet();
-    const bindings = executorBindings(context.sourceCode.ast, options, context.filename);
+    const bindings = executorBindings(context.sourceCode.ast, options, context.filename, context);
 
     return {
       CallExpression(node) {
         if (!isDatabaseCall(node, bindings)) return;
-        const argument = firstCallArgument(node);
+        const argument = firstCallArgument(node, bindings);
         if (!argument || suppressed(node)) return;
         visitSql(sqlArgument(argument, context), (piece) => {
           if (

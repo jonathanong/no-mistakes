@@ -28,6 +28,15 @@ export function byKind(kind: string, id: string) {
 }
 ```
 
+```ts
+import * as db from "@example/db";
+
+const { read } = db;
+const execute = (sql) => read(sql);
+const TABLES = { orders: "orders" };
+execute(`SELECT id FROM ${TABLES[kind]}`);
+```
+
 ## Allowed
 
 ```ts
@@ -79,6 +88,31 @@ the rule does not validate that key at runtime.
 `executorNames` defaults to `["query", "read", "write"]` when `importSpecifier`
 is set, and must be set (use `[]` for no calls) when `importSpecifier` is
 empty. Scoped factories and `trustedSqlTags` are not options of this rule.
+
+## Limits
+
+The executor calls above include same-file immutable `const` aliases,
+namespace imports from the configured module, and `const { query } = db` (or
+another configured namespace export). String and expression-free template keys,
+optional calls, TypeScript wrappers, comma callees, `.call`, and `.apply` with a
+literal array are supported. A configured namespace export named `call` or
+`apply` is matched as that executor before function forwarding.
+
+One local arrow, function expression, or function declaration can forward
+identifier parameters directly to the executor. Its body must be one call or
+one return, optionally awaited. Parameters must have no defaults, rest, or
+destructuring; spreads, missing forwarded arguments, and a second forwarder
+stay unknown. Reassigned bindings and cyclic aliases are not followed.
+
+Cross-file re-exports and `export *` are not followed. For example,
+`export { read as execute } from "@example/db"` in `db.ts`, then
+`import { execute } from "./db"; execute(sql)` in another file does not prove
+that `execute` is the configured import. A default import is not a namespace.
+A computed identifier key (`const { [key]: q } = db`) or a property default
+(`const { query: q = fallback } = db`) is not a static executor alias.
+`function run({ query: q } = db) { q(sql); }` is a parameter-default
+destructure, so its default does not prove the caller supplied that executor.
+A nested parameter named `query` shadows the configured import.
 
 ## Fix
 

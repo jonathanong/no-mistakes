@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const helpers = require("./postgres-runtime-helpers");
 
 const {
@@ -33,13 +34,15 @@ module.exports = Object.assign(
     },
     (context) => {
       const options = executorOptionDefaults(context.options?.[0] ?? {});
+      const suppressed = ruleSuppression(context, "postgres-no-unbounded-query-fanout");
       let bindings = new Set();
 
       return {
         Program(node) {
-          bindings = executorBindings(node, options, context.filename);
+          bindings = executorBindings(node, options, context.filename, context);
         },
         CallExpression(node) {
+          if (suppressed(node)) return;
           if (!isPromiseAllCallee(node.callee)) return;
           const mapped = mapCallArgument(node);
           if (!mapped) return;
