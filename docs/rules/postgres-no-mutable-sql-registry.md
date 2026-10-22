@@ -154,8 +154,11 @@ a freeze does not establish the whole imported object's provenance or nested
 immutability. Helpers, aliases, and other indirect SQL also require maximum
 effort. Rewrite SQL as a literal at the executor call or one local literal
 `const`, or select `max` to inspect the cross-file registry. Unsupported executor
-aliases, factories, and type-based receivers are diagnosed at their configured
-binding reference; place a line suppression at that reported location.
+factories and type-based receivers are diagnosed at their configured binding
+reference. A one-hop local executor alias (`const run = query`) remains
+unanalyzable. A visible alias invocation is diagnosed at the call line, so a
+`no-mistakes-disable-next-line` suppression goes immediately before that call.
+Other runtime escapes are diagnosed at their use.
 Namespace executor calls are also unanalyzable: low effort does not track writes
 to the namespace receiver or its method.
 
