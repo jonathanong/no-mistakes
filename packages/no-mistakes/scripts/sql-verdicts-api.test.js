@@ -5,6 +5,73 @@ const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
 test(
+  "compiled identifier checks retain array rows and comma result provenance",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const [scenario, expected] of [
+      ["fail-array-destructured-row", [[5, "id"]]],
+      ["fail-array-destructured-row-elision", [[4, "schema"]]],
+      ["fail-comma-env", [[3, "process.env.SCHEMA"]]],
+      ["pass-array-row-overwritten-member", []],
+      ["fail-array-row-untouched-member", [[5, "first"]]],
+      ["fail-array-row-earlier-read", [[4, "first"]]],
+      ["fail-array-row-copied-member", [[6, "schema"]]],
+      ["fail-array-row-env-write", [[5, "first"]]],
+      ["fail-array-row-conditional-write", [[6, "first"]]],
+      ["fail-array-row-alias-write-barrier", [[7, "first"]]],
+      ["fail-array-row-call-barrier", [[7, "first"]]],
+      ["fail-array-row-object-write-barrier", [[6, "first"]]],
+      ["fail-array-row-interpolation-effect-barrier", [[6, "first"]]],
+      ["fail-array-row-shadow-scope", [[9, "first"]]],
+      [
+        "fail-array-row-unmatched-overwrites",
+        [
+          [6, "first"],
+          [8, "first"],
+          [10, "first"],
+          [14, "first"],
+        ],
+      ],
+      ["pass-comma-discarded-env", []],
+      ["pass-array-destructured-http-row", []],
+      ["pass-array-destructured-mutable-row", []],
+      ["pass-array-destructured-mutable-result", []],
+      ["pass-empty-and-computed-patterns", []],
+    ]) {
+      const root = join(
+        __dirname,
+        "../../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture",
+        scenario,
+      );
+      const options = { root, config: join(root, ".no-mistakes.yml") };
+      const pending = cjs.check(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.check(options), report, scenario);
+      const found = report.rules.filter(
+        (finding) => finding.rule === "postgres-no-unbounded-sql-identifier",
+      );
+      assert.deepEqual(
+        found.map((finding) => [finding.line, finding.target]),
+        expected,
+        scenario,
+      );
+      for (const finding of found) {
+        assert.equal(finding.file, "src/query.ts", scenario);
+        assert.match(finding.message, /switch whose default throws/, scenario);
+      }
+      const batch = await cjs.analyzeProject({
+        ...options,
+        reports: [{ type: "check", id: "check" }],
+      });
+      assert.deepEqual(batch.reports[0].result, report, scenario);
+    }
+  },
+);
+
+test(
   "compiled SQL verdict checks preserve CJS, ESM, suppression, and batched isolation",
   { skip: !compiled },
   async () => {

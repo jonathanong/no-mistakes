@@ -33,6 +33,11 @@ impl ImportCollector {
                         .into(),
                 )
             }
+            // A comma expression evaluates to its final operand only.
+            Expression::SequenceExpression(sequence) => sequence
+                .expressions
+                .last()
+                .map_or(ValueExpression::Unknown, |last| self.value_expression(last)),
             Expression::ConditionalExpression(value) => self.conditional_value_expression(value),
             Expression::BinaryExpression(value)
                 if value.operator == oxc_syntax::operator::BinaryOperator::Addition =>

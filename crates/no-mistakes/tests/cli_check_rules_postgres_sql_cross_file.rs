@@ -108,6 +108,19 @@ fn unbounded_identifier_remaining_shapes_use_the_public_cli() {
         ("fail-process-namespace", 3, "process.env.SCHEMA"),
         ("fail-destructured-rows", 3, "rows"),
         ("fail-destructured-row", 4, "schema"),
+        ("fail-array-destructured-row", 5, "id"),
+        ("fail-array-destructured-row-elision", 4, "schema"),
+        ("fail-comma-env", 3, "process.env.SCHEMA"),
+        ("fail-array-row-untouched-member", 5, "first"),
+        ("fail-array-row-earlier-read", 4, "first"),
+        ("fail-array-row-copied-member", 6, "schema"),
+        ("fail-array-row-env-write", 5, "first"),
+        ("fail-array-row-conditional-write", 6, "first"),
+        ("fail-array-row-alias-write-barrier", 7, "first"),
+        ("fail-array-row-call-barrier", 7, "first"),
+        ("fail-array-row-object-write-barrier", 6, "first"),
+        ("fail-array-row-interpolation-effect-barrier", 6, "first"),
+        ("fail-array-row-shadow-scope", 9, "first"),
         ("fail-iterated-rows", 4, "row"),
         ("fail-iterated-row-alias", 4, "row"),
         ("fail-conditional-row-source", 5, "row"),
@@ -121,6 +134,11 @@ fn unbounded_identifier_remaining_shapes_use_the_public_cli() {
     ] {
         exact_locations(rule, scenario, &[(line, target)]);
     }
+    exact_locations(
+        rule,
+        "fail-array-row-unmatched-overwrites",
+        &[(6, "first"), (8, "first"), (10, "first"), (14, "first")],
+    );
     for scenario in [
         "pass-conditional-literals",
         "pass-conditional-validator-local",
@@ -128,6 +146,12 @@ fn unbounded_identifier_remaining_shapes_use_the_public_cli() {
         "pass-conditional-validator-imported",
         "pass-new-bind-value",
         "pass-projected-http-rows",
+        "pass-array-destructured-http-row",
+        "pass-array-destructured-mutable-row",
+        "pass-array-destructured-mutable-result",
+        "pass-empty-and-computed-patterns",
+        "pass-comma-discarded-env",
+        "pass-array-row-overwritten-member",
         "pass-alias-cycle",
         "pass-alias-shadow",
         "pass-finite-alias",
