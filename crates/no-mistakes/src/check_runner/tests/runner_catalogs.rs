@@ -3,8 +3,14 @@ use std::path::{Path, PathBuf};
 
 fn prepare(root: &Path) -> prepared::PreparedCheckInputs {
     let session = no_mistakes::codebase::analysis_session::AnalysisSession::disabled();
-    prepared::prepare_with_session(&session, root, Some(&root.join(".no-mistakes.yml")), None)
-        .unwrap()
+    prepared::prepare_with_session(
+        &session,
+        root,
+        Some(&root.join(".no-mistakes.yml")),
+        None,
+        None,
+    )
+    .unwrap()
 }
 
 fn fixture(name: &str) -> PathBuf {
