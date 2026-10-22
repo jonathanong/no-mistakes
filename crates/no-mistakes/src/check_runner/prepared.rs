@@ -34,6 +34,7 @@ pub(super) fn prepare_with_session(
     config_path: Option<&Path>,
     tsconfig_path: Option<&Path>,
     effort: Option<no_mistakes::config::v2::Effort>,
+    deadlines: bool,
 ) -> Result<PreparedCheckInputs> {
     let (visible_paths, _) = no_mistakes::diagnostics::measure_if_enabled(
         "discovery",
@@ -42,8 +43,8 @@ pub(super) fn prepare_with_session(
     );
     let (config, effective_config_path) = session.config_with_path(root, config_path)?;
     let tsconfig = session.tsconfig(root, tsconfig_path)?;
-    let workspace =
-        consumers::needs_workspace(&config, tsconfig_path).then(|| session.workspace(root));
+    let workspace = consumers::needs_workspace(&config, tsconfig_path, deadlines)
+        .then(|| session.workspace(root));
     let mut config = config.as_ref().clone();
     config.effort_override = effort;
     prepare_from_shared(
@@ -54,6 +55,7 @@ pub(super) fn prepare_with_session(
         config,
         tsconfig.as_ref().clone(),
         workspace,
+        deadlines,
     )
 }
 
@@ -65,6 +67,7 @@ pub(crate) fn prepare_from_shared(
     mut config: NoMistakesConfig,
     tsconfig: no_mistakes::codebase::ts_resolver::TsConfig,
     workspace: Option<Arc<no_mistakes::codebase::workspaces::IndexedWorkspaceMap>>,
+    deadlines: bool,
 ) -> Result<PreparedCheckInputs> {
     let root_paths = visible_paths.paths_for(root);
     let sources = visible_paths.source_store_for(root);
@@ -99,6 +102,7 @@ pub(crate) fn prepare_from_shared(
                             root_paths.as_ref(),
                             &sources,
                             workspace.as_deref(),
+                            deadlines,
                         )
                     })
                 },
@@ -112,6 +116,7 @@ pub(crate) fn prepare_from_shared(
                             visible_paths.as_ref(),
                             &sources,
                             workspace.as_deref(),
+                            deadlines,
                         )
                     })
                 },

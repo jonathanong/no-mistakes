@@ -33,6 +33,7 @@ impl SharedCheckContext {
             config,
             tsconfig.clone(),
             Some(workspace),
+            deadlines,
         )?;
         let config = &prepared.config;
         let queues_enabled = queues_configured(config);

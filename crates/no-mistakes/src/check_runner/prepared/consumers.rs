@@ -33,13 +33,14 @@ const CATALOG_RULES: &[&str] = &[
     rules::VITEST_TEST_CORRESPONDENCE,
 ];
 
-pub(crate) fn needs_tsconfig_catalog(config: &NoMistakesConfig) -> bool {
+pub(crate) fn needs_tsconfig_catalog(config: &NoMistakesConfig, deadlines: bool) -> bool {
     playwright::rules::configured(config)
         || unique_exports_configured(config)
         || queues_configured(config)
         || integration_configured(config)
         || react_enabled(config)
         || catalog_rule_configured(config)
+        || (deadlines && declared_runner_configs(config))
         || !matches!(
             no_mistakes::codebase::rules::try_canonical_graph_plan(config),
             Ok(None)
@@ -49,14 +50,15 @@ pub(crate) fn needs_tsconfig_catalog(config: &NoMistakesConfig) -> bool {
 pub(crate) fn needs_workspace(
     config: &NoMistakesConfig,
     tsconfig_path: Option<&std::path::Path>,
+    deadlines: bool,
 ) -> bool {
     config.rule_configured(rules::TSCONFIG_GATE_COVERAGE)
         || playwright::rules::configured(config)
-        || (tsconfig_path.is_none() && needs_tsconfig_catalog(config))
+        || (tsconfig_path.is_none() && needs_tsconfig_catalog(config, deadlines))
 }
 
-pub(crate) fn needs_inferred_roots(config: &NoMistakesConfig) -> bool {
-    needs_tsconfig_catalog(config) || config.projects.values().any(infers_framework_root)
+pub(crate) fn needs_inferred_roots(config: &NoMistakesConfig, deadlines: bool) -> bool {
+    needs_tsconfig_catalog(config, deadlines) || config.projects.values().any(infers_framework_root)
 }
 
 fn infers_framework_root(project: &no_mistakes::config::v2::schema::Project) -> bool {
@@ -73,10 +75,20 @@ fn catalog_rule_configured(config: &NoMistakesConfig) -> bool {
         || enabled.nextjs_api_routes
         || enabled.nextjs_caching
         || enabled.storybook_stories
-        || enabled.embedded_sql
+        || prepared_embedded_sql_configured(config)
         || CATALOG_RULES
             .iter()
             .any(|rule| config.rule_configured(rule))
+}
+
+fn prepared_embedded_sql_configured(config: &NoMistakesConfig) -> bool {
+    no_mistakes::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS
+        .iter()
+        .any(|rule| config.rule_configured(rule))
+}
+
+fn declared_runner_configs(config: &NoMistakesConfig) -> bool {
+    config.tests.vitest.configs.is_some() || config.tests.playwright.configs.is_some()
 }
 
 fn react_enabled(config: &NoMistakesConfig) -> bool {

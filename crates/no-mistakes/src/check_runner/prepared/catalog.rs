@@ -13,6 +13,7 @@ pub(super) fn prepare(
     root_paths: &[PathBuf],
     sources: &SourceStore,
     workspace: Option<&IndexedWorkspaceMap>,
+    deadlines: bool,
 ) -> Arc<TsConfigCatalog> {
     let catalog = if let Some(path) = tsconfig_path {
         let path = if path.is_absolute() {
@@ -25,7 +26,7 @@ pub(super) fn prepare(
             tsconfig.clone(),
             Some(no_mistakes::codebase::ts_resolver::normalize_path(&path)),
         )
-    } else if !super::consumers::needs_tsconfig_catalog(config) {
+    } else if !super::consumers::needs_tsconfig_catalog(config, deadlines) {
         TsConfigCatalog::forced(root, tsconfig.clone(), None)
     } else {
         let mut candidate_roots = vec![root.to_path_buf()];

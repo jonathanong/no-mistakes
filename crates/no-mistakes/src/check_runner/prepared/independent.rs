@@ -17,8 +17,9 @@ pub(super) fn prepare(
     visible_paths: &no_mistakes::codebase::ts_source::VisiblePathSnapshot,
     sources: &no_mistakes::codebase::ts_source::SourceStore,
     workspace: Option<&no_mistakes::codebase::workspaces::IndexedWorkspaceMap>,
+    deadlines: bool,
 ) -> PreparedIndependent {
-    let inferred_roots = if super::consumers::needs_inferred_roots(config) {
+    let inferred_roots = if super::consumers::needs_inferred_roots(config, deadlines) {
         no_mistakes::codebase::config::InferredRoots::from_visible(root, root_paths)
     } else {
         no_mistakes::codebase::config::InferredRoots::default()
