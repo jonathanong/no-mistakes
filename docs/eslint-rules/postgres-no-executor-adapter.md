@@ -26,6 +26,12 @@ exec(sql);
 (flag ? read : write)(sql);
 tx(sql);
 tx.query(sql);
+db.read(sql);
+const { query } = tx;
+query(sql);
+read?.(sql);
+read["call"](null, sql);
+read["apply"](null, [sql]);
 ```
 
 `const` is required for an imported-executor alias. A `let` binding and
@@ -144,8 +150,11 @@ export function list(account: string, flag: boolean, client: { query: (sql: stri
 Not followed, not safe: a missing report is not a judgment that the adapter is
 safe. The rule does not follow a stored object or array (properties can
 change), a property read, a spread element, a getter or setter, or a private
-method. It does not follow `read.bind` passed without calling it, optional
-`read?.bind(null)` / `read.bind?.(null)`, or `.bind` on a callback. `.bind`
+method. It does not follow `read.bind` passed without calling it, or `.bind`
+on a callback. `read?.bind(null)` and `read.bind?.(null)` are that bind when
+the chain runs. A string or expression-free template key is the same member
+(`db["read"]`, ``db[`read`]``, `read["call"]`, ``read[`apply`]``). A computed
+identifier key (`db[name]`, `read[name]`) is not a static name. `.bind`
 with arguments after `this` (`read.bind(null, account)`) is not followed:
 those arguments are prepended, and `read(sql`…`)` would drop them. A function
 declaration that is assigned, or that shares its scope with direct `eval`, is
@@ -226,6 +235,13 @@ run(0 ?? read, account);
   import, a scoped factory or typed parameter, or a `const` alias of one.
   An untyped `client.query` is not an executor. Without a module, `.query`
   matches every member only when `executorNames` includes `query`.
+  `import * as db` matches `db.read` when `read` is an executor name and the
+  module is `importSpecifier` (a subpath does not match). `const { read } = db`
+  is that export. `const { query } = tx` is `tx.query` when `tx` is a proven
+  receiver. A computed identifier key, a property default, `let` or `var`, and
+  a default import are not those executors. A member named `call` on the
+  namespace is that executor, not `Function.prototype.call`, when `call` is the
+  configured name.
 - Omitting both `importSpecifier` and `executorNames` is a configuration error.
   Set `executorNames: []` to select no executor calls.
 

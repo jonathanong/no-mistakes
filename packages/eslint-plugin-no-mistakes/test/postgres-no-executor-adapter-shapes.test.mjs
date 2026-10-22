@@ -155,6 +155,80 @@ describe("postgres-no-executor-adapter shapes", () => {
     }
   });
 
+  it("reports namespace members, query destructures, and static call or apply", () => {
+    const snippets = [
+      "db.read(statement)",
+      'db["read"](statement)',
+      "db[`read`](statement)",
+      "db?.read(statement)",
+      "(db as object).read(statement)",
+      "run(db.read, account)",
+      "run(db?.read, account)",
+      "query(statement)",
+      "renamed(statement)",
+      "bracket(statement)",
+      "template(statement)",
+      "quoted(statement)",
+      "asserted(statement)",
+      "fromNamespace(statement)",
+      "tx?.query(statement)",
+      "flag && read?.bind(null)",
+      "read?.(statement)",
+      'read["call"](null, statement)',
+      'read["apply"](null, [statement])',
+      "read[`call`](null, statement)",
+      "read[`apply`](null, [statement])",
+      "read?.call(null, statement)",
+      'read?.["apply"](null, [statement])',
+      "run(read?.bind(null), account)",
+      "read.bind?.(null)",
+      'read["bind"](null)',
+      "read[`bind`](null)",
+    ];
+    for (const snippet of snippets) {
+      assert.equal(onLine("static-recall.ts", snippet, SCOPED).length, 1, snippet);
+    }
+
+    const member = onLine("static-recall.ts", "db.read(statement)", SCOPED);
+    assert.equal(member[0].messageId, "blocked");
+    assert.match(member[0].message, /db\.read\(sql\)/);
+    assert.match(member[0].message, /receiver or this/);
+
+    const query = onLine("static-recall.ts", "query(statement)", SCOPED);
+    assert.equal(query[0].messageId, "forward");
+    assert.match(query[0].message, /query\(sql\)/);
+    assert.doesNotMatch(query[0].message, /const exec = query/);
+
+    const renamed = onLine("static-recall.ts", "fromNamespace(statement)", SCOPED);
+    assert.equal(renamed[0].messageId, "forward");
+    assert.match(renamed[0].message, /const exec = fromNamespace/);
+
+    const optional = onLine("static-recall.ts", "read?.(statement)", SCOPED);
+    assert.equal(optional[0].messageId, "forward");
+    assert.match(optional[0].message, /read\(sql\)/);
+
+    const called = onLine("static-recall.ts", 'read["call"](null, statement)', SCOPED);
+    assert.equal(called[0].messageId, "blocked");
+    assert.match(called[0].message, /receiver or this/);
+
+    const bound = onLine("static-recall.ts", "run(read?.bind(null), account)", SCOPED);
+    assert.equal(bound[0].messageId, "passed");
+    assert.match(bound[0].message, /read\(sql`…`\)/);
+
+    const method = check("call-method.ts", {
+      importSpecifier: "@example/db",
+      executorNames: ["call"],
+    });
+    assert.equal(method.length, 2);
+    assert.match(method[0].message, /db\.call\(sql\)/);
+    assert.match(method[1].message, /db\["call"\]\(sql\)/);
+    assert.ok(method.every((message) => message.message.includes("receiver or this")));
+  });
+
+  it("leaves non-static executor aliases silent", () => {
+    assert.deepEqual(check("static-recall-limits.ts", SCOPED), []);
+  });
+
   it("leaves unjudged shapes silent, including an untyped client.query", () => {
     assert.deepEqual(check("silent.ts"), []);
     assert.deepEqual(
