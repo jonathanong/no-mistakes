@@ -1,9 +1,14 @@
 use super::classify::Classified;
 use super::{policy, REWRITE};
+use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
+use crate::codebase::dependencies::graph::{test_support::from_raw_maps, GraphFiles};
 use crate::config::v2::schema::RuleDef;
 use crate::config::v2::{EffectiveRuleAnalysis, Effort, NoMistakesConfig, Unanalyzable};
 use oxc_ast_visit::Visit;
-use std::path::Path;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 fn classify(path: &Path, source: &str) -> anyhow::Result<Classified> {
     crate::ast::with_program(path, source, |program, source| {
@@ -88,6 +93,8 @@ fn reports_other_setup_reachability_shapes_once() {
         jest.setMock("./set.mts");
         jest.unstable_mockModule("./unstable.mts");
         require(name);
+        vi.fn();
+        require(`./${name}.cjs`);
         "#;
     assert_eq!(
         targets(source),
@@ -103,6 +110,7 @@ fn reports_other_setup_reachability_shapes_once() {
             "doMock",
             "setMock",
             "unstable_mockModule",
+            "require",
             "require",
         ]
     );
@@ -182,4 +190,91 @@ fn mixed_effort_stays_on_max_and_all_low_uses_the_strictest_policy() {
     let resolved = policy(&all_low).unwrap();
     assert!(resolved.low);
     assert_eq!(resolved.unanalyzable, Unanalyzable::Report);
+}
+
+#[test]
+fn missing_setup_facts_and_cached_failures_keep_their_messages() {
+    let root = PathBuf::from("/repo");
+    let broken = root.join("broken.mts");
+    let plain = root.join("plain.mts");
+    let helper_broken = root.join("helper-broken.mts");
+    let helper_plain = root.join("helper-plain.mts");
+    let mut shared = CheckFactMap::default();
+    shared.ts.insert(
+        broken.clone(),
+        Arc::new(CheckFileFacts {
+            parse_error: Some("bad token".to_string()),
+            ..Default::default()
+        }),
+    );
+    shared
+        .ts
+        .insert(plain.clone(), Arc::new(CheckFileFacts::default()));
+    shared.ts.insert(
+        helper_broken.clone(),
+        Arc::new(CheckFileFacts {
+            parse_error: Some("bad helper".to_string()),
+            ..Default::default()
+        }),
+    );
+    shared
+        .ts
+        .insert(helper_plain.clone(), Arc::new(CheckFileFacts::default()));
+    let files = Vec::new();
+    let visible = crate::fx::PathSet::default();
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let catalog = crate::codebase::ts_resolver::TsConfigCatalog::forced(&root, tsconfig, None);
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new(&catalog, &visible);
+    let graph = from_raw_maps(root.clone(), Default::default(), Default::default());
+    let graph_files = GraphFiles::from_files(Vec::new());
+    let group = super::Group {
+        files: &files,
+        root: &root,
+        resolver: &resolver,
+        graph: &graph,
+        graph_files: &graph_files,
+        visible_files: &visible,
+        shared: &shared,
+        unanalyzable: Unanalyzable::Report,
+    };
+    assert!(super::load_setup(&group, &root.join("missing.mts"))
+        .unwrap_err()
+        .to_string()
+        .contains("missing shared facts"));
+    assert!(super::load_setup(&group, &broken)
+        .unwrap_err()
+        .to_string()
+        .contains("bad token"));
+    assert!(super::load_setup(&group, &plain)
+        .unwrap_err()
+        .to_string()
+        .contains("missing dynamic import facts"));
+    assert!(super::load_helper(&group, &root.join("helper-missing.mts"))
+        .unwrap_err()
+        .to_string()
+        .contains("imported setup helper"));
+    assert!(super::load_helper(&group, &helper_broken)
+        .unwrap_err()
+        .to_string()
+        .contains("failed to parse imported setup helper"));
+    assert!(super::load_helper(&group, &helper_plain)
+        .unwrap_err()
+        .to_string()
+        .contains("missing dynamic import facts for imported setup helper"));
+
+    let cache = RefCell::new(HashMap::new());
+    let file = PathBuf::from("setup.mts");
+    let first = super::remember(&cache, &file, || anyhow::bail!("explode"));
+    assert!(first.unwrap_err().to_string().contains("explode"));
+    let second = super::remember(&cache, &file, || Ok(classified("vi.mock('./x.mts');")));
+    assert!(second.unwrap_err().to_string().contains("explode"));
+    assert!(super::ready(&cache, Path::new("other.mts"))
+        .unwrap_err()
+        .to_string()
+        .contains("missing setup classification"));
 }
