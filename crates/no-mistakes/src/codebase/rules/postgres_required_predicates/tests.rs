@@ -169,3 +169,6 @@ fn rejects_unknown_unanalyzable_sql() {
     .expect("mode");
     assert!(error.to_string().contains("unanalyzableSql"), "{error}");
 }
+
+#[path = "variant_merged_tests.rs"]
+mod variant_merged_tests;
