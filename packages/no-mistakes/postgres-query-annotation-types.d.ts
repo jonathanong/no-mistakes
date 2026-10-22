@@ -11,6 +11,7 @@ export interface PostgresRequireQueryAnnotationOptions {
   executorNames?: string[];
   executorFactoryNames?: string[];
   executorTypeNames?: string[];
+  /** @deprecated At effort "low" only; ignored there and warns when configured. Still used at effort "max". */
   trustedSqlTags?: { module: string; name: string }[];
   effort?: Effort;
   unanalyzable?: Unanalyzable;

@@ -182,7 +182,7 @@ fn low_heads_and_executor_projection_share_one_parse_without_evaluation() {
         .1
         .call_spans
         .iter()
-        .any(|span| heads.accepts(*span, &profile)));
+        .any(|span| heads.accepts(*span)));
     assert!(
         file.query_annotation.is_empty(),
         "helper evaluator is skipped"

@@ -175,6 +175,13 @@ when set).
 `module` or a subpath of `module`, including a rename. A default import is not
 enough, and a shadowed or rebound local fails closed.
 
+The check rule `postgres-require-query-annotation` accepts any tagged template
+at `effort: low` when the first quasi begins with a literal named block comment.
+The tag's import form and identity are not checked. In that rule only,
+`trustedSqlTags` is deprecated and ignored at low effort, with a configuration
+warning; its max-effort behavior and use by other SQL rules are unchanged. See
+the [rule reference](rules/postgres-require-query-annotation.md#effort).
+
 ### `postgres-no-async-sql-builder`
 
 Opt-in and inert until configured. Not in `configs.recommended` or

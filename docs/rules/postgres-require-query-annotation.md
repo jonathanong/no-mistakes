@@ -140,20 +140,22 @@ const statement = `/* posts/list */ ${body}`;
 query(statement);
 ```
 
-Configured `trustedSqlTags` templates also qualify in both positions, when the
-first quasi starts with the complete named comment:
+Any tagged template qualifies in either position when its first quasi starts
+with the complete named comment. Tag identity and import form do not matter;
+the tag can be a named, default, namespace, or renamed import, or another tag
+expression:
 
 ```ts
-import { sql } from "@example/sql"; // Configured trustedSqlTags import.
+import sql from "@example/sql";
+import * as templates from "@example/templates";
 query(sql`/* posts/list */ SELECT id FROM posts WHERE id = ${id}`);
-const statement = sql`/* posts/list */ SELECT id FROM posts WHERE id = ${id}`;
-query(statement);
+const statement = templates.sql`/* posts/list */ SELECT id FROM posts WHERE id = ${id}`;
+query(statement); // A single local const passed directly also qualifies.
 ```
 
-Tag trust follows the actual named import binding, including configured module
-subpaths and import aliases. A shadowed tag, a tag absent from the configuration, and built-in
-default tag imports without an explicit matching configuration do not qualify.
-Default-import syntax is outside this named-import grammar.
+At `low`, `trustedSqlTags` is deprecated for this rule and ignored; configuring
+it produces a configuration warning. This does not change its behavior for
+`max` analysis or for other SQL rules that consume the option.
 
 A tag-backed const must stay local and be used only as a direct argument to
 prepared executors. Repeated executor reads qualify. Property writes, receiver
@@ -161,13 +163,16 @@ methods, helper escapes, aliases, returns, stores, and exports make it
 unanalyzable because a const binding does not make its builder immutable.
 Literal string consts retain their head when passed elsewhere.
 
+A tagged-template left operand of `+` also keeps its literal head, directly or
+through one local const. A tag on the right cannot repair an unknown left head.
+
 The first complete block comment must contain a nonempty name. Parentheses and
 TypeScript assertions do not add indirection. The const must resolve to the same
 file's lexical declaration; a second alias, import, destructured binding, or
 mutable declaration does not qualify.
 
-Counterexamples at `low` include helper returns, tagged templates absent from
-the configuration, conditional heads, appended builders, and bare transaction
+Counterexamples at `low` include helper returns, conditional heads, appended
+builders, and bare transaction
 commands. At `low`, the policy does not distinguish a proven-missing annotation
 from an unproven shape: both are unanalyzable, even when `max` would prove the
 annotation missing. `BEGIN`, `COMMIT`, and `ROLLBACK` also follow this policy at

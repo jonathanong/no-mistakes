@@ -8,7 +8,7 @@ use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 
-const REWRITE: &str = "use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); a configured trustedSqlTags template with that literal head also qualifies in either position";
+const REWRITE: &str = "use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position";
 
 pub(super) fn scan(
     root: &Path,
@@ -35,7 +35,7 @@ pub(super) fn scan(
             observer.increment("postgres.annotation.low.calls", file.calls.len() as u64);
         }
         for (call, span) in file.calls.iter().zip(&file.call_spans) {
-            let visible = heads.is_some_and(|heads| heads.accepts(*span, &opts.embedded));
+            let visible = heads.is_some_and(|heads| heads.accepts(*span));
             if facts.wants_sql_verdicts() {
                 facts.record_sql_verdict(SqlObligationVerdict {
                     profile: opts.embedded.clone(),

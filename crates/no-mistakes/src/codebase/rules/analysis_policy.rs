@@ -106,6 +106,15 @@ pub fn prepare_rule_analysis_with_support(
                 policy.effort = Effort::Max;
             }
         }
+        if policy.effort == Effort::Low
+            && rule.rule == "postgres-require-query-annotation"
+            && rule.options.get("trustedSqlTags").is_some()
+        {
+            warnings.push(format!(
+                "{}: trustedSqlTags is deprecated and ignored at effort low; remove it: the literal leading /* name */ determines annotation for every tag",
+                rule.name.as_deref().unwrap_or(&rule.rule)
+            ));
+        }
         policies.push(Some(policy));
     }
     for (rule, policy) in config.rules.iter_mut().zip(policies) {
@@ -149,5 +158,8 @@ fn patterns(rule: &RuleDef, name: &str) -> Result<Option<Vec<String>>> {
         .transpose()
 }
 
+#[cfg(test)]
+#[path = "analysis_policy/tag_warning_tests.rs"]
+mod tag_warning_tests;
 #[cfg(test)]
 mod tests;

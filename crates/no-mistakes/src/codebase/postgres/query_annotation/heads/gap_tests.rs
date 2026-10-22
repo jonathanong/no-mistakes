@@ -1,14 +1,7 @@
-use super::support::{assert_markers_for, decisions_for, fixture, recollect};
-use crate::codebase::postgres::{EmbeddedSqlOptions, TrustedSqlTag};
+use super::support::{assert_markers, decisions, fixture, recollect};
 use crate::codebase::ts_source::module_facts::{ModuleDiagnostic, ModuleSpan};
 use std::sync::Arc;
 const FIXTURE: &str = "diagnostic-gaps.mts";
-fn options() -> EmbeddedSqlOptions {
-    EmbeddedSqlOptions::configured("@bench/db", &[]).with_trusted_sql_tags(&[TrustedSqlTag {
-        module: "@bench/tags".into(),
-        name: "sql".into(),
-    }])
-}
 fn diagnostic(span: Option<ModuleSpan>, kind: &str, message: &str) -> ModuleDiagnostic {
     ModuleDiagnostic {
         kind: kind.into(),
@@ -19,19 +12,19 @@ fn diagnostic(span: Option<ModuleSpan>, kind: &str, message: &str) -> ModuleDiag
 #[test]
 fn global_and_canonical_eval_gaps_reject_ownership_but_keep_literal_heads() {
     let (source, original, heads) = fixture(FIXTURE);
-    assert_eq!(assert_markers_for(&source, &heads, &options()), 4);
+    assert_eq!(assert_markers(&source, &heads), 4);
     for (kind, message, span, expected) in [
         (
             "semanticError",
             "unlocated ownership failure",
             None,
-            [false, false, false, true],
+            [false, true, false, true],
         ),
         (
             "unsupported",
             "Dynamic eval may change binding semantics",
             Some(ModuleSpan { start: 0, end: 1 }),
-            [false, false, false, true],
+            [false, true, false, true],
         ),
         (
             "semanticError",
@@ -52,7 +45,7 @@ fn global_and_canonical_eval_gaps_reject_ownership_but_keep_literal_heads() {
             .push(diagnostic(span, kind, message));
         let heads = recollect(FIXTURE, &ts);
         assert_eq!(
-            decisions_for(&source, &heads, &options())
+            decisions(&source, &heads)
                 .into_iter()
                 .map(|(_, accepted)| accepted)
                 .collect::<Vec<_>>(),
@@ -64,7 +57,7 @@ fn global_and_canonical_eval_gaps_reject_ownership_but_keep_literal_heads() {
 #[test]
 fn nested_and_touching_diagnostic_intervals_do_not_hide_a_real_use_gap() {
     let (source, mut ts, heads) = fixture(FIXTURE);
-    assert_eq!(assert_markers_for(&source, &heads, &options()), 4);
+    assert_eq!(assert_markers(&source, &heads), 4);
     let module = Arc::make_mut(ts.module_bindings.as_mut().unwrap());
     let references = &module
         .bindings
@@ -90,7 +83,7 @@ fn nested_and_touching_diagnostic_intervals_do_not_hide_a_real_use_gap() {
     }
     let heads = recollect(FIXTURE, &ts);
     assert_eq!(
-        decisions_for(&source, &heads, &options())
+        decisions(&source, &heads)
             .into_iter()
             .map(|(_, accepted)| accepted)
             .collect::<Vec<_>>(),
@@ -116,5 +109,5 @@ fn half_open_diagnostic_boundaries_and_unrelated_gaps_preserve_const_proofs() {
         ));
     }
     let heads = recollect(FIXTURE, &ts);
-    assert_eq!(assert_markers_for(&source, &heads, &options()), 4);
+    assert_eq!(assert_markers(&source, &heads), 4);
 }

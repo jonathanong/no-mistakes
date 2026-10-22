@@ -37,3 +37,13 @@ escapeToHelper(literal);
 read(literal); // low: true
 const capturedSafe = sql`/* captured safe */ SELECT 1`;
 function execute() { read(capturedSafe); } // low: true
+
+// A tagged left operand keeps tag-constant ownership checks after concatenation.
+const plusSafe = sql`/* safe plus */ SELECT 1` + tail;
+read(plusSafe); // low: true
+const plusChanged = sql`/* changed plus */ SELECT 1` + tail;
+plusChanged.text = "SELECT unsafe";
+read(plusChanged); // low: false
+const plusEscaped = sql`/* escaped plus */ SELECT 1` + tail;
+escapeToHelper(plusEscaped);
+read(plusEscaped); // low: false

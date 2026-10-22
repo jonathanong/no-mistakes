@@ -41,13 +41,6 @@ pub(super) fn recollect(name: &str, ts: &TsFileFacts) -> AnnotationHeads {
     .unwrap()
 }
 pub(super) fn decisions(source: &str, heads: &AnnotationHeads) -> Vec<(Span, bool)> {
-    decisions_for(source, heads, &EmbeddedSqlOptions::default())
-}
-pub(super) fn decisions_for(
-    source: &str,
-    heads: &AnnotationHeads,
-    options: &EmbeddedSqlOptions,
-) -> Vec<(Span, bool)> {
     heads
         .calls
         .iter()
@@ -55,18 +48,11 @@ pub(super) fn decisions_for(
             let tail = &source[*start as usize..];
             tail.starts_with("read(") || tail.starts_with("read?.(")
         })
-        .map(|(span, _)| (*span, heads.accepts(*span, options)))
+        .map(|(span, _)| (*span, heads.accepts(*span)))
         .collect()
 }
 pub(super) fn assert_markers(source: &str, heads: &AnnotationHeads) -> usize {
-    assert_markers_for(source, heads, &EmbeddedSqlOptions::default())
-}
-pub(super) fn assert_markers_for(
-    source: &str,
-    heads: &AnnotationHeads,
-    options: &EmbeddedSqlOptions,
-) -> usize {
-    let calls = decisions_for(source, heads, options);
+    let calls = decisions(source, heads);
     let mut cursor = 0;
     let mut offset = 0;
     for line in source.split_inclusive('\n') {

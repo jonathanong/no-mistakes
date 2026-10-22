@@ -1,26 +1,37 @@
 use super::*;
 
 #[test]
-fn low_tag_acceptance_uses_each_saved_profile_without_inferred_builtin_trust() {
+fn low_tag_heads_are_identical_across_saved_profiles() {
     let source = std::fs::read_to_string(root().join("src/query.mts")).unwrap();
-    let configured = run(".no-mistakes-report.yml");
-    let without_tags = run(".no-mistakes-tags-none.yml");
-    let other = run(".no-mistakes-tags-other.yml");
-    let mut no_tags = marked_lines(&source, "EXPECT_REPORT_");
-    no_tags.extend(marked_lines(&source, "EXPECT_ACCEPTED_TAG"));
-    no_tags.sort_unstable();
-    assert_eq!(call_lines(&without_tags.rules, "src/query.mts"), no_tags);
-    let mut other_tags = no_tags;
-    other_tags.retain(|line| !marked_lines(&source, "EXPECT_OTHER_TAG_ACCEPTED").contains(line));
-    assert_eq!(call_lines(&other.rules, "src/query.mts"), other_tags);
-    let mixed = run(".no-mistakes-tags-mixed.yml");
-    assert_eq!(call_lines(&mixed.advisories, "src/query.mts"), other_tags);
-    let configured_lines = call_lines(&configured.rules, "src/query.mts");
-    assert_eq!(call_lines(&mixed.rules, "src/query.mts"), configured_lines);
-    assert_eq!(configured_lines, marked_lines(&source, "EXPECT_REPORT_"));
-    for line in marked_lines(&source, "EXPECT_ACCEPTED_TAG") {
-        assert!(!configured_lines.contains(&line));
+    let expected = marked_lines(&source, "EXPECT_REPORT_");
+    // These explicit oracles retain unsupported heads while accepting every tag identity.
+    assert_eq!(
+        expected,
+        vec![13, 15, 16, 17, 19, 21, 22, 23, 42, 43, 46, 48, 53]
+    );
+    assert_eq!(
+        marked_lines(&source, "EXPECT_ACCEPTED_TAG"),
+        vec![14, 32, 33, 35, 37, 38, 39, 40, 41, 50]
+    );
+    for config in [
+        ".no-mistakes-report.yml",
+        ".no-mistakes-tags-none.yml",
+        ".no-mistakes-tags-other.yml",
+    ] {
+        let result = run(config);
+        assert_eq!(
+            call_lines(&result.rules, "src/query.mts"),
+            expected,
+            "{config}"
+        );
+        assert!(result.advisories.is_empty(), "{config}");
     }
-    assert!(other.advisories.is_empty());
-    assert!(without_tags.advisories.is_empty());
+    let mixed = run(".no-mistakes-tags-mixed.yml");
+    assert_eq!(call_lines(&mixed.rules, "src/query.mts"), expected);
+    assert_eq!(call_lines(&mixed.advisories, "src/query.mts"), expected);
+    // Both report and advisory profiles retain the same call-site suppressions.
+    for line in marked_lines(&source, "EXPECT_LINE_SUPPRESSED") {
+        assert!(!call_lines(&mixed.rules, "src/query.mts").contains(&line));
+        assert!(!call_lines(&mixed.advisories, "src/query.mts").contains(&line));
+    }
 }

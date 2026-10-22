@@ -1,11 +1,9 @@
 //! Original syntax proofs for annotation low effort; no helper value evaluation.
-use crate::codebase::postgres::{EmbeddedSqlOptions, TrustedSqlTag};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use oxc_ast::ast::Program;
-use std::{collections::BTreeMap, sync::Arc};
+use std::collections::BTreeMap;
 mod bindings;
 mod diagnostics;
-mod imports;
 mod syntax;
 mod tag_constants;
 #[cfg(test)]
@@ -14,9 +12,6 @@ pub(super) type Span = (u32, u32);
 #[derive(Clone, Debug)]
 pub(crate) enum HeadProof {
     Literal,
-    // Actual named-import identity, NOT unconditional trust. One Arc per import
-    // shares this identity across direct and one-const proofs and profiles.
-    NamedImport(Arc<TrustedSqlTag>),
     Unproven,
 }
 #[derive(Clone, Debug, Default)]
@@ -24,18 +19,8 @@ pub(crate) struct AnnotationHeads {
     pub(crate) calls: BTreeMap<Span, HeadProof>,
 }
 impl AnnotationHeads {
-    pub(crate) fn accepts(&self, span: Span, options: &EmbeddedSqlOptions) -> bool {
-        match self.calls.get(&span) {
-            Some(HeadProof::Literal) => true,
-            Some(HeadProof::NamedImport(actual)) => {
-                crate::codebase::postgres::embedded::matches_trusted_sql_import(
-                    &actual.module,
-                    &actual.name,
-                    &options.trusted_sql_tags,
-                )
-            }
-            _ => false,
-        }
+    pub(crate) fn accepts(&self, span: Span) -> bool {
+        matches!(self.calls.get(&span), Some(HeadProof::Literal))
     }
 }
 pub(crate) fn collect(

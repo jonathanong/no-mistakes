@@ -45,7 +45,11 @@ falls back to `max` for that rule.
 
 [`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md#effort)
 supports `low`: prove a literal annotation at the call or through one local
-const, including explicitly configured trusted tags, without helper evaluation.
+const, including any tagged template whose first quasi starts with a literal
+named annotation, without checking the tag's identity or import form and
+without helper evaluation. `trustedSqlTags` is deprecated and ignored for this
+rule at `low`; configuring it produces a warning. This deprecation is specific
+to this rule's low-effort analysis and does not affect `max` or other SQL rules.
 Other shapes use the selected unanalyzable policy. These syntax proofs do not
 require a companion rule.
 

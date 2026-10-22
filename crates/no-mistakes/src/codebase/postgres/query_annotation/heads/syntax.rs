@@ -24,49 +24,53 @@ fn named(text: &str) -> bool {
         .and_then(|tail| tail.find("*/").map(|end| !tail[..end].trim().is_empty()))
         .unwrap_or(false)
 }
-fn literal<'a>(mut expression: &'a Expression<'a>) -> bool {
-    loop {
-        expression = unwrap_ts_wrappers(expression);
-        match expression {
-            Expression::StringLiteral(value) => return named(&value.value),
-            Expression::TemplateLiteral(value) => {
-                return value
-                    .quasis
-                    .first()
-                    .and_then(|part| part.value.cooked.as_ref())
-                    .is_some_and(|text| named(text))
-            }
-            Expression::BinaryExpression(value)
-                if value.operator == oxc_ast::ast::BinaryOperator::Addition =>
-            {
-                expression = &value.left;
-            }
-            _ => return false,
-        }
+fn literal(expression: &Expression<'_>) -> bool {
+    match expression {
+        Expression::StringLiteral(value) => named(&value.value),
+        Expression::TemplateLiteral(value) => value
+            .quasis
+            .first()
+            .and_then(|part| part.value.cooked.as_ref())
+            .is_some_and(|text| named(text)),
+        _ => false,
     }
 }
 #[derive(Clone, Copy)]
 pub(super) enum Head {
     Literal,
-    Tag(Span),
+    Tag,
     Reference(Span),
     Unproven,
 }
 impl Head {
     pub fn reference(self) -> Option<Span> {
         match self {
-            Self::Tag(span) | Self::Reference(span) => Some(span),
+            Self::Reference(span) => Some(span),
             _ => None,
         }
     }
 }
-fn head(expression: &Expression<'_>) -> Head {
-    let expression = unwrap_ts_wrappers(expression);
+// Preserve Tag through concatenation so local constants still require safe uses.
+fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
+    let mut concatenated = false;
+    loop {
+        expression = unwrap_ts_wrappers(expression);
+        if let Expression::BinaryExpression(value) = expression {
+            if value.operator == oxc_ast::ast::BinaryOperator::Addition {
+                concatenated = true;
+                expression = &value.left;
+                continue;
+            }
+        }
+        break;
+    }
     if literal(expression) {
         return Head::Literal;
     }
-    if let Expression::Identifier(id) = expression {
-        return Head::Reference(span(id.span));
+    if !concatenated {
+        if let Expression::Identifier(id) = expression {
+            return Head::Reference(span(id.span));
+        }
     }
     if let Expression::TaggedTemplateExpression(value) = expression {
         if value
@@ -76,9 +80,8 @@ fn head(expression: &Expression<'_>) -> Head {
             .and_then(|part| part.value.cooked.as_ref())
             .is_some_and(|text| named(text))
         {
-            if let Expression::Identifier(tag) = unwrap_ts_wrappers(&value.tag) {
-                return Head::Tag(span(tag.span));
-            }
+            // Low effort judges the literal head, independently of the tag.
+            return Head::Tag;
         }
     }
     Head::Unproven
@@ -100,7 +103,7 @@ impl<'a> Visit<'a> for Syntax {
             for declaration in &value.declarations {
                 if let BindingPattern::BindingIdentifier(binding) = &declaration.id {
                     let head = declaration.init.as_ref().map_or(Head::Unproven, head);
-                    if matches!(head, Head::Literal | Head::Tag(_)) {
+                    if matches!(head, Head::Literal | Head::Tag) {
                         self.constants.insert(span(binding.span), head);
                     }
                 }

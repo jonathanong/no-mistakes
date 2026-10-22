@@ -27,8 +27,8 @@ read(declared); // low: false
 read(imported); // low: false
 read(named + tail); // low: false
 read(helper("/* helper */ SELECT 1")); // low: false
-read(sql`/* tag */ SELECT 1`); // low: false
-read(String.raw`/* raw */ SELECT 1`); // low: false
+read(sql`/* tag */ SELECT 1`); // low: true
+read(String.raw`/* raw */ SELECT 1`); // low: true
 read(flag ? "/* first */ SELECT 1" : "/* second */ SELECT 2"); // low: false
 read(`/* ${value} */ SELECT 1`); // low: false
 read("/*" + " split */ SELECT 1"); // low: false
