@@ -92,6 +92,8 @@ impl Scan<'_> {
             if method == "mock" {
                 if let Some(specifier) = syntax::mock_specifier(call) {
                     self.accepted_mocks.push(specifier);
+                } else {
+                    self.reject(call.span.start, "mock");
                 }
                 return;
             }

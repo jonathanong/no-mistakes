@@ -177,8 +177,10 @@ coverage.
 At effective `effort: low`, setup reachability accepts only three forms:
 
 - a top-level static import, including a statically imported setup helper
-- a `vi.mock` or `jest.mock` call, including a nested call and a typed
-  `import()` specifier
+- a `vi.mock` or `jest.mock` call whose specifier is a string literal,
+  including a nested call and a typed `import("./literal")`. Nested calls stay
+  accepted because mock registration is hoisted, matching `effort: max`. A
+  non-literal specifier is unanalyzable
 - a top-level literal `require("...")` or `require('...')` in the setup file
   or in a helper reached through an accepted edge
 
@@ -189,8 +191,9 @@ require("./require-helper.cjs");
 ```
 
 Every other setup-reachability shape is unanalyzable. That includes a
-conditional, sequence, `void`, or nested `require()`, a runtime `import()`,
-and `vi.doMock`, `jest.doMock`, `jest.setMock`, or `jest.unstable_mockModule`.
+non-literal `vi.mock` or `jest.mock` specifier, a conditional, sequence,
+`void`, or nested `require()`, a runtime `import()`, and `vi.doMock`,
+`jest.doMock`, `jest.setMock`, or `jest.unstable_mockModule`.
 `require.resolve()` is not a reachability shape. The diagnostic names the
 rewrite:
 

@@ -8,6 +8,10 @@ function nested() {
 }
 
 vi.mock('./direct-target.mts', () => ({ value: 'direct' }))
+// A non-literal specifier is uncredited at effort max and unanalyzable at low.
+const dynamicName = './dynamic-name.mts'
+vi.mock(dynamicName) // EXPECT_SHAPE
+jest.mock(dynamicName) // EXPECT_SHAPE
 // vi.doMock is coverage at effort max and unanalyzable at effort low.
 vi.doMock('./do-target.mts', () => ({ value: 'do' })) // EXPECT_SHAPE
 import('./dynamic-helper.mts') // EXPECT_SHAPE

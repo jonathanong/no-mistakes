@@ -118,9 +118,10 @@ fn reports_other_setup_reachability_shapes_once() {
 }
 
 #[test]
-fn non_literal_mock_calls_are_accepted_and_not_credited() {
-    // A vi.mock/jest.mock call is accepted even when its specifier is not a
-    // literal. The typed import() is that call's carrier, not a second shape.
+fn non_literal_mock_calls_name_the_rewrite_without_a_second_import() {
+    // A vi.mock/jest.mock call whose specifier is not a literal cannot be
+    // credited. It is unanalyzable, and a typed import() stays the call's
+    // carrier rather than a second shape.
     let found = classified(
         r#"
         const name = "./name.mts";
@@ -129,7 +130,14 @@ fn non_literal_mock_calls_are_accepted_and_not_credited() {
         jest.mock(name);
         "#,
     );
-    assert!(found.rejected.is_empty(), "{:?}", found.rejected);
+    assert_eq!(
+        found
+            .rejected
+            .iter()
+            .map(|shape| shape.target)
+            .collect::<Vec<_>>(),
+        vec!["mock", "mock", "mock"]
+    );
     assert!(
         found.accepted_mocks.is_empty(),
         "{:?}",
