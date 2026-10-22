@@ -27,9 +27,6 @@ rules:
       bannedTablePatterns:
         - pattern: '_(history|change_logs|audit_logs)$'
           message: use a *_revisions table
-      allow:
-        - object: table:vendor_sync_history
-          reason: Mirror of a vendor table; shape owned by the vendor
 ```
 
 ## Why and when
@@ -98,8 +95,21 @@ matches no shape and no banned pattern. `article_votes` has
 `score smallint NOT NULL`. `report_export_cursors` is keyed by the
 `report_types` enum.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY, created_at timestamptz NOT NULL);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        }
+      }
+    }
+  }
+}
 ```
 
 
@@ -110,8 +120,21 @@ CREATE TABLE orders (id uuid PRIMARY KEY, created_at timestamptz NOT NULL);
 `target_table`. `sync_cursors` is keyed by `cursor_name text`.
 `order_history` matches the banned history pattern.
 
-```sql
-CREATE TABLE orders (name text);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "bad_revisions": {
+      "columns": {
+        "changes": {
+          "dataType": "json",
+          "nullable": true
+        }
+      }
+    }
+  }
+}
 ```
 
 
@@ -122,6 +145,14 @@ names, or rename the table onto the pattern that matches how it is actually
 built. Drop forbidden columns such as `updated_at` on an append-only table.
 
 ## Suppression
+
+For an intentional exception, add an entry under the rule's `options.allow`:
+
+```yaml
+allow:
+  - object: table:vendor_sync_history
+    reason: Mirror of a vendor table; shape owned by the vendor
+```
 
 Snapshot JSON cannot carry `no-mistakes-disable` comments. Suppress every
 finding for a table with `allow: [{object, reason}]`, where `object` is
