@@ -5,6 +5,7 @@ mod collect_helpers;
 mod file;
 mod file_parse_error;
 mod file_playwright;
+mod finalized;
 mod map;
 mod plan;
 mod playwright_facts;
@@ -119,6 +120,8 @@ pub use relative_scope::unproven_member_query_warning;
 pub(crate) use runner::{collect_prepared_runner_facts, runner_config_facts, RunnerConfigFacts};
 pub use stats::CheckFactStats;
 
+#[cfg(test)]
+mod finalized_tests;
 #[cfg(test)]
 mod parse_cache_tests;
 #[cfg(test)]

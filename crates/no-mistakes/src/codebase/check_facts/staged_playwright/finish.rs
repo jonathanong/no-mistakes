@@ -64,7 +64,7 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         files,
         graph_files,
         graph_files_complete,
-        ts: ts.map_values(Arc::new),
+        ts: ts.map_values(super::super::finalized::into_shared),
         graph_plan: if has_indexable_graph_only {
             plan.graph
         } else {
