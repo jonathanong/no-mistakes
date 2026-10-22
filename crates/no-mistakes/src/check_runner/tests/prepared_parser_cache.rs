@@ -1,5 +1,5 @@
 use super::*;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[test]
 fn standalone_preparation_parses_each_config_once_across_distinct_selections() {
@@ -74,7 +74,7 @@ fn standalone_preparation_keeps_same_root_tsconfig_scopes_distinct() {
 fn preparation_builds_at_most_one_workspace_projection() {
     let root = no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/codebase-analysis/symbols-output/fixture"),
+            .join("../../test-cases/codebase-analysis/unique-exports-basic/fixture"),
     );
     let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
     let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(Some(
@@ -107,4 +107,38 @@ fn explicit_tsconfig_without_playwright_skips_workspace_projection() {
     .unwrap();
 
     assert_eq!(observer.snapshot().work.get("workspace.builds"), None);
+}
+
+fn git_sha_fail_root() -> PathBuf {
+    no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/no-test-git-sha/fixture/fail"),
+    )
+}
+
+#[test]
+fn filesystem_only_config_skips_workspace_projection() {
+    let root = git_sha_fail_root();
+    let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+    let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(Some(
+        std::sync::Arc::clone(&observer),
+    ));
+
+    prepared::prepare_with_session(&session, &root, None, None, None).unwrap();
+
+    assert_eq!(observer.snapshot().work.get("workspace.builds"), None);
+}
+
+#[test]
+fn filesystem_only_check_matches_standalone_filesystem_findings() {
+    let root = git_sha_fail_root();
+    let config_path = root.join(".no-mistakes.yml");
+    let aggregate = run_all(root.clone(), Some(config_path.clone()), None).unwrap();
+    let standalone =
+        no_mistakes::codebase::rules::run_filesystem_rules(&root, Some(&config_path)).unwrap();
+    assert_eq!(
+        aggregate.rules, standalone,
+        "{:?}\n{standalone:?}",
+        aggregate.rules
+    );
 }

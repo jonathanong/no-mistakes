@@ -25,6 +25,8 @@ pub(super) fn prepare(
             tsconfig.clone(),
             Some(no_mistakes::codebase::ts_resolver::normalize_path(&path)),
         )
+    } else if !super::consumers::needs_tsconfig_catalog(config) {
+        TsConfigCatalog::forced(root, tsconfig.clone(), None)
     } else {
         let mut candidate_roots = vec![root.to_path_buf()];
         candidate_roots.extend(

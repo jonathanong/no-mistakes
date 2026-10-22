@@ -5,6 +5,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 mod catalog;
+mod consumers;
 mod independent;
 mod parallel;
 
@@ -41,10 +42,8 @@ pub(super) fn prepare_with_session(
     );
     let (config, effective_config_path) = session.config_with_path(root, config_path)?;
     let tsconfig = session.tsconfig(root, tsconfig_path)?;
-    let workspace = (tsconfig_path.is_none()
-        || no_mistakes::playwright::rules::configured(&config)
-        || config.rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE))
-    .then(|| session.workspace(root));
+    let workspace =
+        consumers::needs_workspace(&config, tsconfig_path).then(|| session.workspace(root));
     let mut config = config.as_ref().clone();
     config.effort_override = effort;
     prepare_from_shared(

@@ -18,8 +18,11 @@ pub(super) fn prepare(
     sources: &no_mistakes::codebase::ts_source::SourceStore,
     workspace: Option<&no_mistakes::codebase::workspaces::IndexedWorkspaceMap>,
 ) -> PreparedIndependent {
-    let inferred_roots =
-        no_mistakes::codebase::config::InferredRoots::from_visible(root, root_paths);
+    let inferred_roots = if super::consumers::needs_inferred_roots(config) {
+        no_mistakes::codebase::config::InferredRoots::from_visible(root, root_paths)
+    } else {
+        no_mistakes::codebase::config::InferredRoots::default()
+    };
     let codebase_config =
         no_mistakes::codebase::config::config_from_loaded_v2(root, config_path, config);
     let react = no_mistakes::react_traits::prepare_check_from_loaded_config(config, false);
