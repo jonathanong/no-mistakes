@@ -8,6 +8,6 @@ test("mutable SQL registry configuration exposes effort and unanalyzable policy"
   assert.match(types, /unanalyzableSql\?: Unanalyzable;/);
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
-    /export \* from "\.\/postgres-mutable-sql-registry-types";/,
+    /export type \* from "\.\/postgres-mutable-sql-registry-types";/,
   );
 });
