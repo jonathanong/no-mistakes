@@ -58,6 +58,15 @@ fn queue_split_dot_add_importer_stays_a_memmem_seed() {
         .expect("queue fixture config");
     configure_family_path_scopes(&root, &files, &config, sources.as_ref(), &mut scoped).unwrap();
     let enqueue = normalize_path(&root.join("src/enqueue.ts"));
+    let enqueue_source =
+        std::fs::read_to_string(root.join("src/enqueue.ts")).expect("enqueue fixture");
+    assert!(
+        enqueue_source
+            .lines()
+            .filter(|line| line.trim_start().starts_with("//"))
+            .all(|line| !line.contains("add")),
+        "comments must not contain the old needle, or this test would pass without the split-dot seed"
+    );
     assert!(
         applies(&scoped.queue_paths, &enqueue),
         "q.\\n add / q. add / q./*c*/add must seed the importer so those producers are not dropped"
