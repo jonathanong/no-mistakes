@@ -1,4 +1,6 @@
-use super::scan::{check_named_section, contains_word};
+use super::extract::{extract_named_destinations_from_program, ExtractedDestinations};
+use super::scan::section_findings;
+use super::words::contains_word;
 use super::RULE_ID;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
 use oxc_ast::ast::{
@@ -10,6 +12,22 @@ use std::path::{Path, PathBuf};
 
 const EXTENSIONS: &[&str] = &["ts", "mts", "cts", "tsx", "js", "mjs", "cjs", "jsx"];
 
+#[derive(Default)]
+pub(super) struct ConfigAnalysis {
+    pub(super) redirects: ExtractedDestinations,
+    pub(super) rewrites: ExtractedDestinations,
+    pub(super) specifier: Option<String>,
+}
+
+pub(super) fn analyze_config(path: &Path, source: &str) -> ConfigAnalysis {
+    crate::ast::with_program(path, source, |program, source| ConfigAnalysis {
+        redirects: extract_named_destinations_from_program(program, source, "redirects"),
+        rewrites: extract_named_destinations_from_program(program, source, "rewrites"),
+        specifier: default_module_specifier(program).map(str::to_string),
+    })
+    .unwrap_or_default()
+}
+
 pub(super) struct DelegateRequest<'a> {
     pub(super) root: &'a Path,
     pub(super) config_path: &'a Path,
@@ -19,6 +37,7 @@ pub(super) struct DelegateRequest<'a> {
     pub(super) route_set: &'a BTreeSet<String>,
     pub(super) app_root_label: &'a str,
     pub(super) include_rewrites: bool,
+    pub(super) specifier: Option<&'a str>,
 }
 
 pub(super) fn append_delegated(
@@ -30,8 +49,10 @@ pub(super) fn append_delegated(
     if !follow_redirects && !follow_rewrites {
         return;
     }
-    let Some(delegated) = local_default_module(request.config_path, request.source, request.files)
-    else {
+    let Some(specifier) = request.specifier else {
+        return;
+    };
+    let Some(delegated) = resolve_relative(request.config_path, specifier, request.files) else {
         return;
     };
     let Some(delegated_source) = super::super::read_source(request.sources, &delegated) else {
@@ -41,41 +62,33 @@ pub(super) fn append_delegated(
         return;
     }
     let rel = relative_slash_path(request.root, &delegated);
+    let analysis = analyze_config(&delegated, &delegated_source);
     if follow_redirects {
-        findings.extend(check_named_section(
+        findings.extend(section_findings(
             &rel,
             &delegated_source,
-            &delegated,
             "redirects",
             "redirect",
+            &analysis.redirects,
             request.route_set,
             request.app_root_label,
         ));
     }
     if follow_rewrites {
-        findings.extend(check_named_section(
+        findings.extend(section_findings(
             &rel,
             &delegated_source,
-            &delegated,
             "rewrites",
             "rewrite",
+            &analysis.rewrites,
             request.route_set,
             request.app_root_label,
         ));
     }
 }
 
-fn local_default_module(config_path: &Path, source: &str, files: &[PathBuf]) -> Option<PathBuf> {
-    let specifier = crate::ast::with_program(config_path, source, |program, _| {
-        default_module_specifier(program).map(str::to_string)
-    })
-    .ok()
-    .flatten()?;
-    resolve_relative(config_path, &specifier, files)
-}
-
 fn default_module_specifier<'a>(program: &'a Program<'a>) -> Option<&'a str> {
-    let mut imported: Option<(&str, &str)> = None;
+    let mut imported = Vec::new();
     let mut exported_ident: Option<&str> = None;
     let mut reexport: Option<&str> = None;
     for statement in &program.body {
@@ -87,8 +100,8 @@ fn default_module_specifier<'a>(program: &'a Program<'a>) -> Option<&'a str> {
                 for specifier in specifiers {
                     if let ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) = specifier
                     {
-                        imported =
-                            Some((specifier.local.name.as_str(), import.source.value.as_str()));
+                        imported
+                            .push((specifier.local.name.as_str(), import.source.value.as_str()));
                     }
                 }
             }
@@ -108,10 +121,11 @@ fn default_module_specifier<'a>(program: &'a Program<'a>) -> Option<&'a str> {
     if let Some(specifier) = reexport {
         return Some(specifier);
     }
-    match (imported, exported_ident) {
-        (Some((local, specifier)), Some(exported)) if local == exported => Some(specifier),
-        _ => None,
-    }
+    let exported = exported_ident?;
+    imported
+        .into_iter()
+        .find(|(local, _)| *local == exported)
+        .map(|(_, specifier)| specifier)
 }
 
 fn default_reexport_specifier<'a>(export: &'a ExportFromDeclaration<'a>) -> Option<&'a str> {
@@ -135,10 +149,22 @@ fn resolve_relative(from: &Path, specifier: &str, files: &[PathBuf]) -> Option<P
     }
     let base = from.parent()?.join(specifier);
     let normalized = crate::codebase::ts_resolver::normalize_path(&base);
-    let mut candidates = vec![normalized.clone()];
-    if normalized.extension().is_none() {
-        for extension in EXTENSIONS {
-            candidates.push(normalized.with_extension(*extension));
+    let mut candidates = Vec::new();
+    match normalized
+        .extension()
+        .and_then(|extension| extension.to_str())
+    {
+        Some(extension) => {
+            candidates.push(normalized.clone());
+            if let Some(source_extension) = typescript_extension(extension) {
+                candidates.push(normalized.with_extension(source_extension));
+            }
+        }
+        None => {
+            for extension in EXTENSIONS {
+                candidates.push(normalized.with_extension(*extension));
+                candidates.push(normalized.join(format!("index.{extension}")));
+            }
         }
     }
     files
@@ -148,4 +174,14 @@ fn resolve_relative(from: &Path, specifier: &str, files: &[PathBuf]) -> Option<P
             candidates.iter().any(|candidate| candidate == &file)
         })
         .cloned()
+}
+
+fn typescript_extension(extension: &str) -> Option<&'static str> {
+    match extension {
+        "js" => Some("ts"),
+        "jsx" => Some("tsx"),
+        "mjs" => Some("mts"),
+        "cjs" => Some("cts"),
+        _ => None,
+    }
 }

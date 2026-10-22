@@ -6,7 +6,8 @@ use super::routes::{
     build_route_set, destination_matches, is_page_file, matches_route_segments,
     route_from_page_relative, should_skip_destination, strip_query_and_hash,
 };
-use super::scan::{check_named_section, contains_word, word_line};
+use super::scan::check_named_section;
+use super::words::{contains_word, word_line};
 use super::*;
 use crate::config::v2::{
     schema::{Project, RuleDef, RuleScope},

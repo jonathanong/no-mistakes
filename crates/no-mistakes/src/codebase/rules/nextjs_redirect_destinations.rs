@@ -11,6 +11,7 @@ mod options;
 mod routes;
 mod scan;
 mod static_values;
+mod words;
 
 use options::Options;
 use scan::scan;

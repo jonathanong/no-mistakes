@@ -54,6 +54,29 @@ fn default_import_reports_the_shared_module() {
 }
 
 #[test]
+fn exported_default_is_followed_when_another_default_import_is_present() {
+    for name in ["fail-earlier-import", "fail-later-import"] {
+        let findings = run(name);
+        assert_eq!(findings.len(), 1, "{name}: {findings:?}");
+        assert_eq!(findings[0].file, "next-shared.ts");
+        assert!(findings[0].message.contains("redirect destination '/gone'"));
+    }
+}
+
+#[test]
+fn extensionless_index_and_js_specifier_resolve_the_typescript_module() {
+    let index = run("fail-index");
+    assert_eq!(index.len(), 1, "{index:?}");
+    assert_eq!(index[0].file, "next-shared/index.ts");
+    assert!(index[0].message.contains("redirect destination '/gone'"));
+
+    let sibling = run("fail-js-specifier");
+    assert_eq!(sibling.len(), 1, "{sibling:?}");
+    assert_eq!(sibling[0].file, "next-shared.ts");
+    assert!(sibling[0].message.contains("redirect destination '/gone'"));
+}
+
+#[test]
 fn reexport_accepts_a_destination_that_matches_a_page() {
     assert!(run("pass-reexport").is_empty());
 }

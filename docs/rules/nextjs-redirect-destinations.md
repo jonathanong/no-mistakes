@@ -113,7 +113,11 @@ instead of silently passing.
 A config entry that does not itself contain `redirects` or `rewrites` is
 followed one hop when it re-exports a relative default (`export { default }
 from "./next-shared"`) or default-imports that binding and exports it
-(`import nextConfig from "./next-shared"; export default nextConfig`). The
+(`import nextConfig from "./next-shared"; export default nextConfig`). Every
+default import is remembered and matched to the exported identifier, including
+when another default import comes later. An extensionless relative specifier
+also resolves `index.ts` (and the other source extensions), and a `.js` /
+`.jsx` / `.mjs` / `.cjs` specifier also resolves the TypeScript sibling. The
 shared file is then checked with the same extractor. A second hop, a package
 specifier, and a tsconfig path such as `@/next-shared` are not followed.
 
