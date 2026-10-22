@@ -39,6 +39,16 @@ await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 await waitForNextPage;
 ```
 
+```ts
+// e2e/alias.spec.ts
+let waitForNextPage = page.waitForRequest(
+  (req) => req.url().includes("/api/v1/posts") && req.url().includes("after="),
+);
+let scrollTo = window.scrollTo;
+scrollTo(0, document.body.scrollHeight);
+await waitForNextPage;
+```
+
 ## Allowed
 
 ```ts
@@ -54,6 +64,18 @@ await waitForNextPage;
 // e2e/scroll-top.spec.ts
 // No paginated wait anywhere in this file — a raw scroll here is just testing scroll-to-top.
 await page.evaluate(() => window.scrollTo(0, 0));
+```
+
+```ts
+// e2e/alias.spec.ts
+let waitForNextPage = page.waitForRequest(
+  (req) => req.url().includes("/api/v1/posts") && req.url().includes("after="),
+);
+waitForNextPage = readNext;
+let scrollTo = window.scrollTo;
+scrollTo = scrollToLoadMore;
+scrollTo(0, document.body.scrollHeight);
+await waitForNextPage;
 ```
 
 ## Options
@@ -72,7 +94,7 @@ paginated request fires, instead of a single synthetic scroll.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. `url.searchParams.has.call(url.searchParams, "cursor")` and `url.searchParams.get.apply(url.searchParams, ["after"])` still see the cursor argument. A computed identifier key is not a static name. A parameter named `waitForRequest` or `waitForResponse`, including a `const` alias of that parameter, does not establish a Playwright cursor wait.
+A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. `url.searchParams.has.call(url.searchParams, "cursor")` and `url.searchParams.get.apply(url.searchParams, ["after"])` still see the cursor argument. A computed identifier key is not a static name. A parameter named `waitForRequest` or `waitForResponse`, including a single-write alias of that parameter, does not establish a Playwright cursor wait.
 
 Another file's re-export is not visible here.
 

@@ -216,4 +216,78 @@ describe("playwright same-file recall", () => {
       ["semantic"],
     );
   });
+
+  it("does not follow a using binding as a locator alias", () => {
+    assert.deepEqual(
+      messages(
+        fixture("playwright-selector-priority/using-binding.spec.ts"),
+        "playwright-selector-priority",
+        undefined,
+        "e2e/using-binding.spec.ts",
+      ),
+      [],
+    );
+  });
+
+  it("recalls an undeclared bare locator call", () => {
+    assert.deepEqual(
+      messages(
+        fixture("playwright-selector-priority/bare-locator.spec.js"),
+        "playwright-selector-priority",
+        undefined,
+        "e2e/bare-locator.spec.js",
+      ),
+      ["semantic"],
+    );
+  });
+
+  it("follows single-write let and var aliases and ignores reassignment", () => {
+    assert.deepEqual(
+      messages(
+        fixture("playwright-selector-priority/single-write-alias.spec.js"),
+        "playwright-selector-priority",
+        undefined,
+        "e2e/single-write-alias.spec.js",
+      ),
+      ["semantic", "semantic", "semantic", "text", "heading"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("playwright-prefer-get-by-test-id/single-write-alias.jsx"),
+        "playwright-prefer-get-by-test-id",
+      ),
+      ["prefer", "prefer"],
+    );
+    assert.deepEqual(
+      messages(fixture("playwright-literals/single-write-alias.jsx"), "playwright-literals"),
+      ["literal", "literal"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("playwright-no-raw-scroll-pagination/single-write-alias.spec.js"),
+        "playwright-no-raw-scroll-pagination",
+        undefined,
+        "e2e/single-write-alias.spec.js",
+      ),
+      ["rawScroll", "rawScroll"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("playwright-no-hoisted-unique-token/single-write-alias.spec.js"),
+        "playwright-no-hoisted-unique-token",
+        { tokenFactories: ["randomSuffix"] },
+        "playwright/single-write-alias.spec.js",
+      ),
+      ["hoisted", "hoisted", "hoisted"],
+    );
+    assert.deepEqual(
+      messages(
+        fixture("playwright-assertion-timeout-cap/single-write-alias.spec.ts"),
+        "playwright-assertion-timeout-cap",
+        undefined,
+        "e2e/single-write-alias.spec.ts",
+      ),
+      ["timeout", "timeout", "timeout", "timeout"],
+    );
+  });
 });

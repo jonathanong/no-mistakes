@@ -9,7 +9,9 @@ function withClass() {
   locator(".not-playwright");
 }
 function mutable() {
+  // A later write fails closed: the binding is not a static locator.
   let locator = page.locator;
+  locator = page.click;
   locator(".not-static");
 }
 function cyclic() {

@@ -1,6 +1,7 @@
 "use strict";
 
 const { resolveVariable } = require("./test-no-shared-state-aliases");
+const { resolveAlias } = require("./playwright-static-call-alias");
 const { invokedCall, memberName, methodFromCallee } = require("./playwright-static-call");
 
 const RAW_SCROLL_NAMES = new Set(["scrollTo", "scrollBy", "scroll"]);
@@ -34,17 +35,16 @@ function globalScrollInit(declarator, context) {
 
 function isRawScrollCall(node, context) {
   const invoked = invokedCall(node);
-  if (!invoked || !RAW_SCROLL_NAMES.has(methodFromCallee(invoked.callee, context))) return false;
+  if (!invoked) return false;
   let callee = invoked.callee;
   while (callee?.type === "ChainExpression") callee = callee.expression;
   if (callee?.type === "Identifier") {
     const variable = resolveVariable(callee, context);
-    if (!variable || variable.defs.length === 0) return true;
-    if (variable.defs.length !== 1) return false;
-    const def = variable.defs[0];
-    if (def.type !== "Variable" || def.parent?.kind !== "const") return false;
-    return globalScrollInit(def.node, context);
+    if (!variable || variable.defs.length === 0) return RAW_SCROLL_NAMES.has(callee.name);
+    const alias = resolveAlias(callee, context, new Set());
+    return Boolean(alias && globalScrollInit(alias.declarator, context));
   }
+  if (!RAW_SCROLL_NAMES.has(methodFromCallee(callee, context))) return false;
   const object =
     callee.object?.type === "ChainExpression" ? callee.object.expression : callee.object;
   return object?.type === "Identifier" && object.name === "window" && unbound(object, context);

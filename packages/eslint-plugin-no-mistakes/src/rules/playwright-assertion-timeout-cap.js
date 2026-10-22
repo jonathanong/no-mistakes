@@ -2,6 +2,7 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { resolveAlias } = require("./playwright-static-call-alias");
 const {
   invokedCall,
   memberName,
@@ -59,9 +60,9 @@ function isPlaywrightNamespace(node, context, seen = new Set()) {
   ) {
     return true;
   }
-  if (def.type !== "Variable" || def.parent?.kind !== "const" || !def.node?.init) return false;
-  seen.add(variable);
-  return isPlaywrightNamespace(def.node.init, context, seen);
+  const alias = resolveAlias(node, context, seen);
+  if (alias?.init?.type !== "Identifier") return false;
+  return isPlaywrightNamespace(alias.init, context, seen);
 }
 
 function expectRoot(node, context, expectNames, seen = new Set()) {
@@ -74,29 +75,20 @@ function expectRoot(node, context, expectNames, seen = new Set()) {
   if (node.type !== "Identifier") return false;
   const variable = variableFor(node, context);
   if (variable && seen.has(variable)) return false;
-  if (variable) seen.add(variable);
   if (expectNames.has(node.name) || node.name === "expect") {
     if (!variable || variable.defs.length === 0) return true;
     const def = variable.defs[0];
     if (def.type === "ImportBinding") return true;
-    if (def.type === "Variable" && def.parent?.kind === "const" && def.node?.init) {
-      return expectRoot(def.node.init, context, expectNames, seen);
-    }
+    const alias = resolveAlias(node, context, seen);
+    if (alias?.kind === "init") return expectRoot(alias.init, context, expectNames, seen);
     return false;
   }
-  const def = variable?.defs?.length === 1 ? variable.defs[0] : null;
-  if (def?.type === "Variable" && def.parent?.kind === "const" && def.node?.init) {
-    if (def.node.id?.type === "ObjectPattern") {
-      let key = null;
-      for (const item of def.node.id.properties) {
-        if (item.type !== "Property") continue;
-        const value = item.value;
-        if (value.type === "Identifier" && value.name === node.name) key = patternKey(item);
-      }
-      return key === "expect" && isPlaywrightNamespace(def.node.init, context);
-    }
-    return expectRoot(def.node.init, context, expectNames, seen);
+  const alias = resolveAlias(node, context, seen);
+  if (alias?.kind === "key") {
+    return alias.key === "expect" && isPlaywrightNamespace(alias.declarator.init, context);
   }
+  if (alias?.kind === "init") return expectRoot(alias.init, context, expectNames, seen);
+  if (variable) seen.add(variable);
   return methodFromCallee(node, context, seen) === "expect";
 }
 

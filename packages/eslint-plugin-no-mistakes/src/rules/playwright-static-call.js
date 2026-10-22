@@ -1,6 +1,7 @@
 "use strict";
 
 const { literalString } = require("../helpers");
+const { patternKey, resolveAlias, variableFor } = require("./playwright-static-call-alias");
 
 const SELECTOR_METHODS = new Set([
   "$",
@@ -34,23 +35,6 @@ function memberName(node) {
   return literalString(node.property);
 }
 
-function patternKey(property) {
-  const key = property.key;
-  if (property.computed && key.type === "Identifier") return null;
-  if (!property.computed && typeof key.name === "string") return key.name;
-  return literalString(key);
-}
-
-function variableFor(node, context) {
-  let scope = context.sourceCode.getScope(node);
-  while (scope) {
-    const variable = scope.variables.find((item) => item.name === node.name);
-    if (variable) return variable;
-    scope = scope.upper;
-  }
-  return null;
-}
-
 function methodFromCallee(callee, context, seen = new Set()) {
   while (callee?.type === "ChainExpression") callee = callee.expression;
   const direct = memberName(callee);
@@ -58,51 +42,25 @@ function methodFromCallee(callee, context, seen = new Set()) {
   if (callee?.type !== "Identifier") return null;
   const variable = variableFor(callee, context);
   if (!variable || variable.defs?.length === 0) return callee.name;
-  if (seen.has(variable) || variable.defs.length !== 1) return null;
-  const def = variable.defs[0];
-  if (def.type !== "Variable" || def.parent?.kind !== "const" || !def.node?.init) return null;
-  seen.add(variable);
-  if (def.node.id.type === "ObjectPattern") {
-    for (const item of def.node.id.properties) {
-      if (item.type !== "Property") continue;
-      const value = item.value.type === "AssignmentPattern" ? item.value.left : item.value;
-      if (value.type === "Identifier" && value.name === callee.name) {
-        const key = patternKey(item);
-        if (key) return key;
-      }
-    }
-    return null;
-  }
-  if (def.node.id.type !== "Identifier") return null;
-  return methodFromCallee(def.node.init, context, seen);
+  const alias = resolveAlias(callee, context, seen);
+  if (!alias) return null;
+  if (alias.kind === "key") return alias.key;
+  return methodFromCallee(alias.init, context, seen);
 }
 
-// A configured factory keeps its own name when that name is also a const
-// alias of another function. The resolved target is used only when the
-// spelled callee is not itself configured.
+// A configured factory keeps its own name when that name is also a
+// single-write alias of another function. The resolved target is used only
+// when the spelled callee is not itself configured.
 function configuredFactory(callee, context, factoryNames, seen = new Set()) {
   while (callee?.type === "ChainExpression") callee = callee.expression;
   if (callee?.type === "Identifier" && factoryNames.has(callee.name)) return callee.name;
   const direct = memberName(callee);
   if (direct && factoryNames.has(direct)) return direct;
   if (callee?.type !== "Identifier") return null;
-  const variable = variableFor(callee, context);
-  if (!variable || seen.has(variable) || variable.defs?.length !== 1) return null;
-  const def = variable.defs[0];
-  if (def.type !== "Variable" || def.parent?.kind !== "const" || !def.node?.init) return null;
-  seen.add(variable);
-  if (def.node.id.type === "ObjectPattern") {
-    for (const item of def.node.id.properties) {
-      if (item.type !== "Property") continue;
-      const value = item.value.type === "AssignmentPattern" ? item.value.left : item.value;
-      if (value.type !== "Identifier" || value.name !== callee.name) continue;
-      const key = patternKey(item);
-      if (key && factoryNames.has(key)) return key;
-    }
-    return null;
-  }
-  if (def.node.id.type !== "Identifier") return null;
-  return configuredFactory(def.node.init, context, factoryNames, seen);
+  const alias = resolveAlias(callee, context, seen);
+  if (!alias) return null;
+  if (alias.kind === "key") return alias.key && factoryNames.has(alias.key) ? alias.key : null;
+  return configuredFactory(alias.init, context, factoryNames, seen);
 }
 
 function invokedCall(node) {
@@ -139,40 +97,28 @@ function invokedCall(node) {
 }
 
 function isNamespaceBinding(node, context, namespaces, seen = new Set()) {
-  if (node?.type !== "Identifier" || seen.has(node)) return false;
+  if (node?.type !== "Identifier") return false;
   const variable = variableFor(node, context);
   if (!variable || variable.defs.length !== 1) return false;
   const def = variable.defs[0];
   if (def.type === "ImportBinding" && def.node.type === "ImportNamespaceSpecifier") {
     return namespaces.has(node.name);
   }
-  if (
-    def.type !== "Variable" ||
-    def.parent.kind !== "const" ||
-    def.node.init?.type !== "Identifier"
-  ) {
-    return false;
-  }
-  seen.add(node);
-  return isNamespaceBinding(def.node.init, context, namespaces, seen);
+  const alias = resolveAlias(node, context, seen);
+  if (alias?.init?.type !== "Identifier") return false;
+  return isNamespaceBinding(alias.init, context, namespaces, seen);
 }
 
 function isTestBinding(node, context, testNames, seen = new Set()) {
-  if (node?.type !== "Identifier" || seen.has(node)) return false;
+  if (node?.type !== "Identifier") return false;
   const variable = variableFor(node, context);
   if (!variable || variable.defs.length === 0) return testNames.has(node.name);
   const def = variable.defs[0];
   if (def.type === "Parameter") return false;
   if (def.type === "ImportBinding") return testNames.has(node.name);
-  if (
-    def.type === "Variable" &&
-    def.parent.kind === "const" &&
-    def.node.init?.type === "Identifier"
-  ) {
-    seen.add(node);
-    return isTestBinding(def.node.init, context, testNames, seen);
-  }
-  return false;
+  const alias = resolveAlias(node, context, seen);
+  if (alias?.init?.type !== "Identifier") return false;
+  return isTestBinding(alias.init, context, testNames, seen);
 }
 
 function isBeforeAllCall(node, testNames, namespaces, context) {
