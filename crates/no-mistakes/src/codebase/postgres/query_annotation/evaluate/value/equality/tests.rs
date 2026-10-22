@@ -127,5 +127,6 @@ fn memo_warmth_is_not_semantic_and_cow_does_not_reuse_identity() {
     assert!(a != Value::Record(cold, vec!["name".into()]));
 }
 
+mod legacy_tag_owner;
 mod owner_evaluator;
 mod owners;
