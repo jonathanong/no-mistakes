@@ -11,7 +11,7 @@ the same `null` or response behavior in every server handler.
 // backend/users.ts
 type MaybeUser = { id: string } | null;
 
-export async function getUserRoute(): Promise<MaybeUser> {
+export async function getUserRoute(id: string): Promise<MaybeUser> {
   return getUserById(id);
 }
 ```
@@ -22,7 +22,7 @@ export async function getUserRoute(): Promise<MaybeUser> {
 // backend/users.ts
 type MaybeUser = { id: string } | null;
 
-export async function getUserRoute(): Promise<MaybeUser> {
+export async function getUserRoute(id: string): Promise<MaybeUser> {
   return nullableEntity(getUserById(id));
 }
 ```
