@@ -21,6 +21,14 @@ default to empty lists. `requiredHeading` defaults to unset. Each
 `requiredSubstrings` item names one `file` and one literal `substring`. An
 empty or omitted `bannedPatterns` list does no pattern work.
 
+`requiredHeading` applies to each `requiredFiles` document. A valid ATX value
+(`## Install`) requires the parsed heading text at that exact level; `# Install`
+and fenced or indented code examples do not satisfy it. A value without leading
+`#` characters matches a heading of that text at any level. For compatibility,
+a leading-hash value that is not valid ATX syntax (`#Install` or `####### Install`)
+strips its leading hashes and matches the remaining text at any level. Prefer
+`Install` for any level or `## Install` for an exact level.
+
 Each `bannedPatterns` entry requires `files`, `pattern`, and `message`. There
 is no default message. `files` lists at least one non-empty glob. `pattern` is
 a Rust regex and is not trimmed. It must not be able to match the empty string.

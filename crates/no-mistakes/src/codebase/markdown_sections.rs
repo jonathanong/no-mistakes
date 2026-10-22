@@ -60,7 +60,8 @@ pub fn has_section(content: &str, heading: &str) -> bool {
 /// An ATX `required` value such as `## Perf` must appear as a parsed heading
 /// at that level. `# Perf` does not satisfy `## Perf`. A fenced or four-space
 /// example of `## Perf` is not a heading. A bare heading name still matches
-/// any level through [`has_section`].
+/// any level through [`has_section`]. Legacy leading-hash values that are not
+/// valid ATX syntax strip their hashes and match at any level as well.
 pub fn has_required_heading(content: &str, required: &str) -> bool {
     let required = required.trim();
     if let Some((level, heading)) = parse_atx_heading_spec(required) {
@@ -68,7 +69,7 @@ pub fn has_required_heading(content: &str, required: &str) -> bool {
             .iter()
             .any(|s| s.level == level && s.heading == heading);
     }
-    has_section(content, required)
+    has_section(content, required.trim_start_matches('#').trim())
 }
 
 /// Parse `## Perf` into `(2, "Perf")`. Requires CommonMark ATX shape: 1–6
