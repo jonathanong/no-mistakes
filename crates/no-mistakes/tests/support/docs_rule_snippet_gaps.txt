@@ -6,13 +6,9 @@ playwright-coverage.md: Counterexample[0] run error:
 playwright-prefer-test-id-locators.md: Counterexample[0] expected 
 postgres-bounded-statements.md: Valid example[0] run error:
 postgres-bounded-statements.md: Counterexample[0] run error:
-postgres-column-naming.md: Valid example[0] expected 
-postgres-column-requires-trigger.md: Valid example[0] expected 
 postgres-conflict-ordering.md: Counterexample[0] expected 
-postgres-duplicate-function-body.md: Valid example[0] expected 
 postgres-explicit-columns.md: Valid example[0] run error:
 postgres-explicit-columns.md: Counterexample[0] run error:
-postgres-finite-text-columns.md: Valid example[0] expected 
 postgres-generated-column-predicates.md: Valid example[0] run error:
 postgres-generated-column-predicates.md: Counterexample[0] run error:
 postgres-idempotent-insert.md: Valid example[0] run error:

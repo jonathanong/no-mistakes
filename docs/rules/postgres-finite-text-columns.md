@@ -24,9 +24,6 @@ rules:
       namePatterns: ['(^|_)(status|state|kind|type|source|category|mode|channel)$']
       skipGeneratedColumns: false
       ignoreTablePatterns: []
-      allow:
-        - object: 'column:webhook_deliveries.event_type'
-          reason: 'Values are defined by the webhook provider and change without a migration'
 ```
 
 ## Why and when
@@ -126,6 +123,14 @@ table that holds the values. If the values are owned by an external system,
 add an `allow` entry with a reason instead of changing the column.
 
 ## Suppression
+
+For example, allow a provider-owned value set:
+
+```yaml
+allow:
+  - object: 'column:webhook_deliveries.event_type'
+    reason: 'Values are defined by the webhook provider and change without a migration'
+```
 
 Schema snapshots accept JSONC comments. A finding uses the line containing
 the column key in the snapshot, so the standard directives can suppress it:
