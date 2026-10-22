@@ -15,11 +15,22 @@ await fetch("/api/users");
 ## Allowed
 
 ```ts
-// web/lib/api/users.ts (an allowed helper path)
+// web/lib/api/users.ts
 export const listUsers = () => fetch("/api/users");
 ```
 
 ## Options
+
+```js
+{
+  rules: {
+    "no-mistakes/no-global-fetch-outside-helper": ["error", {
+      checkedPathPatterns: ["web/**"],
+      allowedPathPatterns: ["web/lib/api/**"]
+    }]
+  }
+}
+```
 
 - `checkedPathPatterns` scopes files in which global `fetch` is banned.
 - `allowedPathPatterns` exempts the helper paths where global `fetch` may be
