@@ -41,6 +41,11 @@ const zeroArgCallForwarder = () => zeroArg.call(undefined);
 function recursiveCall(input: Input) {
   return recursiveCall.call(undefined, input);
 }
+function overloadedRecursive(input: string): string;
+function overloadedRecursive(input: number): number;
+function overloadedRecursive(input: string | number): string | number {
+  return overloadedRecursive(input);
+}
 function zeroArgRecursiveCall() {
   return zeroArgRecursiveCall.call(undefined);
 }

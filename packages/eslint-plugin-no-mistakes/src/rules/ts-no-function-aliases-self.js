@@ -48,17 +48,14 @@ function wrapperBindingIsFunction(node, callee, sourceCode) {
   if ((node.params || []).some((parameter) => patternHasName(parameter, callee.name))) return false;
   const variable = resolveVariable(sourceCode, callee);
   if (!variable) return false;
-  return (
-    variable.defs.length === 1 &&
-    variable.defs.some((definition) => {
-      const declaration = definition.node;
-      return (
-        declaration === node ||
-        declaration?.init === node ||
-        (declaration?.type === "VariableDeclarator" && declaration.init === node)
-      );
-    })
-  );
+  return variable.defs.some((definition) => {
+    const declaration = definition.node;
+    return (
+      declaration === node ||
+      declaration?.init === node ||
+      (declaration?.type === "VariableDeclarator" && declaration.init === node)
+    );
+  });
 }
 
 function patternHasName(pattern, name) {
