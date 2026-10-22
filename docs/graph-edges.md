@@ -677,7 +677,8 @@ control covers `if (flag) invoke(b)`. These origins remain separate from later
 parameter-reassignment generations. See [issue #2467](https://github.com/jonathanong/no-mistakes/issues/2467).
 Conditional execution is still limited: origins can be dropped for
 `if (flag) callback(value)` inside a forwarder, a loop that calls
-`callback(value)` but runs zero times, an early return before `callback(value)`,
+`callback(value)` but runs zero times, an early return before a callback or
+forwarding call,
 conditional `callback = mutate` with an installed no-op callback, and direct
 `if (flag) mutate(b)`. Skipped or no-op paths leave the original method live;
 its absence from reported candidates is no safety proof. These remaining shapes
