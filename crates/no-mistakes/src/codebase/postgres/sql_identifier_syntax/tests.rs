@@ -42,6 +42,13 @@ fn low_syntax_executor_alias_is_unknown_only_at_configured_call_sites() {
             .all(|call| matches!(call.input, Input::Unknown)));
         assert!(result.profiles[1].1.is_empty());
     });
+    fixture("executor-alias-escape.ts", |program, source, ts| {
+        let profile = EmbeddedSqlOptions::configured("@example/db", &[]);
+        let result = collect(program, &ts, source, &[profile]);
+        assert_eq!(result.profiles[0].1.len(), 1);
+        assert_eq!(result.profiles[0].1[0].line, 3);
+        assert!(matches!(result.profiles[0].1[0].input, Input::Unknown));
+    });
 }
 #[test]
 fn low_syntax_recovery_selects_only_configured_imports() {
