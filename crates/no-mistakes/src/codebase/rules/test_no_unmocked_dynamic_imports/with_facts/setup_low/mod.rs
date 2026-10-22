@@ -1,4 +1,5 @@
-mod classify;
+pub(crate) mod classify;
+mod syntax;
 
 use super::super::setup_helper_graph;
 use crate::codebase::check_facts::CheckFactMap;
@@ -177,13 +178,10 @@ fn load_setup(group: &Group<'_>, file: &Path) -> Result<classify::Classified> {
     if let Some(error) = &facts.parse_error {
         anyhow::bail!("failed to parse {}: {error}", file.display());
     }
-    if facts.dynamic_imports.is_none() {
+    let Some(dynamic) = facts.dynamic_imports.as_ref() else {
         anyhow::bail!("missing dynamic import facts for {}", file.display());
-    }
-    let Some(source) = facts.source.as_deref() else {
-        anyhow::bail!("missing source for {}", file.display());
     };
-    classify::classify(file, source)
+    Ok(dynamic.setup_reachability.clone().into())
 }
 
 fn load_helper(group: &Group<'_>, file: &Path) -> Result<classify::Classified> {
@@ -199,19 +197,13 @@ fn load_helper(group: &Group<'_>, file: &Path) -> Result<classify::Classified> {
             file.display()
         );
     }
-    if facts.dynamic_imports.is_none() {
+    let Some(dynamic) = facts.dynamic_imports.as_ref() else {
         anyhow::bail!(
             "missing dynamic import facts for imported setup helper {}",
             file.display()
         );
-    }
-    let Some(source) = facts.source.as_deref() else {
-        anyhow::bail!(
-            "missing source for imported setup helper {}",
-            file.display()
-        );
     };
-    classify::classify(file, source)
+    Ok(dynamic.setup_reachability.clone().into())
 }
 
 #[cfg(test)]

@@ -109,6 +109,27 @@ fn reports_other_setup_reachability_shapes_once() {
 }
 
 #[test]
+fn non_literal_mock_calls_are_accepted_and_not_credited() {
+    // A vi.mock/jest.mock call is accepted even when its specifier is not a
+    // literal. The typed import() is that call's carrier, not a second shape.
+    let found = classified(
+        r#"
+        const name = "./name.mts";
+        vi.mock(name);
+        vi.mock(import(name));
+        jest.mock(name);
+        "#,
+    );
+    assert!(found.rejected.is_empty(), "{:?}", found.rejected);
+    assert!(
+        found.accepted_mocks.is_empty(),
+        "{:?}",
+        found.accepted_mocks
+    );
+    assert!(found.accepted_requires.is_empty());
+}
+
+#[test]
 fn unprepared_low_option_stays_on_max() {
     let mut config = NoMistakesConfig::default();
     config

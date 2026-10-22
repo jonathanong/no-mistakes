@@ -20,7 +20,7 @@ mod runner_configs;
 pub(super) use request::check as check_standalone;
 pub(crate) use runner_configs::ensure as supplement_runner_facts;
 mod setup_contexts;
-mod setup_low;
+pub(crate) mod setup_low;
 mod setup_mocks;
 mod tsconfig_catalog;
 
@@ -150,10 +150,23 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
 
     let mut findings = Vec::new();
     let mut suppression_sources = Vec::new();
+    let mut shape_findings = prepared_contexts.diagnostics.findings;
     let mut advisories = prepared_contexts.diagnostics.advisories;
+    if !defer_suppression {
+        super::super::suppression::suppress_rule_findings_with_sources(
+            root,
+            &mut shape_findings,
+            sources,
+        );
+        super::super::suppression::suppress_rule_findings_with_sources(
+            root,
+            &mut advisories,
+            sources,
+        );
+    }
     // Shape diagnostics are ordinary findings. Each one needs a suppression
     // slot so the later zip does not drop them or the imports that follow.
-    for finding in prepared_contexts.diagnostics.findings {
+    for finding in shape_findings {
         findings.push(finding);
         suppression_sources.push(None);
     }

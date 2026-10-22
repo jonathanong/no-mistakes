@@ -33,7 +33,9 @@ pub(super) fn collect_fused_check_program(
         };
     }
     let mut visitor = CheckProgramVisitor {
-        dynamic: plan.dynamic_imports.then(|| Collector::new(source)),
+        dynamic: plan
+            .dynamic_imports
+            .then(|| Collector::new(source, program)),
         nextjs: plan
             .nextjs_caching
             .then(|| prepare_visitor(path, source, program)),
