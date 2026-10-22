@@ -96,6 +96,10 @@ fn resolve_relative(from: &Path, specifier: &str, inventory: &HashSet<PathBuf>) 
     let base = normalize_path(&parent.join(specifier));
     let mut candidates = vec![base.clone()];
     for ext in ["ts", "tsx", "js", "jsx", "mts", "cts", "mjs", "cjs"] {
+        let mut appended = base.clone().into_os_string();
+        appended.push(".");
+        appended.push(ext);
+        candidates.push(PathBuf::from(appended));
         candidates.push(base.with_extension(ext));
         candidates.push(base.join(format!("index.{ext}")));
     }

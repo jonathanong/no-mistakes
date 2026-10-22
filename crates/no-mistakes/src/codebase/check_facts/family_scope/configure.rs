@@ -110,6 +110,12 @@ fn queue_scope(
 ) -> FamilyPathScope {
     let mut seeds = BTreeSet::new();
     for path in files {
+        if !matches!(
+            path.extension().and_then(|ext| ext.to_str()),
+            Some("ts" | "tsx" | "js" | "jsx" | "mts" | "cts" | "mjs" | "cjs")
+        ) {
+            continue;
+        }
         let Ok(source) = sources.read_path(path) else {
             continue;
         };
