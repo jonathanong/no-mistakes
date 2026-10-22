@@ -14,6 +14,6 @@ fn git_identity_literal_prefixes_fail_check_with_structured_findings() {
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     let expected = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
     assert_eq!(report["rules"], serde_json::to_value(expected).unwrap());
-    assert_eq!(report["rules"].as_array().unwrap().len(), 28);
+    assert_eq!(report["rules"].as_array().unwrap().len(), 33);
     assert_eq!(report["warnings"], serde_json::json!([]));
 }

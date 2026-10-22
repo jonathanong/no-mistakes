@@ -33,6 +33,7 @@ fn literal_global_options_and_quoted_commands_are_reported() {
             .chain([22, 23])
             .chain(25..=29)
             .chain([31, 32, 33])
+            .chain(35..=39)
             .collect::<Vec<_>>()
     );
     assert!(findings
@@ -78,6 +79,6 @@ fn napi_check_reports_the_same_literal_prefix_findings() {
     .unwrap();
     let findings = super::super::run_filesystem_rules(&root, None).unwrap();
     assert_eq!(report["rules"], serde_json::to_value(findings).unwrap());
-    assert_eq!(report["rules"].as_array().unwrap().len(), 28);
+    assert_eq!(report["rules"].as_array().unwrap().len(), 33);
     assert_eq!(report["warnings"], serde_json::json!([]));
 }

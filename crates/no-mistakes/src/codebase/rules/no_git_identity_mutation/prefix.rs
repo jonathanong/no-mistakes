@@ -4,11 +4,16 @@ pub(super) fn shell_pattern() -> Regex {
     // Quoted arguments stay single shell words without evaluating their contents.
     // Separators must never be consumed as a global option's argument.
     let space = r"(?:[ \t]|\\\n[ \t]*)+";
-    let word = r#"(?:'[^'\n]*'|"[^"\n]*"|[^\s'"$`\\;|&<>()]+)+"#;
+    let quoted = r#"(?:'[^'\n]*'|"[^"\n]*")"#;
+    let raw = r#"[^\s'"$`\\;|&<>()]"#;
+    // A leading unquoted # starts a comment; an interior # stays literal.
+    let word = format!(r#"(?:{quoted}|[^\s'"$`\\;|&<>()#]{raw}*)(?:{quoted}|{raw}+)*"#);
     let valued = r"(?:-C|-c|--git-dir|--work-tree|--namespace|--config-env)";
     let flag = r"(?:--no-pager|--paginate|-p|-P|--bare|--no-replace-objects|--literal-pathspecs|--glob-pathspecs|--noglob-pathspecs|--icase-pathspecs|--no-optional-locks|--no-lazy-fetch|--no-advice)";
+    let long = r"(?:--git-dir|--work-tree|--namespace|--config-env|--exec-path|--attr-source)";
+    let equals = format!(r#"(?:{long}={word}|'{long}=[^'\n]*'|"{long}=[^"\n]*")"#);
     let option = format!(
-        r#"(?:(?:{valued}|'{valued}'|"{valued}"){space}{word}|(?:-C|-c){word}|(?:--git-dir|--work-tree|--namespace|--config-env|--exec-path|--attr-source)={word}|{flag}|'{flag}'|"{flag}")"#,
+        r#"(?:(?:{valued}|'{valued}'|"{valued}"){space}{word}|{equals}|{flag}|'{flag}'|"{flag}")"#,
     );
     // Preserve the historical permissive suffix for existing plain commands.
     // The bounded branch comes first so new prefixes cannot swallow later writes.
