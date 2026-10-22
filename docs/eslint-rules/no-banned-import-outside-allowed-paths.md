@@ -8,15 +8,18 @@ handling stay consistent. Re-exporting a banned binding keeps it reachable.
 ## Disallowed
 
 ```ts
+// web/app/page.ts
 import { fetchUser } from "@app/data";
+fetchUser("123");
 export { fetchUser } from "@app/data";
 ```
 
 ## Allowed
 
 ```ts
-// web/lib/api/user.ts is an allowed helper path
+// web/lib/api/user.ts
 import { fetchUser } from "@app/data";
+export { fetchUser };
 ```
 
 ## Options
@@ -28,6 +31,14 @@ import { fetchUser } from "@app/data";
   `.default()`.
 
 All lists default to empty, so configure the project policy explicitly.
+
+```js
+{
+  checkedPathPatterns: ["web/**"],
+  allowedPathPatterns: ["web/lib/api/**"],
+  bannedImports: [{ module: "@app/data", names: ["fetchUser"] }],
+}
+```
 
 A string or expression-free template member on a banned binding is the same member.
 

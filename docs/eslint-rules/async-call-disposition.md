@@ -8,16 +8,25 @@ their promise disposition explicit. A bare call can silently lose a rejection.
 ## Disallowed
 
 ```ts
+import { enqueueEmail } from "@app/jobs";
+
 enqueueEmail(user.id);
 ```
 
 ## Allowed
 
 ```ts
-await enqueueEmail(user.id);
-return enqueueEmail(user.id);
-void enqueueEmail(user.id); // intentionally fire and forget
-await Promise.all([enqueueEmail(first), enqueueEmail(second)]);
+import { enqueueEmail } from "@app/jobs";
+
+async function sendEmail(user, first, second) {
+  await enqueueEmail(user.id);
+  void enqueueEmail(user.id); // intentionally fire and forget
+  await Promise.all([enqueueEmail(first), enqueueEmail(second)]);
+}
+
+function returnToCaller(user) {
+  return enqueueEmail(user.id);
+}
 ```
 
 ## Options
@@ -25,6 +34,12 @@ await Promise.all([enqueueEmail(first), enqueueEmail(second)]);
 - `targets` is an array of target groups. Each group may set
   `sourceSpecifierPatterns` and `calleeNamePatterns`; values are glob or
   `/regex/` strings. Only calls matching a configured group are checked.
+
+```js
+{
+  targets: [{ sourceSpecifierPatterns: ["@app/jobs"], calleeNamePatterns: ["/^enqueue/"] }],
+}
+```
 
 Same-file namespace members, a default import of the configured module, a single `const` alias, a string or expression-free template member, an optional call, a comma callee, and `.call` or a literal-array `.apply` are the same callee.
 
