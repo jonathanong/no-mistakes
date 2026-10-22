@@ -1,0 +1,5 @@
+jobs:
+  setup:
+    runs-on: self-hosted
+    steps:
+      - run: 'git' -C . config user.email bot@example.com
