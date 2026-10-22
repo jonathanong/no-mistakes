@@ -298,7 +298,9 @@ jobs:
 
       - name: Install Chromium for timeout-policy browser tests
         timeout-minutes: 5
-        run: pnpm exec playwright install --with-deps chromium
+        # The runner image already ships Chromium's shared libraries; --with-deps
+        # only added optional CJK/X fonts from apt, whose mirror stalls this step.
+        run: pnpm exec playwright install chromium
 
       - name: Run JavaScript tests
         timeout-minutes: 5
