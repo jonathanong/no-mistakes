@@ -29,6 +29,7 @@ jobs:
     outputs:
       benchmarks: ${{ steps.benchmark-paths.outputs.changed }}
       benchmark-scope: ${{ steps.benchmark-paths.outputs.scope }}
+      timeout-policy-browser: ${{ steps.timeout-policy-browser-paths.outputs.changed }}
 
     steps:
       - name: Checkout
@@ -62,6 +63,30 @@ jobs:
           # and added destination paths, selecting both semantic shards.
           git diff --no-renames --name-status -z "$BASE_SHA" "$HEAD_SHA" |
             node .github/scripts/benchmark-change-scope.cjs >> "$GITHUB_OUTPUT"
+
+      - name: Check timeout-policy browser paths
+        id: timeout-policy-browser-paths
+        timeout-minutes: 2
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+            node .github/scripts/timeout-policy-browser-scope.cjs --all >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          for sha in "$BASE_SHA" "$HEAD_SHA"; do
+            if ! git cat-file -e "${sha}^{commit}" 2>/dev/null; then
+              git fetch --no-tags --depth=1 origin "$sha"
+            fi
+          done
+
+          git diff --no-renames --name-status -z "$BASE_SHA" "$HEAD_SHA" |
+            node .github/scripts/timeout-policy-browser-scope.cjs >> "$GITHUB_OUTPUT"
 
   quality:
     name: Lint and package checks
@@ -296,12 +321,6 @@ jobs:
           NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
           cp target/debug/libno_mistakes.so target/debug/no-mistakes.node
 
-      - name: Install Chromium for timeout-policy browser tests
-        timeout-minutes: 5
-        # The runner image already ships Chromium's shared libraries; --with-deps
-        # only added optional CJK/X fonts from apt, whose mirror stalls this step.
-        run: pnpm exec playwright install chromium
-
       - name: Run JavaScript tests
         timeout-minutes: 5
         run: pnpm run test:ci
@@ -345,6 +364,42 @@ jobs:
           files: coverage/lcov.info
           flags: javascript
           fail_ci_if_error: true
+
+  timeout-policy-browser-tests:
+    name: Timeout-policy browser tests
+    needs: changes
+    if: ${{ needs.changes.outputs.timeout-policy-browser == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up pnpm and Node.js
+        timeout-minutes: 5
+        uses: pnpm/setup@a0881977cd8ea73b1ed212236c99ca10dcc80cf4 # v3.1.1
+        with:
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Install Chromium for timeout-policy browser tests
+        timeout-minutes: 5
+        # The runner image already ships Chromium's shared libraries; --with-deps
+        # only added optional CJK/X fonts from apt, whose mirror stalls this step.
+        run: pnpm exec playwright install chromium
+
+      - name: Run timeout-policy browser tests
+        timeout-minutes: 5
+        run: pnpm run test:timeout-policy-browser
 
   native-tests:
     name: Native tests (${{ matrix.name }})
@@ -682,8 +737,10 @@ jobs:
   tests-gate:
     name: Tests with coverage
     needs:
+      - changes
       - quality
       - javascript-tests
+      - timeout-policy-browser-tests
       - native-tests
       - tests
       - tests-standalone-lib
@@ -700,9 +757,27 @@ jobs:
           NATIVE_RESULT: ${{ needs.native-tests.result }}
           RUST_RESULT: ${{ needs.tests.result }}
           STANDALONE_RESULT: ${{ needs.tests-standalone-lib.result }}
+          CHANGE_RESULT: ${{ needs.changes.result }}
+          BROWSER_CHANGED: ${{ needs.changes.outputs.timeout-policy-browser }}
+          BROWSER_RESULT: ${{ needs.timeout-policy-browser-tests.result }}
         run: |
           if [[ "$QUALITY_RESULT" != "success" || "$JAVASCRIPT_RESULT" != "success" || "$NATIVE_RESULT" != "success" || "$RUST_RESULT" != "success" || "$STANDALONE_RESULT" != "success" ]]; then
             echo "Quality checks, JavaScript tests, native tests, standalone library tests, or Rust coverage failed." >&2
+            exit 1
+          fi
+
+          if [[ "$CHANGE_RESULT" != "success" ]]; then
+            echo "Path-filter detection failed." >&2
+            exit 1
+          fi
+
+          if [[ "$BROWSER_CHANGED" == "true" ]]; then
+            if [[ "$BROWSER_RESULT" != "success" ]]; then
+              echo "Timeout-policy browser tests failed." >&2
+              exit 1
+            fi
+          elif [[ "$BROWSER_RESULT" != "skipped" && "$BROWSER_RESULT" != "success" ]]; then
+            echo "Timeout-policy browser tests did not skip cleanly." >&2
             exit 1
           fi
 
