@@ -4,6 +4,7 @@ require("./api-tests/exports");
 require("./api-tests/declarations-core");
 require("./api-tests/declarations-unbounded");
 require("./api-tests/declarations-export-invariants");
+require("./api-tests/declarations-mutable");
 require("./api-tests/declarations-postgres");
 require("./api-tests/declarations-graph");
 require("./api-tests/declarations-executor-diagnostics");
