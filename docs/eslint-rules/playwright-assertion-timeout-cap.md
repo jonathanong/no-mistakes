@@ -36,8 +36,15 @@ A string or expression-free template key, optional chaining, one `const` alias, 
 Another file's re-export is not visible here.
 
 ```js
-export { page as screen } from "./playwright.mjs";
-screen.locator("#save");
+// assertions.mjs
+export { expect as verify } from "@playwright/test";
+```
+
+```js
+// e2e/status.spec.js
+import { verify } from "../assertions.mjs";
+// The imported alias is not known to be Playwright expect in this file.
+verify(page.getByRole("status")).toBeVisible({ timeout: 30_000 });
 ```
 
 ## Suppression

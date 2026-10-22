@@ -34,13 +34,20 @@ use a test ID only when a semantic locator is not appropriate.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name. A parameter named `locator`, including a `const` alias of that parameter, does not establish a Playwright method binding.
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name. Only unresolved bare names or initialized `const` aliases establish bare method calls; parameters, mutable bindings, cycles, and local function or class declarations do not.
 
 Another file's re-export is not visible here.
 
 ```js
-export { page as screen } from "./playwright.mjs";
-screen.locator("#save");
+// selectors.mjs (page-methods.mjs exports a bound locator helper)
+export { locator as find } from "./page-methods.mjs";
+```
+
+```js
+// e2e/save.spec.js
+import { find } from "../selectors.mjs";
+// The imported alias is not known to be locator in this file.
+find("#save");
 ```
 
 ## Suppression

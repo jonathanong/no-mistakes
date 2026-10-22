@@ -77,8 +77,16 @@ A string or expression-free template key, optional chaining, one `const` alias, 
 Another file's re-export is not visible here.
 
 ```js
-export { page as screen } from "./playwright.mjs";
-screen.locator("#save");
+// waits.mjs (page-methods.mjs exports a bound waitForResponse helper)
+export { waitForResponse as wait } from "./page-methods.mjs";
+```
+
+```js
+// e2e/feed.spec.js
+import { wait } from "../waits.mjs";
+// This imported alias does not establish the cursor-wait gate in this file.
+await wait((response) => response.url().includes("?cursor=1"));
+window.scrollTo(0, document.body.scrollHeight);
 ```
 
 ## Suppression

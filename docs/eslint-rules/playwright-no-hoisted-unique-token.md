@@ -88,8 +88,16 @@ A string or expression-free template key, optional chaining, one `const` alias, 
 Another file's re-export is not visible here.
 
 ```js
-export { page as screen } from "./playwright.mjs";
-screen.locator("#save");
+// runner.mjs
+export { test as runner } from "@playwright/test";
+```
+
+```js
+// e2e/posts.spec.js
+import { runner } from "../runner.mjs";
+// With tokenFactories: ["randomSuffix"], the token is known but the hook is not.
+const suffix = randomSuffix();
+runner.beforeAll(() => createPost({ slug: suffix }));
 ```
 
 ## Suppression

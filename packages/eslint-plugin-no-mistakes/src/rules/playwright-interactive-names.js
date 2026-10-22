@@ -31,8 +31,8 @@ function rememberAlias(node, importedNames, context) {
   if (!parent || parent.kind !== "const") return;
   if (!id || id.type !== "Identifier" || !init || init.type !== "Identifier") return;
   const imported = importedNames.get(init.name);
-  const source = variableNamed(init.name, init, context);
-  const defs = source.defs;
+  if (!imported) return;
+  const defs = variableNamed(init.name, init, context)?.defs ?? [];
   if (defs.length === 1 && defs[0].type === "ImportBinding") {
     importedNames.set(id.name, imported);
   }
@@ -52,14 +52,13 @@ function mappedImport(name, node, context, importedNames) {
   const fromBinding = bindingImportName(def);
   if (fromBinding && fromBinding !== name) return fromBinding;
   const imported = importedNames.get(name);
-  if (!imported || imported === name) return null;
+  if (!imported || imported === name || def.type !== "Variable") return null;
   const init = def.node.init;
   const source =
     init && init.type === "Identifier" ? variableNamed(init.name, init, context) : null;
   const sourceDefs = source ? source.defs : [];
   const kind = def.parent.kind;
   if (
-    def.type === "Variable" &&
     kind === "const" &&
     sourceDefs.length === 1 &&
     sourceDefs[0].type === "ImportBinding" &&

@@ -45,8 +45,15 @@ A string or expression-free template key, optional chaining, one `const` alias, 
 Another file's re-export is not visible here.
 
 ```js
-export { page as screen } from "./playwright.mjs";
-screen.locator("#save");
+// selectors.mjs (page-methods.mjs exports a bound getByTestId helper)
+export { getByTestId as find } from "./page-methods.mjs";
+```
+
+```js
+// e2e/save.spec.js
+import { find } from "../selectors.mjs";
+// The imported alias is not known to be getByTestId in this file.
+find(`save-${user.id}`);
 ```
 
 ## Suppression

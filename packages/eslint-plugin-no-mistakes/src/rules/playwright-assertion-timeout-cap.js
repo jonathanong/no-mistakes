@@ -72,25 +72,24 @@ function expectRoot(node, context, expectNames, seen = new Set()) {
     return expectRoot(node.object, context, expectNames, seen);
   }
   if (node.type !== "Identifier") return false;
+  const variable = variableFor(node, context);
+  if (variable && seen.has(variable)) return false;
+  if (variable) seen.add(variable);
   if (expectNames.has(node.name) || node.name === "expect") {
-    const variable = variableFor(node, context);
     if (!variable || variable.defs.length === 0) return true;
     const def = variable.defs[0];
     if (def.type === "ImportBinding") return true;
     if (def.type === "Variable" && def.parent?.kind === "const" && def.node?.init) {
-      seen.add(node.name);
       return expectRoot(def.node.init, context, expectNames, seen);
     }
     return false;
   }
-  if (seen.has(node.name)) return false;
-  seen.add(node.name);
-  const variable = variableFor(node, context);
   const def = variable?.defs?.length === 1 ? variable.defs[0] : null;
   if (def?.type === "Variable" && def.parent?.kind === "const" && def.node?.init) {
     if (def.node.id?.type === "ObjectPattern") {
       let key = null;
       for (const item of def.node.id.properties) {
+        if (item.type !== "Property") continue;
         const value = item.value;
         if (value.type === "Identifier" && value.name === node.name) key = patternKey(item);
       }

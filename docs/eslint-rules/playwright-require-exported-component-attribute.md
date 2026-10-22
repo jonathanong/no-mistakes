@@ -43,9 +43,15 @@ A string or expression-free template key, optional chaining, one `const` alias, 
 
 Another file's re-export is not visible here.
 
-```js
-export { page as screen } from "./playwright.mjs";
-screen.locator("#save");
+```tsx
+// button.tsx
+export function Button() { return <button>Save</button>; }
+```
+
+```tsx
+// index.tsx
+// This file has no local component implementation for the rule to inspect.
+export { Button } from "./button";
 ```
 
 ## Suppression

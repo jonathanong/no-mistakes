@@ -60,7 +60,8 @@ module.exports = rule(
         if (!isPlaywrightFile) return;
         const invoked = invokedCall(node);
         if (!invoked || methodFromCallee(invoked.callee, context) !== "locator") return;
-        const selector = literalString(invoked.arguments[0])?.trim();
+        const argument = invoked.arguments[0];
+        const selector = argument && literalString(argument)?.trim();
         if (!selector || isAllowedSelector(selector)) return;
         if (suppressed(node)) return;
         if (/^\.[a-zA-Z_-]/.test(selector) || selector.startsWith("#")) {

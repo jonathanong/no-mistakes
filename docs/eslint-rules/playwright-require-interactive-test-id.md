@@ -35,9 +35,16 @@ A string or expression-free template key, optional chaining, one `const` alias, 
 
 Another file's re-export is not visible here.
 
-```js
-export { page as screen } from "./playwright.mjs";
-screen.locator("#save");
+```tsx
+// controls.tsx
+export { Button as Action } from "./button";
+```
+
+```tsx
+// form.tsx
+import { Action } from "./controls";
+// With interactiveComponents: ["Button"], Action cannot be traced to Button here.
+export function Form() { return <Action />; }
 ```
 
 ## Suppression

@@ -11,7 +11,7 @@ function unbound(node, context) {
 
 function globalScrollInit(declarator, context) {
   const init = declarator.init;
-  if (init.type === "Identifier" && RAW_SCROLL_NAMES.has(init.name)) return unbound(init, context);
+  if (init?.type === "Identifier" && RAW_SCROLL_NAMES.has(init.name)) return unbound(init, context);
   let object = init;
   while (object?.type === "ChainExpression") object = object.expression;
   if (object?.type === "MemberExpression") {
@@ -26,7 +26,7 @@ function globalScrollInit(declarator, context) {
   }
   return (
     declarator.id?.type === "ObjectPattern" &&
-    init.type === "Identifier" &&
+    init?.type === "Identifier" &&
     init.name === "window" &&
     unbound(init, context)
   );

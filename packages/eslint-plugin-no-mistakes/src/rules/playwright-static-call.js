@@ -57,23 +57,23 @@ function methodFromCallee(callee, context, seen = new Set()) {
   if (direct) return direct;
   if (callee?.type !== "Identifier") return null;
   const variable = variableFor(callee, context);
-  if (!variable || seen.has(variable) || variable.defs?.length !== 1) return callee.name;
+  if (!variable || variable.defs?.length === 0) return callee.name;
+  if (seen.has(variable) || variable.defs.length !== 1) return null;
   const def = variable.defs[0];
-  if (def.type === "Parameter") return null;
-  if (def.type !== "Variable" || def.parent?.kind !== "const" || !def.node?.init)
-    return callee.name;
+  if (def.type !== "Variable" || def.parent?.kind !== "const" || !def.node?.init) return null;
   seen.add(variable);
   if (def.node.id.type === "ObjectPattern") {
     for (const item of def.node.id.properties) {
+      if (item.type !== "Property") continue;
       const value = item.value.type === "AssignmentPattern" ? item.value.left : item.value;
       if (value.type === "Identifier" && value.name === callee.name) {
         const key = patternKey(item);
         if (key) return key;
       }
     }
-    return callee.name;
+    return null;
   }
-  if (def.node.id.type !== "Identifier") return callee.name;
+  if (def.node.id.type !== "Identifier") return null;
   return methodFromCallee(def.node.init, context, seen);
 }
 
@@ -93,6 +93,7 @@ function configuredFactory(callee, context, factoryNames, seen = new Set()) {
   seen.add(variable);
   if (def.node.id.type === "ObjectPattern") {
     for (const item of def.node.id.properties) {
+      if (item.type !== "Property") continue;
       const value = item.value.type === "AssignmentPattern" ? item.value.left : item.value;
       if (value.type !== "Identifier" || value.name !== callee.name) continue;
       const key = patternKey(item);
@@ -148,7 +149,7 @@ function isNamespaceBinding(node, context, namespaces, seen = new Set()) {
   if (
     def.type !== "Variable" ||
     def.parent.kind !== "const" ||
-    def.node.init.type !== "Identifier"
+    def.node.init?.type !== "Identifier"
   ) {
     return false;
   }
@@ -166,7 +167,7 @@ function isTestBinding(node, context, testNames, seen = new Set()) {
   if (
     def.type === "Variable" &&
     def.parent.kind === "const" &&
-    def.node.init.type === "Identifier"
+    def.node.init?.type === "Identifier"
   ) {
     seen.add(node);
     return isTestBinding(def.node.init, context, testNames, seen);

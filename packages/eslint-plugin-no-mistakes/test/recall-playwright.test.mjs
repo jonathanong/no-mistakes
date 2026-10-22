@@ -3,6 +3,54 @@ import { describe, it } from "vitest";
 import { fixture, messages } from "./helpers.mjs";
 
 describe("playwright same-file recall", () => {
+  for (const [name, rule, expected, options] of [
+    [
+      "playwright-assertion-timeout-cap/rest-binding.spec.ts",
+      "playwright-assertion-timeout-cap",
+      ["timeout"],
+    ],
+    [
+      "playwright-assertion-timeout-cap/expect-cycle.spec.ts",
+      "playwright-assertion-timeout-cap",
+      [],
+    ],
+    [
+      "playwright-require-interactive-test-id/unresolved-alias.jsx",
+      "playwright-require-interactive-test-id",
+      ["missing"],
+      { interactiveComponents: ["Button"] },
+    ],
+    [
+      "playwright-require-interactive-test-id/shadowed-kinds.jsx",
+      "playwright-require-interactive-test-id",
+      [],
+      { interactiveComponents: ["Button"] },
+    ],
+    ["playwright-prefer-get-by-test-id/rest-binding.jsx", "playwright-prefer-get-by-test-id", []],
+    ["playwright-selector-priority/unknown-bindings.spec.js", "playwright-selector-priority", []],
+    [
+      "playwright-no-hoisted-unique-token/rest-factory.spec.js",
+      "playwright-no-hoisted-unique-token",
+      [],
+      { tokenFactories: ["randomSuffix"] },
+    ],
+    [
+      "playwright-no-hoisted-unique-token/loop-binding.spec.js",
+      "playwright-no-hoisted-unique-token",
+      [],
+      { tokenFactories: ["randomSuffix"] },
+    ],
+    [
+      "playwright-no-raw-scroll-pagination/loop-binding.spec.js",
+      "playwright-no-raw-scroll-pagination",
+      [],
+    ],
+  ]) {
+    it(`safely handles ${name}`, () => {
+      assert.deepEqual(messages(fixture(name), rule, options, `e2e/${name}`), expected);
+    });
+  }
+
   it("ignores cursor waits through unrelated parameters and their aliases", () => {
     assert.deepEqual(
       messages(
