@@ -14,8 +14,13 @@ pub struct RuleEffortSupport {
     pub partner_scope: fn(&RuleDef, &RuleDef) -> bool,
 }
 
-// Adopters register here; this plumbing intentionally changes no rule's analysis.
-const SUPPORT: &[RuleEffortSupport] = &[];
+// These positive syntax proofs need no companion rule: every other shape is
+// explicitly unanalyzable under the caller's policy, rather than inferred clear.
+const SUPPORT: &[RuleEffortSupport] = &[RuleEffortSupport {
+    rule: "postgres-require-query-annotation",
+    partners: &[],
+    partner_scope: |_, _| false,
+}];
 
 pub fn prepare_rule_analysis(
     root: &Path,
@@ -48,7 +53,11 @@ pub fn prepare_rule_analysis_with_support(
         if policy.effort == Effort::Low {
             if let Some(adopter) = support.iter().find(|entry| entry.rule == rule.rule) {
                 crate::config::v2::validate_low_alias(rule)?;
-                let files = application_files(root, config, rule, visible)?;
+                let files = if adopter.partners.is_empty() {
+                    Vec::new()
+                } else {
+                    application_files(root, config, rule, visible)?
+                };
                 for partner in adopter.partners {
                     let applications = config.rule_applications(partner);
                     let mut covered = crate::fx::fx_set();

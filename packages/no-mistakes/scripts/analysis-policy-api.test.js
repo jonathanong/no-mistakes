@@ -29,31 +29,34 @@ test(
       const expected = await pending;
       assert.equal(expected.rules.length, failures);
       assert.equal(expected.advisories.length, advisories);
-      const encoded = JSON.stringify(expected);
-      const legacy = await cjs.check({
-        ...options,
-        config: join(root, `legacy-sql-${policy}.yml`),
-      });
-      assert.equal(JSON.stringify(legacy), encoded);
-      const lowExpected = {
-        ...expected,
-        warnings: [
-          ...expected.warnings,
-          "postgres-require-query-annotation: requested effort low; effective effort max because this rule has no low implementation",
-        ],
-      };
+      const low = await cjs.check({ ...options, effort: "low" });
+      assert.equal(low.rules.length, failures);
+      assert.equal(low.advisories.length, advisories);
+      const locations = (rows) => rows.map(({ rule, file, line }) => ({ rule, file, line }));
+      assert.deepEqual(locations(low.rules), locations(expected.rules));
+      assert.deepEqual(locations(low.advisories), locations(expected.advisories));
+      for (const finding of [...low.rules, ...low.advisories]) {
+        assert.match(finding.message, /query\("\/\* name \*\/ " \+ sql\)/);
+        assert.match(finding.message, /one local const/);
+      }
+      const expectedByEffort = { max: expected, low };
       let defaultStdout;
       for (const effort of [undefined, "max", "low"]) {
         const requested = { ...options, ...(effort ? { effort } : {}) };
-        const expectedEffort = effort === "low" ? lowExpected : expected;
-        for (const api of [cjs, esm])
-          assert.equal(JSON.stringify(await api.check(requested)), JSON.stringify(expectedEffort));
+        const effortExpected = expectedByEffort[effort || "max"];
+        for (const api of [cjs, esm]) {
+          assert.deepEqual(await api.check(requested), effortExpected);
+          assert.deepEqual(
+            await api.check({ ...requested, config: join(root, `legacy-sql-${policy}.yml`) }),
+            effortExpected,
+          );
+        }
         const args = ["check", "--root", root, "--config", options.config, "--format", "json"];
         if (effort) args.push("--effort", effort);
         const child = spawnSync(cli, args, { encoding: "utf8", env: process.env });
         assert.equal(child.error, undefined);
         assert.equal(child.status, failures ? 1 : 0, child.stderr);
-        assert.deepEqual(JSON.parse(child.stdout), expectedEffort);
+        assert.deepEqual(JSON.parse(child.stdout), effortExpected);
         if (effort === undefined) defaultStdout = child.stdout;
         else if (effort === "max") assert.equal(child.stdout, defaultStdout);
       }
@@ -70,8 +73,11 @@ test(
       const batchPending = cjs.analyzeProject(request);
       assert.ok(batchPending instanceof Promise);
       const batch = await batchPending;
-      for (const [index, report] of batch.reports.entries())
-        assert.deepEqual(report.result, index === 0 || index === 3 ? lowExpected : expected);
+      assert.equal(batch.reports.length, request.reports.length);
+      for (const report of batch.reports) {
+        const effort = request.reports[Number(report.id)].effort || "max";
+        assert.deepEqual(report.result, expectedByEffort[effort]);
+      }
       assert.deepEqual(await esm.analyzeProject(request), batch);
     }
     const inherited = await cjs.check({ root, config: "project-no-policy.yml" });

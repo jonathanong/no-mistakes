@@ -32,3 +32,6 @@ fn a_verified_leading_annotation_has_no_residual_advisory() {
     assert_eq!(report.advisories.len(), 1, "{:?}", report.advisories);
     assert_eq!(report.advisories[0].line, 6);
 }
+
+#[path = "effort_low_tests.rs"]
+mod effort_low;

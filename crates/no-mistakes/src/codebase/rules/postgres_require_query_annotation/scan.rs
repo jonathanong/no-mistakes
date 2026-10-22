@@ -5,6 +5,7 @@ use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
+mod low;
 mod verdicts;
 
 pub(super) fn scan_with_sources(
@@ -13,7 +14,11 @@ pub(super) fn scan_with_sources(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &dyn SqlFactContext,
+    observer: Option<&crate::diagnostics::InvocationObserver>,
 ) -> Result<crate::codebase::rules::PostgresFindings> {
+    if opts.effort == crate::config::v2::Effort::Low {
+        return low::scan(root, opts, files, facts, observer);
+    }
     let prepared = facts.prepared();
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);

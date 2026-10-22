@@ -37,27 +37,6 @@ fn shared_unanalyzable_policies_route_actual_sql_failures_advisories_and_skips()
 }
 
 #[test]
-fn explicit_max_stays_identical_and_non_adopting_low_is_a_nonfailing_note() {
-    for mode in ["report", "advise", "ignore"] {
-        let config = format!("sql-{mode}.yml");
-        let default = check_runner::json_value(&report(&config, None));
-        assert_eq!(
-            check_runner::json_value(&report(&config, Some(Effort::Max))),
-            default
-        );
-        assert!(default.get("analysisFallbacks").is_none());
-        let low = report(&config, Some(Effort::Low));
-        assert_eq!(has_failures(&low), mode == "report");
-        let mut low = check_runner::json_value(&low);
-        assert_eq!(low["warnings"], serde_json::json!([
-            "postgres-require-query-annotation: requested effort low; effective effort max because this rule has no low implementation"
-        ]));
-        low["warnings"] = serde_json::json!([]);
-        assert_eq!(low, default);
-    }
-}
-
-#[test]
 fn invalid_legacy_sql_alias_keeps_its_original_parser_error_at_max() {
     let execute = |effort| {
         check_runner::run_all_with_options(
@@ -195,3 +174,6 @@ fn canonical_policy_wins_valid_alias_conflicts_on_actual_sql() {
         check_runner::json_value(&report("sql-advise.yml", None))
     );
 }
+
+#[path = "analysis_policy_tests/effort.rs"]
+mod effort;

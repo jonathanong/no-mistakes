@@ -14,6 +14,9 @@ pub(crate) fn prepare_rule_sql_facts(
         .collect();
     let (profiles, annotation_profiles, embedded_sql_rule_ids) =
         configured_embedded_sql_options_with_annotation(config, &dml_ids)?;
+    let evaluated_annotation = !annotation_profiles.is_empty();
+    let low_annotation = rule_ids.contains(&"postgres-require-query-annotation")
+        && super::annotation_effort::low_requested(config)?;
     let patterns = sql_patterns(config, rule_ids)?;
     let selected = if profiles.is_empty() {
         crate::codebase::postgres::postgres_sql_paths(
@@ -46,14 +49,10 @@ pub(crate) fn prepare_rule_sql_facts(
                     && dml_ids
                         .iter()
                         .any(|id| !matches!(*id, "postgres-require-query-annotation")),
-                postgres_variants: dml_ids.iter().any(|id| {
-                    matches!(
-                        *id,
-                        "postgres-lock-ordering"
-                            | "postgres-conflict-ordering"
-                            | "postgres-require-query-annotation"
-                    )
-                }),
+                postgres_variants: evaluated_annotation
+                    || dml_ids.iter().any(|id| {
+                        matches!(*id, "postgres-lock-ordering" | "postgres-conflict-ordering")
+                    }),
                 postgres_exact_locations: rule_ids.contains(&"postgres-lock-ordering"),
                 postgres_conflict_locations: rule_ids.contains(&"postgres-conflict-ordering"),
                 postgres_general_locations: rule_ids.iter().any(|id| {
@@ -70,7 +69,8 @@ pub(crate) fn prepare_rule_sql_facts(
                 } else {
                     Vec::new()
                 },
-                query_annotation: rule_ids.contains(&"postgres-require-query-annotation"),
+                query_annotation: evaluated_annotation,
+                query_annotation_heads: low_annotation,
                 query_annotation_options: rule_ids
                     .contains(&"postgres-require-query-annotation")
                     .then_some(annotation_profiles),
