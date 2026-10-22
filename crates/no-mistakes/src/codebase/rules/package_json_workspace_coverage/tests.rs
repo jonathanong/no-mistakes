@@ -8,7 +8,7 @@ use std::path::Path;
 
 fn package_name(path: &Path) -> Option<String> {
     let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
-    package_name_with_sources(path, &sources)
+    super::coverage_scope::package_name_with_sources(path, &sources)
 }
 
 fn fixture_root(name: &str) -> PathBuf {

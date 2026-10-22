@@ -8,8 +8,6 @@ use std::path::{Path, PathBuf};
 
 mod coverage_scope;
 mod patterns;
-#[cfg(test)]
-use coverage_scope::package_name_with_sources;
 use patterns::{covered_workspace_dirs, normalize_relative_path};
 
 pub const RULE_ID: &str = "package-json-workspace-coverage";
