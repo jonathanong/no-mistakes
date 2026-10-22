@@ -65,6 +65,7 @@ An invalid `sqlInclude` glob is also a configuration error.
 A 63-byte name is allowed. A long name that is only referenced is allowed.
 
 ```sql
+-- db/migrations/001.sql
 CREATE TABLE accounts (
   id uuid REFERENCES invoice_line_items_account_id_created_at_status_currency_code(id)
 );
@@ -74,6 +75,7 @@ CREATE INDEX short_idx ON accounts (id);
 ## Counterexample
 
 ```sql
+-- db/migrations/001.sql
 CREATE INDEX idx_invoice_line_items_account_id_created_at_status_currency_code ON invoice_line_items (account_id);
 ```
 

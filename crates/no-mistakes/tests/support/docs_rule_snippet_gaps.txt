@@ -2,11 +2,9 @@
 # Remove a prefix only after that snippet executes as documented.
 forbidden-dependencies.md: Counterexample[0] expected 
 no-mistakes-config.md: Counterexample[0] expected 
-package-json-nested-workspace-coverage.md: Counterexample[0] expected 
 playwright-coverage.md: Valid example[0] run error:
 playwright-coverage.md: Counterexample[0] run error:
 playwright-prefer-test-id-locators.md: Counterexample[0] expected 
-pnpm-release-age-policy.md: Counterexample[0] expected 
 postgres-bounded-statements.md: Valid example[0] run error:
 postgres-bounded-statements.md: Counterexample[0] run error:
 postgres-column-naming.md: Valid example[0] expected 
@@ -17,22 +15,17 @@ postgres-duplicate-function-body.md: Valid example[0] expected
 postgres-explicit-columns.md: Valid example[0] run error:
 postgres-explicit-columns.md: Counterexample[0] run error:
 postgres-finite-text-columns.md: Valid example[0] expected 
-postgres-fk-index.md: Valid example[0] expected 
 postgres-generated-column-predicates.md: Valid example[0] run error:
 postgres-generated-column-predicates.md: Counterexample[0] run error:
 postgres-idempotent-insert.md: Valid example[0] run error:
 postgres-idempotent-insert.md: Valid example[1] run error:
 postgres-idempotent-insert.md: Counterexample[0] run error:
-postgres-identifier-length.md: Counterexample[0] expected 
 postgres-lock-ordering.md: Counterexample[0] expected 
-postgres-no-add-column.md: Counterexample[0] expected 
 postgres-no-generated-column-writes.md: Counterexample[0] expected 
 postgres-no-generated-column-writes.md: Counterexample[1] expected 
 postgres-no-offset.md: Counterexample[0] expected 
 postgres-no-offset.md: Counterexample[1] expected 
 postgres-object-naming.md: Valid example[0] expected 
-postgres-require-fk-on-delete.md: Counterexample[0] expected 
-postgres-require-named-constraints.md: Counterexample[0] expected 
 postgres-require-query-annotation.md: Counterexample[0] expected 
 postgres-required-comments.md: Valid example[0] expected 
 postgres-required-predicates.md: Valid example[0] run error:

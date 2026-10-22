@@ -11,11 +11,8 @@ rules:
   - rule: postgres-fk-index
     scope: repository
     options:
-      sqlInclude: ["backend/data-stores/psql/migrations/**/*.sql"]
+      sqlInclude: ["db/migrations/**/*.sql"]
       allowDirective: fk-index-allow
-      allowedColumns:
-        - posts.legacy_user_id
-      allowedTables: []
 ```
 
 `sqlInclude` defaults to `**/*.sql`. Unique and primary-key columns count as
@@ -70,6 +67,7 @@ Allowlist entries are `table.column` or table names and stale entries fail.
 ## Valid example
 
 ```sql
+-- db/migrations/001.sql
 CREATE INDEX comments_post_id_idx ON comments (post_id);
 ALTER TABLE comments ADD CONSTRAINT fk_comments_post
   FOREIGN KEY (post_id) REFERENCES posts(id);
@@ -78,6 +76,7 @@ ALTER TABLE comments ADD CONSTRAINT fk_comments_post
 ## Counterexample
 
 ```sql
+-- db/migrations/001.sql
 ALTER TABLE comments ADD FOREIGN KEY (post_id) REFERENCES posts(id);
 ```
 
