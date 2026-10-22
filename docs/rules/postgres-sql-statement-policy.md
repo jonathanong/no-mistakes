@@ -39,7 +39,7 @@ rules:
   - rule: postgres-sql-statement-policy
     scope: repository
     options:
-      sqlInclude: ["backend/data-stores/psql/config-driven/**/*.sql"]
+      sqlInclude: ["db/config-driven/**/*.sql"]
       bannedStatements:
         - CREATE TABLE
         - ALTER TABLE
@@ -161,6 +161,7 @@ and groups are configuration errors.
 ## Valid example
 
 ```sql
+-- db/config-driven/seed.sql
 INSERT INTO foo (id) VALUES ('00000000-0000-0000-0000-000000000001')
   ON CONFLICT (id) DO NOTHING;
 ```
@@ -168,6 +169,7 @@ INSERT INTO foo (id) VALUES ('00000000-0000-0000-0000-000000000001')
 ## Counterexample
 
 ```sql
+-- db/config-driven/seed.sql
 CREATE TABLE foo (id uuid PRIMARY KEY);
 SELECT pg_catalog.set_config('session_replication_role', 'replica', true);
 ```

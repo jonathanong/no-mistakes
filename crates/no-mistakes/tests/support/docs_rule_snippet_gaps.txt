@@ -9,7 +9,6 @@ postgres-bounded-statements.md: Counterexample[0] run error:
 postgres-column-naming.md: Valid example[0] expected 
 postgres-column-requires-trigger.md: Valid example[0] expected 
 postgres-conflict-ordering.md: Counterexample[0] expected 
-postgres-constraint-validate.md: Counterexample[0] expected 
 postgres-duplicate-function-body.md: Valid example[0] expected 
 postgres-explicit-columns.md: Valid example[0] run error:
 postgres-explicit-columns.md: Counterexample[0] run error:
@@ -19,11 +18,8 @@ postgres-generated-column-predicates.md: Counterexample[0] run error:
 postgres-idempotent-insert.md: Valid example[0] run error:
 postgres-idempotent-insert.md: Valid example[1] run error:
 postgres-idempotent-insert.md: Counterexample[0] run error:
-postgres-lock-ordering.md: Counterexample[0] expected 
 postgres-no-generated-column-writes.md: Counterexample[0] expected 
 postgres-no-generated-column-writes.md: Counterexample[1] expected 
-postgres-no-offset.md: Counterexample[0] expected 
-postgres-no-offset.md: Counterexample[1] expected 
 postgres-object-naming.md: Valid example[0] expected 
 postgres-require-query-annotation.md: Counterexample[0] expected 
 postgres-required-comments.md: Valid example[0] expected 
@@ -31,7 +27,6 @@ postgres-required-predicates.md: Valid example[0] run error:
 postgres-required-predicates.md: Counterexample[0] run error:
 postgres-sql-shape-policy.md: Valid example[0] run error:
 postgres-sql-shape-policy.md: Counterexample[0] run error:
-postgres-sql-statement-policy.md: Counterexample[0] expected 
 postgres-status-with-lifecycle-timestamps.md: Valid example[0] expected 
 postgres-table-shape.md: Valid example[0] expected 
 query-reached-per-item.md: Valid example[0] run error:
@@ -43,4 +38,3 @@ shellcheck-runner.md: Counterexample[0] expected
 tsconfig-gate-coverage.md: Valid example[0] expected 
 vitest-ci-path-coverage.md: Counterexample[0] expected 
 vitest-project-mapping.md: Counterexample[0] expected 
-workflow-topology-policy.md: Valid example[0] expected 

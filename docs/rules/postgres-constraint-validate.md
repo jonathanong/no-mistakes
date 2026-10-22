@@ -12,7 +12,7 @@ rules:
   - rule: postgres-constraint-validate
     scope: repository
     options:
-      sqlInclude: ["backend/data-stores/psql/migrations/**/*.sql"]
+      sqlInclude: ["db/migrations/**/*.sql"]
 ```
 
 `sqlInclude` defaults to `**/*.sql`. Pairing is by `table.name` across every
@@ -88,6 +88,7 @@ they cannot be paired by name.
 ## Valid example
 
 ```sql
+-- db/migrations/001.sql
 ALTER TABLE comments ADD CONSTRAINT comments_body_check
   CHECK (body <> '') NOT VALID;
 ALTER TABLE comments VALIDATE CONSTRAINT comments_body_check;
@@ -96,6 +97,7 @@ ALTER TABLE comments VALIDATE CONSTRAINT comments_body_check;
 ## Counterexample
 
 ```sql
+-- db/migrations/001.sql
 ALTER TABLE comments ADD CONSTRAINT comments_body_check
   CHECK (body <> '') NOT VALID;
 ```
