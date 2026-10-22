@@ -90,6 +90,15 @@ fn tracked_routes_require_boolean_option_and_real_prepared_git_inventory() {
     let root = project.path();
     assert!(check(root, &config("{trackedRoutesOnly: invalid}")).is_err());
     let files = fixture_files(root);
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let advisories = advisories_with_files_and_sources(
+        root,
+        &config("{trackedRoutesOnly: true}"),
+        &files,
+        &sources,
+    )
+    .unwrap();
+    assert!(advisories.is_empty(), "{advisories:?}");
     let error = check_with_files(root, &config("{trackedRoutesOnly: true}"), &files).unwrap_err();
     let message = error.to_string();
     for expected in [

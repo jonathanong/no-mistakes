@@ -1,5 +1,6 @@
 use super::super::{
-    advisories_with_files_and_sources, check_with_files_and_sources, extract, RuleFinding,
+    advisories_with_files, advisories_with_files_and_sources, check_with_files_and_sources,
+    extract, scan, RuleFinding,
 };
 use super::{config, fixture, fixture_files, run};
 use crate::codebase::rules::analysis_policy::prepare_rule_analysis;
@@ -176,4 +177,67 @@ fn prepared_low_is_recorded_on_the_application() {
     let analysis = config.effective_rule_analysis(&config.rules[0]).unwrap();
     assert_eq!(analysis.effort, Effort::Low);
     assert!(config.analysis_warnings.is_empty());
+}
+
+#[test]
+fn public_advisory_wrapper_surfaces_low_advise() {
+    let (root, config, files) = prepare("dest-non-string", "{ effort: low, unanalyzable: advise }");
+    let advisories = advisories_with_files(&root, &config, &files).unwrap();
+    assert_eq!(advisories.len(), 1, "{advisories:?}");
+    assert!(advisories[0].message.contains("effort low"));
+}
+
+#[test]
+fn low_incomplete_extraction_does_not_check_recovered_destinations() {
+    let path = Path::new("next.config.ts");
+    let source = r#"
+export default {
+  async redirects() {
+    return [
+      { source: "/a", destination: "/about", permanent: true },
+      { source: "/b", destination: dest, permanent: true },
+    ];
+  },
+};
+"#;
+    let analysis = crate::config::v2::EffectiveRuleAnalysis {
+        effort: Effort::Low,
+        unanalyzable: Unanalyzable::Report,
+    };
+    let routes = std::collections::BTreeSet::from(["/about".into()]);
+    let diagnostics = scan::check_named_section(scan::NamedCheck {
+        rel: "next.config.ts",
+        source,
+        config_path: path,
+        name: "redirects",
+        kind: "redirect",
+        route_set: &routes,
+        app_root_label: "app",
+        analysis,
+    });
+    assert_eq!(diagnostics.findings.len(), 1, "{:?}", diagnostics.findings);
+    assert!(diagnostics.findings[0].message.contains("unanalyzable"));
+}
+
+#[test]
+fn low_empty_redirects_body_with_empty_statements_is_silent() {
+    let path = Path::new("next.config.ts");
+    let source = "export default { async redirects() { ; } };";
+    let low = extract::extract_named_destinations_with(path, source, "redirects", true);
+    assert!(low.body_found);
+    assert!(low.destinations.is_empty());
+    assert!(!low.incomplete);
+}
+
+#[test]
+fn low_function_without_body_and_bare_return_are_unknown() {
+    let path = Path::new("next.config.ts");
+    let ambient = "export default class Config { async redirects(): Promise<unknown>; }";
+    let low = extract::extract_named_destinations_with(path, ambient, "redirects", true);
+    assert!(low.body_found);
+    assert!(low.destinations.is_empty());
+    let bare = "export default { async redirects() { return; } };";
+    let low = extract::extract_named_destinations_with(path, bare, "redirects", true);
+    assert!(low.body_found);
+    assert!(low.incomplete);
 }

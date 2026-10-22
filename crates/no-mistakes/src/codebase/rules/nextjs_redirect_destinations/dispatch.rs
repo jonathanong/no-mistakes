@@ -33,21 +33,33 @@ pub(super) fn collect(
                 .cloned()
                 .collect();
             let files = super::super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            if opts.tracked_routes_only && snapshot.is_some() {
-                tracked(TrackedScan {
-                    root,
-                    config,
-                    rule,
-                    opts: &opts,
-                    analysis,
-                    files: &files,
-                    sources,
-                    snapshot,
-                    target_roots: &target_roots,
-                    skip: &skip,
-                })
-            } else if opts.tracked_routes_only && require_tracked_snapshot {
-                Err(missing_tracked_inventory(root))
+            if opts.tracked_routes_only {
+                if let Some(snapshot) = snapshot {
+                    tracked(TrackedScan {
+                        root,
+                        config,
+                        rule,
+                        opts: &opts,
+                        analysis,
+                        files: &files,
+                        sources,
+                        snapshot,
+                        target_roots: &target_roots,
+                        skip: &skip,
+                    })
+                } else if require_tracked_snapshot {
+                    Err(missing_tracked_inventory(root))
+                } else {
+                    Ok(scan_diagnostics(
+                        root,
+                        &opts,
+                        &files,
+                        &files,
+                        &target_roots,
+                        sources,
+                        analysis,
+                    ))
+                }
             } else {
                 Ok(scan_diagnostics(
                     root,
@@ -76,15 +88,13 @@ struct TrackedScan<'a> {
     analysis: crate::config::v2::EffectiveRuleAnalysis,
     files: &'a [PathBuf],
     sources: &'a crate::codebase::ts_source::SourceStore,
-    snapshot: Option<&'a crate::codebase::ts_source::VisiblePathSnapshot>,
+    snapshot: &'a crate::codebase::ts_source::VisiblePathSnapshot,
     target_roots: &'a [PathBuf],
     skip: &'a HashSet<&'a str>,
 }
 
 fn tracked(scan: TrackedScan<'_>) -> Result<AnalysisDiagnostics> {
-    let snapshot = scan
-        .snapshot
-        .ok_or_else(|| missing_tracked_inventory(scan.root))?;
+    let snapshot = scan.snapshot;
     let mut diagnostics = AnalysisDiagnostics::default();
     for target_root in scan.target_roots {
         if !snapshot.git_index_available_for(target_root) {

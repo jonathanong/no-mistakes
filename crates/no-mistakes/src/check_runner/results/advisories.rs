@@ -1,6 +1,8 @@
 use anyhow::Result;
 mod sql;
 pub(super) use sql::merge_sql;
+#[cfg(test)]
+mod tests;
 
 pub(super) fn collect(
     enabled: bool,
