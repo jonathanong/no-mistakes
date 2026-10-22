@@ -20,6 +20,7 @@ mod runner_configs;
 pub(super) use request::check as check_standalone;
 pub(crate) use runner_configs::ensure as supplement_runner_facts;
 mod setup_contexts;
+mod setup_low;
 mod setup_mocks;
 mod tsconfig_catalog;
 
@@ -36,6 +37,7 @@ struct PerTestResult {
 pub(crate) struct PreparedDynamicFindings {
     pub(crate) findings: Vec<RuleFinding>,
     pub(crate) suppression_sources: Vec<Option<String>>,
+    pub(crate) advisories: Vec<RuleFinding>,
 }
 
 pub(crate) struct PreparedFactsGraphRequest<'a> {
@@ -88,6 +90,7 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
                 &shared.integration_runner_configs,
             )
         })?;
+    let effort = setup_low::policy(config)?;
     let prepared_contexts = setup_contexts::prepare(setup_contexts::Request {
         root,
         test_files: matching_test_files_with_filter(root, &files, prepared.test_filter()),
@@ -99,6 +102,8 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
         visible_files: &visible_files,
         shared,
         defer_suppression,
+        low: effort.low,
+        unanalyzable: effort.unanalyzable,
     })?;
     let empty_mocks = HashSet::new();
 
@@ -145,6 +150,13 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
 
     let mut findings = Vec::new();
     let mut suppression_sources = Vec::new();
+    let mut advisories = prepared_contexts.diagnostics.advisories;
+    // Shape diagnostics are ordinary findings. Each one needs a suppression
+    // slot so the later zip does not drop them or the imports that follow.
+    for finding in prepared_contexts.diagnostics.findings {
+        findings.push(finding);
+        suppression_sources.push(None);
+    }
     for result in per_test.into_iter().flatten() {
         let reachable_suppression_file = result.reachable_suppression_file;
         for finding in result.direct_findings {
@@ -174,9 +186,12 @@ pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
     });
     paired.dedup();
     let (findings, suppression_sources): (Vec<_>, Vec<_>) = paired.into_iter().unzip();
+    advisories.sort();
+    advisories.dedup();
     Ok(PreparedDynamicFindings {
         findings,
         suppression_sources,
+        advisories,
     })
 }
 

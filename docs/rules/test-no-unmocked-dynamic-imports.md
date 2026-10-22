@@ -167,6 +167,54 @@ executions. An application `include` or code-project scope still limits the
 selected execution, and each execution uses its own setup files when deciding
 whether a dynamic import is mocked.
 
+## Effort
+
+`effort: max` is the default. It preserves the setup walk above, including
+conditional eager `require()`, `vi.doMock` / `jest.doMock`, `jest.setMock`,
+`jest.unstable_mockModule`, and the other execution shapes that supply mock
+coverage.
+
+At effective `effort: low`, setup reachability accepts only three forms:
+
+- a top-level static import, including a statically imported setup helper
+- a `vi.mock` or `jest.mock` call, including a nested call and a typed
+  `import()` specifier
+- a top-level literal `require("...")` or `require('...')` in the setup file
+  or in a helper reached through an accepted edge
+
+```ts
+import "./static-helper.mts";
+vi.mock("./direct-target.mts");
+require("./require-helper.cjs");
+```
+
+Every other setup-reachability shape is unanalyzable. That includes a
+conditional, sequence, `void`, or nested `require()`, a runtime `import()`,
+and `vi.doMock`, `jest.doMock`, `jest.setMock`, or `jest.unstable_mockModule`.
+`require.resolve()` is not a reachability shape. The diagnostic names the
+rewrite:
+
+```text
+src/setup.mts:12: setup reachability is unanalyzable at effort low; use a top-level static import, a vi.mock or jest.mock call, or a literal require() in the setup file
+```
+
+The shared `unanalyzable` policy controls that diagnostic: `report` fails,
+`advise` emits a non-failing advisory, and `ignore` skips it. The rejected
+shape is not mock coverage under any of those policies. A dynamic import that
+was mocked only by that shape remains a finding, including when the shape
+itself is advised or ignored.
+
+These syntax proofs do not require a companion rule. The rule checks each test
+once, so if any enabled application of this rule is not `low`, the invocation
+stays at `max` and does not rewrite the other application's findings.
+
+Suppress a low-effort shape on its own line:
+
+```ts
+// no-mistakes-disable-next-line test-no-unmocked-dynamic-imports
+import("./dynamic-helper.mts");
+```
+
 ## Valid example
 
 ```ts

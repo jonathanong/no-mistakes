@@ -26,6 +26,7 @@ pub(super) fn dynamic_imports(req: &IndependentRuleRequest<'_>) -> Result<RuleCh
     Ok(RuleChunk {
         findings: findings.findings,
         suppression_sources: findings.suppression_sources,
+        advisories: findings.advisories,
     })
 }
 

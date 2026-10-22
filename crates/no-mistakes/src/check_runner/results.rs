@@ -113,6 +113,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     );
     let mut advisories = advisories?;
     advisories::merge_sql(&mut advisories, root, sources, &sql_verdicts);
+    advisories.extend(std::mem::take(&mut rules.advisories));
     let mut warnings: Vec<String> = [
         react_warning,
         react.warning,

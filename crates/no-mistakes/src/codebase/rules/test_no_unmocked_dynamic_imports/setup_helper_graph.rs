@@ -5,6 +5,9 @@ use std::path::{Path, PathBuf};
 
 /// Alternating lower/upper execution bounds discard cuts from inactive helpers.
 /// Ambiguous mock cycles contribute no registrations until execution is proven.
+///
+/// `on_active` sees only helpers that survive the mock cut. Earlier bounds still
+/// include inactive helpers, so shape diagnostics must use this callback.
 pub(super) fn collect(
     graph: &DepGraph,
     setup: &Path,
@@ -12,6 +15,7 @@ pub(super) fn collect(
     initial_mocks: &HashSet<PathBuf>,
     mut registrations: impl FnMut(&Path) -> Result<HashSet<PathBuf>>,
     mut eager_requires: impl FnMut(&Path) -> HashSet<PathBuf>,
+    mut on_active: impl FnMut(&Path),
 ) -> Result<HashSet<PathBuf>> {
     let mut requires = HashMap::new();
     let mut helper_files = |excluded: &HashSet<PathBuf>| {
@@ -76,6 +80,7 @@ pub(super) fn collect(
     for file in active {
         if let Some(outcome) = by_helper.remove(&file) {
             active_mocks.extend(outcome?);
+            on_active(&file);
         }
     }
     Ok(active_mocks)

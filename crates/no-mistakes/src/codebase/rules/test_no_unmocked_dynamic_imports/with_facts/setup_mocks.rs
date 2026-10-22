@@ -1,21 +1,41 @@
 use super::super::resolve_mock_specifiers;
+use super::setup_low;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
+use crate::config::v2::Unanalyzable;
 use anyhow::Result;
 use std::collections::HashSet;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub(super) struct Request<'a> {
+    pub(super) root: &'a Path,
     pub(super) setup_files: &'a [PathBuf],
     pub(super) resolver: &'a crate::codebase::ts_resolver::ScopedImportResolver<'a>,
     pub(super) graph: &'a DepGraph,
     pub(super) graph_files: &'a GraphFiles,
     pub(super) visible_files: &'a crate::fx::PathSet,
     pub(super) shared: &'a CheckFactMap,
+    pub(super) low: bool,
+    pub(super) unanalyzable: Unanalyzable,
 }
 
-pub(super) fn with_facts(request: Request<'_>) -> Result<HashSet<PathBuf>> {
-    from_group(request.setup_files, &request)
+pub(super) fn with_facts(request: Request<'_>) -> Result<setup_low::Outcome> {
+    if request.low {
+        return setup_low::from_group(setup_low::Group {
+            files: request.setup_files,
+            root: request.root,
+            resolver: request.resolver,
+            graph: request.graph,
+            graph_files: request.graph_files,
+            visible_files: request.visible_files,
+            shared: request.shared,
+            unanalyzable: request.unanalyzable,
+        });
+    }
+    Ok(setup_low::Outcome {
+        mocks: from_group(request.setup_files, &request)?,
+        diagnostics: Default::default(),
+    })
 }
 
 fn from_group(files: &[PathBuf], request: &Request<'_>) -> Result<HashSet<PathBuf>> {

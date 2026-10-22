@@ -68,6 +68,7 @@ pub(super) fn suppress_findings(
 pub(super) fn finalize_findings(
     findings: Vec<RuleFinding>,
     suppression_sources: Vec<Option<String>>,
+    mut advisories: Vec<RuleFinding>,
 ) -> PreparedRuleFindings {
     let mut paired = findings
         .into_iter()
@@ -76,8 +77,11 @@ pub(super) fn finalize_findings(
     paired.sort_by(|(a, _), (b, _)| a.cmp(b));
     paired.dedup_by(|(a, source_a), (b, source_b)| a == b && source_a == source_b);
     let (findings, suppression_sources): (Vec<_>, Vec<_>) = paired.into_iter().unzip();
+    advisories.sort();
+    advisories.dedup();
     PreparedRuleFindings {
         findings,
         suppression_sources,
+        advisories,
     }
 }
