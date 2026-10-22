@@ -25,7 +25,9 @@ pub(super) fn collect_fused_check_program(
     program: &Program<'_>,
     plan: &CheckFactPlan,
 ) -> FusedCheckFacts {
-    if !plan.dynamic_imports && !plan.nextjs_caching && !plan.storybook {
+    let storybook = plan.storybook
+        && crate::codebase::check_facts::family_scope::applies(&plan.storybook_paths, path);
+    if !plan.dynamic_imports && !plan.nextjs_caching && !storybook {
         return FusedCheckFacts {
             dynamic_imports: None,
             nextjs_caching: None,
@@ -39,7 +41,7 @@ pub(super) fn collect_fused_check_program(
         nextjs: plan
             .nextjs_caching
             .then(|| prepare_visitor(path, source, program)),
-        storybook_ids: plan.storybook.then(HashSet::new),
+        storybook_ids: storybook.then(HashSet::new),
     };
     visitor.visit_program(program);
     FusedCheckFacts {

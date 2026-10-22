@@ -21,6 +21,24 @@ pub(super) fn ts_extract_plan(
     if playwright.is_some_and(|plan| plan.file(path).is_some()) {
         ts_plan.include(TsFactPlan::imports());
     }
+    if !plan.graph.react
+        && plan.react
+        && !crate::codebase::check_facts::family_scope::applies(&plan.react_paths, path)
+    {
+        ts_plan.react = false;
+    }
+    if !plan.graph.queue_project
+        && plan.queue
+        && !crate::codebase::check_facts::family_scope::applies(&plan.queue_paths, path)
+    {
+        ts_plan.queue_project = false;
+    }
+    if !plan.graph.symbols
+        && plan.symbols
+        && !crate::codebase::check_facts::family_scope::applies(&plan.symbols_paths, path)
+    {
+        ts_plan.symbols = false;
+    }
     ts_plan
 }
 

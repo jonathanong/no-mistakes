@@ -25,11 +25,14 @@ pub(crate) fn collect_file_facts_from_program(
         None,
         stored_source.clone(),
     );
-    let react = (plan.react || plan.graph.react).then(|| {
-        Arc::new(crate::react_traits::analyze::file::FileAnalysis {
-            components: Arc::clone(&ts.react_components),
-        })
-    });
+    let react = ((plan.react
+        && crate::codebase::check_facts::family_scope::applies(&plan.react_paths, path))
+        || plan.graph.react)
+        .then(|| {
+            Arc::new(crate::react_traits::analyze::file::FileAnalysis {
+                components: Arc::clone(&ts.react_components),
+            })
+        });
     let react_usages = plan.react_usages.then(|| {
         crate::react_traits::pipeline::usages::collect_usage_file_facts(
             path,
@@ -38,16 +41,22 @@ pub(crate) fn collect_file_facts_from_program(
             plan.graph_context.visible_files.as_deref(),
         )
     });
-    let integration = plan
-        .integration
-        .then(|| crate::integration_tests::analysis::analyze_program(path, program, source));
+    let integration = (plan.integration
+        && crate::codebase::check_facts::family_scope::applies(&plan.integration_paths, path))
+    .then(|| crate::integration_tests::analysis::analyze_program(path, program, source));
     let integration_runner_config = plan
         .integration_runner_configs
         .as_ref()
         .and_then(|plan| plan.parse_program(path, program, source));
     let fused = super::program_walk::collect_fused_check_program(path, source, program, plan);
     let server_route_client_boundary = plan.server_route_client_boundary.then(|| {
-        crate::codebase::rules::server_route_client_boundary::extract_program(path, source, program)
+        if crate::codebase::check_facts::family_scope::applies(&plan.boundary_paths, path) {
+            crate::codebase::rules::server_route_client_boundary::extract_program(
+                path, source, program,
+            )
+        } else {
+            Default::default()
+        }
     });
     let playwright_fetch = playwright
         .filter(|plan| plan.contains_source(path))
