@@ -33,13 +33,16 @@ on only one path is still reported at that branch's physical source location,
 where line suppressions also apply:
 
 ```ts
-query(named ? "/* accounts/list */ SELECT id FROM accounts" : "SELECT id FROM accounts"); // The second version needs an annotation.
+query(named
+  ? "/* accounts/list */ SELECT id FROM accounts"
+  : "SELECT id FROM accounts"); // The second version needs an annotation.
 ```
 
 Opaque or over-cap calls retain the richer prepared helper-prefix traversal
-and `unanalyzableSql` behavior. A trusted tag that splices an opaque leading
-SQL fragment has an unknown prefix rather than a bind placeholder. A literal
-leading annotation before a later opaque fragment remains verifiable.
+and `unanalyzableSql` behavior. A trusted tag that splices an opaque nested SQL
+fragment before the annotation has an unknown prefix, not a bind placeholder,
+and follows that policy. A literal leading annotation before a later nested
+fragment remains verifiable.
 
 `String.raw` strings and scalar results of
 comparisons, conditional tests, and object expressions remain bind values even
@@ -163,16 +166,20 @@ TypeScript assertions do not add indirection. The const must resolve to the same
 file's lexical declaration; a second alias, import, destructured binding, or
 mutable declaration does not qualify.
 
-Counterexamples at `low` include helper returns, tagged templates absent from the configuration,
-conditional heads, appended builders, and bare transaction
-commands. These shapes are **unanalyzable**, even when `max` can prove their
-annotation. Rewrite them as a named literal at the call, or one local const
-initialized with that literal head and passed directly, as above.
+Counterexamples at `low` include helper returns, tagged templates absent from
+the configuration, conditional heads, appended builders, and bare transaction
+commands. At `low`, the policy does not distinguish a proven-missing annotation
+from an unproven shape: both are unanalyzable, even when `max` would prove the
+annotation missing. `BEGIN`, `COMMIT`, and `ROLLBACK` also follow this policy at
+`low`, despite their `max` exemption. Rewrite rejected calls as a named literal
+at the call or as one local `const` initialized with that literal head and
+passed directly.
 
-The shared `unanalyzable` policy controls the outcome: `report` fails, `advise`
-emits a non-failing advisory, and `ignore` skips it. `unanalyzableSql` remains an
-alias. For example, set `options.effort: low` and `options.unanalyzable: report`
-to require these forms. Shared configuration and CLI overrides also apply.
+The shared `unanalyzable` policy controls every rejected call: `report` fails,
+`advise` emits a non-failing advisory, and `ignore` skips it. `unanalyzableSql`
+remains an alias. For example, set `options.effort: low` and
+`options.unanalyzable: report` to require these forms. Shared configuration and
+CLI overrides also apply.
 
 Low-effort diagnostics use the executor call's line. Suppress at that call:
 
