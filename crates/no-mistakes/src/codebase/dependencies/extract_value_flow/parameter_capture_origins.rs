@@ -1,5 +1,8 @@
 use super::*;
 type Key = (usize, String);
+type Selection<'a> = (&'a [ValueExpression], bool, Option<&'a [ValueExpression]>);
+#[path = "parameter_capture_conditionals.rs"]
+mod conditionals;
 
 pub(in super::super) struct Reassignment {
     pub(in super::super) key: Key,
@@ -11,6 +14,7 @@ pub(in super::super) struct Reassignment {
 }
 struct Captures {
     initial: Vec<ValueExpression>,
+    possible_initial: Vec<ValueExpression>,
     events: Vec<Reassignment>,
     owner: CallableId,
     foreign: bool,
@@ -57,6 +61,7 @@ impl CaptureOrigins {
                 .entry(event.key.clone())
                 .or_insert_with(|| Captures {
                     initial: values.get(&event.key).cloned().unwrap_or_default(),
+                    possible_initial: Vec::new(),
                     events: Vec::new(),
                     owner: *owner,
                     foreign: false,
@@ -88,6 +93,8 @@ impl CaptureOrigins {
     /// remain separate from the initial capture generation.
     pub(in super::super) fn include_late_forwarded(
         &mut self,
+        collector: &ImportCollector,
+        slots: &FxHashMap<CallableId, FxHashMap<usize, Key>>,
         values: &mut FxHashMap<Key, Vec<ValueExpression>>,
         forward: impl FnOnce(&mut FxHashMap<Key, Vec<ValueExpression>>),
     ) {
@@ -97,12 +104,25 @@ impl CaptureOrigins {
             .map(|key| (key.clone(), values.get(key).map_or(0, Vec::len)))
             .collect::<Vec<_>>();
         forward(values);
+        if starts.is_empty() {
+            return;
+        }
+        let conditional = conditionals::keys(collector, slots, values);
         for (key, start) in starts {
             let Some(additions) = values.get(&key).and_then(|values| values.get(start..)) else {
                 continue;
             };
-            let initial = &mut self.bindings.get_mut(&key).expect("captured key").initial;
+            let captures = self.bindings.get_mut(&key).expect("captured key");
             for value in additions {
+                if captures.initial.contains(value) {
+                    continue;
+                }
+                let initial =
+                    if conditionals::key(value).is_some_and(|key| conditional.contains(&key)) {
+                        &mut captures.possible_initial
+                    } else {
+                        &mut captures.initial
+                    };
                 if !initial.contains(value) {
                     initial.push(value.clone());
                 }
@@ -112,11 +132,7 @@ impl CaptureOrigins {
 
     /// Only ordered writes in the same invocation select a capture generation.
     /// Unknown execution order retains the historical union at the caller.
-    pub(super) fn at(
-        &self,
-        key: &Key,
-        read: nested::RootRead,
-    ) -> Option<(&[ValueExpression], bool)> {
+    pub(super) fn at(&self, key: &Key, read: nested::RootRead) -> Option<Selection<'_>> {
         let captures = self.bindings.get(key)?;
         if captures.foreign || read.1 != Some(captures.owner) {
             return None;
@@ -130,11 +146,20 @@ impl CaptureOrigins {
         if index == 0 {
             // Forwarding through a reassigned callback can populate the legacy
             // union after this snapshot. Missing initial facts prove no absence.
-            return (!captures.initial.is_empty()).then_some((captures.initial.as_slice(), false));
+            return (!captures.initial.is_empty() || !captures.possible_initial.is_empty())
+                .then_some((
+                    captures.initial.as_slice(),
+                    false,
+                    (!captures.possible_initial.is_empty())
+                        .then_some(captures.possible_initial.as_slice()),
+                ));
         }
         let event = &captures.events[index - 1];
-        (event.certain && matches!(event.value, ValueExpression::Named { .. }))
-            .then_some((std::slice::from_ref(&event.value), event.recovered))
+        (event.certain && matches!(event.value, ValueExpression::Named { .. })).then_some((
+            std::slice::from_ref(&event.value),
+            event.recovered,
+            None,
+        ))
     }
 }
 

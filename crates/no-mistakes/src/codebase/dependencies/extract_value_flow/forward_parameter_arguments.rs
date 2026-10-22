@@ -27,6 +27,7 @@ pub(super) fn expand(
             (selected.values, false),
             (selected.possible[0], true),
             (selected.possible[1], true),
+            (selected.possible[2], true),
         ] {
             let mut references = Vec::new();
             for value in values.into_iter().flatten() {

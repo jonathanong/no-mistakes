@@ -102,7 +102,7 @@ pub(in super::super) fn absorb(
     }
     if reassigned {
         // Preserve forwarding through callees recovered from reassignment facts.
-        captures.include_late_forwarded(values, |values| {
+        captures.include_late_forwarded(collector, slots, values, |values| {
             super::escaped_higher_order::forward(collector, slots, values);
         });
     }

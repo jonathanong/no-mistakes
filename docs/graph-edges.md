@@ -666,14 +666,23 @@ Callable bodies can refer to receiver aliases declared later: pending writes
 reuse the completed binding facts and each initializer's acquisition coordinates.
 Uncalled, unavailable, and escaped writers retain conservative unknown targets;
 declaration order does not establish execution.
-Origins recovered through a later assigned-callback invocation extend the initial
-parameter capture even when a direct call already populated it. They remain
-separate from later parameter-reassignment generations.
-This does not prove conditional caller reachability. In the saved late-forwarded
-example, changing `invoke(b)` to `if (flag) invoke(b)` can still omit `untouched.get`
-when `flag` is false, although that receiver is untouched at runtime. This is a
-pre-existing limitation; the unconditional controls do not establish this broader
-guarantee. See [the audit](https://github.com/jonathanong/no-mistakes/issues/2445).
+Origins recovered through a later assigned-callback invocation extend an already
+populated parameter capture, including forwarded inputs discovered after the
+initial capture was formed. For the saved direct, named-parameter and member
+forwarders, a conditionally forwarded receiver remains a possible candidate
+alongside unknown evidence; this does not prove that the callback ran.
+The saved
+[`array-forwarded-late-captured-conditional.mts`](../test-cases/codebase-analysis/value-flow-guarded-parameters/fixture/src/array-forwarded-late-captured-conditional.mts)
+control covers `if (flag) invoke(b)`. These origins remain separate from later
+parameter-reassignment generations. See [issue #2467](https://github.com/jonathanong/no-mistakes/issues/2467).
+Conditional execution is still limited: origins can be dropped for
+`if (flag) callback(value)` inside a forwarder, a loop that calls
+`callback(value)` but runs zero times, an early return before a callback or
+forwarding call,
+conditional `callback = mutate` with an installed no-op callback, and direct
+`if (flag) mutate(b)`. Skipped or no-op paths leave the original method live;
+its absence from reported candidates is no safety proof. These remaining shapes
+are tracked in [issue #2480](https://github.com/jonathanong/no-mistakes/issues/2480).
 An immutable repository export alias of an external receiver, such as
 `export const receiver = shared`, keeps that external receiver's canonical
 identity through named re-exports. Repeated foreign helper reads of a written

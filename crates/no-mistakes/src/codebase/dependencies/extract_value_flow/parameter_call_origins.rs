@@ -14,7 +14,7 @@ pub(in crate::codebase::dependencies) struct ParameterCallOrigins {
 
 pub(super) struct SelectedOrigins<'a> {
     pub(super) values: Option<&'a [ValueExpression]>,
-    pub(super) possible: [Option<&'a [ValueExpression]>; 2],
+    pub(super) possible: [Option<&'a [ValueExpression]>; 3],
     pub(super) uncertain: bool,
 }
 
@@ -115,15 +115,16 @@ impl ParameterCallOrigins {
         let selected = self.captures.at(key, read);
         SelectedOrigins {
             values: selected
-                .map(|(values, _)| values)
+                .map(|(values, _, _)| values)
                 .or_else(|| self.values(key)),
-            uncertain: selected.is_some_and(|(_, possible)| possible),
+            uncertain: selected.is_some_and(|(_, possible, _)| possible),
             possible: [
                 self.possible_values(key),
                 selected
                     .is_none()
                     .then(|| self.recovered.get(key).map(Vec::as_slice))
                     .flatten(),
+                selected.and_then(|(_, _, possible)| possible),
             ],
         }
     }
