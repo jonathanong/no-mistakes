@@ -2,7 +2,13 @@ use super::*;
 
 impl ImportCollector {
     pub(in super::super::super) fn note_escaped_call(&mut self, call: &CallExpression<'_>) {
-        if self.conditional_execution || self.receiver_write_is_conditional {
+        if self.conditional_execution
+            || self.receiver_write_is_conditional
+            || self
+                .current_function_id()
+                .and_then(|owner| self.receiver_escapes.return_offsets.get(&owner))
+                .is_some_and(|offset| *offset <= call.span.start)
+        {
             self.receiver_escapes
                 .conditional_calls
                 .insert((call.span.start, call.span.end));

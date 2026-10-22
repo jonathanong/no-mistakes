@@ -44,6 +44,7 @@ impl CaptureOrigins {
                 }
             }
         }
+        let possible = conditionals::initial(collector);
         let mut owners = fx_map();
         for parameter in &collector.value_flow.parameters {
             if parameter.projection.is_empty() && !callbacks.contains(&parameter.owner) {
@@ -56,16 +57,23 @@ impl CaptureOrigins {
             let Some(owner) = owners.get(&event.key) else {
                 continue;
             };
-            let captures = result
-                .bindings
-                .entry(event.key.clone())
-                .or_insert_with(|| Captures {
-                    initial: values.get(&event.key).cloned().unwrap_or_default(),
-                    possible_initial: Vec::new(),
+            let captures = result.bindings.entry(event.key.clone()).or_insert_with(|| {
+                let (possible_initial, initial) = values
+                    .get(&event.key)
+                    .into_iter()
+                    .flatten()
+                    .cloned()
+                    .partition(|value| {
+                        conditionals::offset(value).is_some_and(|offset| possible.contains(&offset))
+                    });
+                Captures {
+                    initial,
+                    possible_initial,
                     events: Vec::new(),
                     owner: *owner,
                     foreign: false,
-                });
+                }
+            });
             captures.foreign |= event.context != Some(*owner);
             captures.events.push(Reassignment {
                 key: event.key.clone(),
@@ -117,12 +125,13 @@ impl CaptureOrigins {
                 if captures.initial.contains(value) {
                     continue;
                 }
-                let initial =
-                    if conditionals::key(value).is_some_and(|key| conditional.contains(&key)) {
-                        &mut captures.possible_initial
-                    } else {
-                        &mut captures.initial
-                    };
+                let initial = if conditional.contains(&key)
+                    || conditionals::key(value).is_some_and(|key| conditional.contains(&key))
+                {
+                    &mut captures.possible_initial
+                } else {
+                    &mut captures.initial
+                };
                 if !initial.contains(value) {
                     initial.push(value.clone());
                 }

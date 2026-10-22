@@ -125,6 +125,12 @@ test(
       ["conditional", 20],
       ["conditional-chain", 21],
       ["member-conditional", 21],
+      ["inner-conditional", 20],
+      ["inner-loop", 20],
+      ["inner-return", 21],
+      ["forward-return", 21],
+      ["assignment-conditional", 20],
+      ["direct-conditional", 16],
     ]) {
       const entry = `src/array-forwarded-late-captured-${suffix}.mts`;
       const options = { root, config: join(root, "effects.yml"), kind: "receiver", entry };

@@ -9,15 +9,24 @@ pub(super) fn keys(
 ) -> FxHashSet<Key> {
     let calls = &collector.receiver_escapes.conditional_calls;
     let mut possible = fx_set();
-    if calls.is_empty() {
+    let uncertain = collector
+        .receiver_escapes
+        .reassigned
+        .iter()
+        .filter(|event| !event.certain)
+        .map(|event| event.key.clone())
+        .collect::<FxHashSet<_>>();
+    if calls.is_empty() && uncertain.is_empty() {
         return possible;
     }
     for call in &collector.value_flow.calls {
-        if calls.contains(&(call.offset, call.end)) {
-            if let Some(parameters) = super::super::callable_owner(collector, &call.callee)
-                .and_then(|owner| slots.get(&owner))
-            {
-                possible.extend(parameters.values().cloned());
+        if calls.contains(&(call.offset, call.end))
+            || key(&call.callee).is_some_and(|key| uncertain.contains(&key))
+        {
+            for owner in owners(collector, values, &call.callee) {
+                if let Some(parameters) = slots.get(&owner) {
+                    possible.extend(parameters.values().cloned());
+                }
             }
         }
     }
@@ -50,6 +59,54 @@ pub(super) fn key(mut value: &ValueExpression) -> Option<Key> {
     }
     match value {
         ValueExpression::Named { name, scope, .. } => Some((scope.unwrap_or(0), name.clone())),
+        _ => None,
+    }
+}
+
+// Match the forwarding pass's callable origins, without treating a reference
+// to an assigned callback as proof that its invocation ran.
+fn owners(
+    collector: &ImportCollector,
+    values: &FxHashMap<Key, Vec<ValueExpression>>,
+    callee: &ValueExpression,
+) -> Vec<CallableId> {
+    super::super::callable_owner(collector, callee)
+        .into_iter()
+        .chain(
+            key(callee)
+                .and_then(|key| values.get(&key))
+                .into_iter()
+                .flatten()
+                .filter_map(|origin| super::super::callable_owner(collector, origin)),
+        )
+        .collect()
+}
+
+/// Source coordinates identify named acquisitions without cloning argument trees
+/// or comparing every pair of origins. Each call argument is visited once.
+pub(super) fn initial(collector: &ImportCollector) -> FxHashSet<u32> {
+    let mut possible = fx_set();
+    if collector.receiver_escapes.conditional_calls.is_empty() {
+        return possible;
+    }
+    for call in &collector.value_flow.calls {
+        if collector
+            .receiver_escapes
+            .conditional_calls
+            .contains(&(call.offset, call.end))
+        {
+            possible.extend(call.arguments.iter().filter_map(offset));
+        }
+    }
+    possible
+}
+
+pub(super) fn offset(mut value: &ValueExpression) -> Option<u32> {
+    while let ValueExpression::Member(receiver, _) = value {
+        value = receiver;
+    }
+    match value {
+        ValueExpression::Named { offset, .. } => Some(*offset),
         _ => None,
     }
 }

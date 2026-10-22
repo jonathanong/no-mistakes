@@ -178,6 +178,12 @@ fn conditional_assigned_callbacks_keep_late_captured_origins_possible() {
         "array-forwarded-late-captured-conditional",
         "array-forwarded-late-captured-conditional-chain",
         "array-forwarded-late-captured-member-conditional",
+        "array-forwarded-late-captured-inner-conditional",
+        "array-forwarded-late-captured-inner-loop",
+        "array-forwarded-late-captured-inner-return",
+        "array-forwarded-late-captured-forward-return",
+        "array-forwarded-late-captured-assignment-conditional",
+        "array-forwarded-late-captured-direct-conditional",
     ] {
         assert_unknown(&built, &root, file, "replica.get");
         possible(&built, &root, file, "untouched.get");
