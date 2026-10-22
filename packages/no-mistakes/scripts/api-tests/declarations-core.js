@@ -17,7 +17,15 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   assert.match(traversalDeclarations, /mode: "signature-impact";\n  symbol: string;/);
   assert.match(
     traversalDeclarations,
-    /export interface CheckOptions extends ProjectOptions \{[\s\S]*?includeSuppressed\?: boolean;/,
+    /export interface CheckOptions extends ProjectOptions \{[\s\S]*?effort\?: Effort;[\s\S]*?includeSuppressed\?: boolean;/,
+  );
+  assert.match(
+    traversalDeclarations,
+    /export interface ProjectOptions \{[\s\S]*?effort\?: Effort;/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8"),
+    /export interface AnalysisFallback \{[\s\S]*?rule: string;[\s\S]*?partner: string;[\s\S]*?requested: Effort;[\s\S]*?effective: Effort;/,
   );
   assert.doesNotMatch(
     traversalDeclarations,
@@ -73,7 +81,11 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedReactUsagesOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "targets" \| "include"[\s\S]*?Required<Pick<ProjectOptions, "target">>/,
+    /type BatchedReactUsagesOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "targets" \| "include" \| "effort"[\s\S]*?Required<Pick<ProjectOptions, "target">>/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "reactAnalyze" \| "reactCheck"; id\?: string \} & Pick<[\s\S]*?"targets" \| "depth" \| "assertNoFetch" \| "effort"/,
   );
   assert.match(
     analyzeProjectDeclarations,
@@ -81,7 +93,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedCheckOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "includeSuppressed"[\s\S]*?>/,
+    /type BatchedCheckOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "includeSuppressed" \| "effort"[\s\S]*?>/,
   );
   assert.doesNotMatch(
     analyzeProjectDeclarations,
@@ -117,16 +129,38 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
     /unprovenMemberQuerySql\?: number;/,
   );
   assert.match(
+    readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8"),
+    /analysisFallbacks\?: AnalysisFallback\[\];/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "report-types.d.ts"), "utf8"),
+    /export \* from "\.\/check-report-types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export \* from "\.\/report-types";/,
+  );
+  assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export \* from "\.\/analyze-project-types";/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /export \* from "\.\/types";/,
   );
 });
 
 test("query annotation configuration exposes the unknown SQL policy", () => {
   const types = readFileSync(join(packageRoot, "postgres-query-annotation-types.d.ts"), "utf8");
-  assert.match(types, /export type PostgresUnanalyzableSql = "report" \| "ignore" \| "advise";/);
+  assert.match(types, /export type PostgresUnanalyzableSql = Unanalyzable;/);
+  assert.match(types, /import type \{ Effort, Unanalyzable \} from "\.\/traversal-types";/);
   assert.match(types, /export interface PostgresRequireQueryAnnotationOptions/);
+  assert.match(types, /effort\?: Effort;/);
+  assert.match(types, /unanalyzable\?: Unanalyzable;/);
   assert.match(types, /unanalyzableSql\?: PostgresUnanalyzableSql/);
+  const traversal = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  assert.match(traversal, /export type Effort = "low" \| "max";/);
+  assert.match(traversal, /export type Unanalyzable = "report" \| "advise" \| "ignore";/);
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export \* from "\.\/postgres-query-annotation-types";/,

@@ -11,6 +11,7 @@ pub(super) struct ScanCtx<'a> {
     pub(super) globs: GlobSet,
     pub(super) file_set: HashSet<&'a PathBuf>,
     pub(super) files: &'a [PathBuf],
+    pub(super) config_file: String,
 }
 
 pub(super) fn scan_pkg(root: &Path, pkg_root: &Path, ctx: &ScanCtx) -> Vec<RuleFinding> {

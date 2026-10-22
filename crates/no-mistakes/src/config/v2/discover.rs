@@ -20,6 +20,8 @@ pub(crate) fn automatic_v2_config_paths(root: &Path) -> Vec<PathBuf> {
 }
 
 mod check_commands;
+mod deprecations;
+use deprecations::emit_v2_deprecation_warnings;
 mod path_globs;
 mod swift_commands;
 mod targeted_triggers;
@@ -141,28 +143,15 @@ pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMista
     let mut config = parse_config::<NoMistakesConfig>(source, path)?;
     validate_v2_config(&config, path)?;
     super::postgres_project_scope::materialize(&mut config)?;
+    config.materialize_analysis_defaults()?;
     for policy in config.tests.vitest.projects.values_mut() {
         if !policy.setup_files.is_empty() {
             policy.declaration_path = Some(crate::codebase::ts_resolver::normalize_path(path));
         }
     }
+    config.loaded_config_path =
+        super::schema::loaded_path::LoadedConfigPath(Some(path.to_path_buf()));
     Ok(config)
-}
-
-fn emit_v2_deprecation_warnings(config: &NoMistakesConfig, path: &Path) {
-    let path_display = path.display();
-    if config.test_plan.playwright.deprecated_dependencies_key {
-        eprintln!(
-            "warning: {path_display}: `test_plan.playwright.dependencies` is deprecated; \
-             rename it to `test_plan.playwright.fullSuiteTriggers`"
-        );
-    }
-    if config.test_plan.vitest.deprecated_dependencies_key {
-        eprintln!(
-            "warning: {path_display}: `test_plan.vitest.dependencies` is deprecated; \
-             rename it to `test_plan.vitest.fullSuiteTriggers`"
-        );
-    }
 }
 
 fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Result<()> {

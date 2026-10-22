@@ -134,7 +134,9 @@ fn opts_with_roots(roots: &[&str]) -> Options {
 #[test]
 fn scan_empty_roots_returns_empty() {
     let opts = Options::default();
-    assert!(scan(Path::new("/tmp"), &opts, &[]).is_empty());
+    assert!(
+        scan_with_config(Path::new("/tmp"), &NoMistakesConfig::default(), &opts, &[]).is_empty()
+    );
 }
 
 #[test]
@@ -147,7 +149,7 @@ fn scan_subdir_with_code_and_readme_passes() {
     std::fs::write(dir.join("README.md"), "# hi").unwrap();
     let files: Vec<PathBuf> = vec![dir.join("index.mts"), dir.join("README.md")];
     let opts = opts_with_roots(&["agents"]);
-    let findings = scan(root, &opts, &files);
+    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
     assert!(findings.is_empty(), "unexpected findings: {findings:#?}");
 }
 
@@ -161,7 +163,7 @@ fn scan_subdir_without_readme_fails() {
     std::fs::write(&code_file, "").unwrap();
     let files = vec![code_file];
     let opts = opts_with_roots(&["agents"]);
-    let findings = scan(root, &opts, &files);
+    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("missing README.md"));
 }
@@ -176,7 +178,7 @@ fn scan_skips_files_directly_under_root() {
     std::fs::write(&code_file, "").unwrap();
     let files = vec![code_file];
     let opts = opts_with_roots(&["agents"]);
-    let findings = scan(root, &opts, &files);
+    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
     assert!(
         findings.is_empty(),
         "direct root children should not require docs"
@@ -193,7 +195,7 @@ fn scan_skips_test_files() {
     std::fs::write(&test_file, "").unwrap();
     let files = vec![test_file];
     let opts = opts_with_roots(&["agents"]);
-    let findings = scan(root, &opts, &files);
+    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
     assert!(
         findings.is_empty(),
         "test files should not trigger missing docs"
@@ -221,6 +223,23 @@ fn doc_section_passes_when_heading_present() {
 fn doc_section_fails_when_heading_level_does_not_match() {
     // Saved #2434 repro: `# Perf` must not satisfy `requiredHeading: "## Perf"`.
     let root = fixture("rules/required-doc-section/fail");
+    let readme = root.join("agents/demo/README.md");
+    let opts = DocSectionOptions {
+        glob: "agents/*/README.md".to_string(),
+        required_heading: "## Perf".to_string(),
+    };
+    let findings = scan_doc_section(&root, &opts, &[readme]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("missing required heading"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn doc_section_fails_when_heading_is_deeper_than_required() {
+    // `### Perf` does not satisfy `requiredHeading: "## Perf"`.
+    let root = fixture("rules/required-doc-section/fail-deeper-heading");
     let readme = root.join("agents/demo/README.md");
     let opts = DocSectionOptions {
         glob: "agents/*/README.md".to_string(),
@@ -426,7 +445,7 @@ fn scan_config_uses_defaults_when_fields_empty() {
         code_extensions: Vec::new(),  // → DEFAULT_CODE_EXTENSIONS
         test_exclude_patterns: Vec::new(), // → DEFAULT_TEST_EXCLUDE
     };
-    let findings = scan(root, &opts, &files);
+    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
     // Should flag because README.md is missing
     assert_eq!(findings.len(), 1, "missing README.md should be flagged");
     assert!(findings[0].message.contains("README.md"));
@@ -449,7 +468,7 @@ fn scan_with_absolute_root_path() {
         code_extensions: vec!["ts".to_string()],
         test_exclude_patterns: vec!["*.test.*".to_string()],
     };
-    let findings = scan(root, &opts, &files);
+    let findings = scan_with_config(root, &NoMistakesConfig::default(), &opts, &files);
     assert_eq!(
         findings.len(),
         1,
@@ -479,4 +498,35 @@ fn doc_section_findings_sorted() {
     for i in 1..findings.len() {
         assert!(findings[i - 1] <= findings[i]);
     }
+}
+
+#[test]
+fn doc_section_level_one_does_not_satisfy_level_two() {
+    // `# Perf` shares the text of `## Perf` and must still be a finding.
+    let root = fixture("rules/required-doc-section/fail");
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let findings = check_required_doc_section(&root, &config).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "agents/demo/README.md");
+    assert!(findings[0].message.contains("## Perf"), "{findings:?}");
+}
+
+#[test]
+fn doc_section_matching_level_passes() {
+    let root = fixture("rules/required-doc-section/pass");
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let findings = check_required_doc_section(&root, &config).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn heading_without_hashes_matches_any_level() {
+    let present = crate::codebase::markdown_sections::has_required_heading;
+    assert!(present("# Perf\n", "Perf"));
+    assert!(present("## Perf\n", "Perf"));
+    assert!(!present("# Perf\n", "## Perf"));
+    assert!(present("## Perf\n", "## Perf"));
+    assert!(!present("## Other\n", "## Perf"));
 }

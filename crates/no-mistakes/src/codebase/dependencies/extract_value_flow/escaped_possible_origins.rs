@@ -3,6 +3,7 @@ use super::*;
 pub(in super::super::super) fn absorb_possible(
     collector: &ImportCollector,
     slots: &FxHashMap<CallableId, FxHashMap<usize, (usize, String)>>,
+    definite: &FxHashMap<(usize, String), Vec<ValueExpression>>,
     values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>,
 ) {
     let side = &collector.receiver_escapes;
@@ -20,6 +21,17 @@ pub(in super::super::super) fn absorb_possible(
                 .and_then(|owner| slots.get(&owner))
         {
             apply(values, parameters, collector, (call.offset, call.end));
+        } else if side
+            .uncertain_spreads
+            .contains_key(&(call.offset, call.end))
+        {
+            for owner in super::escaped_higher_order::owners(collector, definite, &call.callee) {
+                if let Some(parameters) = slots.get(&owner) {
+                    // Newly recovered higher-order spread inputs stay possible.
+                    super::apply_escaped(values, parameters, collector, call.offset, call.end);
+                    apply(values, parameters, collector, (call.offset, call.end));
+                }
+            }
         }
     }
     for (offset, end, method, arguments, possible) in &collector.receiver_escapes.methods {
@@ -47,6 +59,11 @@ fn apply(
     collector: &ImportCollector,
     call: (u32, u32),
 ) {
+    let shift = collector
+        .receiver_escapes
+        .uncertain_spreads
+        .get(&call)
+        .map_or(0, |spread| spread.shift);
     for extras in [
         collector.receiver_escapes.possible_escaped.get(&call),
         collector.receiver_escapes.guarded_escaped.get(&call),
@@ -55,7 +72,10 @@ fn apply(
     .flatten()
     {
         for (index, extra) in extras {
-            if let Some(key) = parameters.get(index) {
+            if let Some(key) = index
+                .checked_sub(shift)
+                .and_then(|index| parameters.get(&index))
+            {
                 values
                     .entry(key.clone())
                     .or_default()
@@ -71,7 +91,7 @@ fn apply(
     .flatten()
     {
         for (index, key) in parameters {
-            if index >= start {
+            if *index >= start.saturating_sub(shift) {
                 values
                     .entry(key.clone())
                     .or_default()

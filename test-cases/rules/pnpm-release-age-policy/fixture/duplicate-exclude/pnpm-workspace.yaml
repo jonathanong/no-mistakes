@@ -1,0 +1,7 @@
+include:
+  ./pnpm/age.yaml:
+    - minimumReleaseAgeExclude
+minimumReleaseAgeExclude:
+  - acme-lib
+  - '@acme/core'
+  - demo-temporary-package@9.9.9

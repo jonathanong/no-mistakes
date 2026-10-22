@@ -2,6 +2,7 @@ struct SharedCheckPreparationOptions<'a> {
     config_path: Option<&'a Path>,
     tsconfig_path: Option<&'a Path>,
     deadlines: bool,
+    effort: Option<crate::config::v2::Effort>,
 }
 
 struct SharedCheckContext {
@@ -24,4 +25,3 @@ struct SharedCheckContext {
     playwright_rules_enabled: bool,
     graph_plan: Option<crate::codebase::dependencies::graph::GraphBuildPlan>,
 }
-

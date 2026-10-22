@@ -37,7 +37,11 @@ pub(super) fn workspace_dependency_name_with_sources(
     package_dir: &Path,
     workspace: &workspaces::WorkspaceMap,
     sources: &crate::codebase::ts_source::SourceStore,
+    catalogs: &workspaces::CatalogIndex,
 ) -> Option<String> {
+    if specifier.starts_with("catalog:") {
+        return catalog_workspace_name(dependency_name, specifier, workspace, catalogs);
+    }
     if let Some(path) = local_path_specifier(specifier) {
         return resolve_workspace_path(path, package_dir, workspace);
     }
@@ -50,6 +54,29 @@ pub(super) fn workspace_dependency_name_with_sources(
     }
     workspace_has_matching_range_with_sources(dependency_name, specifier, workspace, sources)
         .then(|| dependency_name.to_string())
+}
+
+pub(super) fn catalog_workspace_name(
+    dependency_name: &str,
+    specifier: &str,
+    workspace: &workspaces::WorkspaceMap,
+    catalogs: &workspaces::CatalogIndex,
+) -> Option<String> {
+    let catalog = specifier.strip_prefix("catalog:")?;
+    if catalog.contains(['/', ' ', '\\']) {
+        return None;
+    }
+    let hit = catalogs.get(catalog, dependency_name)?;
+    if matches!(
+        hit.specifier.as_str(),
+        "workspace:*" | "workspace:~" | "workspace:^"
+    ) {
+        return workspace_has_package(dependency_name, workspace)
+            .then(|| dependency_name.to_string());
+    }
+    // Semver catalog entries are not walked: linkWorkspacePackages is not read.
+    let path = local_path_specifier(&hit.specifier)?;
+    resolve_workspace_path(path, &hit.base_dir, workspace)
 }
 
 fn workspace_has_package(name: &str, workspace: &workspaces::WorkspaceMap) -> bool {

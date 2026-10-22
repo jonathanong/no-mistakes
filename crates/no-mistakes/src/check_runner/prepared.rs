@@ -32,6 +32,7 @@ pub(super) fn prepare_with_session(
     root: &Path,
     config_path: Option<&Path>,
     tsconfig_path: Option<&Path>,
+    effort: Option<no_mistakes::config::v2::Effort>,
 ) -> Result<PreparedCheckInputs> {
     let (visible_paths, _) = no_mistakes::diagnostics::measure_if_enabled(
         "discovery",
@@ -44,12 +45,14 @@ pub(super) fn prepare_with_session(
         || no_mistakes::playwright::rules::configured(&config)
         || config.rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE))
     .then(|| session.workspace(root));
+    let mut config = config.as_ref().clone();
+    config.effort_override = effort;
     prepare_from_shared(
         root,
         effective_config_path.as_deref(),
         tsconfig_path,
         visible_paths,
-        config.as_ref().clone(),
+        config,
         tsconfig.as_ref().clone(),
         workspace,
     )
@@ -60,12 +63,18 @@ pub(crate) fn prepare_from_shared(
     config_path: Option<&Path>,
     tsconfig_path: Option<&Path>,
     visible_paths: Arc<VisiblePathSnapshot>,
-    config: NoMistakesConfig,
+    mut config: NoMistakesConfig,
     tsconfig: no_mistakes::codebase::ts_resolver::TsConfig,
     workspace: Option<Arc<no_mistakes::codebase::workspaces::IndexedWorkspaceMap>>,
 ) -> Result<PreparedCheckInputs> {
     let root_paths = visible_paths.paths_for(root);
     let sources = visible_paths.source_store_for(root);
+    no_mistakes::codebase::rules::analysis_policy::prepare_rule_analysis(
+        root,
+        &mut config,
+        &root_paths,
+        &sources,
+    )?;
     if config.rule_configured(no_mistakes::codebase::rules::REQUIRE_STORYBOOK_STORIES) {
         no_mistakes::codebase::rules::require_storybook_stories::authorize_configured_sources(
             root, &config, &sources,
@@ -130,28 +139,25 @@ pub(crate) fn prepare_from_shared(
         })
         .transpose()?
         .flatten();
-    let vitest_projects = (config
-        .rule_configured(no_mistakes::codebase::rules::VITEST_PROJECT_MAPPING)
-        || config.rule_configured(no_mistakes::codebase::rules::VITEST_CI_PATH_COVERAGE)
-        || config.rule_configured(no_mistakes::codebase::rules::FORBIDDEN_CALLS))
-    .then(|| {
-        no_mistakes::codebase::rules::prepare_vitest_project_catalog(
+    let (vitest_from_calls, playwright_projects) =
+        no_mistakes::codebase::rules::forbidden_calls::prepare_root_catalogs(
             root,
             &config,
             visible_paths.as_ref(),
             &tsconfig_catalog,
-        )
-    });
-    let playwright_projects = config
-        .rule_configured(no_mistakes::codebase::rules::FORBIDDEN_CALLS)
+        );
+    let vitest_projects = vitest_from_calls.or_else(|| {
+        (config.rule_configured(no_mistakes::codebase::rules::VITEST_PROJECT_MAPPING)
+            || config.rule_configured(no_mistakes::codebase::rules::VITEST_CI_PATH_COVERAGE))
         .then(|| {
-            no_mistakes::codebase::rules::prepare_playwright_project_catalog(
+            no_mistakes::codebase::rules::prepare_vitest_project_catalog(
                 root,
                 &config,
                 visible_paths.as_ref(),
                 &tsconfig_catalog,
             )
-        });
+        })
+    });
     Ok(PreparedCheckInputs {
         visible_paths,
         inferred_roots,

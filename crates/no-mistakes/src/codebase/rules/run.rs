@@ -1,13 +1,12 @@
 use super::{
     forbidden_calls, forbidden_dependencies, nextjs_no_api_routes, nextjs_no_caching,
-    prepare_playwright_project_catalog, prepare_vitest_project_catalog, require_storybook_stories,
-    required_entrypoint_reachability, rule_enabled, server_route_client_boundary,
-    suppress_rule_findings_with_sources, test_no_unmocked_dynamic_imports,
-    unconstructed_error_class, RuleFinding, FORBIDDEN_CALLS, FORBIDDEN_DEPENDENCIES,
-    NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, POSTGRES_NO_MUTABLE_SQL_REGISTRY,
-    POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER, QUERY_REACHED_PER_ITEM, REQUIRED_ENTRYPOINT_REACHABILITY,
-    REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
-    UNCONSTRUCTED_ERROR_CLASS,
+    require_storybook_stories, required_entrypoint_reachability, rule_enabled,
+    server_route_client_boundary, suppress_rule_findings_with_sources,
+    test_no_unmocked_dynamic_imports, unconstructed_error_class, RuleFinding, FORBIDDEN_CALLS,
+    FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
+    POSTGRES_NO_MUTABLE_SQL_REGISTRY, POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER, QUERY_REACHED_PER_ITEM,
+    REQUIRED_ENTRYPOINT_REACHABILITY, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
+    TEST_NO_UNMOCKED_DYNAMIC_IMPORTS, UNCONSTRUCTED_ERROR_CLASS,
 };
 use anyhow::Result;
 use std::path::Path;
@@ -90,15 +89,20 @@ pub fn run_check_with_facts_and_playwright(
         })
         .flatten();
     let shared = supplemented.as_ref().unwrap_or(shared);
-    let visible_snapshot = config
-        .rule_configured(FORBIDDEN_CALLS)
-        .then(|| crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, visible));
-    let prepared_vitest_projects = visible_snapshot.as_ref().map(|snapshot| {
-        prepare_vitest_project_catalog(root, &config, snapshot, &prepared_tsconfig_catalog)
-    });
-    let prepared_playwright_projects = visible_snapshot.as_ref().map(|snapshot| {
-        prepare_playwright_project_catalog(root, &config, snapshot, &prepared_tsconfig_catalog)
-    });
+    let catalog_snapshot = (forbidden_calls::vitest_roots_configured(&config)
+        || forbidden_calls::playwright_roots_configured(&config))
+    .then(|| crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, visible));
+    let (prepared_vitest_projects, prepared_playwright_projects) = catalog_snapshot
+        .as_ref()
+        .map(|snapshot| {
+            forbidden_calls::prepare_root_catalogs(
+                root,
+                &config,
+                snapshot,
+                &prepared_tsconfig_catalog,
+            )
+        })
+        .unwrap_or((None, None));
     run_check_with_config_and_facts_and_playwright(PreparedRulesCheck {
         session,
         root,

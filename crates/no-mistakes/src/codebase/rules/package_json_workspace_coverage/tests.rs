@@ -1,3 +1,4 @@
+use super::patterns::{build_workspace_globset, normalize_relative_path};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -7,7 +8,7 @@ use std::path::Path;
 
 fn package_name(path: &Path) -> Option<String> {
     let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
-    package_name_with_sources(path, &sources)
+    super::coverage_scope::package_name_with_sources(path, &sources)
 }
 
 fn fixture_root(name: &str) -> PathBuf {
@@ -182,15 +183,28 @@ fn require_named_package_does_not_treat_star_as_crossing_directories() {
 }
 
 #[test]
-fn covered_unnamed_packages_pass_when_names_are_not_required() {
+fn nested_package_is_uncovered_when_names_are_not_required() {
     let root = fixture_root("unnamed-covered");
     let files = vec![
         root.join("package.json"),
         root.join("packages/unnamed/package.json"),
+        root.join("packages/group/app/package.json"),
     ];
     let findings = check_with_files(&root, &config("packageRoots: [packages]\n"), &files).unwrap();
 
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file == "packages/group/app/package.json"
+                && finding.message.contains("not covered")
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.file != "packages/unnamed/package.json"),
+        "{findings:?}"
+    );
 }
 
 #[test]
@@ -204,8 +218,10 @@ fn workspace_globset_builder_splits_includes_and_excludes() {
 
     assert!(include.is_match("packages/web"));
     assert!(include.is_match("packages/internal"));
+    assert!(!include.is_match("packages/group/app"));
     assert!(exclude.is_match("packages/internal"));
     assert!(!exclude.is_match("packages/web"));
+    assert!(build_workspace_globset(&["[".to_string()], false).is_err());
     assert_eq!(
         normalize_relative_path("./packages/../packages/web"),
         "packages/web"
@@ -215,3 +231,13 @@ fn workspace_globset_builder_splits_includes_and_excludes() {
         "*/../packages/*"
     );
 }
+
+fn files_named(root: &Path, names: &[&str]) -> Vec<PathBuf> {
+    names.iter().map(|name| root.join(name)).collect()
+}
+
+// Sibling modules keep this file under the test line cap.
+#[path = "tests_coverage.rs"]
+mod tests_coverage;
+#[path = "tests_patterns.rs"]
+mod tests_patterns;

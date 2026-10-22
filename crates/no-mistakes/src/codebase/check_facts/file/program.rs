@@ -95,6 +95,15 @@ pub(crate) fn collect_file_facts_from_program(
     } else {
         Vec::new()
     };
+    let query_annotation_heads = plan.query_annotation_heads.then(|| {
+        Arc::new(crate::codebase::postgres::query_annotation::heads::collect(
+            program,
+            &ts,
+            embedded_sql
+                .iter()
+                .flat_map(|(_, file)| file.call_spans.iter().copied()),
+        ))
+    });
     let symbols = ts.symbols.clone();
     CheckFileFacts {
         ts: ts.into(),
@@ -111,6 +120,7 @@ pub(crate) fn collect_file_facts_from_program(
         storybook: fused.storybook,
         embedded_sql,
         query_annotation,
+        query_annotation_heads,
         server_route_client_boundary,
         playwright,
         playwright_fetch,

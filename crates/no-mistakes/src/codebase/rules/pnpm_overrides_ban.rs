@@ -5,6 +5,7 @@ use anyhow::Result;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
+mod included;
 mod keys;
 use keys::{json_key_line, json_nested_key_line, yaml_has_key, yaml_top_level_key_line};
 
@@ -59,21 +60,36 @@ fn scan(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    files
+    let mut findings: Vec<RuleFinding> = files
         .par_iter()
         .flat_map(
             |path| match path.file_name().and_then(|name| name.to_str()) {
-                Some("pnpm-workspace.yaml") => check_workspace(root, path, sources),
+                Some("pnpm-workspace.yaml") => check_workspace(root, path, files, sources),
                 Some("package.json") => check_package_json(root, path, sources),
                 _ => Vec::new(),
             },
         )
-        .collect()
+        .collect();
+    // A selected included override file stays in scope when the root workspace
+    // file itself is filtered out.
+    let root_yaml = crate::codebase::ts_resolver::normalize_path(&root.join("pnpm-workspace.yaml"));
+    let root_selected = files
+        .iter()
+        .any(|candidate| crate::codebase::ts_resolver::normalize_path(candidate) == root_yaml);
+    if !root_selected {
+        if let Ok(source) = sources.read_path(&root_yaml) {
+            findings.extend(included::included_override_findings(
+                root, &root_yaml, &source, sources, files,
+            ));
+        }
+    }
+    findings
 }
 
 fn check_workspace(
     root: &Path,
     path: &Path,
+    files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
     let Ok(source) = sources.read_path(path) else {
@@ -81,16 +97,19 @@ fn check_workspace(
     };
     match serde_yaml::from_str::<serde_yaml::Value>(&source) {
         Ok(value) => {
+            let mut findings = Vec::new();
             if yaml_has_key(&value, "overrides") {
-                vec![finding(
+                findings.push(finding(
                     root,
                     path,
                     yaml_top_level_key_line(&source, "overrides"),
                     format!("top-level \"overrides\" is banned. {FIX}"),
-                )]
-            } else {
-                Vec::new()
+                ));
             }
+            findings.extend(included::included_override_findings(
+                root, path, &source, sources, files,
+            ));
+            findings
         }
         Err(error) => {
             let detail = error

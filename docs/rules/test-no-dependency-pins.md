@@ -319,12 +319,14 @@ exemption. Both options default to the shown behavior when omitted.
 ## Valid example
 
 ```ts
+// pin.test.ts
 expect(workflow).toContain("uses: actions/checkout@");
 ```
 
 ## Counterexample
 
 ```ts
+// pin.test.ts
 expect(workflow).toContain("uses: actions/checkout@v6.0.2");
 ```
 

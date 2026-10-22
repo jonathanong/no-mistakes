@@ -21,7 +21,16 @@ Use this before finishing an agent edit when the repository has configured
 rules. `check` runs React, queue, integration, filesystem, Playwright, unique
 export, and codebase rules that are enabled in config.
 
-Key options: `--root`, `--config`, `--tsconfig`, `--format`, and `--json`.
+Key options: `--root`, `--config`, `--tsconfig`, `--format`, `--json`, and
+`--effort <low|max>`. The default effort is `max`, preserving current analysis.
+Invocation effort overrides rule and repository defaults. A rule that requires
+a partner check warns and falls back to `max` when that partner is absent or
+outside its configured scope.
+JSON output includes `analysisFallbacks` rows for partner-backed fallbacks,
+with the rule, unavailable partner, requested effort, and effective effort;
+the field is omitted when there are no such fallbacks. A rule without a low
+implementation also emits a named, non-failing warning when low was requested
+and continues at `max`; it has no partner fallback row.
 `--include-suppressed` is opt-in and adds deterministic directive accounting to
 JSON/YAML output without changing the default report schema.
 `unprovenMemberQuerySql` is an optional count of member `.query` calls that were not proven, omitted when zero, and not a failure.
@@ -35,6 +44,10 @@ uncertainty in non-failing `advisories`, including its reason, known SQL prefix,
 and helper lines when available. Existing `fail`/`ignore` behavior and defaults
 stay unchanged. An advisory `target` may hold several comma-separated checks.
 See [SQL verdicts](../postgres-sql-verdicts.md).
+The shared `unanalyzable` policy accepts `report`, `advise`, or `ignore`;
+`unanalyzableSql` remains a SQL-specific alias. Legacy PostgreSQL `fail`
+values map to `report`, and the shared `report` value maps to each rule's
+legacy parser spelling.
 
 The root-global `--timings` and `--verbose-timings` flags work here and on every
 other CLI leaf. Verbose mode implies timings, includes rule/graph/Playwright

@@ -102,3 +102,29 @@ fn vitest_root_errors_when_no_files_match() {
         "{error:#}"
     );
 }
+
+#[test]
+fn run_check_with_facts_prepares_the_vitest_catalog_for_vitest_roots() {
+    let root = fixture_root();
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let graph_plan = crate::codebase::rules::try_canonical_graph_plan(&config)
+        .unwrap()
+        .expect("forbidden-calls requires a graph");
+    let (graph, graph_context) =
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(&root, graph_plan);
+    let shared = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        crate::codebase::ts_source::discover_files(&root, &[]),
+        crate::codebase::check_facts::CheckFactPlan {
+            graph,
+            graph_context,
+            ..Default::default()
+        },
+    );
+    let findings =
+        crate::codebase::rules::run_check_with_facts(&root, Some(&config_path), None, &shared)
+            .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "src/custom.spec.mts");
+}

@@ -18,7 +18,14 @@ fn root(scenario: &str) -> PathBuf {
 }
 
 fn findings(scenario: &str) -> Vec<crate::codebase::rules::RuleFinding> {
-    crate::codebase::rules::run_check(&root(scenario), None, None)
+    let fixture = root(scenario);
+    let config = crate::config::v2::load_v2_config(&fixture, None).unwrap();
+    // A passing control must exercise an enabled application, not an empty run.
+    assert!(
+        config.rule_configured(RULE_ID),
+        "inactive fixture: {scenario}"
+    );
+    crate::codebase::rules::run_check(&fixture, None, None)
         .unwrap()
         .into_iter()
         .filter(|finding| finding.rule == RULE_ID)

@@ -117,14 +117,22 @@ impl ImportCollector {
     }
 }
 
-/// The ordinary entries API remains unchanged; only escaped spread arguments
-/// distinguish branch-exclusive literal slots from guaranteed later pushes.
+pub(super) struct Projection {
+    pub(super) entries: Vec<(usize, ValueExpression, bool)>,
+    pub(super) tail: Option<(usize, Vec<ValueExpression>)>,
+}
+#[path = "escaped_exact_spread.rs"]
+mod exact;
+pub(in super::super) use exact::entries as exact_entries;
+/// Keep the proven prefix fixed. After the first optional push, later known
+/// values form one possible open tail rather than enumerating branch lengths.
 pub(super) fn entries(
     collector: &ImportCollector,
     value: &ValueExpression,
     before: u32,
-) -> Option<Vec<(usize, ValueExpression, bool)>> {
-    let baseline = super::escaped_array_entries::array_entries(collector, value, before)?;
+) -> Option<Projection> {
+    let (baseline, optional) =
+        super::escaped_array_bindings::guarded_entries(collector, value, before)?;
     let summary = match value {
         ValueExpression::Named { name, scope, .. } => collector
             .receiver_escapes
@@ -134,19 +142,40 @@ pub(super) fn entries(
             .filter(|summary| summary.at <= before && summary.guarded),
         _ => None,
     };
-    Some(
-        baseline
-            .into_iter()
-            .map(|(slot, value)| {
-                let possible = summary.is_some_and(|summary| {
-                    slot < summary.width
-                        && !summary
-                            .common
-                            .as_ref()
-                            .is_some_and(|common| common.contains_key(&slot.to_string()))
-                });
-                (slot, value, possible)
-            })
-            .collect(),
-    )
+    let mut entries = Vec::new();
+    let mut tail = Vec::new();
+    let mut minimum = 0;
+    for (slot, value) in baseline {
+        #[cfg(feature = "test-instrumentation")]
+        tail_metrics::record(0);
+        if optional.is_some_and(|start| slot >= start) {
+            #[cfg(feature = "test-instrumentation")]
+            tail_metrics::record(1);
+            tail.push(value);
+        } else {
+            let common = summary.is_some_and(|summary| {
+                summary
+                    .common
+                    .as_ref()
+                    .is_some_and(|common| common.contains_key(&slot.to_string()))
+            });
+            if common {
+                minimum = minimum.max(slot + 1);
+            }
+            let possible = !common && summary.is_some_and(|summary| slot < summary.width);
+            entries.push((slot, value, possible));
+        }
+    }
+    Some(Projection {
+        entries,
+        tail: optional.map(|start| (start, tail)).or_else(|| {
+            summary
+                .is_some_and(|summary| summary.length.is_none())
+                .then_some((minimum, Vec::new()))
+        }),
+    })
 }
+
+#[cfg(feature = "test-instrumentation")]
+#[path = "escaped_array_tail_metrics.rs"]
+mod tail_metrics;

@@ -12,7 +12,7 @@ fn standalone_preparation_parses_each_config_once_across_distinct_selections() {
 
     no_mistakes::ast::begin_parse_count(&root);
     let session = no_mistakes::codebase::analysis_session::AnalysisSession::disabled();
-    let prepared = prepared::prepare_with_session(&session, &root, None, None).unwrap();
+    let prepared = prepared::prepare_with_session(&session, &root, None, None, None).unwrap();
     let counts = no_mistakes::ast::finish_parse_count(&root);
     let expected = [
         root.join("playwright.admin.config.ts"),
@@ -34,11 +34,12 @@ fn standalone_preparation_keeps_same_root_config_scopes_distinct() {
     let root = fixture.path().canonicalize().unwrap();
     let session = no_mistakes::codebase::analysis_session::AnalysisSession::disabled();
 
-    let automatic = prepared::prepare_with_session(&session, &root, None, None).unwrap();
+    let automatic = prepared::prepare_with_session(&session, &root, None, None, None).unwrap();
     let explicit = prepared::prepare_with_session(
         &session,
         &root,
         Some(Path::new("explicit.no-mistakes.yml")),
+        None,
         None,
     )
     .unwrap();
@@ -55,12 +56,13 @@ fn standalone_preparation_keeps_same_root_tsconfig_scopes_distinct() {
     );
     let session = no_mistakes::codebase::analysis_session::AnalysisSession::disabled();
 
-    prepared::prepare_with_session(&session, &root, None, None).unwrap();
+    prepared::prepare_with_session(&session, &root, None, None, None).unwrap();
     let error = prepared::prepare_with_session(
         &session,
         &root,
         None,
         Some(Path::new("tsconfig-invalid.json")),
+        None,
     )
     .err()
     .expect("an explicit malformed tsconfig must not reuse the automatic scope");
@@ -79,7 +81,7 @@ fn preparation_builds_at_most_one_workspace_projection() {
         std::sync::Arc::clone(&observer),
     ));
 
-    prepared::prepare_with_session(&session, &root, None, None).unwrap();
+    prepared::prepare_with_session(&session, &root, None, None, None).unwrap();
 
     assert_eq!(observer.snapshot().work["workspace.builds"], 1);
 }
@@ -95,8 +97,14 @@ fn explicit_tsconfig_without_playwright_skips_workspace_projection() {
         std::sync::Arc::clone(&observer),
     ));
 
-    prepared::prepare_with_session(&session, &root, None, Some(Path::new("tsconfig.json")))
-        .unwrap();
+    prepared::prepare_with_session(
+        &session,
+        &root,
+        None,
+        Some(Path::new("tsconfig.json")),
+        None,
+    )
+    .unwrap();
 
     assert_eq!(observer.snapshot().work.get("workspace.builds"), None);
 }

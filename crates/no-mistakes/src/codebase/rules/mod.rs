@@ -1,4 +1,5 @@
 pub mod agents_md_max_size;
+pub mod analysis_policy;
 pub mod banned_paths;
 pub mod banned_renamed_files;
 pub mod config_path_references;
@@ -120,7 +121,9 @@ pub mod vitest_test_correspondence;
 pub mod workflow_topology_policy;
 pub mod workspace_package_cycles;
 
+mod byte_prefilter;
 mod catalog_rule;
+mod configured_root;
 mod entrypoints;
 pub mod filesystem_dispatch;
 mod masked_source;

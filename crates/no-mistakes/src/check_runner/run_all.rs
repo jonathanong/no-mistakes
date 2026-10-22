@@ -11,17 +11,20 @@ mod entry;
 mod playwright;
 mod setup;
 
-pub(crate) use entry::{run_all_with_evidence, run_all_with_sql_verdicts};
+pub(crate) use entry::{
+    run_all_with_evidence, run_all_with_options, run_all_with_sql_verdicts, AnalysisOptions,
+};
 
-pub(crate) fn run_all_with_session(
+pub(super) fn run_all_with_session_options(
     session: &Arc<no_mistakes::codebase::analysis_session::AnalysisSession>,
     root: PathBuf,
     config_path: Option<PathBuf>,
     tsconfig_path: Option<PathBuf>,
     include_suppressed: bool,
     include_runner_config_deadlines: bool,
-    include_sql_verdicts: bool,
+    options: AnalysisOptions,
 ) -> Result<CheckResults> {
+    let include_sql_verdicts = options.include_sql_verdicts;
     let session = Arc::clone(session);
     no_mistakes::invocation::set_timeout_phase("check.prepare");
     no_mistakes::invocation::check_timeout()?;
@@ -31,6 +34,7 @@ pub(crate) fn run_all_with_session(
         &root,
         config_path.as_deref(),
         tsconfig_path.as_deref(),
+        options.effort,
     );
     let prepared = prepared?;
     let config_path = prepared.config_path.clone();
@@ -59,6 +63,13 @@ pub(crate) fn run_all_with_session(
     ) {
         fact_collection::release_extract_programs(&session);
         let mut results = empty_results([None]);
+        results
+            .warnings
+            .extend(config.analysis_warnings.iter().cloned());
+        results.analysis_warning_count = config.analysis_warnings.len();
+        results
+            .analysis_fallbacks
+            .clone_from(&config.analysis_fallbacks);
         results.include_suppressed = include_suppressed;
         results.include_sql_verdicts = include_sql_verdicts;
         results.runner_config_deadlines = runner_deadline_plan

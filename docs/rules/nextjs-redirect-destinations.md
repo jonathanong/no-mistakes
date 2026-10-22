@@ -4,7 +4,7 @@
 
 ```ts
 // next.config.ts
-export default { async redirects() { return [{ source: '/a', destination: 'https://evil.test', permanent: true }]; } };
+export default { async redirects() { return [{ source: '/a', destination: '/gone', permanent: true }]; } };
 ```
 
 ## Suppression
@@ -33,11 +33,14 @@ to `true`. `trackedRoutesOnly` defaults to `false`.
 
 ## Valid example
 
-A redirect from `/old` to an existing `app/new/page.tsx` route passes.
+A redirect from `/a` to an existing `app/b/page.tsx` route passes.
 
 ```ts
 // next.config.ts
 export default { async redirects() { return [{ source: '/a', destination: '/b', permanent: true }]; } };
+
+// app/b/page.tsx
+export default function Page() { return null; }
 ```
 
 

@@ -35,7 +35,7 @@ test('loads', async () => { await db.query('select 1'); });
 
 ```ts
 // tests/integration/users.test.ts
-vi.mock('../db');
+import { setupServer } from 'msw/node';
 ```
 
 ## Related rules

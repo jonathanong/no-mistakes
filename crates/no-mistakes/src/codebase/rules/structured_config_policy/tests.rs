@@ -25,6 +25,31 @@ fn config(yaml: &str) -> NoMistakesConfig {
 }
 
 #[test]
+fn merge_key_does_not_copy_a_banned_key() {
+    // `<<: *defaults` is not expanded, so the anchored banned key is absent.
+    let root = fixture_root("merge-key");
+    let files = vec![root.join("app.yml")];
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+policies:
+  - files: [app.yml]
+    bannedKeys: [runtime.legacy.enabled]
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("runtime.legacy.enabled")),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn reports_required_and_banned_structured_config_keys() {
     let root = fixture_root("fixture");
     let files = vec![root.join("app.yml")];

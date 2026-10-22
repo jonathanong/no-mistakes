@@ -52,11 +52,13 @@ fn scan(
                 name,
                 scope,
                 offset,
-                ..
+                members,
             } = &provenance
             {
                 if bindings.env_alias(&call.file, *scope, name, *offset)
-                    || bindings.query_projection(&call.file, *scope, name, *offset)
+                    || (!bindings.row_member_overwritten(
+                        &call.file, *scope, name, *offset, members, call.span,
+                    ) && bindings.query_projection(&call.file, *scope, name, *offset))
                 {
                     sinks += 1;
                     findings.push(message(root, call, name, Some(name.clone())));

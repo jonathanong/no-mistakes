@@ -44,6 +44,8 @@ pub(crate) struct CheckResults {
         Option<Vec<no_mistakes::integration_tests::RunnerConfigDeadlineEvidence>>,
     pub(crate) codebase: Vec<UniqueExportFinding>,
     pub(crate) warnings: Vec<String>,
+    pub(crate) analysis_warning_count: usize,
+    pub(crate) analysis_fallbacks: Vec<no_mistakes::config::v2::AnalysisFallback>,
     pub(crate) advisories: Vec<RuleFinding>,
     pub(crate) sql_verdicts: Vec<no_mistakes::codebase::postgres::SqlObligationVerdict>,
     pub(crate) include_sql_verdicts: bool,
@@ -111,7 +113,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     );
     let mut advisories = advisories?;
     advisories::merge_sql(&mut advisories, root, sources, &sql_verdicts);
-    let warnings = [
+    let mut warnings: Vec<String> = [
         react_warning,
         react.warning,
         queues.warning,
@@ -123,6 +125,8 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     .into_iter()
     .flatten()
     .collect();
+    let analysis_warning_count = config.analysis_warnings.len();
+    warnings.extend(config.analysis_warnings.iter().cloned());
     let suppressed = suppression::apply_if_requested(
         include_suppressed,
         suppression::Inputs {
@@ -165,6 +169,8 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
             .map(|prepared| prepared.finding)
             .collect(),
         warnings,
+        analysis_warning_count,
+        analysis_fallbacks: config.analysis_fallbacks.clone(),
         advisories,
         sql_verdicts,
         include_sql_verdicts,

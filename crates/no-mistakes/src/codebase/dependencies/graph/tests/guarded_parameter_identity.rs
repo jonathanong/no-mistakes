@@ -8,9 +8,7 @@ fn guarded_parameter_epoch_separates_between_and_rhs_assignments() {
     for suffix in ["between", "rhs", "nested", "destructure"] {
         let file = format!("array-latest-guarded-parameter-{suffix}");
         possible(&built, &root, &file, "replica.get");
-        if suffix != "destructure" {
-            possible(&built, &root, &file, "untouched.get");
-        }
+        possible(&built, &root, &file, "untouched.get");
         assert_export(&built, &root, &file, "replica.info");
         assert_export(&built, &root, &file, "unrelated.get");
     }
@@ -21,9 +19,13 @@ fn guarded_parameter_epoch_keeps_equal_captures_and_shadowing_definite() {
     let (built, root) = graph();
     for suffix in ["before", "after"] {
         let file = format!("array-latest-guarded-parameter-{suffix}");
-        for callee in ["replica.get", "untouched.get"] {
-            assert_unknown(&built, &root, &file, callee);
-        }
+        let (mutated, unchanged) = if suffix == "before" {
+            ("untouched.get", "replica.get")
+        } else {
+            ("replica.get", "untouched.get")
+        };
+        assert_unknown(&built, &root, &file, mutated);
+        assert_export(&built, &root, &file, unchanged);
         for callee in ["primary.get", "replica.info", "unrelated.get"] {
             assert_export(&built, &root, &file, callee);
         }
@@ -85,6 +87,83 @@ fn guarded_parameter_epoch_keeps_uncertain_writes_conservative() {
         possible(&built, &root, &file, "replica.get");
         if matches!(suffix, "conditional" | "foreign") {
             possible(&built, &root, &file, "untouched.get");
+        }
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, &file, callee);
+        }
+    }
+}
+
+#[test]
+fn unguarded_array_captures_use_the_same_parameter_timeline() {
+    let (built, root) = graph();
+    for (suffix, mutated, unchanged) in [
+        ("before", "untouched.get", "replica.get"),
+        ("after", "replica.get", "untouched.get"),
+    ] {
+        let file = format!("array-parameter-{suffix}-unguarded");
+        assert_unknown(&built, &root, &file, mutated);
+        assert_export(&built, &root, &file, unchanged);
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, &file, callee);
+        }
+    }
+}
+
+#[test]
+fn uncertain_parameter_captures_retain_both_candidates() {
+    let (built, root) = graph();
+    for suffix in ["destructure-default", "callback", "mixed-update"] {
+        let file = format!("array-latest-guarded-parameter-{suffix}");
+        // Callback and unmatched-update cases deliberately retain conservative
+        // unions; no exact invocation or unsupported numeric value is inferred.
+        for callee in ["replica.get", "untouched.get"] {
+            possible(&built, &root, &file, callee);
+        }
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, &file, callee);
+        }
+    }
+}
+
+#[test]
+fn newly_recovered_pattern_writes_keep_the_previously_reported_candidate() {
+    let (built, root) = graph();
+    let file = "array-parameter-destructure-unguarded";
+    assert_export(&built, &root, file, "replica.get");
+    // Pattern projection is newly recovered evidence. Retain the old candidate
+    // with Unknown rather than turning an existing finding silent.
+    possible(&built, &root, file, "untouched.get");
+    for callee in ["primary.get", "replica.info", "unrelated.get"] {
+        assert_export(&built, &root, file, callee);
+    }
+}
+
+#[test]
+fn default_callbacks_seed_captures_before_parameter_reassignment_unions() {
+    let (built, root) = graph();
+    for (suffix, written, retained) in [
+        ("before", "untouched.get", "replica.get"),
+        ("after", "replica.get", "untouched.get"),
+    ] {
+        let file = format!("array-parameter-default-callback-{suffix}");
+        assert_unknown(&built, &root, &file, written);
+        assert_export(&built, &root, &file, retained);
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, &file, callee);
+        }
+    }
+}
+
+#[test]
+fn assigned_callbacks_add_origins_to_nonempty_initial_captures() {
+    let (built, root) = graph();
+    for suffix in ["before", "after"] {
+        let file = format!("array-forwarded-late-captured-{suffix}");
+        // Both invocations overwrite their receivers; the indirect invocation
+        // must not disappear behind the direct call's nonempty snapshot.
+        for callee in ["replica.get", "untouched.get"] {
+            assert_unknown(&built, &root, &file, callee);
         }
         for callee in ["primary.get", "replica.info", "unrelated.get"] {
             assert_export(&built, &root, &file, callee);

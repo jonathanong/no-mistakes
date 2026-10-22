@@ -15,7 +15,7 @@ mod escaped_class_lookup;
 #[path = "escaped_class_methods.rs"]
 mod escaped_class_methods;
 #[path = "escaped_guarded_arrays.rs"]
-mod escaped_guarded_arrays;
+pub(super) mod escaped_guarded_arrays;
 #[path = "escaped_higher_order.rs"]
 mod escaped_higher_order;
 #[path = "escaped_origin_absorb.rs"]
@@ -43,6 +43,18 @@ type StoredArray = (
     bool,
 );
 
+pub(super) struct UncertainSpread {
+    pub(super) raw: usize,
+    pub(super) shift: usize,
+    pub(super) redirected: FxHashSet<usize>,
+}
+impl UncertainSpread {
+    pub(super) fn skips(&self, index: usize) -> bool {
+        index >= self.raw.saturating_sub(self.shift)
+            || self.redirected.contains(&index.saturating_add(self.shift))
+    }
+}
+
 #[derive(Default)]
 pub(in super::super) struct Side {
     /// `const api = new Api()` — write origins only, not a callable binding.
@@ -62,6 +74,7 @@ pub(in super::super) struct Side {
     /// Array values from `let` bindings and later array assignments.
     arrays: Vec<StoredArray>,
     guarded_arrays: bool,
+    optional_pushes: FxHashSet<u32>,
     pushes: FxHashMap<usize, FxHashMap<String, Vec<usize>>>,
     pending_possible: Vec<escaped_possible_arguments::Pending>,
     stable_bindings: FxHashMap<usize, FxHashSet<String>>,
@@ -79,7 +92,8 @@ pub(in super::super) struct Side {
     /// Values that can occupy every parameter at or after the index, because a
     /// spread ahead of them had no known elements.
     open: FxHashMap<(u32, u32), (usize, Vec<ValueExpression>)>,
-    reassigned: Vec<(usize, String, ValueExpression)>,
+    pub(super) uncertain_spreads: FxHashMap<(u32, u32), UncertainSpread>,
+    pub(super) reassigned: Vec<super::parameter_call_origins::Reassignment>,
     possible_escaped: FxHashMap<(u32, u32), FxHashMap<usize, Vec<ValueExpression>>>,
     possible_open: FxHashMap<(u32, u32), (usize, Vec<ValueExpression>)>,
     pub(super) projecting_possible: bool,

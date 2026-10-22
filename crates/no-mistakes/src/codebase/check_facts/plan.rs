@@ -1,3 +1,4 @@
+mod collected;
 mod location_demand;
 mod rule_scans;
 use rule_scans::merge_embedded_sql_rule_ids;
@@ -37,6 +38,8 @@ pub struct CheckFactPlan {
     pub embedded_sql: bool,
     /// Owned helper/callback summaries for the annotation-only projection.
     pub query_annotation: bool,
+    /// Syntactic leading-name proofs for low-effort annotation, without helper evaluation.
+    pub query_annotation_heads: bool,
     /// Explicit annotation-only profiles. `None` preserves the direct fact
     /// API's request for annotation on every embedded SQL profile.
     pub query_annotation_options: Option<Vec<crate::codebase::postgres::EmbeddedSqlOptions>>,
@@ -91,6 +94,7 @@ impl CheckFactPlan {
     pub(crate) fn include(&mut self, other: Self) {
         self.merge_location_demand(&other);
         self.imports |= other.imports;
+        self.query_annotation_heads |= other.query_annotation_heads;
         self.companion_import_plans =
             crate::codebase::rules::required_companion_imports::merge_plans(
                 &self.companion_import_plans,
@@ -178,24 +182,6 @@ impl CheckFactPlan {
         self.postgres_sql_include.dedup();
         self.graph.include(other.graph);
         self.graph_context.include(other.graph_context);
-    }
-
-    /// TS graph fact shapes guaranteed for every file collected with this
-    /// plan. Several check-only flags populate the canonical `TsFileFacts`
-    /// fields too; recording only `graph` would make a strict prepared graph
-    /// reject facts that were already collected in the same parse pass.
-    pub(super) fn collected_ts_plan(&self) -> crate::codebase::ts_source::facts::TsFactPlan {
-        let mut plan = self.graph;
-        plan.imports |=
-            self.query_annotation || self.embedded_sql || !self.embedded_sql_options.is_empty();
-        if self.imports {
-            plan.include(crate::codebase::ts_source::facts::TsFactPlan::imports());
-        }
-        plan.symbols |= self.symbols;
-        plan.source |= self.source || self.raw_source;
-        plan.react |= self.react;
-        plan.queue_project |= self.queue;
-        plan
     }
 }
 

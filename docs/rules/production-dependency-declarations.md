@@ -28,7 +28,7 @@ rules:
   - rule: production-dependency-declarations
     scope: repository
     options:
-      workspaceRoots: [backend]
+      workspaceRoots: [packages]
       allowedFields: [dependencies, optionalDependencies, peerDependencies]
       testFilePatterns:
         - "**/__tests__/**"
@@ -54,60 +54,6 @@ Within each rule application, each distinct source/specifier pair is resolved
 once, then package reachability uses those prepared relationships. Preparation
 and memoization belong to that invocation and do not persist between checks.
 
-Counterexample:
-
-```json
-// packages/lib/package.json
-{
-  "name": "@acme/lib",
-  "devDependencies": {
-    "@acme/tool": "workspace:^"
-  }
-}
-```
-
-```ts
-// packages/lib/index.mts — imported by @acme/app, a production dependency
-import { doThing } from "@acme/tool";
-
-export function helper() {
-  return doThing();
-}
-```
-
-Compliant example:
-
-```json
-// packages/lib/package.json
-{
-  "name": "@acme/lib",
-  "dependencies": {
-    "@acme/tool": "workspace:^"
-  }
-}
-```
-
-```ts
-// packages/lib/index.mts
-import { doThing } from "@acme/tool";
-
-export function helper() {
-  return doThing();
-}
-```
-
-Fix: move the import's package into `dependencies` (or
-`optionalDependencies`/`peerDependencies`) in the owning package's
-`package.json`. If the import is genuinely unused in production — for
-example, a build script or test helper only reachable from other tooling —
-confirm nothing outside the package imports it, since that changes the finding
-kind rather than the fix.
-
-Suppression caveat: findings point at the importing source file and line, so
-`no-mistakes-disable-line`/`-next-line`/`-file` directives work as usual.
-Prefer fixing the declaration over suppressing — a suppressed finding still
-fails at runtime after a production install.
-
 ## Why and when
 
 Use this rule in deployable workspaces before a production-only install or
@@ -130,26 +76,81 @@ include/exclude filters further bound the scan.
 
 ## Valid example
 
-```json
+`@acme/app` imports `@acme/lib`, so `packages/lib/index.mts` is
+production-reachable. `@acme/tool` is declared in `dependencies`.
+
+```ts
+// packages/app/package.json
 {
-  "dependencies": { "@acme/tool": "workspace:^" }
+  "name": "@acme/app",
+  "dependencies": {
+    "@acme/lib": "workspace:^"
+  }
+}
+
+// packages/app/index.mts
+import { helper } from "@acme/lib";
+export function run() {
+  return helper();
+}
+
+// packages/lib/package.json
+{
+  "name": "@acme/lib",
+  "dependencies": {
+    "@acme/tool": "workspace:^"
+  }
+}
+
+// packages/lib/index.mts
+import { doThing } from "@acme/tool";
+export function helper() {
+  return doThing();
 }
 ```
 
 ## Counterexample
 
-```json
+The same graph with `@acme/tool` only in `devDependencies` is a `dev-only`
+finding: a production install can prune it.
+
+```ts
+// packages/app/package.json
 {
-  "devDependencies": { "@acme/tool": "workspace:^" }
+  "name": "@acme/app",
+  "dependencies": {
+    "@acme/lib": "workspace:^"
+  }
+}
+
+// packages/app/index.mts
+import { helper } from "@acme/lib";
+export function run() {
+  return helper();
+}
+
+// packages/lib/package.json
+{
+  "name": "@acme/lib",
+  "devDependencies": {
+    "@acme/tool": "workspace:^"
+  }
+}
+
+// packages/lib/index.mts
+import { doThing } from "@acme/tool";
+export function helper() {
+  return doThing();
 }
 ```
-
-When production code imports `@acme/tool`, a production install can prune it.
 
 ## Fix
 
 Move the package to `dependencies`, `optionalDependencies`, or
-`peerDependencies`, or prove that the importer is not runtime-reachable.
+`peerDependencies`, or prove that the importer is not runtime-reachable. If
+the import is genuinely unused in production — for example, a build script or
+test helper only reachable from other tooling — confirm nothing outside the
+package imports it, since that changes the finding kind rather than the fix.
 
 ## Suppression
 

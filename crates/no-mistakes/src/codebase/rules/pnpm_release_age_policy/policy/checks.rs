@@ -10,6 +10,13 @@ pub(super) fn exclude(
     permanent: &HashSet<String>,
     temporary: &HashSet<String>,
 ) {
+    if snapshot
+        .exclude
+        .iter()
+        .any(|entry| matches!(entry, ExcludeEntry::Conflict))
+    {
+        return;
+    }
     let mut seen = HashSet::new();
     let mut yaml_names = HashSet::new();
     for entry in &snapshot.exclude {

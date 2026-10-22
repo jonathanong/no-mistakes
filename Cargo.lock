@@ -1386,6 +1386,7 @@ dependencies = [
  "is-terminal",
  "jsonc-parser",
  "libc",
+ "memchr",
  "merman-analysis",
  "napi",
  "napi-build",

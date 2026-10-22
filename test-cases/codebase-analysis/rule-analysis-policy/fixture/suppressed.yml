@@ -1,0 +1,7 @@
+effort: low
+rules:
+  - rule: test-effort-adopter
+    scope: repository
+    include: ['src/suppressed*.ts']
+  - rule: test-partner
+    scope: repository

@@ -1,0 +1,4 @@
+rules:
+  - rule: test-effort-adopter
+    scope: repository
+    include: ['src/*.ts']

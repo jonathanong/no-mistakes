@@ -71,7 +71,7 @@ pub(crate) fn check_with_files(
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
             let files = super::selected_rule_files(root, config, rule, all_files)?;
-            Ok(scan(root, &opts, &files))
+            Ok(scan_with_config(root, config, &opts, &files))
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -116,7 +116,12 @@ pub(crate) fn is_code_file(
         })
 }
 
-pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFinding> {
+pub(crate) fn scan_with_config(
+    root: &Path,
+    config: &NoMistakesConfig,
+    opts: &Options,
+    files: &[PathBuf],
+) -> Vec<RuleFinding> {
     if opts.roots.is_empty() {
         return Vec::new();
     }
@@ -135,19 +140,27 @@ pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFi
         globs,
         file_set: files.iter().collect(),
         files,
+        config_file: super::configured_root::config_file_for_finding(root, config),
     };
     opts.roots
         .par_iter()
-        .flat_map(|root_rel| {
-            let pkg_root = if root_rel.is_absolute() {
-                root_rel.clone()
-            } else {
-                root.join(root_rel)
-            };
-            scan_pkg::scan_pkg(root, &pkg_root, &ctx)
-        })
+        .flat_map(|root_rel| scan_root(root, root_rel, &ctx))
         .collect()
 }
 
+fn scan_root(root: &Path, root_rel: &Path, ctx: &scan_pkg::ScanCtx<'_>) -> Vec<RuleFinding> {
+    let pkg_root = super::configured_root::normalize_configured_root(root, root_rel);
+    if super::configured_root::escapes_repository(root, &pkg_root) {
+        return vec![super::configured_root::escape_finding(
+            RULE_ID,
+            root_rel,
+            &ctx.config_file,
+        )];
+    }
+    scan_pkg::scan_pkg(root, &pkg_root, ctx)
+}
+
+#[cfg(test)]
+mod recall_tests;
 #[cfg(test)]
 mod tests;

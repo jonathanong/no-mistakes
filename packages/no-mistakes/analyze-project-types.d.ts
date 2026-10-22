@@ -55,12 +55,12 @@ type BatchedServerRouteRelatedOptions = BatchedProjectOptions &
   ({ files: string[] } | { roots: string[] });
 type BatchedReactUsagesOptions = Pick<
   ProjectOptions,
-  "root" | "tsconfig" | "config" | "targets" | "include"
+  "root" | "tsconfig" | "config" | "targets" | "include" | "effort"
 > &
   Required<Pick<ProjectOptions, "target">>;
 type BatchedCheckOptions = Pick<
   CheckOptions,
-  "root" | "tsconfig" | "config" | "includeSuppressed"
+  "root" | "tsconfig" | "config" | "includeSuppressed" | "effort"
 > &
   Pick<CheckOptions, "includeRunnerConfigDeadlines" | "includeSqlVerdicts">;
 type BatchedQueryFileOptions<T> = Omit<T, "root" | "tsconfig">;
@@ -85,7 +85,7 @@ export type AnalyzeProjectReportRequest =
   | ({ type: "serverRouteRelated"; id?: string } & BatchedServerRouteRelatedOptions)
   | ({ type: "reactAnalyze" | "reactCheck"; id?: string } & Pick<
       ProjectOptions,
-      "targets" | "depth" | "assertNoFetch"
+      "targets" | "depth" | "assertNoFetch" | "effort"
     >)
   | ({ type: "reactUsages"; id?: string } & BatchedReactUsagesOptions)
   | ({

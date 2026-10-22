@@ -19,11 +19,35 @@ Rules are opt-in. `include` and `exclude` filters apply to each rule
 application and are interpreted relative to the configured root.
 
 For [`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md),
-`options.unanalyzableSql` defaults to `report`. Configure `ignore` to skip
-opaque executor arguments, or `advise` for a non-failing residual advisory.
+`options.unanalyzableSql` remains an alias for `options.unanalyzable`.
+`options.unanalyzable` inherits the repository `unanalyzable` policy and
+defaults to `report`; configure `ignore` to skip opaque executor arguments, or
+`advise` for a non-failing residual advisory. The legacy key keeps the same
+meaning. Other PostgreSQL rules keep their legacy `fail` spelling for
+`report`; setting the shared `report` policy translates to that spelling.
+For rule applications that consume the shared policy, when both
+`options.unanalyzable` and `options.unanalyzableSql` are present, the canonical
+`unanalyzable` value takes precedence and the alias is still validated. An
+invalid alias remains a configuration error even when the canonical key is
+valid. Legacy PostgreSQL applications that historically ignored this
+`unanalyzableSql` payload continue to ignore it for compatibility.
 Helper and callback tracing still checks every recovered leading prefix.
 Grouped advice, including a `target` that may list several checks, is described
 in [SQL verdicts](../postgres-sql-verdicts.md).
+
+Rule applications that support alternate effort levels can set
+`options.effort: low` or `options.effort: max`. The repository-level
+`effort` defaults to `max`; a rule option overrides it, and the invocation
+option overrides both. `max` preserves current analysis. `low` is available
+only for rules that explicitly adopt it. If an adopted low-effort rule needs a
+partner check that is absent or outside its configured scope, it warns and
+falls back to `max` for that rule.
+
+[`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md#effort)
+supports `low`: prove a literal annotation at the call or through one local
+const, including explicitly configured trusted tags, without helper evaluation.
+Other shapes use the selected unanalyzable policy. These syntax proofs do not
+require a companion rule.
 
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the

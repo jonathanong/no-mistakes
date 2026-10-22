@@ -1,6 +1,13 @@
 use super::*;
 
 impl ImportCollector {
+    pub(super) fn is_builtin_bind_callee(&self, raw: &str) -> bool {
+        raw.strip_suffix(".bind").is_some_and(|receiver| {
+            is_function_prototype_receiver(self, receiver)
+                && !receiver_owns_member(self, receiver, "bind")
+        })
+    }
+
     pub(super) fn value_arguments(
         &self,
         arguments: &[Argument<'_>],
@@ -27,10 +34,16 @@ impl ImportCollector {
     ) -> (ValueExpression, Vec<ValueExpression>, Option<usize>, bool) {
         if let Some(raw) = simple_callee_name(&call.callee) {
             if let Some(receiver) = raw.strip_suffix(".bind") {
-                if is_function_prototype_receiver(self, receiver)
-                    && !receiver_owns_member(self, receiver, "bind")
-                {
-                    let (arguments, spread) = self.value_arguments(&call.arguments);
+                if self.is_builtin_bind_callee(&raw) {
+                    let prefix = self.bound_prefix(call);
+                    let (arguments, spread) = self.value_arguments(&call.arguments[prefix.start..]);
+                    let spread = if prefix.uncertain {
+                        Some(0)
+                    } else {
+                        spread.map(|index| index + prefix.leading.len())
+                    };
+                    let mut leading = prefix.leading;
+                    leading.extend(arguments);
                     return (
                         ValueExpression::Named {
                             name: receiver.to_string(),
@@ -38,8 +51,8 @@ impl ImportCollector {
                             offset: call.span.start,
                             context: self.current_function_id(),
                         },
-                        arguments.into_iter().skip(1).collect(),
-                        spread.map(|index| index.saturating_sub(1)),
+                        leading,
+                        spread,
                         true,
                     );
                 }

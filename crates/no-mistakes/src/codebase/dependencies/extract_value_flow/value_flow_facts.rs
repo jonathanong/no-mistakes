@@ -172,9 +172,12 @@ pub struct ValueFlowFacts {
     pub possible_receiver_mutations: Option<std::sync::Arc<ValueReceiverMutations>>,
     pub replacements: Option<std::sync::Arc<replacements::ValueReplacementFacts>>,
     pub bindings: Vec<ValueBinding>,
-    /// Iterable source for local loop bindings, for provenance only. These are
+    /// Iterable source for const loop/destructuring bindings, for provenance only. These are
     /// not runtime element values and never enter ordinary value resolution.
     pub iteration_bindings: Vec<ValueBinding>,
+    /// Direct call/member reads immediately preceded by a scalar overwrite.
+    /// (call start, call end, lexical scope, receiver, member), provenance only.
+    pub row_literal_overwrites: Vec<(u32, u32, usize, String, String)>,
     pub parameters: Vec<ValueParameter>,
     pub returns: Vec<(CallableId, ValueExpression)>,
     pub calls: Vec<ValueCall>,

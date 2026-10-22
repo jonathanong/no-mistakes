@@ -1,13 +1,14 @@
 use super::*;
 use crate::codebase::dependencies::extract::{ValueBinding, ValueFlowFacts};
 use crate::fx::{fx_map, FxHashMap, FxHashSet};
-
+type RowMemberKey<'a> = (&'a Path, usize, &'a str, &'a str);
 /// Borrowed syntactic indexes; neither value resolution nor another graph.
 pub(crate) struct Bindings<'a> {
     pub(crate) routes: super::super::graph::RegistryRoutes<'a>,
     pub(super) facts: &'a CheckFactMap,
     values: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
     calls: FxHashMap<&'a Path, FxHashSet<(u32, u32)>>,
+    overwrites: FxHashMap<RowMemberKey<'a>, FxHashSet<(u32, u32)>>,
     iterations: FxHashMap<(&'a Path, usize, &'a str), Vec<&'a ValueBinding>>,
 }
 impl<'a> Bindings<'a> {
@@ -18,6 +19,7 @@ impl<'a> Bindings<'a> {
             calls: fx_map(),
             values: fx_map(),
             iterations: fx_map(),
+            overwrites: fx_map(),
         };
         for file in facts.graph_file_universe() {
             let Some(ts) = facts.get_ts_facts(file) else {
@@ -47,6 +49,12 @@ impl<'a> Bindings<'a> {
                 .entry((file, binding.scope, &binding.name))
                 .or_default()
                 .push(binding);
+        }
+        for (start, end, scope, name, member) in &flow.row_literal_overwrites {
+            self.overwrites
+                .entry((file, *scope, name, member))
+                .or_default()
+                .insert((*start, *end));
         }
         for binding in &flow.iteration_bindings {
             self.iterations
@@ -83,6 +91,33 @@ impl<'a> Bindings<'a> {
         members: &[String],
     ) -> Option<String> {
         self.search_env(file, value, members, &mut super::search::Search::default())
+    }
+    pub(crate) fn row_member_overwritten(
+        &self,
+        file: &Path,
+        scope: usize,
+        name: &str,
+        at: u32,
+        members: &[String],
+        call: (u32, u32),
+    ) -> bool {
+        if members.len() != 1
+            || !self
+                .overwrites
+                .get(&(file, scope, name, members[0].as_str()))
+                .is_some_and(|calls| calls.contains(&call))
+        {
+            return false;
+        }
+        let Some(values) = self.iterations.get(&(file, scope, name)) else {
+            return false;
+        };
+        let index = values.partition_point(|binding| binding.declared_at <= at);
+        // Loop origins remain conservative; this proof only narrows the new
+        // const-array channel, never ordinary runtime value bindings.
+        values
+            .get(index.checked_sub(1).unwrap_or(values.len()))
+            .is_some_and(|binding| !binding.repeated)
     }
     pub(crate) fn query_projection(&self, file: &Path, scope: usize, name: &str, at: u32) -> bool {
         self.row_named(file, scope, name, at, &mut crate::fx::fx_set())

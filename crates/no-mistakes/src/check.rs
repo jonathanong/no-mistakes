@@ -17,6 +17,9 @@ pub(crate) struct CheckArgs {
     /// Path to tsconfig.json for queue import alias resolution.
     #[arg(long, global = true)]
     tsconfig: Option<PathBuf>,
+    /// Override repository and per-rule analysis effort.
+    #[arg(long, value_enum)]
+    pub(crate) effort: Option<no_mistakes::config::v2::Effort>,
     /// Output format: json, yml, md, paths, human.
     #[arg(
         long,
@@ -59,22 +62,36 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
     );
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = resolve_root(&args.root, &cwd);
-    let results = if args.include_sql_verdicts {
-        check_runner::run_all_with_sql_verdicts(
-            root,
-            args.config,
-            args.tsconfig,
-            args.include_suppressed,
-            args.include_runner_config_deadlines,
-            true,
-        )
+    let results = if args.effort.is_none() {
+        if args.include_sql_verdicts {
+            check_runner::run_all_with_sql_verdicts(
+                root,
+                args.config,
+                args.tsconfig,
+                args.include_suppressed,
+                args.include_runner_config_deadlines,
+                true,
+            )
+        } else {
+            check_runner::run_all_with_evidence(
+                root,
+                args.config,
+                args.tsconfig,
+                args.include_suppressed,
+                args.include_runner_config_deadlines,
+            )
+        }
     } else {
-        check_runner::run_all_with_evidence(
+        check_runner::run_all_with_options(
             root,
             args.config,
             args.tsconfig,
             args.include_suppressed,
             args.include_runner_config_deadlines,
+            check_runner::AnalysisOptions {
+                effort: args.effort,
+                include_sql_verdicts: args.include_sql_verdicts,
+            },
         )
     };
     let results = results?;
@@ -158,8 +175,11 @@ fn has_failures(results: &check_runner::CheckResults) -> bool {
         || !results.rules.is_empty()
         || !results.integration.is_empty()
         || !results.codebase.is_empty()
-        || !results.warnings.is_empty()
+        || results.warnings.len() > results.analysis_warning_count
 }
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod analysis_policy_tests;

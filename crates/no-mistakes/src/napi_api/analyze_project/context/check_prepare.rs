@@ -19,15 +19,18 @@ impl SharedCheckContext {
             config_path,
             tsconfig_path,
             deadlines,
+            effort,
         } = options;
         // Borrow the aggregate root identity; canonicalizing here would split shared keys.
         let root = root.to_path_buf();
+        let mut config = config.clone();
+        config.effort_override = effort;
         let prepared = crate::check_runner::prepared::prepare_from_shared(
             &root,
             config_path,
             tsconfig_path,
             visible_paths,
-            config.clone(),
+            config,
             tsconfig.clone(),
             Some(workspace),
         )?;

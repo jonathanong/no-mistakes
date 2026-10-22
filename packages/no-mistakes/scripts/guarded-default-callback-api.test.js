@@ -1,0 +1,111 @@
+const assert = require("node:assert/strict");
+const { join } = require("node:path");
+const test = globalThis.test || require("node:test").test;
+const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
+
+test(
+  "compiled async default callbacks preserve capture generations",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/codebase-analysis/value-flow-guarded-parameters/fixture",
+    );
+    const options = {
+      root,
+      config: join(root, "effects.yml"),
+      reports: ["before", "after"].map((suffix) => ({
+        type: "effects",
+        kind: "receiver",
+        entry: `src/array-parameter-default-callback-${suffix}.mts`,
+      })),
+    };
+    const pending = cjs.analyzeProject(options);
+    assert.ok(pending instanceof Promise);
+    const batch = await pending;
+    for (const [index, retained] of ["replica.get", "untouched.get"].entries()) {
+      // The default callable must receive its input before the capture is frozen.
+      assert.deepEqual(
+        batch.reports[index].result.callSites.map(({ callee }) => callee),
+        [retained, "primary.get", "replica.info", "unrelated.get"],
+      );
+    }
+    assert.deepEqual(await esm.analyzeProject(options), batch);
+  },
+);
+
+test(
+  "compiled async bound array spreads retain candidates and exact empty controls",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/codebase-analysis/value-flow-optional-prefixes/fixture",
+    );
+    const scenarios = [
+      ["array-bind-varying-width", null],
+      ["array-bind-optional-push", null],
+      ["array-bind-known-empty", "untouched.get"],
+      ["array-bind-packed-first-spread", "replica.get"],
+      ["array-bind-empty-first-spread", "untouched.get"],
+      ["array-bind-multi-value-spread-suffix", "replica.get"],
+      ["array-bind-conditional-first-spread", null],
+    ];
+    const options = {
+      root,
+      config: join(root, "effects.yml"),
+      reports: scenarios.map(([entry]) => ({
+        type: "effects",
+        kind: "receiver",
+        entry: `src/${entry}.mts`,
+      })),
+    };
+    const pending = cjs.analyzeProject(options);
+    assert.ok(pending instanceof Promise);
+    const batch = await pending;
+    for (const [index, { result }] of batch.reports.entries()) {
+      assert.deepEqual(
+        result.callSites.map(({ callee }) => callee),
+        ["replica.get", "untouched.get", "primary.get", "replica.info", "unrelated.get"].filter(
+          (callee) => callee !== scenarios[index][1],
+        ),
+      );
+    }
+    assert.deepEqual(await esm.analyzeProject(options), batch);
+  },
+);
+
+test(
+  "compiled async assigned callbacks retain late origins in nonempty captures",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/codebase-analysis/value-flow-guarded-parameters/fixture",
+    );
+    const options = {
+      root,
+      config: join(root, "effects.yml"),
+      reports: ["before", "after"].map((suffix) => ({
+        type: "effects",
+        kind: "receiver",
+        entry: `src/array-forwarded-late-captured-${suffix}.mts`,
+      })),
+    };
+    const pending = cjs.analyzeProject(options);
+    assert.ok(pending instanceof Promise);
+    const batch = await pending;
+    for (const { result } of batch.reports)
+      assert.deepEqual(
+        result.callSites.map(({ callee }) => callee),
+        ["primary.get", "replica.info", "unrelated.get"],
+      );
+    assert.deepEqual(await esm.analyzeProject(options), batch);
+  },
+);

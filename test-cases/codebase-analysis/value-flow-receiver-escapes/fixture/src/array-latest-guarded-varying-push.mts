@@ -8,7 +8,7 @@ function mutate(first, second = spare) { first.client.get = replacement; second.
 let args = [];
 if (flag) { args = [box]; }
 args.push(other);
-// A guaranteed push occupies different slots when incoming widths differ.
+// Runtime correlates both flag reads; the analysis retains a conservative union.
 if (flag) { args = [other]; }
 mutate(...args);
 replica.get('earlier optional origin');

@@ -156,6 +156,8 @@ export type {
 } from "./symbol-traversal-types";
 
 export interface ProjectOptions {
+  /** Accepted by shared N-API options; applies to check reports and is ignored by other commands. */
+  effort?: Effort;
   /** Project root. Defaults to the current working directory. */
   root?: string;
   /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
@@ -175,7 +177,15 @@ export interface ProjectOptions {
   include?: string;
 }
 
+/** Analysis effort for configured rules. `max` preserves the current analysis. */
+export type Effort = "low" | "max";
+
+/** Policy for rule inputs that the selected effort cannot analyze. */
+export type Unanalyzable = "report" | "advise" | "ignore";
+
 export interface CheckOptions extends ProjectOptions {
+  /** Override configured rule effort for this check invocation. Defaults to `max`. */
+  effort?: Effort;
   /** Add deterministic accounting for findings hidden by no-mistakes directives. */
   includeSuppressed?: boolean;
   /** Add declared config evidence; absent slots never imply SDK defaults. */

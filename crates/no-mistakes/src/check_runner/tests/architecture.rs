@@ -17,3 +17,5 @@ mod domains;
 mod graph;
 #[path = "architecture_preparation.rs"]
 mod preparation;
+#[path = "runner_catalogs.rs"]
+mod runner_catalogs;
