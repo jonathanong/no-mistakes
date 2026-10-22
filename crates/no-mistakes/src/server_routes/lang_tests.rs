@@ -193,5 +193,9 @@ fn phoenix_fixture_lists_literal_routes() {
     assert!(report
         .routes
         .iter()
+        .any(|route| { route.route == "/api/items" && route.file.ends_with("router.ex") }));
+    assert!(report
+        .routes
+        .iter()
         .all(|route| !route.file.ends_with("computed.ex")));
 }

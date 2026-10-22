@@ -180,6 +180,10 @@ fn elixir_collects_aliases_and_phoenix_routes() {
         .route_handlers
         .iter()
         .any(|(route, handler)| route == "/users" && handler.ends_with(".create")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/api/items" && handler.ends_with(".index")));
     let computed = facts
         .files
         .values()
