@@ -107,8 +107,7 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
                 crate::codebase::rules::postgres_no_mutable_sql_registry::check_with_graph(
                     root,
                     config,
-                    dependency_graph
-                        .expect("postgres-no-mutable-sql-registry requires canonical graph"),
+                    dependency_graph,
                     shared,
                 )
             },

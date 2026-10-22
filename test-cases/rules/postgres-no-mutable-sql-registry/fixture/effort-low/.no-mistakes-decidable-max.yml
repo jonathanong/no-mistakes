@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      effort: max
+      include: ["src/decidable.ts"]

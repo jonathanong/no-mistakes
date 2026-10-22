@@ -134,3 +134,10 @@ Grouped residual advice, including a `target` that may list several checks, is d
 [SQL verdicts](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).
 
 For `postgres-no-unbounded-sql-identifier`, low effort accepts direct literal SQL/templates or one lexical const and skips call-graph/provenance inference. Keep relations literal; bind external values. Helper/alias/factory/type shapes are unanalyzable and follow `report`, `advise`, or `ignore`. Direct global `process.env` relation inputs remain violations.
+
+`postgres-no-mutable-sql-registry` also supports `effort: low`. Use it when SQL
+relations are literal: the syntax tier skips cross-file mutation and call-graph
+analysis. Imported registry relations, helpers, and other indirect SQL produce
+an unanalyzable diagnostic under `report` (or an advisory under `advise`).
+`as const` does not freeze runtime registry members. Choose `max` when the
+cross-file registry path needs inspection; see the rule's Effort section.

@@ -128,6 +128,36 @@ export const tables = { users: "app.users" } as const;
 
 `importSpecifier` defaults to empty and must be set (or set `executorNames`) to select executor calls when the rule does not inherit a project postgres block. `executorNames` defaults to `query`, `read`, and `write` when a specifier is set. `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default to empty. `include` and `exclude` default to empty (all indexable files).
 
+## Effort
+
+`effort: max` is the default and preserves cross-file registry analysis.
+`effort: low` avoids the call graph, helper evaluator, and mutation/provenance
+analysis. It accepts SQL written directly as a literal, or through one local
+`const` initialized with that literal. Direct templates with interpolations only
+in SQL value positions also qualify: their parsed relation names contain no
+interpolation. These calls cannot interpolate a registry into a relation:
+
+```ts
+query("SELECT id FROM app.users");
+const statement = "SELECT id FROM app.users";
+query(statement);
+query(`SELECT id FROM app.users WHERE id = ${id}`);
+```
+
+A registry relation such as ``query(`SELECT id FROM ${tables.users}`)`` is
+unanalyzable at low effort, including when the registry uses `as const` or
+`Object.freeze`. A TypeScript const assertion does not freeze runtime members;
+a freeze does not establish the whole imported object's provenance or nested
+immutability. Helpers, aliases, and other indirect SQL also require maximum
+effort. Rewrite SQL as a literal at the executor call or one local literal
+`const`, or select `max` to inspect the cross-file registry.
+
+`unanalyzable: report` produces a finding for unsupported inputs;
+`advise` places the same diagnostic in report advisories; `ignore` suppresses it.
+These policies do not certify an unsupported registry immutable. The shared
+repository, rule, and invocation effort/policy precedence applies. No partner
+check is required because unsupported inputs are explicitly classified.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-no-mutable-sql-registry` or

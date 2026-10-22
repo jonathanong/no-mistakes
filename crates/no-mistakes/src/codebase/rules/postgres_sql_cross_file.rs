@@ -69,31 +69,6 @@ pub(crate) fn finding(
     }
 }
 
-pub(crate) fn check_applications(
-    root: &Path,
-    config: &NoMistakesConfig,
-    graph: &DepGraph,
-    facts: &CheckFactMap,
-    rule_id: &str,
-    visit: impl Fn(&Path, &CompiledOptions, &DepGraph, &CheckFactMap) -> Result<Vec<RuleFinding>>,
-) -> Result<Vec<RuleFinding>> {
-    let root = crate::codebase::ts_resolver::normalize_path(root);
-    let mut findings = Vec::new();
-    for application in config.rule_applications(rule_id) {
-        findings.extend(check_application(
-            &root,
-            config,
-            application,
-            graph,
-            facts,
-            rule_id,
-            &visit,
-        )?);
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
-
 #[cfg(test)]
 mod tests;
 
