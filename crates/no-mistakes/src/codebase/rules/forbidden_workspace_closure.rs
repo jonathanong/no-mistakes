@@ -8,13 +8,13 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 mod alias;
+mod catalog;
 mod lockfile;
 mod manifest;
 mod options;
 mod selection;
 mod traversal;
 mod workspace;
-use options::Options;
 
 pub const RULE_ID: &str = "forbidden-workspace-closure";
 
@@ -54,7 +54,7 @@ pub(crate) fn check_with_files_and_sources(
         .rule_applications(RULE_ID)
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
+            let opts: options::Options = rule.try_rule_options()?;
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
             let mut discovery_roots = vec![root.to_path_buf()];
@@ -86,7 +86,7 @@ pub(crate) fn check_with_files_and_sources(
 fn scan_with_sources(
     root: &Path,
     target_roots: &[PathBuf],
-    opts: &Options,
+    opts: &options::Options,
     files: &[PathBuf],
     source_filter: &super::path_filter::RulePathFilter,
     sources: &crate::codebase::ts_source::SourceStore,
@@ -118,6 +118,7 @@ fn scan_with_sources(
     // Lockfile field matching and manifest-only peers need every field;
     // the selected-field projection would be discarded on that path.
     let manifest_nodes = selection.manifest_nodes(
+        root,
         if opts.lockfile.is_some() {
             package_deps::ALL_DEPENDENCY_FIELDS
         } else {
@@ -146,7 +147,7 @@ fn scan_with_sources(
     };
 
     let workspace_names: BTreeSet<String> = nodes.keys().cloned().collect();
-    let mut findings = Vec::new();
+    let mut findings = catalog::duplicate_setting_findings(root, sources, source_filter);
     let traversal = traversal::Traversal::new(
         root,
         nodes,
@@ -188,23 +189,4 @@ fn config_finding(message: &str) -> RuleFinding {
     }
 }
 
-#[cfg(test)]
-mod tests;
-#[cfg(test)]
-mod tests_lockfile;
-#[cfg(test)]
-mod tests_lockfile_alias;
-#[cfg(test)]
-mod tests_lockfile_config;
-#[cfg(test)]
-mod tests_lockfile_path_alias;
-#[cfg(test)]
-mod tests_manifest_alias;
-#[cfg(test)]
-mod tests_manifest_path_alias;
-#[cfg(test)]
-mod tests_pnpm12;
-#[cfg(test)]
-mod tests_workspace;
-#[cfg(test)]
-mod tests_workspace_lockfile;
+include!("forbidden_workspace_closure/test_mods.rs");

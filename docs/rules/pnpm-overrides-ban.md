@@ -24,8 +24,13 @@ more than forcing a transitive version from the root manifest.
 ## What it catches/requires
 
 It rejects pnpm `overrides` in `pnpm-workspace.yaml` and workspace manifests,
-including `pnpm.overrides`. `packageExtensions` remains allowed because it
-describes missing metadata rather than selecting a version.
+including `pnpm.overrides`. A local `include` of `./` or `../` YAML that owns
+`overrides` is read from the workspace root, and an `overrides` map that
+exists only in that file is banned the same way. When the root file and a
+local include both claim `overrides`, every file that defines the key is
+reported and the check also reports that the setting is claimed twice.
+`packageExtensions` remains allowed because it describes missing metadata
+rather than selecting a version.
 
 ## Options and defaults
 
@@ -63,3 +68,27 @@ constraint makes the override unavoidable; document that constraint nearby.
 [`version-pin-consistency`](version-pin-consistency.md) keeps intentional pins
 in sync, while [`production-dependency-declarations`](production-dependency-declarations.md)
 checks that runtime imports are declared in the right field.
+
+## Limitations
+
+Settings owned by a pnpm config dependency cannot be loaded without an install.
+This rule does not read `node_modules`. A source whose key does not start with
+`./` or `../` is ignored, so an `overrides` map that exists only there is not
+a finding.
+
+```yaml
+include:
+  "@acme/pnpm-policy":
+    - overrides
+```
+
+`packageConfigs.<name>.overrides` is applied by pnpm only when
+`sharedWorkspaceLockfile` is false. This rule does not read `packageConfigs`.
+
+```yaml
+sharedWorkspaceLockfile: false
+packageConfigs:
+  "@acme/app":
+    overrides:
+      lodash: 4.17.21
+```

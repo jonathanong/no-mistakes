@@ -28,6 +28,9 @@ fn package_files(root: &Path, files: &[&str]) -> Vec<PathBuf> {
     files.iter().map(|file| root.join(file)).collect()
 }
 
+#[path = "tests_scope.rs"]
+mod tests_scope;
+
 #[test]
 fn reports_direct_external_dependency() {
     let root = fixture_root("direct-external");

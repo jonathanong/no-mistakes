@@ -1,0 +1,7 @@
+packages:
+  - packages/*
+catalog:
+  "@acme/domain": workspace:*
+include:
+  ./pnpm/catalog.yaml:
+    - catalog

@@ -1,0 +1,5 @@
+overrides:
+  lodash: 1.0.0
+include:
+  ./pnpm/security.yaml:
+    - overrides

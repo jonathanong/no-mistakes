@@ -61,7 +61,11 @@ temporary releases.
 
 The configured policy must agree across pnpm workspace settings, Dependabot
 cooldown exclusions, package manifests, and the active lockfile. Temporary
-exceptions must identify a package version, reason, and removal date.
+exceptions must identify a package version, reason, and removal date. A local
+`include` that owns `minimumReleaseAgeExclude` supplies that list. Patterns
+are not rebased; the entries are package selectors. When the root workspace
+file and the included file both claim the setting, the check reports the
+conflict and does not compare either list to the policy.
 
 ## Options and defaults
 
@@ -106,3 +110,16 @@ in the suppression comment.
 [`pnpm-overrides-ban`](pnpm-overrides-ban.md) prevents version forcing, and
 [`version-pin-consistency`](version-pin-consistency.md) checks other structured
 version sources against their anchors.
+
+## Limitations
+
+Settings owned by a pnpm config dependency cannot be loaded without an install.
+This rule does not read `node_modules`. A source whose key does not start with
+`./` or `../` is ignored, so a `minimumReleaseAgeExclude` list that exists
+only there is not the list this rule compares.
+
+```yaml
+include:
+  "@acme/pnpm-policy":
+    - minimumReleaseAgeExclude
+```

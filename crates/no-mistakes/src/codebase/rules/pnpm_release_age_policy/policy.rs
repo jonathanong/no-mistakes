@@ -27,6 +27,7 @@ pub(super) struct Snapshot {
 pub(super) enum ExcludeEntry {
     Name(String),
     Other,
+    Conflict,
 }
 
 pub(super) enum CooldownEntry {

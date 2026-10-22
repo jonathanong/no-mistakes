@@ -49,6 +49,7 @@ impl SelectionCache {
 impl WorkspaceSelection {
     pub(super) fn manifest_nodes(
         &self,
+        root: &Path,
         dependency_types: &[&str],
         sources: &SourceStore,
     ) -> Arc<Nodes> {
@@ -61,6 +62,7 @@ impl WorkspaceSelection {
                 .entry(key)
                 .or_insert_with(|| {
                     Arc::new(manifest::manifest_nodes_with_sources(
+                        root,
                         &self.workspace,
                         dependency_types,
                         sources,

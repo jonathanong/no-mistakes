@@ -186,8 +186,8 @@ fn external_root_selection_and_duplicate_name_precedence_remain_distinct() {
         .unwrap();
     assert!(Arc::ptr_eq(&a, &repeated));
     assert!(!Arc::ptr_eq(&a, &b));
-    let a_nodes = a.manifest_nodes(&["dependencies"], &sources);
-    let b_nodes = b.manifest_nodes(&["dependencies"], &sources);
+    let a_nodes = a.manifest_nodes(&root, &["dependencies"], &sources);
+    let b_nodes = b.manifest_nodes(&root, &["dependencies"], &sources);
     assert_eq!(a_nodes["@scope/shared"].deps[0].name, "second-only");
     assert_eq!(b_nodes["@scope/shared"].deps[0].name, "first-only");
     assert_eq!(

@@ -5,6 +5,7 @@ use anyhow::Result;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod included_exclude;
 mod lockfile;
 mod policy;
 mod scan;
@@ -105,5 +106,7 @@ fn rel(root: &Path, path: &Path) -> String {
 mod scan_edges;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_include;
 #[cfg(test)]
 mod tests_pnpm12;

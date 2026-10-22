@@ -12,6 +12,13 @@ from bringing a prohibited package into its install/runtime closure.
 
 It follows configured manifest dependency types, workspace aliases, and the
 lockfile when configured, then reports a path to each forbidden package.
+`catalog:` and `catalog:<name>` follow the pnpm catalog when that entry is
+`workspace:*`, `workspace:~`, `workspace:^`, or a relative `workspace:`,
+`file:`, or `link:` path. The catalog is read from the root
+`pnpm-workspace.yaml` and from a local `include` that owns `catalog` or
+`catalogs`. A relative catalog path is resolved from the file that defines
+it. `catalog` and `catalogs.default` are the same default catalog. A setting
+claimed by both the root file and a local include is not walked.
 pnpm lockfile edges come from the project document. The env document's `.`
 importer, used for config and package-manager dependencies, is not a workspace root.
 A lockfile that cannot be parsed, or whose leading document is not an env
@@ -105,3 +112,32 @@ Suppression caveat: findings point at `package.json`, so inline
 `no-mistakes-disable-*` directives are not available there. Prefer a narrower
 rule configuration, or suppress the enclosing file only when the manifest format
 can actually carry directives.
+
+## Limitations
+
+A catalog entry that is only a semver range is not walked, because
+`linkWorkspacePackages` is not read. `workspace:^1.2.3` is a range, not one of
+the three workspace wildcards.
+
+```yaml
+catalog:
+  "@acme/domain": ^1.0.0
+```
+
+```json
+{
+  "dependencies": {
+    "@acme/domain": "catalog:"
+  }
+}
+```
+
+Settings owned by a pnpm config dependency cannot be loaded without an install.
+This rule does not read `node_modules`. A source whose key does not start with
+`./` or `../` is ignored.
+
+```yaml
+include:
+  "@acme/pnpm-policy":
+    - catalog
+```

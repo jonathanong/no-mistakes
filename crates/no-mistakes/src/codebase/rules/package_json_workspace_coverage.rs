@@ -1,14 +1,14 @@
 use super::RuleFinding;
-use crate::codebase::glob_normalize;
-use crate::codebase::ts_source::relative_slash_path;
-use crate::codebase::workspaces;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use globset::{Glob, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+
+mod coverage_scope;
+mod patterns;
+use patterns::{covered_workspace_dirs, normalize_relative_path};
 
 pub const RULE_ID: &str = "package-json-workspace-coverage";
 
@@ -48,7 +48,7 @@ pub(crate) fn check_with_files_and_sources(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files, sources)
+            scan(root, &opts, &files, all_files, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -60,129 +60,38 @@ fn scan(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],
+    all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     if opts.package_roots.is_empty() {
         return Ok(Vec::new());
     }
 
-    let workspace_dirs: HashSet<String> = workspaces::load_from_source_store(root, sources)?
-        .packages
-        .iter()
-        .map(|pkg| relative_slash_path(root, &pkg.dir))
-        .collect();
-    let covered_workspace_dirs = covered_workspace_dirs(root, files, sources)?;
+    let coverage_scope::WorkspaceCoverage {
+        mut findings,
+        workspace_globs,
+        workspace_dirs,
+    } = coverage_scope::resolve_workspace(root, files, all_files, sources)?;
+    let covered_workspace_dirs = covered_workspace_dirs(root, files, &workspace_globs)?;
     let allowlist: HashSet<String> = opts
         .allowlist
         .iter()
         .map(|path| normalize_relative_path(path))
         .collect();
 
-    let mut findings = Vec::new();
     for path in files {
-        if path.file_name().and_then(|name| name.to_str()) != Some("package.json") {
-            continue;
-        }
-        let rel = relative_slash_path(root, path);
-        if allowlist.contains(rel.as_str()) {
-            continue;
-        }
-        let dir = path
-            .parent()
-            .expect("discovered package.json paths have a parent directory");
-        let dir_rel = relative_slash_path(root, dir);
-        if dir_rel.is_empty() || !path_under_package_roots(&dir_rel, &opts.package_roots) {
-            continue;
-        }
-        if sources.parse_json_path(path).is_err() && opts.require_named_package {
-            continue;
-        }
-        let unnamed = opts.require_named_package
-            && package_name_with_sources(path, sources)
-                .filter(|name| !name.is_empty())
-                .is_none();
-        if unnamed {
-            findings.push(RuleFinding {
-                rule: RULE_ID.to_string(),
-                file: rel.clone(),
-                line: 1,
-                message: format!("{rel}: package.json must declare a name"),
-                import: None,
-                target: Some(dir_rel.clone()),
-            });
-        }
-        let canonical = workspace_dirs.contains(&dir_rel);
-        let loosely_covered = covered_workspace_dirs.contains(&dir_rel);
-        if canonical || (loosely_covered && (unnamed || !opts.require_named_package)) {
-            continue;
-        }
-        findings.push(RuleFinding {
-            rule: RULE_ID.to_string(),
-            file: rel.clone(),
-            line: 1,
-            message: format!("{rel}: package directory is not covered by the workspace config"),
-            import: None,
-            target: Some(dir_rel),
-        });
+        findings.extend(coverage_scope::package_findings(
+            root,
+            opts,
+            path,
+            sources,
+            &allowlist,
+            &workspace_dirs,
+            &covered_workspace_dirs,
+        ));
     }
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
-}
-
-fn covered_workspace_dirs(
-    root: &Path,
-    files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<HashSet<String>> {
-    let workspace_globs = workspaces::load_workspace_globs_from_source_store(root, sources)?;
-    let include = build_workspace_globset(&workspace_globs, false)?;
-    let exclude = build_workspace_globset(&workspace_globs, true)?;
-    Ok(files
-        .iter()
-        .filter(|path| path.file_name().and_then(|name| name.to_str()) == Some("package.json"))
-        .filter_map(|path| path.parent())
-        .filter_map(|dir| {
-            let rel = relative_slash_path(root, dir);
-            (include.is_match(rel.as_str()) && !exclude.is_match(rel.as_str())).then_some(rel)
-        })
-        .collect())
-}
-
-fn build_workspace_globset(patterns: &[String], excluded: bool) -> Result<GlobSet> {
-    let mut builder = GlobSetBuilder::new();
-    for pattern in patterns {
-        let pattern = if excluded {
-            let Some(stripped) = pattern.strip_prefix('!') else {
-                continue;
-            };
-            stripped
-        } else if pattern.starts_with('!') {
-            continue;
-        } else {
-            pattern.as_str()
-        };
-        builder.add(Glob::new(&normalize_relative_path(pattern))?);
-    }
-    Ok(builder.build()?)
-}
-
-fn path_under_package_roots(path: &str, package_roots: &[String]) -> bool {
-    package_roots.iter().any(|root| {
-        let root = normalize_relative_path(root);
-        !root.is_empty() && (path == root || path.starts_with(&format!("{root}/")))
-    })
-}
-
-fn normalize_relative_path(path: &str) -> String {
-    glob_normalize::normalize(path)
-}
-
-fn package_name_with_sources(
-    path: &Path,
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Option<String> {
-    let json = sources.parse_json_path(path).ok()?;
-    json.get("name")?.as_str().map(str::to_string)
 }
 
 #[cfg(test)]

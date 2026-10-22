@@ -1,0 +1,4 @@
+packages:
+  - packages/*
+catalog:
+  "@acme/domain": ^1.0.0
