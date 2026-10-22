@@ -13,8 +13,10 @@ mod ast;
 mod bindings;
 mod cache_imports;
 mod config;
+mod const_values;
 mod patterns;
 mod visitor;
+mod visitor_scope;
 mod visitor_visit;
 pub(crate) use visitor::NextjsCachingVisitor;
 

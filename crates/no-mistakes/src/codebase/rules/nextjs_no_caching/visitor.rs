@@ -1,5 +1,6 @@
 use super::ast::is_cache_directive;
 use super::bindings::TopLevelBindings;
+use super::const_values::{record_const, StaticValue};
 use super::patterns::{banned_segment_config, fetch_cache_findings, single_binding_name};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::ts_source::byte_offset_to_line;
@@ -18,6 +19,7 @@ pub(crate) struct NextjsCachingVisitor<'a> {
     local_fetch: bool,
     segment_config: bool,
     next_config: bool,
+    pub(super) const_scopes: Vec<HashMap<String, StaticValue>>,
 }
 
 impl<'a> NextjsCachingVisitor<'a> {
@@ -38,6 +40,7 @@ impl<'a> NextjsCachingVisitor<'a> {
             local_fetch: bindings.local_fetch,
             segment_config,
             next_config,
+            const_scopes: bindings.static_consts,
         }
     }
 
@@ -58,7 +61,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         let Some(Argument::ObjectExpression(options)) = call.arguments.get(1) else {
             return;
         };
-        for finding in fetch_cache_findings(options) {
+        for finding in fetch_cache_findings(options, &self.const_scopes) {
             self.push(call.span.start, finding);
         }
     }
@@ -106,7 +109,10 @@ impl<'a> NextjsCachingVisitor<'a> {
             let Some(init) = decl.init.as_ref() else {
                 continue;
             };
-            if banned_segment_config(name.as_str(), init) {
+            if var_decl.kind == oxc_ast::ast::VariableDeclarationKind::Const {
+                record_const(&mut self.const_scopes, &name, init);
+            }
+            if banned_segment_config(name.as_str(), init, &self.const_scopes) {
                 self.push(decl.span.start, segment_config_message(&name));
             }
         }
@@ -136,6 +142,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         self.push_next_config_findings(super::config::default_export_findings(
             &export.declaration,
             &self.next_config_bindings,
+            &self.const_scopes,
         ));
     }
 
@@ -146,6 +153,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         self.push_next_config_findings(super::config::assignment_findings(
             assignment,
             &self.next_config_bindings,
+            &self.const_scopes,
         ));
     }
 

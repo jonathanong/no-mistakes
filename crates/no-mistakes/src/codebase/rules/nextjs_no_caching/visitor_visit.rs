@@ -1,5 +1,7 @@
 use super::visitor::NextjsCachingVisitor;
-use oxc_ast::ast::{AssignmentExpression, CallExpression, FunctionBody};
+use oxc_ast::ast::{
+    AssignmentExpression, BlockStatement, CallExpression, FunctionBody, VariableDeclaration,
+};
 use oxc_ast_visit::{walk, Visit};
 
 impl<'a> Visit<'a> for NextjsCachingVisitor<'a> {
@@ -31,7 +33,20 @@ impl<'a> Visit<'a> for NextjsCachingVisitor<'a> {
 
     fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
         self.check_function_body_directives(body);
+        self.push_const_scope();
         walk::walk_function_body(self, body);
+        self.pop_const_scope();
+    }
+
+    fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
+        self.push_const_scope();
+        walk::walk_block_statement(self, block);
+        self.pop_const_scope();
+    }
+
+    fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
+        self.record_const_declaration(declaration);
+        walk::walk_variable_declaration(self, declaration);
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {

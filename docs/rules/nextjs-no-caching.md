@@ -52,6 +52,13 @@ directive that lives only there is not reported.
 export const revalidate = 60;
 ```
 
+Same-file resolution follows `const` bindings, including one `const` that
+copies another, and expression-free template keys and values. A `let` or `var`
+binding, a computed key whose name is an identifier (`{ [key]: "force-cache" }`),
+a template with an expression (`` `force-${kind}` ``), and a binding imported
+from another module are left alone. A `const` declared in a nested block is
+not visible after that block.
+
 ## Related rules
 
 [`nextjs-no-api-routes`](nextjs-no-api-routes.md) governs legacy API files;
@@ -67,6 +74,10 @@ rules:
     projects: [web]
 ```
 
-Counterexample: `fetch(url, { cache: "force-cache" })`.
+Counterexample: `fetch(url, { cache: "force-cache" })`. The same fetch option is
+reported when the key or value is an expression-free template
+(`` [`cache`]: `force-cache` ``) or a same-file `const` alias
+(`const mode = "force-cache"`). `let`, `var`, computed identifier keys, templates
+with expressions, and aliases imported from another file stay unreported.
 
 Fix: remove caching or isolate it behind an explicitly allowed architecture.

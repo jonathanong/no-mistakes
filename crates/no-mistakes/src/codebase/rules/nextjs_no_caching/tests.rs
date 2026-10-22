@@ -54,6 +54,15 @@ fn reports_nextjs_cache_surfaces() {
             "web/app/fetch-options.ts",
             "web/app/fetch-options.ts",
             "web/app/fetch-options.ts",
+            "web/app/static-keys/page.tsx",
+            "web/app/static-keys/page.tsx",
+            "web/app/static-keys/page.tsx",
+            "web/app/static-keys/page.tsx",
+            "web/app/static-keys/page.tsx",
+            "web/app/static-keys/page.tsx",
+            "web/app/static-keys/page.tsx",
+            "web/app/static-keys/page.tsx",
+            "web/app/static-keys/page.tsx",
             "web/next.config.ts",
             "web/next.config.ts",
             "web/next.config.ts",
@@ -81,6 +90,12 @@ fn allows_no_cache_forms_and_disable_comments() {
     assert!(!findings
         .iter()
         .any(|finding| finding.file == "web/app/next-line-disabled.ts"));
+    assert!(
+        !findings
+            .iter()
+            .any(|finding| finding.file == "web/app/static-key-limits/page.tsx"),
+        "{findings:?}"
+    );
 }
 
 #[test]
@@ -90,7 +105,15 @@ fn generic_runner_checks_nextjs_caching() {
         crate::codebase::rules::run_check(&root, Some(&root.join(".no-mistakes.yml")), None)
             .unwrap();
 
-    assert_eq!(findings.len(), 11);
+    assert_eq!(
+        findings.len(),
+        20,
+        "{:?}",
+        findings
+            .iter()
+            .map(|finding| format!("{}:{} {}", finding.file, finding.line, finding.message))
+            .collect::<Vec<_>>()
+    );
 }
 
 #[test]
@@ -114,7 +137,7 @@ fn fact_runner_checks_nextjs_caching() {
     )
     .unwrap();
 
-    assert_eq!(findings.len(), 11);
+    assert_eq!(findings.len(), 20);
 }
 
 #[test]

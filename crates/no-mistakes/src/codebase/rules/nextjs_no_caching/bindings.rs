@@ -1,6 +1,8 @@
+use super::const_values::{record_const, StaticValue};
 use super::patterns::{banned_segment_config, single_binding_name};
 use oxc_ast::ast::{
     Declaration, ImportDeclarationSpecifier, Program, Statement, VariableDeclaration,
+    VariableDeclarationKind,
 };
 use std::collections::HashMap;
 
@@ -8,6 +10,7 @@ pub(super) struct TopLevelBindings {
     pub(super) next_config: HashMap<String, Vec<(u32, String)>>,
     pub(super) segment_config: HashMap<String, String>,
     pub(super) local_fetch: bool,
+    pub(super) static_consts: Vec<HashMap<String, StaticValue>>,
 }
 
 pub(super) fn top_level_bindings(program: &Program<'_>, segment_config: bool) -> TopLevelBindings {
@@ -15,6 +18,7 @@ pub(super) fn top_level_bindings(program: &Program<'_>, segment_config: bool) ->
         next_config: HashMap::new(),
         segment_config: HashMap::new(),
         local_fetch: false,
+        static_consts: vec![HashMap::new()],
     };
     for statement in &program.body {
         match statement {
@@ -66,11 +70,14 @@ fn collect_top_level_var(
         let Some(init) = decl.init.as_ref() else {
             continue;
         };
-        let config_findings = super::config::expression_findings(init);
+        if var.kind == VariableDeclarationKind::Const {
+            record_const(&mut bindings.static_consts, &name, init);
+        }
+        let config_findings = super::config::expression_findings(init, &bindings.static_consts);
         if !config_findings.is_empty() {
             bindings.next_config.insert(name.clone(), config_findings);
         }
-        if segment_config && banned_segment_config(name.as_str(), init) {
+        if segment_config && banned_segment_config(name.as_str(), init, &bindings.static_consts) {
             bindings
                 .segment_config
                 .insert(name.clone(), segment_config_message(&name));

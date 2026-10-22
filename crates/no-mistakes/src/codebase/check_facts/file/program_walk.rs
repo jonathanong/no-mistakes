@@ -5,9 +5,10 @@ use crate::codebase::rules::nextjs_no_caching::{
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::{Collector, TestFacts};
 use crate::codebase::storybook::StorybookFileFacts;
 use oxc_ast::ast::{
-    AssignmentExpression, CallExpression, ExportDeclaration, ExportDefaultDeclaration,
-    ExportNamedDeclaration, FunctionBody, IdentifierReference, ImportDeclaration, ImportExpression,
-    Program, TSImportEqualsDeclaration, VariableDeclarator,
+    AssignmentExpression, BlockStatement, CallExpression, ExportDeclaration,
+    ExportDefaultDeclaration, ExportNamedDeclaration, FunctionBody, IdentifierReference,
+    ImportDeclaration, ImportExpression, Program, TSImportEqualsDeclaration, VariableDeclaration,
+    VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashSet;
@@ -130,8 +131,29 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
     fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
         if let Some(nextjs) = &mut self.nextjs {
             nextjs.check_function_body_directives(body);
+            nextjs.push_const_scope();
         }
         walk::walk_function_body(self, body);
+        if let Some(nextjs) = &mut self.nextjs {
+            nextjs.pop_const_scope();
+        }
+    }
+
+    fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
+        if let Some(nextjs) = &mut self.nextjs {
+            nextjs.push_const_scope();
+        }
+        walk::walk_block_statement(self, block);
+        if let Some(nextjs) = &mut self.nextjs {
+            nextjs.pop_const_scope();
+        }
+    }
+
+    fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
+        if let Some(nextjs) = &mut self.nextjs {
+            nextjs.record_const_declaration(declaration);
+        }
+        walk::walk_variable_declaration(self, declaration);
     }
 
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
