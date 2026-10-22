@@ -1,5 +1,7 @@
 #[path = "failures.rs"]
 mod failures;
+#[path = "gap_tests.rs"]
+mod gap_tests;
 #[path = "support.rs"]
 mod support;
 #[path = "tags_tests.rs"]
