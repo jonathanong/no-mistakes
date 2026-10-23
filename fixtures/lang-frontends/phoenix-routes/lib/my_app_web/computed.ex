@@ -4,4 +4,9 @@ defmodule MyAppWeb.Computed do
   scope path do
     get "/hidden", UserController, :index
   end
+
+  # Interpolated prefixes are computed paths, not literal joins.
+  scope "/x#{v}" do
+    get "/c", UserController, :index
+  end
 end

@@ -197,5 +197,17 @@ fn phoenix_fixture_lists_literal_routes() {
     assert!(report
         .routes
         .iter()
+        .any(|route| { route.route == "/g/h" && route.file.ends_with("router.ex") }));
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| { route.route == "/z" && route.file.ends_with("router.ex") }));
+    assert!(report
+        .routes
+        .iter()
+        .all(|route| { !route.route.contains("#{") && route.route != "/api/after-comment-end" }));
+    assert!(report
+        .routes
+        .iter()
         .all(|route| !route.file.ends_with("computed.ex")));
 }

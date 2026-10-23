@@ -184,6 +184,32 @@ fn elixir_collects_aliases_and_phoenix_routes() {
         .route_handlers
         .iter()
         .any(|(route, handler)| route == "/api/items" && handler.ends_with(".index")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/after-comment-end" && handler.ends_with(".index")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/z" && handler.ends_with(".index")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/g/h" && handler.ends_with(".index")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/after-inline" && handler.ends_with(".index")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/aliased" && handler.ends_with(".index")));
+    assert!(router.route_handlers.iter().all(|(route, _)| {
+        route != "/api/after-comment-end"
+            && route != "/e/z"
+            && route != "/g/after-inline"
+            && !route.contains("#{")
+    }));
     let computed = facts
         .files
         .values()

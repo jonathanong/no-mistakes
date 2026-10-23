@@ -5,8 +5,8 @@ const EXPECTED_PARSED: usize = 70;
 const EXPECTED_IMPORTS: usize = 67;
 const EXPECTED_ENQUEUES: usize = 7;
 const EXPECTED_WORKERS: usize = 6;
-const EXPECTED_ROUTES: usize = 44;
-const EXPECTED_EDGES: usize = 133;
+const EXPECTED_ROUTES: usize = 49;
+const EXPECTED_EDGES: usize = 143;
 const EXPECTED_QUEUE_EDGES: usize = 14;
 const EXPECTED_GLOB_MATCHES: usize = 118;
 
