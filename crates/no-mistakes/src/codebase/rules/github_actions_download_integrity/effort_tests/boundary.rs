@@ -11,7 +11,16 @@ fn standalone_default_max_matches_the_prepared_rule_boundary() {
     assert!(!standalone.is_empty());
     assert_eq!(
         standalone,
-        super::super::check_with_files(&root, &config, &[root.join(WORKFLOW)]).unwrap()
+        super::super::check_with_files(
+            &root,
+            &config,
+            &[
+                root.join(WORKFLOW),
+                root.join(".github/workflows/compact.yml"),
+                root.join(".github/actions/fetch/action.yml"),
+            ],
+        )
+        .unwrap()
     );
 }
 
