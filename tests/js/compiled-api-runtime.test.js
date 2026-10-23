@@ -7,6 +7,59 @@ require("../../packages/no-mistakes/scripts/workflow-secret-inventory-api.test.j
 const fixture = join(__dirname, "../../fixtures/napi/worker-invocation-lock/worker.js");
 const linux = process.platform === "linux";
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
+const { configureCompiledApiEnvironment } = require("./compiled-api-environment.js");
+
+for (const platform of ["darwin", "win32"]) {
+  test(`compiled ${platform} setup selects the existing process-isolated invocation lock`, () => {
+    const env = { NO_MISTAKES_TEST_NAPI_ADDON_PATH: "/compiled/addon.node" };
+    configureCompiledApiEnvironment({ platform, env });
+    assert.equal(
+      env["CARGO_BIN_EXE_no-mistakes"],
+      join("/compiled", platform === "win32" ? "no-mistakes.exe" : "no-mistakes"),
+    );
+    assert.equal(env.XDG_RUNTIME_DIR, undefined);
+
+    const overridden = { ...env, NO_MISTAKES_TEST_CLI_PATH: "/explicit/cli" };
+    configureCompiledApiEnvironment({ platform, env: overridden });
+    assert.equal(overridden["CARGO_BIN_EXE_no-mistakes"], "/explicit/cli");
+  });
+}
+
+test("mock addons and Linux setup preserve the incoming environment", () => {
+  for (const platform of ["linux", "darwin", "win32"]) {
+    for (const addon of [undefined, "/mock/addon.js", "/compiled/addon.node"]) {
+      if (platform !== "linux" && addon?.endsWith(".node")) continue;
+      const env = { NO_MISTAKES_TEST_NAPI_ADDON_PATH: addon, XDG_RUNTIME_DIR: "/runtime" };
+      const before = { ...env };
+      configureCompiledApiEnvironment({ platform, env });
+      assert.deepEqual(env, before);
+    }
+  }
+});
+
+test(
+  "compiled process isolation keeps native contention and independent CLI queries",
+  { skip: !compiled },
+  async () => {
+    const child = fork(join(__dirname, "../../fixtures/napi/worker-invocation-lock/per-process.js"), {
+      env: process.env,
+      stdio: ["ignore", "ignore", "inherit", "ipc"],
+    });
+    const exited = once(child, "exit");
+    try {
+      const [message] = await Promise.race([
+        once(child, "message"),
+        exited.then(([code, signal]) => {
+          throw new Error(`process isolation fixture exited before reporting: ${code}/${signal}`);
+        }),
+      ]);
+      assert.deepEqual(message, { success: true });
+      assert.deepEqual(await exited, [0, null]);
+    } finally {
+      child.kill();
+    }
+  },
+);
 
 function start(mode, initialize = "setup", environment = process.env) {
   const child = fork(fixture, [mode, initialize], {
