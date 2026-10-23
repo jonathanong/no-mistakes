@@ -29,6 +29,36 @@ describe(id, () => {
       [1, 2, 3, 4],
     );
   });
+  it("reports reexports, namespace access and configured dynamic sources", () => {
+    assert.deepEqual(
+      check("recall.ts").map(({ line, column }) => [line, column]),
+      [
+        [3, 10],
+        [5, 1],
+        [6, 1],
+        [7, 9],
+        [9, 15],
+        [11, 17],
+        [13, 1],
+        [14, 5],
+        [15, 1],
+        [16, 1],
+        [17, 9],
+        [17, 40],
+        [19, 4],
+        [43, 24],
+        [45, 23],
+        [46, 1],
+        [47, 1],
+      ],
+    );
+    for (const message of check("recall.ts").filter((message) => [11, 13].includes(message.line)))
+      assert.match(message.message, /Use a static named import/);
+    assert.deepEqual(
+      lines(check("recall.ts", { targets: [{ ...target, importedNamePattern: "^paginate-" }] })),
+      [4, 5, 6, 11, 13, 43, 45, 46, 47],
+    );
+  });
   it("makes lexical call names explicit and independent from origin or shadowing", () => {
     assert.deepEqual(
       lines(check("usage.ts", { targets: [lexical] })),
@@ -67,12 +97,20 @@ describe(id, () => {
     );
   });
   it("supports file, line and next-line suppression using actual comments", () => {
-    for (const name of ["suppressed.mjs", "file-suppressed.mjs"])
+    for (const name of [
+      "suppressed.mjs",
+      "file-suppressed.mjs",
+      "recall-suppressed.ts",
+      "recall-file-suppressed.ts",
+    ])
       assert.deepEqual(check(name, { targets: [{ ...target, ...lexical }] }), []);
     assert.deepEqual(lines(check("directives.mjs", { targets: [lexical] })), [3, 5]);
   });
   it("keeps ESLint and Oxlint findings identical", () => {
     const names = [
+      "recall.ts",
+      "recall-suppressed.ts",
+      "recall-file-suppressed.ts",
       "usage.ts",
       "default.mjs",
       "suppressed.mjs",

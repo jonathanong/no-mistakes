@@ -10,10 +10,16 @@ no built-in sources or API names. ESLint and Oxlint use the same implementation.
 ## Disallowed
 
 ```ts
-import { paginateEntries as pages } from '@example/client';
-import * as client from '@example/client';
+import { paginateEntries as pages } from "@example/client";
+import * as client from "@example/client";
 pages();
 client.paginateEntries();
+export { paginateEntries as exportedPages } from "@example/client";
+export * from "@example/client";
+const { paginateEntries: entries } = client;
+const alias = client.paginateEntries;
+await import("@example/client");
+require("@example/client");
 other.paginateEntries();
 paginateEntries();
 ```
@@ -21,9 +27,11 @@ paginateEntries();
 ## Allowed
 
 ```ts
-import { ListEntriesCommand } from '@example/client';
-import type { paginateEntries } from '@example/client';
-function paginate(items: string[]) { return items; }
+import { ListEntriesCommand } from "@example/client";
+import type { paginateEntries } from "@example/client";
+function paginate(items: string[]) {
+  return items;
+}
 paginate([]);
 client.send(new ListEntriesCommand({ cursor }));
 ```
@@ -44,10 +52,14 @@ client.send(new ListEntriesCommand({ cursor }));
 ```
 
 - `targets`: restrictions; omitted means no restrictions. An empty array is invalid.
-- `source`: exact module specifier for the import selector.
+- `source`: exact module specifier for imports, re-exports, and dynamic loads.
 - `importedNamePattern`: JavaScript regular expression for the original exported
   name, including `default`. Requires `source`. Named value imports are findings
-  even when unused or renamed. Matching direct and namespace calls also report.
+  even when unused or renamed. Named value re-exports match the original name.
+  Matching namespace member reads and destructured keys report the access itself;
+  direct imported calls also report. Wildcard and namespace re-exports, dynamic
+  imports and global `require` loads report any configured source because
+  their export contents cannot be name-matched.
 - `callNamePattern`: optional JavaScript regular expression for a direct callee
   name or static member property. This explicitly asserts a lexical restriction:
   it also reports unrelated imports, local functions, shadowed bindings, and
@@ -68,13 +80,19 @@ and excluded contract-test cases then preserve the intended prevention policy.
 
 Import-origin calls use lexical binding identity, so a parameter shadowing an
 import is allowed. Declaration-level and specifier-level type imports are ignored.
-Namespace calls accept static string keys, optional calls, and transparent
-TypeScript wrappers. Import-origin matching follows renamed imports, but does
-not follow variable aliases, destructuring, re-exports, CommonJS, dynamic imports,
-or nested namespace objects. Dynamic member keys, constructors, and `.call` or
-`.apply` forwarding are outside this rule. Import declarations remain findings
-even when matching calls are independently suppressed. A target matching both
-selectors reports each call once; distinct targets can each report it.
+Namespace accesses accept static string keys, optional calls, and transparent
+TypeScript wrappers. Reads report before aliasing, construction, `.call` / `.apply`
+forwarding, or tagged templates can hide the restricted API. Destructuring reports
+the matching key, including renamed and defaulted bindings. Type-only re-exports
+are ignored. Dynamic imports and global `require` loads of a configured source
+ask for a static named import, including when a custom message is configured.
+Assigning the whole namespace to another variable also asks for a static named
+import before the original binding is hidden.
+The rule does not propagate aliases after the reported access, inspect nested
+namespace objects, or resolve dynamic member keys or module specifiers.
+Import declarations remain findings even when matching calls are independently
+suppressed. A target matching both selectors reports a namespace call at its
+member access once; distinct targets can each report it.
 
 ## Fix
 
@@ -86,7 +104,7 @@ safe because the replacement's arguments and control flow depend on the library.
 
 ```ts
 // no-mistakes-disable-next-line restricted-api-usage
-import { paginateEntries } from '@example/client';
+import { paginateEntries } from "@example/client";
 paginateEntries(); // no-mistakes-disable-line restricted-api-usage
 ```
 
