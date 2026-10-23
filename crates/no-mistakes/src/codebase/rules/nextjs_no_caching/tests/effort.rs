@@ -189,3 +189,13 @@ fn low_saved_shapes_route_opaque_inputs_and_preserve_direct_checks() {
         );
     }
 }
+
+#[test]
+fn effort_planning_rejects_invalid_policy_before_requesting_facts() {
+    let mut config = config();
+    config.rules[0].options = serde_yaml::from_str("{ effort: invalid }").unwrap();
+    let mut plan = CheckFactPlan::default();
+    let error = configure_effort_plan(&config, &mut plan).unwrap_err();
+    assert!(error.to_string().contains("invalid options.effort"));
+    assert!(!plan.nextjs_caching && !plan.nextjs_caching_low);
+}
