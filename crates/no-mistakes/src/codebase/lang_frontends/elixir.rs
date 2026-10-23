@@ -138,7 +138,7 @@ pub(super) fn expand_brace_members(prefix: &str, rest: &str) -> Vec<String> {
         .map(|(line, _)| line)
         .unwrap_or(after)
         .trim_start_matches([' ', '\t']);
-    if !(after_line.is_empty() || after_line.starts_with('#')) {
+    if !(after_line.is_empty() || after_line.starts_with('#') || after_line.starts_with(';')) {
         return Vec::new();
     }
     if body.contains('{') {
@@ -192,6 +192,9 @@ fn elixir_ref_re() -> &'static Regex {
     RE.get_or_init(|| Regex::new(r"\b([A-Z][A-Za-z0-9_]*)\b").expect("ref"))
 }
 
+#[cfg(test)]
+#[path = "elixir_import_tests.rs"]
+mod import_tests;
 #[cfg(test)]
 #[path = "elixir_tests.rs"]
 mod tests;

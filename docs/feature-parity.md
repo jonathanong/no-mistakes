@@ -103,7 +103,7 @@ language CLIs are not started.
 | PHP                     | `php-use`, `php-package`                       | `tests plan php`                                                         | Laravel `Route::` / `Route::resource` / `Route::apiResource` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan)   |
 | Java, Spring            | `java-import`, `java-ref`                      | `tests plan java`                                                        | Spring `@RequestMapping` / `@GetMapping` literals                                      | no                                                        | shipped (v1 extractors + plan)   |
 | Kotlin, Spring          | `kotlin-import`, `kotlin-ref`                  | `tests plan kotlin`                                                      | Spring `@RequestMapping` / `@GetMapping` literals on `.kt`                             | no                                                        | shipped (v1 extractors + plan)   |
-| Elixir, Phoenix         | `elixir-import`, `elixir-ref`                  | `tests plan elixir`                                                      | Phoenix `get`/`post`/`put`/`patch`/`delete` literals                                   | no                                                        | shipped (v1 extractors + plan)   |
+| Elixir, Phoenix         | `elixir-import`, `elixir-ref`                  | `tests plan elixir`                                                      | Phoenix `get`/`post`/`put`/`patch`/`delete` literals with literal `scope` prefixes     | no                                                        | shipped (v1 extractors + plan)   |
 | Dart / Flutter          | `dart-import`, `dart-ref`                      | `tests plan dart`                                                        | no Dart server graph; client `http` edges to TS routes                                 | no                                                        | shipped (v1 extractors + plan)   |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
@@ -574,15 +574,16 @@ Module names plus capitalized identifiers emit `elixir-ref`. Same-package
 refs without an `alias`/`import`/`use` are non-edges.
 
 Phoenix HTTP v1 matches literal `get "/users", Controller, :index` (and
-`post`/`put`/`patch`/`delete`) registrations. `resources` macros and
-`scope "/api"` prefix joining are non-edges.
+`post`/`put`/`patch`/`delete`) registrations and joins literal
+`scope "/api"` prefixes onto nested verb paths. `resources` macros and
+computed `scope path` blocks are non-edges.
 
 | Feature          | TS/JS reference     | Elixir equivalent                                                                                                            |
 | ---------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Module graph     | `import`            | exact `alias`/`import`/`use MyApp.User` and brace aliases `alias MyApp.{User, Role}`                                         |
 | Package identity | workspace packages  | configured `tests.elixir.apps`                                                                                               |
 | Tests            | `tests plan vitest` | `tests plan elixir` over `*_test.exs`; `mix test <path>` from the Mix project root (umbrella child paths stay repo-relative) |
-| HTTP routes      | `server routes`     | Phoenix `get`/`post`/`put`/`patch`/`delete` literals                                                                         |
+| HTTP routes      | `server routes`     | Phoenix `get`/`post`/`put`/`patch`/`delete` literals, including literal `scope "/api"` prefixes                              |
 | Queues           | BullMQ              | no                                                                                                                           |
 | Lockfile         | npm-family          | later (`mix.exs` native fallback only)                                                                                       |
 
@@ -594,12 +595,15 @@ end
 defmodule MyAppWeb.Router do
   get "/users", MyAppWeb.UserController, :index
   post "/users", MyAppWeb.UserController, :create
+  scope "/api" do
+    get "/items", MyAppWeb.UserController, :index
+  end
 end
 ```
 
 Nested brace aliases, wildcard imports, same-package refs without
-`alias`/`import`/`use`, Phoenix `resources` macros, `scope "/api"` prefix
-joining, `mix.lock` / `config.exs` native fallback, queues, and a dedicated
+`alias`/`import`/`use`, Phoenix `resources` macros, computed `scope path`
+blocks, `mix.lock` / `config.exs` native fallback, queues, and a dedicated
 `no-mistakes elixir` CLI are non-edges / later work. Native fallback is
 `mix.exs` plus non-test `.ex` files under configured apps. Any `.ex`/`.exs`
 under `/test/` is non-production. `*_test.exs` is the test suffix.

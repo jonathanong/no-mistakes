@@ -16,3 +16,13 @@ fn malformed_nested_brace_alias_cannot_emit_a_valid_sibling_import() {
         "the intentionally missing outer brace must not expose MyApp.GhostNested"
     );
 }
+
+#[test]
+fn brace_group_followed_by_semicolon_keeps_exact_members() {
+    let source = std::fs::read_to_string(phoenix_fixture_file("lib/my_app/app.ex")).unwrap();
+    let alias = source
+        .lines()
+        .find(|line| line.trim_start().starts_with("alias MyApp.{User};"))
+        .expect("saved semicolon alias");
+    assert_eq!(extract_elixir_imports(alias), vec!["MyApp.User"]);
+}
