@@ -226,6 +226,14 @@ fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_m
     assert_eq!(configured.rules.len(), 2);
     for finding in &configured.rules {
         assert!(finding.message.contains("no declared executor type"));
+        let receiver = if finding.file.ends_with("renamed.mts") {
+            "renamedPool"
+        } else {
+            "writePool"
+        };
+        assert!(finding.message.contains(&format!(
+            "listing the value's name `{receiver}` alone is not enough"
+        )));
         assert!(finding.message.contains("parameter explicitly typed"));
         assert!(finding.message.contains("configured executor type"));
         assert!(!finding
