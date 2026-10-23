@@ -1,8 +1,6 @@
 use super::{Value, Write};
 use crate::codebase::postgres::query_annotation::heads::{
-    diagnostics::Gaps,
-    syntax::{Head, Syntax},
-    HeadProof, Span,
+    diagnostics::Gaps, syntax::Syntax, HeadProof, Span,
 };
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 use crate::fx::{FxHashMap, FxHashSet};
@@ -77,7 +75,7 @@ impl Proofs {
                         .writes
                         .get(&(usage.span.start, usage.span.end))
                 }))
-                .any(|write| matches!(write.value, Value::Literal(Head::Tag | Head::MissingTag)));
+                .any(|write| matches!(write.value, Value::Literal(head) if head.tagged()));
             let mut writes = vec![*initial];
             let mut calls = Vec::new();
             let valid = binding
@@ -145,8 +143,11 @@ fn classify(write: &Write, shadowed: &FxHashSet<Span>, gaps: &Gaps) -> Outcome {
         return Outcome::Unknown;
     }
     match write.value {
-        Value::Literal(Head::Literal | Head::Tag) => Outcome::Clear,
-        Value::Literal(Head::Missing | Head::MissingTag) => Outcome::Missing,
+        Value::Literal(value) => match value.proof(false) {
+            HeadProof::Literal => Outcome::Clear,
+            HeadProof::Missing => Outcome::Missing,
+            HeadProof::Unproven => Outcome::Unknown,
+        },
         Value::NoSql => Outcome::NoSql,
         Value::Undefined(span) if !shadowed.contains(&span) => Outcome::NoSql,
         _ => Outcome::Unknown,

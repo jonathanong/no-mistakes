@@ -72,7 +72,15 @@ test(
     };
     const rows = await cjs.extractExecutedPostgresSql(options);
     assert.deepEqual(await esm.extractExecutedPostgresSql(options), rows);
-    assert.equal(rows.length, 2);
+    // The loop retains zero/one previews, both with an unexplored residual.
+    assert.deepEqual(
+      rows.map((row) => [row.line, row.sqlText, row.incompleteReason]),
+      [
+        [5, null, "untrusted-array-intrinsics"],
+        [10, "/* returns/unsupported */ SELECT 7", "sql-variants-truncated"],
+        [10, "/* returns/unsupported */ SELECT 7; DELETE FROM records", "sql-variants-truncated"],
+      ],
+    );
     for (const row of rows) {
       assert.equal(row.complete, false, JSON.stringify(row));
       assert.equal(row.onlyValuePlaceholders, false);

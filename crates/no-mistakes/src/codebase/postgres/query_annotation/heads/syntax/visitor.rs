@@ -18,7 +18,17 @@ impl Syntax {
     }
 }
 impl<'a> Visit<'a> for Syntax {
+    fn visit_class(&mut self, value: &Class<'a>) {
+        let prior = self.current_function.replace(span(value.span));
+        walk::walk_class(self, value);
+        self.current_function = prior;
+    }
+    fn visit_identifier_reference(&mut self, value: &IdentifierReference<'a>) {
+        self.contexts
+            .insert(span(value.span), self.current_function);
+    }
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
+        self.append_call(value);
         let argument = value.arguments.first().and_then(|arg| arg.as_expression());
         self.calls.push(Call {
             span: span(value.span),
@@ -31,11 +41,9 @@ impl<'a> Visit<'a> for Syntax {
         if value.kind.is_const() {
             for declaration in &value.declarations {
                 if let BindingPattern::BindingIdentifier(binding) = &declaration.id {
+                    self.append_declaration(binding, declaration.init.as_ref());
                     let head = declaration.init.as_ref().map_or(Head::Unproven, head);
-                    if matches!(
-                        head,
-                        Head::Literal | Head::Tag | Head::Missing | Head::MissingTag
-                    ) {
+                    if head.is_constant() {
                         self.constants.insert(span(binding.span), head);
                     }
                 }
@@ -46,6 +54,9 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_variable_declaration(self, value);
     }
     fn visit_expression_statement(&mut self, value: &ExpressionStatement<'a>) {
+        if let Some(reference) = super::super::append::reference(&value.expression) {
+            self.discarded_appends.insert(reference);
+        }
         let discarded = match unwrap_ts_wrappers(&value.expression) {
             Expression::AssignmentExpression(value) => Some(span(value.span)),
             _ => None,
@@ -70,6 +81,7 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_assignment_expression(self, value);
     }
     fn visit_function(&mut self, value: &Function<'a>, flags: ScopeFlags) {
+        let prior = self.current_function.replace(span(value.span));
         self.context(
             Context {
                 function: Some(value.span.start),
@@ -79,8 +91,10 @@ impl<'a> Visit<'a> for Syntax {
                 walk::walk_function(this, value, flags);
             },
         );
+        self.current_function = prior;
     }
     fn visit_arrow_function_expression(&mut self, value: &ArrowFunctionExpression<'a>) {
+        let prior = self.current_function.replace(span(value.span));
         self.context(
             Context {
                 function: Some(value.span.start),
@@ -90,6 +104,7 @@ impl<'a> Visit<'a> for Syntax {
                 walk::walk_arrow_function_expression(this, value);
             },
         );
+        self.current_function = prior;
     }
     fn visit_property_definition(&mut self, value: &PropertyDefinition<'a>) {
         self.context(Context::default(), |this| {

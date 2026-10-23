@@ -64,6 +64,9 @@ pub struct CheckFactPlan {
     /// Distinct configured embedded-SQL projections collected from each
     /// already-parsed TS/JS program during the request's shared fact pass.
     pub embedded_sql_options: Vec<crate::codebase::postgres::EmbeddedSqlOptions>,
+    /// Profiles consumed exclusively by syntactic, low-effort annotation checks.
+    #[doc(hidden)]
+    pub embedded_sql_head_calls_only: Vec<crate::codebase::postgres::EmbeddedSqlOptions>,
     /// PostgreSQL rule applications that selected each embedded-SQL profile.
     ///
     /// Empty for a direct extract. Each entry carries that application's
@@ -94,19 +97,8 @@ pub struct CheckFactPlan {
 }
 
 impl CheckFactPlan {
-    pub(super) fn with_production_files(
-        &self,
-        mut files: Vec<std::path::PathBuf>,
-    ) -> Vec<std::path::PathBuf> {
-        if !self.production_import_paths.is_empty() {
-            files.extend(self.production_import_paths.iter().cloned());
-            files.sort();
-            files.dedup();
-        }
-        files
-    }
-
     pub(crate) fn include(&mut self, other: Self) {
+        self.merge_head_calls_only(&other);
         self.merge_location_demand(&other);
         super::family_scope::include_scopes(self, &other);
         self.imports |= other.imports;
@@ -200,5 +192,6 @@ impl CheckFactPlan {
     }
 }
 
+mod head_calls_only;
 #[cfg(test)]
 mod tests;

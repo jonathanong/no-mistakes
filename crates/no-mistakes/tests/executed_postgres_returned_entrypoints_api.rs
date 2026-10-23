@@ -55,11 +55,43 @@ fn branch_returned_containers_and_callable_cycles_retain_entrypoints() {
 #[test]
 fn unsupported_returned_shapes_remain_incomplete() {
     let rows = extract("control-flow-returned-entrypoint-unsupported.ts");
-    assert_eq!(rows.len(), 2, "{rows:?}");
-    for row in rows {
-        assert!(!row.complete && !row.only_value_placeholders, "{row:?}");
-        assert!(row.incomplete_reason.is_some(), "{row:?}");
-    }
+    assert_eq!(rows.len(), 3, "{rows:?}");
+    let actual = rows
+        .iter()
+        .map(|row| {
+            assert!(!row.complete && !row.only_value_placeholders, "{row:?}");
+            assert_eq!(
+                row.kind,
+                no_mistakes::codebase::postgres::EmbeddedSqlKind::Dynamic,
+                "{row:?}"
+            );
+            (
+                row.line,
+                row.annotation.as_deref(),
+                row.sql_text.as_deref(),
+                row.incomplete_reason.as_deref(),
+            )
+        })
+        .collect::<Vec<_>>();
+    // Unknown repetition retains zero/one samples, never a complete loop result.
+    assert_eq!(
+        actual,
+        vec![
+            (5, None, None, Some("untrusted-array-intrinsics")),
+            (
+                10,
+                Some("returns/unsupported"),
+                Some("/* returns/unsupported */ SELECT 7"),
+                Some("sql-variants-truncated"),
+            ),
+            (
+                10,
+                Some("returns/unsupported"),
+                Some("/* returns/unsupported */ SELECT 7; DELETE FROM records"),
+                Some("sql-variants-truncated"),
+            ),
+        ]
+    );
 }
 
 #[test]

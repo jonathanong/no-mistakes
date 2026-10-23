@@ -15,6 +15,7 @@ pub(crate) struct SqlTagNames {
     /// Default imports from `sql-template-strings`, or configured named
     /// `trustedSqlTags` imports, under the file's local names.
     imported: HashSet<String>,
+    template_strings: HashSet<String>,
     fragments: crate::fx::FxHashSet<String>,
     fragment_functions: crate::fx::FxHashSet<String>,
 }
@@ -22,6 +23,14 @@ pub(crate) struct SqlTagNames {
 impl SqlTagNames {
     pub(crate) fn insert_imported(&mut self, name: String) {
         self.imported.insert(name);
+    }
+    pub(crate) fn insert_template_strings(&mut self, name: String) {
+        self.template_strings.insert(name.clone());
+        self.insert_imported(name);
+    }
+    pub(crate) fn parameterizes_all(&self, tag: &Expression<'_>) -> bool {
+        matches!(unwrap_ts_wrappers(tag), Expression::Identifier(name)
+            if self.template_strings.contains(name.name.as_str()))
     }
 
     /// Records fragment bindings once every trusted import is known.
@@ -52,11 +61,13 @@ impl SqlTagNames {
 /// them into the text. Nothing else — `String.raw` included — offers that
 /// guarantee, so any other tag with interpolations is untrusted.
 ///
-/// The trusted tag is also untrusted when an interpolation splices another
+/// A configured tag is also untrusted when an interpolation splices another
 /// SQL fragment (a nested trusted template, a call on the tag such as
 /// `sql.raw(...)`, a fragment binding, or a conditional choosing one): the
 /// quasi text would read that fragment as a bind value, so the composed
 /// statement is not recoverable and must classify as dynamic.
+/// `sql-template-strings` always binds interpolations, including SQL-looking
+/// values, so it does not use this fragment-splicing classification.
 ///
 /// A tagged template with zero interpolated values is still untrusted unless
 /// the tag is one of those configured bindings or the built-in `String.raw`.
@@ -75,7 +86,8 @@ pub(super) fn interpolating_untrusted_tag(
             && !is_string_raw_tag(&tagged.tag, is_shadowed);
     }
     !is_sql_tag(&tagged.tag, is_shadowed, imported_sql_tags)
-        || interpolates_sql_fragment(&tagged.quasi, is_shadowed, imported_sql_tags)
+        || !imported_sql_tags.parameterizes_all(&tagged.tag)
+            && interpolates_sql_fragment(&tagged.quasi, is_shadowed, imported_sql_tags)
 }
 
 /// The built-in `String.raw` tag: a fixed, well-known JS semantic (return

@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { spawnSync } = require("node:child_process");
+const { execFile, spawnSync } = require("node:child_process");
 const { dirname, join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 const addon = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
@@ -7,6 +7,8 @@ const compiled = addon?.endsWith(".node");
 require("./annotation-assignment-api.test.js");
 require("./annotation-loop-header-api.test.js");
 require("./annotation-reference-api.test.js");
+require("./annotation-append-api.test.js");
+require("./annotation-composition-api.test.js");
 
 async function policyContext() {
   const cjs = require("../index.js");
@@ -166,37 +168,64 @@ test(
       __dirname,
       "../../../test-cases/codebase-analysis/rule-analysis-policy/fixture",
     );
-    for (const [options, locations, warningCount] of [
-      [
-        { root },
+    let phase = "case-1-cjs";
+    const slowDiagnostic = setTimeout(() => {
+      console.error(`slow policy parity test: ${phase}`);
+    }, 10_000);
+    slowDiagnostic.unref();
+    try {
+      let caseNumber = 0;
+      for (const [options, locations, warningCount] of [
         [
-          ["default-tags.mts", 7],
-          ["default-tags.mts", 9],
+          { root },
+          [
+            ["default-tags.mts", 7],
+            ["default-tags.mts", 9],
+          ],
+          0,
         ],
-        0,
-      ],
-      [{ root: warningRoot, config: "sql-tags.yml" }, [], 1],
-      [{ root: warningRoot, config: "sql-tags.yml", effort: "max" }, [], 0],
-    ]) {
-      const pending = cjs.check(options);
-      assert.ok(pending instanceof Promise);
-      const report = await pending;
-      assert.deepEqual(
-        report.rules.map(({ file, line }) => [file, line]),
-        locations,
-      );
-      assert.deepEqual(report.advisories, []);
-      assert.equal(report.warnings.length, warningCount);
-      if (warningCount)
-        assert.match(report.warnings[0], /trustedSqlTags is deprecated and ignored at effort low/);
-      assert.deepEqual(await esm.check(options), report);
-      const args = ["check", "--root", options.root, "--format", "json"];
-      if (options.config) args.push("--config", join(options.root, options.config));
-      if (options.effort) args.push("--effort", options.effort);
-      const child = spawnSync(cli, args, { encoding: "utf8", env: process.env });
-      assert.equal(child.error, undefined);
-      assert.equal(child.status, locations.length ? 1 : 0, child.stderr);
-      assert.deepEqual(JSON.parse(child.stdout), report);
+        [{ root: warningRoot, config: "sql-tags.yml" }, [], 1],
+        [{ root: warningRoot, config: "sql-tags.yml", effort: "max" }, [], 0],
+      ]) {
+        caseNumber += 1;
+        phase = `case-${caseNumber}-cjs`;
+        const pending = cjs.check(options);
+        assert.ok(pending instanceof Promise);
+        const report = await pending;
+        assert.deepEqual(
+          report.rules.map(({ file, line }) => [file, line]),
+          locations,
+        );
+        assert.deepEqual(report.advisories, []);
+        assert.equal(report.warnings.length, warningCount);
+        if (warningCount)
+          assert.match(
+            report.warnings[0],
+            /trustedSqlTags is deprecated and ignored at effort low/,
+          );
+        phase = `case-${caseNumber}-esm`;
+        assert.deepEqual(await esm.check(options), report);
+        const args = ["check", "--root", options.root, "--format", "json"];
+        if (options.config) args.push("--config", join(options.root, options.config));
+        if (options.effort) args.push("--effort", options.effort);
+        phase = `case-${caseNumber}-cli`;
+        const child = await new Promise((resolve) => {
+          execFile(
+            cli,
+            args,
+            { encoding: "utf8", env: process.env, timeout: 20_000 },
+            (error, stdout, stderr) => {
+              resolve({ error, stdout, stderr });
+            },
+          );
+        });
+        const expectedStatus = locations.length ? 1 : 0;
+        const status = child.error ? child.error.code : 0;
+        assert.equal(status, expectedStatus, child.stderr);
+        assert.deepEqual(JSON.parse(child.stdout), report);
+      }
+    } finally {
+      clearTimeout(slowDiagnostic);
     }
   },
 );

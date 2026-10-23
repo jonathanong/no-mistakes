@@ -1,8 +1,6 @@
-use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{Argument, CallExpression, Expression, Program, TemplateLiteral};
+use oxc_ast::ast::{Argument, CallExpression, Expression, Program};
 use oxc_span::SourceType;
-use std::collections::HashMap;
 use std::path::Path;
 
 mod bindings;
@@ -27,7 +25,10 @@ pub(super) mod scoped_bindings;
 mod source_positions;
 pub use source_positions::EmbeddedSqlSourcePosition;
 mod tags;
+mod text;
 pub(crate) use tags::matches_trusted_sql_import;
+pub(super) use text::unpublished_sql_text;
+pub use text::{executed_query_text, sql_text};
 pub(crate) mod walk;
 pub use bindings::{executor_bindings, is_database_call};
 pub(crate) use dml_kind::{
@@ -55,6 +56,16 @@ pub fn extract_embedded_sql_from_program(
     source: &str,
     options: &EmbeddedSqlOptions,
 ) -> EmbeddedSqlFileFacts {
+    extract_embedded_sql_from_program_with_demand(path, program, source, options, false)
+}
+
+pub(crate) fn extract_embedded_sql_from_program_with_demand(
+    path: &Path,
+    program: &Program<'_>,
+    source: &str,
+    options: &EmbeddedSqlOptions,
+    head_calls_only: bool,
+) -> EmbeddedSqlFileFacts {
     let bindings = executor_bindings(program, options);
     let mut executor_bindings: Vec<String> = bindings
         .iter()
@@ -70,6 +81,7 @@ pub fn extract_embedded_sql_from_program(
         &scoped.executors,
         &scoped.spans,
         options,
+        head_calls_only,
     );
     scoped.prune_unused_diagnostic_candidates(&collected.undeclared_executor_types);
     let mut fragments = collected.fragments;
@@ -127,52 +139,6 @@ pub(super) fn first_call_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'
     }
 }
 
-/// SQL text of a literal, tagged template, or template expression.
-pub fn sql_text(expr: &Expression<'_>) -> Option<String> {
-    unpublished_sql_text(expr).map(placeholders::publish_placeholders)
-}
-
-pub(super) fn unpublished_sql_text(expr: &Expression<'_>) -> Option<String> {
-    match unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
-        Expression::TemplateLiteral(template) => Some(template_sql_text(template, false)),
-        Expression::TaggedTemplateExpression(tagged) => {
-            let use_raw = tags::is_string_raw_tag_spelling(&tagged.tag);
-            Some(template_sql_text(&tagged.quasi, use_raw))
-        }
-        _ => None,
-    }
-}
-
-/// `sql_text` plus identifier lookup of in-scope SQL bindings.
-pub fn executed_query_text(
-    expr: &Expression<'_>,
-    bindings: &HashMap<String, String>,
-) -> Option<String> {
-    if let Some(text) = sql_text(expr) {
-        return Some(text);
-    }
-    match unwrap_ts_wrappers(expr) {
-        Expression::Identifier(ident) => bindings.get(ident.name.as_str()).cloned(),
-        _ => None,
-    }
-}
-
-/// `use_raw` selects `String.raw`'s own runtime semantics (the literal
-/// source characters, escape sequences un-processed) over the cooked form
-/// every other tag — the trusted `sql` tag included — returns; see
-/// [`tags::is_string_raw_tag_spelling`].
-fn template_sql_text(template: &TemplateLiteral<'_>, use_raw: bool) -> String {
-    let mut out = String::new();
-    for (index, quasi) in template.quasis.iter().enumerate() {
-        if index > 0 {
-            out.push_str(&placeholders::internal_placeholder(index));
-        }
-        out.push_str(tags::quasi_text(quasi, use_raw));
-    }
-    out
-}
-
 #[cfg(test)]
 mod append_mutation_tests;
 #[cfg(test)]
@@ -195,6 +161,8 @@ mod const_splice_tests;
 mod default_export_constants_tests;
 #[cfg(test)]
 mod dml_kind_tests;
+#[cfg(test)]
+mod head_demand_tests;
 #[cfg(test)]
 mod helper_body_tests;
 #[cfg(test)]

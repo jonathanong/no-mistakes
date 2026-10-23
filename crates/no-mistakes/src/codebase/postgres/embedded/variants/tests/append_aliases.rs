@@ -16,12 +16,12 @@ fn append_mutations_do_not_reuse_stale_builder_alias_variants() {
         (7, "SELECT id FROM accounts OFFSET 10", "SELECT 8"),
         (17, "SELECT id FROM users OFFSET 14", "SELECT 18"),
     ] {
-        assert_eq!(texts(&calls[index]), [statement, alternate], "call {index}");
+        assert_eq!(texts(&calls[index]), [alternate, statement], "call {index}");
     }
     // A fluent chain applies every link to the tracked root, in order.
     assert_eq!(
         texts(&calls[5]),
-        ["SELECT id FROM users WHERE id = 1 OFFSET 9", "SELECT 6"]
+        ["SELECT 6", "SELECT id FROM users WHERE id = 1 OFFSET 9"]
     );
     assert_eq!(texts(&calls[6]), ["SELECT id FROM users", "SELECT 7"]);
     assert_eq!(texts(&calls[12]), ["SELECT id FROM users", "SELECT 14"]);
@@ -31,13 +31,14 @@ fn append_mutations_do_not_reuse_stale_builder_alias_variants() {
     );
     assert_eq!(
         texts(&calls[14]),
-        ["SELECT id FROM users LIMIT 1", "SELECT 16"]
+        ["SELECT 16", "SELECT id FROM users LIMIT 1"]
     );
-    // The legacy chain resolver does not resolve an identifier receiver.
-    // Finite recovery must leave that existing nonbranching shape unchanged.
+    // Storing a mutable append result creates an alias. A static singleton
+    // must not bypass the legacy opacity boundary merely by being enumerated.
     assert_eq!(calls[15].kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(calls[15].sql_text, None);
     assert!(calls[15].variants.is_empty());
+    assert!(calls[15].is_unanalyzable());
 }
 
 #[test]
@@ -79,4 +80,19 @@ fn switch_label_calls_keep_direct_entry_sql_and_bodies_keep_fallthrough_sql() {
         ]
     );
     assert!(texts(&calls[4]).contains(&"SELECT id FROM accounts LIMIT 1 OFFSET 2"));
+}
+
+#[test]
+fn alias_mutation_cannot_revive_a_revoked_bare_binding_as_a_static_variant() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-offset/variants/builder-mutation-escapes/src/aliases.ts");
+    let source = std::fs::read_to_string(&path).expect("saved alias fixture");
+    let options = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
+    let file = extract_embedded_sql_from_source(&path, &source, &options);
+    assert_eq!(file.calls.len(), 2);
+    for call in &file.calls {
+        assert_eq!(call.kind, EmbeddedSqlKind::Dynamic);
+        assert!(call.variants.is_empty());
+        assert!(call.is_unanalyzable());
+    }
 }

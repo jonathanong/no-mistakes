@@ -29,8 +29,11 @@ pub(super) fn rebase_embedded_lines(
         let sql = call.sql_text.as_deref().unwrap_or_default();
         for position in locations.positions.values_mut() {
             position.source_line = source_line(position.sql_line, position.sql_column);
-            position.source_offset =
-                call.source_offset_at_sql_position(sql, position.sql_line, position.sql_column);
+            position.source_offset = variant
+                .then(|| {
+                    call.source_offset_at_sql_position(sql, position.sql_line, position.sql_column)
+                })
+                .flatten();
             position.source_path = call
                 .sql_source_positions
                 .partition_point(|origin| {

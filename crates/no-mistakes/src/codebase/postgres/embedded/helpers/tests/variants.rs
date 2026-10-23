@@ -54,8 +54,8 @@ fn a_hole_after_a_conditional_is_kept_for_every_alternative() {
     assert_eq!(
         texts,
         [
-            "SELECT 1 FROM t WHERE x = sql_placeholder_1 AND y = 2 AND h = 1 AND z = sql_placeholder_2",
             "SELECT 1 FROM t WHERE x = sql_placeholder_1 AND h = 1 AND z = sql_placeholder_2",
+            "SELECT 1 FROM t WHERE x = sql_placeholder_1 AND y = 2 AND h = 1 AND z = sql_placeholder_2",
         ]
     );
     for variant in &call.variants {

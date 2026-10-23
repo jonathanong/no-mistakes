@@ -89,7 +89,7 @@ impl Assignments {
                     context: self.context,
                     value: if value.operator == AssignmentOperator::Assign {
                         let head = literal(&value.right);
-                        if matches!(head, Value::Literal(Head::Tag | Head::MissingTag))
+                        if matches!(head, Value::Literal(head) if head.tagged())
                             && self.discarded_assignment != Some((value.span.start, value.span.end))
                         {
                             // A used assignment result can leak a mutable tag builder.

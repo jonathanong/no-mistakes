@@ -64,5 +64,5 @@ pub(super) fn tagged(scope: &mut Scope<'_, '_>, tagged: &TaggedTemplateExpressio
         .iter()
         .map(|hole| (expr::lower(scope, hole), scope.mark(hole.span())))
         .collect();
-    Expr::Sql(pieces, holes)
+    Expr::Sql(pieces, holes, scope.ctx.tags.parameterizes_all(&tagged.tag))
 }

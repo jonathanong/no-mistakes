@@ -8,9 +8,10 @@ fn direct_parameter_helpers_keep_append_origins_and_renumbered_bind_positions() 
     assert_eq!(file.calls.len(), 14);
     let call = &file.calls[0];
     assert_eq!(call.variants.len(), 2);
+    // Both arms append; canonical BFS starts with the guard's off outcome.
     for (variant, marker, count) in [
-        (&call.variants[0], "sql_placeholder_10", 10),
-        (&call.variants[1], "sql_placeholder_2", 2),
+        (&call.variants[0], "sql_placeholder_2", 2),
+        (&call.variants[1], "sql_placeholder_10", 10),
     ] {
         assert_eq!(variant.recovered_placeholder_positions.len(), count);
         let offset = variant.sql_text.find(marker).unwrap();
@@ -54,15 +55,15 @@ fn direct_parameter_helpers_keep_append_origins_and_renumbered_bind_positions() 
     assert_eq!(
         texts(&file.calls[2]),
         [
-            "SELECT id FROM users WHERE owner_id = sql_placeholder_1 OFFSET 7 LIMIT 3 FOR UPDATE",
-            "SELECT 2"
+            "SELECT 2",
+            "SELECT id FROM users WHERE owner_id = sql_placeholder_1 OFFSET 7 LIMIT 3 FOR UPDATE"
         ]
     );
     assert_eq!(
         texts(&file.calls[3]),
         [
-            "SELECT id FROM users WHERE owner_id = sql_placeholder_1 OFFSET 7 LIMIT 3",
-            "SELECT 9"
+            "SELECT 9",
+            "SELECT id FROM users WHERE owner_id = sql_placeholder_1 OFFSET 7 LIMIT 3"
         ]
     );
     assert!(file.calls[4..].iter().all(EmbeddedSqlCall::is_unanalyzable));
@@ -84,7 +85,11 @@ fn static_helper_append_forms_keep_cooked_and_raw_physical_origins() {
     let source = std::fs::read_to_string(&file.path).unwrap();
     assert_eq!(file.calls.len(), 1);
     assert_eq!(file.calls[0].variants.len(), 2);
-    let version = &file.calls[0].variants[0];
+    let version = file.calls[0]
+        .variants
+        .iter()
+        .find(|variant| variant.sql_text.contains("LIMIT 5"))
+        .unwrap();
     assert_eq!(
         version.sql_text,
         r"SELECT id FROM users WHERE active = true AND name = E'\\n' LIMIT 5"
@@ -104,7 +109,10 @@ fn static_helper_append_forms_keep_cooked_and_raw_physical_origins() {
     }
     let facts = crate::codebase::postgres::collect::dml::embedded_call_facts(&file, true, false);
     assert!(facts.iter().all(|facts| !facts.parse_failed));
-    let position = facts[0]
+    let position = facts
+        .iter()
+        .find(|facts| !facts.limit_uses.is_empty())
+        .unwrap()
         .variant_locations
         .as_ref()
         .unwrap()
@@ -147,5 +155,5 @@ fn parameter_helpers_reject_unsupported_bodies_and_inputs_without_inventing_sql(
         Some("SELECT id FROM users WHERE owner = sql_placeholder_1")
     );
     assert!(calls[16].variants.is_empty());
-    assert_eq!(texts(&calls[19]), ["SELECT id FROM users", "SELECT 17"]);
+    assert_eq!(texts(&calls[19]), ["SELECT 17", "SELECT id FROM users"]);
 }

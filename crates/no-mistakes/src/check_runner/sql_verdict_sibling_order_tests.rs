@@ -42,7 +42,10 @@ fn sibling_order_keeps_each_conflict_on_its_own_chunk() {
         )
         .unwrap();
         assert_eq!(targets(&plain), targets(&report), "{config}: ledger parity");
-        assert!(plain.sql_verdicts.is_empty(), "{config}");
+        assert!(
+            super::json_value(&plain).get("sqlVerdicts").is_none(),
+            "{config}"
+        );
         let unanalyzable = fail_closed.then_some("unanalyzable-sql");
         let mut expected = vec![
             ("src/before.ts", 7, Some("targetless-arbiter")),

@@ -5,7 +5,9 @@ use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
+mod composition;
 mod low;
+mod trusted_append;
 mod verdicts;
 
 pub(super) fn scan_with_sources(
@@ -39,32 +41,53 @@ pub(super) fn scan_with_sources(
             .transpose()?
             .map(crate::codebase::rules::index_sql_variants)
             .unwrap_or_default();
+        let invalid =
+            composition::diagnostics(&rel, file, &opts.embedded, &statements, facts, observer);
         if facts.wants_sql_verdicts() {
-            verdicts::record(
-                &rel,
-                file,
-                &opts.embedded,
-                opts.unanalyzable_sql == super::UnanalyzableSql::Advise,
-                facts,
-            );
+            verdicts::record(&rel, file, opts, facts, &invalid, prepared, path);
         }
         for (call_index, (call, span)) in file.calls.iter().zip(&file.call_spans).enumerate() {
+            let mut retained_violation = false;
             if !call.variants.is_empty() {
                 for (variant_index, version) in call.statement_calls().enumerate() {
+                    // A truncated residual has no complete statement to parse.
+                    if version.sql_text.is_none() || invalid.contains(&(call_index, variant_index))
+                    {
+                        continue;
+                    }
                     let statement = statements
                         .get(&(call_index, variant_index))
                         .copied()
                         .ok_or_else(|| anyhow::anyhow!("prepared SQL variant facts are missing"))?;
                     for finding in findings_for_call(&rel, &version) {
-                        dedup.push(
-                            &mut findings,
-                            statement,
-                            crate::codebase::postgres::statements::SqlFactSite::Annotation,
-                            Some(&source),
-                            finding,
-                        );
+                        retained_violation = true;
+                        // A newly published deterministic append mirror keeps
+                        // the legacy executor location and its suppressions.
+                        if call.mirrors_single_variant() {
+                            findings.push(finding);
+                        } else {
+                            dedup.push(
+                                &mut findings,
+                                statement,
+                                crate::codebase::postgres::statements::SqlFactSite::Annotation,
+                                Some(&source),
+                                finding,
+                            );
+                        }
                     }
                 }
+                // Retained alternatives do not settle an unexplored residual.
+                // Preserve max's prefix proof / unanalyzable policy for that path.
+                if !call.variants_truncated() {
+                    continue;
+                }
+                // Concrete branch findings already identify this obligation.
+                // Its unknown remainder remains in the advisory/verdict ledger.
+                if retained_violation {
+                    continue;
+                }
+            }
+            if trusted_append::accepts(prepared, path, call, *span) {
                 continue;
             }
             let prefix = prepared.query_annotation_prefix(path, &opts.embedded, *span);

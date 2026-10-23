@@ -15,7 +15,9 @@ impl Machine<'_> {
             | Expr::Num
             | Expr::Ident(_) => return self.eval_leaf(expr, path),
             Expr::Template(pieces, holes) => self.eval_template(pieces, holes, path),
-            Expr::Sql(pieces, holes) => self.eval_sql(pieces, holes, path),
+            Expr::Sql(pieces, holes, parameterizes_all) => {
+                self.eval_sql(pieces, holes, path, *parameterizes_all)
+            }
             Expr::Append(target, arg, mark) => self.eval_append(target, arg, *mark, path),
             Expr::Call(name, args) => self.call(name, args, path, false),
             Expr::Member(object, property) => self.eval_member(object, property, path),

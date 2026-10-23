@@ -128,10 +128,11 @@ pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
         undeclared.extend(embedded.undeclared_executor_types.iter());
         for (index, call) in embedded.calls.iter().enumerate() {
             let mut statements_for_call = project_calls(&source.file_name, vec![call.clone()]);
-            if call.kind == EmbeddedSqlKind::ImmutableLocal
-                || call.kind == EmbeddedSqlKind::Dynamic
-                || call.kind == EmbeddedSqlKind::Composed
-                || !call.recovered_placeholder_positions.is_empty()
+            if !call.variants_truncated()
+                && (call.kind == EmbeddedSqlKind::ImmutableLocal
+                    || call.kind == EmbeddedSqlKind::Dynamic
+                    || call.kind == EmbeddedSqlKind::Composed
+                    || !call.recovered_placeholder_positions.is_empty())
             {
                 let key = (
                     crate::codebase::ts_resolver::normalize_path(Path::new(&source.file_name)),

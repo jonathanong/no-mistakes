@@ -14,6 +14,10 @@ fn facts() -> (
         &source,
         &EmbeddedSqlOptions {
             import_specifier: "@example/db".into(),
+            trusted_sql_tags: vec![crate::codebase::postgres::TrustedSqlTag {
+                module: "@example/db".into(),
+                name: "sql".into(),
+            }],
             ..Default::default()
         },
     );

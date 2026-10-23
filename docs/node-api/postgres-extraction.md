@@ -42,7 +42,7 @@ With `importSpecifier`, a `.query` member requires a receiver from a configured
 import, factory, type, or immutable alias; unrelated HTTP query parameters are
 excluded. Explicit `executorNames: [query]` without a module selects broad
 member matching.
-Recovered conditional alternatives have `kind: "composed"`. The named
+Untruncated conditional alternatives have `kind: "composed"`. The named
 `ExecutedPostgresTrustedSqlTag` type describes each `trustedSqlTags` entry.
 Template interpolations appear as `sql_placeholder_N` markers and remain
 `complete: false` because their runtime content is unknown. Dynamic SQL can
@@ -52,6 +52,11 @@ true only when the SQL structure is proven and the remaining holes are generated
 value binds. Parse that SQL and inspect nested statements before classifying a
 `WITH` query as read-only; the field does not certify read-only effects.
 `annotation` is `null` for unannotated or unrecoverable SQL.
+When append exploration is truncated, retained alternatives keep their SQL text
+with `kind: "dynamic"`, `complete: false`, `onlyValuePlaceholders: false`, and
+`incompleteReason: "sql-variants-truncated"`. This also applies to zero/one
+iteration loop previews, whose remaining iterations are unproven. Enabling
+`resolveImports` preserves those alternatives and their incomplete status.
 An invalid TS/JS source or unknown option rejects the whole request, so a
 recovered parse cannot silently report incomplete input as complete SQL.
 This source-only API reads no files. By default it leaves imported SQL helpers

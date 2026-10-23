@@ -29,7 +29,7 @@ fn appended_helper_is_a_hole_between_the_callers_own_fragments() {
     assert_eq!(call(&facts, 0).recovered_placeholder_positions, [(1, 47)]);
     let pending = pending_for(&facts, 0).expect("pending");
     assert_eq!(pending.template.kind, EmbeddedSqlKind::Composed);
-    let template = pending.template.sql_text.as_deref().expect("template");
+    let template = pending.template.variants[0].sql_text.as_str();
     let holes = sentinel::find_all(template);
     assert_eq!(holes.len(), 1);
     assert!(template[holes[0].0.end..].ends_with(" ORDER BY l.id"));
@@ -76,7 +76,15 @@ fn argument_kinds_are_recorded_for_the_projection() {
     assert_eq!(args(3), Some(vec![SiteArg::Scalar]));
     assert_eq!(args(5), Some(vec![SiteArg::Builder, SiteArg::Scalar]));
     let template = pending_for(&facts, 5)
-        .and_then(|pending| pending.template.sql_text.clone())
+        .and_then(|pending| {
+            pending.template.sql_text.clone().or_else(|| {
+                pending
+                    .template
+                    .variants
+                    .first()
+                    .map(|variant| variant.sql_text.clone())
+            })
+        })
         .expect("template");
     assert!(template.starts_with("SELECT 1 FROM p WHERE true"));
     assert!(sentinel::contains(&template));

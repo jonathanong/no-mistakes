@@ -56,17 +56,21 @@ pub(super) fn record_declarator(
     } else {
         kind
     };
-    let sql_source_positions = super::compose::helper_provenance(init, visitor)
-        .filter(|provenance| sql.as_deref() == Some(provenance.sql.as_str()))
-        .map(|provenance| provenance.positions)
-        .unwrap_or_else(|| {
-            super::super::super::source_positions::for_expression(
-                init,
-                visitor.source,
-                ident.span.start as usize,
-                line,
-            )
-        });
+    let sql_source_positions = if visitor.head_calls_only {
+        Vec::new()
+    } else {
+        super::compose::helper_provenance(init, visitor)
+            .filter(|provenance| sql.as_deref() == Some(provenance.sql.as_str()))
+            .map(|provenance| provenance.positions)
+            .unwrap_or_else(|| {
+                super::super::super::source_positions::for_expression(
+                    init,
+                    visitor.source,
+                    ident.span.start as usize,
+                    line,
+                )
+            })
+    };
     let builder_identity = visitor.builder_identity_for_init(init);
     let namespace_executor = is_const && visitor.namespace_expression(init);
     let relative_executor_proof = visitor

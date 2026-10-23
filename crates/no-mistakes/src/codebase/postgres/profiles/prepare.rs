@@ -15,6 +15,11 @@ pub(crate) fn prepare_rule_sql_facts(
     let (profiles, annotation_profiles, embedded_sql_rule_ids) =
         configured_embedded_sql_options_with_annotation(config, &dml_ids)?;
     let evaluated_annotation = !annotation_profiles.is_empty();
+    let head_calls_only = super::plan::head_calls_only_profiles(
+        &profiles,
+        &annotation_profiles,
+        &embedded_sql_rule_ids,
+    );
     let low_annotation = rule_ids.contains(&"postgres-require-query-annotation")
         && super::annotation_effort::low_requested(config)?;
     let patterns = sql_patterns(config, rule_ids)?;
@@ -76,6 +81,7 @@ pub(crate) fn prepare_rule_sql_facts(
                     .then_some(annotation_profiles),
                 embedded_sql: !profiles.is_empty(),
                 embedded_sql_options: profiles,
+                embedded_sql_head_calls_only: head_calls_only,
                 embedded_sql_rule_ids,
                 postgres_schema_catalog_paths: configured_schema_catalog_paths(config, rule_ids)?,
                 ..Default::default()

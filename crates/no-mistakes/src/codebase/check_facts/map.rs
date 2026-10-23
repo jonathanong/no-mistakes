@@ -21,7 +21,7 @@ use dashmap::DashMap;
 pub use sql_verdicts::{SqlApplicationFacts, SqlFactContext};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 
 pub(crate) type PlaywrightTestFilesByProject = Arc<
     Vec<(
@@ -46,6 +46,8 @@ pub struct CheckFactMap {
     pub(crate) sql_application: Option<crate::codebase::postgres::SqlRuleApplication>,
     pub(crate) sql_verdicts:
         Option<Arc<Mutex<Vec<crate::codebase::postgres::SqlObligationVerdict>>>>,
+    pub(crate) sql_advisories:
+        Arc<OnceLock<Mutex<Vec<crate::codebase::postgres::SqlObligationVerdict>>>>,
     pub(crate) companion_import_plans: Arc<
         Vec<Arc<crate::codebase::rules::required_companion_imports::PreparedCompanionImportPlan>>,
     >,

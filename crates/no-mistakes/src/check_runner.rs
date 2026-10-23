@@ -57,9 +57,14 @@ mod unique_test_ids_effort;
 mod unmocked_import_effort;
 
 #[cfg(test)]
+mod append_composition_tests;
+#[cfg(test)]
+mod append_static_invalid_tests;
+#[cfg(test)]
 mod low_reference_tests;
 #[cfg(test)]
-mod unbounded_effort_tests;
-
-#[cfg(test)]
 mod mutable_registry_low_tests;
+#[cfg(test)]
+mod truncated_append_parity_tests;
+#[cfg(test)]
+mod unbounded_effort_tests;

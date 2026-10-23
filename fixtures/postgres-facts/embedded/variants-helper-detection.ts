@@ -1,4 +1,4 @@
-import sql, { type SQLStatement as Statement } from "sql-template-strings";
+import { sql } from "@example/db"; import { type SQLStatement as Statement } from "sql-template-strings"; /* Configured tags splice fragments; sql-template-strings binds them. */
 import { query } from "@example/db";
 type SQLStatement = string;
 function appendAlias(fragment: Statement): Statement {

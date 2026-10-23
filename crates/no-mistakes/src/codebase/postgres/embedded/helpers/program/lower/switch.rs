@@ -136,7 +136,7 @@ mod shape {
         let [Statement::ReturnStatement(ret)] = statements else { return None };
         let argument = ret.argument.as_ref()?;
         let value = expr::lower(scope, argument);
-        if !matches!(value, Expr::Lit(_) | Expr::Sql(_, _)) { return None; }
+        if !matches!(value, Expr::Lit(_) | Expr::Sql(..)) { return None; }
         Some(SwitchArm { cases: std::mem::take(labels), value, mark: scope.mark(argument.span()) })
     }
 }

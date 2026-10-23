@@ -34,7 +34,14 @@ fn later_arguments_update_the_captured_builder_but_never_recapture_primitive_val
             };
             assert_eq!(call.kind, expected_kind, "{call:#?}");
             assert_eq!(call.sql_text.as_deref(), Some(sql));
-            assert!(call.variants.is_empty(), "{call:#?}");
+            if kind == "composed" {
+                // A complete append now retains its singleton provenance too.
+                assert_eq!(call.variants.len(), 1, "{call:#?}");
+                assert_eq!(call.variants[0].sql_text, sql);
+                assert!(!call.variants_truncated());
+            } else {
+                assert!(call.variants.is_empty(), "{call:#?}");
+            }
         }
     }
     assert_eq!(file.calls, calls("variants-executor-argument-effects.ts"));

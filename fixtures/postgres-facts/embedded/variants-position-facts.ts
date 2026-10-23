@@ -1,4 +1,4 @@
-import sql from "sql-template-strings"; import { query } from "@example/db";
+import { sql } from "@example/db"; /* Configured tags splice fragments. */ import { query } from "@example/db";
 export function run(flag: boolean) {
   query(sql`SELECT id FROM ${flag
     ? sql`accounts WHERE id = $1`

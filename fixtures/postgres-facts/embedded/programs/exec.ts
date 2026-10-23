@@ -1,4 +1,4 @@
-import sql from "sql-template-strings";
+import { sql } from "@example/db"; /* Configured tags splice fragments; sql-template-strings binds them. */
 import type { SQLStatement } from "sql-template-strings";
 
 // Fresh builders and strings.

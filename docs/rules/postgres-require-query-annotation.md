@@ -42,9 +42,7 @@ on only one path is still reported at that branch's physical source location,
 where line suppressions also apply:
 
 ```ts
-query(named
-  ? "/* accounts/list */ SELECT id FROM accounts"
-  : "SELECT id FROM accounts"); // The second version needs an annotation.
+query(named ? "/* accounts/list */ SELECT id FROM accounts" : "SELECT id FROM accounts"); // The second version needs an annotation.
 ```
 
 Opaque or over-cap calls retain the richer prepared helper-prefix traversal
@@ -116,9 +114,8 @@ need a stable operation name rather than an opaque SQL string.
 
 ## What it catches/requires
 
-Executed PostgreSQL SQL must begin with a non-empty block comment. Literal
-`BEGIN`, `COMMIT`, and `ROLLBACK` commands are exempt at either effort level;
-line comments do not satisfy the contract.
+Executed PostgreSQL SQL must begin with a non-empty block comment. At `max`,
+`BEGIN`, `COMMIT`, and `ROLLBACK` are exempt; line comments do not satisfy the contract.
 
 ## Options and defaults
 
@@ -126,7 +123,7 @@ line comments do not satisfy the contract.
 `executorNames` defaults to `[query, read, write]` only with a configured module.
 `unanalyzableSql` defaults to `report`; `ignore` skips residual unknown SQL and
 `advise` puts its reason, known prefix, and helper lines in non-failing
-`advisories`. Proven missing annotations remain findings under every
+`advisories`. At `max`, proven missing annotations remain findings under every
 unanalyzable policy, including decidable literal heads at `low`.
 
 Configuration, SQL helper behavior, and callback forwarding are described in
@@ -137,118 +134,14 @@ see [SQL verdicts](../postgres-sql-verdicts.md).
 ## Effort
 
 `effort: max` is the default and preserves helper, branch, builder, and imported
-value inference. At effective `effort: low`, this rule does not request or run
-the annotation evaluator. It checks literal heads at the executor call or
-through a local binding:
-
-```ts
-// The leading named comment is literal at the executor call.
-query(`/* posts/list */ SELECT id FROM posts WHERE id = ${id}`);
-query("/* posts/list */ " + body);
-
-// Or one local const has that literal head and is passed directly.
-const statement = `/* posts/list */ ${body}`;
-query(statement);
-```
-
-Any tagged template qualifies in either position when its first quasi starts
-with the complete named comment. Tag identity and import form do not matter;
-the tag can be a named, default, namespace, or renamed import, or another tag
-expression:
-
-```ts
-import sql from "@example/sql";
-import * as templates from "@example/templates";
-query(sql`/* posts/list */ SELECT id FROM posts WHERE id = ${id}`);
-const statement = templates.sql`/* posts/list */ SELECT id FROM posts WHERE id = ${id}`;
-query(statement); // A single local const passed directly also qualifies.
-```
-
-At `low`, `trustedSqlTags` is deprecated for this rule and ignored; configuring
-it produces a configuration warning. This does not change its behavior for
-`max` analysis or for other SQL rules that consume the option.
-
-A tag-backed const must stay local and be used only as a direct argument to
-prepared executors. Repeated executor reads qualify. Property writes, receiver
-methods, helper escapes, aliases, returns, stores, and exports make it
-unanalyzable because a const binding does not make its builder immutable.
-Literal string consts retain their head when passed elsewhere.
-
-A tagged-template left operand of `+` also keeps its literal head, directly or
-through one local const. A tag on the right cannot repair an unknown left head.
-
-The first complete block comment must contain a nonempty name. Parentheses and
-TypeScript assertions do not add indirection. The const must resolve to the same
-file's lexical declaration; a second alias, import, or destructured binding
-does not qualify. Mutable bindings need the additional proof described below.
-
-At `low`, a decidable literal head is checked before the unanalyzable policy.
-Unannotated string literals, no-substitution templates, tagged templates with a
-known unannotated head, and one local const initialized with those forms are
-findings even with `unanalyzable: advise` or `ignore`:
-
-```ts
-query("SELECT 1"); // Missing annotation: a failing finding, including with advise.
-const statement = "SELECT 1";
-query(statement); // The same definite violation.
-// Fix: query("/* health/check */ SELECT 1");
-```
-
-A complete literal transaction command keeps the transaction exemption. An
-incomplete head, such as `` query(`/* ${name} */ SELECT 1`) ``, stays
-unanalyzable. Helper returns, conditional heads, and appended builders also
-remain unanalyzable. A same-function `let` or `var` used as the executor
-argument can be decided when every direct assignment that may reach that call
-is a literal string, no-substitution template, or tag without interpolations. Every such value
-must have a known head: if all are named, the call passes; if any is missing
-the annotation, the call is a finding. For example, an uninitialized or
-undefined path contributes no SQL, while a mix of named and unannotated
-literal assignments is still a finding:
-
-```ts
-function run(enabled: boolean) {
-  let statement: string | undefined;
-  if (enabled) statement = "/* health/check */ SELECT 1";
-  read(statement); // The undefined path contributes no SQL; the literal path is named.
-
-  let next = "/* health/check */ SELECT 1";
-  if (enabled) next = "SELECT 2";
-  read(next); // Definite missing annotation, including with unanalyzable: ignore.
-}
-```
-
-An assignment from a helper call, a parameter, a captured/closure write, or a
-mutation through an alias remains unanalyzable. Outside repeated control flow,
-a future write does not affect an earlier executor call. A later write in the
-same loop can reach the next iteration and is included. Initializers and
-iterable expressions run once per loop entry; an outer
-loop can still repeat that entry. The analysis conservatively considers direct
-same-function assignments that may reach the call; it does not infer values
-across calls or perform path-sensitive control-flow analysis.
-Scalar literal bindings retain their heads through ordinary reads such as
-logging. Tagged builders keep the direct-use restriction: a standalone
-assignment can update the binding, but an assignment whose result is passed
-elsewhere can expose the builder and remains unanalyzable. Rewrite
-unresolved shapes as a named literal at the call or as one local `const`
-initialized with that literal head and passed directly. Existing file and line
-suppressions apply to definite findings too.
-
-The shared `unanalyzable` policy controls only unresolved calls: `report` fails,
-`advise` emits a non-failing advisory, and `ignore` skips it. `unanalyzableSql`
-remains an alias. For example, set `options.effort: low` and
-`options.unanalyzable: report` to require these forms. Shared configuration and
-CLI overrides also apply.
-
-Low-effort diagnostics use the executor call's line. Suppress at that call:
-
-```ts
-// no-mistakes-disable-next-line postgres-require-query-annotation
-query(buildSql());
-```
-
-File and same-line directives also work. A helper-line suppression does not
-suppress a low-effort call-site diagnostic. Other applications that remain at
-`max` can still request evaluator work in the same invocation.
+value inference. At `effort: low`, a leading named literal at the executor call
+or through one local const qualifies, including tagged templates and safe local
+`.append()` chains. The evaluator does not run. Decidable missing annotations
+remain failing findings under every policy; unresolved shapes follow
+`unanalyzable`. Complete literal transaction commands retain their exemption.
+See [low-effort examples, rewrites, and suppressions](../postgres-query-annotation/low-effort.md).
+See [append composition and bounded alternatives](../postgres-query-annotation/append-composition.md)
+for the SQL text model, truncation, and invalid-SQL advisories.
 
 ## Valid example
 
