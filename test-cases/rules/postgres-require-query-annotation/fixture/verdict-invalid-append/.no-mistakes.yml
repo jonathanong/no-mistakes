@@ -4,6 +4,6 @@ rules:
     options:
       effort: max
       unanalyzable: report
-      importSpecifier: '@bench/db'
+      importSpecifier: "@bench/db"
       executorNames: [read]
-      include: ['main.mts']
+      include: ["main.mts"]

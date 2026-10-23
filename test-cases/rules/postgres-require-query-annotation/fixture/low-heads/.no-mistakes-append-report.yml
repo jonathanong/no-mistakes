@@ -4,6 +4,6 @@ rules:
     options:
       effort: low
       unanalyzable: report
-      importSpecifier: '@bench/db'
+      importSpecifier: "@bench/db"
       executorNames: [read]
-      include: ['append.mts', 'append-suppressed.mts', 'append-file-disabled.mts']
+      include: ["append.mts", "append-suppressed.mts", "append-file-disabled.mts"]

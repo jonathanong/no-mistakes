@@ -42,9 +42,7 @@ on only one path is still reported at that branch's physical source location,
 where line suppressions also apply:
 
 ```ts
-query(named
-  ? "/* accounts/list */ SELECT id FROM accounts"
-  : "SELECT id FROM accounts"); // The second version needs an annotation.
+query(named ? "/* accounts/list */ SELECT id FROM accounts" : "SELECT id FROM accounts"); // The second version needs an annotation.
 ```
 
 Opaque or over-cap calls retain the richer prepared helper-prefix traversal
@@ -144,7 +142,6 @@ remain failing findings under every policy; unresolved shapes follow
 See [low-effort examples, rewrites, and suppressions](../postgres-query-annotation/low-effort.md).
 See [append composition and bounded alternatives](../postgres-query-annotation/append-composition.md)
 for the SQL text model, truncation, and invalid-SQL advisories.
-
 
 ## Valid example
 

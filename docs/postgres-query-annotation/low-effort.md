@@ -110,7 +110,7 @@ query(statement); // The same definite violation.
 ```
 
 A complete literal transaction command keeps the transaction exemption. An
-incomplete head, such as `` query(`/* ${name} */ SELECT 1`) ``, stays
+incomplete head, such as ``query(`/* ${name} */ SELECT 1`)``, stays
 unanalyzable. Helper returns and conditional heads also remain unanalyzable. A same-function `let` or `var` used as the executor
 argument can be decided when every direct assignment that may reach that call
 is a literal string, no-substitution template, or tag without interpolations. Every such value
@@ -146,4 +146,3 @@ elsewhere can expose the builder and remains unanalyzable. Rewrite
 unresolved shapes as a named literal at the call or as one local `const`
 initialized with that literal head and passed directly. Existing file and line
 suppressions apply to definite findings too.
-
