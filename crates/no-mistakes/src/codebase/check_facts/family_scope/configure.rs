@@ -11,6 +11,7 @@ use crate::queue::extract_prefilter::source_may_have_queue_facts;
 use anyhow::Result;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub fn configure_family_path_scopes(
     root: &Path,
@@ -82,7 +83,7 @@ fn storybook_scope(
     match selected {
         FamilyPathScope::All => Ok(FamilyPathScope::All),
         FamilyPathScope::Only(paths) => {
-            seeds.extend(paths.iter().cloned());
+            seeds.extend(Arc::unwrap_or_clone(paths));
             Ok(with_import_closure(root, files, sources, seeds))
         }
     }
@@ -97,7 +98,7 @@ fn scoped_or_closure(
     match seeds {
         FamilyPathScope::All => FamilyPathScope::All,
         FamilyPathScope::Only(paths) => {
-            with_import_closure(root, files, sources, paths.as_ref().clone())
+            with_import_closure(root, files, sources, Arc::unwrap_or_clone(paths))
         }
     }
 }
