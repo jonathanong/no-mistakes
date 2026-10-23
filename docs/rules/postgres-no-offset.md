@@ -28,9 +28,9 @@ Both efforts report those OFFSET clauses at their physical SQL locations.
 Low does not evaluate JavaScript helpers or builders. Interpolation, SQL tags,
 computed SQL, further aliases, and executor forms without a direct ownership
 proof remain unanalyzable. JavaScript escapes in SQL literals are also
-unanalyzable at low; use an unescaped literal or select max. Low requires the
-literal SQL to parse completely; malformed SQL follows the same uncertainty
-policy rather than being treated as clear.
+unanalyzable at low; use an unescaped literal or select max. Low requires
+embedded literal SQL to parse completely; malformed embedded SQL follows the same
+uncertainty policy rather than being treated as clear.
 Physical CRLF template line endings are accepted with JavaScript's LF
 normalization; JavaScript escape sequences still follow the uncertainty policy.
 
@@ -152,7 +152,10 @@ reported at the OFFSET keyword, just like a SELECT query.
 Executed, statically recoverable PostgreSQL SQL must not contain `OFFSET`.
 `.sql` files are checked only when `sqlInclude` matches them. Interpolated
 offsets are checked after placeholder normalization at max; prose is ignored.
-At max, unparseable SQL is skipped; at low, it follows the uncertainty policy. `OFFSET 0` asks for a `MATERIALIZED` CTE. Any other offset
+At max, unparseable statements are skipped; at low, unparseable embedded executor
+SQL follows the uncertainty policy. Selected `.sql` files keep the existing behavior
+at both efforts: unparseable statements are skipped while recoverable siblings
+remain checked. `OFFSET 0` asks for a `MATERIALIZED` CTE. Any other offset
 asks for cursor pagination, `LIMIT + 1`, `COUNT`, `EXISTS`, or `ROW_NUMBER()`.
 
 ### Unanalyzable SQL
