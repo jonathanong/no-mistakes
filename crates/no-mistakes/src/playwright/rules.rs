@@ -41,14 +41,7 @@ pub(crate) struct PlaywrightCheckOutput {
 }
 
 #[cfg(test)]
-pub(crate) fn check_with_facts(
-    root: &Path,
-    config_path: Option<&Path>,
-    config: &NoMistakesConfig,
-    facts: &CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
-    Ok(check_with_facts_outcome(root, config_path, config, facts)?.findings)
-}
+pub(crate) mod test_api;
 
 pub(crate) fn check_with_facts_outcome(
     root: &Path,
@@ -58,17 +51,6 @@ pub(crate) fn check_with_facts_outcome(
 ) -> Result<PlaywrightCheckOutput> {
     let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(root);
     check_with_facts_from_snapshot(root, config_path, config, facts, &snapshot)
-}
-
-#[cfg(test)]
-pub(crate) fn check_with_prepared_facts(
-    root: &Path,
-    config_path: Option<&Path>,
-    config: &NoMistakesConfig,
-    facts: &CheckFactMap,
-    prepared: &PreparedPlaywrightRules,
-) -> Result<Vec<RuleFinding>> {
-    Ok(check_with_prepared_facts_outcome(root, config_path, config, facts, prepared)?.findings)
 }
 
 pub(crate) fn check_with_prepared_facts_outcome(

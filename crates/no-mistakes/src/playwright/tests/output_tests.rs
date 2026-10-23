@@ -119,7 +119,6 @@ fn text_printers_cover_routes_and_selectors() {
                 call: "getAsideLocator(...)".to_string(),
             }],
             line: 1,
-            recovered: false,
             literal_exact: true,
         }],
         duplicate_selectors: vec![DuplicateSelector {

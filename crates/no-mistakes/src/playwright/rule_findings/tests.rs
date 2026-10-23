@@ -1,8 +1,11 @@
 use super::*;
 use crate::config::v2::Unanalyzable;
 use crate::playwright::analysis::types::{
-    Analysis, CoverageFetch, CoverageRoute, CoverageSelector, Edge, EdgeReport, SelectorRef,
-    Summary,
+    Analysis, CoverageFetch, CoverageReport, CoverageRoute, CoverageSelector, DuplicateSelector,
+    Edge, EdgeReport, SelectorRef, Summary,
+};
+use crate::playwright::rules::{
+    PLAYWRIGHT_COVERAGE, PLAYWRIGHT_PREFER_TEST_ID_LOCATORS, PLAYWRIGHT_UNIQUE_HTML_IDS,
 };
 use std::sync::Arc;
 
@@ -12,6 +15,24 @@ fn coverage_all(enabled: bool) -> CoverageFindingOptions {
         routes: true,
         selectors: true,
     }
+}
+
+fn findings_from_report(
+    analysis: &Analysis,
+    unique_test_ids: bool,
+    unique_html_ids: bool,
+    prefer_test_id_locators: bool,
+    coverage: CoverageFindingOptions,
+) -> Vec<crate::codebase::rules::RuleFinding> {
+    findings_from_report_with_effort(
+        analysis,
+        unique_test_ids,
+        unique_html_ids,
+        prefer_test_id_locators,
+        coverage,
+        None,
+    )
+    .findings
 }
 
 fn report_findings(
@@ -64,7 +85,6 @@ fn findings_from_report_maps_routes_selectors_and_duplicates() {
             selectors: vec![],
             helper_references: vec![],
             line: 1,
-            recovered: false,
             literal_exact: true,
         }],
         duplicate_selectors: vec![
@@ -169,7 +189,6 @@ fn findings_from_report_skips_unsupported_dynamic_selectors() {
                 selectors: vec![],
                 helper_references: vec![],
                 line: 1,
-                recovered: false,
                 literal_exact: false,
             },
             CoverageSelector {
@@ -183,7 +202,6 @@ fn findings_from_report_skips_unsupported_dynamic_selectors() {
                 selectors: vec![],
                 helper_references: vec![],
                 line: 1,
-                recovered: false,
                 literal_exact: true,
             },
         ],
@@ -367,7 +385,6 @@ fn low_effort_emits_unanalyzable_for_non_literal_exact_selectors() {
                 selectors: vec![],
                 helper_references: vec![],
                 line: 4,
-                recovered: false,
                 literal_exact: true,
             },
             CoverageSelector {
@@ -381,7 +398,6 @@ fn low_effort_emits_unanalyzable_for_non_literal_exact_selectors() {
                 selectors: vec![],
                 helper_references: vec![],
                 line: 9,
-                recovered: false,
                 literal_exact: false,
             },
         ],

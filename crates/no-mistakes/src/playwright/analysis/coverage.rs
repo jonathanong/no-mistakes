@@ -99,7 +99,6 @@ pub(crate) fn build_coverage(inputs: CoverageInputs<'_>) -> CoverageReport {
                 .collect(),
             helper_references,
             line: app_selector.line,
-            recovered: app_selector.recovered,
             literal_exact: app_selector.is_literal_exact(),
         });
     }

@@ -1,3 +1,4 @@
+use super::test_api::{check_with_facts, check_with_prepared_facts};
 use super::*;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope, RuleTestTargets, StringOrList};

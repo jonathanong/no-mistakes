@@ -43,11 +43,6 @@ pub(crate) struct CoverageSelector {
     pub(crate) helper_references: Vec<SelectorHelperReference>,
     #[serde(skip)]
     pub(crate) line: usize,
-    /// Copied from the app selector so a later coverage effort cut can
-    /// distinguish recovered exact IDs from literals.
-    #[serde(skip)]
-    #[allow(dead_code)]
-    pub(crate) recovered: bool,
     #[serde(skip)]
     pub(crate) literal_exact: bool,
 }
