@@ -218,11 +218,23 @@ fn runner_derived_invalid_and_unconfigured_scopes_keep_full_discovery() {
         config::test_discovery_scope(&root, &files, &config),
         FamilyPathScope::All
     );
-    config.tests.vitest.projects.clear();
-    config.tests.playwright.projects.clear();
-    assert_eq!(
-        config::test_discovery_scope(&root, &files, &config),
-        FamilyPathScope::All
+    for name in [
+        "runner-derived.yml",
+        "invalid-include.yml",
+        "invalid-exclude.yml",
+        "disabled.yml",
+    ] {
+        let config = crate::config::v2::load_v2_config(&root, Some(&root.join(name))).unwrap();
+        assert_eq!(
+            config::test_discovery_scope(&root, &files, &config),
+            FamilyPathScope::All,
+            "{name}"
+        );
+    }
+    let empty =
+        crate::config::v2::load_v2_config(&root, Some(&root.join("empty-scope.yml"))).unwrap();
+    assert!(
+        matches!(config::test_discovery_scope(&root, &files, &empty), FamilyPathScope::Only(paths) if paths.is_empty())
     );
 }
 

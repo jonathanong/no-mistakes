@@ -1,0 +1,10 @@
+tests:
+  vitest:
+    configs: []
+    projects:
+      selected:
+        include: ['does-not-exist/**/*.ts']
+        integration_suites:
+          selected: [aws]
+  playwright:
+    configs: []

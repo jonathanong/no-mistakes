@@ -1,6 +1,6 @@
 import { forbidden as boundary } from './dependency';
 export function globalBridge() { boundary(); }
-// Global augmentation bodies are also ambient module blocks.
+// These imports historically update the file-wide table.
 declare global {
   import { safe as boundary } from './safe';
 }

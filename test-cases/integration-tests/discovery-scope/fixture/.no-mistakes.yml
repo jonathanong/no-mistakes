@@ -2,6 +2,9 @@ tests:
   vitest:
     configs: []
     projects:
+      # Broad runner selection without an integration policy must not widen discovery.
+      no-integration-policy:
+        include: ['**/*']
       selected:
         include: [selected/**/*.ts]
         exclude: [selected/excluded.ts]
