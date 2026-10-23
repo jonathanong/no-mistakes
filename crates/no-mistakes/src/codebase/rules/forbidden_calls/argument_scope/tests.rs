@@ -284,3 +284,67 @@ fn batched_graph_only_files_keep_scoped_argument_demand() {
         );
     }
 }
+
+#[test]
+fn argument_scope_alone_requests_parsing_only_for_selected_sources() {
+    let (saved, config, files) = fixture();
+    let root = saved.path();
+    let mut scoped = CheckFactPlan {
+        // A raw-source-only consumer disables the default AST compatibility
+        // fallback, leaving scoped arguments as the only AST demand.
+        raw_source: true,
+        ..Default::default()
+    };
+    configure_argument_facts(root, &config, &mut scoped);
+    assert!(scoped.graph.is_empty());
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let facts = crate::diagnostics::with_observer(Some(observer.clone()), || {
+        crate::codebase::check_facts::collect_check_facts(root, files, scoped)
+    });
+    assert_eq!(
+        observer
+            .snapshot()
+            .work
+            .get("facts.call_arguments.collections"),
+        Some(&4)
+    );
+    for (path, file_facts) in &facts.ts {
+        assert!(file_facts.source.is_some(), "{}", path.display());
+    }
+    for file in [
+        "src/a/entry.mjs",
+        "src/a/helper.mjs",
+        "src/a/empty.mjs",
+        "src/b/entry.mjs",
+    ] {
+        assert!(
+            facts
+                .ts
+                .get(&root.join(file))
+                .unwrap()
+                .ts
+                .module_bindings
+                .as_ref()
+                .unwrap()
+                .call_arguments
+                .is_some(),
+            "{file}"
+        );
+    }
+    for file in [
+        "src/a/entry.mjs",
+        "src/a/helper.mjs",
+        "src/a/empty.mjs",
+        "src/a/invalid.mjs",
+        "src/b/entry.mjs",
+    ] {
+        assert!(facts.ts.get(&root.join(file)).unwrap().parsed, "{file}");
+    }
+    for file in ["src/a/excluded.mjs", "src/unrelated.mjs"] {
+        let file_facts = facts.ts.get(&root.join(file)).unwrap();
+        assert!(!file_facts.parsed, "{file}");
+        assert!(file_facts.ts.module_bindings.is_none(), "{file}");
+    }
+    assert!(argument_facts_covered(root, &config, &facts));
+    assert!(!facts.graph_plan().call_arguments);
+}
