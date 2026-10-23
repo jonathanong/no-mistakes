@@ -391,3 +391,11 @@ binding identity. Lexical call patterns intentionally also match unrelated
 bindings with those names. Invalid expressions fail during initialization.
 See [the rule reference](eslint-rules/restricted-api-usage.md) for file scoping,
 exclusions, suppression, and complete examples.
+
+### Explicit client and lifecycle contracts
+
+`no-consecutive-unbatched-reads` accepts `clients`, `imports` selectors with `source` and `imported`, required `readMethods`, and optional `message`. It reports adjacent direct awaited reads on the same selected client binding unless the second references a previous result. See [the rule](eslint-rules/no-consecutive-unbatched-reads.md) for the configured independence contract and static limits.
+
+`require-top-level-registration` accepts required `registrar` (`source`, `imported`) and `callback`, plus optional `message`. Scope owner modules with lint configuration; a genuine runtime imported registrar must receive the callback in a direct module-level expression statement. See [the rule](eslint-rules/require-top-level-registration.md).
+
+Both rules are opt-in and support ESLint and Oxlint, custom messages, and file/line/next-line suppression. Neither is enabled by a preset.

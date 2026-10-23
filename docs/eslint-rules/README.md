@@ -101,3 +101,7 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 
 - [`forbidden-member-chains`](forbidden-member-chains.md) bans configured static member-access chains.
 - [`restricted-api-usage`](restricted-api-usage.md) restricts configured API imports and calls.
+
+
+- [no-consecutive-unbatched-reads](no-consecutive-unbatched-reads.md) — configure adjacent read batching contracts.
+- [require-top-level-registration](require-top-level-registration.md) — configure module registration contracts.
