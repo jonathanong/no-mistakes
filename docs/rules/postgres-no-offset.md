@@ -40,6 +40,7 @@ rules:
       importSpecifier: '@example/db'
       executorNames: [query]
       effort: low
+      sqlInclude: ["db/views/**/*.sql"]
       unanalyzable: advise
 ```
 
