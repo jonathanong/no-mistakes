@@ -20,7 +20,7 @@ fn prepare(name: &str, options_yaml: &str) -> (PathBuf, NoMistakesConfig, Vec<Pa
     (root, config, files)
 }
 
-fn run_prepared(name: &str, options_yaml: &str) -> (Vec<RuleFinding>, Vec<RuleFinding>) {
+pub(super) fn run_prepared(name: &str, options_yaml: &str) -> (Vec<RuleFinding>, Vec<RuleFinding>) {
     let (root, config, files) = prepare(name, options_yaml);
     let sources = crate::codebase::rules::source_store_for_files(&files);
     (
@@ -289,7 +289,7 @@ export default {
     let diagnostics = scan::check_named_section(scan::NamedCheck {
         rel: "next.config.ts",
         source,
-        config_path: path,
+        extracted: &extract::extract_named_destinations_with(path, source, "redirects", true),
         name: "redirects",
         kind: "redirect",
         route_set: &routes,

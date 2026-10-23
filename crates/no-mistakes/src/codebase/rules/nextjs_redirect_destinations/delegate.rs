@@ -1,16 +1,14 @@
 use super::extract::{extract_named_destinations_from_program, ExtractedDestinations};
-use super::scan::section_findings;
+use super::scan::{check_named_section, NamedCheck};
 use super::words::contains_word;
 use super::RULE_ID;
+use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
-use oxc_ast::ast::{
-    ExportDefaultDeclarationKind, ExportFromDeclaration, ImportDeclarationSpecifier,
-    ModuleExportName, Program, Statement,
-};
+use crate::config::v2::{EffectiveRuleAnalysis, Effort};
+mod resolve;
+use resolve::{default_module_specifier, resolve_relative};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
-
-const EXTENSIONS: &[&str] = &["ts", "mts", "cts", "tsx", "js", "mjs", "cjs", "jsx"];
 
 #[derive(Default)]
 pub(super) struct ConfigAnalysis {
@@ -19,10 +17,10 @@ pub(super) struct ConfigAnalysis {
     pub(super) specifier: Option<String>,
 }
 
-pub(super) fn analyze_config(path: &Path, source: &str) -> ConfigAnalysis {
+pub(super) fn analyze_config(path: &Path, source: &str, low: bool) -> ConfigAnalysis {
     crate::ast::with_program(path, source, |program, source| ConfigAnalysis {
-        redirects: extract_named_destinations_from_program(program, source, "redirects"),
-        rewrites: extract_named_destinations_from_program(program, source, "rewrites"),
+        redirects: extract_named_destinations_from_program(program, source, "redirects", low),
+        rewrites: extract_named_destinations_from_program(program, source, "rewrites", low),
         specifier: default_module_specifier(program).map(str::to_string),
     })
     .unwrap_or_default()
@@ -39,19 +37,18 @@ pub(super) struct DelegateRequest<'a> {
     pub(super) app_root_label: &'a str,
     pub(super) include_rewrites: bool,
     pub(super) specifier: Option<&'a str>,
+    pub(super) analysis: EffectiveRuleAnalysis,
 }
 
-pub(super) fn append_delegated(
-    request: &DelegateRequest<'_>,
-    findings: &mut Vec<super::super::RuleFinding>,
-) {
+pub(super) fn append_delegated(request: &DelegateRequest<'_>) -> AnalysisDiagnostics {
+    let mut diagnostics = AnalysisDiagnostics::default();
     let follow_redirects = !contains_word(request.source, "redirects");
     let follow_rewrites = request.include_rewrites && !contains_word(request.source, "rewrites");
     if !follow_redirects && !follow_rewrites {
-        return;
+        return diagnostics;
     }
     let Some(specifier) = request.specifier else {
-        return;
+        return diagnostics;
     };
     let Some(delegated) =
         resolve_relative(request.config_path, specifier, request.files).or_else(|| {
@@ -61,142 +58,41 @@ pub(super) fn append_delegated(
                 .filter(|path| request.files.contains(path))
         })
     else {
-        return;
+        return diagnostics;
     };
     let Some(delegated_source) = super::super::read_source(request.sources, &delegated) else {
-        return;
+        return diagnostics;
     };
     if has_disable_file_comment(&delegated_source, RULE_ID) {
-        return;
+        return diagnostics;
     }
     let rel = relative_slash_path(request.root, &delegated);
-    let analysis = analyze_config(&delegated, &delegated_source);
-    if follow_redirects {
-        findings.extend(section_findings(
-            &rel,
-            &delegated_source,
+    let analysis = analyze_config(
+        &delegated,
+        &delegated_source,
+        request.analysis.effort == Effort::Low,
+    );
+    for (follow, name, kind, extracted) in [
+        (
+            follow_redirects,
             "redirects",
             "redirect",
             &analysis.redirects,
-            request.route_set,
-            request.app_root_label,
-        ));
-    }
-    if follow_rewrites {
-        findings.extend(section_findings(
-            &rel,
-            &delegated_source,
-            "rewrites",
-            "rewrite",
-            &analysis.rewrites,
-            request.route_set,
-            request.app_root_label,
-        ));
-    }
-}
-
-fn default_module_specifier<'a>(program: &'a Program<'a>) -> Option<&'a str> {
-    let mut imported = Vec::new();
-    let mut exported_ident: Option<&str> = None;
-    let mut reexport: Option<&str> = None;
-    for statement in &program.body {
-        match statement {
-            Statement::ImportDeclaration(import) => {
-                let Some(specifiers) = &import.specifiers else {
-                    continue;
-                };
-                for specifier in specifiers {
-                    if let ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) = specifier
-                    {
-                        imported
-                            .push((specifier.local.name.as_str(), import.source.value.as_str()));
-                    }
-                }
-            }
-            Statement::ExportDefaultDeclaration(export) => {
-                if let ExportDefaultDeclarationKind::Identifier(identifier) = &export.declaration {
-                    exported_ident = Some(identifier.name.as_str());
-                }
-            }
-            Statement::ExportFromDeclaration(export) => {
-                if let Some(specifier) = default_reexport_specifier(export) {
-                    reexport = Some(specifier);
-                }
-            }
-            _ => {}
+        ),
+        (follow_rewrites, "rewrites", "rewrite", &analysis.rewrites),
+    ] {
+        if follow {
+            diagnostics.append(check_named_section(NamedCheck {
+                rel: &rel,
+                source: &delegated_source,
+                name,
+                kind,
+                extracted,
+                route_set: request.route_set,
+                app_root_label: request.app_root_label,
+                analysis: request.analysis,
+            }));
         }
     }
-    if let Some(specifier) = reexport {
-        return Some(specifier);
-    }
-    let exported = exported_ident?;
-    imported
-        .into_iter()
-        .find(|(local, _)| *local == exported)
-        .map(|(_, specifier)| specifier)
-}
-
-fn default_reexport_specifier<'a>(export: &'a ExportFromDeclaration<'a>) -> Option<&'a str> {
-    let reexports_default = export.specifiers.iter().any(|specifier| {
-        export_name(&specifier.local) == "default" && export_name(&specifier.exported) == "default"
-    });
-    reexports_default.then_some(export.source.value.as_str())
-}
-
-fn export_name<'a>(name: &'a ModuleExportName<'a>) -> &'a str {
-    match name {
-        ModuleExportName::IdentifierName(identifier) => identifier.name.as_str(),
-        ModuleExportName::IdentifierReference(identifier) => identifier.name.as_str(),
-        ModuleExportName::StringLiteral(literal) => literal.value.as_str(),
-    }
-}
-
-fn resolve_relative(from: &Path, specifier: &str, files: &[PathBuf]) -> Option<PathBuf> {
-    if !(specifier.starts_with("./") || specifier.starts_with("../")) {
-        return None;
-    }
-    let base = from.parent()?.join(specifier);
-    let normalized = crate::codebase::ts_resolver::normalize_path(&base);
-    let mut candidates = Vec::new();
-    match source_extension(&normalized) {
-        Some(extension) => {
-            candidates.push(normalized.clone());
-            if let Some(source_extension) = typescript_extension(extension) {
-                candidates.push(normalized.with_extension(source_extension));
-            }
-        }
-        None => {
-            for extension in EXTENSIONS {
-                candidates.push(append_extension(&normalized, extension));
-                candidates.push(normalized.join(format!("index.{extension}")));
-            }
-        }
-    }
-    files
-        .iter()
-        .find(|file| {
-            let file = crate::codebase::ts_resolver::normalize_path(file);
-            candidates.iter().any(|candidate| candidate == &file)
-        })
-        .cloned()
-}
-
-fn source_extension(path: &Path) -> Option<&str> {
-    let extension = path.extension().and_then(|extension| extension.to_str())?;
-    EXTENSIONS.contains(&extension).then_some(extension)
-}
-
-fn append_extension(path: &Path, extension: &str) -> PathBuf {
-    let mut name = path.as_os_str().to_os_string();
-    name.push(".");
-    name.push(extension);
-    PathBuf::from(name)
-}
-
-fn typescript_extension(extension: &str) -> Option<&'static str> {
-    const PAIRS: &[(&str, &str)] = &[("js", "ts"), ("jsx", "tsx"), ("mjs", "mts"), ("cjs", "cts")];
-    PAIRS
-        .iter()
-        .find(|(javascript, _)| *javascript == extension)
-        .map(|(_, typescript)| *typescript)
+    diagnostics
 }

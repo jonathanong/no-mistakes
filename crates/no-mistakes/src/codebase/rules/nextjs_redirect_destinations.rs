@@ -4,12 +4,18 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 mod config;
+mod delegate;
 mod dispatch;
+mod prepared;
+pub(crate) use prepared::with_standalone as with_standalone_resolver;
+#[doc(hidden)]
+pub use prepared::PreparedConfigResolver;
 mod extract;
 mod options;
 mod routes;
 mod scan;
 mod static_values;
+mod words;
 
 pub const RULE_ID: &str = "nextjs-redirect-destinations";
 
@@ -55,8 +61,14 @@ pub fn advisories_with_files_sources_and_deferred_suppression(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let diagnostics = dispatch::collect(root, config, all_files, sources, None, false)?;
-    Ok(dispatch::finish_advisories(diagnostics))
+    if config.rule_applications(RULE_ID).is_empty() {
+        return Ok(Vec::new());
+    }
+    prepared::with_standalone(root, config, all_files, sources, |resolver| {
+        let diagnostics =
+            dispatch::collect(root, config, all_files, sources, None, false, resolver)?;
+        Ok(dispatch::finish_advisories(diagnostics))
+    })
 }
 
 pub(crate) fn check_with_files(
@@ -84,9 +96,84 @@ pub(crate) fn check_with_files_sources_and_snapshot(
     sources: &crate::codebase::ts_source::SourceStore,
     snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
 ) -> Result<Vec<RuleFinding>> {
-    let diagnostics = dispatch::collect(root, config, all_files, sources, snapshot, true)?;
+    if config.rule_applications(RULE_ID).is_empty() {
+        return Ok(Vec::new());
+    }
+    prepared::with_standalone(root, config, all_files, sources, |resolver| {
+        Ok(dispatch::finish_findings(diagnostics_prepared(
+            root, config, all_files, sources, snapshot, resolver, true,
+        )?))
+    })
+}
+
+#[doc(hidden)]
+pub fn diagnostics_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
+    defer_suppression: bool,
+) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+    prepared::with_standalone(root, config, files, sources, |resolver| {
+        diagnostics_prepared(
+            root,
+            config,
+            files,
+            sources,
+            snapshot,
+            resolver,
+            defer_suppression,
+        )
+    })
+}
+
+#[doc(hidden)]
+pub fn diagnostics_prepared(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
+    resolver: &PreparedConfigResolver<'_>,
+    defer_suppression: bool,
+) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+    let mut diagnostics =
+        dispatch::collect(root, config, all_files, sources, snapshot, true, resolver)?;
+    if !defer_suppression {
+        super::suppress_rule_findings_with_sources(root, &mut diagnostics.findings, sources);
+        super::suppress_rule_findings_with_sources(root, &mut diagnostics.advisories, sources);
+    }
+    Ok(diagnostics)
+}
+
+pub(crate) fn check_prepared(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
+    resolver: &PreparedConfigResolver<'_>,
+) -> Result<Vec<RuleFinding>> {
+    let diagnostics =
+        diagnostics_prepared(root, config, all_files, sources, snapshot, resolver, true)?;
     Ok(dispatch::finish_findings(diagnostics))
 }
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod reexport_tests;
+/// Configured Next.js project roots admitted to the ordinary project catalog.
+#[doc(hidden)]
+pub fn configured_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
+    let mut roots = config
+        .rule_applications(RULE_ID)
+        .into_iter()
+        .flat_map(|rule| super::target_roots(root, config, rule))
+        .collect::<Vec<_>>();
+    roots.sort();
+    roots.dedup();
+    roots
+}

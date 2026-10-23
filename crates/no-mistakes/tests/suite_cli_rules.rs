@@ -18,6 +18,8 @@ mod cli_check_declared_payload;
 mod cli_check_finite_set;
 #[path = "cli_check_mermaid.rs"]
 mod cli_check_mermaid;
+#[path = "cli_check_redirect_delegation.rs"]
+mod cli_check_redirect_delegation;
 #[path = "cli_check_repository_inventory.rs"]
 mod cli_check_repository_inventory;
 #[path = "cli_check_rules.rs"]

@@ -1,18 +1,17 @@
 use super::super::super::RuleFinding;
-use super::super::extract::{extract_named_destinations_with, ExtractedDestination};
+use super::super::extract::{ExtractedDestination, ExtractedDestinations};
 use super::super::routes::{destination_matches, should_skip_destination, strip_query_and_hash};
 use super::{contains_word, finding, word_line};
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::config::v2::{EffectiveRuleAnalysis, Effort, Unanalyzable};
 use std::collections::BTreeSet;
-use std::path::Path;
 
-pub(crate) const REWRITE: &str = "return a literal array of objects with string destination fields, for example return [{ source: '/a', destination: '/b', permanent: true }]";
+const REDIRECT_REWRITE: &str = "return a literal array of objects with string destination fields, for example return [{ source: '/a', destination: '/b', permanent: true }]";
 
 pub struct NamedCheck<'a> {
     pub rel: &'a str,
     pub source: &'a str,
-    pub config_path: &'a Path,
+    pub extracted: &'a ExtractedDestinations,
     pub name: &'a str,
     pub kind: &'a str,
     pub route_set: &'a BTreeSet<String>,
@@ -22,8 +21,7 @@ pub struct NamedCheck<'a> {
 
 pub fn check_named_section(check: NamedCheck<'_>) -> AnalysisDiagnostics {
     let low = check.analysis.effort == Effort::Low;
-    let extracted =
-        extract_named_destinations_with(check.config_path, check.source, check.name, low);
+    let extracted = check.extracted;
     if !extracted.body_found {
         return missing_body(&check, low);
     }
@@ -55,9 +53,14 @@ fn missing_body(check: &NamedCheck<'_>, low: bool) -> AnalysisDiagnostics {
     if !contains_word(check.source, check.name) {
         return diagnostics;
     }
+    let rewrite = if check.kind == "rewrite" {
+        "return a literal array of objects with string destination fields, for example return [{ source: '/a', destination: '/b' }]"
+    } else {
+        REDIRECT_REWRITE
+    };
     let message = if low {
         format!(
-            "{}: nextjs-redirect-destinations could not locate the {}() body at effort low; {REWRITE}",
+            "{}: nextjs-redirect-destinations could not locate the {}() body at effort low; {rewrite}",
             check.rel, check.name
         )
     } else {
@@ -79,9 +82,14 @@ shape or the extractor so stale {} destinations cannot slip through.",
 
 fn no_string_destinations(check: &NamedCheck<'_>, low: bool) -> AnalysisDiagnostics {
     let mut diagnostics = AnalysisDiagnostics::default();
+    let rewrite = if check.kind == "rewrite" {
+        "return a literal array of objects with string destination fields, for example return [{ source: '/a', destination: '/b' }]"
+    } else {
+        REDIRECT_REWRITE
+    };
     let message = if low {
         format!(
-            "{}: nextjs-redirect-destinations found destination properties in {}() that are not string literals at effort low; {REWRITE}",
+            "{}: nextjs-redirect-destinations found destination properties in {}() that are not string literals at effort low; {rewrite}",
             check.rel, check.name
         )
     } else {
@@ -102,9 +110,14 @@ so {} construction changes are not silent.",
 }
 
 fn incomplete_finding(check: &NamedCheck<'_>, low: bool) -> RuleFinding {
+    let rewrite = if check.kind == "rewrite" {
+        "return a literal array of objects with string destination fields, for example return [{ source: '/a', destination: '/b' }]"
+    } else {
+        REDIRECT_REWRITE
+    };
     let message = if low {
         format!(
-            "{}: nextjs-redirect-destinations extraction is unanalyzable in {}() at effort low; {REWRITE}",
+            "{}: nextjs-redirect-destinations extraction is unanalyzable in {}() at effort low; {rewrite}",
             check.rel, check.name
         )
     } else {

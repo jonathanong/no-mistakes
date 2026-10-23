@@ -17,7 +17,7 @@ fn redirect_config(options: &str) -> NoMistakesConfig {
 }
 
 #[test]
-fn nextjs_advisory_collection_covers_suppressed_and_ordinary_paths() {
+fn final_advisory_collection_does_not_rescan_nextjs_configs() {
     let root = no_mistakes::codebase::ts_resolver::normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/nextjs-redirect-destinations/fixture/dest-non-string"),
@@ -34,6 +34,6 @@ fn nextjs_advisory_collection_covers_suppressed_and_ordinary_paths() {
     .unwrap();
     let ordinary = collect(true, false, &root, &config, &files, &sources).unwrap();
     let deferred = collect(true, true, &root, &config, &files, &sources).unwrap();
-    assert_eq!(ordinary.len(), 1, "{ordinary:?}");
+    assert!(ordinary.is_empty(), "{ordinary:?}");
     assert_eq!(deferred, ordinary);
 }

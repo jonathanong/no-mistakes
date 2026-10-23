@@ -36,7 +36,7 @@ pub(super) fn extract_named_destinations_with(
     .unwrap_or_default()
 }
 
-fn extract_named_destinations_from_program(
+pub(super) fn extract_named_destinations_from_program(
     program: &Program<'_>,
     source: &str,
     name: &str,
@@ -50,7 +50,11 @@ fn extract_named_destinations_from_program(
         saw_destination_property: false,
         incomplete: false,
         literals_only,
-        environment: program_environment(program),
+        environment: if literals_only {
+            Environment::new()
+        } else {
+            program_environment(program)
+        },
     };
     finder.visit_program(program);
     ExtractedDestinations {
@@ -108,7 +112,11 @@ impl<'a> Visit<'a> for BodyFinder<'a, '_> {
         flags: oxc_syntax::scope::ScopeFlags,
     ) {
         let outer = self.environment.clone();
-        self.environment = parameter_environment(&function.params, &outer);
+        self.environment = if self.literals_only {
+            Environment::new()
+        } else {
+            parameter_environment(&function.params, &outer)
+        };
         walk::walk_function(self, function, flags);
         self.environment = outer;
     }
@@ -117,20 +125,32 @@ impl<'a> Visit<'a> for BodyFinder<'a, '_> {
         function: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     ) {
         let outer = self.environment.clone();
-        self.environment = parameter_environment(&function.params, &outer);
+        self.environment = if self.literals_only {
+            Environment::new()
+        } else {
+            parameter_environment(&function.params, &outer)
+        };
         walk::walk_arrow_function_expression(self, function);
         self.environment = outer;
     }
     fn visit_function_body(&mut self, body: &oxc_ast::ast::FunctionBody<'a>) {
         let outer = self.environment.clone();
-        self.environment = scope_environment(&body.statements, &outer);
+        self.environment = if self.literals_only {
+            Environment::new()
+        } else {
+            scope_environment(&body.statements, &outer)
+        };
         walk::walk_function_body(self, body);
         self.environment = outer;
     }
 
     fn visit_block_statement(&mut self, block: &oxc_ast::ast::BlockStatement<'a>) {
         let outer = self.environment.clone();
-        self.environment = scope_environment(&block.body, &outer);
+        self.environment = if self.literals_only {
+            Environment::new()
+        } else {
+            scope_environment(&block.body, &outer)
+        };
         walk::walk_block_statement(self, block);
         self.environment = outer;
     }

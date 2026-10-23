@@ -1,5 +1,7 @@
+mod delegated_effort;
 mod effort;
 mod extract;
+mod named_section;
 mod static_values;
 mod tracked_routes;
 use super::options::Options;

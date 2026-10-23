@@ -1,5 +1,5 @@
 use super::options::Options;
-use super::scan::scan_diagnostics;
+use super::scan::{scan_diagnostics, ScanContext};
 use super::RULE_ID;
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::RuleFinding;
@@ -16,6 +16,7 @@ pub(super) fn collect(
     sources: &crate::codebase::ts_source::SourceStore,
     snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
     require_tracked_snapshot: bool,
+    resolver: &super::PreparedConfigResolver<'_>,
 ) -> Result<AnalysisDiagnostics> {
     let all: Result<Vec<AnalysisDiagnostics>> = config
         .rule_applications(RULE_ID)
@@ -46,6 +47,7 @@ pub(super) fn collect(
                         snapshot,
                         target_roots: &target_roots,
                         skip: &skip,
+                        resolver,
                     })
                 } else if require_tracked_snapshot {
                     Err(missing_tracked_inventory(root))
@@ -56,8 +58,11 @@ pub(super) fn collect(
                         &files,
                         &files,
                         &target_roots,
-                        sources,
-                        analysis,
+                        &ScanContext {
+                            sources,
+                            analysis,
+                            resolver,
+                        },
                     ))
                 }
             } else {
@@ -67,8 +72,11 @@ pub(super) fn collect(
                     &files,
                     &files,
                     &target_roots,
-                    sources,
-                    analysis,
+                    &ScanContext {
+                        sources,
+                        analysis,
+                        resolver,
+                    },
                 ))
             }
         })
@@ -81,6 +89,7 @@ pub(super) fn collect(
 }
 
 struct TrackedScan<'a> {
+    resolver: &'a super::PreparedConfigResolver<'a>,
     root: &'a Path,
     config: &'a NoMistakesConfig,
     rule: &'a crate::config::v2::schema::RuleDef,
@@ -153,8 +162,11 @@ fn tracked(scan: TrackedScan<'_>) -> Result<AnalysisDiagnostics> {
             &target_files,
             &tracked,
             std::slice::from_ref(target_root),
-            scan.sources,
-            scan.analysis,
+            &ScanContext {
+                sources: scan.sources,
+                analysis: scan.analysis,
+                resolver: scan.resolver,
+            },
         ));
     }
     Ok(diagnostics)

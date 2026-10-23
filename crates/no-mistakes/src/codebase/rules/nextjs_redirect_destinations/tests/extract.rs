@@ -1,12 +1,7 @@
-use super::super::extract::{extract_named_destinations_with, ExtractedDestinations};
-use super::super::scan::{check_named_section, NamedCheck};
-use crate::config::v2::EffectiveRuleAnalysis;
+use super::super::extract::ExtractedDestinations;
+use super::named_section::{check_named_section, extract_named_destinations};
 use std::collections::BTreeSet;
 use std::path::Path;
-
-fn extract_named_destinations(path: &Path, source: &str, name: &str) -> ExtractedDestinations {
-    extract_named_destinations_with(path, source, name, false)
-}
 
 #[test]
 fn substring_redirects_text_is_not_extractor_drift() {
@@ -16,17 +11,15 @@ fn substring_redirects_text_is_not_extractor_drift() {
         "redirects",
     );
     assert!(!extracted.body_found);
-    let findings = check_named_section(NamedCheck {
-        rel: "next.config.ts",
-        source: "export default { preredirects() { return []; } };\n",
-        config_path: Path::new("next.config.ts"),
-        name: "redirects",
-        kind: "redirect",
-        route_set: &BTreeSet::new(),
-        app_root_label: "app",
-        analysis: EffectiveRuleAnalysis::default(),
-    })
-    .findings;
+    let findings = check_named_section(
+        "next.config.ts",
+        "export default { preredirects() { return []; } };\n",
+        Path::new("next.config.ts"),
+        "redirects",
+        "redirect",
+        &BTreeSet::new(),
+        "app",
+    );
     assert!(findings.is_empty(), "{findings:?}");
 }
 

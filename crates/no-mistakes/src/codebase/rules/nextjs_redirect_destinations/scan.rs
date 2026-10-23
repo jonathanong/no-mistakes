@@ -1,16 +1,21 @@
 use super::super::RuleFinding;
 use super::config::{display_app_root, resolve_config_path, resolved_app_root};
 use super::options::Options;
+pub(super) use super::words::{contains_word, word_line};
 use super::RULE_ID;
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
-use crate::codebase::ts_source::{
-    byte_offset_to_line, has_disable_file_comment, relative_slash_path,
-};
-use crate::config::v2::EffectiveRuleAnalysis;
+use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
+use crate::config::v2::{EffectiveRuleAnalysis, Effort};
 use std::path::{Path, PathBuf};
 
 mod named;
 pub(super) use named::{check_named_section, NamedCheck};
+
+pub(super) struct ScanContext<'a> {
+    pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
+    pub(super) resolver: &'a super::PreparedConfigResolver<'a>,
+    pub(super) analysis: EffectiveRuleAnalysis,
+}
 
 pub(super) fn scan_diagnostics(
     root: &Path,
@@ -18,20 +23,11 @@ pub(super) fn scan_diagnostics(
     files: &[PathBuf],
     route_files: &[PathBuf],
     target_roots: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-    analysis: EffectiveRuleAnalysis,
+    context: &ScanContext<'_>,
 ) -> AnalysisDiagnostics {
     let mut diagnostics = AnalysisDiagnostics::default();
     for target_root in target_roots {
-        let next = scan_target(
-            root,
-            opts,
-            files,
-            route_files,
-            target_root,
-            sources,
-            analysis,
-        );
+        let next = scan_target(root, opts, files, route_files, target_root, context);
         diagnostics.findings.extend(next.findings);
         diagnostics.advisories.extend(next.advisories);
     }
@@ -44,9 +40,13 @@ fn scan_target(
     files: &[PathBuf],
     route_files: &[PathBuf],
     target_root: &Path,
-    sources: &crate::codebase::ts_source::SourceStore,
-    analysis: EffectiveRuleAnalysis,
+    context: &ScanContext<'_>,
 ) -> AnalysisDiagnostics {
+    let ScanContext {
+        sources,
+        resolver,
+        analysis,
+    } = *context;
     let Some(config_path) = resolve_config_path(target_root, files, opts.config_path.as_deref())
     else {
         return AnalysisDiagnostics::default();
@@ -61,10 +61,12 @@ fn scan_target(
     let route_set = super::routes::build_route_set(route_files, &app_root);
     let app_root_label = display_app_root(opts.app_root.as_deref());
     let rel = relative_slash_path(root, &config_path);
+    let extracted =
+        super::delegate::analyze_config(&config_path, &source, analysis.effort == Effort::Low);
     let mut diagnostics = check_named_section(NamedCheck {
         rel: &rel,
         source: &source,
-        config_path: &config_path,
+        extracted: &extracted.redirects,
         name: "redirects",
         kind: "redirect",
         route_set: &route_set,
@@ -75,7 +77,7 @@ fn scan_target(
         diagnostics.append(check_named_section(NamedCheck {
             rel: &rel,
             source: &source,
-            config_path: &config_path,
+            extracted: &extracted.rewrites,
             name: "rewrites",
             kind: "rewrite",
             route_set: &route_set,
@@ -83,31 +85,22 @@ fn scan_target(
             analysis,
         }));
     }
+    diagnostics.append(super::delegate::append_delegated(
+        &super::delegate::DelegateRequest {
+            root,
+            config_path: &config_path,
+            source: &source,
+            files,
+            sources,
+            resolver,
+            route_set: &route_set,
+            app_root_label: &app_root_label,
+            include_rewrites: opts.include_rewrites,
+            specifier: extracted.specifier.as_deref(),
+            analysis,
+        },
+    ));
     diagnostics
-}
-
-pub(super) fn contains_word(source: &str, word: &str) -> bool {
-    source
-        .match_indices(word)
-        .any(|(index, _)| is_word_at(source, index, word.len()))
-}
-
-pub(super) fn word_line(source: &str, word: &str) -> usize {
-    source
-        .match_indices(word)
-        .find(|(index, _)| is_word_at(source, *index, word.len()))
-        .map(|(index, _)| byte_offset_to_line(source, index) as usize)
-        .unwrap_or(1)
-}
-
-fn is_word_at(source: &str, index: usize, len: usize) -> bool {
-    let before = source[..index].chars().next_back();
-    let after = source[index + len..].chars().next();
-    !before.is_some_and(is_word_char) && !after.is_some_and(is_word_char)
-}
-
-fn is_word_char(ch: char) -> bool {
-    ch.is_ascii_alphanumeric() || ch == '_'
 }
 
 pub(super) fn finding(file: &str, line: usize, message: String) -> RuleFinding {

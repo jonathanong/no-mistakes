@@ -232,3 +232,5 @@ nextConfig;` checks `next-shared.ts` when the selected tsconfig maps `@/*` to
 Only one hop is followed. Package imports, `baseUrl`-only specifiers, and a
 second delegated module are outside this bounded extraction. Keep redirects
 and rewrites in the directly delegated module to make them statically checkable.
+
+At either effort, the same one-hop relative re-export or configured TypeScript paths alias is followed. Low effort checks literal destinations in the delegated file and applies `unanalyzable` to its unsupported entries. Findings and advisories name that helper file, including its suppression directives. For rewrites, use `return [{ source: "/a", destination: "/b" }]` (no `permanent` field).

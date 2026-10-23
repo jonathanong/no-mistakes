@@ -1,0 +1,7 @@
+rules:
+  - rule: nextjs-redirect-destinations
+    scope: repository
+    message: preserve configured guidance
+    options:
+      effort: low
+      unanalyzable: advise

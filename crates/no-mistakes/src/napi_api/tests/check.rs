@@ -362,3 +362,6 @@ fn check_json_reports_unproven_member_query_sql_without_warnings() {
 
 #[path = "check_analysis_policy.rs"]
 mod check_analysis_policy;
+
+#[path = "check_redirect_effort.rs"]
+mod check_redirect_effort;
