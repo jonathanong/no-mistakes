@@ -66,6 +66,25 @@ pub(super) fn run(
     } else {
         config
     };
+    let mut without_version_pins;
+    let config = if config.rule_configured(rules::VERSION_PIN_CONSISTENCY) {
+        diagnostics.append(
+            rules::version_pin_consistency::diagnostics_with_files_and_sources(
+                root,
+                config,
+                files,
+                &prepared.sources,
+                defer_suppression,
+            )?,
+        );
+        without_version_pins = config.clone();
+        without_version_pins
+            .rules
+            .retain(|rule| rule.rule != rules::VERSION_PIN_CONSISTENCY);
+        &without_version_pins
+    } else {
+        config
+    };
     let findings = if defer_suppression {
         rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
             root, config, files, prepared, facts,

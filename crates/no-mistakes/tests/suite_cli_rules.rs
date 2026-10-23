@@ -89,3 +89,6 @@ mod cli_check_git_identity_prefixes;
 
 #[path = "cli_check_storybook_effort.rs"]
 mod cli_check_storybook_effort;
+
+#[path = "cli_check_version_pin_policy.rs"]
+mod cli_check_version_pin_policy;

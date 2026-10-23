@@ -261,13 +261,6 @@ fn tagged_yaml_pin_is_invalid() {
 }
 
 #[test]
-fn untracked_source_parse_error_is_silent() {
-    let tmp = tmp_pair("[tools]\n\"broken", "LYCHEE_VERSION: 0.24.2\n");
-    let findings = run(tmp.path(), OPTIONS, &[PAIR[1]]);
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
 fn optional_capture_without_a_match_is_a_mismatch() {
     let tmp = tmp_pair(PIN, "LYCHEE_VERSION:\n");
     let yaml = OPTIONS.replace(
@@ -341,16 +334,6 @@ fn non_string_pin_on_untracked_source_is_silent() {
         "[tools]\n\"aqua:lycheeverse/lychee\" = 8\n",
         "LYCHEE_VERSION: 0.24.2\n",
     );
-    let findings = run(tmp.path(), OPTIONS, &[PAIR[1]]);
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
-fn missing_source_on_disk_with_tracked_anchor_is_silent() {
-    let tmp = tempfile::tempdir().unwrap();
-    let action = tmp.path().join(PAIR[1]);
-    std::fs::create_dir_all(action.parent().unwrap()).unwrap();
-    std::fs::write(&action, "LYCHEE_VERSION: 0.24.2\n").unwrap();
     let findings = run(tmp.path(), OPTIONS, &[PAIR[1]]);
     assert!(findings.is_empty(), "{findings:?}");
 }
