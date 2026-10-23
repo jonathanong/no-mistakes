@@ -33,3 +33,8 @@ arrayAlias('unused', ['repos/O/R/labels?per_page=100']);
 const { ...rest } = api;
 rest.gh(['api', 'repos/O/R/labels?per_page=100']);
 export { shadow, defaults };
+// Chained intrinsic forwarding invokes the explicit receiver, not ghApi.
+ghApi.call.call(other, null, 'unused', ['repos/O/R/labels?per_page=100']);
+ghApi.apply.call(other, null, ['unused', ['repos/O/R/labels?per_page=100']]);
+ghApi.call.apply(other, [null, 'unused', ['repos/O/R/labels?per_page=100']]);
+ghApi.apply.apply(other, [null, ['unused', ['repos/O/R/labels?per_page=100']]]);

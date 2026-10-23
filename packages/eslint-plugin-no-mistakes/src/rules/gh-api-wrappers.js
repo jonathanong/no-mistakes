@@ -45,7 +45,7 @@ function createWrapperResolver(context, wrappers) {
     // A configured method literally named call/apply owns its original arguments.
     const direct = resolve(node.callee, node.arguments);
     if (direct) return direct;
-    const invoked = logicalCall(node);
+    const invoked = logicalCall(node, (callee) => resolve(callee, []));
     return invoked ? resolve(invoked.callee, invoked.arguments) : null;
   };
 }

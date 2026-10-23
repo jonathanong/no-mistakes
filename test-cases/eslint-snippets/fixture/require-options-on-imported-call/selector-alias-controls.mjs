@@ -36,3 +36,8 @@ class PrivateReceiver {
     send('input');
   }
 }
+const respond = createResponse;
+respond.call.call(other, null, 'input');
+respond.apply.call(other, null, ['input']);
+respond.call.apply(other, [null, 'input']);
+respond.apply.apply(other, [null, ['input']]);

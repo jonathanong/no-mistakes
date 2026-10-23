@@ -52,7 +52,10 @@ avoid re-exporting the banned binding.
 Same-file imported capability calls also include comma callees, optional calls,
 and static `.call` / literal-array `.apply` forwarding, including string and
 expression-free template member keys. An explicitly banned export named `call`
-or `apply` takes precedence over forwarding. Dynamic member keys, spread
+or `apply` takes precedence at every forwarding step, including
+`namespace.call.call(null)`. Unmatched nested intrinsic forwarding follows its
+explicit receiver: `clear.call.call(other, null)` invokes `other()` and is not
+attributed to `clear`. Dynamic member keys, spread
 `.call` arguments, and opaque, sparse, or spread `.apply` argument arrays are
 not resolved through forwarding. Calls still use the existing scope and
 assignment tracking, so a shadowed binding does not inherit the import identity.

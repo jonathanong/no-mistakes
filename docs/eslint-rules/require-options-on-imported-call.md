@@ -73,7 +73,14 @@ client.chat.responses.create({ signal });
     pattern. `*` is one segment, `**` is any prefix (`**.responses` also
     matches `responses`), and `/regex/` is tested against the dotted path
     without added anchors. `client.responses.create` matches `*.responses`;
-    `client.chat.responses.create` does not.
+    `client.chat.responses.create` does not. Glob matching preserves property
+    boundaries: `client["foo.responses"]` and `client["foo/responses"]` do not
+    match `client.foo.responses`. Literal slash and percent bytes in a pattern
+    remain literal, so `client.foo/responses` matches the single slash-containing
+    property. Percent-encoded-looking keys keep their literal text.
+    Regex selectors retain joined dotted text: a literal dotted key can have
+    the same regex input as nested properties. Use a glob when those boundaries
+    must remain distinct.
   A target that sets both `globalNamePatterns` and `receiverPatterns`, omits
   its kind, or uses a slash-wrapped pattern that does not compile (`/[/`,
   `/(/`, `/*/`) fails at config load in ESLint and Oxlint. It does not load
@@ -183,7 +190,10 @@ Spreads do not count as known keys.
 
 ## Limits
 
-A receiver method named `call` or `apply`, such as `client.apply(input)`, is that method. Forwarding applies only when the direct callee is not itself a configured target. An `.apply` call with a spread argument is not rewritten, because the literal array may not be the runtime argument list.
+A receiver method named `call` or `apply`, such as `client.apply(input)`, is that method. Forwarding stops at the first configured target, including a method named `call`
+or `apply` reached after another forwarding step. Unmatched nested intrinsic
+forwarding uses its explicit receiver, so `createResponse.call.call(other, null, input)`
+invokes `other(input)` rather than `createResponse(input)`. An `.apply` call with a spread argument is not rewritten, because the literal array may not be the runtime argument list.
 
 Another file's re-export is not visible here. `import { check } from "./barrel.mjs"; check(url)` stays unreported when `barrel.mjs` is `export { validateUrl as check } from "ssrf-guard/node"` or `export * from "ssrf-guard/node"`. A parameter default such as `function run({ validateUrl } = guard)` is not judged, because the caller can pass a different object. `const check = (0, validateUrl)` is still `validateUrl`. `const check = validateUrl<string>` is still `validateUrl`. `import * as guard from "ssrf-guard/node"; const api = guard; api.validateUrl(url)` is still `validateUrl`.
 

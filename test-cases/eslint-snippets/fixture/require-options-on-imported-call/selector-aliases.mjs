@@ -22,3 +22,10 @@ invoke('input');
 make('input');
 make('input'); // no-mistakes-disable-line require-options-on-imported-call -- protocol fixture
 make('input', { safe: true });
+client.call.call(null, 'input');
+client.call.apply(null, ['input']);
+make.call.call(make, null, 'input');
+make.apply.call(make, null, ['input']);
+make.call.apply(make, [null, 'input']);
+make.apply.apply(make, [null, ['input']]);
+(0, make.call).call(make, null, 'input');

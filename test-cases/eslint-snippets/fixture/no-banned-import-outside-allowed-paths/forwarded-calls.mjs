@@ -27,3 +27,16 @@ function shadowAlias(alias) { (0, alias)(); }
 alias?.();
 clear[`call`](null);
 clear[`apply`](null, []);
+namespace.call.call(null);
+namespace.apply.apply(null, []);
+clear.call.call(clear, null);
+clear.apply.call(clear, null, []);
+clear.call.apply(clear, [null]);
+clear.apply.apply(clear, [null, []]);
+// Intrinsic forwarding with an unrelated explicit receiver is not clear().
+clear.call.call(other, null);
+clear.apply.call(other, null, []);
+clear.call.apply(other, [null]);
+clear.apply.apply(other, [null, []]);
+(0, clear.call).call(clear, null);
+(0, clear.call)(null);

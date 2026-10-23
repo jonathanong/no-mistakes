@@ -24,3 +24,12 @@ alias('unused', ['repos/O/R/labels?per_page=100']);
 alias('unused', ['repos/O/R/labels?per_page=100']); // no-mistakes-disable-line gh-api-argument-safety -- protocol fixture
 export { nested };
 api[`apply`](['api', 'repos/O/R/labels?per_page=100']);
+api.call.call(null, ['api', 'repos/O/R/labels?per_page=100']);
+api.apply['call'](null, ['api', 'repos/O/R/labels?per_page=100']);
+api.call.apply(null, [['api', 'repos/O/R/labels?per_page=100']]);
+api.apply.apply(null, [['api', 'repos/O/R/labels?per_page=100']]);
+ghApi.call.call(ghApi, null, 'unused', ['repos/O/R/labels?per_page=100']);
+ghApi.apply.call(ghApi, null, ['unused', ['repos/O/R/labels?per_page=100']]);
+ghApi.call.apply(ghApi, [null, 'unused', ['repos/O/R/labels?per_page=100']]);
+ghApi.apply.apply(ghApi, [null, ['unused', ['repos/O/R/labels?per_page=100']]]);
+(0, ghApi.call).call(ghApi, null, 'unused', ['repos/O/R/labels?per_page=100']);

@@ -18,7 +18,8 @@ function createInvocationChecker(context, config, activeAliases) {
   function checkInvocation(node) {
     const aliases = activeAliases();
     const direct = tagForExpression(node.callee, context, aliases, config);
-    const invoked = !direct && logicalCall(node);
+    const invoked =
+      !direct && logicalCall(node, (callee) => tagForExpression(callee, context, aliases, config));
     const tag = direct || (invoked && tagForExpression(invoked.callee, context, aliases, config));
     if (tag?.kind === "direct") {
       reportCall(node.callee, tag.module, tag.name);

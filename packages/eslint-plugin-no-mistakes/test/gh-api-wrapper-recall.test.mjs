@@ -36,6 +36,15 @@ describe("configured GH wrapper recall", () => {
         [18, "endpointQuery"],
         [21, "endpointQuery"],
         [26, "endpointQuery"],
+        [27, "endpointQuery"],
+        [28, "endpointQuery"],
+        [29, "endpointQuery"],
+        [30, "endpointQuery"],
+        [31, "endpointQuery"],
+        [32, "endpointQuery"],
+        [33, "endpointQuery"],
+        [34, "endpointQuery"],
+        [35, "endpointQuery"],
       ],
     );
   });

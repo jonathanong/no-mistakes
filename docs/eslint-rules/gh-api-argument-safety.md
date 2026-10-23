@@ -52,7 +52,10 @@ aliases, namespace aliases, and object destructuring
 without defaults preserve that binding identity, including static string or
 expression-free template keys. Optional/comma calls and `.call` / literal-array
 `.apply` forwarding preserve the configured argv position. A configured method
-literally named `call` or `apply` uses its original arguments. Dynamic member
+literally named `call` or `apply` uses its original arguments, including when
+forwarded again as `api.call.call(null, argv)`. Unmatched nested intrinsic
+forwarding uses the explicit receiver: `ghApi.call.call(other, null, argv)`
+invokes `other(argv)` and is not attributed to `ghApi`. Dynamic member
 names, mutable aliases, destructuring defaults, and cross-file aliases are not
 followed. Unrelated arrays starting with `api` are ignored.
 

@@ -28,7 +28,7 @@ function staticReceiverPath(node) {
   }
   if (current?.type !== "Identifier") return null;
   parts.unshift(current.name);
-  return parts.join(".");
+  return parts;
 }
 
 function createCallSelectors(context, options) {
@@ -121,7 +121,7 @@ function createCallSelectors(context, options) {
         }
         found.push({
           target,
-          resolved: { source: aliased.receiverPath, calleeName: aliased.calleeName },
+          resolved: { source: aliased.receiverPath.join("."), calleeName: aliased.calleeName },
         });
       }
       return;
@@ -136,7 +136,7 @@ function createCallSelectors(context, options) {
       ) {
         continue;
       }
-      found.push({ target, resolved: { source: receiverPath, calleeName: terminal } });
+      found.push({ target, resolved: { source: receiverPath.join("."), calleeName: terminal } });
     }
   }
 
@@ -174,7 +174,7 @@ function createCallSelectors(context, options) {
       };
       const direct = collect(unwrapExpression(node.callee), node.arguments);
       if (direct.length) return direct;
-      const invoked = logicalCall(node);
+      const invoked = logicalCall(node, (callee) => collect(callee, []).length > 0);
       if (!invoked) return [];
       return collect(unwrapExpression(invoked.callee), invoked.arguments);
     },
