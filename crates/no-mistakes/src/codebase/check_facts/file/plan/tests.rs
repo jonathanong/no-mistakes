@@ -1,4 +1,4 @@
-use super::{ts_extract_context, ts_extract_plan, ts_source};
+use super::{requires_parse, ts_extract_context, ts_extract_plan, ts_source};
 use crate::codebase::check_facts::CheckFactPlan;
 use crate::codebase::ts_source::facts::TsFactPlan;
 use std::path::{Path, PathBuf};
@@ -340,4 +340,26 @@ fn scoped_call_sites_select_normalized_paths_without_narrowing_generic_demand() 
     assert!(!ts_extract_plan(Path::new("/repo"), &plan, &other, None).call_sites);
     plan.graph.call_sites = true;
     assert!(ts_extract_plan(Path::new("/repo"), &plan, &other, None).call_sites);
+}
+
+#[test]
+fn raw_source_only_paths_parse_only_when_selected_for_call_sites() {
+    let root = Path::new("/repo");
+    let selected = PathBuf::from("/repo/src/entry.ts");
+    let other = PathBuf::from("/repo/src/other.ts");
+    let mut plan = CheckFactPlan {
+        raw_source: true,
+        ..Default::default()
+    };
+    plan.require_call_site_paths(std::slice::from_ref(&selected));
+    assert!(requires_parse(root, &plan, &selected, None));
+    assert!(requires_parse(
+        root,
+        &plan,
+        Path::new("/repo/src/nested/../entry.ts"),
+        None
+    ));
+    assert!(!requires_parse(root, &plan, &other, None));
+    plan.graph.call_sites = true;
+    assert!(requires_parse(root, &plan, &other, None));
 }
