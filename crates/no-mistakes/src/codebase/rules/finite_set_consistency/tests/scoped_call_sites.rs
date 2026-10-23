@@ -115,3 +115,32 @@ fn finite_set_call_sources_skip_unrelated_walks_without_changing_findings() {
     assert!(filled.covers_ts_fact_plan_for_path(&unrelated, required));
     assert_eq!(filled.ts[&unrelated].ts.call_sites.len(), 2);
 }
+
+#[test]
+fn default_path_call_site_coverage_preserves_generic_ts_map_semantics() {
+    let saved = call_literal_fixture_root("scoped-demand");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let selected = root.join("schedules.ts");
+    let unrelated = root.join("unrelated.tsx");
+    let files = [selected.clone(), unrelated.clone()];
+    let required = TsFactPlan {
+        call_sites: true,
+        ..Default::default()
+    };
+    let broad = crate::codebase::ts_source::facts::collect_ts_facts(&files, required);
+    let without_calls =
+        crate::codebase::ts_source::facts::collect_ts_facts(&files, TsFactPlan::default());
+    // Generic TsFactMap uses the trait default: coverage follows its global
+    // plan equally for the finite-set source and an unrelated collected source.
+    for path in [&selected, &unrelated] {
+        assert!(broad.covers_ts_fact_plan_for_path(path, required));
+        assert!(!without_calls.covers_ts_fact_plan_for_path(path, required));
+        assert_eq!(broad.get_ts_facts(path).unwrap().call_sites.len(), 2);
+        assert!(without_calls
+            .get_ts_facts(path)
+            .unwrap()
+            .call_sites
+            .is_empty());
+    }
+}
