@@ -321,6 +321,19 @@ fn split_named_files(code: &str, lang: &str, catalog: Option<&str>) -> Vec<(Stri
     let mut current = String::new();
     for line in code.lines() {
         if let Some(name) = path_comment(line, comment) {
+            // A shell path comment follows its shebang so the named file keeps
+            // the interpreter line at the top. Carry that header into the
+            // named file instead of writing an overwritten default file.
+            if matches!(lang, "sh" | "bash")
+                && current
+                    .lines()
+                    .filter(|line| !line.trim().is_empty())
+                    .all(|line| line.trim().starts_with("#!"))
+                && current.lines().any(|line| line.trim().starts_with("#!"))
+            {
+                current_name = name;
+                continue;
+            }
             if !current.trim().is_empty() {
                 files.push((current_name, current.trim_end().to_string()));
             }
