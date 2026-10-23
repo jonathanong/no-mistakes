@@ -63,9 +63,10 @@ describe("configured global and receiver selectors", () => {
   });
 
   it("checks optional calls and follows supported destructure aliases", () => {
+    // Two receiver aliases now report; a property default no longer proves its target.
     assert.deepEqual(
       ids("selectors-alias.ts"),
-      Array.from({ length: 10 }, () => "missingOptions"),
+      Array.from({ length: 11 }, () => "missingOptions"),
     );
   });
 

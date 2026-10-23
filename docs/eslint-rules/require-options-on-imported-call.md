@@ -124,20 +124,30 @@ and a spread-only object all fail. Unknown identifiers, calls, and parameters
 stay accepted even if they might be undefined at runtime.
 
 A comma callee such as `(0, createResponse)()` is the same call. Global and
-receiver selectors do not follow `const alias = createResponse` or
-`const responses = client.responses`. They do follow a stable `const`, `let`,
-or `var` object destructure with one initialization and no later writes:
-`const { createResponse: respond } = globalThis` and
-`const { create: make } = client.responses`, including a defaulted binding.
-Reassigned bindings, dynamic computed destructure keys, nested patterns, and
-receiver aliases are not reported. A literal computed key is static, so
-`const { ["createResponse"]: respond } = globalThis` is followed. A local
-binding, parameter, catch clause, class, or function with the global's name
-shadows it, and so does a value import. A
-type-only import does not. Ambient declarations do not count as shadowing.
-Receiver shape is the static spelling, so a local named `client` still matches
-`client.responses`. Dynamic members, call receivers, private names, and
-`globalThis[name]()` stay unreported.
+receiver selectors follow same-file immutable `const` aliases, including
+`const alias = createResponse`, `const send = client.responses.create`, and
+`const responses = client.responses`. Object destructuring through those aliases
+also preserves the selected static path. A directly configured receiver path
+keeps its lexical meaning even when its root has an opaque initializer.
+
+They also follow a stable `const`, `let`, or `var` direct object destructure with
+one initialization and no later writes: `const { createResponse: respond } =
+globalThis` and `const { create: make } = client.responses`. Property defaults,
+reassigned bindings, dynamic computed destructure keys, and nested patterns are
+not followed. For example, with `const client = { responses: {} }`,
+`const { create: make = fallback } = client.responses; make(input)` invokes
+`fallback`, rather than the selected method. A literal computed key is
+static, so `const { ["createResponse"]: respond } = globalThis` is followed.
+A local binding, parameter, catch clause, class, or function with the global's
+name shadows it, and so does a value import. A type-only import does not.
+Ambient declarations do not count as shadowing. Receiver shape is the static
+spelling, so a local named `client` still matches `client.responses`, including
+an alias of that explicitly selected path. Dynamic members, call receivers,
+private names, and `globalThis[name]()` stay unreported. Cross-file aliases such
+as `import { make } from "./barrel.mjs"; make(input)` are not inferred, even if
+the other file re-exports the global or selected receiver method. A parameter
+default such as `function run({ createResponse } = globalThis)` is not inferred,
+because the caller can pass another object.
 
 Default imports match the local binding name, including
 `import { default as local }`. Object destructure from a tracked namespace

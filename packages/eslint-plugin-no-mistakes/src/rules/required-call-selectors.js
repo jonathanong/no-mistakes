@@ -1,6 +1,7 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const { expandSelectorAlias } = require("./required-call-selector-aliases");
 const { logicalCall } = require("./module-mock-helpers");
 const { matchesAny } = require("./async-patterns");
 const { isReassigned, memberPropertyName, resolveVariable } = require("./async-target-bindings");
@@ -51,7 +52,7 @@ function createCallSelectors(context, options) {
     const receiverPath = staticReceiverPath(node.init);
     if (!globalRoot && !receiverPath) return;
     for (const property of node.id.properties) {
-      if (property.type !== "Property") continue;
+      if (property.type !== "Property" || property.value.type === "AssignmentPattern") continue;
       const name = staticPropertyName(property);
       const binding = bindingIdentifier(property.value);
       if (!name || !binding || isReassigned(binding, context)) continue;
@@ -151,6 +152,24 @@ function createCallSelectors(context, options) {
         const found = [];
         pushGlobals(callee, found);
         pushMembers(callee, found);
+        if (!found.length) {
+          const expanded = expandSelectorAlias(callee, context, (candidate, asReceiver) => {
+            const literal = [];
+            pushGlobals(candidate, literal);
+            pushMembers(candidate, literal);
+            const path = staticReceiverPath(candidate);
+            return (
+              literal.length > 0 ||
+              (asReceiver &&
+                path &&
+                compiled.members.some((target) => matchesDotted(path, target.receiverPatterns)))
+            );
+          });
+          if (expanded) {
+            pushGlobals(expanded, found);
+            pushMembers(expanded, found);
+          }
+        }
         return found.map((match) => ({ ...match, arguments: args }));
       };
       const direct = collect(unwrapExpression(node.callee), node.arguments);
