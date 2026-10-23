@@ -33,6 +33,10 @@ function joinValues(left, right) {
   if (left === right) {
     return left;
   }
+  // A choice of method values keeps ordinary object provenance. It does not
+  // select either receiver as the callable mutator for the whole expression.
+  if (left.mutator) left = left.mutator.member;
+  if (right.mutator) right = right.mutator.member;
   if (isBlank(left)) {
     return right;
   }
@@ -64,6 +68,7 @@ function joinValues(left, right) {
 }
 
 function readOnlyFresh(tag) {
+  if (tag.mutator) tag = tag.mutator.member;
   if (tag.type === "union") {
     return tag.members.every(readOnlyFresh);
   }

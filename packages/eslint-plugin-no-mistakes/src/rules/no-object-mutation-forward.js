@@ -3,17 +3,8 @@
 const { lookup } = require("./no-object-mutation-values");
 const { methodName, unwrap } = require("./no-object-mutation-ast");
 
-const ARRAY_METHODS = new Set([
-  "copyWithin",
-  "fill",
-  "pop",
-  "push",
-  "reverse",
-  "shift",
-  "sort",
-  "splice",
-  "unshift",
-]);
+const { ARRAY_METHODS } = require("./no-object-mutation-ast");
+
 const OBJECT_METHODS = new Set(["assign", "defineProperties", "defineProperty", "setPrototypeOf"]);
 const REFLECT_METHODS = new Set(["defineProperty", "set"]);
 

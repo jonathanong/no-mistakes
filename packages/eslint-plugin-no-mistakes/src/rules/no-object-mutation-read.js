@@ -1,5 +1,6 @@
 "use strict";
 
+const { ARRAY_METHODS } = require("./no-object-mutation-ast");
 const { joinValues } = require("./no-object-mutation-join");
 
 function unknown() {
@@ -7,6 +8,7 @@ function unknown() {
 }
 
 function elementTag(tag) {
+  if (tag.mutator) tag = tag.mutator.member;
   if (tag.type === "union") {
     let joined = unknown();
     for (const member of tag.members) {
@@ -32,7 +34,15 @@ function elementTag(tag) {
   return unknown();
 }
 
-function readMember(tag, key) {
+function readMember(tag, key, objectNode) {
+  if (tag?.mutator) tag = tag.mutator.member;
+  if (objectNode && ARRAY_METHODS.has(key)) {
+    const member = readMember(tag, key);
+    if (member.type === "fn" || member.fn) return member;
+    // Keep the receiver's actual value identity, including later escapes. The
+    // separate member tag preserves ordinary object/collection provenance.
+    return { type: "unknown", mutator: { receiver: tag, receiverNode: objectNode, member } };
+  }
   if (!tag || tag.type === "unknown" || tag.type === "fn") {
     return unknown();
   }
@@ -87,6 +97,7 @@ function reportableMember(tag) {
 }
 
 function iteratedContents(tag) {
+  if (tag.mutator) tag = tag.mutator.member;
   if (tag.type === "unknown" || tag.type === "fn") {
     return unknown();
   }
@@ -125,6 +136,11 @@ function iteratedContents(tag) {
 function escapeFresh(tag, seen = new Set()) {
   if (!tag || seen.has(tag)) {
     return;
+  }
+  if (tag.mutator) {
+    seen.add(tag);
+    escapeFresh(tag.mutator.receiver, seen);
+    for (const value of tag.mutator.boundArgs || []) escapeFresh(value, seen);
   }
   if (tag.type === "union") {
     seen.add(tag);

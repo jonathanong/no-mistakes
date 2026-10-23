@@ -69,6 +69,7 @@ function shouldReport(state, target) {
 }
 
 function considerWrite(state, target, node, info) {
+  if (target?.mutator) target = target.mutator.member;
   if (target?.type === "union") {
     for (const member of target.members) {
       considerWrite(state, member, node, info);

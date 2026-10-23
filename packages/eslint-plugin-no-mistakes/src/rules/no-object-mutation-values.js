@@ -62,6 +62,10 @@ function freshCopy(tag, scope) {
 }
 
 function remember(fresh, tag) {
+  if (tag?.mutator) {
+    fresh.items.push(tag);
+    tag = tag.mutator.member;
+  }
   if (!tag || tag.type === "unknown") {
     if (!fresh.dynamic) {
       fresh.dynamic = unknown();
