@@ -14,13 +14,18 @@ pub struct RuleEffortSupport {
     pub partner_scope: fn(&RuleDef, &RuleDef) -> bool,
 }
 
-// These positive syntax proofs need no companion rule: every other shape is
-// explicitly unanalyzable under the caller's policy, rather than inferred clear.
+// Each low implementation either names its enforced partners or reports
+// unsupported syntax explicitly under the caller's unanalyzable policy.
 const SUPPORT: &[RuleEffortSupport] = &[
     RuleEffortSupport {
         rule: "nextjs-no-caching",
         partners: &[],
         partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
+        rule: "github-actions-job-timeouts",
+        partners: &["github-actions-step-timeouts"],
+        partner_scope: super::github_actions_job_timeouts::partner_scope,
     },
     RuleEffortSupport {
         rule: "nextjs-redirect-destinations",
@@ -158,7 +163,19 @@ fn application_files(
 ) -> Result<Vec<PathBuf>> {
     let (mut files, roots) = super::selected_rule_files_with_roots(root, config, rule, visible)?;
     // Rule-local include/exclude narrows the application beyond project targeting.
-    if let Some(include) = patterns(rule, "include")? {
+    let include = patterns(rule, "include")?;
+    let include = if matches!(
+        rule.rule.as_str(),
+        "github-actions-job-timeouts" | "github-actions-step-timeouts"
+    ) {
+        Some(super::configured_includes(
+            include.unwrap_or_default(),
+            super::github_actions_job_timeouts::DEFAULT_INCLUDE,
+        ))
+    } else {
+        include
+    };
+    if let Some(include) = include {
         if !include.is_empty() {
             files = super::matching_files(root, &include, &files, &roots)?;
         }
