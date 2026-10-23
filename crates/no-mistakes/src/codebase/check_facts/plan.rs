@@ -39,6 +39,8 @@ pub struct CheckFactPlan {
     pub dynamic_imports: bool,
     pub nextjs_caching: bool,
     pub nextjs_caching_low: bool,
+    #[doc(hidden)]
+    pub nextjs_caching_paths: super::FamilyPathScope,
     pub storybook: bool,
     #[doc(hidden)]
     pub storybook_paths: super::FamilyPathScope,

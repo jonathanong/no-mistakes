@@ -6,6 +6,7 @@ use crate::codebase::unique_exports::UniqueExportFinding;
 use std::path::{Path, PathBuf};
 
 mod closure;
+mod nextjs;
 mod queue;
 mod storybook;
 mod unique;

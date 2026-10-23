@@ -188,3 +188,6 @@ fn fused_nextjs_scopes_preserve_other_fact_families() {
     }
     assert_eq!(references[0], references[1]);
 }
+
+mod nextjs_scope;
+pub(super) use nextjs_scope::{record_nextjs, record_walk};

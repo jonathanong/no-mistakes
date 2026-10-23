@@ -442,3 +442,43 @@ fn analyze_project_server_views_share_one_report_with_standalone_parity() {
 }
 
 include!("tests/serialize_once.rs");
+
+#[test]
+fn analyze_project_nextjs_scope_preserves_check_and_graph_batch_parity() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/check-facts/family-scope-nextjs"),
+    );
+    let analyze = |reports: Value| {
+        let output = analyze_project_value_impl(json!({
+            "root": root, "config": "graph.yml", "reports": reports
+        }))
+        .unwrap();
+        serde_json::from_str::<Value>(&output).unwrap()
+    };
+    let single = analyze(json!([{ "type": "check" }]));
+    let batch = analyze(json!([
+        { "type": "check" },
+        { "type": "dependents", "files": ["web/src/selected.ts"], "relationships": ["import"] }
+    ]));
+    let report = &single["reports"][0]["result"];
+    assert_eq!(report, &batch["reports"][0]["result"]);
+    let standalone: Value = serde_json::from_str(
+        &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "config": "graph.yml" }).to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(report, &standalone);
+    let cache: Vec<_> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| finding["rule"] == "nextjs-no-caching")
+        .collect();
+    assert_eq!(cache.len(), 1, "{report}");
+    assert!(!cache
+        .iter()
+        .any(|finding| finding["file"] == "web/src/skipped/selected.ts"));
+}

@@ -1,0 +1,66 @@
+use super::{ast, collect_fused_check_program, CheckFactPlan, Path};
+
+#[test]
+fn nextjs_scope_skips_actual_visitor_work_and_preserves_other_fused_consumers() {
+    use crate::codebase::check_facts::FamilyPathScope;
+    use std::sync::Arc;
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check-facts/family-scope-nextjs");
+    let selected = root.join("web/src/selected.ts");
+    let excluded = root.join("backend/excluded.ts");
+    let source = std::fs::read_to_string(&excluded).unwrap();
+    let mut plan = CheckFactPlan {
+        nextjs_caching: true,
+        nextjs_caching_paths: FamilyPathScope::Only(Arc::new(
+            [selected.clone()].into_iter().collect(),
+        )),
+        ..Default::default()
+    };
+    let collect = |path: &Path, plan: &CheckFactPlan| {
+        take_work_counts();
+        let facts = ast::with_program(path, &source, |program, source| {
+            collect_fused_check_program(path, source, program, plan)
+        })
+        .unwrap();
+        (facts, take_work_counts())
+    };
+    let (facts, counts) = collect(&excluded, &plan);
+    assert_eq!(
+        counts,
+        (0, 0),
+        "excluded cache-only files must not prepare or walk"
+    );
+    assert!(facts.nextjs_caching.is_none());
+    let (facts, counts) = collect(&selected, &plan);
+    assert_eq!(counts, (1, 1));
+    assert_eq!(facts.nextjs_caching.unwrap().len(), 1);
+    plan.dynamic_imports = true;
+    let (facts, counts) = collect(&excluded, &plan);
+    assert_eq!(
+        counts,
+        (0, 1),
+        "other consumers retain the shared walk without cache work"
+    );
+    assert_eq!(facts.dynamic_imports.unwrap().dynamic_imports.len(), 1);
+    assert!(facts.nextjs_caching.is_none());
+}
+
+use std::cell::Cell;
+thread_local! {
+    static COUNTS: Cell<(usize, usize)> = const { Cell::new((0, 0)) };
+}
+pub(crate) fn record_nextjs(enabled: bool) {
+    COUNTS.with(|counts| {
+        let (nextjs, walks) = counts.get();
+        counts.set((nextjs + usize::from(enabled), walks));
+    });
+}
+pub(crate) fn record_walk() {
+    COUNTS.with(|counts| {
+        let (nextjs, walks) = counts.get();
+        counts.set((nextjs, walks + 1));
+    });
+}
+pub(super) fn take_work_counts() -> (usize, usize) {
+    COUNTS.with(|counts| counts.replace((0, 0)))
+}

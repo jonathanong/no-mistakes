@@ -79,6 +79,13 @@ pub(super) fn build(
         prepared.visible_paths.source_store_for(root).as_ref(),
         &mut plan,
     )?;
+    no_mistakes::codebase::check_facts::configure_nextjs_caching_scope(
+        root,
+        prepared.visible_paths.paths_for(root).as_ref(),
+        config,
+        &prepared.inferred_roots,
+        &mut plan,
+    )?;
     no_mistakes::codebase::postgres::configure_prepared_postgres_plan(root, config, &mut plan)?;
     no_mistakes::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
     let schema_catalog_paths = no_mistakes::codebase::postgres::configured_schema_catalog_paths(

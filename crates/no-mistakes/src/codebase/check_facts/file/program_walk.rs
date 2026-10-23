@@ -1,4 +1,5 @@
 use super::super::CheckFactPlan;
+use crate::codebase::check_facts::family_scope::applies;
 use crate::codebase::rules::nextjs_no_caching::{
     finish_visitor, prepare_visitor, NextjsCachingFinding, NextjsCachingVisitor,
 };
@@ -31,9 +32,10 @@ pub(super) fn collect_fused_check_program(
     program: &Program<'_>,
     plan: &CheckFactPlan,
 ) -> FusedCheckFacts {
-    let storybook = plan.storybook
-        && crate::codebase::check_facts::family_scope::applies(&plan.storybook_paths, path);
-    if !plan.dynamic_imports && !plan.nextjs_caching && !plan.nextjs_caching_low && !storybook {
+    let storybook = plan.storybook && applies(&plan.storybook_paths, path);
+    let nextjs_caching = plan.nextjs_caching && applies(&plan.nextjs_caching_paths, path);
+    let nextjs_caching_low = plan.nextjs_caching_low && applies(&plan.nextjs_caching_paths, path);
+    if !plan.dynamic_imports && !nextjs_caching && !nextjs_caching_low && !storybook {
         return FusedCheckFacts {
             dynamic_imports: None,
             nextjs_caching: None,
@@ -41,18 +43,20 @@ pub(super) fn collect_fused_check_program(
             storybook: None,
         };
     }
+    #[cfg(test)]
+    tests::record_nextjs(nextjs_caching);
     let mut visitor = CheckProgramVisitor {
         dynamic: plan
             .dynamic_imports
             .then(|| Collector::new(source, program)),
-        nextjs: plan
-            .nextjs_caching
-            .then(|| prepare_visitor(path, source, program)),
-        nextjs_low: plan.nextjs_caching_low.then(|| {
+        nextjs: nextjs_caching.then(|| prepare_visitor(path, source, program)),
+        nextjs_low: nextjs_caching_low.then(|| {
             crate::codebase::rules::nextjs_no_caching::low::Collector::new(path, source, program)
         }),
         storybook_ids: storybook.then(HashSet::new),
     };
+    #[cfg(test)]
+    tests::record_walk();
     visitor.visit_program(program);
     FusedCheckFacts {
         dynamic_imports: visitor.dynamic.map(Collector::into_facts),

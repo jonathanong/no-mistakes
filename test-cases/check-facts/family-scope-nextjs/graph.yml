@@ -1,0 +1,18 @@
+filesystem:
+  skipDirectories: [skipped]
+projects:
+  web:
+    root: web
+    include: [src/**]
+    exclude: [src/project-excluded.ts]
+rules:
+  - rule: nextjs-no-caching
+    projects: [web]
+    include: [src/**/*.ts]
+    exclude: [src/generated/**]
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [web/src/selected.ts]
+      forbiddenModules: [never-imported-package]
+      relationships: [import]

@@ -88,6 +88,10 @@ under the selected policy. Low-only runs skip the max constant and configuration
 binding tables. Mixed low/max applications share the source inventory and parse,
 then use their respective facts.
 
+Shared analysis extracts this rule's caching facts only for the union of its
+selected applications. Other rules and graph relationships retain their own
+analysis demand. Suppression still applies after extraction.
+
 ## Valid example
 
 A selected server component with no cache directive, cached fetch, or configured

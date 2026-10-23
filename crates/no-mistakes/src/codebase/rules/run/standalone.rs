@@ -106,6 +106,13 @@ pub(super) fn run_check(
         sources.as_ref(),
         &mut fact_plan,
     )?;
+    crate::codebase::check_facts::configure_nextjs_caching_scope(
+        root,
+        &visible_paths,
+        &config,
+        &inferred_roots,
+        &mut fact_plan,
+    )?;
     let prepared_tsconfig_catalog = Arc::new(super::prepared_tsconfig_catalog(
         root,
         tsconfig_path,
