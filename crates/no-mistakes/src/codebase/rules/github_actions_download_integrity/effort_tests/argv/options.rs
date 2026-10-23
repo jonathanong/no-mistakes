@@ -75,3 +75,29 @@ fn uncertain_option_values_follow_policy_without_dropping_literal_violations() {
         }
     }
 }
+
+#[test]
+fn escaped_option_values_do_not_split_but_doubled_backslashes_allow_expansion() {
+    let path = ".github/workflows/escaped-option-values.yml";
+    let source = std::fs::read_to_string(fixture_root("effort-argv").join(path)).unwrap();
+    assert!(runs::check_source(path, &source, &hosts(), &[]).is_empty());
+    for policy in [
+        Unanalyzable::Report,
+        Unanalyzable::Advise,
+        Unanalyzable::Ignore,
+    ] {
+        let result = runs::check_source_low(path, &source, &hosts(), &[], policy);
+        assert_eq!(
+            result.findings.len(),
+            usize::from(policy == Unanalyzable::Report)
+        );
+        assert_eq!(
+            result.advisories.len(),
+            usize::from(policy == Unanalyzable::Advise)
+        );
+        for row in result.findings.iter().chain(&result.advisories) {
+            assert!(row.message.contains("step 4"), "{row:?}");
+            assert!(row.message.contains("unanalyzable at effort low"));
+        }
+    }
+}

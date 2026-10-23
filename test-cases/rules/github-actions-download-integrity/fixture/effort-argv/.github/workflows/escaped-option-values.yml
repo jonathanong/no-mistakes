@@ -1,0 +1,20 @@
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: escaped-separate-output
+        run: |
+          curl -o \$OUTPUT_FILE https://api.github.com/repos/example/project
+      - name: escaped-attached-output
+        run: |
+          curl -o\$OUTPUT_FILE https://api.github.com/repos/example/project
+      - name: escaped-inline-output
+        run: |
+          curl --output=\$OUTPUT_FILE https://api.github.com/repos/example/project
+      - name: doubled-backslash-expands
+        # Two backslashes protect each other, leaving the dollar expandable.
+        run: |
+          curl -o \\$OUTPUT_FILE https://api.github.com/repos/example/project
+      - name: tripled-backslash-keeps-dollar-literal
+        run: |
+          curl -o \\\$OUTPUT_FILE https://api.github.com/repos/example/project
