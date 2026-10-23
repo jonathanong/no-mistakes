@@ -6,11 +6,12 @@ const {
   stableConstInitializer,
   isReassigned,
 } = require("./async-target-bindings");
+const { mockInitializer } = require("./async-disposition-mock-bindings");
 const { memberPropertyName } = require("./async-targets");
 
 // Property writes invalidate provenance, including writes through stable local aliases.
 // This follows syntax in this file, not arbitrary callees' side effects.
-function propertiesWritten(node, context, seen = new Set()) {
+function propertiesWritten(node, context, seen = new Set(), initialization = null) {
   const variable = resolveVariable(node, context);
   const key = variable || node.name;
   if (seen.has(key)) return false;
@@ -37,6 +38,7 @@ function propertiesWritten(node, context, seen = new Set()) {
       value = unwrapTransparentParent(parent);
     }
     const parent = value.parent;
+    if (parent === initialization && parent.left === value) return false;
     if (
       (parent.type === "AssignmentExpression" && parent.left === value) ||
       parent.type === "UpdateExpression" ||
@@ -49,7 +51,13 @@ function propertiesWritten(node, context, seen = new Set()) {
       parent.id.type === "Identifier" &&
       ["const", "let"].includes(parent.parent.kind)
     )
-      return propertiesWritten(parent.id, context, seen);
+      return propertiesWritten(parent.id, context, seen, initialization);
+    if (
+      parent.type === "AssignmentExpression" &&
+      parent.right === value &&
+      parent.left.type === "Identifier"
+    )
+      return propertiesWritten(parent.left, context, seen, parent);
     return false;
   });
 }
@@ -98,24 +106,10 @@ function mockedInputWritten(node, context) {
 function mockCall(node, context, seen = new Set()) {
   node = unwrapExpression(node);
   if (node?.type === "Identifier") {
-    if (propertiesWritten(node, context)) return false;
-    const variable = resolveVariable(node, context);
-    if (
-      !variable ||
-      seen.has(variable) ||
-      variable.defs.length !== 1 ||
-      isReassigned(node, context)
-    )
-      return false;
-    seen.add(variable);
-    const def = variable.defs[0];
-    const init =
-      def.type === "Variable" &&
-      ["const", "let"].includes(def.parent.kind) &&
-      def.node.id.type === "Identifier"
-        ? def.node.init
-        : null;
-    return init ? mockCall(init, context, seen) : false;
+    const binding = mockInitializer(node, context, seen);
+    if (!binding || propertiesWritten(node, context, new Set(), binding.assignment)) return false;
+    seen.add(resolveVariable(node, context));
+    return binding.init ? mockCall(binding.init, context, seen) : false;
   }
   if (node?.type !== "CallExpression") return false;
   const callee = unwrapExpression(node.callee);

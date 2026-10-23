@@ -20,10 +20,13 @@ describe("async disposition follow-up saved recall", () => {
     "downstream-adoption.ts",
     "downstream-conditional-return.ts",
     "downstream-let-spy.ts",
+    "delayed-let-spy.ts",
     "conditional-sibling-push.ts",
   ]) {
     it(`accepts ${name}`, () => assert.deepEqual(reports(name), []));
   }
+  it("keeps delayed mock provenance controls reported", () =>
+    assert.deepEqual(reports("delayed-let-spy-controls.ts"), Array(22).fill("disposition")));
   it("keeps independent unhandled controls reported", () =>
     assert.deepEqual(reports("followup-controls.ts"), Array(21).fill("disposition")));
   it("keeps undrained siblings and previously retained conditional promises reported", () =>

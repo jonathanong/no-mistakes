@@ -13,6 +13,20 @@ import { enqueueEmail } from "@app/jobs";
 enqueueEmail(user.id);
 ```
 
+A conditional assignment does not establish identity for a later sibling call.
+Move setup into that call's block before installing the implementation.
+
+```ts
+import { enqueueEmail } from "@app/jobs";
+import { vi } from "vitest";
+
+function conditionalSetup(m, enabled) {
+  let spy;
+  if (enabled) spy = vi.spyOn(m, "enqueue");
+  spy.mockImplementation(() => enqueueEmail()); // reported: mock identity is unproven
+}
+```
+
 ## Allowed
 
 ```ts
@@ -50,6 +64,30 @@ async function sendBatch(ids) {
   pending.push(job);
   pending.push(enqueueEmail(ids[1]));
   await Promise.allSettled(pending);
+}
+```
+
+An uninitialized `let`, including a `MockInstance<...> | undefined` annotation,
+also establishes a mock after exactly one direct `=` assignment. The assignment
+and implementation call must be ordered sibling statements in the same block;
+the declaration may be in an enclosing scope. This includes setup inside a
+`try` body or a nested block.
+
+```ts
+import { enqueueEmail as original, enqueueRelease } from "@app/jobs";
+import { vi, type MockInstance } from "vitest";
+
+function install(m, selected) {
+  let spy: MockInstance<typeof m.enqueue> | undefined;
+  try {
+    spy = vi.spyOn(m, "enqueue");
+    spy.mockImplementation((tags, p) => {
+      if (selected) return original(tags, p);
+      return enqueueRelease(tags, p);
+    });
+  } finally {
+    spy?.mockRestore();
+  }
 }
 ```
 
@@ -141,7 +179,12 @@ is accepted through its return; this does not establish when an outer array is
 drained. Locally shadowed `vi`, `jest`, and `Promise` objects do not establish
 these dispositions. Direct property writes, updates, or deletion on a known mock
 or framework object, including through stable local aliases, invalidate its
-pass-through identity. The analysis does not prove that callers actually invoke
+pass-through identity. A delayed assignment must precede the use in the same
+executing block; an assignment inside `try` cannot prove identity after that
+`try`, because an earlier throw may bypass it. Other writes, compound or embedded
+assignments, assignments in another function, and unknown receivers remain
+unproven. Property writes through aliases also invalidate delayed mock bindings.
+The analysis does not prove that callers actually invoke
 or await a mock; its return follows the same explicit-disposition contract as
 an ordinary function return.
 
