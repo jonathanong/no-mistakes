@@ -56,6 +56,10 @@ per-step timeout comparison; the partner reports invalid or over-cap steps.
 Smaller job timeouts keep the full comparison, and all other job checks stay
 active. An unavailable partner warns and falls back to `max`. See
 [the rule](../rules/github-actions-job-timeouts.md#effort).
+For `require-storybook-stories`, `low` checks direct story and configured
+colocated-test coverage while skipping render-chain and dynamic/mock boundary
+analysis. Uncertain coverage follows the shared unanalyzable policy. See
+[the rule](../rules/require-storybook-stories.md#effort).
 `--include-suppressed` is opt-in and adds deterministic directive accounting to
 JSON/YAML output without changing the default report schema.
 `unprovenMemberQuerySql` is an optional count of member `.query` calls that were not proven, omitted when zero, and not a failure.

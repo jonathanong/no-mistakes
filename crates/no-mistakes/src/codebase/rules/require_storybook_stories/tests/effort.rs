@@ -30,10 +30,10 @@ fn run_config(
     root: &std::path::Path,
     mut config: NoMistakesConfig,
 ) -> crate::codebase::rules::analysis_policy::AnalysisDiagnostics {
-    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let files = crate::codebase::ts_source::discover_files(root, &[]);
     let sources = crate::codebase::rules::source_store_for_files(&files);
     crate::codebase::rules::analysis_policy::prepare_rule_analysis(
-        &root,
+        root,
         &mut config,
         &files,
         &sources,
@@ -47,12 +47,12 @@ fn run_config(
         ..Default::default()
     };
     configure_effort_plan(&config, &mut plan).unwrap();
-    let facts = crate::codebase::check_facts::collect_check_facts(&root, files, plan);
+    let facts = crate::codebase::check_facts::collect_check_facts(root, files, plan);
     runner::check_diagnostics_with_resolver(
-        &root,
+        root,
         &config,
         &facts,
-        &empty_resolver(&root),
+        &empty_resolver(root),
         None,
         false,
         &sources,

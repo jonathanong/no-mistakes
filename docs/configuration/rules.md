@@ -85,6 +85,13 @@ Cache directives and cache API checks remain enabled. Indirect settings use
 `options.unanalyzable` (`report`, `advise`, or `ignore`); definite literal
 violations remain findings. These proofs require no companion rule.
 
+[`require-storybook-stories`](../rules/require-storybook-stories.md#effort)
+supports `low`: keep direct story and configured colocated-test coverage, skip
+component render-chain and dynamic/mock boundary analysis, and route uncertain
+coverage through `options.unanalyzable`. With no direct coverage seeds, explicitly
+included components still receive definite missing-story findings. These checks
+require no companion rule; unsupported coverage remains explicit.
+
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.
