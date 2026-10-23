@@ -105,7 +105,23 @@ owns that separate error.
 
 ## Limits
 
-A renamed `expect`, `v.expect`, and `expect(promise)["rejects"]` or an expression-free template key are the same observer. A computed identifier key is not static. `expect.poll`, `expect.call`, and `expect.apply` are not `expect(promise)`.
+A renamed `expect`, a same-file immutable alias (including inside a function),
+`v.expect`, and `expect(promise)["rejects"]` or an expression-free template key
+are the same observer. `.call(null, promise)` and `.apply(null, [promise])`
+forward that promise argument, including optional calls and static `"call"` /
+expression-free template keys. An earlier forwarded matcher also attaches its
+observer before a later coordination await.
+
+Nested forwarding uses the function actually passed as the receiver:
+`expect.call.call(expect, null, promise)` observes the promise, while
+`expect.call.call(other, null, promise)` invokes `other` and cannot suppress a
+later delayed `expect(promise).rejects` finding. An extracted intrinsic such as
+`const invoke = expect.call` is not itself an expectation binding.
+
+A computed identifier key is not static. `expect.poll` receives a callback,
+including through an alias or forwarding call, and is not `expect(promise)`.
+`expect.call(promise)` passes no expectation argument; `.apply` with an unknown
+or spread argument list cannot establish which promise is observed.
 
 `expect` brought in through another file is not visible here.
 

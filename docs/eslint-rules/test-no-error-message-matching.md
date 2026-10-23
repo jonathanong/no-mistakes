@@ -33,6 +33,13 @@ A renamed `expect`, a namespace member, a string or expression-free template key
 
 `expect` brought in through another file is not visible here.
 
+An immutable local alias of a proven module-level expectation remains the same
+assertion: `const local = check; local(error.message).toEqual("missing")` inside
+a function is reported when `check` imports Vitest's `expect`. A local alias of
+a parameter or an unrelated function is not that binding. A nested binding
+named `expect` is followed only when its constant initializer proves that
+identity; its spelling alone is insufficient.
+
 ```ts
 import { check } from "./barrel";
 check(error.message).toMatch("missing");
