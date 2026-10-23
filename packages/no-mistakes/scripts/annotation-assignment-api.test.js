@@ -58,5 +58,18 @@ test(
       assert.equal(child.status, 1, child.stderr);
       assert.deepEqual(JSON.parse(child.stdout), result);
     }
+    const maximum = await cjs.check({ root, config: join(root, ".no-mistakes-max-report.yml") });
+    // Max locates finite alternatives at their SQL literals; low uses the call.
+    const maxMissing = marked("EXPECT_MAX_MISSING");
+    assert.deepEqual(
+      lines(maximum.rules.filter((row) => maxMissing.includes(row.line))),
+      maxMissing,
+    );
+    const allNamed = marked("EXPECT_ACCEPTED_ALL_NAMED")[0];
+    assert.ok(!maximum.rules.some((row) => row.line === allNamed));
+    const opaqueCall = marked("EXPECT_UNKNOWN_CALL")[0];
+    assert.ok(
+      maximum.rules.some((row) => row.line === opaqueCall && /unanalyzable/.test(row.message)),
+    );
   },
 );
