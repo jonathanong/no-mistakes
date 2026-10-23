@@ -109,7 +109,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                         path,
                         None,
                         || {
-                            let changed_arguments = changed_argument_ids(
+                            let changed_arguments = super::scope_skip::changed_argument_ids(
                                 &objects,
                                 &self.argument_objects,
                                 &extra_slots,
@@ -120,7 +120,11 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                                 // Shared module frames are not written by a local arm.
                                 // Argument arenas stay outside the scope Arc, so a
                                 // changed identity still has to be compared.
-                                if unchanged_shared_scope(before, after, &changed_arguments) {
+                                if super::scope_skip::unchanged_shared_scope(
+                                    before,
+                                    after,
+                                    &changed_arguments,
+                                ) {
                                     continue;
                                 }
                                 for (name, value) in before.reference_bindings() {
@@ -200,46 +204,4 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         // Splitting their text adds no context struct, clones, or retained evaluator fields.
         include!("run_finish.inc")
     }
-}
-
-pub(super) fn changed_argument_ids(
-    before_objects: &super::super::ArgumentObjects,
-    after_objects: &super::super::ArgumentObjects,
-    before_extras: &crate::fx::FxHashMap<u64, std::collections::BTreeMap<usize, Value>>,
-    after_extras: &crate::fx::FxHashMap<u64, std::collections::BTreeMap<usize, Value>>,
-) -> crate::fx::FxHashSet<u64> {
-    let mut changed = crate::fx::FxHashSet::default();
-    for (id, slots) in before_objects {
-        if after_objects.get(id).is_none_or(|after| after != slots) {
-            changed.insert(*id);
-        }
-    }
-    for id in after_objects.keys() {
-        if !before_objects.contains_key(id) {
-            changed.insert(*id);
-        }
-    }
-    for (id, slots) in before_extras {
-        if after_extras.get(id) != Some(slots) {
-            changed.insert(*id);
-        }
-    }
-    for id in after_extras.keys() {
-        if !before_extras.contains_key(id) {
-            changed.insert(*id);
-        }
-    }
-    changed
-}
-
-/// An untouched scope Arc still observes arena writes through argument ids.
-pub(super) fn unchanged_shared_scope(
-    before: &Scope,
-    after: &Scope,
-    changed_arguments: &crate::fx::FxHashSet<u64>,
-) -> bool {
-    if !before.same_bindings(after) {
-        return false;
-    }
-    changed_arguments.is_empty() || before.references().arguments.is_disjoint(changed_arguments)
 }

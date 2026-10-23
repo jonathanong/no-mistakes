@@ -78,7 +78,9 @@ pub(super) fn roots<'a>(
                     if let Some(low) = low {
                         parent.low = parent.low.min(low);
                     }
-                    parent.demanded |= demanded && files[path].facts.annotation_event;
+                    // Excluded files stay on the import path. Root selection
+                    // applies the path filter after the whole graph is demanded.
+                    parent.demanded |= demanded;
                 } else {
                     enter(target, files, &mut visits, &mut component, &mut frames);
                 }
@@ -94,26 +96,26 @@ pub(super) fn roots<'a>(
                     .iter()
                     .any(|member| visits[member].demanded);
                 for member in component.drain(start..) {
-                    let event_file = files[member].facts.annotation_event;
                     let visit = visits.get_mut(member).unwrap();
                     visit.active = false;
-                    visit.demanded = demanded && event_file;
+                    visit.demanded = demanded;
                 }
             }
             frames.pop();
             if let Some(parent) = frames.last() {
                 let demanded = visits[path].demanded;
                 let parent_path = parent.path;
-                let event_file = files[parent_path].facts.annotation_event;
                 let parent = visits.get_mut(parent_path).unwrap();
                 parent.low = parent.low.min(low);
-                parent.demanded |= demanded && event_file;
+                parent.demanded |= demanded;
             }
         }
     }
     visits
         .into_iter()
-        .filter_map(|(path, visit)| visit.demanded.then_some(path))
+        .filter_map(|(path, visit)| {
+            (visit.demanded && files[path].facts.annotation_event).then_some(path)
+        })
         .collect()
 }
 
@@ -131,7 +133,9 @@ fn enter<'a>(
             index,
             low: index,
             active: true,
-            demanded: !files[path].executors.is_empty() && files[path].facts.annotation_event,
+            // Executor files seed reachability even when a path filter rejects
+            // them. The filter decides roots, not whether importers stay live.
+            demanded: !files[path].executors.is_empty(),
         },
     );
     component.push(path);

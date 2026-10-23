@@ -1,5 +1,5 @@
 use super::super::{Evaluator, File, Scope, Value};
-use super::run::{changed_argument_ids, unchanged_shared_scope};
+use super::scope_skip::{changed_argument_ids, unchanged_shared_scope};
 use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::query_annotation::{Expr, QueryAnnotationFileFacts};
 use crate::codebase::ts_source::facts::TsFileFacts;

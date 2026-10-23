@@ -116,7 +116,7 @@ pub(crate) fn collect_file_facts_from_program(
             .map(|options| {
                 let mut facts =
                     crate::codebase::postgres::query_annotation::collect(program, source, options);
-                if !annotation_event(plan, options, &rel) {
+                if !super::annotation_profile::annotation_event(plan, options, &rel) {
                     facts.annotation_event = false;
                 }
                 (options.clone(), facts)
@@ -179,25 +179,3 @@ mod embedded;
 pub(super) use embedded::prepared_embedded_sql;
 #[path = "program_heads.rs"]
 mod heads;
-
-fn annotation_event(
-    plan: &CheckFactPlan,
-    options: &crate::codebase::postgres::EmbeddedSqlOptions,
-    rel: &str,
-) -> bool {
-    let Some(scans) = plan.embedded_sql_rule_ids.get(options) else {
-        return true;
-    };
-    let mut configured = false;
-    let mut selected = false;
-    for scan in scans {
-        if scan.rule_id != "postgres-require-query-annotation" {
-            continue;
-        }
-        configured = true;
-        selected |= scan.paths.includes(rel);
-    }
-    // Profiles without this rule keep every collected file as a possible root.
-    !configured || selected
-}
-
