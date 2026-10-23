@@ -10,10 +10,12 @@ rules:
           file: src/schedules/worker-a.ts
           kind: ts-call-first-string-argument
           target: scheduler.register
+          minSize: 4
         - name: schedulers-b
           file: src/schedules/worker-b.ts
           kind: ts-call-first-string-argument
           target: scheduler.register
+          minSize: 4
       comparisons:
         - left: schedulers-a
           right: schedulers-b

@@ -51,7 +51,7 @@ for label in ('a', 'b'):
         lines.append(f"scheduler.register('{name}', {{ lane: {j}, enabled: true }});")
     lines += ["", f"export function runScheduledJobs{label.upper()}() {{"]
     for j in range(16):
-        lines.append(f"  return scheduler.register('daily-refresh', {{ attempt: {j}, tags: ['batch', 'safe'] }});")
-    lines += ["}", ""]
+        lines.append(f"  scheduler.register('daily-refresh', {{ attempt: {j}, tags: ['batch', 'safe'] }});")
+    lines += ["  return scheduler.register('daily-refresh', { attempt: 16, tags: ['batch', 'safe'] });", "}", ""]
     (ROOT / 'src/schedules' / f'worker-{label}.ts').write_text('\n'.join(lines))
 
