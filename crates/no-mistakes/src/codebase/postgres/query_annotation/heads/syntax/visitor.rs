@@ -29,6 +29,11 @@ impl<'a> Visit<'a> for Syntax {
     }
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
         self.append_call(value);
+        if let Some(candidates) = &mut self.literal_helpers {
+            if let Some(candidate) = super::super::literal_helpers::candidate(value) {
+                candidates.push(candidate);
+            }
+        }
         let argument = value.arguments.first().and_then(|arg| arg.as_expression());
         self.calls.push(Call {
             span: span(value.span),

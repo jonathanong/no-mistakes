@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      include: [src/query.mts]
+      importSpecifier: pg
+      executorTypeNames: [PoolClient]
+      sqlLiteralHelpers: ["#from"]
+      effort: low
+      unanalyzable: ignore

@@ -26,7 +26,14 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
                 &options.executor_factory_names,
                 &options.executor_type_names,
             )
-            .with_trusted_sql_tags(&options.trusted_sql_tags);
+            .with_trusted_sql_tags(&options.trusted_sql_tags)
+            .with_sql_literal_helpers(
+                if *rule_id == "postgres-require-query-annotation" {
+                    &options.sql_literal_helpers
+                } else {
+                    &[]
+                },
+            );
             // Legacy statement policies select only SQL files until executors
             // are explicitly configured; do not request an empty TS projection.
             if *rule_id != "postgres-sql-statement-policy" || profile.selects_executors() {

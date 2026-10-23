@@ -29,6 +29,13 @@ impl<'a> Bindings<'a> {
         let wanted = candidates()
             .filter_map(|head| head.reference())
             .chain(syntax.append_tags.values().copied())
+            .chain(
+                syntax
+                    .literal_helpers
+                    .iter()
+                    .flatten()
+                    .map(|call| call.reference),
+            )
             .collect::<FxHashSet<_>>();
         let mut index = Self {
             owners: FxHashMap::default(),

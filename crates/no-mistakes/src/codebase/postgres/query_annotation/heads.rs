@@ -7,6 +7,7 @@ mod append_constants;
 mod assignments;
 mod bindings;
 mod diagnostics;
+mod literal_helpers;
 mod syntax;
 mod tag_constants;
 #[cfg(test)]
@@ -25,9 +26,17 @@ pub(crate) enum HeadProof {
 #[derive(Clone, Debug, Default)]
 pub(crate) struct AnnotationHeads {
     pub(crate) calls: BTreeMap<Span, HeadProof>,
+    helper_calls: Option<BTreeMap<Span, (String, HeadProof)>>,
     pub(crate) trusted_append_calls: crate::fx::FxHashSet<Span>,
 }
 impl AnnotationHeads {
+    pub(crate) fn helper(&self, span: Span, helpers: &[String]) -> Option<HeadProof> {
+        if helpers.is_empty() {
+            return None;
+        }
+        let (identity, proof) = self.helper_calls.as_ref()?.get(&span)?;
+        helpers.contains(identity).then_some(*proof)
+    }
     pub(crate) fn accepts(&self, span: Span) -> bool {
         matches!(self.calls.get(&span), Some(HeadProof::Literal))
     }
@@ -38,17 +47,18 @@ impl AnnotationHeads {
         self.trusted_append_calls.contains(&span)
     }
 }
-pub(crate) fn collect_with_trusted_appends(
+pub(crate) fn collect_with_helpers(
     program: &Program<'_>,
     ts: &TsFileFacts,
     executor_calls: impl Iterator<Item = Span>,
     candidates: &crate::fx::FxHashSet<Span>,
     include_all_calls: bool,
+    helpers: bool,
 ) -> AnnotationHeads {
     if ts.parse_error.is_some() || ts.operational_error.is_some() || ts.fatal_parse_error {
         return AnnotationHeads::default();
     }
-    let syntax = syntax::collect(program, !candidates.is_empty());
+    let syntax = syntax::collect_with_helpers(program, !candidates.is_empty(), helpers);
     let bindings = bindings::Bindings::new(&syntax, ts, executor_calls);
     let calls = syntax
         .calls
@@ -57,8 +67,13 @@ pub(crate) fn collect_with_trusted_appends(
         .map(|call| (call.span, bindings.proof(call.head, call.span)))
         .collect();
     let trusted_append_calls = trusted_append::proofs(&syntax, &bindings, &calls, ts, candidates);
+    let helper_calls = literal_helpers::proofs(&syntax, &bindings, ts);
     AnnotationHeads {
+        helper_calls,
         calls,
         trusted_append_calls,
     }
 }
+
+#[cfg(test)]
+mod literal_helper_tests;

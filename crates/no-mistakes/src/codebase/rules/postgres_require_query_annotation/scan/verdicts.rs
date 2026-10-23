@@ -1,10 +1,9 @@
-use super::{CompiledOptions, RULE_ID};
+use super::{literal_helpers, CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::{
     combine_sql_verdicts, leading_query_annotation, sql_requires_query_annotation,
     EmbeddedSqlFileFacts, EmbeddedSqlKind, SqlEvidenceKind, SqlObligationVerdict, SqlVerdictStatus,
 };
-use crate::codebase::rules::postgres_require_query_annotation::UnanalyzableSql;
 use std::path::Path;
 
 pub(super) fn record(
@@ -17,97 +16,100 @@ pub(super) fn record(
     path: &Path,
 ) {
     for (call_index, (call, span)) in embedded.calls.iter().zip(&embedded.call_spans).enumerate() {
-        let (status, evidence, residual_reasons, known_prefix) = if !call.variants.is_empty() {
-            let branches = call
-                .variants
-                .iter()
-                .enumerate()
-                .filter(|(variant_index, _)| !invalid.contains(&(call_index, *variant_index)))
-                .map(|(_, version)| annotation_status(&version.sql_text))
-                .collect::<Vec<_>>();
-            if branches.is_empty() && !call.variants_truncated() {
-                (
-                    SqlVerdictStatus::Abstain,
-                    None,
-                    vec!["invalid-composed-sql".to_string()],
-                    None,
-                )
-            } else if call.variants_truncated() {
-                let truncated = vec!["sql-variants-truncated".to_string()];
-                if branches.contains(&SqlVerdictStatus::Violation) {
+        let (status, evidence, residual_reasons, known_prefix) =
+            if let Some(result) = literal_helpers::verdict(prepared, path, opts, *span) {
+                result
+            } else if !call.variants.is_empty() {
+                let branches = call
+                    .variants
+                    .iter()
+                    .enumerate()
+                    .filter(|(variant_index, _)| !invalid.contains(&(call_index, *variant_index)))
+                    .map(|(_, version)| annotation_status(&version.sql_text))
+                    .collect::<Vec<_>>();
+                if branches.is_empty() && !call.variants_truncated() {
                     (
-                        SqlVerdictStatus::Violation,
-                        Some(SqlEvidenceKind::VerifiedPrefix),
-                        truncated,
-                        composed_prefix(call),
+                        SqlVerdictStatus::Abstain,
+                        None,
+                        vec!["invalid-composed-sql".to_string()],
+                        None,
                     )
-                } else {
-                    match prepared.query_annotation_prefix(path, &opts.embedded, *span) {
-                        Some(Some(prefix)) => (
-                            annotation_status(prefix),
+                } else if call.variants_truncated() {
+                    let truncated = vec!["sql-variants-truncated".to_string()];
+                    if branches.contains(&SqlVerdictStatus::Violation) {
+                        (
+                            SqlVerdictStatus::Violation,
                             Some(SqlEvidenceKind::VerifiedPrefix),
                             truncated,
-                            Some(prefix.clone()),
-                        ),
-                        Some(None) | None => (
-                            SqlVerdictStatus::Abstain,
-                            None,
-                            vec![
-                                "sql-variants-truncated".to_string(),
-                                "unresolved-leading-sql".to_string(),
-                            ],
                             composed_prefix(call),
-                        ),
+                        )
+                    } else {
+                        match prepared.query_annotation_prefix(path, &opts.embedded, *span) {
+                            Some(Some(prefix)) => (
+                                annotation_status(prefix),
+                                Some(SqlEvidenceKind::VerifiedPrefix),
+                                truncated,
+                                Some(prefix.clone()),
+                            ),
+                            Some(None) | None => (
+                                SqlVerdictStatus::Abstain,
+                                None,
+                                vec![
+                                    "sql-variants-truncated".to_string(),
+                                    "unresolved-leading-sql".to_string(),
+                                ],
+                                composed_prefix(call),
+                            ),
+                        }
                     }
+                } else {
+                    let exhaustive = branches.len() == call.variants.len();
+                    (
+                        combine_sql_verdicts(&branches, exhaustive, true),
+                        exhaustive.then_some(SqlEvidenceKind::ExhaustiveUnion),
+                        Vec::new(),
+                        composed_prefix(call),
+                    )
                 }
-            } else {
-                let exhaustive = branches.len() == call.variants.len();
+            } else if super::trusted_append::accepts(prepared, path, call, *span) {
                 (
-                    combine_sql_verdicts(&branches, exhaustive, true),
-                    exhaustive.then_some(SqlEvidenceKind::ExhaustiveUnion),
+                    SqlVerdictStatus::ProvenClear,
+                    Some(SqlEvidenceKind::VerifiedPrefix),
                     Vec::new(),
-                    composed_prefix(call),
+                    call.sql_text.clone(),
                 )
-            }
-        } else if super::trusted_append::accepts(prepared, path, call, *span) {
-            (
-                SqlVerdictStatus::ProvenClear,
-                Some(SqlEvidenceKind::VerifiedPrefix),
-                Vec::new(),
-                call.sql_text.clone(),
-            )
-        } else {
-            let projected = (call.kind == EmbeddedSqlKind::Composed)
-                .then(|| prepared.query_annotation_prefix(path, &opts.embedded, *span))
-                .flatten();
-            let (sql, used_projection) = match projected {
-                Some(Some(sql)) => (Some(sql.as_str()), true),
-                Some(None) => (None, true),
-                None => (call.sql_text.as_deref(), false),
-            };
-            let proof = if call.kind == EmbeddedSqlKind::Dynamic {
-                TextProof::Partial
-            } else if used_projection {
-                TextProof::Prepared
             } else {
-                TextProof::Exact
+                let projected = (call.kind == EmbeddedSqlKind::Composed)
+                    .then(|| prepared.query_annotation_prefix(path, &opts.embedded, *span))
+                    .flatten();
+                let (sql, used_projection) = match projected {
+                    Some(Some(sql)) => (Some(sql.as_str()), true),
+                    Some(None) => (None, true),
+                    None => (call.sql_text.as_deref(), false),
+                };
+                let proof = if call.kind == EmbeddedSqlKind::Dynamic {
+                    TextProof::Partial
+                } else if used_projection {
+                    TextProof::Prepared
+                } else {
+                    TextProof::Exact
+                };
+                let (status, evidence, residual) = judge_sql(sql, proof);
+                (
+                    status,
+                    evidence,
+                    residual,
+                    sql.map(str::to_string).filter(|_| {
+                        used_projection
+                            || call.is_unanalyzable()
+                            || call.kind == EmbeddedSqlKind::Composed
+                    }),
+                )
             };
-            let (status, evidence, residual) = judge_sql(sql, proof);
-            (
-                status,
-                evidence,
-                residual,
-                sql.map(str::to_string).filter(|_| {
-                    used_projection
-                        || call.is_unanalyzable()
-                        || call.kind == EmbeddedSqlKind::Composed
-                }),
-            )
-        };
         let invalid_composed = residual_reasons
             .iter()
             .any(|reason| reason == "invalid-composed-sql");
-        let advisory = opts.unanalyzable_sql == UnanalyzableSql::Advise
+        let advisory = literal_helpers::advisory(prepared, path, opts, *span)
             && !invalid_composed
             && !call.variants_truncated();
         facts.record_sql_verdict(SqlObligationVerdict {

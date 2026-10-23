@@ -15,6 +15,7 @@ pub(super) struct Call {
 pub(super) struct Syntax {
     pub append_tags: FxHashMap<Span, Span>,
     pub collect_append_tags: bool,
+    pub literal_helpers: Option<Vec<super::literal_helpers::Candidate>>,
     pub calls: Vec<Call>,
     pub constants: FxHashMap<Span, Head>,
     pub assignments: super::assignments::Assignments,
@@ -135,9 +136,14 @@ pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
     }
     super::text::head(expression, concatenated, appended).map_or(Head::Unproven, Head::Text)
 }
-pub(super) fn collect(program: &Program<'_>, collect_append_tags: bool) -> Syntax {
+pub(super) fn collect_with_helpers(
+    program: &Program<'_>,
+    collect_append_tags: bool,
+    helpers: bool,
+) -> Syntax {
     let mut syntax = Syntax {
         collect_append_tags,
+        literal_helpers: helpers.then(Vec::new),
         ..Default::default()
     };
     syntax.visit_program(program);

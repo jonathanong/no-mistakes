@@ -12,3 +12,10 @@ require("./api-tests/declarations-analysis");
 require("./api-tests/declarations-sql");
 require("./api-tests/declarations-audit");
 require("./api-tests/declarations-runtime");
+
+const { assert, test, readFileSync, join, packageRoot } = require("./api-tests/context");
+test("annotation literal helpers remain an exported option and verdict profile", () => {
+  for (const file of ["postgres-query-annotation-types.d.ts", "check-report-types.d.ts"]) {
+    assert.match(readFileSync(join(packageRoot, file), "utf8"), /sqlLiteralHelpers\?: string\[\];/);
+  }
+});
