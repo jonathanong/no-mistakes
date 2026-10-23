@@ -1,48 +1,51 @@
-use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::postgres::sql_identifier_syntax::{FileFacts, Input, OffsetLiteral};
+use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
+use crate::codebase::postgres::sql_identifier_syntax::{Input, OffsetLiteral};
 use std::collections::BTreeMap;
 use std::path::Path;
 
 type Span = (u32, u32);
 
 pub(super) fn literals<'a>(
-    syntax: &'a FileFacts,
+    file: &'a CheckFileFacts,
     facts: &CheckFactMap,
     path: &Path,
     source: &str,
 ) -> &'a BTreeMap<Span, OffsetLiteral> {
+    let syntax = &file.sql_identifier_syntax;
     syntax.offset_literals.get_or_init(|| {
         let observer = crate::diagnostics::current();
         // Borrow a max consumer's completed SQL projection; never evaluate it here.
         let mut prepared = BTreeMap::new();
-        if let Some(file) = facts.ts.get(path) {
-            for (profile, embedded) in &file.embedded_sql {
-                let Ok(statements) = facts.postgres_statements(path, Some(profile)) else {
-                    continue;
-                };
-                let mut statements = statements.iter();
-                let mut calls = BTreeMap::new();
-                for (call, span) in embedded.calls.iter().zip(&embedded.call_spans) {
-                    for _ in call
-                        .statement_calls()
-                        .filter(|version| version.sql_text.is_some())
-                    {
-                        if let Some(statement) = statements.next() {
-                            if call.variants.is_empty() {
-                                calls.insert(
-                                    *span,
-                                    if statement.parse_failed {
-                                        Err(())
-                                    } else {
-                                        Ok(Some(statement.offset_uses.clone()))
-                                    },
-                                );
-                            }
-                        }
-                    }
+        for (profile, embedded) in &file.embedded_sql {
+            let Ok(statements) = facts.postgres_statements(path, Some(profile)) else {
+                continue;
+            };
+            let mut statements = statements.iter();
+            let mut calls = BTreeMap::new();
+            let projected =
+                embedded
+                    .calls
+                    .iter()
+                    .zip(&embedded.call_spans)
+                    .flat_map(|(call, span)| {
+                        call.statement_calls()
+                            .filter(|version| version.sql_text.is_some())
+                            .map(move |_| (call, span))
+                    });
+            // Consume every alternative before deciding whether a call is exact.
+            for ((call, span), statement) in projected.zip(statements.by_ref()) {
+                if call.variants.is_empty() {
+                    calls.insert(
+                        *span,
+                        if statement.parse_failed {
+                            Err(())
+                        } else {
+                            Ok(Some(statement.offset_uses.clone()))
+                        },
+                    );
                 }
-                prepared.insert(profile, calls);
             }
+            prepared.insert(profile, calls);
         }
         let mut out = BTreeMap::new();
         for (profile, calls) in &syntax.profiles {

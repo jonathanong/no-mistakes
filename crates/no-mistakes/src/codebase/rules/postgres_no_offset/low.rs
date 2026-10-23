@@ -55,7 +55,7 @@ pub(super) fn scan(
         };
         let source = sources.read_path(path)?;
         let mut ordinal = 0;
-        let literals = cache::literals(&file.sql_identifier_syntax, facts, path, &source);
+        let literals = cache::literals(file, facts, path, &source);
         for call in calls {
             if let Some(observer) = &observer {
                 observer.increment("postgres.no_offset.low.calls", 1);
