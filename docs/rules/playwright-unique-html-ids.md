@@ -43,6 +43,31 @@ There are no rule-local options. The rule uses the selected project or
 repository scope and scans the configured source universe; Playwright
 `selectors.htmlIds` only affects coverage, not this rule.
 
+## Effort
+
+`effort: max` is the default. It resolves supported identifier, helper,
+conditional, and imported bindings before judging HTML ID uniqueness.
+
+At effective `effort: low`, uniqueness accepts only a string literal HTML ID,
+including a JSX expression such as `id={"profile-title"}`:
+
+```tsx
+<h1 id="profile-title">Profile</h1>
+<section id={"account-settings"} />
+```
+
+An ID expression that does not establish a literal value, such as an identifier
+or helper result, is unanalyzable at low. It does not count as uniqueness
+evidence. The diagnostic names the static rewrite: use a literal `id` value.
+The shared `unanalyzable` policy controls the result: `report` fails, `advise`
+emits a non-failing advisory, and `ignore` skips it.
+
+`selectors.htmlIds: false` only excludes HTML IDs from coverage analysis; it
+does not disable this uniqueness rule. These syntax checks require no companion
+rule. If any enabled application of this rule is not `low`, the invocation
+keeps `max` analysis for the rule. If another Playwright selector consumer is
+configured at `max`, its demand also keeps shared selector recovery enabled.
+
 ## Valid example
 
 ```tsx

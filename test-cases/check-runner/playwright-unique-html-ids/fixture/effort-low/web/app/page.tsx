@@ -1,0 +1,11 @@
+const TEST_ID = 'selector-control';
+
+export default function Page() {
+  return (
+    <main>
+      <h1 id="literal-unique">Unique literal</h1>
+      {/* Dynamic test IDs are outside this HTML-id rule's low diagnostics. */}
+      <button data-testid={TEST_ID}>Control</button>
+    </main>
+  );
+}

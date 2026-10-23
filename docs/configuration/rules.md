@@ -84,6 +84,11 @@ and [`playwright-coverage`](../rules/playwright-coverage.md#effort) support
 or a prop with a literal default. Every other selector shape uses the selected
 unanalyzable policy and names that static rewrite. These syntax proofs do not
 require a companion rule.
+
+[`playwright-unique-html-ids`](../rules/playwright-unique-html-ids.md#effort)
+also supports `low`: it checks literal HTML IDs and routes other ID expressions
+through the selected unanalyzable policy. This remains independent of
+`tests.playwright.selectors.htmlIds`, which controls coverage analysis.
 [`nextjs-no-caching`](../rules/nextjs-no-caching.md#effort) supports `low`:
 check literal fetch options, route segment exports, and directly exported
 configuration objects without resolving constants or configuration wrappers.

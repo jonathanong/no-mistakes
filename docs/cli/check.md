@@ -45,6 +45,10 @@ literal default. Other selector shapes use the shared unanalyzable policy and
 name that rewrite. See
 [playwright-unique-test-ids](../rules/playwright-unique-test-ids.md#effort)
 and [playwright-coverage](../rules/playwright-coverage.md#effort).
+`playwright-unique-html-ids` also supports `low`: literal HTML IDs remain
+checked, and other ID expressions use the selected unanalyzable policy. This
+rule remains enabled when `tests.playwright.selectors.htmlIds` is `false`. See
+[the rule](../rules/playwright-unique-html-ids.md#effort).
 For `nextjs-no-caching`, `low` checks literal cache settings without constant
 propagation or configuration wrapper inference. Indirect settings follow the
 shared unanalyzable policy; literal violations, directives, and cache API checks
