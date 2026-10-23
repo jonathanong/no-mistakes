@@ -1,0 +1,34 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/gh-api-argument-safety": [
+      "error",
+      {
+        "wrappers": [
+          {
+            "callee": "ghApi",
+            "argumentPosition": 2,
+            "includesApi": false
+          },
+          {
+            "callee": "api.gh",
+            "argumentPosition": 1
+          },
+          {
+            "callee": "api.call",
+            "argumentPosition": 1
+          },
+          {
+            "callee": "api.apply",
+            "argumentPosition": 1
+          }
+        ]
+      }
+    ]
+  }
+}

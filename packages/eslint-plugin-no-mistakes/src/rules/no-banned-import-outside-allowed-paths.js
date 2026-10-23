@@ -1,8 +1,8 @@
 "use strict";
 
+const { createInvocationChecker } = require("./no-banned-import-outside-allowed-paths-calls");
 const { rule } = require("../helpers");
 const {
-  hasBannedName,
   normalizeBannedImports,
   shouldCheckFile,
 } = require("./no-banned-import-outside-allowed-paths-config");
@@ -17,7 +17,6 @@ const {
   recordVariableTag,
 } = require("./no-banned-import-outside-allowed-paths-aliases");
 const { createAliasScopeTracker } = require("./no-banned-import-outside-allowed-paths-scopes");
-const { tagForExpression } = require("./no-banned-import-outside-allowed-paths-tags");
 
 module.exports = rule(
   {
@@ -82,11 +81,7 @@ module.exports = rule(
       functionDepth -= 1;
     }
 
-    // Merges forward-declared module-scope tags (imports, plus hoistable
-    // require()/createRequire() forward references) with the current
-    // block-scoped tags when resolving inside a function body. At module
-    // depth 0, `aliases` alone reflects real top-to-bottom JS execution
-    // order, so no forward merge happens there (matches the reference rule).
+    // Functions can reach hoisted module tags; module execution keeps source order.
     function activeAliases() {
       if (functionDepth === 0) return scopes.aliases;
       const active = new Map(forwardAliases);
@@ -95,28 +90,7 @@ module.exports = rule(
       return active;
     }
 
-    function reportCall(node, module, name) {
-      context.report({ node, messageId: "bannedImport", data: { module, name } });
-    }
-
-    // Shared by CallExpression and NewExpression: a banned capability is
-    // just as reachable through `new BannedClient()` as through
-    // `BannedClient()`, and both invocation forms resolve their callee the
-    // same way.
-    function checkInvocation(node) {
-      const tag = tagForExpression(node.callee, context, activeAliases(), config);
-      if (tag?.kind === "direct") {
-        reportCall(node.callee, tag.module, tag.name);
-        return;
-      }
-      if (tag?.kind !== "object") return;
-      for (const module of tag.modules) {
-        if (hasBannedName(config, module, "default")) {
-          reportCall(node.callee, module, "default");
-          return;
-        }
-      }
-    }
+    const checkInvocation = createInvocationChecker(context, config, activeAliases);
 
     return {
       Program(node) {
