@@ -122,6 +122,60 @@ fn findings_from_report_maps_routes_selectors_and_duplicates() {
 }
 
 #[test]
+fn coverage_findings_omit_selectors_when_selector_coverage_is_disabled() {
+    let report = CoverageReport {
+        summary: Summary {
+            total_routes: 1,
+            covered_routes: 0,
+            uncovered_routes: 1,
+            total_selectors: 1,
+            covered_selectors: 0,
+            uncovered_selectors: 1,
+            duplicate_selectors: 0,
+            total_fetch_apis: 0,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 0,
+        },
+        routes: vec![CoverageRoute {
+            route: "/missing".to_string(),
+            file: "web/app/missing/page.tsx".to_string(),
+            covered: false,
+            tests: vec![],
+            tests_detail: vec![],
+            urls: vec![],
+        }],
+        selectors: vec![CoverageSelector {
+            attribute: "data-testid".to_string(),
+            value: "missing".to_string(),
+            file: "web/app/page.tsx".to_string(),
+            covered: false,
+            unsupported_dynamic: false,
+            tests: vec![],
+            tests_detail: vec![],
+            selectors: vec![],
+            helper_references: vec![],
+            line: 1,
+            literal_exact: true,
+        }],
+        duplicate_selectors: vec![],
+        fetch_apis: vec![],
+    };
+    let findings = findings_from_report(
+        &analysis(report, vec![]),
+        false,
+        false,
+        false,
+        CoverageFindingOptions {
+            enabled: true,
+            routes: true,
+            selectors: false,
+        },
+    );
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("/missing"));
+}
+
+#[test]
 fn findings_from_report_filters_disabled_duplicate_rules() {
     let report = CoverageReport {
         summary: Summary {

@@ -56,16 +56,6 @@ impl Ord for AppSelector {
 }
 
 impl AppSelector {
-    pub fn new(file: PathBuf, attribute: String, value: AppSelectorValue) -> Self {
-        Self {
-            file,
-            attribute,
-            value,
-            line: 1,
-            recovered: false,
-        }
-    }
-
     pub(crate) fn is_literal_exact(&self) -> bool {
         matches!(self.value, AppSelectorValue::Exact(_)) && !self.recovered
     }
