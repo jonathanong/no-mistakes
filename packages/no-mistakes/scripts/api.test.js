@@ -2,6 +2,7 @@ require("./api-tests/proxy");
 require("./api-tests/planning");
 require("./api-tests/exports");
 require("./api-tests/declarations-core");
+require("./api-tests/declarations-export-invariants");
 require("./api-tests/declarations-postgres");
 require("./api-tests/declarations-graph");
 require("./api-tests/declarations-analysis");

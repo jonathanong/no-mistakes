@@ -45,27 +45,28 @@ import type {
   TraversePathsOptions,
 } from "./traversal-types";
 
-type BatchedProjectOptions = Omit<ProjectOptions, "root" | "tsconfig" | "config">;
-type BatchedFlowOptions = Omit<FlowOptions, "root" | "tsconfig" | "config">;
-type BatchedTraverseOptions = TraverseOptions & Pick<ProjectOptions, "config">;
-type BatchedDependencyTraverseOptions = (TraverseGraphOptions | TraversePathsOptions) &
+/** Shared `analyzeProject()` options after the request-level `root`/`tsconfig`/`config`. */
+export type BatchedProjectOptions = Omit<ProjectOptions, "root" | "tsconfig" | "config">;
+export type BatchedFlowOptions = Omit<FlowOptions, "root" | "tsconfig" | "config">;
+export type BatchedTraverseOptions = TraverseOptions & Pick<ProjectOptions, "config">;
+export type BatchedDependencyTraverseOptions = (TraverseGraphOptions | TraversePathsOptions) &
   Pick<ProjectOptions, "config">;
-type BatchedQueueRelatedOptions = BatchedProjectOptions & { files: string[] };
-type BatchedServerRouteRelatedOptions = BatchedProjectOptions &
+export type BatchedQueueRelatedOptions = BatchedProjectOptions & { files: string[] };
+export type BatchedServerRouteRelatedOptions = BatchedProjectOptions &
   ({ files: string[] } | { roots: string[] });
-type BatchedReactUsagesOptions = Pick<
+export type BatchedReactUsagesOptions = Pick<
   ProjectOptions,
   "root" | "tsconfig" | "config" | "targets" | "include" | "effort"
 > &
   Required<Pick<ProjectOptions, "target">>;
-type BatchedCheckOptions = Pick<
+export type BatchedCheckOptions = Pick<
   CheckOptions,
   "root" | "tsconfig" | "config" | "includeSuppressed" | "effort"
 > &
   Pick<CheckOptions, "includeRunnerConfigDeadlines" | "includeSqlVerdicts">;
-type BatchedQueryFileOptions<T> = Omit<T, "root" | "tsconfig">;
-type BatchedRootConfigOptions<T> = Omit<T, "root" | "config">;
-type BatchedRootTsConfigOptions<T> = Omit<T, "root" | "tsconfig" | "config">;
+export type BatchedQueryFileOptions<T> = Omit<T, "root" | "tsconfig">;
+export type BatchedRootConfigOptions<T> = Omit<T, "root" | "config">;
+export type BatchedRootTsConfigOptions<T> = Omit<T, "root" | "tsconfig" | "config">;
 
 export type AnalyzeProjectReportRequest =
   | ({ type: "dependencies"; id?: string } & BatchedDependencyTraverseOptions)
@@ -152,12 +153,21 @@ export interface AnalyzeProjectOptions {
   reports: AnalyzeProjectReportRequest[];
 }
 
+/** Discriminant for `analyzeProject()` report requests and result entries. */
+export type AnalyzeProjectReportType = AnalyzeProjectReportRequest["type"];
+
+/** Payload carried on one `analyzeProject()` result entry. */
+export type AnalyzeProjectReportResult = unknown | EffectsReport | RscCallersReport;
+
+/** One entry in `analyzeProject()` `reports`. */
+export interface AnalyzeProjectReport {
+  id?: string;
+  type: AnalyzeProjectReportType;
+  result: AnalyzeProjectReportResult;
+}
+
 export interface AnalyzeProjectResult {
-  reports: Array<{
-    id?: string;
-    type: AnalyzeProjectReportRequest["type"];
-    result: unknown | EffectsReport | RscCallersReport;
-  }>;
+  reports: AnalyzeProjectReport[];
   /**
    * Set when this call's resolved `jobs` differs from the process-wide Rayon pool.
    * Omitted when the pool was just created or the resolved count already matches.

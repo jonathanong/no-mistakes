@@ -92,7 +92,7 @@ files; other setup-reachability shapes use the same unanalyzable policy. See
 | `createWorkflowTopologyIndex` | `createWorkflowTopologyIndex(topology)` |
 | `version` | `version()` |
 | `diagnosticsSnapshot` | `diagnosticsSnapshot({ id })` |
-| `analyzeProject` | `analyzeProject(options)` |
+| `analyzeProject` | `analyzeProject(options)`; import `AnalyzeProjectReportType` for report `type` instead of indexing `AnalyzeProjectReportRequest['type']` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
 | `check` | `check(options)` |

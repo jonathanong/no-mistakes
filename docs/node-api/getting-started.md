@@ -10,6 +10,10 @@ queries without subprocess overhead.
 exported `RouteCoverageSource`, `RouteCoverageHelper`, `RouteCoverageFramework`,
 and `RouteCoverageAttribution` types describe the contract.
 
+`analyzeProject()` report entries use the exported `AnalyzeProjectReport` and
+`AnalyzeProjectReportType` names; import those instead of indexing
+`AnalyzeProjectReportRequest['type']`.
+
 ````js
 const {
   analyzeProject,
