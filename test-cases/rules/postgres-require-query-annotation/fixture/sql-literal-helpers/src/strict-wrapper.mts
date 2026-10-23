@@ -1,2 +1,2 @@
-// Ordinary max inference can follow this body; configured wrappers use syntax only.
-export function literal(sql: string) { return sql; }
+// Max resolves this body, but configured grammar rejects nonliteral and extra arguments.
+export function staticNamed(_sql: string) { return '/* generic static helper */ SELECT 1'; }

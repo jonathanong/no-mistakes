@@ -5,6 +5,6 @@ rules:
       include: [src/strict-call.mts]
       importSpecifier: pg
       executorNames: [query]
-      sqlLiteralHelpers: ['./strict-wrapper.mjs#literal']
+      sqlLiteralHelpers: ['./strict-wrapper.mjs#staticNamed']
       effort: max
       unanalyzable: ignore
