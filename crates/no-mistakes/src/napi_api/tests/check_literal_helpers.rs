@@ -174,3 +174,41 @@ fn helper_configuration_preserves_ordinary_cross_file_max_inference() {
         baseline = Some(report["advisories"].clone());
     }
 }
+
+#[test]
+fn configured_helpers_override_favorable_max_inference_for_unsupported_arguments() {
+    let root = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+        .join("sql-literal-helpers");
+    for policy in ["report", "advise", "ignore"] {
+        for configured in [false, true] {
+            let kind = if configured { "configured" } else { "baseline" };
+            let request = serde_json::json!({"root": root,
+                "config": root.join(format!(".no-mistakes-strict-{kind}-{policy}.yml")),
+                "includeSqlVerdicts": true});
+            let report: serde_json::Value = serde_json::from_str(
+                &check_json_impl(crate::napi_api::options::test_json_arg(request.to_string()))
+                    .unwrap(),
+            )
+            .unwrap();
+            let verdicts = report["sqlVerdicts"].as_array().unwrap();
+            assert_eq!(verdicts.len(), 3, "{kind}/{policy}: {report}");
+            assert_eq!(verdicts[0]["status"], "proven-clear");
+            for verdict in &verdicts[1..] {
+                assert_eq!(verdict["status"], if configured { "abstain" } else { "proven-clear" },
+                    "known identifier and extra argument must not fall through to favorable inference: {kind}/{policy}");
+                if configured {
+                    assert_eq!(verdict["advisory"], policy == "advise");
+                }
+            }
+            assert_eq!(
+                report["rules"].as_array().unwrap().len(),
+                if configured && policy == "report" {
+                    2
+                } else {
+                    0
+                },
+                "{report}"
+            );
+        }
+    }
+}
