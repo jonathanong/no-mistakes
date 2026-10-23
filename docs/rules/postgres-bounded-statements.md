@@ -158,7 +158,8 @@ SELECT code FROM currencies;   -- allow entry
 
 ## Counterexample
 
-Use the same catalog so each statement fails because its row count is unbounded:
+The first three statements are unbounded under this catalog. The currencies
+query keeps the configured table exception in use:
 
 ```json
 // db/schema.json
