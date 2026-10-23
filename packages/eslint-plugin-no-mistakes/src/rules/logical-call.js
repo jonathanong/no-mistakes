@@ -60,7 +60,7 @@ function logicalCall(node, stopAt) {
     forwarded = true;
     args = list.elements;
   }
-  return { callee: unwrapExpression(callee), arguments: args };
+  return { callee: unwrapExpression(callee), arguments: args, forwarded };
 }
 
 function literalString(node) {

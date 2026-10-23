@@ -37,7 +37,6 @@ function createClassifier(context, wrappers) {
   const stable = new WeakMap();
   const aliases = new WeakMap();
   const value = (node, depth) => identity(classify(node, depth));
-  const read = (argument, depth) => classify(argument, depth + 1);
   function classify(input, depth = 0) {
     const node = unwrapExpression(input);
     if (!node || depth > 32) return 0;
@@ -121,7 +120,7 @@ function createClassifier(context, wrappers) {
         return MAIN;
       const target = unwrapExpression(node.object);
       if (name === "href" && globalName(target?.callee, "URL", context)) {
-        const constructed = fileUrlArgument(target, (argument) => read(argument, depth));
+        const constructed = fileUrlArgument(target, (argument) => classify(argument, depth + 1));
         if (constructed) return constructed;
       }
       const object = value(node.object, depth + 1);
@@ -148,13 +147,14 @@ function createClassifier(context, wrappers) {
       )
         return ARGV;
       if (
+        !invoked.forwarded &&
         callee?.type === "MemberExpression" &&
         memberPropertyName(callee) === "toString" &&
         invoked.arguments.length === 0
       ) {
         const url = unwrapExpression(callee.object);
         if (globalName(url?.callee, "URL", context)) {
-          const constructed = fileUrlArgument(url, (argument) => read(argument, depth));
+          const constructed = fileUrlArgument(url, (argument) => classify(argument, depth + 1));
           if (constructed) return constructed;
         }
         const classified = classify(callee.object, depth + 1);
@@ -163,13 +163,14 @@ function createClassifier(context, wrappers) {
           : 0;
       }
       if (
+        !invoked.forwarded &&
         callee?.type === "MemberExpression" &&
         memberPropertyName(callee) === "concat" &&
         invoked.arguments.every((argument) => argument.type !== "SpreadElement")
       )
         return invoked.arguments.reduce(
-          (folded, argument) => concatenate(folded, read(argument, depth)),
-          read(callee.object, depth),
+          (folded, argument) => concatenate(folded, classify(argument, depth + 1)),
+          classify(callee.object, depth + 1),
         );
       if (invoked.arguments.length !== 1 || invoked.arguments[0].type === "SpreadElement") return 0;
       if (globalName(callee, "String", context)) return classify(invoked.arguments[0], depth + 1);

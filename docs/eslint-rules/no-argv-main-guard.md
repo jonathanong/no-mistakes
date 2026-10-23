@@ -67,7 +67,8 @@ An empty string suffix in concatenation and `argv[1] ?? ""` preserve the identit
 Global `String(value)`, a zero-argument `.toString()` on a recognized identity
 or on global `new URL(fileUrl)`, and global `new URL(fileUrl).href` are
 transparent; shadowed `String` and `URL` bindings are unknown. String
-`.concat(...)` folds like `+`. URL construction requires one argument that is
+`.concat(...)` folds like `+` on a direct call. `.call`, `.apply`, and comma
+calls stay unknown because they replace that receiver. URL construction requires one argument that is
 already a recognized file URL expression. Other prefixes, nonempty suffixes,
 substitutions after argv (even empty ones), repeated argv substitutions, and
 tagged templates are not classified as argv identities.
