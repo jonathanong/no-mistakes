@@ -62,7 +62,7 @@ describe("async-call-disposition", () => {
         asyncTargetOptions,
         "retained-invalid.ts",
       ),
-      Array(39).fill("disposition"),
+      Array(38).fill("disposition"),
     );
   });
 
@@ -88,6 +88,25 @@ describe("async-call-disposition", () => {
       ),
       ["disposition"],
     );
+  });
+
+  it("rejects rewritten spy methods and framework aliases in isolated fixtures", () => {
+    for (const name of [
+      "retained-mutated-spy-write.ts",
+      "retained-mutated-spy-delete.ts",
+      "retained-mutated-spy-update.ts",
+      "retained-mutated-framework.ts",
+    ]) {
+      assert.deepEqual(
+        messages(
+          ruleFixture("async-call-disposition", name),
+          "async-call-disposition",
+          asyncTargetOptions,
+          name,
+        ),
+        ["disposition"],
+      );
+    }
   });
 
   it("honors file and line suppression comments only for this rule", () => {

@@ -46,4 +46,3 @@ function rewrittenMock() { const mock = vi.fn(); mock.mockImplementation = unkno
 function deletedMock() { const mock = vi.fn(); delete mock.mockImplementation; mock.mockImplementation(() => enqueueEmail("1")); }
 function updatedMock() { const mock = vi.fn(); mock.mockImplementation++; mock.mockImplementation(() => enqueueEmail("1")); }
 function aliasMutation() { const mock = vi.fn(); const alias = mock; alias.mockImplementation = unknown; mock.mockImplementation(() => enqueueEmail("1")); }
-function rewrittenFramework() { const api = vi; api.fn = unknown; api.fn(() => enqueueEmail("1")); }

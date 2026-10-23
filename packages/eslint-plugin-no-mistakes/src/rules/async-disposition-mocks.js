@@ -22,8 +22,20 @@ function propertiesWritten(node, context, seen = new Set()) {
       );
   return references.some((reference) => {
     let value = unwrapTransparentParent(reference.identifier);
-    while (value.parent?.type === "MemberExpression" && value.parent.object === value)
-      value = unwrapTransparentParent(value.parent);
+    for (;;) {
+      const parent = value.parent;
+      const member = parent.type === "MemberExpression" && parent.object === value;
+      // These calls can return the existing spy; another call does not restore its method.
+      const spyResult =
+        parent.type === "CallExpression" &&
+        parent.callee === value &&
+        value.type === "MemberExpression" &&
+        ["spyOn", "mockImplementation", "mockImplementationOnce"].includes(
+          memberPropertyName(value),
+        );
+      if (!member && !spyResult) break;
+      value = unwrapTransparentParent(parent);
+    }
     const parent = value.parent;
     if (
       (parent.type === "AssignmentExpression" && parent.left === value) ||
