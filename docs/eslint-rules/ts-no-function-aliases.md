@@ -57,8 +57,8 @@ const specialized = value => original<string>(value);
 This compatibility path retains historical diagnostics without claiming that
 the declared or return contracts are equivalent. The released naming, self-call,
 and unchanged-argument checks still apply. Suppressions still apply. A bare
-identifier that the released rule left silent stays silent on that uncast
-wrapper; it does not fall through to expanded analysis. A casted identifier can
+identifier that the released rule left silent stays silent on a wrapper
+without casts; it does not fall through to expanded analysis. A casted identifier can
 enter the expanded path when its target is reachable and the cast is proved
 type-preserving. Normalizing a `.call` or `.apply` target to an identifier
 never grants compatibility.
