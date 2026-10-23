@@ -45,20 +45,24 @@ pub(crate) fn findings_from_report_with_effort(
             unique_html_ids,
         ));
     }
-    emit::unanalyzable(
-        &mut diagnostics,
-        report,
-        PLAYWRIGHT_UNIQUE_TEST_IDS,
-        low.unique_test_ids,
-        unique_html_ids,
-    );
-    emit::unanalyzable(
-        &mut diagnostics,
-        report,
-        PLAYWRIGHT_COVERAGE,
-        low.coverage,
-        false,
-    );
+    if unique_test_ids {
+        emit::unanalyzable(
+            &mut diagnostics,
+            report,
+            PLAYWRIGHT_UNIQUE_TEST_IDS,
+            low.unique_test_ids,
+            unique_html_ids,
+        );
+    }
+    if coverage.enabled && coverage.selectors {
+        emit::unanalyzable(
+            &mut diagnostics,
+            report,
+            PLAYWRIGHT_COVERAGE,
+            low.coverage,
+            false,
+        );
+    }
     if prefer_test_id_locators {
         findings.extend(emit::prefer_test_id_locators(analysis));
     }
