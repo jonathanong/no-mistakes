@@ -31,13 +31,13 @@ test(
         assert.deepEqual(await esm.check(options), report, `${policy}: ESM parity`);
         assert.deepEqual(
           report.rules.map(({ line }) => line),
-          [3],
-          `${policy}: valid sibling`,
+          [3, 9],
+          `${policy}: missing heads survive invalid SQL`,
         );
         assert.deepEqual(
           report.advisories.map(({ line }) => line),
           [5, 8, 11],
-          `${policy}: invalid alternatives advise without failing`,
+          `${policy}: invalid alternatives retain composition advice`,
         );
         assert.ok(
           report.advisories.every(
