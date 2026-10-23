@@ -69,7 +69,9 @@ A renamed `expect`, a namespace member, a string or expression-free template key
 Captured-value analysis follows preceding immutable identifier declarations in
 the same file. Mutable bindings, writes, forward reads, cycles, dynamic computed
 keys, parameters, destructured bindings, helper returns, and object-container
-reads do not prove that identity. Reads crossing a dynamic `with` scope are not followed.
+reads do not prove that identity. Reads crossing a dynamic `with` scope or a
+non-strict scope containing a potential direct `eval` call are not followed:
+the latter can introduce a nearer binding that static scope resolution misses.
 The added value analysis keeps the existing assertion and test-body boundaries;
 it does not turn arbitrary string operations outside tests into findings.
 Captured `err.body.message` values keep the existing body-message exemption.
@@ -90,6 +92,22 @@ expect(selected).toBe("missing");
 function check({ message: value } = error) {
   expect(value).toBe("missing"); // A parameter default does not prove each argument.
 }
+```
+
+In a non-strict CommonJS/script function, direct eval can insert a nearer
+variable even when the call is inside a nested block. The captured-value proof
+does not follow that dynamic environment:
+
+```js
+// fixture.cjs: no "use strict"
+const captured = error.message;
+const checkScript = () => {
+  {
+    eval("var captured = 'ordinary'");
+  }
+  expect(captured).toBe("ordinary"); // This reads the eval-created local value.
+};
+checkScript();
 ```
 
 An immutable local alias of a proven module-level expectation remains the same

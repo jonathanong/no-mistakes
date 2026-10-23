@@ -12,7 +12,7 @@ function check(name, filename = name) {
     { [rule]: "error" },
     filename,
     {},
-    name.endsWith(".js") ? "script" : "module",
+    /\.(cjs|cts)$/.test(name) ? "commonjs" : name.endsWith(".js") ? "script" : "module",
   );
 }
 
@@ -50,9 +50,18 @@ describe("captured error-message values", () => {
       "captured-with.js",
       "captured-rewrites.ts",
       "captured-source-rewrites.ts",
+      "captured-eval.cts",
+      "captured-cjs-rewrite.cjs",
     ]) {
       assert.deepEqual(check(name), [], name);
     }
+  });
+
+  it("does not confuse direct eval bindings with outer CommonJS captures", () => {
+    assert.deepEqual(
+      check("captured-eval.cjs").map(({ line }) => line),
+      [4],
+    );
   });
 
   it("preserves file, line, next-line and filename exclusions", () => {
@@ -70,6 +79,9 @@ describe("captured error-message values", () => {
       ["captured-source-change.ts", 3],
       ["captured-rewrites.ts", 0],
       ["captured-source-rewrites.ts", 0],
+      ["captured-eval.cjs", 1],
+      ["captured-eval.cts", 0],
+      ["captured-cjs-rewrite.cjs", 0],
       ["captured-controls.ts", 0],
       ["captured-order.ts", 0],
       ["captured-with.js", 0],

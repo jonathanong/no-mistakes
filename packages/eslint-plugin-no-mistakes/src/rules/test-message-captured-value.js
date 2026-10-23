@@ -29,8 +29,41 @@ function safeReference(identifier, variable, context) {
     // A hoisted declaration can run before the captured const is initialized,
     // even when the assertion appears textually after that initializer.
     if (scope.type === "function" && scope.block.type === "FunctionDeclaration") return false;
+    // ESLint may ignore eval when building scopes. Non-strict direct eval can
+    // introduce a nearer variable that the static resolver cannot see.
+    if (hasDirectEval(scope)) return false;
   }
   return true;
+}
+
+function hasDirectEval(scope) {
+  if (scope.isStrict) return false;
+  if (scope.references.some(isDirectEvalReference)) return true;
+  // A block's eval inserts vars into its containing function, unlike an eval
+  // in a nested function with its own variable environment.
+  return scope.childScopes.some(
+    (child) => child.variableScope === scope.variableScope && hasDirectEval(child),
+  );
+}
+
+function isDirectEvalReference({ identifier }) {
+  if (identifier.name !== "eval") return false;
+  let callee = identifier;
+  while (
+    [
+      "ChainExpression",
+      "TSAsExpression",
+      "TSTypeAssertion",
+      "TSNonNullExpression",
+      "TSSatisfiesExpression",
+    ].includes(callee.parent?.type)
+  )
+    callee = callee.parent;
+  return (
+    callee.parent?.type === "CallExpression" &&
+    callee.parent.callee === callee &&
+    !callee.parent.optional
+  );
 }
 
 function capturedMessageOrigin(node, context) {
