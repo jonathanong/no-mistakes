@@ -17,3 +17,12 @@ test("stable captured checks", () => {
   local === "MISSING";
   "MISSING" !== local;
 });
+
+declare function loadError(): { message: string; code: string };
+declare function display(message: string): void;
+// Retain another message consumer without evaluating the original receiver twice.
+const failure = loadError();
+const displayed = failure.message;
+const stable = failure.code;
+display(displayed);
+expect(stable).toBe("MISSING");

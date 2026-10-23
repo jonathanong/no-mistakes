@@ -56,6 +56,9 @@ automatic fix because the correct error contract is application-specific.
 If other code still needs the captured message, keep that capture and add a
 separate code capture at the same point for the assertion. Retain initializer
 side effects, forwarding receivers, other arguments, and required type wrappers.
+For a receiver with side effects, such as `loadError().message`, evaluate
+`loadError()` once into a local error object, then read any still-needed message
+and the code from that object. Do not call the receiver expression a second time.
 
 ## Limits
 
