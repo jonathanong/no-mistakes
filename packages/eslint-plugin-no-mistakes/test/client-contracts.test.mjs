@@ -22,6 +22,12 @@ describe("configured client contracts", () => {
       Array(3).fill("unbatchedReads"),
     );
   });
+  it("unwraps transparent TypeScript receiver wrappers", () => {
+    assert.deepEqual(
+      messages(code("reads-receiver-wrappers"), readRule, importedReads, "fixture.ts"),
+      Array(3).fill("unbatchedReads"),
+    );
+  });
   it("preserves result dependencies, batching, scope, and method exclusions", () => {
     for (const name of ["reads-valid", "reads-shapes", "reads-wrong-import", "reads-shadowed"])
       assert.deepEqual(messages(code(name), readRule, importedReads, "fixture.ts"), [], name);
@@ -119,6 +125,7 @@ describe("configured client contracts", () => {
         "--format",
         "json",
         resolve(root, "reads-invalid.ts"),
+        resolve(root, "reads-receiver-wrappers.ts"),
         resolve(root, "registration-invalid.ts"),
         resolve(root, "registration-valid.ts"),
       ],
@@ -127,7 +134,7 @@ describe("configured client contracts", () => {
     assert.equal(result.error, undefined);
     assert.equal(result.status, 1, result.stderr);
     const diagnostics = JSON.parse(result.stdout).diagnostics;
-    assert.equal(diagnostics.filter((item) => item.code.includes(readRule)).length, 3);
-    assert.equal(diagnostics.filter((item) => item.code.includes(registrationRule)).length, 2);
+    assert.equal(diagnostics.filter((item) => item.code.includes(readRule)).length, 6);
+    assert.equal(diagnostics.filter((item) => item.code.includes(registrationRule)).length, 3);
   });
 });

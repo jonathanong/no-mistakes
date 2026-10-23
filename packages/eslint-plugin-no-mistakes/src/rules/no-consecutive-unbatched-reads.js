@@ -41,11 +41,11 @@ module.exports = {
       const member = unwrapExpression(call.callee);
       if (
         member.type !== "MemberExpression" ||
-        member.object.type !== "Identifier" ||
+        unwrapExpression(member.object).type !== "Identifier" ||
         !options.readMethods?.includes(memberPropertyName(member))
       )
         return null;
-      const client = member.object;
+      const client = unwrapExpression(member.object);
       if (
         !options.clients?.includes(client.name) &&
         !options.imports?.some((selector) => matchesRuntimeImport(client, selector, context))
