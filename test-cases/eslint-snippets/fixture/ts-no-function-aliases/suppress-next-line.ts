@@ -1,4 +1,4 @@
-declare const db: { createUser(input: string): string };
-const reported = (input: string) => db.createUser(input);
+import * as db from "./api";
+const reported = (input) => db.createUser(input);
 // no-mistakes-disable-next-line ts-no-function-aliases -- stable external API
-const kept = (input: string) => db.createUser(input);
+const kept = (input) => db.createUser(input);

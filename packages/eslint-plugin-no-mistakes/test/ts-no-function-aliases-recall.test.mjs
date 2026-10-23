@@ -3,15 +3,15 @@ import { describe, it } from "vitest";
 import { fixture, messages, require } from "./helpers.mjs";
 
 describe("ts-no-function-aliases recall", () => {
-  it("reports statically forwarded members and call/apply forms while preserving controls", () => {
+  it("preserves previously over-reported private and ambient receiver facades", () => {
     assert.deepEqual(
       messages(
-        fixture("ts-no-function-aliases/recall.ts"),
+        fixture("ts-no-function-aliases/private-recall.ts"),
         "ts-no-function-aliases",
         undefined,
-        "ts-no-function-aliases/recall.ts",
+        "ts-no-function-aliases/private-recall.ts",
       ),
-      Array.from({ length: 26 }, () => "alias"),
+      [],
     );
   });
 

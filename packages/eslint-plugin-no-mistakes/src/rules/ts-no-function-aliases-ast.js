@@ -43,9 +43,11 @@ function isSameArgumentList(params, args) {
   if (params.length !== args.length) return false;
   return params.every((param, index) => {
     if (param.type === "RestElement") {
+      const name = identifierName(param.argument);
       return (
+        name !== null &&
         args[index].type === "SpreadElement" &&
-        identifierName(param.argument) === identifierName(args[index].argument)
+        name === identifierName(args[index].argument)
       );
     }
     if (param.type === "AssignmentPattern") return false;

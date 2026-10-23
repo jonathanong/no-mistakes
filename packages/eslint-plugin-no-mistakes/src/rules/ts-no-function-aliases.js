@@ -8,6 +8,14 @@ const {
   callableTarget,
 } = require("./ts-no-function-aliases-ast");
 const { isNamedWrapper, isSelfCall, patternHasName } = require("./ts-no-function-aliases-self");
+const { exportedDeclarations, reachableTarget } = require("./ts-no-function-aliases-reachable");
+const {
+  unassertedCall,
+  wrapperHasOverloads,
+  directIntrinsic,
+  documentedSignature,
+} = require("./ts-no-function-aliases-contract");
+const { signaturePreserved } = require("./ts-no-function-aliases-signature");
 const { forwardedCall } = require("./ts-no-function-aliases-forwarding");
 
 function expressionStatementCall(statement) {
@@ -26,18 +34,24 @@ function onlyCallExpression(body) {
   return returnStatementCall(statement) || expressionStatementCall(statement);
 }
 
-function reportIfAlias(node, context, suppressed) {
+function reportIfAlias(node, context, suppressed, declarations) {
   if (suppressed(node) || !isNamedWrapper(node)) return;
   const call = onlyCallExpression(node.body);
-  if (!call || call.type !== "CallExpression") return;
+  if (!call || call.type !== "CallExpression" || !unassertedCall(node, call)) return;
   const sourceCode = context.sourceCode;
+  if (wrapperHasOverloads(node, sourceCode) || documentedSignature(node, sourceCode)) return;
   const forwarded = forwardedCall(call, sourceCode);
   if (isSelfCall(node, call, sourceCode, forwarded)) return;
   const directTarget = callableTarget(call.callee);
-  const directForward = directTarget ? { target: directTarget, args: call.arguments } : null;
+  const directForward =
+    directTarget && !directIntrinsic(directTarget, sourceCode)
+      ? { target: directTarget, args: call.arguments }
+      : null;
   for (const candidate of [directForward, forwarded]) {
     if (!candidate) continue;
     if (!isSameArgumentList(node.params, candidate.args)) continue;
+    const reachable = reachableTarget(candidate.target, sourceCode, declarations);
+    if (!reachable || !signaturePreserved(node, reachable)) continue;
     context.report({ node, messageId: "alias" });
     return;
   }
@@ -59,15 +73,19 @@ module.exports = Object.assign(
     },
     (context) => {
       const suppressed = ruleSuppression(context, "ts-no-function-aliases");
+      let declarations;
       return {
+        Program(node) {
+          declarations = exportedDeclarations(node, context.sourceCode);
+        },
         ArrowFunctionExpression(node) {
-          reportIfAlias(node, context, suppressed);
+          reportIfAlias(node, context, suppressed, declarations);
         },
         FunctionDeclaration(node) {
-          reportIfAlias(node, context, suppressed);
+          reportIfAlias(node, context, suppressed, declarations);
         },
         FunctionExpression(node) {
-          reportIfAlias(node, context, suppressed);
+          reportIfAlias(node, context, suppressed, declarations);
         },
       };
     },
