@@ -64,8 +64,29 @@ pub(crate) fn finish_analysis(
             fetch_index: &fetch_idx,
         })
     });
+    // Uniqueness owns these occurrences even when htmlIds:false excludes them
+    // from coverage. Retain only the records needed for low HTML diagnostics.
+    let unanalyzable_html_ids = if unique_selector_policy.literal_html_ids_only {
+        setup
+            .app_selector_occurrences
+            .iter()
+            .filter(|selector| {
+                selector.attribute == crate::playwright::selectors::HTML_ID_ATTRIBUTE
+                    && !selector.is_literal_exact()
+            })
+            .map(|selector| {
+                let mut record = selector.clone();
+                record.file =
+                    crate::playwright::fsutil::relative_string(root, &selector.file).into();
+                record
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
     Ok(Analysis {
         coverage,
         edges: edge_report,
+        unanalyzable_html_ids,
     })
 }

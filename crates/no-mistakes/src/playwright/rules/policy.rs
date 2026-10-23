@@ -16,6 +16,7 @@ pub(super) fn unique_policy(
     unique_test_ids: bool,
     unique_html_ids: bool,
     literal_test_ids_only: bool,
+    literal_html_ids_only: bool,
 ) -> UniqueSelectorPolicy {
     UniqueSelectorPolicy {
         test_ids: unique_test_ids,
@@ -23,5 +24,11 @@ pub(super) fn unique_policy(
         aggregate: false,
         configured_html_id_selector: false,
         literal_test_ids_only,
+        // Another selection may use `id` as a configured test-ID attribute.
+        // Only the HTML rule's own selection may narrow those duplicates.
+        literal_html_ids_only: unique_html_ids && literal_html_ids_only,
     }
 }
+
+#[cfg(test)]
+mod tests;

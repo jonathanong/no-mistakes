@@ -7,6 +7,8 @@ use anyhow::Result;
 
 pub(crate) const REWRITE: &str =
     "use a literal test id such as data-pw=\"save-button\", or a prop with a literal default";
+pub(crate) const HTML_ID_REWRITE: &str =
+    "use a literal HTML id such as id=\"save-button\", or a prop with a literal default";
 
 pub(super) struct RuleEffortPolicy {
     pub(super) low: bool,
@@ -17,6 +19,11 @@ pub(super) struct RuleEffortPolicy {
 /// keeps recovery at max so a max application cannot lose findings.
 pub(super) fn unique_test_ids_policy(config: &NoMistakesConfig) -> Result<RuleEffortPolicy> {
     rule_effort_policy(config, PLAYWRIGHT_UNIQUE_TEST_IDS)
+}
+
+/// Keep HTML-ID recovery at max when any application of this rule needs max.
+pub(super) fn unique_html_ids_policy(config: &NoMistakesConfig) -> Result<RuleEffortPolicy> {
+    rule_effort_policy(config, PLAYWRIGHT_UNIQUE_HTML_IDS)
 }
 
 /// Coverage checks each selector once. Any application that is not low keeps

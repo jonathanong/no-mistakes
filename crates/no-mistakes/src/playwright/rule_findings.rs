@@ -16,6 +16,7 @@ pub(crate) struct CoverageFindingOptions {
 #[derive(Clone, Copy, Default)]
 pub(crate) struct LowEffortFindings {
     pub unique_test_ids: Option<Unanalyzable>,
+    pub unique_html_ids: Option<Unanalyzable>,
     pub coverage: Option<Unanalyzable>,
 }
 
@@ -52,6 +53,13 @@ pub(crate) fn findings_from_report_with_effort(
             PLAYWRIGHT_UNIQUE_TEST_IDS,
             low.unique_test_ids,
             unique_html_ids,
+        );
+    }
+    if unique_html_ids {
+        emit::unanalyzable_html_ids(
+            &mut diagnostics,
+            &analysis.unanalyzable_html_ids,
+            low.unique_html_ids,
         );
     }
     if coverage.enabled && coverage.selectors {

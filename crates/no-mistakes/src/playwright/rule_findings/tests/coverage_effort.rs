@@ -60,6 +60,7 @@ fn low_coverage_skips_recovered_uncovered_selectors() {
         false,
         coverage_all(true),
         LowEffortFindings {
+            unique_html_ids: None,
             unique_test_ids: None,
             coverage: Some(Unanalyzable::Report),
         },
@@ -122,6 +123,7 @@ fn low_coverage_skips_unanalyzable_when_selector_coverage_is_disabled() {
             selectors: false,
         },
         LowEffortFindings {
+            unique_html_ids: None,
             unique_test_ids: None,
             coverage: Some(Unanalyzable::Report),
         },

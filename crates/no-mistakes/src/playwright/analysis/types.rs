@@ -172,6 +172,9 @@ pub(crate) struct RelatedReport {
 pub(crate) struct Analysis {
     pub(crate) coverage: CoverageReport,
     pub(crate) edges: EdgeReport,
+    /// Diagnostic-only records have root-relative paths and never enter coverage output.
+    #[serde(skip)]
+    pub(crate) unanalyzable_html_ids: Vec<selectors::AppSelector>,
 }
 
 pub(crate) struct CoverageInputs<'a> {
@@ -194,6 +197,8 @@ pub(crate) struct UniqueSelectorPolicy {
     pub(crate) configured_html_id_selector: bool,
     /// Skip recovered Exact values when judging unique test IDs.
     pub(crate) literal_test_ids_only: bool,
+    /// HTML-ID effort is independent of configured test-ID effort.
+    pub(crate) literal_html_ids_only: bool,
 }
 
 pub(crate) type FetchIndex =

@@ -53,6 +53,10 @@ string literal test id, including JSX `data-testid={"save"}`, or a prop with a
 literal default; other selector shapes use the same unanalyzable policy. See
 [playwright-unique-test-ids](rules/playwright-unique-test-ids.md#effort) and
 [playwright-coverage](rules/playwright-coverage.md#effort).
+For `playwright-unique-html-ids`, `low` checks literal HTML IDs and routes
+other ID expressions through the shared unanalyzable policy. The rule remains
+independent of `tests.playwright.selectors.htmlIds`; see
+[its Effort section](rules/playwright-unique-html-ids.md#effort).
 For `nextjs-no-caching`, `low` checks
 [literal cache settings](rules/nextjs-no-caching.md#effort) without preparing
 constant propagation or configuration wrapper facts. Both APIs preserve shared
