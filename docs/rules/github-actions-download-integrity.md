@@ -110,6 +110,11 @@ it. The static rewrite is to put the complete URL directly in the downloader's
 URL argument. An unanalyzable URL does not prove that the download is unsafe;
 `ignore` therefore leaves that command without analysis.
 
+A dynamic option name such as `curl --$FLAG URL` also makes argument slots
+uncertain: the expanded option could consume the apparent URL as a filename.
+It follows the same policy. Fixed option names with dynamic values, such as
+`--output="$OUT"` or `--header="$HEADER"`, keep their known operand positions.
+
 Low effort may inspect one uppercase literal binding to identify a downloader
 or wrapper used as a dynamic command prefix. It does not use that binding to
 expand URL values. When this proves a configured downloader behind an indirect
