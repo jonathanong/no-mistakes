@@ -40,6 +40,33 @@ impl CheckFactMap {
                 ts.insert(path.clone(), Arc::clone(facts));
             }
         }
+        let mut call_site_paths = Arc::clone(&self.call_site_paths);
+        // A rejected sparse duplicate cannot add coverage to the richer winner.
+        let supplemental_wins = |path: &&PathBuf| overwrite || !self.ts.contains_key(path);
+        if !Arc::ptr_eq(&call_site_paths, &supplemental.call_site_paths)
+            && supplemental
+                .call_site_paths
+                .iter()
+                .filter(supplemental_wins)
+                .any(|path| !call_site_paths.contains(path))
+        {
+            if call_site_paths.is_empty()
+                && supplemental
+                    .call_site_paths
+                    .iter()
+                    .all(|path| overwrite || !self.ts.contains_key(path))
+            {
+                call_site_paths = Arc::clone(&supplemental.call_site_paths);
+            } else {
+                Arc::make_mut(&mut call_site_paths).extend(
+                    supplemental
+                        .call_site_paths
+                        .iter()
+                        .filter(supplemental_wins)
+                        .cloned(),
+                );
+            }
+        }
         let mut graph_plan = self.graph_plan;
         graph_plan.include(supplemental.graph_plan);
         let unproven_member_query_sql =
@@ -61,6 +88,7 @@ impl CheckFactMap {
             graph_files_complete: self.graph_files_complete,
             ts,
             graph_plan,
+            call_site_paths,
             integration_runner_configs: self.integration_runner_configs.clone(),
             playwright_source_files: Arc::clone(&self.playwright_source_files),
             playwright_test_files_by_project: Arc::clone(&self.playwright_test_files_by_project),

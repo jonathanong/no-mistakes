@@ -27,10 +27,21 @@ fn runner_graph_helpers_retain_scoped_call_sites_and_richer_imports() {
                 &dataset.workspace(),
             ),
         );
+        let mut runner_config = crate::config::v2::NoMistakesConfig::default();
+        runner_config.tests.vitest.configs = Some(crate::config::v2::schema::StringOrList::One(
+            "vitest.config.ts".into(),
+        ));
+        runner_config.tests.vitest.projects.insert(
+            "unit".into(),
+            crate::config::v2::schema::TestProjectPolicy {
+                integration_suites: [("integration".into(), Vec::new())].into_iter().collect(),
+                ..Default::default()
+            },
+        );
         let runners = Arc::new(
             crate::integration_tests::prepare_runner_configs_with_catalog(
                 &root,
-                &dataset.config(None).unwrap(),
+                &runner_config,
                 &visible,
                 catalog,
                 sources.clone(),
@@ -38,6 +49,10 @@ fn runner_graph_helpers_retain_scoped_call_sites_and_richer_imports() {
         );
         let helper = root.join("setup.ts");
         let config = root.join("vitest.config.ts");
+        assert!(
+            runners.contains(&config),
+            "the fixture must exercise runner discovery"
+        );
         let mut plan = CheckFactPlan {
             integration_runner_configs: Some(runners),
             graph: TsFactPlan::imports_and_symbols(),
@@ -74,7 +89,7 @@ fn runner_graph_helpers_retain_scoped_call_sites_and_richer_imports() {
         assert!(file.ts.symbols.is_some());
         assert!(!file.ts.exported_bindings.is_empty());
         assert_eq!(facts.ts[&config].ts.imports.len(), 1);
-        assert!(facts.ts[&config].integration_runner_config.is_some());
+        assert!(facts.integration_runner_configs.contains_key(&config));
         assert!(session
             .work_snapshot()
             .parse_attempts

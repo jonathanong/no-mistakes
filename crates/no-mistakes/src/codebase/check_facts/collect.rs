@@ -112,6 +112,7 @@ fn collect_check_facts_inner(
         sql_verdicts: None,
         sql_advisories: Arc::default(),
         companion_import_plans: Arc::clone(&plan.companion_import_plans),
+        call_site_paths: Arc::clone(&plan.call_site_paths),
         postgres: Default::default(),
         integration_route_links: Default::default(),
         files,
