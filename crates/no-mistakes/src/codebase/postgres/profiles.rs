@@ -56,6 +56,7 @@ struct EmbeddedSqlRuleOptions {
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<TrustedSqlTag>,
+    sql_literal_helpers: Vec<String>,
     include: Vec<String>,
     exclude: Vec<String>,
 }

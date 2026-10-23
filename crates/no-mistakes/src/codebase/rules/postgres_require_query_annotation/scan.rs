@@ -6,6 +6,7 @@ use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 mod composition;
+mod literal_helpers;
 mod low;
 mod trusted_append;
 mod verdicts;
@@ -47,6 +48,22 @@ pub(super) fn scan_with_sources(
             verdicts::record(&rel, file, opts, facts, &invalid, prepared, path);
         }
         for (call_index, (call, span)) in file.calls.iter().zip(&file.call_spans).enumerate() {
+            if let Some(proof) = literal_helpers::proof(prepared, path, opts, *span) {
+                use crate::codebase::postgres::query_annotation::heads::HeadProof;
+                if proof == HeadProof::Missing
+                    || (proof == HeadProof::Unproven
+                        && opts.unanalyzable_sql == super::UnanalyzableSql::Report)
+                {
+                    findings.push(RuleFinding {
+                        rule: RULE_ID.to_string(), file: rel.clone(), line: call.line as usize,
+                        message: format!("{rel}:{}: {}", call.line, if proof == HeadProof::Missing {
+                            "query execution must start with a /* name */ annotation"
+                        } else { "query annotation cannot be verified because the configured SQL helper requires one static literal argument" }),
+                        import: None, target: Some("annotation".to_string()),
+                    });
+                }
+                continue;
+            }
             let mut retained_violation = false;
             if !call.variants.is_empty() {
                 for (variant_index, version) in call.statement_calls().enumerate() {

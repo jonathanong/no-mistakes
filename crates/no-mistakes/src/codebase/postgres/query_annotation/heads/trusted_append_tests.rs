@@ -85,11 +85,12 @@ fn trusted_tagged_builder_origins_are_required_for_composed_head_proofs() {
         .join("../../fixtures/postgres-facts/embedded/annotation-trusted-append.mts");
     let source = std::fs::read_to_string(&path).unwrap();
     let heads = crate::ast::with_program(&path, &source, |program, _| {
-        super::collect_with_trusted_appends(
+        super::collect_with_helpers(
             program,
             &file.ts,
             embedded.call_spans.iter().copied(),
             &candidates,
+            false,
             false,
         )
     })

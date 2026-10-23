@@ -15,7 +15,18 @@ pub(crate) fn collect_file_facts_from_program(
     owned_source: Option<Arc<str>>,
 ) -> CheckFileFacts {
     let embedded_sql = prepared_embedded_sql(root, path, source, program, plan);
-    let head_candidates = heads::candidates(plan, &embedded_sql);
+    let mut head_candidates = heads::candidates(plan, &embedded_sql);
+    let helpers = embedded_sql
+        .iter()
+        .any(|(profile, _)| !profile.sql_literal_helpers.is_empty());
+    if helpers {
+        head_candidates.extend(
+            embedded_sql
+                .iter()
+                .filter(|(profile, _)| !profile.sql_literal_helpers.is_empty())
+                .flat_map(|(_, file)| file.call_spans.iter().copied()),
+        );
+    }
     let mut ts_plan = ts_extract_plan(root, plan, path, playwright);
     ts_plan.module_bindings |= !head_candidates.is_empty();
     let stored_source =
@@ -114,7 +125,7 @@ pub(crate) fn collect_file_facts_from_program(
     let query_annotation_heads =
         (plan.query_annotation_heads || !head_candidates.is_empty()).then(|| {
             Arc::new(
-                crate::codebase::postgres::query_annotation::heads::collect_with_trusted_appends(
+                crate::codebase::postgres::query_annotation::heads::collect_with_helpers(
                     program,
                     &ts,
                     embedded_sql
@@ -122,6 +133,7 @@ pub(crate) fn collect_file_facts_from_program(
                         .flat_map(|(_, file)| file.call_spans.iter().copied()),
                     &head_candidates,
                     plan.query_annotation_heads,
+                    helpers,
                 ),
             )
         });

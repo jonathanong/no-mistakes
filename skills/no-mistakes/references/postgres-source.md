@@ -141,3 +141,5 @@ analysis. Imported registry relations, helpers, and other indirect SQL produce
 an unanalyzable diagnostic under `report` (or an advisory under `advise`).
 `as const` does not freeze runtime registry members. Choose `max` when the
 cross-file registry path needs inspection; see the rule's Effort section.
+
+For annotation checks, configure `sqlLiteralHelpers: [pg-copy-streams#from]` to unwrap a direct imported helper with one string or interpolation-free template literal at low and max effort. Put the SQL name comment inside the literal. Other argument shapes remain unanalyzable; unannotated static literals remain definite findings under every policy. This option is separate from deprecated `trustedSqlTags`.

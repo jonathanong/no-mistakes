@@ -18,6 +18,7 @@ struct Options {
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
+    sql_literal_helpers: Vec<String>,
 }
 
 /// Borrow the existing request fact map, with each application's normal scope.
@@ -42,7 +43,12 @@ pub(crate) fn check(
         let paths = RuleGlobFilter::new(rule_id, &opts.include, &opts.exclude)?;
         let profile = EmbeddedSqlOptions::configured(&specifier, &opts.executor_names)
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
-            .with_trusted_sql_tags(&opts.trusted_sql_tags);
+            .with_trusted_sql_tags(&opts.trusted_sql_tags)
+            .with_sql_literal_helpers(if rule_id == "postgres-require-query-annotation" {
+                &opts.sql_literal_helpers
+            } else {
+                &[]
+            });
         let view = facts.for_sql_application(index, rule.name.as_deref());
         let context = view
             .as_ref()

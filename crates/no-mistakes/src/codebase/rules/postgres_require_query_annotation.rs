@@ -21,6 +21,7 @@ pub(crate) struct Options {
     pub(crate) executor_factory_names: Vec<String>,
     pub(crate) executor_type_names: Vec<String>,
     pub(crate) trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
+    pub(crate) sql_literal_helpers: Vec<String>,
     pub(crate) unanalyzable_sql: UnanalyzableSql,
 }
 
@@ -74,13 +75,26 @@ pub(crate) fn check_with_files_sources_and_facts(
 }
 
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+    for helper in &opts.sql_literal_helpers {
+        anyhow::ensure!(
+            helper.split_once('#').is_some_and(|(module, export)| {
+                !module.trim().is_empty()
+                    && !export.trim().is_empty()
+                    && !export.contains('#')
+                    && module.trim() == module
+                    && export.trim() == export
+            }),
+            "{RULE_ID}: sqlLiteralHelpers entries must be nonempty module#export identities"
+        );
+    }
     Ok(CompiledOptions {
         paths: super::RuleGlobFilter::new(RULE_ID, &opts.include, &opts.exclude)?,
         unanalyzable_sql: opts.unanalyzable_sql,
         effort: crate::config::v2::Effort::Max,
         embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names)
             .with_scoped_executors(&opts.executor_factory_names, &opts.executor_type_names)
-            .with_trusted_sql_tags(&opts.trusted_sql_tags),
+            .with_trusted_sql_tags(&opts.trusted_sql_tags)
+            .with_sql_literal_helpers(&opts.sql_literal_helpers),
     })
 }
 

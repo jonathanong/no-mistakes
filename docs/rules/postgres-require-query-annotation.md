@@ -204,3 +204,36 @@ Detailed mutation and invocation behavior is described in
 
 [`postgres-no-offset`](postgres-no-offset.md) discourages unstable pagination;
 [`postgres-lock-ordering`](postgres-lock-ordering.md) protects concurrent row locks.
+
+### Configured single-literal SQL helpers
+
+Set `sqlLiteralHelpers: ['pg-copy-streams#from']` to recognize a direct runtime
+import of that exact module and export at both `effort: low` and `effort: max`:
+
+```ts
+import { from as copyFrom } from 'pg-copy-streams';
+client.query(copyFrom('/* import users */ COPY users FROM STDIN'));
+```
+
+Named imports, renamed imports, and direct namespace calls such as
+`copies.from(...)`, `copies['from'](...)`, and ``copies[`from`](...)`` are
+supported. Bracket keys must be string literals or template literals without
+interpolations; numeric and regular expression keys are unsupported. Optional
+calls and optional namespace access remain unsupported. The helper must receive
+exactly one string literal or template literal without interpolations. Its SQL
+comment must occur **inside the literal**;
+`copyFrom(/* import users */ 'COPY users FROM STDIN')` is a definite missing
+annotation. Fix it by moving the named comment inside the string. Definite
+missing annotations remain findings under every unanalyzable policy; existing
+transaction exemptions still apply.
+
+The option defaults to `[]` and selects no helpers. Identities use nonempty,
+exact `module#export` strings; package subpaths must be listed separately.
+Shadowed or type-only imports, optional calls, dynamic namespace keys,
+spread arguments, other argument counts,
+interpolated templates, dynamic arguments, stored helper results, and helper
+return forwarding provide no proof. These retain the existing `unanalyzable`
+report/advise/ignore policy. Rewrite them to a direct helper wrapping one static
+literal, or use the existing rule suppression directives documented above.
+`sqlLiteralHelpers` is independent of deprecated `trustedSqlTags` and does not
+add helper support to the general SQL extraction API.

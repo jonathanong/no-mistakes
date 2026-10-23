@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      include: [src/plain-call.mts]
+      importSpecifier: pg
+      effort: max
+      unanalyzable: ignore

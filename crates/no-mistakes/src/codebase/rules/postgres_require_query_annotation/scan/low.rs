@@ -37,8 +37,17 @@ pub(super) fn scan(
             observer.increment("postgres.annotation.low.calls", file.calls.len() as u64);
         }
         for (call, span) in file.calls.iter().zip(&file.call_spans) {
-            let visible = heads.is_some_and(|heads| heads.accepts(*span));
-            let definite_violation = heads.is_some_and(|heads| heads.proves_missing(*span));
+            let helper =
+                heads.and_then(|heads| heads.helper(*span, &opts.embedded.sql_literal_helpers));
+            use crate::codebase::postgres::query_annotation::heads::HeadProof;
+            let visible = helper.map_or_else(
+                || heads.is_some_and(|heads| heads.accepts(*span)),
+                |proof| proof == HeadProof::Literal,
+            );
+            let definite_violation = helper.map_or_else(
+                || heads.is_some_and(|heads| heads.proves_missing(*span)),
+                |proof| proof == HeadProof::Missing,
+            );
             let status = if visible {
                 SqlVerdictStatus::ProvenClear
             } else if definite_violation {

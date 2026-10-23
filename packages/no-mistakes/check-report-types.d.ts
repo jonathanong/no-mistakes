@@ -43,6 +43,7 @@ export interface SqlExecutorProfile {
   executorFactoryNames: string[];
   executorTypeNames: string[];
   trustedSqlTags: { module: string; name: string }[];
+  sqlLiteralHelpers?: string[];
 }
 /** Zero-based ordinal among enabled applications of the same rule in config order. */
 export interface SqlRuleApplication {

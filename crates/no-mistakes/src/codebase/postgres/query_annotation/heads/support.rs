@@ -1,4 +1,4 @@
-use super::super::{collect_with_trusted_appends, AnnotationHeads, Span};
+use super::super::{collect_with_helpers, AnnotationHeads, Span};
 use crate::codebase::postgres::EmbeddedSqlOptions;
 use crate::codebase::ts_source::facts::{
     collect_file_facts_from_program, TsFactContext, TsFactPlan, TsFileFacts,
@@ -24,12 +24,13 @@ pub(super) fn fixture(name: &str) -> (String, TsFileFacts, AnnotationHeads) {
             None,
         );
         assert!(ts.module_bindings.is_some());
-        let heads = collect_with_trusted_appends(
+        let heads = collect_with_helpers(
             program,
             &ts,
             executors(&path, &source, program).into_iter(),
             &Default::default(),
             true,
+            false,
         );
         (ts, heads)
     })
@@ -42,12 +43,13 @@ pub(super) fn recollect(name: &str, ts: &TsFileFacts) -> AnnotationHeads {
         .join(name);
     let source = std::fs::read_to_string(&path).unwrap();
     crate::ast::with_program(&path, &source, |program, _| {
-        collect_with_trusted_appends(
+        collect_with_helpers(
             program,
             ts,
             executors(&path, &source, program).into_iter(),
             &Default::default(),
             true,
+            false,
         )
     })
     .unwrap()
