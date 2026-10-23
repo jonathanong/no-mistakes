@@ -32,7 +32,7 @@ The options object accepts `clients` (exact local identifier names), `imports` (
 }] }
 ```
 
-Only adjacent statements in a module or block are compared. Each statement must be a direct await expression or a single variable declaration initialized by an await. Transparent TypeScript assertions and static computed method names are accepted. Both reads must target the same resolved client binding. Referencing any previous result binding, including a destructured binding, anywhere in the second call exempts the pair. Aliases, nested awaits, arbitrary control flow, and helper return values are not followed. Configured methods assert independent reads when no result dependency is visible; the rule does not prove purity of argument helpers or discover hidden dependencies. Keep such dependencies explicit in the second call or separate the statements.
+Adjacent reads in a module, block, or individual switch case are compared. Supported shapes are direct await expressions, simple assignments with an awaited right side, variable declarators initialized by awaits (including exported declarations), and a second read written as `return await`. Declarators are compared in execution order, including across statement boundaries; a non-read declarator breaks adjacency. Separate switch cases are never combined, and a return ends a sequence. Transparent TypeScript assertions and static computed method names are accepted. Both reads must target the same resolved client binding. Referencing any previous declared or assigned result binding, including a destructured binding, anywhere in the second call exempts the pair. Compound assignments, assignments to properties or unresolved bindings, aliases, nested awaits, arbitrary control flow, and helper return values are not followed. Configured methods assert independent reads when no result dependency is visible; the rule does not prove purity of argument helpers or discover hidden dependencies. Keep such dependencies explicit in the second call or separate the statements.
 
 ## Fix
 
@@ -46,7 +46,7 @@ await client.get('a');
 await client.ttl('b');
 ```
 
-Also supports `no-mistakes-disable-line`, a leading `no-mistakes-disable-file`, and ordinary ESLint/Oxlint suppression directives.
+For multiple declarators, a directive on the declaration header covers the declaration; a directive on an individual declarator covers that read. Also supports `no-mistakes-disable-line`, a leading `no-mistakes-disable-file`, and ordinary ESLint/Oxlint suppression directives.
 
 ## Related rules
 
