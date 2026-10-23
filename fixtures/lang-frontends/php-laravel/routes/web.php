@@ -11,4 +11,5 @@ Route::get('/ping', PingController::class);
 Route::get('/fq-users', \App\Http\Controllers\UserController::class);
 Route::resource('users', UserController::class);
 Route::resource('hidden', UserController::class, ['only' => ['index']]);
+// Bare Route::apiResource is a route edge (collection + member), same as Route::resource.
 Route::apiResource('accounts', UserController::class);

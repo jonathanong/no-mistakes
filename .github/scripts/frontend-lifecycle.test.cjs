@@ -50,8 +50,8 @@ for (const expected of cases) {
         imports: 66,
         enqueues: 7,
         workers: 6,
-        routes: 41,
-        edges: 125,
+        routes: 43,
+        edges: 129,
         queueEdges: 14,
         globMatches: 117,
       });

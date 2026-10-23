@@ -154,7 +154,7 @@ fn laravel_resource_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(
-            r#"Route::resource\(\s*['"]([^'"]+)['"]\s*,\s*(?:\[([^\]]+)\]|(\\?[A-Za-z_][A-Za-z0-9_\\]*)::class)\s*,?\s*\)"#,
+            r#"Route::(?:apiR|r)esource\(\s*['"]([^'"]+)['"]\s*,\s*(?:\[([^\]]+)\]|(\\?[A-Za-z_][A-Za-z0-9_\\]*)::class)\s*,?\s*\)"#,
         )
         .expect("laravel resource")
     })

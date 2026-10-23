@@ -66,7 +66,7 @@ pub(super) fn validate_relationships(
         edges,
         LanguageFrontendSummary {
             files: 117,
-            edges: 125,
+            edges: 129,
             queue_edges: 14,
             ..LanguageFrontendSummary::default()
         }
@@ -88,7 +88,7 @@ pub(super) fn expected_facts() -> LanguageFrontendSummary {
         imports: 66,
         enqueues: 7,
         workers: 6,
-        route_handlers: 41,
+        route_handlers: 43,
         ..LanguageFrontendSummary::default()
     }
 }

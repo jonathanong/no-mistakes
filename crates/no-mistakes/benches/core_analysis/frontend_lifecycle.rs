@@ -109,7 +109,7 @@ pub(super) fn register(c: &mut Criterion) {
             "priorHelperEvents": prior_events, "helperEvents": trace.events(),
             "fixtureInitializations": trace.events().iter().filter(|event| **event == "fixture").count(),
             "rayonWorkers": 4, "files": 117, "parsed": 69, "imports": 66,
-            "enqueues": 7, "workers": 6, "routes": 41, "edges": 125,
+            "enqueues": 7, "workers": 6, "routes": 43, "edges": 129,
             "queueEdges": 14, "globMatches": 117
         })
     );
