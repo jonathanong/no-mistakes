@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      include: ['packages/db/src/rewrite/*.mts']
+      executorTypeNames: [Pool]
+      unanalyzable: report

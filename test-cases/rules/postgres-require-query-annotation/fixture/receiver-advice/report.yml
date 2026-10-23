@@ -4,4 +4,5 @@ rules:
     options:
       importSpecifier: '@example/db'
       include: ['packages/db/src/*.mts']
+      exclude: ['packages/db/src/rewrite/**']
       unanalyzable: report

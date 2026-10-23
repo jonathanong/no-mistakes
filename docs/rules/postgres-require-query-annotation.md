@@ -18,14 +18,20 @@ receiver type. See [executor bindings](../postgres-facts/executor-bindings.md).
 
 When the receiver is imported as a value and its declared executor type is not
 available to this check, the diagnostic names the receiver instead of treating
-that value name as a type. Add the actual type to `executorTypeNames`; if the
-export has no explicit type, annotate it first:
+that value name as a type. Pass it to a helper with a parameter explicitly
+typed using its actual executor type from the configured module, and add that
+type to `executorTypeNames`. The check confirms package ownership for relative
+imports; it does not propagate type annotations through an exported value:
 
 ```ts
-import * as psql from "@example/db";
-import type { Pool } from "pg";
+import type { Pool } from "@example/db";
+import { writePool } from "./db.mjs";
 
-export const writePool: Pool = psql.writePool;
+function listAccounts(pool: Pool) {
+  pool.query("/* accounts/list */ SELECT id FROM accounts");
+}
+
+listAccounts(writePool);
 ```
 
 The same `unanalyzable` policy applies: `report` emits a finding, `advise`

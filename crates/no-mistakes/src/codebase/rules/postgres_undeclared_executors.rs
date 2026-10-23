@@ -67,7 +67,7 @@ pub(crate) fn check(
                         )
                     } else {
                         format!(
-                            "receiver `{}` has no declared executor type available to this check; annotate its exported value with its actual type and add that type to executorTypeNames so its SQL can be checked",
+                            "receiver `{}` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
                             call.receiver_name,
                         )
                     };
@@ -81,7 +81,7 @@ pub(crate) fn check(
                         "undeclared-executor-type",
                         "undeclared-executor-type",
                         format!(
-                            "receiver `{}` has no declared executor type available to this check; annotate its exported value with its actual type and add that type to executorTypeNames so its SQL can be checked",
+                            "receiver `{}` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
                             call.receiver_name,
                         ),
                     )

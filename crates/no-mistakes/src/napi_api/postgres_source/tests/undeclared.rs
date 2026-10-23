@@ -191,7 +191,8 @@ fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_m
                 assert!(finding.message.contains(&format!("receiver `{receiver}`")));
                 assert!(finding.message.contains("no declared executor type"));
                 assert!(finding.message.contains("executorTypeNames"));
-                assert!(finding.message.contains("annotate its exported value"));
+                assert!(finding.message.contains("parameter explicitly typed"));
+                assert!(finding.message.contains("configured executor type"));
                 assert!(!finding
                     .message
                     .contains("undeclared executor type `writePool`"));
@@ -225,7 +226,8 @@ fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_m
     assert_eq!(configured.rules.len(), 2);
     for finding in &configured.rules {
         assert!(finding.message.contains("no declared executor type"));
-        assert!(finding.message.contains("annotate its exported value"));
+        assert!(finding.message.contains("parameter explicitly typed"));
+        assert!(finding.message.contains("configured executor type"));
         assert!(!finding
             .message
             .contains("configured executor receiver of type"));
@@ -233,6 +235,44 @@ fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_m
             finding.target.as_deref(),
             Some("unresolved-configured-executor-receiver")
         );
+    }
+}
+
+#[test]
+fn typed_helper_parameters_check_imported_values_at_low_and_max() {
+    use crate::check_runner::{run_all_with_options, AnalysisOptions};
+    use crate::config::v2::Effort;
+
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-require-query-annotation/fixture/receiver-advice");
+    for effort in [Effort::Low, Effort::Max] {
+        let report = run_all_with_options(
+            root.clone(),
+            Some("rewrite.yml".into()),
+            None,
+            false,
+            false,
+            AnalysisOptions {
+                effort: Some(effort),
+                include_sql_verdicts: false,
+            },
+        )
+        .unwrap();
+        assert!(
+            report.advisories.is_empty(),
+            "{effort:?}: {:?}",
+            report.advisories
+        );
+        assert_eq!(report.rules.len(), 1, "{effort:?}: {:?}", report.rules);
+        assert_eq!(
+            report.rules[0].file,
+            "packages/db/src/rewrite/after-rewrite.mts"
+        );
+        assert_eq!(report.rules[0].line, 9);
+        assert_eq!(report.rules[0].target.as_deref(), Some("annotation"));
+        assert!(report.rules[0]
+            .message
+            .contains("must start with a /* name */ annotation"));
     }
 }
 
