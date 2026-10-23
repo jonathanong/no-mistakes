@@ -73,7 +73,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         integration: enabled.integration,
         integration_paths: Default::default(),
         integration_runner_configs: None,
-        dynamic_imports: enabled.dynamic_import_rules || enabled.storybook_stories,
+        dynamic_imports: enabled.dynamic_import_rules,
         nextjs_caching: enabled.nextjs_caching,
         nextjs_caching_low: false,
         storybook: enabled.storybook_stories,

@@ -12,6 +12,9 @@ pub(super) fn transitive_covered_components(
     direct: &BTreeSet<String>,
     component_keys: &HashSet<String>,
 ) -> BTreeSet<String> {
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("storybook.transitive_coverage.scans", 1);
+    }
     let mut covered = direct.clone();
     let mut queue: VecDeque<String> = direct.iter().cloned().collect();
     let component_children = component_children(root, project_root, shared);
@@ -65,6 +68,9 @@ pub(super) fn dynamic_or_mock_boundary_files(
     shared: &CheckFactMap,
     resolver: &dyn ImportResolution,
 ) -> HashSet<PathBuf> {
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("storybook.dynamic_boundary.scans", 1);
+    }
     let mut out = HashSet::new();
     for (file, facts) in &shared.ts {
         if !file.starts_with(project_root) {

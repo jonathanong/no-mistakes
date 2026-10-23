@@ -64,6 +64,9 @@ pub(super) fn build(
         embedded_sql: enabled.embedded_sql,
     });
     no_mistakes::codebase::rules::nextjs_no_caching::configure_effort_plan(config, &mut plan)?;
+    no_mistakes::codebase::rules::require_storybook_stories::configure_effort_plan(
+        config, &mut plan,
+    )?;
     plan.query_annotation_catalog = Some(std::sync::Arc::clone(&prepared.tsconfig_catalog));
     plan.production_import_paths = no_mistakes::codebase::rules::production_dependency_declarations::required_import_fact_files(
         root, config, prepared.visible_paths.paths_for(root).as_ref(),

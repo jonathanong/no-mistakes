@@ -72,6 +72,66 @@ an exempt component key or file path to its required reason and default empty.
 defaults to `false`; enable it to skip `index` and underscore-private source
 files. Generic rule filters remain separate from these rule-local globs.
 
+## Effort
+
+`max` is the default and preserves transitive component coverage and dynamic or
+mock boundary analysis. Use the shared `options.effort: low` to check direct
+story coverage without building the component render graph or resolving the
+project's dynamic and mock boundary imports:
+
+```yaml
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      effort: low
+      unanalyzable: advise
+      stories: ["stories/**/*.stories.tsx"]
+      include: ["src/**/*.tsx"]
+```
+
+Low retains story-file discovery, story import and re-export resolution,
+namespace-import checks, allow-entry validation, and configured colocated-test
+coverage. It does not follow a covered parent's render chain. For example:
+
+```tsx
+// stories/Parent.stories.tsx
+import { Parent } from '../src/Parent';
+export default { component: Parent };
+export const Primary = {};
+// src/Parent.tsx
+import { Child } from './Child';
+export function Parent() { return <Child />; }
+```
+
+Both efforts establish direct coverage for `Parent`. Max can also establish
+coverage for `Child`; low treats its coverage as unanalyzable. Add a story that
+directly imports `Child`, use an accepted colocated test when enabled, or use max
+to follow the render chain.
+
+If the project has no direct story coverage seeds, an explicitly included
+component without an accepted colocated test is still definitely missing a
+story at low, just as at max. Otherwise an uncovered component may depend on
+transitive coverage. Components selected only by export kind also need boundary
+analysis to exclude dynamic or mocked modules; low leaves their coverage
+unanalyzable rather than guessing that the exemption applies.
+
+The shared `unanalyzable` policy controls these residual diagnostics: `report`
+fails (the default), `advise` emits a non-failing advisory, and `ignore` omits
+the residual. Definite missing-story findings and namespace/allow-entry findings
+remain findings under every policy. Low's definite findings are contained in
+max's findings; total report counts can differ when low reports uncertainty
+that max resolves clear. No partner check is required because this uncertainty
+remains explicit under the selected policy.
+
+Low-only requests also omit dynamic/mock import facts unless another consumer
+needs them. Mixed low/max rule applications retain the facts required by max
+and reuse the same source inventory and parse.
+
+The same file and line suppression directives suppress low-effort findings and
+advisories. Existing parse-error diagnostics continue to follow `unanalyzable`
+at both efforts.
+
 ## Valid example
 
 ```yaml

@@ -52,6 +52,11 @@ For `nextjs-no-caching`, `low` checks
 constant propagation or configuration wrapper facts. Both APIs preserve shared
 unanalyzable policy and suppression behavior; mixed low/max applications reuse
 the same source inventory and parse.
+For `require-storybook-stories`, `low` keeps
+[direct story coverage](rules/require-storybook-stories.md#effort) and configured
+colocated-test coverage without transitive render-chain or dynamic/mock boundary
+analysis. `check({ effort: "low" })` and a check report in `analyzeProject()` use
+the same shared unanalyzable policy as CLI `--effort low`.
 For `github-actions-job-timeouts`, `check({ effort: "low" })` and a check report
 in `analyzeProject()` use the same covering `github-actions-step-timeouts`
 partner as CLI `--effort low`. With a certified step cap, the job rule skips

@@ -24,6 +24,16 @@ pub(super) fn run_check(
         return Ok(Vec::new());
     }
 
+    let files = crate::codebase::ts_source::discover_files_from_visible(
+        root,
+        &config.filesystem.skip_directories,
+        &visible_paths,
+    );
+    let sources = snapshot.source_store_for(root);
+    let config =
+        super::require_storybook_stories::prepare_low_config(root, &config, &files, &sources)?
+            .unwrap_or(config);
+
     let inferred_roots = crate::codebase::config::InferredRoots::from_visible(root, &visible_paths);
     let prepared_tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
         tsconfig_path,
@@ -83,16 +93,12 @@ pub(super) fn run_check(
             &visible_paths,
         )?;
     fact_plan.graph.imports |= !fact_plan.production_import_paths.is_empty();
-    let files = crate::codebase::ts_source::discover_files_from_visible(
-        root,
-        &config.filesystem.skip_directories,
-        &visible_paths,
-    );
+
     let graph_files = standalone_graph_files(root, &config, graph_plan, &visible_paths, &files);
     let playwright_fact_plan = prepared_playwright
         .as_ref()
         .map(crate::playwright::rules::PreparedPlaywrightRules::fact_plan);
-    let sources = snapshot.source_store_for(root);
+
     crate::codebase::check_facts::configure_family_path_scopes(
         root,
         &files,
@@ -169,7 +175,7 @@ fn standalone_fact_plan(config: &crate::config::v2::NoMistakesConfig) -> Result<
         imports: dynamic_imports,
         symbols: storybook,
         react: storybook,
-        dynamic_imports: dynamic_imports || storybook,
+        dynamic_imports,
         nextjs_caching,
         storybook,
         server_route_client_boundary: boundary,
@@ -178,5 +184,6 @@ fn standalone_fact_plan(config: &crate::config::v2::NoMistakesConfig) -> Result<
         ..CheckFactPlan::default()
     };
     super::nextjs_no_caching::configure_effort_plan(config, &mut plan)?;
+    super::require_storybook_stories::configure_effort_plan(config, &mut plan)?;
     Ok(plan)
 }

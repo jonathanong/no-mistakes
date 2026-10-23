@@ -57,3 +57,27 @@ fn full_universe_graph_files_include_skipped_directories() {
         .iter()
         .any(|file| file.ends_with("generated/worker.ts")));
 }
+
+#[test]
+fn low_storybook_preserves_enabled_dynamic_import_rule_demand() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/require-storybook-stories/fixture/effort");
+    let mut config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.low.yml"))).unwrap();
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let sources = super::super::super::source_store_for_files(&files);
+    crate::codebase::rules::analysis_policy::prepare_rule_analysis(
+        &root,
+        &mut config,
+        &files,
+        &sources,
+    )
+    .unwrap();
+    assert!(!standalone_fact_plan(&config).unwrap().dynamic_imports);
+    config.rules.push(RuleDef {
+        rule: TEST_NO_UNMOCKED_DYNAMIC_IMPORTS.to_string(),
+        scope: Some(RuleScope::Repository),
+        ..Default::default()
+    });
+    assert!(standalone_fact_plan(&config).unwrap().dynamic_imports);
+}

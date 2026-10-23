@@ -83,3 +83,6 @@ mod cli_check_rules_workflow_topology;
 
 #[path = "cli_check_git_identity_prefixes.rs"]
 mod cli_check_git_identity_prefixes;
+
+#[path = "cli_check_storybook_effort.rs"]
+mod cli_check_storybook_effort;
