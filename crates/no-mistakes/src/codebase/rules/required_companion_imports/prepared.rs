@@ -64,8 +64,17 @@ pub fn configure_fact_plan(
 
 impl PreparedCompanionImportPlan {
     pub(super) fn matches(&self, root: &Path, config: &NoMistakesConfig) -> bool {
-        self.root == normalize_path(root) && self.config == *config
+        self.root == normalize_path(root) && self.config == companion_view(config)
     }
+}
+
+/// The config as this rule sees it. Aggregate runners hand a rule's domain a
+/// copy with sibling rules (for example nextjs-redirect-destinations) removed
+/// after fact preparation; those siblings never influence companion selection.
+fn companion_view(config: &NoMistakesConfig) -> NoMistakesConfig {
+    let mut view = config.clone();
+    view.rules.retain(|rule| rule.rule == RULE_ID);
+    view
 }
 
 fn prepare(
@@ -172,7 +181,7 @@ fn prepare(
     import_paths.dedup();
     Ok(PreparedCompanionImportPlan {
         root,
-        config: config.clone(),
+        config: companion_view(config),
         checks,
         import_paths,
     })

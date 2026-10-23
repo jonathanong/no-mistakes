@@ -9,6 +9,7 @@ use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 mod architecture;
+mod companion_redirect;
 mod config_path;
 mod consumers;
 mod domain_tasks;
