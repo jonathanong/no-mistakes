@@ -83,6 +83,29 @@ http(s) URL. The default is only `curl` and `wget`. An explicit list is extra,
 not a replacement, so `[]` leaves `curl` and `wget` in place. A helper is a
 single command token such as `ci_download_to`.
 
+## Effort
+
+`effort: max` is the default. It keeps the current expansion of one whole-line
+uppercase assignment with a literal value, such as `BASE_URL="https://example.invalid/base"`,
+before checking later `$BASE_URL` or `${BASE_URL}` URL arguments.
+
+At `effort: low`, the rule does not expand that assignment. A download URL that
+is not an inline static `http://` or `https://` URL in a downloader's URL
+argument slot is unanalyzable at low. This includes an argument that depends on
+the uppercase assignment because its host cannot be proved from the argument
+alone. The shared `unanalyzable` policy controls the result: `report` fails,
+`advise` emits a non-failing advisory, and `ignore` skips it. The static rewrite
+is to put the complete URL directly in the download command. An unanalyzable
+URL does not prove that the download is unsafe; `ignore` therefore leaves that
+URL unjudged.
+
+Literal URL arguments keep the same checks at low and max: trusted-host and
+checksum-file exceptions, same-step checksum verification, and the
+`integrity-check: skip` comment still apply. URL-option parsing also stays
+enabled, so header and output-file arguments are not treated as dynamic URL
+slots.
+The default `max` output is unchanged.
+
 ```yaml
 rules:
   - rule: github-actions-download-integrity

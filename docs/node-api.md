@@ -87,6 +87,11 @@ redundant `rejectStepExceedingJob` comparisons only for literal job timeouts at
 least that cap; the partner reports step violations. Missing or ineligible
 coverage produces the same warning, `analysisFallbacks` record, and `max`
 fallback in both APIs. See [its Effort section](rules/github-actions-job-timeouts.md#effort).
+For `github-actions-download-integrity`, `low` skips uppercase literal
+assignment expansion and routes dynamic URL argument slots through the same
+shared unanalyzable policy. Literal URL checks are unchanged in CLI and Node API
+checks. See
+[its Effort section](rules/github-actions-download-integrity.md#effort).
 
 | CLI                                        | Node API                                                                                                                                                                                                                                                                   |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
