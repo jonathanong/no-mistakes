@@ -3,5 +3,5 @@ rules:
     scope: repository
     options:
       importSpecifier: '@example/db'
-      include: ['*.mts']
+      include: ['packages/db/src/*.mts']
       unanalyzable: ignore

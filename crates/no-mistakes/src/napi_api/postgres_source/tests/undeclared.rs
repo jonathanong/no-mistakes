@@ -173,11 +173,17 @@ fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_m
             if policy == "ignore" {
                 assert!(diagnostic_files.is_empty());
             } else {
-                assert_eq!(diagnostic_files, [("query.mts", 3), ("renamed.mts", 3)]);
+                assert_eq!(
+                    diagnostic_files,
+                    [
+                        ("packages/db/src/query.mts", 3),
+                        ("packages/db/src/renamed.mts", 3)
+                    ]
+                );
             }
             for finding in report.rules.iter().chain(&report.advisories) {
                 assert_eq!(finding.line, 3);
-                let receiver = if finding.file == "renamed.mts" {
+                let receiver = if finding.file.ends_with("renamed.mts") {
                     "renamedPool"
                 } else {
                     "writePool"
