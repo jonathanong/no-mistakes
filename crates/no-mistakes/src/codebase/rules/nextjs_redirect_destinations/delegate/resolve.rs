@@ -4,10 +4,10 @@ use oxc_ast::ast::{
 };
 use std::path::{Path, PathBuf};
 const EXTENSIONS: &[&str] = &["ts", "mts", "cts", "tsx", "js", "mjs", "cjs", "jsx"];
-pub(super) fn default_module_specifier<'a>(program: &'a Program<'a>) -> Option<&'a str> {
+pub(super) fn default_module_specifier<'a>(program: &'a Program<'a>) -> Option<(&'a str, u32)> {
     let mut imported = Vec::new();
     let mut exported_ident: Option<&str> = None;
-    let mut reexport: Option<&str> = None;
+    let mut reexport: Option<(&str, u32)> = None;
     for statement in &program.body {
         match statement {
             Statement::ImportDeclaration(import) => {
@@ -17,8 +17,10 @@ pub(super) fn default_module_specifier<'a>(program: &'a Program<'a>) -> Option<&
                 for specifier in specifiers {
                     if let ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) = specifier
                     {
-                        imported
-                            .push((specifier.local.name.as_str(), import.source.value.as_str()));
+                        imported.push((
+                            specifier.local.name.as_str(),
+                            (import.source.value.as_str(), import.source.span.start),
+                        ));
                     }
                 }
             }
@@ -29,7 +31,7 @@ pub(super) fn default_module_specifier<'a>(program: &'a Program<'a>) -> Option<&
             }
             Statement::ExportFromDeclaration(export) => {
                 if let Some(specifier) = default_reexport_specifier(export) {
-                    reexport = Some(specifier);
+                    reexport = Some((specifier, export.source.span.start));
                 }
             }
             _ => {}

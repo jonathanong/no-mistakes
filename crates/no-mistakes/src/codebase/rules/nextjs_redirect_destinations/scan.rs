@@ -96,7 +96,10 @@ fn scan_target(
             route_set: &route_set,
             app_root_label: &app_root_label,
             include_rewrites: opts.include_rewrites,
-            specifier: extracted.specifier.as_deref(),
+            specifier: extracted
+                .specifier
+                .as_ref()
+                .map(|(specifier, line)| (specifier.as_str(), *line)),
             analysis,
         },
     ));
