@@ -43,7 +43,9 @@ pub(super) fn try_record_resolved(
     let Some(value) = static_value(init, scopes) else {
         return false;
     };
-    insert_new(scopes, name, value);
+    if let Some(scope) = scopes.last_mut() {
+        scope.insert(name.to_string(), value);
+    }
     true
 }
 

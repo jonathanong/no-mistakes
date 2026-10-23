@@ -2,9 +2,13 @@ use super::const_values::{self, record_unknown, try_record_resolved};
 use super::patterns::single_binding_name;
 use super::visitor::NextjsCachingVisitor;
 use oxc_ast::ast::{
-    BindingPattern, Declaration, FormalParameters, Statement, VariableDeclaration,
-    VariableDeclarationKind, VariableDeclarator,
+    BindingPattern, Class, Declaration, Expression, FormalParameters, Function, FunctionBody,
+    Statement, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
+use oxc_ast_visit::Visit;
+use oxc_syntax::scope::ScopeFlags;
+
+mod statements;
 
 impl<'a> NextjsCachingVisitor<'a> {
     pub(crate) fn push_const_scope(&mut self) {
@@ -18,21 +22,47 @@ impl<'a> NextjsCachingVisitor<'a> {
     pub(crate) fn open_function_scope(
         &mut self,
         params: &FormalParameters<'a>,
-        statements: Option<&[Statement<'a>]>,
+        name: Option<&str>,
     ) {
         self.push_const_scope();
-        self.record_formal_parameters(params);
-        if let Some(statements) = statements {
-            self.precollect_statements(statements);
+        if let Some(name) = name {
+            record_unknown(&mut self.const_scopes, name);
         }
+        self.record_formal_parameters(params);
     }
 
-    pub(crate) fn precollect_statements(&mut self, statements: &[Statement<'a>]) {
-        let declarations = direct_declarations(statements);
-        for declaration in &declarations {
-            if declaration.kind != VariableDeclarationKind::Const {
-                self.record_bound_names(declaration);
+    pub(crate) fn open_function_body_scope(&mut self, body: &FunctionBody<'a>) {
+        // Body bindings are not visible to default parameter initializers.
+        self.push_const_scope();
+        self.precollect_hoisted_vars(&body.statements);
+        self.precollect_statements(&body.statements);
+    }
+
+    pub(crate) fn precollect_statements<'b>(
+        &mut self,
+        statements: impl IntoIterator<Item = &'b Statement<'a>>,
+    ) where
+        'a: 'b,
+    {
+        let mut declarations = Vec::new();
+        for statement in statements {
+            // These are lexical statement bodies; module exports are collected separately.
+            match statement.as_declaration() {
+                Some(Declaration::VariableDeclaration(declaration)) => {
+                    declarations.push(declaration.as_ref());
+                }
+                Some(Declaration::FunctionDeclaration(function)) => {
+                    self.record_name(function.id.as_ref().map(|id| id.name.as_str()));
+                }
+                Some(Declaration::ClassDeclaration(class)) => {
+                    self.record_name(class.id.as_ref().map(|id| id.name.as_str()));
+                }
+                _ => {}
             }
+        }
+        // Reserve every name before resolving aliases, including later declarations.
+        for declaration in &declarations {
+            self.record_bound_names(declaration);
         }
         let mut pending: Vec<&VariableDeclarator<'a>> = declarations
             .iter()
@@ -48,6 +78,27 @@ impl<'a> NextjsCachingVisitor<'a> {
         }
         for declarator in pending {
             self.record_pattern_unknown(&declarator.id);
+        }
+    }
+
+    pub(crate) fn record_name(&mut self, name: Option<&str>) {
+        if let Some(name) = name {
+            record_unknown(&mut self.const_scopes, name);
+        }
+    }
+
+    pub(crate) fn precollect_hoisted_vars(&mut self, statements: &[Statement<'a>]) {
+        // Scan declaration-bearing statement structure only, stopping at new var owners.
+        let mut collector = HoistedVars(self);
+        for statement in statements {
+            collector.visit_statement(statement);
+        }
+    }
+
+    pub(crate) fn open_loop_scope(&mut self, declaration: Option<&VariableDeclaration<'a>>) {
+        self.push_const_scope();
+        if let Some(declaration) = declaration {
+            self.record_bound_names(declaration);
         }
     }
 
@@ -88,7 +139,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         }
     }
 
-    fn record_pattern_unknown(&mut self, pattern: &BindingPattern<'a>) {
+    pub(crate) fn record_pattern_unknown(&mut self, pattern: &BindingPattern<'a>) {
         match pattern {
             BindingPattern::BindingIdentifier(identifier) => {
                 record_unknown(&mut self.const_scopes, identifier.name.as_str());
@@ -116,18 +167,18 @@ impl<'a> NextjsCachingVisitor<'a> {
     }
 }
 
-fn direct_declarations<'a, 'b>(
-    statements: &'b [Statement<'a>],
-) -> Vec<&'b VariableDeclaration<'a>> {
-    statements
-        .iter()
-        .filter_map(|statement| match statement {
-            Statement::VariableDeclaration(declaration) => Some(declaration.as_ref()),
-            Statement::ExportDeclaration(export) => match &export.declaration {
-                Declaration::VariableDeclaration(declaration) => Some(declaration.as_ref()),
-                _ => None,
-            },
-            _ => None,
-        })
-        .collect()
+struct HoistedVars<'v, 'a>(&'v mut NextjsCachingVisitor<'a>);
+
+impl<'a> Visit<'a> for HoistedVars<'_, 'a> {
+    fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
+        if declaration.kind == VariableDeclarationKind::Var {
+            self.0.record_bound_names(declaration);
+        }
+    }
+
+    fn visit_expression(&mut self, _: &Expression<'a>) {}
+
+    fn visit_function(&mut self, _: &Function<'a>, _: ScopeFlags) {}
+
+    fn visit_class(&mut self, _: &Class<'a>) {}
 }

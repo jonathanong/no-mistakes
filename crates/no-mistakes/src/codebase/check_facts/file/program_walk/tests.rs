@@ -92,3 +92,99 @@ fn fused_walk_can_enable_all_three_check_only_flags() {
     assert!(facts.nextjs_caching.is_some());
     assert!(facts.storybook.is_some());
 }
+
+#[test]
+fn fused_walk_matches_saved_nextjs_shadowing_findings() {
+    let mut failures = Vec::new();
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/no-nextjs-caching/shadowing");
+    for case in [
+        "catch",
+        "declarations",
+        "var",
+        "loops",
+        "switch",
+        "parameters",
+    ] {
+        let path = root.join(format!("{case}.ts"));
+        let source = std::fs::read_to_string(&path).unwrap();
+        let plan = CheckFactPlan {
+            nextjs_caching: true,
+            ..CheckFactPlan::default()
+        };
+        let findings = fused(&source, &plan).nextjs_caching.unwrap();
+        let standalone =
+            crate::codebase::rules::nextjs_no_caching::extract(&path, &source).unwrap();
+        assert_eq!(findings, standalone, "{case}: standalone/fused parity");
+        let expected: Vec<_> = source
+            .lines()
+            .enumerate()
+            .filter_map(|(index, line)| line.contains("// finding").then_some(index + 1))
+            .collect();
+        let actual: Vec<_> = findings.iter().map(|finding| finding.line).collect();
+        if actual != expected {
+            failures.push(format!("{case}: actual={actual:?}, expected={expected:?}"));
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+#[test]
+fn fused_nextjs_scopes_preserve_other_fact_families() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/no-nextjs-caching/shadowing/mixed.ts");
+    let source = std::fs::read_to_string(path).unwrap();
+    let expected: Vec<_> = source
+        .lines()
+        .enumerate()
+        .filter_map(|(line, text)| {
+            text.split_once("// dynamic ")
+                .map(|(_, name)| (Some(name.to_string()), line + 1))
+        })
+        .collect();
+    let mut references = Vec::new();
+    for nextjs_caching in [false, true] {
+        let plan = CheckFactPlan {
+            nextjs_caching,
+            dynamic_imports: true,
+            storybook: true,
+            ..Default::default()
+        };
+        let facts = fused(&source, &plan);
+        let dynamic: Vec<_> = facts
+            .dynamic_imports
+            .unwrap()
+            .dynamic_imports
+            .into_iter()
+            .map(|import| (import.specifier, import.line))
+            .collect();
+        assert_eq!(dynamic, expected);
+        let storybook = facts.storybook.unwrap();
+        assert_eq!(storybook.side_effect_imports.len(), 1);
+        assert_eq!(storybook.side_effect_imports[0].source, "./setup");
+        assert_eq!(
+            storybook
+                .used_runtime_imports
+                .iter()
+                .map(|import| import.local.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "Of",
+                "In",
+                "For",
+                "Discriminant",
+                "Case",
+                "Body",
+                "Caught",
+                "Base",
+                "Static"
+            ]
+        );
+        references.push(storybook.used_runtime_imports);
+        assert_eq!(
+            facts.nextjs_caching.map(|findings| findings.len()),
+            nextjs_caching.then_some(1)
+        );
+    }
+    assert_eq!(references[0], references[1]);
+}

@@ -5,15 +5,18 @@ use crate::codebase::rules::nextjs_no_caching::{
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::{Collector, TestFacts};
 use crate::codebase::storybook::StorybookFileFacts;
 use oxc_ast::ast::{
-    ArrowFunctionBody, ArrowFunctionExpression, AssignmentExpression, BlockStatement,
-    CallExpression, ExportDeclaration, ExportDefaultDeclaration, ExportNamedDeclaration, Function,
-    FunctionBody, IdentifierReference, ImportDeclaration, ImportExpression, Program, Statement,
-    TSImportEqualsDeclaration, VariableDeclaration, VariableDeclarator,
+    ArrowFunctionExpression, AssignmentExpression, BlockStatement, CallExpression, CatchClause,
+    Class, ExportDeclaration, ExportDefaultDeclaration, ExportNamedDeclaration, ForInStatement,
+    ForOfStatement, ForStatement, Function, FunctionBody, IdentifierReference, ImportDeclaration,
+    ImportExpression, Program, StaticBlock, SwitchStatement, TSImportEqualsDeclaration,
+    VariableDeclaration, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 use std::collections::HashSet;
 use std::path::Path;
+
+mod scopes;
 
 pub(super) struct FusedCheckFacts {
     pub dynamic_imports: Option<TestFacts>,
@@ -130,45 +133,47 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
     }
 
     fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
-        if let Some(nextjs) = &mut self.nextjs {
-            let statements = function
-                .body
-                .as_ref()
-                .map(|body| body.statements.as_slice());
-            nextjs.open_function_scope(&function.params, statements);
-        }
-        walk::walk_function(self, function, flags);
-        if let Some(nextjs) = &mut self.nextjs {
-            nextjs.pop_const_scope();
-        }
+        self.walk_function_scope(function, flags);
     }
 
     fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
-        if let Some(nextjs) = &mut self.nextjs {
-            nextjs.open_function_scope(&arrow.params, arrow_statements(&arrow.body));
-        }
-        walk::walk_arrow_function_expression(self, arrow);
-        if let Some(nextjs) = &mut self.nextjs {
-            nextjs.pop_const_scope();
-        }
+        self.walk_arrow_scope(arrow);
     }
 
     fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
-        if let Some(nextjs) = &mut self.nextjs {
-            nextjs.check_function_body_directives(body);
-        }
-        walk::walk_function_body(self, body);
+        self.walk_function_body_scope(body);
     }
 
     fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
-        if let Some(nextjs) = &mut self.nextjs {
-            nextjs.push_const_scope();
-            nextjs.precollect_statements(&block.body);
-        }
-        walk::walk_block_statement(self, block);
-        if let Some(nextjs) = &mut self.nextjs {
-            nextjs.pop_const_scope();
-        }
+        self.walk_block_scope(block);
+    }
+
+    fn visit_catch_clause(&mut self, catch: &CatchClause<'a>) {
+        self.walk_catch_scope(catch);
+    }
+
+    fn visit_class(&mut self, class: &Class<'a>) {
+        self.walk_class_scope(class);
+    }
+
+    fn visit_static_block(&mut self, block: &StaticBlock<'a>) {
+        self.walk_static_scope(block);
+    }
+
+    fn visit_for_statement(&mut self, statement: &ForStatement<'a>) {
+        self.walk_for_scope(statement);
+    }
+
+    fn visit_for_in_statement(&mut self, statement: &ForInStatement<'a>) {
+        self.walk_for_in_scope(statement);
+    }
+
+    fn visit_for_of_statement(&mut self, statement: &ForOfStatement<'a>) {
+        self.walk_for_of_scope(statement);
+    }
+
+    fn visit_switch_statement(&mut self, statement: &SwitchStatement<'a>) {
+        self.walk_switch_scope(statement);
     }
 
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
@@ -183,13 +188,6 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
             nextjs.check_assignment(assignment);
         }
         walk::walk_assignment_expression(self, assignment);
-    }
-}
-
-fn arrow_statements<'a, 'b>(body: &'b ArrowFunctionBody<'a>) -> Option<&'b [Statement<'a>]> {
-    match body {
-        ArrowFunctionBody::FunctionBody(body) => Some(body.statements.as_slice()),
-        _ => None,
     }
 }
 
