@@ -153,7 +153,7 @@ fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_m
                 root.clone(),
                 Some(format!("{policy}.yml").into()),
                 None,
-                false,
+                true,
                 false,
                 AnalysisOptions {
                     effort: Some(effort),
