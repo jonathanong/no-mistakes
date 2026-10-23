@@ -19,6 +19,15 @@ use std::path::Path;
 
 mod scopes;
 
+#[cfg(not(test))]
+macro_rules! record_fused_work {
+    ($nextjs:expr) => {};
+}
+
+#[cfg(test)]
+#[macro_use]
+mod tests;
+
 pub(super) struct FusedCheckFacts {
     pub dynamic_imports: Option<TestFacts>,
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
@@ -43,8 +52,6 @@ pub(super) fn collect_fused_check_program(
             storybook: None,
         };
     }
-    #[cfg(test)]
-    tests::record_nextjs(nextjs_caching);
     let mut visitor = CheckProgramVisitor {
         dynamic: plan
             .dynamic_imports
@@ -55,8 +62,7 @@ pub(super) fn collect_fused_check_program(
         }),
         storybook_ids: storybook.then(HashSet::new),
     };
-    #[cfg(test)]
-    tests::record_walk();
+    record_fused_work!(nextjs_caching);
     visitor.visit_program(program);
     FusedCheckFacts {
         dynamic_imports: visitor.dynamic.map(Collector::into_facts),
@@ -222,6 +228,3 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
         walk::walk_assignment_expression(self, assignment);
     }
 }
-
-#[cfg(test)]
-mod tests;
