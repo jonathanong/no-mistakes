@@ -21,9 +21,6 @@ rules:
           events: [update]
           forEachRow: true
           allowColumnList: false
-      allow:
-        - object: table:import_rows
-          reason: updated_at is written explicitly by the importer
 ```
 
 ## Why and when
@@ -75,10 +72,33 @@ fails configuration.
 `CREATE TRIGGER trigger_orders_touch BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()`.
 `order_events` has neither the column nor the trigger.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY, updated_at timestamptz);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "updated_at": {
+          "dataType": "timestamp with time zone"
+        }
+      },
+      "triggers": {
+        "trigger_orders_touch": {
+          "definition": "CREATE TRIGGER trigger_orders_touch BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()"
+        }
+      }
+    },
+    "order_events": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}
 ```
-
 
 ## Counterexample
 
@@ -86,10 +106,21 @@ CREATE TABLE orders (id uuid PRIMARY KEY, updated_at timestamptz);
 `fn_touch_updated_at()`. A trigger that only runs `BEFORE UPDATE OF status` is
 also reported when it is the only candidate.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY, updated_at timestamptz);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "updated_at": {
+          "dataType": "timestamp with time zone"
+        }
+      }
+    }
+  }
+}
 ```
-
 
 ## Fix
 
@@ -98,6 +129,14 @@ not maintain it. Drop a leftover trigger after dropping the column. Set
 `allowColumnList` only when an `UPDATE OF` list is the intended contract.
 
 ## Suppression
+
+For example, add an exception with a reason:
+
+```yaml
+allow:
+  - object: table:import_rows
+    reason: updated_at is written explicitly by the importer
+```
 
 Snapshot JSON cannot carry `no-mistakes-disable` comments. Suppress a table
 with `allow: [{object, reason}]`, where `object` is `table:<name>` and `reason`

@@ -19,9 +19,6 @@ rules:
       normalizeIdentifiers: true
       normalizeRaise: true
       keepIdentifiers: ['now', 'coalesce']
-      allow:
-        - object: function:fn_orders_audit
-          reason: Kept separate on purpose; audited by a different team
 ```
 
 ## Why and when
@@ -118,10 +115,17 @@ One `fn_reject_mutation()` that raises `'% is immutable', TG_TABLE_NAME`.
 because the called name is kept. The same body in `sql` and `plpgsql` does not
 match. `minTokens: 12` ignores the six-token always-raise copies.
 
-```sql
-CREATE FUNCTION add(a int, b int) RETURNS int LANGUAGE sql AS $$ SELECT a + b $$;
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "functions": {
+    "fn_reject_mutation": {
+      "definition": "CREATE FUNCTION fn_reject_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION '% is immutable', TG_TABLE_NAME; END $$;"
+    }
+  }
+}
 ```
-
 
 ## Counterexample
 
@@ -131,11 +135,23 @@ including a copy that uses `USING ERRCODE`, a format argument, or `END;`.
 `NEW.title IS DISTINCT FROM OLD.title` matches `NEW.body IS DISTINCT FROM
 OLD.body` while `normalizeIdentifiers` is true.
 
-```sql
-CREATE FUNCTION add(a int, b int) RETURNS int LANGUAGE sql AS $$ SELECT a + b $$;
-CREATE FUNCTION plus(a int, b int) RETURNS int LANGUAGE sql AS $$ SELECT a + b $$;
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "functions": {
+    "fn_reject_orders_update": {
+      "definition": "CREATE FUNCTION fn_reject_orders_update() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'orders rows are immutable'; END $$;"
+    },
+    "fn_reject_invoices_update": {
+      "definition": "CREATE FUNCTION fn_reject_invoices_update() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'invoices rows are immutable'; END $$;"
+    },
+    "fn_reject_refunds_update": {
+      "definition": "CREATE FUNCTION fn_reject_refunds_update() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'refunds rows are immutable'; END $$;"
+    }
+  }
+}
 ```
-
 
 ## Fix
 
@@ -146,6 +162,14 @@ be worth merging. Set `normalizeIdentifiers` or `normalizeRaise` to false when
 those differences are intentional.
 
 ## Suppression
+
+For example, add an exception with a reason:
+
+```yaml
+allow:
+  - object: function:fn_orders_audit
+    reason: Kept separate on purpose; audited by a different team
+```
 
 Snapshot JSON cannot carry `no-mistakes-disable` comments. Suppress one
 function with `allow: [{object, reason}]`, where `object` is

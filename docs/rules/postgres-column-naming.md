@@ -25,9 +25,6 @@ rules:
           hint: "end timestamp columns in _at"
       foreignKeys:
         targetMatch: last-word
-      allow:
-        - object: "column:sessions.expires"
-          reason: "Name mirrors an external protocol field"
 ```
 
 ## Why and when
@@ -107,10 +104,21 @@ replaces the built-in finding text.
 fails `full-name`. `premium_accounts.id` and a self-reference
 `categories.parent_id` are skipped while `checkSelfReferences` is false.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY, user_id uuid NOT NULL);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "invoices": {
+      "columns": {
+        "due_at": {
+          "dataType": "timestamp with time zone"
+        }
+      }
+    }
+  }
+}
 ```
-
 
 ## Counterexample
 
@@ -124,10 +132,21 @@ and `item_id` referencing `articles.id` still fail target matching.
 (`uuid`) with no foreign key uses a reserved `_user_id` suffix.
 `comments.target_table` matches a forbidden table-name pattern.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY, userId uuid NOT NULL);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "invoices": {
+      "columns": {
+        "due": {
+          "dataType": "timestamp with time zone"
+        }
+      }
+    }
+  }
+}
 ```
-
 
 ## Fix
 
@@ -165,8 +184,8 @@ Suppress a finding with `allow` when comments are not appropriate:
 
 ```yaml
 allow:
-  - object: "column:orders.shipped_at"
-    reason: "Shipped date is a calendar day in this table"
+  - object: "column:sessions.expires"
+    reason: "Name mirrors an external protocol field"
 ```
 
 One allow entry covers every finding on that object. An unused entry reports
