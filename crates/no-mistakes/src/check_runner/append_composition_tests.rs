@@ -1,4 +1,5 @@
 use super::run_all_with_sql_verdicts;
+use no_mistakes::codebase::postgres::SqlVerdictStatus;
 use std::path::PathBuf;
 
 #[test]
@@ -153,14 +154,14 @@ fn conflict_ordering_keeps_complete_cap_and_loop_violations_and_unknown_residual
         assert_eq!(
             obligations
                 .iter()
-                .filter(|row| row.status == crate::codebase::postgres::SqlVerdictStatus::Violation)
+                .filter(|row| row.status == SqlVerdictStatus::Violation)
                 .count(),
             3
         );
         assert_eq!(
             obligations
                 .iter()
-                .filter(|row| row.status == crate::codebase::postgres::SqlVerdictStatus::Abstain)
+                .filter(|row| row.status == SqlVerdictStatus::Abstain)
                 .count(),
             1
         );
