@@ -200,7 +200,7 @@ transaction exemptions still apply.
 
 The option defaults to `[]` and selects no helpers. Identities use nonempty,
 exact `module#export` strings; package subpaths must be listed separately.
-Shadowed or type-only imports, optional calls, spread arguments, other arities,
+Shadowed or type-only imports, optional calls, spread arguments, other argument counts,
 interpolated templates, dynamic arguments, stored helper results, and helper
 return forwarding provide no proof. These retain the existing `unanalyzable`
 report/advise/ignore policy. Rewrite them to a direct helper wrapping one static

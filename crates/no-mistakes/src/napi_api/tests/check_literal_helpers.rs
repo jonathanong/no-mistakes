@@ -115,7 +115,7 @@ fn mixed_helper_profiles_do_not_share_configuration_authority() {
     let verdicts = report["sqlVerdicts"].as_array().unwrap();
     for (needle, clear) in [
         (
-            "client.query(copyFrom('/* named */ COPY users",
+            "client.query(copyFrom('/* named */ COPY users FROM STDIN')); // clear",
             "pg-copy-streams#from",
         ),
         ("client.query(otherFrom(", "other-copy-streams#from"),
