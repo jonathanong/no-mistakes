@@ -1,11 +1,14 @@
 const { defineConfig } = require("vitest/config");
+const compiledNative = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
 module.exports = defineConfig({
   test: {
     globals: true,
     // Native environment access must see each compiled worker's private runtime directory.
     pool: "forks",
-    testTimeout: process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node") ? 20_000 : 5_000,
+    // Linux setup gives native forks distinct locks; other platforms share one.
+    fileParallelism: !compiledNative || process.platform === "linux",
+    testTimeout: compiledNative ? 20_000 : 5_000,
     setupFiles: ["tests/js/setup.js"],
     include: [
       "packages/*/scripts/*.test.js",
