@@ -1,38 +1,32 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
+const {
+  collectedPromise,
+  isPromiseAllCall,
+  retainedPromise,
+  returnsThroughMock,
+} = require("./async-disposition-bindings");
 const {
   findContainingFunction,
   isFunction,
   isTransparentExpression,
-  unwrapExpression,
   unwrapTransparentParent,
 } = require("./async-ast");
 const { targetOptionsSchema } = require("./async-schema");
 const { createTargetMatcher, memberPropertyName } = require("./async-targets");
 
-function isPromiseAllCall(node) {
-  const callee = unwrapExpression(node?.callee);
-  const object = unwrapExpression(callee?.object);
-  return (
-    node?.type === "CallExpression" &&
-    callee?.type === "MemberExpression" &&
-    object?.type === "Identifier" &&
-    object.name === "Promise" &&
-    memberPropertyName(callee) === "all"
-  );
-}
-
-function directlyDisposed(node) {
+function directlyDisposed(node, context) {
   const expression = unwrapTransparentParent(node);
   const parent = expression.parent;
   if (parent?.type === "ReturnStatement") {
     const fn = findContainingFunction(parent);
-    return !isCallArgument(fn);
+    return !isCallArgument(fn) || returnsThroughMock(fn, context);
   }
   if (parent?.type === "ArrowFunctionExpression" && parent.body === expression) {
-    if (isCallCallee(parent)) return directlyDisposed(parent.parent);
-    return !isCallArgument(parent);
+    if (isCallCallee(parent)) return directlyDisposed(parent.parent, context);
+    return !isCallArgument(parent) || returnsThroughMock(parent, context);
   }
   return (
     parent?.type === "AwaitExpression" ||
@@ -41,6 +35,7 @@ function directlyDisposed(node) {
 }
 
 function isCallArgument(node) {
+  node = node && unwrapTransparentParent(node);
   return Boolean(node?.parent?.type === "CallExpression" && node.parent.arguments.includes(node));
 }
 
@@ -141,14 +136,14 @@ function observedExpression(node) {
   return current;
 }
 
-function promiseAllDisposed(node) {
+function promiseAllDisposed(node, context) {
   let current = node.parent;
   while (current) {
-    if (isPromiseAllCall(current) && canReachPromiseAll(node, current)) {
+    if (isPromiseAllCall(current, context) && canReachPromiseAll(node, current)) {
       return (
-        directlyDisposed(current) ||
-        directlyDisposed(observedExpression(current)) ||
-        promiseAllDisposed(current)
+        directlyDisposed(current, context) ||
+        directlyDisposed(observedExpression(current), context) ||
+        promiseAllDisposed(current, context)
       );
     }
     current = current.parent;
@@ -156,9 +151,18 @@ function promiseAllDisposed(node) {
   return false;
 }
 
-function isDisposed(node) {
+function isDisposed(node, context, seen = new Set()) {
+  if (seen.has(node)) return false;
+  seen.add(node);
   const observed = observedExpression(node);
-  return directlyDisposed(node) || directlyDisposed(observed) || promiseAllDisposed(node);
+  const disposed = (value) => isDisposed(value, context, seen);
+  return (
+    directlyDisposed(node, context) ||
+    directlyDisposed(observed, context) ||
+    promiseAllDisposed(node, context) ||
+    retainedPromise(observed, context, disposed) ||
+    collectedPromise(observed, context, (value) => isPromiseAllCall(value, context), disposed)
+  );
 }
 
 module.exports = rule(
@@ -178,12 +182,13 @@ module.exports = rule(
   },
   (context) => {
     const matcher = createTargetMatcher(context);
+    const suppressed = ruleSuppression(context, "async-call-disposition");
     if (!matcher.hasTargets) return {};
 
     return {
       ...matcher.visitors,
       CallExpression(node) {
-        if (!matcher.isTargetCall(node) || isDisposed(node)) return;
+        if (!matcher.isTargetCall(node) || suppressed(node) || isDisposed(node, context)) return;
         context.report({
           node,
           messageId: "disposition",

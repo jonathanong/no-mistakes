@@ -29,6 +29,35 @@ function returnToCaller(user) {
 }
 ```
 
+A callback's return also counts for `vi.fn`, `jest.fn`, and
+`mockImplementation` / `mockImplementationOnce` on a known `vi.spyOn`,
+`jest.spyOn`, `vi.fn`, or `jest.fn` result. These APIs pass the implementation's
+return value to the mock's caller. Imported aliases, framework namespaces such
+as `vitest.vi`, and unchanged `const` mock bindings are recognized.
+
+```ts
+import { enqueueEmail } from "@app/jobs";
+import { vi } from "vitest";
+
+vi.spyOn(service, "send").mockImplementation((id) => {
+  const job = enqueueEmail(id);
+  return job;
+});
+
+async function sendBatch(ids) {
+  const pending = [];
+  const job = enqueueEmail(ids[0]);
+  pending.push(job);
+  pending.push(enqueueEmail(ids[1]));
+  await Promise.allSettled(pending);
+}
+```
+
+A promise retained in an unchanged `const` binding counts when it is later
+explicitly disposed in the same block. An initially empty `const` array also
+counts when its promises are pushed and its direct `Promise.all` or
+`Promise.allSettled` result is later awaited, returned, or explicitly voided.
+
 ## Options
 
 - `targets` is an array of target groups. Each group may set
@@ -57,12 +86,24 @@ For a bare configured call, ESLint offers one suggestion: prefix it with
 
 Another file's re-export is not visible here. `import { send } from "./barrel.mjs"; send(id)` stays unreported when `barrel.mjs` is `export { enqueueEmail as send } from "@app/jobs"` or `export * from "@app/jobs"`. A parameter default such as `function run({ enqueueEmail } = client)` is not judged, because the caller can pass a different object. `.apply` with a non-literal argument list is not rewritten. `const send = (0, enqueueEmail)` is still `enqueueEmail`. `const send = enqueueEmail<Job>` is still `enqueueEmail`. `import * as jobs from "@app/jobs"; const api = jobs; api.enqueueEmail(id)` is still that method.
 
+Collection tracking requires straight-line statements in the same executing
+block, with the push before the observation. Conditional observations, array
+mutation or escape, nested callback producers, reassigned bindings, and unknown
+callback APIs remain reported. A mock callback that pushes and returns a promise
+is accepted through its return; this does not establish when an outer array is
+drained. Locally shadowed `vi`, `jest`, and `Promise` objects do not establish
+these dispositions. The analysis does not prove that callers actually invoke
+or await a mock; its return follows the same explicit-disposition contract as
+an ordinary function return.
+
 ## Suppression
 
 ```ts
-// eslint-disable-next-line no-mistakes/async-call-disposition -- queue is intentionally best effort
+// no-mistakes-disable-next-line async-call-disposition -- queue is intentionally best effort
 enqueueEmail(user.id);
 ```
+
+`no-mistakes-disable-file` and `no-mistakes-disable-line` are also supported.
 
 ## Related rules
 

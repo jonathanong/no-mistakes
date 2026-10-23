@@ -42,6 +42,79 @@ describe("async-call-disposition", () => {
     );
   });
 
+  it("allows retained promises and known mock pass-through returns", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-call-disposition", "retained-valid.ts"),
+        "async-call-disposition",
+        asyncTargetOptions,
+        "retained-valid.ts",
+      ),
+      [],
+    );
+  });
+
+  it("keeps unknown callbacks and unproven collections reported", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-call-disposition", "retained-invalid.ts"),
+        "async-call-disposition",
+        asyncTargetOptions,
+        "retained-invalid.ts",
+      ),
+      Array(34).fill("disposition"),
+    );
+  });
+
+  it("recognizes unshadowed framework globals without accepting arbitrary globals", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-call-disposition", "retained-globals.ts"),
+        "async-call-disposition",
+        asyncTargetOptions,
+        "retained-globals.ts",
+      ),
+      ["disposition"],
+    );
+  });
+
+  it("honors file and line suppression comments only for this rule", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-call-disposition", "suppressed-file.ts"),
+        "async-call-disposition",
+        asyncTargetOptions,
+        "suppressed-file.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-call-disposition", "suppressed-lines.ts"),
+        "async-call-disposition",
+        asyncTargetOptions,
+        "suppressed-lines.ts",
+      ),
+      ["disposition", "disposition"],
+    );
+  });
+
+  it("executes the documented TypeScript examples", () => {
+    const doc = readFileSync(
+      resolve(__dirname, "../../../docs/eslint-rules/async-call-disposition.md"),
+      "utf8",
+    );
+    const snippets = [...doc.matchAll(/```ts\n([\s\S]*?)```/g)];
+    assert.equal(snippets.length, 4);
+    for (const [index, snippet] of snippets.entries()) {
+      const code = `import { enqueueEmail } from "@app/jobs";\n${snippet[1].replace(/import \{ enqueueEmail \} from "@app\/jobs";\n/g, "")}`;
+      assert.deepEqual(
+        messages(code, "async-call-disposition", asyncTargetOptions, "docs.ts"),
+        index === 0 ? ["disposition"] : [],
+      );
+    }
+  });
+
   it("reports floating enqueue promises", () => {
     assert.deepEqual(
       messages(
