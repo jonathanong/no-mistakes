@@ -63,7 +63,14 @@ pub(crate) fn collect_file_facts_from_program(
     });
     let integration = (plan.integration
         && crate::codebase::check_facts::family_scope::applies(&plan.integration_paths, path))
-    .then(|| crate::integration_tests::analysis::analyze_program(path, program, source));
+    .then(|| {
+        crate::integration_tests::analysis::analyze_program_with_test_discovery(
+            path,
+            program,
+            source,
+            crate::codebase::check_facts::family_scope::applies(&plan.integration_test_paths, path),
+        )
+    });
     let integration_runner_config = plan
         .integration_runner_configs
         .as_ref()

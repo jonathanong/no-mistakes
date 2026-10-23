@@ -126,6 +126,8 @@ pub(super) enum ImportedName {
 
 #[derive(Clone, Default)]
 pub(crate) struct FileAnalysis {
+    #[cfg(test)]
+    pub(crate) discovery_statement_visits: usize,
     pub(super) imports: HashMap<String, ImportBinding>,
     pub(super) exports: HashMap<String, String>,
     pub(super) functions: HashMap<String, FunctionInfo>,

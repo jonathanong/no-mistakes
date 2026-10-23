@@ -39,6 +39,8 @@ pub fn configure_family_path_scopes(
     }
     if plan.integration {
         plan.integration_paths = FamilyPathScope::All;
+        plan.integration_test_paths =
+            crate::integration_tests::config::test_discovery_scope(root, files, config);
     }
     Ok(())
 }

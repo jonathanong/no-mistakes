@@ -1,0 +1,11 @@
+# A policy covering the complete source universe consumes full test discovery.
+tests:
+  vitest:
+    configs: []
+    projects:
+      integration:
+        include: ['**/*']
+        integration_suites:
+          external: [aws]
+  playwright:
+    configs: []

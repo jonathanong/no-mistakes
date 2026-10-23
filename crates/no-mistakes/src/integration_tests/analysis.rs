@@ -1,5 +1,5 @@
 use super::calls;
-use super::types::{FileAnalysis, FunctionInfo, FunctionKey, TestCase};
+use super::types::{CallTarget, FileAnalysis, FunctionInfo, FunctionKey, TestCase};
 use crate::ast;
 use anyhow::{Context, Result};
 use oxc_ast::ast::{BindingPattern, ModuleExportName, Program, Statement};
@@ -32,6 +32,15 @@ pub(super) fn analyze_files_with_seed(
 }
 
 pub(crate) fn analyze_program(path: &Path, program: &Program<'_>, source: &str) -> FileAnalysis {
+    analyze_program_with_test_discovery(path, program, source, true)
+}
+
+pub(crate) fn analyze_program_with_test_discovery(
+    path: &Path,
+    program: &Program<'_>,
+    source: &str,
+    collect_tests: bool,
+) -> FileAnalysis {
     let mut collector = AnalysisCollector {
         path,
         source,
@@ -39,8 +48,38 @@ pub(crate) fn analyze_program(path: &Path, program: &Program<'_>, source: &str) 
         describe_stack: Vec::new(),
         statement_depth: 0,
         test_counter: 0,
+        collect_tests,
     };
     collector.visit_program(program);
+    // Synthetic test functions share the historical helper namespace. Keep
+    // discovery if an exported or declared helper can collide with __test_N.
+    if !collect_tests
+        && (collector
+            .result
+            .functions
+            .keys()
+            .any(|name| name.starts_with("__test_"))
+            || collector
+                .result
+                .exports
+                .values()
+                .any(|name| name.starts_with("__test_"))
+            || collector.result.functions.values().any(|function| {
+                function.calls.iter().any(|call| match call {
+                    CallTarget::Local(name) => name.starts_with("__test_"),
+                    _ => false,
+                })
+            }))
+    {
+        let full = analyze_program(path, program, source);
+        #[cfg(test)]
+        let full = {
+            let mut full = full;
+            full.discovery_statement_visits += collector.result.discovery_statement_visits;
+            full
+        };
+        return full;
+    }
     collector.result
 }
 
@@ -51,6 +90,7 @@ struct AnalysisCollector<'a, 'p> {
     describe_stack: Vec<String>,
     statement_depth: usize,
     test_counter: usize,
+    collect_tests: bool,
 }
 
 impl<'a> Visit<'a> for AnalysisCollector<'a, '_> {
@@ -64,6 +104,10 @@ impl<'a> Visit<'a> for AnalysisCollector<'a, '_> {
     }
 
     fn visit_statement(&mut self, statement: &Statement<'a>) {
+        #[cfg(test)]
+        {
+            self.result.discovery_statement_visits += 1;
+        }
         if self.statement_depth == 0 {
             match statement {
                 Statement::FunctionDeclaration(function) => {
@@ -97,6 +141,12 @@ impl<'a> Visit<'a> for AnalysisCollector<'a, '_> {
                 Statement::ExportDefaultDeclaration(export) => self.collect_default_export(export),
                 _ => {}
             }
+        }
+        if !self.collect_tests {
+            if let Statement::ImportDeclaration(import) = statement {
+                self.visit_import_declaration(import);
+            }
+            return;
         }
         self.statement_depth += 1;
         walk::walk_statement(self, statement);
@@ -166,3 +216,6 @@ fn module_export_name(name: &ModuleExportName<'_>) -> String {
         ModuleExportName::StringLiteral(value) => value.value.to_string(),
     }
 }
+
+#[cfg(test)]
+mod scope_tests;
