@@ -17,10 +17,17 @@ pub(crate) fn extract_with_arguments(
         .with_build_nodes(true)
         .with_check_syntax_error(true)
         .build(program);
-    let semantic = built.semantic;
+    extract_from_semantic(&built.semantic, &built.diagnostics, collect)
+}
+
+pub(crate) fn extract_from_semantic(
+    semantic: &oxc_semantic::Semantic<'_>,
+    diagnostics: &[oxc_diagnostics::OxcDiagnostic],
+    collect: bool,
+) -> TypeScriptModuleFacts {
     let scoping = semantic.scoping();
     let mut facts = TypeScriptModuleFacts::default();
-    for diagnostic in built.diagnostics {
+    for diagnostic in diagnostics {
         facts.diagnostics.push(ModuleDiagnostic {
             kind: "semanticError".into(),
             message: diagnostic.to_string(),
@@ -74,9 +81,9 @@ pub(crate) fn extract_with_arguments(
             parent_id: scoping.scope_parent_id(id).map(|parent| parent.index()),
         })
         .collect();
-    modules::collect(&semantic, &mut facts);
+    modules::collect(semantic, &mut facts);
     if collect && facts.diagnostics.is_empty() {
-        facts.call_arguments = Some(std::sync::Arc::new(arguments::collect(&semantic, &facts)));
+        facts.call_arguments = Some(std::sync::Arc::new(arguments::collect(semantic, &facts)));
     }
     facts
 }

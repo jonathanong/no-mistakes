@@ -41,7 +41,7 @@ fn dotted_calls_are_seen_and_static_aliases_are_not() {
     assert!(urls.iter().any(|url| url == "/dashboard"));
 
     // #2521: computed members, a const test id, and a const method alias are silent.
-    // #2523: a const string inside the template is not folded to `/blog/post`.
+    // Const URL interpolation is independent of the remaining alias gaps.
     assert!(!selectors
         .iter()
         .any(|selector| selector.contains("archive")));
@@ -51,5 +51,41 @@ fn dotted_calls_are_seen_and_static_aliases_are_not() {
         .any(|selector| selector.contains("publish")));
     assert!(!urls.iter().any(|url| url == "/settings"));
     assert!(!urls.iter().any(|url| url == "/billing"));
-    assert!(!urls.iter().any(|url| url == "/blog/post"));
+    assert!(urls.iter().any(|url| url == "/blog/post"));
+}
+
+#[test]
+fn const_url_templates_respect_bindings_and_keep_dynamic_segments() {
+    let source = crate::playwright::test_support::fixture_source(&[
+        "playwright",
+        "recall-gaps",
+        "const-urls.spec.ts",
+    ]);
+    let urls = extract_playwright_urls(&source);
+    for expected in [
+        "/blog/post",
+        "/archive/posts/post",
+        "/escaped/ab",
+        "/nested/inner",
+        "/after/post",
+        "/outer/outer",
+        "/parameter/${slug}",
+        "/let/${mutable}",
+        "/var/${legacy}",
+        "/number/${number}",
+        "/dynamic/${dynamic}",
+        "/import/${imported}",
+        "/before/${slug}",
+        "/written/${written}",
+        "/object/${object}",
+        "/alias/${alias}",
+        "/expression/${slug.toUpperCase()}",
+        "/click/${slug}",
+    ] {
+        assert!(
+            urls.iter().any(|url| url == expected),
+            "missing {expected}: {urls:?}"
+        );
+    }
+    assert_eq!(urls.len(), 18);
 }
