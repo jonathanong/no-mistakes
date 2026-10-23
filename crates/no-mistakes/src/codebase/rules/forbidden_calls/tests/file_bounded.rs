@@ -6,7 +6,9 @@ fn file_traversal_scans_only_selected_files() {
         "file traversal must iterate selected files' call sites"
     );
     assert!(
-        selection.contains("graph.call_source_nodes(roots, traversal, options.max_depth)"),
+        selection.contains(
+            "graph.call_source_nodes(roots, CallTraversal::Transitive, options.max_depth)"
+        ),
         "source selection must share the bounded union traversal"
     );
     assert!(

@@ -167,12 +167,12 @@ fn reachable_source_nodes(
     roots: &[NodeId],
     options: &Options,
 ) -> FxHashSet<NodeId> {
-    // File traversal returns the expanded roots; direct traversal also checks
-    // only their own call sites. Transitive source selection excludes the cap.
-    let traversal = match options.traversal {
-        Traversal::Direct => CallTraversal::Direct,
-        Traversal::Transitive => CallTraversal::Transitive,
-        Traversal::File => CallTraversal::File,
-    };
-    graph.call_source_nodes(roots, traversal, options.max_depth)
+    // File/direct policies already have their source owners. Keep their local
+    // selection path independent of the transitive graph traversal.
+    match options.traversal {
+        Traversal::Direct | Traversal::File => roots.iter().cloned().collect(),
+        Traversal::Transitive => {
+            graph.call_source_nodes(roots, CallTraversal::Transitive, options.max_depth)
+        }
+    }
 }
