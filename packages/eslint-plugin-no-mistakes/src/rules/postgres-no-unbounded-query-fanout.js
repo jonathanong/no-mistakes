@@ -3,6 +3,7 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const helpers = require("./postgres-runtime-helpers");
+const { fanoutMapCall } = require("./postgres-fanout-calls");
 
 const {
   callbackContainsExecutor,
@@ -11,7 +12,6 @@ const {
   executorOptionSchema,
   isPromiseAllCallee,
   isStaticallyBounded,
-  mapCallArgument,
 } = helpers;
 
 module.exports = Object.assign(
@@ -43,8 +43,7 @@ module.exports = Object.assign(
         },
         CallExpression(node) {
           if (suppressed(node)) return;
-          if (!isPromiseAllCallee(node.callee)) return;
-          const mapped = mapCallArgument(node);
+          const mapped = fanoutMapCall(node, isPromiseAllCallee, context);
           if (!mapped) return;
           if (isStaticallyBounded(mapped.source, options.chunkFunctionNames, context)) return;
           if (!callbackContainsExecutor(mapped.callback, bindings, context)) return;

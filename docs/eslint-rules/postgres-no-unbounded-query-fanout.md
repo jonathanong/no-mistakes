@@ -95,7 +95,29 @@ an executor invocation. Direct local callback bodies are also scanned for execut
 not need to recover SQL arguments through the callback's parameters.
 
 
-`Promise["all"]` and a no-expression ``Promise[`all`]`` are `Promise.all`. A computed identifier, a template with an expression, or a tagged template is not.
+`Promise["all"]` and a no-expression ``Promise[`all`]`` are `Promise.all`.
+Static `.call` and literal-array `.apply` wrappers on both `Promise.all` and
+`map` retain the check, including optional calls, comma callees, and TypeScript
+assertions. For example:
+
+```ts
+Promise.all.call(Promise, items.map.apply(items, [query]));
+const all = Promise.all;
+all.call(Promise, items.map(query));
+```
+
+A same-file immutable `const` alias of either method can be forwarded this way.
+The explicit receiver determines the mapped collection: `[].map.call(items,
+query)` is unbounded, while `items.map.call([1, 2], query)` is bounded. Forwarding
+with a spread, a nonliteral argument array, an array hole, or another forwarding
+hop is left unknown. A computed identifier, a template with an expression, or
+a tagged template is not a static method name.
+
+Detached aggregate calls (`const all = Promise.all; all(items.map(query))`) have
+no Promise constructor receiver and are not followed. Destructured method
+aliases (`const { all } = Promise; all.call(Promise, items.map(query))`) and
+aggregate or map aliases with a `let`/`var` declaration or a later assignment
+are also not followed. Rewrite these to the static calls above.
 
 ## Fix
 
