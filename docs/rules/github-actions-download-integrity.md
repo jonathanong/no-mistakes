@@ -89,21 +89,28 @@ single command token such as `ci_download_to`.
 uppercase assignment with a literal value, such as `BASE_URL="https://example.invalid/base"`,
 before checking later `$BASE_URL` or `${BASE_URL}` URL arguments.
 
-At `effort: low`, the rule does not expand that assignment. A download URL that
-is not an inline static `http://` or `https://` URL in a downloader's URL
-argument slot is unanalyzable at low. This includes an argument that depends on
-the uppercase assignment because its host cannot be proved from the argument
-alone. The shared `unanalyzable` policy controls the result: `report` fails,
-`advise` emits a non-failing advisory, and `ignore` skips it. The static rewrite
-is to put the complete URL directly in the download command. An unanalyzable
-URL does not prove that the download is unsafe; `ignore` therefore leaves that
-URL unjudged.
+At `effort: low`, the rule does not expand assignments to URL values. If a
+known downloader command has any dynamic candidate URL argument, the whole
+command is unanalyzable: it emits one diagnostic and no definite unsafe-URL
+findings from that command. The shared `unanalyzable` policy controls the
+result: `report` fails, `advise` emits a non-failing advisory, and `ignore` skips
+it. The static rewrite is to put the complete URL directly in the downloader's
+URL argument. An unanalyzable URL does not prove that the download is unsafe;
+`ignore` therefore leaves that command unjudged.
 
-Literal URL arguments keep the same checks at low and max: trusted-host and
-checksum-file exceptions, same-step checksum verification, and the
-`integrity-check: skip` comment still apply. URL-option parsing also stays
-enabled, so header and output-file arguments are not treated as dynamic URL
-slots.
+Low effort may inspect one uppercase literal binding to identify a downloader
+or wrapper used as a dynamic command prefix. It does not use that binding to
+expand URL values. If command identity cannot be established, the shared
+`unanalyzable` policy applies; the rewrite is to call `curl`, `wget`, or a
+configured helper directly. Dynamic operands of known output and header options
+keep using the existing option parser, so they do not trigger this policy as
+candidate URL arguments.
+
+Commands whose URL arguments are all literal keep the same checks at low and
+max: trusted-host and checksum-file exceptions, same-step checksum verification,
+and the `integrity-check: skip` comment still apply. URL-option parsing also
+stays enabled, so header and output-file arguments are not treated as dynamic
+URL slots.
 The default `max` output is unchanged.
 
 ```yaml

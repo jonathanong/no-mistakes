@@ -60,9 +60,10 @@ per-step timeout comparison; the partner reports invalid or over-cap steps.
 Smaller job timeouts keep the full comparison, and all other job checks stay
 active. An unavailable partner warns and falls back to `max`. See
 [the rule](../rules/github-actions-job-timeouts.md#effort).
-For `github-actions-download-integrity`, `low` skips expansion of a single
-uppercase literal assignment. Literal URL checks remain unchanged; dynamic URL
-argument slots use the shared unanalyzable policy and name the inline-URL rewrite.
+For `github-actions-download-integrity`, `low` skips assignment expansion for
+URL values. A known downloader command with a dynamic candidate URL is handled
+once through the shared unanalyzable policy; literal-only commands retain their
+checks. The rule may inspect one binding to identify a dynamic command prefix.
 See [the rule](../rules/github-actions-download-integrity.md#effort).
 For `require-storybook-stories`, `low` checks direct story and configured
 colocated-test coverage while skipping render-chain and dynamic/mock boundary

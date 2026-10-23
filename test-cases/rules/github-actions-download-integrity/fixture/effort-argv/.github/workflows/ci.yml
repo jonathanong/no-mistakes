@@ -1,0 +1,37 @@
+name: Download integrity low effort argv boundaries
+on: push
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: literal-assignment-command
+        run: |
+          FETCH=curl
+          $FETCH -fsSL https://untrusted.example.invalid/fetch.tgz -o fetch.tgz
+      - name: prefixed-command
+        run: |
+          WRAP=sudo
+          $WRAP curl -fsSL https://untrusted.example.invalid/wrapped.tgz -o wrapped.tgz
+      - name: configured-helper-command
+        run: |
+          FETCH=ci_download_to
+          $FETCH https://untrusted.example.invalid/helper.tgz
+      - name: non-downloader-command
+        run: |
+          EXEC=python
+          $EXEC https://untrusted.example.invalid/not-a-download.tgz
+      - name: dynamic-output-flags
+        run: |
+          FLAGS=--output
+          curl $FLAGS https://untrusted.example.invalid/output-is-not-a-url.tgz
+      - name: dynamic-output-operand
+        run: curl -o "$OUTPUT_FILE" https://api.github.com/repos/example/project
+      - name: dynamic-header-operand
+        run: curl --header "$HEADER" https://api.github.com/repos/example/project
+      - name: static-host-dynamic-path
+        run: |
+          BASE_URL="https://untrusted.example.invalid/base"
+          curl "$BASE_URL/latest.tgz" -o latest.tgz
+      - name: mixed-literal-and-dynamic-url-command
+        run: curl -fsSL https://untrusted.example.invalid/literal.tgz "$DYNAMIC_URL" -o mixed.tgz
