@@ -71,3 +71,49 @@ fn helper_profiles_are_canonical() {
     ]);
     assert_eq!(profile.sql_literal_helpers, ["a#x", "b#y"]);
 }
+
+#[test]
+fn configured_helpers_fail_closed_without_prepared_module_or_import_ownership() {
+    let path = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+        .join("sql-literal-helpers/src/query.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let profile = EmbeddedSqlOptions::configured("pg", &[])
+        .with_scoped_executors(&[], &["PoolClient".into()])
+        .with_sql_literal_helpers(&["pg-copy-streams#from".into()]);
+    crate::ast::with_program(&path, &source, |program, source| {
+        let file = collect_file_facts_from_program(
+            path.parent().unwrap(),
+            &path,
+            &CheckFactPlan {
+                embedded_sql_options: vec![profile.clone()],
+                ..Default::default()
+            },
+            None,
+            source,
+            program,
+            None,
+        );
+        let spans = &file.embedded_sql[0].1.call_spans;
+        // Missing and incomplete prepared ownership must never trust spelling.
+        for missing_module in [false, true] {
+            let mut ts = file.ts.as_ref().clone();
+            if missing_module {
+                ts.module_bindings = None;
+            } else {
+                std::sync::Arc::make_mut(ts.module_bindings.as_mut().unwrap())
+                    .imports
+                    .clear();
+            }
+            let heads = super::collect_with_helpers(
+                program,
+                &ts,
+                spans.iter().copied(),
+                &spans.iter().copied().collect(),
+                false,
+                true,
+            );
+            assert_eq!(heads.helper(spans[0], &profile.sql_literal_helpers), None);
+        }
+    })
+    .unwrap();
+}

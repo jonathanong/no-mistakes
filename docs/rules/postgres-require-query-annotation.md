@@ -190,7 +190,8 @@ import { from as copyFrom } from 'pg-copy-streams';
 client.query(copyFrom('/* import users */ COPY users FROM STDIN'));
 ```
 
-Named imports, renamed imports, and static namespace calls are supported. The
+Named imports, renamed imports, and direct namespace calls such as
+`copies.from(...)` are supported. The
 helper must receive exactly one string literal or template literal without
 interpolations. Its SQL comment must occur **inside the literal**;
 `copyFrom(/* import users */ 'COPY users FROM STDIN')` is a definite missing
@@ -200,7 +201,8 @@ transaction exemptions still apply.
 
 The option defaults to `[]` and selects no helpers. Identities use nonempty,
 exact `module#export` strings; package subpaths must be listed separately.
-Shadowed or type-only imports, optional calls, spread arguments, other argument counts,
+Shadowed or type-only imports, optional calls, computed namespace properties,
+spread arguments, other argument counts,
 interpolated templates, dynamic arguments, stored helper results, and helper
 return forwarding provide no proof. These retain the existing `unanalyzable`
 report/advise/ignore policy. Rewrite them to a direct helper wrapping one static

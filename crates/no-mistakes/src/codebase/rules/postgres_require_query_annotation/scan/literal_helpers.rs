@@ -60,3 +60,6 @@ pub(super) fn advisory(
     opts.unanalyzable_sql == super::super::UnanalyzableSql::Advise
         && proof(facts, path, opts, span).is_none_or(|proof| proof == HeadProof::Unproven)
 }
+
+#[cfg(test)]
+mod tests;

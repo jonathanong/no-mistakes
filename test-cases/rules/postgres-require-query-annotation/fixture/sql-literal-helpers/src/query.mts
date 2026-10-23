@@ -28,6 +28,13 @@ export function run(client: PoolClient, dynamic: string) {
   client.query(copies.from?.('/* named */ COPY users FROM STDIN')); // unknown
   client.query(otherFrom('/* named */ COPY users FROM STDIN')); // unknown
   client.query(typeOnly('/* named */ COPY users FROM STDIN')); // unknown
+  client.query(copies?.from); // unknown
+  client.query(copies.nested.from('/* named */ COPY users FROM STDIN')); // unknown
+  client.query(copies.nested['from']('/* named */ COPY users FROM STDIN')); // unknown
+  client.query((() => copyFrom)()('/* named */ COPY users FROM STDIN')); // unknown
+  client.query(copies[dynamic]('/* named */ COPY users FROM STDIN')); // unknown
+  client.query(copies('/* named */ COPY users FROM STDIN')); // unknown
+  client.query(copyFrom.from('/* named */ COPY users FROM STDIN')); // unknown
   const saved = copyFrom('/* named */ COPY users FROM STDIN');
   client.query(saved); // unknown
   { const copyFrom = (_: string) => dynamic;
