@@ -1,6 +1,9 @@
 const { join } = require("node:path");
 const { mkdtempSync, rmSync } = require("node:fs");
 const { tmpdir } = require("node:os");
+const { configureCompiledApiEnvironment } = require("./compiled-api-environment.js");
+
+configureCompiledApiEnvironment();
 
 if (
   process.platform === "linux" &&

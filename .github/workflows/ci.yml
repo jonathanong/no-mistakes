@@ -281,6 +281,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
+      contents: read
       id-token: write
 
     steps:
@@ -328,6 +329,7 @@ jobs:
       # real-napi-api.test.js already registers mutable receiver cases; list that suite only once.
       - name: Run real N-API API test
         timeout-minutes: 2
+        id: real-napi
         run: >-
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
           pnpm exec vitest run
@@ -352,7 +354,26 @@ jobs:
           packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js
           packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js
           packages/no-mistakes/scripts/doc-consistency-api.test.js
+          --reporter=default --reporter=json --outputFile.json=target/native-api-tests.json
           --coverage=false
+
+      - name: Report real N-API test durations
+        if: ${{ !cancelled() && steps.real-napi.outcome != 'skipped' }}
+        timeout-minutes: 2
+        run: node .github/scripts/report-native-api-tests.cjs target/native-api-tests.json target
+
+      - name: Upload real N-API test durations
+        if: ${{ !cancelled() && hashFiles('target/native-api-tests.json') != '' }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-api-tests-linux
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            target/native-api-tests.json
+            target/native-api-tests-durations.csv
+            target/native-api-tests-summary.md
 
       # Codecov is reporting only; an outage must not block merges.
       - name: Upload JavaScript coverage to Codecov
@@ -522,11 +543,31 @@ jobs:
 
       - name: Run real N-API API test
         timeout-minutes: 5
+        id: real-napi
         shell: bash
         run: |
           set -euo pipefail
           addon_path="$(node -e 'process.stdout.write(require("node:path").resolve("target/debug/no-mistakes.node"))')"
-          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run packages/no-mistakes/scripts/real-napi-api.test.js packages/no-mistakes/scripts/sql-verdicts-api.test.js packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js packages/no-mistakes/scripts/guarded-array-receiver-api.test.js --coverage=false
+          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run packages/no-mistakes/scripts/real-napi-api.test.js packages/no-mistakes/scripts/sql-verdicts-api.test.js packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js packages/no-mistakes/scripts/guarded-array-receiver-api.test.js --reporter=default --reporter=json --outputFile.json=target/native-api-tests.json --coverage=false
+
+      - name: Report real N-API test durations
+        if: ${{ !cancelled() && steps.real-napi.outcome != 'skipped' }}
+        timeout-minutes: 2
+        shell: bash
+        run: node .github/scripts/report-native-api-tests.cjs target/native-api-tests.json target
+
+      - name: Upload real N-API test durations
+        if: ${{ !cancelled() && hashFiles('target/native-api-tests.json') != '' }}
+        timeout-minutes: 2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: native-api-tests-${{ runner.os }}
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            target/native-api-tests.json
+            target/native-api-tests-durations.csv
+            target/native-api-tests-summary.md
 
       - name: Report native job timing
         if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}

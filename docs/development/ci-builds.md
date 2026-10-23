@@ -30,6 +30,21 @@ reports with the sibling compiled CLI, including SQL advisory aggregation.
 The Linux JavaScript job builds the CLI before the addon so both artifacts are
 available to these parity tests, as in the native platform matrix.
 
+Compiled Vitest workers use independent invocation locks. Linux keeps a private
+`XDG_RUNTIME_DIR`; macOS and Windows use the existing Cargo test marker
+`CARGO_BIN_EXE_no-mistakes` to select a lock keyed by process ID. Calls within
+one process still contend, and explicit planning-artifact locks retain their
+normal behavior. Saved process fixtures verify both contention and independent
+CLI execution. Production invocation locking is unchanged.
+
+Each real-addon step writes Vitest JSON to `target/native-api-tests.json`.
+The [timing helper](../../.github/scripts/report-native-api-tests.cjs) adds the
+slowest tests to the job summary and writes every test's status and duration to
+`target/native-api-tests-durations.csv`. The `native-api-tests-*` artifacts retain
+the JSON, CSV, and Markdown summary, including available results after failures.
+A passing test that takes 5,000 ms or more fails this timing check. The existing
+Vitest timeouts remain unchanged; no test retries are configured.
+
 ## Hosted measurement
 
 [Run 38332918032](https://github.com/jonathanong/no-mistakes/actions/runs/38332918032)

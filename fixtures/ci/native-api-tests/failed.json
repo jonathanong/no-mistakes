@@ -1,0 +1,15 @@
+{
+  "numTotalTests": 2,
+  "numPassedTests": 1,
+  "numFailedTests": 1,
+  "testResults": [
+    {
+      "name": "/work/packages/no-mistakes/scripts/sql-verdicts-api.test.js",
+      "status": "failed",
+      "assertionResults": [
+        { "fullName": "timed out SQL verdict", "status": "failed", "duration": 20009 },
+        { "fullName": "short SQL verdict", "status": "passed", "duration": 900 }
+      ]
+    }
+  ]
+}
