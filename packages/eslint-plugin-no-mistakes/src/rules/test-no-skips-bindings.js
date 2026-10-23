@@ -1,6 +1,6 @@
 "use strict";
 const { options } = require("../helpers");
-const { resolveVariable } = require("./test-no-shared-state-aliases");
+const { resolveVariable, stableConstInitializer } = require("./async-target-bindings");
 const { importSpecifierName } = require("./test-no-shared-state-callees");
 const { literalString } = require("./module-mock-helpers");
 const { unwrapExpression, isFunction } = require("./async-ast");
@@ -22,9 +22,19 @@ function admit(source, importedName, namespace, testModules) {
   if (!testModules.has(source) || importedName !== (namespace ? "*" : "test")) return null;
   return namespace ? CONFIGURED_NAMESPACE : { framework: "@playwright/test", name: "test" };
 }
-function memberName(node) {
+function immutableKey(node, context) {
+  const seen = new Set();
+  while (node) {
+    node = unwrapExpression(node);
+    const literal = literalString(node);
+    if (literal !== null) return literal;
+    node = stableConstInitializer(node, context, seen);
+  }
+  return null;
+}
+function memberName(node, context) {
   if (!node.computed && node.property.type === "Identifier") return node.property.name;
-  return literalString(node.property);
+  return immutableKey(node.property, context);
 }
 function unwrapBinding(node) {
   let current = node;
@@ -129,7 +139,7 @@ function testBinding(node, context, visited = new Set()) {
   if (node.type === "CallExpression") return testBinding(node.callee, context, visited);
   if (node.type === "TaggedTemplateExpression") return testBinding(node.tag, context, visited);
   if (node.type !== "MemberExpression") return null;
-  const name = memberName(node);
+  const name = memberName(node, context);
   if (NAMES.has(name) && node.object.type === "Identifier") {
     const framework = imported(node.object, context, true);
     if (framework && (framework !== CONFIGURED_NAMESPACE || name === "test"))

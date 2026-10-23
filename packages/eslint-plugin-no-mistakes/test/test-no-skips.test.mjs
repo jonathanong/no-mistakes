@@ -6,6 +6,33 @@ import { fixture, lint, messages, plugin, __dirname } from "./helpers.mjs";
 const rule = "test-no-skips";
 const code = (name) => fixture(`test-no-skips/${name}.ts`);
 describe(rule, () => {
+  it("resolves immutable lexical keys through runner aliases and extended APIs", () => {
+    const findings = lint(
+      code("immutable-keys"),
+      { [`no-mistakes/${rule}`]: "error" },
+      "suite.test.ts",
+    );
+    assert.deepEqual(
+      findings.map(({ line, messageId }) => [line, messageId]),
+      [
+        [7, "modifier"],
+        [8, "modifier"],
+        [10, "modifier"],
+        [12, "modifier"],
+        [13, "modifier"],
+        [14, "modifier"],
+        [15, "modifier"],
+        [18, "modifier"],
+        [20, "modifier"],
+      ],
+    );
+  });
+  it("leaves dynamic, imported, reassigned, cyclic and shadowed keys unresolved", () => {
+    assert.deepEqual(
+      messages(code("immutable-key-controls"), rule, undefined, "suite.test.ts"),
+      [],
+    );
+  });
   it("reports each modifier and table chain once, with bound contexts only", () => {
     const findings = lint(code("modifiers"), { [`no-mistakes/${rule}`]: "error" }, "suite.test.ts");
     assert.deepEqual(
