@@ -73,8 +73,7 @@ diagnostic, and unused `allow` entries for jobs in scanned files are findings.
 as partners. Together, they must cover this rule's workflow scope and have no
 `allow` entries. Each partner's `maxMinutes` (360 by default) certifies a
 literal upper bound for its executable steps. If a job has a supported literal
-timeout at least as
-large as that bound, this rule skips its redundant
+timeout at least as large as that bound, this rule skips its redundant
 `rejectStepExceedingJob` comparison for executable steps. The step rule still
 reports a missing, malformed, or over-cap step timeout. For a job timeout below
 the certified bound, this rule keeps the full step comparison. It also keeps the

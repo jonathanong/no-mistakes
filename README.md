@@ -133,9 +133,6 @@ Use `--format json` when an agent will parse the answer, `--format paths` when
 the output feeds another shell command, and `--timings` when explaining analysis
 cost. For repeated in-process queries, prefer the async Node API so one agent
 workflow can avoid subprocess overhead.
-Configured [`github-actions-job-timeouts`](docs/rules/github-actions-job-timeouts.md#effort)
-supports `effort: low` with a covering `github-actions-step-timeouts` partner;
-otherwise it warns and keeps `max` analysis.
 
 ### Example recipes
 

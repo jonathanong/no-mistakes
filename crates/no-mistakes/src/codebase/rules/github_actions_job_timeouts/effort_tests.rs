@@ -120,7 +120,12 @@ fn missing_disabled_narrowed_allowed_and_suppressed_partners_fall_back() {
 #[test]
 fn all_certified_caps_are_combined_conservatively_and_defaults_are_clamped() {
     let (_, max) = job_findings("max.yml");
-    for name in ["multiple.yml", "default-cap.yml", "clamped-cap.yml"] {
+    for name in [
+        "multiple.yml",
+        "default-cap.yml",
+        "clamped-cap.yml",
+        "default-options.yml",
+    ] {
         let (config, findings) = job_findings(name);
         assert!(config.analysis_fallbacks.is_empty(), "{name}");
         assert!(
@@ -175,7 +180,8 @@ fn full_check_prepares_partner_coverage_and_honors_effort_overrides() {
     let public =
         super::super::run_filesystem_rules(saved.path(), Some(&saved.path().join("low.yml")))
             .unwrap();
-    assert_eq!(public, low.rules);
+    // The standalone phase has no prepared policy and conservatively retains max.
+    assert_eq!(public, max.rules);
     assert!(low.analysis_fallbacks.is_empty());
     assert!(low.rules.iter().all(|finding| max.rules.contains(finding)));
     assert_eq!(max.rules.len(), low.rules.len() + 2);

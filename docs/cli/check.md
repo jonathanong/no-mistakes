@@ -50,7 +50,7 @@ remain enabled. See [the rule](../rules/nextjs-no-caching.md#effort).
 For `github-actions-job-timeouts`, `low` uses a covering, enabled
 `github-actions-step-timeouts` rule without exceptions to certify a step cap.
 When a job's literal timeout meets that cap, the job rule skips its redundant
-per-step exceedance scan; the partner reports invalid or over-cap steps.
+per-step timeout comparison; the partner reports invalid or over-cap steps.
 Smaller job timeouts keep the full comparison, and all other job checks stay
 active. An unavailable partner warns and falls back to `max`. See
 [the rule](../rules/github-actions-job-timeouts.md#effort).

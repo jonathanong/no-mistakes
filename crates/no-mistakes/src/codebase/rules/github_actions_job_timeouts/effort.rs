@@ -6,14 +6,15 @@ const PARTNER: &str = "github-actions-step-timeouts";
 /// Match the partner's supported options, refusing exceptions and unknown selectors.
 pub(crate) fn partner_scope(_: &RuleDef, partner: &RuleDef) -> bool {
     partner.tests == Default::default()
-        && partner.options.as_mapping().is_some_and(|options| {
-            options.keys().all(|key| {
-                matches!(
-                    key.as_str(),
-                    Some("include" | "maxMinutes" | "allow" | "effort" | "unanalyzable")
-                )
-            })
-        })
+        && (partner.options.is_null()
+            || partner.options.as_mapping().is_some_and(|options| {
+                options.keys().all(|key| {
+                    matches!(
+                        key.as_str(),
+                        Some("include" | "maxMinutes" | "allow" | "effort" | "unanalyzable")
+                    )
+                })
+            }))
         && partner
             .options
             .get("allow")
