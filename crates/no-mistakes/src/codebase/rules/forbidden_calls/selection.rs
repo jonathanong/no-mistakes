@@ -167,24 +167,12 @@ fn reachable_source_nodes(
     roots: &[NodeId],
     options: &Options,
 ) -> FxHashSet<NodeId> {
-    let mut nodes: FxHashSet<NodeId> = roots.iter().cloned().collect();
-    if matches!(options.traversal, Traversal::File) {
-        return nodes;
-    }
+    // File traversal returns the expanded roots; direct traversal also checks
+    // only their own call sites. Transitive source selection excludes the cap.
     let traversal = match options.traversal {
         Traversal::Direct => CallTraversal::Direct,
         Traversal::Transitive => CallTraversal::Transitive,
-        Traversal::File => unreachable!("file traversal returns the expanded roots"),
+        Traversal::File => CallTraversal::File,
     };
-    let cap = if traversal == CallTraversal::Direct {
-        1
-    } else {
-        options.max_depth.unwrap_or(usize::MAX)
-    };
-    for trace in graph.call_traces(roots, traversal, options.max_depth) {
-        if trace.nodes.len().saturating_sub(1) < cap {
-            nodes.insert(trace.target);
-        }
-    }
-    nodes
+    graph.call_source_nodes(roots, traversal, options.max_depth)
 }

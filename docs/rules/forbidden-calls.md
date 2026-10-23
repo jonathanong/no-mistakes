@@ -86,6 +86,11 @@ not remove traversal roots.
 caps the selected traversal. `direct` always stops after one call hop. Call
 cycles are finite and each distinct reachable call occurrence is reported once.
 
+Source selection shares one breadth-first traversal across the expanded roots,
+without constructing per-root call traces. For transitive traversal at
+`maxDepth: N`, only call sites whose owners are fewer than N call hops from a
+root are selected.
+
 `traversal` defaults to `direct`, `unknownCalls` defaults to `ignore`, and
 `invocations` defaults to `call`. An omitted `maxDepth` is unbounded for
 `file` and `transitive` traversal. `targets` must be non-empty unless
