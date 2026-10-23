@@ -174,11 +174,11 @@ for generated config that cannot be edited. Findings currently report line 1.
 
 ## Limitations
 
-YAML 1.1 merge keys (`<<: *anchor`) are not expanded. Structured YAML is parsed
-with `serde_yaml`, which leaves `<<` as an ordinary key instead of copying the
-anchored mapping into its parent. A banned key that would exist only after
-that copy is not a finding. A required key that exists only in the merge
-remains missing and is reported as a finding.
+YAML 1.1 merge keys (`<<: *anchor`) are expanded after `serde_yaml` parses the
+file. The anchored mapping is copied into its parent. A key already written on
+the parent wins. When `<<` is a sequence, an earlier mapping wins over a later
+one. A banned key that exists only after that copy is a finding. A required
+key that exists only after that copy is present.
 
 ```yaml
 defaults: &defaults
@@ -188,11 +188,21 @@ runtime:
   <<: *defaults
 ```
 
-With `bannedKeys: [runtime.legacy.enabled]`, the file above is not a finding.
-`runtime` contains the key `<<`, not `legacy`.
+With `bannedKeys: [runtime.legacy.enabled]`, the file above is a finding.
+`runtime.legacy.enabled` is `true` after the merge.
 
-A bare alias is not this limit. `enabled: *flag` is expanded by the YAML
-parser, and the policy sees the value the alias points at.
+A merge value that is not a mapping, and not a sequence of mappings, is
+dropped. It does not invent keys. JSON and JSONC keep a literal `<<` key,
+because merge keys are a YAML 1.1 construct.
+
+```yaml
+label: &label plain
+runtime:
+  <<: *label
+```
+
+A bare alias is separate from a merge key. `enabled: *flag` is expanded by the
+YAML parser, and the policy sees the value the alias points at.
 
 ## Related rules
 
