@@ -35,10 +35,56 @@ fn literal(expression: &Expression<'_>) -> bool {
         _ => false,
     }
 }
+fn text<'a>(expression: &'a Expression<'a>) -> Option<(&'a str, bool, bool)> {
+    match expression {
+        Expression::StringLiteral(value) => Some((&value.value, false, false)),
+        Expression::TemplateLiteral(value) => Some((
+            value.quasis.first()?.value.cooked.as_ref()?,
+            false,
+            !value.expressions.is_empty(),
+        )),
+        Expression::TaggedTemplateExpression(value) => Some((
+            value.quasi.quasis.first()?.value.cooked.as_ref()?,
+            true,
+            !value.quasi.expressions.is_empty(),
+        )),
+        _ => None,
+    }
+}
+fn transaction(text: &str, can_continue: bool) -> bool {
+    // Share max's Unicode boundary and leading-comment semantics. EOF after
+    // BEGIN is not a stable boundary when an unknown suffix can make BEGINNING.
+    crate::codebase::postgres::annotation::transaction_command_prefix_end(text)
+        .is_some_and(|end| !can_continue || end < text.len())
+}
+fn uncertain_missing(text: &str, can_continue: bool) -> bool {
+    let mut leading = text.trim_start();
+    loop {
+        if can_continue && (leading.is_empty() || leading == "/") {
+            return true;
+        }
+        let Some(comment) = leading.strip_prefix("/*") else {
+            break;
+        };
+        let Some(end) = comment.find("*/") else {
+            return can_continue;
+        };
+        leading = comment[end + 2..].trim_start();
+    }
+    can_continue
+        && ["BEGIN", "COMMIT", "ROLLBACK"].iter().any(|command| {
+            leading.len() <= command.len()
+                && command
+                    .get(..leading.len())
+                    .is_some_and(|prefix| prefix.eq_ignore_ascii_case(leading))
+        })
+}
 #[derive(Clone, Copy)]
 pub(super) enum Head {
     Literal,
     Tag,
+    Missing,
+    MissingTag,
     Reference(Span),
     Unproven,
 }
@@ -84,17 +130,28 @@ fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
             return Head::Tag;
         }
     }
+    if let Some((text, tagged, interpolated)) = text(expression) {
+        let can_continue = interpolated || concatenated;
+        if transaction(text, can_continue) {
+            return if tagged { Head::Tag } else { Head::Literal };
+        }
+        if !uncertain_missing(text, can_continue) {
+            return if tagged {
+                Head::MissingTag
+            } else {
+                Head::Missing
+            };
+        }
+    }
     Head::Unproven
 }
 impl<'a> Visit<'a> for Syntax {
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
+        let argument = value.arguments.first().and_then(|arg| arg.as_expression());
+        let head = argument.map_or(Head::Unproven, head);
         self.calls.push(Call {
             span: span(value.span),
-            head: value
-                .arguments
-                .first()
-                .and_then(|arg| arg.as_expression())
-                .map_or(Head::Unproven, head),
+            head,
         });
         walk::walk_call_expression(self, value);
     }
@@ -103,8 +160,12 @@ impl<'a> Visit<'a> for Syntax {
             for declaration in &value.declarations {
                 if let BindingPattern::BindingIdentifier(binding) = &declaration.id {
                     let head = declaration.init.as_ref().map_or(Head::Unproven, head);
-                    if matches!(head, Head::Literal | Head::Tag) {
-                        self.constants.insert(span(binding.span), head);
+                    if matches!(
+                        head,
+                        Head::Literal | Head::Tag | Head::Missing | Head::MissingTag
+                    ) {
+                        let key = span(binding.span);
+                        self.constants.insert(key, head);
                     }
                 }
             }

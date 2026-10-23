@@ -11,11 +11,14 @@ fn low_modes_alias_and_max_profiles_keep_their_policy_semantics() {
         "legacy policy alias changed findings"
     );
     assert_eq!(report.advisories, legacy.advisories);
-    assert!(!advise.rules.iter().any(|row| row.file == "src/query.mts"));
-    assert_eq!(
-        call_lines(&advise.advisories, "src/query.mts"),
-        call_lines(&report.rules, "src/query.mts")
-    );
+    let source = std::fs::read_to_string(root().join("src/query.mts")).unwrap();
+    let missing = marked_lines(&source, "EXPECT_MISSING");
+    let unresolved = call_lines(&report.rules, "src/query.mts")
+        .into_iter()
+        .filter(|line| !missing.contains(line))
+        .collect::<Vec<_>>();
+    assert_eq!(call_lines(&advise.rules, "src/query.mts"), missing);
+    assert_eq!(call_lines(&advise.advisories, "src/query.mts"), unresolved);
     assert!(advise
         .advisories
         .iter()
@@ -28,7 +31,10 @@ fn low_modes_alias_and_max_profiles_keep_their_policy_semantics() {
         "advisories must carry the static rewrite: {:?}",
         advise.advisories
     );
-    assert!(ignore.rules.is_empty(), "{:?}", ignore.rules);
+    assert_eq!(call_lines(&ignore.rules, "src/query.mts"), missing);
+    assert!(ignore.rules.iter().all(|finding| finding
+        .message
+        .contains("query execution must start with a /* name */ annotation")));
     assert!(ignore.advisories.is_empty(), "{:?}", ignore.advisories);
 
     let default_max = run(".no-mistakes-default-max.yml");

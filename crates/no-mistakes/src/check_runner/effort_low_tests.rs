@@ -39,7 +39,7 @@ fn call_lines(rows: &[no_mistakes::codebase::rules::RuleFinding], file: &str) ->
 }
 
 #[test]
-fn low_policy_reports_only_unsupported_executor_heads_and_honors_suppression_scope() {
+fn low_policy_separates_missing_heads_from_unsupported_shapes_and_honors_suppressions() {
     let root = root();
     let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();
     let report = run(".no-mistakes-report.yml");
@@ -53,8 +53,13 @@ fn low_policy_reports_only_unsupported_executor_heads_and_honors_suppression_sco
     );
     assert!(report.advisories.is_empty(), "{:?}", report.advisories);
     assert!(report.rules.iter().all(|row| {
-        row.message.contains("query(\"/* name */ \" + sql)")
-            && row.message.contains("const statement")
+        if row.line == 43 {
+            row.message
+                .contains("query execution must start with a /* name */ annotation")
+        } else {
+            row.message.contains("query(\"/* name */ \" + sql)")
+                && row.message.contains("const statement")
+        }
     }));
     assert!(
         call_lines(&report.rules, "src/shared.mjs").is_empty(),

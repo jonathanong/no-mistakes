@@ -12,6 +12,7 @@ pub(super) type Span = (u32, u32);
 #[derive(Clone, Debug)]
 pub(crate) enum HeadProof {
     Literal,
+    Missing,
     Unproven,
 }
 #[derive(Clone, Debug, Default)]
@@ -21,6 +22,10 @@ pub(crate) struct AnnotationHeads {
 impl AnnotationHeads {
     pub(crate) fn accepts(&self, span: Span) -> bool {
         matches!(self.calls.get(&span), Some(HeadProof::Literal))
+    }
+
+    pub(crate) fn proves_missing(&self, span: Span) -> bool {
+        matches!(self.calls.get(&span), Some(HeadProof::Missing))
     }
 }
 pub(crate) fn collect(

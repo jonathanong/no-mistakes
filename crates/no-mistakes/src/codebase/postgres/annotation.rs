@@ -24,6 +24,12 @@ fn is_transaction_command(sql: &str) -> bool {
     transaction_re().is_match(sql)
 }
 
+/// End of the fixed command keyword, so a prefix proof can require an
+/// observed word boundary instead of assuming its unknown suffix ends here.
+pub(super) fn transaction_command_prefix_end(sql: &str) -> Option<usize> {
+    transaction_re().find(sql).map(|matched| matched.end())
+}
+
 fn annotation_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"(?s)^\s*/\*\s*\S.*?\*/").expect("query annotation regex"))

@@ -2,6 +2,8 @@
 mod failures;
 #[path = "gap_tests.rs"]
 mod gap_tests;
+#[path = "missing_tests.rs"]
+mod missing_tests;
 #[path = "support.rs"]
 mod support;
 #[path = "tags_tests.rs"]

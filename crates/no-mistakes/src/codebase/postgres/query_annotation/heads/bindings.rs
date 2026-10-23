@@ -66,6 +66,8 @@ impl<'a> Bindings<'a> {
         match head {
             Head::Literal => HeadProof::Literal,
             Head::Tag => HeadProof::Literal,
+            Head::Missing => HeadProof::Missing,
+            Head::MissingTag => HeadProof::Missing,
             Head::Reference(span) => {
                 let Some(owner) = self.owner(span).filter(|owner| !owner.imported) else {
                     return HeadProof::Unproven;
@@ -77,6 +79,12 @@ impl<'a> Bindings<'a> {
                     {
                         HeadProof::Literal
                     }
+                    Some(Head::MissingTag)
+                        if self.safe_tags.contains(&(owner.span.start, owner.span.end)) =>
+                    {
+                        HeadProof::Missing
+                    }
+                    Some(Head::Missing) => HeadProof::Missing,
                     _ => HeadProof::Unproven,
                 }
             }
