@@ -57,3 +57,6 @@ See [options and examples](../../docs/eslint-rules/postgres-no-async-sql-builder
 `require-options-on-imported-call` requires a static options object on configured
 imports, globals with no local binding, and terminal methods with a matching receiver shape.
 See [options and examples](../../docs/eslint-rules/require-options-on-imported-call.md).
+
+`restricted-api-usage` is an opt-in import/export-name and call-name policy.
+See [options and examples](../../docs/eslint-rules/restricted-api-usage.md).

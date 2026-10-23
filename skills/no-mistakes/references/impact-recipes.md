@@ -406,3 +406,9 @@ later expression shares the same statement as `Promise.all`. The
 [`no-mistakes/async-call-disposition`](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-rules/async-call-disposition.md)
 eslint rule enforces disposition going forward on configured enqueue APIs, but
 it is not a discovery graph — existing callers still need this manual pass.
+
+For file-local API prevention policies, configure the opt-in
+[`restricted-api-usage`](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-rules/restricted-api-usage.md)
+ESLint/Oxlint rule with exact sources and exported-name patterns. Add a lexical
+call-name pattern only when all bindings with that spelling are intentionally
+restricted. Scope files and contract-test exclusions in the linter configuration.

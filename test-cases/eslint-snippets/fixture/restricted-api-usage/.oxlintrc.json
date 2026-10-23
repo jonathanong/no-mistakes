@@ -1,0 +1,6 @@
+{
+  "jsPlugins": [{ "name": "no-mistakes", "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js" }],
+  "rules": { "no-mistakes/restricted-api-usage": ["error", { "targets": [{
+    "source": "@example/client", "importedNamePattern": "^paginate[A-Z]", "callNamePattern": "^paginate[A-Z]", "message": "Use explicit continuation."
+  }] }] }
+}

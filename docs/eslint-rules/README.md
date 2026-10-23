@@ -100,3 +100,4 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 - [`no-comment-phrases`](no-comment-phrases.md) flags configured phrases in line and block comments.
 
 - [`forbidden-member-chains`](forbidden-member-chains.md) bans configured static member-access chains.
+- [`restricted-api-usage`](restricted-api-usage.md) restricts configured API imports and calls.
