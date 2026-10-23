@@ -40,6 +40,18 @@ describe(id, () => {
     );
     assert.deepEqual(check("suppression-file.mjs"), []);
   });
+  it("recognizes exact file URL templates through the existing identity classifier", () => {
+    assert.deepEqual(
+      check("templates.ts").map((m) => m.line),
+      [4, 5, 6, 7, 10, 11, 12, 13, 15],
+    );
+    assert.deepEqual(check("template-controls.mjs"), []);
+    assert.deepEqual(
+      check("template-suppressions.mjs").map((m) => m.line),
+      [6],
+    );
+    assert.deepEqual(check("template-suppression-file.mjs"), []);
+  });
   it("has genuine oxlint parity on the saved scope and suppression matrix", () => {
     for (const [name, count] of [
       ["unsafe.mjs", 10],
@@ -48,6 +60,10 @@ describe(id, () => {
       ["suppressions.mjs", 1],
       ["suppression-file.mjs", 0],
       ["commonjs.cjs", 1],
+      ["templates.ts", 9],
+      ["template-controls.mjs", 0],
+      ["template-suppressions.mjs", 1],
+      ["template-suppression-file.mjs", 0],
     ]) {
       const result = spawnSync(
         process.execPath,
