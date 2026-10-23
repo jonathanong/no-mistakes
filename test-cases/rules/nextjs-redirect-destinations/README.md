@@ -20,3 +20,14 @@ malformed-helper file suppressions.
 matched by a catch-all `paths` mapping with no local target.
 `limit-outside-scanned` saves a valid helper then excludes it from one test's
 declared file set to prove that a relative hop cannot silently read outside it.
+
+The `entry-*` fixtures cover failures in the selected `next.config.ts` itself.
+`entry-malformed` has a leading comment before invalid syntax. The
+`entry-malformed-comment-prefix` and `entry-malformed-unterminated-comment`
+cases lock the suppression anchor after blank and comment lines or at line 1
+when no code line exists. The `entry-malformed-file`, `entry-malformed-line`,
+and `entry-malformed-next-line` cases cover all three directive forms.
+`entry-invalid-utf8` contains a saved invalid byte and exercises a real
+`SourceStore` read failure. `entry-missing-read` intentionally lacks
+`next.config.ts`; its test supplies that absent path in the inventory to cover
+an operating-system read error.

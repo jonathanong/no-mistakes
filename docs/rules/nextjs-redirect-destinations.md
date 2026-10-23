@@ -171,6 +171,18 @@ set `options.effort: low` and `options.unanalyzable: report` to require literal
 arrays. Shared configuration and CLI overrides also apply. These syntax proofs
 do not require a companion rule.
 
+If the selected entry `next.config.*` cannot be read as UTF-8 or parsed, the
+rule reports one `unanalyzable` diagnostic at either effort. Its message names
+the config and the read or parser error, so fix that file before relying on
+redirect or rewrite coverage. `report` fails, `advise` emits a non-failing
+advisory, and `ignore` skips the diagnostic. A read failure is anchored at line
+1 because the source is unavailable. A parse failure is anchored at the first
+code line after leading blank lines and comments; this is a suppression anchor,
+not necessarily the parser's error location. For readable configs with parse
+errors, use `no-mistakes-disable-file`, `no-mistakes-disable-line`, or
+`no-mistakes-disable-next-line` on that anchor. Inline directives cannot be
+read from an unreadable config; use the `unanalyzable` policy in that case.
+
 Low-effort unanalyzable diagnostics use the `redirects` / `rewrites` method
 line. Suppress at that method:
 

@@ -1,5 +1,6 @@
 mod delegated_effort;
 mod effort;
+mod entry_failure;
 mod extract;
 mod named_section;
 mod static_values;
@@ -193,12 +194,14 @@ fn unknown_config_path_is_silent() {
 }
 
 #[test]
-fn unreadable_config_path_is_silent() {
+fn unreadable_config_path_reports_residual() {
     let root = fixture("pass");
     let missing = root.join("nope.config.ts");
     let findings =
         check_with_files(&root, &config("{ configPath: nope.config.ts }"), &[missing]).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "nope.config.ts");
+    assert!(findings[0].message.contains("could not read config"));
 }
 
 #[test]
