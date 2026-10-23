@@ -45,6 +45,11 @@ statement.append(sql` WHERE id = ${id}`);
 query(statement);
 ```
 
+These are deliberately narrow low-effort syntax proofs. Low does not run the
+helper/value evaluator, so a helper-produced head or nonliteral append argument
+can remain unresolved even when `effort: max` can recover it. The configured
+`unanalyzable` policy applies to that low-effort uncertainty.
+
 To follow appends through a const, its declaration and uses must stay in the
 same function. Before the executor call,
 its uses may only append supported literals or pass it directly to prepared

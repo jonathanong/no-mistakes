@@ -18,6 +18,11 @@ annotation profiles skip full SQL composition; a shared profile requested by max
 analysis or another SQL rule retains full recovery. See the
 [low-effort binding and escape rules](low-effort.md).
 
+This makes low intentionally stricter about nonliteral and helper-produced
+appends: those shapes can stay unresolved at low even when max recovers their
+values and proves the leading head. Choose the effort level with that difference
+in mind when selecting the unresolved-SQL policy.
+
 When full SQL recovery encounters independent conditional appends, it explores
 all-off first, then each singleton, then pairs, and larger combinations in that
 order. A loop contributes zero or one iteration; a changed builder remains incomplete
@@ -29,10 +34,12 @@ alternatives are still checked and the truncation is advisory. The unexplored
 remainder still needs a leading-prefix proof; otherwise the configured
 `unanalyzable` policy applies to it.
 
-An invalid composed SQL alternative is skipped for annotation findings and
-reported as a non-failing advisory. Valid siblings remain checked. Consumer
-tests must validate the SQL generated at runtime. These advisories are separate
-from the `unanalyzable` policy and use the executor call's suppression location:
+Invalid composed SQL still gets a non-failing composition advisory. If its head
+decisively lacks an annotation, the missing-annotation finding is reported even
+when the SQL does not parse. If the head is annotated, invalidity remains
+advice-only. Valid siblings remain checked. Consumer tests must validate the SQL
+generated at runtime. These advisories are separate from the `unanalyzable`
+policy and use the executor call's suppression location:
 
 ```ts
 // no-mistakes-disable-next-line postgres-require-query-annotation
