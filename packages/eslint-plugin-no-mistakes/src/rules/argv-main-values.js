@@ -2,7 +2,7 @@
 const { unwrapExpression } = require("./async-ast");
 const { resolveVariable, memberPropertyName, isLocalRequire } = require("./async-target-bindings");
 const { literalString, logicalCall } = require("./module-mock-helpers");
-const { ARGV, identity, concatenate } = require("./argv-main-fragments");
+const { ARGV, identity, concatenate, fileUrlArgument } = require("./argv-main-fragments");
 
 function globalName(node, name, context) {
   if (node?.type !== "Identifier" || node.name !== name) return false;
@@ -119,14 +119,9 @@ function createClassifier(context, wrappers) {
       )
         return MAIN;
       const target = unwrapExpression(node.object);
-      if (
-        name === "href" &&
-        target.type === "NewExpression" &&
-        globalName(target.callee, "URL", context) &&
-        target.arguments.length === 1
-      ) {
-        const argument = classify(target.arguments[0], depth + 1);
-        return Array.isArray(argument) && identity(argument) === ARGV ? argument : 0;
+      if (name === "href" && globalName(target?.callee, "URL", context)) {
+        const constructed = fileUrlArgument(target, (argument) => classify(argument, depth + 1));
+        if (constructed) return constructed;
       }
       const object = value(node.object, depth + 1);
       if (object === PROCESS && name === "argv") return ARGUMENTS;
@@ -152,15 +147,31 @@ function createClassifier(context, wrappers) {
       )
         return ARGV;
       if (
+        !invoked.forwarded &&
         callee?.type === "MemberExpression" &&
         memberPropertyName(callee) === "toString" &&
         invoked.arguments.length === 0
       ) {
+        const url = unwrapExpression(callee.object);
+        if (globalName(url?.callee, "URL", context)) {
+          const constructed = fileUrlArgument(url, (argument) => classify(argument, depth + 1));
+          if (constructed) return constructed;
+        }
         const classified = classify(callee.object, depth + 1);
         return typeof classified === "string" || [ARGV, MAIN].includes(identity(classified))
           ? classified
           : 0;
       }
+      if (
+        !invoked.forwarded &&
+        callee?.type === "MemberExpression" &&
+        memberPropertyName(callee) === "concat" &&
+        invoked.arguments.every((argument) => argument.type !== "SpreadElement")
+      )
+        return invoked.arguments.reduce(
+          (folded, argument) => concatenate(folded, classify(argument, depth + 1)),
+          classify(callee.object, depth + 1),
+        );
       if (invoked.arguments.length !== 1 || invoked.arguments[0].type === "SpreadElement") return 0;
       if (globalName(callee, "String", context)) return classify(invoked.arguments[0], depth + 1);
       if (globalName(callee, "Boolean", context) || wrappers.resolveCallTarget(node)) {

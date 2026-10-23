@@ -20,6 +20,8 @@ if (import.meta.url === "file://" + process.argv[1]) main();
 if (import.meta.url === `file://${process.argv[1]}`.toString()) main();
 if (import.meta.url === String(`file://${process.argv[1]}`)) main();
 if (import.meta.url === new URL(`file://${process.argv[1]}`).href) main();
+if (import.meta.url === new URL(`file://${process.argv[1]}`).toString()) main();
+if (import.meta.url === "file://".concat(process.argv[1])) main();
 if (import.meta.url === `${"file://"}${process.argv[1]}`) main();
 if (import.meta.url === `file://${process.argv[1]}` + "") main();
 if (import.meta.url === `file://${process.argv[1] ?? ""}`) main();
@@ -62,12 +64,14 @@ Decoded file URL prefixes accept exactly `file://` or `file:///`, ignoring case.
 String concatenation and constant template substitutions before the single argv
 substitution are folded, including direct `const` aliases of those string parts.
 An empty string suffix in concatenation and `argv[1] ?? ""` preserve the identity.
-Global `String(value)`, a zero-argument `.toString()` on a recognized identity,
-and global `new URL(fileUrl).href` are transparent; shadowed `String` and `URL`
-bindings are unknown. URL construction requires one argument that is already a
-recognized file URL expression. Other prefixes, nonempty suffixes, substitutions
-after argv (even empty ones), repeated argv substitutions, and tagged templates
-are not classified as argv identities.
+Global `String(value)`, a zero-argument `.toString()` on a recognized identity
+or on global `new URL(fileUrl)`, and global `new URL(fileUrl).href` are
+transparent; shadowed `String` and `URL` bindings are unknown. String
+`.concat(...)` folds like `+` on a direct call. `.call`, `.apply`, and comma
+calls stay unknown because they replace that receiver. URL construction requires one argument that is
+already a recognized file URL expression. Other prefixes, nonempty suffixes,
+substitutions after argv (even empty ones), repeated argv substitutions, and
+tagged templates are not classified as argv identities.
 
 The global `process` and default/namespace imports or direct `const require`
 bindings from `node:process` / `process` are recognized by binding identity.

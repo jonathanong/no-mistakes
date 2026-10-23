@@ -21,6 +21,7 @@ if (import.meta.url === String(`file://${process.argv[1]}`, "ignored")) main();
 function shadowed(String, URL, process) {
   if (import.meta.url === String(`file://${process.argv[1]}`)) main();
   if (import.meta.url === new URL(`file://${process.argv[1]}`).href) main();
+  if (import.meta.url === new URL(`file://${process.argv[1]}`).toString()) main();
 }
 function shadowedWrappers(String, URL) {
   if (import.meta.url === String(`file://${process.argv[1]}`)) main();
@@ -47,4 +48,12 @@ const doubled = oversized + oversized;
 const doubledAgain = doubled + doubled;
 if (import.meta.url === doubledAgain + process.argv[1]) main();
 if (import.meta.url === "file:///x" + process.argv[1]) main();
+if (import.meta.url === "file://".concat(process.argv[1], "/x")) main();
+// .call, .apply, and comma calls replace the syntactic receiver, so both file and other thisArgs stay unknown.
+if (import.meta.url === "file://".concat.call("https://", process.argv[1])) main();
+if (import.meta.url === "file://".concat.call("file://", process.argv[1])) main();
+if (import.meta.url === new URL(`file://${process.argv[1]}`).toString.call("nope")) main();
+if (import.meta.url === (0, `file://${process.argv[1]}`.concat)("")) main();
+if (import.meta.url === "https://".concat(process.argv[1])) main();
+if (import.meta.url === new URL(`file://${process.argv[1]}`).toString("changed")) main();
 if (import.meta.url === `${"file:///"}${"x"}${process.argv[1]}`) main();

@@ -17,5 +17,9 @@ function concatenate(left, right) {
   if (Array.isArray(left) && typeof right === "string") return right === "" ? left : 0;
   return 0;
 }
-
-module.exports = { ARGV, identity, concatenate };
+function fileUrlArgument(target, read) {
+  if (target?.type !== "NewExpression" || target.arguments.length !== 1) return 0;
+  const argument = read(target.arguments[0]);
+  return Array.isArray(argument) && identity(argument) === ARGV ? argument : 0;
+}
+module.exports = { ARGV, identity, concatenate, fileUrlArgument };

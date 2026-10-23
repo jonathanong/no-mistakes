@@ -23,3 +23,6 @@ if (import.meta.url === "file://" + String(invoked)) main();
 if (import.meta.url === `${invokedUrl}`) main();
 // Eight-character prefixes remain accepted at the folding boundary.
 if (import.meta.url === ("file:" + "///") + process.argv[1]) main();
+if (import.meta.url === new URL(`file://${process.argv[1]}`).toString()) main();
+if (import.meta.url === `file://${process.argv[1]}`.concat("")) main();
+if (import.meta.url === "file://".concat(process.argv[1])) main();
