@@ -1,5 +1,6 @@
-use super::{runner::check_with_resolver, CheckFactMap, NoMistakesConfig, RuleFinding};
+use super::{runner::check_diagnostics_with_resolver, CheckFactMap, NoMistakesConfig};
 use crate::codebase::analysis_session::AnalysisSession;
+use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::ts_resolver::{normalize_path, ScopedImportResolver, TsConfigCatalog};
 use anyhow::Result;
 use std::path::Path;
@@ -17,11 +18,11 @@ pub(crate) struct PreparedStorybookCheck<'a> {
 
 pub(crate) fn check_with_prepared_facts_for_aggregate(
     input: PreparedStorybookCheck<'_>,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<AnalysisDiagnostics> {
     check_with_optional_inferred(input)
 }
 
-fn check_with_optional_inferred(input: PreparedStorybookCheck<'_>) -> Result<Vec<RuleFinding>> {
+fn check_with_optional_inferred(input: PreparedStorybookCheck<'_>) -> Result<AnalysisDiagnostics> {
     let PreparedStorybookCheck {
         root,
         config,
@@ -39,7 +40,7 @@ fn check_with_optional_inferred(input: PreparedStorybookCheck<'_>) -> Result<Vec
         .collect::<crate::fx::PathSet>();
     let resolver =
         ScopedImportResolver::new_in_session(prepared_tsconfig_catalog, &visible_files, session);
-    check_with_resolver(
+    check_diagnostics_with_resolver(
         root,
         config,
         shared,

@@ -29,6 +29,35 @@ Each selected exported component must be reachable from a configured story or
 an allowed covered parent. Generated components and intentionally ineligible
 exports should be excluded explicitly.
 
+### Incomplete analysis
+
+The shared `unanalyzable` policy controls explicitly included TSX/JSX files
+whose prepared TypeScript facts contain a parse error. Such a file produces one
+file-level `unanalyzable` diagnostic at line 1; the rule does not guess which
+components the file exports or report missing stories for them. This check
+applies only when the file matches `options.include`. A file considered only
+through `includeAllReactNamedExports` or `includeAllReactDefaultExports` does
+not produce this diagnostic.
+
+For example, an included `UserCard.tsx` containing the incomplete declaration
+`export function UserCard() { return <article>` is reported as unanalyzable.
+
+The shared `unanalyzable` policy defaults to `report`; rule-level
+`options.unanalyzable` overrides the top-level `unanalyzable` setting
+([configuration](../configuration/README.md)). `report` places
+the diagnostic among failing findings, `advise` places it among advisories,
+and `ignore` omits it. Project scope, test-file exclusions,
+`ignoreIndexAndPrivateFiles`, `exclude`, generic rule filters, `allowFiles`,
+and file suppression continue to apply. The diagnostic is suppressed by
+`no-mistakes-disable-file require-storybook-stories` or
+`no-mistakes-disable-line require-storybook-stories` on line 1.
+
+This diagnostic exists because malformed included source cannot be analyzed
+for component exports, so the rule cannot establish Storybook coverage for
+that file. Fix the parse error and use valid TSX/JSX; if the file is
+intentionally outside the coverage policy, remove or narrow the `include`
+pattern, or use a reasoned `allowFiles` entry.
+
 ## Options and defaults
 
 `stories` selects candidate story files; an empty list matches no stories.

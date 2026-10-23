@@ -87,18 +87,19 @@ pub(super) fn storybook(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
     crate::perf_trace::trace("rules.require_storybook_stories", || {
-        Ok(RuleChunk::from_findings(storybook_findings(
-            StorybookFindingsRequest {
-                root: req.root,
-                config: req.config,
-                prepared_tsconfig_catalog: req.prepared_tsconfig_catalog,
-                shared: req.shared,
-                inferred_roots: req.inferred_roots,
-                session: req.session,
-                defer_suppression: req.defer_suppression,
-                sources: req.sources,
-            },
-        )?))
+        let diagnostics = storybook_findings(StorybookFindingsRequest {
+            root: req.root,
+            config: req.config,
+            prepared_tsconfig_catalog: req.prepared_tsconfig_catalog,
+            shared: req.shared,
+            inferred_roots: req.inferred_roots,
+            session: req.session,
+            defer_suppression: req.defer_suppression,
+            sources: req.sources,
+        })?;
+        let mut chunk = RuleChunk::from_findings(diagnostics.findings);
+        chunk.advisories = diagnostics.advisories;
+        Ok(chunk)
     })
 }
 

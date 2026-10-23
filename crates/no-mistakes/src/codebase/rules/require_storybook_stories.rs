@@ -11,6 +11,7 @@ mod colocated_tests;
 mod config;
 mod coverage;
 mod coverage_graph;
+mod diagnostics;
 mod findings;
 mod prepared;
 mod runner;
