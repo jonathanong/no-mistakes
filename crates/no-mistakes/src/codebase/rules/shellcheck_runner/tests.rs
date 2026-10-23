@@ -58,7 +58,7 @@ fn shellcheck_available() -> bool {
 mod tracked_only;
 
 #[test]
-fn pass_fixture_has_no_findings_or_skips_without_shellcheck() {
+fn pass_fixture_is_clean_or_reports_missing_shellcheck() {
     let root = fixture_root("pass");
     let config_path = root.join(".no-mistakes.yml");
     let findings = check(
@@ -71,12 +71,16 @@ fn pass_fixture_has_no_findings_or_skips_without_shellcheck() {
             findings.is_empty(),
             "expected no findings, got: {findings:?}"
         );
+    } else {
+        assert!(!findings.is_empty());
+        assert!(findings
+            .iter()
+            .all(|finding| finding.target.as_deref() == Some("unanalyzable")));
     }
-    // Without shellcheck installed the rule silently returns no findings too
 }
 
 #[test]
-fn fail_fixture_has_findings_or_skips_without_shellcheck() {
+fn fail_fixture_reports_issues_or_missing_shellcheck() {
     let root = fixture_root("fail");
     let config_path = root.join(".no-mistakes.yml");
     let findings = check(
@@ -90,7 +94,7 @@ fn fail_fixture_has_findings_or_skips_without_shellcheck() {
             "expected findings for bad shell script"
         );
     }
-    // Without shellcheck the rule is a no-op; that's acceptable
+    assert!(!findings.is_empty());
 }
 
 #[test]
@@ -314,7 +318,7 @@ fn run_shellcheck_uses_default_severity_when_empty() {
         },
         ..Default::default()
     };
-    // run_shellcheck should not error — may return Ok(empty) if shellcheck not installed
+    // Missing ShellCheck is a structured incomplete result, not an invocation error.
     let result = run_shellcheck(tmp.path(), &opts, &[sh]);
     assert!(result.is_ok());
 }
@@ -411,64 +415,6 @@ fn explicit_shell_files_respect_rule_path_filters() {
 }
 
 #[test]
-fn handle_shellcheck_result_not_found_returns_empty() {
-    // Exercises the NotFound arm: shellcheck binary not installed → silent Ok(empty).
-    let tmp = tempfile::tempdir().unwrap();
-    let err = std::io::Error::new(std::io::ErrorKind::NotFound, "shellcheck not found");
-    let result = handle_shellcheck_result(tmp.path(), &[], Err(err));
-    assert!(result.is_ok());
-    assert!(result.unwrap().is_empty());
-}
-
-#[test]
-fn handle_shellcheck_result_other_error_propagates() {
-    // Exercises the generic Err arm: any non-NotFound I/O error → Err.
-    let tmp = tempfile::tempdir().unwrap();
-    let err = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "denied");
-    let result = handle_shellcheck_result(tmp.path(), &[], Err(err));
-    assert!(result.is_err());
-}
-
-#[test]
-fn handle_shellcheck_result_success_returns_empty() {
-    // Exercises the Ok(output) arm with exit code 0 → no findings.
-    let tmp = tempfile::tempdir().unwrap();
-    let output = std::process::Output {
-        status: make_exit_status(0),
-        stdout: Vec::new(),
-        stderr: Vec::new(),
-    };
-    let result = handle_shellcheck_result(tmp.path(), &[], Ok(output));
-    assert!(result.is_ok());
-    assert!(result.unwrap().is_empty());
-}
-
-#[test]
-fn handle_shellcheck_result_reports_only_affected_files() {
-    // Only files mentioned in gcc-format stdout get findings; clean files are skipped.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let sh1 = root.join("a.sh");
-    let sh2 = root.join("b.sh");
-    std::fs::write(&sh1, "#!/bin/bash\nfoo\n").unwrap();
-    std::fs::write(&sh2, "#!/bin/bash\nbar\n").unwrap();
-    let gcc_line = format!("{}:2:1: warning: blah [SC2006]\n", sh1.display());
-    let output = std::process::Output {
-        status: make_exit_status(1),
-        stdout: gcc_line.into_bytes(),
-        stderr: Vec::new(),
-    };
-    let result = handle_shellcheck_result(root, &[sh1.clone(), sh2], Ok(output));
-    let findings = result.unwrap();
-    assert_eq!(
-        findings.len(),
-        1,
-        "only the flagged file should get a finding"
-    );
-    assert!(findings[0].file.contains("a.sh"));
-}
-
-#[test]
 fn parse_affected_files_empty_stdout_returns_empty() {
     let files: Vec<std::path::PathBuf> = vec![];
     assert!(parse_affected_files("", &files).is_empty());
@@ -534,3 +480,6 @@ fn run_shellcheck_rejects_invalid_severity() {
         error
     );
 }
+
+#[path = "tests/incomplete.rs"]
+mod incomplete;
