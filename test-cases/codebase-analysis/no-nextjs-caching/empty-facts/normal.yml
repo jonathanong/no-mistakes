@@ -1,0 +1,6 @@
+rules:
+  - rule: nextjs-no-caching
+    scope: repository
+    include: ["**/*.ts"]
+    options:
+      unanalyzable: advise
