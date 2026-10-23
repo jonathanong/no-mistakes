@@ -54,4 +54,3 @@ for label in ('a', 'b'):
         lines.append(f"  scheduler.register('daily-refresh', {{ attempt: {j}, tags: ['batch', 'safe'] }});")
     lines += ["  return scheduler.register('daily-refresh', { attempt: 16, tags: ['batch', 'safe'] });", "}", ""]
     (ROOT / 'src/schedules' / f'worker-{label}.ts').write_text('\n'.join(lines))
-
