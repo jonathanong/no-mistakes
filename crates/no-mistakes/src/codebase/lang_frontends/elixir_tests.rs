@@ -41,6 +41,15 @@ fn trailing_comment_after_brace_alias_still_expands() {
 }
 
 #[test]
+fn brace_alias_without_trailing_newline_expands() {
+    assert_eq!(
+        extract_elixir_imports("alias MyApp.{User}"),
+        vec!["MyApp.User"]
+    );
+    assert!(extract_elixir_imports("alias MyApp.{User}}").is_empty());
+}
+
+#[test]
 fn expand_brace_members_skips_non_brace_rest() {
     assert!(expand_brace_members("MyApp", "User").is_empty());
 }
