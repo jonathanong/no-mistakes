@@ -56,6 +56,7 @@ function signaturePreserved(node, target) {
     return (
       other.type === param.type &&
       param.optional === other.optional &&
+      Boolean(param.typeAnnotation) === Boolean(other.typeAnnotation) &&
       (!param.typeAnnotation || identicalType(param.typeAnnotation, other.typeAnnotation))
     );
   });

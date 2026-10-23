@@ -10,6 +10,7 @@ const {
 const { isNamedWrapper, isSelfCall, patternHasName } = require("./ts-no-function-aliases-self");
 const { exportedDeclarations, reachableTarget } = require("./ts-no-function-aliases-reachable");
 const {
+  legacyIdentifierCall,
   unassertedCall,
   wrapperHasOverloads,
   directIntrinsic,
@@ -37,9 +38,16 @@ function onlyCallExpression(body) {
 function reportIfAlias(node, context, suppressed, declarations) {
   if (suppressed(node) || !isNamedWrapper(node)) return;
   const call = onlyCallExpression(node.body);
-  if (!call || call.type !== "CallExpression" || !unassertedCall(node, call)) return;
+  if (!call || call.type !== "CallExpression") return;
+  const legacy = legacyIdentifierCall(node, call);
   const sourceCode = context.sourceCode;
-  if (wrapperHasOverloads(node, sourceCode) || documentedSignature(node, sourceCode)) return;
+  if (
+    !legacy &&
+    (!unassertedCall(node, call) ||
+      wrapperHasOverloads(node, sourceCode) ||
+      documentedSignature(node, sourceCode))
+  )
+    return;
   const forwarded = forwardedCall(call, sourceCode);
   if (isSelfCall(node, call, sourceCode, forwarded)) return;
   const directTarget = callableTarget(call.callee);
@@ -50,8 +58,8 @@ function reportIfAlias(node, context, suppressed, declarations) {
   for (const candidate of [directForward, forwarded]) {
     if (!candidate) continue;
     if (!isSameArgumentList(node.params, candidate.args)) continue;
-    const reachable = reachableTarget(candidate.target, sourceCode, declarations);
-    if (!reachable || !signaturePreserved(node, reachable)) continue;
+    const reachable = reachableTarget(candidate.target, sourceCode, declarations, legacy);
+    if (!reachable || (!legacy && !signaturePreserved(node, reachable))) continue;
     context.report({ node, messageId: "alias" });
     return;
   }

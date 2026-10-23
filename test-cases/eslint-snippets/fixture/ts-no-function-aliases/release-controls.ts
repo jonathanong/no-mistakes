@@ -14,7 +14,7 @@ export function retrieve(id) { return getClient().refunds.retrieve(id); }
 export function includes(v) { return (LIST as readonly string[]).includes(v); }
 export function asserted(v) { return (request!).post(v); }
 export function memberThis(v) { return this.handle(v); }
-// A declared contract is meaningful when the imported signature is unavailable.
+// Raw reachable identifiers below retain their released contract findings.
 export function predicate(v: unknown): v is Code { return imported(v); }
 export function narrowParameter(v: string) { return imported(v); }
 export function narrowReturn(v): string { return imported(v); }
@@ -36,7 +36,7 @@ const object: { run: Narrow } = {};
 object.run = v => imported(v);
 export function shadow(imported) { return imported(imported); }
 
-// Promise/iterator or discarded-result contracts are meaningful behavior.
+// Plain identifiers retain the released async/generator/statement findings.
 export const asyncFacade = async value => await imported(value);
 export function* generatorFacade(value) { return imported(value); }
 export function discards(value) { imported(value); }
@@ -49,7 +49,7 @@ export function overloaded(value: number): number;
 export function overloaded(value: string | number) { return value; }
 const overloadedFacade = (value: string) => overloaded(value);
 
-// Overload declarations add a public signature even if implementation parameters are unannotated.
+// Plain identifier overloads retain released behavior, unlike expanded targets.
 export function overloadedWrapper(value: unknown): unknown;
 export function overloadedWrapper(value) { return imported(value); }
 export function shadowedOverload(shadowedOverload: unknown): unknown;
@@ -85,7 +85,7 @@ const destructuredRest = (...[value]) => imported(...[value]);
 const destructured = ({ value }) => imported(value);
 const defaulted = (value = "default") => imported(value);
 
-// Fixing generic arguments or asserting the explicit forwarding receiver adds a contract.
+// Raw generic calls retain released behavior; asserted forwarding receivers stay excluded.
 const explicitGeneric = value => imported<string>(value);
 const explicitOptionalGeneric = value => imported?.<string>(value);
 const explicitForwardGeneric = value => imported.call<string>(undefined, value);
@@ -99,7 +99,7 @@ export default snapshotOriginal;
 snapshotOriginal = replacement;
 export const snapshotFacade = value => snapshotOriginal(value);
 
-// Explicit optionality is a declared signature even without a parameter type.
+// Raw identifier optional/default contracts retain their released findings.
 const optionalImported = (value?) => imported(value);
 const optionalUntypedLocal = (value?): string => localRequired(value);
 export function defaultedTarget(value: string = "default"): string { return value; }

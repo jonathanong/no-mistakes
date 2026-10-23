@@ -14,10 +14,20 @@ describe("reachable function alias release regression", () => {
     );
     assert.deepEqual(messages(code, rule, undefined, "fixture.ts"), []);
   });
-  it("keeps private, runtime, asserted and signature-changing facades", () => {
+  it("keeps private, runtime and asserted controls while preserving released identifier findings", () => {
+    const diagnostics = lint(
+      fixture(`${rule}/release-controls.ts`),
+      { [`no-mistakes/${rule}`]: "error" },
+      "fixture.ts",
+    );
+    // Only the plain reachable identifiers regain the released behavior; every
+    // expanded/private/asserted control in this historical file stays silent.
     assert.deepEqual(
-      messages(fixture(`${rule}/release-controls.ts`), rule, undefined, "fixture.ts"),
-      [],
+      diagnostics.map((item) => item.line),
+      [
+        18, 19, 20, 21, 32, 34, 36, 40, 41, 42, 44, 45, 46, 50, 54, 56, 77, 79, 81, 89, 90, 103,
+        104, 106,
+      ],
     );
   });
   it("reports reachable imported and exported pass-throughs including forwarding", () => {
@@ -30,10 +40,13 @@ describe("reachable function alias release regression", () => {
 
 describe("reachable function alias Oxlint parity", () => {
   for (const [name, count] of [
-    ["release-controls.ts", 0],
-    ["release-jsdoc.mjs", 2],
+    ["release-controls.ts", 24],
+    ["release-jsdoc.mjs", 7],
     ["release-positive.ts", 24],
     ["release-default-const.ts", 2],
+    ["legacy-compatibility.ts", 14],
+    ["legacy-instantiation.ts", 1],
+    ["expanded-contracts.ts", 5],
     ["private-recall.ts", 0],
     ["suppress-next-line.ts", 1],
     ["suppress-line.ts", 0],

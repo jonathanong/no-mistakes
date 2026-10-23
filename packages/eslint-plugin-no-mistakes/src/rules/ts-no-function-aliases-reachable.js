@@ -61,11 +61,17 @@ function importedPath(target, sourceCode) {
   );
 }
 
-function reachableTarget(target, sourceCode, declarations) {
+function reachableTarget(target, sourceCode, declarations, legacy = false) {
   if (importedPath(target, sourceCode)) return { imported: true };
   if (target.type !== "Identifier") return null;
   const variable = resolveVariable(sourceCode, target);
-  if (!moduleBinding(variable) || variable.defs.length !== 1) return null;
+  if (!moduleBinding(variable)) return null;
+  if (
+    legacy &&
+    variable.defs.some((def) => def.type === "FunctionName" && declarations.has(def.node))
+  )
+    return { imported: false };
+  if (variable.defs.length !== 1) return null;
   const declaration = variable.defs[0].node;
   if (!declarations.has(declaration)) return null;
   const callable = declaration.type === "FunctionDeclaration" ? declaration : declaration.init;
