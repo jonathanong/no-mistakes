@@ -41,3 +41,9 @@ typeVi.fn(() => enqueueEmail("1"));
 specifierTypeVi.fn(() => enqueueEmail("1"));
 typeVitest.vi.fn(() => enqueueEmail("1"));
 otherFactory().mockImplementation(() => enqueueEmail("1"));
+// A known factory cannot prove a rewritten implementation method's return contract.
+function rewrittenMock() { const mock = vi.fn(); mock.mockImplementation = unknown; mock.mockImplementation(() => enqueueEmail("1")); }
+function deletedMock() { const mock = vi.fn(); delete mock.mockImplementation; mock.mockImplementation(() => enqueueEmail("1")); }
+function updatedMock() { const mock = vi.fn(); mock.mockImplementation++; mock.mockImplementation(() => enqueueEmail("1")); }
+function aliasMutation() { const mock = vi.fn(); const alias = mock; alias.mockImplementation = unknown; mock.mockImplementation(() => enqueueEmail("1")); }
+function rewrittenFramework() { const api = vi; api.fn = unknown; api.fn(() => enqueueEmail("1")); }

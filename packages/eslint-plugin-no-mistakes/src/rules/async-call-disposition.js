@@ -6,8 +6,8 @@ const {
   collectedPromise,
   isPromiseAllCall,
   retainedPromise,
-  returnsThroughMock,
 } = require("./async-disposition-bindings");
+const { returnsThroughMock } = require("./async-disposition-mocks");
 const {
   findContainingFunction,
   isFunction,

@@ -62,7 +62,7 @@ describe("async-call-disposition", () => {
         asyncTargetOptions,
         "retained-invalid.ts",
       ),
-      Array(34).fill("disposition"),
+      Array(39).fill("disposition"),
     );
   });
 
@@ -73,6 +73,18 @@ describe("async-call-disposition", () => {
         "async-call-disposition",
         asyncTargetOptions,
         "retained-globals.ts",
+      ),
+      ["disposition"],
+    );
+  });
+
+  it("rejects rewritten framework globals", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-call-disposition", "retained-mutated-global.ts"),
+        "async-call-disposition",
+        asyncTargetOptions,
+        "retained-mutated-global.ts",
       ),
       ["disposition"],
     );

@@ -92,7 +92,9 @@ mutation or escape, nested callback producers, reassigned bindings, and unknown
 callback APIs remain reported. A mock callback that pushes and returns a promise
 is accepted through its return; this does not establish when an outer array is
 drained. Locally shadowed `vi`, `jest`, and `Promise` objects do not establish
-these dispositions. The analysis does not prove that callers actually invoke
+these dispositions. Direct property writes, updates, or deletion on a known mock
+or framework object, including through stable local aliases, invalidate its
+pass-through identity. The analysis does not prove that callers actually invoke
 or await a mock; its return follows the same explicit-disposition contract as
 an ordinary function return.
 
