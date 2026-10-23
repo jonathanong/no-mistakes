@@ -7,6 +7,8 @@ let pw = playwright;
 pw.expect(locator).toBeVisible({ timeout: 20000 });
 let { expect: named } = playwright;
 named(locator).toHaveText("text", { timeout: 20000 });
+let { expect } = playwright;
+expect(locator).toBeVisible({ timeout: 20000 });
 const { expect: fallbackNamed = check } = playwright;
 fallbackNamed(locator).toBeVisible({ timeout: 20000 });
 

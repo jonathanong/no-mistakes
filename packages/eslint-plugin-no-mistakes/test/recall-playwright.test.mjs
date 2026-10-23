@@ -299,7 +299,7 @@ describe("playwright same-file recall", () => {
         undefined,
         "e2e/single-write-alias.spec.ts",
       ),
-      ["timeout", "timeout", "timeout", "timeout"],
+      ["timeout", "timeout", "timeout", "timeout", "timeout"],
     );
   });
 });

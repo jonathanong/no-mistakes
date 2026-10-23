@@ -81,6 +81,9 @@ function expectRoot(node, context, expectNames, seen = new Set()) {
     if (def.type === "ImportBinding") return true;
     const alias = resolveAlias(node, context, seen);
     if (alias?.kind === "init") return expectRoot(alias.init, context, expectNames, seen);
+    if (alias?.kind === "key") {
+      return alias.key === "expect" && isPlaywrightNamespace(alias.declarator.init, context);
+    }
     return false;
   }
   const alias = resolveAlias(node, context, seen);
