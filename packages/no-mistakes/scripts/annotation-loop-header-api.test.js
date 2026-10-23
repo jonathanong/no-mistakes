@@ -33,5 +33,8 @@ test(
     for (const line of marked("EXPECT_ACCEPTED_")) {
       assert.ok(!maximum.rules.some((row) => row.line === line), `max header ${line}`);
     }
+    for (const line of marked("EXPECT_MAX_UNKNOWN")) {
+      assert.ok(maximum.rules.some((row) => row.line === line && /unanalyzable/.test(row.message)));
+    }
   },
 );

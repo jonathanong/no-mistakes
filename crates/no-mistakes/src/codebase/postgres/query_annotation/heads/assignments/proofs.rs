@@ -70,6 +70,14 @@ impl Proofs {
             if binding.imported || !binding.runtime || gaps.overlaps(declaration) {
                 continue;
             }
+            let has_tag = std::iter::once(initial)
+                .chain(binding.references.iter().filter_map(|usage| {
+                    syntax
+                        .assignments
+                        .writes
+                        .get(&(usage.span.start, usage.span.end))
+                }))
+                .any(|write| matches!(write.value, Value::Literal(Head::Tag | Head::MissingTag)));
             let mut writes = vec![*initial];
             let mut calls = Vec::new();
             let valid = binding
@@ -78,7 +86,8 @@ impl Proofs {
                 .filter(|usage| usage.runtime)
                 .all(|usage| {
                     let span = (usage.span.start, usage.span.end);
-                    if gaps.overlaps(span) {
+                    if gaps.overlaps(span) || syntax.assignments.unsupported_writes.contains(&span)
+                    {
                         return false;
                     }
                     if let Some(write) = syntax.assignments.writes.get(&span) {
@@ -88,21 +97,24 @@ impl Proofs {
                         calls.push((span, *call));
                         call.context.function == Some(function)
                     } else {
-                        // Other uses include captures, aliases, member mutation,
-                        // updates, destructuring and implicit iteration targets.
-                        false
+                        // Scalar literals cannot be mutated through aliases or reads.
+                        // Tagged builders retain the strict direct-use whitelist.
+                        !has_tag
                     }
                 });
             if !valid {
                 continue;
             }
-            writes.sort_unstable_by_key(|write| write.span.1);
+            // Iteration-target writes run after the one-time iterable expression,
+            // despite appearing before it in source. Repeated calls include the
+            // loop end; one-time headers do not see these deferred writes.
+            writes.sort_unstable_by_key(available_after);
             let mut outcome = Outcome::NoSql;
             let prefix = writes
                 .iter()
                 .map(|write| {
                     outcome = outcome.max(classify(write, &shadowed, gaps));
-                    (write.span.1, outcome)
+                    (available_after(write), outcome)
                 })
                 .collect::<Vec<_>>();
             for (reference, call) in calls {
@@ -121,6 +133,12 @@ impl Proofs {
         }
         proofs
     }
+}
+fn available_after(write: &Write) -> u32 {
+    write
+        .context
+        .repeated
+        .map_or(write.span.1, |span| span.1.max(write.span.1))
 }
 fn classify(write: &Write, shadowed: &FxHashSet<Span>, gaps: &Gaps) -> Outcome {
     if gaps.overlaps(write.span) {

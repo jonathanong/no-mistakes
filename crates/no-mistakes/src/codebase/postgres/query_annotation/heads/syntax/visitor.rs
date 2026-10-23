@@ -1,5 +1,6 @@
 use super::{head, span, Call, Head, Syntax};
 use crate::codebase::postgres::query_annotation::heads::assignments::Context;
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::{ast::*, AstKind};
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
@@ -43,6 +44,26 @@ impl<'a> Visit<'a> for Syntax {
             self.assignments.declaration(value);
         }
         walk::walk_variable_declaration(self, value);
+    }
+    fn visit_expression_statement(&mut self, value: &ExpressionStatement<'a>) {
+        let discarded = match unwrap_ts_wrappers(&value.expression) {
+            Expression::AssignmentExpression(value) => Some(span(value.span)),
+            _ => None,
+        };
+        let previous = std::mem::replace(&mut self.assignments.discarded_assignment, discarded);
+        walk::walk_expression_statement(self, value);
+        self.assignments.discarded_assignment = previous;
+    }
+    fn visit_simple_assignment_target(&mut self, value: &SimpleAssignmentTarget<'a>) {
+        self.assignments.target(value);
+        walk::walk_simple_assignment_target(self, value);
+    }
+    fn visit_assignment_target_property_identifier(
+        &mut self,
+        value: &AssignmentTargetPropertyIdentifier<'a>,
+    ) {
+        self.assignments.unsupported_write(value.binding.span);
+        walk::walk_assignment_target_property_identifier(self, value);
     }
     fn visit_assignment_expression(&mut self, value: &AssignmentExpression<'a>) {
         self.assignments.assignment(value);
