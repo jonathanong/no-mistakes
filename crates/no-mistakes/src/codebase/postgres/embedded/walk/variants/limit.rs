@@ -2,8 +2,8 @@ use super::Recovered;
 use crate::codebase::postgres::embedded::MAX_EMBEDDED_SQL_VARIANTS;
 
 pub(super) fn bounded(values: Vec<Recovered>) -> Option<Vec<Recovered>> {
-    #[cfg(test)]
-    peak_tests::record(values.len());
+    // Saved fixtures and observer counters check the exploration budget.
+    // This boundary executes the same algorithm in ordinary and test builds.
     let mut unique = Vec::new();
     for mut value in values {
         normalize(&mut value);
@@ -166,6 +166,3 @@ fn same_without_choice(left: &Recovered, right: &Recovered, id: u64) -> bool {
     normalize(&mut right);
     left.same_value(&right)
 }
-
-#[cfg(test)]
-mod peak_tests;
