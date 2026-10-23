@@ -109,7 +109,10 @@ pub(super) fn extract_elixir_imports(source: &str) -> Vec<String> {
     for cap in elixir_import_re().captures_iter(source) {
         let path = &cap[1];
         let rest = source[cap.get(1).expect("module path").end()..].trim_start_matches([' ', '\t']);
-        if rest.starts_with('*') || rest.starts_with(".*") {
+        if rest.starts_with('*') {
+            continue;
+        }
+        if rest.starts_with(".*") {
             continue;
         }
         if rest.starts_with('{') || rest.starts_with(".{") {
@@ -138,7 +141,10 @@ pub(super) fn expand_brace_members(prefix: &str, rest: &str) -> Vec<String> {
     if !(after_line.is_empty() || after_line.starts_with('#')) {
         return Vec::new();
     }
-    if body.contains('{') || body.contains('*') {
+    if body.contains('{') {
+        return Vec::new();
+    }
+    if body.contains('*') {
         return Vec::new();
     }
     body.split(',')
