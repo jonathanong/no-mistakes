@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 if (process.argv[1] === fileURLToPath(import.meta.url)) main();
 const invoked = process.argv.at(1);
 if (invoked !== import.meta.filename) return;
+if (import.meta.url === `file://${process.argv[1]}`) main();
 ```
 
 ## Allowed
@@ -48,6 +49,10 @@ one side is argv index 1 and the other is `import.meta.url`,
 `import.meta.filename`, or global CommonJS `__filename`. Optional
 `process.argv?.[1]` and `process.argv.at(1)` forms are recognized. Ordinary argv
 reads, index 2, `slice(2)`, and comparisons to unrelated paths are not findings.
+An exact template with a decoded `file://` prefix, one argv-index-1 substitution,
+and no suffix is also recognized, including direct `const` aliases and the
+transparent expressions below. Other prefixes, suffixes, multiple substitutions,
+and tagged templates are not classified as argv identities.
 
 The global `process` and default/namespace imports or direct `const require`
 bindings from `node:process` / `process` are recognized by binding identity.

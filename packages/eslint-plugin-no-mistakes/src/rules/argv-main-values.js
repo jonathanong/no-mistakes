@@ -83,6 +83,14 @@ function createClassifier(context, wrappers) {
       }
       return aliases.get(variable);
     }
+    if (
+      node.type === "TemplateLiteral" &&
+      node.expressions.length === 1 &&
+      node.quasis[0].value.cooked === "file://" &&
+      node.quasis[1].value.cooked === ""
+    ) {
+      return classify(node.expressions[0], depth + 1) === ARGV ? ARGV : 0;
+    }
     if (node.type === "MemberExpression") {
       const name = memberPropertyName(node);
       if (
