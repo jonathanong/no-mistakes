@@ -58,6 +58,9 @@ pub(crate) fn check_with_files_sources_and_snapshot(
     sources: &crate::codebase::ts_source::SourceStore,
     snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
 ) -> Result<Vec<RuleFinding>> {
+    if config.rule_applications(RULE_ID).is_empty() {
+        return Ok(Vec::new());
+    }
     prepared::with_standalone(root, config, all_files, sources, |resolver| {
         check_prepared(root, config, all_files, sources, snapshot, resolver)
     })

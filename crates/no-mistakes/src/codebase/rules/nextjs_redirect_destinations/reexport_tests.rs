@@ -147,3 +147,19 @@ fn standalone_dispatcher_uses_the_same_alias_resolution() {
     assert_eq!(findings[0].file, "next-shared.ts");
     assert!(findings[0].message.contains("redirect destination '/gone'"));
 }
+
+#[test]
+fn disabled_rule_does_not_prepare_a_workspace_or_catalog() {
+    let root = fixture("fail-default-import");
+    let files = crate::codebase::ts_source::walk_files(&root, &[]);
+    let sources = super::super::source_store_for_files(&files);
+    let findings =
+        check_with_files_and_sources(&root, &NoMistakesConfig::default(), &files, &sources)
+            .unwrap();
+    assert!(findings.is_empty());
+    assert_eq!(
+        sources.json_parse_count(),
+        0,
+        "disabled rule must not parse the malformed manifest"
+    );
+}

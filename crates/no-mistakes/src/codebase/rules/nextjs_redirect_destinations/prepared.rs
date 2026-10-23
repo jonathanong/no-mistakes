@@ -40,7 +40,10 @@ pub(crate) fn with_standalone<T>(
     roots.extend(super::configured_project_roots(root, config));
     roots.sort();
     roots.dedup();
-    let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, sources)?;
+    // Match the ordinary session/catalog's tolerant workspace projection;
+    // unrelated malformed manifests must not block config extraction.
+    let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, sources)
+        .unwrap_or_default();
     let catalog = TsConfigCatalog::from_visible_and_sources_with_workspace(
         root, &roots, files, sources, &workspace,
     );
