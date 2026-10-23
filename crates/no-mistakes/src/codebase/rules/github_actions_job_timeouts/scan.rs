@@ -1,4 +1,4 @@
-use super::yaml::{finding, key_line, step_label, timeout_minutes};
+use super::yaml::{finding, timeout_minutes};
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::relative_slash_path;
 use serde_yaml::Value;
@@ -106,7 +106,14 @@ fn check_job(
     };
     let mut findings = cap_findings(rel, line, job_id, minutes, &allow_key, opts, used_allow);
     if opts.reject_step_exceeding_job {
-        findings.extend(step_findings(rel, source, job_id, job, minutes));
+        findings.extend(super::step_comparison::findings(
+            rel,
+            source,
+            job_id,
+            job,
+            minutes,
+            opts.partner_cap,
+        ));
     }
     if opts.reject_job_at_or_above_step_sum {
         findings.extend(super::step_sum::finding(rel, line, job_id, job, minutes));
@@ -150,51 +157,4 @@ fn cap_findings(
         format!("{rel}: job \"{job_id}\" timeout-minutes is {minutes}, over the {cap}-minute cap"),
         job_id,
     )]
-}
-
-fn step_findings(
-    rel: &str,
-    source: &str,
-    job_id: &str,
-    job: &serde_yaml::Mapping,
-    job_timeout: u64,
-) -> Vec<RuleFinding> {
-    let Some(steps) = job
-        .get(Value::String("steps".to_string()))
-        .and_then(Value::as_sequence)
-    else {
-        return Vec::new();
-    };
-    let mut findings = Vec::new();
-    for (index, step) in steps.iter().enumerate() {
-        let Some(step) = step.as_mapping() else {
-            continue;
-        };
-        let Some(raw) = step.get(Value::String("timeout-minutes".to_string())) else {
-            continue;
-        };
-        let label = step_label(step, index);
-        let Some(minutes) = timeout_minutes(raw) else {
-            findings.push(finding(
-                rel,
-                key_line(source, "timeout-minutes"),
-                format!(
-                    "{rel}: job \"{job_id}\" step \"{label}\" timeout-minutes has no supported literal upper bound"
-                ),
-                job_id,
-            ));
-            continue;
-        };
-        if minutes > job_timeout {
-            findings.push(finding(
-                rel,
-                key_line(source, "timeout-minutes"),
-                format!(
-                    "{rel}: job \"{job_id}\" step \"{label}\" timeout-minutes is {minutes}, exceeding its job timeout of {job_timeout}"
-                ),
-                job_id,
-            ));
-        }
-    }
-    findings
 }

@@ -52,6 +52,13 @@ For `nextjs-no-caching`, `low` checks
 constant propagation or configuration wrapper facts. Both APIs preserve shared
 unanalyzable policy and suppression behavior; mixed low/max applications reuse
 the same source inventory and parse.
+For `github-actions-job-timeouts`, `check({ effort: "low" })` and a check report
+in `analyzeProject()` use the same covering `github-actions-step-timeouts`
+partner as CLI `--effort low`. With a certified step cap, the job rule skips
+redundant `rejectStepExceedingJob` comparisons only for literal job timeouts at
+least that cap; the partner reports step violations. Missing or ineligible
+coverage produces the same warning, `analysisFallbacks` record, and `max`
+fallback in both APIs. See [its Effort section](rules/github-actions-job-timeouts.md#effort).
 
 | CLI                                        | Node API                                                                                                                                                                                                                                                                   |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

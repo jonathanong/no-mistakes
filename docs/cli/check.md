@@ -49,6 +49,13 @@ For `nextjs-no-caching`, `low` checks literal cache settings without constant
 propagation or configuration wrapper inference. Indirect settings follow the
 shared unanalyzable policy; literal violations, directives, and cache API checks
 remain enabled. See [the rule](../rules/nextjs-no-caching.md#effort).
+For `github-actions-job-timeouts`, `low` uses a covering, enabled
+`github-actions-step-timeouts` rule without exceptions to certify a step cap.
+When a job's literal timeout meets that cap, the job rule skips its redundant
+per-step timeout comparison; the partner reports invalid or over-cap steps.
+Smaller job timeouts keep the full comparison, and all other job checks stay
+active. An unavailable partner warns and falls back to `max`. See
+[the rule](../rules/github-actions-job-timeouts.md#effort).
 `--include-suppressed` is opt-in and adds deterministic directive accounting to
 JSON/YAML output without changing the default report schema.
 `unprovenMemberQuerySql` is an optional count of member `.query` calls that were not proven, omitted when zero, and not a failure.

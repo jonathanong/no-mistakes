@@ -48,6 +48,9 @@ compatibility.
 Rules that do not implement low effort continue to use their maximum analysis.
 When a low-effort rule requires a partner check that is missing or outside its
 configured scope, `check` warns and runs that rule at `max`.
+For example, [`github-actions-job-timeouts`](../rules/github-actions-job-timeouts.md#effort)
+uses a covering `github-actions-step-timeouts` partner to avoid redundant
+step comparisons when the partner caps steps below the job deadline.
 
 The top-level `frontendRoot`, `assertNoFetch`, and `reactTraits` fields are
 legacy compatibility settings for the standalone `react` command. Prefer

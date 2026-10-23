@@ -1,0 +1,19 @@
+effort: low
+rules:
+  - rule: github-actions-job-timeouts
+    scope: repository
+    include: [.github/workflows/ci.yml]
+    options:
+      rejectStepExceedingJob: true
+      rejectJobAtOrAboveStepSum: true
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      effort: max
+      maxMinutes: 5
+  - rule: github-actions-step-timeouts
+    scope: repository
+    include: [.github/workflows/other.yml]
+    options:
+      effort: max
+      maxMinutes: 15
