@@ -53,6 +53,21 @@ rules:
 
 The configured project root does not exist, so the rule reports `apps/missing`.
 
+## Unknown-key limitation
+
+Unknown top-level keys are accepted by the current loader and are not findings
+of this rule. The following active configuration loads successfully and reports
+nothing; `unknownKey` has no effect. This is a limitation, not a reporting
+counterexample:
+
+```yaml
+# .no-mistakes.yml
+unknownKey: true
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+```
+
 ## Suppression
 
 Fix configuration rather than suppressing it. For an intentional generated
