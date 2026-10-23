@@ -9,6 +9,8 @@ mod support;
 #[path = "tags_tests.rs"]
 mod tags_tests;
 use support::{assert_markers, fixture};
+#[path = "assignment_gap_tests.rs"]
+mod assignment_gap_tests;
 
 #[test]
 fn original_ast_heads_accept_only_the_two_low_effort_shapes() {

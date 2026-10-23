@@ -1,17 +1,20 @@
 use super::Span;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashMap;
-use oxc_ast::ast::{BindingPattern, CallExpression, Expression, Program, VariableDeclaration};
-use oxc_ast_visit::{walk, Visit};
+use oxc_ast::ast::{Expression, Program};
+use oxc_ast_visit::Visit;
+mod visitor;
 
 pub(super) struct Call {
     pub span: Span,
     pub head: Head,
+    pub context: super::assignments::Context,
 }
 #[derive(Default)]
 pub(super) struct Syntax {
     pub calls: Vec<Call>,
     pub constants: FxHashMap<Span, Head>,
+    pub assignments: super::assignments::Assignments,
 }
 fn span(span: oxc_span::Span) -> Span {
     (span.start, span.end)
@@ -97,7 +100,7 @@ impl Head {
     }
 }
 // Preserve Tag through concatenation so local constants still require safe uses.
-fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
+pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
     let mut concatenated = false;
     loop {
         expression = unwrap_ts_wrappers(expression);
@@ -144,34 +147,6 @@ fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
         }
     }
     Head::Unproven
-}
-impl<'a> Visit<'a> for Syntax {
-    fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
-        let argument = value.arguments.first().and_then(|arg| arg.as_expression());
-        let head = argument.map_or(Head::Unproven, head);
-        self.calls.push(Call {
-            span: span(value.span),
-            head,
-        });
-        walk::walk_call_expression(self, value);
-    }
-    fn visit_variable_declaration(&mut self, value: &VariableDeclaration<'a>) {
-        if value.kind.is_const() {
-            for declaration in &value.declarations {
-                if let BindingPattern::BindingIdentifier(binding) = &declaration.id {
-                    let head = declaration.init.as_ref().map_or(Head::Unproven, head);
-                    if matches!(
-                        head,
-                        Head::Literal | Head::Tag | Head::Missing | Head::MissingTag
-                    ) {
-                        let key = span(binding.span);
-                        self.constants.insert(key, head);
-                    }
-                }
-            }
-        }
-        walk::walk_variable_declaration(self, value);
-    }
 }
 pub(super) fn collect(program: &Program<'_>) -> Syntax {
     let mut syntax = Syntax::default();

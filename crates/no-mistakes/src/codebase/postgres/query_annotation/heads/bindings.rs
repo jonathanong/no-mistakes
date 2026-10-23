@@ -10,6 +10,7 @@ pub(super) struct Bindings<'a> {
     constants: &'a FxHashMap<Span, Head>,
     gaps: Option<Gaps>,
     safe_tags: FxHashSet<Span>,
+    mutable: super::assignments::Proofs,
 }
 impl<'a> Bindings<'a> {
     pub fn new(
@@ -32,12 +33,20 @@ impl<'a> Bindings<'a> {
             constants: &syntax.constants,
             gaps: None,
             safe_tags: FxHashSet::default(),
+            mutable: super::assignments::Proofs::default(),
         };
         let Some(module) = ts.module_bindings.as_deref().filter(|_| !wanted.is_empty()) else {
             return index;
         };
         index.gaps = Some(Gaps::new(module));
-        index.safe_tags = super::tag_constants::safe(syntax, module, executor_calls);
+        let executors = executor_calls.collect::<FxHashSet<_>>();
+        index.safe_tags = super::tag_constants::safe(syntax, module, executors.iter().copied());
+        index.mutable = super::assignments::Proofs::new(
+            syntax,
+            module,
+            &executors,
+            index.gaps.as_ref().unwrap(),
+        );
         // Index every possible owner once, retaining only relevant references.
         // A duplicate is ambiguous even if the other owner is invalid.
         for binding in &module.bindings {
@@ -85,7 +94,12 @@ impl<'a> Bindings<'a> {
                         HeadProof::Missing
                     }
                     Some(Head::Missing) => HeadProof::Missing,
-                    _ => HeadProof::Unproven,
+                    _ => self
+                        .mutable
+                        .calls
+                        .get(&span)
+                        .cloned()
+                        .unwrap_or(HeadProof::Unproven),
                 }
             }
             Head::Unproven => HeadProof::Unproven,
