@@ -1,0 +1,8 @@
+{
+  "categories": { "correctness": "off" },
+  "jsPlugins": [{
+    "name": "no-mistakes",
+    "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+  }],
+  "rules": { "no-mistakes/test-no-error-message-matching": "error" }
+}
