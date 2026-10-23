@@ -72,6 +72,11 @@ scripts unanalyzed. Use `unanalyzable: report` (the default), `advise`, or
 `ignore` to choose whether that gap fails, advises, or is skipped; install
 ShellCheck in the analysis environment to check the scripts.
 
+For `version-pin-consistency`, an unreadable or malformed source outside the
+selected file set for a selected anchor follows `unanalyzable` (`report` by
+default, `advise`, or `ignore`). A valid off-selection source still supplies
+the comparison pin; definite mismatches remain failures.
+
 Grouped residual advice, including a `target` that may list several checks, is described in
 [SQL verdicts](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).
 
