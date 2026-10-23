@@ -60,3 +60,38 @@ fn truncated_variants_cannot_prove_clear_but_keep_known_offset_witnesses() {
         Some(SqlEvidenceKind::VerifiedPrefix)
     );
 }
+
+#[test]
+fn unresolved_runtime_sql_abstains_before_statement_facts_are_needed() {
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/verdict-unresolved-runtime.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let embedded =
+        crate::codebase::postgres::extract_embedded_sql_from_source(&path, &source, &options);
+    assert_eq!(embedded.calls.len(), 1);
+    assert_eq!(embedded.calls[0].sql_text, None);
+
+    let mut facts = crate::codebase::check_facts::CheckFactMap::default();
+    facts.enable_sql_verdicts();
+    record_sql_policy_verdicts(
+        SqlPolicyVerdictContext {
+            facts: &facts,
+            embedded: &embedded,
+            statements: &[],
+        },
+        "postgres-rule",
+        "query.ts",
+        &options,
+        &["bound".to_string()],
+        false,
+        |_, _, _| panic!("unresolved text cannot be judged"),
+    );
+    let verdicts = facts.sql_verdicts();
+    assert_eq!(verdicts.len(), 1);
+    assert_eq!(verdicts[0].status, SqlVerdictStatus::Abstain);
+    assert_eq!(
+        verdicts[0].residual_reasons,
+        vec!["unresolved-sql-fragment".to_string()]
+    );
+}

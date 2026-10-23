@@ -8,6 +8,8 @@ read(sql`/* spread */ SELECT 1`.append(...parts)); // low: false
 read(sql`/* untagged */ SELECT 1`.append(` WHERE x = ${value}`)); // low: false
 read(sql`/* tagged */ SELECT 1`.append(sql` WHERE x = ${value}`)); // low: true
 read(sql`/* nested */ SELECT 1`.append(dynamic).append(" tail")); // low: false
+// Calls that compute SQL through another function remain unknown at low effort.
+read(buildSql()); // low: false
 export function bound() {
   const q = sql`/* local */ SELECT 1`;
   q.append(sql` WHERE x = ${value}`);

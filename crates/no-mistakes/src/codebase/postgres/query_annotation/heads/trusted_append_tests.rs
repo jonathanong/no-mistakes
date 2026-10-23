@@ -74,3 +74,36 @@ fn ordinary_inline_calls_need_no_max_append_head_pass() {
     assert!(file.query_annotation_heads.is_none());
     assert!(file.ts.module_bindings.is_none());
 }
+
+#[test]
+fn trusted_tagged_builder_origins_are_required_for_composed_head_proofs() {
+    let profile = EmbeddedSqlOptions::configured("@bench/db", &["read".into()]);
+    let file = prepared("annotation-trusted-append.mts", &profile, &profile);
+    let embedded = &file.embedded_sql[0].1;
+    let candidates = embedded.call_spans.iter().copied().collect();
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded/annotation-trusted-append.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let heads = crate::ast::with_program(&path, &source, |program, _| {
+        super::super::collect_with_trusted_appends(
+            program,
+            &file.ts,
+            embedded.call_spans.iter().copied(),
+            &candidates,
+            false,
+        )
+    })
+    .unwrap();
+    let is_trusted = |index| heads.accepts_trusted_append(embedded.call_spans[index]);
+    assert!(is_trusted(0), "default SQL tag with a safe local append");
+    assert!(
+        is_trusted(6),
+        "renamed default SQL tag with a safe local append"
+    );
+    for index in [1, 2, 3, 4, 5] {
+        assert!(
+            !is_trusted(index),
+            "untrusted or escaped builder at {index}"
+        );
+    }
+}

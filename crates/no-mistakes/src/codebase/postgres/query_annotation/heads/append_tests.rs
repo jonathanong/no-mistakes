@@ -15,5 +15,5 @@ fn repeated_execution_never_uses_textual_order_to_hide_mutation() {
 #[test]
 fn append_suffixes_are_checked_without_composing_sql() {
     let (source, _, heads) = fixture("append-literal-arguments.mts");
-    assert_eq!(assert_markers(&source, &heads), 13);
+    assert_eq!(assert_markers(&source, &heads), 14);
 }

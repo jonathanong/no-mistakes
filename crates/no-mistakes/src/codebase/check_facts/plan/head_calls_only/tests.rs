@@ -66,3 +66,22 @@ fn unspecified_direct_or_evaluator_demand_cannot_be_downgraded() {
         assert!(combined.embedded_sql_head_calls_only.is_empty());
     }
 }
+
+#[test]
+fn explicit_annotation_profile_scope_only_promotes_the_selected_profile() {
+    let selected = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let other = EmbeddedSqlOptions::configured("@other/db", &[]);
+    let query_annotation = |profile| CheckFactPlan {
+        query_annotation: true,
+        query_annotation_options: Some(vec![profile]),
+        ..Default::default()
+    };
+
+    let mut matching = plan(&selected, true);
+    matching.include(query_annotation(selected.clone()));
+    assert!(matching.embedded_sql_head_calls_only.is_empty());
+
+    let mut unrelated = plan(&selected, true);
+    unrelated.include(query_annotation(other));
+    assert_eq!(unrelated.embedded_sql_head_calls_only, vec![selected]);
+}
