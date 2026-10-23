@@ -1,0 +1,8 @@
+effort: max
+unanalyzable: ignore
+rules:
+  - rule: shellcheck-runner
+    scope: repository
+    options:
+      shellFiles: []
+      shebangDirs: []

@@ -1,5 +1,8 @@
 //! Cli rules integration tests, linked in one harness.
 
+#[path = "cli_shellcheck_policy.rs"]
+mod cli_shellcheck_policy;
+
 // Share stateless fixture helpers across the modules in this harness.
 #[path = "common/git_tracked_rule.rs"]
 mod git_tracked_rule;

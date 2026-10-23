@@ -46,6 +46,26 @@ pub(super) fn run(
     } else {
         config
     };
+    let mut shell_remaining;
+    let config = if config.rule_configured(rules::SHELLCHECK_RUNNER) {
+        diagnostics.append(
+            rules::shellcheck_runner::diagnostics_with_files_sources_and_snapshot(
+                root,
+                config,
+                files,
+                &prepared.sources,
+                prepared.snapshot,
+                defer_suppression,
+            )?,
+        );
+        shell_remaining = config.clone();
+        shell_remaining
+            .rules
+            .retain(|rule| rule.rule != rules::SHELLCHECK_RUNNER);
+        &shell_remaining
+    } else {
+        config
+    };
     let findings = if defer_suppression {
         rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
             root, config, files, prepared, facts,

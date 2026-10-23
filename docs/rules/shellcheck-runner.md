@@ -9,12 +9,8 @@ rules:
     options:
       shellcheck:
         severity: info
+      unanalyzable: report
 ```
-
-Counterexample: a checked-in `.sh` file with ShellCheck failures.
-
-Fix: address the ShellCheck finding. If `shellcheck` is not installed, the rule
-skips silently.
 
 ## Why and when
 
@@ -23,8 +19,24 @@ release tooling where quoting and error handling failures are expensive.
 
 ## What it catches/requires
 
-Each selected shell file must pass the installed ShellCheck binary. The rule
-does not fabricate diagnostics when ShellCheck is unavailable.
+Each selected shell file must pass the installed ShellCheck binary. A ShellCheck
+finding is a proven script issue. If at least one script is selected but the
+`shellcheck` executable is missing, the rule cannot analyze those scripts and
+routes that uncertainty through the shared `unanalyzable` policy. It does not
+claim the scripts are clean.
+
+The policy defaults to the repository `unanalyzable` setting, which defaults to
+`report`; `options.unanalyzable` can override it for this rule. `report` emits a
+failing unanalyzable diagnostic, `advise` emits a non-failing advisory, and
+`ignore` skips the missing-tool uncertainty. Install ShellCheck in the
+environment that runs `no-mistakes` to analyze the selected scripts. This rule
+has no low-effort variant; a low-effort invocation runs it at `max`.
+
+A failed invocation that produces no recognized GCC-format diagnostics also
+prevents analysis of selected scripts. An abnormal exit preserves recognized
+script findings and applies `unanalyzable` to the remaining selected scripts.
+Run ShellCheck manually and repair its execution before retrying; a broken
+launcher must not silently make the rule pass.
 
 ## Options and defaults
 
@@ -49,9 +61,14 @@ shebangs, and `shellFiles`.
 
 `shellcheck.severity` sets ShellCheck's minimum severity and defaults to
 `warning`; accepted values are `error`, `warning`, `info`, and `style`.
-The runner still requires the installed `shellcheck` executable.
+`options.unanalyzable` accepts `report`, `advise`, or `ignore`. It inherits the
+repository `unanalyzable` policy and defaults to `report` when neither scope
+sets a value. It applies when selected scripts cannot be checked because the
+ShellCheck executable is missing. This is independent of `shellcheck.severity`.
 
 ## Valid example
+
+A selected script with no ShellCheck findings:
 
 ```sh
 #!/usr/bin/env bash
@@ -68,7 +85,9 @@ printf '%s\n' "${1:-default}"
 echo $1
 ```
 
-ShellCheck reports the unquoted positional argument as SC2086.
+ShellCheck reports the unquoted positional argument as SC2086. If the executable
+is missing, this selected input follows `unanalyzable` instead of being treated
+as passing.
 
 ```sh
 #!/usr/bin/env bash
@@ -85,14 +104,19 @@ status from `set -e`; ShellCheck reports this as SC2155 when installed.
 
 ## Fix
 
-Quote expansions, enable deliberate error handling, and address the reported
-SC codes rather than suppressing the entire script.
+Install ShellCheck in the analysis environment so selected scripts can be
+checked. Then quote expansions, enable deliberate error handling, and address
+reported SC codes rather than suppressing the entire script. For an intentional
+temporary exception, set `options.unanalyzable` to `advise` or `ignore` with an
+explicit plan to restore ShellCheck coverage.
 
 ## Suppression
 
 Use a ShellCheck-specific inline directive only when the code is intentional;
 use `no-mistakes-disable-file shellcheck-runner` when the script is generated
-and cannot be edited.
+and cannot be edited. Both findings and advisories honor this directive.
+The runner reports file-level diagnostics at line 1; line-based no-mistakes
+directives apply to that reported line, not the original ShellCheck location.
 
 ## Related rules
 

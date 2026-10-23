@@ -43,6 +43,12 @@ Helper and callback tracing still checks every recovered leading prefix.
 Grouped advice, including a `target` that may list several checks, is described
 in [SQL verdicts](../postgres-sql-verdicts.md).
 
+`shellcheck-runner` uses the shared policy when selected scripts cannot be
+checked because the ShellCheck executable is missing. The repository policy
+defaults to `report`; `options.unanalyzable` overrides it for one rule
+application. This rule has no low-effort analysis, so missing-tool reporting is
+independent of the `effort` setting.
+
 Rule applications that support alternate effort levels can set
 `options.effort: low` or `options.effort: max`. The repository-level
 `effort` defaults to `max`; a rule option overrides it, and the invocation
