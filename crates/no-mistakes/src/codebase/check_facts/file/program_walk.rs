@@ -5,11 +5,13 @@ use crate::codebase::rules::nextjs_no_caching::{
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::{Collector, TestFacts};
 use crate::codebase::storybook::StorybookFileFacts;
 use oxc_ast::ast::{
-    AssignmentExpression, CallExpression, ExportDeclaration, ExportDefaultDeclaration,
-    ExportNamedDeclaration, FunctionBody, IdentifierReference, ImportDeclaration, ImportExpression,
-    Program, TSImportEqualsDeclaration, VariableDeclarator,
+    ArrowFunctionBody, ArrowFunctionExpression, AssignmentExpression, BlockStatement,
+    CallExpression, ExportDeclaration, ExportDefaultDeclaration, ExportNamedDeclaration, Function,
+    FunctionBody, IdentifierReference, ImportDeclaration, ImportExpression, Program, Statement,
+    TSImportEqualsDeclaration, VariableDeclaration, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
+use oxc_syntax::scope::ScopeFlags;
 use std::collections::HashSet;
 use std::path::Path;
 
@@ -127,6 +129,30 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
         walk::walk_export_default_declaration(self, export);
     }
 
+    fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
+        if let Some(nextjs) = &mut self.nextjs {
+            let statements = function
+                .body
+                .as_ref()
+                .map(|body| body.statements.as_slice());
+            nextjs.open_function_scope(&function.params, statements);
+        }
+        walk::walk_function(self, function, flags);
+        if let Some(nextjs) = &mut self.nextjs {
+            nextjs.pop_const_scope();
+        }
+    }
+
+    fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
+        if let Some(nextjs) = &mut self.nextjs {
+            nextjs.open_function_scope(&arrow.params, arrow_statements(&arrow.body));
+        }
+        walk::walk_arrow_function_expression(self, arrow);
+        if let Some(nextjs) = &mut self.nextjs {
+            nextjs.pop_const_scope();
+        }
+    }
+
     fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
         if let Some(nextjs) = &mut self.nextjs {
             nextjs.check_function_body_directives(body);
@@ -134,11 +160,36 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
         walk::walk_function_body(self, body);
     }
 
+    fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
+        if let Some(nextjs) = &mut self.nextjs {
+            nextjs.push_const_scope();
+            nextjs.precollect_statements(&block.body);
+        }
+        walk::walk_block_statement(self, block);
+        if let Some(nextjs) = &mut self.nextjs {
+            nextjs.pop_const_scope();
+        }
+    }
+
+    fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
+        if let Some(nextjs) = &mut self.nextjs {
+            nextjs.record_const_declaration(declaration);
+        }
+        walk::walk_variable_declaration(self, declaration);
+    }
+
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
         if let Some(nextjs) = &mut self.nextjs {
             nextjs.check_assignment(assignment);
         }
         walk::walk_assignment_expression(self, assignment);
+    }
+}
+
+fn arrow_statements<'a, 'b>(body: &'b ArrowFunctionBody<'a>) -> Option<&'b [Statement<'a>]> {
+    match body {
+        ArrowFunctionBody::FunctionBody(body) => Some(body.statements.as_slice()),
+        _ => None,
     }
 }
 

@@ -1,5 +1,7 @@
+const enabled = true
+
 export default {
-  cacheComponents: true,
+  [`cacheComponents`]: enabled,
   cacheLife: {
     stale: 60,
   },

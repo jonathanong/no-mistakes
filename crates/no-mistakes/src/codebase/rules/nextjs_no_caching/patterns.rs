@@ -1,4 +1,4 @@
-use crate::codebase::ts_source::static_property_key_name;
+use super::const_values::{property_name, static_value, ConstMap, StaticValue};
 use oxc_ast::ast::{BindingPattern, Expression, ObjectExpression, ObjectPropertyKind};
 
 pub(super) fn banned_next_cache_import(name: &str) -> bool {
@@ -13,17 +13,20 @@ pub(super) fn banned_next_cache_import(name: &str) -> bool {
     )
 }
 
-pub(super) fn fetch_cache_findings(options: &ObjectExpression<'_>) -> Vec<String> {
+pub(super) fn fetch_cache_findings(
+    options: &ObjectExpression<'_>,
+    scopes: &[ConstMap],
+) -> Vec<String> {
     let mut findings = Vec::new();
     for prop in &options.properties {
         let ObjectPropertyKind::ObjectProperty(prop) = prop else {
             continue;
         };
-        let Some(name) = static_property_key_name(&prop.key) else {
+        let Some(name) = property_name(&prop.key) else {
             continue;
         };
-        match name {
-            "cache" if string_value(&prop.value) == Some("force-cache") => {
+        match name.as_str() {
+            "cache" if resolved_string(&prop.value, scopes).as_deref() == Some("force-cache") => {
                 findings.push(
                     "fetch cache: \"force-cache\" is disabled; use uncached request-time data"
                         .to_string(),
@@ -33,7 +36,7 @@ pub(super) fn fetch_cache_findings(options: &ObjectExpression<'_>) -> Vec<String
                 let Expression::ObjectExpression(next) = &prop.value else {
                     continue;
                 };
-                findings.extend(next_fetch_cache_findings(next));
+                findings.extend(next_fetch_cache_findings(next, scopes));
             }
             _ => {}
         }
@@ -41,17 +44,17 @@ pub(super) fn fetch_cache_findings(options: &ObjectExpression<'_>) -> Vec<String
     findings
 }
 
-fn next_fetch_cache_findings(next: &ObjectExpression<'_>) -> Vec<String> {
+fn next_fetch_cache_findings(next: &ObjectExpression<'_>, scopes: &[ConstMap]) -> Vec<String> {
     let mut findings = Vec::new();
     for prop in &next.properties {
         let ObjectPropertyKind::ObjectProperty(prop) = prop else {
             continue;
         };
-        let Some(name) = static_property_key_name(&prop.key) else {
+        let Some(name) = property_name(&prop.key) else {
             continue;
         };
-        match name {
-            "revalidate" if banned_revalidate_value(&prop.value) => {
+        match name.as_str() {
+            "revalidate" if banned_revalidate_value(&prop.value, scopes) => {
                 findings.push(
                     "fetch next.revalidate caching is disabled; use revalidate: 0 or no-store"
                         .to_string(),
@@ -66,36 +69,36 @@ fn next_fetch_cache_findings(next: &ObjectExpression<'_>) -> Vec<String> {
     findings
 }
 
-pub(super) fn banned_segment_config(name: &str, value: &Expression<'_>) -> bool {
+pub(super) fn banned_segment_config(
+    name: &str,
+    value: &Expression<'_>,
+    scopes: &[ConstMap],
+) -> bool {
     match name {
-        "revalidate" => banned_revalidate_value(value),
+        "revalidate" => banned_revalidate_value(value, scopes),
         "fetchCache" => matches!(
-            string_value(value),
+            resolved_string(value, scopes).as_deref(),
             Some("force-cache" | "only-cache" | "default-cache")
         ),
-        "dynamic" => matches!(string_value(value), Some("force-static" | "error")),
+        "dynamic" => matches!(
+            resolved_string(value, scopes).as_deref(),
+            Some("force-static" | "error")
+        ),
         _ => false,
     }
 }
 
-fn banned_revalidate_value(value: &Expression<'_>) -> bool {
-    match value {
-        Expression::BooleanLiteral(boolean) => !boolean.value,
-        Expression::NumericLiteral(number) => number.value > 0.0,
+fn banned_revalidate_value(value: &Expression<'_>, scopes: &[ConstMap]) -> bool {
+    match static_value(value, scopes) {
+        Some(StaticValue::Bool(enabled)) => !enabled,
+        Some(StaticValue::Number(number)) => number > 0.0,
         _ => false,
     }
 }
 
-fn string_value<'a>(value: &'a Expression<'a>) -> Option<&'a str> {
-    match value {
-        Expression::StringLiteral(literal) => Some(literal.value.as_str()),
-        _ => None,
-    }
-}
-
-pub(super) fn boolean_value(value: &Expression<'_>) -> Option<bool> {
-    match value {
-        Expression::BooleanLiteral(literal) => Some(literal.value),
+fn resolved_string(value: &Expression<'_>, scopes: &[ConstMap]) -> Option<String> {
+    match static_value(value, scopes)? {
+        StaticValue::String(text) => Some(text),
         _ => None,
     }
 }

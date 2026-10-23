@@ -9,6 +9,7 @@ mod output_tests;
 mod pipeline_error_tests;
 mod pipeline_order_tests;
 mod pipeline_tests;
+mod recall_gaps;
 mod test_support_tests;
 mod text_locator_tests;
 mod url_tests;
