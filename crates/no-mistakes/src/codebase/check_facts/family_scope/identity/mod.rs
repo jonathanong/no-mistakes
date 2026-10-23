@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 mod closure;
 mod nextjs;
+mod nextjs_effort;
 mod queue;
 mod storybook;
 mod unique;

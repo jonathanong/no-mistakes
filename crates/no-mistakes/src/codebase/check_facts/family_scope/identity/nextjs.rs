@@ -45,12 +45,14 @@ fn nextjs_scope_preserves_findings_and_exact_application_filters() {
     let scoped_facts = collect_check_facts(&root, files.clone(), scoped.clone());
     let full_facts = collect_check_facts(&root, files, full.clone());
     let report = |facts: &crate::codebase::check_facts::CheckFactMap| {
-        crate::codebase::rules::nextjs_no_caching::check_with_facts_for_aggregate(
-            &root, &config, facts, None, false,
-        )
-        .unwrap()
+        let diagnostics =
+            crate::codebase::rules::nextjs_no_caching::diagnostics_with_facts_for_aggregate(
+                &root, &config, facts, None, false,
+            )
+            .unwrap();
+        (diagnostics.findings, diagnostics.advisories)
     };
-    let findings = report(&scoped_facts);
+    let (findings, advisories) = report(&scoped_facts);
     assert_eq!(findings.len(), 2);
     assert!(findings
         .iter()
@@ -58,7 +60,8 @@ fn nextjs_scope_preserves_findings_and_exact_application_filters() {
     assert!(findings
         .iter()
         .any(|finding| finding.file == "web/src/skipped/selected.ts"));
-    assert_eq!(findings, report(&full_facts));
+    assert!(advisories.is_empty());
+    assert_eq!((findings, advisories), report(&full_facts));
     // Unrestricted direct callers must widen a scoped merged plan in either order.
     scoped.include(full.clone());
     assert_eq!(scoped.nextjs_caching_paths, FamilyPathScope::All);

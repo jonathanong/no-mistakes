@@ -91,9 +91,9 @@ pub fn include_scopes(plan: &mut super::CheckFactPlan, other: &super::CheckFactP
         &other.storybook_paths,
     );
     plan.nextjs_caching_paths = merge(
-        plan.nextjs_caching,
+        plan.nextjs_caching || plan.nextjs_caching_low,
         &plan.nextjs_caching_paths,
-        other.nextjs_caching,
+        other.nextjs_caching || other.nextjs_caching_low,
         &other.nextjs_caching_paths,
     );
     plan.boundary_paths = merge(

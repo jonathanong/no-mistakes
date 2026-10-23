@@ -88,9 +88,11 @@ under the selected policy. Low-only runs skip the max constant and configuration
 binding tables. Mixed low/max applications share the source inventory and parse,
 then use their respective facts.
 
-Shared analysis extracts this rule's caching facts only for the union of its
-selected applications. Other rules and graph relationships retain their own
-analysis demand. Suppression still applies after extraction.
+Shared analysis limits both low and max caching collectors to the union of this
+rule's selected applications. Mixed efforts share that union and can prepare
+both projections within it; each application still consumes its own effort's
+facts. Other rules and graph relationships retain their own analysis demand.
+Suppression still applies after extraction.
 
 ## Valid example
 

@@ -62,7 +62,7 @@ pub fn configure_nextjs_caching_scope(
     inferred: &crate::codebase::config::InferredRoots,
     plan: &mut CheckFactPlan,
 ) -> Result<()> {
-    if plan.nextjs_caching {
+    if plan.nextjs_caching || plan.nextjs_caching_low {
         plan.nextjs_caching_paths = nextjs_scope(root, visible, config, &mut inferred.clone())?;
     }
     Ok(())
