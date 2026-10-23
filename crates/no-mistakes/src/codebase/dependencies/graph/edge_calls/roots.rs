@@ -1,3 +1,4 @@
+include!("call_path_metrics.rs");
 impl DepGraph {
     pub fn resolved_call_sites(&self) -> &[ResolvedCallSite] {
         &self.resolved_call_sites
@@ -143,8 +144,7 @@ impl DepGraph {
                     if !seen.insert(neighbor.clone()) {
                         continue;
                     }
-                    #[cfg(test)]
-                    CALL_PATH_COUNT.with(|count| count.set(count.get() + 1));
+                    record_call_path!();
                     let mut next = path.clone();
                     next.push(neighbor.clone());
                     out.push(CallTrace {

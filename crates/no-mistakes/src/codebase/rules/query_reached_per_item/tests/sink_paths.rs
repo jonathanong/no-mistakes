@@ -1,5 +1,6 @@
 use super::super::traces::{reachable, SinkMap};
 use super::*;
+use crate::codebase::dependencies::graph::call_path_metrics_tests::take_call_path_count;
 use crate::codebase::dependencies::graph::{CallRoot, CallTraversal, GraphBuildPlan};
 
 thread_local! {
@@ -138,9 +139,9 @@ fn production_reachable_reconstructs_only_reached_sink_paths() {
                 .iter()
                 .filter(|trace| sinks.contains_key(&trace.target))
                 .count();
-            crate::codebase::dependencies::graph::take_call_path_count();
+            take_call_path_count();
             let actual = reachable(&graph, &roots, &sinks, &excluded);
-            let constructed = crate::codebase::dependencies::graph::take_call_path_count();
+            let constructed = take_call_path_count();
             // Counting inside production traversal catches falling back to the
             // all-target implementation even when every finding is identical.
             assert_eq!(constructed, expected_paths);

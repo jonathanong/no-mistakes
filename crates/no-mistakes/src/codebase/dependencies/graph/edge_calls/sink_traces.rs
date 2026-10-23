@@ -39,8 +39,7 @@ impl DepGraph {
                                 predecessor = queue[index].1;
                             }
                             nodes.reverse();
-                            #[cfg(test)]
-                            CALL_PATH_COUNT.with(|count| count.set(count.get() + 1));
+                            record_call_path!();
                             out.push(CallTrace {
                                 root: root.clone(),
                                 target: neighbor.clone(),
@@ -54,14 +53,4 @@ impl DepGraph {
         }
         out
     }
-}
-
-#[cfg(test)]
-thread_local! {
-    static CALL_PATH_COUNT: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
-#[cfg(test)]
-pub(crate) fn take_call_path_count() -> usize {
-    CALL_PATH_COUNT.with(|count| count.replace(0))
 }

@@ -2,6 +2,16 @@ use crate::codebase::dependencies::graph::{DepGraph, NodeId, ResolvedCallSite};
 use rayon::prelude::*;
 use std::collections::BTreeMap;
 
+#[cfg(not(test))]
+macro_rules! legacy_reachable {
+    ($($input:expr),*) => {};
+}
+
+#[cfg(test)]
+#[macro_use]
+#[path = "tests/legacy_traces.rs"]
+mod legacy_traces;
+
 pub(super) fn source_node(site: &ResolvedCallSite) -> NodeId {
     site.caller.as_deref().map_or_else(
         || NodeId::file(&site.file),
@@ -41,10 +51,7 @@ pub(super) fn reachable(
     sinks: &SinkMap<'_>,
     excluded: &[NodeId],
 ) -> BTreeMap<NodeId, Option<Reach>> {
-    #[cfg(test)]
-    if super::tests::sink_paths::USE_LEGACY.with(|mode| mode.get()) {
-        return super::tests::sink_paths::legacy_reachable(graph, roots, sinks, excluded);
-    }
+    legacy_reachable!(graph, roots, sinks, excluded);
     let sink_nodes = sinks.keys().collect::<crate::fx::FxHashSet<_>>();
     let excluded = excluded.iter().collect::<crate::fx::FxHashSet<_>>();
     roots
