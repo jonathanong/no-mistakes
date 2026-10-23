@@ -373,3 +373,49 @@ fn test_plan_dotnet_mixed_and_native_configuration_files_remain_broad() {
         assert_eq!(broad["selected_tests"].as_array().unwrap().len(), 2);
     }
 }
+
+#[test]
+fn semantic_fixture_uses_explicit_compile_items_without_sdk_imports() {
+    let fixture = semantic_fixture();
+    let root = fixture.path();
+    // The SDK originally compiled nested test sources in their parent projects too.
+    // Keep those overlapping Compile items while avoiding five SDK import graphs per plan.
+    for (project, compiled) in [
+        (
+            "core/Core.csproj",
+            &["CoreService.cs", "tests/CoreServiceTests.cs"][..],
+        ),
+        ("core/tests/Core.Tests.csproj", &["CoreServiceTests.cs"][..]),
+        (
+            "app/App.csproj",
+            &["AppService.cs", "tests/AppServiceTests.cs"][..],
+        ),
+        (
+            "app/tests/App.Tests.csproj",
+            &["AppServiceTests.cs", "../AppService.cs"][..],
+        ),
+        ("orphan/Orphan.csproj", &[][..]),
+        (
+            "changes/app-project.csproj",
+            &["AppService.cs", "tests/AppServiceTests.cs"][..],
+        ),
+        ("changes/orphan-project.csproj", &[][..]),
+    ] {
+        let source = std::fs::read_to_string(root.join(project)).unwrap();
+        assert!(
+            !source.contains("Sdk="),
+            "{project} should avoid SDK imports"
+        );
+        assert_eq!(
+            source.matches("<Compile Include=").count(),
+            compiled.len(),
+            "{project}"
+        );
+        for item in compiled {
+            assert!(
+                source.contains(&format!("<Compile Include=\"{item}\"")),
+                "{project}: {item}"
+            );
+        }
+    }
+}
