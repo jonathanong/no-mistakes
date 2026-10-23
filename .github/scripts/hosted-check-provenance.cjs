@@ -3,6 +3,8 @@ const { join } = require("node:path");
 const { isDeepStrictEqual } = require("node:util");
 const { hashFile } = require("./hosted-check-runtime.cjs");
 
+const { validateCandidateSource } = require("./hosted-check-refs.cjs");
+
 const REVISION = /^[a-f0-9]{40}$/;
 const HASH = /^[a-f0-9]{64}$/;
 function validateBuildPair(builds) {
@@ -12,13 +14,9 @@ function validateBuildPair(builds) {
   if (!isDeepStrictEqual(baseline.refs, candidate.refs))
     throw new Error("Variant source selections differ");
   const refs = baseline.refs;
-  if (
-    refs?.schemaVersion !== 1 ||
-    refs.repository !== "jonathanong/no-mistakes" ||
-    refs.candidate?.kind !== "main" ||
-    refs.candidate.ref !== "refs/heads/main"
-  )
-    throw new Error("Candidate source must be selected from main");
+  if (refs?.schemaVersion !== 1 || refs.repository !== "jonathanong/no-mistakes")
+    throw new Error("Invalid source selection schema or repository");
+  validateCandidateSource(refs.candidate, refs.repository);
   const release = refs.baseline?.release;
   if (
     refs.baseline?.kind !== "release" ||

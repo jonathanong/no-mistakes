@@ -16,13 +16,86 @@ function commitIdentity(response) {
   return { commit: response.sha, tree: response.commit.tree.sha };
 }
 
-function resolveRefs(api, compiler, repository, harnessCommit, now = new Date()) {
+function validateCandidateSource(candidate, repository) {
+  if (candidate?.kind === "main" && candidate.ref === "refs/heads/main") return;
+  const pr = candidate?.pullRequest;
+  if (
+    candidate?.kind !== "pull-request" ||
+    candidate.event !== "workflow_dispatch" ||
+    !Number.isSafeInteger(pr?.number) ||
+    pr.number <= 0 ||
+    candidate.ref !== `refs/pull/${pr.number}/head` ||
+    pr.url !== `https://github.com/${repository}/pull/${pr.number}` ||
+    pr.headRepository !== repository ||
+    pr.baseRepository !== repository ||
+    pr.baseRef !== "main" ||
+    typeof pr.headRef !== "string" ||
+    !pr.headRef ||
+    /\s/.test(pr.headRef) ||
+    !SHA.test(pr.expectedHeadCommit) ||
+    candidate.commit !== pr.expectedHeadCommit
+  )
+    throw new Error(
+      "Candidate source must be main or an exact manual same-repository pull request",
+    );
+}
+
+function candidateSource(api, repository, selection) {
+  const { source = "main", eventName, pullRequest = "", expectedHead = "" } = selection;
+  if (source === "main") {
+    if (pullRequest || expectedHead) throw new Error("PR inputs require pull-request source");
+    return {
+      kind: "main",
+      ref: "refs/heads/main",
+      ...commitIdentity(api(`repos/${repository}/commits/main`)),
+    };
+  }
+  if (
+    source !== "pull-request" ||
+    eventName !== "workflow_dispatch" ||
+    !/^[1-9][0-9]*$/.test(pullRequest) ||
+    !Number.isSafeInteger(Number(pullRequest)) ||
+    !SHA.test(expectedHead)
+  )
+    throw new Error("Expected manual pull-request source, positive PR number and exact head SHA");
+  const number = Number(pullRequest);
+  const pr = api(`repos/${repository}/pulls/${number}`);
+  if (
+    pr?.number !== number ||
+    pr.state !== "open" ||
+    pr.html_url !== `https://github.com/${repository}/pull/${number}` ||
+    pr.head?.repo?.full_name !== repository ||
+    pr.base?.repo?.full_name !== repository ||
+    pr.base?.ref !== "main" ||
+    pr.head?.sha !== expectedHead
+  )
+    throw new Error("Expected open same-repository PR targeting main at the exact requested head");
+  const candidate = {
+    kind: "pull-request",
+    ref: `refs/pull/${number}/head`,
+    event: eventName,
+    ...commitIdentity(api(`repos/${repository}/commits/${expectedHead}`)),
+    pullRequest: {
+      number,
+      url: pr.html_url,
+      headRepository: pr.head.repo.full_name,
+      headRef: pr.head.ref,
+      baseRepository: pr.base.repo.full_name,
+      baseRef: pr.base.ref,
+      expectedHeadCommit: expectedHead,
+    },
+  };
+  validateCandidateSource(candidate, repository);
+  return candidate;
+}
+
+function resolveRefs(api, compiler, repository, harnessCommit, now = new Date(), selection = {}) {
   validateCompiler(compiler);
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository) || !SHA.test(harnessCommit)) {
     throw new Error("Invalid repository or measurement harness commit");
   }
   const endpoint = `repos/${repository}/releases/latest`;
-  const main = api(`repos/${repository}/commits/main`);
+  const candidate = candidateSource(api, repository, selection);
   const release = api(endpoint);
   if (
     release.draft !== false ||
@@ -41,7 +114,7 @@ function resolveRefs(api, compiler, repository, harnessCommit, now = new Date())
     harnessCommit,
     compiler,
     resolvedAt: now.toISOString(),
-    candidate: { kind: "main", ref: "refs/heads/main", ...commitIdentity(main) },
+    candidate,
     baseline: {
       kind: "release",
       ref: `refs/tags/${release.tag_name}`,
@@ -63,7 +136,7 @@ function githubApi(endpoint) {
 
 function sourceSummary(refs) {
   return [
-    `Candidate: main \`${refs.candidate.commit}\`.`,
+    `Candidate: ${refs.candidate.kind === "main" ? "main" : `pull request #${refs.candidate.pullRequest.number}`} \`${refs.candidate.commit}\`.`,
     `Baseline: release [${refs.baseline.release.tag}](${refs.baseline.release.url}) \`${refs.baseline.commit}\`.`,
     ...(refs.baseline.commit === refs.candidate.commit
       ? [
@@ -81,6 +154,13 @@ if (require.main === module) {
     compiler,
     process.env.GITHUB_REPOSITORY,
     process.env.HOSTED_HARNESS_COMMIT,
+    new Date(),
+    {
+      source: process.env.HOSTED_CANDIDATE_SOURCE || "main",
+      eventName: process.env.GITHUB_EVENT_NAME,
+      pullRequest: process.env.HOSTED_PULL_REQUEST || "",
+      expectedHead: process.env.HOSTED_EXPECTED_HEAD || "",
+    },
   );
   writeFileSync(output, `${JSON.stringify(refs, null, 2)}\n`);
   for (const key of ["candidate", "baseline"]) {
@@ -91,4 +171,10 @@ if (require.main === module) {
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, sourceSummary(refs));
 }
 
-module.exports = { resolveRefs, validateCompiler, commitIdentity, sourceSummary };
+module.exports = {
+  resolveRefs,
+  validateCompiler,
+  commitIdentity,
+  sourceSummary,
+  validateCandidateSource,
+};

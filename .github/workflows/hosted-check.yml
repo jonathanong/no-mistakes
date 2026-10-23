@@ -4,6 +4,20 @@ on:
   schedule:
     - cron: "23 8 * * *"
   workflow_dispatch:
+    inputs:
+      candidate-source:
+        description: Candidate source (schedules always use main)
+        type: choice
+        options: [main, pull-request]
+        default: main
+      pull-request:
+        description: Same-repository open PR number targeting main (PR source only)
+        type: string
+        default: ""
+      expected-head:
+        description: Exact 40-character PR head SHA (PR source only)
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -25,7 +39,7 @@ env:
 # ubuntu-22.04 builds require an older glibc compatible with ubuntu-latest measurements.
 jobs:
   resolve:
-    name: Resolve main and latest stable release once
+    name: Resolve candidate and latest stable release once
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -46,12 +60,15 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Resolve immutable main and latest release source identities
+      - name: Resolve immutable candidate and latest release source identities
         id: refs
         timeout-minutes: 3
         env:
           GH_TOKEN: ${{ github.token }}
           HOSTED_HARNESS_COMMIT: ${{ github.workflow_sha }}
+          HOSTED_CANDIDATE_SOURCE: ${{ inputs.candidate-source || 'main' }}
+          HOSTED_PULL_REQUEST: ${{ inputs.pull-request || '' }}
+          HOSTED_EXPECTED_HEAD: ${{ inputs.expected-head || '' }}
         shell: bash
         run: |
           set -euo pipefail
