@@ -1,0 +1,13 @@
+{
+  "numTotalTests": 1,
+  "numPassedTests": 1,
+  "testResults": [
+    {
+      "name": "/work/packages/no-mistakes/scripts/real-napi-api.test.js",
+      "status": "passed",
+      "assertionResults": [
+        { "fullName": "unmeasured parity", "status": "passed" }
+      ]
+    }
+  ]
+}
