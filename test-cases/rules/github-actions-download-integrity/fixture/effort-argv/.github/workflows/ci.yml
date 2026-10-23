@@ -29,9 +29,9 @@ jobs:
         run: curl -o "$OUTPUT_FILE" https://api.github.com/repos/example/project
       - name: dynamic-header-operand
         run: curl --header "$HEADER" https://api.github.com/repos/example/project
+      - name: dynamic-wget-output-operand
+        run: wget --output-document="$OUTPUT_FILE" https://objects.githubusercontent.com/releases/project.tar.gz
       - name: static-host-dynamic-path
-        run: |
-          BASE_URL="https://untrusted.example.invalid/base"
-          curl "$BASE_URL/latest.tgz" -o latest.tgz
+        run: curl "https://untrusted.example.invalid/tool-${VERSION}.sha256" -o latest.tgz
       - name: mixed-literal-and-dynamic-url-command
         run: curl -fsSL https://untrusted.example.invalid/literal.tgz "$DYNAMIC_URL" -o mixed.tgz
