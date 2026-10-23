@@ -75,7 +75,7 @@ impl Proofs {
                         .writes
                         .get(&(usage.span.start, usage.span.end))
                 }))
-                .any(|write| matches!(write.value, Value::Literal(Head::Tag | Head::MissingTag)));
+                .any(|write| matches!(write.value, Value::Literal(head) if head.tagged()));
             let mut writes = vec![*initial];
             let mut calls = Vec::new();
             let valid = binding

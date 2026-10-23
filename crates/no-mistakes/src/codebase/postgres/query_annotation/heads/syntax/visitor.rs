@@ -18,12 +18,6 @@ impl Syntax {
     }
 }
 impl<'a> Visit<'a> for Syntax {
-    fn visit_expression_statement(&mut self, value: &ExpressionStatement<'a>) {
-        if let Some(reference) = super::super::append::reference(&value.expression) {
-            self.discarded_appends.insert(reference);
-        }
-        walk::walk_expression_statement(self, value);
-    }
     fn visit_class(&mut self, value: &Class<'a>) {
         let prior = self.current_function.replace(span(value.span));
         walk::walk_class(self, value);
@@ -60,6 +54,9 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_variable_declaration(self, value);
     }
     fn visit_expression_statement(&mut self, value: &ExpressionStatement<'a>) {
+        if let Some(reference) = super::super::append::reference(&value.expression) {
+            self.discarded_appends.insert(reference);
+        }
         let discarded = match unwrap_ts_wrappers(&value.expression) {
             Expression::AssignmentExpression(value) => Some(span(value.span)),
             _ => None,
