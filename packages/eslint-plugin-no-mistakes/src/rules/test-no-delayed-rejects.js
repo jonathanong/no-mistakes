@@ -17,6 +17,7 @@ const {
 } = require("./test-no-delayed-rejects-suspensions");
 
 const { EXPECT_MODULES, isExpectCallee } = require("./test-message-expect");
+const { logicalCall } = require("./module-mock-helpers");
 
 function findVariable(scope, name) {
   let current = scope;
@@ -33,18 +34,15 @@ function expectedIdentifier(rejects, context) {
   if (literalPropertyName(rejects) !== "rejects") return null;
   const expectation = unwrapExpression(rejects.object);
   if (expectation?.type !== "CallExpression") return null;
-  const callee = unwrapExpression(expectation.callee);
-  if (callee?.type === "MemberExpression") {
-    const name = literalPropertyName(callee);
-    // poll takes a function, and call/apply's first argument is this, not the promise.
-    if (name === "poll" || name === "call" || name === "apply") return null;
-  }
+  const invoked = logicalCall(expectation);
+  // poll receives a callback, while call/apply must first shift the this argument.
+  if (!invoked || literalPropertyName(invoked.callee) === "poll") return null;
   if (
-    expectation.arguments.length !== 1 ||
-    !isExpectCallee(expectation.callee, context, new Set(), EXPECT_MODULES)
+    invoked.arguments.length !== 1 ||
+    !isExpectCallee(invoked.callee, context, new Set(), EXPECT_MODULES, false)
   )
     return null;
-  const [argument] = expectation.arguments;
+  const [argument] = invoked.arguments;
   const unwrapped = unwrapExpression(argument);
   return unwrapped.type === "Identifier" ? unwrapped : null;
 }

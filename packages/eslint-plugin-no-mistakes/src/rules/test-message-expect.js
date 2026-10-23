@@ -75,15 +75,15 @@ function isNamespace(node, context, seen) {
   return isNamespace(def.node.init, context, seen);
 }
 
-function isExpectCallee(node, context, seen = new Set(), modules = null) {
+function isExpectCallee(node, context, seen = new Set(), modules = null, allowPoll = true) {
   let callee = unwrap(node);
   if (callee?.type === "MemberExpression") {
     const name = memberName(callee);
     if (name === "call" || name === "apply") {
-      return isExpectCallee(callee.object, context, seen, modules);
+      return isExpectCallee(callee.object, context, seen, modules, allowPoll);
     }
-    if (name === "soft" || name === "poll")
-      return isExpectCallee(callee.object, context, seen, modules);
+    if (name === "soft" || (name === "poll" && allowPoll))
+      return isExpectCallee(callee.object, context, seen, modules, allowPoll);
     return name === "expect" && isNamespace(callee.object, context, seen);
   }
   if (callee?.type !== "Identifier" || seen.has(callee.name)) return false;
@@ -91,13 +91,13 @@ function isExpectCallee(node, context, seen = new Set(), modules = null) {
   if (!variable || variable.defs.length === 0) return callee.name === "expect";
   if (variable.defs.length !== 1) return false;
   const def = variable.defs[0];
-  if (def.type === "Parameter" || isNestedBinding(variable)) return false;
+  if (def.type === "Parameter") return false;
   if (isExpectBinding(def, modules)) return true;
-  if (!modules && callee.name === "expect") return true;
+  if (!modules && callee.name === "expect" && !isNestedBinding(variable)) return true;
   if (def.type !== "Variable" || def.node?.parent?.kind !== "const" || !def.node.init) return false;
   seen.add(callee.name);
   if (def.node.id.type === "Identifier")
-    return isExpectCallee(def.node.init, context, seen, modules);
+    return isExpectCallee(def.node.init, context, seen, modules, allowPoll);
   if (def.node.id.type !== "ObjectPattern") return false;
   const fromModule =
     isNamespace(def.node.init, context, seen) || (!modules && requireExpectSource(def.node.init));
