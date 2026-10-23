@@ -184,6 +184,23 @@ fn known_gap_prefixes_fail_once_they_stop_reproducing() {
 }
 
 #[test]
+fn nextjs_caching_documentation_examples_execute() {
+    let rule = "nextjs-no-caching";
+    let page = docs_rule_snippets::load_page(&repo_root(), rule);
+    let config = docs_rule_snippets::rule_config_yaml(&page.body, rule);
+    for (heading, expected) in [("Valid example", 0), ("Counterexample", 1)] {
+        let section = docs_rule_snippets::heading_section(&page.body, heading);
+        let fences = docs_rule_snippets::fences(&section);
+        assert!(!fences.is_empty(), "{heading}: executable example required");
+        for (index, snippets) in docs_rule_snippets::snippet_runs(&fences) {
+            let fixture = docs_rule_snippets::materialize_snippet(&config, &snippets);
+            let findings = docs_rule_snippets::run_rule(fixture.path(), rule).unwrap();
+            assert_eq!(findings.len(), expected, "{heading}[{index}]: {findings:?}");
+        }
+    }
+}
+
+#[test]
 fn heading_section_skips_hashes_inside_fences_and_accepts_suffixes() {
     let body = "\
 ## Valid example

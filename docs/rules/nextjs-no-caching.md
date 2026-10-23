@@ -4,8 +4,15 @@
 
 ```ts
 // app/page.tsx
-export const revalidate = 60;
-export default function Page() { return null; }
+const mode = 'force-cache';
+export default async function Page() {
+  for (const mode of ['no-store'] as const) {
+    await fetch('/api/data', { cache: mode });
+  }
+  // The loop binding ended, so this reads the outer force-cache constant.
+  await fetch('/api/data', { cache: mode });
+  return null;
+}
 ```
 
 ## Suppression
@@ -38,7 +45,17 @@ cache helper passes.
 ```ts
 // app/page.tsx
 export const dynamic = 'force-dynamic';
-export default function Page() { return null; }
+const mode = 'force-cache';
+export default async function Page() {
+  try {
+    throw 'no-store';
+  } catch (mode) {
+    if (mode === 'no-store') {
+      await fetch('/api/data', { cache: mode });
+    }
+  }
+  return null;
+}
 ```
 
 ## Limitations
@@ -58,6 +75,22 @@ binding, a computed key whose name is an identifier (`{ [key]: "force-cache" }`)
 a template with an expression (`` `force-${kind}` ``), and a binding imported
 from another module are left alone. A `const` declared in a nested block is
 not visible after that block.
+
+Catch parameters and function or class declaration names hide an outer
+constant in their own lexical scope. A named function or class expression
+binds its name only inside that expression. `var` names hide an outer constant
+throughout their nearest function or class static block, even when declared
+inside a nested block. They do not cross a nested function, arrow, or class.
+Declarations are collected before resolving aliases, so a later declaration
+also hides the outer name in an earlier nested function or alias initializer.
+Function body declarations do not hide a constant read by a default parameter
+initializer; parameter bindings still hide outer constants there.
+
+`for`, `for-of`, and `for-in` lexical bindings apply to the head and body, then
+end after the loop. `switch` case tests and statements share one lexical scope;
+the discriminant is evaluated in the surrounding scope first. A case binding
+does not hide an outer constant after the switch. A `var` in either statement
+still belongs to its nearest function or static block.
 
 ## Related rules
 
