@@ -38,7 +38,7 @@ fn app_selector_equality_and_order_ignore_line_and_recovered() {
     };
     assert_eq!(literal, recovered);
     assert!(later_file < literal);
-    let mut ordered = vec![literal.clone(), recovered.clone(), later_file.clone()];
+    let mut ordered = [literal.clone(), recovered.clone(), later_file.clone()];
     ordered.sort();
     assert_eq!(ordered[0].file, later_file.file);
     assert_eq!(ordered[1], literal);
