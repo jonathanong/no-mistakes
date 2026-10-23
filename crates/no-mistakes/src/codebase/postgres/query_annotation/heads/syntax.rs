@@ -59,17 +59,17 @@ fn transaction(text: &str, can_continue: bool) -> bool {
 }
 fn uncertain_missing(text: &str, can_continue: bool) -> bool {
     let mut leading = text.trim_start();
-    if can_continue && (leading.is_empty() || leading == "/") {
-        return true;
-    }
-    if let Some(comment) = leading.strip_prefix("/*") {
+    loop {
+        if can_continue && (leading.is_empty() || leading == "/") {
+            return true;
+        }
+        let Some(comment) = leading.strip_prefix("/*") else {
+            break;
+        };
         let Some(end) = comment.find("*/") else {
             return can_continue;
         };
         leading = comment[end + 2..].trim_start();
-        if can_continue && leading.is_empty() {
-            return true;
-        }
     }
     can_continue
         && ["BEGIN", "COMMIT", "ROLLBACK"].iter().any(|command| {

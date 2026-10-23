@@ -29,3 +29,15 @@ fn direct_unannotated_heads_are_distinct_from_unknown_shapes() {
         [12, 13, 14, 15, 16, 17, 18, 22, 23, 24, 25, 32, 40, 41]
     );
 }
+
+#[test]
+fn repeated_leading_comments_keep_a_partial_transaction_prefix_unknown() {
+    let (source, _, heads) = fixture("low-comment-prefix.mts");
+    let span = heads
+        .calls
+        .keys()
+        .find(|span| source[span.0 as usize..].starts_with("read("))
+        .unwrap();
+    assert!(!heads.accepts(*span));
+    assert!(!heads.proves_missing(*span));
+}
