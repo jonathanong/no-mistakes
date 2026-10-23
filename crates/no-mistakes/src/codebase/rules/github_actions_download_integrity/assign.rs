@@ -1,8 +1,7 @@
 /// Expands one whole-line uppercase literal. Any other uppercase assignment
 /// in the same script leaves every `$NAME` untouched.
 pub(super) fn expand_uppercase(script: &str) -> String {
-    #[cfg(test)]
-    expansion_counts::note();
+    probe::note();
     let env = single_literal_binding(script);
     let mut out = String::new();
     for line in script.lines() {
@@ -20,8 +19,7 @@ pub(super) fn expand_uppercase(script: &str) -> String {
 
 /// The same one-binding proof used by max, without expanding any script values.
 pub(super) fn single_literal_binding(script: &str) -> Option<(String, String)> {
-    #[cfg(test)]
-    expansion_counts::note_binding_scan();
+    probe::note_binding_scan();
     let mut count = 0usize;
     let mut literal = None;
     for line in script.lines() {
@@ -46,17 +44,11 @@ pub(super) fn substitute_command(token: &str, binding: &(String, String)) -> Str
 }
 
 #[cfg(test)]
-mod expansion_counts;
-
-#[cfg(test)]
-pub(super) fn expansion_count() -> usize {
-    expansion_counts::count()
-}
-
-#[cfg(test)]
-pub(super) fn binding_scan_count() -> usize {
-    expansion_counts::binding_scans()
-}
+#[path = "assign/probe_tests.rs"]
+pub(super) mod probe;
+#[cfg(not(test))]
+#[path = "assign/probe_disabled.rs"]
+mod probe;
 
 enum Kind {
     None,

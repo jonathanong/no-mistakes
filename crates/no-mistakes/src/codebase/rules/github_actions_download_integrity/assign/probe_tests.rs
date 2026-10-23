@@ -5,18 +5,18 @@ thread_local! {
     static BINDING_SCANS: Cell<usize> = const { Cell::new(0) };
 }
 
-pub(super) fn note() {
+pub(crate) fn note() {
     EXPANSIONS.with(|count| count.set(count.get() + 1));
 }
 
-pub(super) fn count() -> usize {
+pub(crate) fn count() -> usize {
     EXPANSIONS.with(Cell::get)
 }
 
-pub(super) fn note_binding_scan() {
+pub(crate) fn note_binding_scan() {
     BINDING_SCANS.with(|count| count.set(count.get() + 1));
 }
 
-pub(super) fn binding_scans() -> usize {
+pub(crate) fn binding_scans() -> usize {
     BINDING_SCANS.with(Cell::get)
 }
