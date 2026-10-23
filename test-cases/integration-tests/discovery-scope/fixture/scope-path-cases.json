@@ -1,0 +1,89 @@
+[
+  {
+    "name": "empty inventory retains All",
+    "paths": [],
+    "rooted": true,
+    "config": "all-files.yml",
+    "members": null,
+    "normalizations": 0
+  },
+  {
+    "name": "duplicates retain normalized cardinality",
+    "paths": [
+      "helpers/bridge.ts",
+      "helpers/bridge.ts"
+    ],
+    "rooted": true,
+    "config": "all-files.yml",
+    "members": [
+      "helpers/bridge.ts"
+    ],
+    "normalizations": 2
+  },
+  {
+    "name": "dot aliases retain normalized cardinality",
+    "paths": [
+      "helpers/bridge.ts",
+      "helpers/./bridge.ts"
+    ],
+    "rooted": true,
+    "config": "all-files.yml",
+    "members": [
+      "helpers/bridge.ts"
+    ],
+    "normalizations": 2
+  },
+  {
+    "name": "parent aliases retain normalized cardinality",
+    "paths": [
+      "helpers/bridge.ts",
+      "helpers/../helpers/bridge.ts"
+    ],
+    "rooted": true,
+    "config": "all-files.yml",
+    "members": [
+      "helpers/bridge.ts"
+    ],
+    "normalizations": 2
+  },
+  {
+    "name": "unsorted unique paths retain All through fallback",
+    "paths": [
+      "selected/suite.test.ts",
+      "helpers/bridge.ts"
+    ],
+    "rooted": true,
+    "config": "all-files.yml",
+    "members": null,
+    "normalizations": 2
+  },
+  {
+    "name": "leading current-directory aliases retain cardinality",
+    "paths": [
+      "./helpers/bridge.ts",
+      "helpers/bridge.ts"
+    ],
+    "rooted": false,
+    "config": "all-files.yml",
+    "members": [
+      "helpers/bridge.ts"
+    ],
+    "normalizations": 2
+  },
+  {
+    "name": "middle exclusion keeps prefix and aliased tail",
+    "paths": [
+      "helpers/ambient.ts",
+      "helpers/dependency.ts",
+      "helpers/./ambient.ts",
+      "helpers/bridge.ts"
+    ],
+    "rooted": true,
+    "config": "middle-exclude.yml",
+    "members": [
+      "helpers/ambient.ts",
+      "helpers/bridge.ts"
+    ],
+    "normalizations": 3
+  }
+]

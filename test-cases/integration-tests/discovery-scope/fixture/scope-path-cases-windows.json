@@ -1,0 +1,25 @@
+[
+  {
+    "name": "verbatim prefix uses conservative fallback",
+    "paths": [
+      "\\\\?\\C:\\fixture\\helpers\\bridge.ts"
+    ],
+    "rooted": false,
+    "config": "all-files.yml",
+    "members": null,
+    "normalizations": 1
+  },
+  {
+    "name": "verbatim prefix dot aliases retain cardinality",
+    "paths": [
+      "\\\\?\\C:\\fixture\\helpers\\bridge.ts",
+      "\\\\?\\C:\\fixture\\helpers\\.\\bridge.ts"
+    ],
+    "rooted": false,
+    "config": "all-files.yml",
+    "members": [
+      "\\\\?\\C:\\fixture\\helpers\\bridge.ts"
+    ],
+    "normalizations": 2
+  }
+]
