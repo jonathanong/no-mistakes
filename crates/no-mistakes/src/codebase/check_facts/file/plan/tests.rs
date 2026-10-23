@@ -250,3 +250,70 @@ fn unproven_member_spans_follow_rule_path_filters() {
         ["postgres-required-predicates".to_string()]
     );
 }
+
+#[test]
+fn playwright_const_urls_share_module_binding_projection_across_variants() {
+    let source = crate::playwright::test_support::fixture_source(&[
+        "playwright",
+        "recall-gaps",
+        "const-urls.spec.ts",
+    ]);
+    let root = Path::new("/repo");
+    let file = root.join("const-urls.spec.ts");
+    let mut playwright = crate::codebase::check_facts::PlaywrightFactPlan::default();
+    for attribute in ["data-testid", "data-test"] {
+        playwright.add_file(crate::codebase::check_facts::PlaywrightFactSelection {
+            path: file.clone(),
+            navigation_helpers: &[],
+            selector_wrappers: &[],
+            selector_attributes: &[attribute.to_string()],
+            component_selector_attributes: &Default::default(),
+            html_ids: false,
+            test_id_attributes: &[attribute.to_string()],
+            policy: Default::default(),
+            demands_text_imports: false,
+        });
+    }
+    let plan = CheckFactPlan {
+        graph: TsFactPlan {
+            module_bindings: true,
+            call_arguments: true,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    crate::ast::with_program(&file, &source, |program, source| {
+        let baseline = crate::codebase::ts_source::facts::collect_file_facts_from_program(
+            &file,
+            plan.graph,
+            &ts_extract_context(root, &plan),
+            source,
+            program,
+            None,
+            None,
+        );
+        let combined = super::super::program::collect_file_facts_from_program(
+            root,
+            &file,
+            &plan,
+            Some(&playwright),
+            source,
+            program,
+            None,
+        );
+        assert_eq!(
+            serde_json::to_value(baseline.module_bindings).unwrap(),
+            serde_json::to_value(&combined.ts.module_bindings).unwrap(),
+        );
+        let variants = combined.playwright.unwrap().all();
+        assert_eq!(variants.len(), 2);
+        for variant in variants {
+            assert!(variant.urls().iter().any(|url| url.value == "/blog/post"));
+            assert!(variant
+                .urls()
+                .iter()
+                .any(|url| url.value == "/parameter/${slug}"));
+        }
+    })
+    .unwrap();
+}

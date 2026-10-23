@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 mod plan;
 mod playwright_source;
+mod prepared_program;
 pub(crate) mod production_imports;
 mod program;
 mod program_walk;

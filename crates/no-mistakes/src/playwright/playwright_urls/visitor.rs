@@ -10,6 +10,7 @@ mod context;
 
 pub(super) struct UrlVisitor<'a, 'h> {
     pub source: &'a str,
+    pub static_templates: &'h crate::fx::FxHashMap<u32, String>,
     pub navigation_helpers: &'h [String],
     pub static_zero_arg_paths: &'h HashMap<String, Vec<String>>,
     pub status: playwright_tests::TestStatus,
@@ -66,12 +67,20 @@ pub fn extract_playwright_url_occurrences_from_program(
     source: &str,
     navigation_helpers: &[String],
 ) -> Vec<playwright_tests::TestOccurrence<String>> {
-    use super::statics::collect_static_zero_arg_paths;
-    use oxc_ast_visit::Visit as _;
+    let static_templates = super::constants::static_templates(program);
+    extract_with_static_templates(program, source, navigation_helpers, &static_templates)
+}
 
-    let static_zero_arg_paths = collect_static_zero_arg_paths(source);
+pub(crate) fn extract_with_static_templates(
+    program: &Program<'_>,
+    source: &str,
+    navigation_helpers: &[String],
+    static_templates: &crate::fx::FxHashMap<u32, String>,
+) -> Vec<playwright_tests::TestOccurrence<String>> {
+    let static_zero_arg_paths = super::statics::collect_static_zero_arg_paths(source);
     let mut visitor = UrlVisitor {
         source,
+        static_templates,
         navigation_helpers,
         static_zero_arg_paths: &static_zero_arg_paths,
         status: playwright_tests::TestStatus::Active,

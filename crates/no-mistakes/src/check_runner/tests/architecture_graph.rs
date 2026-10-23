@@ -42,11 +42,18 @@ fn prepared_graph_config_reuses_a_supplied_test_filter() {
 fn check_facts_program_delegates_ts_extract_to_the_shared_collector() {
     let program = include_str!("../../codebase/check_facts/file/program.rs");
 
-    assert!(program.contains("facts::collect_file_facts_from_program("));
-    assert!(!program.contains("extract_import_facts_from_program"));
-    assert!(!program.contains("extract_symbols_from_program"));
-    assert!(!program.contains("collect_call_site_facts"));
-    assert!(!program.contains("collect_domain_facts"));
+    let prepared = include_str!("../../codebase/check_facts/file/prepared_program.rs");
+    assert!(program.contains("super::prepared_program::collect("));
+    assert!(prepared.contains("facts::collect_file_facts_from_program_with_semantic("));
+    // The owner shares one lexical projection; neither consumer starts a second pass.
+    assert_eq!(prepared.matches("SemanticBuilder::new()").count(), 1);
+    assert!(prepared.contains("semantic.as_ref()"));
+    for source in [program, prepared] {
+        assert!(!source.contains("extract_import_facts_from_program"));
+        assert!(!source.contains("extract_symbols_from_program"));
+        assert!(!source.contains("collect_call_site_facts"));
+        assert!(!source.contains("collect_domain_facts"));
+    }
 }
 
 #[test]

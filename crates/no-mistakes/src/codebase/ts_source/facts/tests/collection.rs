@@ -181,7 +181,7 @@ fn empty_serial_paths_collect_symbols_with_the_parallel_fact_path() {
 fn effects_project_canonical_calls_while_domain_walk_fuses_http_and_trpc() {
     let source = include_str!("../domain.rs");
     let walk = include_str!("../domain_walk.rs");
-    let collect = include_str!("../collect/file.rs");
+    let collect = include_str!("../collect/program.rs");
     assert!(
         source.contains("collect_fused_domain_calls"),
         "domain facts must retain the shared HTTP/tRPC visitor"

@@ -31,7 +31,12 @@ impl<'a, 'h> UrlVisitor<'a, 'h> {
         let Some(argument) = call.arguments.first() else {
             return;
         };
-        for url in argument_literals(argument, self.source, self.static_zero_arg_paths) {
+        for url in argument_literals(
+            argument,
+            self.source,
+            self.static_zero_arg_paths,
+            self.static_templates,
+        ) {
             if is_candidate_url(&url) {
                 self.insert(url, call.span.start);
             }
@@ -42,7 +47,12 @@ impl<'a, 'h> UrlVisitor<'a, 'h> {
         let Some(argument) = call.arguments.first() else {
             return;
         };
-        for selector in argument_literals(argument, self.source, self.static_zero_arg_paths) {
+        for selector in argument_literals(
+            argument,
+            self.source,
+            self.static_zero_arg_paths,
+            &Default::default(),
+        ) {
             if let Some(url) = extract_href_from_selector(&selector) {
                 self.insert(url, call.span.start);
             }
@@ -61,17 +71,30 @@ impl<'a, 'h> UrlVisitor<'a, 'h> {
     }
 
     fn collect_direct_url_patterns(&mut self, call: &CallExpression<'a>) {
-        for url in
-            direct_url_pattern_literals(&call.arguments, self.source, self.static_zero_arg_paths)
-        {
+        let empty = Default::default();
+        let templates = if callee_is_playwright_wait_for_url(&call.callee) {
+            self.static_templates
+        } else {
+            &empty
+        };
+        for url in direct_url_pattern_literals(
+            &call.arguments,
+            self.source,
+            self.static_zero_arg_paths,
+            templates,
+        ) {
             self.insert(url, call.span.start);
         }
     }
 
     fn collect_navigation_helper_urls(&mut self, call: &CallExpression<'a>) {
         for argument in &call.arguments {
-            let urls =
-                argument_candidate_literals(argument, self.source, self.static_zero_arg_paths);
+            let urls = argument_candidate_literals(
+                argument,
+                self.source,
+                self.static_zero_arg_paths,
+                &Default::default(),
+            );
             if urls.is_empty() {
                 continue;
             }

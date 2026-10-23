@@ -1,7 +1,6 @@
+use super::super::file_playwright::collect_playwright_facts;
 use super::super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
-use super::plan::{ts_extract_context, ts_extract_plan};
 use super::should_store_source;
-use crate::codebase::ts_source::facts;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -16,15 +15,16 @@ pub(crate) fn collect_file_facts_from_program(
 ) -> CheckFileFacts {
     let stored_source =
         owned_source.or_else(|| should_store_source(plan).then(|| Arc::<str>::from(source)));
-    let ts = facts::collect_file_facts_from_program(
-        path,
-        ts_extract_plan(plan, path, playwright),
-        &ts_extract_context(root, plan),
-        source,
-        program,
-        None,
-        stored_source.clone(),
-    );
+    let super::prepared_program::PreparedProgramFacts { ts, semantic } =
+        super::prepared_program::collect(
+            root,
+            path,
+            plan,
+            playwright,
+            source,
+            program,
+            stored_source.clone(),
+        );
     let react = ((plan.react
         && crate::codebase::check_facts::family_scope::applies(&plan.react_paths, path))
         || plan.graph.react)
@@ -82,8 +82,7 @@ pub(crate) fn collect_file_facts_from_program(
     let playwright_static_exports = playwright_fetch
         .as_ref()
         .map(|_| crate::playwright::selectors::collect_static_export_values(program));
-    let playwright =
-        super::super::file_playwright::collect_playwright_facts(path, program, source, playwright);
+    let playwright = collect_playwright_facts(path, program, source, playwright, &semantic);
     let embedded_sql = prepared_embedded_sql(root, path, source, program, plan);
     let query_annotation = if plan.query_annotation {
         let options = plan.query_annotation_options.clone().unwrap_or_else(|| {

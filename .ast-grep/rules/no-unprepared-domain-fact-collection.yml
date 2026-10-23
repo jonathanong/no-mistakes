@@ -22,7 +22,7 @@ ignores:
   # that translates a declared fact plan into domain facts. Keep every consumer
   # outside this gateway caught.
   - "crates/no-mistakes/src/codebase/ts_source/facts/collect.rs"
-  - "crates/no-mistakes/src/codebase/ts_source/facts/collect/file.rs"
+  - "crates/no-mistakes/src/codebase/ts_source/facts/collect/program.rs"
   # The unified check-fact pass also owns a declared graph fact plan so checks
   # and graph construction share the same per-file program.
   - "crates/no-mistakes/src/codebase/check_facts/file/program.rs"

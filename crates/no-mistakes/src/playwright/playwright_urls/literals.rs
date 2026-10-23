@@ -2,6 +2,7 @@ use super::callee::is_candidate_url;
 use super::normalize::normalize_url_pattern;
 use super::regex_sample::regex_path_sample;
 use super::statics::static_zero_arg_path_call;
+use crate::fx::FxHashMap;
 use crate::playwright::ast;
 use oxc_ast::ast::{Argument, BinaryExpression, CallExpression};
 use oxc_ast_visit::{walk, Visit};
@@ -27,6 +28,7 @@ pub fn extract_href_from_selector(selector: &str) -> Option<String> {
 
 pub(super) struct LiteralVisitor<'a> {
     pub source: &'a str,
+    pub static_templates: &'a FxHashMap<u32, String>,
     pub static_zero_arg_paths: &'a HashMap<String, Vec<String>>,
     pub literals: Vec<String>,
 }
@@ -53,7 +55,7 @@ impl<'a> Visit<'a> for LiteralVisitor<'a> {
 
     fn visit_template_literal(&mut self, template: &oxc_ast::ast::TemplateLiteral<'a>) {
         self.literals
-            .push(ast::template_literal_text(template, self.source));
+            .push(template_text(template, self.source, self.static_templates));
     }
 
     fn visit_binary_expression(&mut self, binary: &BinaryExpression<'a>) {
@@ -75,9 +77,11 @@ pub fn candidate_literals(
     arguments: &[Argument<'_>],
     source: &str,
     static_zero_arg_paths: &HashMap<String, Vec<String>>,
+    static_templates: &FxHashMap<u32, String>,
 ) -> Vec<String> {
     let mut visitor = LiteralVisitor {
         source,
+        static_templates,
         static_zero_arg_paths,
         literals: Vec::new(),
     };
@@ -95,9 +99,11 @@ pub fn direct_url_pattern_literals(
     arguments: &[Argument<'_>],
     source: &str,
     static_zero_arg_paths: &HashMap<String, Vec<String>>,
+    static_templates: &FxHashMap<u32, String>,
 ) -> Vec<String> {
     let mut visitor = LiteralVisitor {
         source,
+        static_templates,
         static_zero_arg_paths,
         literals: Vec::new(),
     };
@@ -115,10 +121,13 @@ pub fn argument_literals(
     argument: &Argument<'_>,
     source: &str,
     static_zero_arg_paths: &HashMap<String, Vec<String>>,
+    static_templates: &FxHashMap<u32, String>,
 ) -> Vec<String> {
     match argument {
         Argument::StringLiteral(literal) => vec![literal.value.to_string()],
-        Argument::TemplateLiteral(template) => vec![ast::template_literal_text(template, source)],
+        Argument::TemplateLiteral(template) => {
+            vec![template_text(template, source, static_templates)]
+        }
         Argument::BinaryExpression(binary) => {
             // `page.goto('/users/' + id)` folds to `/users/${id}` (#391).
             ast::binary_concat_path_text(binary, source)
@@ -134,6 +143,7 @@ pub fn argument_candidate_literals(
     argument: &Argument<'_>,
     source: &str,
     static_zero_arg_paths: &HashMap<String, Vec<String>>,
+    static_templates: &FxHashMap<u32, String>,
 ) -> Vec<String> {
     match argument {
         Argument::ObjectExpression(_) => Vec::new(),
@@ -141,9 +151,21 @@ pub fn argument_candidate_literals(
             std::slice::from_ref(argument),
             source,
             static_zero_arg_paths,
+            static_templates,
         ),
     }
 }
 
 #[cfg(test)]
 mod tests;
+
+fn template_text(
+    template: &oxc_ast::ast::TemplateLiteral<'_>,
+    source: &str,
+    values: &FxHashMap<u32, String>,
+) -> String {
+    values
+        .get(&template.span.start)
+        .cloned()
+        .unwrap_or_else(|| ast::template_literal_text(template, source))
+}
