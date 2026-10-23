@@ -99,6 +99,33 @@ For [`github-actions-job-timeouts`](../rules/github-actions-job-timeouts.md),
 job timeout below the sum of at least two steps' supported literal timeout
 bounds; missing or unsupported step bounds make the sum unprovable and skip
 that check. This option is independent of caps and `allow` entries.
+The rule also supports [`effort: low`](../rules/github-actions-job-timeouts.md#effort).
+For example, configure an enabled step-timeouts partner over the same workflows
+with no step `allow` entries, then cap steps at five minutes and jobs at ten:
+
+```yaml
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      include: [".github/workflows/**/*.yml"]
+      maxMinutes: 5
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
+      include: [".github/workflows/**/*.yml"]
+      effort: low
+      maxMinutes: 10
+      rejectStepExceedingJob: true
+```
+
+The step rule certifies a bound for executable steps. For jobs with a literal
+timeout at least that bound, the job rule can skip the redundant per-step
+comparison. Other job checks continue. A partner that is missing, disabled,
+suppressed, exception-bearing, or does not cover the job rule's workflow scope
+causes a warning and a `max` fallback. Across overlapping step-rule
+applications, the largest certified cap determines whether a job comparison
+can be skipped.
 
 For [`github-actions-script-expressions`](../rules/github-actions-script-expressions.md),
 `options.constantContexts` defaults to the constant GitHub, runner, and quoted

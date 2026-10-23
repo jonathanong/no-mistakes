@@ -65,6 +65,84 @@ rules:
 `timeout-minutes` must be a number or numeric string. Invalid YAML is a
 diagnostic, and unused `allow` entries for jobs in scanned files are findings.
 
+## Effort
+
+`effort: max` is the default and keeps every job and step comparison above.
+`effort: low` uses enabled, unsuppressed
+[`github-actions-step-timeouts`](github-actions-step-timeouts.md) applications
+as partners. Together, they must cover this rule's workflow scope and have no
+`allow` entries. Each partner's `maxMinutes` (360 by default) certifies a
+literal upper bound for its executable steps. If a job has a supported literal
+timeout at least as
+large as that bound, this rule skips its redundant
+`rejectStepExceedingJob` comparison for executable steps. The step rule still
+reports a missing, malformed, or over-cap step timeout. For a job timeout below
+the certified bound, this rule keeps the full step comparison. It also keeps the
+comparison for step mappings the partner does not inspect, such as
+metadata-only steps.
+
+Low effort keeps the job timeout requirement, `maxMinutes` cap, stale job
+`allow` findings, and `rejectJobAtOrAboveStepSum` check. Missing, disabled,
+suppressed, exception-bearing, or insufficiently scoped partners cannot certify
+the steps: the check warns and falls back to `max`. When several partner
+applications cover the workflows, a narrower cap from one application does
+not certify steps that another application permits above it; the largest
+certified cap applies. See
+[configuration](../configuration/rules.md#rule-applications) for the shared
+effort precedence and [check output](../cli/check.md) for fallback reporting.
+
+For example, this configuration caps steps at five minutes and jobs at ten:
+
+```yaml
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      include: [".github/workflows/**/*.yml"]
+      maxMinutes: 5
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
+      include: [".github/workflows/**/*.yml"]
+      effort: low
+      maxMinutes: 10
+      rejectStepExceedingJob: true
+```
+
+With that policy, a job timeout of ten minutes and two valid step timeouts of
+five minutes each pass both rules:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - run: echo first
+        timeout-minutes: 5
+      - run: echo second
+        timeout-minutes: 5
+```
+
+This over-cap step is reported by the step rule, even though this job rule can
+skip its executable-step comparison at low effort:
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - run: echo too-long
+        timeout-minutes: 12
+```
+
+Changing the job timeout to four minutes instead retains the job rule's full
+comparison: a five-minute step exceeds that job even though it satisfies the
+partner's cap. At `max`, the job rule also reports a step exceeding a job's
+timeout. A low-effort report can therefore have fewer *job-rule* findings;
+the partner reports over-cap steps.
+
 ## Valid example
 
 With a cap of 10, these two step bounds sum to 13. The job timeout of 10 is at
