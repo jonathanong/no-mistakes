@@ -128,7 +128,12 @@ test("CI installs Chromium only on the path-filtered browser job", () => {
   const gate = workflow.match(/^ {2}tests-gate:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
   assert.ok(jsJob && browserJob && gate);
   assert.doesNotMatch(jsJob, /playwright install/);
-  assert.match(browserJob, /playwright install --with-deps chromium/);
+  assert.match(browserJob, /playwright install chromium/);
+  assert.doesNotMatch(browserJob, /playwright install --with-deps/);
+  assert.match(
+    browserJob,
+    /The runner image already ships Chromium's shared libraries; --with-deps/,
+  );
   assert.match(browserJob, /needs: changes/);
   assert.match(browserJob, /needs\.changes\.outputs\.timeout-policy-browser == 'true'/);
   assert.match(gate, /timeout-policy-browser-tests/);
@@ -161,7 +166,8 @@ test("release validation still installs Chromium and runs the full suite", () =>
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
   const js = workflow.match(/^ {2}validate-js:[\s\S]*?(?=^ {2}[a-z])/m)?.[0];
   assert.ok(js);
-  assert.match(js, /playwright install --with-deps chromium/);
+  assert.match(js, /playwright install chromium/);
+  assert.doesNotMatch(js, /playwright install --with-deps/);
   assert.match(js, /run: pnpm test\n/);
   assert.doesNotMatch(js, /test:ci|test:timeout-policy-browser/);
 });
