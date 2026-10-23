@@ -131,3 +131,46 @@ export function localTaggedLiteral() {
   let statement = sql`/* named */ SELECT 23`;
   read(statement); // EXPECT_ACCEPTED_MUTABLE_TAG
 }
+
+// Deferred class bodies must not inherit their enclosing function's proof.
+export function classContexts() {
+  let statement = "/* named */ SELECT 24";
+  class Box {
+    value = read(statement); // EXPECT_UNKNOWN_CLASS_FIELD
+    accessor slot = read(statement); // EXPECT_UNKNOWN_ACCESSOR
+    static { read(statement); } // EXPECT_UNKNOWN_STATIC_BLOCK
+  }
+}
+
+export function countedAndRepeated(enabled: boolean, values: string[]) {
+  for (let statement = "SELECT 25"; enabled;) {
+    read(statement); // EXPECT_MISSING_FOR_LITERAL
+  }
+  for (var key in values) {
+    read(key); // EXPECT_UNKNOWN_FOR_IN_DECLARATION
+  }
+  for (let value of values) {
+    read(value); // EXPECT_UNKNOWN_FOR_OF_DECLARATION
+  }
+  let repeated = "SELECT 26";
+  do {
+    read(repeated); // EXPECT_MISSING_DO_LITERAL
+    repeated = "/* named */ SELECT 27";
+  } while (enabled);
+}
+
+export function effectfulVoid() {
+  let statement = void buildSql();
+  read(statement); // EXPECT_UNKNOWN_EFFECTFUL_VOID
+}
+
+export function destructuredHead(record: { statement: string }) {
+  let { statement } = record;
+  read(statement); // EXPECT_UNKNOWN_DESTRUCTURED_HEAD
+}
+
+declare function acquire(): any;
+export function resourceHead() {
+  using statement = acquire();
+  read(statement); // EXPECT_UNKNOWN_USING_HEAD
+}
