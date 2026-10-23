@@ -39,18 +39,15 @@ fn run_config(
         &sources,
     )
     .unwrap();
-    let facts = crate::codebase::check_facts::collect_check_facts(
-        &root,
-        files,
-        CheckFactPlan {
-            react: true,
-            symbols: true,
-            storybook: true,
-            dynamic_imports: true,
-            source: true,
-            ..Default::default()
-        },
-    );
+    let mut plan = CheckFactPlan {
+        react: true,
+        symbols: true,
+        storybook: true,
+        source: true,
+        ..Default::default()
+    };
+    configure_effort_plan(&config, &mut plan).unwrap();
+    let facts = crate::codebase::check_facts::collect_check_facts(&root, files, plan);
     runner::check_diagnostics_with_resolver(
         &root,
         &config,
@@ -143,23 +140,32 @@ fn low_skips_transitive_graph_and_dynamic_boundary_work() {
 }
 
 #[test]
-fn standalone_rule_honors_prepared_low_policy() {
+fn standalone_rule_honors_freshly_loaded_low_policy() {
     let root = fixture("effort");
-    let mut config =
+    let config =
         crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.low-ignore.yml")))
             .unwrap();
-    let files = crate::codebase::ts_source::discover_files(&root, &[]);
-    let sources = crate::codebase::rules::source_store_for_files(&files);
-    crate::codebase::rules::analysis_policy::prepare_rule_analysis(
-        &root,
-        &mut config,
-        &files,
-        &sources,
-    )
-    .unwrap();
+    assert!(config
+        .rules
+        .iter()
+        .all(|rule| rule.resolved_analysis.is_none()));
     assert_eq!(
         check(&root, &config, None).unwrap(),
         run(Some(Effort::Low), Unanalyzable::Ignore, false).findings
+    );
+    assert!(config
+        .rules
+        .iter()
+        .all(|rule| rule.resolved_analysis.is_none()));
+    assert_eq!(
+        crate::codebase::rules::run_check(
+            &root,
+            Some(&root.join(".no-mistakes.low-ignore.yml")),
+            None
+        )
+        .unwrap()
+        .len(),
+        1
     );
 }
 
@@ -182,4 +188,49 @@ fn implicit_boundary_exemptions_are_residuals_and_colocated_tests_still_clear() 
         assert!(result.findings.is_empty());
         assert!(result.advisories.is_empty());
     }
+}
+
+#[test]
+fn effort_demand_skips_dynamic_facts_only_for_low_only_storybook() {
+    let root = fixture("effort");
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    for mode in ["low", "max", "mixed", "other-consumer"] {
+        let mut cfg =
+            crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.low.yml")))
+                .unwrap();
+        if mode == "max" {
+            cfg.effort = Some(Effort::Max);
+        }
+        if mode == "mixed" {
+            cfg.rules[0]
+                .options
+                .as_mapping_mut()
+                .unwrap()
+                .insert("effort".into(), "max".into());
+        }
+        crate::codebase::rules::analysis_policy::prepare_rule_analysis(
+            &root, &mut cfg, &files, &sources,
+        )
+        .unwrap();
+        let mut plan = CheckFactPlan {
+            dynamic_imports: mode == "other-consumer",
+            ..Default::default()
+        };
+        configure_effort_plan(&cfg, &mut plan).unwrap();
+        let facts = crate::codebase::check_facts::collect_check_facts(&root, files.clone(), plan);
+        assert!(
+            facts
+                .ts
+                .values()
+                .all(|file| file.dynamic_imports.is_some() == (mode != "low")),
+            "{mode}"
+        );
+    }
+    let mut plan = CheckFactPlan {
+        dynamic_imports: true,
+        ..Default::default()
+    };
+    configure_effort_plan(&NoMistakesConfig::default(), &mut plan).unwrap();
+    assert!(plan.dynamic_imports);
 }

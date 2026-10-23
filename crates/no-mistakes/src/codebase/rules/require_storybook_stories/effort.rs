@@ -27,3 +27,46 @@ pub(super) fn missing(component: Component) -> RuleFinding {
         target: Some(component.key),
     }
 }
+
+/// Add Storybook demand without clearing another consumer's explicit projection.
+#[doc(hidden)]
+pub fn configure_effort_plan(
+    config: &crate::config::v2::NoMistakesConfig,
+    plan: &mut crate::codebase::check_facts::CheckFactPlan,
+) -> anyhow::Result<()> {
+    for rule in config.rule_applications(RULE_ID) {
+        plan.dynamic_imports |=
+            config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Max;
+    }
+    Ok(())
+}
+
+pub(crate) fn prepare_low_config(
+    root: &std::path::Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    files: &[std::path::PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> anyhow::Result<Option<crate::config::v2::NoMistakesConfig>> {
+    let low_requested = config.rule_applications(RULE_ID).iter().any(|rule| {
+        config
+            .requested_rule_analysis(rule)
+            .is_ok_and(|policy| policy.effort == crate::config::v2::Effort::Low)
+    });
+    if !low_requested {
+        return Ok(None);
+    }
+    let mut config = config.clone();
+    // Standalone preparation must not validate or change unrelated applications.
+    let mut scoped = config.clone();
+    scoped.rules.retain(|rule| rule.rule == RULE_ID);
+    super::super::analysis_policy::prepare_rule_analysis(root, &mut scoped, files, sources)?;
+    for (rule, prepared) in config
+        .rules
+        .iter_mut()
+        .filter(|rule| rule.rule == RULE_ID)
+        .zip(scoped.rules)
+    {
+        rule.resolved_analysis = prepared.resolved_analysis;
+    }
+    Ok(Some(config))
+}

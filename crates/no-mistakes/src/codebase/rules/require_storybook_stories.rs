@@ -13,6 +13,9 @@ mod coverage;
 mod coverage_graph;
 mod diagnostics;
 mod effort;
+#[doc(hidden)]
+pub use effort::configure_effort_plan;
+pub(crate) use effort::prepare_low_config;
 mod findings;
 mod prepared;
 mod runner;
@@ -86,19 +89,25 @@ pub fn check(
         &visible_paths,
     );
     let sources = snapshot.source_store_for(root);
+    let prepared_config = effort::prepare_low_config(root, config, &files, &sources)?;
+    let config = prepared_config.as_ref().unwrap_or(config);
     authorize_configured_sources(root, config, &sources);
+    let mut plan = CheckFactPlan {
+        react: true,
+        symbols: true,
+        storybook: true,
+        dynamic_imports: prepared_config.is_none(),
+        source: true,
+        ..Default::default()
+    };
+    if prepared_config.is_some() {
+        configure_effort_plan(config, &mut plan)?;
+    }
     let facts = collect_check_facts_with_graph_files_playwright_sources_and_session(
         &session,
         root,
         (files, Vec::new()),
-        CheckFactPlan {
-            react: true,
-            symbols: true,
-            storybook: true,
-            dynamic_imports: true,
-            source: true,
-            ..Default::default()
-        },
+        plan,
         None,
         std::sync::Arc::clone(&sources),
     );
