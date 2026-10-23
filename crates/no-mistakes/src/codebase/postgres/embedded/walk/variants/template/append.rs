@@ -12,10 +12,7 @@ pub(super) fn recover(
 ) -> Option<Vec<Recovered>> {
     let mut links = vec![call];
     let mut base = receiver(call)?;
-    loop {
-        let Expression::CallExpression(inner) = unwrap_ts_wrappers(base) else {
-            break;
-        };
+    while let Expression::CallExpression(inner) = unwrap_ts_wrappers(base) {
         let Some(inner_base) = receiver(inner) else {
             break;
         };
