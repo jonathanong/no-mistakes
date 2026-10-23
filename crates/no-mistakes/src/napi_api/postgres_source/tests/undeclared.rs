@@ -71,7 +71,7 @@ fn rust_report_preserves_legacy_statements_and_import_selection() {
 
 #[test]
 fn undeclared_executor_policies_and_suppressions_reach_public_check_reports() {
-    use crate::check_runner::{run_all_with_options, AnalysisOptions};
+    use crate::check_runner::{AnalysisOptions, run_all_with_options};
     use crate::config::v2::Effort;
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
         "../../test-cases/rules/postgres-require-query-annotation/fixture/undeclared-executors",
@@ -141,7 +141,7 @@ fn undeclared_executor_policies_and_suppressions_reach_public_check_reports() {
 
 #[test]
 fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_max() {
-    use crate::check_runner::{run_all_with_options, AnalysisOptions};
+    use crate::check_runner::{AnalysisOptions, run_all_with_options};
     use crate::config::v2::Effort;
 
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -186,9 +186,11 @@ fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_m
                 assert!(finding.message.contains("no declared executor type"));
                 assert!(finding.message.contains("executorTypeNames"));
                 assert!(finding.message.contains("annotate its exported value"));
-                assert!(!finding
-                    .message
-                    .contains("undeclared executor type `writePool`"));
+                assert!(
+                    !finding
+                        .message
+                        .contains("undeclared executor type `writePool`")
+                );
             }
             if policy != "ignore" {
                 assert_eq!(
@@ -202,6 +204,33 @@ fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_m
                 );
             }
         }
+    }
+
+    let configured = run_all_with_options(
+        root.clone(),
+        Some("configured-value.yml".into()),
+        None,
+        false,
+        false,
+        AnalysisOptions {
+            effort: Some(Effort::Max),
+            include_sql_verdicts: false,
+        },
+    )
+    .unwrap();
+    assert_eq!(configured.rules.len(), 2);
+    for finding in &configured.rules {
+        assert!(finding.message.contains("no declared executor type"));
+        assert!(finding.message.contains("annotate its exported value"));
+        assert!(
+            !finding
+                .message
+                .contains("configured executor receiver of type")
+        );
+        assert_eq!(
+            finding.target.as_deref(),
+            Some("unresolved-configured-executor-receiver")
+        );
     }
 }
 

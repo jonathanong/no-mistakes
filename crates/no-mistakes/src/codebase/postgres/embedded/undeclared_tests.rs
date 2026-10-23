@@ -1,7 +1,6 @@
 use super::{
-    extract_embedded_sql_from_source,
+    EmbeddedSqlOptions, extract_embedded_sql_from_source,
     tests::{fixture, read_fixture},
-    EmbeddedSqlOptions,
 };
 
 #[test]
@@ -33,9 +32,11 @@ fn undeclared_types_are_diagnostics_and_never_executor_calls() {
         diagnostics.iter().map(|call| call.line).collect::<Vec<_>>(),
         [7, 8, 9, 15, 18, 20, 21, 36]
     );
-    assert!(diagnostics
-        .iter()
-        .all(|call| call.type_name == "PoolClient"));
+    assert!(
+        diagnostics
+            .iter()
+            .all(|call| call.type_name == "PoolClient")
+    );
     assert_eq!(diagnostics[4].module, "@example/db/client");
     assert!(diagnostics.iter().all(|call| call.span.0 < call.span.1));
 }
@@ -88,10 +89,12 @@ fn relative_diagnostics_require_the_existing_package_scope_proof() {
                 vec!["DirectClient"]
             }
         );
-        assert!(facts
-            .undeclared_executor_types
-            .iter()
-            .all(|call| call.module == "@example/db"));
+        assert!(
+            facts
+                .undeclared_executor_types
+                .iter()
+                .all(|call| call.module == "@example/db")
+        );
         assert!(facts.calls.is_empty());
     }
     let mut facts = initial;
@@ -165,7 +168,7 @@ fn explicit_imported_receiver_types_survive_assignment_but_inferred_aliases_do_n
             .filter(|call| !call.configured_type)
             .map(|call| call.line)
             .collect::<Vec<_>>(),
-        [4, 7, 19, 23]
+        [4, 6, 9, 21, 25]
     );
     assert_eq!(
         super::undeclared::summarize_unresolved_executor_receivers(
@@ -174,16 +177,28 @@ fn explicit_imported_receiver_types_survive_assignment_but_inferred_aliases_do_n
         .count,
         1
     );
-    assert!(facts
+    assert!(
+        facts
+            .undeclared_executor_types
+            .iter()
+            .filter(|call| !call.configured_type)
+            .all(|call| call.type_name == "PoolClient")
+    );
+    assert!(
+        facts
+            .undeclared_executor_types
+            .iter()
+            .filter(|call| !call.configured_type)
+            .all(|call| call.known_type)
+    );
+    let alias = facts
         .undeclared_executor_types
         .iter()
-        .filter(|call| !call.configured_type)
-        .all(|call| call.type_name == "PoolClient"));
-    assert!(facts
-        .undeclared_executor_types
-        .iter()
-        .filter(|call| !call.configured_type)
-        .all(|call| call.known_type));
+        .find(|call| call.line == 6)
+        .expect("ordinary alias diagnostic");
+    assert_eq!(alias.receiver_name, "alias");
+    assert!(alias.known_type);
+    assert!(!alias.explicit_annotation);
 }
 
 #[test]

@@ -2,6 +2,8 @@ import type { PoolClient, Executor } from '@example/db';
 export function run(client: PoolClient, replacement: PoolClient, known: Executor, unrelated: unknown) {
   client = replacement;
   client.query('SELECT explicit_parameter');
+  const alias = client;
+  alias.query('SELECT typed_alias');
   let local: PoolClient = client;
   local = replacement;
   local.query('SELECT explicit_local');
