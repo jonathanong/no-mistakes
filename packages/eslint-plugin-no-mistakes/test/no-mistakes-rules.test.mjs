@@ -653,11 +653,11 @@ describe("ts-no-function-aliases", () => {
         undefined,
         "invalid.ts",
       ),
-      Array.from({ length: 19 }, () => "alias"),
+      Array.from({ length: 7 }, () => "alias"),
     );
   });
 
-  it("covers function expressions, self calls, default params, and TS expression wrappers", () => {
+  it("keeps released private identifier findings and silent self/default wrappers", () => {
     assert.deepEqual(
       messages(
         ruleFixture("ts-no-function-aliases", "coverage.ts"),
@@ -665,7 +665,7 @@ describe("ts-no-function-aliases", () => {
         undefined,
         "coverage.ts",
       ),
-      ["alias", "alias", "alias"],
+      Array.from({ length: 3 }, () => "alias"),
     );
   });
 });
