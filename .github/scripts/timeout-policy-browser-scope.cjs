@@ -1,6 +1,15 @@
 const { spawnSync } = require("node:child_process");
 
-const TRACKED_PACKAGES = ["vitest", "@vitest/browser", "@vitest/browser-playwright", "playwright"];
+const TRACKED_PACKAGES = [
+  "vitest",
+  "@vitest/browser",
+  "@vitest/browser-playwright",
+  "playwright",
+  "@storybook/addon-vitest",
+  "@storybook/react-vite",
+  "@storybook/react",
+  "storybook",
+];
 
 const ALWAYS_PATHS = new Set([
   ".github/workflows/ci.yml",

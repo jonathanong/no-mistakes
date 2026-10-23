@@ -17,12 +17,14 @@ const BROWSER_TESTS = [
 const NODE_POLICY_CONTRACTS =
   "packages/no-mistakes/test-timeout-policy/browser-policy-contracts.test.mjs";
 
-function pkg(vitest = "^5.0.4", playwright = "1.64.0") {
+function pkg(vitest = "^5.0.4", playwright = "1.64.0", storybookReact = "10.6.1") {
   return JSON.stringify({
     devDependencies: {
       vitest,
       "@vitest/browser-playwright": "5.0.4",
       playwright,
+      "@storybook/react": storybookReact,
+      "@storybook/react-vite": "10.6.1",
     },
   });
 }
@@ -77,6 +79,21 @@ test("ignores unrelated paths and untracked dependency bumps", () => {
   assert.equal(
     timeoutPolicyBrowserChanged(modified(["package.json"]), {
       packageJson: { base: pkg(), head: null },
+    }),
+    true,
+  );
+  assert.equal(
+    timeoutPolicyBrowserChanged(modified(["package.json"]), {
+      packageJson: { base: pkg(), head: pkg("^5.0.4", "1.64.0", "10.6.2") },
+    }),
+    true,
+  );
+  assert.equal(
+    timeoutPolicyBrowserChanged(modified(["pnpm-lock.yaml"]), {
+      lockfile: {
+        base: "  '@storybook/react-vite@10.6.1':\n",
+        head: "  '@storybook/react-vite@10.6.2':\n",
+      },
     }),
     true,
   );
