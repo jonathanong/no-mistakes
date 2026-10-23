@@ -2,6 +2,7 @@
 const { unwrapExpression } = require("./async-ast");
 const { resolveVariable, memberPropertyName, isLocalRequire } = require("./async-target-bindings");
 const { literalString, logicalCall } = require("./module-mock-helpers");
+const { ARGV, identity, concatenate } = require("./argv-main-fragments");
 
 function globalName(node, name, context) {
   if (node?.type !== "Identifier" || node.name !== name) return false;
@@ -29,16 +30,18 @@ function nodeProcess(node, context) {
     ["process", "node:process"].includes(literalString(init.arguments[0]))
   );
 }
-const ARGV = 1;
 const MAIN = 2;
 const PROCESS = 3;
 const ARGUMENTS = 4;
 function createClassifier(context, wrappers) {
   const stable = new WeakMap();
   const aliases = new WeakMap();
+  const value = (node, depth) => identity(classify(node, depth));
   function classify(input, depth = 0) {
     const node = unwrapExpression(input);
     if (!node || depth > 32) return 0;
+    const text = literalString(node);
+    if (text !== null) return text;
     if (node.type === "Identifier") {
       const variable = resolveVariable(node, context);
       if (!variable) {
@@ -67,7 +70,7 @@ function createClassifier(context, wrappers) {
         def.node?.id?.type === "ObjectPattern"
       ) {
         const key = objectPatternKey(def.node.id, node.name);
-        if (key === "argv" && classify(def.node.init, depth + 1) === PROCESS) return ARGUMENTS;
+        if (key === "argv" && value(def.node.init, depth + 1) === PROCESS) return ARGUMENTS;
         return 0;
       }
       if (
@@ -83,13 +86,28 @@ function createClassifier(context, wrappers) {
       }
       return aliases.get(variable);
     }
+    if (node.type === "BinaryExpression" && node.operator === "+") {
+      return concatenate(classify(node.left, depth + 1), classify(node.right, depth + 1));
+    }
     if (
-      node.type === "TemplateLiteral" &&
-      node.expressions.length === 1 &&
-      node.quasis[0].value.cooked === "file://" &&
-      node.quasis[1].value.cooked === ""
+      node.type === "LogicalExpression" &&
+      node.operator === "??" &&
+      classify(node.right, depth + 1) === ""
     ) {
-      return classify(node.expressions[0], depth + 1) === ARGV ? ARGV : 0;
+      return classify(node.left, depth + 1);
+    }
+    if (node.type === "TemplateLiteral") {
+      // Only prefix substitutions may be constant; a suffix substitution is not an argv guard.
+      const last = node.expressions.length - 1;
+      const argument = classify(node.expressions[last], depth + 1);
+      if (identity(argument) !== ARGV || node.quasis[last + 1].value.cooked !== "") return 0;
+      let prefix = node.quasis[0].value.cooked;
+      for (let i = 0; i < last; i++) {
+        const part = classify(node.expressions[i], depth + 1);
+        if (typeof part !== "string") return 0;
+        prefix += part + node.quasis[i + 1].value.cooked;
+      }
+      return concatenate(prefix, argument);
     }
     if (node.type === "MemberExpression") {
       const name = memberPropertyName(node);
@@ -100,7 +118,17 @@ function createClassifier(context, wrappers) {
         ["url", "filename"].includes(name)
       )
         return MAIN;
-      const object = classify(node.object, depth + 1);
+      const target = unwrapExpression(node.object);
+      if (
+        name === "href" &&
+        target.type === "NewExpression" &&
+        globalName(target.callee, "URL", context) &&
+        target.arguments.length === 1
+      ) {
+        const argument = classify(target.arguments[0], depth + 1);
+        return Array.isArray(argument) && identity(argument) === ARGV ? argument : 0;
+      }
+      const object = value(node.object, depth + 1);
       if (object === PROCESS && name === "argv") return ARGUMENTS;
       if (object === ARGUMENTS && node.computed && staticIndexOne(node.property)) return ARGV;
       // A URL conversion's href preserves the same module/argv identity.
@@ -118,20 +146,31 @@ function createClassifier(context, wrappers) {
       if (
         callee?.type === "MemberExpression" &&
         memberPropertyName(callee) === "at" &&
-        classify(callee.object, depth + 1) === ARGUMENTS &&
+        value(callee.object, depth + 1) === ARGUMENTS &&
         invoked.arguments.length === 1 &&
         staticIndexOne(invoked.arguments[0])
       )
         return ARGV;
+      if (
+        callee?.type === "MemberExpression" &&
+        memberPropertyName(callee) === "toString" &&
+        invoked.arguments.length === 0
+      ) {
+        const classified = classify(callee.object, depth + 1);
+        return typeof classified === "string" || [ARGV, MAIN].includes(identity(classified))
+          ? classified
+          : 0;
+      }
       if (invoked.arguments.length !== 1 || invoked.arguments[0].type === "SpreadElement") return 0;
+      if (globalName(callee, "String", context)) return classify(invoked.arguments[0], depth + 1);
       if (globalName(callee, "Boolean", context) || wrappers.resolveCallTarget(node)) {
-        const value = classify(invoked.arguments[0], depth + 1);
-        return value === ARGV || value === MAIN ? value : 0;
+        const argument = value(invoked.arguments[0], depth + 1);
+        return argument === ARGV || argument === MAIN ? argument : 0;
       }
     }
     return 0;
   }
-  return (node) => classify(node);
+  return (node) => value(node, 0);
 }
 function staticIndexOne(node) {
   if (!node) return false;
