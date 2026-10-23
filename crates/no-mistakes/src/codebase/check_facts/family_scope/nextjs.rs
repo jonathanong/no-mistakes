@@ -64,21 +64,19 @@ fn nextjs_scope(
     Ok(FamilyPathScope::Only(Arc::new(selected)))
 }
 
+#[cfg(not(test))]
+macro_rules! record_membership_normalization {
+    () => {};
+}
+
+#[cfg(test)]
+#[macro_use]
+pub(super) mod tests;
+
 fn normalized_membership_path(path: &Path) -> PathBuf {
     let normalized = normalize_path(path);
-    #[cfg(test)]
-    MEMBERSHIP_NORMALIZATIONS.with(|count| count.set(count.get() + 1));
+    record_membership_normalization!();
     normalized
-}
-
-#[cfg(test)]
-thread_local! {
-    static MEMBERSHIP_NORMALIZATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-
-#[cfg(test)]
-pub(super) fn take_membership_normalizations() -> usize {
-    MEMBERSHIP_NORMALIZATIONS.with(|count| count.replace(0))
 }
 
 /// Scope file-local caching facts over the complete visible inventory, including

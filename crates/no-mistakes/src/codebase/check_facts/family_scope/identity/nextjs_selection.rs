@@ -43,10 +43,10 @@ fn nextjs_selection_materializes_membership_only_for_partial_scopes() {
             crate::codebase::rules::nextjs_no_caching::configure_effort_plan(&config, &mut plan)
                 .unwrap();
             let full = collect_check_facts(&root, files.clone(), plan.clone());
-            super::super::nextjs::take_membership_normalizations();
+            super::super::nextjs::tests::take_membership_normalizations();
             configure_nextjs_caching_scope(&root, &files, &config, &inferred, &mut plan).unwrap();
             assert_eq!(
-                super::super::nextjs::take_membership_normalizations(),
+                super::super::nextjs::tests::take_membership_normalizations(),
                 normalizations,
                 "{name}: {effort:?}"
             );
@@ -87,11 +87,14 @@ fn nextjs_filtered_empty_inventory_remains_empty_for_both_efforts() {
             nextjs_caching_low: low,
             ..Default::default()
         };
-        super::super::nextjs::take_membership_normalizations();
+        super::super::nextjs::tests::take_membership_normalizations();
         configure_nextjs_caching_scope(&root, &[], &config, &inferred, &mut plan).unwrap();
         assert!(
             matches!(&plan.nextjs_caching_paths, FamilyPathScope::Only(paths) if paths.is_empty())
         );
-        assert_eq!(super::super::nextjs::take_membership_normalizations(), 0);
+        assert_eq!(
+            super::super::nextjs::tests::take_membership_normalizations(),
+            0
+        );
     }
 }
