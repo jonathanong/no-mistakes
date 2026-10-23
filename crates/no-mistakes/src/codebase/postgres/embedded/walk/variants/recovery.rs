@@ -18,7 +18,13 @@ impl ScopeVisitor<'_> {
             .flat_map(|(index, scope)| {
                 scope
                     .iter()
-                    .filter(|(_, binding)| binding.sql_builder && binding.variants.is_some())
+                    // Mutable declarations lack the const-only sql_builder flag.
+                    // Actual recovered fragments prove the same appendable shape.
+                    .filter(|(_, binding)| {
+                        binding.variants.as_ref().is_some_and(|values| {
+                            !values.is_empty() && values.iter().all(|value| value.fragment)
+                        })
+                    })
                     .filter_map(move |(name, binding)| {
                         binding
                             .variants

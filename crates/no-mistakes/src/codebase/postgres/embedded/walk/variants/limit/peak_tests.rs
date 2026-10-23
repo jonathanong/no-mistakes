@@ -29,7 +29,7 @@ fn actual_join_candidates_stay_bounded_before_variant_selection() {
         let file = extract_embedded_sql_from_source(
             &path,
             &source,
-            &EmbeddedSqlOptions::configured("@example/db", &[]),
+            &EmbeddedSqlOptions::configured("@example/db", &["read".into()]),
         );
         let peak = PEAK.with(|peak| peak.replace(None).unwrap());
         assert!(file.calls.iter().any(|call| call.variants_truncated()));

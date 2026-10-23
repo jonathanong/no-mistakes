@@ -65,10 +65,10 @@ fn truncated_variant_ledger_uses_prepared_prefix_and_unknown_policy() {
     );
     let root = path.parent().unwrap();
     let profile = EmbeddedSqlOptions::configured("@bench/db", &["read".into()]);
-    for (policy, advise) in [
-        (UnanalyzableSql::Report, false),
-        (UnanalyzableSql::Advise, true),
-        (UnanalyzableSql::Ignore, false),
+    for policy in [
+        UnanalyzableSql::Report,
+        UnanalyzableSql::Advise,
+        UnanalyzableSql::Ignore,
     ] {
         let mut facts = collect_check_facts(
             root,
@@ -93,7 +93,9 @@ fn truncated_variant_ledger_uses_prepared_prefix_and_unknown_policy() {
             .zip(&embedded.call_spans)
             .zip(prefixes)
         {
-            assert_eq!(call.kind, EmbeddedSqlKind::Composed);
+            // Truncated alternatives retain their source classification; the
+            // composition diagnostic owns their unconditional advisory.
+            assert_eq!(call.kind, EmbeddedSqlKind::Dynamic);
             file.query_annotation[0].1.calls.insert(*span, prefix);
         }
         facts.enable_sql_verdicts();
@@ -117,7 +119,8 @@ fn truncated_variant_ledger_uses_prepared_prefix_and_unknown_policy() {
         let rows = facts.sql_verdicts();
         assert_eq!(rows.len(), 3);
         assert_eq!(rows[0].status, SqlVerdictStatus::Abstain);
-        assert_eq!(rows[0].advisory, advise);
+        // Per-call ledger rows do not duplicate composition diagnostics.
+        assert!(!rows[0].advisory);
         assert_eq!(rows[0].evidence, None);
         assert!(rows[0]
             .residual_reasons

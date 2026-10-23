@@ -97,15 +97,24 @@ fn deterministic_singleton_helper_recovery_keeps_suffix_and_provenance() {
             origin: 700,
         },
     );
-    let holes = [(pending.sites[0].0, vec![helper])].into_iter().collect();
+    let mut holes: crate::fx::FxHashMap<_, _> = [(pending.sites[0].0, vec![helper.clone()])]
+        .into_iter()
+        .collect();
     let filled = splice(&pending.template, &holes).expect("filled singleton");
-    assert!(filled.sql_text.is_none());
+    assert_eq!(filled.kind, super::EmbeddedSqlKind::Composed);
     let [variant] = filled.variants.as_slice() else {
         panic!("singleton")
     };
     assert_eq!(
         variant.sql_text,
         "SELECT sql_placeholder_1 WHERE helper = sql_placeholder_2 AND suffix = sql_placeholder_3"
+    );
+    assert_eq!(filled.sql_text.as_deref(), Some(variant.sql_text.as_str()));
+    assert_eq!(filled.declaration_line, Some(variant.line));
+    assert_eq!(filled.sql_source_positions, variant.sql_source_positions);
+    assert_eq!(
+        filled.recovered_placeholder_positions,
+        variant.recovered_placeholder_positions
     );
     assert_eq!(variant.recovered_placeholder_positions.len(), 3);
     assert!(!sentinel::contains(&variant.sql_text));
@@ -128,6 +137,26 @@ fn deterministic_singleton_helper_recovery_keeps_suffix_and_provenance() {
         (9, None)
     );
     assert_eq!(variant.sql_source_offsets.len(), variant.sql_text.len());
+    // A helper with multiple outcomes cannot publish one outcome as raw SQL.
+    let mut alternative = helper;
+    alternative.sql = "FALSE".into();
+    alternative.origins = vec![700; alternative.sql.len()];
+    alternative.positions.clear();
+    holes
+        .get_mut(&pending.sites[0].0)
+        .expect("hole")
+        .push(alternative);
+    let fanout = splice(&pending.template, &holes).expect("finite fanout");
+    assert_eq!(fanout.variants.len(), 2);
+    assert_eq!(fanout.kind, super::EmbeddedSqlKind::Dynamic);
+    assert!(fanout.sql_text.is_none());
+    assert!(fanout.sql_source_positions.is_empty());
+    assert!(fanout.recovered_placeholder_positions.is_empty());
+    assert!(fanout.declaration_line.is_none());
+    assert!(fanout
+        .variants
+        .iter()
+        .all(|variant| !sentinel::contains(&variant.sql_text)));
 }
 
 #[test]

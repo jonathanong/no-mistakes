@@ -61,13 +61,22 @@ pub(super) fn scan_with_sources(
                         .ok_or_else(|| anyhow::anyhow!("prepared SQL variant facts are missing"))?;
                     for finding in findings_for_call(&rel, &version) {
                         retained_violation = true;
-                        dedup.push(
-                            &mut findings,
-                            statement,
-                            crate::codebase::postgres::statements::SqlFactSite::Annotation,
-                            Some(&source),
-                            finding,
-                        );
+                        // A newly published deterministic append mirror keeps
+                        // the legacy executor location and its suppressions.
+                        if call.variants.len() == 1
+                            && !call.variants_truncated()
+                            && call.sql_text.as_deref() == version.sql_text.as_deref()
+                        {
+                            findings.push(finding);
+                        } else {
+                            dedup.push(
+                                &mut findings,
+                                statement,
+                                crate::codebase::postgres::statements::SqlFactSite::Annotation,
+                                Some(&source),
+                                finding,
+                            );
+                        }
                     }
                 }
                 // Retained alternatives do not settle an unexplored residual.

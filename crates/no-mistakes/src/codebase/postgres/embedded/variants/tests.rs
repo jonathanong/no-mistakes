@@ -170,12 +170,17 @@ fn opaque_alternatives_loops_cross_file_helpers_depth_and_cap_fail_closed() {
     for name in ["variants-opaque.ts", "variants-cap.ts"] {
         let calls = calls(name);
         assert!(!calls.is_empty());
-        assert!(
-            calls
-                .iter()
-                .all(|call| call.kind == EmbeddedSqlKind::Dynamic && call.variants.is_empty()),
-            "{name}: {calls:#?}"
-        );
+        for call in &calls {
+            assert_eq!(call.kind, EmbeddedSqlKind::Dynamic, "{name}: {call:#?}");
+            if name == "variants-opaque.ts" && call.line == 9 {
+                // Loop appends retain zero/one samples plus an unknown tail.
+                assert_eq!(texts(call), ["SELECT 1", "SELECT 1 LIMIT 1"]);
+                assert!(call.variants_truncated());
+                assert!(call.is_unanalyzable());
+            } else {
+                assert!(call.variants.is_empty(), "{name}: {call:#?}");
+            }
+        }
     }
     assert_eq!(MAX_EMBEDDED_SQL_VARIANTS, 16);
 }
@@ -350,8 +355,9 @@ fn static_builder_calls_joins_and_fluent_branch_fragments_are_complete_versions(
     assert_eq!(
         texts(&calls[3]),
         [
-            "SELECT id FROM users WHERE active AND enabled",
-            "SELECT id FROM users WHERE active AND verified"
+            // The off (else) arm precedes the enabled singleton.
+            "SELECT id FROM users WHERE active AND verified",
+            "SELECT id FROM users WHERE active AND enabled"
         ]
     );
     assert_eq!(
@@ -454,3 +460,6 @@ fn scalar_falsy_arms_are_binds_while_untaken_fragment_guards_are_absent() {
 
 #[path = "tests/logical.rs"]
 mod logical;
+
+#[path = "tests/mutable_append_loops.rs"]
+mod mutable_append_loops;

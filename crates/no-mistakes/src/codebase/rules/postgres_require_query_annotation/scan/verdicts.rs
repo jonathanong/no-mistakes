@@ -77,16 +77,18 @@ pub(super) fn record(
                 call.sql_text.clone(),
             )
         } else {
-            let projected = prepared.query_annotation_prefix(path, &opts.embedded, *span);
+            let projected = (call.kind == EmbeddedSqlKind::Composed)
+                .then(|| prepared.query_annotation_prefix(path, &opts.embedded, *span))
+                .flatten();
             let (sql, used_projection) = match projected {
                 Some(Some(sql)) => (Some(sql.as_str()), true),
                 Some(None) => (None, true),
                 None => (call.sql_text.as_deref(), false),
             };
-            let proof = if used_projection {
-                TextProof::Prepared
-            } else if call.kind == EmbeddedSqlKind::Dynamic {
+            let proof = if call.kind == EmbeddedSqlKind::Dynamic {
                 TextProof::Partial
+            } else if used_projection {
+                TextProof::Prepared
             } else {
                 TextProof::Exact
             };
@@ -105,9 +107,9 @@ pub(super) fn record(
         let invalid_composed = residual_reasons
             .iter()
             .any(|reason| reason == "invalid-composed-sql");
-        let advisory = status == SqlVerdictStatus::Abstain
+        let advisory = opts.unanalyzable_sql == UnanalyzableSql::Advise
             && !invalid_composed
-            && opts.unanalyzable_sql == UnanalyzableSql::Advise;
+            && !call.variants_truncated();
         facts.record_sql_verdict(SqlObligationVerdict {
             profile: opts.embedded.clone(),
             rule: RULE_ID.to_string(),

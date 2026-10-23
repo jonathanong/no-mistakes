@@ -22,7 +22,15 @@ pub(super) fn argument(
     } else {
         None
     };
-    publish(recovered, kind)
+    // A direct fluent expression owns its result. A bare Dynamic binding may
+    // instead have lost its legacy proof through aliasing or an escape.
+    let publication_kind =
+        if kind == EmbeddedSqlKind::Dynamic && trusted_fluent_root(visitor, argument) {
+            EmbeddedSqlKind::Composed
+        } else {
+            kind
+        };
+    publish(recovered, publication_kind)
 }
 
 pub(super) fn publish(
@@ -35,9 +43,11 @@ pub(super) fn publish(
                 .iter()
                 .all(|version| version.value == ValueKind::Sql)
                 && if kind == EmbeddedSqlKind::Dynamic {
-                    versions
-                        .iter()
-                        .any(|version| version.enumerated || !version.choices.is_empty())
+                    versions.iter().any(|version| {
+                        !version.choices.is_empty()
+                            || version.variants_truncated
+                            || (version.enumerated && version.append_sites.is_empty())
+                    })
                 } else {
                     kind == EmbeddedSqlKind::Composed
                         && versions
@@ -52,4 +62,41 @@ pub(super) fn publish(
             EmbeddedSqlVariant::push_unique(&mut unique, variant);
             unique
         })
+}
+
+// Syntactic `.append` spelling alone cannot revive an escaped builder. Only a
+// trusted inline tag or an independently retained binding proof owns the root.
+fn trusted_fluent_root<'a>(visitor: &ScopeVisitor<'_>, mut value: &Expression<'a>) -> bool {
+    let mut appended = false;
+    loop {
+        value = unwrap_ts_wrappers(value);
+        let Expression::CallExpression(call) = value else {
+            break;
+        };
+        let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
+            break;
+        };
+        if member.property.name != "append" || call.optional {
+            return false;
+        }
+        appended = true;
+        value = &member.object;
+    }
+    appended
+        && match value {
+            Expression::TaggedTemplateExpression(tagged) => {
+                crate::codebase::postgres::embedded::tags::is_sql_tag(
+                    &tagged.tag,
+                    &mut |name| super::super::compose::tag_shadowed(name, visitor),
+                    visitor.functions.imported_sql_tags(),
+                )
+            }
+            Expression::Identifier(id) => visitor.lookup(id.name.as_str()).is_some_and(|binding| {
+                binding.sql_builder
+                    && binding.sql.is_some()
+                    && binding.kind != EmbeddedSqlKind::Dynamic
+                    && !visitor.append_crosses_function(id.name.as_str())
+            }),
+            _ => false,
+        }
 }

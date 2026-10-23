@@ -86,14 +86,17 @@ fn repeated_conditional_builder_updates_keep_explored_missing_annotations() {
             let findings = check_with_files(&root, &config, &files).unwrap();
             // The original fixture concatenates SELECT statements without
             // separators; invalid variants advise instead of failing the rule.
+            // Its unexplored residual still follows the explicit unknown policy.
+            let expected_line = line.or((policy == "report").then_some(15));
             assert_eq!(
                 findings.len(),
-                usize::from(line.is_some()),
+                usize::from(expected_line.is_some()),
                 "{name}/{policy}: {findings:#?}"
             );
-            if let Some(line) = line {
+            if let Some(expected) = expected_line {
                 assert_eq!(findings[0].file, "src/query.mts");
-                assert_eq!(findings[0].line, line);
+                assert_eq!(findings[0].line, expected);
+                assert_eq!(findings[0].message.contains("unanalyzable"), line.is_none());
             }
         }
     }

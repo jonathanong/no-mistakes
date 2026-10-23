@@ -33,13 +33,12 @@ fn append_mutations_do_not_reuse_stale_builder_alias_variants() {
         texts(&calls[14]),
         ["SELECT 16", "SELECT id FROM users LIMIT 1"]
     );
-    // The legacy call retains its unknown text, while trusted finite recovery
-    // now keeps the actual singleton append and its contributing occurrence.
+    // Storing a mutable append result creates an alias. A static singleton
+    // must not bypass the legacy opacity boundary merely by being enumerated.
     assert_eq!(calls[15].kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(calls[15].sql_text, None);
-    assert_eq!(texts(&calls[15]), ["SELECT id FROM users LIMIT 1"]);
-    assert_eq!(calls[15].variants[0].append_sites.len(), 1);
-    assert!(!calls[15].is_unanalyzable());
+    assert!(calls[15].variants.is_empty());
+    assert!(calls[15].is_unanalyzable());
 }
 
 #[test]
@@ -81,4 +80,20 @@ fn switch_label_calls_keep_direct_entry_sql_and_bodies_keep_fallthrough_sql() {
         ]
     );
     assert!(texts(&calls[4]).contains(&"SELECT id FROM accounts LIMIT 1 OFFSET 2"));
+}
+
+#[test]
+fn alias_mutation_cannot_revive_a_revoked_bare_binding_as_a_static_variant() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-offset/variants/builder-mutation-escapes/src/aliases.ts");
+    let source = std::fs::read_to_string(&path).expect("saved alias fixture");
+    let options = EmbeddedSqlOptions::configured("@example/db", &["read".into()]);
+    let file = extract_embedded_sql_from_source(&path, &source, &options);
+    assert_eq!(file.calls.len(), 2);
+    for call in &file.calls {
+        assert_eq!(call.kind, EmbeddedSqlKind::Dynamic);
+        assert!(call.sql_text.is_none());
+        assert!(call.variants.is_empty());
+        assert!(call.is_unanalyzable());
+    }
 }

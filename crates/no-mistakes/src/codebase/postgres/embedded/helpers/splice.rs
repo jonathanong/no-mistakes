@@ -27,10 +27,37 @@ pub(crate) fn splice(template: &EmbeddedSqlCall, holes: &Holes) -> Option<Embedd
                 EmbeddedSqlVariant::push_unique(&mut variants, filled);
             }
         }
-        return (variants.len() <= MAX_EMBEDDED_SQL_VARIANTS).then(|| EmbeddedSqlCall {
+        if variants.len() > MAX_EMBEDDED_SQL_VARIANTS {
+            return None;
+        }
+        let mut call = EmbeddedSqlCall {
             variants,
             ..template.clone()
-        });
+        };
+        // Finalization removes the raw mirror of a complete singleton so only
+        // its provenance-bearing variant is spliced. Rebuild that public mirror
+        // from the filled result, never from the marker-bearing template.
+        if template.kind != EmbeddedSqlKind::Dynamic
+            && template.variants.len() == 1
+            && !template.variants_truncated()
+        {
+            if call.variants.len() == 1 && !call.variants_truncated() {
+                let filled = &call.variants[0];
+                call.sql_text = Some(filled.sql_text.clone());
+                call.kind = EmbeddedSqlKind::Composed;
+                call.declaration_line = Some(filled.line);
+                call.sql_source_positions = filled.sql_source_positions.clone();
+                call.recovered_placeholder_positions =
+                    filled.recovered_placeholder_positions.clone();
+            } else {
+                call.sql_text = None;
+                call.kind = EmbeddedSqlKind::Dynamic;
+                call.declaration_line = None;
+                call.sql_source_positions.clear();
+                call.recovered_placeholder_positions.clear();
+            }
+        }
+        return Some(call);
     }
     let published = template.sql_text.as_deref()?;
     let first_line = match template.kind {
