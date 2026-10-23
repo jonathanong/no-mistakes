@@ -41,6 +41,17 @@ impl CheckFactMap {
             }
         }
         let mut call_site_paths = Arc::clone(&self.call_site_paths);
+        // Scoped coverage follows the winning entry, including overwrites that replace
+        // call summaries with an imports-only projection. Disjoint overlays share.
+        let loses_coverage = |path: &PathBuf| {
+            supplemental.ts.contains_key(path) && !supplemental.call_site_paths.contains(path)
+        };
+        if overwrite
+            && !supplemental.graph_plan.call_sites
+            && call_site_paths.iter().any(loses_coverage)
+        {
+            Arc::make_mut(&mut call_site_paths).retain(|path| !loses_coverage(path));
+        }
         // A rejected sparse duplicate cannot add coverage to the richer winner.
         let supplemental_wins = |path: &&PathBuf| overwrite || !self.ts.contains_key(path);
         if !Arc::ptr_eq(&call_site_paths, &supplemental.call_site_paths)

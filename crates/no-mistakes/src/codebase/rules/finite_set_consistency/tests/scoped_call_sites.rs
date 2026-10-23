@@ -175,3 +175,66 @@ fn default_path_call_site_coverage_preserves_generic_ts_map_semantics() {
             .is_empty());
     }
 }
+
+#[test]
+fn overwriting_scoped_calls_with_import_facts_removes_only_losing_coverage() {
+    let saved = call_literal_fixture_root("scoped-demand");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let call = root.join("schedules.ts");
+    let unrelated = root.join("unrelated.tsx");
+    let registry = root.join("registry.mts");
+    let mut plan = CheckFactPlan {
+        imports: true,
+        ..Default::default()
+    };
+    plan.require_call_site_paths(&[call.clone(), unrelated.clone()]);
+    let primary = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        vec![call.clone(), unrelated.clone()],
+        plan,
+    );
+    let imports_only = |path: PathBuf| {
+        crate::codebase::check_facts::collect_check_facts(
+            &root,
+            vec![path],
+            CheckFactPlan {
+                imports: true,
+                ..Default::default()
+            },
+        )
+    };
+    let required = TsFactPlan {
+        call_sites: true,
+        ..Default::default()
+    };
+    let empty_overlay = primary.fact_view_with_supplemental(&CheckFactMap::default());
+    assert!(Arc::ptr_eq(
+        &primary.call_site_paths,
+        &empty_overlay.call_site_paths
+    ));
+    let disjoint = primary.fact_view_with_supplemental(&imports_only(registry));
+    assert!(Arc::ptr_eq(
+        &primary.call_site_paths,
+        &disjoint.call_site_paths
+    ));
+    assert!(disjoint.covers_ts_fact_plan_for_path(&call, required));
+    let overlapping = primary.fact_view_with_supplemental(&imports_only(call.clone()));
+    // The supplemental entry really wins, so stale primary demand cannot
+    // promise call summaries that the surviving entry does not contain.
+    assert!(overlapping.ts[&call].ts.call_sites.is_empty());
+    assert_eq!(overlapping.ts[&call].ts.imports.len(), 1);
+    assert!(!overlapping.covers_ts_fact_plan_for_path(&call, required));
+    assert!(overlapping.covers_ts_fact_plan_for_path(&unrelated, required));
+    assert_eq!(overlapping.ts[&unrelated].ts.call_sites.len(), 2);
+    assert_eq!(overlapping.call_site_paths.len(), 1);
+    assert_eq!(primary.call_site_paths.len(), 2);
+    assert!(overlapping.covers_ts_fact_plan(TsFactPlan::imports()));
+    assert!(!overlapping.covers_ts_fact_plan_for_path(
+        &unrelated,
+        TsFactPlan {
+            resources: true,
+            ..required
+        },
+    ));
+}
