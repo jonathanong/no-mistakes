@@ -73,6 +73,35 @@ describe("eslint rule docs are executable", () => {
       );
     });
   }
+
+  it("await-array-methods suppression hides a real documented finding", () => {
+    const page = rulePages().find((candidate) => candidate.ruleId === "await-array-methods");
+    const [snippet] = sourceFences(headingSection(page.body, "Suppression"));
+    assert.ok(snippet, "await-array-methods needs a Suppression source fence");
+
+    const ruleId = "no-mistakes/await-array-methods";
+    const filename = snippetFilename(snippet.code, snippet.lang);
+    const config = { [ruleId]: "error" };
+    const suppressed = lint(snippet.code, config, filename);
+    assert.deepEqual(
+      suppressed.filter((message) => message.ruleId === ruleId),
+      [],
+    );
+
+    const directive =
+      /^\s*\/\/ eslint-disable-next-line no-mistakes\/await-array-methods --[^\n]*\r?\n/m;
+    const unsuppressedCode = snippet.code.replace(directive, "");
+    assert.notEqual(unsuppressedCode, snippet.code, "the snippet needs its rule directive");
+    assert.match(unsuppressedCode, /await values\.sort\(\);/);
+
+    const findings = lint(unsuppressedCode, config, filename).filter(
+      (message) => message.ruleId === ruleId,
+    );
+    assert.deepEqual(
+      findings.map((message) => message.messageId),
+      ["awaited"],
+    );
+  });
 });
 
 function runSnippet(ruleId, snippet, option) {

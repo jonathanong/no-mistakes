@@ -8,7 +8,10 @@ the same `null` or response behavior in every server handler.
 ## Disallowed
 
 ```ts
-export async function getUserRoute() {
+// backend/users.ts
+type MaybeUser = { id: string } | null;
+
+export async function getUserRoute(id: string): Promise<MaybeUser> {
   return getUserById(id);
 }
 ```
@@ -16,12 +19,30 @@ export async function getUserRoute() {
 ## Allowed
 
 ```ts
-export async function getUserRoute() {
+// backend/users.ts
+type MaybeUser = { id: string } | null;
+
+export async function getUserRoute(id: string): Promise<MaybeUser> {
   return nullableEntity(getUserById(id));
 }
 ```
 
 ## Options
+
+The schema accepts an options object.
+
+```js
+{
+  rules: {
+    "no-mistakes/server-require-nullable-fetch-wrapper": ["error", {
+      getterCalleePatterns: ["^getUserById$"],
+      requiredWrapperCallee: "nullableEntity",
+      nullableReturnTypeNames: ["MaybeUser"],
+      includePathPatterns: ["backend/**"]
+    }]
+  }
+}
+```
 
 - `getterCalleePatterns` and `requiredWrapperCallee` are required.
 - `includePathPatterns` and `excludePathPatterns` scope matching files.

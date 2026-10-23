@@ -8,27 +8,42 @@ production never uses. This rule limits those mocks to a declared boundary.
 ## Disallowed
 
 ```ts
+// test/payments.test.ts
+import { vi } from "vitest";
+
 vi.mock("@app/payments", () => ({ charge: vi.fn() }));
 ```
 
 ## Allowed
 
 ```ts
+// test/payments.test.ts
+import { vi } from "vitest";
+
 vi.mock("stripe", () => ({ Stripe: vi.fn() }));
-vi.mock("@app/payments", async () => ({
-  ...(await vi.importActual("@app/payments")),
-  charge: vi.fn(),
-}));
 ```
 
 ## Options
 
-The schema accepts an options object. `internalSpecifiers` identifies internal
-specifier prefixes; `includePathPatterns` and `excludePathPatterns` scope
-files; `requireLiteralSpecifiers` defaults to `true`; and `baseline` records
+The schema accepts an options object.
+
+```js
+{
+  rules: {
+    "no-mistakes/module-mock-boundary": ["error", {
+      internalSpecifiers: ["@app/**"],
+      includePathPatterns: ["test/**"]
+    }]
+  }
+}
+```
+
+`internalSpecifiers` identifies internal specifier patterns;
+`includePathPatterns` and `excludePathPatterns` scope files;
+`requireLiteralSpecifiers` defaults to `true`; and `baseline` records
 temporary `[file, specifier, count]` allowances. `integrationExports` permits
-tagged integration exports, with its `sourcePathTemplates` and
-`reexportExtensions` controls. See the exhaustive table in
+tagged integration exports, with its `specifiers`, `sourcePathTemplates`,
+`reexportExtensions`, and `markerRegex` controls. See the exhaustive table in
 [`eslint-plugin`](../eslint-plugin.md#rule-options).
 
 A default import of `vitest` or `@jest/globals`, a single `const` alias, a static `vi` or `jest` member including a string or expression-free template key, an optional call, and a comma callee are the same framework binding.

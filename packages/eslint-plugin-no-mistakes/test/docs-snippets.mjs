@@ -11,11 +11,7 @@ export function staleKnownRecallFailures(failures, known) {
 }
 
 export const knownRecallFailures = new Map([
-  ["module-mock-boundary", ["Disallowed ts hits=0 ids="]],
-  ["module-mock-preserve-exports", ["Disallowed ts hits=0 ids="]],
-  ["no-global-fetch-outside-helper", ["Disallowed ts hits=0 ids="]],
   ["require-options-on-imported-call", ["Disallowed ts hits=0 ids="]],
-  ["server-require-nullable-fetch-wrapper", ["Disallowed ts hits=0 ids="]],
 ]);
 
 const FENCE = /```([A-Za-z0-9_-]*)[^\n]*\n([\s\S]*?)```/g;

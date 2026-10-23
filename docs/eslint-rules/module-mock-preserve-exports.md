@@ -8,12 +8,18 @@ of the exports that the test did not intend to replace.
 ## Disallowed
 
 ```ts
+// test/payments.test.ts
+import { vi } from "vitest";
+
 vi.mock("@app/payments", () => ({ charge: vi.fn() }));
 ```
 
 ## Allowed
 
 ```ts
+// test/payments.test.ts
+import { vi } from "vitest";
+
 vi.mock("@app/payments", async () => ({
   ...(await vi.importActual("@app/payments")),
   charge: vi.fn(),
@@ -22,10 +28,22 @@ vi.mock("@app/payments", async () => ({
 
 ## Options
 
-The schema accepts an options object. `internalSpecifiers`,
-`includePathPatterns`, and `excludePathPatterns` select applicable mocks;
-`baseline` provides temporary `[file, specifier]` allowances. See the
-exhaustive table in [`eslint-plugin`](../eslint-plugin.md#rule-options).
+The schema accepts an options object.
+
+```js
+{
+  rules: {
+    "no-mistakes/module-mock-preserve-exports": ["error", {
+      internalSpecifiers: ["@app/**"],
+      includePathPatterns: ["test/**"]
+    }]
+  }
+}
+```
+
+`internalSpecifiers`, `includePathPatterns`, and `excludePathPatterns` select
+applicable mocks; `baseline` provides temporary `[file, specifier]` allowances.
+See the exhaustive table in [`eslint-plugin`](../eslint-plugin.md#rule-options).
 
 A default import of `vitest` or `@jest/globals`, a single `const` alias, a static `vi` or `jest` member including a string or expression-free template key, an optional call, a comma callee, and a direct `.call` or literal-array `.apply` are the same framework binding.
 
