@@ -83,15 +83,24 @@ function laterInBlock(from, to) {
   return straightLine(from, to);
 }
 
+function callbackReturnsNormally(node) {
+  if (node.type === "ReturnStatement") return true;
+  if (node.type === "BlockStatement") return node.body.every(callbackReturnsNormally);
+  if (node.type === "IfStatement")
+    return (
+      callbackReturnsNormally(node.consequent) &&
+      (!node.alternate || callbackReturnsNormally(node.alternate))
+    );
+  return fallsThrough(node);
+}
+
 function callbackCompletes(push) {
   const fn = findContainingFunction(push);
   if (fn.body.type !== "BlockStatement") return true;
   const start = statement(push);
   // A callback return completes this iteration; a throw can abort the caller
   // before an ordinary outer drain, but still transfers control to finally.
-  return fn.body.body
-    .slice(fn.body.body.indexOf(start) + 1)
-    .every((node) => node.type === "ReturnStatement" || fallsThrough(node));
+  return fn.body.body.slice(fn.body.body.indexOf(start) + 1).every(callbackReturnsNormally);
 }
 
 function laterDrain(from, to) {
@@ -125,4 +134,4 @@ function laterDrain(from, to) {
   return body.slice(body.indexOf(start) + 1, body.indexOf(attempt)).every(fallsThrough);
 }
 
-module.exports = { collectionAnchor, laterDrain, laterInBlock, statement };
+module.exports = { callbackReturnsNormally, collectionAnchor, laterDrain, laterInBlock, statement };

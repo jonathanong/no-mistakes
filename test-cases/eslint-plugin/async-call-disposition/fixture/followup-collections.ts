@@ -24,3 +24,6 @@ async function thrownEachFinally(xs) { const ps = []; try { throw xs.forEach(x =
 // Throws after a collected push still execute the enclosing try's finally.
 async function callbackThrowFinally(xs) { const ps = []; try { xs.forEach(x => { ps.push(enqueueEmail(x)); throw error; }); } finally { await Promise.all(ps); } }
 async function callbackReturn(xs) { const ps = []; xs.forEach(x => { ps.push(enqueueEmail(x)); return; }); await Promise.all(ps); }
+async function mapperEarlyReturn(xs) { const ps = xs.map(x => { if (x.skip) return; return enqueueEmail(x); }); await Promise.all(ps); }
+async function mapperAsyncThrow(xs) { const ps = xs.map(async x => { if (x.bad) throw error; return enqueueEmail(x); }); await Promise.all(ps); }
+async function callbackConditionalReturn(xs) { const ps = []; xs.forEach(x => { ps.push(enqueueEmail(x)); if (x.done) { return; } else { record(x); } }); await Promise.all(ps); }

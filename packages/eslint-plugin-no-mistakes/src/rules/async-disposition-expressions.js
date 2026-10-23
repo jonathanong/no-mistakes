@@ -1,6 +1,7 @@
 "use strict";
 
 const { isPromiseAllCall, isPromiseMethodCall } = require("./async-disposition-bindings");
+const { callbackReturnsNormally } = require("./async-disposition-flow");
 const { returnsThroughMock } = require("./async-disposition-mocks");
 const {
   findContainingFunction,
@@ -146,12 +147,19 @@ function promiseAllDisposed(node, context) {
 
 function mappedPromise(node, disposed) {
   const parent = node.parent;
-  if (parent.type === "ReturnStatement") {
-    const fn = findContainingFunction(parent);
-    return Boolean(fn && isMapCallback(fn) && disposed(fn.parent));
-  }
-  return (
-    isFunction(parent) && parent.body === node && isMapCallback(parent) && disposed(parent.parent)
+  const fn =
+    parent.type === "ReturnStatement"
+      ? findContainingFunction(parent)
+      : isFunction(parent) && parent.body === node
+        ? parent
+        : null;
+  // A synchronous mapper throw can lose promises from earlier iterations before
+  // its result array exists. Async mapper throws become retained member rejections.
+  return Boolean(
+    fn &&
+    isMapCallback(fn) &&
+    (fn.async || fn.body.type !== "BlockStatement" || callbackReturnsNormally(fn.body)) &&
+    disposed(fn.parent),
   );
 }
 
