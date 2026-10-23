@@ -26,7 +26,7 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
     for (path, file) in &mut files {
         file.query_annotation.truncate(1);
         file.embedded_sql.truncate(1);
-        // Excluded files stay in the catalog for imports, but they are not roots.
+        // entry.mts only forwards SQL. Rejecting the file keeps it as a root.
         if path.ends_with("entry.mts") {
             file.query_annotation[0].1.annotation_event = false;
         }
@@ -55,7 +55,9 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
         .collect::<BTreeSet<_>>();
     assert_eq!(
         selected,
-        BTreeSet::from(["executor", "caller", "barrel", "cycle-a", "cycle-b", "required",])
+        BTreeSet::from([
+            "executor", "caller", "barrel", "entry", "cycle-a", "cycle-b", "required",
+        ])
     );
     drop(collected);
     let observer = InvocationObserver::new(true);
@@ -70,7 +72,7 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
             candidates.contains(&target).then_some(target)
         });
     });
-    assert_eq!(observer.snapshot().work["postgres.annotation.roots"], 6);
+    assert_eq!(observer.snapshot().work["postgres.annotation.roots"], 7);
     assert!(
         resolutions
             .into_inner()
@@ -126,8 +128,8 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
         "included caller of an excluded re-export"
     );
     assert!(
-        !selected.contains("barrel"),
-        "excluded re-export is not a root"
+        selected.contains("barrel"),
+        "excluded re-export still forwards demand"
     );
     assert!(selected.contains("executor"));
 }

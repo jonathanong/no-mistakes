@@ -114,7 +114,11 @@ pub(super) fn roots<'a>(
     visits
         .into_iter()
         .filter_map(|(path, visit)| {
-            (visit.demanded && files[path].facts.annotation_event).then_some(path)
+            let file = &files[path];
+            // Executor-free importers still supply SQL to an included call.
+            // An excluded file that contains its own executor call does not.
+            (visit.demanded && (file.facts.annotation_event || file.executors.is_empty()))
+                .then_some(path)
         })
         .collect()
 }
@@ -133,9 +137,10 @@ fn enter<'a>(
             index,
             low: index,
             active: true,
-            // Executor files seed reachability even when a path filter rejects
-            // them. The filter decides roots, not whether importers stay live.
-            demanded: !files[path].executors.is_empty(),
+            // Only an included executor call seeds the walk. Excluded tests that
+            // call the executor themselves are not roots. Callers that only
+            // forward SQL stay reachable through the import edges below.
+            demanded: !files[path].executors.is_empty() && files[path].facts.annotation_event,
         },
     );
     component.push(path);
