@@ -125,6 +125,7 @@ fn explicit_suite_scope_preserves_helper_and_collision_findings_and_skips_walks(
     }
     for relative in [
         "helpers/ambient.ts",
+        "helpers/global.ts",
         "helpers/collision-before.ts",
         "helpers/collision-call.ts",
         "helpers/collision-call-unescaped.ts",
@@ -138,7 +139,10 @@ fn explicit_suite_scope_preserves_helper_and_collision_findings_and_skips_walks(
         let wide = full.ts[&path].integration.as_ref().unwrap();
         assert_eq!(narrow.tests, wide.tests, "{relative}");
         if relative.starts_with("helpers/")
-            && !matches!(relative, "helpers/ambient.ts" | "helpers/collision-call.ts")
+            && !matches!(
+                relative,
+                "helpers/ambient.ts" | "helpers/global.ts" | "helpers/collision-call.ts"
+            )
         {
             assert!(
                 discovery_visits(&path, selected_for_discovery(&plan, &path))

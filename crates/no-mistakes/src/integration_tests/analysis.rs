@@ -91,15 +91,17 @@ pub(crate) fn analyze_program_with_test_discovery(
 // variation; false positives retain full discovery without another AST pass.
 fn source_may_contain_nested_imports(source: &str) -> bool {
     source.contains('\\')
-        || ["module", "namespace"].into_iter().any(|keyword| {
-            source.match_indices(keyword).any(|(start, _)| {
-                let end = start + keyword.len();
-                let identifier =
-                    |byte: u8| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$');
-                (start == 0 || !identifier(source.as_bytes()[start - 1]))
-                    && (end == source.len() || !identifier(source.as_bytes()[end]))
+        || ["module", "namespace", "declare"]
+            .into_iter()
+            .any(|keyword| {
+                source.match_indices(keyword).any(|(start, _)| {
+                    let end = start + keyword.len();
+                    let identifier =
+                        |byte: u8| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$');
+                    (start == 0 || !identifier(source.as_bytes()[start - 1]))
+                        && (end == source.len() || !identifier(source.as_bytes()[end]))
+                })
             })
-        })
 }
 
 struct AnalysisCollector<'a, 'p> {

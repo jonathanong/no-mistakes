@@ -6,8 +6,9 @@ import { callSynthetic } from '../helpers/collision-call';
 import { exportedSynthetic } from '../helpers/collision-export';
 import { ambientBridge } from '../helpers/ambient';
 import { callSyntheticUnescaped } from '../helpers/collision-call-unescaped';
+import { globalBridge } from '../helpers/global';
 describe('nested', () => {
-  test('ambient imports', () => { ambientBridge(); });
+  test('ambient imports', () => { ambientBridge(); globalBridge(); });
   test('bridge', () => { bridge(); arrow(); defaultBridge(); });
   test('collision export', () => exportedSynthetic());
   test('collision call unescaped', () => callSyntheticUnescaped());

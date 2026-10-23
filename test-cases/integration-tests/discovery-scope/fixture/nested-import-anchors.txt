@@ -19,3 +19,6 @@ true|function helper(){ namespace Ambient {} }
 true|name\u0073pace Ambient {}
 true|const escaped = '\n';
 true|αmoduleα
+false|declared
+true|declare global {}
+true|declare/*comment*/global{}
