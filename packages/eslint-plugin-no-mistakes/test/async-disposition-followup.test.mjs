@@ -28,5 +28,7 @@ describe("async disposition follow-up saved recall", () => {
   it("keeps array identity, early exits, rewrites, and unknown adoption reported", () => {
     assert.deepEqual(reports("followup-contract-controls.ts"), Array(20).fill("disposition"));
     assert.deepEqual(reports("followup-rewritten-promise.ts"), ["disposition"]);
+    assert.deepEqual(reports("followup-mocked-input-write.ts"), ["disposition", "disposition"]);
+    assert.deepEqual(reports("followup-foreach-throw.ts"), Array(3).fill("disposition"));
   });
 });

@@ -83,10 +83,22 @@ function laterInBlock(from, to) {
   return straightLine(from, to);
 }
 
+function callbackCompletes(push) {
+  const fn = findContainingFunction(push);
+  if (fn.body.type !== "BlockStatement") return true;
+  const start = statement(push);
+  // A callback return completes this iteration; a throw can abort the caller
+  // before an ordinary outer drain, but still transfers control to finally.
+  return fn.body.body
+    .slice(fn.body.body.indexOf(start) + 1)
+    .every((node) => node.type === "ReturnStatement" || fallsThrough(node));
+}
+
 function laterDrain(from, to) {
   const anchor = collectionAnchor(from);
   if (!anchor || findContainingFunction(anchor) !== findContainingFunction(to)) return false;
-  if (straightLine(anchor, to)) return true;
+  const completes = anchor === from || callbackCompletes(from);
+  if (completes && straightLine(anchor, to)) return true;
   const end = statement(to);
   const finalizer = end.parent;
   const attempt = finalizer.parent;
@@ -103,6 +115,7 @@ function laterDrain(from, to) {
   if (start.parent === attempt.block)
     return unconditional(anchor, start) && start.type !== "IfStatement";
   if (
+    !completes ||
     ["ReturnStatement", "ThrowStatement"].includes(start.type) ||
     start.parent !== attempt.parent ||
     start.range[0] >= attempt.range[0]

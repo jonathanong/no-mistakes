@@ -21,3 +21,6 @@ async function branchedReturn() { const p = enqueueEmail("branches"); if (cond) 
 async function mappedFinally(xs) { const ps = xs.map(x => enqueueEmail(x)); try { return await run(); } finally { await Promise.all(ps); } }
 async function returnedEachFinally(xs) { const ps = []; try { return xs.forEach(x => ps.push(enqueueEmail(x))); } finally { await Promise.all(ps); } }
 async function thrownEachFinally(xs) { const ps = []; try { throw xs.forEach(x => ps.push(enqueueEmail(x))); } finally { await Promise.all(ps); } }
+// Throws after a collected push still execute the enclosing try's finally.
+async function callbackThrowFinally(xs) { const ps = []; try { xs.forEach(x => { ps.push(enqueueEmail(x)); throw error; }); } finally { await Promise.all(ps); } }
+async function callbackReturn(xs) { const ps = []; xs.forEach(x => { ps.push(enqueueEmail(x)); return; }); await Promise.all(ps); }

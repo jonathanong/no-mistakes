@@ -87,6 +87,14 @@ function frameworkObject(node, context, seen = new Set()) {
   return init ? frameworkObject(init, context, seen) : null;
 }
 
+// mocked is an identity wrapper: visible writes to its input remain writes to
+// the implementation method, even when the wrapper's result is never bound.
+function mockedInputWritten(node, context) {
+  node = unwrapExpression(node);
+  while (node?.type === "MemberExpression") node = unwrapExpression(node.object);
+  return node?.type === "Identifier" && propertiesWritten(node, context);
+}
+
 function mockCall(node, context, seen = new Set()) {
   node = unwrapExpression(node);
   if (node?.type === "Identifier") {
@@ -113,8 +121,10 @@ function mockCall(node, context, seen = new Set()) {
   const callee = unwrapExpression(node.callee);
   if (callee?.type !== "MemberExpression") return false;
   const method = memberPropertyName(callee);
-  if (frameworkObject(callee.object, context) === "api")
-    return method === "fn" || method === "spyOn" || method === "mocked";
+  if (frameworkObject(callee.object, context) === "api") {
+    if (method === "mocked") return !mockedInputWritten(node.arguments[0], context);
+    return method === "fn" || method === "spyOn";
+  }
   return (
     (method === "mockImplementation" || method === "mockImplementationOnce") &&
     mockCall(callee.object, context, seen)
