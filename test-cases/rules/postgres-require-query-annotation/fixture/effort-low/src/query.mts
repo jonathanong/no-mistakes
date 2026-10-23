@@ -20,7 +20,7 @@ read(mutable); // EXPECT_REPORT_MUTABLE
 const alias = statement;
 read(alias); // EXPECT_REPORT_ALIAS
 read(container.statement); // EXPECT_REPORT_MEMBER
-read("BEGIN"); // EXPECT_REPORT_TRANSACTION
+read("BEGIN"); // EXPECT_ACCEPTED_TRANSACTION
 // no-mistakes-disable-next-line postgres-require-query-annotation: call-site suppression
 read(body); // EXPECT_LINE_SUPPRESSED
 read(body); // no-mistakes-disable-line postgres-require-query-annotation: same-line suppression
@@ -40,7 +40,7 @@ read(builtinTag`/* default builtin is not configured */ SELECT 1`); // EXPECT_AC
 function tagShadow(renamedTag: unknown) { read(renamedTag`/* shadow */ SELECT 1`); } // EXPECT_ACCEPTED_TAG
 { const renamedTag = helper; read(renamedTag`/* block shadow */ SELECT 1`); } // EXPECT_ACCEPTED_TAG
 read(sql`/* open ${body} */ SELECT 1`); // EXPECT_REPORT_OPEN_TAG
-read(sql`/*  */ SELECT 1`); // EXPECT_REPORT_EMPTY_TAG
+read(sql`/*  */ SELECT 1`); // EXPECT_REPORT_EMPTY_TAG EXPECT_MISSING
 const aliasSource = renamedTag`/* alias source */ SELECT ${body}`;
 const taggedAlias = aliasSource;
 read(taggedAlias); // EXPECT_REPORT_TAG_ALIAS

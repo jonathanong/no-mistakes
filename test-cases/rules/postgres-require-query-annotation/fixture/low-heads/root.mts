@@ -37,9 +37,9 @@ read("/* */ /* later */ SELECT 1"); // low: false
 read("/**/ SELECT 1"); // low: false
 read("/*   */ SELECT 1"); // low: false
 read("/* open"); // low: false
-read("BEGIN"); // low: false
-read("COMMIT;"); // low: false
-read("ROLLBACK TO SAVEPOINT point"); // low: false
+read("BEGIN"); // low: true
+read("COMMIT;"); // low: true
+read("ROLLBACK TO SAVEPOINT point"); // low: true
 read("SELECT 1"); // low: false
 read(""); // low: false
 read(/* JavaScript comments are not SQL text. */ value); // low: false

@@ -4,8 +4,8 @@ A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configurat
 
 Require a leading `/* name */` block comment on executed PostgreSQL SQL so
 slow-query logs and `EXPLAIN ANALYZE` can name the statement. Line comments
-(`-- name`) do not count. At the default `effort: max`, `BEGIN`, `COMMIT`, and
-`ROLLBACK` are exempt.
+(`-- name`) do not count. Complete literal `BEGIN`, `COMMIT`, and `ROLLBACK`
+commands are exempt at both effort levels.
 
 At `effort: max`, the rule consumes prepared embedded-SQL and helper summaries from the request's
 shared TypeScript parse. Imported helpers use the request's prepared importer
@@ -107,8 +107,9 @@ need a stable operation name rather than an opaque SQL string.
 
 ## What it catches/requires
 
-Executed PostgreSQL SQL must begin with a non-empty block comment. At `max`,
-`BEGIN`, `COMMIT`, and `ROLLBACK` are exempt; line comments do not satisfy the contract.
+Executed PostgreSQL SQL must begin with a non-empty block comment. Literal
+`BEGIN`, `COMMIT`, and `ROLLBACK` commands are exempt at either effort level;
+line comments do not satisfy the contract.
 
 ## Options and defaults
 
@@ -116,8 +117,8 @@ Executed PostgreSQL SQL must begin with a non-empty block comment. At `max`,
 `executorNames` defaults to `[query, read, write]` only with a configured module.
 `unanalyzableSql` defaults to `report`; `ignore` skips residual unknown SQL and
 `advise` puts its reason, known prefix, and helper lines in non-failing
-`advisories`. At `max`, proven missing annotations remain findings under every
-unanalyzable policy.
+`advisories`. Proven missing annotations remain findings under every
+unanalyzable policy, including decidable literal heads at `low`.
 
 Configuration, SQL helper behavior, and callback forwarding are described in
 [options and helpers](../postgres-query-annotation/options-and-helpers.md).
@@ -171,16 +172,26 @@ TypeScript assertions do not add indirection. The const must resolve to the same
 file's lexical declaration; a second alias, import, destructured binding, or
 mutable declaration does not qualify.
 
-Counterexamples at `low` include helper returns, conditional heads, appended
-builders, and bare transaction
-commands. At `low`, the policy does not distinguish a proven-missing annotation
-from an unproven shape: both are unanalyzable, even when `max` would prove the
-annotation missing. `BEGIN`, `COMMIT`, and `ROLLBACK` also follow this policy at
-`low`, despite their `max` exemption. Rewrite rejected calls as a named literal
-at the call or as one local `const` initialized with that literal head and
-passed directly.
+At `low`, a decidable literal head is checked before the unanalyzable policy.
+Unannotated string literals, no-substitution templates, tagged templates with a
+known unannotated head, and one local const initialized with those forms are
+findings even with `unanalyzable: advise` or `ignore`:
 
-The shared `unanalyzable` policy controls every rejected call: `report` fails,
+```ts
+query("SELECT 1"); // Missing annotation: a failing finding, including with advise.
+const statement = "SELECT 1";
+query(statement); // The same definite violation.
+// Fix: query("/* health/check */ SELECT 1");
+```
+
+A complete literal transaction command keeps the transaction exemption. An
+incomplete head, such as `` query(`/* ${name} */ SELECT 1`) ``, stays
+unanalyzable. Helper returns, conditional heads, appended builders, and mutable
+bindings also remain unanalyzable. Rewrite those shapes as a named literal at
+the call or as one local `const` initialized with that literal head and passed
+directly. Existing file and line suppressions apply to definite findings too.
+
+The shared `unanalyzable` policy controls only unresolved calls: `report` fails,
 `advise` emits a non-failing advisory, and `ignore` skips it. `unanalyzableSql`
 remains an alias. For example, set `options.effort: low` and
 `options.unanalyzable: report` to require these forms. Shared configuration and

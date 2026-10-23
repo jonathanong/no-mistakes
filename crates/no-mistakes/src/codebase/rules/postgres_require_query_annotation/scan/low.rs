@@ -1,6 +1,8 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
-use crate::codebase::postgres::{SqlEvidenceKind, SqlObligationVerdict, SqlVerdictStatus};
+use crate::codebase::postgres::{
+    EmbeddedSqlKind, SqlEvidenceKind, SqlObligationVerdict, SqlVerdictStatus,
+};
 use crate::codebase::rules::{
     postgres_require_query_annotation::UnanalyzableSql, PostgresFindings,
 };
@@ -36,6 +38,14 @@ pub(super) fn scan(
         }
         for (call, span) in file.calls.iter().zip(&file.call_spans) {
             let visible = heads.is_some_and(|heads| heads.accepts(*span));
+            let definite_violation = heads.is_some_and(|heads| heads.proves_missing(*span));
+            let status = if visible {
+                SqlVerdictStatus::ProvenClear
+            } else if definite_violation {
+                SqlVerdictStatus::Violation
+            } else {
+                SqlVerdictStatus::Abstain
+            };
             if facts.wants_sql_verdicts() {
                 facts.record_sql_verdict(SqlObligationVerdict {
                     profile: opts.embedded.clone(),
@@ -44,25 +54,44 @@ pub(super) fn scan(
                     subcheck: "leading-annotation".to_string(),
                     file: rel.clone(),
                     span: *span,
-                    status: if visible {
-                        SqlVerdictStatus::ProvenClear
-                    } else {
-                        SqlVerdictStatus::Abstain
+                    status,
+                    advisory: status == SqlVerdictStatus::Abstain
+                        && opts.unanalyzable_sql == UnanalyzableSql::Advise,
+                    evidence: match status {
+                        SqlVerdictStatus::ProvenClear => Some(SqlEvidenceKind::VerifiedPrefix),
+                        SqlVerdictStatus::Violation if call.kind == EmbeddedSqlKind::Dynamic => {
+                            Some(SqlEvidenceKind::VerifiedPrefix)
+                        }
+                        SqlVerdictStatus::Violation => Some(SqlEvidenceKind::Exact),
+                        SqlVerdictStatus::Abstain => None,
                     },
-                    advisory: opts.unanalyzable_sql == UnanalyzableSql::Advise,
-                    evidence: visible.then_some(SqlEvidenceKind::VerifiedPrefix),
                     known_prefix: None,
                     helper_lines: Vec::new(),
-                    residual_reasons: if visible {
-                        Vec::new()
-                    } else {
+                    residual_reasons: if status == SqlVerdictStatus::Abstain {
                         vec![format!(
                             "leading annotation is not visible at effort low; {REWRITE}"
                         )]
+                    } else {
+                        Vec::new()
                     },
                 });
             }
-            if !visible && opts.unanalyzable_sql == UnanalyzableSql::Report {
+            if definite_violation {
+                findings.push_at(
+                    RuleFinding {
+                        rule: RULE_ID.to_string(),
+                        file: rel.clone(),
+                        line: call.line as usize,
+                        message: format!(
+                            "{rel}:{}: query execution must start with a /* name */ annotation",
+                            call.line
+                        ),
+                        import: None,
+                        target: Some("annotation".to_string()),
+                    },
+                    Some(span.0 as usize),
+                );
+            } else if !visible && opts.unanalyzable_sql == UnanalyzableSql::Report {
                 findings.push_at(
                     RuleFinding {
                         rule: RULE_ID.to_string(),
