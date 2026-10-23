@@ -40,8 +40,25 @@ fn forbidden_calls_scoped_arguments_preserve_analyze_project_ordinary_call_sites
         .iter()
         .map(|(file, export)| json!({ "type": "callSites", "file": file, "exportName": export }))
         .collect::<Vec<_>>();
+    crate::ast::begin_parse_count(&root);
     let (queries_only, observer) = observed_call_batch(&root, json!(call_reports));
+    let query_counts = crate::ast::finish_parse_count(&root);
     assert_eq!(queries_only, standalone_calls);
+    // Ordinary callSites targets keep a legacy TypeScript symbol parse beside
+    // their standard JavaScript module parse. Checks must add no parse modes.
+    let expected_counts = [
+        ("src/a/empty.mjs", 1),
+        ("src/a/entry.mjs", 1),
+        ("src/a/excluded.mjs", 1),
+        ("src/a/helper.mjs", 2),
+        ("src/a/invalid.mjs", 1),
+        ("src/b/entry.mjs", 1),
+        ("src/unrelated.mjs", 2),
+    ]
+    .into_iter()
+    .map(|(path, count)| (root.join(path), count))
+    .collect::<std::collections::HashMap<_, _>>();
+    assert_eq!(query_counts, expected_counts);
     assert!(observer
         .snapshot()
         .work
@@ -57,7 +74,10 @@ fn forbidden_calls_scoped_arguments_preserve_analyze_project_ordinary_call_sites
     let counts = crate::ast::finish_parse_count(&root);
     assert_eq!(results[0], standalone_check);
     assert_eq!(&results[1..], standalone_calls.as_slice());
-    assert_each_indexable_file_parsed_once(&root, &counts);
+    assert_eq!(
+        counts, query_counts,
+        "adding checks must preserve ordinary parse work"
+    );
     assert_eq!(
         observer
             .snapshot()
