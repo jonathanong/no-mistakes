@@ -34,6 +34,7 @@ pub(super) struct DelegateRequest<'a> {
     pub(super) source: &'a str,
     pub(super) files: &'a [PathBuf],
     pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
+    pub(super) resolver: &'a super::PreparedConfigResolver<'a>,
     pub(super) route_set: &'a BTreeSet<String>,
     pub(super) app_root_label: &'a str,
     pub(super) include_rewrites: bool,
@@ -52,7 +53,14 @@ pub(super) fn append_delegated(
     let Some(specifier) = request.specifier else {
         return;
     };
-    let Some(delegated) = resolve_relative(request.config_path, specifier, request.files) else {
+    let Some(delegated) =
+        resolve_relative(request.config_path, specifier, request.files).or_else(|| {
+            request
+                .resolver
+                .resolve_alias(specifier, request.config_path)
+                .filter(|path| request.files.contains(path))
+        })
+    else {
         return;
     };
     let Some(delegated_source) = super::super::read_source(request.sources, &delegated) else {

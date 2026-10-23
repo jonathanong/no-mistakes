@@ -17,6 +17,7 @@ pub(super) fn scan(
     route_files: &[PathBuf],
     target_roots: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    resolver: &super::PreparedConfigResolver<'_>,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     for target_root in target_roots {
@@ -27,6 +28,7 @@ pub(super) fn scan(
             route_files,
             target_root,
             sources,
+            resolver,
         ));
     }
     findings
@@ -39,6 +41,7 @@ fn scan_target(
     route_files: &[PathBuf],
     target_root: &Path,
     sources: &crate::codebase::ts_source::SourceStore,
+    resolver: &super::PreparedConfigResolver<'_>,
 ) -> Vec<RuleFinding> {
     let Some(config_path) = resolve_config_path(target_root, files, opts.config_path.as_deref())
     else {
@@ -82,6 +85,7 @@ fn scan_target(
             source: &source,
             files,
             sources,
+            resolver,
             route_set: &route_set,
             app_root_label: &app_root_label,
             include_rewrites: opts.include_rewrites,

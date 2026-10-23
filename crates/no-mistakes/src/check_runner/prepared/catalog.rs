@@ -39,6 +39,11 @@ pub(super) fn prepare(
                 root, config,
             ),
         );
+        candidate_roots.extend(
+            no_mistakes::codebase::rules::nextjs_redirect_destinations::configured_project_roots(
+                root, config,
+            ),
+        );
         TsConfigCatalog::from_visible_and_sources_with_workspace(
             root,
             &candidate_roots,

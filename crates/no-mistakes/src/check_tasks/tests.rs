@@ -104,6 +104,7 @@ fn enabled_filesystem_check_runs_both_suppression_modes() {
             &[],
             no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
                 snapshot: &snapshot,
+                next_config_resolver: None,
                 vitest_catalog: None,
                 sources: snapshot.source_store_for(&root),
                 workflow_documents: None,

@@ -98,10 +98,68 @@ fn reexport_accepts_a_destination_that_matches_a_page() {
 }
 
 #[test]
-fn second_hop_package_and_path_alias_stay_silent() {
+fn second_hop_and_package_stay_silent() {
     assert!(run("limit-second-hop").is_empty(), "one hop only");
     assert!(run("limit-package").is_empty());
-    // #2522: `@/next-shared` is a tsconfig path. This rule follows only a relative
-    // default re-export, so the missing destination stays silent.
-    assert!(run("limit-path-alias").is_empty());
+}
+
+#[test]
+fn tsconfig_path_alias_reports_the_shared_module() {
+    let findings = run("limit-path-alias");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "next-shared.ts");
+    assert!(findings[0].message.contains("redirect destination '/gone'"));
+}
+
+#[test]
+fn path_alias_keeps_one_hop_and_requires_configured_paths() {
+    assert!(run("pass-path-alias").is_empty());
+    assert!(
+        run("limit-alias-precedence").is_empty(),
+        "failed exact paths mapping wins over a resolvable wildcard and baseUrl"
+    );
+    assert!(
+        run("limit-missing-exact-alias").is_empty(),
+        "failed paths must not admit baseUrl fallback"
+    );
+    assert!(
+        run("limit-missing-wildcard-alias").is_empty(),
+        "failed wildcard paths must not admit baseUrl fallback"
+    );
+    assert!(run("limit-alias-second-hop").is_empty(), "one hop only");
+    assert!(
+        run("limit-base-url").is_empty(),
+        "baseUrl is not a paths alias"
+    );
+}
+
+#[test]
+fn standalone_dispatcher_uses_the_same_alias_resolution() {
+    let root = fixture("limit-path-alias");
+    let files = crate::codebase::ts_source::walk_files(&root, &[]);
+    let findings = super::super::filesystem_dispatch::run_filesystem_rules_with_config(
+        &root,
+        &config("{}"),
+        &files,
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "next-shared.ts");
+    assert!(findings[0].message.contains("redirect destination '/gone'"));
+}
+
+#[test]
+fn disabled_rule_does_not_prepare_a_workspace_or_catalog() {
+    let root = fixture("fail-default-import");
+    let files = crate::codebase::ts_source::walk_files(&root, &[]);
+    let sources = super::super::source_store_for_files(&files);
+    let findings =
+        check_with_files_and_sources(&root, &NoMistakesConfig::default(), &files, &sources)
+            .unwrap();
+    assert!(findings.is_empty());
+    assert_eq!(
+        sources.json_parse_count(),
+        0,
+        "disabled rule must not parse the malformed manifest"
+    );
 }

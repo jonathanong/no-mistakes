@@ -177,3 +177,16 @@ exceeding a limit also reports incomplete extraction.
 
 Destination collection and mutation alias traversal are also bounded to 4,096
 value visits and 64 nesting levels; exhaustion reports incomplete extraction.
+
+## Delegated configuration
+
+The default config binding may import or re-export one local module through a
+relative specifier or a configured TypeScript `paths` alias. The rule uses the
+request's prepared project resolver and attributes findings to the shared
+module. For example, `import nextConfig from "@/next-shared"; export default
+nextConfig;` checks `next-shared.ts` when the selected tsconfig maps `@/*` to
+`./*`. A `/gone` redirect there still requires a matching App Router page.
+
+Only one hop is followed. Package imports, `baseUrl`-only specifiers, and a
+second delegated module are outside this bounded extraction. Keep redirects
+and rewrites in the directly delegated module to make them statically checkable.

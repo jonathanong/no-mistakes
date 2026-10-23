@@ -57,6 +57,7 @@ fn optional_fact_adapter_prepares_postgres_diagnostics_once() {
     .unwrap();
     let prepared = |sources| PreparedFilesystemRuleInputs {
         snapshot: &snapshot,
+        next_config_resolver: None,
         vitest_catalog: None,
         sources,
         workflow_documents: None,

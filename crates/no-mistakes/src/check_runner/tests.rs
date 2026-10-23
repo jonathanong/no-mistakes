@@ -120,6 +120,7 @@ fn disabled_filesystem_check_returns_no_findings_without_dispatching_rules() {
         &[],
         no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
             snapshot: &snapshot,
+            next_config_resolver: None,
             vitest_catalog: None,
             sources: snapshot.source_store_for(&root),
             workflow_documents: None,

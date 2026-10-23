@@ -26,6 +26,17 @@ impl<'a> ImportResolver<'a> {
                 .unwrap_or_default();
         }
 
+        let mut candidates = self.path_alias_candidates(specifier);
+        if let Some(base_url) = &self.tsconfig().base_url {
+            candidates.extend(self.path_resolution_candidates(&base_url.join(specifier)));
+        }
+        if let ImportResolutionPolicy::QueueCompatibility { root } = self.policy {
+            candidates.extend(self.path_resolution_candidates(&root.join(specifier)));
+        }
+        candidates
+    }
+
+    fn path_alias_candidates(&self, specifier: &str) -> std::collections::BTreeSet<PathBuf> {
         let mut candidates = std::collections::BTreeSet::new();
         for (capture, replacements) in self.matching_aliases(specifier) {
             for replacement in replacements {
@@ -38,12 +49,6 @@ impl<'a> ImportResolver<'a> {
                     .join(resolved);
                 candidates.extend(self.path_resolution_candidates(&base));
             }
-        }
-        if let Some(base_url) = &self.tsconfig().base_url {
-            candidates.extend(self.path_resolution_candidates(&base_url.join(specifier)));
-        }
-        if let ImportResolutionPolicy::QueueCompatibility { root } = self.policy {
-            candidates.extend(self.path_resolution_candidates(&root.join(specifier)));
         }
         candidates
     }
@@ -85,9 +90,7 @@ impl<'a> ImportResolver<'a> {
     }
 
     fn queue_path_resolution_candidates(&self, base: &Path) -> std::collections::BTreeSet<PathBuf> {
-        const QUEUE_EXTENSIONS: &[&str] = &[
-            "mts", "ts", "tsx", "mjs", "js", "jsx", "cjs", "cts",
-        ];
+        const QUEUE_EXTENSIONS: &[&str] = &["mts", "ts", "tsx", "mjs", "js", "jsx", "cjs", "cts"];
         let mut candidates = std::collections::BTreeSet::new();
         if is_queue_source(base) {
             candidates.insert(base.to_path_buf());

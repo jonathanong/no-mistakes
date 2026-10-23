@@ -1,8 +1,8 @@
-use dashmap::mapref::entry::Entry as ScopedEntry;
 use dashmap::DashMap as ScopedDashMap;
+use dashmap::mapref::entry::Entry as ScopedEntry;
 use std::path::{Path as ScopedPath, PathBuf as ScopedPathBuf};
-use std::sync::atomic::{AtomicUsize as ScopedAtomicUsize, Ordering as ScopedOrdering};
 use std::sync::Arc as ScopedArc;
+use std::sync::atomic::{AtomicUsize as ScopedAtomicUsize, Ordering as ScopedOrdering};
 
 #[path = "scoped_facade.rs"]
 mod facade;
@@ -61,6 +61,29 @@ impl<'a> ScopedImportResolver<'a> {
         }
         self.shared_cache = Some(cache);
         self
+    }
+
+    pub(crate) fn resolve_path_alias(
+        &self,
+        specifier: &str,
+        importing_file: &ScopedPath,
+    ) -> Option<ScopedPathBuf> {
+        let resolve = |resolver: &ImportResolver<'_>| {
+            if !resolver.matches_alias(specifier) {
+                return None;
+            }
+            let target = resolver.resolve(specifier, importing_file)?;
+            // A matching paths pattern may fail and resolve through baseUrl.
+            // Accept only mapped candidates, while sharing the ordinary cache.
+            resolver
+                .path_alias_candidates(specifier)
+                .contains(&target)
+                .then_some(target)
+        };
+        if let Some(resolver) = self.fixed_resolver_for(importing_file) {
+            return resolve(resolver);
+        }
+        resolve(&self.resolver_for(importing_file))
     }
 
     pub(crate) fn resolve(
