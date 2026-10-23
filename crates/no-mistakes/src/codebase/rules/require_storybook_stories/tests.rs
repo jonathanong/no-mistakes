@@ -196,3 +196,6 @@ mod config_helpers;
 mod coverage_helpers;
 mod coverage_rule_cases;
 mod selection_rule_cases;
+
+mod malformed_prepared;
+mod malformed_selected;

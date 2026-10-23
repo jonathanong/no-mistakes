@@ -51,3 +51,17 @@ pub(super) fn component_suppression_sources(
             by_path
         })
 }
+
+/// Keep stale allow-component auditing aligned with the ordinary suppression path.
+pub(super) fn unsuppressed_component_keys(
+    root: &Path,
+    components: &[Component],
+    shared: &crate::codebase::check_facts::CheckFactMap,
+) -> std::collections::HashSet<String> {
+    let sources = component_suppression_sources(root, components, shared);
+    components
+        .iter()
+        .filter(|component| !component_is_suppressed(root, &sources, component))
+        .map(|component| component.key.clone())
+        .collect()
+}

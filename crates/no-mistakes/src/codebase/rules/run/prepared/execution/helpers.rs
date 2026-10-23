@@ -32,7 +32,9 @@ pub(super) struct StorybookFindingsRequest<'a> {
     pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
 }
 
-pub(super) fn storybook_findings(input: StorybookFindingsRequest<'_>) -> Result<Vec<RuleFinding>> {
+pub(super) fn storybook_findings(
+    input: StorybookFindingsRequest<'_>,
+) -> Result<crate::codebase::rules::analysis_policy::AnalysisDiagnostics> {
     let StorybookFindingsRequest {
         root,
         config,
