@@ -23,6 +23,11 @@ const SUPPORT: &[RuleEffortSupport] = &[
         partner_scope: |_, _| false,
     },
     RuleEffortSupport {
+        rule: "postgres-no-mutable-sql-registry",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
         rule: "postgres-no-unbounded-sql-identifier",
         partners: &[],
         partner_scope: |_, _| false,

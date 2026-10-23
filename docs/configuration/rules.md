@@ -117,3 +117,8 @@ unanalyzable when executor ownership is unresolved. They follow the selected
 parameter to make the receiver eligible for SQL analysis.
 
 `postgres-no-unbounded-sql-identifier` also supports [low effort](../rules/postgres-no-unbounded-sql-identifier.md#effort): direct SQL literals/templates or one lexical const, with unsupported syntax routed through the shared unanalyzable policy. No partner rule is required.
+
+[`postgres-no-mutable-sql-registry`](../rules/postgres-no-mutable-sql-registry.md#effort)
+also supports `effort: low`. Literal SQL and templates without relation-name
+interpolation are decidable; imported registry relations and helper SQL use
+`unanalyzable`. The low tier does not infer cross-file mutation provenance.

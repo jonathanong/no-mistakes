@@ -20,3 +20,4 @@ export * from "./postgres-catalog-types";
 export * from "./planning-impact-artifacts-types";
 export * from "./declared-payload-types";
 export type * from "./forbidden-call-types";
+export type * from "./postgres-mutable-sql-registry-types";

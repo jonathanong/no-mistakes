@@ -157,6 +157,7 @@
   "PostgresCompleteCatalog",
   "PostgresCompleteCatalogColumn",
   "PostgresCompleteCatalogTable",
+  "PostgresNoMutableSqlRegistryOptions",
   "PostgresNoUnboundedSqlIdentifierOptions",
   "PostgresOrderingCatalog",
   "PostgresRequireQueryAnnotationOptions",

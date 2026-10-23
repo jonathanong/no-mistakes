@@ -1,0 +1,13 @@
+rules:
+  - rule: postgres-no-mutable-sql-registry
+    name: low
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      effort: low
+  - rule: postgres-no-mutable-sql-registry
+    name: max
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      effort: max

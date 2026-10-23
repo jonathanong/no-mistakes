@@ -186,3 +186,10 @@ See [Live phase progress](node-api/progress.md).
 See [Effect alternatives](node-api/effect-alternatives.md).
 
 `check()` and `analyzeProject()` also honor low effort for [`postgres-no-unbounded-sql-identifier`](rules/postgres-no-unbounded-sql-identifier.md#effort). Import the exported `PostgresNoUnboundedSqlIdentifierOptions` type for its configuration. Unsupported syntax uses the same report/advisory/ignore policy in CLI and async Node reports.
+
+The `postgres-no-mutable-sql-registry` check accepts the exported
+`PostgresNoMutableSqlRegistryOptions` configuration type. Its
+[`effort: "low"` tier](rules/postgres-no-mutable-sql-registry.md#effort)
+checks direct literal SQL through named executor imports without preparing
+cross-file mutation analysis;
+unsupported inputs use the shared `unanalyzable` report/advice/ignore policy.

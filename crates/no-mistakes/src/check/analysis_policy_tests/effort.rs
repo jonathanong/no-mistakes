@@ -59,7 +59,7 @@ fn sql_explicit_max_is_byte_identical_to_default() {
 }
 
 #[test]
-fn low_keeps_nonadopter_fallback_and_enables_registered_adopter() {
+fn registered_sql_adopters_enable_low_without_fallback() {
     let config = "project-no-policy.yml";
     let default = report(config, None);
     assert_eq!(
@@ -70,35 +70,42 @@ fn low_keeps_nonadopter_fallback_and_enables_registered_adopter() {
             .collect::<Vec<_>>(),
         [
             ("postgres-no-mutable-sql-registry", 4),
-            ("postgres-no-unbounded-sql-identifier", 5),
-        ]
+            ("postgres-no-unbounded-sql-identifier", 5)
+        ],
     );
-    let default_json = check_runner::json_value(&default);
     assert_eq!(
         check_runner::json_value(&report(config, Some(Effort::Max))),
-        default_json
+        check_runner::json_value(&default)
     );
-
     let low = report(config, Some(Effort::Low));
-    assert_eq!(
-        low.warnings,
-        [
-            "postgres-no-mutable-sql-registry: requested effort low; effective effort max because this rule has no low implementation",
-        ]
-    );
+    assert!(low.warnings.is_empty(), "{:?}", low.warnings);
     assert!(low.analysis_fallbacks.is_empty());
-    let low_json = check_runner::json_value(&low);
-    assert!(low_json.get("analysisFallbacks").is_none());
-    let mutable = |rows: &[no_mistakes::codebase::rules::RuleFinding]| {
-        rows.iter()
-            .filter(|row| row.rule == "postgres-no-mutable-sql-registry")
-            .cloned()
-            .collect::<Vec<_>>()
-    };
-    assert_eq!(mutable(&low.rules), mutable(&default.rules));
-    assert!(low
-        .rules
-        .iter()
-        .any(|row| row.rule == "postgres-no-unbounded-sql-identifier"
-            && row.message.contains("effort low")));
+    for rule in [
+        "postgres-no-mutable-sql-registry",
+        "postgres-no-unbounded-sql-identifier",
+    ] {
+        assert!(
+            low.rules
+                .iter()
+                .any(|row| row.rule == rule && row.message.contains("effort low")),
+            "{rule}: {:?}",
+            low.rules
+        );
+    }
+}
+
+#[test]
+fn nonadopting_low_preserves_a_real_filesystem_finding_and_warns() {
+    let config = "nonadopter-agents.yml";
+    let default = report(config, None);
+    assert_eq!(default.rules.len(), 1, "{:?}", default.rules);
+    assert_eq!(default.rules[0].rule, "agents-md-max-size");
+    let low = report(config, Some(Effort::Low));
+    assert_eq!(low.warnings, ["agents-md-max-size: requested effort low; effective effort max because this rule has no low implementation"]);
+    assert!(low.analysis_fallbacks.is_empty());
+    let mut default_json = check_runner::json_value(&default);
+    let mut low_json = check_runner::json_value(&low);
+    default_json.as_object_mut().unwrap().remove("warnings");
+    low_json.as_object_mut().unwrap().remove("warnings");
+    assert_eq!(low_json, default_json);
 }

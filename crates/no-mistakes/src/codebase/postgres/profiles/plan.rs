@@ -24,7 +24,11 @@ pub fn configure_prepared_postgres_plan(
     plan.record_general_sql_locations();
     for (index, rule) in config.rules.iter().enumerate().filter(|(_, rule)| {
         rule.enabled
-            && rule.rule == "postgres-no-unbounded-sql-identifier"
+            && [
+                "postgres-no-unbounded-sql-identifier",
+                "postgres-no-mutable-sql-registry",
+            ]
+            .contains(&rule.rule.as_str())
             && config.rule_has_effective_target(rule)
     }) {
         if config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low {
