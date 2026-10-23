@@ -4,6 +4,7 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { literalString } = require("./module-mock-helpers");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
+const { isGlobalPromiseAlias } = require("./react-no-use-promise-resolve-alias");
 
 function unwrap(node) {
   while (node?.type === "ChainExpression") node = node.expression;
@@ -106,6 +107,36 @@ function isPromiseResolve(node) {
   );
 }
 
+function isAliasedPromiseResolve(node, context) {
+  if (
+    node?.type !== "CallExpression" ||
+    node.optional ||
+    node.arguments.length !== 1 ||
+    node.arguments[0].type === "SpreadElement"
+  )
+    return false;
+  const callee = node.callee;
+  return (
+    callee.type === "MemberExpression" &&
+    !callee.optional &&
+    callee.object.type === "Identifier" &&
+    staticName(callee.property, callee.computed) === "resolve" &&
+    isGlobalPromiseAlias(callee.object, context)
+  );
+}
+
+function ordinaryUseCall(node) {
+  if (node.optional || node.arguments.length !== 1 || node.arguments[0].type === "SpreadElement")
+    return false;
+  const callee = node.callee;
+  return (
+    callee.type === "Identifier" ||
+    (callee.type === "MemberExpression" &&
+      !callee.optional &&
+      !["call", "apply"].includes(staticName(callee.property, callee.computed)))
+  );
+}
+
 module.exports = Object.assign(
   rule(
     {
@@ -141,7 +172,8 @@ module.exports = Object.assign(
           if (
             suppressed(node) ||
             !isReactUse(node.callee, context, useNames) ||
-            !isPromiseResolve(resolvedArgument)
+            (!isPromiseResolve(resolvedArgument) &&
+              !(ordinaryUseCall(node) && isAliasedPromiseResolve(node.arguments[0], context)))
           ) {
             return;
           }
