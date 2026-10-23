@@ -549,21 +549,7 @@ describe("ts-no-function-aliases", () => {
         undefined,
         "invalid.ts",
       ),
-      [
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-      ],
+      Array.from({ length: 19 }, () => "alias"),
     );
   });
 
