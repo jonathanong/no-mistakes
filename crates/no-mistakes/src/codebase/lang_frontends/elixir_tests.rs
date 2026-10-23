@@ -50,8 +50,23 @@ fn brace_alias_without_trailing_newline_expands() {
 }
 
 #[test]
-fn expand_brace_members_skips_non_brace_rest() {
+fn expand_brace_members_covers_skip_and_keep_arms() {
     assert!(expand_brace_members("MyApp", "User").is_empty());
+    assert!(expand_brace_members("MyApp", "{User").is_empty());
+    assert!(expand_brace_members("MyApp", "{Foo.{Bar}}").is_empty());
+    assert!(expand_brace_members("MyApp", "{User, *}").is_empty());
+    assert_eq!(
+        expand_brace_members("MyApp", "{User}"),
+        vec!["MyApp.User".to_string()]
+    );
+    assert_eq!(
+        expand_brace_members("MyApp", "{User}\n"),
+        vec!["MyApp.User".to_string()]
+    );
+    assert_eq!(
+        expand_brace_members("MyApp", "{User} # x"),
+        vec!["MyApp.User".to_string()]
+    );
 }
 
 #[test]
