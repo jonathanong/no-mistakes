@@ -46,6 +46,7 @@ rules:
   - rule: postgres-sql-shape-policy
     scope: repository
     options:
+      executorNames: []
       sqlInclude: ["**/*.sql"]
       bannedShapes:
         - correlated-exists-set-operation
@@ -138,8 +139,17 @@ SELECT 1 WHERE EXISTS (
   UNION ALL
   SELECT 1 FROM topics WHERE id = $1
 );
+```
+
+```sql
 SELECT id FROM accounts a WHERE NOT EXISTS (SELECT 1 FROM bans b WHERE b.account_id = a.id);
+```
+
+```sql
 SELECT id FROM accounts WHERE id NOT IN (1, 2, 3);
+```
+
+```sql
 SELECT account_id FROM orders GROUP BY account_id HAVING COUNT(*) > 0;
 ```
 
@@ -152,7 +162,13 @@ WHERE EXISTS (
   UNION ALL
   SELECT 1 FROM tags WHERE tags.post_id = posts.id
 );
+```
+
+```sql
 SELECT id FROM accounts WHERE id NOT IN (SELECT account_id FROM bans);
+```
+
+```sql
 SELECT COUNT(*) > 0 AS has_orders FROM orders WHERE account_id = $1;
 ```
 

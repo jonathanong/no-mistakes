@@ -11,9 +11,10 @@ from a statement that can match many rows.
 ```yaml
 rules:
   - rule: postgres-bounded-statements
+    scope: repository
     options:
-      include: ["src/**/*.ts"]
-      exclude: ["**/*.test.ts"]
+      executorNames: []
+      sqlInclude: ["db/**/*.sql"]
       schemaCatalogPath: db/schema.json
       statements: [select, update, delete]
       allow:
@@ -83,7 +84,69 @@ their existing scopes. See [the migration notes](../migrations/explicit-postgres
 
 ## Valid example
 
+The SQL-only configuration above reads `db/queries.sql`. Both examples use
+this complete catalog snapshot, including valid, immediate primary-key indexes:
+
+```json
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "accounts": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid", "nullable": false}, "name": {"dataType": "text", "nullable": false}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "accounts_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true,
+          "valid": true, "ready": true, "live": true, "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "orders": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid", "nullable": false}, "account_id": {"dataType": "uuid", "nullable": false}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "orders_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true,
+          "valid": true, "ready": true, "live": true, "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "invoices": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid", "nullable": false}, "paid_at": {"dataType": "timestamptz", "nullable": true}}
+    },
+    "exports": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid", "nullable": false}, "expires_at": {"dataType": "timestamptz", "nullable": false}, "s3_key": {"dataType": "text", "nullable": true}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "exports_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true,
+          "valid": true, "ready": true, "live": true, "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "sessions": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid", "nullable": false}, "expires_at": {"dataType": "timestamptz", "nullable": false}}
+    },
+    "currencies": {
+      "relationKind": "table",
+      "columns": {"code": {"dataType": "text", "nullable": false}}
+    }
+  }
+}
+```
+
 ```sql
+-- db/queries.sql
 SELECT id FROM invoices WHERE paid_at IS NULL ORDER BY id LIMIT $1;
 SELECT name FROM accounts WHERE id = $1;
 SELECT id FROM orders WHERE id = ANY($1::uuid[]);
@@ -95,10 +158,72 @@ SELECT code FROM currencies;   -- allow entry
 
 ## Counterexample
 
+Use the same catalog so each statement fails because its row count is unbounded:
+
+```json
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "accounts": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid", "nullable": false}, "name": {"dataType": "text", "nullable": false}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "accounts_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true,
+          "valid": true, "ready": true, "live": true, "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "orders": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid", "nullable": false}, "account_id": {"dataType": "uuid", "nullable": false}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "orders_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true,
+          "valid": true, "ready": true, "live": true, "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "invoices": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid", "nullable": false}, "paid_at": {"dataType": "timestamptz", "nullable": true}}
+    },
+    "exports": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid", "nullable": false}, "expires_at": {"dataType": "timestamptz", "nullable": false}, "s3_key": {"dataType": "text", "nullable": true}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "exports_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true,
+          "valid": true, "ready": true, "live": true, "immediate": true,
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "sessions": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid", "nullable": false}, "expires_at": {"dataType": "timestamptz", "nullable": false}}
+    },
+    "currencies": {
+      "relationKind": "table",
+      "columns": {"code": {"dataType": "text", "nullable": false}}
+    }
+  }
+}
+```
+
 ```sql
+-- db/queries.sql
 SELECT id FROM invoices WHERE paid_at IS NULL;
 UPDATE exports SET s3_key = NULL WHERE expires_at < now();
 DELETE FROM sessions WHERE expires_at < now();
+SELECT code FROM currencies; -- Keep the configured allow entry in use.
 ```
 
 ## Fix

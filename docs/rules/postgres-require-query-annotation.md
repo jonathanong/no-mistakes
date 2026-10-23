@@ -220,12 +220,16 @@ suppress a low-effort call-site diagnostic. Other applications that remain at
 ## Valid example
 
 ```ts
+import { query } from "@example/db";
+
 query(`/* posts/list */ SELECT id FROM posts ORDER BY id DESC`);
 ```
 
 ## Counterexample
 
 ```ts
+import { query } from "@example/db";
+
 query(`SELECT id FROM posts ORDER BY id DESC`);
 ```
 
