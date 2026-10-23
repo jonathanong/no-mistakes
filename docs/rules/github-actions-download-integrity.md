@@ -114,14 +114,16 @@ A dynamic option name such as `curl --$FLAG URL` also makes argument slots
 uncertain: the expanded option could consume the apparent URL as a filename.
 It follows the same policy. Fixed option names with dynamic values, such as
 `--output="$OUT"` or `--header="$HEADER"`, keep their known operand positions.
+An unquoted dynamic value can split into additional options, so it also makes
+the command unanalyzable. Quote those values to keep their argument positions.
 
 Low effort may inspect one uppercase literal binding to identify a downloader
 or wrapper used as a dynamic command prefix. It does not use that binding to
 expand URL values. When this proves a configured downloader behind an indirect
 prefix, the shared `unanalyzable` policy applies; the rewrite is to call `curl`,
 `wget`, or a configured helper directly. Commands that cannot be identified as
-configured download commands remain outside this rule's target scope. Dynamic
-operands of known output and header options
+configured download commands remain outside this rule's target scope. Quoted
+dynamic operands of known output and header options
 keep using the existing option parser, so they do not trigger this policy as
 candidate URL arguments.
 
