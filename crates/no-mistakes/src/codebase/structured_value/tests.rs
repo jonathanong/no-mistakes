@@ -75,6 +75,19 @@ runtime:
 }
 
 #[test]
+fn sequence_merge_skips_a_scalar_item() {
+    let source = "\
+runtime:
+  <<:
+    - legacy: { enabled: true }
+    - plain
+";
+    let value = parse_structured_value(Path::new("app.yml"), source).unwrap();
+    assert_eq!(value["runtime"]["legacy"]["enabled"].as_bool(), Some(true));
+    assert!(value["runtime"].get("plain").is_none());
+}
+
+#[test]
 fn scalar_merge_does_not_invent_keys() {
     let source = "label: &label plain\nruntime:\n  <<: *label\n  version: 1\n";
     let value = parse_structured_value(Path::new("app.yml"), source).unwrap();

@@ -4,5 +4,6 @@ first: &first
     enabled: true
 second: &second
   extra: 1
+note: &note plain
 runtime:
-  <<: [*first, *second]
+  <<: [*first, *second, *note]
