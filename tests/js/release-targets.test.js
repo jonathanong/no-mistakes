@@ -178,7 +178,13 @@ test("CI cancels superseded PR runs but keeps active main coverage runs", () => 
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
   const concurrency = workflow.match(/^concurrency:\n((?: {2}[^\n]+\n)+)/m);
   assert.ok(concurrency, "CI must retain workflow-level concurrency");
-  assert.match(concurrency[1], /group:.*github\.event\.pull_request\.number \|\| github\.ref/);
+  // PRs group per PR number; every other event (main pushes) groups per SHA so a
+  // newer queued run can never replace an older pending main run.
+  assert.match(
+    concurrency[1],
+    /group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.event_name == 'pull_request' && format\('pr-\{0\}', github\.event\.pull_request\.number\) \|\| github\.sha \}\}\n/,
+  );
+  assert.doesNotMatch(concurrency[1], /github\.ref/);
   assert.match(
     concurrency[1],
     /cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/,
