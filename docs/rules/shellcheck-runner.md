@@ -32,6 +32,12 @@ failing unanalyzable diagnostic, `advise` emits a non-failing advisory, and
 environment that runs `no-mistakes` to analyze the selected scripts. This rule
 has no low-effort variant; a low-effort invocation runs it at `max`.
 
+A failed invocation that produces no recognized GCC-format diagnostics also
+prevents analysis of selected scripts. An abnormal exit preserves recognized
+script findings and applies `unanalyzable` to the remaining selected scripts.
+Run ShellCheck manually and repair its execution before retrying; a broken
+launcher must not silently make the rule pass.
+
 ## Options and defaults
 
 `shellFiles` adds explicit existing repository-relative script paths; it
@@ -60,7 +66,7 @@ repository `unanalyzable` policy and defaults to `report` when neither scope
 sets a value. It applies when selected scripts cannot be checked because the
 ShellCheck executable is missing. This is independent of `shellcheck.severity`.
 
-## Example
+## Valid example
 
 A selected script with no ShellCheck findings:
 
@@ -108,7 +114,9 @@ explicit plan to restore ShellCheck coverage.
 
 Use a ShellCheck-specific inline directive only when the code is intentional;
 use `no-mistakes-disable-file shellcheck-runner` when the script is generated
-and cannot be edited.
+and cannot be edited. Both findings and advisories honor this directive.
+The runner reports file-level diagnostics at line 1; line-based no-mistakes
+directives apply to that reported line, not the original ShellCheck location.
 
 ## Related rules
 

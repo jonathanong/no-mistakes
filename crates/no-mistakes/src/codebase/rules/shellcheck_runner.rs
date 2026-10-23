@@ -15,8 +15,6 @@ mod diagnostics;
 mod execution;
 pub use diagnostics::diagnostics_with_files_sources_and_snapshot;
 use execution::run_shellcheck;
-#[cfg(test)]
-use execution::{handle_shellcheck_result, parse_affected_files};
 mod selection;
 
 #[derive(Deserialize, Default)]

@@ -1,6 +1,7 @@
 use super::candidates::{
     collect_shell_files, collect_shell_files_with_sources, filtered_shell_files, has_bash_shebang,
 };
+use super::execution::{handle_shellcheck_result, parse_affected_files};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
