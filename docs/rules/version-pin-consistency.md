@@ -32,6 +32,16 @@ the filtered tracked file list are checked or reported. The source pin may
 still be read from disk to check remaining anchors. The rule is silent when
 none of those files remain.
 
+When an anchor remains selected but its source is outside the selected file
+set, the rule still reads the configured source from disk. If that source is
+missing, unreadable, or malformed, the rule reports an unanalyzable finding at
+line 1 of each selected anchor by default. Set `options.unanalyzable` to
+`advise` to receive non-failing advice, or `ignore` to suppress this
+uncertainty. Restore the source file or correct its path/format to let the rule
+compare the anchor. A valid source outside the selected set still supplies the
+comparison pin; a definite anchor mismatch remains a failure under every
+unanalyzable policy.
+
 Each `pattern` must contain exactly one capturing group. The captured text
 must equal the string pin at `sourceKey`. Missing keys, non-string pins,
 missing captures, and mismatches are findings with file and line when
@@ -51,25 +61,37 @@ Fix: update the source pin and every matching capture in the same change.
 EXAMPLE_TOOL_VERSION: 0.24.2
 ```
 
-Use `no-mistakes-disable-next-line version-pin-consistency` or
-`no-mistakes-disable-file version-pin-consistency` for a one-off exception.
+Use `no-mistakes-disable-file version-pin-consistency` in the anchor file
+for a file-level exception. Both findings and advisories honor it.
 
 ## Why and when
 
 Use this rule when one structured source owns a tool version and workflows,
 actions, or docs repeat it as operational anchors.
+If a selected anchor's source is unavailable outside the selected file set, the
+rule cannot verify the pin and reports or advises at that anchor instead of
+silently dropping it.
 
 ## What it catches/requires
 
 The source key must resolve to a string pin and every included anchor's single
 capture group must equal it. Missing keys, stale captures, malformed patterns,
-and stale paths are findings.
+and stale paths are findings. If a selected anchor depends on a missing,
+unreadable, or malformed source that is outside the selected file set, that
+uncertainty follows `options.unanalyzable` (`report` by default, `advise`, or
+`ignore`). A valid source outside the selected file set still supplies the comparison pin,
+and definite mismatches always fail.
 
 ## Options and defaults
 
 `sourceFile`, `sourceKey`, and `anchors` are required. Each anchor supplies a
 file and exactly-one-capture `pattern`, with optional `label`. Common
 include/exclude filters apply; there are no implicit source or anchor files.
+
+`options.unanalyzable` inherits the repository policy, which defaults to
+`report`. It accepts `report`, `advise`, or `ignore` for incomplete comparisons
+caused by an unreadable or malformed source outside the selected file set.
+Definite mismatches and validation of a selected source remain findings.
 
 ## Valid example
 
@@ -103,12 +125,17 @@ EXAMPLE_TOOL_VERSION: 0.24.1
 ## Fix
 
 Update every anchor in the same change, or change the source ownership and
-patterns together so one canonical pin remains.
+patterns together so one canonical pin remains. For an unanalyzable finding,
+restore the source file or correct `sourceFile`/its format so the selected
+anchor can be compared.
 
 ## Suppression
 
-Use `no-mistakes-disable-next-line version-pin-consistency` for one exceptional
-anchor or the file directive for a generated mirror that cannot be updated.
+Use `no-mistakes-disable-file version-pin-consistency` in the anchor file for
+an exception that covers findings and advisories. Incomplete-source diagnostics
+point to line 1, so `no-mistakes-disable-line` must be on that line. Definite
+mismatches retain the captured version's line and support `no-mistakes-disable-next-line`
+immediately before that line.
 
 ## Related rules
 

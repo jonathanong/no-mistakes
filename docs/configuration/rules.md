@@ -110,6 +110,12 @@ const, without evaluating helpers or builders. Other SQL inputs follow shared
 `unanalyzableSql: fail` means `report`. Selected `.sql` files keep their existing
 analysis. No companion rule is required.
 
+[`version-pin-consistency`](../rules/version-pin-consistency.md) also uses
+`options.unanalyzable` when a selected anchor's source is outside the selected
+file set and cannot be read or parsed. The default `report` fails, `advise`
+emits non-failing advice, and `ignore` stays silent. A valid source outside the selected file set still supplies the comparison pin, and definite mismatches remain
+failures under every policy.
+
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.

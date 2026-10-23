@@ -8,6 +8,7 @@ mod key;
 mod parse;
 mod path;
 mod scan;
+mod source;
 
 pub const RULE_ID: &str = "version-pin-consistency";
 
@@ -36,7 +37,19 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+    diagnostics_with_files_and_sources(root, config, all_files, sources, defer_suppression)
+        .map(|diagnostics| diagnostics.findings)
+}
+
+#[doc(hidden)]
+pub fn diagnostics_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+    let mut diagnostics = super::analysis_policy::AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
         let target_roots = super::target_roots(root, config, rule);
@@ -50,10 +63,18 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
         if files.is_empty() {
             continue;
         }
-        findings.extend(scan::scan(root, &opts, &files, sources, defer_suppression));
+        let policy = config.effective_rule_analysis(rule)?.unanalyzable;
+        for finding in scan::scan(root, &opts, &files, sources, defer_suppression) {
+            if finding.target.as_deref() == Some("unanalyzable") {
+                diagnostics.unanalyzable(policy, finding);
+            } else {
+                diagnostics.findings.push(finding);
+            }
+        }
     }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::sort_findings(&mut diagnostics.findings);
+    super::sort_findings(&mut diagnostics.advisories);
+    Ok(diagnostics)
 }
 
 #[cfg(test)]

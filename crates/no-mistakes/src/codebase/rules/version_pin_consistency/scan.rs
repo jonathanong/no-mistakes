@@ -1,5 +1,5 @@
 use super::key::key_line;
-use super::parse::{configured_rel, parse_source, pin_kind, tracked_rels};
+use super::parse::{configured_rel, pin_kind, tracked_rels};
 use super::path::read_text;
 use super::{Anchor, Options, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::line_number;
@@ -28,23 +28,11 @@ pub(super) fn scan(
     if !source_tracked && remaining.is_empty() {
         return Vec::new();
     }
-    let source_text = read_text(root, source_rel, sources);
-    let parsed = match parse_source(Path::new(source_rel), &source_text) {
-        Ok(value) => value,
-        Err(error) => {
-            return finish(
-                root,
-                sources,
-                defer_suppression,
-                source_finding(
-                    source_tracked,
-                    source_rel,
-                    1,
-                    format!("{source_rel}: {error}"),
-                ),
-            );
-        }
-    };
+    let (source_text, parsed) =
+        match super::source::load(root, source_rel, source_tracked, &remaining, sources) {
+            Ok(source) => source,
+            Err(findings) => return finish(root, sources, defer_suppression, findings),
+        };
     let source = SourcePin {
         rel: source_rel,
         tracked: source_tracked,
@@ -100,7 +88,7 @@ fn check_anchor(
         Ok(pin) => pin,
         Err(message) => return source_finding(source.tracked, source.rel, line, message),
     };
-    let anchor_text = read_text(root, anchor_rel, sources);
+    let anchor_text = read_text(root, anchor_rel, sources).unwrap_or_default();
     capture_findings(&regex, &anchor_text, pin, anchor_rel, source.rel, label)
 }
 
@@ -188,7 +176,7 @@ fn finish(
     findings
 }
 
-fn finding(file: &str, line: usize, message: String) -> RuleFinding {
+pub(super) fn finding(file: &str, line: usize, message: String) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),
         file: file.to_string(),

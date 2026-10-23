@@ -72,6 +72,14 @@ For `postgres-no-offset`, `low` checks
 `check({ effort: "low" })` and check reports in `analyzeProject()` use the same
 unanalyzable policy, source locations, suppression, and SQL verdict controls as
 the CLI. Raw SQL files retain their existing analysis.
+
+For `version-pin-consistency`, CLI `check`, `check(options)`, and check reports
+in `analyzeProject()` apply the same `unanalyzable` policy when a selected
+anchor's source outside the selected file set is missing, unreadable, or malformed: `report`
+fails by default, `advise` emits non-failing advice, and `ignore` suppresses the
+uncertainty. A valid source outside the selected file set still supplies the comparison pin,
+and definite mismatches remain failures.
+
 For `github-actions-job-timeouts`, `check({ effort: "low" })` and a check report
 in `analyzeProject()` use the same covering `github-actions-step-timeouts`
 partner as CLI `--effort low`. With a certified step cap, the job rule skips
