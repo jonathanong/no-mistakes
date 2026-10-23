@@ -35,6 +35,12 @@ fn diagnostics_are_additive_under_both_extraction_modes() {
                 {"type":"PoolClient", "module":"@example/db/client", "count":2}
             ])
         );
+        assert_eq!(
+            report["unresolvedExecutorReceivers"],
+            serde_json::json!([
+                {"type":"Executor", "module":"@example/db", "count":1}
+            ])
+        );
     }
 }
 
@@ -59,6 +65,7 @@ fn rust_report_preserves_legacy_statements_and_import_selection() {
         };
         assert_eq!(report.statements, legacy);
         assert!(report.undeclared_executor_types.is_empty());
+        assert!(report.unresolved_executor_receivers.is_empty());
     }
 }
 
@@ -129,5 +136,53 @@ fn undeclared_executor_policies_and_suppressions_reach_public_check_reports() {
                 .count(),
             3
         );
+    }
+}
+
+#[test]
+fn configured_member_receivers_remain_visible_in_opt_in_source_diagnostics() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/embedded/undeclared-member-receivers.ts"
+    ));
+    for resolve in [false, true] {
+        for configured in [false, true] {
+            let types = if configured {
+                vec!["Executor", "PoolClient"]
+            } else {
+                vec!["Executor"]
+            };
+            let mut request = serde_json::json!({
+                "sources": [{"fileName": "query.ts", "source": source}],
+                "importSpecifier": "@example/db", "executorTypeNames": types,
+                "resolveImports": resolve,
+            });
+            let legacy: serde_json::Value = serde_json::from_str(
+                &extract_executed_postgres_sql_json_impl(request.clone()).unwrap(),
+            )
+            .unwrap();
+            request["includeDiagnostics"] = true.into();
+            let report: serde_json::Value =
+                serde_json::from_str(&extract_executed_postgres_sql_json_impl(request).unwrap())
+                    .unwrap();
+            assert_eq!(report["statements"], legacy);
+            assert_eq!(legacy.as_array().unwrap().len(), 1);
+            let key = if configured {
+                "unresolvedExecutorReceivers"
+            } else {
+                "undeclaredExecutorTypes"
+            };
+            assert_eq!(
+                report[key],
+                serde_json::json!([{"type":"PoolClient", "module":"@example/db", "count":9}]),
+                "{resolve}/{configured}: {report}"
+            );
+            let other = if configured {
+                "undeclaredExecutorTypes"
+            } else {
+                "unresolvedExecutorReceivers"
+            };
+            assert_eq!(report[other], serde_json::json!([]));
+        }
     }
 }

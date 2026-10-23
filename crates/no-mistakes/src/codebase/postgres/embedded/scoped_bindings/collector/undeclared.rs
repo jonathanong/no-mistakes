@@ -22,34 +22,8 @@ impl ScopeCollector {
         }
     }
 
-    fn imported_annotation_identity(
-        &self,
-        ty: &TSType<'_>,
-    ) -> Option<&super::super::super::UndeclaredExecutorType> {
-        match ty {
-            TSType::TSTypeReference(reference) => match &reference.type_name {
-                oxc_ast::ast::TSTypeName::IdentifierReference(ident) => {
-                    self.undeclared.get(ident.name.as_str())
-                }
-                _ => None,
-            },
-            // Match the existing declared-executor union grammar, including nullable receivers.
-            TSType::TSUnionType(union) => union
-                .types
-                .iter()
-                .find_map(|member| self.imported_annotation_identity(member)),
-            _ => None,
-        }
-    }
-
     pub(super) fn record_undeclared(&mut self, name: &str, start: u32, ty: &TSType<'_>) {
-        if let Some(identity) = self.imported_annotation_identity(ty) {
-            let mut identity = identity.clone();
-            identity.explicit_annotation = true;
-            self.found
-                .undeclared
-                .insert((name.to_string(), start), identity);
-        }
+        self.record_path_annotation(name, start, ty, "", None);
     }
 
     pub(super) fn record_undeclared_variable(&mut self, declaration: &VariableDeclarator<'_>) {

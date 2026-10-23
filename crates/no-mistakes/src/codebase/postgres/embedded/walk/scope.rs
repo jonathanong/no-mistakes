@@ -58,7 +58,6 @@ impl ScopeVisitor<'_> {
         let mut names = Vec::new();
         resolve::for_each_bound_name(pattern, &mut |name| names.push(name.to_string()));
         for name in names {
-            self.bind_undeclared_declaration(&name, pattern.span().start);
             let executor = self
                 .scoped
                 .contains_declaration(&name, pattern.span().start);
@@ -84,6 +83,7 @@ impl ScopeVisitor<'_> {
                     },
                 );
             }
+            self.bind_undeclared_declaration(&name, pattern.span().start);
             if let Some(index) = relative_executor_proof {
                 self.relative_proofs
                     .last_mut()

@@ -43,6 +43,6 @@ function constructorShadow(PoolClient: unknown) {
   local.query('SELECT ignored');
 }
 Client.query('SELECT ignored'); // Type-only imports have no runtime receiver.
-// Explicit declared types take precedence over inferred alias identities.
+// Explicit configured types take precedence over inferred aliases but need a supported receiver.
 const explicitlyDeclared: Executor = client;
-explicitlyDeclared.query('SELECT ignored');
+explicitlyDeclared.query('SELECT unresolved');

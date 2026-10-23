@@ -67,17 +67,19 @@ fn classify_import(
             || named.import_kind == ImportOrExportKind::Type;
         let factory = !type_only && contains(&options.executor_factory_names, imported.as_str());
         let type_import = contains(&options.executor_type_names, imported.as_str());
-        if !factory && !type_import {
+        if !factory {
             if !options.import_specifier.is_empty() && (confirmed || relative) {
                 let owner = relative.then(|| {
                     let index = classified.candidates.len() as u32;
-                    classified.candidates.push(RelativeScopedCandidate {
-                        specifier: source.to_string(),
-                        imported_name: imported.to_string(),
-                        local_name: local.clone(),
-                        factory: false,
-                        type_import: false,
-                    });
+                    if !type_import {
+                        classified.candidates.push(RelativeScopedCandidate {
+                            specifier: source.to_string(),
+                            imported_name: imported.to_string(),
+                            local_name: local.clone(),
+                            factory: false,
+                            type_import: false,
+                        });
+                    }
                     index
                 });
                 let identity = super::super::UndeclaredExecutorType {
@@ -91,15 +93,18 @@ fn classify_import(
                     span: (0, 0),
                     owner,
                     explicit_annotation: false,
+                    configured_type: type_import,
                 };
                 if !type_only {
                     classified
                         .undeclared_runtime
                         .insert(local.clone(), identity.clone());
                 }
-                classified.undeclared.insert(local, identity);
+                classified.undeclared.insert(local.clone(), identity);
             }
-            continue;
+            if !type_import {
+                continue;
+            }
         }
         if confirmed {
             if factory {

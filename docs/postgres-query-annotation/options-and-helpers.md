@@ -34,6 +34,13 @@ type to `executorTypeNames` and explicitly annotate inferred receivers to analyz
 its calls. This diagnostic does not infer
 an executor or run its SQL argument.
 
+Configured types alone do not prove every receiver shape. Calls through class
+fields or constructor parameter properties (`this.db.query`), typed object
+parameters (`ctx.db.query`), and typed array elements (`clients[0].query`) remain
+unanalyzable when executor ownership is unresolved. They follow the selected
+`unanalyzable` policy, including at low effort. Use a supported explicitly typed
+parameter to make the receiver eligible for SQL analysis.
+
 ### SQL helpers and callbacks
 
 Straight-line same-file and imported helpers can return SQL assembled from strings,

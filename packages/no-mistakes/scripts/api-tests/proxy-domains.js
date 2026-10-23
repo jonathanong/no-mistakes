@@ -82,6 +82,7 @@ async function assertProxyDomains(api) {
     {
       statements: [],
       undeclaredExecutorTypes: [{ type: "PoolClient", module: "@db", count: 1 }],
+      unresolvedExecutorReceivers: [{ type: "Pool", module: "@db", count: 2 }],
     },
   );
   const noDiagnostics = { ...importAware, includeDiagnostics: false };

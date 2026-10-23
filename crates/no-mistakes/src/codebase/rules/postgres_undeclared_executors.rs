@@ -59,16 +59,31 @@ pub(crate) fn check(
                 continue;
             };
             for call in &file.undeclared_executor_types {
-                let message = format!(
-                    "undeclared executor type `{}` from `{}`; add `{}` to executorTypeNames and explicitly annotate inferred receivers with that type so their SQL is checked",
-                    call.type_name, call.module, call.type_name,
-                );
+                let (subcheck, target, message) = if call.configured_type {
+                    (
+                        "unresolved-configured-executor-receiver",
+                        "unresolved-configured-executor-receiver",
+                        format!(
+                            "configured executor receiver of type `{}` from `{}` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
+                            call.type_name, call.module,
+                        ),
+                    )
+                } else {
+                    (
+                        "undeclared-executor-type",
+                        "undeclared-executor-type",
+                        format!(
+                            "undeclared executor type `{}` from `{}`; add `{}` to executorTypeNames and use an explicitly typed parameter/helper so its SQL is checked",
+                            call.type_name, call.module, call.type_name,
+                        ),
+                    )
+                };
                 if context.wants_sql_verdicts() {
                     context.record_sql_verdict(SqlObligationVerdict {
                         profile: profile.clone(),
                         rule: rule_id.to_string(),
                         application: None,
-                        subcheck: "undeclared-executor-type".into(),
+                        subcheck: subcheck.into(),
                         file: rel.clone(),
                         span: call.span,
                         status: SqlVerdictStatus::Abstain,
@@ -86,7 +101,7 @@ pub(crate) fn check(
                         line: call.line as usize,
                         message: format!("{rel}:{}: {message}", call.line),
                         import: Some(call.module.clone()),
-                        target: Some("undeclared-executor-type".into()),
+                        target: Some(target.into()),
                     });
                 }
             }

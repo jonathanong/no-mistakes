@@ -12,6 +12,11 @@ test("executor diagnostics preserve array defaults and export a named opt-in rep
   assert.match(declarations, /undeclaredExecutorTypes: UndeclaredExecutorTypeSummary\[\];/);
   assert.match(
     declarations,
+    /export type UnresolvedExecutorReceiverSummary = UndeclaredExecutorTypeSummary;/,
+  );
+  assert.match(declarations, /unresolvedExecutorReceivers: UnresolvedExecutorReceiverSummary\[\];/);
+  assert.match(
+    declarations,
     /ExecutedPostgresSqlOptions<true> & \{ includeDiagnostics: true \},\s*\): Promise<ExecutedPostgresSqlReport>;/,
   );
   assert.match(

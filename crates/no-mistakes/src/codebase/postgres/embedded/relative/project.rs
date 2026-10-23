@@ -92,6 +92,15 @@ pub(crate) fn project_relative_scoped_facts(
             (call, start)
         })
         .collect::<Vec<_>>();
+    if !facts.undeclared_executor_types.is_empty() {
+        // Resolver-confirmed receivers already follow the ordinary SQL verdict
+        // path, including unanalyzable SQL; do not also report receiver failure.
+        let proven_spans: crate::fx::FxHashSet<_> =
+            promoted.iter().map(|(_, span)| *span).collect();
+        facts
+            .undeclared_executor_types
+            .retain(|entry| !proven_spans.contains(&entry.span));
+    }
     if promoted.is_empty() {
         return;
     }

@@ -7,12 +7,14 @@ use crate::codebase::postgres::UndeclaredExecutorTypeSummary;
 use anyhow::Result;
 use serde::Serialize;
 
-/// Executed statements plus receiver types omitted from the configured executors.
+/// Executed statements plus missing-type and unresolved-receiver diagnostics.
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ExecutedPostgresSqlReport {
     pub statements: Vec<ExecutedPostgresSql>,
     pub undeclared_executor_types: Vec<UndeclaredExecutorTypeSummary>,
+    /// Configured imported types whose receiver shapes have no executor proof.
+    pub unresolved_executor_receivers: Vec<UndeclaredExecutorTypeSummary>,
 }
 
 /// Preserve extraction's statements while exposing diagnostic counts. `Some`

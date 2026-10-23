@@ -11,7 +11,7 @@ export function run(client: PoolClient, replacement: PoolClient, known: Executor
   function nested(client: unknown) { client.query('SELECT ignored_shadow'); }
   let declared: Executor = known;
   declared = known;
-  declared.query('SELECT ignored_declared');
+  declared.query('SELECT unresolved_declared'); // Local annotation alone is not executor proof.
   known.query('SELECT declared_executor');
 }
 // Nullable imported types use the same union grammar as declared executors.

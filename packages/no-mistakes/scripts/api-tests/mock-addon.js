@@ -113,6 +113,7 @@ function createMockAddon(collectionGap) {
           ? {
               statements: [],
               undeclaredExecutorTypes: [{ type: "PoolClient", module: "@db", count: 1 }],
+              unresolvedExecutorReceivers: [{ type: "Pool", module: "@db", count: 2 }],
             }
           : { command: "extractExecutedPostgresSql", options: JSON.parse(json) },
       ),

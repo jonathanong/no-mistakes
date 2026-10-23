@@ -5,31 +5,49 @@ use oxc_ast::ast::{CallExpression, Expression};
 
 impl ScopeVisitor<'_> {
     pub(super) fn bind_undeclared_declaration(&mut self, name: &str, start: u32) {
-        if let Some(identity) = self.scoped.undeclared.get(&(name.to_string(), start)) {
-            self.undeclared_scopes
-                .last_mut()
-                .expect("scope")
-                .insert(name.to_string(), identity.clone());
+        if let Some(identity) = self
+            .scoped
+            .undeclared
+            .get(&start)
+            .and_then(|names| names.get(name))
+        {
+            let index = self
+                .scopes
+                .iter()
+                .rposition(|scope| scope.contains_key(name))
+                .expect("binding scope");
+            self.undeclared_scopes[index].insert(name.to_string(), identity.clone());
         }
     }
 
-    fn undeclared_identity(&self, name: &str) -> Option<&super::super::UndeclaredExecutorType> {
+    fn undeclared_identity(
+        &self,
+        name: &str,
+        path: &str,
+    ) -> Option<&super::super::UndeclaredExecutorType> {
         match self
             .scopes
             .iter()
             .rposition(|scope| scope.contains_key(name))
         {
-            Some(index) => self.undeclared_scopes[index].get(name),
-            None => self.scoped.undeclared_imports.get(name),
+            Some(index) => self.undeclared_scopes[index]
+                .get(name)
+                .and_then(|types| types.get(path)),
+            None if path.is_empty() => self.scoped.undeclared_imports.get(name),
+            None => None,
         }
     }
 
     pub(super) fn bind_undeclared_alias(&mut self, name: &str, init: &Expression<'_>) {
-        if self
-            .undeclared_scopes
-            .last()
-            .is_some_and(|scope| scope.contains_key(name))
-        {
+        let Some(index) = self
+            .scopes
+            .iter()
+            .rposition(|scope| scope.contains_key(name))
+        else {
+            // Some helper-only declarators have no ordinary value binding.
+            return;
+        };
+        if self.undeclared_scopes[index].contains_key(name) {
             return;
         }
         let source_name = match unwrap_ts_wrappers(init) {
@@ -40,15 +58,24 @@ impl ScopeVisitor<'_> {
             },
             _ => None,
         };
-        if let Some(mut identity) = source_name
-            .and_then(|name| self.undeclared_identity(name))
-            .cloned()
-        {
-            identity.explicit_annotation = false;
-            self.undeclared_scopes
-                .last_mut()
-                .expect("scope")
-                .insert(name.to_string(), identity);
+        if let Some(source_name) = source_name {
+            let mut types = self
+                .scopes
+                .iter()
+                .rposition(|scope| scope.contains_key(source_name))
+                .and_then(|index| self.undeclared_scopes[index].get(source_name))
+                .cloned()
+                .unwrap_or_default();
+            if let Some(identity) = self.undeclared_identity(source_name, "") {
+                types.insert(String::new(), identity.clone());
+            }
+            if types.is_empty() {
+                return;
+            }
+            for identity in types.values_mut() {
+                identity.explicit_annotation = false;
+            }
+            self.undeclared_scopes[index].insert(name.to_string(), types);
         }
     }
 
@@ -61,7 +88,7 @@ impl ScopeVisitor<'_> {
             // Assignment changes an inferred value identity, not a declared type.
             if self.undeclared_scopes[index]
                 .get(name)
-                .is_some_and(|identity| !identity.explicit_annotation)
+                .is_some_and(|types| types.values().all(|identity| !identity.explicit_annotation))
             {
                 self.undeclared_scopes[index].remove(name);
             }
@@ -84,17 +111,37 @@ impl ScopeVisitor<'_> {
         if !self.executor_methods.iter().any(|name| name == method) {
             return;
         }
-        let Expression::Identifier(name) = unwrap_ts_wrappers(receiver) else {
+        let Some((name, path)) = super::undeclared_receivers::receiver_path(receiver) else {
             return;
         };
-        // Configured imports and declared receivers already have executor proof.
-        if self.proven_executor(receiver)
-            && (!self.namespace_expression(receiver) || self.query_binding)
-        {
-            return;
-        }
-        let identity = self.undeclared_identity(name.name.as_str());
+        let identity = if name == "this" {
+            let Some((scope, types)) = self
+                .scoped
+                .undeclared_this
+                .iter()
+                .filter(|(scope, _)| scope.start <= call.span.start && call.span.end <= scope.end)
+                .min_by_key(|(scope, _)| scope.end - scope.start)
+            else {
+                return;
+            };
+            if self.scoped.undeclared_this_exclusions.iter().any(|span| {
+                scope.start <= span.start
+                    && span.start <= call.span.start
+                    && call.span.end <= span.end
+            }) {
+                return;
+            }
+            types.get(&path)
+        } else {
+            self.undeclared_identity(name, &path)
+        };
         if let Some(identity) = identity {
+            // Configured imports and declared receivers already have executor proof.
+            if self.proven_executor(receiver)
+                && (!self.namespace_expression(receiver) || self.query_binding)
+            {
+                return;
+            }
             let mut occurrence = identity.clone();
             occurrence.line = crate::codebase::ts_source::byte_offset_to_line(
                 self.source,

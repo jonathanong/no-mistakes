@@ -81,21 +81,36 @@ const report = await extractExecutedPostgresSql({
   includeDiagnostics: true,
 });
 // Check this before treating the extracted statements as complete coverage.
-if (report.undeclaredExecutorTypes.length > 0) {
+if (report.undeclaredExecutorTypes.length || report.unresolvedExecutorReceivers.length) {
   // For example: { type: "PoolClient", module: "pg", count: 2 }.
 }
 ```
 
 The result is an `ExecutedPostgresSqlReport` with `statements` and an always-present
-`undeclaredExecutorTypes` array. Each `UndeclaredExecutorTypeSummary` has `type`,
+`undeclaredExecutorTypes` array and an always-present `unresolvedExecutorReceivers`
+array. The latter counts configured imported types whose member or element
+receivers still lack executor proof. Its exported `UnresolvedExecutorReceiverSummary`
+type has the same fields as `UndeclaredExecutorTypeSummary`: `type`,
 `module`, and `count`; entries are sorted by type, then module, and count omitted
 call sites rather than SQL alternatives. An empty array means no such omitted
 types were found, not that every possible executor or SQL value was resolved.
 These calls stay excluded from `statements`: diagnostics do not widen executor
 selection or evaluate an undeclared receiver's SQL. Add the imported type name
-to `executorTypeNames` and explicitly annotate inferred receivers, for example
-`const client: PoolClient = new PoolClient()`, to make the receiver eligible for
-SQL analysis.
+to `executorTypeNames`. If a receiver still appears in `unresolvedExecutorReceivers`,
+use a supported explicitly typed parameter, rather than assuming configuration
+alone proves a complex property or array receiver:
+
+```ts
+function execute(client: PoolClient) {
+  return client.query("/* widgets/list */ SELECT id FROM widgets");
+}
+execute(this.db);
+```
+
+This diagnostic applies to `this.db.query`, object-parameter properties such as
+`ctx.db.query`, and indexed receivers such as `clients[0].query`. Check mode routes
+both missing types and unresolved configured receivers through `unanalyzable`;
+source extraction exposes both arrays independently of that policy.
 
 Omitting `includeDiagnostics`, or setting it to `false`, preserves the existing
 statement-array response. The generic `ExecutedPostgresSqlOptions` defaults to

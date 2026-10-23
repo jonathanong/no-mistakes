@@ -20,7 +20,7 @@ fn inputs(policy: &str) -> (PathBuf, NoMistakesConfig, Vec<PathBuf>) {
 #[test]
 fn missing_types_follow_policy_without_becoming_executed_sql() {
     for (policy, expected_findings, advisory) in [
-        ("report", 8, false),
+        ("report", 9, false),
         ("advise", 0, true),
         ("ignore", 0, false),
     ] {
@@ -38,14 +38,26 @@ fn missing_types_follow_policy_without_becoming_executed_sql() {
         let findings = check(&root, &config, RULE, &files, &facts).unwrap();
         assert_eq!(findings.len(), expected_findings, "{policy}: {findings:?}");
         let verdicts = facts.sql_verdicts();
-        assert_eq!(verdicts.len(), 8);
+        assert_eq!(verdicts.len(), 9);
         assert!(verdicts
             .iter()
             .all(|v| v.status == SqlVerdictStatus::Abstain && v.advisory == advisory));
-        assert!(verdicts
+        let omitted = verdicts
+            .iter()
+            .filter(|v| v.subcheck == "undeclared-executor-type")
+            .collect::<Vec<_>>();
+        assert_eq!(omitted.len(), 8);
+        assert!(omitted
             .iter()
             .all(|v| v.residual_reasons[0].contains("PoolClient")
                 && v.residual_reasons[0].contains("executorTypeNames")));
+        let unresolved = verdicts
+            .iter()
+            .filter(|v| v.subcheck != "undeclared-executor-type")
+            .collect::<Vec<_>>();
+        assert_eq!(unresolved.len(), 1);
+        assert!(unresolved[0].residual_reasons[0]
+            .contains("configured executor receiver of type `Executor`"));
         assert!(verdicts
             .iter()
             .all(|v| v.application.as_ref().unwrap().index == 0));

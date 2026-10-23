@@ -47,11 +47,15 @@ impl ScopedCollection {
     }
 }
 
+pub(super) type UndeclaredReceiverTypes = HashMap<String, super::UndeclaredExecutorType>;
+
 /// Binding name to the source spans in which it is an executor.
 #[derive(Debug, Default)]
 pub(super) struct ScopedExecutors {
     spans: HashMap<String, Vec<Span>>,
-    pub(super) undeclared: HashMap<(String, u32), super::UndeclaredExecutorType>,
+    pub(super) undeclared: HashMap<u32, HashMap<String, UndeclaredReceiverTypes>>,
+    pub(super) undeclared_this: Vec<(Span, UndeclaredReceiverTypes)>,
+    pub(super) undeclared_this_exclusions: Vec<Span>,
     pub(super) undeclared_imports: HashMap<String, super::UndeclaredExecutorType>,
 }
 
@@ -81,6 +85,7 @@ pub(super) fn collect(program: &Program<'_>, options: &EmbeddedSqlOptions) -> Sc
     let mut visitor = ScopeCollector::from_imports(imports);
     if visitor.needs_walk() {
         visitor.visit_program(program);
+        visitor.finish_undeclared_annotations();
     }
     ScopedCollection {
         executors: visitor.found,

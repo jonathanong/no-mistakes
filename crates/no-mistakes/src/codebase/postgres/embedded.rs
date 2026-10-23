@@ -17,7 +17,7 @@ pub(crate) use placeholders::{
     INTERNAL_PLACEHOLDER,
 };
 pub(crate) mod relative;
-mod undeclared;
+pub(crate) mod undeclared;
 mod unproven;
 pub use undeclared::{
     summarize_undeclared_executor_types, UndeclaredExecutorType, UndeclaredExecutorTypeSummary,

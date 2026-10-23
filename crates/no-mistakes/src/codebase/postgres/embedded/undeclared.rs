@@ -9,6 +9,7 @@ pub struct UndeclaredExecutorType {
     pub span: (u32, u32),
     pub(crate) owner: Option<u32>,
     pub(crate) explicit_annotation: bool,
+    pub(crate) configured_type: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -22,10 +23,23 @@ pub struct UndeclaredExecutorTypeSummary {
 pub fn summarize_undeclared_executor_types<'a>(
     occurrences: impl IntoIterator<Item = &'a UndeclaredExecutorType>,
 ) -> Vec<UndeclaredExecutorTypeSummary> {
+    summarize_receivers(occurrences, false)
+}
+
+pub fn summarize_unresolved_executor_receivers<'a>(
+    occurrences: impl IntoIterator<Item = &'a UndeclaredExecutorType>,
+) -> Vec<UndeclaredExecutorTypeSummary> {
+    summarize_receivers(occurrences, true)
+}
+
+fn summarize_receivers<'a>(
+    occurrences: impl IntoIterator<Item = &'a UndeclaredExecutorType>,
+    configured: bool,
+) -> Vec<UndeclaredExecutorTypeSummary> {
     let mut counts = std::collections::BTreeMap::new();
     for occurrence in occurrences {
         // Relative syntax alone does not prove the configured module's ownership.
-        if occurrence.owner.is_some() {
+        if occurrence.owner.is_some() || occurrence.configured_type != configured {
             continue;
         }
         *counts

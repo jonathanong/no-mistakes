@@ -68,6 +68,8 @@ pub(crate) fn extract_executed_postgres_sql_with_session(
         undeclared.extend(occurrences);
     }
     report.undeclared_executor_types = super::summarize_undeclared_executor_types(&undeclared);
+    report.unresolved_executor_receivers =
+        super::summarize_unresolved_executor_receivers(&undeclared);
     Ok(report)
 }
 
@@ -177,6 +179,9 @@ pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
             report.statements.extend(statements_for_call);
         }
     }
-    report.undeclared_executor_types = super::summarize_undeclared_executor_types(undeclared);
+    report.undeclared_executor_types =
+        super::summarize_undeclared_executor_types(undeclared.iter().copied());
+    report.unresolved_executor_receivers =
+        super::summarize_unresolved_executor_receivers(undeclared);
     Ok(report)
 }

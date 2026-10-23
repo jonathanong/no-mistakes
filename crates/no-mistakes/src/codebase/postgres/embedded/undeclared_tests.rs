@@ -16,7 +16,18 @@ fn undeclared_types_are_diagnostics_and_never_executor_calls() {
         1,
         "only the declared Executor is evaluated"
     );
-    let diagnostics = &facts.undeclared_executor_types;
+    let diagnostics: Vec<_> = facts
+        .undeclared_executor_types
+        .iter()
+        .filter(|call| !call.configured_type)
+        .collect();
+    assert_eq!(
+        super::undeclared::summarize_unresolved_executor_receivers(
+            &facts.undeclared_executor_types
+        )[0]
+        .count,
+        1
+    );
     assert_eq!(diagnostics.len(), 8);
     assert_eq!(
         diagnostics.iter().map(|call| call.line).collect::<Vec<_>>(),
@@ -39,7 +50,9 @@ fn declared_types_and_unscoped_profiles_have_no_undeclared_diagnostics() {
         EmbeddedSqlOptions::configured("unrelated", &[]),
     ] {
         let facts = extract_embedded_sql_from_source(&fixture(name), &read_fixture(name), &options);
-        assert!(facts.undeclared_executor_types.is_empty());
+        assert!(
+            super::summarize_undeclared_executor_types(&facts.undeclared_executor_types).is_empty()
+        );
     }
 }
 
@@ -149,12 +162,23 @@ fn explicit_imported_receiver_types_survive_assignment_but_inferred_aliases_do_n
         facts
             .undeclared_executor_types
             .iter()
+            .filter(|call| !call.configured_type)
             .map(|call| call.line)
             .collect::<Vec<_>>(),
         [4, 7, 19, 23]
     );
+    assert_eq!(
+        super::undeclared::summarize_unresolved_executor_receivers(
+            &facts.undeclared_executor_types
+        )[0]
+        .count,
+        1
+    );
     assert!(facts
         .undeclared_executor_types
         .iter()
+        .filter(|call| !call.configured_type)
         .all(|call| call.type_name == "PoolClient"));
 }
+
+mod review;

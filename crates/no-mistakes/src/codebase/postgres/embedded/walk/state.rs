@@ -38,7 +38,8 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(in crate::codebase::postgres::embedded) scoped: &'a ScopedExecutors,
     pub(crate) provisional: &'a [PendingRelativeSpan],
     pub(crate) scopes: Vec<HashMap<String, BindingState>>,
-    pub(super) undeclared_scopes: Vec<HashMap<String, super::super::UndeclaredExecutorType>>,
+    pub(super) undeclared_scopes:
+        Vec<HashMap<String, super::super::scoped_bindings::UndeclaredReceiverTypes>>,
     pub(super) undeclared_executor_types: Vec<super::super::UndeclaredExecutorType>,
     pub(super) executor_methods: Vec<String>,
     pub(crate) relative_proofs: Vec<HashMap<String, u32>>,

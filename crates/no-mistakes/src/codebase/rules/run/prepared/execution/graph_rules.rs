@@ -113,6 +113,15 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
                 )
             },
         )?);
+        findings.extend(
+            crate::codebase::rules::postgres_undeclared_executors::check(
+                root,
+                config,
+                crate::codebase::rules::POSTGRES_NO_MUTABLE_SQL_REGISTRY,
+                shared.graph_file_universe(),
+                shared,
+            )?,
+        );
     }
     if rule_enabled(
         config,
@@ -130,6 +139,15 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
                 )
             },
         )?);
+        findings.extend(
+            crate::codebase::rules::postgres_undeclared_executors::check(
+                root,
+                config,
+                crate::codebase::rules::POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER,
+                shared.graph_file_universe(),
+                shared,
+            )?,
+        );
     }
     Ok(findings)
 }
