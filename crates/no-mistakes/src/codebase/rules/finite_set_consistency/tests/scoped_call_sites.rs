@@ -1,7 +1,7 @@
 use super::*;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::{
-    collect_check_facts_with_supplemental_call_sites, CheckFactPlan,
+    collect_check_facts_with_supplemental_call_sites, CheckFactMap, CheckFactPlan,
 };
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_source::facts::TsFactPlan;
@@ -109,6 +109,37 @@ fn finite_set_call_sources_skip_unrelated_walks_without_changing_findings() {
     assert!(!view.covers_ts_fact_plan_for_path(&unrelated, required));
     assert!(!view.covers_ts_fact_plan_for_path(&registry, required));
     assert!(Arc::ptr_eq(&view.call_site_paths, &scoped.call_site_paths));
+
+    // When every supplemental scoped path wins, the composed view shares its
+    // coverage set and retains the actual call facts behind that coverage.
+    broad.call_site_paths = Arc::new([call.clone(), unrelated.clone()].into_iter().collect());
+    let empty_primary = CheckFactMap::default();
+    let all_winning = empty_primary.fact_view_filling_missing(&broad);
+    assert!(Arc::ptr_eq(
+        &all_winning.call_site_paths,
+        &broad.call_site_paths
+    ));
+    assert!(all_winning.covers_ts_fact_plan_for_path(&call, required));
+    assert!(all_winning.covers_ts_fact_plan_for_path(&unrelated, required));
+    assert_eq!(all_winning.ts[&call].ts.call_sites.len(), 2);
+    assert_eq!(all_winning.ts[&unrelated].ts.call_sites.len(), 2);
+
+    // With one existing primary entry and one missing entry, only the
+    // supplemental path whose real facts win earns scoped coverage.
+    let mut mixed_primary = CheckFactMap::default();
+    mixed_primary
+        .ts
+        .insert(unrelated.clone(), Arc::clone(&scoped.ts[&unrelated]));
+    let mixed = mixed_primary.fact_view_filling_missing(&broad);
+    assert_eq!(mixed.call_site_paths.len(), 1);
+    assert!(mixed.call_site_paths.contains(&call));
+    assert!(!mixed.call_site_paths.contains(&unrelated));
+    assert!(!Arc::ptr_eq(&mixed.call_site_paths, &broad.call_site_paths));
+    assert!(mixed.covers_ts_fact_plan_for_path(&call, required));
+    assert!(!mixed.covers_ts_fact_plan_for_path(&unrelated, required));
+    assert_eq!(mixed.ts[&call].ts.call_sites.len(), 2);
+    assert!(mixed.ts[&unrelated].ts.call_sites.is_empty());
+
     // Once the primary lacks that entry, the supplemental facts and coverage win together.
     scoped.ts.remove(&unrelated);
     let filled = scoped.fact_view_filling_missing(&broad);
