@@ -53,6 +53,7 @@ fn collect_check_facts_inner(
     let playwright = playwright.as_ref();
     let graph_plan = CheckFactPlan {
         graph: plan.graph,
+        call_site_paths: plan.call_site_paths.clone(),
         graph_context: plan.graph_context.clone(),
         integration_runner_configs: plan.integration_runner_configs.clone(),
         ..CheckFactPlan::default()

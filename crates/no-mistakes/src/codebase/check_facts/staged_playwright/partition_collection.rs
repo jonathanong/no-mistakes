@@ -108,7 +108,7 @@ pub(super) fn collect_partitions(
             facts,
         );
     }
-    if !plan.graph.is_empty() {
+    if !plan.graph.is_empty() || !plan.call_site_paths.is_empty() {
         collect_test_partition(
             session,
             root,

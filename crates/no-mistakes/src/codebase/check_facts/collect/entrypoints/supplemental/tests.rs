@@ -17,7 +17,6 @@ fn supplemental_call_source_keeps_its_richer_production_import_facts() {
         production_import_paths: Arc::new([call_source.clone()].into_iter().collect()),
         graph: TsFactPlan {
             imports: true,
-            call_sites: true,
             ..Default::default()
         },
         ..Default::default()
@@ -120,13 +119,7 @@ fn playwright_only_test_source_keeps_supplemental_call_sites() {
         &root,
         (Vec::new(), Vec::new()),
         vec![call_source.clone()],
-        CheckFactPlan {
-            graph: TsFactPlan {
-                call_sites: true,
-                ..Default::default()
-            },
-            ..Default::default()
-        },
+        CheckFactPlan::default(),
         Some(playwright),
         sources,
     );

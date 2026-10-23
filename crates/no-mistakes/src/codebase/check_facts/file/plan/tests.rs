@@ -320,3 +320,24 @@ fn playwright_const_urls_share_module_binding_projection_across_variants() {
     })
     .unwrap();
 }
+
+#[test]
+fn scoped_call_sites_select_normalized_paths_without_narrowing_generic_demand() {
+    let selected = PathBuf::from("/repo/src/entry.ts");
+    let other = PathBuf::from("/repo/src/other.ts");
+    let mut plan = CheckFactPlan::default();
+    plan.require_call_site_paths(std::slice::from_ref(&selected));
+    assert!(ts_extract_plan(Path::new("/repo"), &plan, &selected, None).call_sites);
+    assert!(
+        ts_extract_plan(
+            Path::new("/repo"),
+            &plan,
+            Path::new("/repo/src/nested/../entry.ts"),
+            None,
+        )
+        .call_sites
+    );
+    assert!(!ts_extract_plan(Path::new("/repo"), &plan, &other, None).call_sites);
+    plan.graph.call_sites = true;
+    assert!(ts_extract_plan(Path::new("/repo"), &plan, &other, None).call_sites);
+}
