@@ -1,5 +1,5 @@
 use super::super::extract::{extract_named_destinations_from_program, ExtractedDestinations};
-use super::super::scan::section_findings;
+use super::super::scan::{check_named_section as check, NamedCheck};
 use super::super::RuleFinding;
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -9,10 +9,7 @@ pub(super) fn extract_named_destinations(
     source: &str,
     name: &str,
 ) -> ExtractedDestinations {
-    crate::ast::with_program(path, source, |program, source| {
-        extract_named_destinations_from_program(program, source, name)
-    })
-    .unwrap_or_default()
+    extract_named_destinations_with(path, source, name, false)
 }
 
 pub(super) fn check_named_section(
@@ -25,13 +22,30 @@ pub(super) fn check_named_section(
     app_root_label: &str,
 ) -> Vec<RuleFinding> {
     let extracted = extract_named_destinations(config_path, source, name);
-    section_findings(
+    check(NamedCheck {
         rel,
         source,
         name,
         kind,
-        &extracted,
+        extracted: &extracted,
         route_set,
         app_root_label,
-    )
+        analysis: crate::config::v2::EffectiveRuleAnalysis {
+            effort: crate::config::v2::Effort::Max,
+            unanalyzable: crate::config::v2::Unanalyzable::Report,
+        },
+    })
+    .findings
+}
+
+pub(super) fn extract_named_destinations_with(
+    path: &Path,
+    source: &str,
+    name: &str,
+    literals_only: bool,
+) -> ExtractedDestinations {
+    crate::ast::with_program(path, source, |program, source| {
+        extract_named_destinations_from_program(program, source, name, literals_only)
+    })
+    .unwrap_or_default()
 }

@@ -106,3 +106,68 @@ fn nextjs_static_tuple_destinations_and_partial_extraction_are_checked() {
         .status
         .success());
 }
+
+#[test]
+fn nextjs_redirect_effort_max_matches_default_and_low_keeps_literals() {
+    let root = fixture("nextjs-redirect-destinations", "dest-non-string");
+    let default = check_fixture_config(&root, ".no-mistakes.yml");
+    let explicit_max = check_fixture_config(&root, ".no-mistakes-explicit-max.yml");
+    assert!(default.status.success());
+    assert_eq!(stdout(&default), stdout(&explicit_max));
+    let low_report = check_fixture_config(&root, ".no-mistakes-low-report.yml");
+    assert_eq!(low_report.status.code(), Some(1));
+    assert!(
+        stdout(&low_report).contains("effort low"),
+        "{}",
+        stdout(&low_report)
+    );
+    assert!(
+        stdout(&low_report).contains("literal array of objects"),
+        "{}",
+        stdout(&low_report)
+    );
+    let advise = check_fixture_config(&root, ".no-mistakes-low-advise.yml");
+    assert!(advise.status.success(), "{}", stdout(&advise));
+    assert!(
+        stdout(&advise).contains("effort low"),
+        "{}",
+        stdout(&advise)
+    );
+    let ignore = check_fixture_config(&root, ".no-mistakes-low-ignore.yml");
+    assert!(ignore.status.success(), "{}", stdout(&ignore));
+    assert!(!stdout(&ignore).contains("nextjs-redirect-destinations"));
+    let pass = fixture("nextjs-redirect-destinations", "pass");
+    assert!(check_fixture_config(&pass, ".no-mistakes-low.yml")
+        .status
+        .success());
+    let missing = fixture("nextjs-redirect-destinations", "fail-missing");
+    let missing_low = check_fixture_config(&missing, ".no-mistakes-low.yml");
+    assert_eq!(missing_low.status.code(), Some(1));
+    assert!(
+        stdout(&missing_low).contains("/gone"),
+        "{}",
+        stdout(&missing_low)
+    );
+}
+
+#[test]
+fn nextjs_redirect_low_mixed_literals_stay_checked_under_unanalyzable() {
+    let root = fixture("nextjs-redirect-destinations", "mixed-literal-unanalyzable");
+    for yaml in [
+        ".no-mistakes-low-report.yml",
+        ".no-mistakes-low-advise.yml",
+        ".no-mistakes-low-ignore.yml",
+    ] {
+        let out = check_fixture_config(&root, yaml);
+        let body = stdout(&out);
+        assert_eq!(out.status.code(), Some(1), "{yaml}: {body}");
+        for destination in [
+            "/missing-literal",
+            "/missing-tpl",
+            "/missing-rw-literal",
+            "/missing-rw-tpl",
+        ] {
+            assert!(body.contains(destination), "{yaml} {destination}: {body}");
+        }
+    }
+}

@@ -138,6 +138,48 @@ Use `no-mistakes-disable-file nextjs-redirect-destinations` to opt a Next.js
 config out, or `no-mistakes-disable-next-line nextjs-redirect-destinations`
 on a destination line.
 
+## Effort
+
+`effort: max` is the default and preserves helper, binding, map-callback, and
+template inference described below. At effective `effort: low`, this rule
+accepts only literal arrays and objects returned from `redirects()` /
+`rewrites()`:
+
+```ts
+export default {
+  async redirects() {
+    return [{ source: "/a", destination: "/b", permanent: true }];
+  },
+};
+```
+
+String literals, no-expression templates, and function bodies that only return
+that literal array qualify. Identifiers, helpers, `.map()` callbacks, spreads,
+destructuring, and interpolated templates are **unanalyzable**, even when `max`
+can recover them. Rewrite them as a literal array of objects with string
+`destination` fields, for example
+`return [{ source: '/a', destination: '/b', permanent: true }]`.
+
+Missing pages for recovered literal destinations remain ordinary findings at
+both efforts, including when the same `redirects()` / `rewrites()` array also
+has unanalyzable entries. `unanalyzable` only governs the undecidable rows.
+
+The shared `unanalyzable` policy controls unsupported shapes: `report` fails,
+`advise` emits a non-failing advisory, and `ignore` skips them. For example,
+set `options.effort: low` and `options.unanalyzable: report` to require literal
+arrays. Shared configuration and CLI overrides also apply. These syntax proofs
+do not require a companion rule.
+
+Low-effort unanalyzable diagnostics use the `redirects` / `rewrites` method
+line. Suppress at that method:
+
+```ts
+// no-mistakes-disable-next-line nextjs-redirect-destinations
+async redirects() {
+  return rows.map((row) => row);
+}
+```
+
 ## Static destination construction
 
 Immutable module and method-local constants, literal arrays and objects, array
@@ -190,3 +232,5 @@ nextConfig;` checks `next-shared.ts` when the selected tsconfig maps `@/*` to
 Only one hop is followed. Package imports, `baseUrl`-only specifiers, and a
 second delegated module are outside this bounded extraction. Keep redirects
 and rewrites in the directly delegated module to make them statically checkable.
+
+At either effort, the same one-hop relative re-export or configured TypeScript paths alias is followed. Low effort checks literal destinations in the delegated file and applies `unanalyzable` to its unsupported entries. Findings and advisories name that helper file, including its suppression directives. For rewrites, use `return [{ source: "/a", destination: "/b" }]` (no `permanent` field).

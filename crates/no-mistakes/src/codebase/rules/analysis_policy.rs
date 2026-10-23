@@ -18,6 +18,11 @@ pub struct RuleEffortSupport {
 // explicitly unanalyzable under the caller's policy, rather than inferred clear.
 const SUPPORT: &[RuleEffortSupport] = &[
     RuleEffortSupport {
+        rule: "nextjs-redirect-destinations",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
         rule: "postgres-require-query-annotation",
         partners: &[],
         partner_scope: |_, _| false,

@@ -41,7 +41,9 @@ no-mistakes check --format json
 
 `no-mistakes check --include-sql-verdicts --format json` adds the opt-in SQL verdict ledger and does not change findings.
 `no-mistakes check --effort low --format json` selects low effort only for
-rules that implement it; `max` is the default and preserves current analysis.
+rules that implement it (`postgres-require-query-annotation`,
+`nextjs-redirect-destinations`, and `test-no-unmocked-dynamic-imports`); `max`
+is the default and preserves current analysis.
 `test-no-unmocked-dynamic-imports` at `low` accepts only a top-level static
 import, a `vi.mock` or `jest.mock` call, or a literal `require()` in setup
 files; other setup-reachability shapes follow `unanalyzable`.
