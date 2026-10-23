@@ -92,6 +92,9 @@ fn unresolved_runtime_sql_abstains_before_statement_facts_are_needed() {
     assert_eq!(verdicts[0].status, SqlVerdictStatus::Abstain);
     assert_eq!(
         verdicts[0].residual_reasons,
-        vec!["unresolved-sql-fragment".to_string()]
+        vec![
+            "opaque-sql-tail".to_string(),
+            "unresolved-sql-fragment".to_string()
+        ]
     );
 }
