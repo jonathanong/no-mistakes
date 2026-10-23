@@ -420,6 +420,50 @@ fn low_effort_emits_unanalyzable_for_non_literal_exact_selectors() {
         .contains("unanalyzable at effort low"));
 }
 
+#[test]
+fn low_effort_skips_html_ids_when_the_html_rule_is_enabled() {
+    let report = CoverageReport {
+        summary: Summary {
+            total_routes: 0,
+            covered_routes: 0,
+            uncovered_routes: 0,
+            total_selectors: 1,
+            covered_selectors: 0,
+            uncovered_selectors: 1,
+            duplicate_selectors: 0,
+            total_fetch_apis: 0,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 0,
+        },
+        routes: vec![],
+        selectors: vec![CoverageSelector {
+            attribute: HTML_ID_ATTRIBUTE.to_string(),
+            value: "{id}".to_string(),
+            file: "web/app/page.tsx".to_string(),
+            covered: false,
+            unsupported_dynamic: true,
+            tests: vec![],
+            tests_detail: vec![],
+            selectors: vec![],
+            helper_references: vec![],
+            line: 12,
+            literal_exact: false,
+        }],
+        duplicate_selectors: vec![],
+        fetch_apis: vec![],
+    };
+    let outcome = findings_from_report_with_effort(
+        &analysis(report, vec![]),
+        true,
+        true,
+        false,
+        coverage_all(false),
+        Some(Unanalyzable::Report),
+    );
+    assert!(outcome.findings.is_empty());
+    assert!(outcome.advisories.is_empty());
+}
+
 fn analysis(report: CoverageReport, edges: Vec<Edge>) -> Analysis {
     Analysis {
         coverage: report,
