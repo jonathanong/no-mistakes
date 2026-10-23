@@ -193,5 +193,8 @@ fn elixir_ref_re() -> &'static Regex {
 }
 
 #[cfg(test)]
+#[path = "elixir_import_tests.rs"]
+mod import_tests;
+#[cfg(test)]
 #[path = "elixir_tests.rs"]
 mod tests;
