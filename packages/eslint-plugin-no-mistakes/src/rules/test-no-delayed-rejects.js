@@ -2,7 +2,8 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
-const { findContainingRoot, traverse, unwrapExpression } = require("./async-ast");
+const { findContainingRoot, traverse } = require("./async-ast");
+const { originDeclarator } = require("./test-no-delayed-rejects-promise-alias");
 const { chainIsSafelyObserved, promiseChainBase } = require("./test-no-delayed-rejects-chains");
 const { canReachMatcher, contains, executesBefore } = require("./test-no-delayed-rejects-flow");
 const { isImmediateObserver } = require("./test-no-delayed-rejects-observers");
@@ -13,17 +14,6 @@ const {
 } = require("./test-no-delayed-rejects-suspensions");
 
 const { expectedIdentifier } = require("./test-no-delayed-rejects-expect");
-
-function findVariable(scope, name) {
-  let current = scope;
-  while (current) {
-    const variable =
-      current.set?.get?.(name) ?? current.variables?.find((item) => item.name === name);
-    if (variable) return variable;
-    current = current.upper;
-  }
-  return null;
-}
 
 function matcherCall(rejects) {
   let current = rejects;
@@ -38,27 +28,8 @@ function matcherCall(rejects) {
     : null;
 }
 
-function constDeclarator(identifier, context) {
-  const variable = findVariable(context.sourceCode.getScope(identifier), identifier.name);
-  if (!variable || variable.defs.length !== 1) return null;
-  const [definition] = variable.defs;
-  if (definition.type !== "Variable") return null;
-  const declarator = definition.node;
-  if (
-    !declarator?.init ||
-    declarator.id.type !== "Identifier" ||
-    declarator.id.name !== identifier.name ||
-    declarator.parent?.type !== "VariableDeclaration" ||
-    declarator.parent.kind !== "const"
-  ) {
-    return null;
-  }
-  if (unwrapExpression(declarator.init).type === "Identifier") return null;
-  return declarator;
-}
-
 function isSameConst(identifier, declarator, context) {
-  return identifier.type === "Identifier" && constDeclarator(identifier, context) === declarator;
+  return identifier.type === "Identifier" && originDeclarator(identifier, context) === declarator;
 }
 
 function isRejectionHandlerCall(node, declarator, context) {
@@ -159,7 +130,7 @@ module.exports = rule(
       MemberExpression(node) {
         const identifier = expectedIdentifier(node, context);
         if (!identifier) return;
-        const declarator = constDeclarator(identifier, context);
+        const declarator = originDeclarator(identifier, context);
         const call = matcherCall(node);
         if (
           !declarator ||
