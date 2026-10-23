@@ -11,6 +11,9 @@ export async function malformedAndUnknown() {
   await expect.apply(null, unknownArgs).rejects.toThrow();
   await expect.apply(null, [...unknownArgs]).rejects.toThrow();
   await expect.call(null, ...unknownArgs).rejects.toThrow();
+  await expect.apply.call(expect, null, unknownArgs).rejects.toThrow();
+  const shape = { rejects: { toThrow() {} } };
+  shape.rejects.toThrow();
   await expect.poll.call(null, () => promise).rejects.toThrow();
   await expect.poll.apply(null, [() => promise]).rejects.toThrow();
   const poll = expect.poll;

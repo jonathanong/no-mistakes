@@ -28,6 +28,16 @@ describe("delayed rejection forwarding", () => {
     assert.deepEqual(check("forwarding-suppressed"), []);
     assert.deepEqual(check("forwarding-suppressed-file"), []);
   });
+  it("requires the actual function receiver before counting nested early observers", () => {
+    assert.deepEqual(
+      check("forwarding-receiver").map((message) => [message.line, message.messageId]),
+      [
+        [8, "delayedReject"],
+        [14, "delayedReject"],
+        [21, "delayedReject"],
+      ],
+    );
+  });
   it("shares proven nested aliases with error-message assertions, preserving shadowing", () => {
     const rule = "test-no-error-message-matching";
     assert.deepEqual(
@@ -51,6 +61,7 @@ describe("delayed rejection forwarding", () => {
       [`${id}/forwarding-controls.ts`, 0],
       [`${id}/forwarding-suppressed.ts`, 0],
       [`${id}/forwarding-suppressed-file.ts`, 0],
+      [`${id}/forwarding-receiver.ts`, 3],
       ["test-no-error-message-matching/nested-alias.ts", 2],
     ]) {
       const result = spawnSync(

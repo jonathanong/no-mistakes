@@ -3,11 +3,7 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { findContainingRoot, traverse, unwrapExpression } = require("./async-ast");
-const {
-  chainIsSafelyObserved,
-  literalPropertyName,
-  promiseChainBase,
-} = require("./test-no-delayed-rejects-chains");
+const { chainIsSafelyObserved, promiseChainBase } = require("./test-no-delayed-rejects-chains");
 const { canReachMatcher, contains, executesBefore } = require("./test-no-delayed-rejects-flow");
 const { isImmediateObserver } = require("./test-no-delayed-rejects-observers");
 const {
@@ -16,8 +12,7 @@ const {
   suspensionOccursBeforeMatcher,
 } = require("./test-no-delayed-rejects-suspensions");
 
-const { EXPECT_MODULES, isExpectCallee } = require("./test-message-expect");
-const { logicalCall } = require("./module-mock-helpers");
+const { expectedIdentifier } = require("./test-no-delayed-rejects-expect");
 
 function findVariable(scope, name) {
   let current = scope;
@@ -28,23 +23,6 @@ function findVariable(scope, name) {
     current = current.upper;
   }
   return null;
-}
-
-function expectedIdentifier(rejects, context) {
-  if (literalPropertyName(rejects) !== "rejects") return null;
-  const expectation = unwrapExpression(rejects.object);
-  if (expectation?.type !== "CallExpression") return null;
-  const invoked = logicalCall(expectation);
-  // poll receives a callback, while call/apply must first shift the this argument.
-  if (!invoked || literalPropertyName(invoked.callee) === "poll") return null;
-  if (
-    invoked.arguments.length !== 1 ||
-    !isExpectCallee(invoked.callee, context, new Set(), EXPECT_MODULES, false)
-  )
-    return null;
-  const [argument] = invoked.arguments;
-  const unwrapped = unwrapExpression(argument);
-  return unwrapped.type === "Identifier" ? unwrapped : null;
 }
 
 function matcherCall(rejects) {

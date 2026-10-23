@@ -75,15 +75,18 @@ function isNamespace(node, context, seen) {
   return isNamespace(def.node.init, context, seen);
 }
 
-function isExpectCallee(node, context, seen = new Set(), modules = null, allowPoll = true) {
+function isExpectCallee(node, context, seen = new Set(), modules = null, mode = {}) {
   let callee = unwrap(node);
   if (callee?.type === "MemberExpression") {
     const name = memberName(callee);
     if (name === "call" || name === "apply") {
-      return isExpectCallee(callee.object, context, seen, modules, allowPoll);
+      return (
+        mode.allowForwarding !== false &&
+        isExpectCallee(callee.object, context, seen, modules, mode)
+      );
     }
-    if (name === "soft" || (name === "poll" && allowPoll))
-      return isExpectCallee(callee.object, context, seen, modules, allowPoll);
+    if (name === "soft" || (name === "poll" && mode.allowPoll !== false))
+      return isExpectCallee(callee.object, context, seen, modules, mode);
     return name === "expect" && isNamespace(callee.object, context, seen);
   }
   if (callee?.type !== "Identifier" || seen.has(callee.name)) return false;
@@ -97,7 +100,7 @@ function isExpectCallee(node, context, seen = new Set(), modules = null, allowPo
   if (def.type !== "Variable" || def.node?.parent?.kind !== "const" || !def.node.init) return false;
   seen.add(callee.name);
   if (def.node.id.type === "Identifier")
-    return isExpectCallee(def.node.init, context, seen, modules, allowPoll);
+    return isExpectCallee(def.node.init, context, seen, modules, mode);
   if (def.node.id.type !== "ObjectPattern") return false;
   const fromModule =
     isNamespace(def.node.init, context, seen) || (!modules && requireExpectSource(def.node.init));
