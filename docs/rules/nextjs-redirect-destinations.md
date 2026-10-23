@@ -115,11 +115,16 @@ followed one hop when it re-exports a relative default (`export { default }
 from "./next-shared"`) or default-imports that binding and exports it
 (`import nextConfig from "./next-shared"; export default nextConfig`). Every
 default import is remembered and matched to the exported identifier, including
-when another default import comes later. A relative specifier with no extension
-also resolves `index.ts` (and the other source extensions), and a `.js` /
-`.jsx` / `.mjs` / `.cjs` specifier also resolves the TypeScript sibling. The
-shared file is then checked with the same extractor. A second hop, a package
-specifier, and a tsconfig path such as `@/next-shared` are not followed.
+when another default import comes later. A specifier counts as having an
+extension only when that extension is a JS or TS source extension. A dotted
+basename such as `./next.shared` still receives those extensions, including
+`next.shared.ts` and `next.shared/index.ts`. A `.js` / `.jsx` / `.mjs` /
+`.cjs` specifier also resolves the TypeScript sibling. The shared file is then
+checked with the same extractor. A second hop, a package specifier, a tsconfig
+path such as `@/next-shared`, `export * from`, `module.exports = require("./x")`,
+and a wrapper such as `export default withPlugin(shared)` or `{ ...shared }`
+are not followed. Two entries that delegate to the same shared module each
+report that module's findings.
 
 Counterexample: `next.config.ts` redirects `/old` to `/gone`, and
 `app/gone/page.tsx` does not exist. A destination of `/secret` also fails when

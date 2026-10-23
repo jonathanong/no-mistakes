@@ -150,10 +150,7 @@ fn resolve_relative(from: &Path, specifier: &str, files: &[PathBuf]) -> Option<P
     let base = from.parent()?.join(specifier);
     let normalized = crate::codebase::ts_resolver::normalize_path(&base);
     let mut candidates = Vec::new();
-    match normalized
-        .extension()
-        .and_then(|extension| extension.to_str())
-    {
+    match source_extension(&normalized) {
         Some(extension) => {
             candidates.push(normalized.clone());
             if let Some(source_extension) = typescript_extension(extension) {
@@ -162,7 +159,7 @@ fn resolve_relative(from: &Path, specifier: &str, files: &[PathBuf]) -> Option<P
         }
         None => {
             for extension in EXTENSIONS {
-                candidates.push(normalized.with_extension(*extension));
+                candidates.push(append_extension(&normalized, extension));
                 candidates.push(normalized.join(format!("index.{extension}")));
             }
         }
@@ -174,6 +171,18 @@ fn resolve_relative(from: &Path, specifier: &str, files: &[PathBuf]) -> Option<P
             candidates.iter().any(|candidate| candidate == &file)
         })
         .cloned()
+}
+
+fn source_extension(path: &Path) -> Option<&str> {
+    let extension = path.extension().and_then(|extension| extension.to_str())?;
+    EXTENSIONS.contains(&extension).then_some(extension)
+}
+
+fn append_extension(path: &Path, extension: &str) -> PathBuf {
+    let mut name = path.as_os_str().to_os_string();
+    name.push(".");
+    name.push(extension);
+    PathBuf::from(name)
 }
 
 fn typescript_extension(extension: &str) -> Option<&'static str> {
