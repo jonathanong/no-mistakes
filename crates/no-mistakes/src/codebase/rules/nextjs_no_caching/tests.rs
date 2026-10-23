@@ -5,7 +5,8 @@ fn check_with_facts(
     config: &NoMistakesConfig,
     facts: &CheckFactMap,
 ) -> anyhow::Result<Vec<RuleFinding>> {
-    check_with_facts_for_aggregate(root, config, facts, None, false)
+    diagnostics_with_facts_for_aggregate(root, config, facts, None, false)
+        .map(|diagnostics| diagnostics.findings)
 }
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::ts_source::FileIdMap;
@@ -516,3 +517,5 @@ mod config_shapes;
 mod coverage;
 mod nested;
 mod shadowing;
+
+mod effort;

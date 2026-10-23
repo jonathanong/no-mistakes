@@ -1,0 +1,23 @@
+'use cache';
+import { unstable_cache as memo } from 'next/cache';
+import * as cache from 'next/cache';
+memo(() => 1);
+cache.unstable_cache(() => 1);
+fetch('/no-options');
+fetch('/unknown-options', options);
+fetch('/spread', { ...options });
+fetch('/computed', { [key()]: 1 });
+fetch('/unknown-next', { next: options });
+fetch('/unknown-revalidate', { next: { revalidate: duration } });
+fetch('/unknown-tags', { next: { tags } });
+fetch('/other', { method: 'GET', next: { tags: [], other: true } });
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'no-store';
+export const unrelated = compute();
+export let uninitialized;
+export function handler() { 'use cache: private'; return 1; }
+const setting = 'force-static';
+export { setting as dynamic, setting as other };
+const duration = 60;
+export { duration as revalidate };

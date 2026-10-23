@@ -128,6 +128,7 @@ pub(crate) fn collect_file_facts_from_program(
         integration_runner_config,
         dynamic_imports: fused.dynamic_imports,
         nextjs_caching: fused.nextjs_caching,
+        nextjs_caching_low: fused.nextjs_caching_low,
         storybook: fused.storybook,
         embedded_sql,
         query_annotation,

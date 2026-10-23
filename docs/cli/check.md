@@ -43,6 +43,10 @@ For `playwright-unique-test-ids`, `low` accepts a string literal test id,
 including JSX `data-testid={"save"}`, or a prop with a literal default. Other
 selector shapes use the shared unanalyzable policy and name that rewrite. See
 [the rule](../rules/playwright-unique-test-ids.md#effort).
+For `nextjs-no-caching`, `low` checks literal cache settings without constant
+propagation or configuration wrapper inference. Indirect settings follow the
+shared unanalyzable policy; literal violations, directives, and cache API checks
+remain enabled. See [the rule](../rules/nextjs-no-caching.md#effort).
 `--include-suppressed` is opt-in and adds deterministic directive accounting to
 JSON/YAML output without changing the default report schema.
 `unprovenMemberQuerySql` is an optional count of member `.query` calls that were not proven, omitted when zero, and not a failure.

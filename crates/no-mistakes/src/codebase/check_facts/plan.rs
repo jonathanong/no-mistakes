@@ -38,6 +38,7 @@ pub struct CheckFactPlan {
         Option<Arc<crate::integration_tests::PreparedIntegrationRunnerConfigs>>,
     pub dynamic_imports: bool,
     pub nextjs_caching: bool,
+    pub nextjs_caching_low: bool,
     pub storybook: bool,
     #[doc(hidden)]
     pub storybook_paths: super::FamilyPathScope,
@@ -168,6 +169,7 @@ impl CheckFactPlan {
         }
         self.dynamic_imports |= other.dynamic_imports;
         self.nextjs_caching |= other.nextjs_caching;
+        self.nextjs_caching_low |= other.nextjs_caching_low;
         self.source |= other.source;
         self.raw_source |= other.raw_source;
         self.postgres_schema |= other.postgres_schema;

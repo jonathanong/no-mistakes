@@ -56,7 +56,7 @@ pub(super) fn run_check(
         })
         .transpose()?;
 
-    let mut fact_plan = standalone_fact_plan(&config);
+    let mut fact_plan = standalone_fact_plan(&config)?;
     crate::codebase::postgres::configure_prepared_postgres_plan(root, &config, &mut fact_plan)?;
     crate::codebase::postgres::assign_prepared_embedded_sql_options(&config, &mut fact_plan)?;
     fact_plan.embedded_sql = !fact_plan.embedded_sql_options.is_empty();
@@ -159,13 +159,13 @@ pub(super) fn run_check(
 #[cfg(test)]
 mod tests;
 
-fn standalone_fact_plan(config: &crate::config::v2::NoMistakesConfig) -> CheckFactPlan {
+fn standalone_fact_plan(config: &crate::config::v2::NoMistakesConfig) -> Result<CheckFactPlan> {
     let dynamic_imports = rule_enabled(config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS);
     let boundary = rule_enabled(config, SERVER_ROUTE_CLIENT_BOUNDARY);
     let nextjs_api_routes = rule_enabled(config, NEXTJS_NO_API_ROUTES);
     let nextjs_caching = rule_enabled(config, NEXTJS_NO_CACHING);
     let storybook = rule_enabled(config, REQUIRE_STORYBOOK_STORIES);
-    CheckFactPlan {
+    let mut plan = CheckFactPlan {
         imports: dynamic_imports,
         symbols: storybook,
         react: storybook,
@@ -176,5 +176,7 @@ fn standalone_fact_plan(config: &crate::config::v2::NoMistakesConfig) -> CheckFa
         raw_source: nextjs_api_routes,
         source: dynamic_imports || nextjs_caching || storybook,
         ..CheckFactPlan::default()
-    }
+    };
+    super::nextjs_no_caching::configure_effort_plan(config, &mut plan)?;
+    Ok(plan)
 }

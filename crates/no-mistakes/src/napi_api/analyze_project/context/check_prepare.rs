@@ -71,6 +71,7 @@ impl SharedCheckContext {
             unique_exports: unique_exports_enabled,
             embedded_sql: enabled.embedded_sql,
         });
+        crate::codebase::rules::nextjs_no_caching::configure_effort_plan(config, &mut plan)?;
         crate::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
         plan.postgres_schema_catalog_paths =
             crate::codebase::postgres::configured_schema_catalog_paths(
