@@ -10,6 +10,8 @@ use std::time::Duration;
 mod filesystem;
 mod react;
 #[cfg(test)]
+mod redirect_tests;
+#[cfg(test)]
 mod tests;
 
 pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_check_with_facts};

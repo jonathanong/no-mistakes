@@ -9,10 +9,7 @@ pub(super) fn extract_named_destinations(
     source: &str,
     name: &str,
 ) -> ExtractedDestinations {
-    crate::ast::with_program(path, source, |program, source| {
-        extract_named_destinations_from_program(program, source, name, false)
-    })
-    .unwrap_or_default()
+    extract_named_destinations_with(path, source, name, false)
 }
 
 pub(super) fn check_named_section(
@@ -39,4 +36,16 @@ pub(super) fn check_named_section(
         },
     })
     .findings
+}
+
+pub(super) fn extract_named_destinations_with(
+    path: &Path,
+    source: &str,
+    name: &str,
+    literals_only: bool,
+) -> ExtractedDestinations {
+    crate::ast::with_program(path, source, |program, source| {
+        extract_named_destinations_from_program(program, source, name, literals_only)
+    })
+    .unwrap_or_default()
 }
