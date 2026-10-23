@@ -108,14 +108,14 @@ findings from that command. The shared `unanalyzable` policy controls the
 result: `report` fails, `advise` emits a non-failing advisory, and `ignore` skips
 it. The static rewrite is to put the complete URL directly in the downloader's
 URL argument. An unanalyzable URL does not prove that the download is unsafe;
-`ignore` therefore leaves that command unjudged.
+`ignore` therefore leaves that command without analysis.
 
 Low effort may inspect one uppercase literal binding to identify a downloader
 or wrapper used as a dynamic command prefix. It does not use that binding to
 expand URL values. When this proves a configured downloader behind an indirect
 prefix, the shared `unanalyzable` policy applies; the rewrite is to call `curl`,
 `wget`, or a configured helper directly. Commands that cannot be identified as
-configured downloaders remain outside this rule's target scope. Dynamic
+configured download commands remain outside this rule's target scope. Dynamic
 operands of known output and header options
 keep using the existing option parser, so they do not trigger this policy as
 candidate URL arguments.
