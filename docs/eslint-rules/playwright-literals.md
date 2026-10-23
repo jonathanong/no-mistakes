@@ -11,6 +11,11 @@ Computed IDs cannot be reliably matched to Playwright assertions.
 <button data-pw={`save-${user.id}`}>Save</button>
 ```
 
+```tsx
+let find = page.getByTestId;
+find(`save-${user.id}`);
+```
+
 ## Allowed
 
 ```tsx
@@ -22,6 +27,12 @@ function SaveButton({ testId = "save-button" }) {
     </>
   );
 }
+```
+
+```tsx
+let find = page.getByTestId;
+find = page.locator;
+find(`save-${user.id}`);
 ```
 
 ## Options
@@ -40,7 +51,7 @@ needs a controlled override.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name.
+A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name.
 
 Another file's re-export is not visible here.
 

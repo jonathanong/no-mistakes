@@ -14,6 +14,20 @@ page.locator("text=Save");
 page.locator("h2");
 ```
 
+```ts
+// e2e/alias.spec.ts
+let find = page.locator;
+find(".save");
+var heading = page.locator;
+heading("h2");
+```
+
+```ts
+// e2e/bare-locator.spec.ts
+// An undeclared bare locator() is recalled as the Playwright method.
+locator(".a");
+```
+
 ## Allowed
 
 ```ts
@@ -21,6 +35,16 @@ page.locator("h2");
 page.getByRole("button", { name: "Save" });
 page.getByText("Save");
 page.getByRole("heading", { level: 2 });
+```
+
+```ts
+// e2e/alias.spec.ts
+let find = page.locator;
+find = page.getByRole;
+find(".save");
+var heading = page.locator;
+heading = page.getByRole;
+heading("h2");
 ```
 
 ## Options
@@ -34,7 +58,7 @@ use a test ID only when a semantic locator is not appropriate.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name. Only unresolved bare names or initialized `const` aliases establish bare method calls; parameters, mutable bindings, cycles, and local function or class declarations do not.
+A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name. Only unresolved bare names or single-write aliases establish bare method calls; parameters, reassigned bindings, cycles, and local function or class declarations do not.
 
 Another file's re-export is not visible here.
 

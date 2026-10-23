@@ -12,13 +12,16 @@ function registerNamespace() {
   });
 }
 const alias = test;
+// Reassignment fails closed: loose is not the namespace, and mint is not the factory.
 let loose = pw;
+loose = unbound;
 var twice;
 var twice = test;
 
 const suffix = helpers.randomSuffix();
 const nested = randomSuffix()();
 let mint = randomSuffix;
+mint = other;
 const fromLet = mint();
 const { other: skip, randomSuffix: make = fallback, ...rest } = helpers;
 const fromMake = make();
