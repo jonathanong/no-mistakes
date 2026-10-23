@@ -1,0 +1,14 @@
+version: 2
+# Both names share one root; equivalent globs must collapse before matching.
+projects:
+  admin:
+    type: server
+    root: ./api/
+    queues:
+      waitScopes: ["api/admin/**", "./admin/**"]
+  routes:
+    type: server
+    root: api
+    queues:
+      enqueues: ["**/*.mts"]
+      waitScopes: ["routes/**", "./routes/**"]
