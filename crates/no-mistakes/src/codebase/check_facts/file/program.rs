@@ -1,7 +1,7 @@
 use super::super::file_playwright::collect_playwright_facts;
 use super::super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
-use super::should_store_source;
 use super::plan::ts_extract_plan;
+use super::should_store_source;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -24,7 +24,10 @@ pub(crate) fn collect_file_facts_from_program(
         super::prepared_program::collect(
             root,
             path,
-            super::prepared_program::Demand { request: plan, ts: ts_plan },
+            super::prepared_program::Demand {
+                request: plan,
+                ts: ts_plan,
+            },
             playwright,
             source,
             program,
