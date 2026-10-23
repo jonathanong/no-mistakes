@@ -16,6 +16,28 @@ receivers. These calls are diagnosed without
 being evaluated as SQL; adding a leading comment alone does not declare the
 receiver type. See [executor bindings](../postgres-facts/executor-bindings.md).
 
+When the receiver is imported as a value and its declared executor type is not
+available to this check, the diagnostic names the receiver instead of treating
+that value name as a type. Pass it to a helper with a parameter explicitly
+typed using its actual executor type from the configured module, and add that
+type to `executorTypeNames`. The check confirms package ownership for relative
+imports; it does not propagate type annotations through an exported value:
+
+```ts
+import type { Pool } from "@example/db";
+import { writePool } from "./db.mjs";
+
+function listAccounts(pool: Pool) {
+  pool.query("/* accounts/list */ SELECT id FROM accounts");
+}
+
+listAccounts(writePool);
+```
+
+The same `unanalyzable` policy applies: `report` emits a finding, `advise`
+emits an advisory, and `ignore` omits the diagnostic. A type already identified
+by an explicit receiver annotation keeps its type-specific message.
+
 At `effort: max`, the rule consumes prepared embedded-SQL and helper summaries from the request's
 shared TypeScript parse. Imported helpers use the request's prepared importer
 project catalog and source session. Package-local TypeScript aliases resolve from

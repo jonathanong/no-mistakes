@@ -65,6 +65,34 @@ fn missing_types_follow_policy_without_becoming_executed_sql() {
 }
 
 #[test]
+fn declared_imported_types_keep_type_specific_diagnostics_through_constructor_aliases() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/postgres-facts/embedded");
+    let files = vec![root.join("undeclared-constructor-alias.ts")];
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: RULE.into(),
+        scope: Some(RuleScope::Repository),
+        options: crate::codebase::postgres::tests::fixture_rule_options(
+            "importSpecifier: '@example/db'",
+        ),
+        ..Default::default()
+    });
+    let sources = super::super::source_store_for_files(&files);
+    let facts =
+        crate::codebase::postgres::prepare_rule_sql_facts(&root, &files, sources, &config, &[RULE])
+            .unwrap();
+    let findings = check(&root, &config, RULE, &files, &facts).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(findings[0]
+        .message
+        .contains("undeclared executor type `PoolClient`"));
+    assert!(!findings[0]
+        .message
+        .contains("has no declared executor type"));
+}
+
+#[test]
 fn ignore_without_ledger_does_no_diagnostic_work_and_scope_excludes_calls() {
     let (root, mut config, files) = inputs("ignore");
     assert!(

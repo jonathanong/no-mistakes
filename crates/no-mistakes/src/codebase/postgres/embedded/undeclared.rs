@@ -7,9 +7,11 @@ pub struct UndeclaredExecutorType {
     pub module: String,
     pub line: u32,
     pub span: (u32, u32),
+    pub(crate) receiver_name: String,
     pub(crate) owner: Option<u32>,
     pub(crate) explicit_annotation: bool,
     pub(crate) configured_type: bool,
+    pub(crate) known_type: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]

@@ -60,12 +60,29 @@ pub(crate) fn check(
             };
             for call in &file.undeclared_executor_types {
                 let (subcheck, target, message) = if call.configured_type {
-                    (
-                        "unresolved-configured-executor-receiver",
-                        "unresolved-configured-executor-receiver",
+                    let message = if call.known_type {
                         format!(
                             "configured executor receiver of type `{}` from `{}` cannot be resolved; use an explicitly typed parameter/helper (supported shape) so its SQL is checked",
                             call.type_name, call.module,
+                        )
+                    } else {
+                        format!(
+                            "receiver `{}` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+                            call.receiver_name,
+                        )
+                    };
+                    (
+                        "unresolved-configured-executor-receiver",
+                        "unresolved-configured-executor-receiver",
+                        message,
+                    )
+                } else if !call.known_type {
+                    (
+                        "undeclared-executor-type",
+                        "undeclared-executor-type",
+                        format!(
+                            "receiver `{}` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
+                            call.receiver_name,
                         ),
                     )
                 } else {

@@ -91,9 +91,11 @@ fn classify_import(
                     },
                     line: 0,
                     span: (0, 0),
+                    receiver_name: local.clone(),
                     owner,
                     explicit_annotation: false,
                     configured_type: type_import,
+                    known_type: false,
                 };
                 if !type_only {
                     classified

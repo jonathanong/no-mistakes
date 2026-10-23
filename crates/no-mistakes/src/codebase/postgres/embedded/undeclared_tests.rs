@@ -147,38 +147,5 @@ fn configured_value_imports_and_their_aliases_are_not_undeclared_types() {
     assert!(facts.undeclared_executor_types.is_empty());
 }
 
-#[test]
-fn explicit_imported_receiver_types_survive_assignment_but_inferred_aliases_do_not() {
-    let name = "undeclared-explicit-reassignment.ts";
-    let options = EmbeddedSqlOptions::configured("@example/db", &[])
-        .with_scoped_executors(&[], &["Executor".into()]);
-    let facts = extract_embedded_sql_from_source(&fixture(name), &read_fixture(name), &options);
-    assert_eq!(
-        facts.calls.len(),
-        1,
-        "executor proof is unchanged by diagnostic type provenance"
-    );
-    assert_eq!(
-        facts
-            .undeclared_executor_types
-            .iter()
-            .filter(|call| !call.configured_type)
-            .map(|call| call.line)
-            .collect::<Vec<_>>(),
-        [4, 7, 19, 23]
-    );
-    assert_eq!(
-        super::undeclared::summarize_unresolved_executor_receivers(
-            &facts.undeclared_executor_types
-        )[0]
-        .count,
-        1
-    );
-    assert!(facts
-        .undeclared_executor_types
-        .iter()
-        .filter(|call| !call.configured_type)
-        .all(|call| call.type_name == "PoolClient"));
-}
-
+mod receiver_aliases;
 mod review;
