@@ -12,8 +12,8 @@ fn file_traversal_scans_only_selected_files() {
         "source selection must share the bounded union traversal"
     );
     assert!(
-        !selection.contains("graph.call_traces("),
-        "source selection must not materialize per-root traces"
+        selection.contains("return graph.call_source_nodes("),
+        "transitive source selection must return before the legacy direct trace path"
     );
 }
 

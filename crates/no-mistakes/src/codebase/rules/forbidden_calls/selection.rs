@@ -167,12 +167,29 @@ fn reachable_source_nodes(
     roots: &[NodeId],
     options: &Options,
 ) -> FxHashSet<NodeId> {
-    // File/direct policies already have their source owners. Keep their local
-    // selection path independent of the transitive graph traversal.
-    match options.traversal {
-        Traversal::Direct | Traversal::File => roots.iter().cloned().collect(),
-        Traversal::Transitive => {
-            graph.call_source_nodes(roots, CallTraversal::Transitive, options.max_depth)
+    // Only transitive policies need a union traversal; keep the existing file
+    // and direct paths intact so their work and lazy graph demand stay scoped.
+    if matches!(options.traversal, Traversal::Transitive) {
+        return graph.call_source_nodes(roots, CallTraversal::Transitive, options.max_depth);
+    }
+    let mut nodes: FxHashSet<NodeId> = roots.iter().cloned().collect();
+    if matches!(options.traversal, Traversal::File) {
+        return nodes;
+    }
+    let traversal = match options.traversal {
+        Traversal::Direct => CallTraversal::Direct,
+        Traversal::Transitive => CallTraversal::Transitive,
+        Traversal::File => unreachable!("file traversal returns the expanded roots"),
+    };
+    let cap = if traversal == CallTraversal::Direct {
+        1
+    } else {
+        options.max_depth.unwrap_or(usize::MAX)
+    };
+    for trace in graph.call_traces(roots, traversal, options.max_depth) {
+        if trace.nodes.len().saturating_sub(1) < cap {
+            nodes.insert(trace.target);
         }
     }
+    nodes
 }
