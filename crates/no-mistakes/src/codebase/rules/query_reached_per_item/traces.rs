@@ -1,6 +1,16 @@
-use crate::codebase::dependencies::graph::{CallTraversal, DepGraph, NodeId, ResolvedCallSite};
+use crate::codebase::dependencies::graph::{DepGraph, NodeId, ResolvedCallSite};
 use rayon::prelude::*;
 use std::collections::BTreeMap;
+
+#[cfg(not(test))]
+macro_rules! legacy_reachable {
+    ($($input:expr),*) => {};
+}
+
+#[cfg(test)]
+#[macro_use]
+#[path = "tests/legacy_traces.rs"]
+mod legacy_traces;
 
 pub(super) fn source_node(site: &ResolvedCallSite) -> NodeId {
     site.caller.as_deref().map_or_else(
@@ -41,18 +51,19 @@ pub(super) fn reachable(
     sinks: &SinkMap<'_>,
     excluded: &[NodeId],
 ) -> BTreeMap<NodeId, Option<Reach>> {
+    legacy_reachable!(graph, roots, sinks, excluded);
+    let sink_nodes = sinks.keys().collect::<crate::fx::FxHashSet<_>>();
+    let excluded = excluded.iter().collect::<crate::fx::FxHashSet<_>>();
     roots
         .par_iter()
         .map(|node| {
-            let mut paths = vec![(node.clone(), vec![node.clone()])];
+            let mut paths = Vec::new();
+            if sinks.contains_key(node) {
+                paths.push((node.clone(), vec![node.clone()]));
+            }
             paths.extend(
                 graph
-                    .call_traces_excluding(
-                        std::slice::from_ref(node),
-                        CallTraversal::Transitive,
-                        None,
-                        excluded,
-                    )
+                    .call_traces_to_sinks_excluding(node, &sink_nodes, &excluded)
                     .into_iter()
                     .map(|trace| (trace.target, trace.nodes)),
             );
