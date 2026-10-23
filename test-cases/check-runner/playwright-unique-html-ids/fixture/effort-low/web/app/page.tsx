@@ -1,5 +1,9 @@
 const TEST_ID = 'selector-control';
 
+export function DefaultId({ id = 'literal-default' }: { id?: string }) {
+  return <input id={id} />;
+}
+
 export default function Page() {
   return (
     <main>
