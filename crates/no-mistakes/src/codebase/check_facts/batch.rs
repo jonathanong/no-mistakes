@@ -48,7 +48,11 @@ pub(crate) fn collect_check_fact_batch_with_session(
             {
                 // OXC programs cannot cross threads. Project every demanded variant
                 // while the preparing thread still owns its config/helper AST.
-                collected.extend(collect_demand(session, &requests, path, demands));
+                collected.extend(
+                    crate::invocation::check_timeout()
+                        .ok()
+                        .map(|()| project_demand(session, &requests, path, demands)),
+                );
                 None
             } else {
                 Some((path, demands))
@@ -108,24 +112,37 @@ fn collect_demand(
     demands: Vec<FactDemand>,
 ) -> Option<CollectedDemand> {
     crate::invocation::check_timeout().ok().map(|()| {
-        crate::ast::with_request_parse_cache(|| {
-            let variants = demands
-                .iter()
-                .map(|demand| {
-                    let request = &requests[demand.request];
-                    super::file::CheckFactVariant {
-                        root: &request.root,
-                        plan: &demand.plan,
-                        playwright: request.playwright.as_ref(),
-                    }
-                })
-                .collect::<Vec<_>>();
-            let facts =
-                super::file::collect_file_fact_variants_with_session(session, &path, &variants);
-            (path, demands, facts)
+        // A Rayon worker can be running inside another request's cache. Only
+        // owned facts leave this demand, so its programs can drop together.
+        crate::ast::with_owned_request_parse_cache(|| {
+            project_demand(session, requests, path, demands)
         })
     })
 }
+
+fn project_demand(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    requests: &[BatchCheckFactRequest],
+    path: PathBuf,
+    demands: Vec<FactDemand>,
+) -> CollectedDemand {
+    let variants = demands
+        .iter()
+        .map(|demand| {
+            let request = &requests[demand.request];
+            super::file::CheckFactVariant {
+                root: &request.root,
+                plan: &demand.plan,
+                playwright: request.playwright.as_ref(),
+            }
+        })
+        .collect::<Vec<_>>();
+    let facts = super::file::collect_file_fact_variants_with_session(session, &path, &variants);
+    (path, demands, facts)
+}
+
+#[cfg(test)]
+mod tests;
 
 fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<FactDemand>> {
     let mut demands = BTreeMap::<PathBuf, Vec<FactDemand>>::new();
