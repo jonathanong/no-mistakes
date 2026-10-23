@@ -83,6 +83,7 @@ fn report_json_with_cache(
             html_ids: options.assert_unique_html_ids,
             aggregate: false,
             configured_html_id_selector: false,
+            literal_test_ids_only: false,
         },
         &snapshot,
     );

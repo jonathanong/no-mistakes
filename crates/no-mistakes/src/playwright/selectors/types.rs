@@ -21,11 +21,44 @@ pub(super) struct AttributeRegex {
     pub(super) regex: Regex,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Clone, Debug)]
 pub struct AppSelector {
     pub file: PathBuf,
     pub attribute: String,
     pub value: AppSelectorValue,
+    pub line: usize,
+    /// True when the exact value was recovered from an identifier, helper,
+    /// ternary, object map, or imported binding rather than a literal.
+    pub recovered: bool,
+}
+
+impl PartialEq for AppSelector {
+    fn eq(&self, other: &Self) -> bool {
+        self.file == other.file && self.attribute == other.attribute && self.value == other.value
+    }
+}
+
+impl Eq for AppSelector {}
+
+impl PartialOrd for AppSelector {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for AppSelector {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.file
+            .cmp(&other.file)
+            .then_with(|| self.attribute.cmp(&other.attribute))
+            .then_with(|| self.value.cmp(&other.value))
+    }
+}
+
+impl AppSelector {
+    pub(crate) fn is_literal_exact(&self) -> bool {
+        matches!(self.value, AppSelectorValue::Exact(_)) && !self.recovered
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]

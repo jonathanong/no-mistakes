@@ -118,6 +118,8 @@ fn text_printers_cover_routes_and_selectors() {
                 line: 4,
                 call: "getAsideLocator(...)".to_string(),
             }],
+            line: 1,
+            literal_exact: true,
         }],
         duplicate_selectors: vec![DuplicateSelector {
             attribute: "data-testid".to_string(),

@@ -5,6 +5,7 @@
 //! patterns coming out as `/src/app/...` instead of `/...`), using the
 //! shared fixture at `fixtures/playwright/multi-frontend-apps/`.
 
+use super::super::test_api::check_with_facts;
 use super::super::*;
 use crate::codebase::rules::RuleFinding;
 use std::collections::BTreeSet;

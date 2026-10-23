@@ -82,6 +82,8 @@ pub fn fact_plan_for_consumers(
     let loaded_configs = loaded_configs?;
 
     let mut plan = PlaywrightFactPlan::default();
+    plan.skip_dynamic_recovery =
+        super::effort::skip_dynamic_recovery(config, consumers.graph_selectors)?;
     let mut test_files_by_project = BTreeMap::new();
     for (settings, demands_text_imports, scan_html_ids) in prepared {
         let playwright = playwright_config::select_loaded(

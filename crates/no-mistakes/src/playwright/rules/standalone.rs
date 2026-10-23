@@ -1,3 +1,4 @@
+use super::effort;
 use super::filter::filter_rule_findings;
 use super::policy::unique_policy;
 use super::selection::rule_selections;
@@ -8,7 +9,6 @@ use crate::playwright::analysis::pipeline::{
 };
 use crate::playwright::config;
 use crate::playwright::playwright_tests;
-use crate::playwright::rule_findings::findings_from_report;
 use anyhow::Result;
 use std::path::Path;
 
@@ -46,7 +46,12 @@ pub fn check(
             assert_conditional_tests: false,
             allow_skipped_tests: false,
         };
-        let unique_policy = unique_policy(selection.unique_test_ids, selection.unique_html_ids);
+        let unique_ids = effort::unique_test_ids_policy(config)?;
+        let unique_policy = unique_policy(
+            selection.unique_test_ids,
+            selection.unique_html_ids,
+            unique_ids.low,
+        );
         let analysis = if selection.coverage {
             analyze_with_policy_from_snapshot(
                 root,
@@ -64,7 +69,7 @@ pub fn check(
                 &snapshot,
             )
         }?;
-        let report_findings = findings_from_report(
+        let report = crate::playwright::rule_findings::findings_from_report_with_effort(
             &analysis,
             selection.unique_test_ids,
             selection.unique_html_ids,
@@ -74,8 +79,9 @@ pub fn check(
                 routes: selection.cover_routes,
                 selectors: selection.cover_selectors,
             },
+            unique_ids.low.then_some(unique_ids.unanalyzable),
         );
-        findings.extend(filter_rule_findings(root, config, report_findings)?);
+        findings.extend(filter_rule_findings(root, config, report.findings)?);
     }
     findings.sort();
     findings.dedup();

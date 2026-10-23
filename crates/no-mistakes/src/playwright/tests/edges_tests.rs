@@ -129,6 +129,8 @@ fn selector_index_skips_unsupported_dynamic_selectors() {
         file: root.join("web/app/page.tsx"),
         attribute: "data-testid".to_string(),
         value: AppSelectorValue::Unsupported("expr".to_string()),
+        line: 1,
+        recovered: false,
     };
     let app_selectors = [unsupported];
     let targets = app_selector_targets(root, &app_selectors);

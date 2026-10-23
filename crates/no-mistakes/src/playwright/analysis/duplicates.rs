@@ -41,6 +41,9 @@ pub(crate) fn build_duplicate_selectors(
                         .push(selector);
                 }
             } else if policy.test_ids {
+                if policy.literal_test_ids_only && selector.recovered {
+                    continue;
+                }
                 by_value
                     .entry(DuplicateSelectorKey::TestId(value.as_str()))
                     .or_default()

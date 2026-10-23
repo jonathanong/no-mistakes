@@ -37,8 +37,54 @@ independent apps are allowed when each rule application is app-scoped.
 
 ## Options and defaults
 
-There are no rule-local options. The configured selector attributes and roots
-under `tests.playwright` determine which values are considered.
+There are no uniqueness-specific options. The configured selector attributes
+and roots under `tests.playwright` determine which values are considered.
+Shared `effort` and `unanalyzable` options apply as described below.
+
+## Effort
+
+`effort: max` is the default. It recovers identifier, helper, ternary, object
+map, and imported bindings into exact test IDs before judging uniqueness.
+
+At effective `effort: low`, uniqueness accepts only:
+
+- a string literal attribute, including JSX `data-testid={"save"}`
+- a prop whose default is a string literal, matching `playwright-literals`
+
+```tsx
+<button data-testid="save-profile" />
+<button data-testid={"cancel-profile"} />
+function SaveButton({ testId = "save-button" }) {
+  return <button data-testid={testId} />;
+}
+```
+
+Every other shape is unanalyzable: an identifier without a literal default, a
+ternary or logical leaf, a template, a helper call, or a cross-file binding.
+The diagnostic names the rewrite:
+
+```text
+web/app/page.tsx:12: selector [data-testid="{id}"] is unanalyzable at effort low; use a literal test id such as data-pw="save-button", or a prop with a literal default
+```
+
+The shared `unanalyzable` policy controls that diagnostic: `report` fails,
+`advise` emits a non-failing advisory, and `ignore` skips it. Rejected shapes
+are never uniqueness evidence under any of those policies.
+
+These syntax proofs do not require a companion rule. The rule checks each
+selector once, so if any enabled application of this rule is not `low`, the
+invocation stays at `max` and does not rewrite the other application's
+findings. Identifier recovery is skipped only when every Playwright selector
+consumer in the invocation is effectively `low`; a max `playwright-coverage`
+application still recovers values, and this rule then treats recovered exact
+IDs as unanalyzable rather than uniqueness hits.
+
+Suppress a low-effort shape on its own line:
+
+```tsx
+// no-mistakes-disable-next-line playwright-unique-test-ids
+<button data-testid={id} />
+```
 
 ## Valid example
 

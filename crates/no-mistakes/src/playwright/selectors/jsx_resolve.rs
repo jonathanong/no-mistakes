@@ -1,14 +1,36 @@
 use super::dynamic_values::{self, DynamicIdentifierValues};
-use super::scoped_defaults::{scoped_static_default_for_identifier, ScopedStaticIdentifierDefault};
+use super::scoped_defaults::ScopedStaticIdentifierDefault;
 use super::types::{AppSelectorValue, TemplatePattern};
 use crate::playwright::ast;
 use oxc_span::GetSpan;
 use std::path::Path;
 
+mod identifier;
+
 pub(super) struct SelectorFileContext<'a> {
     pub(super) file: &'a Path,
     pub(super) visible_files: Option<&'a crate::fx::PathSet>,
     pub(super) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
+    pub(super) recover_dynamic: bool,
+}
+
+pub(super) struct ResolvedAppValue {
+    pub(super) value: AppSelectorValue,
+    pub(super) recovered: bool,
+}
+
+fn literal(value: AppSelectorValue) -> ResolvedAppValue {
+    ResolvedAppValue {
+        value,
+        recovered: false,
+    }
+}
+
+fn recovered(value: AppSelectorValue) -> ResolvedAppValue {
+    ResolvedAppValue {
+        value,
+        recovered: true,
+    }
 }
 
 pub(super) fn app_selector_values(
@@ -18,7 +40,7 @@ pub(super) fn app_selector_values(
     scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
-) -> Vec<AppSelectorValue> {
+) -> Vec<ResolvedAppValue> {
     app_selector_values_inner(
         value,
         source,
@@ -29,6 +51,7 @@ pub(super) fn app_selector_values(
             file,
             visible_files: None,
             sources: None,
+            recover_dynamic: true,
         },
     )
 }
@@ -40,7 +63,7 @@ pub(super) fn app_selector_values_from_visible(
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
     file_context: SelectorFileContext<'_>,
-) -> Vec<AppSelectorValue> {
+) -> Vec<ResolvedAppValue> {
     app_selector_values_inner(
         value,
         source,
@@ -58,13 +81,13 @@ fn app_selector_values_inner(
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
     file_context: SelectorFileContext<'_>,
-) -> Vec<AppSelectorValue> {
+) -> Vec<ResolvedAppValue> {
     let Some(value) = value else {
         return vec![];
     };
     match value {
-        oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => {
-            vec![AppSelectorValue::Exact(literal.value.to_string())]
+        oxc_ast::ast::JSXAttributeValue::StringLiteral(lit) => {
+            vec![literal(AppSelectorValue::Exact(lit.value.to_string()))]
         }
         oxc_ast::ast::JSXAttributeValue::ExpressionContainer(container) => {
             jsx_expression_values_inner(
@@ -87,18 +110,20 @@ fn jsx_expression_values_inner(
     dynamic_identifier_values: &[DynamicIdentifierValues],
     program: &oxc_ast::ast::Program<'_>,
     file_context: SelectorFileContext<'_>,
-) -> Vec<AppSelectorValue> {
+) -> Vec<ResolvedAppValue> {
     match expression {
-        oxc_ast::ast::JSXExpression::StringLiteral(literal) => {
-            vec![AppSelectorValue::Exact(literal.value.to_string())]
+        oxc_ast::ast::JSXExpression::StringLiteral(lit) => {
+            vec![literal(AppSelectorValue::Exact(lit.value.to_string()))]
         }
         oxc_ast::ast::JSXExpression::TemplateLiteral(template) => {
             let raw = ast::template_literal_text(template, source);
-            vec![TemplatePattern::new(&raw)
-                .map(AppSelectorValue::Template)
-                .unwrap_or_else(|| AppSelectorValue::Unsupported(raw))]
+            vec![literal(
+                TemplatePattern::new(&raw)
+                    .map(AppSelectorValue::Template)
+                    .unwrap_or_else(|| AppSelectorValue::Unsupported(raw)),
+            )]
         }
-        oxc_ast::ast::JSXExpression::Identifier(identifier) => resolve_identifier(
+        oxc_ast::ast::JSXExpression::Identifier(identifier) => identifier::resolve_identifier(
             identifier.name.as_str(),
             identifier.span(),
             source,
@@ -107,70 +132,28 @@ fn jsx_expression_values_inner(
             dynamic_identifier_values,
             program,
         ),
-        oxc_ast::ast::JSXExpression::ConditionalExpression(cond) => {
-            let mut leaves = dynamic_values::collect_string_leaves(&cond.consequent);
-            leaves.extend(dynamic_values::collect_string_leaves(&cond.alternate));
-            if !leaves.is_empty() {
-                return leaves.into_iter().map(AppSelectorValue::Exact).collect();
-            }
-            vec![AppSelectorValue::Unsupported(
-                ast::span_text(source, expression.span()).trim().to_string(),
-            )]
+        oxc_ast::ast::JSXExpression::ConditionalExpression(cond)
+            if file_context.recover_dynamic =>
+        {
+            identifier::recovered_leaves(
+                source,
+                expression.span(),
+                dynamic_values::collect_string_leaves(&cond.consequent)
+                    .into_iter()
+                    .chain(dynamic_values::collect_string_leaves(&cond.alternate)),
+            )
         }
-        oxc_ast::ast::JSXExpression::LogicalExpression(logical) => {
-            let mut leaves = dynamic_values::collect_string_leaves(&logical.left);
-            leaves.extend(dynamic_values::collect_string_leaves(&logical.right));
-            if !leaves.is_empty() {
-                return leaves.into_iter().map(AppSelectorValue::Exact).collect();
-            }
-            vec![AppSelectorValue::Unsupported(
-                ast::span_text(source, expression.span()).trim().to_string(),
-            )]
+        oxc_ast::ast::JSXExpression::LogicalExpression(logical) if file_context.recover_dynamic => {
+            identifier::recovered_leaves(
+                source,
+                expression.span(),
+                dynamic_values::collect_string_leaves(&logical.left)
+                    .into_iter()
+                    .chain(dynamic_values::collect_string_leaves(&logical.right)),
+            )
         }
-        _ => vec![AppSelectorValue::Unsupported(
+        _ => vec![literal(AppSelectorValue::Unsupported(
             ast::span_text(source, expression.span()).trim().to_string(),
-        )],
+        ))],
     }
-}
-
-fn resolve_identifier(
-    name: &str,
-    span: oxc_span::Span,
-    source: &str,
-    file_context: SelectorFileContext<'_>,
-    scoped_static_identifier_defaults: &[ScopedStaticIdentifierDefault],
-    dynamic_identifier_values: &[DynamicIdentifierValues],
-    program: &oxc_ast::ast::Program<'_>,
-) -> Vec<AppSelectorValue> {
-    // 1. Try scoped static defaults (existing behavior)
-    if let Some(value) =
-        scoped_static_default_for_identifier(name, span, scoped_static_identifier_defaults, source)
-    {
-        return vec![AppSelectorValue::Exact(value)];
-    }
-    // 2. Try dynamic resolution (ternary/if-else/object-map/fn-call)
-    let mut values =
-        dynamic_values::resolve_dynamic_identifier(name, span, dynamic_identifier_values);
-    // 3. Try cross-file imports
-    if values.is_empty() {
-        values = match file_context.visible_files {
-            Some(visible) => dynamic_values::cross_file::resolve_imported_values_from_visible(
-                name,
-                program,
-                file_context.file,
-                visible,
-                file_context.sources,
-            ),
-            None => dynamic_values::cross_file::resolve_imported_values(
-                name,
-                program,
-                file_context.file,
-            ),
-        };
-    }
-    if !values.is_empty() {
-        return values.into_iter().map(AppSelectorValue::Exact).collect();
-    }
-    // 4. Fallback to Unsupported
-    vec![AppSelectorValue::Unsupported(name.to_string())]
 }

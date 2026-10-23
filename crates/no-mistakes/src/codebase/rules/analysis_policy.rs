@@ -42,6 +42,11 @@ const SUPPORT: &[RuleEffortSupport] = &[
         partners: &[],
         partner_scope: |_, _| false,
     },
+    RuleEffortSupport {
+        rule: "playwright-unique-test-ids",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
 ];
 
 pub fn prepare_rule_analysis(

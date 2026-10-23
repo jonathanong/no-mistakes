@@ -98,6 +98,8 @@ pub(crate) fn build_coverage(inputs: CoverageInputs<'_>) -> CoverageReport {
                 .map(|selector| selector.to_string())
                 .collect(),
             helper_references,
+            line: app_selector.line,
+            literal_exact: app_selector.is_literal_exact(),
         });
     }
     coverage_selectors.sort_by(|a, b| {

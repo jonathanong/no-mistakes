@@ -1,9 +1,14 @@
 use super::*;
 use crate::playwright::analysis::types::{
-    Analysis, CoverageFetch, CoverageRoute, CoverageSelector, Edge, EdgeReport, SelectorRef,
-    Summary,
+    Analysis, CoverageFetch, CoverageReport, CoverageRoute, CoverageSelector, DuplicateSelector,
+    Edge, EdgeReport, SelectorRef, Summary,
+};
+use crate::playwright::rules::{
+    PLAYWRIGHT_COVERAGE, PLAYWRIGHT_PREFER_TEST_ID_LOCATORS, PLAYWRIGHT_UNIQUE_HTML_IDS,
 };
 use std::sync::Arc;
+
+mod unique_effort;
 
 fn coverage_all(enabled: bool) -> CoverageFindingOptions {
     CoverageFindingOptions {
@@ -11,6 +16,24 @@ fn coverage_all(enabled: bool) -> CoverageFindingOptions {
         routes: true,
         selectors: true,
     }
+}
+
+fn findings_from_report(
+    analysis: &Analysis,
+    unique_test_ids: bool,
+    unique_html_ids: bool,
+    prefer_test_id_locators: bool,
+    coverage: CoverageFindingOptions,
+) -> Vec<crate::codebase::rules::RuleFinding> {
+    findings_from_report_with_effort(
+        analysis,
+        unique_test_ids,
+        unique_html_ids,
+        prefer_test_id_locators,
+        coverage,
+        None,
+    )
+    .findings
 }
 
 fn report_findings(
@@ -62,6 +85,8 @@ fn findings_from_report_maps_routes_selectors_and_duplicates() {
             tests_detail: vec![],
             selectors: vec![],
             helper_references: vec![],
+            line: 1,
+            literal_exact: true,
         }],
         duplicate_selectors: vec![
             DuplicateSelector {
@@ -95,6 +120,60 @@ fn findings_from_report_maps_routes_selectors_and_duplicates() {
     assert!(targets.contains(&(PLAYWRIGHT_COVERAGE, Some("data-testid=missing"))));
     assert!(targets.contains(&(PLAYWRIGHT_UNIQUE_TEST_IDS, Some("data-testid=save"))));
     assert!(targets.contains(&(PLAYWRIGHT_UNIQUE_HTML_IDS, Some("id=save"))));
+}
+
+#[test]
+fn coverage_findings_omit_selectors_when_selector_coverage_is_disabled() {
+    let report = CoverageReport {
+        summary: Summary {
+            total_routes: 1,
+            covered_routes: 0,
+            uncovered_routes: 1,
+            total_selectors: 1,
+            covered_selectors: 0,
+            uncovered_selectors: 1,
+            duplicate_selectors: 0,
+            total_fetch_apis: 0,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 0,
+        },
+        routes: vec![CoverageRoute {
+            route: "/missing".to_string(),
+            file: "web/app/missing/page.tsx".to_string(),
+            covered: false,
+            tests: vec![],
+            tests_detail: vec![],
+            urls: vec![],
+        }],
+        selectors: vec![CoverageSelector {
+            attribute: "data-testid".to_string(),
+            value: "missing".to_string(),
+            file: "web/app/page.tsx".to_string(),
+            covered: false,
+            unsupported_dynamic: false,
+            tests: vec![],
+            tests_detail: vec![],
+            selectors: vec![],
+            helper_references: vec![],
+            line: 1,
+            literal_exact: true,
+        }],
+        duplicate_selectors: vec![],
+        fetch_apis: vec![],
+    };
+    let findings = findings_from_report(
+        &analysis(report, vec![]),
+        false,
+        false,
+        false,
+        CoverageFindingOptions {
+            enabled: true,
+            routes: true,
+            selectors: false,
+        },
+    );
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("/missing"));
 }
 
 #[test]
@@ -164,6 +243,8 @@ fn findings_from_report_skips_unsupported_dynamic_selectors() {
                 tests_detail: vec![],
                 selectors: vec![],
                 helper_references: vec![],
+                line: 1,
+                literal_exact: false,
             },
             CoverageSelector {
                 attribute: "data-pw".to_string(),
@@ -175,6 +256,8 @@ fn findings_from_report_skips_unsupported_dynamic_selectors() {
                 tests_detail: vec![],
                 selectors: vec![],
                 helper_references: vec![],
+                line: 1,
+                literal_exact: true,
             },
         ],
         duplicate_selectors: vec![],

@@ -9,6 +9,7 @@ struct AppSelectorVisitor<'a, 'r> {
     program: &'a oxc_ast::ast::Program<'a>,
     visible_files: Option<&'r crate::fx::PathSet>,
     sources: Option<&'r crate::codebase::ts_source::SourceStore>,
+    recover_dynamic: bool,
     selectors: Vec<AppSelector>,
 }
 
@@ -38,6 +39,7 @@ impl<'a> oxc_ast_visit::Visit<'a> for AppSelectorVisitor<'a, '_> {
                         file: self.path,
                         visible_files: Some(visible),
                         sources: self.sources,
+                        recover_dynamic: self.recover_dynamic,
                     },
                 ),
                 None => app_selector_values(
@@ -49,11 +51,17 @@ impl<'a> oxc_ast_visit::Visit<'a> for AppSelectorVisitor<'a, '_> {
                     self.program,
                 ),
             };
-            for value in values {
+            let line = crate::codebase::ts_source::byte_offset_to_line(
+                self.source,
+                attribute.span().start as usize,
+            ) as usize;
+            for resolved in values {
                 self.selectors.push(AppSelector {
                     file: PathBuf::from(self.path),
                     attribute: mapped_attribute.clone(),
-                    value,
+                    value: resolved.value,
+                    line,
+                    recovered: resolved.recovered,
                 });
             }
         }

@@ -105,23 +105,26 @@ pub(super) fn playwright(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> 
     if !crate::playwright::rules::configured(req.config) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
-    let findings =
-        crate::perf_trace::trace("rules.playwright", || match req.prepared_playwright {
-            Some(prepared) => crate::playwright::rules::check_with_prepared_facts(
-                req.root,
-                req.config_path,
-                req.config,
-                req.shared,
-                prepared,
-            ),
-            None => crate::playwright::rules::check_with_facts(
-                req.root,
-                req.config_path,
-                req.config,
-                req.shared,
-            ),
-        })?;
-    Ok(RuleChunk::from_findings(findings))
+    let output = crate::perf_trace::trace("rules.playwright", || match req.prepared_playwright {
+        Some(prepared) => crate::playwright::rules::check_with_prepared_facts_outcome(
+            req.root,
+            req.config_path,
+            req.config,
+            req.shared,
+            prepared,
+        ),
+        None => crate::playwright::rules::check_with_facts_outcome(
+            req.root,
+            req.config_path,
+            req.config,
+            req.shared,
+        ),
+    })?;
+    Ok(RuleChunk {
+        suppression_sources: std::iter::repeat_n(None, output.findings.len()).collect(),
+        findings: output.findings,
+        advisories: output.advisories,
+    })
 }
 
 pub(super) fn graph_rules(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
