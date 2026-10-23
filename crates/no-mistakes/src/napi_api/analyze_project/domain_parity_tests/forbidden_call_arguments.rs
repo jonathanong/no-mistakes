@@ -59,11 +59,10 @@ fn forbidden_calls_scoped_arguments_preserve_analyze_project_ordinary_call_sites
     .map(|(path, count)| (root.join(path), count))
     .collect::<std::collections::HashMap<_, _>>();
     assert_eq!(query_counts, expected_counts);
-    assert!(observer
+    assert!(!observer
         .snapshot()
         .work
-        .get("facts.call_arguments.collections")
-        .is_none());
+        .contains_key("facts.call_arguments.collections"));
 
     crate::ast::begin_parse_count(&root);
     // The second query asks about a sibling outside every argument application's
