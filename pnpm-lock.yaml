@@ -91,16 +91,16 @@ importers:
         version: 5.0.3(@vitest/browser-playwright@5.0.4(playwright@1.64.0)(vite@8.0.13(esbuild@0.28.2)(yaml@2.9.0))(vitest@5.0.4))(@vitest/coverage-v8@5.0.4(@vitest/browser@5.0.4)(vitest@5.0.4))(@vitest/ui@5.0.3)(vite@8.0.13(esbuild@0.28.2)(yaml@2.9.0))
     optionalDependencies:
       no-mistakes-darwin-arm64:
-        specifier: 0.96.0
+        specifier: 0.97.0
         version: link:../no-mistakes-darwin-arm64
       no-mistakes-linux-arm64-gnu:
-        specifier: 0.96.0
+        specifier: 0.97.0
         version: link:../no-mistakes-linux-arm64-gnu
       no-mistakes-linux-x64-gnu:
-        specifier: 0.96.0
+        specifier: 0.97.0
         version: link:../no-mistakes-linux-x64-gnu
       no-mistakes-win32-x64-msvc:
-        specifier: 0.96.0
+        specifier: 0.97.0
         version: link:../no-mistakes-win32-x64-msvc
 
   packages/no-mistakes-darwin-arm64: {}
