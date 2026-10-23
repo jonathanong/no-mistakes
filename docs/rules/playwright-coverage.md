@@ -155,10 +155,10 @@ are never selector coverage evidence under any of those policies.
 
 These syntax proofs do not require a companion rule. The rule checks each
 selector once, so if any enabled application of this rule is not `low`, the
-invocation stays at `max`. Identifier recovery is skipped only when every
-Playwright selector consumer in the invocation is effectively `low`; a max
-`playwright-unique-test-ids` application still recovers values, and this rule
-then treats recovered exact IDs as unanalyzable rather than uncovered hits.
+invocation stays at `max`. The low grammar is a findings filter: recovered
+exact IDs are unanalyzable rather than uncovered hits. Identifier recovery
+itself is skipped only when every Playwright selector consumer in the
+invocation is effectively `low`.
 
 Suppress a low-effort shape on its own line:
 
