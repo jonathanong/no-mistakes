@@ -7,8 +7,14 @@ use super::{ImportClassification, ScopedExecutors};
 impl ScopeCollector {
     pub(in crate::codebase::postgres::embedded::scoped_bindings) fn from_imports(
         imports: ImportClassification,
+        delayed: bool,
     ) -> Self {
+        let enabled =
+            delayed && (!imports.types.is_empty() || !imports.provisional_types.is_empty());
+        let mut delayed = super::delayed::Bindings::default();
+        delayed.enabled = enabled;
         Self {
+            delayed,
             factories: imports.factories,
             types: imports.types,
             found: ScopedExecutors {

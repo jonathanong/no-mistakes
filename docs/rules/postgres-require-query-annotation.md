@@ -14,7 +14,10 @@ silent under `ignore`. Add the imported type name to `executorTypeNames` (or the
 project's `postgres.executors.typeNames`) and explicitly annotate inferred
 receivers. These calls are diagnosed without
 being evaluated as SQL; adding a leading comment alone does not declare the
-receiver type. See [executor bindings](../postgres-facts/executor-bindings.md).
+receiver type. A declared type also proves an uninitialized `let` after one
+direct assignment in the same executing block, including a `try` body; foreign
+function writes, competing writes, and calls outside that block remain
+unresolved. This receiver proof is shared by low and maximum effort. See [executor bindings](../postgres-facts/executor-bindings.md).
 
 When the receiver is imported as a value and its declared executor type is not
 available to this check, the diagnostic names the receiver instead of treating

@@ -29,6 +29,9 @@ impl ScopeVisitor<'_> {
             return None;
         };
         let name = identifier.name.as_str();
+        if let Some(index) = self.relative_declaration_proof(name, identifier.span.start) {
+            return Some(index);
+        }
         self.scopes
             .iter()
             .enumerate()
@@ -53,7 +56,10 @@ impl ScopeVisitor<'_> {
             Expression::Identifier(identifier) => {
                 let name = identifier.name.as_str();
                 match self.scopes.iter().rev().find_map(|scope| scope.get(name)) {
-                    Some(binding) => binding.executor_alias == Some(true),
+                    Some(binding) => {
+                        binding.executor_alias == Some(true)
+                            || self.scoped.delayed.contains(&identifier.span.start)
+                    }
                     None => {
                         self.bindings.contains(name)
                             || self.imported_namespace_names.contains_key(name)

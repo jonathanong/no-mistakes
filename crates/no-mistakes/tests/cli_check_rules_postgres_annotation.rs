@@ -127,3 +127,55 @@ fn postgres_annotation_helpers_keep_importer_ownership_and_explicit_overrides() 
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].file, "packages/bad/src/query.mts");
 }
+
+#[test]
+fn delayed_try_receivers_share_low_max_proof_and_keep_policy_controlled_abstentions() {
+    let root = fixture("delayed-try-receivers");
+    for effort in ["low", "max"] {
+        for policy in ["report", "advise", "ignore"] {
+            let output = Command::new(bin())
+                .args(["check", "--root"])
+                .arg(&root)
+                .arg("--config")
+                .arg(root.join(format!("{effort}-{policy}.yml")))
+                .args(["--format", "json", "--include-sql-verdicts"])
+                .output()
+                .unwrap();
+            let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+            assert_eq!(output.status.code(), Some(1), "{effort}/{policy}: {report}");
+            let findings = report["rules"].as_array().unwrap();
+            let annotations = findings
+                .iter()
+                .filter(|row| row["target"] == "annotation")
+                .collect::<Vec<_>>();
+            assert_eq!(annotations.len(), 1, "{effort}/{policy}: {report}");
+            assert_eq!(annotations[0]["file"], "positive.mts");
+            assert_eq!(annotations[0]["line"], 9);
+            assert!(annotations[0]["message"]
+                .as_str()
+                .unwrap()
+                .contains("/* name */"));
+            let unresolved = findings
+                .iter()
+                .filter(|row| row["target"] == "unresolved-configured-executor-receiver")
+                .count();
+            assert_eq!(
+                unresolved,
+                if policy == "report" { 8 } else { 0 },
+                "{report}"
+            );
+            let verdicts = report["sqlVerdicts"].as_array().unwrap();
+            let abstentions = verdicts
+                .iter()
+                .filter(|row| row["subcheck"] == "unresolved-configured-executor-receiver")
+                .collect::<Vec<_>>();
+            assert_eq!(abstentions.len(), 8, "{report}");
+            assert!(
+                abstentions.iter().all(
+                    |row| row["status"] == "abstain" && row["advisory"] == (policy == "advise")
+                ),
+                "{report}"
+            );
+        }
+    }
+}
