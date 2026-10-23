@@ -124,25 +124,59 @@ Remove baseline entries as helpers gain batch equivalents.
 
 ## Valid example
 
+```yaml
+# .no-mistakes.yml
+effects:
+  postgres:
+    targets:
+      - { module: '@data-stores/psql', export: read, category: query }
+    batchFunctions: [readMany]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]
+```
+
 ```ts
+// src/users.ts
+import { read } from '@data-stores/psql';
+async function readMany(ids: readonly string[]) {
+  return read(ids);
+}
+const ids = ['alice', 'bob'];
 const users = await readMany(ids);
 ```
 
-A configured batch helper does not produce a per-item sink diagnostic for its
-own internal batching path.
+The helper makes one batch call rather than one call per item.
 
 ## Counterexample
 
-```ts
-import { read } from '@data-stores/psql';
+```yaml
+# .no-mistakes.yml
+effects:
+  postgres:
+    targets:
+      - { module: '@data-stores/psql', export: read, category: query }
+    batchFunctions: [readMany]
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [postgres]
+```
 
+```ts
+// src/users.ts
+import { read } from '@data-stores/psql';
 async function getUser(id: string) {
   return read(id);
 }
+const ids = ['alice', 'bob'];
 const users = await Promise.all(ids.map((id) => getUser(id)));
 ```
 
-The report traces the callback's `getUser` call to `read`.
+The report traces the callback's `getUser` call to the configured `read` sink.
 
 ## Fix
 

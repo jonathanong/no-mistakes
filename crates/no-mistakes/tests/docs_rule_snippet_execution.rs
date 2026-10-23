@@ -198,6 +198,64 @@ fn nextjs_caching_documentation_examples_execute() {
 }
 
 #[test]
+fn no_mistakes_config_examples_execute_unknown_key_and_missing_root_independently() {
+    let rule = "no-mistakes-config";
+    let page = docs_rule_snippets::load_page(&repo_root(), rule);
+    let fallback = docs_rule_snippets::rule_config_yaml(&page.body, rule);
+    for (heading, unknown_key, expected_count) in [
+        ("Unknown-key limitation", true, 0),
+        ("Counterexample", false, 1),
+    ] {
+        let section = docs_rule_snippets::heading_section(&page.body, heading);
+        let fences = docs_rule_snippets::fences(&section);
+        let runs = docs_rule_snippets::snippet_runs(&fences);
+        assert_eq!(
+            runs.len(),
+            1,
+            "{heading}: one independently executed config"
+        );
+        let fixture = docs_rule_snippets::materialize_snippet(&fallback, &runs[0].1);
+        let active = read(&fixture.path().join(".no-mistakes.yml"));
+        assert!(active.contains("rule: no-mistakes-config"), "{active}");
+        assert_eq!(active.contains("unknownKey: true"), unknown_key, "{active}");
+        assert_eq!(
+            active.contains("root: apps/missing"),
+            !unknown_key,
+            "{active}"
+        );
+        let findings = docs_rule_snippets::run_rule(fixture.path(), rule).unwrap();
+        assert_eq!(findings.len(), expected_count, "{heading}: {findings:?}");
+        if !unknown_key {
+            assert_eq!(
+                findings,
+                [".no-mistakes.yml:1:projects.web.root: missing directory `apps/missing`"]
+            );
+        }
+    }
+}
+
+#[test]
+fn playwright_locator_documented_fix_targets_the_counterexample_element() {
+    let rule = "playwright-prefer-test-id-locators";
+    let page = docs_rule_snippets::load_page(&repo_root(), rule);
+    let fixes = regex::Regex::new(r#"page\.getByTestId\("([^"]+)"\)"#).unwrap();
+    let fix = fixes.captures(&page.body).expect("documented literal fix");
+    let config = docs_rule_snippets::rule_config_yaml(&page.body, rule);
+    let counter = docs_rule_snippets::counterexample_section(&page.body);
+    let fences = docs_rule_snippets::fences(&counter);
+    let runs = docs_rule_snippets::snippet_runs(&fences);
+    assert_eq!(runs.len(), 1);
+    let fixture = docs_rule_snippets::materialize_snippet(&config, &runs[0].1);
+    let findings = docs_rule_snippets::run_rule(fixture.path(), rule).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    // Verify the real replacement suggested for the matched app element.
+    assert!(
+        findings[0].contains(&format!("Prefer getByTestId('{}')", &fix[1])),
+        "documented fix must match the counterexample element: {findings:?}"
+    );
+}
+
+#[test]
 fn heading_section_skips_hashes_inside_fences_and_accepts_suffixes() {
     let body = "\
 ## Valid example

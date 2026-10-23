@@ -22,20 +22,50 @@ There are no rule-specific options or defaults. It validates the active
 
 ## Valid example
 
-The fixed configuration below uses a tracked project root, removes the empty
-exclude, and puts the budget on a non-`direct` group.
+The project root below exists in the example tree.
 
 ```yaml
+# .no-mistakes.yml
+projects:
+  web:
+    root: web
 rules:
   - rule: no-mistakes-config
     scope: repository
 ```
 
+```ts
+// web/index.ts
+export const appName = 'web';
+```
 
 ## Counterexample
 
 ```yaml
+# .no-mistakes.yml
+projects:
+  web:
+    root: apps/missing
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+```
+
+The configured project root does not exist, so the rule reports `apps/missing`.
+
+## Unknown-key limitation
+
+Unknown top-level keys are accepted by the current loader and are not findings
+of this rule. The following active configuration loads successfully and reports
+nothing; `unknownKey` has no effect. This is a limitation, not a reporting
+counterexample:
+
+```yaml
+# .no-mistakes.yml
 unknownKey: true
+rules:
+  - rule: no-mistakes-config
+    scope: repository
 ```
 
 ## Suppression
