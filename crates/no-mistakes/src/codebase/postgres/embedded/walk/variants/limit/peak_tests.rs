@@ -29,7 +29,12 @@ fn actual_join_candidates_stay_bounded_before_variant_selection() {
         let file = extract_embedded_sql_from_source(
             &path,
             &source,
-            &EmbeddedSqlOptions::configured("@example/db", &["read".into()]),
+            &EmbeddedSqlOptions::configured("@example/db", &["read".into()]).with_trusted_sql_tags(
+                &[crate::codebase::postgres::TrustedSqlTag {
+                    module: "@example/db".into(),
+                    name: "sql".into(),
+                }],
+            ),
         );
         let peak = PEAK.with(|peak| peak.replace(None).unwrap());
         assert!(file.calls.iter().any(|call| call.variants_truncated()));

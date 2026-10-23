@@ -45,6 +45,19 @@ impl EmbeddedSqlVariant {
 }
 
 impl EmbeddedSqlCall {
+    /// Whether the sole complete version mirrors the legacy raw SQL fields.
+    /// Keep this source presentation for diagnostics while retaining the
+    /// variant's occurrence provenance for consumers that need it.
+    pub(crate) fn mirrors_single_variant(&self) -> bool {
+        let [variant] = self.variants.as_slice() else {
+            return false;
+        };
+        self.kind != EmbeddedSqlKind::Dynamic
+            && !variant.variants_truncated
+            && self.sql_text.as_deref() == Some(variant.sql_text.as_str())
+            && self.recovered_placeholder_positions == variant.recovered_placeholder_positions
+    }
+
     pub(crate) fn source_offset_at_sql_offset(&self, offset: usize) -> Option<usize> {
         self.variants
             .first()?
@@ -73,26 +86,32 @@ impl EmbeddedSqlCall {
     }
     /// Project prepared alternatives internally without creating public call sites.
     pub(crate) fn statement_calls(&self) -> impl Iterator<Item = Cow<'_, Self>> + Clone {
+        let mirrored = self.mirrors_single_variant();
         std::iter::once(Cow::Borrowed(self))
-            .take(usize::from(self.variants.is_empty()))
-            .chain(self.variants.iter().map(|variant| {
-                Cow::Owned(Self {
-                    line: self.line,
-                    callee: self.callee.clone(),
-                    sql_text: Some(variant.sql_text.clone()),
-                    kind: if variant.variants_truncated {
-                        EmbeddedSqlKind::Dynamic
-                    } else {
-                        EmbeddedSqlKind::Composed
-                    },
-                    declaration_line: Some(variant.line),
-                    sql_source_positions: variant.sql_source_positions.clone(),
-                    recovered_placeholder_positions: variant
-                        .recovered_placeholder_positions
-                        .clone(),
-                    variants: vec![variant.clone()],
-                })
-            }))
+            .take(usize::from(self.variants.is_empty() || mirrored))
+            .chain(
+                self.variants
+                    .iter()
+                    .filter(move |_| !mirrored)
+                    .map(|variant| {
+                        Cow::Owned(Self {
+                            line: self.line,
+                            callee: self.callee.clone(),
+                            sql_text: Some(variant.sql_text.clone()),
+                            kind: if variant.variants_truncated {
+                                EmbeddedSqlKind::Dynamic
+                            } else {
+                                EmbeddedSqlKind::Composed
+                            },
+                            declaration_line: Some(variant.line),
+                            sql_source_positions: variant.sql_source_positions.clone(),
+                            recovered_placeholder_positions: variant
+                                .recovered_placeholder_positions
+                                .clone(),
+                            variants: vec![variant.clone()],
+                        })
+                    }),
+            )
     }
     pub(crate) fn variants_truncated(&self) -> bool {
         self.variants

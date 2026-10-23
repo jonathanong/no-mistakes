@@ -148,7 +148,12 @@ pub(in crate::codebase::postgres::embedded::walk) fn executor_call_from_binding(
         binding.kind,
         EmbeddedSqlKind::Dynamic | EmbeddedSqlKind::Composed
     ) {
-        variants::publish(binding.variants.clone(), binding.kind)
+        variants::publish_for_argument(
+            visitor,
+            first_call_argument(call),
+            binding.variants.clone(),
+            binding.kind,
+        )
     } else {
         Vec::new()
     };

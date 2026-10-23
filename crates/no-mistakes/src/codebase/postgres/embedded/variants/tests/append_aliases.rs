@@ -92,7 +92,6 @@ fn alias_mutation_cannot_revive_a_revoked_bare_binding_as_a_static_variant() {
     assert_eq!(file.calls.len(), 2);
     for call in &file.calls {
         assert_eq!(call.kind, EmbeddedSqlKind::Dynamic);
-        assert!(call.sql_text.is_none());
         assert!(call.variants.is_empty());
         assert!(call.is_unanalyzable());
     }

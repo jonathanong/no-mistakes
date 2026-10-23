@@ -75,18 +75,20 @@ pub(crate) fn embedded_call_facts_with_demand(
         .enumerate()
         .filter(|(_, call)| !variants_only || !call.variants.is_empty())
         .flat_map(|(call_index, call)| {
+            let mirrored = call.mirrors_single_variant();
             call.statement_calls()
                 .enumerate()
                 .map(move |(variant_index, version)| {
                     (
                         version,
                         !call.variants.is_empty(),
+                        mirrored,
                         call_index,
                         variant_index,
                     )
                 })
         })
-        .filter_map(|(call, variant, call_index, variant_index)| {
+        .filter_map(|(call, variant, mirrored, call_index, variant_index)| {
             let sql = call.sql_text.as_deref()?;
             // Ordering rejects opaque tails before consulting prepared statements.
             // Keep all facts for variants and general/bounds consumers.
@@ -146,7 +148,7 @@ pub(crate) fn embedded_call_facts_with_demand(
                     .first()
                     .map_or_else(Vec::new, |variant| variant.append_sites.clone());
             }
-            rebase_embedded_lines(&mut facts, &call, variant);
+            rebase_embedded_lines(&mut facts, &call, variant && !mirrored);
             Some(facts)
         })
         .collect()

@@ -63,10 +63,7 @@ pub(super) fn scan_with_sources(
                         retained_violation = true;
                         // A newly published deterministic append mirror keeps
                         // the legacy executor location and its suppressions.
-                        if call.variants.len() == 1
-                            && !call.variants_truncated()
-                            && call.sql_text.as_deref() == version.sql_text.as_deref()
-                        {
+                        if call.mirrors_single_variant() {
                             findings.push(finding);
                         } else {
                             dedup.push(

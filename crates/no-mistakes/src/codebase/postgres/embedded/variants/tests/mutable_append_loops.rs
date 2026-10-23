@@ -22,5 +22,6 @@ fn mutable_builder_loops_keep_zero_and_one_with_an_unknown_residual() {
     assert_eq!(texts(&calls[2]), ["SELECT 3", "SELECT 3 LIMIT 3"]);
     assert_eq!(calls[3].sql_text.as_deref(), Some("SELECT 4"));
     assert!(!calls[3].variants_truncated());
-    assert!(!calls[3].is_unanalyzable());
+    assert_eq!(calls[3].kind, EmbeddedSqlKind::Dynamic);
+    assert!(calls[3].variants.is_empty());
 }

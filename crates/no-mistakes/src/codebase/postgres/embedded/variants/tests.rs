@@ -48,6 +48,8 @@ mod metadata;
 mod opaque_logical;
 #[path = "tests/positions.rs"]
 mod positions;
+#[path = "tests/singleton_mirror.rs"]
+mod singleton_mirror;
 #[path = "tests/static_append.rs"]
 mod static_append;
 #[path = "tests/switch_generators.rs"]
