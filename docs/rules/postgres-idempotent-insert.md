@@ -24,6 +24,7 @@ rules:
   - rule: postgres-idempotent-insert
     scope: repository
     options:
+      importSpecifier: "@example/db"
       sqlInclude: ["**/*.sql"]
       scanEmbedded: true
       checkConvergence: true

@@ -97,7 +97,44 @@ still abstains. See [SQL verdicts](../postgres-sql-verdicts.md).
 
 ## Valid example
 
+```jsonc
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "rss_feed_item_categories": {
+      "indexes": {
+        "idx_rss_feed_item_categories__item_category_lower": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "rss_feed_item_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "lower(category_text)",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        }
+      }
+    }
+  }
+}
+```
+
 ```sql
+-- backend/queries/upsert.sql
 INSERT INTO rss_feed_item_categories (rss_feed_item_id, category_text)
 SELECT input.rss_feed_item_id, input.category_text
 FROM unnest($1::uuid[], $2::text[]) AS input(rss_feed_item_id, category_text)
@@ -113,7 +150,44 @@ the required key prefix.
 
 This target identifies the same unique-key set but reverses the lock order:
 
+```jsonc
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "edges": {
+      "indexes": {
+        "edges_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "left_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "right_id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        }
+      }
+    }
+  }
+}
+```
+
 ```sql
+-- backend/queries/upsert.sql
 INSERT INTO edges (left_id, right_id)
 SELECT input.left_id, input.right_id
 FROM unnest($1::uuid[], $2::uuid[]) AS input(left_id, right_id)

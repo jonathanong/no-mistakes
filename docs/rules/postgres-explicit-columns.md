@@ -9,12 +9,13 @@ relation is wider than `maxColumns`, or when it is named in `relations`.
 rules:
   - rule: postgres-explicit-columns
     options:
-      include: ["src/**/*.ts"]
+      include: ["src/**/*.ts", "queries/**/*.sql"]
       exclude: ["**/*.test.ts"]
-      sqlInclude: []
+      importSpecifier: "@example/db"
+      sqlInclude: ["queries/**/*.sql"]
       schemaCatalogPath: db/schema.json
       maxColumns: 12
-      relations: [accounts]
+      relations: [orders, accounts]
       allowWholeRowFunctions: [row_to_json, to_json, to_jsonb, json_agg, jsonb_agg]
       checkReturning: true
       unanalyzableSql: ignore
@@ -121,7 +122,54 @@ their existing scopes. See [the migration notes](../migrations/explicit-postgres
 
 ## Valid example
 
+```jsonc
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "status": {
+          "dataType": "text"
+        },
+        "account_id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "tags": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "name": {
+          "dataType": "text"
+        },
+        "slug": {
+          "dataType": "text"
+        }
+      }
+    },
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "name": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}
+```
+
 ```sql
+-- queries/examples.sql
 SELECT id, status FROM orders WHERE id = $1;
 SELECT * FROM tags;
 SELECT EXISTS (SELECT * FROM orders WHERE account_id = $1);
@@ -130,19 +178,67 @@ SELECT row_to_json(o.*) FROM orders o WHERE id = $1;
 WITH r AS (SELECT id, status FROM orders) SELECT * FROM r;
 ```
 
-`tags` has three columns, under the default limit of 12. `orders` is wide, so
-the explicit list and the `row_to_json` wrapper are the shapes that pass.
+`tags` has three columns, under the default limit of 12. `orders` is listed
+in `relations`, so the explicit list and the `row_to_json` wrapper pass even
+though its catalog lists only three columns.
 
 ## Counterexample
 
+```jsonc
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "status": {
+          "dataType": "text"
+        },
+        "account_id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "tags": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "name": {
+          "dataType": "text"
+        },
+        "slug": {
+          "dataType": "text"
+        }
+      }
+    },
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "name": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}
+```
+
 ```sql
+-- queries/examples.sql
 SELECT * FROM orders WHERE id = $1;
 SELECT o.*, a.name FROM orders o JOIN accounts a ON a.id = o.account_id;
 UPDATE orders SET status = 'paid' WHERE id = $1 RETURNING *;
 WITH recent AS (SELECT * FROM orders WHERE id > $1) SELECT id FROM recent;
 ```
 
-`orders` has 40 columns. The join reports `orders`. It also reports `accounts`
+`orders` is listed in `relations`. The join reports `orders`. It also reports `accounts`
 when that name is in `relations` and the query stars it. The CTE reports the
 inner `SELECT *`.
 

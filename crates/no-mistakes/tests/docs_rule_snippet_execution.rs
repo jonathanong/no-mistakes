@@ -1,7 +1,7 @@
 //! Check-rule snippet execution, extracted from docs_coverage.rs.
 
 #[path = "support/docs_rule_snippets.rs"]
-mod docs_rule_snippets;
+pub(super) mod docs_rule_snippets;
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};

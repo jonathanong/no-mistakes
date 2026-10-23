@@ -248,3 +248,15 @@ fn reviewed_caveats_stay_explicit() {
     assert!(architecture.contains("different\nruntime environments"));
     assert!(architecture.contains("unexpected base"));
 }
+
+#[test]
+fn generated_and_trigger_write_counterexamples_execute_independently() {
+    use crate::docs_rule_snippet_execution::docs_rule_snippets as snippets;
+
+    let page = snippets::load_page(&super::repo_root(), "postgres-no-generated-column-writes");
+    let counter = snippets::counterexample_section(&page.body);
+    let runs = snippets::snippet_runs(&snippets::fences(&counter));
+    // A generated-column finding must not cover for a missing trigger-column finding.
+    assert_eq!(runs.len(), 2, "each write policy needs an independent run");
+    assert!(runs.iter().all(|(_, fences)| fences.len() == 1));
+}
