@@ -8,7 +8,7 @@ use oxc_span::{GetSpan, Span};
 type Binding = (u32, Span, Option<Span>);
 // Reference span, executing function, and whether it writes the binding.
 type Reference = (Span, Option<Span>, bool);
-#[derive(Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub(super) struct Bindings {
     pub(super) enabled: bool,
     declarations: FxHashMap<String, Vec<Binding>>,
@@ -20,14 +20,6 @@ pub(super) struct Bindings {
 }
 
 impl ScopeCollector {
-    #[cfg(test)]
-    pub(in super::super) fn delayed_records(&self) -> usize {
-        self.delayed.declarations.len()
-            + self.delayed.references.len()
-            + self.delayed.assignments.len()
-            + self.delayed.candidates.len()
-    }
-
     pub(super) fn declare_delayed_binding(&mut self, id: &ast::BindingIdentifier<'_>) {
         if !self.delayed.enabled {
             return;
@@ -48,21 +40,22 @@ impl ScopeCollector {
         if !self.delayed.enabled {
             return;
         }
+        let owner = self.delayed.functions.last().copied();
+        let writing = self.delayed.writing > 0;
         self.delayed
             .references
             .entry(id.name.to_string())
             .or_default()
-            .push((
-                id.span,
-                self.delayed.functions.last().copied(),
-                self.delayed.writing > 0,
-            ));
+            .push((id.span, owner, writing));
     }
 
     pub(super) fn record_delayed_statements(&mut self, statements: &[Statement<'_>]) {
         if !self.delayed.enabled {
             return;
         }
+        let end = statements
+            .last()
+            .map_or(0, |statement| statement.span().end);
         for statement in statements {
             let Statement::ExpressionStatement(statement) = statement else {
                 continue;
@@ -74,17 +67,9 @@ impl ScopeCollector {
                 continue;
             };
             if assignment.operator == ast::AssignmentOperator::Assign {
-                self.delayed.assignments.insert(
-                    id.span.start,
-                    Span::new(
-                        assignment.span.end,
-                        statements
-                            .last()
-                            .expect("nonempty statement list")
-                            .span()
-                            .end,
-                    ),
-                );
+                self.delayed
+                    .assignments
+                    .insert(id.span.start, Span::new(assignment.span.end, end));
             }
         }
     }
@@ -130,17 +115,10 @@ impl ScopeCollector {
                 let Some(range) = self.delayed.assignments.get(&write.start) else {
                     continue;
                 };
-                for (span, _, _) in
-                    references
-                        .iter()
-                        .filter(owned)
-                        .filter(|(span, owner, writing)| {
-                            !writing
-                                && owner == function
-                                && range.start <= span.start
-                                && span.end <= range.end
-                        })
-                {
+                // The unique write ends before this range, so its owned sites are reads.
+                for (span, _, _) in references.iter().filter(owned).filter(|(span, owner, _)| {
+                    owner == function && range.start <= span.start && span.end <= range.end
+                }) {
                     if let Some(owner) = identity.owner {
                         self.spans.push(super::PendingRelativeSpan {
                             owners: vec![owner],

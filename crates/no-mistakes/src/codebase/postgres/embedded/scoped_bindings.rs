@@ -25,8 +25,6 @@ pub(crate) fn from_configured_module(source: &str, specifier: &str) -> bool {
 }
 
 pub(super) struct ScopedCollection {
-    #[cfg(test)]
-    pub(super) delayed_records: usize,
     pub(super) executors: ScopedExecutors,
     pub(super) candidates: Vec<RelativeScopedCandidate>,
     pub(super) spans: Vec<PendingRelativeSpan>,
@@ -94,8 +92,6 @@ pub(super) fn collect(program: &Program<'_>, options: &EmbeddedSqlOptions) -> Sc
         visitor.finish_delayed_receivers();
     }
     ScopedCollection {
-        #[cfg(test)]
-        delayed_records: visitor.delayed_records(),
         executors: visitor.found,
         candidates,
         spans: visitor.spans,

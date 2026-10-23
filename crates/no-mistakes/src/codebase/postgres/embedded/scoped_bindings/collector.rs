@@ -218,3 +218,6 @@ impl<'a> Visit<'a> for ScopeCollector {
         walk::walk_variable_declaration(self, declaration);
     }
 }
+
+#[cfg(test)]
+mod delayed_tests;
