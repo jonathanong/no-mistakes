@@ -29,5 +29,8 @@
 {"name": "async-target-result", "code": "export async function createUser(i): string {return i;} const g = i => (createUser(i) as string);", "expected": 0},
 {"name": "generator-target-result", "code": "export function* createUser(i): string {yield i;} const g = i => (createUser(i) as string);", "expected": 0},
 {"name": "query-alias-cross-scope", "code": "import {f} from './api'; function scope(f) { type Handler = typeof f; const g = i => (f as Handler)(i); }", "expected": 0},
-{"name": "annotated-target-binding", "code": "export const createUser: (i: string) => string | number = (i: string): string => i; const g = i => (createUser(i) as string);", "expected": 0}
+{"name": "annotated-target-binding", "code": "export const createUser: (i: string) => string | number = (i: string): string => i; const g = i => (createUser(i) as string);", "expected": 0},
+{"name": "import-type-query-cast", "code": "import {f} from './api'; const g = i => (f as typeof import('./api'))(i);", "expected": 0},
+{"name": "async-asserted-callee", "code": "import * as db from './api'; const g = async i => await (db.createUser as typeof db.createUser)(i);", "expected": 0},
+{"name": "deep-type-query-identity", "code": "import * as db from './api'; const g = i => (db.users.createUser as typeof db.users.createUser)(i);", "expected": 1}
 ]

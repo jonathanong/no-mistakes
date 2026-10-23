@@ -13,11 +13,9 @@ function unassertedPath(expression) {
 }
 
 function typeQueryPath(node) {
-  if (node?.type === "Identifier") return [node.name];
-  if (node?.type === "TSQualifiedName") {
-    const left = typeQueryPath(node.left);
-    return left && [...left, node.right.name];
-  }
+  if (node.type === "Identifier") return [node.name];
+  if (node.type === "TSQualifiedName") return [...typeQueryPath(node.left), node.right.name];
+  // A typeof import() query has no static value path in this file.
   return null;
 }
 
@@ -117,9 +115,7 @@ function assertedContractPreserved(node, call, candidate, target, sourceCode) {
     } else if (result.type === "ChainExpression" || result.type === "TSNonNullExpression") {
       if (result.type === "TSNonNullExpression") return false;
       result = result.expression;
-    } else if (result.type === "AwaitExpression") {
-      result = result.argument;
-    } else return false;
+    } else return false; // Async wrappers were rejected before this walk.
   }
   let callee = call.callee;
   while (callee && callee !== candidate.target) {
