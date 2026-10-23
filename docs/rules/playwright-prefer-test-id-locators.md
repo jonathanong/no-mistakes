@@ -116,7 +116,7 @@ export default defineConfig({
 ```tsx
 // web/app/profile/page.tsx
 export default function ProfilePage() {
-  return <button data-pw="save-profile">Save</button>;
+  return <button data-pw="save-button">Save</button>;
 }
 ```
 
