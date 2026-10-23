@@ -9,6 +9,9 @@ const TRACKED_PACKAGES = [
   "@storybook/react-vite",
   "@storybook/react",
   "storybook",
+  "react",
+  "react-dom",
+  "vite",
 ];
 
 const ALWAYS_PATHS = new Set([
@@ -17,6 +20,8 @@ const ALWAYS_PATHS = new Set([
   "tests/js/timeout-policy-browser-scope.test.js",
   "vitest.config.js",
   "packages/no-mistakes/package.json",
+  "pnpm-workspace.yaml",
+  "tests/js/setup.js",
 ]);
 
 function isAlwaysPath(path) {
@@ -27,8 +32,7 @@ function isAlwaysPath(path) {
   );
 }
 
-function dependencyVersions(source) {
-  const pkg = JSON.parse(source);
+function dependencyVersions(pkg) {
   const bags = [
     pkg.dependencies,
     pkg.devDependencies,
@@ -42,6 +46,11 @@ function dependencyVersions(source) {
     }
     return `${name}@${version}`;
   }).join("\n");
+}
+
+function packageFingerprint(source) {
+  const pkg = JSON.parse(source);
+  return `${dependencyVersions(pkg)}\n${JSON.stringify(pkg.scripts ?? {})}`;
 }
 
 function lockfileFingerprint(source) {
@@ -68,7 +77,7 @@ function timeoutPolicyBrowserChanged(changes, compared = {}) {
   const pkg = compared.packageJson || {};
   const lock = compared.lockfile || {};
   return (
-    (pkgTouched && snapshotsDiffer(pkg.base, pkg.head, dependencyVersions)) ||
+    (pkgTouched && snapshotsDiffer(pkg.base, pkg.head, packageFingerprint)) ||
     (lockTouched && snapshotsDiffer(lock.base, lock.head, lockfileFingerprint))
   );
 }

@@ -17,14 +17,24 @@ const BROWSER_TESTS = [
 const NODE_POLICY_CONTRACTS =
   "packages/no-mistakes/test-timeout-policy/browser-policy-contracts.test.mjs";
 
-function pkg(vitest = "^5.0.4", playwright = "1.64.0", storybookReact = "10.6.1") {
+const DEFAULT_SCRIPTS = {
+  "test:ci": "vitest run --coverage",
+  "test:timeout-policy-browser": "vitest run browser",
+  "fmt:js": "oxfmt",
+};
+
+function pkg(vitest = "^5.0.4", playwright = "1.64.0", storybookReact = "10.6.1", extra = {}) {
   return JSON.stringify({
+    scripts: extra.scripts ?? DEFAULT_SCRIPTS,
     devDependencies: {
       vitest,
       "@vitest/browser-playwright": "5.0.4",
       playwright,
       "@storybook/react": storybookReact,
       "@storybook/react-vite": "10.6.1",
+      react: extra.react ?? "19.3.0",
+      "react-dom": extra.reactDom ?? "19.3.0",
+      vite: extra.vite ?? "7.1.0",
     },
   });
 }
@@ -39,6 +49,8 @@ test("runs when timeout-policy sources, entrypoints, or the workflow change", ()
     ".github/scripts/timeout-policy-browser-scope.cjs",
     "tests/js/timeout-policy-browser-scope.test.js",
     "vitest.config.js",
+    "pnpm-workspace.yaml",
+    "tests/js/setup.js",
   ]) {
     assert.equal(timeoutPolicyBrowserChanged(modified([path])), true, path);
   }
@@ -93,6 +105,67 @@ test("ignores unrelated paths and untracked dependency bumps", () => {
       lockfile: {
         base: "  '@storybook/react-vite@10.6.1':\n",
         head: "  '@storybook/react-vite@10.6.2':\n",
+      },
+    }),
+    true,
+  );
+  assert.equal(
+    timeoutPolicyBrowserChanged(modified(["package.json"]), {
+      packageJson: {
+        base: pkg(),
+        head: pkg("^5.0.4", "1.64.0", "10.6.1", { react: "19.4.0" }),
+      },
+    }),
+    true,
+  );
+  assert.equal(
+    timeoutPolicyBrowserChanged(modified(["package.json"]), {
+      packageJson: {
+        base: pkg(),
+        head: pkg("^5.0.4", "1.64.0", "10.6.1", { reactDom: "19.4.0" }),
+      },
+    }),
+    true,
+  );
+  assert.equal(
+    timeoutPolicyBrowserChanged(modified(["package.json"]), {
+      packageJson: {
+        base: pkg(),
+        head: pkg("^5.0.4", "1.64.0", "10.6.1", { vite: "7.2.0" }),
+      },
+    }),
+    true,
+  );
+});
+
+test("runs when root package.json test scripts change", () => {
+  const withScripts = (scripts) =>
+    pkg("^5.0.4", "1.64.0", "10.6.1", { scripts: { ...DEFAULT_SCRIPTS, ...scripts } });
+  assert.equal(
+    timeoutPolicyBrowserChanged(modified(["package.json"]), {
+      packageJson: {
+        base: pkg(),
+        head: withScripts({ "test:ci": "vitest run --coverage --exclude broken.mjs" }),
+      },
+    }),
+    true,
+  );
+  assert.equal(
+    timeoutPolicyBrowserChanged(modified(["package.json"]), {
+      packageJson: {
+        base: pkg(),
+        head: withScripts({
+          "test:timeout-policy-browser": "vitest run --coverage=false missing.mjs",
+        }),
+      },
+    }),
+    true,
+  );
+  assert.equal(
+    timeoutPolicyBrowserChanged(modified(["package.json"]), {
+      packageJson: {
+        base: pkg(),
+        head: withScripts({ "fmt:js": "oxfmt --write ." }),
       },
     }),
     true,
