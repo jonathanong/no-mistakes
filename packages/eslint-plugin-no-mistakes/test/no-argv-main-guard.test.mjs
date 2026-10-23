@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, it } from "vitest";
 import { fixture, lint, plugin, __dirname } from "./helpers.mjs";
+import { headingSection, rulePages, sourceFences } from "./docs-snippets.mjs";
 const id = "no-argv-main-guard";
 const fixtureRoot = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
 function check(name, options = {}) {
@@ -52,7 +53,26 @@ describe(id, () => {
     );
     assert.deepEqual(check("template-suppression-file.mjs"), []);
   });
+  it("normalizes concatenated and wrapped file URL guards", () => {
+    assert.deepEqual(
+      check("file-url-recall.mjs").map((m) => m.line),
+      [2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 16, 18, 19, 20, 21, 23, 25],
+    );
+    assert.deepEqual(check("file-url-controls.mjs"), []);
+  });
+  it("executes every documented disallowed guard and the allowed example", () => {
+    const page = rulePages().find((page) => page.ruleId === id);
+    const disallowed = sourceFences(headingSection(page.body, "Disallowed"))[0];
+    const allowed = sourceFences(headingSection(page.body, "Allowed"))[0];
+    const rules = { [`no-mistakes/${id}`]: "error" };
+    const findings = lint(disallowed.code, rules, "documented.ts");
+    assert.equal(findings.length, 12);
+    assert.ok(findings.every((message) => message.ruleId === `no-mistakes/${id}`));
+    assert.deepEqual(lint(allowed.code, rules, "documented.ts"), []);
+  });
   for (const [name, count] of [
+    ["file-url-recall.mjs", 17],
+    ["file-url-controls.mjs", 0],
     ["unsafe.mjs", 10],
     ["aliases.ts", 5],
     ["safe.mjs", 0],
