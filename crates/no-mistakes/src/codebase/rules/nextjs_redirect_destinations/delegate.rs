@@ -1,5 +1,5 @@
 use super::extract::{extract_named_destinations_from_program, ExtractedDestinations};
-use super::scan::{check_named_section, NamedCheck};
+use super::scan::{check_named_section, finding, NamedCheck};
 use super::words::contains_word;
 use super::RULE_ID;
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
@@ -14,14 +14,19 @@ use std::path::{Path, PathBuf};
 pub(super) struct ConfigAnalysis {
     pub(super) redirects: ExtractedDestinations,
     pub(super) rewrites: ExtractedDestinations,
-    pub(super) specifier: Option<String>,
+    pub(super) specifier: Option<(String, usize)>,
 }
 
 pub(super) fn analyze_config(path: &Path, source: &str, low: bool) -> ConfigAnalysis {
     crate::ast::with_program(path, source, |program, source| ConfigAnalysis {
         redirects: extract_named_destinations_from_program(program, source, "redirects", low),
         rewrites: extract_named_destinations_from_program(program, source, "rewrites", low),
-        specifier: default_module_specifier(program).map(str::to_string),
+        specifier: default_module_specifier(program).map(|(specifier, offset)| {
+            (
+                specifier.to_string(),
+                crate::codebase::ts_source::byte_offset_to_line(source, offset as usize) as usize,
+            )
+        }),
     })
     .unwrap_or_default()
 }
@@ -36,7 +41,7 @@ pub(super) struct DelegateRequest<'a> {
     pub(super) route_set: &'a BTreeSet<String>,
     pub(super) app_root_label: &'a str,
     pub(super) include_rewrites: bool,
-    pub(super) specifier: Option<&'a str>,
+    pub(super) specifier: Option<(&'a str, usize)>,
     pub(super) analysis: EffectiveRuleAnalysis,
 }
 
@@ -47,17 +52,38 @@ pub(super) fn append_delegated(request: &DelegateRequest<'_>) -> AnalysisDiagnos
     if !follow_redirects && !follow_rewrites {
         return diagnostics;
     }
-    let Some(specifier) = request.specifier else {
+    let Some((specifier, line)) = request.specifier else {
         return diagnostics;
     };
-    let Some(delegated) =
-        resolve_relative(request.config_path, specifier, request.files).or_else(|| {
-            request
-                .resolver
-                .resolve_alias(specifier, request.config_path)
-                .filter(|path| request.files.contains(path))
-        })
-    else {
+    let target = if specifier.starts_with("./") || specifier.starts_with("../") {
+        Some(resolve_relative(
+            request.config_path,
+            specifier,
+            request.files,
+        ))
+    } else {
+        request
+            .resolver
+            .resolve_alias(specifier, request.config_path)
+    };
+    // Unmatched package/baseUrl-only imports are outside the declared one-hop scope.
+    let Some(target) = target else {
+        return diagnostics;
+    };
+    let Some(delegated) = target.filter(|path| request.files.contains(path)) else {
+        let rel = relative_slash_path(request.root, request.config_path);
+        let finding = finding(
+            &rel,
+            line,
+            format!(
+                "{rel}: nextjs-redirect-destinations extraction is incomplete: delegated config specifier '{specifier}' could not be resolved; restore the local module or correct its relative path or TypeScript paths mapping so redirect and rewrite destinations can be checked."
+            ),
+        );
+        if request.analysis.effort == Effort::Low {
+            diagnostics.unanalyzable(request.analysis.unanalyzable, finding);
+        } else {
+            diagnostics.findings.push(finding);
+        }
         return diagnostics;
     };
     let Some(delegated_source) = super::super::read_source(request.sources, &delegated) else {

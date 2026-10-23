@@ -120,8 +120,9 @@ extension only when that extension is a JS or TS source extension. A dotted
 basename such as `./next.shared` still receives those extensions, including
 `next.shared.ts` and `next.shared/index.ts`. A `.js` / `.jsx` / `.mjs` /
 `.cjs` specifier also resolves the TypeScript sibling. The shared file is then
-checked with the same extractor. A second hop, a package specifier, a tsconfig
-path such as `@/next-shared`, `export * from`, `module.exports = require("./x")`,
+checked with the same extractor. Configured TypeScript `paths` aliases such as
+`@/next-shared` are also followed. A second hop, a package specifier,
+`export * from`, `module.exports = require("./x")`,
 and a wrapper such as `export default withPlugin(shared)` or `{ ...shared }`
 are not followed. Two entries that delegate to the same shared module each
 report that module's findings.
@@ -234,3 +235,14 @@ second delegated module are outside this bounded extraction. Keep redirects
 and rewrites in the directly delegated module to make them statically checkable.
 
 At either effort, the same one-hop relative re-export or configured TypeScript paths alias is followed. Low effort checks literal destinations in the delegated file and applies `unanalyzable` to its unsupported entries. Findings and advisories name that helper file, including its suppression directives. For rewrites, use `return [{ source: "/a", destination: "/b" }]` (no `permanent` field).
+
+A relative specifier or matching TypeScript `paths` mapping whose local target
+cannot be resolved reports incomplete extraction at the entry config, naming
+the unresolved specifier. Restore the module or correct the specifier/mapping;
+a failed `paths` mapping does not fall back to `baseUrl` or a less-specific
+mapping. This prevents unavailable delegated configs from silently hiding stale
+destinations. At `effort: low`, this uncertainty uses `unanalyzable: report`,
+`advise`, or `ignore`; at `effort: max`, it remains a finding under every policy.
+Entry-config `no-mistakes-disable-file`, `no-mistakes-disable-line`, and
+`no-mistakes-disable-next-line` directives suppress it in either diagnostic
+channel. Resolved helpers retain their own finding locations and suppressions.

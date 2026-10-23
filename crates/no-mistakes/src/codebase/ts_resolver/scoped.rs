@@ -63,22 +63,27 @@ impl<'a> ScopedImportResolver<'a> {
         self
     }
 
+    /// None means no matching paths pattern; Some(None) means its target is unresolved.
     pub(crate) fn resolve_path_alias(
         &self,
         specifier: &str,
         importing_file: &ScopedPath,
-    ) -> Option<ScopedPathBuf> {
+    ) -> Option<Option<ScopedPathBuf>> {
         let resolve = |resolver: &ImportResolver<'_>| {
             if !resolver.matches_alias(specifier) {
                 return None;
             }
-            let target = resolver.resolve(specifier, importing_file)?;
+            let Some(target) = resolver.resolve(specifier, importing_file) else {
+                return Some(None);
+            };
             // A matching paths pattern may fail and resolve through baseUrl.
             // Accept only mapped candidates, while sharing the ordinary cache.
-            resolver
-                .path_alias_candidates(specifier)
-                .contains(&target)
-                .then_some(target)
+            Some(
+                resolver
+                    .path_alias_candidates(specifier)
+                    .contains(&target)
+                    .then_some(target),
+            )
         };
         if let Some(resolver) = self.fixed_resolver_for(importing_file) {
             return resolve(resolver);

@@ -114,18 +114,6 @@ fn tsconfig_path_alias_reports_the_shared_module() {
 #[test]
 fn path_alias_keeps_one_hop_and_requires_configured_paths() {
     assert!(run("pass-path-alias").is_empty());
-    assert!(
-        run("limit-alias-precedence").is_empty(),
-        "failed exact paths mapping wins over a resolvable wildcard and baseUrl"
-    );
-    assert!(
-        run("limit-missing-exact-alias").is_empty(),
-        "failed paths must not admit baseUrl fallback"
-    );
-    assert!(
-        run("limit-missing-wildcard-alias").is_empty(),
-        "failed wildcard paths must not admit baseUrl fallback"
-    );
     assert!(run("limit-alias-second-hop").is_empty(), "one hop only");
     assert!(
         run("limit-base-url").is_empty(),

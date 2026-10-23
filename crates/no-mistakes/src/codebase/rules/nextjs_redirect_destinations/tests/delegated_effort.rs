@@ -103,3 +103,92 @@ fn combined_diagnostics_matches_standalone_channels_and_keeps_configured_message
         assert_eq!(combined.advisories, advisories);
     }
 }
+
+#[test]
+fn unresolved_local_delegates_report_incomplete_extraction_without_base_url_fallback() {
+    for (fixture, specifier, line) in [
+        ("limit-alias-precedence", "next-shared", 1),
+        ("limit-missing-exact-alias", "next-shared", 1),
+        ("limit-missing-wildcard-alias", "next-shared", 1),
+        ("fail-unresolved-relative", "./missing-config", 2),
+        ("fail-unresolved-alias", "@config", 2),
+    ] {
+        let baseline = run(fixture, "{}");
+        assert_eq!(baseline.len(), 1, "{fixture}: {baseline:?}");
+        let finding = &baseline[0];
+        assert_eq!(finding.file, "next.config.ts");
+        assert_eq!(finding.line, line);
+        assert!(finding.message.contains("extraction is incomplete"));
+        assert!(finding
+            .message
+            .contains(&format!("specifier '{specifier}'")));
+        assert!(finding.message.contains("restore the local module"));
+        for policy in ["report", "advise", "ignore"] {
+            let (findings, advisories) = run_prepared(
+                fixture,
+                &format!("{{ effort: low, unanalyzable: {policy} }}"),
+            );
+            assert_eq!(
+                findings,
+                if policy == "report" {
+                    baseline.clone()
+                } else {
+                    vec![]
+                }
+            );
+            assert_eq!(
+                advisories,
+                if policy == "advise" {
+                    baseline.clone()
+                } else {
+                    vec![]
+                }
+            );
+            let (findings, advisories) = run_prepared(
+                fixture,
+                &format!("{{ effort: max, unanalyzable: {policy} }}"),
+            );
+            assert_eq!(findings, baseline);
+            assert!(advisories.is_empty());
+        }
+    }
+}
+
+#[test]
+fn unresolved_delegates_respect_entry_config_suppressions_in_both_channels() {
+    for name in [
+        "unresolved-disabled",
+        "unresolved-next-line",
+        "unresolved-line",
+    ] {
+        for effort in ["low", "max"] {
+            for policy in ["report", "advise", "ignore"] {
+                let root = fixture(name);
+                let files = fixture_files(&root);
+                let sources = crate::codebase::rules::source_store_for_files(&files);
+                let mut config = config(&format!("{{ effort: {effort}, unanalyzable: {policy} }}"));
+                crate::codebase::rules::analysis_policy::prepare_rule_analysis(
+                    &root,
+                    &mut config,
+                    &files,
+                    &sources,
+                )
+                .unwrap();
+                let diagnostics = diagnostics_with_files_and_sources(
+                    &root, &config, &files, &sources, None, false,
+                )
+                .unwrap();
+                assert!(
+                    diagnostics.findings.is_empty(),
+                    "{name}: {:?}",
+                    diagnostics.findings
+                );
+                assert!(
+                    diagnostics.advisories.is_empty(),
+                    "{name}: {:?}",
+                    diagnostics.advisories
+                );
+            }
+        }
+    }
+}

@@ -23,7 +23,7 @@ impl<'a> PreparedConfigResolver<'a> {
         }
     }
 
-    pub(super) fn resolve_alias(&self, specifier: &str, from: &Path) -> Option<PathBuf> {
+    pub(super) fn resolve_alias(&self, specifier: &str, from: &Path) -> Option<Option<PathBuf>> {
         self.resolver.resolve_path_alias(specifier, from)
     }
 }
