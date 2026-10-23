@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 mod closure;
 mod nextjs;
 mod nextjs_effort;
+mod nextjs_selection;
 mod queue;
 mod storybook;
 mod unique;

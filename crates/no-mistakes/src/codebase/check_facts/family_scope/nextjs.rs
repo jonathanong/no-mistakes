@@ -15,7 +15,7 @@ fn nextjs_scope(
     inferred: &mut crate::codebase::config::InferredRoots,
 ) -> Result<FamilyPathScope> {
     let root = normalize_path(root);
-    let mut selected = BTreeSet::new();
+    let mut applications = Vec::new();
     let mut any = false;
     let mut unrestricted = false;
     for rule in config.rule_applications(NEXTJS_NO_CACHING) {
@@ -31,26 +31,54 @@ fn nextjs_scope(
         if unrestricted {
             continue;
         }
-        // Graph consumers may add files in filesystem.skipDirectories. The rule
-        // historically checks those files too, so do not use selected_rule_files.
-        selected.extend(
-            files
-                .iter()
-                .filter(|path| {
-                    roots.iter().any(|root| path.starts_with(root)) && filter.is_match(path)
-                })
-                .map(|path| normalize_path(path)),
-        );
+        applications.push((roots, filter));
     }
     if !any || unrestricted {
         return Ok(FamilyPathScope::All);
     }
-    // Unlike cross-file closure scopes, an empty file-local selection is exact.
-    Ok(if selected.is_empty() {
-        FamilyPathScope::Only(Arc::new(selected))
-    } else {
-        super::closure::only_or_all(selected, files.len())
-    })
+    if files.is_empty() {
+        return Ok(FamilyPathScope::Only(Arc::new(BTreeSet::new())));
+    }
+    // Graph consumers may add skipped-directory files. Match the complete
+    // supplied inventory, rather than the primary selected_rule_files set.
+    let matches = |path: &PathBuf| {
+        applications.iter().any(|(roots, filter)| {
+            roots.iter().any(|root| path.starts_with(root)) && filter.is_match(path)
+        })
+    };
+    let Some(first_excluded) = files.iter().position(|path| !matches(path)) else {
+        // A fully selected inventory needs no owned membership paths.
+        return Ok(FamilyPathScope::All);
+    };
+    // The prefix was already matched. Materialize it only after proving that
+    // this is a partial scope, and evaluate each remaining path exactly once.
+    let selected = files[..first_excluded]
+        .iter()
+        .chain(
+            files[first_excluded + 1..]
+                .iter()
+                .filter(|path| matches(path)),
+        )
+        .map(|path| normalized_membership_path(path))
+        .collect();
+    Ok(FamilyPathScope::Only(Arc::new(selected)))
+}
+
+fn normalized_membership_path(path: &Path) -> PathBuf {
+    let normalized = normalize_path(path);
+    #[cfg(test)]
+    MEMBERSHIP_NORMALIZATIONS.with(|count| count.set(count.get() + 1));
+    normalized
+}
+
+#[cfg(test)]
+thread_local! {
+    static MEMBERSHIP_NORMALIZATIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+#[cfg(test)]
+pub(super) fn take_membership_normalizations() -> usize {
+    MEMBERSHIP_NORMALIZATIONS.with(|count| count.replace(0))
 }
 
 /// Scope file-local caching facts over the complete visible inventory, including
