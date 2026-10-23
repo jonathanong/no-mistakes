@@ -68,6 +68,15 @@ pub(crate) fn check(
                             call.type_name, call.module,
                         ),
                     )
+                } else if !call.known_type {
+                    (
+                        "undeclared-executor-type",
+                        "undeclared-executor-type",
+                        format!(
+                            "receiver `{}` has no declared executor type available to this check; annotate its exported value with its actual type and add that type to executorTypeNames so its SQL can be checked",
+                            call.receiver_name,
+                        ),
+                    )
                 } else {
                     (
                         "undeclared-executor-type",

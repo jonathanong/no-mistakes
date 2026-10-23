@@ -50,13 +50,16 @@ impl ScopeVisitor<'_> {
         if self.undeclared_scopes[index].contains_key(name) {
             return;
         }
-        let source_name = match unwrap_ts_wrappers(init) {
-            Expression::Identifier(alias) => Some(alias.name.as_str()),
-            Expression::NewExpression(new) => match unwrap_ts_wrappers(&new.callee) {
-                Expression::Identifier(constructor) => Some(constructor.name.as_str()),
-                _ => None,
-            },
-            _ => None,
+        let (source_name, constructor_value) = match unwrap_ts_wrappers(init) {
+            Expression::Identifier(alias) => (Some(alias.name.as_str()), false),
+            Expression::NewExpression(new) => (
+                match unwrap_ts_wrappers(&new.callee) {
+                    Expression::Identifier(constructor) => Some(constructor.name.as_str()),
+                    _ => None,
+                },
+                true,
+            ),
+            _ => (None, false),
         };
         if let Some(source_name) = source_name {
             let mut types = self
@@ -74,6 +77,8 @@ impl ScopeVisitor<'_> {
             }
             for identity in types.values_mut() {
                 identity.explicit_annotation = false;
+                identity.receiver_name = name.to_string();
+                identity.known_type |= constructor_value;
             }
             self.undeclared_scopes[index].insert(name.to_string(), types);
         }
@@ -143,6 +148,7 @@ impl ScopeVisitor<'_> {
                 return;
             }
             let mut occurrence = identity.clone();
+            occurrence.receiver_name = name.to_string();
             occurrence.line = crate::codebase::ts_source::byte_offset_to_line(
                 self.source,
                 call.span.start as usize,

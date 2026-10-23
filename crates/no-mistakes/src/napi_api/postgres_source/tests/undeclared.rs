@@ -140,6 +140,72 @@ fn undeclared_executor_policies_and_suppressions_reach_public_check_reports() {
 }
 
 #[test]
+fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_max() {
+    use crate::check_runner::{run_all_with_options, AnalysisOptions};
+    use crate::config::v2::Effort;
+
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-require-query-annotation/fixture/receiver-advice");
+    for effort in [Effort::Max, Effort::Low] {
+        for (policy, failures, advisories) in [("report", 2, 0), ("advise", 0, 2), ("ignore", 0, 0)]
+        {
+            let report = run_all_with_options(
+                root.clone(),
+                Some(format!("{policy}.yml").into()),
+                None,
+                false,
+                false,
+                AnalysisOptions {
+                    effort: Some(effort),
+                    include_sql_verdicts: false,
+                },
+            )
+            .unwrap();
+            assert_eq!(report.rules.len(), failures, "{effort:?}/{policy}");
+            assert_eq!(report.advisories.len(), advisories, "{effort:?}/{policy}");
+            let mut diagnostic_files = report
+                .rules
+                .iter()
+                .chain(&report.advisories)
+                .map(|finding| (finding.file.as_str(), finding.line))
+                .collect::<Vec<_>>();
+            diagnostic_files.sort();
+            if policy == "ignore" {
+                assert!(diagnostic_files.is_empty());
+            } else {
+                assert_eq!(diagnostic_files, [("query.mts", 3), ("renamed.mts", 3)]);
+            }
+            for finding in report.rules.iter().chain(&report.advisories) {
+                assert_eq!(finding.line, 3);
+                let receiver = if finding.file == "renamed.mts" {
+                    "renamedPool"
+                } else {
+                    "writePool"
+                };
+                assert!(finding.message.contains(&format!("receiver `{receiver}`")));
+                assert!(finding.message.contains("no declared executor type"));
+                assert!(finding.message.contains("executorTypeNames"));
+                assert!(finding.message.contains("annotate its exported value"));
+                assert!(!finding
+                    .message
+                    .contains("undeclared executor type `writePool`"));
+            }
+            if policy != "ignore" {
+                assert_eq!(
+                    report
+                        .suppressed
+                        .iter()
+                        .filter(|row| row.rule == "postgres-require-query-annotation")
+                        .count(),
+                    1,
+                    "{effort:?}/{policy}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn configured_member_receivers_remain_visible_in_opt_in_source_diagnostics() {
     let source = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),

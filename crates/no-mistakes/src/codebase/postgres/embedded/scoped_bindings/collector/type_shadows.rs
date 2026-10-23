@@ -49,6 +49,8 @@ impl ScopeCollector {
                     continue;
                 }
                 identity.explicit_annotation = true;
+                identity.known_type = true;
+                identity.receiver_name = pending.binding.0.clone();
                 identities.entry(path).or_insert(identity);
             }
             if let Some(scope) = pending.this_scope {
