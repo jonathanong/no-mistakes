@@ -9,8 +9,12 @@ on:
 permissions:
   contents: read
 
+# PRs share a group per PR so superseded runs are cancelled. Every main push gets
+# its own group (per SHA): GitHub replaces an older *pending* run in a shared
+# group even with cancel-in-progress false, which dropped coverage uploads for
+# middle commits when several merges landed together.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
