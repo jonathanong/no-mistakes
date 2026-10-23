@@ -112,12 +112,21 @@ fn extract_app_selectors_with_regexes_inner(
             source,
             program,
             regexes,
-            visible_files,
-            false,
-            sources,
-            true,
+            ExtractProgramOptions {
+                visible_files,
+                defer_cross_file: false,
+                sources,
+                recover_dynamic: true,
+            },
         )
     })
+}
+
+struct ExtractProgramOptions<'a> {
+    visible_files: Option<&'a crate::fx::PathSet>,
+    defer_cross_file: bool,
+    sources: Option<&'a crate::codebase::ts_source::SourceStore>,
+    recover_dynamic: bool,
 }
 
 pub(crate) fn extract_app_selectors_from_program_from_visible_deferred(
@@ -133,10 +142,12 @@ pub(crate) fn extract_app_selectors_from_program_from_visible_deferred(
         source,
         program,
         regexes,
-        Some(visible_files),
-        true,
-        None,
-        recover_dynamic,
+        ExtractProgramOptions {
+            visible_files: Some(visible_files),
+            defer_cross_file: true,
+            sources: None,
+            recover_dynamic,
+        },
     )
 }
 
@@ -145,14 +156,11 @@ fn extract_app_selectors_from_program(
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
     regexes: &SelectorRegexes,
-    visible_files: Option<&crate::fx::PathSet>,
-    defer_cross_file: bool,
-    sources: Option<&crate::codebase::ts_source::SourceStore>,
-    recover_dynamic: bool,
+    options: ExtractProgramOptions<'_>,
 ) -> Vec<AppSelector> {
     let scoped_static_identifier_defaults = collect_scoped_static_identifier_defaults(program);
-    let dynamic_identifier_values = if recover_dynamic {
-        match (visible_files, defer_cross_file) {
+    let dynamic_identifier_values = if options.recover_dynamic {
+        match (options.visible_files, options.defer_cross_file) {
             (Some(visible), true) => {
                 super::dynamic_values::collect_dynamic_identifier_values_with_file_from_visible_deferred(
                     program, source, path, visible,
@@ -160,7 +168,7 @@ fn extract_app_selectors_from_program(
             }
             (Some(visible), false) => {
                 super::dynamic_values::collect_dynamic_identifier_values_with_file_from_visible(
-                    program, source, path, visible, sources,
+                    program, source, path, visible, options.sources,
                 )
             }
             (None, _) => super::dynamic_values::collect_dynamic_identifier_values_with_file(
@@ -179,9 +187,9 @@ fn extract_app_selectors_from_program(
         scoped_static_identifier_defaults: &scoped_static_identifier_defaults,
         dynamic_identifier_values: &dynamic_identifier_values,
         program,
-        visible_files,
-        sources,
-        recover_dynamic,
+        visible_files: options.visible_files,
+        sources: options.sources,
+        recover_dynamic: options.recover_dynamic,
         selectors: Vec::new(),
     };
     visitor.visit_program(program);

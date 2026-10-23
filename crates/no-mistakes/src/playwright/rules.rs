@@ -40,6 +40,7 @@ pub(crate) struct PlaywrightCheckOutput {
     pub advisories: Vec<RuleFinding>,
 }
 
+#[cfg(test)]
 pub(crate) fn check_with_facts(
     root: &Path,
     config_path: Option<&Path>,
@@ -59,6 +60,7 @@ pub(crate) fn check_with_facts_outcome(
     check_with_facts_from_snapshot(root, config_path, config, facts, &snapshot)
 }
 
+#[cfg(test)]
 pub(crate) fn check_with_prepared_facts(
     root: &Path,
     config_path: Option<&Path>,

@@ -16,6 +16,7 @@ pub(crate) struct CoverageFindingOptions {
     pub(crate) selectors: bool,
 }
 
+#[cfg(test)]
 pub(crate) fn findings_from_report(
     analysis: &Analysis,
     unique_test_ids: bool,
