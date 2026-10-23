@@ -2,6 +2,10 @@ const error = { message: "captured", code: "CAPTURED" };
 const code = error.code;
 const safe = () => {
   expect(code).toBe("CAPTURED");
+  const isolated = () => {
+    eval("var text = 'ordinary'");
+  };
+  isolated();
 };
 safe();
 const optional = () => {
