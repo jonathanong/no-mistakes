@@ -328,8 +328,8 @@ jobs:
 
       # real-napi-api.test.js already registers mutable receiver cases; list that suite only once.
       - name: Run real N-API API test
-        id: real-napi
         timeout-minutes: 2
+        id: real-napi
         run: >-
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
           pnpm exec vitest run
@@ -542,8 +542,8 @@ jobs:
         run: '"${{ matrix.binary }}" --version'
 
       - name: Run real N-API API test
-        id: real-napi
         timeout-minutes: 5
+        id: real-napi
         shell: bash
         run: |
           set -euo pipefail
