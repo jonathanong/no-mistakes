@@ -1,5 +1,7 @@
 use super::*;
 
+mod sparse;
+
 pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn collect_cached(
     scopes: &[Scope],
     roots: RootSeeds<'_>,
@@ -23,9 +25,7 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     found.pending_args.extend(roots.arguments.iter().copied());
     // Auxiliary maps are mutable independently of Scope snapshots. Always read
     // their current edges, including changes to preserved prefix environments.
-    for env in 0..base {
-        auxiliary(&mut found, env, mapped, captured);
-    }
+    sparse::auxiliary_prefix(&mut found, base, mapped, captured);
     for root in roots.transient {
         match root {
             TransientRoot::Argument(id) => found.pending_args.push(*id),
