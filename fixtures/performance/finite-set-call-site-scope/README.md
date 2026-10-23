@@ -53,3 +53,26 @@ frozen physical fixture copy for both binaries and fresh invocations. Keep
 jobs, observer settings, command arguments, and machine constant. Do not compare
 one binary against itself or allow a shared build directory to substitute the
 wrong executable.
+
+On Linux, run the saved driver with the two verified binaries and that fixture
+copy (choose a fresh output directory):
+
+```sh
+python3 scripts/measure.py --baseline /path/to/baseline --candidate /path/to/candidate \
+  --fixture "$FIXTURE_ROOT" --out /tmp/finite-set-scope-results
+```
+
+The driver freezes byte-identical executable copies using the same 4 KiB write
+sizes for both artifacts. Different artifact-copy procedures can change file
+cache residency and peak RSS even for identical executable bytes. It records
+the hashes, raw JSON reports, stderr, wall time, CPU time, and peak RSS from
+fresh processes. Reports and exit codes must match in every sample. No allocator
+settings are changed.
+
+Each workload runs with jobs 1, 4, and default, separately with verbose timings
+off and on. Each cell has one warm-up per binary followed by eight measured
+samples per binary in balanced ABBA/BAAB order. Startup (`--version`) is recorded
+separately and is never subtracted from analysis time. Run without concurrent
+builds or tests. Expected AST call walks are 39 to 2 for the narrow config,
+0 to 0 for the no-finite-set control, and 39 to 39 for the broad control;
+all three configs retain 39 parses.
