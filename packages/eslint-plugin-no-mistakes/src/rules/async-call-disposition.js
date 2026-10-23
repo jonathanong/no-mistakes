@@ -35,7 +35,13 @@ function isDisposed(node, context, seen = new Set()) {
         disposed,
       ),
     ) ||
-    collectedPromise(observed, context, (value) => isPromiseAllCall(value, context), disposed)
+    collectedPromise(
+      observed,
+      context,
+      (value) => isPromiseAllCall(value, context),
+      disposed,
+      node.type === "CallExpression",
+    )
   );
 }
 

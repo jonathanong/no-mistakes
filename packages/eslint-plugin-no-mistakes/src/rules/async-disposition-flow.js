@@ -103,10 +103,24 @@ function callbackCompletes(push) {
   return fn.body.body.slice(fn.body.body.indexOf(start) + 1).every(callbackReturnsNormally);
 }
 
-function laterDrain(from, to) {
-  const anchor = collectionAnchor(from);
+function conditionalPushAnchor(push) {
+  let start = statement(push);
+  while (start.parent?.type === "BlockStatement" && start.parent.parent?.type === "IfStatement")
+    start = start.parent.parent;
+  return start.type === "IfStatement" &&
+    findContainingFunction(start) === findContainingFunction(push) &&
+    fallsThrough(start)
+    ? start
+    : null;
+}
+
+function laterDrain(from, to, createdHere = false) {
+  // Only a value created inside the conditional push is necessarily retained.
+  // A promise created beforehand may remain unhandled when the branch is skipped.
+  const conditional = createdHere && conditionalPushAnchor(from);
+  const anchor = conditional || collectionAnchor(from);
   if (!anchor || findContainingFunction(anchor) !== findContainingFunction(to)) return false;
-  const completes = anchor === from || callbackCompletes(from);
+  const completes = conditional || anchor === from || callbackCompletes(from);
   if (completes && straightLine(anchor, to)) return true;
   const end = statement(to);
   const finalizer = end.parent;
@@ -122,7 +136,7 @@ function laterDrain(from, to) {
   const start = statement(anchor);
   // Finally executes on both normal completion and return/throw from this try.
   if (start.parent === attempt.block)
-    return unconditional(anchor, start) && start.type !== "IfStatement";
+    return unconditional(anchor, start) && (conditional || start.type !== "IfStatement");
   if (
     !completes ||
     ["ReturnStatement", "ThrowStatement"].includes(start.type) ||

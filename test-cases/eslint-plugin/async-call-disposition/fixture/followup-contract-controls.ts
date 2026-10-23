@@ -11,7 +11,6 @@ function rewrittenLet() { let spy = vi.spyOn(service, "send"); let alias = spy; 
 function conditionalExit() { const p = enqueueEmail("early"); if (cond) { if (other) return; } return p; }
 function secondResolveArg() { return Promise.resolve(other, enqueueEmail("ignored")); }
 async function asyncExpression(xs) { const ps = []; xs.forEach(async x => ps.push(enqueueEmail(x))); await Promise.all(ps); }
-async function guardedPush() { const ps = []; if (cond) ps.push(enqueueEmail("conditional")); await Promise.all(ps); }
 async function outsideAttempt() { const ps = []; { ps.push(enqueueEmail("outer")); } try { run(); } finally { await Promise.all(ps); } }
 async function conditionalEach(xs) { const ps = []; if (cond) xs.forEach(x => ps.push(enqueueEmail(x))); await Promise.all(ps); }
 async function logicalEach(xs) { const ps = []; cond && xs.forEach(x => ps.push(enqueueEmail(x))); await Promise.all(ps); }

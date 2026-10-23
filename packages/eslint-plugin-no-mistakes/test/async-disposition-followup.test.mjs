@@ -20,13 +20,16 @@ describe("async disposition follow-up saved recall", () => {
     "downstream-adoption.ts",
     "downstream-conditional-return.ts",
     "downstream-let-spy.ts",
+    "conditional-sibling-push.ts",
   ]) {
     it(`accepts ${name}`, () => assert.deepEqual(reports(name), []));
   }
   it("keeps independent unhandled controls reported", () =>
     assert.deepEqual(reports("followup-controls.ts"), Array(21).fill("disposition")));
+  it("keeps undrained siblings and previously retained conditional promises reported", () =>
+    assert.deepEqual(reports("conditional-sibling-undrained.ts"), Array(3).fill("disposition")));
   it("keeps array identity, early exits, rewrites, and unknown adoption reported", () => {
-    assert.deepEqual(reports("followup-contract-controls.ts"), Array(20).fill("disposition"));
+    assert.deepEqual(reports("followup-contract-controls.ts"), Array(19).fill("disposition"));
     assert.deepEqual(reports("followup-rewritten-promise.ts"), ["disposition"]);
     assert.deepEqual(reports("followup-mocked-input-write.ts"), ["disposition", "disposition"]);
     assert.deepEqual(reports("followup-foreach-throw.ts"), Array(3).fill("disposition"));

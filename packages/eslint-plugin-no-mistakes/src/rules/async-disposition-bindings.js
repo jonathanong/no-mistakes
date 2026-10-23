@@ -2,12 +2,7 @@
 
 const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { resolveVariable, stableConstInitializer } = require("./async-target-bindings");
-const {
-  collectionAnchor,
-  laterDrain,
-  laterInBlock,
-  statement,
-} = require("./async-disposition-flow");
+const { laterDrain, laterInBlock } = require("./async-disposition-flow");
 const { propertiesWritten } = require("./async-disposition-mocks");
 const { memberPropertyName } = require("./async-targets");
 
@@ -56,7 +51,7 @@ function pushedArray(node) {
   return { id: callee.object, push };
 }
 
-function collectedPromise(node, context, isAggregate, disposed) {
+function collectedPromise(node, context, isAggregate, disposed, createdHere) {
   const found = pushedArray(node);
   if (!found) return false;
   const init = unwrapExpression(stableConstInitializer(found.id, context, new Set()));
@@ -68,7 +63,7 @@ function collectedPromise(node, context, isAggregate, disposed) {
     const id = reference.identifier;
     const parent = unwrapTransparentParent(id).parent;
     if (isAggregate(parent) && parent.arguments[0] === id) {
-      if (laterDrain(found.push, parent) && disposed(parent)) drained = true;
+      if (laterDrain(found.push, parent, createdHere) && disposed(parent)) drained = true;
       continue;
     }
     const member = parent;
@@ -79,12 +74,11 @@ function collectedPromise(node, context, isAggregate, disposed) {
       memberPropertyName(member) !== "push" ||
       call?.type !== "CallExpression" ||
       call.callee !== member ||
-      !standalonePush(call) ||
-      !collectionAnchor(call) ||
-      statement(collectionAnchor(call)).parent !==
-        statement(collectionAnchor(found.push) || found.push).parent
+      !standalonePush(call)
     )
       return false;
+    // A sibling push cannot remove values already collected. Its producer
+    // independently proves whether it reaches a handled drain.
   }
   return drained;
 }

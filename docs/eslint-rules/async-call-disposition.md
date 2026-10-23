@@ -60,6 +60,9 @@ counts when its promises are pushed and its direct `Promise.all`,
 returned, or explicitly voided. A retained `.map` result follows the same
 aggregate requirement; returning or awaiting the array itself does not dispose
 its members. Synchronous `.forEach` callbacks can push work before that drain.
+A conditional push also retains a promise created in its argument whenever
+that branch runs; it does not invalidate sibling pushes. A promise created
+before a conditional push still needs an independent disposition.
 An unconditional drain in `finally` also handles work created in its protected
 `try` block, including a return or throw from that block.
 
