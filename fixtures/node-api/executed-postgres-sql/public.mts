@@ -2,6 +2,8 @@ import {
   extractExecutedPostgresSql,
   type ExecutedPostgresSql,
   type ExecutedPostgresSqlKind,
+  type ExecutedPostgresSqlReport,
+  type UndeclaredExecutorTypeSummary,
   type ExecutedPostgresSqlOptions,
   type ExecutedPostgresResolvedImport,
   type ExecutedPostgresTrustedSqlTag,
@@ -35,3 +37,26 @@ result.then((queries) => {
   void kind;
   void reason;
 });
+
+const report: Promise<ExecutedPostgresSqlReport> = extractExecutedPostgresSql({
+  ...options,
+  includeDiagnostics: true,
+});
+const legacyArray: Promise<ExecutedPostgresSql[]> = extractExecutedPostgresSql({
+  ...options,
+  includeDiagnostics: false,
+});
+const dynamicOptions: ExecutedPostgresSqlOptions<boolean> = {
+  ...options,
+  includeDiagnostics: Math.random() > 0.5,
+};
+const dynamic: Promise<ExecutedPostgresSql[] | ExecutedPostgresSqlReport> =
+  extractExecutedPostgresSql(dynamicOptions);
+report.then((value) => {
+  const summary: UndeclaredExecutorTypeSummary[] = value.undeclaredExecutorTypes;
+  const statements: ExecutedPostgresSql[] = value.statements;
+  void summary;
+  void statements;
+});
+void legacyArray;
+void dynamic;

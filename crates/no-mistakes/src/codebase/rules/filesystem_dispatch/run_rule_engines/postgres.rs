@@ -33,6 +33,13 @@ pub(super) fn run(
         .or_else(|| run_naming_and_query_rules(rule_id, root, config, files, sources, facts))?;
     Some(result.and_then(|mut findings| {
         if crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(&rule_id) {
+            if let Some(facts) = facts {
+                findings.extend(
+                    crate::codebase::rules::postgres_undeclared_executors::check(
+                        root, config, rule_id, files, facts,
+                    )?,
+                );
+            }
             findings.extend(crate::codebase::rules::postgres_unmatched_executors::check(
                 root, config, rule_id, files, sources, facts,
             )?);

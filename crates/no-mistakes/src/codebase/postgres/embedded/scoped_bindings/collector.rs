@@ -1,11 +1,15 @@
+mod class_receivers;
+mod object_params;
+mod receiver_types;
+mod type_shadows;
+mod undeclared;
 use super::super::relative::PendingRelativeSpan;
 use super::candidates::ImportClassification;
 use super::owners::{self, NameHit};
 use super::ScopedExecutors;
 use oxc_ast::ast::{
     ArrowFunctionExpression, BindingPattern, BlockStatement, ForStatement, Function, FunctionBody,
-    ObjectPattern, Program, StaticBlock, SwitchStatement, TSSignature, TSType, VariableDeclaration,
-    VariableDeclarationKind,
+    Program, StaticBlock, SwitchStatement, VariableDeclaration, VariableDeclarationKind,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::{GetSpan, Span};
@@ -16,26 +20,22 @@ use std::collections::{HashMap, HashSet};
 pub(super) struct ScopeCollector {
     factories: HashSet<String>,
     types: HashSet<String>,
+    undeclared: HashMap<String, super::super::UndeclaredExecutorType>,
     provisional_factories: HashMap<String, Vec<u32>>,
     provisional_types: HashMap<String, Vec<u32>>,
     scopes: Vec<Span>,
+    type_shadows: Vec<(String, Span)>,
+    classes: Vec<Span>,
+    class_methods: HashSet<u32>,
+    pending_annotations: Vec<type_shadows::PendingAnnotation>,
     pub(super) found: ScopedExecutors,
     pub(super) spans: Vec<PendingRelativeSpan>,
 }
 
 impl ScopeCollector {
-    pub(super) fn from_imports(imports: ImportClassification) -> Self {
-        Self {
-            factories: imports.factories,
-            types: imports.types,
-            provisional_factories: imports.provisional_factories,
-            provisional_types: imports.provisional_types,
-            ..Self::default()
-        }
-    }
-
     pub(super) fn needs_walk(&self) -> bool {
-        !self.factories.is_empty()
+        !self.undeclared.is_empty()
+            || !self.factories.is_empty()
             || !self.types.is_empty()
             || !self.provisional_factories.is_empty()
             || !self.provisional_types.is_empty()
@@ -62,6 +62,11 @@ impl ScopeCollector {
             let annotated = &annotation.type_annotation;
             match &param.pattern {
                 BindingPattern::BindingIdentifier(ident) => {
+                    self.record_undeclared(
+                        ident.name.as_str(),
+                        param.pattern.span().start,
+                        annotated,
+                    );
                     let hit = owners::type_hit(&self.types, &self.provisional_types, annotated);
                     self.record(
                         ident.name.as_str(),
@@ -77,48 +82,6 @@ impl ScopeCollector {
                     );
                 }
                 _ => {}
-            }
-        }
-    }
-
-    fn bind_object_properties(
-        &mut self,
-        object: &ObjectPattern<'_>,
-        annotated: &TSType<'_>,
-        scope: Span,
-    ) {
-        let TSType::TSTypeLiteral(literal) = annotated else {
-            return;
-        };
-        for property in &object.properties {
-            let (Some(key), BindingPattern::BindingIdentifier(local)) =
-                (property.key.static_name(), &property.value)
-            else {
-                continue;
-            };
-            let mut hit = NameHit {
-                confirmed: false,
-                owners: Vec::new(),
-            };
-            let typed = literal.members.iter().any(|member| {
-                let TSSignature::TSPropertySignature(signature) = member else {
-                    return false;
-                };
-                if signature.key.static_name().as_deref() != Some(key.as_ref()) {
-                    return false;
-                }
-                let Some(annotation) = &signature.type_annotation else {
-                    return false;
-                };
-                hit = owners::type_hit(
-                    &self.types,
-                    &self.provisional_types,
-                    &annotation.type_annotation,
-                );
-                hit.confirmed || !hit.owners.is_empty()
-            });
-            if typed {
-                self.record(local.name.as_str(), scope, hit);
             }
         }
     }
@@ -144,6 +107,7 @@ impl<'a> Visit<'a> for ScopeCollector {
     }
 
     fn visit_static_block(&mut self, block: &StaticBlock<'a>) {
+        self.found.undeclared_this_exclusions.push(block.span);
         self.with_scope(block.span, |this| walk::walk_static_block(this, block));
     }
 
@@ -160,13 +124,63 @@ impl<'a> Visit<'a> for ScopeCollector {
     }
 
     fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
+        self.exclude_dynamic_this(function);
+        self.record_type_parameters(function.type_parameters.as_deref(), function.span);
         self.bind_params(&function.params, function.span);
         walk::walk_function(self, function, flags);
     }
 
     fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
+        self.record_type_parameters(arrow.type_parameters.as_deref(), arrow.span);
         self.bind_params(&arrow.params, arrow.span);
         walk::walk_arrow_function_expression(self, arrow);
+    }
+
+    fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
+        if let Some(name) = &class.id {
+            let span = if class.r#type == oxc_ast::ast::ClassType::ClassDeclaration {
+                *self.scopes.last().expect("scope")
+            } else {
+                class.span
+            };
+            self.type_shadows.push((name.name.to_string(), span));
+        }
+        self.record_type_parameters(class.type_parameters.as_deref(), class.span);
+        self.prepare_class_receivers(class);
+        self.classes.push(class.span);
+        walk::walk_class(self, class);
+        self.classes.pop();
+    }
+
+    fn visit_property_definition(&mut self, property: &oxc_ast::ast::PropertyDefinition<'a>) {
+        self.record_class_property(property);
+        walk::walk_property_definition(self, property);
+    }
+
+    fn visit_formal_parameter(&mut self, parameter: &oxc_ast::ast::FormalParameter<'a>) {
+        self.record_parameter_property(parameter);
+        walk::walk_formal_parameter(self, parameter);
+    }
+
+    fn visit_ts_type_alias_declaration(
+        &mut self,
+        alias: &oxc_ast::ast::TSTypeAliasDeclaration<'a>,
+    ) {
+        self.record_type_shadow(alias.id.name.as_str());
+        walk::walk_ts_type_alias_declaration(self, alias);
+    }
+
+    fn visit_ts_interface_declaration(
+        &mut self,
+        interface: &oxc_ast::ast::TSInterfaceDeclaration<'a>,
+    ) {
+        self.record_type_shadow(interface.id.name.as_str());
+        walk::walk_ts_interface_declaration(self, interface);
+    }
+
+    fn visit_variable_declarator(&mut self, declaration: &oxc_ast::ast::VariableDeclarator<'a>) {
+        self.record_undeclared_variable(declaration);
+        walk::walk_variable_declarator(self, declaration);
     }
 
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {

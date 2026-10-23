@@ -106,7 +106,11 @@ project setting.
 Every key is optional. An embedded-SQL rule still needs a non-empty
 `executors.importSpecifier` on the project; an empty specifier does not select
 every `.query` call. `factoryNames` and `typeNames` are the only executor lists
-copied. Rule options still default executor names to `query`, `read`, and
+copied. A receiver type imported from the configured module but missing from
+`postgres.executors.typeNames` is diagnosed by the consuming rule's shared
+`unanalyzable` policy. Add the missing imported type name to that project list;
+the diagnostic does not automatically select or evaluate its calls.
+Rule options still default executor names to `query`, `read`, and
 `write` when `importSpecifier` is set and `executorNames` is empty. Effects do
 not gain `functions` or `targets` from that default.
 

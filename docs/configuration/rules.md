@@ -31,6 +31,14 @@ For rule applications that consume the shared policy, when both
 invalid alias remains a configuration error even when the canonical key is
 valid. Legacy PostgreSQL applications that historically ignored this
 `unanalyzableSql` payload continue to ignore it for compatibility.
+PostgreSQL member calls whose imported receiver type comes from the configured
+executor module but is missing from `executorTypeNames` also use this shared
+policy: `report` fails, `advise` emits a non-failing advisory, and `ignore` stays
+silent. Add the named type to the executor list and use a supported explicitly
+typed parameter, for example `function run(client: PoolClient) { ... }`. Merely
+configuring a type does not prove a complex receiver. The policy does not promote
+unresolved calls into executed SQL.
+
 Helper and callback tracing still checks every recovered leading prefix.
 Grouped advice, including a `target` that may list several checks, is described
 in [SQL verdicts](../postgres-sql-verdicts.md).
@@ -95,3 +103,10 @@ and `objects.githubusercontent.com`. Omitting the option keeps that default.
 An explicit list, including `[]`, replaces it. `options.downloadHelpers` adds
 command names beside `curl` and `wget`; the default is no extra helpers. The
 rule stays off until a configuration lists it.
+
+Configured types alone do not prove every receiver shape. Calls through class
+fields or constructor parameter properties (`this.db.query`), typed object
+parameters (`ctx.db.query`), and typed array elements (`clients[0].query`) remain
+unanalyzable when executor ownership is unresolved. They follow the selected
+`unanalyzable` policy, including at low effort. Use a supported explicitly typed
+parameter to make the receiver eligible for SQL analysis.

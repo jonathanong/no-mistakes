@@ -1,3 +1,4 @@
+mod collected;
 use super::super::bindings::sql_statement_type_bindings;
 use super::super::helpers;
 use super::super::options::EmbeddedSqlOptions;
@@ -7,6 +8,7 @@ use super::executors::MemberQueryProof;
 use super::imported;
 use super::resolve;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
+use collected::CollectedCalls;
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -36,6 +38,10 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(in crate::codebase::postgres::embedded) scoped: &'a ScopedExecutors,
     pub(crate) provisional: &'a [PendingRelativeSpan],
     pub(crate) scopes: Vec<HashMap<String, BindingState>>,
+    pub(super) undeclared_scopes:
+        Vec<HashMap<String, super::super::scoped_bindings::UndeclaredReceiverTypes>>,
+    pub(super) undeclared_executor_types: Vec<super::super::UndeclaredExecutorType>,
+    pub(super) executor_methods: Vec<String>,
     pub(crate) relative_proofs: Vec<HashMap<String, u32>>,
     pub(crate) namespace_proofs: Vec<HashSet<String>>,
     pub(crate) imported_namespace_names: HashMap<String, String>,
@@ -79,24 +85,6 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) exported_constants:
         crate::fx::FxHashMap<String, super::super::helpers::ExportedConstant>,
 }
-pub(crate) struct CollectedCalls {
-    pub(crate) calls: Vec<EmbeddedSqlCall>,
-    pub(crate) call_spans: Vec<(u32, u32)>,
-    pub(crate) exported_helpers: crate::fx::FxHashMap<String, helpers::HelperSummary>,
-    pub(crate) exported_programs:
-        crate::fx::FxHashMap<String, std::sync::Arc<helpers::program::Program>>,
-    pub(crate) exported_constants: crate::fx::FxHashMap<String, helpers::ExportedConstant>,
-    pub(crate) pending_imported: Vec<helpers::PendingImportedSql>,
-    pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
-    pub(crate) fragments: Vec<EmbeddedSqlFragment>,
-    pub(crate) fragment_sites: Vec<Option<u32>>,
-    pub(crate) fragment_variants: Vec<Vec<super::super::EmbeddedSqlVariant>>,
-    pub(crate) pending_calls: Vec<PendingRelativeCall>,
-    pub(crate) diagnostic_member_sequences: Vec<u32>,
-    pub(crate) confirmed_order: Vec<u32>,
-    pub(crate) unproven_member_query_spans: Vec<(u32, u32)>,
-}
-
 pub(crate) fn collect_calls<'a>(
     program: &Program<'a>,
     source: &'a str,
@@ -121,6 +109,9 @@ pub(crate) fn collect_calls<'a>(
         scoped,
         provisional,
         scopes: Vec::new(),
+        undeclared_scopes: Vec::new(),
+        undeclared_executor_types: Vec::new(),
+        executor_methods: super::undeclared::methods(options),
         relative_proofs: Vec::new(),
         namespace_proofs: Vec::new(),
         imported_namespace_names,
@@ -182,6 +173,7 @@ pub(crate) fn collect_calls<'a>(
         .map(|call| call.sequence)
         .collect();
     CollectedCalls {
+        undeclared_executor_types: visitor.undeclared_executor_types,
         calls: visitor.calls,
         call_spans: visitor.call_spans,
         exported_helpers: visitor.functions.exported_helpers(),

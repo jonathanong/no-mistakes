@@ -7,7 +7,10 @@ test("executed PostgreSQL source extraction exposes its named async contract", (
   assert.match(declarations, /export interface ExecutedPostgresSource \{/);
   assert.match(declarations, /export interface ExecutedPostgresTrustedSqlTag \{/);
   assert.match(declarations, /export interface ExecutedPostgresResolvedImport \{/);
-  assert.match(declarations, /export interface ExecutedPostgresSqlOptions \{/);
+  assert.match(
+    declarations,
+    /export interface ExecutedPostgresSqlOptions<Diagnostics extends boolean = false> \{/,
+  );
   assert.match(declarations, /trustedSqlTags\?: ExecutedPostgresTrustedSqlTag\[\];/);
   assert.match(declarations, /resolveImports\?: boolean;/);
   assert.match(declarations, /resolvedImports\?: ExecutedPostgresResolvedImport\[\];/);

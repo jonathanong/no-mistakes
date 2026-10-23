@@ -1,0 +1,12 @@
+unanalyzable: advise
+rules:
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorTypeNames: [PoolClient]
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorTypeNames: [PoolClient]

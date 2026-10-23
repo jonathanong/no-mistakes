@@ -146,6 +146,36 @@ fn inherited_ignored_sql_aliases_preserve_both_cross_file_rule_reports() {
 }
 
 #[test]
+fn prepared_cross_file_rules_emit_non_failing_advice_without_sql_verdict_opt_in() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/rule-analysis-policy/fixture/undeclared-advice");
+    let results = check_runner::run_all_with_options(
+        root.clone(),
+        Some(root.join(".no-mistakes.yml")),
+        None,
+        false,
+        false,
+        check_runner::AnalysisOptions::default(),
+    )
+    .unwrap();
+
+    assert!(results.rules.is_empty(), "{:?}", results.rules);
+    assert_eq!(results.advisories.len(), 2, "{:?}", results.advisories);
+    assert!(results.advisories.iter().all(|finding| {
+        matches!(
+            finding.rule.as_str(),
+            "postgres-no-mutable-sql-registry" | "postgres-no-unbounded-sql-identifier"
+        ) && finding
+            .message
+            .contains("configured executor receiver of type `PoolClient`")
+            && finding
+                .message
+                .contains("explicitly typed parameter/helper (supported shape)")
+    }));
+    assert!(!has_failures(&results));
+}
+
+#[test]
 fn structured_analysis_fallbacks_are_typed_and_omitted_when_empty() {
     let mut results = check_runner::empty_results([None]);
     assert!(check_runner::json_value(&results)

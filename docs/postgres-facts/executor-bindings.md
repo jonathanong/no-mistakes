@@ -23,6 +23,17 @@ also bind `query`. Member calls named `query` are collected when a module is con
 is explicitly enabled in the executor names. Existing SQL-builder fragment recovery is
 independent of executor selection.
 
+A member call through an imported receiver type that matches the configured
+module but is absent from `executorTypeNames` is an undeclared-executor-type
+candidate. It is diagnosed through the rule's shared `unanalyzable` policy:
+`report` produces a finding, `advise` produces a non-failing advisory, and `ignore`
+produces neither. The diagnostic names the imported type and module and asks you
+to add that type to `executorTypeNames` and explicitly annotate inferred
+receivers. It does not treat the call as executed
+SQL or evaluate its argument. Declaring all receiver types preserves the existing
+SQL findings. This is separate from `reportUnmatchedExecutorNames`, which checks
+configured names that no scanned file imports.
+
 See [the breaking-change migration](../migrations/explicit-postgres-executors.md).
 
 `collect_postgres_facts` runs these extractors when
@@ -95,3 +106,10 @@ async functions or generators: their Promise or iterator results are not SQL
 fragments.
 
 [PostgreSQL fact sources](../postgres-facts.md)
+
+Configured types alone do not prove every receiver shape. Calls through class
+fields or constructor parameter properties (`this.db.query`), typed object
+parameters (`ctx.db.query`), and typed array elements (`clients[0].query`) remain
+unanalyzable when executor ownership is unresolved. They follow the selected
+`unanalyzable` policy, including at low effort. Use a supported explicitly typed
+parameter to make the receiver eligible for SQL analysis.

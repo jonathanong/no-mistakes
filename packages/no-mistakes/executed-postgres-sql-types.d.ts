@@ -14,7 +14,7 @@ export interface ExecutedPostgresResolvedImport {
   toFileName: string;
 }
 
-export interface ExecutedPostgresSqlOptions {
+export interface ExecutedPostgresSqlOptions<Diagnostics extends boolean = false> {
   sources: ExecutedPostgresSource[];
   /** Module whose named imports provide the configured executors. */
   importSpecifier: string;
@@ -27,6 +27,8 @@ export interface ExecutedPostgresSqlOptions {
   resolveImports?: boolean;
   /** Explicit edges for aliases or package imports; relative supplied paths resolve automatically. */
   resolvedImports?: ExecutedPostgresResolvedImport[];
+  /** Include executor-type and unresolved-receiver diagnostics without treating them as SQL. */
+  includeDiagnostics?: Diagnostics;
 }
 
 export type ExecutedPostgresSqlKind = "inline" | "immutableLocal" | "composed" | "dynamic";
@@ -47,7 +49,31 @@ export interface ExecutedPostgresSql {
   incompleteReason: string | null;
 }
 
+/** Omitted member-call sites grouped by their imported receiver type identity. */
+export interface UndeclaredExecutorTypeSummary {
+  type: string;
+  module: string;
+  count: number;
+}
+
+/** Configured imported receiver types whose call ownership is still unresolved. */
+export type UnresolvedExecutorReceiverSummary = UndeclaredExecutorTypeSummary;
+
+export interface ExecutedPostgresSqlReport {
+  statements: ExecutedPostgresSql[];
+  /** Sorted by type, then module; empty when no undeclared receiver types were found. */
+  undeclaredExecutorTypes: UndeclaredExecutorTypeSummary[];
+  /** Configured types with unsupported receiver shapes, sorted by type and module. */
+  unresolvedExecutorReceivers: UnresolvedExecutorReceiverSummary[];
+}
+
 /** Extract configured PostgreSQL executor calls from supplied TS/JS source. */
+export function extractExecutedPostgresSql(
+  options: ExecutedPostgresSqlOptions<true> & { includeDiagnostics: true },
+): Promise<ExecutedPostgresSqlReport>;
 export function extractExecutedPostgresSql(
   options: ExecutedPostgresSqlOptions,
 ): Promise<ExecutedPostgresSql[]>;
+export function extractExecutedPostgresSql(
+  options: ExecutedPostgresSqlOptions<boolean>,
+): Promise<ExecutedPostgresSql[] | ExecutedPostgresSqlReport>;

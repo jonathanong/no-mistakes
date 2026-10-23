@@ -72,7 +72,10 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     // Lower rule layers only borrow it; a supplied sparse map is not repaired.
     let owned_facts = if facts.is_none()
         && (rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
-            || rule_enabled(config, REQUIRED_COMPANION_IMPORTS))
+            || rule_enabled(config, REQUIRED_COMPANION_IMPORTS)
+            || crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS
+                .iter()
+                .any(|rule_id| rule_enabled(config, rule_id)))
     {
         super::entrypoints::prepare_call_site_facts(root, config, files, &prepared.sources)?
     } else {

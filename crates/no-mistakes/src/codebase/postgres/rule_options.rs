@@ -40,6 +40,8 @@ pub fn has_sql_advice(config: &crate::config::v2::NoMistakesConfig) -> bool {
         "postgres-required-predicates",
         "postgres-sql-shape-policy",
         "postgres-sql-statement-policy",
+        "postgres-no-mutable-sql-registry",
+        "postgres-no-unbounded-sql-identifier",
     ];
     let key = serde_yaml::Value::String("unanalyzableSql".to_string());
     RULES.iter().any(|id| {

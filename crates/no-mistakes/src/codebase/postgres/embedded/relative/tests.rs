@@ -54,6 +54,7 @@ fn facts(calls: Vec<EmbeddedSqlCall>, pending: PendingRelativeScope) -> Embedded
         matched_factory_names: Vec::new(),
         matched_type_names: Vec::new(),
         pending_relative: pending,
+        undeclared_executor_types: Vec::new(),
         unproven_member_query_spans: Vec::new(),
         postgres_rule_ids: Vec::new(),
         record_unproven_spans: true,

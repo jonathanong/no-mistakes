@@ -78,7 +78,12 @@ pub(crate) fn check_prepared_sql_rule(
     ) -> Result<Vec<RuleFinding>>,
 ) -> Result<Vec<RuleFinding>> {
     let facts = prepare_sql_rule_facts(root, config, all_files, sources, rule_id)?;
-    check(root, config, all_files, sources, &facts)
+    let mut findings = check(root, config, all_files, sources, &facts)?;
+    findings.extend(super::postgres_undeclared_executors::check(
+        root, config, rule_id, all_files, &facts,
+    )?);
+    super::sort_findings(&mut findings);
+    Ok(findings)
 }
 
 /// Keep option parsing ahead of this lookup so configuration errors retain
