@@ -1,4 +1,4 @@
-//! Composition diagnostics do not turn invalid SQL into annotation failures.
+//! Parse diagnostics preserve independently decidable annotation-head findings.
 use super::RULE_ID;
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
@@ -28,7 +28,13 @@ pub(super) fn diagnostics(
                     .get(&(call_index, variant_index))
                     .is_some_and(|statement| statement.parse_failed)
             {
-                invalid.insert((call_index, variant_index));
+                // The recovered text is complete even when SQL parsing fails.
+                // Skip SQL-semantic analysis, but keep a definite missing head.
+                if !crate::codebase::postgres::sql_requires_query_annotation(
+                    &call.variants[variant_index].sql_text,
+                ) {
+                    invalid.insert((call_index, variant_index));
+                }
                 skipped += 1;
             }
         }

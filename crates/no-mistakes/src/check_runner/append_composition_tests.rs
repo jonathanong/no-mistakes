@@ -31,7 +31,7 @@ fn invalid_append_alternatives_advise_in_every_policy_and_keep_valid_siblings() 
                 .iter()
                 .map(|finding| finding.line)
                 .collect::<Vec<_>>(),
-            vec![3],
+            vec![3, 9],
             "findings: {:?}; advisories: {:?}; evidence: {:?}",
             plain.rules,
             plain.advisories,
