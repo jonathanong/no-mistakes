@@ -1,3 +1,4 @@
+<!-- cspell:ignore dorny -->
 # `vitest-ci-path-coverage`
 
 Requires Vitest project inputs to be covered by GitHub Actions path filters.
