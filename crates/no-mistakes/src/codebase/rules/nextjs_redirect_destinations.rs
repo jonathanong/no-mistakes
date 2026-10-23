@@ -5,11 +5,13 @@ use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 mod config;
+mod delegate;
 mod extract;
 mod options;
 mod routes;
 mod scan;
 mod static_values;
+mod words;
 
 use options::Options;
 use scan::scan;
@@ -141,5 +143,7 @@ fn missing_tracked_inventory(root: &Path) -> anyhow::Error {
     )
 }
 
+#[cfg(test)]
+mod reexport_tests;
 #[cfg(test)]
 mod tests;
