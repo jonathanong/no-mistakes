@@ -3,7 +3,6 @@ impl DepGraph {
         &self.resolved_call_sites
     }
 }
-
 /// Root selector primitives consumed by call-policy checks. Test catalogs turn
 /// into file roots in their prepared owner; this graph layer deliberately does
 /// not discover runner configuration a second time.
@@ -21,14 +20,12 @@ pub enum CallRoot {
         files: Vec<std::path::PathBuf>,
     },
 }
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CallTraversal {
     Direct,
     File,
     Transitive,
 }
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CallTrace {
     pub root: NodeId,
@@ -146,6 +143,8 @@ impl DepGraph {
                     if !seen.insert(neighbor.clone()) {
                         continue;
                     }
+                    #[cfg(test)]
+                    CALL_PATH_COUNT.with(|count| count.set(count.get() + 1));
                     let mut next = path.clone();
                     next.push(neighbor.clone());
                     out.push(CallTrace {
@@ -198,3 +197,4 @@ impl DepGraph {
 }
 
 include!("roots_export.rs");
+include!("sink_traces.rs");
