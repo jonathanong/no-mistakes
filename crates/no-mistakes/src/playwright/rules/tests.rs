@@ -123,6 +123,35 @@ fn low_html_id_uniqueness_keeps_literal_findings_when_coverage_html_ids_are_disa
 }
 
 #[test]
+fn standalone_low_html_id_uniqueness_reports_indirection_without_html_coverage() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/check-runner/playwright-unique-html-ids/fixture/effort-low"),
+    );
+    let config_path = root.join(".no-mistakes-report.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let findings = check(&root, Some(&config_path), &config).unwrap();
+    let indirect: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.message.contains("unanalyzable at effort low"))
+        .collect();
+    assert_eq!(indirect.len(), 2, "{findings:?}");
+    for finding in indirect {
+        assert_eq!(finding.rule, PLAYWRIGHT_UNIQUE_HTML_IDS);
+        assert!(finding.file.ends_with("derived-a.tsx") || finding.file.ends_with("derived-b.tsx"));
+        assert!(!std::path::Path::new(&finding.file).is_absolute());
+        assert!(finding.message.contains("literal HTML id"));
+    }
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.target.as_deref() == Some("id=literal-duplicate"))
+            .count(),
+        2,
+    );
+}
+
+#[test]
 fn html_id_uniqueness_on_one_target_does_not_widen_another_targets_coverage() {
     let findings = html_id_rule_composition_findings("multi-project-isolation");
 

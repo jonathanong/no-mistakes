@@ -172,6 +172,9 @@ pub(crate) struct RelatedReport {
 pub(crate) struct Analysis {
     pub(crate) coverage: CoverageReport,
     pub(crate) edges: EdgeReport,
+    /// Diagnostic-only records have root-relative paths and never enter coverage output.
+    #[serde(skip)]
+    pub(crate) unanalyzable_html_ids: Vec<selectors::AppSelector>,
 }
 
 pub(crate) struct CoverageInputs<'a> {

@@ -57,7 +57,6 @@ pub(super) fn unanalyzable(
     rule: &str,
     policy: Option<Unanalyzable>,
     skip_html_ids: bool,
-    html_ids_only: bool,
 ) {
     let Some(policy) = policy else {
         return;
@@ -69,14 +68,6 @@ pub(super) fn unanalyzable(
         if skip_html_ids && selector.attribute == HTML_ID_ATTRIBUTE {
             continue;
         }
-        if html_ids_only && selector.attribute != HTML_ID_ATTRIBUTE {
-            continue;
-        }
-        let rewrite = if html_ids_only {
-            crate::playwright::rules::effort::HTML_ID_REWRITE
-        } else {
-            crate::playwright::rules::effort::REWRITE
-        };
         diagnostics.unanalyzable(
             policy,
             RuleFinding {
@@ -85,10 +76,39 @@ pub(super) fn unanalyzable(
                 line: selector.line,
                 message: format!(
                     "selector [{}=\"{}\"] is unanalyzable at effort low; {}",
-                    selector.attribute, selector.value, rewrite
+                    selector.attribute,
+                    selector.value,
+                    crate::playwright::rules::effort::REWRITE
                 ),
                 import: None,
                 target: Some(format!("{}={}", selector.attribute, selector.value)),
+            },
+        );
+    }
+}
+
+pub(super) fn unanalyzable_html_ids(
+    diagnostics: &mut AnalysisDiagnostics,
+    selectors: &[crate::playwright::selectors::AppSelector],
+    policy: Option<Unanalyzable>,
+) {
+    let Some(policy) = policy else {
+        return;
+    };
+    for selector in selectors {
+        let value = selector.display_value();
+        diagnostics.unanalyzable(
+            policy,
+            RuleFinding {
+                rule: PLAYWRIGHT_UNIQUE_HTML_IDS.to_string(),
+                file: selector.file.to_string_lossy().into_owned(),
+                line: selector.line,
+                message: format!(
+                    "selector [id=\"{value}\"] is unanalyzable at effort low; {}",
+                    crate::playwright::rules::effort::HTML_ID_REWRITE,
+                ),
+                import: None,
+                target: Some(format!("id={value}")),
             },
         );
     }

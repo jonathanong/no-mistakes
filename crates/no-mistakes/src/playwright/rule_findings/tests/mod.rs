@@ -416,9 +416,22 @@ fn prefer_test_id_locator_ignores_non_effective_selector_refs() {
 }
 
 fn analysis(report: CoverageReport, edges: Vec<Edge>) -> Analysis {
+    let unanalyzable_html_ids = report
+        .selectors
+        .iter()
+        .filter(|selector| selector.attribute == HTML_ID_ATTRIBUTE && !selector.literal_exact)
+        .map(|selector| crate::playwright::selectors::AppSelector {
+            file: selector.file.clone().into(),
+            attribute: selector.attribute.clone(),
+            value: crate::playwright::selectors::AppSelectorValue::Exact(selector.value.clone()),
+            line: selector.line,
+            recovered: true,
+        })
+        .collect();
     Analysis {
         coverage: report,
         edges: EdgeReport { edges },
+        unanalyzable_html_ids,
     }
 }
 

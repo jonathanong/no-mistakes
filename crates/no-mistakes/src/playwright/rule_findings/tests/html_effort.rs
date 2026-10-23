@@ -105,3 +105,37 @@ fn html_low_diagnostics_require_the_html_rule_to_be_selected() {
     assert!(outcome.findings.is_empty());
     assert!(outcome.advisories.is_empty());
 }
+
+#[test]
+fn html_low_diagnostics_do_not_depend_on_coverage_selector_candidates() {
+    let mut input = analysis(selector_report(), vec![]);
+    // htmlIds:false keeps uniqueness occurrences while omitting coverage candidates.
+    input.coverage.selectors.clear();
+    input.coverage.summary.total_selectors = 0;
+    input.coverage.summary.uncovered_selectors = 0;
+    let serialized = serde_json::to_value(&input).unwrap();
+    assert!(serialized.get("unanalyzableHtmlIds").is_none());
+    assert_eq!(serialized["coverage"]["selectors"], serde_json::json!([]));
+
+    let outcome = findings_from_report_with_effort(
+        &input,
+        false,
+        true,
+        false,
+        coverage_all(false),
+        LowEffortFindings {
+            unique_html_ids: Some(Unanalyzable::Report),
+            ..LowEffortFindings::default()
+        },
+    );
+    assert_eq!(outcome.findings.len(), 2);
+    assert!(outcome.advisories.is_empty());
+    assert_eq!(
+        outcome
+            .findings
+            .iter()
+            .map(|row| row.line)
+            .collect::<Vec<_>>(),
+        [8, 12],
+    );
+}

@@ -2,9 +2,7 @@ use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::Unanalyzable;
 use crate::playwright::analysis::types::Analysis;
-use crate::playwright::rules::{
-    PLAYWRIGHT_COVERAGE, PLAYWRIGHT_UNIQUE_HTML_IDS, PLAYWRIGHT_UNIQUE_TEST_IDS,
-};
+use crate::playwright::rules::{PLAYWRIGHT_COVERAGE, PLAYWRIGHT_UNIQUE_TEST_IDS};
 
 mod emit;
 
@@ -55,17 +53,13 @@ pub(crate) fn findings_from_report_with_effort(
             PLAYWRIGHT_UNIQUE_TEST_IDS,
             low.unique_test_ids,
             unique_html_ids,
-            false,
         );
     }
     if unique_html_ids {
-        emit::unanalyzable(
+        emit::unanalyzable_html_ids(
             &mut diagnostics,
-            report,
-            PLAYWRIGHT_UNIQUE_HTML_IDS,
+            &analysis.unanalyzable_html_ids,
             low.unique_html_ids,
-            false,
-            true,
         );
     }
     if coverage.enabled && coverage.selectors {
@@ -74,7 +68,6 @@ pub(crate) fn findings_from_report_with_effort(
             report,
             PLAYWRIGHT_COVERAGE,
             low.coverage,
-            false,
             false,
         );
     }
