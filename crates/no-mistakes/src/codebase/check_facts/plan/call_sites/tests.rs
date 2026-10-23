@@ -5,6 +5,9 @@ fn call_site_demand_unions_without_copying_unchanged_shared_paths() {
     let mut plan = CheckFactPlan::default();
     plan.require_call_site_paths(&[PathBuf::from("/fixture/src/../entry.ts")]);
     let shared = Arc::clone(&plan.call_site_paths);
+    plan.require_call_site_paths(&[]);
+    plan.require_call_site_paths(&[PathBuf::from("/fixture/entry.ts")]);
+    assert!(Arc::ptr_eq(&shared, &plan.call_site_paths));
     plan.include(plan.clone());
     plan.include(CheckFactPlan::default());
     assert!(Arc::ptr_eq(&shared, &plan.call_site_paths));
