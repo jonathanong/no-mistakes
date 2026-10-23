@@ -1,9 +1,16 @@
 use super::super::{CheckFactPlan, PlaywrightFactPlan};
-use super::plan::{ts_extract_context, ts_extract_plan};
-use crate::codebase::ts_source::facts::{self, TsFileFacts};
+use super::plan::ts_extract_context;
+use crate::codebase::ts_source::facts::{self, TsFactPlan, TsFileFacts};
 use oxc_ast::ast::Program;
 use oxc_semantic::{SemanticBuilder, SemanticBuilderReturn};
 use std::{path::Path, sync::Arc};
+
+// File-specific annotation candidates extend the request demand before its
+// single semantic/fact pass; no competing collector is created.
+pub(super) struct Demand<'a> {
+    pub request: &'a CheckFactPlan,
+    pub ts: TsFactPlan,
+}
 
 pub(super) struct PreparedProgramFacts<'a> {
     pub ts: TsFileFacts,
@@ -13,7 +20,7 @@ pub(super) struct PreparedProgramFacts<'a> {
 pub(super) fn collect<'a>(
     root: &Path,
     path: &Path,
-    plan: &CheckFactPlan,
+    plan: Demand<'_>,
     playwright: Option<&PlaywrightFactPlan>,
     source: &str,
     program: &'a Program<'a>,
@@ -28,8 +35,8 @@ pub(super) fn collect<'a>(
     });
     let ts = facts::collect_file_facts_from_program_with_semantic(
         path,
-        ts_extract_plan(root, plan, path, playwright),
-        &ts_extract_context(root, plan),
+        plan.ts,
+        &ts_extract_context(root, plan.request),
         source,
         program,
         (None, stored_source),

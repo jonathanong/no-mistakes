@@ -1,7 +1,11 @@
+#[path = "append_tests.rs"]
+mod append_tests;
 #[path = "failures.rs"]
 mod failures;
 #[path = "gap_tests.rs"]
 mod gap_tests;
+#[path = "missing_append_tests.rs"]
+mod missing_append_tests;
 #[path = "missing_tests.rs"]
 mod missing_tests;
 #[path = "support.rs"]

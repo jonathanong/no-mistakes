@@ -91,7 +91,23 @@ pub(crate) fn executor_call(
     call: &CallExpression<'_>,
     callee: String,
 ) -> EmbeddedSqlCall {
-    if let Some(recovered) = super::builder_text::executor_call(visitor, call, &callee) {
+    if visitor.head_calls_only {
+        return EmbeddedSqlCall {
+            line: crate::codebase::ts_source::byte_offset_to_line(
+                visitor.source,
+                call.span.start as usize,
+            ),
+            callee,
+            sql_text: first_call_argument(call)
+                .and_then(|argument| super::super::head_calls::text(argument, visitor)),
+            kind: EmbeddedSqlKind::Dynamic,
+            ..Default::default()
+        };
+    }
+    if let Some(recovered) = (!visitor.head_calls_only)
+        .then(|| super::builder_text::executor_call(visitor, call, &callee))
+        .flatten()
+    {
         return recovered;
     }
     let mut recovered = legacy_executor_call(visitor, call, callee);

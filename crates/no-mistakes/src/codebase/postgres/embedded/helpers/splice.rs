@@ -84,7 +84,11 @@ fn splice_variant(variant: &EmbeddedSqlVariant, holes: &Holes) -> Option<Vec<Emb
     Some(
         fill_all(&caller, holes)?
             .into_iter()
-            .map(|joined| publish_variant(joined, variant.append_sites.clone()))
+            .map(|joined| {
+                let mut filled = publish_variant(joined, variant.append_sites.clone());
+                filled.variants_truncated = variant.variants_truncated;
+                filled
+            })
             .collect(),
     )
 }
@@ -100,6 +104,7 @@ fn publish_variant(joined: RecoveredSql, append_sites: Vec<u32>) -> EmbeddedSqlV
         sql_source_positions: joined.positions,
         recovered_placeholder_positions,
         append_sites,
+        variants_truncated: false,
     }
 }
 

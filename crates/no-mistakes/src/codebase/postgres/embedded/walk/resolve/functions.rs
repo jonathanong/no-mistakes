@@ -63,6 +63,20 @@ pub(super) struct Resolvable<'a> {
 }
 
 impl LocalFunctions {
+    pub(crate) fn collect_heads(program: &Program<'_>, trusted_sql_tags: &[TrustedSqlTag]) -> Self {
+        Self {
+            resolved: Default::default(),
+            templates: Default::default(),
+            parameter_builders: Default::default(),
+            tag_shadows: TagShadows::collect(
+                program,
+                trusted_sql_tags,
+                &super::super::super::bindings::sql_statement_type_bindings(program),
+            ),
+            programs: Default::default(),
+            declared_elsewhere: bodies::collect(program),
+        }
+    }
     pub(crate) fn has_static_helper(&self, name: &str) -> bool {
         self.resolved.contains_key(name) || self.templates.contains_key(name)
     }

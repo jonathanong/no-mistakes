@@ -1,8 +1,9 @@
 use super::Span;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use crate::fx::FxHashMap;
+use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::{Expression, Program};
 use oxc_ast_visit::Visit;
+mod append_visits;
 mod visitor;
 
 pub(super) struct Call {
@@ -12,9 +13,16 @@ pub(super) struct Call {
 }
 #[derive(Default)]
 pub(super) struct Syntax {
+    pub append_tags: FxHashMap<Span, Span>,
+    pub collect_append_tags: bool,
     pub calls: Vec<Call>,
     pub constants: FxHashMap<Span, Head>,
     pub assignments: super::assignments::Assignments,
+    pub append_receivers: FxHashSet<Span>,
+    pub discarded_appends: FxHashSet<Span>,
+    pub contexts: FxHashMap<Span, Option<Span>>,
+    current_function: Option<Span>,
+    pub repeated_calls: FxHashSet<Span>,
 }
 fn span(span: oxc_span::Span) -> Span {
     (span.start, span.end)
@@ -38,63 +46,39 @@ fn literal(expression: &Expression<'_>) -> bool {
         _ => false,
     }
 }
-fn text<'a>(expression: &'a Expression<'a>) -> Option<(&'a str, bool, bool)> {
-    match expression {
-        Expression::StringLiteral(value) => Some((&value.value, false, false)),
-        Expression::TemplateLiteral(value) => Some((
-            value.quasis.first()?.value.cooked.as_ref()?,
-            false,
-            !value.expressions.is_empty(),
-        )),
-        Expression::TaggedTemplateExpression(value) => Some((
-            value.quasi.quasis.first()?.value.cooked.as_ref()?,
-            true,
-            !value.quasi.expressions.is_empty(),
-        )),
-        _ => None,
-    }
-}
-fn transaction(text: &str, can_continue: bool) -> bool {
-    // Share max's Unicode boundary and leading-comment semantics. EOF after
-    // BEGIN is not a stable boundary when an unknown suffix can make BEGINNING.
-    crate::codebase::postgres::annotation::transaction_command_prefix_end(text)
-        .is_some_and(|end| !can_continue || end < text.len())
-}
-fn uncertain_missing(text: &str, can_continue: bool) -> bool {
-    let mut leading = text.trim_start();
-    loop {
-        if can_continue && (leading.is_empty() || leading == "/") {
-            return true;
-        }
-        let Some(comment) = leading.strip_prefix("/*") else {
-            break;
-        };
-        let Some(end) = comment.find("*/") else {
-            return can_continue;
-        };
-        leading = comment[end + 2..].trim_start();
-    }
-    can_continue
-        && ["BEGIN", "COMMIT", "ROLLBACK"].iter().any(|command| {
-            leading.len() <= command.len()
-                && command
-                    .get(..leading.len())
-                    .is_some_and(|prefix| prefix.eq_ignore_ascii_case(leading))
-        })
-}
 #[derive(Clone, Copy)]
 pub(super) enum Head {
     Literal,
     Tag,
-    Missing,
-    MissingTag,
+    AppendTag,
+    Text(super::text::TextHead),
     Reference(Span),
+    AppendReference(Span),
     Unproven,
 }
 impl Head {
+    pub fn is_constant(self) -> bool {
+        matches!(self, Self::Literal | Self::Tag | Self::AppendTag)
+            || matches!(self, Self::Text(value) if value.current != super::HeadProof::Unproven)
+    }
+    pub fn tagged(self) -> bool {
+        matches!(self, Self::Tag | Self::AppendTag)
+            || matches!(self, Self::Text(value) if value.tagged)
+    }
+    pub fn appended(self) -> bool {
+        matches!(self, Self::AppendTag) || matches!(self, Self::Text(value) if value.appended)
+    }
+    pub fn proof(self, continued: bool) -> super::HeadProof {
+        match self {
+            Self::Literal | Self::Tag | Self::AppendTag => super::HeadProof::Literal,
+            Self::Text(value) if continued => value.continued,
+            Self::Text(value) => value.current,
+            _ => super::HeadProof::Unproven,
+        }
+    }
     pub fn reference(self) -> Option<Span> {
         match self {
-            Self::Reference(span) => Some(span),
+            Self::Reference(span) | Self::AppendReference(span) => Some(span),
             _ => None,
         }
     }
@@ -102,8 +86,16 @@ impl Head {
 // Preserve Tag through concatenation so local constants still require safe uses.
 pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
     let mut concatenated = false;
+    let mut appended = false;
     loop {
         expression = unwrap_ts_wrappers(expression);
+        if let Expression::CallExpression(call) = expression {
+            if let Some(receiver) = super::append::literal_receiver(call) {
+                appended = true;
+                expression = receiver;
+                continue;
+            }
+        }
         if let Expression::BinaryExpression(value) = expression {
             if value.operator == oxc_ast::ast::BinaryOperator::Addition {
                 concatenated = true;
@@ -114,11 +106,19 @@ pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
         break;
     }
     if literal(expression) {
-        return Head::Literal;
+        return if appended {
+            Head::AppendTag
+        } else {
+            Head::Literal
+        };
     }
     if !concatenated {
         if let Expression::Identifier(id) = expression {
-            return Head::Reference(span(id.span));
+            return if appended {
+                Head::AppendReference(span(id.span))
+            } else {
+                Head::Reference(span(id.span))
+            };
         }
     }
     if let Expression::TaggedTemplateExpression(value) = expression {
@@ -130,26 +130,16 @@ pub(super) fn head<'a>(mut expression: &'a Expression<'a>) -> Head {
             .is_some_and(|text| named(text))
         {
             // Low effort judges the literal head, independently of the tag.
-            return Head::Tag;
+            return if appended { Head::AppendTag } else { Head::Tag };
         }
     }
-    if let Some((text, tagged, interpolated)) = text(expression) {
-        let can_continue = interpolated || concatenated;
-        if transaction(text, can_continue) {
-            return if tagged { Head::Tag } else { Head::Literal };
-        }
-        if !uncertain_missing(text, can_continue) {
-            return if tagged {
-                Head::MissingTag
-            } else {
-                Head::Missing
-            };
-        }
-    }
-    Head::Unproven
+    super::text::head(expression, concatenated, appended).map_or(Head::Unproven, Head::Text)
 }
-pub(super) fn collect(program: &Program<'_>) -> Syntax {
-    let mut syntax = Syntax::default();
+pub(super) fn collect(program: &Program<'_>, collect_append_tags: bool) -> Syntax {
+    let mut syntax = Syntax {
+        collect_append_tags,
+        ..Default::default()
+    };
     syntax.visit_program(program);
     syntax
 }

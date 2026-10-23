@@ -66,7 +66,7 @@ pub(crate) fn identifier_placeholder(call: &EmbeddedSqlCall) -> Option<bool> {
     if texts.is_empty() {
         return None;
     }
-    let mut unknown = false;
+    let mut unknown = call.variants_truncated();
     let mut found = false;
     for sql in texts {
         match relation_placeholder(sql) {

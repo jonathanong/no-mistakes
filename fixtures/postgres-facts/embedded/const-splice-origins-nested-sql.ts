@@ -1,4 +1,4 @@
-import sql from "sql-template-strings";
+import { sql } from "@example/db"; /* Configured tags splice fragments; sql-template-strings binds them. */
 import { read } from "@example/db";
 
 // Same-file const text is inlined into the nested template. Origin bytes must

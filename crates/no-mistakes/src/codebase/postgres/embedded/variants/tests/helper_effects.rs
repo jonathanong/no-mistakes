@@ -6,7 +6,7 @@ fn direct_helper_mutations_invalidate_captured_builder_aliases_after_argument_ev
     assert_eq!(calls.len(), 33);
     assert_eq!(
         texts(&calls[0]),
-        ["SELECT id FROM users OFFSET 7", "SELECT 2"]
+        ["SELECT 2", "SELECT id FROM users OFFSET 7"]
     );
     for (index, prefix) in [
         (1, Some("SELECT id FROM users")),
@@ -50,7 +50,7 @@ fn direct_helper_mutations_invalidate_captured_builder_aliases_after_argument_ev
     assert!(calls[18].is_unanalyzable());
     assert_eq!(
         texts(&calls[19]),
-        ["SELECT id FROM append_users WHERE active", "SELECT 11"]
+        ["SELECT 11", "SELECT id FROM append_users WHERE active"]
     );
     assert!(calls[21].is_unanalyzable());
     assert_eq!(

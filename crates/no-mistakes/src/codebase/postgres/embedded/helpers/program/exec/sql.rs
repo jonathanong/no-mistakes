@@ -99,6 +99,7 @@ impl Machine<'_> {
         pieces: &[RecoveredSql],
         holes: &[(Expr, Mark)],
         path: Path,
+        parameterizes_all: bool,
     ) -> Option<Vec<(Path, Val)>> {
         let exprs: Vec<&Expr> = holes.iter().map(|(expr, _)| expr).collect();
         let mut out = Vec::new();
@@ -106,8 +107,8 @@ impl Machine<'_> {
             let mut parts = Vec::with_capacity(values.len());
             for (value, (_, mark)) in values.iter().zip(holes) {
                 parts.push(match value {
-                    Val::Sql(_) => self.fragment(value, &path, *mark)?,
-                    Val::Free => return None,
+                    Val::Sql(_) if !parameterizes_all => self.fragment(value, &path, *mark)?,
+                    Val::Free if !parameterizes_all => return None,
                     _ => self.bind(*mark),
                 });
             }

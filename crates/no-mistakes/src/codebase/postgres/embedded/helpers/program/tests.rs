@@ -27,7 +27,12 @@ pub(super) fn load(name: &str) -> Programs {
     extract_embedded_sql_from_source(
         &path,
         &source,
-        &EmbeddedSqlOptions::configured("@example/db", &[]),
+        &EmbeddedSqlOptions::configured("@example/db", &[]).with_trusted_sql_tags(&[
+            crate::codebase::postgres::embedded::TrustedSqlTag {
+                module: "@example/db".into(),
+                name: "sql".into(),
+            },
+        ]),
     )
     .exported_programs
 }

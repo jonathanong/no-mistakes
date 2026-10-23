@@ -109,6 +109,7 @@ fn collect_check_facts_inner(
     let mut map = CheckFactMap {
         sql_application: None,
         sql_verdicts: None,
+        sql_advisories: Arc::default(),
         companion_import_plans: Arc::clone(&plan.companion_import_plans),
         postgres: Default::default(),
         integration_route_links: Default::default(),

@@ -48,8 +48,9 @@ pub(super) fn record(
                 residual_reasons.push(reason.to_string());
             }
         }
-        let exhaustive =
-            exempt || original.kind != EmbeddedSqlKind::Dynamic || !original.variants.is_empty();
+        let exhaustive = exempt
+            || !original.variants_truncated()
+                && (original.kind != EmbeddedSqlKind::Dynamic || !original.variants.is_empty());
         if !exhaustive {
             residual_reasons.push("opaque-sql-tail".to_string());
         }

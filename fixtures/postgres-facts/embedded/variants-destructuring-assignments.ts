@@ -1,4 +1,4 @@
-import sql from "sql-template-strings";
+import { sql } from "@example/db"; /* Configured tags splice fragments; sql-template-strings binds them. */
 import { query } from "@example/db";
 const gate = runtimeFlag;
 let shorthand = gate ? "SELECT 1" : "SELECT 2";

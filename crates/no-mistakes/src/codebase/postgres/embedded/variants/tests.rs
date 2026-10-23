@@ -2,6 +2,8 @@ use super::*;
 use std::path::PathBuf;
 #[path = "tests/append_aliases.rs"]
 mod append_aliases;
+#[path = "tests/append_breadth.rs"]
+mod append_breadth;
 #[path = "tests/append_sites.rs"]
 mod append_sites;
 #[path = "tests/branch_correlation.rs"]
@@ -97,7 +99,7 @@ fn mutations_keep_taken_and_not_taken_paths() {
     let calls = calls("variants-if.ts");
     assert_eq!(
         texts(&calls[0]),
-        ["SELECT id FROM users LIMIT 1", "SELECT id FROM users"]
+        ["SELECT id FROM users", "SELECT id FROM users LIMIT 1"]
     );
     assert_eq!(
         texts(&calls[1]),

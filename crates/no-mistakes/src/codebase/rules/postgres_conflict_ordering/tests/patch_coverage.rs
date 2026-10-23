@@ -35,6 +35,7 @@ fn call(sql_text: Option<&str>, variants: Vec<EmbeddedSqlVariant>) -> EmbeddedSq
 
 fn variant(sql: &str) -> EmbeddedSqlVariant {
     EmbeddedSqlVariant {
+        variants_truncated: false,
         sql_text: sql.to_string(),
         sql_source_offsets: Vec::new(),
         line: 1,

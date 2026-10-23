@@ -12,17 +12,21 @@ pub(super) fn record(
     profile: &EmbeddedSqlOptions,
     advisory: bool,
     facts: &dyn SqlFactContext,
+    invalid: &crate::fx::FxHashSet<(usize, usize)>,
 ) {
-    for (call, span) in embedded.calls.iter().zip(&embedded.call_spans) {
+    for (call_index, (call, span)) in embedded.calls.iter().zip(&embedded.call_spans).enumerate() {
         let (status, evidence, residual_reasons) = if !call.variants.is_empty() {
             let branches = call
                 .variants
                 .iter()
-                .map(|version| annotation_status(&version.sql_text))
+                .enumerate()
+                .filter(|(variant_index, _)| !invalid.contains(&(call_index, *variant_index)))
+                .map(|(_, version)| annotation_status(&version.sql_text))
                 .collect::<Vec<_>>();
+            let exhaustive = !call.variants_truncated() && branches.len() == call.variants.len();
             (
-                combine_sql_verdicts(&branches, true, false),
-                Some(SqlEvidenceKind::ExhaustiveUnion),
+                combine_sql_verdicts(&branches, exhaustive, true),
+                exhaustive.then_some(SqlEvidenceKind::ExhaustiveUnion),
                 Vec::new(),
             )
         } else {
@@ -63,8 +67,7 @@ pub(super) fn record(
             status,
             advisory,
             evidence,
-            known_prefix: call
-                .is_unanalyzable()
+            known_prefix: (call.is_unanalyzable() || call.kind == EmbeddedSqlKind::Composed)
                 .then(|| call.sql_text.clone())
                 .flatten(),
             helper_lines: embedded

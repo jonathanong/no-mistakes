@@ -82,7 +82,8 @@ pub fn record_sql_policy_verdicts(
                 }),
             })
             .collect::<Vec<_>>();
-        let exhaustive = call.kind != EmbeddedSqlKind::Dynamic || !call.variants.is_empty();
+        let exhaustive = !call.variants_truncated()
+            && (call.kind != EmbeddedSqlKind::Dynamic || !call.variants.is_empty());
         for check in checks {
             let mut statuses = Vec::with_capacity(branches.len());
             let mut residual_reasons = Vec::new();
@@ -118,15 +119,22 @@ pub fn record_sql_policy_verdicts(
                 statuses.push(judgment.status);
             }
             if !exhaustive {
-                residual_reasons.push("opaque-sql-tail".to_string());
+                residual_reasons.push(
+                    if call.variants_truncated() {
+                        "sql-variants-truncated"
+                    } else {
+                        "opaque-sql-tail"
+                    }
+                    .to_string(),
+                );
             }
             let status = combine_sql_verdicts(&statuses, exhaustive, positive_survives_unknown);
             residual_reasons.sort();
             residual_reasons.dedup();
             let evidence = match (status, call.variants.is_empty(), exhaustive) {
                 (SqlVerdictStatus::Abstain, _, _) => None,
-                (_, false, _) => Some(SqlEvidenceKind::ExhaustiveUnion),
-                (_, true, false) => Some(SqlEvidenceKind::VerifiedPrefix),
+                (_, _, false) => Some(SqlEvidenceKind::VerifiedPrefix),
+                (_, false, true) => Some(SqlEvidenceKind::ExhaustiveUnion),
                 (_, true, true) => Some(SqlEvidenceKind::Exact),
             };
             facts.record_sql_verdict(SqlObligationVerdict {
@@ -153,3 +161,6 @@ pub fn record_sql_policy_verdicts(
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

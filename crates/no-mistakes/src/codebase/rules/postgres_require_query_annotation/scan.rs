@@ -5,7 +5,9 @@ use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
+mod composition;
 mod low;
+mod trusted_append;
 mod verdicts;
 
 pub(super) fn scan_with_sources(
@@ -39,6 +41,8 @@ pub(super) fn scan_with_sources(
             .transpose()?
             .map(crate::codebase::rules::index_sql_variants)
             .unwrap_or_default();
+        let invalid =
+            composition::diagnostics(&rel, file, &opts.embedded, &statements, facts, observer);
         if facts.wants_sql_verdicts() {
             verdicts::record(
                 &rel,
@@ -46,11 +50,17 @@ pub(super) fn scan_with_sources(
                 &opts.embedded,
                 opts.unanalyzable_sql == super::UnanalyzableSql::Advise,
                 facts,
+                &invalid,
             );
         }
         for (call_index, (call, span)) in file.calls.iter().zip(&file.call_spans).enumerate() {
             if !call.variants.is_empty() {
                 for (variant_index, version) in call.statement_calls().enumerate() {
+                    // A truncated residual has no complete statement to parse.
+                    if version.sql_text.is_none() || invalid.contains(&(call_index, variant_index))
+                    {
+                        continue;
+                    }
                     let statement = statements
                         .get(&(call_index, variant_index))
                         .copied()
@@ -65,6 +75,9 @@ pub(super) fn scan_with_sources(
                         );
                     }
                 }
+                continue;
+            }
+            if trusted_append::accepts(prepared, path, call, *span) {
                 continue;
             }
             let prefix = prepared.query_annotation_prefix(path, &opts.embedded, *span);

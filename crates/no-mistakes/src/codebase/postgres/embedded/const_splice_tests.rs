@@ -14,7 +14,12 @@ fn extract(name: &str) -> super::EmbeddedSqlFileFacts {
     extract_embedded_sql_from_source(
         &fixture(name),
         &source,
-        &EmbeddedSqlOptions::configured("@example/db", &[]),
+        &EmbeddedSqlOptions::configured("@example/db", &[]).with_trusted_sql_tags(&[
+            super::TrustedSqlTag {
+                module: "@example/db".into(),
+                name: "sql".into(),
+            },
+        ]),
     )
 }
 

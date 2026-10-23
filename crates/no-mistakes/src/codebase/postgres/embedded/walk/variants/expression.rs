@@ -11,7 +11,7 @@ pub(super) fn recover(
     depth: u8,
     constraints: &[(u64, u32)],
 ) -> Option<Vec<Recovered>> {
-    if depth == 0 {
+    if depth == 0 || visitor.head_calls_only {
         return None;
     }
     let expr = unwrap_ts_wrappers(expr);
@@ -82,7 +82,15 @@ pub(super) fn recover(
                 visitor.functions.imported_sql_tags(),
             ) =>
         {
-            template::recover(visitor, &tagged.quasi, depth - 1, constraints)
+            if visitor
+                .functions
+                .imported_sql_tags()
+                .parameterizes_all(&tagged.tag)
+            {
+                literal(visitor, expr, line)
+            } else {
+                template::recover(visitor, &tagged.quasi, depth - 1, constraints)
+            }
         }
         Expression::TemplateLiteral(template) => literal(visitor, expr, line)
             .or_else(|| template::clauses::recover(visitor, template, depth, constraints)),
@@ -141,6 +149,7 @@ fn literal(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, line: u32) -> Opti
         ),
         choices: Vec::new(),
         append_sites: Vec::new(),
+        variants_truncated: false,
         enumerated: false,
     }])
 }

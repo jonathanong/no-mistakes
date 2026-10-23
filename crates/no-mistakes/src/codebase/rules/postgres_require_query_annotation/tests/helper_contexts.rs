@@ -72,18 +72,29 @@ fn executor_free_root_still_reports_imported_executor_through_cyclic_reexports()
 }
 
 #[test]
-fn repeated_conditional_builder_updates_preserve_unproven_sql() {
-    let root = fixture("helper-tracing-joined-binding");
-    let files = crate::codebase::ts_source::discover_visible_paths(&root);
-    for (policy, expected) in [("report", 1), ("ignore", 0)] {
-        let config = config_with_options(&format!(
-            "importSpecifier: '@app/db'\ninclude: ['src/query.mts']\nunanalyzableSql: {policy}"
-        ));
-        let findings = check_with_files(&root, &config, &files).unwrap();
-        assert_eq!(findings.len(), expected, "{policy}: {findings:#?}");
-        if let Some(finding) = findings.first() {
-            assert_eq!(finding.file, "src/query.mts");
-            assert_eq!(finding.line, 15);
+fn repeated_conditional_builder_updates_keep_explored_missing_annotations() {
+    for (name, line) in [
+        ("helper-tracing-joined-binding-valid", Some(7)),
+        ("helper-tracing-joined-binding", None),
+    ] {
+        let root = fixture(name);
+        let files = crate::codebase::ts_source::discover_visible_paths(&root);
+        for policy in ["report", "ignore"] {
+            let config = config_with_options(&format!(
+                "importSpecifier: '@app/db'\ninclude: ['src/query.mts']\nunanalyzableSql: {policy}"
+            ));
+            let findings = check_with_files(&root, &config, &files).unwrap();
+            // The original fixture concatenates SELECT statements without
+            // separators; invalid variants advise instead of failing the rule.
+            assert_eq!(
+                findings.len(),
+                usize::from(line.is_some()),
+                "{name}/{policy}: {findings:#?}"
+            );
+            if let Some(line) = line {
+                assert_eq!(findings[0].file, "src/query.mts");
+                assert_eq!(findings[0].line, line);
+            }
         }
     }
 }

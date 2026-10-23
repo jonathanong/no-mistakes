@@ -67,8 +67,8 @@ pub(super) fn record(
                 })
                 .collect::<Vec<_>>();
             let exhaustive = exempt
-                || original.kind != EmbeddedSqlKind::Dynamic
-                || !original.variants.is_empty();
+                || !original.variants_truncated()
+                    && (original.kind != EmbeddedSqlKind::Dynamic || !original.variants.is_empty());
             if !exhaustive {
                 reasons.push("opaque-sql-tail".to_string());
             }

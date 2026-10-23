@@ -1,4 +1,4 @@
-import sql, { type SQLStatement } from "sql-template-strings";
+import { sql } from "@example/db"; import { type SQLStatement } from "sql-template-strings"; /* Configured tags splice fragments; sql-template-strings binds them. */
 import { query } from "@example/db";
 const gate = runtimeFlag;
 function withOffset(q: SQLStatement, owner: string): SQLStatement {

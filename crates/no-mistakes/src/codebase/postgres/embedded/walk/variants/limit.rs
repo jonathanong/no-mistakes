@@ -15,9 +15,32 @@ pub(super) fn bounded(values: Vec<Recovered>) -> Option<Vec<Recovered>> {
                 unique.len() - 1
             });
         unique[index].merge_append_sites(&value);
+    }
+    if unique.len() > 1 && unique.iter().any(|value| !value.append_sites.is_empty()) {
+        // Append exploration keeps the empty path and every singleton before
+        // spending its remaining budget on pairs. Prune at each join, so the
+        // next branch never expands an exponential intermediate collection.
+        unique.sort_by(|left, right| {
+            left.append_sites
+                .len()
+                .cmp(&right.append_sites.len())
+                .then_with(|| left.append_sites.cmp(&right.append_sites))
+        });
         if unique.len() > MAX_EMBEDDED_SQL_VARIANTS {
-            return None;
+            let decisions: crate::fx::FxHashSet<_> = unique
+                .iter()
+                .flat_map(|value| value.choices.iter().map(|(id, _)| *id))
+                .collect();
+            let cap = MAX_EMBEDDED_SQL_VARIANTS.max(decisions.len() + 1);
+            if unique.len() > cap {
+                unique.truncate(cap);
+                for value in &mut unique {
+                    value.variants_truncated = true;
+                }
+            }
         }
+    } else if unique.len() > MAX_EMBEDDED_SQL_VARIANTS {
+        return None;
     }
     Some(unique)
 }

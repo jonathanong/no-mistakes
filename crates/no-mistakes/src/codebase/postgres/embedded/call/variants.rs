@@ -1,7 +1,7 @@
 use super::{EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlSourcePosition};
 use std::borrow::Cow;
 
-/// Maximum number of concrete statements retained for one executor call.
+/// Default variant budget; append exploration also retains every singleton.
 pub const MAX_EMBEDDED_SQL_VARIANTS: usize = 16;
 
 /// One complete alternative, with its own physical origin and generated binds.
@@ -15,6 +15,8 @@ pub struct EmbeddedSqlVariant {
     pub recovered_placeholder_positions: Vec<(u32, u32)>,
     /// Private append occurrences that contributed SQL to this alternative.
     pub(crate) append_sites: Vec<u32>,
+    /// Feasible append outcomes remain beyond the site cap or sampled loop iterations.
+    pub(crate) variants_truncated: bool,
 }
 
 impl EmbeddedSqlVariant {
@@ -33,6 +35,7 @@ impl EmbeddedSqlVariant {
                 values.push(value.clone());
                 values.len() - 1
             });
+        values[index].variants_truncated |= value.variants_truncated;
         for site in value.append_sites {
             if !values[index].append_sites.contains(&site) {
                 values[index].append_sites.push(site);
@@ -77,7 +80,11 @@ impl EmbeddedSqlCall {
                     line: self.line,
                     callee: self.callee.clone(),
                     sql_text: Some(variant.sql_text.clone()),
-                    kind: EmbeddedSqlKind::Composed,
+                    kind: if variant.variants_truncated {
+                        EmbeddedSqlKind::Dynamic
+                    } else {
+                        EmbeddedSqlKind::Composed
+                    },
                     declaration_line: Some(variant.line),
                     sql_source_positions: variant.sql_source_positions.clone(),
                     recovered_placeholder_positions: variant
@@ -87,7 +94,13 @@ impl EmbeddedSqlCall {
                 })
             }))
     }
+    pub(crate) fn variants_truncated(&self) -> bool {
+        self.variants
+            .iter()
+            .any(|variant| variant.variants_truncated)
+    }
     pub(crate) fn is_unanalyzable(&self) -> bool {
-        self.kind == EmbeddedSqlKind::Dynamic && self.variants.is_empty()
+        self.kind == EmbeddedSqlKind::Dynamic
+            && (self.variants.is_empty() || self.variants_truncated())
     }
 }

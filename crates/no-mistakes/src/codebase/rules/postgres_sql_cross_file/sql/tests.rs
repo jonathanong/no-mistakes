@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
-use crate::codebase::postgres::EmbeddedSqlFileFacts;
+use crate::codebase::postgres::{EmbeddedSqlFileFacts, EmbeddedSqlOptions};
 use crate::codebase::rules::postgres_sql_cross_file::{compile, Options};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use sqlparser::ast::{Ident, ObjectName, ObjectNamePart, ObjectNamePartFunction};
@@ -83,6 +83,31 @@ fn relation_placeholders_are_identifier_interpolations() {
             args: Vec::new(),
         })
     ])));
+}
+
+#[test]
+fn truncated_identifier_search_stays_unknown_unless_a_retained_variant_matches() {
+    let extract = |name: &str| {
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/postgres-facts/embedded")
+            .join(name);
+        let source = std::fs::read_to_string(&path).unwrap();
+        crate::codebase::postgres::extract_embedded_sql_from_source(
+            &path,
+            &source,
+            &EmbeddedSqlOptions::configured("@example/db", &[]),
+        )
+    };
+    let mut truncated = extract("variants-append-breadth.ts").calls.remove(0);
+    assert!(truncated.variants_truncated());
+    assert_eq!(identifier_placeholder(&truncated), None);
+
+    // Keep the same incomplete search, but supply a saved concrete identifier
+    // witness. Unknown alternatives must not erase an already observed match.
+    let identifier = extract("const-splice-let.ts").calls.remove(0);
+    assert_eq!(identifier_placeholder(&identifier), Some(true));
+    truncated.variants[0].sql_text = identifier.sql_text.unwrap();
+    assert_eq!(identifier_placeholder(&truncated), Some(true));
 }
 
 #[test]

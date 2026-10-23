@@ -1,6 +1,7 @@
 use super::super::file_playwright::collect_playwright_facts;
 use super::super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use super::should_store_source;
+use super::plan::ts_extract_plan;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -13,18 +14,23 @@ pub(crate) fn collect_file_facts_from_program(
     program: &oxc_ast::ast::Program<'_>,
     owned_source: Option<Arc<str>>,
 ) -> CheckFileFacts {
+    let embedded_sql = prepared_embedded_sql(root, path, source, program, plan);
+    let head_candidates = heads::candidates(plan, &embedded_sql);
+    let mut ts_plan = ts_extract_plan(root, plan, path, playwright);
+    ts_plan.module_bindings |= !head_candidates.is_empty();
     let stored_source =
         owned_source.or_else(|| should_store_source(plan).then(|| Arc::<str>::from(source)));
     let super::prepared_program::PreparedProgramFacts { ts, semantic } =
         super::prepared_program::collect(
             root,
             path,
-            plan,
+            super::prepared_program::Demand { request: plan, ts: ts_plan },
             playwright,
             source,
             program,
             stored_source.clone(),
         );
+
     let react = ((plan.react
         && crate::codebase::check_facts::family_scope::applies(&plan.react_paths, path))
         || plan.graph.react)
@@ -83,8 +89,6 @@ pub(crate) fn collect_file_facts_from_program(
         .as_ref()
         .map(|_| crate::playwright::selectors::collect_static_export_values(program));
     let playwright = collect_playwright_facts(path, program, source, playwright, &semantic);
-    let embedded_sql =
-        super::embedded_sql::prepared_embedded_sql(root, path, source, program, plan);
     let query_annotation = if plan.query_annotation {
         let options = plan.query_annotation_options.clone().unwrap_or_else(|| {
             embedded_sql
@@ -104,15 +108,20 @@ pub(crate) fn collect_file_facts_from_program(
     } else {
         Vec::new()
     };
-    let query_annotation_heads = plan.query_annotation_heads.then(|| {
-        Arc::new(crate::codebase::postgres::query_annotation::heads::collect(
-            program,
-            &ts,
-            embedded_sql
-                .iter()
-                .flat_map(|(_, file)| file.call_spans.iter().copied()),
-        ))
-    });
+    let query_annotation_heads =
+        (plan.query_annotation_heads || !head_candidates.is_empty()).then(|| {
+            Arc::new(
+                crate::codebase::postgres::query_annotation::heads::collect_with_trusted_appends(
+                    program,
+                    &ts,
+                    embedded_sql
+                        .iter()
+                        .flat_map(|(_, file)| file.call_spans.iter().copied()),
+                    &head_candidates,
+                    plan.query_annotation_heads,
+                ),
+            )
+        });
     let sql_identifier_syntax =
         super::sql_identifier::collect(root, path, source, program, &ts, plan);
     let symbols = ts.symbols.clone();
@@ -146,3 +155,9 @@ pub(crate) fn collect_file_facts_from_program(
         parsed: true,
     }
 }
+
+#[path = "program_embedded.rs"]
+mod embedded;
+pub(super) use embedded::prepared_embedded_sql;
+#[path = "program_heads.rs"]
+mod heads;

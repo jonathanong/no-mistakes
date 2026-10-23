@@ -7,39 +7,14 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{BinaryOperator, Expression};
 
 mod builder;
+mod provenance;
+pub(in crate::codebase::postgres::embedded::walk) use provenance::helper_provenance;
 mod parameter_positions;
 pub(in crate::codebase::postgres::embedded::walk) use builder::{
     appended_builder_fragment, builder_binding_recovered, builder_fragment, is_builder_append,
 };
 pub(in crate::codebase::postgres::embedded::walk) use parameter_positions::contains_parameter_helper;
 pub(super) use parameter_positions::parameter_source_positions;
-
-pub(in crate::codebase::postgres::embedded::walk) fn helper_provenance(
-    expr: &Expression<'_>,
-    visitor: &ScopeVisitor<'_>,
-) -> Option<functions::provenance::RecoveredSql> {
-    fn contains_helper(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> bool {
-        match unwrap_ts_wrappers(expr) {
-            Expression::CallExpression(call) => match unwrap_ts_wrappers(&call.callee) {
-                Expression::Identifier(name) => {
-                    visitor.functions.has_static_helper(name.name.as_str())
-                        || visitor.is_hole_helper(name.name.as_str())
-                }
-                Expression::StaticMemberExpression(member) if member.property.name == "append" => {
-                    contains_helper(&member.object, visitor)
-                }
-                _ => false,
-            },
-            Expression::BinaryExpression(binary) if binary.operator == BinaryOperator::Addition => {
-                contains_helper(&binary.left, visitor) || contains_helper(&binary.right, visitor)
-            }
-            _ => false,
-        }
-    }
-    contains_helper(expr, visitor)
-        .then(|| resolve_chain_recovered(expr, visitor))
-        .flatten()
-}
 
 pub(super) const DYNAMIC_SQL_FRAGMENT: &str = "sql_dynamic_outer.column";
 
@@ -48,6 +23,12 @@ pub(super) fn classify_init(
     is_const: bool,
     visitor: &ScopeVisitor<'_>,
 ) -> (Option<String>, EmbeddedSqlKind) {
+    if visitor.head_calls_only {
+        return (
+            super::super::head_calls::text(expr, visitor),
+            EmbeddedSqlKind::Dynamic,
+        );
+    }
     if let Some((text, kind)) = composed_sql(expr, visitor) {
         return if is_const {
             (Some(text), kind)
@@ -99,6 +80,9 @@ pub(in crate::codebase::postgres::embedded::walk) fn static_fragment(
     expr: &Expression<'_>,
     visitor: &ScopeVisitor<'_>,
 ) -> Option<String> {
+    if visitor.head_calls_only {
+        return super::super::head_calls::text(expr, visitor);
+    }
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {

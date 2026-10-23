@@ -146,8 +146,24 @@ fn resolve_call(
         Expression::StaticMemberExpression(member)
             if member.property.name == "append" && !is_identifier(&member.object) =>
         {
+            let mut arguments = vec![append_argument(call)?];
+            let mut receiver = &member.object;
+            while let Expression::CallExpression(inner) = unwrap_ts_wrappers(receiver) {
+                let Expression::StaticMemberExpression(link) = unwrap_ts_wrappers(&inner.callee)
+                else {
+                    break;
+                };
+                if link.property.name != "append" {
+                    break;
+                }
+                arguments.push(append_argument(inner)?);
+                receiver = &link.object;
+            }
+            if is_identifier(receiver) {
+                return None;
+            }
             let mut base = resolve_expr(
-                &member.object,
+                receiver,
                 source,
                 depth,
                 lookup,
@@ -155,16 +171,18 @@ fn resolve_call(
                 idents,
                 imported_sql_tags,
             )?;
-            let appended = resolve_expr(
-                append_argument(call)?,
-                source,
-                depth,
-                lookup,
-                is_shadowed,
-                idents,
-                imported_sql_tags,
-            )?;
-            base.append(appended);
+            for argument in arguments.into_iter().rev() {
+                let appended = resolve_expr(
+                    argument,
+                    source,
+                    depth,
+                    lookup,
+                    is_shadowed,
+                    idents,
+                    imported_sql_tags,
+                )?;
+                base.append(appended);
+            }
             Some(base)
         }
         Expression::Identifier(ident) => lookup(call, ident.name.as_str(), depth),

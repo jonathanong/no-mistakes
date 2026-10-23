@@ -114,7 +114,7 @@ pub(crate) fn embedded_call_facts_with_demand(
                     projection,
                 )
             };
-            if call.kind == EmbeddedSqlKind::Dynamic {
+            if call.kind == EmbeddedSqlKind::Dynamic && !variant {
                 // Recovered interpolation text can prove OFFSET syntax and write
                 // targets for general consumers. Conflict-only opaque calls were
                 // omitted above because ordering rejects the tail before lookup.

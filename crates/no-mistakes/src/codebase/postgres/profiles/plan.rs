@@ -5,14 +5,35 @@ pub fn assign_prepared_embedded_sql_options(
     config: &NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
-    let (options, _, rule_ids) = super::configured_embedded_sql_options_with_annotation(
+    let (options, annotation, rule_ids) = super::configured_embedded_sql_options_with_annotation(
         config,
         super::PREPARED_EMBEDDED_SQL_RULE_IDS,
     )?;
     plan.embedded_sql = !options.is_empty();
+    plan.embedded_sql_head_calls_only = head_calls_only_profiles(&options, &annotation, &rule_ids);
     plan.embedded_sql_options = options;
     plan.embedded_sql_rule_ids = rule_ids;
     Ok(())
+}
+
+pub(super) fn head_calls_only_profiles(
+    options: &[EmbeddedSqlOptions],
+    annotation: &[EmbeddedSqlOptions],
+    scans: &super::scans::EmbeddedSqlRuleScans,
+) -> Vec<EmbeddedSqlOptions> {
+    options
+        .iter()
+        .filter(|profile| {
+            !annotation.contains(profile)
+                && scans.get(*profile).is_some_and(|scans| {
+                    !scans.is_empty()
+                        && scans
+                            .iter()
+                            .all(|scan| scan.rule_id == "postgres-require-query-annotation")
+                })
+        })
+        .cloned()
+        .collect()
 }
 
 /// Declare SQL projections before the shared request fact pass.

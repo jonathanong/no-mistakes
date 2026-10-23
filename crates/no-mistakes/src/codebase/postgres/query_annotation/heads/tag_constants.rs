@@ -38,10 +38,10 @@ pub(super) fn safe(
             let declaration = (binding.span.start, binding.span.end);
             if !binding.runtime
                 || binding.imported
-                || !matches!(
-                    syntax.constants.get(&declaration),
-                    Some(Head::Tag | Head::MissingTag)
-                )
+                || !syntax
+                    .constants
+                    .get(&declaration)
+                    .is_some_and(|head| head.tagged())
                 || (roots.contains(&binding.scope_id) && exports.contains(binding.name.as_str()))
             {
                 return None;

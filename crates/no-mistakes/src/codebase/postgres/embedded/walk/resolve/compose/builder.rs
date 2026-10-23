@@ -10,6 +10,9 @@ pub(in crate::codebase::postgres::embedded::walk) fn builder_fragment(
     expr: &Expression<'_>,
     visitor: &ScopeVisitor<'_>,
 ) -> Option<String> {
+    if visitor.head_calls_only {
+        return None;
+    }
     recover(expr, visitor, false)
 }
 pub(in crate::codebase::postgres::embedded::walk) fn appended_builder_fragment(

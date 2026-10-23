@@ -11,6 +11,7 @@ pub(super) struct Bindings<'a> {
     gaps: Option<Gaps>,
     safe_tags: FxHashSet<Span>,
     mutable: super::assignments::Proofs,
+    append_safety: super::append_constants::Safety,
 }
 impl<'a> Bindings<'a> {
     pub fn new(
@@ -27,6 +28,7 @@ impl<'a> Bindings<'a> {
         };
         let wanted = candidates()
             .filter_map(|head| head.reference())
+            .chain(syntax.append_tags.values().copied())
             .collect::<FxHashSet<_>>();
         let mut index = Self {
             owners: FxHashMap::default(),
@@ -34,12 +36,14 @@ impl<'a> Bindings<'a> {
             gaps: None,
             safe_tags: FxHashSet::default(),
             mutable: super::assignments::Proofs::default(),
+            append_safety: Default::default(),
         };
         let Some(module) = ts.module_bindings.as_deref().filter(|_| !wanted.is_empty()) else {
             return index;
         };
         index.gaps = Some(Gaps::new(module));
         let executors = executor_calls.collect::<FxHashSet<_>>();
+        index.append_safety = super::append_constants::Safety::new(syntax, module, &executors);
         index.safe_tags = super::tag_constants::safe(syntax, module, executors.iter().copied());
         index.mutable = super::assignments::Proofs::new(
             syntax,
@@ -63,7 +67,7 @@ impl<'a> Bindings<'a> {
         }
         index
     }
-    fn owner(&self, span: Span) -> Option<&ModuleBinding> {
+    pub(super) fn owner(&self, span: Span) -> Option<&ModuleBinding> {
         let owner = self.owners.get(&span).copied().flatten()?;
         let gaps = self.gaps.as_ref()?;
         (owner.runtime
@@ -71,38 +75,44 @@ impl<'a> Bindings<'a> {
             && !gaps.overlaps((owner.span.start, owner.span.end)))
         .then_some(owner)
     }
-    pub fn proof(&self, head: Head) -> HeadProof {
+    pub fn proof(&self, head: Head, call: Span) -> HeadProof {
         match head {
-            Head::Literal => HeadProof::Literal,
-            Head::Tag => HeadProof::Literal,
-            Head::Missing => HeadProof::Missing,
-            Head::MissingTag => HeadProof::Missing,
-            Head::Reference(span) => {
+            Head::Reference(span) | Head::AppendReference(span) => {
                 let Some(owner) = self.owner(span).filter(|owner| !owner.imported) else {
                     return HeadProof::Unproven;
                 };
-                match self.constants.get(&(owner.span.start, owner.span.end)) {
-                    Some(Head::Literal) => HeadProof::Literal,
-                    Some(Head::Tag)
-                        if self.safe_tags.contains(&(owner.span.start, owner.span.end)) =>
-                    {
-                        HeadProof::Literal
-                    }
-                    Some(Head::MissingTag)
-                        if self.safe_tags.contains(&(owner.span.start, owner.span.end)) =>
-                    {
-                        HeadProof::Missing
-                    }
-                    Some(Head::Missing) => HeadProof::Missing,
-                    _ => self
+                let declaration = (owner.span.start, owner.span.end);
+                let Some(value) = self.constants.get(&declaration).copied() else {
+                    return self
                         .mutable
                         .calls
                         .get(&span)
-                        .cloned()
-                        .unwrap_or(HeadProof::Unproven),
+                        .copied()
+                        .unwrap_or(HeadProof::Unproven);
+                };
+                if matches!(head, Head::AppendReference(_))
+                    || value.appended()
+                    || (value.tagged() && self.append_safety.touched(declaration))
+                {
+                    return if self.append_safety.accepts(declaration, call) {
+                        value.proof(
+                            matches!(head, Head::AppendReference(_))
+                                || self.append_safety.continued(declaration, call),
+                        )
+                    } else {
+                        HeadProof::Unproven
+                    };
+                }
+                if value.tagged()
+                    && !self.safe_tags.contains(&declaration)
+                    && !self.append_safety.accepts(declaration, call)
+                {
+                    HeadProof::Unproven
+                } else {
+                    value.proof(false)
                 }
             }
-            Head::Unproven => HeadProof::Unproven,
+            value => value.proof(false),
         }
     }
 }

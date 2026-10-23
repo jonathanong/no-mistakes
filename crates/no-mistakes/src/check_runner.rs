@@ -60,6 +60,7 @@ mod unmocked_import_effort;
 mod low_reference_tests;
 #[cfg(test)]
 mod unbounded_effort_tests;
-
 #[cfg(test)]
 mod mutable_registry_low_tests;
+#[cfg(test)]
+mod append_composition_tests;

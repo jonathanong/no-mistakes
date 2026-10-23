@@ -18,20 +18,32 @@ pub(super) fn project_calls(
                 call.kind,
             ));
         } else {
+            let truncated = call.variants_truncated();
             for variant in call.variants {
-                statements.push(statement(
+                let mut projected = statement(
                     file_name,
                     call.line,
                     Some(variant.sql_text),
-                    variant.recovered_placeholder_positions.is_empty(),
+                    !truncated && variant.recovered_placeholder_positions.is_empty(),
                     false,
-                    EmbeddedSqlKind::Composed,
-                ));
+                    if truncated {
+                        EmbeddedSqlKind::Dynamic
+                    } else {
+                        EmbeddedSqlKind::Composed
+                    },
+                );
+                if truncated {
+                    projected.incomplete_reason = Some("sql-variants-truncated".into());
+                }
+                statements.push(projected);
             }
         }
     }
     statements
 }
+
+#[cfg(test)]
+mod tests;
 
 pub(super) fn statement(
     file_name: &str,

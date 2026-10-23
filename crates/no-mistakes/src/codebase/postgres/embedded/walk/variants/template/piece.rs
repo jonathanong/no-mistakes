@@ -22,6 +22,7 @@ pub(super) fn quasi(visitor: &ScopeVisitor<'_>, quasi: &TemplateElement<'_>) -> 
         fragment: true,
         choices: Vec::new(),
         append_sites: Vec::new(),
+        variants_truncated: false,
         enumerated: false,
     }
 }
