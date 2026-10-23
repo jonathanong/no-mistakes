@@ -29,8 +29,18 @@ alias MyApp.*
 alias MyApp*
 import MyApp.{User, *}
 alias MyApp.{User
+alias MyApp.{User}}
 "#;
     assert!(extract_elixir_imports(source).is_empty());
+}
+
+#[test]
+fn next_line_tuple_does_not_become_a_brace_alias() {
+    let source = "alias MyApp.User\n{:ok, x} = foo()\nalias MyApp.Role\n{Foo, Bar} = y\n";
+    assert_eq!(
+        extract_elixir_imports(source),
+        vec!["MyApp.Role", "MyApp.User"]
+    );
 }
 
 #[test]
@@ -114,6 +124,10 @@ fn elixir_collects_aliases_and_phoenix_routes() {
         .expect("app");
     assert!(app.imports.iter().any(|import| import == "MyApp.User"));
     assert!(app.imports.iter().any(|import| import == "MyApp.Role"));
+    assert!(app
+        .imports
+        .iter()
+        .all(|import| import != "MyApp.Ghost" && !import.contains(".Foo")));
     assert_eq!(app.module.as_deref(), Some("MyApp.App"));
     let router = facts
         .files

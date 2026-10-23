@@ -600,9 +600,9 @@ end
 Nested brace aliases, wildcard imports, same-package refs without
 `alias`/`import`/`use`, Phoenix `resources` macros, `scope "/api"` prefix
 joining, `mix.lock` / `config.exs` native fallback, queues, and a dedicated
-`no-mistakes elixir` CLI are non-edges / later work. Native fallback is `mix.exs` plus non-test `.ex`
-files under configured apps. Any `.ex`/`.exs` under `/test/` is
-non-production. `*_test.exs` is the test suffix.
+`no-mistakes elixir` CLI are non-edges / later work. Native fallback is
+`mix.exs` plus non-test `.ex` files under configured apps. Any `.ex`/`.exs`
+under `/test/` is non-production. `*_test.exs` is the test suffix.
 
 ## Dart, Flutter
 
