@@ -25,8 +25,13 @@ function exportedDeclarations(program, sourceCode) {
       continue;
     const declaration = statement.declaration;
     if (declaration?.type === "FunctionDeclaration") declarations.add(declaration);
-    if (declaration?.type === "Identifier")
-      addExport(declarations, resolveVariable(sourceCode, declaration));
+    if (declaration?.type === "Identifier") {
+      const variable = resolveVariable(sourceCode, declaration);
+      // `export default name` snapshots a value; a later write can make the
+      // callable used by this file unavailable through that default export.
+      if (!variable?.references.some((reference) => reference.isWrite() && !reference.init))
+        addExport(declarations, variable);
+    }
     if (declaration?.type === "VariableDeclaration" && declaration.kind === "const") {
       for (const item of declaration.declarations) declarations.add(item);
     }

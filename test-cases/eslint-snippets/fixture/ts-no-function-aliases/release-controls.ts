@@ -23,7 +23,7 @@ export function reordered(first, second) { return imported(second, first); }
 export function fixed(v) { return imported(v, "fixed"); }
 export function changed(v) { return imported(normalize(v)); }
 export function testClosure(slug, body) {
-  const send = () => request.post(`/x/${slug}`).send(body);
+  const send = payload => request.post(`/x/${slug}`).send(payload);
   return send;
 }
 function privateFunction(v) { return v; }
@@ -84,3 +84,17 @@ const fewerParameters = (value: string) => twoParameters(value);
 const destructuredRest = (...[value]) => imported(...[value]);
 const destructured = ({ value }) => imported(value);
 const defaulted = (value = "default") => imported(value);
+
+// Fixing generic arguments or asserting the explicit forwarding receiver adds a contract.
+const explicitGeneric = value => imported<string>(value);
+const explicitOptionalGeneric = value => imported?.<string>(value);
+const explicitForwardGeneric = value => imported.call<string>(undefined, value);
+import * as importedApi from "./api";
+const assertedForwardReceiver = value => importedApi.create.call(importedApi!, value);
+const assertedApplyReceiver = value => importedApi.create.apply(importedApi!, [value]);
+
+// Default-expression exports snapshot the old function; a named live export would differ.
+function snapshotOriginal(value) { return value; }
+export default snapshotOriginal;
+snapshotOriginal = replacement;
+export const snapshotFacade = value => snapshotOriginal(value);

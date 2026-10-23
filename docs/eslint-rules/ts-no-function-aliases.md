@@ -15,7 +15,9 @@ export const makeUser = input => createUser(input);
 
 The rule requires unchanged arguments in parameter order and a reachable target:
 an imported binding, a static member path rooted at an import, or an exported
-module-level function or const in the same file. Static strings, expression-free
+module-level function or const in the same file. A default-expression export
+(`export default original`) proves this only while the binding is unchanged;
+named exports retain their live binding. Static strings, expression-free
 template keys, optional calls, and proven `.call` / literal-array `.apply`
 forwarding retain that target:
 
@@ -77,6 +79,9 @@ For a same-file exported function or function-valued const, declared wrapper
 types are admitted only when corresponding declared types are identical
 primitive keywords with matching parameter optionality. Type references,
 structural types, predicates, overloads and generic signatures remain unproved.
+Explicit generic call arguments, such as `convert<string>(value)`, also specialize
+the contract and are excluded. An assertion on an explicit `.call` / `.apply`
+receiver is excluded just like an asserted member receiver.
 Attached JSDoc parameter, return, type, template and overload contracts also
 exclude a wrapper; absent TypeScript AST annotations do not erase those contracts. Annotated
 wrapper bindings and assignment-based wrappers can acquire contextual signatures

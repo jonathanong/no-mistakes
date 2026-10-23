@@ -12,12 +12,18 @@ function unassertedPath(expression) {
 }
 
 function unassertedCall(node, call) {
+  if (call.typeArguments || call.typeParameters) return false;
   let result = node.body;
   if (result.type === "BlockStatement") {
     const statement = result.body[0];
     result = statement.argument || statement.expression;
   }
-  return unassertedPath(result) && unassertedPath(call.callee);
+  if (!unassertedPath(result) || !unassertedPath(call.callee)) return false;
+  const callee = call.callee.type === "ChainExpression" ? call.callee.expression : call.callee;
+  const method = callee.type === "MemberExpression" ? staticMemberName(callee) : null;
+  return (
+    !["call", "apply"].includes(method) || !call.arguments[0] || unassertedPath(call.arguments[0])
+  );
 }
 
 function wrapperHasOverloads(node, sourceCode) {
