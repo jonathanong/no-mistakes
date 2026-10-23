@@ -380,3 +380,14 @@ Opt-in bans for configured static member chains. Each `chains` entry sets
 `path` is a schema error. Object destructuring of the final segment matches,
 and a named root ignores shadowing. File scope stays on the lint config. See
 [the rule reference](eslint-rules/forbidden-member-chains.md).
+
+### `restricted-api-usage`
+
+An opt-in file-local import and call policy. `targets` entries select an exact
+`source` and exported `importedNamePattern`, an independent lexical
+`callNamePattern`, or both. `message` supplies a local reason and safe rewrite.
+Type-only imports are ignored; imported aliases and namespace calls use lexical
+binding identity. Lexical call patterns intentionally also match unrelated
+bindings with those names. Invalid expressions fail during initialization.
+See [the rule reference](eslint-rules/restricted-api-usage.md) for file scoping,
+exclusions, suppression, and complete examples.
