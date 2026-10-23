@@ -6,6 +6,7 @@ function configureCompiledApiEnvironment({ platform = process.platform, env = pr
 
   // Cargo's existing test marker selects a PID-specific invocation lock on platforms
   // without Linux runtime directories. Same-process native calls still share a lock.
+  // This marker configures only the test harness; it is not a production option.
   env["CARGO_BIN_EXE_no-mistakes"] =
     env.NO_MISTAKES_TEST_CLI_PATH ||
     join(dirname(addon), platform === "win32" ? "no-mistakes.exe" : "no-mistakes");
