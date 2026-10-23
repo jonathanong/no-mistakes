@@ -31,6 +31,8 @@ proof remain unanalyzable. JavaScript escapes in SQL literals are also
 unanalyzable at low; use an unescaped literal or select max. Low requires the
 literal SQL to parse completely; malformed SQL follows the same uncertainty
 policy rather than being treated as clear.
+Physical CRLF template line endings are accepted with JavaScript's LF
+normalization; JavaScript escape sequences still follow the uncertainty policy.
 
 ```yaml
 rules:

@@ -195,4 +195,5 @@ fn malformed_sql_is_uncertainty_and_never_proven_clear() {
         && verdict.residual_reasons == ["invalid-sql"]));
 }
 
+mod line_endings;
 mod prepared_contracts;

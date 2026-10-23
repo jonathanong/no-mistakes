@@ -62,7 +62,7 @@ pub(super) fn literals<'a>(
                     if !holes.is_empty()
                         || source
                             .get(source_span.0 as usize + 1..source_span.1 as usize - 1)
-                            .is_none_or(|raw| raw != text)
+                            .is_none_or(|raw| !literal_matches(raw, text))
                     {
                         return Ok(None);
                     }
@@ -90,4 +90,9 @@ pub(super) fn literals<'a>(
         }
         out
     })
+}
+
+fn literal_matches(raw: &str, cooked: &str) -> bool {
+    // JavaScript normalizes physical CRLF template endings without decoding escapes.
+    raw == cooked || (raw.contains('\r') && raw.replace("\r\n", "\n") == cooked)
 }
