@@ -2,6 +2,7 @@ use super::*;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+mod next_config;
 mod special;
 mod timing;
 pub(super) type ResultAccumulator = Mutex<Vec<(&'static str, Result<Vec<RuleFinding>>)>>;
@@ -10,6 +11,7 @@ pub(super) struct RuleRunInputs<'a> {
     root: &'a Path,
     config: &'a crate::config::v2::NoMistakesConfig,
     snapshot: &'a crate::codebase::ts_source::VisiblePathSnapshot,
+    next_config_resolver: Option<&'a nextjs_redirect_destinations::PreparedConfigResolver<'a>>,
     vitest_catalog: Option<&'a super::super::PreparedVitestProjectCatalog>,
     sources: &'a std::sync::Arc<crate::codebase::ts_source::SourceStore>,
     facts: Option<&'a crate::codebase::check_facts::CheckFactMap>,
@@ -25,6 +27,7 @@ pub(super) struct RuleRunInputs<'a> {
 /// Request-scoped inputs prepared once and shared by filesystem rules.
 #[doc(hidden)]
 pub struct PreparedFilesystemRuleInputs<'a> {
+    pub next_config_resolver: Option<&'a nextjs_redirect_destinations::PreparedConfigResolver<'a>>,
     pub snapshot: &'a crate::codebase::ts_source::VisiblePathSnapshot,
     pub vitest_catalog: Option<&'a super::super::PreparedVitestProjectCatalog>,
     pub sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
@@ -81,7 +84,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     } else {
         None
     };
-    run_prepared_filesystem_rules(
+    next_config::run(
         root,
         config,
         files,
@@ -100,7 +103,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppr
     prepared: PreparedFilesystemRuleInputs<'_>,
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Vec<RuleFinding>> {
-    run_prepared_filesystem_rules(root, config, files, prepared, facts, true)
+    next_config::run(root, config, files, prepared, facts, true)
 }
 
 fn run_prepared_filesystem_rules(
@@ -113,6 +116,7 @@ fn run_prepared_filesystem_rules(
 ) -> Result<Vec<RuleFinding>> {
     let PreparedFilesystemRuleInputs {
         snapshot,
+        next_config_resolver,
         vitest_catalog,
         sources,
         workflow_documents,
@@ -137,6 +141,7 @@ fn run_prepared_filesystem_rules(
         root,
         config,
         snapshot,
+        next_config_resolver,
         vitest_catalog,
         sources: &sources,
         facts,
@@ -178,7 +183,7 @@ fn run_prepared_filesystem_rules(
 }
 
 fn run_enabled_rules(inputs: &RuleRunInputs<'_>) {
-    macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let result = trace_rule(inputs.sources, $id, || run_rule::run_rule_with_sources(run_rule::RunRuleRequest { rule_id: $id, fallback: $call, root: inputs.root, config: inputs.config, files: inputs.candidates.candidates($id), snapshot: inputs.snapshot, sources: inputs.sources, facts: inputs.facts, defer_suppression: inputs.defer_suppression })); inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; special::spawn(scope, inputs); }); }; }
+    macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let result = trace_rule(inputs.sources, $id, || run_rule::run_rule_with_sources(run_rule::RunRuleRequest { rule_id: $id, fallback: $call, root: inputs.root, config: inputs.config, files: inputs.candidates.candidates($id), snapshot: inputs.snapshot, next_config_resolver: inputs.next_config_resolver, sources: inputs.sources, facts: inputs.facts, defer_suppression: inputs.defer_suppression })); inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; special::spawn(scope, inputs); }); }; }
     crate::filesystem_rules!(run_rules);
 }
 

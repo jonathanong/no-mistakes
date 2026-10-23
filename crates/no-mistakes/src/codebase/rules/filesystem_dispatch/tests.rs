@@ -134,6 +134,7 @@ fn prepared_dispatch_rejects_tsconfig_gate_without_workflow_documents() {
         &[],
         PreparedFilesystemRuleInputs {
             snapshot: &snapshot,
+            next_config_resolver: None,
             vitest_catalog: None,
             sources: snapshot.source_store_for(&root),
             workflow_documents: None,
@@ -241,6 +242,7 @@ fn enabling_mermaid_validation_preserves_existing_markdown_findings() {
             &files,
             PreparedFilesystemRuleInputs {
                 snapshot: &snapshot,
+                next_config_resolver: None,
                 vitest_catalog: None,
                 sources: snapshot.source_store_for(&root),
                 workflow_documents: None,
@@ -432,6 +434,7 @@ fn aggregate_reads_rust_sources_once_without_global_suppression_rereads() {
         &files,
         PreparedFilesystemRuleInputs {
             snapshot: &snapshot,
+            next_config_resolver: None,
             vitest_catalog: None,
             sources: std::sync::Arc::clone(&sources),
             workflow_documents: None,
@@ -488,6 +491,7 @@ comparisons:
         &files,
         PreparedFilesystemRuleInputs {
             snapshot: &snapshot,
+            next_config_resolver: None,
             vitest_catalog: None,
             sources,
             workflow_documents: None,
@@ -539,6 +543,7 @@ fn aggregate_finding_and_suppression_share_one_physical_read() {
         &files,
         PreparedFilesystemRuleInputs {
             snapshot: &snapshot,
+            next_config_resolver: None,
             vitest_catalog: None,
             sources: std::sync::Arc::clone(&sources),
             workflow_documents: None,

@@ -8,6 +8,10 @@ mod config;
 mod delegate;
 mod extract;
 mod options;
+mod prepared;
+pub(crate) use prepared::with_standalone as with_standalone_resolver;
+#[doc(hidden)]
+pub use prepared::PreparedConfigResolver;
 mod routes;
 mod scan;
 mod static_values;
@@ -53,6 +57,19 @@ pub(crate) fn check_with_files_sources_and_snapshot(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
+) -> Result<Vec<RuleFinding>> {
+    prepared::with_standalone(root, config, all_files, sources, |resolver| {
+        check_prepared(root, config, all_files, sources, snapshot, resolver)
+    })
+}
+
+pub(crate) fn check_prepared(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
+    resolver: &PreparedConfigResolver<'_>,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
@@ -122,11 +139,20 @@ pub(crate) fn check_with_files_sources_and_snapshot(
                         &tracked,
                         std::slice::from_ref(target_root),
                         sources,
+                        resolver,
                     ));
                 }
                 findings
             } else {
-                scan(root, &opts, &files, &files, &target_roots, sources)
+                scan(
+                    root,
+                    &opts,
+                    &files,
+                    &files,
+                    &target_roots,
+                    sources,
+                    resolver,
+                )
             };
             Ok(findings)
         })
@@ -147,3 +173,16 @@ fn missing_tracked_inventory(root: &Path) -> anyhow::Error {
 mod reexport_tests;
 #[cfg(test)]
 mod tests;
+
+/// Configured Next.js project roots admitted to the ordinary project catalog.
+#[doc(hidden)]
+pub fn configured_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
+    let mut roots = config
+        .rule_applications(RULE_ID)
+        .into_iter()
+        .flat_map(|rule| super::target_roots(root, config, rule))
+        .collect::<Vec<_>>();
+    roots.sort();
+    roots.dedup();
+    roots
+}

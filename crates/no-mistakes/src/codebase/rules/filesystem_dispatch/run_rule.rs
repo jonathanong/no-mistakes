@@ -7,6 +7,8 @@ pub(super) struct RunRuleRequest<'a> {
     pub(super) root: &'a Path,
     pub(super) config: &'a crate::config::v2::NoMistakesConfig,
     pub(super) files: &'a [PathBuf],
+    pub(super) next_config_resolver:
+        Option<&'a nextjs_redirect_destinations::PreparedConfigResolver<'a>>,
     pub(super) snapshot: &'a crate::codebase::ts_source::VisiblePathSnapshot,
     pub(super) sources: &'a std::sync::Arc<crate::codebase::ts_source::SourceStore>,
     pub(super) facts: Option<&'a crate::codebase::check_facts::CheckFactMap>,
@@ -21,6 +23,7 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         config,
         files,
         snapshot,
+        next_config_resolver,
         sources,
         facts,
         defer_suppression,
@@ -62,15 +65,14 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         DOC_CONSISTENCY => {
             doc_consistency::check_with_files_and_sources(root, config, files, sources)
         }
-        NEXTJS_REDIRECT_DESTINATIONS => {
-            nextjs_redirect_destinations::check_with_files_sources_and_snapshot(
-                root,
-                config,
-                files,
-                sources,
-                Some(snapshot),
-            )
-        }
+        NEXTJS_REDIRECT_DESTINATIONS => nextjs_redirect_destinations::check_prepared(
+            root,
+            config,
+            files,
+            sources,
+            Some(snapshot),
+            next_config_resolver.expect("request boundary prepares next config resolver"),
+        ),
         SHELLCHECK_RUNNER => shellcheck_runner::check_with_files_sources_and_snapshot(
             root, config, files, sources, snapshot,
         ),
@@ -136,6 +138,7 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
             config,
             files,
             snapshot,
+            next_config_resolver,
             sources,
             facts,
             defer_suppression,

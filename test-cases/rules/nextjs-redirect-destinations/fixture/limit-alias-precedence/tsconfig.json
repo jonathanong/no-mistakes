@@ -1,0 +1,2 @@
+// Exact mapping wins even when missing; wildcard and baseUrl cannot replace it.
+{ "compilerOptions": { "baseUrl": ".", "paths": { "next-shared": ["./absent"], "next-*": ["./next-*"] } } }

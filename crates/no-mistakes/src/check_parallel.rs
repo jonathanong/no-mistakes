@@ -37,6 +37,15 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let workflow_documents = inputs.workflow_documents;
     let tsconfig_gate_project_inputs = inputs.tsconfig_gate_project_inputs;
     let defer_suppression = inputs.defer_suppression;
+    let next_config_resolver = config
+        .rule_configured(no_mistakes::codebase::rules::NEXTJS_REDIRECT_DESTINATIONS)
+        .then(|| {
+            no_mistakes::codebase::rules::nextjs_redirect_destinations::PreparedConfigResolver::new(
+                prepared_tsconfig_catalog,
+                discovered_files,
+                &session,
+            )
+        });
 
     let ((react, queues), (rules, (integration, (codebase, filesystem_rules)))) = rayon::join(
         || {
@@ -138,6 +147,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                                 discovered_files,
                                                 no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
                                                     snapshot: visible_paths,
+                                                    next_config_resolver: next_config_resolver.as_ref(),
                                                     sources: std::sync::Arc::clone(&sources),
                                                     vitest_catalog: vitest_projects,
                                                     workflow_documents,

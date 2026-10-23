@@ -151,6 +151,7 @@ fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
         files,
         super::PreparedFilesystemRuleInputs {
             snapshot,
+            next_config_resolver: None,
             vitest_catalog,
             sources,
             workflow_documents: workflows.as_ref(),

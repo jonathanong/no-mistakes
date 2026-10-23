@@ -5,6 +5,7 @@ pub(super) fn spawn<'a>(scope: &rayon::Scope<'a>, inputs: &'a RuleRunInputs<'a>)
         root,
         config,
         snapshot,
+        next_config_resolver: _,
         vitest_catalog,
         sources,
         facts: _,
