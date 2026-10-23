@@ -174,6 +174,31 @@ test("release does not publish no-mistakes until every platform tarball installs
   assert.match(verifyRoot[0], /no-mistakes@\$version/);
 });
 
+test("CI cancels superseded PR runs but keeps active main coverage runs", () => {
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
+  const concurrency = workflow.match(/^concurrency:\n((?: {2}[^\n]+\n)+)/m);
+  assert.ok(concurrency, "CI must retain workflow-level concurrency");
+  assert.match(concurrency[1], /group:.*github\.event\.pull_request\.number \|\| github\.ref/);
+  assert.match(
+    concurrency[1],
+    /cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/,
+  );
+});
+
+test("only Windows native timing breaches are report-only", () => {
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
+  const reports = [
+    ...workflow.matchAll(
+      / {6}- name: Report real N-API test durations\n[\s\S]*?(?=\n {6}- name:)/g,
+    ),
+  ];
+  assert.equal(reports.length, 2);
+  assert.doesNotMatch(reports[0][0], /--report-only|continue-on-error/);
+  assert.match(reports[1][0], /runner\.os == 'Windows' && '--report-only' \|\| ''/);
+  // Keep malformed reports and test failures fatal; only timing breaches warn.
+  assert.doesNotMatch(reports[1][0], /continue-on-error/);
+});
+
 test("native CI jobs run only platform-specific Rust tests", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
   const nativeJob = workflow.match(/^ {2}native-tests:[\s\S]*?(?=^ {2}[a-z])/m);

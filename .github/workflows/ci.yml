@@ -11,7 +11,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   CARGO_TERM_COLOR: always
@@ -554,7 +554,8 @@ jobs:
         if: ${{ !cancelled() && steps.real-napi.outcome != 'skipped' }}
         timeout-minutes: 2
         shell: bash
-        run: node .github/scripts/report-native-api-tests.cjs target/native-api-tests.json target
+        # Hosted Windows wall time is noisy; retain warnings and all artifacts.
+        run: node .github/scripts/report-native-api-tests.cjs target/native-api-tests.json target ${{ runner.os == 'Windows' && '--report-only' || '' }}
 
       - name: Upload real N-API test durations
         if: ${{ !cancelled() && hashFiles('target/native-api-tests.json') != '' }}

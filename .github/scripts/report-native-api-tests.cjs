@@ -76,7 +76,7 @@ function csv(rows) {
   );
 }
 
-function markdown(summary) {
+function markdown(summary, { reportOnly = false } = {}) {
   const counts = {};
   for (const row of summary.rows) counts[row.status] = (counts[row.status] ?? 0) + 1;
   const lines = [
@@ -84,6 +84,7 @@ function markdown(summary) {
     "",
     `Completed: ${summary.completed.length}; passed: ${counts.passed ?? 0}; failed: ${counts.failed ?? 0}; skipped: ${counts.skipped ?? 0}; pending: ${counts.pending ?? 0}; todo: ${counts.todo ?? 0}.`,
     `Passed tests at or above ${LIMIT_MS} ms: ${summary.slowPassed.length}.`,
+    `Timing gate: ${reportOnly ? "report-only (threshold breaches warn)" : "enforced"}.`,
     "",
     "| Duration (ms) | Status | Test | File |",
     "| ---: | --- | --- | --- |",
@@ -98,21 +99,24 @@ function markdown(summary) {
 }
 
 function main(args = process.argv.slice(2)) {
-  const [input, outputDir] = args;
-  if (!input || !outputDir)
-    throw new Error("usage: report-native-api-tests.cjs <vitest-json> <output-dir>");
+  const [input, outputDir, mode] = args;
+  if (!input || !outputDir || args.length > 3 || (mode && mode !== "--report-only"))
+    throw new Error(
+      "usage: report-native-api-tests.cjs <vitest-json> <output-dir> [--report-only]",
+    );
+  const reportOnly = mode === "--report-only";
   const report = JSON.parse(fs.readFileSync(input, "utf8"));
   const summary = summarize(report);
-  const md = markdown(summary);
+  const md = markdown(summary, { reportOnly });
   fs.mkdirSync(outputDir, { recursive: true });
   fs.writeFileSync(path.join(outputDir, "native-api-tests-durations.csv"), csv(summary.rows));
   fs.writeFileSync(path.join(outputDir, "native-api-tests-summary.md"), md);
   process.stdout.write(md);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
   if (summary.slowPassed.length > 0) {
-    throw new Error(
-      `${summary.slowPassed.length} passed real N-API test(s) reached ${LIMIT_MS} ms`,
-    );
+    const message = `${summary.slowPassed.length} passed real N-API test(s) reached ${LIMIT_MS} ms`;
+    if (reportOnly) process.stdout.write(`::warning::${message} (report-only)\n`);
+    else throw new Error(message);
   }
 }
 
