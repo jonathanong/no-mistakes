@@ -136,3 +136,19 @@ fn failed_dependency_reports_only_selected_anchors() {
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "README.md");
 }
+
+#[test]
+fn selected_unreadable_source_still_reports_without_selected_anchors() {
+    let root = fixture("unavailable-source");
+    for policy in ["report", "advise", "ignore"] {
+        let mut cfg = saved_config(&format!("{policy}.yml"));
+        cfg.rules[0].include.clear();
+        cfg.rules[0].options["sourceFile"] = "invalid-utf8.toml".into();
+        // The configured anchor is not selected; source validation must survive.
+        let findings = run_config(&root, &cfg, &["invalid-utf8.toml"]);
+        assert_eq!(findings.len(), 1);
+        assert_eq!(findings[0].file, "invalid-utf8.toml");
+        assert_eq!(findings[0].target, None);
+        assert!(findings[0].message.contains("cannot read"));
+    }
+}

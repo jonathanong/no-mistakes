@@ -23,6 +23,7 @@ require("./tests-audit-native-api.test.js");
 require("./cargo-target-ownership-api.test.js");
 require("./analysis-policy-api.test.js");
 require("./shellcheck-policy-api.test.js");
+require("./version-pin-policy-api.test.js");
 require("./ephemeral-port-literal-api.test.js");
 require("./unbounded-identifier-effort-api.test.js");
 require("./mutable-registry-effort-api.test.js");

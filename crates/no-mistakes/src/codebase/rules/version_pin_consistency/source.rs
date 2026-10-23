@@ -10,7 +10,17 @@ pub(super) fn load(
     anchors: &[&Anchor],
     sources: &SourceStore,
 ) -> Result<(Arc<str>, Value), Vec<RuleFinding>> {
-    let text = read_text(root, rel, sources).map_err(|error| incomplete(rel, anchors, &error))?;
+    let text = read_text(root, rel, sources).map_err(|error| {
+        if selected {
+            vec![finding(
+                rel,
+                1,
+                format!("{rel}: {error}; restore the declared source as readable UTF-8 text"),
+            )]
+        } else {
+            incomplete(rel, anchors, &error)
+        }
+    })?;
     match parse_source(Path::new(rel), &text) {
         Ok(value) => Ok((text, value)),
         // Preserve established validation of a selected source itself.

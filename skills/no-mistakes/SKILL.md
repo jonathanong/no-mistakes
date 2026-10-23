@@ -74,7 +74,7 @@ ShellCheck in the analysis environment to check the scripts.
 
 For `version-pin-consistency`, an unreadable or malformed source outside the
 selected file set for a selected anchor follows `unanalyzable` (`report` by
-default, `advise`, or `ignore`). A valid off-selection source still supplies
+default, `advise`, or `ignore`). A valid source outside the selected file set still supplies
 the comparison pin; definite mismatches remain failures.
 
 Grouped residual advice, including a `target` that may list several checks, is described in

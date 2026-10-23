@@ -61,10 +61,8 @@ Fix: update the source pin and every matching capture in the same change.
 EXAMPLE_TOOL_VERSION: 0.24.2
 ```
 
-Use `no-mistakes-disable-next-line version-pin-consistency` on the line before
-the selected anchor, or `no-mistakes-disable-file version-pin-consistency` in
-the anchor file, to suppress either an unanalyzable report/advice or a definite
-mismatch. The finding points to line 1 of the selected anchor.
+Use `no-mistakes-disable-file version-pin-consistency` in the anchor file
+for a file-level exception. Both findings and advisories honor it.
 
 ## Why and when
 
@@ -81,7 +79,7 @@ capture group must equal it. Missing keys, stale captures, malformed patterns,
 and stale paths are findings. If a selected anchor depends on a missing,
 unreadable, or malformed source that is outside the selected file set, that
 uncertainty follows `options.unanalyzable` (`report` by default, `advise`, or
-`ignore`). A valid off-selection source still supplies the comparison pin,
+`ignore`). A valid source outside the selected file set still supplies the comparison pin,
 and definite mismatches always fail.
 
 ## Options and defaults
@@ -89,6 +87,11 @@ and definite mismatches always fail.
 `sourceFile`, `sourceKey`, and `anchors` are required. Each anchor supplies a
 file and exactly-one-capture `pattern`, with optional `label`. Common
 include/exclude filters apply; there are no implicit source or anchor files.
+
+`options.unanalyzable` inherits the repository policy, which defaults to
+`report`. It accepts `report`, `advise`, or `ignore` for incomplete comparisons
+caused by an unreadable or malformed source outside the selected file set.
+Definite mismatches and validation of a selected source remain findings.
 
 ## Valid example
 
@@ -128,10 +131,11 @@ anchor can be compared.
 
 ## Suppression
 
-Use `no-mistakes-disable-next-line version-pin-consistency` immediately before
-line 1 of the selected anchor, or `no-mistakes-disable-file version-pin-consistency`
-in that anchor file. Both directives suppress
-unanalyzable reports/advice and definite mismatches at the anchor.
+Use `no-mistakes-disable-file version-pin-consistency` in the anchor file for
+an exception that covers findings and advisories. Incomplete-source diagnostics
+point to line 1, so `no-mistakes-disable-line` must be on that line. Definite
+mismatches retain the captured version's line and support `no-mistakes-disable-next-line`
+immediately before that line.
 
 ## Related rules
 
