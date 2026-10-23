@@ -111,7 +111,9 @@ The explicit receiver determines the mapped collection: `[].map.call(items,
 query)` is unbounded, while `items.map.call([1, 2], query)` is bounded. Forwarding
 with a spread, a nonliteral argument array, an array hole, or another forwarding
 hop is left unknown. A computed identifier, a template with an expression, or
-a tagged template is not a static method name.
+a tagged template is not a static forwarded method name. The existing direct
+map check remains conservative for a tagged key such as
+``items[tag`map`](query)``: the tag can return `"map"`, so it remains a candidate.
 
 Detached aggregate calls (`const all = Promise.all; all(items.map(query))`) have
 no Promise constructor receiver and are not followed. Destructured method

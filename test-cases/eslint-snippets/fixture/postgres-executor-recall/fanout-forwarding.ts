@@ -18,3 +18,5 @@ Promise.all(map.call(items, query));
 // Extra arguments do not hide the already evaluated mapped executor calls.
 Promise.all(items.map(query), ...args);
 Promise.all(items.map(query, ...args));
+// Preserve the legacy conservative direct-map match; a tag can return "map".
+Promise.all(items[tag`map`](query));

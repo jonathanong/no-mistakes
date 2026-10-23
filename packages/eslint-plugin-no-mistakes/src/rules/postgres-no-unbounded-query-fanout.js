@@ -12,6 +12,7 @@ const {
   executorOptionSchema,
   isPromiseAllCallee,
   isStaticallyBounded,
+  mapCallArgument,
 } = helpers;
 
 module.exports = Object.assign(
@@ -43,7 +44,10 @@ module.exports = Object.assign(
         },
         CallExpression(node) {
           if (suppressed(node)) return;
-          const mapped = fanoutMapCall(node, isPromiseAllCallee, context);
+          // Preserve direct-call recall while adding stricter static forwarding.
+          const mapped =
+            (isPromiseAllCallee(node.callee) && mapCallArgument(node)) ||
+            fanoutMapCall(node, isPromiseAllCallee, context);
           if (!mapped) return;
           if (isStaticallyBounded(mapped.source, options.chunkFunctionNames, context)) return;
           if (!callbackContainsExecutor(mapped.callback, bindings, context)) return;
