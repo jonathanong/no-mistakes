@@ -57,6 +57,12 @@ and the default `unanalyzableSql: report` policy; explicitly choose `ignore` for
 opaque leading SQL. This annotation evidence does not imply complete SQL for
 structural PostgreSQL rules.
 
+`sql-template-strings` `.append()` chains preserve the leading annotation at
+low effort and compose text for full SQL consumers, with interpolations treated
+as value placeholders. Conditional appends use bounded breadth-first alternatives;
+loops retain zero/one previews and an unknown remainder. These behaviors share
+Rust, CLI and async Node evidence; see [append composition](postgres-query-annotation/append-composition.md).
+
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes
 (including re-export aliases, `export *` barrels, namespace imports, `delete`,
