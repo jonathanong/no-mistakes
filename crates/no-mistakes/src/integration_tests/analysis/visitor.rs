@@ -1,7 +1,6 @@
-use super::{binding_name, calls, module_export_name, AnalysisCollector};
+use super::{calls, AnalysisCollector};
 use oxc_ast::ast::Statement;
 use oxc_ast_visit::{walk, Visit};
-use oxc_span::GetSpan;
 
 impl<'a> Visit<'a> for AnalysisCollector<'a, '_> {
     fn visit_import_declaration(&mut self, import: &oxc_ast::ast::ImportDeclaration<'a>) {
@@ -16,44 +15,7 @@ impl<'a> Visit<'a> for AnalysisCollector<'a, '_> {
     fn visit_statement(&mut self, statement: &Statement<'a>) {
         record_discovery_visit!();
         if self.statement_depth == 0 {
-            match statement {
-                Statement::FunctionDeclaration(function) => {
-                    if let Some(id) = &function.id {
-                        self.collect_function(
-                            id.name.as_str(),
-                            function.span(),
-                            calls::collect_function_calls(function),
-                        );
-                    }
-                }
-                Statement::VariableDeclaration(declaration) => {
-                    for declarator in &declaration.declarations {
-                        let Some(name) = binding_name(&declarator.id) else {
-                            continue;
-                        };
-                        self.collect_init_function(name, declarator.init.as_ref());
-                    }
-                }
-                Statement::ExportNamedDeclaration(export) => {
-                    for specifier in &export.specifiers {
-                        self.result.exports.insert(
-                            module_export_name(&specifier.exported),
-                            module_export_name(&specifier.local),
-                        );
-                    }
-                }
-                Statement::ExportDeclaration(export) => {
-                    self.collect_export_declaration(&export.declaration);
-                }
-                Statement::ExportDefaultDeclaration(export) => self.collect_default_export(export),
-                _ => {}
-            }
-        }
-        if !self.collect_tests {
-            if let Statement::ImportDeclaration(import) = statement {
-                self.visit_import_declaration(import);
-            }
-            return;
+            self.collect_statement_summary(statement);
         }
         self.statement_depth += 1;
         walk::walk_statement(self, statement);

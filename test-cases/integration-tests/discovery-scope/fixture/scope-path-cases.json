@@ -85,5 +85,56 @@
       "helpers/bridge.ts"
     ],
     "normalizations": 3
+  },
+  {
+    "name": "inventory OS order is canonical despite component inversion",
+    "paths": [
+      "path-order/foo-bar.ts",
+      "path-order/foo/bar.ts"
+    ],
+    "rooted": true,
+    "config": "all-files.yml",
+    "members": null,
+    "normalizations": 0,
+    "windows_normalizations": 2
+  },
+  {
+    "name": "OS sorted dot aliases retain cardinality",
+    "paths": [
+      "helpers/./bridge.ts",
+      "helpers/bridge.ts"
+    ],
+    "rooted": true,
+    "config": "all-files.yml",
+    "members": [
+      "helpers/bridge.ts"
+    ],
+    "normalizations": 2
+  },
+  {
+    "name": "OS sorted repeated separators retain cardinality",
+    "paths": [
+      "helpers//bridge.ts",
+      "helpers/bridge.ts"
+    ],
+    "rooted": true,
+    "config": "all-files.yml",
+    "members": [
+      "helpers/bridge.ts"
+    ],
+    "normalizations": 2
+  },
+  {
+    "name": "trailing separator aliases retain cardinality",
+    "paths": [
+      "helpers/bridge.ts",
+      "helpers/bridge.ts/"
+    ],
+    "rooted": true,
+    "config": "all-files.yml",
+    "members": [
+      "helpers/bridge.ts"
+    ],
+    "normalizations": 2
   }
 ]

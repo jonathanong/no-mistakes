@@ -2,7 +2,7 @@ use super::calls;
 use super::types::{CallTarget, FileAnalysis, FunctionInfo, FunctionKey, TestCase};
 use crate::ast;
 use anyhow::{Context, Result};
-use oxc_ast::ast::{BindingPattern, ModuleExportName, Program};
+use oxc_ast::ast::{BindingPattern, ModuleExportName, Program, Statement};
 use oxc_ast_visit::Visit;
 use oxc_span::Span;
 use std::collections::BTreeMap;
@@ -11,6 +11,10 @@ use std::path::{Path, PathBuf};
 mod analysis_helpers;
 #[cfg(not(test))]
 macro_rules! record_discovery_visit {
+    () => {};
+}
+#[cfg(not(test))]
+macro_rules! record_discovery_mode_decision {
     () => {};
 }
 #[cfg(test)]
@@ -49,7 +53,6 @@ pub(crate) fn analyze_program_with_test_discovery(
     source: &str,
     collect_tests: bool,
 ) -> FileAnalysis {
-    let collect_tests = collect_tests || source_may_contain_nested_imports(source);
     let mut collector = AnalysisCollector {
         path,
         source,
@@ -57,9 +60,19 @@ pub(crate) fn analyze_program_with_test_discovery(
         describe_stack: Vec::new(),
         statement_depth: 0,
         test_counter: 0,
-        collect_tests,
     };
-    collector.visit_program(program);
+    record_discovery_mode_decision!();
+    if collect_tests || source_may_contain_nested_imports(source) {
+        collector.visit_program(program);
+        return collector.result;
+    }
+    for statement in &program.body {
+        record_discovery_visit!();
+        collector.collect_statement_summary(statement);
+        if let Statement::ImportDeclaration(import) = statement {
+            collector.visit_import_declaration(import);
+        }
+    }
     // Synthetic test functions share the historical helper namespace. Keep
     // discovery for nested import containers and helpers that can reference or
     // collide with __test_N.
@@ -111,7 +124,6 @@ struct AnalysisCollector<'a, 'p> {
     describe_stack: Vec<String>,
     statement_depth: usize,
     test_counter: usize,
-    collect_tests: bool,
 }
 
 impl AnalysisCollector<'_, '_> {

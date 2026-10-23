@@ -30,11 +30,13 @@ fn scope(root: &Path, files: &[PathBuf], config: &str) -> (FamilyPathScope, usiz
 #[test]
 fn all_match_avoids_owned_normalizations_and_middle_exclusion_retains_prefix_and_tail() {
     let root = fixture();
-    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let discovered = crate::codebase::ts_source::discover_files(&root, &[]);
+    let inventory = crate::codebase::ts_source::FileInventory::from_paths(&discovered);
+    let files = inventory.paths();
     let (all, count) = scope(&root, &files, "all-files.yml");
     assert_eq!(all, FamilyPathScope::All);
     // Prefixes conservatively use the existing lexical-cardinality fallback.
-    assert_eq!(count, if cfg!(windows) { files.len() } else { 0 });
+    assert_eq!(count, if cfg!(unix) { 0 } else { files.len() });
     let excluded = root.join("helpers/dependency.ts");
     let index = files.iter().position(|path| path == &excluded).unwrap();
     assert!(index > 0 && index + 1 < files.len());
@@ -60,6 +62,7 @@ struct Case {
     config: String,
     members: Option<Vec<PathBuf>>,
     normalizations: usize,
+    windows_normalizations: Option<usize>,
 }
 
 fn assert_cases(name: &str) {
@@ -70,7 +73,12 @@ fn assert_cases(name: &str) {
         let rooted = |path: PathBuf| if case.rooted { root.join(path) } else { path };
         let files = case.paths.into_iter().map(rooted).collect::<Vec<_>>();
         let (selected, count) = scope(&root, &files, &case.config);
-        assert_eq!(count, case.normalizations, "{}", case.name);
+        let expected_count = if cfg!(windows) {
+            case.windows_normalizations.unwrap_or(case.normalizations)
+        } else {
+            case.normalizations
+        };
+        assert_eq!(count, expected_count, "{}", case.name);
         match case.members {
             Some(members) => {
                 let FamilyPathScope::Only(paths) = selected else {

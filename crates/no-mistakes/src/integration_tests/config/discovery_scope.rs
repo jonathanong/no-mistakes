@@ -54,13 +54,8 @@ pub(crate) fn test_discovery_scope(
     let mut canonical_unique = true;
     let first_excluded = files.iter().enumerate().position(|(index, path)| {
         if canonical_unique {
-            canonical_unique = (index == 0 || files[index - 1].as_path() < path.as_path())
-                && path.components().all(|component| {
-                    !matches!(
-                        component,
-                        Component::CurDir | Component::ParentDir | Component::Prefix(_)
-                    )
-                });
+            canonical_unique = (index == 0 || files[index - 1].as_os_str() < path.as_os_str())
+                && has_canonical_bytes(path);
         }
         !selected(path)
     });
@@ -88,4 +83,31 @@ pub(crate) fn test_discovery_scope(
 fn normalize_selected(path: &Path) -> PathBuf {
     record_scope_normalization!();
     crate::codebase::ts_resolver::normalize_path(path)
+}
+
+// Inventory order is OsStr byte order, not Path's component order. On Unix,
+// dot-free components with the minimal byte length have exactly the spelling
+// normalize_path writes; the length check rejects repeated/trailing separators
+// and interior dots that components() itself skips. Keep platform-prefix and
+// non-Unix push semantics on the existing fallback.
+fn has_canonical_bytes(path: &Path) -> bool {
+    if !cfg!(unix) {
+        return false;
+    }
+    let mut normalized_len = 0;
+    let mut needs_separator = false;
+    for component in path.components() {
+        match component {
+            Component::RootDir => {
+                normalized_len += 1;
+                needs_separator = false;
+            }
+            Component::Normal(value) => {
+                normalized_len += value.len() + usize::from(needs_separator);
+                needs_separator = true;
+            }
+            _ => return false,
+        }
+    }
+    normalized_len == path.as_os_str().len()
 }

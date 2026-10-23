@@ -1,10 +1,19 @@
 thread_local! {
+    pub(super) static MODE_DECISIONS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
     pub(super) static DISCOVERY_VISITS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
 }
 
 macro_rules! record_discovery_visit {
     () => {
-        super::tests::DISCOVERY_VISITS.with(|count| count.set(count.get() + 1))
+        $crate::integration_tests::analysis::tests::DISCOVERY_VISITS
+            .with(|count| count.set(count.get() + 1))
+    };
+}
+
+macro_rules! record_discovery_mode_decision {
+    () => {
+        $crate::integration_tests::analysis::tests::MODE_DECISIONS
+            .with(|count| count.set(count.get() + 1));
     };
 }
 
@@ -279,6 +288,31 @@ fn nested_import_prefilter_has_conservative_keyword_boundaries() {
             super::source_may_contain_nested_imports(candidate),
             expected == "true",
             "{candidate}"
+        );
+    }
+}
+
+#[test]
+fn discovery_strategy_is_decided_once_per_file_instead_of_per_statement() {
+    let root = fixture();
+    for (relative, full, expected) in [
+        ("excluded/dense.ts", true, 1),
+        ("helpers/dependency.ts", false, 1),
+        // Synthetic-name compatibility intentionally restarts in full mode.
+        ("helpers/collision-before.ts", false, 2),
+        ("helpers/ambient.ts", false, 1),
+    ] {
+        let path = root.join(relative);
+        let source = std::fs::read_to_string(&path).unwrap();
+        MODE_DECISIONS.with(|count| count.set(0));
+        crate::ast::with_program(&path, &source, |program, source| {
+            super::analyze_program_with_test_discovery(&path, program, source, full)
+        })
+        .unwrap();
+        assert_eq!(
+            MODE_DECISIONS.with(std::cell::Cell::get),
+            expected,
+            "actual strategy predicate evaluations: {relative}"
         );
     }
 }
