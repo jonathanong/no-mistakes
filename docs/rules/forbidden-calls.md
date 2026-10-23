@@ -249,3 +249,7 @@ and bounded depth and projection/reference work. Exhaustion produces unknown.
 Argument facts are requested only when a target declares these predicates and
 share the existing request's source inventory and parse. Target-only checks do
 not collect argument summaries.
+
+Argument evidence is collected only for files accepted by applications with
+`whenArguments`, using the same project, include, and exclude filters as findings.
+Other call graph consumers retain their requested facts.

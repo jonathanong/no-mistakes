@@ -12,6 +12,9 @@ pub struct CheckFactPlan {
     /// Exact call-source demand; broad `graph.call_sites` remains independent.
     #[doc(hidden)]
     pub call_site_paths: Arc<std::collections::BTreeSet<PathBuf>>,
+    #[doc(hidden)]
+    pub forbidden_call_arguments:
+        Option<Arc<crate::codebase::rules::forbidden_calls::ArgumentFactScope>>,
     /// Explicit production-rule sources, including metadata and unknown extensions.
     /// Their import projection preserves the historical TypeScript/TSX parse mode.
     #[doc(hidden)]
@@ -102,6 +105,11 @@ pub struct CheckFactPlan {
 }
 impl CheckFactPlan {
     pub(crate) fn include(&mut self, other: Self) {
+        self.forbidden_call_arguments =
+            crate::codebase::rules::forbidden_calls::ArgumentFactScope::merge(
+                self.forbidden_call_arguments.as_ref(),
+                other.forbidden_call_arguments.as_ref(),
+            );
         self.merge_head_calls_only(&other);
         self.merge_location_demand(&other);
         super::family_scope::include_scopes(self, &other);
