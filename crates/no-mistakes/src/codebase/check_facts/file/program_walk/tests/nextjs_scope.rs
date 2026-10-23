@@ -49,10 +49,16 @@ use std::cell::Cell;
 thread_local! {
     static COUNTS: Cell<(usize, usize)> = const { Cell::new((0, 0)) };
 }
-pub(crate) fn record_work(nextjs_enabled: bool) {
+pub(crate) fn record_nextjs() {
     COUNTS.with(|counts| {
         let (nextjs, walks) = counts.get();
-        counts.set((nextjs + usize::from(nextjs_enabled), walks + 1));
+        counts.set((nextjs + 1, walks));
+    });
+}
+pub(crate) fn record_walk() {
+    COUNTS.with(|counts| {
+        let (nextjs, walks) = counts.get();
+        counts.set((nextjs, walks + 1));
     });
 }
 pub(super) fn take_work_counts() -> (usize, usize) {

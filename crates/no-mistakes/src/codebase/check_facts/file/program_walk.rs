@@ -1,5 +1,4 @@
-use super::super::CheckFactPlan;
-use crate::codebase::check_facts::family_scope::applies;
+use super::super::{family_scope::applies, CheckFactPlan};
 use crate::codebase::rules::nextjs_no_caching::{
     finish_visitor, prepare_visitor, NextjsCachingFinding, NextjsCachingVisitor,
 };
@@ -21,7 +20,7 @@ mod scopes;
 
 #[cfg(not(test))]
 macro_rules! record_fused_work {
-    ($nextjs:expr) => {};
+    ($kind:ident) => {};
 }
 
 #[cfg(test)]
@@ -56,13 +55,17 @@ pub(super) fn collect_fused_check_program(
         dynamic: plan
             .dynamic_imports
             .then(|| Collector::new(source, program)),
-        nextjs: nextjs_caching.then(|| prepare_visitor(path, source, program)),
+        nextjs: nextjs_caching.then(|| {
+            record_fused_work!(nextjs);
+            prepare_visitor(path, source, program)
+        }),
         nextjs_low: nextjs_caching_low.then(|| {
+            record_fused_work!(nextjs);
             crate::codebase::rules::nextjs_no_caching::low::Collector::new(path, source, program)
         }),
         storybook_ids: storybook.then(HashSet::new),
     };
-    record_fused_work!(nextjs_caching);
+    record_fused_work!(walk);
     visitor.visit_program(program);
     FusedCheckFacts {
         dynamic_imports: visitor.dynamic.map(Collector::into_facts),

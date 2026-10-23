@@ -4,7 +4,12 @@ use crate::codebase::check_facts::CheckFactPlan;
 use std::path::Path;
 
 macro_rules! record_fused_work {
-    ($nextjs:expr) => { tests::record_work($nextjs) };
+    (nextjs) => {
+        tests::record_nextjs()
+    };
+    (walk) => {
+        tests::record_walk()
+    };
 }
 
 fn fused(source: &str, plan: &CheckFactPlan) -> super::FusedCheckFacts {
@@ -194,4 +199,4 @@ fn fused_nextjs_scopes_preserve_other_fact_families() {
 }
 
 mod nextjs_scope;
-pub(super) use nextjs_scope::record_work;
+pub(super) use nextjs_scope::{record_nextjs, record_walk};
