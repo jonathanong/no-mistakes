@@ -160,3 +160,4 @@ fn shared_analysis_options_are_sanitized_but_unknown_rule_options_still_fail() {
 }
 
 mod argv;
+mod boundary;
