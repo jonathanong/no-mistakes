@@ -192,3 +192,103 @@ fn unresolved_delegates_respect_entry_config_suppressions_in_both_channels() {
         }
     }
 }
+
+#[test]
+fn resolved_delegate_read_and_parse_errors_follow_policy_at_both_efforts() {
+    for (fixture, error) in [
+        ("fail-delegate-read", "utf-8"),
+        ("fail-delegate-parse", "failed to parse"),
+    ] {
+        for effort in ["low", "max"] {
+            for policy in ["report", "advise", "ignore"] {
+                let (findings, advisories) = run_prepared(
+                    fixture,
+                    &format!("{{ effort: {effort}, unanalyzable: {policy} }}"),
+                );
+                assert_eq!(
+                    findings.len(),
+                    usize::from(policy == "report"),
+                    "{fixture} {effort} {policy}: {findings:?}"
+                );
+                assert_eq!(
+                    advisories.len(),
+                    usize::from(policy == "advise"),
+                    "{fixture} {effort} {policy}: {advisories:?}"
+                );
+                for finding in findings.iter().chain(&advisories) {
+                    assert_eq!(finding.file, "next.config.ts");
+                    assert_eq!(finding.line, 1);
+                    assert!(finding.message.contains("next.config.ts"));
+                    assert!(finding.message.contains("next-shared.ts"));
+                    assert!(finding.message.contains("extraction is incomplete"));
+                    assert!(finding.message.contains(error), "{finding:?}");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn resolved_delegate_errors_obey_entry_config_suppressions() {
+    for name in [
+        "delegate-read-disabled",
+        "delegate-parse-next-line",
+        "delegate-parse-line",
+        "delegate-parse-helper-disabled",
+    ] {
+        for effort in ["low", "max"] {
+            for policy in ["report", "advise", "ignore"] {
+                let root = fixture(name);
+                let files = fixture_files(&root);
+                let sources = crate::codebase::rules::source_store_for_files(&files);
+                let mut config = config(&format!("{{ effort: {effort}, unanalyzable: {policy} }}"));
+                crate::codebase::rules::analysis_policy::prepare_rule_analysis(
+                    &root,
+                    &mut config,
+                    &files,
+                    &sources,
+                )
+                .unwrap();
+                let diagnostics = diagnostics_with_files_and_sources(
+                    &root, &config, &files, &sources, None, false,
+                )
+                .unwrap();
+                let (findings, advisories) = (diagnostics.findings, diagnostics.advisories);
+                assert!(
+                    findings.is_empty(),
+                    "{name} {effort} {policy}: {findings:?}"
+                );
+                assert!(
+                    advisories.is_empty(),
+                    "{name} {effort} {policy}: {advisories:?}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn catchall_paths_bare_reexport_keeps_recall_first_unresolved_finding() {
+    let baseline = run("limit-catchall-paths", "{}");
+    assert_eq!(baseline.len(), 1, "{baseline:?}");
+    assert_eq!(baseline[0].file, "next.config.ts");
+    assert!(baseline[0].message.contains("specifier 'some-pkg'"));
+    assert!(baseline[0].message.contains("could not be resolved"));
+}
+
+#[test]
+fn relative_target_outside_scanned_file_set_reports_incomplete_extraction() {
+    let root = fixture("limit-outside-scanned");
+    let mut files = fixture_files(&root);
+    assert!(run("limit-outside-scanned", "{}").is_empty());
+    // The helper exists on disk but is outside the declared scanned file set.
+    files.retain(|path| {
+        path.file_name()
+            .is_some_and(|name| name != "next-shared.ts")
+    });
+    let findings = super::super::check_with_files(&root, &config("{}"), &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "next.config.ts");
+    assert!(findings[0].message.contains("specifier './next-shared'"));
+    assert!(findings[0].message.contains("could not be resolved"));
+}

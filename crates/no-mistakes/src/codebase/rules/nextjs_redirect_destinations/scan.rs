@@ -62,7 +62,8 @@ fn scan_target(
     let app_root_label = display_app_root(opts.app_root.as_deref());
     let rel = relative_slash_path(root, &config_path);
     let extracted =
-        super::delegate::analyze_config(&config_path, &source, analysis.effort == Effort::Low);
+        super::delegate::analyze_config(&config_path, &source, analysis.effort == Effort::Low)
+            .unwrap_or_default();
     let mut diagnostics = check_named_section(NamedCheck {
         rel: &rel,
         source: &source,

@@ -17,7 +17,11 @@ pub(super) struct ConfigAnalysis {
     pub(super) specifier: Option<(String, usize)>,
 }
 
-pub(super) fn analyze_config(path: &Path, source: &str, low: bool) -> ConfigAnalysis {
+pub(super) fn analyze_config(
+    path: &Path,
+    source: &str,
+    low: bool,
+) -> anyhow::Result<ConfigAnalysis> {
     crate::ast::with_program(path, source, |program, source| ConfigAnalysis {
         redirects: extract_named_destinations_from_program(program, source, "redirects", low),
         rewrites: extract_named_destinations_from_program(program, source, "rewrites", low),
@@ -28,7 +32,6 @@ pub(super) fn analyze_config(path: &Path, source: &str, low: bool) -> ConfigAnal
             )
         }),
     })
-    .unwrap_or_default()
 }
 
 pub(super) struct DelegateRequest<'a> {
@@ -86,18 +89,26 @@ pub(super) fn append_delegated(request: &DelegateRequest<'_>) -> AnalysisDiagnos
         }
         return diagnostics;
     };
-    let Some(delegated_source) = super::super::read_source(request.sources, &delegated) else {
-        return diagnostics;
+    let delegated_source = match request.sources.read_path(&delegated) {
+        Ok(source) => source,
+        Err(error) => {
+            return delegation_error(request, line, &delegated, "read", &error.to_string())
+        }
     };
     if has_disable_file_comment(&delegated_source, RULE_ID) {
         return diagnostics;
     }
     let rel = relative_slash_path(request.root, &delegated);
-    let analysis = analyze_config(
+    let analysis = match analyze_config(
         &delegated,
         &delegated_source,
         request.analysis.effort == Effort::Low,
-    );
+    ) {
+        Ok(analysis) => analysis,
+        Err(error) => {
+            return delegation_error(request, line, &delegated, "parsed", &error.to_string())
+        }
+    };
     for (follow, name, kind, extracted) in [
         (
             follow_redirects,
@@ -120,5 +131,26 @@ pub(super) fn append_delegated(request: &DelegateRequest<'_>) -> AnalysisDiagnos
             }));
         }
     }
+    diagnostics
+}
+
+fn delegation_error(
+    request: &DelegateRequest<'_>,
+    line: usize,
+    delegated: &Path,
+    operation: &str,
+    error: &str,
+) -> AnalysisDiagnostics {
+    let config = relative_slash_path(request.root, request.config_path);
+    let target = relative_slash_path(request.root, delegated);
+    let finding = finding(
+        &config,
+        line,
+        format!(
+            "{config}: nextjs-redirect-destinations extraction is incomplete: delegated config '{target}' could not be {operation}: {error}; restore a readable, valid module so redirect and rewrite destinations can be checked."
+        ),
+    );
+    let mut diagnostics = AnalysisDiagnostics::default();
+    diagnostics.unanalyzable(request.analysis.unanalyzable, finding);
     diagnostics
 }

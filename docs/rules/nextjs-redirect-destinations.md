@@ -240,9 +240,24 @@ A relative specifier or matching TypeScript `paths` mapping whose local target
 cannot be resolved reports incomplete extraction at the entry config, naming
 the unresolved specifier. Restore the module or correct the specifier/mapping;
 a failed `paths` mapping does not fall back to `baseUrl` or a less-specific
-mapping. This prevents unavailable delegated configs from silently hiding stale
-destinations. At `effort: low`, this uncertainty uses `unanalyzable: report`,
+mapping. A relative specifier that resolves outside the scanned file set is
+also reported; include the delegated file in the rule's scope to check it.
+A catch-all TypeScript `paths` entry such as `"*": ["./vendor/*"]` also makes
+bare default re-exports eligible for one-hop lookup. When its mapped file is
+absent, the rule reports incomplete extraction even if the bare specifier
+would be a package import at runtime. This favors recall; remove the catch-all
+mapping or narrow its pattern if the report is unwanted.
+
+This prevents unavailable delegated configs from silently hiding stale
+destinations. At `effort: low`, an unresolved target uses `unanalyzable: report`,
 `advise`, or `ignore`; at `effort: max`, it remains a finding under every policy.
 Entry-config `no-mistakes-disable-file`, `no-mistakes-disable-line`, and
 `no-mistakes-disable-next-line` directives suppress it in either diagnostic
 channel. Resolved helpers retain their own finding locations and suppressions.
+
+If a resolved delegated file cannot be read or parsed, the entry config instead
+reports the delegated path and the read or parse error at its import or
+re-export line. At both `effort: low` and `effort: max`, `unanalyzable: report`
+fails, `advise` emits an advisory, and `ignore` skips this diagnostic. Restore
+a readable, valid module to check its destinations. The same entry-config
+suppression directives apply.
