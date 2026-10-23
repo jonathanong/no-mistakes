@@ -8,12 +8,35 @@ It complements the ARM CodSpeed benchmarks; it does not replace them.
 
 ## Source selection and builds
 
-Each invocation resolves the candidate from current `main` HEAD and the baseline
-from GitHub's latest stable release tag. Both commits and trees are resolved once
-and carried through the artifacts. A dispatch selects the workflow harness, not
-an alternative candidate or baseline. A pinned analyzer ref or another build of
-`main` is not a release baseline. The release tag may legitimately point to the
-same commit as `main`; provenance must still identify the actual release tag.
+Each scheduled invocation resolves the candidate from current `main` HEAD. A
+manual dispatch does the same by default. An operator can opt into measuring an
+open pull request by setting `candidate-source` to `pull-request`, then providing
+both its `pull-request` number and the exact `expected-head` commit SHA. The
+candidate is accepted only when the pull request is in this repository, targets
+`main`, remains open, and its current head and commit API response both match the
+expected SHA. A fork, moved head, closed pull request, malformed identity, or
+partial input fails before a build starts. Pinning the expected SHA makes a
+rerun reproducible and prevents a changed branch from silently replacing the
+candidate.
+
+For example, run a pinned pull request candidate with:
+
+```sh
+gh workflow run hosted-check.yml --ref your-workflow-branch \
+  -f candidate-source=pull-request \
+  -f pull-request=2585 \
+  -f expected-head=0123456789abcdef0123456789abcdef01234567
+```
+
+`--ref` selects the workflow harness revision. Before this workflow change is
+merged, use the pull request branch there; after it is merged, use `main`. The
+number and SHA select the candidate independently of the harness ref. Scheduled
+runs have no pull request inputs and always measure `main`.
+
+The baseline always comes from GitHub's latest stable release tag. Candidate
+commits and trees are resolved once and carried through the artifacts. The
+release tag may legitimately point to the same commit as `main`; provenance
+must still identify the actual release tag.
 The summary warns when those commits match: that run measures variance and
 absolute budgets, not a version change. GitHub's
 [`releases/latest`](https://docs.github.com/en/rest/releases/releases#get-the-latest-release)
