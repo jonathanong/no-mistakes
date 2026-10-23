@@ -16,9 +16,6 @@ rules:
       statusColumns: [status, state]
       lifecycleVerbs: [sent, failed, paid]
       minLifecycleColumns: 2
-      allow:
-        - object: table:payment_intents
-          reason: status mirrors the payment provider's state machine
 ```
 
 ## Why and when
@@ -67,8 +64,27 @@ A non-empty rule `message` replaces the finding text and keeps the
 `receipts` has `sent_at` and `paid_at` and no status column. `orders` has
 `status` plus `created_at` and `updated_at`, and those verbs are not listed.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY, status text NOT NULL, created_at timestamptz, updated_at timestamptz);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "invoices": {
+      "columns": {
+        "status": {
+          "dataType": "text",
+          "generated": "stored"
+        },
+        "sent_at": {
+          "dataType": "timestamp with time zone"
+        },
+        "paid_at": {
+          "dataType": "timestamp with time zone"
+        }
+      }
+    }
+  }
+}
 ```
 
 
@@ -78,8 +94,26 @@ CREATE TABLE orders (id uuid PRIMARY KEY, status text NOT NULL, created_at times
 `payments` stores `status payment_statuses` next to `paid_at` and
 `payment_failed_at`.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY, status text NOT NULL);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "deliveries": {
+      "columns": {
+        "state": {
+          "dataType": "text"
+        },
+        "sent_at": {
+          "dataType": "timestamp with time zone"
+        },
+        "failed_at": {
+          "dataType": "timestamp with time zone"
+        }
+      }
+    }
+  }
+}
 ```
 
 
@@ -91,6 +125,14 @@ earlier states, record each attempt or change in a history table and read
 the current state from the latest row.
 
 ## Suppression
+
+For an intentional exception, add an entry under the rule's `options.allow`:
+
+```yaml
+allow:
+  - object: table:payment_intents
+    reason: status mirrors the payment provider's state machine
+```
 
 Snapshot JSON cannot carry `no-mistakes-disable` comments. Suppress every
 finding for a table with `allow: [{object, reason}]`, where `object` is

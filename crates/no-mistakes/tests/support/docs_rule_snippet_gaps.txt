@@ -20,15 +20,11 @@ postgres-idempotent-insert.md: Valid example[1] run error:
 postgres-idempotent-insert.md: Counterexample[0] run error:
 postgres-no-generated-column-writes.md: Counterexample[0] expected 
 postgres-no-generated-column-writes.md: Counterexample[1] expected 
-postgres-object-naming.md: Valid example[0] expected 
 postgres-require-query-annotation.md: Counterexample[0] expected 
-postgres-required-comments.md: Valid example[0] expected 
 postgres-required-predicates.md: Valid example[0] run error:
 postgres-required-predicates.md: Counterexample[0] run error:
 postgres-sql-shape-policy.md: Valid example[0] run error:
 postgres-sql-shape-policy.md: Counterexample[0] run error:
-postgres-status-with-lifecycle-timestamps.md: Valid example[0] expected 
-postgres-table-shape.md: Valid example[0] expected 
 query-reached-per-item.md: Valid example[0] run error:
 query-reached-per-item.md: Counterexample[0] run error:
 require-storybook-stories.md: Valid example[0] run error:

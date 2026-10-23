@@ -18,9 +18,6 @@ rules:
       columnNamePatterns: []
       exemptColumnNamePatterns: ['^(id|created_at|updated_at)$', '^vendor_']
       minLength: 10
-      allow:
-        - object: table:schema_migrations
-          reason: Owned by the migration runner
 ```
 
 ## Why and when
@@ -65,9 +62,21 @@ reports nothing for it.
 
 `COMMENT ON TABLE orders IS 'One row per checkout; immutable after payment'`.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY);
-COMMENT ON TABLE orders IS 'One row per checkout; immutable after payment';
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "comment": "One row per checkout; immutable after payment",
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}
 ```
 
 
@@ -77,8 +86,20 @@ COMMENT ON TABLE orders IS 'One row per checkout; immutable after payment';
 shorter than `minLength`. The same applies to a selected column, view, or
 materialized view.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}
 ```
 
 
@@ -90,6 +111,14 @@ Exempt mechanical column names with `exemptColumnNamePatterns` instead of
 writing filler comments.
 
 ## Suppression
+
+For an intentional exception, add an entry under the rule's `options.allow`:
+
+```yaml
+allow:
+  - object: table:schema_migrations
+    reason: Owned by the migration runner
+```
 
 Snapshot JSON cannot carry `no-mistakes-disable` comments. Suppress an object
 with `allow: [{object, reason}]`. `object` is `table:<name>`,

@@ -53,9 +53,6 @@ rules:
         acknowledgement: acknowledgment
       doubleUnderscore:
         allowPattern: "^link__[a-z0-9]+(_[a-z0-9]+)*__[a-z0-9_]+__[a-z0-9_]+$"
-      allow:
-        - object: "table:legacy_cfg_values"
-          reason: "Name owned by an external replication tool"
 ```
 
 Patterns are not anchored for you. Write `^` and `$` when the whole name
@@ -157,17 +154,40 @@ configuration errors.
 `account_people` ends in the irregular plural `people`. `orders_pkey` is
 skipped while `checkConstraintBackedIndexes` stays at its default `false`.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "order_line_items": {
+      "columns": {
+        "order_id": {
+          "dataType": "bigint"
+        }
+      },
+      "indexes": {
+        "idx_ord_line_itms__order_id": {
+          "unique": false
+        }
+      }
+    },
+    "account_people": {}
+  }
+}
 ```
 
 
 ## Counterexample
 
-```text
-schema.json: index:order_line_items.idx_oli__order_id: index name does not match pattern ^idx_{table}__[a-z0-9_]+$ ({table} = order_line_items or an abbreviation such as ordr_lin_itms)
-schema.json: table:invoice_line: table name must end in a plural word; "line" is singular
-schema.json: table:app_cfg_values: name uses denied token "cfg"; use "configuration"
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "invoice_line": {},
+    "app_cfg_values": {}
+  }
+}
 ```
 
 ## Fix
@@ -178,6 +198,14 @@ denied token or misspelling, and add words until `tableMinWords` is met.
 Reserve `__` for names that match `allowPattern`.
 
 ## Suppression
+
+For an intentional exception, add an entry under the rule's `options.allow`:
+
+```yaml
+allow:
+  - object: "table:legacy_cfg_values"
+    reason: "Name owned by an external replication tool"
+```
 
 Snapshot findings have no source comments. Suppress one object with `allow`:
 
