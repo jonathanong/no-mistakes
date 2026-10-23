@@ -21,7 +21,7 @@ fn finite_set_call_sources_skip_unrelated_walks_without_changing_findings() {
     // Plain TS shares the historical import projection's physical parse mode.
     config.rules[0].options["sets"][0]["file"] = serde_yaml::Value::String("schedules.ts".into());
     let requested = try_required_call_site_fact_files(&root, &config).unwrap();
-    assert_eq!(requested, [call.clone()]);
+    assert_eq!(requested.as_slice(), std::slice::from_ref(&call));
     let collect = |broad| {
         let observer = crate::diagnostics::InvocationObserver::new(true);
         let session = AnalysisSession::new(Some(observer.clone()));
