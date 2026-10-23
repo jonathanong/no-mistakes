@@ -57,6 +57,7 @@ pub(super) fn unanalyzable(
     rule: &str,
     policy: Option<Unanalyzable>,
     skip_html_ids: bool,
+    html_ids_only: bool,
 ) {
     let Some(policy) = policy else {
         return;
@@ -68,6 +69,14 @@ pub(super) fn unanalyzable(
         if skip_html_ids && selector.attribute == HTML_ID_ATTRIBUTE {
             continue;
         }
+        if html_ids_only && selector.attribute != HTML_ID_ATTRIBUTE {
+            continue;
+        }
+        let rewrite = if html_ids_only {
+            crate::playwright::rules::effort::HTML_ID_REWRITE
+        } else {
+            crate::playwright::rules::effort::REWRITE
+        };
         diagnostics.unanalyzable(
             policy,
             RuleFinding {
@@ -76,9 +85,7 @@ pub(super) fn unanalyzable(
                 line: selector.line,
                 message: format!(
                     "selector [{}=\"{}\"] is unanalyzable at effort low; {}",
-                    selector.attribute,
-                    selector.value,
-                    crate::playwright::rules::effort::REWRITE
+                    selector.attribute, selector.value, rewrite
                 ),
                 import: None,
                 target: Some(format!("{}={}", selector.attribute, selector.value)),

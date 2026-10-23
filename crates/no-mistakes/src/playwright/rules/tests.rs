@@ -98,6 +98,31 @@ fn html_id_uniqueness_does_not_enable_coverage_in_standalone_checks() {
 }
 
 #[test]
+fn low_html_id_uniqueness_keeps_literal_findings_when_coverage_html_ids_are_disabled() {
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/playwright/html-id-rule-composition/html-disabled-duplicate");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let mut config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let default = check(&root, None, &config).unwrap();
+    assert!(default.iter().any(|finding| {
+        finding.rule == PLAYWRIGHT_UNIQUE_HTML_IDS
+            && finding.target.as_deref() == Some("id=duplicate-disabled")
+    }));
+
+    let html_rule = config
+        .rules
+        .iter_mut()
+        .find(|rule| rule.rule == PLAYWRIGHT_UNIQUE_HTML_IDS)
+        .unwrap();
+    html_rule.resolved_analysis = Some(crate::config::v2::EffectiveRuleAnalysis {
+        effort: crate::config::v2::Effort::Low,
+        unanalyzable: crate::config::v2::Unanalyzable::Report,
+    });
+    assert_eq!(check(&root, None, &config).unwrap(), default);
+}
+
+#[test]
 fn html_id_uniqueness_on_one_target_does_not_widen_another_targets_coverage() {
     let findings = html_id_rule_composition_findings("multi-project-isolation");
 

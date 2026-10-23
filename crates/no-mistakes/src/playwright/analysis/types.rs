@@ -194,6 +194,8 @@ pub(crate) struct UniqueSelectorPolicy {
     pub(crate) configured_html_id_selector: bool,
     /// Skip recovered Exact values when judging unique test IDs.
     pub(crate) literal_test_ids_only: bool,
+    /// HTML-ID effort is independent of configured test-ID effort.
+    pub(crate) literal_html_ids_only: bool,
 }
 
 pub(crate) type FetchIndex =

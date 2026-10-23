@@ -10,6 +10,7 @@ use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
 use std::sync::Arc;
 
 mod coverage_effort;
+mod html_effort;
 mod unique_effort;
 
 fn coverage_all(enabled: bool) -> CoverageFindingOptions {

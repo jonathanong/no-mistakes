@@ -205,3 +205,54 @@ fn literal_test_ids_only_skips_recovered_exact_values() {
     );
     assert_eq!(recovered.len(), 2);
 }
+
+#[test]
+fn html_id_and_test_id_literal_policies_are_independent() {
+    let root = Path::new("/repo");
+    let app_selectors: Vec<_> = ["id", "data-testid"]
+        .into_iter()
+        .flat_map(|attribute| {
+            (0..3).map(move |index| selectors::AppSelector {
+                file: PathBuf::from(format!("/repo/web/app/{attribute}-{index}.tsx")),
+                attribute: attribute.to_string(),
+                value: AppSelectorValue::Exact("same".to_string()),
+                line: 1,
+                recovered: index == 2,
+            })
+        })
+        .collect();
+
+    // A max consumer can retain recovered facts while the other rule is low.
+    for (html_low, test_low, html_count, test_count) in [
+        (false, false, 3, 3),
+        (true, false, 2, 3),
+        (false, true, 3, 2),
+        (true, true, 2, 2),
+    ] {
+        let duplicates = build_duplicate_selectors(
+            root,
+            &app_selectors,
+            UniqueSelectorPolicy {
+                test_ids: true,
+                html_ids: true,
+                literal_test_ids_only: test_low,
+                literal_html_ids_only: html_low,
+                ..UniqueSelectorPolicy::default()
+            },
+        );
+        for (attribute, expected) in [("id", html_count), ("data-testid", test_count)] {
+            let actual: Vec<_> = duplicates
+                .iter()
+                .filter(|selector| selector.attribute == attribute)
+                .collect();
+            assert_eq!(actual.len(), expected, "{html_low} {test_low} {attribute}");
+            assert_eq!(
+                actual
+                    .iter()
+                    .any(|selector| selector.file.ends_with("-2.tsx")),
+                expected == 3,
+                "{html_low} {test_low} {attribute}",
+            );
+        }
+    }
+}

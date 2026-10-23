@@ -47,11 +47,13 @@ pub fn check(
             allow_skipped_tests: false,
         };
         let unique_ids = effort::unique_test_ids_policy(config)?;
+        let html_ids = effort::unique_html_ids_policy(config)?;
         let coverage_effort = effort::coverage_policy(config)?;
         let unique_policy = unique_policy(
             selection.unique_test_ids,
             selection.unique_html_ids,
             unique_ids.low,
+            html_ids.low,
         );
         let analysis = if selection.coverage {
             analyze_with_policy_from_snapshot(
@@ -82,6 +84,7 @@ pub fn check(
             },
             crate::playwright::rule_findings::LowEffortFindings {
                 unique_test_ids: unique_ids.low.then_some(unique_ids.unanalyzable),
+                unique_html_ids: html_ids.low.then_some(html_ids.unanalyzable),
                 coverage: coverage_effort.low.then_some(coverage_effort.unanalyzable),
             },
         );
