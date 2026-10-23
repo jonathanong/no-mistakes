@@ -2,19 +2,9 @@ use std::path::{Path, PathBuf};
 
 use tempfile::TempDir;
 
-const SKIP_OPEN_PRS: &[&str] = &[
-    // Open PR #2425 owns these check-rule implementations.
-    "postgres-no-mutable-sql-registry",
-    "postgres-no-unbounded-sql-identifier",
-];
-
 pub struct RulePage {
     pub file: String,
     pub body: String,
-}
-
-pub fn skip_open_pr(rule_id: &str) -> bool {
-    SKIP_OPEN_PRS.contains(&rule_id)
 }
 
 pub fn labeled_section(body: &str, labels: &[&str]) -> String {

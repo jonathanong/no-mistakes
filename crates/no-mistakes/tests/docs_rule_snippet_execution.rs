@@ -70,9 +70,6 @@ fn rule_docs_execute_valid_and_counterexample_snippets() {
     let root = repo_root();
     let mut failures = Vec::new();
     for rule_id in rule_ids_from_source(&root) {
-        if docs_rule_snippets::skip_open_pr(&rule_id) {
-            continue;
-        }
         let page = docs_rule_snippets::load_page(&root, &rule_id);
         let mut valid = docs_rule_snippets::heading_section(&page.body, "Valid example");
         if docs_rule_snippets::fences(&valid).is_empty() {
