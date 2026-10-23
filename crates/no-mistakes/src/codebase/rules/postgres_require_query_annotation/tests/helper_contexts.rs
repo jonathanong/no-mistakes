@@ -73,9 +73,9 @@ fn executor_free_root_still_reports_imported_executor_through_cyclic_reexports()
 
 #[test]
 fn repeated_conditional_builder_updates_keep_explored_missing_annotations() {
-    for (name, line) in [
-        ("helper-tracing-joined-binding-valid", Some(7)),
-        ("helper-tracing-joined-binding", None),
+    for name in [
+        "helper-tracing-joined-binding-valid",
+        "helper-tracing-joined-binding",
     ] {
         let root = fixture(name);
         let files = crate::codebase::ts_source::discover_visible_paths(&root);
@@ -84,20 +84,12 @@ fn repeated_conditional_builder_updates_keep_explored_missing_annotations() {
                 "importSpecifier: '@app/db'\ninclude: ['src/query.mts']\nunanalyzableSql: {policy}"
             ));
             let findings = check_with_files(&root, &config, &files).unwrap();
-            // The original fixture concatenates SELECT statements without
-            // separators; invalid variants advise instead of failing the rule.
-            // Its unexplored residual still follows the explicit unknown policy.
-            let expected_line = line.or((policy == "report").then_some(15));
-            assert_eq!(
-                findings.len(),
-                usize::from(expected_line.is_some()),
-                "{name}/{policy}: {findings:#?}"
-            );
-            if let Some(expected) = expected_line {
-                assert_eq!(findings[0].file, "src/query.mts");
-                assert_eq!(findings[0].line, expected);
-                assert_eq!(findings[0].message.contains("unanalyzable"), line.is_none());
-            }
+            // Invalid concatenated SQL cannot erase a complete missing-head
+            // proof. Both fixtures retain that finding despite the open residual.
+            assert_eq!(findings.len(), 1, "{name}/{policy}: {findings:#?}");
+            assert_eq!(findings[0].file, "src/query.mts");
+            assert_eq!(findings[0].line, 7);
+            assert!(findings[0].message.contains("query execution must start"));
         }
     }
 }
