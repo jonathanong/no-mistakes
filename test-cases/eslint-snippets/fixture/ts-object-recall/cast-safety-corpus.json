@@ -1,6 +1,9 @@
 [
 {"name": "named-callee-identity", "code": "import * as db from './api'; type Handler = typeof db.createUser; const g = i => (db.createUser as Handler)(i);", "expected": 1},
 {"name": "named-output-identity", "code": "type Output = string; export function createUser(i) : string { return i; } const g = i => (createUser(i) as Output);", "expected": 1},
+{"name": "bare-imported-typeof", "code": "import {g} from './api'; const alias = i => (g as typeof g)(i);", "expected": 1},
+{"name": "bare-exported-typeof", "code": "export function lf(i) { return i; } const alias = i => (lf as typeof lf)(i);", "expected": 1},
+{"name": "bare-exported-result-cast", "code": "export function lf(i): string { return i; } const alias = i => lf(i) as string;", "expected": 1},
 {"name": "private-callee-even-identity", "code": "const db = {createUser(i){ return i; }}; type Handler = typeof db.createUser; const g = i => (db.createUser as Handler)(i);", "expected": 0},
 {"name": "regex-even-identity", "code": "const pattern = /a/; const g = i => (pattern.test as typeof pattern.test)(i);", "expected": 0},
 {"name": "regex-literal", "code": "type Handler = (i:string)=>boolean; const g = i => (/a/.test as Handler)(i);", "expected": 0},

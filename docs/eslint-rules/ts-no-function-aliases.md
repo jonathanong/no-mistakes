@@ -2,11 +2,11 @@
 
 ## Why
 
-An extra forwarding name obscures the original callable. For a bare identifier
-callee, the rule preserves the exact v0.95.0 syntax-based decision. Member and
-forwarding forms added in #2516 require stronger static rewrite proof. Private
-receivers and runtime receiver expressions cannot be replaced by calling a
-public original.
+An extra forwarding name obscures the original callable. For a bare-identifier
+call with no cast on its callee or result, the rule preserves the v0.95.0
+syntax-based decision. Member and forwarding forms added in #2516 require
+stronger static rewrite proof. Private receivers and runtime receiver
+expressions cannot be replaced by calling a public original.
 
 ## Disallowed
 
@@ -15,13 +15,13 @@ import { createUser } from "./users";
 export const makeUser = input => createUser(input);
 ```
 
-Both paths require unchanged arguments in parameter order. A bare identifier
-callee follows the released syntax rule regardless of its binding. Expanded
-member and forwarding paths require a reachable target: an imported binding,
-a static member path rooted at an import, or an exported module-level function
-or const in the same file. A default-expression export (`export default original`)
-proves expanded-path reachability only while its binding is unchanged; named
-exports retain their live binding.
+Both paths require unchanged arguments in parameter order. A bare-identifier
+call without casts follows the released syntax rule regardless of its binding.
+Expanded member, forwarding and cast paths require a reachable target: an
+imported binding, a static member path rooted at an import, or an exported
+module-level function or const in the same file. A default-expression export
+(`export default original`) proves expanded-path reachability only while its
+binding is unchanged; named exports retain their live binding.
 
 Static strings, expression-free template keys, optional calls, and proven
 `.call` / literal-array `.apply` forwarding retain the imported target:
@@ -35,8 +35,9 @@ const applied = input => users.createUser.apply(users, [input]);
 
 ### Released identifier compatibility
 
-For any callee that becomes a bare identifier after removing `await`, optional
-chain and non-null syntax, the rule preserves v0.95.0 reporting without checking
+For a wrapper with no cast on its callee or result, whose callee becomes a bare
+identifier after removing `await`, optional chain and non-null syntax, the
+rule preserves v0.95.0 reporting without checking
 whether that identifier is imported, exported, private, global, destructured
 from `require`, re-exported, or shadowed. Parameter/return annotations,
 annotated bindings, async and generator functions, statement-only calls,
@@ -56,9 +57,11 @@ const specialized = value => original<string>(value);
 This compatibility path retains historical diagnostics without claiming that
 the declared or return contracts are equivalent. The released naming, self-call,
 and unchanged-argument checks still apply. Suppressions still apply. A bare
-identifier that the released rule left silent stays silent; it does not fall
-through to expanded analysis. Normalizing a `.call` or `.apply` target to an
-identifier never grants compatibility.
+identifier that the released rule left silent stays silent on that uncast
+wrapper; it does not fall through to expanded analysis. A casted identifier can
+enter the expanded path when its target is reachable and the cast is proved
+type-preserving. Normalizing a `.call` or `.apply` target to an identifier
+never grants compatibility.
 
 ## Allowed
 
@@ -94,10 +97,11 @@ Direct and forwarded self-recursion are allowed.
 
 ## Limits
 
-The stronger contract checks apply to expanded member and forwarding
+The stronger contract checks apply to expanded member, forwarding and cast
 paths. Imported signatures are unavailable to this file-local rule, so an
 annotated wrapper over an imported member or `.call` / `.apply` target remains
-unproved. A bare identifier retains the compatibility behavior above.
+unproved. A bare-identifier call without casts retains the compatibility
+behavior above.
 
 For a same-file exported callable reached through forwarding, a declared wrapper
 signature requires matching parameter kinds and optionality, matching annotation
@@ -148,6 +152,21 @@ export function original(input: string): string { return input; }
 type Output = string;
 const forwarded = input => (original(input) as Output);
 // Fix: use original directly instead of forwarded.
+```
+
+This cast path intentionally adds three bare-identifier findings beyond the
+released syntax rule. Each target is reachable and its cast has an identity
+proof, so the wrapper can be replaced by a direct call:
+
+```ts
+import { g } from "./api";
+const importedAlias = i => (g as typeof g)(i);
+// Fix: call g(i) directly.
+
+export function lf(i: string): string { return i; }
+const localAlias = i => (lf as typeof lf)(i);
+const resultAlias = i => lf(i) as string;
+// Fix: call lf(i) directly in place of either wrapper.
 ```
 
 Unresolved or imported aliases, a changed primitive result type, and
