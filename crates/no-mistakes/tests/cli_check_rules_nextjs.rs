@@ -1,6 +1,40 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[test]
+fn nextjs_caching_effort_low_preserves_literals_and_max_reports_at_least_as_much() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/no-nextjs-caching-effort/fixture");
+    for (config, expected_findings, expected_advisories) in [
+        (".no-mistakes.max.yml", 11, 0),
+        (".no-mistakes.low.yml", 11, 0),
+        (".no-mistakes.low-advise.yml", 7, 4),
+        (".no-mistakes.low-ignore.yml", 7, 0),
+    ] {
+        let out = Command::new(bin())
+            .args(["check", "--root"])
+            .arg(&root)
+            .arg("--config")
+            .arg(root.join(config))
+            .args(["--format", "json"])
+            .output()
+            .unwrap();
+        assert_eq!(out.status.code(), Some(1), "{}", stdout(&out));
+        let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(
+            report["rules"].as_array().unwrap().len(),
+            expected_findings,
+            "{config}: {report}"
+        );
+        assert_eq!(
+            report["advisories"].as_array().unwrap().len(),
+            expected_advisories,
+            "{config}: {report}"
+        );
+        assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    }
+}
+
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
 }

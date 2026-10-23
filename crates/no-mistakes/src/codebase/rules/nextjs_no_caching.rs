@@ -38,34 +38,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     super::check_indexed_standalone(root, config, check_files)
 }
 
-pub(crate) fn check_with_facts_for_aggregate(
-    root: &Path,
-    config: &NoMistakesConfig,
-    shared: &crate::codebase::check_facts::CheckFactMap,
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-    defer_suppression: bool,
-) -> Result<Vec<RuleFinding>> {
-    Ok(diagnostics_with_facts_for_aggregate(
-        root,
-        config,
-        shared,
-        inferred_roots,
-        defer_suppression,
-    )?
-    .findings)
-}
-
 pub(crate) fn diagnostics_with_facts_for_aggregate(
-    root: &Path,
-    config: &NoMistakesConfig,
-    shared: &crate::codebase::check_facts::CheckFactMap,
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-    defer_suppression: bool,
-) -> Result<super::analysis_policy::AnalysisDiagnostics> {
-    check_with_optional_inferred(root, config, shared, inferred_roots, defer_suppression)
-}
-
-fn check_with_optional_inferred(
     root: &Path,
     config: &NoMistakesConfig,
     shared: &crate::codebase::check_facts::CheckFactMap,

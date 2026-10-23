@@ -1,7 +1,11 @@
 //! Literal-only caching projection. No const scope, alias, or wrapper evaluation.
 use super::{ast, bindings::TopLevelBindings, NextjsCachingFinding, NextjsCachingVisitor};
 use oxc_ast::ast::*;
+
+mod object;
+mod visit;
 use std::{collections::HashMap, path::Path};
+pub(super) use visit::extract_program;
 
 pub(crate) struct Collector<'a> {
     base: NextjsCachingVisitor<'a>,
@@ -68,6 +72,10 @@ impl<'a> Collector<'a> {
         {
             return;
         }
+        if matches!(call.arguments.first(), Some(Argument::SpreadElement(_))) {
+            self.unknown(call.span.start);
+            return;
+        }
         let Some(argument) = call.arguments.get(1) else {
             return;
         };
@@ -89,6 +97,14 @@ impl<'a> Collector<'a> {
         };
         for declaration in &var.declarations {
             let Some(name) = super::patterns::single_binding_name(&declaration.id) else {
+                if declaration
+                    .id
+                    .get_binding_identifiers()
+                    .iter()
+                    .any(|id| segment_name(id.name.as_str()))
+                {
+                    self.unknown(declaration.span.start);
+                }
                 continue;
             };
             if !segment_name(&name) {
@@ -149,48 +165,8 @@ impl<'a> Collector<'a> {
         }
         self.object(object, Context::Config);
     }
-    fn object(&mut self, object: &ObjectExpression<'a>, context: Context) {
-        for property in &object.properties {
-            let ObjectPropertyKind::ObjectProperty(property) = property else {
-                self.unknown(object.span.start);
-                continue;
-            };
-            let Some(name) = super::const_values::property_name(&property.key) else {
-                self.unknown(property.span.start);
-                continue;
-            };
-            match (context, name.as_str()) {
-                (Context::Fetch, "next") | (Context::Config, "experimental") => {
-                    if let Expression::ObjectExpression(nested) = &property.value {
-                        self.object(
-                            nested,
-                            if matches!(context, Context::Fetch) {
-                                Context::Next
-                            } else {
-                                Context::Config
-                            },
-                        );
-                    } else {
-                        self.unknown(property.span.start);
-                    }
-                }
-                (Context::Fetch, "cache")
-                | (Context::Next, "revalidate")
-                | (Context::Config, "cacheComponents") => {
-                    if !literal(&property.value) {
-                        self.unknown(property.span.start);
-                    }
-                }
-                (Context::Next, "tags") => {
-                    if !matches!(property.value, Expression::ArrayExpression(_)) {
-                        self.unknown(property.span.start);
-                    }
-                }
-                _ => {}
-            }
-        }
-    }
 }
+
 #[derive(Clone, Copy)]
 enum Context {
     Fetch,
@@ -213,45 +189,4 @@ fn declares_fetch(var: &VariableDeclaration<'_>) -> bool {
 }
 fn segment_name(name: &str) -> bool {
     matches!(name, "revalidate" | "fetchCache" | "dynamic")
-}
-
-pub(super) fn extract_program(
-    path: &Path,
-    source: &str,
-    program: &Program<'_>,
-) -> Vec<NextjsCachingFinding> {
-    use oxc_ast_visit::Visit;
-    let mut collector = Collector::new(path, source, program);
-    collector.visit_program(program);
-    collector.finish()
-}
-impl<'a> oxc_ast_visit::Visit<'a> for Collector<'a> {
-    fn visit_import_declaration(&mut self, node: &ImportDeclaration<'a>) {
-        self.import_declaration(node);
-        oxc_ast_visit::walk::walk_import_declaration(self, node);
-    }
-    fn visit_call_expression(&mut self, node: &CallExpression<'a>) {
-        self.call_expression(node);
-        oxc_ast_visit::walk::walk_call_expression(self, node);
-    }
-    fn visit_export_declaration(&mut self, node: &ExportDeclaration<'a>) {
-        self.export_declaration(node);
-        oxc_ast_visit::walk::walk_export_declaration(self, node);
-    }
-    fn visit_export_named_declaration(&mut self, node: &ExportNamedDeclaration<'a>) {
-        self.export_named_declaration(node);
-        oxc_ast_visit::walk::walk_export_named_declaration(self, node);
-    }
-    fn visit_export_default_declaration(&mut self, node: &ExportDefaultDeclaration<'a>) {
-        self.export_default_declaration(node);
-        oxc_ast_visit::walk::walk_export_default_declaration(self, node);
-    }
-    fn visit_assignment_expression(&mut self, node: &AssignmentExpression<'a>) {
-        self.assignment_expression(node);
-        oxc_ast_visit::walk::walk_assignment_expression(self, node);
-    }
-    fn visit_function_body(&mut self, node: &FunctionBody<'a>) {
-        self.function_body(node);
-        oxc_ast_visit::walk::walk_function_body(self, node);
-    }
 }

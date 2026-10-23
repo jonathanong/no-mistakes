@@ -365,3 +365,6 @@ mod check_analysis_policy;
 
 #[path = "check_redirect_effort.rs"]
 mod check_redirect_effort;
+
+#[path = "check_caching_effort.rs"]
+mod check_caching_effort;

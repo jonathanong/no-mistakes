@@ -32,10 +32,61 @@ that would make a selected route or component cacheable.
 
 ## Options
 
-There are no rule-local options. Consequently, there are no rule-local
-defaults. The rule uses the selected project and the shared rule
+There are no rule-local options. The shared `options.effort` and
+`options.unanalyzable` settings apply. The rule
+uses the selected project and the shared rule
 `include`/`exclude` path filters; its Next.js cache patterns are fixed by the
 analyzer.
+
+## Effort
+
+`max` is the default and preserves same-file constant resolution and configuration
+wrapper analysis. `low` checks literal settings directly at the use site:
+
+```yaml
+rules:
+  - rule: nextjs-no-caching
+    projects: [web]
+    options:
+      effort: low
+      unanalyzable: advise
+```
+
+At low effort, cache directives and Next.js cache API imports/calls
+remain checked. Fetch options must be an inline object, including an inline
+`next` object; route segment values must be literal exports; `next.config` must
+export an object directly (or assign one directly to `module.exports`). For
+scalar values, strings, numbers, booleans, null, and expression-free templates
+are literal; TypeScript scalar wrappers are unwrapped without inference. For
+example, both efforts report these literal violations:
+
+```ts
+export const revalidate = 60;
+await fetch('/api/data', { cache: 'force-cache' });
+```
+
+Low effort does not propagate constants or infer configuration through wrappers:
+
+```ts
+const cacheMode = 'force-cache';
+await fetch('/api/data', { cache: cacheMode });
+```
+
+This indirect option is unanalyzable at low effort. Rewrite it as a literal
+option at the call, or select max to resolve the constant. Unsupported option
+objects, spreads, computed keys, indirect segment exports and configuration
+wrappers follow the shared `unanalyzable` policy: `report` fails (the default),
+`advise` emits a non-failing advisory, and `ignore` omits the residual diagnostic.
+Definite literal violations remain findings under every policy. Max can recover
+additional violations from constants; low with `report` can additionally report
+uncertainty that max resolves clear, so total counts are not interchangeable.
+Spread fetch arguments and destructured route segment exports are also
+unanalyzable; write positional fetch arguments and direct literal exports.
+
+These literal proofs need no partner check: unsupported shapes stay explicit
+under the selected policy. Low-only runs skip the max constant and configuration
+binding tables. Mixed low/max applications share the source inventory and parse,
+then use their respective facts.
 
 ## Valid example
 
@@ -59,6 +110,11 @@ export default async function Page() {
 ```
 
 ## Limitations
+
+Both efforts retain the existing fetch identification behavior: a top-level
+import or variable named `fetch` excludes the file's fetch calls. Nested local
+bindings named `fetch` are not distinguished from the global API; use another
+name or a narrow suppression for such a local function.
 
 Discovery drops a file when a directory segment is `node_modules`, `dist`,
 `.git`, `.next`, `coverage`, `fixtures`, `target`, or `build`. A caching

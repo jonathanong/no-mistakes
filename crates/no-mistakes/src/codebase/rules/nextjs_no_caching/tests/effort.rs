@@ -171,6 +171,25 @@ fn low_saved_shapes_route_opaque_inputs_and_preserve_direct_checks() {
         .advisories
         .iter()
         .any(|finding| finding.file.ends_with("next.config.cjs")));
+    // Spreads can supply fetch options; destructured segment names stay opaque.
+    for (file, count) in [("spread.ts", 2), ("app/nested/layout.ts", 3)] {
+        assert_eq!(
+            diagnostics
+                .advisories
+                .iter()
+                .filter(|finding| finding.file.ends_with(file))
+                .count(),
+            count
+        );
+        assert!(!diagnostics
+            .findings
+            .iter()
+            .any(|finding| finding.file.ends_with(file)));
+    }
+    assert!(diagnostics
+        .advisories
+        .iter()
+        .any(|finding| finding.file.ends_with("app/route.ts") && finding.line == 4));
     for file in &files {
         let source = std::fs::read_to_string(file).unwrap();
         let direct = crate::ast::with_program(file, &source, |program, _| {
