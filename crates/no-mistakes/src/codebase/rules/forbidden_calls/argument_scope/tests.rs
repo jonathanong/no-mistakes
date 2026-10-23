@@ -227,3 +227,60 @@ fn independent_call_site_demand_survives_argument_scope() {
         &control
     ));
 }
+
+#[test]
+fn batched_graph_only_files_keep_scoped_argument_demand() {
+    use crate::codebase::check_facts::{
+        collect_check_fact_batch_with_session, BatchCheckFactRequest,
+    };
+    let (saved, config, files) = fixture();
+    let root = saved.path();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let request = BatchCheckFactRequest {
+        root: root.into(),
+        // Batch planning has a separate graph-only projection. No primary
+        // files may accidentally carry the missing scoped argument demand.
+        files: Vec::new(),
+        graph_files: files,
+        plan: plan(root, &config),
+        playwright: None,
+        sources,
+    };
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let facts = crate::diagnostics::with_observer(Some(observer.clone()), || {
+        collect_check_fact_batch_with_session(&session, vec![request])
+    })
+    .pop()
+    .unwrap();
+    assert_eq!(
+        observer
+            .snapshot()
+            .work
+            .get("facts.call_arguments.collections"),
+        Some(&4)
+    );
+    assert!(
+        argument_facts_covered(root, &config, &facts),
+        "batch argument payloads must cover configured applications"
+    );
+    assert!(
+        !facts.graph_plan().call_arguments,
+        "scoped batch facts do not promise global argument coverage"
+    );
+    for file in ["src/a/excluded.mjs", "src/unrelated.mjs"] {
+        assert!(
+            facts
+                .ts
+                .get(&root.join(file))
+                .unwrap()
+                .ts
+                .module_bindings
+                .as_ref()
+                .unwrap()
+                .call_arguments
+                .is_none(),
+            "{file}"
+        );
+    }
+}
