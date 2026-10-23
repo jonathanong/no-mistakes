@@ -52,19 +52,19 @@ describe(id, () => {
     );
     assert.deepEqual(check("template-suppression-file.mjs"), []);
   });
-  it("has genuine oxlint parity on the saved scope and suppression matrix", () => {
-    for (const [name, count] of [
-      ["unsafe.mjs", 10],
-      ["aliases.ts", 5],
-      ["safe.mjs", 0],
-      ["suppressions.mjs", 1],
-      ["suppression-file.mjs", 0],
-      ["commonjs.cjs", 1],
-      ["templates.ts", 9],
-      ["template-controls.mjs", 0],
-      ["template-suppressions.mjs", 1],
-      ["template-suppression-file.mjs", 0],
-    ]) {
+  for (const [name, count] of [
+    ["unsafe.mjs", 10],
+    ["aliases.ts", 5],
+    ["safe.mjs", 0],
+    ["suppressions.mjs", 1],
+    ["suppression-file.mjs", 0],
+    ["commonjs.cjs", 1],
+    ["templates.ts", 9],
+    ["template-controls.mjs", 0],
+    ["template-suppressions.mjs", 1],
+    ["template-suppression-file.mjs", 0],
+  ]) {
+    it(`has genuine oxlint parity for ${name}`, () => {
       const result = spawnSync(
         process.execPath,
         [
@@ -80,8 +80,8 @@ describe(id, () => {
       assert.equal(result.status, count ? 1 : 0, result.stderr);
       const diagnostics = JSON.parse(result.stdout).diagnostics.filter((d) => d.code.includes(id));
       assert.equal(diagnostics.length, count, name);
-    }
-  });
+    });
+  }
   it("bounds alias expansion and rejects forward initialization", () => {
     assert.deepEqual(
       check("bounded-aliases.mjs").map((m) => m.line),
