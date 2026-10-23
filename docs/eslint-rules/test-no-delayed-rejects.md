@@ -26,6 +26,18 @@ async function rejectsWhenLockedSoft() {
 }
 ```
 
+An immutable promise alias does not restart the rejection window. The promise
+can reject before the alias is declared:
+
+```ts
+async function rejectsThroughAlias() {
+  const update = updateCommunityAgentPrompt(input);
+  await releaseLock();
+  const pending = update;
+  await expect(pending).rejects.toThrow();
+}
+```
+
 ## Allowed
 
 Capture the rejection immediately, then assert the non-rejecting capture after
@@ -54,7 +66,8 @@ Directly awaiting the promise or passing it directly in an array to built-in
 `any`, and `race` are recognized when their aggregate promise is immediately
 awaited; otherwise that promise can become the new unhandled rejection.
 
-The same direct binding may be asserted later when it first receives an
+The same promise, through its original binding or an immutable alias, may be
+asserted later when it first receives an
 unconditional, structurally non-rejecting `catch` or rejection-side `then`
 handler. The recognized handler may return a literal, `void 0`, or nothing.
 Returning the rejection reason, an identifier named `undefined`, or the result
@@ -64,11 +77,15 @@ can itself reject unhandled.
 ## Scope
 
 The rule recognizes global `expect` plus a named `expect` import from `vitest`
-or `@jest/globals`. It follows only one immutable, non-aliased `const` binding
-used directly as the single `expect` argument within the same function or at
-module scope (top-level `await`). It does not infer promise identity through
-aliases, destructuring, mutable bindings, or cross-function flows; attach the
-rejection observer immediately in those forms.
+or `@jest/globals`. It follows an immutable `const` promise binding through
+same-file `const` identity aliases used as the single `expect` argument within
+the same function or at module scope (top-level `await`). TypeScript `as` and
+non-null expressions around an alias initializer preserve that identity.
+Aliases declared after a coordination await retain the original promise's
+creation time. A proven rejection observer attached through any alias protects
+the same promise. The rule does not infer identity through destructuring,
+mutable or reassigned bindings, conditional values, or cross-function flows;
+attach the rejection observer immediately in those forms.
 
 Module-level delayed rejects are reported the same way as inside a function:
 
@@ -96,8 +113,9 @@ This rule has no options.
 
 ## Fix
 
-There is no autofix. Attach a rejection handler before the first coordination
-await, then assert its captured value after coordination. A `for await` loop,
+There is no autofix. Attach a rejection handler to the original promise or any
+proven alias before the first coordination await, then assert its captured value
+after coordination. A `for await` loop,
 an async-generator `yield`, and asynchronous disposal when an `await using`
 scope exits are also intervening suspensions. Do not store an un-awaited
 `expect(...).rejects` matcher promise; the test runner's `valid-expect` rule
