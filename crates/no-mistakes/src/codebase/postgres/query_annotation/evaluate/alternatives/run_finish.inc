@@ -42,7 +42,10 @@
         self.install_disconnected_slots(&disconnected, disconnected_common, private_disconnected);
         self.definite_deleted_argument_slots = final_definite;
         let capture_writes = self.refresh_captured_bindings(&scopes);
-        let quiet = !taint_writes && !disconnect_writes && !capture_writes;
+        let quiet = !taint_writes
+            && !disconnect_writes
+            && !capture_writes
+            && quiet_structure;
         // Speculative identities with no surviving aliases cannot affect later reads.
         self.active_module_initials
             .pop()

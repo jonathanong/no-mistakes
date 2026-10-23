@@ -48,6 +48,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let mut returned = Vec::new();
         let mut final_live = None;
         let mut proved_live = None;
+        let mut quiet_structure = false;
         let mut prefix_roots = super::reachable::Prefix::default();
         let mut changed = FxHashSet::default();
         for (arm_index, arm) in arms.iter().enumerate() {
@@ -189,6 +190,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
             joined.clone_from(&self.argument_objects);
             if arm_index + 1 == arms.len() {
+                quiet_structure = self.final_live_structure(scopes.len(), &indices.indices);
                 if self.can_reuse_final_live(
                     scopes.len(),
                     captured.is_empty(),

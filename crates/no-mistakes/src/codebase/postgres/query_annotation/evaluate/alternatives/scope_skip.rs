@@ -29,7 +29,47 @@ pub(super) fn changed_argument_ids(
             changed.insert(*id);
         }
     }
+    // A slot that still points at B does not change A's identity, but B's
+    // arena is visible through that slot. Parents of a changed id stay live.
+    if !changed.is_empty() {
+        close_argument_parents(after_objects, after_extras, &mut changed);
+    }
     changed
+}
+
+fn close_argument_parents(
+    objects: &ArgumentObjects,
+    extras: &FxHashMap<u64, BTreeMap<usize, Value>>,
+    changed: &mut FxHashSet<u64>,
+) {
+    let mut parents: FxHashMap<u64, Vec<u64>> = FxHashMap::default();
+    let mut link = |owner: u64, arguments: &FxHashSet<u64>| {
+        for child in arguments {
+            if *child != owner {
+                parents.entry(*child).or_default().push(owner);
+            }
+        }
+    };
+    for (id, slots) in objects {
+        link(*id, &slots.references().arguments);
+    }
+    for (id, slots) in extras {
+        link(
+            *id,
+            &super::super::references::Edges::collect(slots.values()).arguments,
+        );
+    }
+    let mut queue: Vec<u64> = changed.iter().copied().collect();
+    while let Some(id) = queue.pop() {
+        let Some(owners) = parents.get(&id) else {
+            continue;
+        };
+        for owner in owners.clone() {
+            if changed.insert(owner) {
+                queue.push(owner);
+            }
+        }
+    }
 }
 
 /// An untouched scope Arc still observes arena writes through argument ids.

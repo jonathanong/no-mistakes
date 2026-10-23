@@ -61,6 +61,24 @@ fn shared_scope_skips_until_its_argument_arena_changes() {
         ),
         FxHashSet::from_iter([4])
     );
+    let nested_before = super::super::ArgumentObjects::from_iter([
+        (1, vec![Value::Arguments(2)]),
+        (2, vec![prefix(2)]),
+    ]);
+    let mut nested_after = nested_before.clone();
+    nested_after.insert(2, vec![prefix(9)]);
+    let nested = changed_argument_ids(
+        &nested_before,
+        &nested_after,
+        &FxHashMap::default(),
+        &FxHashMap::default(),
+    );
+    assert!(nested.contains(&1) && nested.contains(&2));
+    let holder = Scope::from(FxHashMap::from_iter([(
+        "holder".into(),
+        Value::Arguments(1),
+    )]));
+    assert!(!unchanged_shared_scope(&holder, &holder.clone(), &nested));
 }
 
 #[test]

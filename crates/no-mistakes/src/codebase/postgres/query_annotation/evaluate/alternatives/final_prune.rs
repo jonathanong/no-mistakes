@@ -31,9 +31,22 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         original_captures_empty
             && final_invalidated_empty
             && self.captured_bindings.is_empty()
-            && self.active_module_initials.iter().all(|initial| initial.arguments().next().is_none())
+            && self.final_live_structure(preserved, indices)
+    }
+
+    pub(super) fn final_live_structure(
+        &self,
+        preserved: Environment,
+        indices: &FxHashMap<Environment, Environment>,
+    ) -> bool {
+        self.active_module_initials
+            .iter()
+            .all(|initial| initial.arguments().next().is_none())
             && self.transient_roots.iter().all(|root| {
-                !matches!(root, super::super::temporaries::TransientRoot::Environment(env) if *env >= preserved)
+                !matches!(
+                    root,
+                    super::super::temporaries::TransientRoot::Environment(env) if *env >= preserved
+                )
             })
             && indices.iter().all(|(old, new)| old == new)
     }

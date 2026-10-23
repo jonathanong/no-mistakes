@@ -195,5 +195,6 @@ fn final_live_guard_keeps_captures_and_moved_transient_environments_conservative
     evaluator.argument_objects.insert(7, vec![Value::Unknown]);
     evaluator.begin_alternative_module_snapshot(0);
     evaluator.record_alternative_module_initial(&path, 0);
+    assert!(!evaluator.final_live_structure(1, &identity));
     assert!(!evaluator.can_reuse_final_live(1, true, true, &identity));
 }
