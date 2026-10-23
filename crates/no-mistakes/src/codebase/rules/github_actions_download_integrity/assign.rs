@@ -1,6 +1,27 @@
 /// Expands one whole-line uppercase literal. Any other uppercase assignment
 /// in the same script leaves every `$NAME` untouched.
 pub(super) fn expand_uppercase(script: &str) -> String {
+    #[cfg(test)]
+    expansion_counts::note();
+    let env = single_literal_binding(script);
+    let mut out = String::new();
+    for line in script.lines() {
+        if matches!(classify(line.trim()), Kind::Literal(_, _)) && env.is_some() {
+            out.push_str(line);
+        } else if let Some((name, value)) = &env {
+            out.push_str(&substitute(line, name, value));
+        } else {
+            out.push_str(line);
+        }
+        out.push('\n');
+    }
+    out
+}
+
+/// The same one-binding proof used by max, without expanding any script values.
+pub(super) fn single_literal_binding(script: &str) -> Option<(String, String)> {
+    #[cfg(test)]
+    expansion_counts::note_binding_scan();
     let mut count = 0usize;
     let mut literal = None;
     for line in script.lines() {
@@ -13,19 +34,28 @@ pub(super) fn expand_uppercase(script: &str) -> String {
             Kind::Other => count += 1,
         }
     }
-    let env = if count == 1 { literal } else { None };
-    let mut out = String::new();
-    for line in script.lines() {
-        if matches!(classify(line.trim()), Kind::Literal(_, _)) && count == 1 {
-            out.push_str(line);
-        } else if let Some((name, value)) = &env {
-            out.push_str(&substitute(line, name, value));
-        } else {
-            out.push_str(line);
-        }
-        out.push('\n');
+    if count == 1 {
+        literal
+    } else {
+        None
     }
-    out
+}
+
+pub(super) fn substitute_command(token: &str, binding: &(String, String)) -> String {
+    substitute(token, &binding.0, &binding.1)
+}
+
+#[cfg(test)]
+mod expansion_counts;
+
+#[cfg(test)]
+pub(super) fn expansion_count() -> usize {
+    expansion_counts::count()
+}
+
+#[cfg(test)]
+pub(super) fn binding_scan_count() -> usize {
+    expansion_counts::binding_scans()
 }
 
 enum Kind {

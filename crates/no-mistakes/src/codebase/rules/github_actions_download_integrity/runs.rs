@@ -1,6 +1,8 @@
 use super::judge::{self, Hit};
 use super::{RuleFinding, RULE_ID};
+use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
+use crate::config::v2::Unanalyzable;
 use serde_yaml::{Mapping, Value};
 
 struct Body {
@@ -37,6 +39,44 @@ pub(super) fn check_source(
         findings.extend(hits.into_iter().map(|hit| finding(rel, &body, place, hit)));
     }
     findings
+}
+
+pub(super) fn check_source_low(
+    rel: &str,
+    source: &str,
+    hosts: &[String],
+    helpers: &[String],
+    policy: Unanalyzable,
+) -> AnalysisDiagnostics {
+    let Some(action) = super::gha_kind(rel) else {
+        return AnalysisDiagnostics::default();
+    };
+    let source = source.trim_start_matches('\u{feff}');
+    let Ok(value) = serde_yaml::from_str::<Value>(source) else {
+        return AnalysisDiagnostics::default();
+    };
+    let located = step_run_lines(source, action);
+    let lines: Vec<&str> = source.lines().collect();
+    let mut diagnostics = AnalysisDiagnostics::default();
+    for body in bodies(action, &value) {
+        let place = located
+            .iter()
+            .find(|item| item.job == body.job && item.step == body.step);
+        if skipped(&lines, place, &body.script) {
+            continue;
+        }
+        let hits = judge::filter_trusted(judge::download_hits_low(&body.script, helpers), hosts);
+        for hit in hits {
+            let unanalyzable = hit.unanalyzable;
+            let finding = finding(rel, &body, place, hit);
+            if unanalyzable {
+                diagnostics.unanalyzable(policy, finding);
+            } else {
+                diagnostics.findings.push(finding);
+            }
+        }
+    }
+    diagnostics
 }
 
 fn skipped(lines: &[&str], place: Option<&StepRun>, script: &str) -> bool {
@@ -135,16 +175,28 @@ fn finding(rel: &str, body: &Body, place: Option<&StepRun>, hit: Hit) -> RuleFin
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line,
-        message: format!(
-            "{rel}:{line}: job `{}` step {} downloads `{url}` with `{command}` and does not \
+        message: if hit.indirect_command {
+            format!(
+                "{rel}:{line}: job `{}` step {} downloader command is unanalyzable at effort low; call `{}` directly with literal HTTP(S) URL arguments instead of a command alias.",
+                body.target, body.step, hit.command,
+            )
+        } else if hit.unanalyzable {
+            format!(
+                "{rel}:{line}: job `{}` step {} download URL or argument shape `{}` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `{}` argument and use literal option names instead of assignments, expansions, or command substitutions.",
+                body.target, body.step, hit.url, hit.command,
+            )
+        } else {
+            format!(
+                "{rel}:{line}: job `{}` step {} downloads `{url}` with `{command}` and does not \
              verify the bytes in this step. An http(s) download can change between runs. Verify \
              it here with `sha256sum -c` or `shasum -a 256 -c`, download a checksum file, use a \
              trusted host, or add `# integrity-check: skip reason=<slug>`.",
-            body.target,
-            body.step,
-            command = hit.command,
-            url = hit.url
-        ),
+                body.target,
+                body.step,
+                command = hit.command,
+                url = hit.url
+            )
+        },
         import: None,
         target: Some(body.target.clone()),
     }

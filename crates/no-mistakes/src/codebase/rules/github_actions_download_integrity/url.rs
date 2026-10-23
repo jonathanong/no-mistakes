@@ -4,9 +4,15 @@ pub(super) struct UrlHost {
 }
 
 pub(super) fn http_url(word: &str) -> Option<UrlHost> {
-    let rest = if word.len() >= 8 && word[..8].eq_ignore_ascii_case("https://") {
+    let rest = if word
+        .get(..8)
+        .is_some_and(|prefix| prefix.eq_ignore_ascii_case("https://"))
+    {
         &word[8..]
-    } else if word.len() >= 7 && word[..7].eq_ignore_ascii_case("http://") {
+    } else if word
+        .get(..7)
+        .is_some_and(|prefix| prefix.eq_ignore_ascii_case("http://"))
+    {
         &word[7..]
     } else {
         return None;

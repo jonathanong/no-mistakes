@@ -6,6 +6,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod assign;
+mod effort;
 mod judge;
 mod runs;
 mod url;
@@ -61,7 +62,8 @@ fn valid_helper(name: &str) -> bool {
         && chars.all(|ch| ch.is_ascii_alphanumeric() || ch == '_' || ch == '-')
 }
 
-super::sourced_file_rule_entrypoints!();
+pub use effort::{check, diagnostics_with_files_and_sources};
+pub(crate) use effort::{check_with_files, check_with_files_and_sources};
 
 fn scan(
     root: &Path,
@@ -120,5 +122,7 @@ pub(super) fn gha_kind(rel: &str) -> Option<bool> {
 mod coverage;
 #[cfg(test)]
 mod edges;
+#[cfg(test)]
+mod effort_tests;
 #[cfg(test)]
 mod tests;
