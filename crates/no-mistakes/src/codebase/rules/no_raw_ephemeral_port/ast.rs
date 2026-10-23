@@ -54,12 +54,22 @@ fn is_ephemeral_listen(call: &CallExpression<'_>) -> bool {
 }
 
 fn is_listen_callee(callee: &Expression<'_>) -> bool {
-    match callee {
+    match unwrap_ts_wrappers(callee) {
         Expression::StaticMemberExpression(member) => member.property.name.as_str() == "listen",
-        Expression::ComputedMemberExpression(member) => matches!(
-            unwrap_ts_wrappers(&member.expression),
-            Expression::StringLiteral(literal) if literal.value.as_str() == "listen"
-        ),
+        Expression::ComputedMemberExpression(member) => {
+            match unwrap_ts_wrappers(&member.expression) {
+                Expression::StringLiteral(literal) => literal.value.as_str() == "listen",
+                Expression::TemplateLiteral(template) => {
+                    template.expressions.is_empty()
+                        && template
+                            .quasis
+                            .first()
+                            .and_then(|quasi| quasi.value.cooked.as_ref())
+                            .is_some_and(|value| value.as_str() == "listen")
+                }
+                _ => false,
+            }
+        }
         _ => false,
     }
 }
