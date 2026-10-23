@@ -1,0 +1,16 @@
+# options.exclude is ignored by the job rule and cannot certify narrower coverage.
+effort: low
+rules:
+  - rule: github-actions-job-timeouts
+    scope: repository
+    include: [.github/workflows/ci.yml, .github/workflows/other.yml]
+    options:
+      exclude: [.github/workflows/other.yml]
+      rejectStepExceedingJob: true
+      rejectJobAtOrAboveStepSum: true
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      effort: max
+      maxMinutes: 5
+      include: [.github/workflows/ci.yml]

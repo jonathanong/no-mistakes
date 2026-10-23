@@ -164,10 +164,11 @@ fn application_files(
     let (mut files, roots) = super::selected_rule_files_with_roots(root, config, rule, visible)?;
     // Rule-local include/exclude narrows the application beyond project targeting.
     let include = patterns(rule, "include")?;
-    let include = if matches!(
+    let workflow_timeouts = matches!(
         rule.rule.as_str(),
         "github-actions-job-timeouts" | "github-actions-step-timeouts"
-    ) {
+    );
+    let include = if workflow_timeouts {
         Some(super::configured_includes(
             include.unwrap_or_default(),
             super::github_actions_job_timeouts::DEFAULT_INCLUDE,
@@ -180,7 +181,14 @@ fn application_files(
             files = super::matching_files(root, &include, &files, &roots)?;
         }
     }
-    if let Some(exclude) = patterns(rule, "exclude")? {
+    // Workflow timeout parsers ignore options.exclude; only the generic rule
+    // exclude field narrows them. Certification must use that same file universe.
+    let exclude = if workflow_timeouts {
+        None
+    } else {
+        patterns(rule, "exclude")?
+    };
+    if let Some(exclude) = exclude {
         let excluded: crate::fx::FxHashSet<_> =
             super::matching_files(root, &exclude, &files, &roots)?
                 .into_iter()

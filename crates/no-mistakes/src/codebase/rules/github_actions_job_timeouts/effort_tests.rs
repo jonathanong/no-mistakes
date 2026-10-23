@@ -80,6 +80,7 @@ fn missing_disabled_narrowed_allowed_and_suppressed_partners_fall_back() {
         "missing",
         "disabled",
         "narrowed",
+        "ignored-exclude",
         "excluded",
         "allowed",
         "unknown",
@@ -186,7 +187,12 @@ fn full_check_prepares_partner_coverage_and_honors_effort_overrides() {
     assert!(low.rules.iter().all(|finding| max.rules.contains(finding)));
     assert_eq!(max.rules.len(), low.rules.len() + 2);
     assert_eq!(report("explicit-max.yml", None).rules, max.rules);
-    for name in ["missing.yml", "narrowed.yml", "suppressed-next.yml"] {
+    for name in [
+        "missing.yml",
+        "narrowed.yml",
+        "ignored-exclude.yml",
+        "suppressed-next.yml",
+    ] {
         let fallback = report(name, None);
         assert_eq!(fallback.analysis_fallbacks.len(), 1, "{name}");
         assert!(
