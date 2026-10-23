@@ -1,7 +1,8 @@
 impl PreparedScope {
     /// Initialize only symbol-dependents traversals before parallel reports.
-    /// Their shared symbol index uses Rayon, while the traversal cache owns
-    /// the tsconfig diagnostics emitted during that index build.
+    /// Index construction uses nested Rayon work while its traversal owns the
+    /// diagnostics gate. A queued sibling report could otherwise reenter that
+    /// gate (or the traversal's OnceLock) on the suspended initializer's worker.
     fn seed_symbol_dependent_traversals(&self) -> Result<()> {
         let cwd = std::env::current_dir().context("reading current directory")?;
         for request in &self.options.reports {
@@ -17,7 +18,7 @@ impl PreparedScope {
             {
                 continue;
             }
-            // The exact traversal key caches entries, diagnostics and provenance.
+            // Seed the exact traversal, so index diagnostics keep their owner.
             // Errors still surface at the report's original dispatch position.
             let _ = crate::codebase::dependencies::collect_and_filter_entries_prepared(
                 &args,

@@ -1,5 +1,11 @@
 use std::cell::Cell;
 
+macro_rules! yield_symbol_index_reentry {
+    () => {
+        $crate::codebase::dependencies::shared_symbol_index_reentry_tests::yield_once();
+    };
+}
+
 thread_local! {
     static ARMED: Cell<bool> = const { Cell::new(false) };
     static YIELDS: Cell<usize> = const { Cell::new(0) };
@@ -25,4 +31,3 @@ pub(crate) fn yield_once() {
         let _ = rayon::yield_local();
     }
 }
-
