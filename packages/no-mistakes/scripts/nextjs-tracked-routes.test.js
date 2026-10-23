@@ -13,98 +13,104 @@ function git(root, args) {
   execFileSync("git", ["-C", root, ...args], { env, stdio: "pipe" });
 }
 
-test(
-  "compiled CJS and ESM checks share tracked redirect route semantics",
-  { skip: !compiled },
-  async () => {
-    const root = await mkdtemp(join(tmpdir(), "no-mistakes-tracked-routes-"));
-    try {
-      await cp(
-        join(
-          __dirname,
-          "../../../test-cases/rules/nextjs-redirect-destinations/fixture/tracked-routes",
-        ),
-        root,
-        { recursive: true },
-      );
-      await rename(join(root, ".gitignore.fixture"), join(root, ".gitignore"));
-      git(root, ["init", "-q", "--initial-branch=main"]);
-      git(root, [
-        "add",
-        ".gitignore",
-        ".no-mistakes.yml",
-        ".filesystem.yml",
-        "next.config.ts",
-        "app/tracked",
-        "app/(group)",
-        "app/posts",
-        "app/docs",
-        "app/optional",
-      ]);
-      const api = require("../index.js");
-      const esm = await import("../index.mjs");
-      const options = { root, config: join(root, ".no-mistakes.yml") };
-      const pending = api.check(options);
-      assert.equal(typeof pending.then, "function");
-      const report = await pending;
-      assert.equal(report.rules.length, 6);
-      assert.deepEqual(await esm.check(options), report);
-      const filesystem = await api.check({ root, config: join(root, ".filesystem.yml") });
-      assert.equal(filesystem.rules.length, 3);
-      git(root, ["add", "-f", "app/untracked", "app/ignored"]);
-      assert.deepEqual((await api.check(options)).rules, []);
-      assert.deepEqual((await esm.check(options)).rules, []);
-    } finally {
-      await rm(root, { recursive: true, force: true });
-    }
-  },
-);
-
-for (const fixtureName of ["nested-projects", "nested-ignored-config"])
+// Keep each fixture state independent so the native duration gate measures one
+// CJS/ESM parity scenario rather than several consecutive analysis requests.
+for (const scenario of ["untracked", "filesystem", "force-added"])
   test(
-    `compiled CJS and ESM checks use ${fixtureName} indexes under non-Git roots`,
+    `compiled CJS and ESM checks share tracked redirect route semantics: ${scenario}`,
     { skip: !compiled },
     async () => {
-      const root = await mkdtemp(join(tmpdir(), "no-mistakes-nested-tracked-routes-"));
+      const root = await mkdtemp(join(tmpdir(), "no-mistakes-tracked-routes-"));
       try {
         await cp(
           join(
             __dirname,
-            "../../../test-cases/rules/nextjs-redirect-destinations/fixture",
-            fixtureName,
+            "../../../test-cases/rules/nextjs-redirect-destinations/fixture/tracked-routes",
           ),
           root,
           { recursive: true },
         );
-        const project = join(root, "packages/web");
-        await rename(join(project, ".gitignore.fixture"), join(project, ".gitignore"));
-        git(project, ["init", "-q", "--initial-branch=main"]);
-        // The umbrella walk omits these ignored pages; the nested Git index owns them.
-        git(project, ["add", "-f", "."]);
-        git(project, ["rm", "--cached", "-r", "app/untracked"]);
+        await rename(join(root, ".gitignore.fixture"), join(root, ".gitignore"));
+        git(root, ["init", "-q", "--initial-branch=main"]);
+        git(root, [
+          "add",
+          ".gitignore",
+          ".no-mistakes.yml",
+          ".filesystem.yml",
+          "next.config.ts",
+          "app/tracked",
+          "app/(group)",
+          "app/posts",
+          "app/docs",
+          "app/optional",
+        ]);
         const api = require("../index.js");
         const esm = await import("../index.mjs");
-        const options = { root, config: join(root, ".no-mistakes.yml") };
-        const report = await api.check(options);
-        assert.equal(report.rules.length, 3);
-        assert.ok(report.rules.every((finding) => finding.message.includes("'/untracked")));
+        if (scenario === "force-added") git(root, ["add", "-f", "app/untracked", "app/ignored"]);
+        const config = scenario === "filesystem" ? ".filesystem.yml" : ".no-mistakes.yml";
+        const options = { root, config: join(root, config) };
+        const pending = api.check(options);
+        assert.equal(typeof pending.then, "function");
+        const report = await pending;
+        assert.equal(
+          report.rules.length,
+          scenario === "untracked" ? 6 : scenario === "filesystem" ? 3 : 0,
+        );
         assert.deepEqual(await esm.check(options), report);
-        git(project, ["add", "app/untracked"]);
-        assert.deepEqual((await api.check(options)).rules, []);
-        assert.deepEqual((await esm.check(options)).rules, []);
-        git(project, ["update-index", "--skip-worktree", "app/tracked/page.tsx"]);
-        await rm(join(project, "app/tracked/page.tsx"));
-        await rm(join(project, "app/untracked/page.tsx"));
-        // Index membership survives sparse and unstaged worktree removals.
-        assert.deepEqual((await api.check(options)).rules, []);
-        assert.deepEqual((await esm.check(options)).rules, []);
-        git(project, ["update-index", "--force-remove", "app/tracked/page.tsx"]);
-        assert.equal((await api.check(options)).rules.length, 1);
       } finally {
         await rm(root, { recursive: true, force: true });
       }
     },
   );
+
+for (const fixtureName of ["nested-projects", "nested-ignored-config"])
+  for (const scenario of ["untracked", "added", "sparse", "index-removed"])
+    test(
+      `compiled CJS and ESM checks use ${fixtureName} indexes under non-Git roots: ${scenario}`,
+      { skip: !compiled },
+      async () => {
+        const root = await mkdtemp(join(tmpdir(), "no-mistakes-nested-tracked-routes-"));
+        try {
+          await cp(
+            join(
+              __dirname,
+              "../../../test-cases/rules/nextjs-redirect-destinations/fixture",
+              fixtureName,
+            ),
+            root,
+            { recursive: true },
+          );
+          const project = join(root, "packages/web");
+          await rename(join(project, ".gitignore.fixture"), join(project, ".gitignore"));
+          git(project, ["init", "-q", "--initial-branch=main"]);
+          // The umbrella walk omits these ignored pages; the nested Git index owns them.
+          git(project, ["add", "-f", "."]);
+          git(project, ["rm", "--cached", "-r", "app/untracked"]);
+          if (scenario !== "untracked") git(project, ["add", "app/untracked"]);
+          if (scenario === "sparse" || scenario === "index-removed") {
+            git(project, ["update-index", "--skip-worktree", "app/tracked/page.tsx"]);
+            await rm(join(project, "app/tracked/page.tsx"));
+            await rm(join(project, "app/untracked/page.tsx"));
+            // Index membership survives sparse and unstaged worktree removals.
+          }
+          if (scenario === "index-removed")
+            git(project, ["update-index", "--force-remove", "app/tracked/page.tsx"]);
+          const api = require("../index.js");
+          const esm = await import("../index.mjs");
+          const options = { root, config: join(root, ".no-mistakes.yml") };
+          const report = await api.check(options);
+          assert.equal(
+            report.rules.length,
+            scenario === "untracked" ? 3 : scenario === "index-removed" ? 1 : 0,
+          );
+          if (scenario === "untracked")
+            assert.ok(report.rules.every((finding) => finding.message.includes("'/untracked")));
+          assert.deepEqual(await esm.check(options), report);
+        } finally {
+          await rm(root, { recursive: true, force: true });
+        }
+      },
+    );
 
 test(
   "compiled CJS and ESM explain how to recover a missing tracked inventory",
