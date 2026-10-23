@@ -1,14 +1,7 @@
 # Known check-rule doc execution gaps tracked by #2416.
 # Remove a prefix only after that snippet executes as documented.
-no-mistakes-config.md: Counterexample[0] expected 
-playwright-coverage.md: Valid example[0] run error:
-playwright-coverage.md: Counterexample[0] run error:
-playwright-prefer-test-id-locators.md: Counterexample[0] expected 
-query-reached-per-item.md: Valid example[0] run error:
-query-reached-per-item.md: Counterexample[0] run error:
 require-storybook-stories.md: Valid example[0] run error:
 require-storybook-stories.md: Counterexample[0] run error:
-server-route-client-boundary.md: Counterexample[0] expected 
 shellcheck-runner.md: Counterexample[0] expected 
 tsconfig-gate-coverage.md: Valid example[0] expected 
 vitest-ci-path-coverage.md: Counterexample[0] expected 

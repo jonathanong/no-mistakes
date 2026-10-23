@@ -22,21 +22,36 @@ There are no rule-specific options or defaults. It validates the active
 
 ## Valid example
 
-The fixed configuration below uses a tracked project root, removes the empty
-exclude, and puts the budget on a non-`direct` group.
+The project root below exists in the example tree.
 
 ```yaml
+# .no-mistakes.yml
+projects:
+  web:
+    root: web
 rules:
   - rule: no-mistakes-config
     scope: repository
 ```
 
+```ts
+// web/index.ts
+export const appName = 'web';
+```
 
 ## Counterexample
 
 ```yaml
-unknownKey: true
+# .no-mistakes.yml
+projects:
+  web:
+    root: apps/missing
+rules:
+  - rule: no-mistakes-config
+    scope: repository
 ```
+
+The configured project root does not exist, so the rule reports `apps/missing`.
 
 ## Suppression
 

@@ -34,16 +34,64 @@ convention.
 
 ## Valid example
 
-```text
-backend/api/users/route.ts
-backend/services/users-client.ts
+```yaml
+# .no-mistakes.yml
+projects:
+  api:
+    type: server
+    root: backend
+    routes: ['api/**']
+rules:
+  - rule: server-route-client-boundary
+    projects: [api]
+```
+
+```ts
+// backend/api/users/route.ts
+import express from 'express';
+const app = express();
+app.get('/api/users', (_request, response) => response.json([]));
+```
+
+```ts
+// backend/services/users-client.ts
+import axios from 'axios';
+export async function getUsers() {
+  return axios.get('/api/users');
+}
 ```
 
 ## Counterexample
 
-```text
-backend/api/users/client.ts
+```yaml
+# .no-mistakes.yml
+projects:
+  api:
+    type: server
+    root: backend
+    routes: ['api/**']
+rules:
+  - rule: server-route-client-boundary
+    projects: [api]
 ```
+
+```ts
+// backend/api/users/route.ts
+import express from 'express';
+const app = express();
+app.get('/api/users', (_request, response) => response.json([]));
+```
+
+```ts
+// backend/api/users/client.ts
+import axios from 'axios';
+export async function getUsers() {
+  return axios.get('/api/users');
+}
+```
+
+The resolved Express route establishes the folder boundary; the Axios call
+in its sibling file violates it.
 
 ## Fix
 
