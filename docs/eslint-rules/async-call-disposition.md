@@ -31,9 +31,9 @@ function returnToCaller(user) {
 
 A callback's return also counts for `vi.fn`, `jest.fn`, and
 `mockImplementation` / `mockImplementationOnce` on a known `vi.spyOn`,
-`jest.spyOn`, `vi.fn`, or `jest.fn` result. These APIs pass the implementation's
+`jest.spyOn`, `vi.fn`, `jest.fn`, or `vi.mocked` result. These APIs pass the implementation's
 return value to the mock's caller. Imported aliases, framework namespaces such
-as `vitest.vi`, and unchanged `const` mock bindings are recognized.
+as `vitest.vi`, and unchanged `const` or `let` mock bindings are recognized.
 
 ```ts
 import { enqueueEmail } from "@app/jobs";
@@ -55,8 +55,51 @@ async function sendBatch(ids) {
 
 A promise retained in an unchanged `const` binding counts when it is later
 explicitly disposed in the same block. An initially empty `const` array also
-counts when its promises are pushed and its direct `Promise.all` or
-`Promise.allSettled` result is later awaited, returned, or explicitly voided.
+counts when its promises are pushed and its direct `Promise.all`,
+`Promise.allSettled`, `Promise.race`, or `Promise.any` result is later awaited,
+returned, or explicitly voided. A retained `.map` result follows the same
+aggregate requirement; returning or awaiting the array itself does not dispose
+its members. Synchronous `.forEach` callbacks can push work before that drain.
+An unconditional drain in `finally` also handles work created in its protected
+`try` block, including a return or throw from that block.
+
+```ts
+import { vi } from "vitest";
+
+async function mapped(ids) {
+  const pending = ids.map((id) => enqueueEmail(id));
+  await Promise.all(pending);
+}
+
+async function collected(ids) {
+  const pending = [];
+  ids.forEach((id) => pending.push(enqueueEmail(id)));
+  await Promise.race(pending);
+}
+
+async function finalized() {
+  const pending = [];
+  try {
+    pending.push(enqueueEmail("one"));
+    return await run();
+  } finally {
+    await Promise.all(pending);
+  }
+}
+
+let spy = vi.spyOn(service, "send");
+spy.mockImplementation((...args) => {
+  const result = Promise.resolve(enqueueEmail(...args)).finally(cleanup);
+  if (collect) pending.push(result);
+  return result;
+});
+vi.mocked(service.send).mockImplementationOnce((id) => enqueueEmail(id));
+```
+
+The native global `Promise.resolve` adopts its first argument, including
+when the resulting promise is chained, retained, and returned. An independently
+proven return still counts after a conditional collection push; an earlier
+conditional return or throw cannot prove that later return executes.
 
 ## Options
 
@@ -88,8 +131,9 @@ Another file's re-export is not visible here. `import { send } from "./barrel.mj
 
 Collection tracking requires straight-line statements in the same executing
 block, with the push before the observation. Conditional observations, array
-mutation or escape, nested callback producers, reassigned bindings, and unknown
-callback APIs remain reported. A mock callback that pushes and returns a promise
+mutation or escape, async `.forEach` callbacks, reassigned bindings, and unknown
+callback APIs remain reported. A catch-only or conditional `finally` drain does
+not establish disposition. Other call wrappers do not establish adoption. A mock callback that pushes and returns a promise
 is accepted through its return; this does not establish when an outer array is
 drained. Locally shadowed `vi`, `jest`, and `Promise` objects do not establish
 these dispositions. Direct property writes, updates, or deletion on a known mock

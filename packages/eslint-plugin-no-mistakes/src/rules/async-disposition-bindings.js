@@ -1,19 +1,22 @@
 "use strict";
 
-const {
-  findContainingFunction,
-  unwrapExpression,
-  unwrapTransparentParent,
-} = require("./async-ast");
+const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { resolveVariable, stableConstInitializer } = require("./async-target-bindings");
+const {
+  collectionAnchor,
+  laterDrain,
+  laterInBlock,
+  statement,
+} = require("./async-disposition-flow");
+const { propertiesWritten } = require("./async-disposition-mocks");
 const { memberPropertyName } = require("./async-targets");
 
 function globalPromise(node, context) {
   const variable = resolveVariable(node, context);
-  return !variable?.defs.length;
+  return !variable?.defs.length && !propertiesWritten(node, context);
 }
 
-function isPromiseAllCall(node, context) {
+function isPromiseMethodCall(node, context, methods) {
   const callee = unwrapExpression(node?.callee);
   const object = unwrapExpression(callee?.object);
   return (
@@ -22,41 +25,19 @@ function isPromiseAllCall(node, context) {
     object?.type === "Identifier" &&
     object.name === "Promise" &&
     globalPromise(object, context) &&
-    ["all", "allSettled"].includes(memberPropertyName(callee))
+    methods.includes(memberPropertyName(callee))
   );
 }
 
-function statement(node) {
-  while (node.parent && node.parent.type !== "BlockStatement" && node.parent.type !== "Program")
-    node = node.parent;
-  return node;
+function isPromiseAllCall(node, context) {
+  return isPromiseMethodCall(node, context, ["all", "allSettled", "race", "any"]);
 }
 
-function unconditional(node, end) {
-  while (node !== end) {
-    if (node.type === "LogicalExpression" || node.type === "ConditionalExpression" || node.optional)
-      return false;
-    node = node.parent;
-  }
-  return true;
-}
-
-// Only straight-line statements establish that the later observation executes.
-function laterInBlock(from, to) {
-  const start = statement(from);
-  const end = statement(to);
-  if (
-    findContainingFunction(from) !== findContainingFunction(to) ||
-    start.parent !== end.parent ||
-    start.range[0] >= end.range[0] ||
-    !["ExpressionStatement", "ReturnStatement", "VariableDeclaration"].includes(end.type)
-  )
-    return false;
-  if (!unconditional(to, end)) return false;
-  const body = start.parent.body;
-  return body
-    .slice(body.indexOf(start) + 1, body.indexOf(end))
-    .every((node) => node.type === "ExpressionStatement" || node.type === "VariableDeclaration");
+function standalonePush(call) {
+  return (
+    call.parent.type === "ExpressionStatement" ||
+    (call.parent.type === "ArrowFunctionExpression" && call.parent.body === call)
+  );
 }
 
 function pushedArray(node) {
@@ -69,7 +50,7 @@ function pushedArray(node) {
     callee?.type !== "MemberExpression" ||
     memberPropertyName(callee) !== "push" ||
     callee.object.type !== "Identifier" ||
-    push.parent.type !== "ExpressionStatement"
+    !standalonePush(push)
   )
     return null;
   return { id: callee.object, push };
@@ -87,7 +68,7 @@ function collectedPromise(node, context, isAggregate, disposed) {
     const id = reference.identifier;
     const parent = unwrapTransparentParent(id).parent;
     if (isAggregate(parent) && parent.arguments[0] === id) {
-      if (laterInBlock(found.push, parent) && disposed(parent)) drained = true;
+      if (laterDrain(found.push, parent) && disposed(parent)) drained = true;
       continue;
     }
     const member = parent;
@@ -98,10 +79,34 @@ function collectedPromise(node, context, isAggregate, disposed) {
       memberPropertyName(member) !== "push" ||
       call?.type !== "CallExpression" ||
       call.callee !== member ||
-      call.parent.type !== "ExpressionStatement" ||
-      statement(call).parent !== statement(found.push).parent
+      !standalonePush(call) ||
+      !collectionAnchor(call) ||
+      statement(collectionAnchor(call)).parent !==
+        statement(collectionAnchor(found.push) || found.push).parent
     )
       return false;
+  }
+  return drained;
+}
+
+function retainedCollection(node, context, isAggregate, disposed) {
+  const expression = unwrapTransparentParent(node);
+  const declaration = expression.parent;
+  if (
+    declaration?.type !== "VariableDeclarator" ||
+    declaration.init !== expression ||
+    declaration.id.type !== "Identifier" ||
+    !stableConstInitializer(declaration.id, context, new Set())
+  )
+    return false;
+  const variable = resolveVariable(declaration.id, context);
+  let drained = false;
+  for (const reference of variable.references) {
+    if (reference.init) continue;
+    const id = unwrapTransparentParent(reference.identifier);
+    const parent = id.parent;
+    if (!isAggregate(parent) || parent.arguments[0] !== id) return false;
+    if (laterDrain(node, parent) && disposed(parent)) drained = true;
   }
   return drained;
 }
@@ -123,4 +128,10 @@ function retainedPromise(node, context, disposed) {
   );
 }
 
-module.exports = { collectedPromise, isPromiseAllCall, retainedPromise };
+module.exports = {
+  collectedPromise,
+  isPromiseAllCall,
+  isPromiseMethodCall,
+  retainedCollection,
+  retainedPromise,
+};

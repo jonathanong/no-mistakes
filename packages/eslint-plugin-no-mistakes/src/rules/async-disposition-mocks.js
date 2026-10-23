@@ -30,7 +30,7 @@ function propertiesWritten(node, context, seen = new Set()) {
         parent.type === "CallExpression" &&
         parent.callee === value &&
         value.type === "MemberExpression" &&
-        ["spyOn", "mockImplementation", "mockImplementationOnce"].includes(
+        ["spyOn", "mocked", "mockImplementation", "mockImplementationOnce"].includes(
           memberPropertyName(value),
         );
       if (!member && !spyResult) break;
@@ -47,7 +47,7 @@ function propertiesWritten(node, context, seen = new Set()) {
       parent.type === "VariableDeclarator" &&
       parent.init === value &&
       parent.id.type === "Identifier" &&
-      parent.parent.kind === "const"
+      ["const", "let"].includes(parent.parent.kind)
     )
       return propertiesWritten(parent.id, context, seen);
     return false;
@@ -91,7 +91,22 @@ function mockCall(node, context, seen = new Set()) {
   node = unwrapExpression(node);
   if (node?.type === "Identifier") {
     if (propertiesWritten(node, context)) return false;
-    const init = stableConstInitializer(node, context, seen);
+    const variable = resolveVariable(node, context);
+    if (
+      !variable ||
+      seen.has(variable) ||
+      variable.defs.length !== 1 ||
+      isReassigned(node, context)
+    )
+      return false;
+    seen.add(variable);
+    const def = variable.defs[0];
+    const init =
+      def.type === "Variable" &&
+      ["const", "let"].includes(def.parent.kind) &&
+      def.node.id.type === "Identifier"
+        ? def.node.init
+        : null;
     return init ? mockCall(init, context, seen) : false;
   }
   if (node?.type !== "CallExpression") return false;
@@ -99,7 +114,7 @@ function mockCall(node, context, seen = new Set()) {
   if (callee?.type !== "MemberExpression") return false;
   const method = memberPropertyName(callee);
   if (frameworkObject(callee.object, context) === "api")
-    return method === "fn" || method === "spyOn";
+    return method === "fn" || method === "spyOn" || method === "mocked";
   return (
     (method === "mockImplementation" || method === "mockImplementationOnce") &&
     mockCall(callee.object, context, seen)
@@ -120,4 +135,4 @@ function returnsThroughMock(fn, context) {
   );
 }
 
-module.exports = { returnsThroughMock };
+module.exports = { propertiesWritten, returnsThroughMock };
