@@ -126,11 +126,42 @@ destructured parameters do not establish an unchanged parameter list. Template
 key assignment wrappers follow the released naming rule for bare identifier
 callees.
 `.apply` requires a literal array; a changed receiver or arguments are not aliases.
+Forwarding must preserve argument order, rest spreading, and the method
+receiver. Defaults, changed arguments, or a different `.call` / `.apply`
+receiver mean the wrapper has behavior the rule cannot prove is an alias.
+Optional invocation is checked when the underlying member name is static.
+An `as` or angle-bracket cast around a callee is checked only when its type is
+`typeof` that exact reachable callable, directly or through one same-file,
+non-generic type alias. A cast around the returned call is checked only when
+its primitive type is identical to an explicit return type on a same-file
+exported callable. A single same-file type alias of that primitive is also
+recognized. These proofs allow the wrapper to be removed
+without discarding a distinct asserted type:
+
+```ts
+import { db } from "./db";
+type Handler = typeof db.createUser;
+const create = input => (db.createUser as Handler)(input);
+// Fix: use db.createUser directly instead of create.
+
+export function original(input: string): string { return input; }
+type Output = string;
+const forwarded = input => (original(input) as Output);
+// Fix: use original directly instead of forwarded.
+```
+
+Unresolved or imported aliases, a changed primitive result type, and
+`satisfies` contracts stay unreported on the expanded path. An
+assertion on a receiver does not establish a reachable target. Recursion and
+forwarding receiver checks still apply to casts that pass the type proof.
+Methods literally named `call` or `apply` are also checked as ordinary member
+calls when their own arguments match the wrapper; the forwarding interpretation
+is considered separately when its receiver and arguments can be proven.
 Type-only imports do not establish expanded-path reachability. A method
 literally named `call` or `apply` on an imported namespace is an actual export;
-on other imported values
-those names can be Function intrinsics, so only proven forwarding is checked.
-The rule does not resolve another file to compare signatures.
+on other imported values those names can be Function intrinsics, so only
+proven forwarding is checked. The rule does not resolve another file to
+compare signatures.
 
 ## Options
 

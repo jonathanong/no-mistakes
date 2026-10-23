@@ -32,7 +32,14 @@ they apply only to `undefined`.
 
 ## Limits
 
-`` options[`label`] `` and `` const { [`label`]: text } = options `` are `options.label`. A computed identifier key is not.
+`` options[`label`] `` and `` const { [`label`]: text } = options `` are `options.label`. A computed identifier key is not:
+`options[key] ?? "Untitled"` does not prove which nullable member is read.
+Same-file object aliases and direct static destructuring patterns preserve the option
+member. A parameter-default destructure such as
+`function render({ label } = options) { return label ?? "Untitled"; }` does not
+prove that the caller supplied that option object. Imported type definitions
+are not resolved: `import type { Options } from "./types"` does not prove which
+members admit null. Call forwarding wrappers do not change these type proofs.
 
 ## Fix
 

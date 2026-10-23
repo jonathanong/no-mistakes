@@ -23,6 +23,14 @@ const accountId = user.id;
 
 This rule has no options.
 
+## Limits
+
+This rule checks differently named identifier initializers in `const`
+declarations, including erased TypeScript assertions. Member reads,
+destructuring, calls, and their `.call` / `.apply` wrappers do not establish an
+identifier alias: `const property = db["read"]` stays allowed. It does not resolve
+another file's exports or infer whether a value is a function.
+
 ## Fix
 
 Use the original value name directly, or keep the declaration only when it
