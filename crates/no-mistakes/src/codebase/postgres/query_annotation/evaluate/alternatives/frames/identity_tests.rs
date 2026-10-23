@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
+use crate::codebase::postgres::query_annotation::evaluate::{ArgumentObjects, SnapshotMap};
 
 #[test]
 fn identity_frames_with_changed_binding_values_still_prune_arena_and_freshness() {
@@ -17,10 +17,10 @@ fn identity_frames_with_changed_binding_values_still_prune_arena_and_freshness()
     ]);
     let mut extras = FxHashMap::default();
     let mut mapped = FxHashMap::default();
-    let mut fresh = FxHashMap::from_iter([
+    let mut fresh = SnapshotMap::from(FxHashMap::from_iter([
         (0, FxHashSet::from_iter(["arg".into()])),
         (9, FxHashSet::from_iter(["stale".into()])),
-    ]);
+    ]));
     let mut captured = FxHashMap::from_iter([(0, Default::default())]);
     let result = compact_from_roots(
         &mut scopes,

@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
+use crate::codebase::postgres::query_annotation::evaluate::{ArgumentObjects, SnapshotMap};
 use std::collections::BTreeMap;
 
 #[derive(Clone, Default)]
@@ -8,7 +8,7 @@ struct State {
     objects: ArgumentObjects,
     extras: FxHashMap<u64, BTreeMap<usize, Value>>,
     mapped: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
-    fresh: FxHashMap<Environment, FxHashSet<String>>,
+    fresh: SnapshotMap<Environment, FxHashSet<String>>,
     captured: CapturedBindings,
     returned: Vec<Value>,
     modules:
@@ -95,7 +95,10 @@ fn exact_compacted_state_matches_legacy_through_remaps_and_root_removal() {
         ]),
         extras: FxHashMap::from_iter([(7, BTreeMap::from([(5, Value::Array(8))]))]),
         mapped: FxHashMap::from_iter([(3, vec![(8, vec!["mapped".into()])])]),
-        fresh: FxHashMap::from_iter([(3, FxHashSet::from_iter(["mapped".into()]))]),
+        fresh: SnapshotMap::from(FxHashMap::from_iter([(
+            3,
+            FxHashSet::from_iter(["mapped".into()]),
+        )])),
         captured: FxHashMap::from_iter([(0, FxHashMap::from_iter([("source".into(), 3)]).into())]),
         modules: FxHashMap::from_iter([(
             crate::codebase::postgres::query_annotation::module_ids::ModuleIds::new([

@@ -65,7 +65,10 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     >,
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,
-    fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
+    fresh: &mut crate::codebase::postgres::query_annotation::evaluate::SnapshotMap<
+        Environment,
+        FxHashSet<String>,
+    >,
     captured: &mut CapturedBindings,
 ) -> Compaction {
     let roots = modules.values().copied().collect::<Vec<_>>();

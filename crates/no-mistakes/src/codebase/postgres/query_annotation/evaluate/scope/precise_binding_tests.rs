@@ -65,10 +65,9 @@ fn precise_record_arms_never_construct_reference_binding_indexes() {
         if precise_records {
             assert_eq!(scans, 0, "precise arms do not perform legacy comparisons");
         } else {
-            assert!(
-                scans > 0,
-                "the saved reference-bearing branch exercises indexing"
-            );
+            // Both arms are the same holder, so the scope Arc and argument arenas
+            // stay shared. Identical arms must not build the binding index.
+            assert_eq!(scans, 0);
         }
     }
 }

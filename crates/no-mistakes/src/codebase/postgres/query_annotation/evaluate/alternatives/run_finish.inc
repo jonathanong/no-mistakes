@@ -30,17 +30,24 @@
         // These identities already represent actual arm effects. Replaying an
         // arguments escape would wrongly taint values assigned after that escape.
         self.invalidated_builders.extend(changed.iter().copied());
-        super::values::apply_taint(&mut self.scopes, &changed);
+        let taint_writes = super::values::apply_taint(&mut self.scopes, &changed);
         // Restored bindings must retain any prior opaque parameter update before
         // the common deletion disconnects them from future argument mutations.
+        let disconnect_writes = private_disconnected
+            .iter()
+            .any(|slot| !disconnected.contains(slot))
+            || disconnected_common.as_ref().is_some_and(|common| {
+                common.iter().any(|slot| !disconnected.contains(slot))
+            });
         self.install_disconnected_slots(&disconnected, disconnected_common, private_disconnected);
         self.definite_deleted_argument_slots = final_definite;
-        self.refresh_captured_bindings();
+        let capture_writes = self.refresh_captured_bindings(&scopes);
+        let quiet = !taint_writes && !disconnect_writes && !capture_writes;
         // Speculative identities with no surviving aliases cannot affect later reads.
         self.active_module_initials
             .pop()
             .expect("balanced alternatives");
-        self.prune_final_alternative_state(&returned, final_live);
+        self.prune_final_alternative_state(&returned, final_live, proved_live, quiet);
         self.untrusted_array_intrinsics = joined_untrusted;
         // Preserve possible callback captures for opaque consumers, while an
         // aggregate never proves the SQL prefix of a conditional return.

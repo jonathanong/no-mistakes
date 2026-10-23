@@ -17,10 +17,30 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn invalidate_live_builders(&mut self) {
         // Opaque hooks may patch intrinsics even without live builders.
         self.untrusted_array_intrinsics = true;
-        let ids = self.collect_builder_ids_from(
-            self.scopes.iter().flat_map(|scope| scope.values()),
-            std::mem::drop,
-        );
+        // Scope reference summaries already record prefix identities. Rebuilding
+        // them on every opaque effect rescans the whole import graph; argument
+        // slots stay outside that summary because arena writes do not detach it.
+        let mut ids = crate::fx::FxHashSet::default();
+        let mut arguments = crate::fx::FxHashSet::default();
+        for scope in &self.scopes {
+            if !scope.contains_reference() {
+                continue;
+            }
+            let edges = scope.references();
+            ids.extend(edges.identities.iter().copied());
+            arguments.extend(edges.arguments.iter().copied());
+        }
+        let mut visited = crate::fx::FxHashSet::default();
+        for id in arguments {
+            if !ids.insert(id) || !self.argument_objects.contains_key(&id) {
+                continue;
+            }
+            for (index, value) in self.argument_slots(id) {
+                if !self.definite_deleted_argument_slots.contains(&(id, index)) {
+                    self.collect_builder_value(value, &mut ids, &mut visited, &mut std::mem::drop);
+                }
+            }
+        }
         self.invalidate_builder_ids(ids);
     }
 

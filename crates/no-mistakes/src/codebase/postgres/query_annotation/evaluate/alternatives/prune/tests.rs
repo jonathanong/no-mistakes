@@ -1,6 +1,6 @@
 use super::*;
-use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
 use crate::codebase::postgres::query_annotation::evaluate::Value;
+use crate::codebase::postgres::query_annotation::evaluate::{ArgumentObjects, SnapshotMap};
 use crate::fx::{FxHashMap, FxHashSet};
 
 #[test]
@@ -62,7 +62,7 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
             ),
             (99, vec![Value::Prefix("dead".into(), true, Some(9))]),
         ]),
-        argument_extra_slots: FxHashMap::from_iter([
+        argument_extra_slots: SnapshotMap::from(FxHashMap::from_iter([
             (
                 43,
                 std::collections::BTreeMap::from_iter([(
@@ -71,7 +71,7 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
                 )]),
             ),
             (99, Default::default()),
-        ]),
+        ])),
         definite_deleted_argument_slots: FxHashSet::from_iter([(43, 1), (99, 0)]),
         recreated_argument_slots: Default::default(),
         disconnected_argument_slots: FxHashSet::from_iter([(43, 1), (99, 0)]),

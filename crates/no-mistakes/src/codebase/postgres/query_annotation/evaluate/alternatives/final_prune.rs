@@ -38,7 +38,20 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             && indices.iter().all(|(old, new)| old == new)
     }
 
-    pub(super) fn prune_final_alternative_state(&mut self, returned: &[Value], live: Option<Live>) {
+    pub(super) fn prune_final_alternative_state(
+        &mut self,
+        returned: &[Value],
+        live: Option<Live>,
+        proved: Option<Live>,
+        quiet: bool,
+    ) {
+        // A quiet finish does not write scopes or slots after the last compaction,
+        // so that compaction's reachable ids are the final graph.
+        let live = live.or(if quiet && !hooks::original_prune() {
+            proved
+        } else {
+            None
+        });
         let Some((arguments, identities)) = live else {
             self.prune_alternative_state(returned);
             return;

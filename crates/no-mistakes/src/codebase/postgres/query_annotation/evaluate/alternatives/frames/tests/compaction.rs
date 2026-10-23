@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::postgres::query_annotation::evaluate::SnapshotMap;
 
 #[test]
 fn changed_compaction_remaps_shared_scopes_results_and_heap_metadata() {
@@ -31,7 +32,10 @@ fn changed_compaction_remaps_shared_scopes_results_and_heap_metadata() {
         std::collections::BTreeMap::from_iter([(1000, function_value(2))]),
     )]);
     let mut mapped = FxHashMap::from_iter([(2, vec![(42, vec!["parameter".into()])])]);
-    let mut fresh = FxHashMap::from_iter([(2, FxHashSet::from_iter(["parameter".into()]))]);
+    let mut fresh = SnapshotMap::from(FxHashMap::from_iter([(
+        2,
+        FxHashSet::from_iter(["parameter".into()]),
+    )]));
     let mut captured =
         FxHashMap::from_iter([(2, FxHashMap::from_iter([("owner".into(), 2)]).into())]);
     let indices = compact_from_roots(
@@ -87,7 +91,7 @@ fn initial_argument_roots_preserve_cycles_and_callbacks_without_copying_returns(
         ArgumentObjects::from_iter([(42, vec![Value::Arguments(42), function_value(2)])]);
     let mut extras = FxHashMap::default();
     let mut mapped = FxHashMap::default();
-    let mut fresh = FxHashMap::default();
+    let mut fresh = SnapshotMap::default();
     let mut captured = FxHashMap::default();
 
     let compacted = compact_from_roots(

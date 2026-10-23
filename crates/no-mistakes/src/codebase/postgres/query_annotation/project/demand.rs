@@ -78,7 +78,7 @@ pub(super) fn roots<'a>(
                     if let Some(low) = low {
                         parent.low = parent.low.min(low);
                     }
-                    parent.demanded |= demanded;
+                    parent.demanded |= demanded && files[path].facts.annotation_event;
                 } else {
                     enter(target, files, &mut visits, &mut component, &mut frames);
                 }
@@ -94,17 +94,20 @@ pub(super) fn roots<'a>(
                     .iter()
                     .any(|member| visits[member].demanded);
                 for member in component.drain(start..) {
+                    let event_file = files[member].facts.annotation_event;
                     let visit = visits.get_mut(member).unwrap();
                     visit.active = false;
-                    visit.demanded = demanded;
+                    visit.demanded = demanded && event_file;
                 }
             }
             frames.pop();
             if let Some(parent) = frames.last() {
                 let demanded = visits[path].demanded;
-                let parent = visits.get_mut(parent.path).unwrap();
+                let parent_path = parent.path;
+                let event_file = files[parent_path].facts.annotation_event;
+                let parent = visits.get_mut(parent_path).unwrap();
                 parent.low = parent.low.min(low);
-                parent.demanded |= demanded;
+                parent.demanded |= demanded && event_file;
             }
         }
     }
@@ -128,7 +131,7 @@ fn enter<'a>(
             index,
             low: index,
             active: true,
-            demanded: !files[path].executors.is_empty(),
+            demanded: !files[path].executors.is_empty() && files[path].facts.annotation_event,
         },
     );
     component.push(path);

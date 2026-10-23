@@ -23,6 +23,8 @@ pub(super) fn collect(
         }
     }
     let reassigned = super::trust::reassigned(program);
+    // Path filters are applied by the check fact pass. Unfiltered facts stay roots.
+    facts.annotation_event = true;
     facts.raw_tag_reassigned = reassigned.contains("String");
     facts.trusted_tags.retain(|name| !reassigned.contains(name));
     for (name, value) in &mut facts.globals {

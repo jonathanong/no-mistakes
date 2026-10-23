@@ -23,9 +23,13 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
             "type-only",
         ],
     );
-    for (_, file) in &mut files {
+    for (path, file) in &mut files {
         file.query_annotation.truncate(1);
         file.embedded_sql.truncate(1);
+        // Excluded files stay in the catalog for imports, but they are not roots.
+        if path.ends_with("entry.mts") {
+            file.query_annotation[0].1.annotation_event = false;
+        }
     }
     let candidates = files.keys().cloned().collect::<BTreeSet<_>>();
     let resolve = |specifier: &str, from: &std::path::Path| {
@@ -51,9 +55,7 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
         .collect::<BTreeSet<_>>();
     assert_eq!(
         selected,
-        BTreeSet::from([
-            "executor", "caller", "barrel", "entry", "cycle-a", "cycle-b", "required",
-        ])
+        BTreeSet::from(["executor", "caller", "barrel", "cycle-a", "cycle-b", "required",])
     );
     drop(collected);
     let observer = InvocationObserver::new(true);
@@ -68,7 +70,7 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
             candidates.contains(&target).then_some(target)
         });
     });
-    assert_eq!(observer.snapshot().work["postgres.annotation.roots"], 7);
+    assert_eq!(observer.snapshot().work["postgres.annotation.roots"], 6);
     assert!(
         resolutions
             .into_inner()

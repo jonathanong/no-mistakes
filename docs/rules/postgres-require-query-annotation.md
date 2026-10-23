@@ -150,7 +150,9 @@ Executed PostgreSQL SQL must begin with a non-empty block comment. At `max`,
 
 ## Options and defaults
 
-`include` and `exclude` select files. `importSpecifier` has no default;
+`include` and `exclude` select which files are annotation roots. A file they
+reject stays available when an included file imports it, and its own calls are
+not evaluated as roots. `importSpecifier` has no default;
 `executorNames` defaults to `[query, read, write]` only with a configured module.
 `unanalyzableSql` defaults to `report`; `ignore` skips residual unknown SQL and
 `advise` puts its reason, known prefix, and helper lines in non-failing

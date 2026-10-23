@@ -9,14 +9,14 @@ use std::sync::{Arc, OnceLock};
 #[derive(Clone, Default, Eq, PartialEq)]
 pub(in crate::codebase::postgres::query_annotation) struct ModuleCache {
     ids: OnceLock<Arc<ModuleIds>>,
-    values: FxHashMap<ModuleId, Environment>,
+    values: Arc<FxHashMap<ModuleId, Environment>>,
 }
 
 impl ModuleCache {
     pub fn with_ids(ids: Arc<ModuleIds>) -> Self {
         Self {
             ids: OnceLock::from(ids),
-            values: FxHashMap::default(),
+            values: Arc::default(),
         }
     }
 }
@@ -29,7 +29,7 @@ impl Deref for ModuleCache {
 }
 impl DerefMut for ModuleCache {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.values
+        Arc::make_mut(&mut self.values)
     }
 }
 

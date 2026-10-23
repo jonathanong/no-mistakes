@@ -17,6 +17,8 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
     let (prefix, base) = cached;
     // The caller supplies every preserved environment as a root.
     prefix.refresh(&scopes[..base]);
+    // Distinct frames often share one immutable snapshot. Union its edges once.
+    let mut seen_edges = FxHashSet::<usize>::default();
     let mut found = Reachable::default();
     prefix.seed(&mut found);
     found
@@ -43,9 +45,11 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
             if found.environments.insert(env) {
                 auxiliary(&mut found, env, mapped, captured);
                 let edges = scopes[env].references();
-                found.pending_env.extend(edges.environments.iter().copied());
-                found.pending_args.extend(edges.arguments.iter().copied());
-                found.identities.extend(edges.identities.iter().copied());
+                if seen_edges.insert(std::ptr::from_ref(edges) as usize) {
+                    found.pending_env.extend(edges.environments.iter().copied());
+                    found.pending_args.extend(edges.arguments.iter().copied());
+                    found.identities.extend(edges.identities.iter().copied());
+                }
             }
         }
         while let Some(id) = found.pending_args.pop() {
@@ -54,9 +58,11 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn c
                 // Dense snapshots cache direct edges, never the mutable arena's
                 // transitive closure. A write detaches and invalidates this memo.
                 let edges = arena.objects[&id].references();
-                found.pending_env.extend(edges.environments.iter().copied());
-                found.pending_args.extend(edges.arguments.iter().copied());
-                found.identities.extend(edges.identities.iter().copied());
+                if seen_edges.insert(std::ptr::from_ref(edges) as usize) {
+                    found.pending_env.extend(edges.environments.iter().copied());
+                    found.pending_args.extend(edges.arguments.iter().copied());
+                    found.identities.extend(edges.identities.iter().copied());
+                }
                 for value in arena
                     .extras
                     .get(&id)

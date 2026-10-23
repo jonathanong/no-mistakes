@@ -40,4 +40,7 @@ mod observer_tests;
 mod reference_binding_tests;
 
 #[cfg(test)]
+mod unchanged_scope_tests;
+
+#[cfg(test)]
 pub(super) mod value_equality_test_support;

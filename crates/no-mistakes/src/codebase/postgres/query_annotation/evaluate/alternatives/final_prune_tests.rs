@@ -146,10 +146,19 @@ fn deleted_state_reuses_the_last_walk_and_preserves_every_mutation_table() {
     );
 }
 #[test]
-fn opaque_invalidations_retain_the_original_walk_fallback() {
+fn opaque_invalidations_keep_the_full_walk_result_without_repeating_it() {
     let (old, new) = compare("invalidated-state.mts");
-    assert_eq!(new.1, 0, "opaque mutations invalidate the no-write proof");
-    assert_eq!(old.0, new.0);
+    // Invalidated ids that never rewrite a restored scope do not change
+    // reachability. Reusing the last compaction must match the verbatim walk.
+    assert_eq!(
+        new.1, 32,
+        "saved conditionals reuse compaction after a quiet finish"
+    );
+    assert_eq!(
+        old.0 - new.0,
+        32,
+        "remove actual walks, not diagnostic bookkeeping"
+    );
 }
 #[test]
 fn final_live_guard_keeps_captures_and_moved_transient_environments_conservative() {

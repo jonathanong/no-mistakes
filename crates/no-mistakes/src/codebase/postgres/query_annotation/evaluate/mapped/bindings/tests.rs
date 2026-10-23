@@ -52,7 +52,7 @@ fn equal_capture_refresh_keeps_shared_bindings_and_builder_indexes() {
         1,
         FxHashMap::from_iter([("builder".into(), 0), ("unknown".into(), 0)]).into(),
     );
-    evaluator.refresh_captured_bindings();
+    evaluator.refresh_captured_bindings(&[]);
     for frame in &evaluator.scopes {
         assert!(std::ptr::eq(&**frame, &*scope));
         assert!(frame.builder_index_initialized());
@@ -63,15 +63,36 @@ fn equal_capture_refresh_keeps_shared_bindings_and_builder_indexes() {
         .get_mut(&1)
         .unwrap()
         .insert("missing".into(), 0);
-    evaluator.refresh_captured_bindings();
+    evaluator.refresh_captured_bindings(&[]);
     assert!(evaluator.scopes[1].get("missing") == Some(&Value::Unknown));
     assert!(!std::ptr::eq(&*evaluator.scopes[1], &*scope));
     assert!(!evaluator.scopes[1].builder_index_initialized());
     assert!(!scope.contains_key("missing"));
     evaluator.scopes[0].insert("builder".into(), Value::Unknown);
-    evaluator.refresh_captured_bindings();
+    evaluator.refresh_captured_bindings(&[]);
     assert!(evaluator.scopes[1]["builder"] == Value::Unknown);
     assert!(matches!(scope["builder"], Value::Prefix(_, _, Some(7))));
+}
+
+#[test]
+fn unchanged_entry_snapshots_skip_capture_refresh() {
+    let files = FxHashMap::default();
+    let mut evaluator = evaluator(&files);
+    let scope = Scope::from(FxHashMap::from_iter([(
+        "builder".into(),
+        Value::Prefix("SELECT 1".into(), true, Some(7)),
+    )]));
+    evaluator.scopes = vec![scope.clone(), scope.clone()];
+    let entry = evaluator.scopes.clone();
+    evaluator.captured_bindings.insert(
+        1,
+        FxHashMap::from_iter([("builder".into(), 0), ("missing".into(), 0)]).into(),
+    );
+    evaluator.refresh_captured_bindings(&entry);
+    assert!(evaluator.scopes[1].same_bindings(&scope));
+    assert!(evaluator.scopes[1].get("missing").is_none());
+    evaluator.refresh_captured_bindings(&[]);
+    assert!(evaluator.scopes[1].get("missing") == Some(&Value::Unknown));
 }
 
 #[test]

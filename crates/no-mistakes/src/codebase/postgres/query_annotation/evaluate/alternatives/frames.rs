@@ -53,7 +53,10 @@ fn compact_from_roots(
     returned: &mut [Value],
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,
-    fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
+    fresh: &mut crate::codebase::postgres::query_annotation::evaluate::SnapshotMap<
+        Environment,
+        FxHashSet<String>,
+    >,
     captured: &mut CapturedBindings,
 ) -> Compaction {
     let reachable = reachable::collect_from_roots(
@@ -93,7 +96,10 @@ fn compact_collected(
     returned: &mut [Value],
     mapped: &mut FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
     arena: ArenaMut<'_>,
-    fresh: &mut FxHashMap<Environment, FxHashSet<String>>,
+    fresh: &mut crate::codebase::postgres::query_annotation::evaluate::SnapshotMap<
+        Environment,
+        FxHashSet<String>,
+    >,
     collected: Collected<'_>,
 ) -> Compaction {
     let Collected {

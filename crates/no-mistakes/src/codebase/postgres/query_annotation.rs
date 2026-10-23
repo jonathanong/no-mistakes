@@ -17,6 +17,9 @@ use std::collections::{BTreeMap, BTreeSet};
 #[derive(Clone, Debug, Default)]
 pub(crate) struct QueryAnnotationFileFacts {
     pub(crate) precise_records: bool,
+    /// False when an annotation rule's include/exclude rejects this file.
+    /// Unfiltered collection leaves this true so executor files stay roots.
+    pub(crate) annotation_event: bool,
     pub(super) array_prototype_exposed: bool,
     pub(super) globals: BTreeMap<String, Expr>,
     pub(super) roots: Vec<Step>,
