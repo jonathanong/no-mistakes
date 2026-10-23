@@ -14,6 +14,17 @@ await query("BEGIN");
 await query("COMMIT");
 ```
 
+```ts
+import * as db from "@example/db";
+
+const { query } = db;
+const q = query;
+const execute = (sql) => q(sql);
+await q.call(null, "BEGIN");
+await q.apply(null, ["COMMIT"]);
+await execute("ROLLBACK");
+```
+
 ## Allowed
 
 ```ts
@@ -65,6 +76,32 @@ query wrapper supports recovery; the owner must preserve that wrapper's contract
 - `owners` is an absolute-suffix or repository-relative allowlist for the
   transaction lifecycle helper. It defaults to no owner exemptions.
 
+## Limits
+
+The executor calls above include same-file immutable `const` aliases,
+value namespace imports from the configured module, and `const { query } = db` (or
+another configured namespace export). String and expression-free template keys,
+optional calls, TypeScript wrappers, comma callees, `.call`, and `.apply` with a
+literal array are supported. A configured namespace export named `call` or
+`apply` is matched as that executor before function forwarding.
+
+One local arrow, function expression, or function declaration can forward
+identifier parameters directly to the executor. Its body must be one call or
+one return, optionally awaited. Parameters must have no defaults, rest, or
+destructuring; spreads, missing forwarded arguments, and a second forwarder
+stay unknown. Reassigned bindings and cyclic aliases are not followed.
+
+Cross-file re-exports and `export *` are not followed. For example,
+`export { read as execute } from "@example/db"` in `db.ts`, then
+`import { execute } from "./db"; execute(sql)` in another file does not prove
+that `execute` is the configured import. A default import is not a namespace.
+A type-only namespace import does not establish a value executor.
+A computed identifier key (`const { [key]: q } = db`) or a property default
+(`const { query: q = fallback } = db`) is not a static executor alias.
+`function run({ query: q } = db) { q(sql); }` is a parameter-default
+destructure, so its default does not prove the caller supplied that executor.
+A nested parameter named `query` shadows the configured import.
+
 ## Fix
 
 Move transaction control into the reviewed transaction helper and pass its
@@ -73,9 +110,11 @@ executor to the operation callback.
 ## Suppression
 
 ```ts
-// eslint-disable-next-line no-mistakes/postgres-no-manual-transaction -- migration runner owns this explicit transaction
+// no-mistakes-disable-next-line postgres-no-manual-transaction -- migration runner owns this explicit transaction
 await query("BEGIN");
 ```
+
+`no-mistakes-disable-line` and `no-mistakes-disable-file` are also supported.
 
 ## Related rules
 

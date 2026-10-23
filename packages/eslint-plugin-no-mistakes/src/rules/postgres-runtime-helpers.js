@@ -129,10 +129,7 @@ function mapCallArgument(node) {
 function containsDatabaseCall(node, bindings) {
   if (!node || typeof node !== "object") return false;
   if (isDatabaseCall(node, bindings)) return true;
-  for (const child of childNodes(node)) {
-    if (containsDatabaseCall(child, bindings)) return true;
-  }
-  return false;
+  return childNodes(node).some((child) => containsDatabaseCall(child, bindings));
 }
 
 function functionFromDefinition(def) {
@@ -167,10 +164,17 @@ function callbackContainsExecutor(callback, bindings, context) {
   ) {
     return containsDatabaseCall(callback, bindings);
   }
+  if (bindings?.resolveCall && bindings.resolveCall.reference(callback)) return true;
   if (callback.type !== "Identifier") return false;
-  if (bindings?.has(callback.name)) return true;
+  if (!bindings?.resolveCall && bindings?.has(callback.name)) return true;
   if (!context) return false;
   const variable = resolveVariable(callback, context);
+  if (
+    bindings?.resolveCall &&
+    (isReassignedBinding(variable) ||
+      variable?.defs.some((def) => def.type === "Variable" && def.parent.kind !== "const"))
+  )
+    return false;
   for (const def of variable?.defs ?? []) {
     const fn = functionFromDefinition(def);
     if (fn && containsDatabaseCall(fn, bindings)) return true;

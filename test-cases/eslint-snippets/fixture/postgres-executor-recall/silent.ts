@@ -1,0 +1,74 @@
+import { query } from "@example/db";
+import { query as unrelated } from "@other/db";
+import * as other from "@other/db";
+import defaultDb from "@example/db";
+const key = "query";
+const { [key]: computed } = other;
+const { query: fallback = query } = other;
+let mutable = query;
+const cycleA = cycleB, cycleB = cycleA;
+// A matching spelling in a nested scope does not establish executor identity.
+function shadow(query) { const alias = query; alias("BEGIN"); }
+function defaults({ query: selected } = other) { selected("BEGIN"); }
+const forward = (sql) => query(sql);
+const second = (sql) => forward(sql);
+const spread = (sql) => query(...sql);
+const changed = (sql) => query("SELECT 1", sql);
+unrelated("BEGIN");
+computed("BEGIN");
+fallback("BEGIN");
+mutable("BEGIN");
+cycleA("BEGIN");
+defaultDb.read("BEGIN");
+other.read("BEGIN");
+second("BEGIN");
+spread(["BEGIN"]);
+changed("BEGIN");
+query.apply(null, args);
+query.apply(null, [ ...args ]);
+query.call(...args);
+Promise.all(items.map((query) => query("BEGIN")));
+
+const namespaceAlias = other;
+namespaceAlias.read("BEGIN");
+const nsCycleA = nsCycleB, nsCycleB = nsCycleA;
+nsCycleA.read("BEGIN");
+unknown.read("BEGIN");
+(unknownFactory()).read("BEGIN");
+const { ...rest } = other;
+rest("BEGIN");
+const { read: unrelatedRead } = other;
+unrelatedRead("BEGIN");
+const [arrayAlias] = [query];
+arrayAlias("BEGIN");
+const noReturn = (sql) => { log(sql); return query(sql); };
+const noCall = (sql) => sql;
+const noReturnCall = (sql) => { log(sql); };
+const missing = (sql) => query(sql);
+const capture = () => query(captured);
+const defaulted = (sql = "BEGIN") => query(sql);
+const objectArg = ({ sql }) => query(sql);
+noReturn("BEGIN");
+noCall("BEGIN");
+noReturnCall("BEGIN");
+missing();
+capture();
+defaulted();
+objectArg({ sql: "BEGIN" });
+query.apply(null, [, "BEGIN"]);
+(42)("BEGIN");
+const reassigned = query;
+reassigned = unrelated;
+reassigned("BEGIN");
+let mutableCallback = () => query("SELECT 1");
+mutableCallback = () => unrelated("SELECT 1");
+Promise.all(items.map(mutableCallback));
+
+query[key](null, "BEGIN");
+query[`ca${suffix}`](null, "BEGIN");
+query[tag`call`](null, "BEGIN");
+// A type-only namespace supplies no value executor, even when used in invalid TS.
+import type * as typedDb from "@example/db";
+const { read: typedRead } = typedDb;
+typedDb.read("BEGIN");
+typedRead("BEGIN");
