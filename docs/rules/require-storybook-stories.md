@@ -39,16 +39,18 @@ applies only when the file matches `options.include`. A file considered only
 through `includeAllReactNamedExports` or `includeAllReactDefaultExports` does
 not produce this diagnostic.
 
+For example, an included `UserCard.tsx` containing the incomplete declaration
+`export function UserCard() { return <article>` is reported as unanalyzable.
+
 The shared `unanalyzable` policy defaults to `report`; rule-level
-`options.unanalyzable` and invocation overrides follow the usual precedence
+`options.unanalyzable` overrides the top-level `unanalyzable` setting
 ([configuration](../configuration/README.md)). `report` places
 the diagnostic among failing findings, `advise` places it among advisories,
 and `ignore` omits it. Project scope, test-file exclusions,
 `ignoreIndexAndPrivateFiles`, `exclude`, generic rule filters, `allowFiles`,
 and file suppression continue to apply. The diagnostic is suppressed by
 `no-mistakes-disable-file require-storybook-stories` or
-`no-mistakes-disable-line require-storybook-stories` on line 1. A next-line
-suppression is not documented for this file-level diagnostic.
+`no-mistakes-disable-line require-storybook-stories` on line 1.
 
 This diagnostic exists because malformed included source cannot be analyzed
 for component exports, so the rule cannot establish Storybook coverage for

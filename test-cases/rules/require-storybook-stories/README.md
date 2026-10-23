@@ -6,7 +6,7 @@ This case selects malformed TSX through `options.include`. With the shared
 `unanalyzable` policy set to `report`, the selected file produces one
 file-level finding with target `unanalyzable` at line 1. The rule does not
 infer exports from the parse-failed source or invent missing-story findings.
-The same diagnostic follows the shared `advise` and `ignore` policies.
+With `advise`, the diagnostic appears in advisories; `ignore` omits it.
 
 The malformed file is `Broken.tsx`. The remaining saved files protect the
 selection and suppression boundaries:
@@ -19,7 +19,7 @@ selection and suppression boundaries:
 - `_Private.tsx`, `index.tsx`, and `Broken.test.tsx` verify private, index,
   and test-file exclusions.
 - `plain.ts` verifies that non-TSX/JSX files are outside this diagnostic.
-- `outside/Unselected.tsx` verifies project-root selection.
+- `outside/Unselected.tsx` verifies explicit include matching.
 
 The diagnostic cannot establish Storybook coverage for a parse-failed file.
 Fix the syntax and use valid TSX/JSX, or deliberately remove the file from
