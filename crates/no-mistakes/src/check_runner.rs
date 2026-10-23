@@ -52,3 +52,5 @@ mod unmocked_import_effort;
 
 #[cfg(test)]
 mod low_reference_tests;
+#[cfg(test)]
+mod unbounded_effort_tests;

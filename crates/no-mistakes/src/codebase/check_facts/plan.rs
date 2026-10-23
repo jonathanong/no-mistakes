@@ -52,6 +52,8 @@ pub struct CheckFactPlan {
     pub query_annotation: bool,
     /// Syntactic leading-name proofs for low-effort annotation, without helper evaluation.
     pub query_annotation_heads: bool,
+    /// Low-effort SQL identifier projections; never invokes JavaScript evaluation.
+    pub sql_identifier_profiles: crate::codebase::postgres::SqlIdentifierScans,
     /// Explicit annotation-only profiles. `None` preserves the direct fact
     /// API's request for annotation on every embedded SQL profile.
     pub query_annotation_options: Option<Vec<crate::codebase::postgres::EmbeddedSqlOptions>>,
@@ -108,6 +110,10 @@ impl CheckFactPlan {
         super::family_scope::include_scopes(self, &other);
         self.imports |= other.imports;
         self.query_annotation_heads |= other.query_annotation_heads;
+        crate::codebase::postgres::sql_identifier_syntax::plan::merge(
+            &mut self.sql_identifier_profiles,
+            other.sql_identifier_profiles,
+        );
         self.companion_import_plans =
             crate::codebase::rules::required_companion_imports::merge_plans(
                 &self.companion_import_plans,

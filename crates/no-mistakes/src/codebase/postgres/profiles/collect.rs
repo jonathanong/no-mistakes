@@ -8,6 +8,11 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
     let mut annotation_profiles = Vec::new();
     for rule_id in rule_ids {
         for rule in config.rule_applications(rule_id) {
+            if *rule_id == "postgres-no-unbounded-sql-identifier"
+                && config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low
+            {
+                continue;
+            }
             let options: EmbeddedSqlRuleOptions = rule.try_rule_options()?;
             let profile = EmbeddedSqlOptions::configured(
                 options.import_specifier.as_deref().unwrap_or_default(),

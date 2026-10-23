@@ -106,7 +106,12 @@ fn annotation_projects_only_its_profile_without_losing_imported_helper_calls() {
             crate::codebase::postgres::configured_embedded_sql_options_for_checks(&config).unwrap(),
         ..Default::default()
     };
-    crate::codebase::postgres::configure_prepared_postgres_plan(&config, &mut plan).unwrap();
+    crate::codebase::postgres::configure_prepared_postgres_plan(
+        std::path::Path::new("/repo"),
+        &config,
+        &mut plan,
+    )
+    .unwrap();
     assert_eq!(plan.embedded_sql_options.len(), 2);
     assert_eq!(plan.query_annotation_options.as_ref().unwrap().len(), 1);
     let sources = Arc::new(crate::codebase::ts_source::SourceStore::new(Arc::new(

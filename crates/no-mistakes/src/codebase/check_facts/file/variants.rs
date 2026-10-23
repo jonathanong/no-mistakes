@@ -54,7 +54,7 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
                 ..CheckFileFacts::default()
             });
         } else if variant.plan.storybook && is_mdx_file(path)
-            || !requires_parse(variant.plan, path, variant.playwright)
+            || !requires_parse(variant.root, variant.plan, path, variant.playwright)
         {
             results[index] = collect_file_facts_from_source(
                 session,
@@ -179,7 +179,14 @@ fn recovered_error_facts(
         symbols: symbols.clone(),
         legacy_symbols: symbols,
         integration_runner_config,
-        embedded_sql: super::program::prepared_embedded_sql(
+        sql_identifier_syntax: super::sql_identifier::invalid(
+            variant.root,
+            path,
+            parsed_source,
+            program,
+            plan,
+        ),
+        embedded_sql: super::embedded_sql::prepared_embedded_sql(
             variant.root,
             path,
             parsed_source,

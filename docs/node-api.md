@@ -184,3 +184,5 @@ See [Live phase progress](node-api/progress.md).
 ### Effect alternatives
 
 See [Effect alternatives](node-api/effect-alternatives.md).
+
+`check()` and `analyzeProject()` also honor low effort for [`postgres-no-unbounded-sql-identifier`](rules/postgres-no-unbounded-sql-identifier.md#effort). Import the exported `PostgresNoUnboundedSqlIdentifierOptions` type for its configuration. Unsupported syntax uses the same report/advisory/ignore policy in CLI and async Node reports.

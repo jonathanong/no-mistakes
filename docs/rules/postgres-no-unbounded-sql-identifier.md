@@ -34,6 +34,50 @@ Comma expressions use JavaScript's value semantics: only the final operand suppl
 
 A helper call around those values is reported unless the callee is a proven finite validator. Interpolations come from prepared template-expression facts, not a lexical `${...}` scan of the call span.
 
+## Effort
+
+The default `effort: max` preserves cross-file provenance, helper validation,
+and the existing findings. `effort: low` skips JavaScript value evaluation,
+call-graph construction, and cross-file provenance for this rule. It reads
+the shared parsed program and semantic binding facts instead.
+
+Low accepts a literal SQL string or untagged template directly at a configured
+named imported executor, or through one same-file lexical `const` initialized with
+that syntax. SQL parsing distinguishes relation interpolation from bound values.
+Direct `process.env.KEY` relation inputs whose `process` binding is not shadowed remain proven violations;
+a template such as `SELECT * FROM public.users WHERE id = ${id}` stays clear.
+
+Helpers, tags, alias chains, imported SQL values, computed executor selections,
+factory/type executors, and CommonJS loaders are unanalyzable at low.
+A single local `const run = query` executor alias also remains unanalyzable;
+its diagnostic uses the invocation line so a disable-next-line comment above
+`run(sql)` suppresses that call.
+The existing configured-module `withTransaction` and `withTransactionOptions`
+imports also imply executor selection at max. Low conservatively reports their
+uses as unknown, including a SQL-free callback, because it does not interpret
+callbacks or namespace receiver mutation. Choose max for that form or expose a direct configured executor. Namespace
+executor calls and escapes are also unanalyzable; unrelated named methods stay outside
+the configured target scope. Rewrite SQL at the direct imported call, keep
+relation names literal, and pass external values as bind parameters. For example:
+
+```ts
+// Supported low syntax; the environment value occupies a bound-value position.
+const statement = `SELECT id FROM public.users WHERE tenant = ${process.env.TENANT}`;
+query(statement);
+
+// Unanalyzable at low: expose the statement at the executor instead.
+query(buildStatement());
+```
+
+Set repository `unanalyzable` or per-rule `options.unanalyzable` to `report`
+(default, fail), `advise` (non-failing advisory), or `ignore` (skip unknowns).
+`unanalyzableSql` remains an alias. Proven direct environment violations still
+fail under all three policies. No partner check is required: unsupported shapes
+are explicit unknowns rather than assumed safe. Fatal parse recovery that retains
+no configured import or call supplies no SQL proof, matching the max boundary;
+parser diagnostics remain in the prepared source facts. Includes, excludes and the
+suppression comments below apply to low findings and advisories too.
+
 ## Abstains
 
 A runtime-computed environment key has no retained static member name. Use a declared key and a finite validator rather than relying on silence:

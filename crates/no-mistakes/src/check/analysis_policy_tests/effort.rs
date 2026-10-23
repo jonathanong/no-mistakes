@@ -59,7 +59,7 @@ fn sql_explicit_max_is_byte_identical_to_default() {
 }
 
 #[test]
-fn non_adopting_low_preserves_findings_and_reports_fallback() {
+fn low_keeps_nonadopter_fallback_and_enables_registered_adopter() {
     let config = "project-no-policy.yml";
     let default = report(config, None);
     assert_eq!(
@@ -73,7 +73,7 @@ fn non_adopting_low_preserves_findings_and_reports_fallback() {
             ("postgres-no-unbounded-sql-identifier", 5),
         ]
     );
-    let mut default_json = check_runner::json_value(&default);
+    let default_json = check_runner::json_value(&default);
     assert_eq!(
         check_runner::json_value(&report(config, Some(Effort::Max))),
         default_json
@@ -84,14 +84,21 @@ fn non_adopting_low_preserves_findings_and_reports_fallback() {
         low.warnings,
         [
             "postgres-no-mutable-sql-registry: requested effort low; effective effort max because this rule has no low implementation",
-            "postgres-no-unbounded-sql-identifier: requested effort low; effective effort max because this rule has no low implementation",
         ]
     );
     assert!(low.analysis_fallbacks.is_empty());
-    let mut low_json = check_runner::json_value(&low);
+    let low_json = check_runner::json_value(&low);
     assert!(low_json.get("analysisFallbacks").is_none());
-    // After removing fallback warnings, the low-tier findings match exactly.
-    default_json.as_object_mut().unwrap().remove("warnings");
-    low_json.as_object_mut().unwrap().remove("warnings");
-    assert_eq!(low_json, default_json);
+    let mutable = |rows: &[no_mistakes::codebase::rules::RuleFinding]| {
+        rows.iter()
+            .filter(|row| row.rule == "postgres-no-mutable-sql-registry")
+            .cloned()
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(mutable(&low.rules), mutable(&default.rules));
+    assert!(low
+        .rules
+        .iter()
+        .any(|row| row.rule == "postgres-no-unbounded-sql-identifier"
+            && row.message.contains("effort low")));
 }

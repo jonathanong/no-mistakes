@@ -220,7 +220,12 @@ fn embedded_static_routine_ddl_reuses_schema_categories() {
 #[test]
 fn legacy_sql_only_policy_does_not_read_or_parse_ts() {
     let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
-    crate::codebase::postgres::configure_prepared_postgres_plan(&config(), &mut plan).unwrap();
+    crate::codebase::postgres::configure_prepared_postgres_plan(
+        std::path::Path::new("/repo"),
+        &config(),
+        &mut plan,
+    )
+    .unwrap();
     assert!(!plan.postgres_dml);
     assert!(
         crate::codebase::postgres::configured_embedded_sql_options_for_checks(&config())

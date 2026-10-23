@@ -70,7 +70,7 @@ Opt-in [postgres-no-mutable-sql-registry](../rules/postgres-no-mutable-sql-regis
 and [postgres-no-unbounded-sql-identifier](../rules/postgres-no-unbounded-sql-identifier.md)
 use prepared import, value-flow, and embedded-SQL facts with the canonical graph
 to prove cross-file registry writes and unbounded identifier interpolations.
-Unknown provenance is never a finding.
+At maximum effort, unknown provenance is never a finding.
 
 Rules must be explicitly configured. See [no-mistakes rules](../rules/README.md)
 and [configuration](../configuration/README.md).
@@ -110,3 +110,5 @@ per-phase allocation total. Unsupported platforms omit the line. Basic timings
 and diagnostics-disabled runs do not sample memory. Individual configured
 codebase rules emit `rules.<id>` spans; filesystem rules retain
 `filesystem_rule.<id>`. Parallel span durations overlap.
+
+`postgres-no-unbounded-sql-identifier` supports [`--effort low`](../rules/postgres-no-unbounded-sql-identifier.md#effort) with direct SQL syntax proofs and no call graph or cross-file provenance work. Its unknown inputs use `unanalyzable: report | advise | ignore`; proven environment relation inputs remain failures.

@@ -10,7 +10,7 @@ pub(crate) use route_index::RegistryRoutes;
 pub(crate) use routes::registry_route;
 
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
-    super::enabled(config).then_some(GraphBuildPlan {
+    super::needs_deep_analysis(config).then_some(GraphBuildPlan {
         calls: true,
         imports: true,
         ..GraphBuildPlan::default()

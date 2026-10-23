@@ -1,0 +1,10 @@
+effort: low
+projects:
+  app:
+    root: src
+    include: [selected.ts]
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    projects: [app]
+    options:
+      importSpecifier: "@example/db"

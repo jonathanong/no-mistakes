@@ -27,6 +27,18 @@ pub fn fail_unanalyzable_sql(rule: &str, value: &str) -> Result<bool> {
 /// The request needs a report-local proof sink when any effective SQL rule
 /// application asks for non-failing residual diagnostics.
 pub fn has_sql_advice(config: &crate::config::v2::NoMistakesConfig) -> bool {
+    if config
+        .rule_applications("postgres-no-unbounded-sql-identifier")
+        .iter()
+        .any(|rule| {
+            config.effective_rule_analysis(rule).is_ok_and(|policy| {
+                policy.effort == crate::config::v2::Effort::Low
+                    && policy.unanalyzable == crate::config::v2::Unanalyzable::Advise
+            })
+        })
+    {
+        return true;
+    }
     const RULES: &[&str] = &[
         "postgres-bounded-statements",
         "postgres-conflict-ordering",

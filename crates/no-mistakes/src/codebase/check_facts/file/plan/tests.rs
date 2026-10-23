@@ -39,11 +39,11 @@ fn ts_extract_plan_clears_family_flags_outside_path_scope() {
         symbols_paths: scope,
         ..CheckFactPlan::default()
     };
-    let ts = ts_extract_plan(&plan, &outside, None);
+    let ts = ts_extract_plan(Path::new("/repo"), &plan, &outside, None);
     assert!(!ts.react, "{ts:?}");
     assert!(!ts.queue_project, "{ts:?}");
     assert!(!ts.symbols, "{ts:?}");
-    let ts = ts_extract_plan(&plan, &inside, None);
+    let ts = ts_extract_plan(Path::new("/repo"), &plan, &inside, None);
     assert!(ts.react);
     assert!(ts.queue_project);
     assert!(ts.symbols);
@@ -66,7 +66,10 @@ fn ts_extract_plan_mirrors_collected_ts_plan() {
         ..CheckFactPlan::default()
     };
 
-    assert_eq!(ts_extract_plan(&plan, path, None), plan.collected_ts_plan());
+    assert_eq!(
+        ts_extract_plan(Path::new("/repo"), &plan, path, None),
+        plan.collected_ts_plan()
+    );
 }
 
 #[test]
@@ -156,7 +159,7 @@ fn playwright_test_files_request_shared_import_facts() {
         demands_text_imports: true,
     });
 
-    let ts_plan = ts_extract_plan(&plan, &file, Some(&playwright));
+    let ts_plan = ts_extract_plan(Path::new("/repo"), &plan, &file, Some(&playwright));
 
     assert!(ts_plan.imports);
     assert!(ts_plan.function_calls);
@@ -188,7 +191,7 @@ fn unproven_member_spans_follow_rule_path_filters() {
     let path = Path::new("/repo/src/legacy/old.ts");
     let profile =
         crate::codebase::postgres::EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
-    let direct = super::super::program::prepared_embedded_sql(
+    let direct = super::super::embedded_sql::prepared_embedded_sql(
         root,
         path,
         source,
@@ -207,7 +210,7 @@ fn unproven_member_spans_follow_rule_path_filters() {
         &["src/legacy/**".into()],
     )
     .unwrap();
-    let dropped = super::super::program::prepared_embedded_sql(
+    let dropped = super::super::embedded_sql::prepared_embedded_sql(
         root,
         path,
         source,
@@ -232,7 +235,7 @@ fn unproven_member_spans_follow_rule_path_filters() {
         &[],
     )
     .unwrap();
-    let counted = super::super::program::prepared_embedded_sql(
+    let counted = super::super::embedded_sql::prepared_embedded_sql(
         root,
         path,
         source,
