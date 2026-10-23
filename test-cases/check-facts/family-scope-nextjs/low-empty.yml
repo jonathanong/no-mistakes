@@ -1,0 +1,15 @@
+projects:
+  web:
+    root: web
+rules:
+  - rule: nextjs-no-caching
+    projects: [web]
+    include: [missing/**]
+    options:
+      effort: low
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [web/src/selected.ts]
+      forbiddenModules: [never-imported-package]
+      relationships: [import]

@@ -76,6 +76,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         dynamic_imports: enabled.dynamic_import_rules,
         nextjs_caching: enabled.nextjs_caching,
         nextjs_caching_low: false,
+        nextjs_caching_paths: Default::default(),
         storybook: enabled.storybook_stories,
         storybook_paths: Default::default(),
         server_route_client_boundary: enabled.boundary_rules,

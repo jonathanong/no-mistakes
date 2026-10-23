@@ -1,3 +1,6 @@
+mod rendering;
+use rendering::{findings_for_file, project_finding};
+
 use super::RuleFinding;
 use crate::codebase::ts_source::{
     has_disable_comment, has_disable_file_comment, relative_slash_path,
@@ -34,6 +37,15 @@ pub(crate) struct NextjsCachingFinding {
     pub(crate) unanalyzable: bool,
 }
 
+#[cfg(not(test))]
+macro_rules! record_aggregate_scope_check {
+    () => {};
+}
+
+#[cfg(test)]
+#[macro_use]
+mod tests;
+
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     super::check_indexed_standalone(root, config, check_files)
 }
@@ -64,10 +76,23 @@ pub(crate) fn diagnostics_with_facts_for_aggregate(
             let Some(facts) = shared.ts.get(path) else {
                 continue;
             };
+            let selected = if low {
+                &facts.nextjs_caching_low
+            } else {
+                &facts.nextjs_caching
+            };
+            // Complete empty facts cannot produce findings or advisories. Keep
+            // incomplete facts on the ordered scope/error path below.
+            if facts.source.is_some() && selected.as_ref().is_some_and(Vec::is_empty) {
+                continue;
+            }
             if !target_roots
                 .iter()
                 .any(|target_root| path.starts_with(target_root))
-                || !filter.is_match(path)
+                || !{
+                    record_aggregate_scope_check!();
+                    filter.is_match(path)
+                }
             {
                 continue;
             }
@@ -76,11 +101,6 @@ pub(crate) fn diagnostics_with_facts_for_aggregate(
             }
             let Some(source) = facts.source.as_ref() else {
                 bail!("{} requires source facts for {}", RULE_ID, path.display());
-            };
-            let selected = if low {
-                &facts.nextjs_caching_low
-            } else {
-                &facts.nextjs_caching
             };
             let Some(cache_facts) = selected.as_ref() else {
                 bail!(
@@ -166,42 +186,8 @@ fn check_files(
     Ok(findings)
 }
 
-fn findings_for_file(
-    root: &Path,
-    path: &Path,
-    source: &str,
-    cache_facts: &[NextjsCachingFinding],
-    defer_suppression: bool,
-) -> Vec<RuleFinding> {
-    if !defer_suppression && has_disable_file_comment(source, RULE_ID) {
-        return Vec::new();
-    }
-    let file = relative_slash_path(root, path);
-    cache_facts
-        .iter()
-        .filter(|finding| {
-            defer_suppression || !has_disable_comment(source, finding.line as u32, RULE_ID)
-        })
-        .map(|finding| project_finding(&file, finding))
-        .collect()
-}
-
-fn project_finding(file: &str, finding: &NextjsCachingFinding) -> RuleFinding {
-    RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: file.to_string(),
-        line: finding.line,
-        message: finding.message.clone(),
-        import: None,
-        target: None,
-    }
-}
-
 pub(crate) fn extract(path: &Path, source: &str) -> Result<Vec<NextjsCachingFinding>> {
     crate::ast::with_program(path, source, |program, _| {
         extract_program(path, source, program)
     })
 }
-
-#[cfg(test)]
-mod tests;

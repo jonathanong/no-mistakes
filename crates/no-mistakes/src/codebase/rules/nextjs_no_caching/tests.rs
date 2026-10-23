@@ -1,3 +1,23 @@
+macro_rules! record_aggregate_scope_check {
+    () => {
+        tests::record_scope_check()
+    };
+}
+
+thread_local! {
+    static AGGREGATE_SCOPE_CHECKS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+pub(super) fn record_scope_check() {
+    AGGREGATE_SCOPE_CHECKS.with(|count| count.set(count.get() + 1));
+}
+
+fn take_scope_checks() -> usize {
+    AGGREGATE_SCOPE_CHECKS.with(|count| count.replace(0))
+}
+
+mod empty_facts;
+
 use super::*;
 
 fn check_with_facts(

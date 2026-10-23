@@ -1,0 +1,8 @@
+# Explicit filters deliberately select the entire visible universe.
+rules:
+  - rule: nextjs-no-caching
+    scope: repository
+    include: ["**/*"]
+    exclude: ["node_modules/**", "dist/**"]
+    options:
+      unanalyzable: advise

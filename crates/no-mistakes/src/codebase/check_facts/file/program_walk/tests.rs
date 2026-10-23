@@ -3,6 +3,15 @@ use crate::ast;
 use crate::codebase::check_facts::CheckFactPlan;
 use std::path::Path;
 
+macro_rules! record_fused_work {
+    (nextjs) => {
+        tests::record_nextjs()
+    };
+    (walk) => {
+        tests::record_walk()
+    };
+}
+
 fn fused(source: &str, plan: &CheckFactPlan) -> super::FusedCheckFacts {
     let path = Path::new("src/page.ts");
     ast::with_program(path, source, |program, src| {
@@ -188,3 +197,6 @@ fn fused_nextjs_scopes_preserve_other_fact_families() {
     }
     assert_eq!(references[0], references[1]);
 }
+
+mod nextjs_scope;
+pub(super) use nextjs_scope::{record_nextjs, record_walk};

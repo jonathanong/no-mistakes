@@ -11,9 +11,11 @@ use std::sync::Arc;
 
 mod closure;
 mod configure;
+mod nextjs;
 mod rules;
 
 pub use configure::configure_family_path_scopes;
+pub use nextjs::configure_nextjs_caching_scope;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub enum FamilyPathScope {
@@ -87,6 +89,12 @@ pub fn include_scopes(plan: &mut super::CheckFactPlan, other: &super::CheckFactP
         &plan.storybook_paths,
         other.storybook,
         &other.storybook_paths,
+    );
+    plan.nextjs_caching_paths = merge(
+        plan.nextjs_caching || plan.nextjs_caching_low,
+        &plan.nextjs_caching_paths,
+        other.nextjs_caching || other.nextjs_caching_low,
+        &other.nextjs_caching_paths,
     );
     plan.boundary_paths = merge(
         plan.server_route_client_boundary,
