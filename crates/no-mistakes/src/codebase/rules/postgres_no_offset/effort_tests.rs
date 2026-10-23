@@ -240,6 +240,7 @@ fn mixed_invalid_sql_abstains_and_unavailable_max_statements_fall_back_to_litera
     cfg.rules.truncate(1);
     facts.enable_sql_verdicts();
     check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap();
+    assert_eq!(facts.sql_verdicts().len(), 2);
     assert!(facts.sql_verdicts().iter().all(|verdict| verdict.status
         == crate::codebase::postgres::SqlVerdictStatus::Abstain
         && verdict.residual_reasons == ["invalid-sql"]));
