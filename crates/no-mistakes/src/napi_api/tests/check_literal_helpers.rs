@@ -81,7 +81,7 @@ fn configured_literal_helpers_have_matching_low_and_max_policy_outcomes() {
                 }
                 statuses.push(verdict["status"].clone());
             }
-            assert_eq!(statuses.len(), 32, "every saved executor has an oracle");
+            assert_eq!(statuses.len(), 42, "every saved executor has an oracle");
             if let Some(prior) = &prior {
                 assert_eq!(&statuses, prior, "max must retain low's definite findings");
             }

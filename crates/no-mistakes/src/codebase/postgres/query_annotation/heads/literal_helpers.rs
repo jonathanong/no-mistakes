@@ -38,30 +38,16 @@ pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
             let Expression::Identifier(id) = unwrap_ts_wrappers(&member.object) else {
                 return None;
             };
-            // A static key identifies the configured export, but computed calls
-            // remain outside the supported direct-call grammar.
             (
                 id.span,
-                Some(member.static_property_name()?.to_string()),
-                true,
+                Some(literal_text(&member.expression)?.to_string()),
+                call.optional || member.optional,
             )
         }
         _ => return None,
     };
     let text = match call.arguments.as_slice() {
-        [argument] if !optional => match argument.as_expression().map(unwrap_ts_wrappers) {
-            Some(Expression::StringLiteral(literal)) => Some(literal.value.as_str()),
-            Some(Expression::TemplateLiteral(template)) if template.expressions.is_empty() => {
-                template
-                    .quasis
-                    .first()?
-                    .value
-                    .cooked
-                    .as_ref()
-                    .map(|text| text.as_str())
-            }
-            _ => None,
-        },
+        [argument] if !optional => argument.as_expression().and_then(literal_text),
         _ => None,
     };
     Some(Candidate {
@@ -76,6 +62,21 @@ pub(super) fn candidate(outer: &CallExpression<'_>) -> Option<Candidate> {
             }
         }),
     })
+}
+
+// Share the exact literal grammar for SQL arguments and computed export keys.
+fn literal_text<'a>(expression: &'a Expression<'a>) -> Option<&'a str> {
+    match unwrap_ts_wrappers(expression) {
+        Expression::StringLiteral(literal) => Some(literal.value.as_str()),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => template
+            .quasis
+            .first()?
+            .value
+            .cooked
+            .as_ref()
+            .map(|text| text.as_str()),
+        _ => None,
+    }
 }
 
 pub(super) fn proofs(

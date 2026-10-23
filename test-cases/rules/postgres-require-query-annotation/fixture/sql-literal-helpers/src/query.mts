@@ -14,7 +14,17 @@ export function run(client: PoolClient, dynamic: string) {
   // The JavaScript comment is not part of the SQL string.
   client.query(copyFrom(/* named */ 'COPY users FROM STDIN')); // missing
   client.query(copyFrom(`COPY users FROM STDIN`)); // missing
-  client.query(copies['from']('/* named */ COPY users FROM STDIN')); // unknown
+  client.query(copies['from']('/* named */ COPY users FROM STDIN')); // clear
+  client.query(copies['from']('COPY users FROM STDIN')); // missing
+  client.query(copies[`from`]('/* named */ COPY users FROM STDIN')); // clear
+  client.query(copies[`from`]('COPY users FROM STDIN')); // missing
+  client.query(copies['from']?.('/* named */ COPY users FROM STDIN')); // unknown
+  client.query(copies?.['from']('/* named */ COPY users FROM STDIN')); // unknown
+  client.query(copies[`from`]?.('/* named */ COPY users FROM STDIN')); // unknown
+  client.query(copies?.[`from`]('/* named */ COPY users FROM STDIN')); // unknown
+  client.query(copies[`fr${dynamic}`]('/* named */ COPY users FROM STDIN')); // unknown
+  client.query(copies[/from/]('/* named */ COPY users FROM STDIN')); // unknown
+  client.query(copies[0]('/* named */ COPY users FROM STDIN')); // unknown
   client.query(copyFrom(42)); // unknown
   client.query(copyFrom('/* named */ ' + dynamic)); // unknown
   client.query(copyFrom(copies.from('/* named */ COPY users FROM STDIN'))); // unknown

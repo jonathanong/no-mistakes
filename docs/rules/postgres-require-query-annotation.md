@@ -191,9 +191,12 @@ client.query(copyFrom('/* import users */ COPY users FROM STDIN'));
 ```
 
 Named imports, renamed imports, and direct namespace calls such as
-`copies.from(...)` are supported. The
-helper must receive exactly one string literal or template literal without
-interpolations. Its SQL comment must occur **inside the literal**;
+`copies.from(...)`, `copies['from'](...)`, and ``copies[`from`](...)`` are
+supported. Bracket keys must be string literals or template literals without
+interpolations; numeric and regular expression keys are unsupported. Optional
+calls and optional namespace access remain unsupported. The helper must receive
+exactly one string literal or template literal without interpolations. Its SQL
+comment must occur **inside the literal**;
 `copyFrom(/* import users */ 'COPY users FROM STDIN')` is a definite missing
 annotation. Fix it by moving the named comment inside the string. Definite
 missing annotations remain findings under every unanalyzable policy; existing
@@ -201,7 +204,7 @@ transaction exemptions still apply.
 
 The option defaults to `[]` and selects no helpers. Identities use nonempty,
 exact `module#export` strings; package subpaths must be listed separately.
-Shadowed or type-only imports, optional calls, computed namespace properties,
+Shadowed or type-only imports, optional calls, dynamic namespace keys,
 spread arguments, other argument counts,
 interpolated templates, dynamic arguments, stored helper results, and helper
 return forwarding provide no proof. These retain the existing `unanalyzable`
