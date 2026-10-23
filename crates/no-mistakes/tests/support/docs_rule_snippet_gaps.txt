@@ -1,8 +1,2 @@
 # Known check-rule doc execution gaps tracked by #2416.
 # Remove a prefix only after that snippet executes as documented.
-require-storybook-stories.md: Valid example[0] run error:
-require-storybook-stories.md: Counterexample[0] run error:
-shellcheck-runner.md: Counterexample[0] expected 
-tsconfig-gate-coverage.md: Valid example[0] expected 
-vitest-ci-path-coverage.md: Counterexample[0] expected 
-vitest-project-mapping.md: Counterexample[0] expected 

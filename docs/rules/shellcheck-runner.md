@@ -6,6 +6,9 @@ Runs ShellCheck on shell files and configured shell scripts.
 rules:
   - rule: shellcheck-runner
     scope: repository
+    options:
+      shellcheck:
+        severity: info
 ```
 
 Counterexample: a checked-in `.sh` file with ShellCheck failures.
@@ -52,6 +55,7 @@ The runner still requires the installed `shellcheck` executable.
 
 ```sh
 #!/usr/bin/env bash
+# scripts/run.sh
 set -euo pipefail
 printf '%s\n' "${1:-default}"
 ```
@@ -60,10 +64,24 @@ printf '%s\n' "${1:-default}"
 
 ```sh
 #!/usr/bin/env bash
+# scripts/run.sh
 echo $1
 ```
 
-Unquoted expansion and an unset positional argument are ShellCheck findings.
+ShellCheck reports the unquoted positional argument as SC2086.
+
+```sh
+#!/usr/bin/env bash
+# scripts/run.sh
+run() {
+  local name=$(basename "$1")
+  printf '%s\n' "$name"
+}
+run "${1:-default}"
+```
+
+Combining `local` with a command substitution can hide the command's failure
+status from `set -e`; ShellCheck reports this as SC2155 when installed.
 
 ## Fix
 
