@@ -1,0 +1,8 @@
+# The earlier mapping supplies the banned key. The later mapping does not override it.
+first: &first
+  legacy:
+    enabled: true
+second: &second
+  extra: 1
+runtime:
+  <<: [*first, *second]

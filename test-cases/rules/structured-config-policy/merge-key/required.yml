@@ -1,0 +1,5 @@
+# `runtime.owner` exists only after the merge key is copied.
+shared: &shared
+  owner: ada
+runtime:
+  <<: *shared

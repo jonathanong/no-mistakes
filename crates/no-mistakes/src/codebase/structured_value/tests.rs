@@ -47,6 +47,50 @@ fn converts_json_number_shapes() {
 }
 
 #[test]
+fn expands_a_mapping_merge_key() {
+    let source = "defaults: &defaults\n  legacy:\n    enabled: true\nruntime:\n  <<: *defaults\n  version: 2\n";
+    let value = parse_structured_value(Path::new("app.yml"), source).unwrap();
+    assert_eq!(value["runtime"]["legacy"]["enabled"].as_bool(), Some(true));
+    assert_eq!(value["runtime"]["version"].as_i64(), Some(2));
+    assert!(value["runtime"].get("<<").is_none());
+}
+
+#[test]
+fn sequence_merge_keeps_the_earlier_mapping() {
+    let source = "\
+runtime:
+  version: 2
+  <<:
+    - legacy: { enabled: true }
+      owner: first
+    - legacy: { enabled: false }
+      owner: second
+      extra: 1
+";
+    let value = parse_structured_value(Path::new("app.yml"), source).unwrap();
+    assert_eq!(value["runtime"]["version"].as_i64(), Some(2));
+    assert_eq!(value["runtime"]["legacy"]["enabled"].as_bool(), Some(true));
+    assert_eq!(value["runtime"]["owner"].as_str(), Some("first"));
+    assert_eq!(value["runtime"]["extra"].as_i64(), Some(1));
+}
+
+#[test]
+fn scalar_merge_does_not_invent_keys() {
+    let source = "label: &label plain\nruntime:\n  <<: *label\n  version: 1\n";
+    let value = parse_structured_value(Path::new("app.yml"), source).unwrap();
+    assert_eq!(value["runtime"]["version"].as_i64(), Some(1));
+    assert!(value["runtime"].get("legacy").is_none());
+    assert!(value["runtime"].get("<<").is_none());
+}
+
+#[test]
+fn json_keeps_a_literal_merge_key() {
+    let value =
+        parse_structured_value(Path::new("app.json"), r#"{ "<<": { "legacy": 1 } }"#).unwrap();
+    assert!(value.get("<<").is_some());
+}
+
+#[test]
 fn converts_json_integers_that_do_not_fit_i64() {
     let source = r#"{ "u": 18446744073709551615 }"#;
     let value = parse_structured_value(Path::new("n.json"), source).unwrap();
