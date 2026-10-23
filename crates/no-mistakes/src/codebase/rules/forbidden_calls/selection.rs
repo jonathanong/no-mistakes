@@ -167,6 +167,11 @@ fn reachable_source_nodes(
     roots: &[NodeId],
     options: &Options,
 ) -> FxHashSet<NodeId> {
+    // Only transitive policies need a union traversal; keep the existing file
+    // and direct paths intact so their work and lazy graph demand stay scoped.
+    if matches!(options.traversal, Traversal::Transitive) {
+        return graph.call_source_nodes(roots, CallTraversal::Transitive, options.max_depth);
+    }
     let mut nodes: FxHashSet<NodeId> = roots.iter().cloned().collect();
     if matches!(options.traversal, Traversal::File) {
         return nodes;
