@@ -9,14 +9,44 @@ pub(super) fn keys(
 ) -> FxHashSet<Key> {
     let calls = &collector.receiver_escapes.conditional_calls;
     let mut possible = fx_set();
-    if calls.is_empty() {
+    let mut assignments: FxHashMap<Key, (Option<CallableId>, bool, Vec<_>)> = fx_map();
+    for event in &collector.receiver_escapes.reassigned {
+        let (context, mixed, events) = assignments
+            .entry(event.key.clone())
+            .or_insert_with(|| (event.context, false, Vec::new()));
+        *mixed |= *context != event.context;
+        events.push(event);
+    }
+    if calls.is_empty() && assignments.is_empty() {
         return possible;
     }
+    for (_, _, events) in assignments.values_mut() {
+        events.sort_by_key(|event| event.completed_at);
+    }
     for call in &collector.value_flow.calls {
-        if calls.contains(&(call.offset, call.end)) {
-            if let Some(parameters) = super::super::callable_owner(collector, &call.callee)
-                .and_then(|owner| slots.get(&owner))
-            {
+        let guarded = calls.contains(&(call.offset, call.end));
+        // No history keeps the existing projection. A history only proves one
+        // callee when its acquisition is certain and in this execution owner.
+        let acquired = key(&call.callee).and_then(|key| assignments.get(&key)).map(
+            |(context, mixed, events)| {
+                if *mixed || *context != call.context {
+                    return None;
+                }
+                let before = events.partition_point(|event| event.completed_at <= call.offset);
+                events[..before]
+                    .last()
+                    .filter(|event| event.certain)
+                    .and_then(|event| super::super::callable_owner(collector, &event.value))
+            },
+        );
+        if !guarded && acquired.is_none() {
+            continue;
+        }
+        for owner in owners(collector, values, &call.callee) {
+            if !guarded && acquired == Some(Some(owner)) {
+                continue;
+            }
+            if let Some(parameters) = slots.get(&owner) {
                 possible.extend(parameters.values().cloned());
             }
         }
@@ -50,6 +80,54 @@ pub(super) fn key(mut value: &ValueExpression) -> Option<Key> {
     }
     match value {
         ValueExpression::Named { name, scope, .. } => Some((scope.unwrap_or(0), name.clone())),
+        _ => None,
+    }
+}
+
+// Match the forwarding pass's callable origins, without treating a reference
+// to an assigned callback as proof that its invocation ran.
+fn owners(
+    collector: &ImportCollector,
+    values: &FxHashMap<Key, Vec<ValueExpression>>,
+    callee: &ValueExpression,
+) -> Vec<CallableId> {
+    super::super::callable_owner(collector, callee)
+        .into_iter()
+        .chain(
+            key(callee)
+                .and_then(|key| values.get(&key))
+                .into_iter()
+                .flatten()
+                .filter_map(|origin| super::super::callable_owner(collector, origin)),
+        )
+        .collect()
+}
+
+/// Source coordinates identify named acquisitions without cloning argument trees
+/// or comparing every pair of origins. Each call argument is visited once.
+pub(super) fn initial(collector: &ImportCollector) -> FxHashSet<u32> {
+    let mut possible = fx_set();
+    if collector.receiver_escapes.conditional_calls.is_empty() {
+        return possible;
+    }
+    for call in &collector.value_flow.calls {
+        if collector
+            .receiver_escapes
+            .conditional_calls
+            .contains(&(call.offset, call.end))
+        {
+            possible.extend(call.arguments.iter().filter_map(offset));
+        }
+    }
+    possible
+}
+
+pub(super) fn offset(mut value: &ValueExpression) -> Option<u32> {
+    while let ValueExpression::Member(receiver, _) = value {
+        value = receiver;
+    }
+    match value {
+        ValueExpression::Named { offset, .. } => Some(*offset),
         _ => None,
     }
 }

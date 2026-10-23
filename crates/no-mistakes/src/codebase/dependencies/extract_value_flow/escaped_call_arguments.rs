@@ -2,7 +2,13 @@ use super::*;
 
 impl ImportCollector {
     pub(in super::super::super) fn note_escaped_call(&mut self, call: &CallExpression<'_>) {
-        if self.conditional_execution || self.receiver_write_is_conditional {
+        if self.conditional_execution
+            || self.receiver_write_is_conditional
+            || self
+                .current_function_id()
+                .and_then(|owner| self.receiver_escapes.return_offsets.get(&owner))
+                .is_some_and(|offset| *offset <= call.span.start)
+        {
             self.receiver_escapes
                 .conditional_calls
                 .insert((call.span.start, call.span.end));
@@ -112,5 +118,35 @@ pub(super) fn argument_values(
             .map(|expression| argument_values(collector, expression))
             .unwrap_or_default(),
         other => vec![collector.value_expression(other)],
+    }
+}
+
+impl ImportCollector {
+    pub(in super::super::super) fn parameter_return_offset(&self) -> Option<u32> {
+        self.current_function_id()
+            .and_then(|owner| self.receiver_escapes.return_offsets.get(&owner))
+            .copied()
+    }
+
+    pub(in super::super::super) fn visit_finalizer_with_parameter_returns(
+        &mut self,
+        finalizer: &BlockStatement<'_>,
+        incoming: Option<u32>,
+    ) {
+        let owner = self.current_function_id();
+        let outgoing = owner.and_then(|owner| self.receiver_escapes.return_offsets.remove(&owner));
+        if let (Some(owner), Some(offset)) = (owner, incoming) {
+            self.receiver_escapes.return_offsets.insert(owner, offset);
+        }
+        // A return in this try/catch runs its finalizer. Earlier returns still
+        // bypass the entire try, and returns inside the finalizer guard its tail.
+        self.visit_block_statement(finalizer);
+        if let (Some(owner), Some(offset)) = (owner, outgoing) {
+            self.receiver_escapes
+                .return_offsets
+                .entry(owner)
+                .and_modify(|current| *current = (*current).min(offset))
+                .or_insert(offset);
+        }
     }
 }

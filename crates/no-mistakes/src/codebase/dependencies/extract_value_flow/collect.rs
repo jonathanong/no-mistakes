@@ -112,6 +112,12 @@ impl ImportCollector {
     ) {
         self.invalidate_replacement_execution();
         if self.collect_value_flow {
+            if let Some(owner) = self.current_function_id() {
+                self.receiver_escapes
+                    .return_offsets
+                    .entry(owner)
+                    .or_insert(statement.span.end);
+            }
             self.note_value_return(statement);
         }
         walk::walk_return_statement(self, statement);
