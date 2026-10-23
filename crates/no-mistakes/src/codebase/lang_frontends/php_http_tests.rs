@@ -70,6 +70,7 @@ Route::resource('limited', UserController::class)->only(['index']);
 Route::resource('named', UserController::class)->names(['index' => 'users.index'])->only(['index']);
 Route::resource("$prefix/users", UserController::class);
 Route::apiResource('filtered', UserController::class)->only(['index']);
+Route::apiResource('excluded', UserController::class)->except(['index']);
 Route::apiResources(['bulk' => UserController::class]);
 Route::resource($name, UserController::class);
 Route::resource('photos.comments', PhotoCommentController::class);
