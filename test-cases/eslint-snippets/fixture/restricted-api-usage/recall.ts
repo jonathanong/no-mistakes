@@ -47,3 +47,7 @@ import(`@example/client`);
 require(`@example/client`);
 import(`@example/other`);
 require(`@example/other`);
+// Rest copies the whole namespace even when no named key is selected.
+const { ...copiedNamespace } = api;
+copiedNamespace.paginateEntries();
+const { ...unrelatedRest } = other;

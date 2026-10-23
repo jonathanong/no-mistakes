@@ -104,6 +104,7 @@ module.exports = {
       if (!value) return;
       const binding = namespaceBinding(value);
       for (const property of node.properties) {
+        if (property.type === "RestElement" && binding) sourceLoad(property, binding.source);
         if (property.type !== "Property") continue;
         const name = memberPropertyName({ property: property.key, computed: property.computed });
         for (const target of targets)

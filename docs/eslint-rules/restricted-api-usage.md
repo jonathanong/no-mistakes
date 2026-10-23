@@ -87,7 +87,8 @@ the matching key, including renamed and defaulted bindings. Type-only re-exports
 are ignored. Dynamic imports and global `require` loads of a configured source
 ask for a static named import, including when a custom message is configured.
 Assigning the whole namespace to another variable also asks for a static named
-import before the original binding is hidden.
+import before the original binding is hidden. A rest destructure copies the whole
+namespace and reports the rest element with the same static import rewrite.
 The rule does not propagate aliases after the reported access, inspect nested
 namespace objects, or resolve dynamic member keys or module specifiers.
 Import declarations remain findings even when matching calls are independently

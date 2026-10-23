@@ -45,18 +45,22 @@ describe(id, () => {
         [16, 1],
         [17, 9],
         [17, 40],
+        [17, 74],
         [19, 4],
         [43, 24],
         [45, 23],
         [46, 1],
         [47, 1],
+        [51, 9],
       ],
     );
-    for (const message of check("recall.ts").filter((message) => [11, 13].includes(message.line)))
+    for (const message of check("recall.ts").filter((message) =>
+      [11, 13, 51].includes(message.line),
+    ))
       assert.match(message.message, /Use a static named import/);
     assert.deepEqual(
       lines(check("recall.ts", { targets: [{ ...target, importedNamePattern: "^paginate-" }] })),
-      [4, 5, 6, 11, 13, 43, 45, 46, 47],
+      [4, 5, 6, 11, 13, 17, 43, 45, 46, 47, 51],
     );
   });
   it("makes lexical call names explicit and independent from origin or shadowing", () => {

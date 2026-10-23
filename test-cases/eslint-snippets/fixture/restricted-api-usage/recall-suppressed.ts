@@ -18,3 +18,6 @@ require("@example/client"); // no-mistakes-disable-line restricted-api-usage
 const wholeNamespace = api;
 let namespaceAssignment;
 namespaceAssignment = api; // no-mistakes-disable-line restricted-api-usage
+// no-mistakes-disable-next-line restricted-api-usage
+const { ...copiedNamespace } = api;
+const { ...copiedAgain } = api; // no-mistakes-disable-line restricted-api-usage
