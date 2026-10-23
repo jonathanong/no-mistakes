@@ -61,7 +61,7 @@ pub(crate) fn collect_check_fact_batch_with_session(
             .into_par_iter()
             .map(|(path, demands)| {
                 crate::diagnostics::with_observer(observer.clone(), || {
-                    collect_demand(session, &requests, path, demands)
+                    collect_worker_demand(session, &requests, path, demands)
                 })
             })
             .while_some()
@@ -99,6 +99,17 @@ pub(crate) fn collect_check_fact_batch_with_session(
             )
         })
         .collect()
+}
+
+fn collect_worker_demand(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    requests: &[BatchCheckFactRequest],
+    path: PathBuf,
+    demands: Vec<FactDemand>,
+) -> Option<CollectedDemand> {
+    // The inner collector also serves the coordinator's prepared ASTs. Only
+    // dispatched work installs a cache that retires with this demand.
+    crate::ast::with_owned_request_parse_cache(|| collect_demand(session, requests, path, demands))
 }
 
 fn collect_demand(
@@ -205,3 +216,6 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
 fn normalize(path: &std::path::Path) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(path)
 }
+
+#[cfg(test)]
+mod tests;
