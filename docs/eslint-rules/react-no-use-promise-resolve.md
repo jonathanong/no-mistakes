@@ -53,8 +53,8 @@ actual operand; the rule does not autofix by removing `Promise.resolve`.
 
 A default or namespace import of `react`, `const { use } = React`, a string or expression-free template key, optional chaining, a comma callee, and `Promise.resolve.call` are the same call. `React.use["call"]` forwards the same way as `.call`. A computed identifier key is not static.
 
-The new constructor-alias path follows same-file `const` identity chains to an
-unshadowed global `Promise` binding. It requires each alias initializer to precede
+The constructor-alias path follows same-file `const` identity chains to global
+`Promise` when no local binding shadows it. It requires each alias initializer to precede
 its use in source and rejects writes, escaped aliases, namespace member writes,
 unknown constructor members, and reads intercepted by a script-mode `with`
 object. It also abstains when a global object escapes as a value, a method on
