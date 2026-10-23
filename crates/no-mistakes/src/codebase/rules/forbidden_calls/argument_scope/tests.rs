@@ -200,6 +200,7 @@ fn independent_call_site_demand_survives_argument_scope() {
     let root = saved.path();
     let mut scoped = plan(root, &config);
     scoped.graph.call_sites = true;
+    scoped.graph.module_bindings = true;
     let mut control = scoped.clone();
     control.forbidden_call_arguments = None;
     let scoped = collect_check_facts_with_graph_files_and_playwright(
@@ -220,6 +221,10 @@ fn independent_call_site_demand_survives_argument_scope() {
         let control = control.ts.get(path).unwrap();
         assert_eq!(scoped.ts.call_sites, control.ts.call_sites);
         assert_eq!(scoped.ts.function_calls, control.ts.function_calls);
+        if scoped.ts.parse_error.is_none() {
+            assert!(scoped.ts.module_bindings.is_some());
+            assert!(control.ts.module_bindings.is_some());
+        }
     }
     assert!(argument_facts_covered(
         root,
@@ -269,6 +274,8 @@ fn batched_graph_only_files_keep_scoped_argument_demand() {
         "scoped batch facts do not promise global argument coverage"
     );
     for file in ["src/a/excluded.mjs", "src/unrelated.mjs"] {
+        // No independent binding consumer exists in this graph-only request;
+        // omitting arguments also avoids their otherwise-unneeded binding facts.
         assert!(
             facts
                 .ts
@@ -276,9 +283,6 @@ fn batched_graph_only_files_keep_scoped_argument_demand() {
                 .unwrap()
                 .ts
                 .module_bindings
-                .as_ref()
-                .unwrap()
-                .call_arguments
                 .is_none(),
             "{file}"
         );
