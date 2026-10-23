@@ -49,14 +49,29 @@ avoid re-exporting the banned binding.
 
 ## Limits
 
-Another file's re-export is not visible here. `import { load } from "./barrel.mjs"; load(id)` stays unreported when `barrel.mjs` is `export { fetchUser as load } from "@app/data"` or `export * from "@app/data"`. A parameter default such as `function run({ fetchUser } = api)` is not judged, because the caller can pass a different object. `.call`, `.apply`, and a comma callee are not the banned binding.
+Same-file imported capability calls also include comma callees, optional calls,
+and static `.call` / literal-array `.apply` forwarding, including string and
+expression-free template member keys. An explicitly banned export named `call`
+or `apply` takes precedence at every forwarding step, including
+`namespace.call.call(null)`. Unmatched nested intrinsic forwarding follows its
+explicit receiver: `clear.call.call(other, null)` invokes `other()` and is not
+attributed to `clear`. Dynamic member keys, spread
+`.call` arguments, and opaque, sparse, or spread `.apply` argument arrays are
+not resolved through forwarding. Calls still use the existing scope and
+assignment tracking, so a shadowed binding does not inherit the import identity.
+
+Another file's re-export is not visible here. `import { load } from "./barrel.mjs"; load(id)` stays unreported when `barrel.mjs` is `export { fetchUser as load } from "@app/data"` or `export * from "@app/data"`. A parameter default such as `function run({ fetchUser } = api)` is not judged, because the caller can pass a different object.
 
 ## Suppression
 
 ```ts
-// eslint-disable-next-line no-mistakes/no-banned-import-outside-allowed-paths -- migration adapter is the reviewed boundary
 import { fetchUser } from "@app/data";
+// no-mistakes-disable-next-line no-banned-import-outside-allowed-paths -- migration adapter is the reviewed boundary
+fetchUser("123");
 ```
+
+`no-mistakes-disable-line` and `no-mistakes-disable-file` also suppress invocation findings.
+Native ESLint directives remain available for import and re-export findings.
 
 ## Related rules
 

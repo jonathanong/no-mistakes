@@ -47,8 +47,17 @@ Renamed and namespace imports work; shadowed imports do not match.
 
 A wrapper is a configuration assertion about that exact module-level binding or
 unbound global, not import resolution or proof of its implementation. Nested
-shadowing and reassigned root bindings are excluded. Dynamic member names and
-aliases are not followed. Unrelated arrays starting with `api` are ignored.
+shadowing and reassigned root bindings are excluded. Same-file immutable `const`
+aliases, namespace aliases, and object destructuring
+without defaults preserve that binding identity, including static string or
+expression-free template keys. Optional/comma calls and `.call` / literal-array
+`.apply` forwarding preserve the configured argv position. A configured method
+literally named `call` or `apply` uses its original arguments, including when
+forwarded again as `api.call.call(null, argv)`. Unmatched nested intrinsic
+forwarding uses the explicit receiver: `ghApi.call.call(other, null, argv)`
+invokes `other(argv)` and is not attributed to `ghApi`. Dynamic member
+names, mutable aliases, destructuring defaults, and cross-file aliases are not
+followed. Unrelated arrays starting with `api` are ignored.
 
 Only literal arrays are inspected. Endpoint templates retain their static
 segments, so a slash before a question mark is detected across substitutions.

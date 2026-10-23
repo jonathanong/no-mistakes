@@ -1,6 +1,7 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const { expandSelectorAlias } = require("./required-call-selector-aliases");
 const { logicalCall } = require("./module-mock-helpers");
 const { matchesAny } = require("./async-patterns");
 const { isReassigned, memberPropertyName, resolveVariable } = require("./async-target-bindings");
@@ -27,7 +28,7 @@ function staticReceiverPath(node) {
   }
   if (current?.type !== "Identifier") return null;
   parts.unshift(current.name);
-  return parts.join(".");
+  return parts;
 }
 
 function createCallSelectors(context, options) {
@@ -51,7 +52,7 @@ function createCallSelectors(context, options) {
     const receiverPath = staticReceiverPath(node.init);
     if (!globalRoot && !receiverPath) return;
     for (const property of node.id.properties) {
-      if (property.type !== "Property") continue;
+      if (property.type !== "Property" || property.value.type === "AssignmentPattern") continue;
       const name = staticPropertyName(property);
       const binding = bindingIdentifier(property.value);
       if (!name || !binding || isReassigned(binding, context)) continue;
@@ -120,7 +121,7 @@ function createCallSelectors(context, options) {
         }
         found.push({
           target,
-          resolved: { source: aliased.receiverPath, calleeName: aliased.calleeName },
+          resolved: { source: aliased.receiverPath.join("."), calleeName: aliased.calleeName },
         });
       }
       return;
@@ -135,7 +136,7 @@ function createCallSelectors(context, options) {
       ) {
         continue;
       }
-      found.push({ target, resolved: { source: receiverPath, calleeName: terminal } });
+      found.push({ target, resolved: { source: receiverPath.join("."), calleeName: terminal } });
     }
   }
 
@@ -151,11 +152,29 @@ function createCallSelectors(context, options) {
         const found = [];
         pushGlobals(callee, found);
         pushMembers(callee, found);
+        if (!found.length) {
+          const expanded = expandSelectorAlias(callee, context, (candidate, asReceiver) => {
+            const literal = [];
+            pushGlobals(candidate, literal);
+            pushMembers(candidate, literal);
+            const path = staticReceiverPath(candidate);
+            return (
+              literal.length > 0 ||
+              (asReceiver &&
+                path &&
+                compiled.members.some((target) => matchesDotted(path, target.receiverPatterns)))
+            );
+          });
+          if (expanded) {
+            pushGlobals(expanded, found);
+            pushMembers(expanded, found);
+          }
+        }
         return found.map((match) => ({ ...match, arguments: args }));
       };
       const direct = collect(unwrapExpression(node.callee), node.arguments);
       if (direct.length) return direct;
-      const invoked = logicalCall(node);
+      const invoked = logicalCall(node, (callee) => collect(callee, []).length > 0);
       if (!invoked) return [];
       return collect(unwrapExpression(invoked.callee), invoked.arguments);
     },
