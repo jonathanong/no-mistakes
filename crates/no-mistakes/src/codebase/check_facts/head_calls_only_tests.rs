@@ -33,9 +33,9 @@ fn config(efforts: &[&str]) -> NoMistakesConfig {
     config
 }
 
-fn plan(config: &NoMistakesConfig) -> CheckFactPlan {
+fn plan(root: &std::path::Path, config: &NoMistakesConfig) -> CheckFactPlan {
     let mut plan = CheckFactPlan::default();
-    configure_prepared_postgres_plan(config, &mut plan).unwrap();
+    configure_prepared_postgres_plan(root, config, &mut plan).unwrap();
     assign_prepared_embedded_sql_options(config, &mut plan).unwrap();
     plan
 }
@@ -49,7 +49,7 @@ fn configured_low_annotation_skips_composition_in_the_real_shared_fact_pass() {
     let path = root.join("append-literal-arguments.mts");
     let mut expected_spans = None;
     for efforts in [vec!["low"], vec!["max"], vec!["low", "max"]] {
-        let plan = plan(&config(&efforts));
+        let plan = plan(root, &config(&efforts));
         let head_only = efforts == ["low"];
         assert_eq!(
             plan.embedded_sql_head_calls_only.len(),
@@ -110,7 +110,7 @@ fn different_profile_full_sql_demand_preserves_the_low_profile_fast_path() {
             .unwrap(),
         ..Default::default()
     });
-    let plan = plan(&config);
+    let plan = plan(std::path::Path::new("."), &config);
     assert_eq!(plan.embedded_sql_options.len(), 2);
     assert_eq!(plan.embedded_sql_head_calls_only.len(), 1);
 }
