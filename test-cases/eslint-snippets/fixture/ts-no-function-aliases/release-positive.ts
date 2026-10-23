@@ -42,3 +42,27 @@ const parenthesizedForwarder = value => (api.create?.call)(api, value);
 
 export function optionalTarget(value?: string): string { return value ?? ""; }
 const optionalForwarder = (value?) => optionalTarget(value);
+
+// Released v0.95.0 identifier syntax remains reportable regardless of binding.
+const assertedResult = value => create(value)!;
+function assertedFunction(value) { return create(value)!; }
+const assertedCallee = value => create!(value);
+const optionalAssertedResult = value => create?.(value)!;
+const awaitedAssertedResult = async value => (await create(value))!;
+async function awaitedAssertedFunction(value) { return (await create(value))!; }
+const assertedArrow = value => create(value)!;
+const { required } = require("./api");
+const requiredForwarder = value => required(value);
+export let mutableTarget = value => value;
+const mutableForwarder = value => mutableTarget(value);
+export var varTarget = value => value;
+const varForwarder = value => varTarget(value);
+function privateFunction(value) { return value; }
+const privateFunctionForwarder = value => privateFunction(value);
+const privateConst = value => value;
+const privateConstForwarder = value => privateConst(value);
+const globalParse = value => parseInt(value);
+const globalString = value => String(value);
+function shadowedParameter(target) { return target(target); }
+export { remote } from "./api";
+const reexportForwarder = value => remote(value);

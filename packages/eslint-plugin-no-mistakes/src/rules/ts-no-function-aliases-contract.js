@@ -21,16 +21,6 @@ function unassertedResult(node) {
   return unassertedPath(result);
 }
 
-function legacyIdentifierCall(node, call) {
-  let callee = call.callee;
-  while (callee.type === "ChainExpression") callee = callee.expression;
-  if (callee.type !== "Identifier" || !unassertedResult(node)) return false;
-  // Template-key assignments became named wrappers in #2516, so they still
-  // use the expanded-path proof even when their body calls an identifier.
-  const left = node.parent?.type === "AssignmentExpression" ? node.parent.left : null;
-  return !(left?.type === "MemberExpression" && left.computed && left.property.type !== "Literal");
-}
-
 function unassertedCall(node, call) {
   if (call.typeArguments || call.typeParameters) return false;
   if (!unassertedResult(node) || !unassertedPath(call.callee)) return false;
@@ -95,7 +85,6 @@ function documentedSignature(node, sourceCode) {
 }
 
 module.exports = {
-  legacyIdentifierCall,
   unassertedCall,
   wrapperHasOverloads,
   directIntrinsic,

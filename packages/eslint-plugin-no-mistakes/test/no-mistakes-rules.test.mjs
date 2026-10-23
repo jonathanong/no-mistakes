@@ -657,7 +657,7 @@ describe("ts-no-function-aliases", () => {
     );
   });
 
-  it("keeps private function expressions, self calls, default params, and TS wrappers", () => {
+  it("keeps released private identifier findings and silent self/default wrappers", () => {
     assert.deepEqual(
       messages(
         ruleFixture("ts-no-function-aliases", "coverage.ts"),
@@ -665,7 +665,7 @@ describe("ts-no-function-aliases", () => {
         undefined,
         "coverage.ts",
       ),
-      [],
+      Array.from({ length: 3 }, () => "alias"),
     );
   });
 });

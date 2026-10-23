@@ -3,7 +3,7 @@ import { describe, it } from "vitest";
 import { fixture, messages, require } from "./helpers.mjs";
 
 describe("ts-no-function-aliases recall", () => {
-  it("preserves previously over-reported private and ambient receiver facades", () => {
+  it("preserves released identifier findings in the private receiver fixture", () => {
     assert.deepEqual(
       messages(
         fixture("ts-no-function-aliases/private-recall.ts"),
@@ -11,7 +11,7 @@ describe("ts-no-function-aliases recall", () => {
         undefined,
         "ts-no-function-aliases/private-recall.ts",
       ),
-      [],
+      ["alias", "alias"],
     );
   });
 
