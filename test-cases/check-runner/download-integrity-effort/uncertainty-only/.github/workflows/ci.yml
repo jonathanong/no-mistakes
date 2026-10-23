@@ -1,0 +1,9 @@
+name: Only an uncertain download
+on: push
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          BASE_URL='https://untrusted.example.invalid/base'
+          curl --url "$BASE_URL/artifact.tgz"

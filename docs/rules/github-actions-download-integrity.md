@@ -8,9 +8,10 @@ later step can execute or unpack different bytes than the author read. The
 rule is opt-in. Listing it is what turns it on. Product defaults do not enable
 it, and it is not part of a recommended or strict preset.
 
-The rule reports only a download it can judge. A URL it cannot resolve is not
-a finding. That silence means the URL was not followed, not that the download
-is safe.
+At the default `max` effort, the rule reports only a download it can judge.
+A URL it cannot resolve is not a finding. That silence means the URL was not
+followed, not that the download is safe. Low effort uses the explicit
+[unanalyzable policy](#effort) for supported downloader calls with indirect URLs.
 
 ## What it catches
 
@@ -89,6 +90,17 @@ single command token such as `ci_download_to`.
 uppercase assignment with a literal value, such as `BASE_URL="https://example.invalid/base"`,
 before checking later `$BASE_URL` or `${BASE_URL}` URL arguments.
 
+Select low effort and its explicit uncertainty policy on the rule application:
+
+```yaml
+rules:
+  - rule: github-actions-download-integrity
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: report
+```
+
 At `effort: low`, the rule does not expand assignments to URL values. If a
 known downloader command has any dynamic candidate URL argument, the whole
 command is unanalyzable: it emits one diagnostic and no definite unsafe-URL
@@ -100,9 +112,11 @@ URL argument. An unanalyzable URL does not prove that the download is unsafe;
 
 Low effort may inspect one uppercase literal binding to identify a downloader
 or wrapper used as a dynamic command prefix. It does not use that binding to
-expand URL values. If command identity cannot be established, the shared
-`unanalyzable` policy applies; the rewrite is to call `curl`, `wget`, or a
-configured helper directly. Dynamic operands of known output and header options
+expand URL values. When this proves a configured downloader behind an indirect
+prefix, the shared `unanalyzable` policy applies; the rewrite is to call `curl`,
+`wget`, or a configured helper directly. Commands that cannot be identified as
+configured downloaders remain outside this rule's target scope. Dynamic
+operands of known output and header options
 keep using the existing option parser, so they do not trigger this policy as
 candidate URL arguments.
 

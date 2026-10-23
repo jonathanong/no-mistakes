@@ -366,6 +366,9 @@ mod check_analysis_policy;
 #[path = "check_caching_effort.rs"]
 mod check_caching_effort;
 
+#[path = "check_download_effort.rs"]
+mod check_download_effort;
+
 #[path = "check_literal_helpers.rs"]
 mod check_literal_helpers;
 

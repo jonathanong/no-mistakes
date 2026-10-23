@@ -138,6 +138,7 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
     })
 }
 
+mod download_integrity;
 mod redirects;
 fn run_enabled_filesystem_rules(
     root: &Path,
@@ -148,7 +149,7 @@ fn run_enabled_filesystem_rules(
     facts: Option<&no_mistakes::codebase::check_facts::CheckFactMap>,
     defer_suppression: bool,
 ) -> Result<no_mistakes::codebase::rules::analysis_policy::AnalysisDiagnostics> {
-    redirects::run(
+    download_integrity::run(
         root,
         config,
         enabled,

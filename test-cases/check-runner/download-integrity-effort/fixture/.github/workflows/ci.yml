@@ -18,7 +18,8 @@ jobs:
       - name: Checksum file download
         run: curl -fsSL https://untrusted.example.invalid/SHA256SUMS.txt -o SHA256SUMS.txt
       - name: Trusted URL with URL-looking header and output path
-        run: curl --header "X-Origin: https://untrusted.example.invalid/header" --output "https://untrusted.example.invalid/output-name" https://api.github.com/repos/example/project
+        run: |
+          curl --header "X-Origin: https://untrusted.example.invalid/header" --output "https://untrusted.example.invalid/output-name" https://api.github.com/repos/example/project
       - name: Trusted wget URL with output document
         run: wget --output-document="$OUTPUT_FILE" https://objects.githubusercontent.com/releases/project.tar.gz
       - name: Intentional skip
