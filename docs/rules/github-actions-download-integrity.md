@@ -109,6 +109,9 @@ result: `report` fails, `advise` emits a non-failing advisory, and `ignore` skip
 it. The static rewrite is to put the complete URL directly in the downloader's
 URL argument. An unanalyzable URL does not prove that the download is unsafe;
 `ignore` therefore leaves that command without analysis.
+With `report`, low can produce more findings than max when max resolves a
+dynamic URL to a trusted host or another allowed form: this is the explicit
+price of skipping expansion, rather than proof of an unsafe download.
 
 A dynamic option name such as `curl --$FLAG URL` also makes argument slots
 uncertain: the expanded option could consume the apparent URL as a filename.
@@ -126,6 +129,8 @@ configured download commands remain outside this rule's target scope. Quoted
 dynamic operands of known output and header options
 keep using the existing option parser, so they do not trigger this policy as
 candidate URL arguments.
+Even a literal trusted-host URL behind a proved indirect prefix follows the
+policy: low does not use alias recovery to prove the complete argument shape.
 
 Commands whose URL arguments are all literal keep the same checks at low and
 max: trusted-host and checksum-file exceptions, same-step checksum verification,
