@@ -118,3 +118,6 @@ fn enabled_filesystem_check_runs_both_suppression_modes() {
         assert!(task.findings.is_empty(), "{defer_suppression}");
     }
 }
+
+#[path = "redirect_tests.rs"]
+mod redirects;
