@@ -5,6 +5,7 @@ rules:
       include: [src/query.mts]
       importSpecifier: pg
       executorTypeNames: [PoolClient]
+      reportUnmatchedExecutorNames: true
       sqlLiteralHelpers: ["a#b "]
       effort: low
       unanalyzable: ignore

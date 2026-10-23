@@ -36,4 +36,8 @@ export function run(client: PoolClient, dynamic: string) {
   { const copies = { from: (_: string) => dynamic };
     client.query(copies.from('/* named */ COPY users FROM STDIN')); // unknown
   }
+  // A local type annotation does not prove a supported executor receiver.
+  const unresolved: PoolClient = client;
+  unresolved.query(copyFrom('/* named */ COPY users FROM STDIN')); // receiver
+
 }

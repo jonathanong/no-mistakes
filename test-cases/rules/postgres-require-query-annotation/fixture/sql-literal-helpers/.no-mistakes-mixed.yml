@@ -5,6 +5,7 @@ rules:
       include: [src/query.mts]
       importSpecifier: pg
       executorTypeNames: [PoolClient]
+      reportUnmatchedExecutorNames: true
       sqlLiteralHelpers: [pg-copy-streams#from]
       effort: low
       unanalyzable: report
@@ -14,6 +15,7 @@ rules:
       include: [src/query.mts]
       importSpecifier: pg
       executorTypeNames: [PoolClient]
+      reportUnmatchedExecutorNames: true
       sqlLiteralHelpers: [other-copy-streams#from]
       effort: max
       unanalyzable: report

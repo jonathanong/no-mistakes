@@ -18,6 +18,27 @@ fn configured_literal_helpers_have_matching_low_and_max_policy_outcomes() {
             .unwrap();
             let rows = report["rules"].as_array().unwrap();
             let verdicts = report["sqlVerdicts"].as_array().unwrap();
+            let receivers = verdicts
+                .iter()
+                .filter(|row| row["subcheck"] == "unresolved-configured-executor-receiver")
+                .collect::<Vec<_>>();
+            assert_eq!(
+                receivers.len(),
+                1,
+                "helper profiles retain receiver diagnostics: {report}"
+            );
+            assert_eq!(receivers[0]["advisory"], policy == "advise");
+            assert_eq!(
+                rows.iter()
+                    .any(|row| row["target"] == "unresolved-configured-executor-receiver"),
+                policy == "report"
+            );
+            assert!(
+                !rows
+                    .iter()
+                    .any(|row| row["target"] == "unmatched-executor-name"),
+                "PoolClient remains a matched configured name"
+            );
             let mut statuses = Vec::new();
             for (index, line) in source.lines().enumerate() {
                 let Some((_, marker)) = line.split_once("// ") else {
@@ -122,5 +143,34 @@ fn mixed_helper_profiles_do_not_share_configuration_authority() {
                 }
             );
         }
+    }
+}
+
+#[test]
+fn helper_configuration_preserves_ordinary_cross_file_max_inference() {
+    let root = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+        .join("sql-literal-helpers");
+    let mut baseline = None;
+    for config in [
+        ".no-mistakes-plain-baseline.yml",
+        ".no-mistakes-plain-max.yml",
+    ] {
+        let request =
+            serde_json::json!({"root":root,"config":root.join(config),"includeSqlVerdicts":true});
+        let report: serde_json::Value = serde_json::from_str(
+            &check_json_impl(crate::napi_api::options::test_json_arg(request.to_string())).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(report["rules"], serde_json::json!([]), "{report}");
+        let rows = report["sqlVerdicts"].as_array().unwrap();
+        assert_eq!(rows.len(), 1, "{report}");
+        assert_eq!(
+            rows[0]["status"], "proven-clear",
+            "ordinary imported helper is still traced"
+        );
+        if let Some(prior) = &baseline {
+            assert_eq!(&report["advisories"], prior);
+        }
+        baseline = Some(report["advisories"].clone());
     }
 }
