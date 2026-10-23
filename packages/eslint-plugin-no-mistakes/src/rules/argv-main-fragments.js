@@ -9,9 +9,12 @@ function identity(value) {
 function concatenate(left, right) {
   if (left === ARGV) left = ["", ""];
   if (right === ARGV) right = ["", ""];
-  if (typeof left === "string" && typeof right === "string") return left + right;
-  if (typeof left === "string" && Array.isArray(right)) return [left + right[0], right[1]];
-  if (Array.isArray(left) && typeof right === "string") return [left[0], left[1] + right];
+  // Accepted prefixes have at most eight characters; reject before allocating.
+  if (typeof left === "string" && typeof right === "string")
+    return left.length + right.length <= 8 ? left + right : 0;
+  if (typeof left === "string" && Array.isArray(right))
+    return left.length + right[0].length <= 8 ? [left + right[0], right[1]] : 0;
+  if (Array.isArray(left) && typeof right === "string") return right === "" ? left : 0;
   return 0;
 }
 

@@ -21,3 +21,5 @@ if (import.meta.url === `${"file://".toString()}${invoked}`) main();
 if (import.meta.url === "file://" + String(invoked)) main();
 // An empty outer template does not add a second file URL prefix.
 if (import.meta.url === `${invokedUrl}`) main();
+// Eight-character prefixes remain accepted at the folding boundary.
+if (import.meta.url === ("file:" + "///") + process.argv[1]) main();

@@ -41,3 +41,10 @@ if (import.meta.url === new URL(new URL(`file://${process.argv[1]}`)).href) main
 const prefixed = "file://" + process.argv[1];
 // Preserve the inner prefix so this cannot become a direct argv identity.
 if (import.meta.url === `file://${prefixed}`) main();
+// Bounded folding must reject oversized aliases before concatenating their strings.
+const oversized = "file:///" + "x";
+const doubled = oversized + oversized;
+const doubledAgain = doubled + doubled;
+if (import.meta.url === doubledAgain + process.argv[1]) main();
+if (import.meta.url === "file:///x" + process.argv[1]) main();
+if (import.meta.url === `${"file:///"}${"x"}${process.argv[1]}`) main();

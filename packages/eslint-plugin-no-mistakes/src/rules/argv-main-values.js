@@ -105,7 +105,7 @@ function createClassifier(context, wrappers) {
       for (let i = 0; i < last; i++) {
         const part = classify(node.expressions[i], depth + 1);
         if (typeof part !== "string") return 0;
-        prefix += part + node.quasis[i + 1].value.cooked;
+        prefix = concatenate(prefix, concatenate(part, node.quasis[i + 1].value.cooked));
       }
       return concatenate(prefix, argument);
     }

@@ -56,7 +56,7 @@ describe(id, () => {
   it("normalizes concatenated and wrapped file URL guards", () => {
     assert.deepEqual(
       check("file-url-recall.mjs").map((m) => m.line),
-      [2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 16, 18, 19, 20, 21, 23],
+      [2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 16, 18, 19, 20, 21, 23, 25],
     );
     assert.deepEqual(check("file-url-controls.mjs"), []);
   });
@@ -71,7 +71,7 @@ describe(id, () => {
     assert.deepEqual(lint(allowed.code, rules, "documented.ts"), []);
   });
   for (const [name, count] of [
-    ["file-url-recall.mjs", 16],
+    ["file-url-recall.mjs", 17],
     ["file-url-controls.mjs", 0],
     ["unsafe.mjs", 10],
     ["aliases.ts", 5],
