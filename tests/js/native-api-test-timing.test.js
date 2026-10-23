@@ -68,6 +68,51 @@ test("missing measurements and empty reports fail explicitly", () => {
   assert.throws(() => summarize(fixture("empty")), /no testResults/);
 });
 
+test("report-only warns about slow tests and still writes all timing artifacts", () => {
+  const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), "native-api-timing-"));
+  try {
+    const completed = spawnSync(
+      process.execPath,
+      [helper, path.join(fixtureDir, "slow.json"), outputDir, "--report-only"],
+      { encoding: "utf8" },
+    );
+    assert.equal(completed.status, 0, completed.stderr);
+    assert.match(completed.stdout, /::warning::1 passed real N-API test\(s\) reached 5000 ms/);
+    assert.match(completed.stdout, /Timing gate: report-only/);
+    assert.match(
+      fs.readFileSync(path.join(outputDir, "native-api-tests-durations.csv"), "utf8"),
+      /"slow parity","passed","5000"/,
+    );
+    assert.match(
+      fs.readFileSync(path.join(outputDir, "native-api-tests-summary.md"), "utf8"),
+      /Passed tests at or above 5000 ms: 1/,
+    );
+  } finally {
+    fs.rmSync(outputDir, { recursive: true, force: true });
+  }
+});
+
+test("report-only still rejects missing measurements and unknown options", () => {
+  const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), "native-api-timing-"));
+  try {
+    for (const [input, option, error] of [
+      ["missing-duration", "--report-only", /Completed test has no finite duration/],
+      ["empty", "--report-only", /no testResults/],
+      ["valid", "--report-onyl", /usage:/],
+    ]) {
+      const completed = spawnSync(
+        process.execPath,
+        [helper, path.join(fixtureDir, `${input}.json`), outputDir, option],
+        { encoding: "utf8" },
+      );
+      assert.equal(completed.status, 1, `${input}: ${completed.stdout}`);
+      assert.match(completed.stderr, error);
+    }
+  } finally {
+    fs.rmSync(outputDir, { recursive: true, force: true });
+  }
+});
+
 test("a failing test remains visible without triggering the passed-test timing gate", () => {
   const result = summarize(fixture("failed"));
   assert.equal(result.slowPassed.length, 0);
