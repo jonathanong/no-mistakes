@@ -7,15 +7,16 @@ Flags a member write in one module that mutates an exported SQL identifier regis
 The request prepares embedded SQL, import edges, and value-flow mutations once. This rule borrows those facts and the canonical graph. Unknown provenance and HTTP `.query` collisions are not proven violations. There is no autofix.
 
 ```yaml
-projects:
-  app:
-    postgres:
-      executors:
-        importSpecifier: "@example/db"
 rules:
   - rule: postgres-no-mutable-sql-registry
-    projects: [app]
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
 ```
+
+This example uses repository scope and sets `importSpecifier` on the rule. For
+project scope, set it under `projects.<name>.postgres.executors` and select
+that project on the rule.
 
 ## Why and when
 
@@ -76,10 +77,12 @@ Cyclic re-exports, missing producers, and arbitrary `module.exports` mutation do
 ## Valid example
 
 ```ts
+// src/tables.ts
 export const tables = { users: "app.users" } as const;
 ```
 
 ```ts
+// src/query.ts
 import { query } from "@example/db";
 import { tables } from "./tables";
 export function list() {
@@ -92,15 +95,18 @@ A known registry root remains a registry mutation even when the member key is co
 ## Counterexample
 
 ```ts
+// src/tables.ts
 export const tables: Record<string, string> = {};
 ```
 
 ```ts
+// src/write.ts
 import { tables } from "./tables";
 tables.users = "app.users";
 ```
 
 ```ts
+// src/query.ts
 import { query } from "@example/db";
 import { tables } from "./tables";
 export function list() {

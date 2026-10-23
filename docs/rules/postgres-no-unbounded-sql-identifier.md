@@ -7,15 +7,16 @@ Flags `process.env`, imported config, request parameters, query result rows, or 
 The request prepares embedded SQL, import edges, and value-flow facts once. This rule borrows those facts and the canonical graph. Recovered switch/validator alternatives that splice literal schemas pass. A call is a validator only when the callee is a proven finite helper (literal returns, typically a switch whose default throws). Identity wrappers, `String()`, and `.toLowerCase()` are not validators. Unknown provenance and HTTP `.query` collisions are not proven violations. There is no autofix.
 
 ```yaml
-projects:
-  app:
-    postgres:
-      executors:
-        importSpecifier: "@example/db"
 rules:
   - rule: postgres-no-unbounded-sql-identifier
-    projects: [app]
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
 ```
+
+This example uses repository scope and sets `importSpecifier` on the rule. For
+project scope, set it under `projects.<name>.postgres.executors` and select
+that project on the rule.
 
 ## Why and when
 
@@ -64,6 +65,7 @@ Unresolved imports, invalidated aliases, and cyclic alias chains remain unknown 
 ## Valid example
 
 ```ts
+// src/schema.ts
 export function schemaOf(value: string) {
   switch (value) {
     case "app":
@@ -77,6 +79,7 @@ export function schemaOf(value: string) {
 ```
 
 ```ts
+// src/query.ts
 import { query } from "@example/db";
 import { schemaOf } from "./schema";
 export function list() {
@@ -89,6 +92,7 @@ A bind-value interpolation (`WHERE tenant = ${process.env.SCHEMA}`), an HTTP `re
 ## Counterexample
 
 ```ts
+// src/query.ts
 import { query } from "@example/db";
 export function list() {
   return query(`SELECT id FROM ${process.env.SCHEMA}.users`);
