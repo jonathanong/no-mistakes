@@ -3,8 +3,7 @@ use super::{
     all_react_component_keys, colocated_test_covered_components, component_disabled,
     directly_covered_components, dynamic_or_mock_boundary_files, effective_story_patterns,
     file_disabled, namespace_import_findings, reachable_story_files, selected_components,
-    stale_or_blank_allow_findings, transitive_covered_components, GlobMatcher, Options,
-    RuleFinding, RULE_ID,
+    stale_or_blank_allow_findings, transitive_covered_components, GlobMatcher, Options, RULE_ID,
 };
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::rules::{
@@ -84,6 +83,8 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
         sources,
     } = inputs;
     let opts: Options = rule.try_rule_options()?;
+    let policy = config.effective_rule_analysis(rule)?;
+    let low = policy.effort == crate::config::v2::Effort::Low;
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     let rule_filter = RulePathFilter::new_with_inferred(root, config, rule, &mut inferred_roots)?;
     let include = GlobMatcher::new(&opts.include)?;
@@ -93,7 +94,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
     let allow_files = GlobMatcher::new(opts.allow_files.keys())?;
     let test_filter = crate::codebase::test_filter::TestFileFilter::new(root, config);
 
-    let (components, unanalyzable) = selected_components(
+    let (components, mut unanalyzable) = selected_components(
         root,
         project_root,
         shared,
@@ -129,14 +130,21 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
         resolver,
         &all_component_keys,
     );
-    let covered =
-        transitive_covered_components(root, project_root, shared, &direct, &component_keys);
+    let covered = if low {
+        direct.clone()
+    } else {
+        transitive_covered_components(root, project_root, shared, &direct, &component_keys)
+    };
     let test_covered = if opts.allow_colocated_tests {
         colocated_test_covered_components(shared, &components)
     } else {
         Default::default()
     };
-    let boundary_files = dynamic_or_mock_boundary_files(project_root, shared, resolver);
+    let boundary_files = if low {
+        Default::default()
+    } else {
+        dynamic_or_mock_boundary_files(project_root, shared, resolver)
+    };
 
     let mut findings = Vec::new();
     findings.append(&mut namespace_findings);
@@ -167,17 +175,13 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
         {
             continue;
         }
-        findings.push(RuleFinding {
-            rule: RULE_ID.to_string(),
-            file: component.repo_file,
-            line: component.line,
-            message: format!(
-                "React component `{}` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `{RULE_ID}`, or add a documented no-mistakes disable comment.",
-                component.export_name
-            ),
-            import: None,
-            target: Some(component.key),
-        });
+        // With no covered story seeds, an explicit component cannot acquire
+        // transitive coverage; implicit components may still be boundary-exempt.
+        if low && (!direct.is_empty() || !component.explicit) {
+            unanalyzable.push(super::effort::unanalyzable(component));
+            continue;
+        }
+        findings.push(super::effort::missing(component));
     }
 
     findings.retain(|finding| rule_filter.is_match(&root.join(&finding.file)));
@@ -192,7 +196,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
         project_root,
         &rule_filter,
         &allow_files,
-        config.effective_rule_analysis(rule)?.unanalyzable,
+        policy.unanalyzable,
     );
     Ok(diagnostics)
 }

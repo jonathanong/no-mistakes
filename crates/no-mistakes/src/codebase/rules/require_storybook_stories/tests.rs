@@ -199,3 +199,5 @@ mod selection_rule_cases;
 
 mod malformed_prepared;
 mod malformed_selected;
+
+mod effort;

@@ -12,6 +12,7 @@ mod config;
 mod coverage;
 mod coverage_graph;
 mod diagnostics;
+mod effort;
 mod findings;
 mod prepared;
 mod runner;

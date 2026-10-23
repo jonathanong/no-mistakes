@@ -14,6 +14,11 @@ pub struct RuleEffortSupport {
 // unsupported syntax explicitly under the caller's unanalyzable policy.
 pub(super) const SUPPORT: &[RuleEffortSupport] = &[
     RuleEffortSupport {
+        rule: "require-storybook-stories",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
         rule: "nextjs-no-caching",
         partners: &[],
         partner_scope: |_, _| false,
