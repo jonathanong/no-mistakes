@@ -23,7 +23,16 @@ pub(crate) fn prepare_rule_sql_facts(
     let low_annotation = rule_ids.contains(&"postgres-require-query-annotation")
         && super::annotation_effort::low_requested(config)?;
     let patterns = sql_patterns(config, rule_ids)?;
-    let selected = if profiles.is_empty() {
+    let low_offset = rule_ids.contains(&"postgres-no-offset")
+        && config
+            .rule_applications("postgres-no-offset")
+            .iter()
+            .any(|rule| {
+                config
+                    .effective_rule_analysis(rule)
+                    .is_ok_and(|policy| policy.effort == crate::config::v2::Effort::Low)
+            });
+    let selected = if profiles.is_empty() && !low_offset {
         crate::codebase::postgres::postgres_sql_paths(
             root,
             files,
@@ -35,12 +44,22 @@ pub(crate) fn prepare_rule_sql_facts(
     } else {
         files.to_vec()
     };
+    let mut low_plan = crate::codebase::check_facts::CheckFactPlan::default();
+    if low_offset {
+        let mut scoped = config.clone();
+        scoped
+            .rules
+            .retain(|rule| rule.rule == "postgres-no-offset");
+        super::plan::configure_prepared_postgres_plan(root, &scoped, &mut low_plan)?;
+    }
     Ok(
         crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
             root,
             selected,
             Vec::new(),
             crate::codebase::check_facts::CheckFactPlan {
+                raw_source: low_plan.raw_source,
+                sql_identifier_profiles: low_plan.sql_identifier_profiles,
                 postgres_schema: rule_ids.iter().any(|id| {
                     !matches!(
                         *id,
@@ -50,10 +69,11 @@ pub(crate) fn prepare_rule_sql_facts(
                             | "postgres-conflict-ordering"
                     )
                 }),
-                postgres_dml: !profiles.is_empty()
-                    && dml_ids
-                        .iter()
-                        .any(|id| !matches!(*id, "postgres-require-query-annotation")),
+                postgres_dml: low_offset
+                    || (!profiles.is_empty()
+                        && dml_ids
+                            .iter()
+                            .any(|id| !matches!(*id, "postgres-require-query-annotation"))),
                 postgres_variants: evaluated_annotation
                     || dml_ids.iter().any(|id| {
                         matches!(*id, "postgres-lock-ordering" | "postgres-conflict-ordering")

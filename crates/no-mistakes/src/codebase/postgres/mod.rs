@@ -19,6 +19,7 @@ pub(crate) mod query_annotation;
 pub(crate) use migration_order::cmp_sql_rel;
 mod numeric_literal;
 mod offset;
+pub(crate) use offset::sql_offset_facts;
 mod on_conflict;
 mod parse;
 pub(crate) mod predicate_normalization;

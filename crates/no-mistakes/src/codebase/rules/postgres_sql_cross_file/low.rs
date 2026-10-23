@@ -127,7 +127,7 @@ pub(crate) fn check(
     Ok(findings)
 }
 fn classify(input: &Input, rule_id: &str) -> (Vec<String>, bool) {
-    let Input::Sql { text, holes } = input else {
+    let Input::Sql { text, holes, .. } = input else {
         return (Vec::new(), true);
     };
     let Ok(statements) = parse_postgres_sql(text) else {

@@ -15,6 +15,7 @@ fn span(value: oxc_span::Span) -> Span {
 pub(crate) enum Input {
     Sql {
         text: String,
+        source_span: Span,
         holes: Vec<(String, Option<String>)>,
     },
     Reference(Span),
@@ -26,9 +27,11 @@ pub(crate) struct SqlCall {
     pub line: u32,
     pub input: Input,
 }
+pub(crate) type OffsetLiteral = std::result::Result<Option<Vec<super::SqlOffsetFact>>, ()>;
 #[derive(Default)]
 pub(crate) struct FileFacts {
     pub profiles: Vec<(EmbeddedSqlOptions, Vec<SqlCall>)>,
+    pub offset_literals: std::sync::OnceLock<std::collections::BTreeMap<Span, OffsetLiteral>>,
 }
 struct Call {
     span: Span,

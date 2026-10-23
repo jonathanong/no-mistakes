@@ -1,8 +1,10 @@
 mod diagnostics;
+mod prepare_low;
 mod support;
 use crate::config::v2::{schema::RuleDef, AnalysisFallback, Effort, NoMistakesConfig};
 use anyhow::Result;
 pub use diagnostics::AnalysisDiagnostics;
+pub(crate) use prepare_low::prepare_requested_rule_config;
 use std::path::{Path, PathBuf};
 pub use support::RuleEffortSupport;
 use support::SUPPORT;

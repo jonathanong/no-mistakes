@@ -9,6 +9,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod low;
 mod scan;
 
 pub const RULE_ID: &str = "postgres-no-offset";
@@ -61,31 +62,45 @@ pub(crate) fn check_with_files_sources_and_facts(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
+    let observer = crate::diagnostics::current();
     let all: Result<Vec<super::PostgresFindings>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
         .enumerate()
-        .map(|(index, rule)| -> Result<super::PostgresFindings> {
-            let opts: Options = rule.try_rule_options()?;
-            let compiled = compile_options(&opts)?;
-            let files = super::selected_rule_files(root, config, rule, all_files)?;
-            let sql_paths =
-                crate::codebase::postgres::postgres_sql_paths(root, &files, &compiled.schema)?;
-            let sql = crate::codebase::check_facts::PathMembership::new(&sql_paths);
-            let files: Vec<PathBuf> = files
-                .into_iter()
-                .filter(|path| {
-                    compiled.includes(&relative_slash_path(root, path), sql.contains(path))
-                })
-                .collect();
-            let view = facts.for_sql_application(index, rule.name.as_deref());
-            scan(
-                root,
-                &compiled,
-                &files,
-                view.as_ref()
-                    .map_or(facts as &dyn SqlFactContext, |view| view),
-                sources,
+        .map(|(index, rule)| {
+            crate::diagnostics::with_observer(
+                observer.clone(),
+                || -> Result<super::PostgresFindings> {
+                    let opts: Options = rule.try_rule_options()?;
+                    let compiled = compile_options(&opts)?;
+                    let files = super::selected_rule_files(root, config, rule, all_files)?;
+                    let sql_paths = crate::codebase::postgres::postgres_sql_paths(
+                        root,
+                        &files,
+                        &compiled.schema,
+                    )?;
+                    let sql = crate::codebase::check_facts::PathMembership::new(&sql_paths);
+                    let files: Vec<PathBuf> = files
+                        .into_iter()
+                        .filter(|path| {
+                            compiled.includes(&relative_slash_path(root, path), sql.contains(path))
+                        })
+                        .collect();
+                    let view = facts.for_sql_application(index, rule.name.as_deref());
+                    if config.effective_rule_analysis(rule)?.effort
+                        == crate::config::v2::Effort::Low
+                    {
+                        return low::scan(root, &compiled, &files, facts, index, rule, sources);
+                    }
+                    scan(
+                        root,
+                        &compiled,
+                        &files,
+                        view.as_ref()
+                            .map_or(facts as &dyn SqlFactContext, |view| view),
+                        sources,
+                    )
+                },
             )
         })
         .collect();
@@ -124,3 +139,6 @@ mod review_tests;
 mod unanalyzable_tests;
 #[cfg(test)]
 mod verdict_tests;
+
+#[cfg(test)]
+mod effort_tests;

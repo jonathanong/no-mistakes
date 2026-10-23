@@ -77,6 +77,14 @@ pub(crate) fn check_prepared_sql_rule(
         &CheckFactMap,
     ) -> Result<Vec<RuleFinding>>,
 ) -> Result<Vec<RuleFinding>> {
+    let prepared_config = if rule_id == "postgres-no-offset" {
+        super::analysis_policy::prepare_requested_rule_config(
+            root, rule_id, config, all_files, sources,
+        )?
+    } else {
+        None
+    };
+    let config = prepared_config.as_ref().unwrap_or(config);
     let facts = prepare_sql_rule_facts(root, config, all_files, sources, rule_id)?;
     let mut findings = check(root, config, all_files, sources, &facts)?;
     findings.extend(super::postgres_undeclared_executors::check(

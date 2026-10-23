@@ -146,7 +146,7 @@ fn unanalyzable(file: &str, call: &EmbeddedSqlCall) -> RuleFinding {
     }
 }
 
-fn finding(file: &str, offset: &SqlOffsetFact, ordinal: usize) -> RuleFinding {
+pub(super) fn finding(file: &str, offset: &SqlOffsetFact, ordinal: usize) -> RuleFinding {
     let line = offset.line.max(1);
     let text = match offset.kind {
         OffsetUse::Zero => "OFFSET 0 used as an optimizer fence; use a MATERIALIZED CTE (WITH x AS MATERIALIZED (...))",

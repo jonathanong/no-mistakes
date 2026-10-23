@@ -4,6 +4,7 @@ pub(super) fn input(expression: &Expression<'_>, env: &mut FxHashMap<String, Spa
     match unwrap_ts_wrappers(expression) {
         Expression::StringLiteral(value) => Input::Sql {
             text: value.value.to_string(),
+            source_span: span(value.span),
             holes: Vec::new(),
         },
         Expression::TemplateLiteral(value) => {
@@ -39,7 +40,11 @@ pub(super) fn input(expression: &Expression<'_>, env: &mut FxHashMap<String, Spa
                     holes.push((placeholder, source));
                 }
             }
-            Input::Sql { text, holes }
+            Input::Sql {
+                text,
+                holes,
+                source_span: span(value.span),
+            }
         }
         Expression::Identifier(id) => Input::Reference(span(id.span)),
         _ => Input::Unknown,

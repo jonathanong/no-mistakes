@@ -60,6 +60,10 @@ For `require-storybook-stories`, `low` checks direct story and configured
 colocated-test coverage while skipping render-chain and dynamic/mock boundary
 analysis. Uncertain coverage follows the shared unanalyzable policy. See
 [the rule](../rules/require-storybook-stories.md#effort).
+For `postgres-no-offset`, `low` checks unescaped literal SQL without evaluating
+JavaScript helpers or builders. Unsupported SQL follows the shared unanalyzable
+policy; raw SQL files retain their existing analysis. See
+[the rule](../rules/postgres-no-offset.md#effort).
 `--include-suppressed` is opt-in and adds deterministic directive accounting to
 JSON/YAML output without changing the default report schema.
 `unprovenMemberQuerySql` is an optional count of member `.query` calls that were not proven, omitted when zero, and not a failure.
