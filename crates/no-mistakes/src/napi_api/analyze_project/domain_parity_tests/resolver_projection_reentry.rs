@@ -13,14 +13,14 @@ fn controlled_symbol_index_reentry_completes_with_known_dependencies() {
             .spawn()
             .unwrap();
         eprintln!("controlled reentry child pid: {}", child.id());
-        match child.wait_timeout(std::time::Duration::from_secs(5)) {
-            Ok(Some(status)) => assert!(status.success(), "reentry child: {status}"),
-            outcome => {
-                let _ = child.kill();
-                let _ = child.wait();
-                panic!("controlled reentry child did not complete: {outcome:?}");
-            }
-        }
+        let outcome = child.wait_timeout(std::time::Duration::from_secs(5));
+        // Always reap before asserting, including timeout/errors; exited children are harmless.
+        let _ = child.kill();
+        let _ = child.wait();
+        assert!(
+            matches!(outcome, Ok(Some(status)) if status.success()),
+            "controlled reentry child did not complete successfully: {outcome:?}"
+        );
         return;
     }
 
