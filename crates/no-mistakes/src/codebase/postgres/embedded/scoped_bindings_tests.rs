@@ -2,6 +2,7 @@ use super::{extract_embedded_sql_from_source, EmbeddedSqlOptions};
 use std::path::PathBuf;
 
 mod commonjs;
+mod delayed;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

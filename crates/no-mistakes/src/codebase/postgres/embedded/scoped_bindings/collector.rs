@@ -1,4 +1,5 @@
 mod class_receivers;
+mod delayed;
 mod object_params;
 mod receiver_types;
 mod type_shadows;
@@ -8,8 +9,9 @@ use super::candidates::ImportClassification;
 use super::owners::{self, NameHit};
 use super::ScopedExecutors;
 use oxc_ast::ast::{
-    ArrowFunctionExpression, BindingPattern, BlockStatement, ForStatement, Function, FunctionBody,
-    Program, StaticBlock, SwitchStatement, VariableDeclaration, VariableDeclarationKind,
+    ArrowFunctionExpression, AssignmentTargetPropertyIdentifier, BindingPattern, BlockStatement,
+    ForStatement, Function, FunctionBody, Program, SimpleAssignmentTarget, StaticBlock,
+    SwitchStatement, VariableDeclaration, VariableDeclarationKind,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::{GetSpan, Span};
@@ -18,6 +20,7 @@ use std::collections::{HashMap, HashSet};
 
 #[derive(Default)]
 pub(super) struct ScopeCollector {
+    delayed: delayed::Bindings,
     factories: HashSet<String>,
     types: HashSet<String>,
     undeclared: HashMap<String, super::super::UndeclaredExecutorType>,
@@ -41,51 +44,6 @@ impl ScopeCollector {
             || !self.provisional_types.is_empty()
     }
 
-    fn record(&mut self, name: &str, span: Span, hit: NameHit) {
-        if hit.confirmed {
-            self.found.add(name, span);
-        } else if !hit.owners.is_empty() {
-            self.spans.push(PendingRelativeSpan {
-                owners: hit.owners,
-                name: name.to_string(),
-                start: span.start,
-                end: span.end,
-            });
-        }
-    }
-
-    fn bind_params(&mut self, params: &oxc_ast::ast::FormalParameters<'_>, scope: Span) {
-        for param in &params.items {
-            let Some(annotation) = &param.type_annotation else {
-                continue;
-            };
-            let annotated = &annotation.type_annotation;
-            match &param.pattern {
-                BindingPattern::BindingIdentifier(ident) => {
-                    self.record_undeclared(
-                        ident.name.as_str(),
-                        param.pattern.span().start,
-                        annotated,
-                    );
-                    let hit = owners::type_hit(&self.types, &self.provisional_types, annotated);
-                    self.record(
-                        ident.name.as_str(),
-                        Span::new(param.pattern.span().start, scope.end),
-                        hit,
-                    );
-                }
-                BindingPattern::ObjectPattern(object) => {
-                    self.bind_object_properties(
-                        object,
-                        annotated,
-                        Span::new(param.pattern.span().start, scope.end),
-                    );
-                }
-                _ => {}
-            }
-        }
-    }
-
     fn with_scope(&mut self, span: Span, walk: impl FnOnce(&mut Self)) {
         self.scopes.push(span);
         walk(self);
@@ -94,6 +52,37 @@ impl ScopeCollector {
 }
 
 impl<'a> Visit<'a> for ScopeCollector {
+    fn visit_binding_identifier(&mut self, id: &oxc_ast::ast::BindingIdentifier<'a>) {
+        self.declare_delayed_binding(id);
+    }
+
+    fn visit_identifier_reference(&mut self, id: &oxc_ast::ast::IdentifierReference<'a>) {
+        self.record_delayed_reference(id);
+    }
+
+    fn visit_simple_assignment_target(&mut self, target: &SimpleAssignmentTarget<'a>) {
+        self.delayed.write = target.get_expression().map_or(target.span(), |expression| {
+            crate::codebase::ts_source::unwrap_ts_wrappers(expression).span()
+        });
+        walk::walk_simple_assignment_target(self, target);
+    }
+
+    fn visit_assignment_target_property_identifier(
+        &mut self,
+        target: &AssignmentTargetPropertyIdentifier<'a>,
+    ) {
+        self.delayed.write = target.binding.span;
+        walk::walk_assignment_target_property_identifier(self, target);
+    }
+
+    fn visit_statements(
+        &mut self,
+        statements: &oxc_allocator::Vec<'a, oxc_ast::ast::Statement<'a>>,
+    ) {
+        self.record_delayed_statements(statements);
+        walk::walk_statements(self, statements);
+    }
+
     fn visit_program(&mut self, program: &Program<'a>) {
         self.with_scope(program.span, |this| walk::walk_program(this, program));
     }
@@ -117,6 +106,22 @@ impl<'a> Visit<'a> for ScopeCollector {
         });
     }
 
+    fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
+        self.with_scope(clause.span, |this| walk::walk_catch_clause(this, clause));
+    }
+
+    fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {
+        self.with_scope(statement.span, |this| {
+            walk::walk_for_in_statement(this, statement)
+        });
+    }
+
+    fn visit_for_of_statement(&mut self, statement: &oxc_ast::ast::ForOfStatement<'a>) {
+        self.with_scope(statement.span, |this| {
+            walk::walk_for_of_statement(this, statement)
+        });
+    }
+
     fn visit_for_statement(&mut self, statement: &ForStatement<'a>) {
         self.with_scope(statement.span, |this| {
             walk::walk_for_statement(this, statement)
@@ -126,14 +131,23 @@ impl<'a> Visit<'a> for ScopeCollector {
     fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
         self.exclude_dynamic_this(function);
         self.record_type_parameters(function.type_parameters.as_deref(), function.span);
+        if function.r#type == oxc_ast::ast::FunctionType::FunctionDeclaration {
+            if let Some(id) = &function.id {
+                self.declare_delayed_binding(id);
+            }
+        }
+        self.delayed.functions.push(function.span);
         self.bind_params(&function.params, function.span);
         walk::walk_function(self, function, flags);
+        self.delayed.functions.pop();
     }
 
     fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
         self.record_type_parameters(arrow.type_parameters.as_deref(), arrow.span);
+        self.delayed.functions.push(arrow.span);
         self.bind_params(&arrow.params, arrow.span);
         walk::walk_arrow_function_expression(self, arrow);
+        self.delayed.functions.pop();
     }
 
     fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
@@ -184,6 +198,13 @@ impl<'a> Visit<'a> for ScopeCollector {
     }
 
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
+        if self.delayed.enabled && declaration.kind == VariableDeclarationKind::Let {
+            for item in &declaration.declarations {
+                if item.init.is_none() && item.type_annotation.is_some() {
+                    self.delayed.candidates.insert(item.id.span().start);
+                }
+            }
+        }
         // `var` hoists past the block, so only block-scoped kinds are bound.
         if declaration.kind != VariableDeclarationKind::Var {
             let end = self.scopes.last().expect("program scope").end;
@@ -201,3 +222,6 @@ impl<'a> Visit<'a> for ScopeCollector {
         walk::walk_variable_declaration(self, declaration);
     }
 }
+
+#[cfg(test)]
+mod delayed_tests;

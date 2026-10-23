@@ -1,0 +1,9 @@
+effort: low
+unanalyzable: report
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: pg
+      executorTypeNames: [PoolClient]
+      include: ['*.mts']

@@ -53,6 +53,7 @@ pub(super) type UndeclaredReceiverTypes = HashMap<String, super::UndeclaredExecu
 #[derive(Debug, Default)]
 pub(super) struct ScopedExecutors {
     spans: HashMap<String, Vec<Span>>,
+    pub(super) delayed: std::collections::HashSet<u32>,
     pub(super) undeclared: HashMap<u32, HashMap<String, UndeclaredReceiverTypes>>,
     pub(super) undeclared_this: Vec<(Span, UndeclaredReceiverTypes)>,
     pub(super) undeclared_this_exclusions: Vec<Span>,
@@ -82,10 +83,13 @@ impl ScopedExecutors {
 pub(super) fn collect(program: &Program<'_>, options: &EmbeddedSqlOptions) -> ScopedCollection {
     let mut imports = classify(program, options);
     let candidates = std::mem::take(&mut imports.candidates);
-    let mut visitor = ScopeCollector::from_imports(imports);
+    // Negative-only preflight: every supported binding spells `let`. Comments
+    // and unrelated identifiers may enable extra work, but never prove a receiver.
+    let mut visitor = ScopeCollector::from_imports(imports, program.source_text.contains("let"));
     if visitor.needs_walk() {
         visitor.visit_program(program);
         visitor.finish_undeclared_annotations();
+        visitor.finish_delayed_receivers();
     }
     ScopedCollection {
         executors: visitor.found,
