@@ -2,6 +2,7 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { capturedMessageOrigin } = require("./test-message-captured-value");
 const {
   expectArguments,
   isExpectCall,
@@ -38,6 +39,10 @@ function isMessageMember(node) {
     memberName(current) === "message" &&
     !isBodyMember(current.object)
   );
+}
+
+function isMessageValue(node, context) {
+  return isMessageMember(node) || isMessageMember(capturedMessageOrigin(node, context));
 }
 
 function isBodyMember(node) {
@@ -107,7 +112,7 @@ module.exports = rule(
           callee?.type === "MemberExpression" &&
           MATCHERS.has(memberName(callee)) &&
           isExpectCall(matcherObject, context) &&
-          isMessageMember(expectArguments(matcherObject, context)?.[0]) &&
+          isMessageValue(expectArguments(matcherObject, context)?.[0], context) &&
           !suppressed(node)
         ) {
           context.report({ node, messageId: "message" });
@@ -117,7 +122,7 @@ module.exports = rule(
           callee?.type === "MemberExpression" &&
           memberName(callee) === "includes" &&
           testDepth > 0 &&
-          isMessageMember(callee.object) &&
+          isMessageValue(callee.object, context) &&
           !suppressed(node)
         ) {
           context.report({ node, messageId: "message" });
@@ -130,8 +135,8 @@ module.exports = rule(
         if (testDepth <= 0) return;
         if (!["!=", "==", "===", "!=="].includes(node.operator)) return;
         if (
-          (isMessageMember(node.left) && node.right.type === "Literal") ||
-          (isMessageMember(node.right) && node.left.type === "Literal")
+          (isMessageValue(node.left, context) && node.right.type === "Literal") ||
+          (isMessageValue(node.right, context) && node.left.type === "Literal")
         ) {
           if (!suppressed(node)) context.report({ node, messageId: "message" });
         }
