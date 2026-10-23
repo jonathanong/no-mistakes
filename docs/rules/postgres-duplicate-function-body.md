@@ -15,7 +15,7 @@ rules:
     options:
       schemaCatalogPath: db/schema.json
       minClusterSize: 2
-      minTokens: 1
+      minTokens: 12
       normalizeIdentifiers: true
       normalizeRaise: true
       keepIdentifiers: ['now', 'coalesce']
@@ -110,18 +110,20 @@ finding text.
 
 ## Valid example
 
-One `fn_reject_mutation()` that raises `'% is immutable', TG_TABLE_NAME`.
-`PERFORM fn_touch_orders()` and `PERFORM fn_touch_invoices()` stay distinct
-because the called name is kept. The same body in `sql` and `plpgsql` does not
-match. `minTokens: 12` ignores the six-token always-raise copies.
+These two functions have otherwise-matching bodies, but their calls to
+`fn_touch_orders()` and `fn_touch_invoices()` stay distinct because the called
+name is kept.
 
 ```json
 {
   "formatVersion": 2,
   "coverage": "complete",
   "functions": {
-    "fn_reject_mutation": {
-      "definition": "CREATE FUNCTION fn_reject_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION '% is immutable', TG_TABLE_NAME; END $$;"
+    "fn_guard_orders": {
+      "definition": "CREATE FUNCTION fn_guard_orders() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN PERFORM fn_touch_orders(TG_TABLE_NAME); PERFORM set_config('app.order', TG_TABLE_NAME, true); RAISE EXCEPTION '% is immutable', TG_TABLE_NAME; RETURN NEW; END $$;"
+    },
+    "fn_guard_invoices": {
+      "definition": "CREATE FUNCTION fn_guard_invoices() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN PERFORM fn_touch_invoices(TG_TABLE_NAME); PERFORM set_config('app.order', TG_TABLE_NAME, true); RAISE EXCEPTION '% is immutable', TG_TABLE_NAME; RETURN NEW; END $$;"
     }
   }
 }
@@ -130,10 +132,10 @@ match. `minTokens: 12` ignores the six-token always-raise copies.
 ## Counterexample
 
 `fn_reject_orders_update`, `fn_reject_invoices_update`, and
-`fn_reject_refunds_update` all normalize to `BEGIN RAISE EXCEPTION ? ; END`,
-including a copy that uses `USING ERRCODE`, a format argument, or `END;`.
-`NEW.title IS DISTINCT FROM OLD.title` matches `NEW.body IS DISTINCT FROM
-OLD.body` while `normalizeIdentifiers` is true.
+`fn_reject_refunds_update` have enough tokens to pass `minTokens` and normalize
+to the same body, including a copy that uses `USING ERRCODE` or a format
+argument. `NEW.title IS DISTINCT FROM OLD.title` matches `NEW.body IS DISTINCT
+FROM OLD.body` while `normalizeIdentifiers` is true.
 
 ```json
 {
@@ -141,13 +143,13 @@ OLD.body` while `normalizeIdentifiers` is true.
   "coverage": "complete",
   "functions": {
     "fn_reject_orders_update": {
-      "definition": "CREATE FUNCTION fn_reject_orders_update() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'orders rows are immutable'; END $$;"
+      "definition": "CREATE FUNCTION fn_reject_orders_update() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN PERFORM fn_verify_record(TG_TABLE_NAME); IF NEW.id IS NULL THEN RAISE EXCEPTION 'orders rows are immutable'; END IF; RETURN NEW; END $$;"
     },
     "fn_reject_invoices_update": {
-      "definition": "CREATE FUNCTION fn_reject_invoices_update() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'invoices rows are immutable'; END $$;"
+      "definition": "CREATE FUNCTION fn_reject_invoices_update() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN PERFORM fn_verify_record(TG_TABLE_NAME); IF NEW.id IS NULL THEN RAISE EXCEPTION 'invoices rows are immutable'; END IF; RETURN NEW; END $$;"
     },
     "fn_reject_refunds_update": {
-      "definition": "CREATE FUNCTION fn_reject_refunds_update() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'refunds rows are immutable'; END $$;"
+      "definition": "CREATE FUNCTION fn_reject_refunds_update() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN PERFORM fn_verify_record(TG_TABLE_NAME); IF NEW.id IS NULL THEN RAISE EXCEPTION 'refunds rows are immutable' USING ERRCODE = '23514'; END IF; RETURN NEW; END $$;"
     }
   }
 }

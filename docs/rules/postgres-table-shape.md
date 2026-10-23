@@ -24,6 +24,28 @@ rules:
           forbiddenColumns: [updated_at, deleted_at]
           requiredTriggers:
             - { function: fn_reject_mutation, timing: before, events: [update, delete] }
+        - name: article-votes
+          tablePattern: '^article_votes$'
+          requiredColumns:
+            - { name: user_id, type: uuid, nullable: false, foreignKey: true, references: [users], onDelete: cascade }
+            - { name: score, type: smallint, nullable: false }
+        - name: comment-votes
+          tablePattern: '^comment_votes$'
+          requiredColumns:
+            - { name: user_id, type: uuid, nullable: false, foreignKey: true, references: [users], onDelete: cascade }
+            - { name: score, type: smallint, nullable: false }
+        - name: content-votes
+          tablePattern: '^content_votes$'
+          requiredColumns:
+            - { name: user_id, type: uuid, nullable: false, foreignKey: true, references: [users], onDelete: cascade }
+            - { name: score, type: smallint, nullable: false }
+          forbiddenColumns: [target_table]
+        - name: report-export-cursors
+          tablePattern: '^report_export_cursors$'
+          primaryKeyTypes: [enum]
+        - name: sync-cursors
+          tablePattern: '^sync_cursors$'
+          primaryKeyTypes: [uuid]
       bannedTablePatterns:
         - pattern: '_(history|change_logs|audit_logs)$'
           message: use a *_revisions table
@@ -90,10 +112,9 @@ an error. `allow` defaults to `[]`.
 `order_revisions` has `id`, an `_id` foreign key, `revised_by_id` with
 `ON DELETE SET NULL`, `changes jsonb NOT NULL`, and a
 `BEFORE UPDATE OR DELETE` trigger executing `fn_reject_mutation()`. `orders`
-matches no shape and no banned pattern. `article_votes` has
-`user_id uuid NOT NULL` referencing `users` `ON DELETE CASCADE` and
-`score smallint NOT NULL`. `report_export_cursors` is keyed by the
-`report_types` enum.
+matches no shape and no banned pattern. `article_votes` has `user_id uuid`
+`NOT NULL` referencing `users` with `ON DELETE CASCADE`, plus `score smallint`
+`NOT NULL`. `report_export_cursors` is keyed by the `report_types` enum.
 
 ```json
 {
@@ -107,18 +128,58 @@ matches no shape and no banned pattern. `article_votes` has
           "nullable": false
         }
       }
+    },
+    "order_revisions": {
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "order_id": { "dataType": "uuid", "nullable": false },
+        "revised_by_id": { "dataType": "uuid", "nullable": true },
+        "changes": { "dataType": "jsonb", "nullable": false }
+      },
+      "foreignKeys": {
+        "order_revisions_order_id_fkey": {
+          "columns": ["order_id"], "referencedTable": "orders",
+          "referencedColumns": ["id"], "onDelete": "cascade"
+        },
+        "order_revisions_revised_by_id_fkey": {
+          "columns": ["revised_by_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "set null"
+        }
+      },
+      "triggers": {
+        "reject_revision_mutation": {
+          "definition": "CREATE TRIGGER reject_revision_mutation BEFORE UPDATE OR DELETE ON order_revisions FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
+      }
+    },
+    "article_votes": {
+      "columns": {
+        "user_id": { "dataType": "uuid", "nullable": false },
+        "score": { "dataType": "smallint", "nullable": false }
+      },
+      "foreignKeys": {
+        "article_votes_user_id_fkey": {
+          "columns": ["user_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "cascade"
+        }
+      }
+    },
+    "report_export_cursors": {
+      "columns": {
+        "report_type": { "dataType": "report_types", "nullable": false }
+      },
+      "primaryKey": { "columns": ["report_type"] }
     }
-  }
+  },
+  "enums": { "report_types": { "values": ["daily", "monthly"] } }
 }
 ```
 
 
 ## Counterexample
 
-`bad_revisions.changes` is nullable `json` with no reject trigger.
-`comment_votes.user_id` is `ON DELETE SET NULL`. `content_votes` has
-`target_table`. `sync_cursors` is keyed by `cursor_name text`.
-`order_history` matches the banned history pattern.
+`bad_revisions.changes` is nullable even though it uses `jsonb`; the other
+revision requirements are present.
 
 ```json
 {
@@ -127,13 +188,165 @@ matches no shape and no banned pattern. `article_votes` has
   "tables": {
     "bad_revisions": {
       "columns": {
-        "changes": {
-          "dataType": "json",
-          "nullable": true
+        "id": { "dataType": "uuid", "nullable": false },
+        "order_id": { "dataType": "uuid", "nullable": false },
+        "revised_by_id": { "dataType": "uuid", "nullable": true },
+        "changes": { "dataType": "jsonb", "nullable": true }
+      },
+      "foreignKeys": {
+        "bad_revisions_order_id_fkey": {
+          "columns": ["order_id"], "referencedTable": "orders",
+          "referencedColumns": ["id"], "onDelete": "cascade"
+        },
+        "bad_revisions_revised_by_id_fkey": {
+          "columns": ["revised_by_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "set null"
+        }
+      },
+      "triggers": {
+        "reject_revision_mutation": {
+          "definition": "CREATE TRIGGER reject_revision_mutation BEFORE UPDATE OR DELETE ON bad_revisions FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
         }
       }
     }
   }
+}
+```
+
+`legacy_revisions.changes` uses `json` instead of `jsonb`; its nullability,
+foreign keys, and trigger meet the other requirements.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "legacy_revisions": {
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "order_id": { "dataType": "uuid", "nullable": false },
+        "revised_by_id": { "dataType": "uuid", "nullable": true },
+        "changes": { "dataType": "json", "nullable": false }
+      },
+      "foreignKeys": {
+        "legacy_revisions_order_id_fkey": {
+          "columns": ["order_id"], "referencedTable": "orders",
+          "referencedColumns": ["id"], "onDelete": "cascade"
+        },
+        "legacy_revisions_revised_by_id_fkey": {
+          "columns": ["revised_by_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "set null"
+        }
+      },
+      "triggers": {
+        "reject_revision_mutation": {
+          "definition": "CREATE TRIGGER reject_revision_mutation BEFORE UPDATE OR DELETE ON legacy_revisions FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
+      }
+    }
+  }
+}
+```
+
+`unprotected_revisions` has the required columns and foreign keys but no
+reject trigger.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "unprotected_revisions": {
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "order_id": { "dataType": "uuid", "nullable": false },
+        "revised_by_id": { "dataType": "uuid", "nullable": true },
+        "changes": { "dataType": "jsonb", "nullable": false }
+      },
+      "foreignKeys": {
+        "unprotected_revisions_order_id_fkey": {
+          "columns": ["order_id"], "referencedTable": "orders",
+          "referencedColumns": ["id"], "onDelete": "cascade"
+        },
+        "unprotected_revisions_revised_by_id_fkey": {
+          "columns": ["revised_by_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "set null"
+        }
+      }
+    }
+  }
+}
+```
+
+`comment_votes.user_id` is `ON DELETE SET NULL`.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "comment_votes": {
+      "columns": {
+        "user_id": { "dataType": "uuid", "nullable": false },
+        "score": { "dataType": "smallint", "nullable": false }
+      },
+      "foreignKeys": {
+        "comment_votes_user_id_fkey": {
+          "columns": ["user_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "set null"
+        }
+      }
+    }
+  }
+}
+```
+
+`content_votes` has `target_table`.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "content_votes": {
+      "columns": {
+        "user_id": { "dataType": "uuid", "nullable": false },
+        "score": { "dataType": "smallint", "nullable": false },
+        "target_table": { "dataType": "text", "nullable": false }
+      },
+      "foreignKeys": {
+        "content_votes_user_id_fkey": {
+          "columns": ["user_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "cascade"
+        }
+      }
+    }
+  }
+}
+```
+
+`sync_cursors` is keyed by `cursor_name text` instead of a UUID.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "sync_cursors": {
+      "columns": { "cursor_name": { "dataType": "text", "nullable": false } },
+      "primaryKey": { "columns": ["cursor_name"] }
+    }
+  }
+}
+```
+
+`order_history` matches the banned history pattern.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": { "order_history": { "columns": {} } }
 }
 ```
 
