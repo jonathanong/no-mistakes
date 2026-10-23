@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 
 mod cache;
 
-const REWRITE: &str = "pass a literal SQL string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL";
+const REWRITE: &str = "pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL";
 
 pub(super) fn scan(
     root: &Path,
