@@ -34,6 +34,7 @@ pub(super) fn with_imports(mut plan: CheckFactPlan) -> CheckFactPlan {
 pub(super) fn graph_plan(plan: &CheckFactPlan) -> CheckFactPlan {
     CheckFactPlan {
         graph: plan.graph,
+        call_site_paths: plan.call_site_paths.clone(),
         graph_context: plan.graph_context.clone(),
         integration_runner_configs: plan.integration_runner_configs.clone(),
         ..CheckFactPlan::default()
@@ -41,7 +42,8 @@ pub(super) fn graph_plan(plan: &CheckFactPlan) -> CheckFactPlan {
 }
 
 pub(super) fn needs_scoped_facts(plan: &CheckFactPlan) -> bool {
-    plan.imports
+    !plan.call_site_paths.is_empty()
+        || plan.imports
         || plan.query_annotation
         || plan.query_annotation_heads
         || !plan.sql_identifier_profiles.is_empty()

@@ -99,3 +99,6 @@ fn requested_runner_helpers_keep_union_recovered_facts_and_parse_once() {
         .values()
         .all(|reads| *reads == 1));
 }
+
+#[path = "scoped_runner_call_sites.rs"]
+mod scoped_runner_call_sites;

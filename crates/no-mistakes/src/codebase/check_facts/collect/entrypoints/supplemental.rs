@@ -15,9 +15,9 @@ pub fn collect_check_facts_with_supplemental_call_sites(
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<SourceStore>,
 ) -> CheckFactMap {
-    // A primary plan that omits call sites would keep an overlapping
-    // production-import entry and skip the call-only pass below.
-    plan.graph.call_sites |= !supplemental_call_sites.is_empty();
+    // Overlapping richer entries must receive call facts in their first pass,
+    // without requesting call summaries from unrelated primary/graph files.
+    plan.require_call_site_paths(&supplemental_call_sites);
     // Main collection can admit these paths through production imports,
     // Playwright sources, or runner helpers. Keep the richer entry when it does.
     let mut facts = super::collect_with_scope(
@@ -32,8 +32,8 @@ pub fn collect_check_facts_with_supplemental_call_sites(
             call_sites: &supplemental_call_sites,
         },
     );
-    // Every earlier inserter uses this call-site-enabled plan, so a present key
-    // already carries the call facts and only absent paths need the light pass.
+    // Every earlier inserter retains scoped demand, so a present key already
+    // carries the requested call facts; only absent paths need the light pass.
     let missing = supplemental_call_sites
         .into_iter()
         .filter(|path| !facts.ts.contains_key(path))

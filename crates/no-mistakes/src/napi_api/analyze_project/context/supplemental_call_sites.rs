@@ -15,16 +15,12 @@ fn supplemental_call_site_plan(
         primary_files,
         graph_files,
     );
+    let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
+    plan.require_call_site_paths(&files);
     ScopeFactPlan {
         files,
         graph_files: Vec::new(),
-        plan: crate::codebase::check_facts::CheckFactPlan {
-            graph: crate::codebase::ts_source::facts::TsFactPlan {
-                call_sites: true,
-                ..Default::default()
-            },
-            ..Default::default()
-        },
+        plan,
         playwright: None,
         sources,
     }

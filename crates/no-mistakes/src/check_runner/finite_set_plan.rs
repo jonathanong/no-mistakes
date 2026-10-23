@@ -76,9 +76,7 @@ pub(crate) fn prepare(
         no_mistakes::codebase::rules::finite_set_consistency::try_required_call_site_fact_files(
             root, config,
         )?;
-    if !files.is_empty() {
-        plan.graph.call_sites = true;
-    }
+    plan.require_call_site_paths(&files);
     let mut demand = PreparedFactDemand {
         companion_import_files: Vec::new(),
         has_companion_plan: false,

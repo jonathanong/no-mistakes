@@ -11,6 +11,9 @@ use crate::config::v2::{
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+#[path = "scoped_call_sites.rs"]
+mod scoped_call_sites;
+
 #[path = "call_literals_regressions.rs"]
 mod call_literals_regressions;
 

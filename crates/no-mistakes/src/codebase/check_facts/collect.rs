@@ -53,6 +53,7 @@ fn collect_check_facts_inner(
     let playwright = playwright.as_ref();
     let graph_plan = CheckFactPlan {
         graph: plan.graph,
+        call_site_paths: plan.call_site_paths.clone(),
         graph_context: plan.graph_context.clone(),
         integration_runner_configs: plan.integration_runner_configs.clone(),
         ..CheckFactPlan::default()
@@ -111,6 +112,7 @@ fn collect_check_facts_inner(
         sql_verdicts: None,
         sql_advisories: Arc::default(),
         companion_import_plans: Arc::clone(&plan.companion_import_plans),
+        call_site_paths: Arc::clone(&plan.call_site_paths),
         postgres: Default::default(),
         integration_route_links: Default::default(),
         files,

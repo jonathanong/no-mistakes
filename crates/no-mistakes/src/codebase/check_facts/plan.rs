@@ -1,14 +1,17 @@
+mod call_sites;
 mod collected;
 mod location_demand;
 mod rule_scans;
 use rule_scans::merge_embedded_sql_rule_ids;
-
 use std::sync::Arc;
 use std::{collections::HashSet, path::PathBuf};
 
 #[derive(Clone, Default)]
 pub struct CheckFactPlan {
     pub imports: bool,
+    /// Exact call-source demand; broad `graph.call_sites` remains independent.
+    #[doc(hidden)]
+    pub call_site_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     /// Explicit production-rule sources, including metadata and unknown extensions.
     /// Their import projection preserves the historical TypeScript/TSX parse mode.
     #[doc(hidden)]
@@ -97,12 +100,12 @@ pub struct CheckFactPlan {
     pub graph: crate::codebase::ts_source::facts::TsFactPlan,
     pub graph_context: crate::codebase::ts_source::facts::TsFactContext,
 }
-
 impl CheckFactPlan {
     pub(crate) fn include(&mut self, other: Self) {
         self.merge_head_calls_only(&other);
         self.merge_location_demand(&other);
         super::family_scope::include_scopes(self, &other);
+        self.merge_call_site_paths(&other);
         self.imports |= other.imports;
         self.query_annotation_heads |= other.query_annotation_heads;
         crate::codebase::postgres::sql_identifier_syntax::plan::merge(
