@@ -220,7 +220,9 @@ function run(enabled: boolean) {
 An assignment from a helper call, a parameter, a captured/closure write, or a
 mutation through an alias remains unanalyzable. Outside repeated control flow,
 a future write does not affect an earlier executor call. A later write in the
-same loop can reach the next iteration and is included. The analysis conservatively considers direct
+same loop can reach the next iteration and is included. Initializers and
+iterable expressions run once per loop entry; an outer
+loop can still repeat that entry. The analysis conservatively considers direct
 same-function assignments that may reach the call; it does not infer values
 across calls or perform path-sensitive control-flow analysis. Rewrite
 unresolved shapes as a named literal at the call or as one local `const`

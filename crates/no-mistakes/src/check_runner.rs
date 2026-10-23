@@ -13,6 +13,8 @@ pub(crate) use run_all::{run_all_with_evidence, run_all_with_options, AnalysisOp
 #[cfg(test)]
 mod low_assignment_tests;
 #[cfg(test)]
+mod low_loop_header_tests;
+#[cfg(test)]
 mod sql_verdict_annotation_tests;
 #[cfg(test)]
 mod sql_verdict_catalog_coverage_tests;
