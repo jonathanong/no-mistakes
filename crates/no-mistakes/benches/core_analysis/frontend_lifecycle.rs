@@ -57,7 +57,7 @@ pub(super) fn register(c: &mut Criterion) {
     let mut calls = 0;
     let mut facts = LanguageFrontendSummary::default();
     let mut group = c.benchmark_group("language_frontend_lifecycle");
-    group.throughput(Throughput::Elements(117));
+    group.throughput(Throughput::Elements(118));
     group.bench_function(&mode, |b| {
         assert_eq!(calls, 0, "adapter reentered the lifecycle closure");
         b.iter_manual_unstable(
@@ -108,9 +108,9 @@ pub(super) fn register(c: &mut Criterion) {
             "collectorCountsSource": "inspected helper call paths",
             "priorHelperEvents": prior_events, "helperEvents": trace.events(),
             "fixtureInitializations": trace.events().iter().filter(|event| **event == "fixture").count(),
-            "rayonWorkers": 4, "files": 117, "parsed": 69, "imports": 66,
-            "enqueues": 7, "workers": 6, "routes": 43, "edges": 129,
-            "queueEdges": 14, "globMatches": 117
+            "rayonWorkers": 4, "files": 118, "parsed": 70, "imports": 67,
+            "enqueues": 7, "workers": 6, "routes": 43, "edges": 131,
+            "queueEdges": 14, "globMatches": 118
         })
     );
 }

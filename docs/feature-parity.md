@@ -567,8 +567,9 @@ file stem, matching Java `-Dtest`.
 
 Elixir support is a language frontend for configured `tests.elixir.apps`.
 Empty lists disable the extractor; there is no `mix.exs` inference.
-Exact `alias`/`import`/`use MyApp.User` statements emit `elixir-import`.
-Brace aliases `alias MyApp.{User, Role}` and wildcard imports are non-edges.
+Exact `alias`/`import`/`use MyApp.User` statements and brace aliases
+`alias MyApp.{User, Role}` emit `elixir-import`. Nested braces
+`alias MyApp.{Foo.{Bar}}` and wildcard imports are non-edges.
 Module names plus capitalized identifiers emit `elixir-ref`. Same-package
 refs without an `alias`/`import`/`use` are non-edges.
 
@@ -578,7 +579,7 @@ Phoenix HTTP v1 matches literal `get "/users", Controller, :index` (and
 
 | Feature          | TS/JS reference     | Elixir equivalent                                                                                                            |
 | ---------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Module graph     | `import`            | exact `alias`/`import`/`use MyApp.User`                                                                                      |
+| Module graph     | `import`            | exact `alias`/`import`/`use MyApp.User` and brace aliases `alias MyApp.{User, Role}`                                         |
 | Package identity | workspace packages  | configured `tests.elixir.apps`                                                                                               |
 | Tests            | `tests plan vitest` | `tests plan elixir` over `*_test.exs`; `mix test <path>` from the Mix project root (umbrella child paths stay repo-relative) |
 | HTTP routes      | `server routes`     | Phoenix `get`/`post`/`put`/`patch`/`delete` literals                                                                         |
@@ -586,18 +587,22 @@ Phoenix HTTP v1 matches literal `get "/users", Controller, :index` (and
 | Lockfile         | npm-family          | later (`mix.exs` native fallback only)                                                                                       |
 
 ```elixir
+defmodule MyApp.App do
+  alias MyApp.{User, Role}
+end
+
 defmodule MyAppWeb.Router do
   get "/users", MyAppWeb.UserController, :index
   post "/users", MyAppWeb.UserController, :create
 end
 ```
 
-Brace aliases, same-package refs without `alias`/`import`/`use`, Phoenix
-`resources` macros, `scope "/api"` prefix joining, `mix.lock` / `config.exs`
-native fallback, queues, and a dedicated `no-mistakes elixir` CLI are
-non-edges / later work. Native fallback is `mix.exs` plus non-test `.ex`
-files under configured apps. Any `.ex`/`.exs` under `/test/` is
-non-production. `*_test.exs` is the test suffix.
+Nested brace aliases, wildcard imports, same-package refs without
+`alias`/`import`/`use`, Phoenix `resources` macros, `scope "/api"` prefix
+joining, `mix.lock` / `config.exs` native fallback, queues, and a dedicated
+`no-mistakes elixir` CLI are non-edges / later work. Native fallback is
+`mix.exs` plus non-test `.ex` files under configured apps. Any `.ex`/`.exs`
+under `/test/` is non-production. `*_test.exs` is the test suffix.
 
 ## Dart, Flutter
 
