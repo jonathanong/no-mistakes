@@ -1,0 +1,9 @@
+name: Dynamic option names must not prove unsafe URL slots
+on: push
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          FLAG=output
+          curl --$FLAG https://untrusted.example.invalid/output-filename

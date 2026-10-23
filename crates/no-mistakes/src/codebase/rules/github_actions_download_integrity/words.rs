@@ -1,6 +1,8 @@
 pub(super) struct Word {
     pub(super) text: String,
     pub(super) line: usize,
+    /// An unquoted expansion may add fields and change following option slots.
+    pub(super) expansion_may_split: bool,
 }
 
 pub(super) struct Command {
@@ -72,11 +74,18 @@ fn push_char(word: &mut String, word_line: &mut usize, line: usize, ch: char) {
     word.push(ch);
 }
 
-fn flush_word(word: &mut String, current: &mut Command, word_line: usize) {
+fn flush_word(
+    word: &mut String,
+    current: &mut Command,
+    word_line: usize,
+    expansion_may_split: &mut bool,
+) {
+    let expansion_may_split = std::mem::take(expansion_may_split);
     if !word.is_empty() {
         current.words.push(Word {
             text: std::mem::take(word),
             line: word_line,
+            expansion_may_split,
         });
     }
 }

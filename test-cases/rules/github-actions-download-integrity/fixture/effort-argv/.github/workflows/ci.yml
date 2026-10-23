@@ -29,6 +29,14 @@ jobs:
         run: curl -o "$OUTPUT_FILE" https://api.github.com/repos/example/project
       - name: dynamic-header-operand
         run: curl --header "$HEADER" https://api.github.com/repos/example/project
+      - name: dynamic-inline-option-operands
+        run: curl --output="$OUTPUT_FILE" --header="$HEADER" https://api.github.com/repos/example/project
+      - name: dynamic-attached-short-operands
+        run: curl -o"$OUTPUT_FILE" -H"$HEADER" https://api.github.com/repos/example/project
+      - name: dynamic-cluster-option-operand
+        run: curl -fsSo"$OUTPUT_FILE" https://api.github.com/repos/example/project
+      - name: dynamic-option-looking-header-operand
+        run: curl --header "--$HEADER" https://api.github.com/repos/example/project
       - name: dynamic-wget-output-operand
         run: wget --output-document="$OUTPUT_FILE" https://objects.githubusercontent.com/releases/project.tar.gz
       - name: static-host-dynamic-path

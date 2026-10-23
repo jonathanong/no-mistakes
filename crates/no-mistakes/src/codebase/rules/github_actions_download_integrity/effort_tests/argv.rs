@@ -1,5 +1,7 @@
 use super::*;
 
+mod options;
+
 fn argv_script(name: &str) -> String {
     let workflow: serde_yaml::Value = serde_yaml::from_str(&source("effort-argv")).unwrap();
     workflow["jobs"]["verify"]["steps"]
@@ -57,6 +59,10 @@ fn low_keeps_non_url_option_operands_out_of_url_diagnostics() {
     for name in [
         "dynamic-output-operand",
         "dynamic-header-operand",
+        "dynamic-inline-option-operands",
+        "dynamic-attached-short-operands",
+        "dynamic-cluster-option-operand",
+        "dynamic-option-looking-header-operand",
         "dynamic-wget-output-operand",
     ] {
         let script = argv_script(name);
@@ -83,5 +89,34 @@ fn low_retains_downloader_scope_behind_empty_and_heredoc_prefixes() {
         assert_eq!(assign::probe::count(), before, "{name}");
         assert_eq!(low.len(), 1, "{name}");
         assert!(low[0].unanalyzable && low[0].indirect_command, "{name}");
+    }
+}
+
+#[test]
+fn dynamic_option_names_use_the_selected_uncertainty_policy() {
+    let workflow = ".github/workflows/dynamic-option-name.yml";
+    let source = std::fs::read_to_string(fixture_root("effort-argv").join(workflow)).unwrap();
+    // Max expands --$FLAG to --output, making the following token a filename.
+    assert!(runs::check_source(workflow, &source, &hosts(), &[]).is_empty());
+    for policy in [
+        Unanalyzable::Report,
+        Unanalyzable::Advise,
+        Unanalyzable::Ignore,
+    ] {
+        let result = runs::check_source_low(workflow, &source, &hosts(), &[], policy);
+        assert_eq!(
+            result.findings.len(),
+            usize::from(policy == Unanalyzable::Report)
+        );
+        assert_eq!(
+            result.advisories.len(),
+            usize::from(policy == Unanalyzable::Advise)
+        );
+        for finding in result.findings.iter().chain(&result.advisories) {
+            assert!(finding.message.contains("unanalyzable at effort low"));
+            assert!(finding.message.contains("--$FLAG"));
+            assert!(finding.message.contains("literal option names"));
+            assert!(!finding.message.contains("does not verify"));
+        }
     }
 }

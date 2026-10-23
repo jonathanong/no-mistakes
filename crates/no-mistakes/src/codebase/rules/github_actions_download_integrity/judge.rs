@@ -5,6 +5,7 @@ use super::words::{self, Word};
 use std::cell::OnceCell;
 
 mod command;
+mod options;
 
 pub(super) struct Hit {
     pub(super) url: String,
@@ -55,15 +56,18 @@ fn download_hits_with_effort(script: &str, helpers: &[String], low: bool) -> Vec
         // An expansion can become an option and consume a later literal URL.
         // Judge the command's argument shape before claiming any unsafe URL.
         if low {
-            let unknown = candidates.iter().find(|(_, url)| dynamic(url)).or_else(|| {
-                if indirect_command {
-                    candidates
-                        .iter()
-                        .find(|(_, url)| url::http_url(url).is_some())
-                } else {
-                    None
-                }
-            });
+            let unknown = options::dynamic_option(&name, args)
+                .or_else(|| candidates.iter().copied().find(|(_, url)| dynamic(url)))
+                .or_else(|| {
+                    if indirect_command {
+                        candidates
+                            .iter()
+                            .copied()
+                            .find(|(_, url)| url::http_url(url).is_some())
+                    } else {
+                        None
+                    }
+                });
             if let Some((word, url)) = unknown {
                 hits.push(Hit {
                     url: url.to_string(),
