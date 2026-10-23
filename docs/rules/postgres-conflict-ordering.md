@@ -206,11 +206,16 @@ ON CONFLICT (left_id, right_id) DO NOTHING
 ## Dynamic SQL and suppression
 
 Each complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)
-of a branching executor call is checked independently, up to 16 versions.
+of a branching executor call is checked independently within the exploration budget.
 An `ORDER BY` appended on only one path cannot establish conflict ordering on
 the path that omits it. Every version that is a full INSERT receives the
 ordinary catalog check; a non-INSERT version stays outside this rule.
 Findings retain branch-fragment source locations for suppressions.
+When append exploration reaches its budget or samples a loop, retained complete
+alternatives still receive the catalog check, including with
+`unanalyzableSql: ignore`. The unexplored residual remains unknown: the report policy (`unanalyzableSql: fail`)
+emits one unknown-SQL finding per executor call and `advise` retains an advisory,
+even when a retained alternative already proves an ordering violation.
 
 Recovered dynamic SQL without complete alternatives whose static fragments identify an `INSERT` fails closed
 by default because an interpolation can add or alter its conflict clause and

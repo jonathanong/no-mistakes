@@ -41,8 +41,8 @@ pub(super) fn record(
                 opts,
                 catalog,
             );
-            positive_survives_unknown |=
-                judgment.status == SqlVerdictStatus::Violation && judgment.survives_unknown;
+            positive_survives_unknown |= judgment.status == SqlVerdictStatus::Violation
+                && (judgment.survives_unknown || !version.variants.is_empty());
             statuses.push(judgment.status);
             if let Some(reason) = judgment.reason {
                 residual_reasons.push(reason.to_string());
@@ -61,6 +61,26 @@ pub(super) fn record(
         } else {
             combine_sql_verdicts(&statuses, exhaustive, positive_survives_unknown)
         };
+        if original.variants_truncated()
+            && opts.advise_unanalyzable
+            && !exempt
+            && status == SqlVerdictStatus::Violation
+        {
+            facts.record_sql_advisory(SqlObligationVerdict {
+                profile: opts.embedded.clone(),
+                rule: RULE_ID.to_string(),
+                application: None,
+                subcheck: "canonical-conflict-order-residual".to_string(),
+                file: file.to_string(),
+                span: embedded.call_spans[call_index],
+                status: SqlVerdictStatus::Abstain,
+                advisory: true,
+                evidence: None,
+                known_prefix: original.sql_text.clone(),
+                helper_lines: Vec::new(),
+                residual_reasons: vec!["opaque-sql-tail".to_string()],
+            });
+        }
         facts.record_sql_verdict(SqlObligationVerdict {
             profile: opts.embedded.clone(),
             rule: RULE_ID.to_string(),
@@ -101,7 +121,7 @@ fn judge(
     if has_safe_directive(source, call.line, sql, &opts.safe_directive) {
         return SqlBranchJudgment::clear();
     }
-    if call.kind == EmbeddedSqlKind::Dynamic {
+    if call.kind == EmbeddedSqlKind::Dynamic && call.variants.is_empty() {
         // Conflict-only preparation omits this call. Judge the known prefix here.
         return prefix::dynamic_prefix_judgment(call, catalog);
     }

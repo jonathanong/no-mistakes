@@ -50,6 +50,7 @@ pub(super) fn scan_with_sources(
         if facts.wants_sql_verdicts() {
             verdicts::record(&rel, &source, file, opts, catalog, &statements, facts);
         }
+        let mut residual_reported = None;
         for (call_index, variant_index, original, call) in
             file.calls
                 .iter()
@@ -72,7 +73,17 @@ pub(super) fn scan_with_sources(
                 continue;
             }
             let sql = call.sql_text.as_deref();
-            if call.kind == EmbeddedSqlKind::Dynamic {
+            // Retained alternatives are complete statements even when more
+            // outcomes remain. Check them, and report the residual separately.
+            if opts.fail_unanalyzable
+                && residual_reported != Some(call_index)
+                && original.variants_truncated()
+                && recovered_sql_needs_insert_check(call.sql_text.as_deref())
+            {
+                residual_reported = Some(call_index);
+                findings.push(unanalyzable_sql(&rel, call.line, DYNAMIC_INSERT_MESSAGE));
+            }
+            if call.kind == EmbeddedSqlKind::Dynamic && call.variants.is_empty() {
                 if opts.fail_unanalyzable && recovered_sql_needs_insert_check(sql) {
                     findings.push(unanalyzable_sql(
                         &rel,
