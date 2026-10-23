@@ -1,3 +1,7 @@
+#[cfg(test)]
+#[path = "shared_symbol_index_reentry_tests.rs"]
+pub(crate) mod shared_symbol_index_reentry_tests;
+
 impl SharedTraversalContext {
     pub(crate) fn prepared_facts(&self) -> &crate::codebase::ts_source::facts::TsFactMap {
         self.facts.as_ref().expect("TS facts are initialized")
@@ -57,6 +61,8 @@ impl SharedTraversalContext {
         let key = GraphFileUniverseKey::new(&self.graph_files, self.analysis_generation);
         let workspace = self.dataset.workspace();
         let (index, built) = self.symbol_index_cache.get_or_build_status(key, || {
+            #[cfg(test)]
+            shared_symbol_index_reentry_tests::yield_once();
             Ok(
                 graph::SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
                     &self.tsconfig,
