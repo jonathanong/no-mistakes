@@ -500,5 +500,6 @@ mod explicit_vitest;
 mod file_bounded;
 mod glob;
 mod parse_errors;
+mod path_memo;
 mod playwright;
 mod terminal;

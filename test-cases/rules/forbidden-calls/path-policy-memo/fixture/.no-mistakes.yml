@@ -1,0 +1,18 @@
+rules:
+  - name: entry-and-child
+    rule: forbidden-calls
+    scope: repository
+    include: [src/*.mts]
+    exclude: [src/excluded.mts]
+    options:
+      roots: [{ function: { file: src/entry.mts, symbol: entry } }]
+      traversal: transitive
+      targets: [{ global: setTimeout }]
+  - name: excluded-only
+    rule: forbidden-calls
+    scope: repository
+    include: [src/excluded.mts]
+    options:
+      roots: [{ function: { file: src/entry.mts, symbol: entry } }]
+      traversal: transitive
+      targets: [{ global: setTimeout }]
