@@ -6,7 +6,13 @@ function unwrapExpression(expression) {
     current &&
     (current.type === "AwaitExpression" ||
       current.type === "ChainExpression" ||
-      current.type === "TSNonNullExpression")
+      [
+        "TSAsExpression",
+        "TSNonNullExpression",
+        "TSSatisfiesExpression",
+        "TSTypeAssertion",
+        "TSInstantiationExpression",
+      ].includes(current.type))
   ) {
     current = current.type === "AwaitExpression" ? current.argument : current.expression;
   }

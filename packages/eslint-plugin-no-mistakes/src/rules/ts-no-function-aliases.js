@@ -12,6 +12,7 @@ const { legacyIdentifierCall } = require("./ts-no-function-aliases-legacy");
 const { exportedDeclarations, reachableTarget } = require("./ts-no-function-aliases-reachable");
 const {
   unassertedCall,
+  assertedContractPreserved,
   wrapperHasOverloads,
   directIntrinsic,
   documentedSignature,
@@ -63,7 +64,12 @@ function reportIfAlias(node, context, suppressed, declarations) {
     if (!candidate) continue;
     if (!isSameArgumentList(node.params, candidate.args)) continue;
     const reachable = reachableTarget(candidate.target, sourceCode, declarations);
-    if (!reachable || !signaturePreserved(node, reachable)) continue;
+    if (
+      !reachable ||
+      !signaturePreserved(node, reachable) ||
+      !assertedContractPreserved(node, call, candidate, reachable, sourceCode)
+    )
+      continue;
     context.report({ node, messageId: "alias" });
     return;
   }

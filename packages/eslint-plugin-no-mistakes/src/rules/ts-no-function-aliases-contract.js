@@ -2,44 +2,21 @@
 
 const { staticMemberName } = require("./ts-no-function-aliases-ast");
 const { resolveVariable } = require("./ts-no-function-aliases-self");
-
-function unassertedPath(expression) {
-  let current = expression;
-  while (["ChainExpression", "MemberExpression", "AwaitExpression"].includes(current.type)) {
-    if (current.type === "ChainExpression") current = current.expression;
-    else current = current.type === "AwaitExpression" ? current.argument : current.object;
-  }
-  return !current.type.startsWith("TS");
-}
-
-function unassertedResult(node) {
-  let result = node.body;
-  if (result.type === "BlockStatement") {
-    const statement = result.body[0];
-    result = statement.argument || statement.expression;
-  }
-  return unassertedPath(result);
-}
+const {
+  unassertedPath,
+  assertedContractPreserved,
+  wrapperHasOverloads,
+} = require("./ts-no-function-aliases-cast-proof");
 
 function unassertedCall(node, call) {
   if (call.typeArguments || call.typeParameters) return false;
-  if (!unassertedResult(node) || !unassertedPath(call.callee)) return false;
+  // Assertions are checked against the reachable target after candidate
+  // selection. This guard still rejects casts on an explicit receiver.
   const callee = call.callee.type === "ChainExpression" ? call.callee.expression : call.callee;
   const method = callee.type === "MemberExpression" ? staticMemberName(callee) : null;
   return (
     !["call", "apply"].includes(method) || !call.arguments[0] || unassertedPath(call.arguments[0])
   );
-}
-
-function wrapperHasOverloads(node, sourceCode) {
-  if (node.type !== "FunctionDeclaration") return false;
-  return sourceCode
-    .getDeclaredVariables(node)
-    .some((variable) =>
-      variable.defs.some(
-        (definition) => definition.type === "FunctionName" && definition.node !== node,
-      ),
-    );
 }
 
 function directIntrinsic(target, sourceCode) {
@@ -86,6 +63,7 @@ function documentedSignature(node, sourceCode) {
 
 module.exports = {
   unassertedCall,
+  assertedContractPreserved,
   wrapperHasOverloads,
   directIntrinsic,
   documentedSignature,
