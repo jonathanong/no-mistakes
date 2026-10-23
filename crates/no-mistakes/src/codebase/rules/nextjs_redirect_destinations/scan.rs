@@ -51,8 +51,12 @@ fn scan_target(
     else {
         return AnalysisDiagnostics::default();
     };
-    let Some(source) = super::super::read_source(sources, &config_path) else {
-        return AnalysisDiagnostics::default();
+    let rel = relative_slash_path(root, &config_path);
+    let source = match sources.read_path(&config_path) {
+        Ok(source) => source,
+        Err(error) => {
+            return entry_failure(analysis, &rel, 1, format!("could not read config: {error}"));
+        }
     };
     if has_disable_file_comment(&source, RULE_ID) {
         return AnalysisDiagnostics::default();
@@ -60,10 +64,21 @@ fn scan_target(
     let app_root = resolved_app_root(target_root, opts.app_root.as_deref());
     let route_set = super::routes::build_route_set(route_files, &app_root);
     let app_root_label = display_app_root(opts.app_root.as_deref());
-    let rel = relative_slash_path(root, &config_path);
-    let extracted =
-        super::delegate::analyze_config(&config_path, &source, analysis.effort == Effort::Low)
-            .unwrap_or_default();
+    let extracted = match super::delegate::analyze_config(
+        &config_path,
+        &source,
+        analysis.effort == Effort::Low,
+    ) {
+        Ok(extracted) => extracted,
+        Err(error) => {
+            return entry_failure(
+                analysis,
+                &rel,
+                first_code_line(&source),
+                format!("could not parse config: {error}"),
+            );
+        }
+    };
     let mut diagnostics = check_named_section(NamedCheck {
         rel: &rel,
         source: &source,
@@ -105,6 +120,54 @@ fn scan_target(
         },
     ));
     diagnostics
+}
+
+fn entry_failure(
+    analysis: EffectiveRuleAnalysis,
+    rel: &str,
+    line: usize,
+    error: String,
+) -> AnalysisDiagnostics {
+    let mut diagnostics = AnalysisDiagnostics::default();
+    diagnostics.unanalyzable(
+        analysis.unanalyzable,
+        finding(
+            rel,
+            line,
+            format!(
+                "{rel}: nextjs-redirect-destinations could not analyze the entry config: {error}; fix the file so redirect and rewrite destinations can be checked."
+            ),
+        ),
+    );
+    diagnostics
+}
+
+// The parser exposes error text but no stable source location to this rule.
+// Anchor a failed config at its first code line for line/next-line directives.
+fn first_code_line(source: &str) -> usize {
+    let mut in_block = false;
+    for (index, line) in source.lines().enumerate() {
+        let mut rest = line.trim_start();
+        loop {
+            if in_block {
+                if let Some(end) = rest.find("*/") {
+                    rest = rest[end + 2..].trim_start();
+                    in_block = false;
+                } else {
+                    break;
+                }
+            } else if rest.starts_with("/*") {
+                in_block = true;
+                rest = &rest[2..];
+            } else {
+                if !rest.is_empty() && !rest.starts_with("//") {
+                    return index + 1;
+                }
+                break;
+            }
+        }
+    }
+    1
 }
 
 pub(super) fn finding(file: &str, line: usize, message: String) -> RuleFinding {
