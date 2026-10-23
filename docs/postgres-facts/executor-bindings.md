@@ -18,11 +18,22 @@ scoped to the declaring block or function and also match imports from subpaths o
 a configured `importSpecifier`, plus relative imports that resolve into that
 package (see the
 [migration notes](../migrations/explicit-postgres-executors.md#scoped-executors)). With neither option set, no executor calls are collected.
+
 An uninitialized `let` annotated with a declared executor type can also be used
-inside the block containing its single direct `=` assignment. For example,
-`let client: PoolClient | undefined; try { client = await pool.connect();
-await client.query(sql); } finally { client?.release(); }` proves the calls
-inside the `try`. The assignment must belong to the declaration's executing
+inside the block containing its single direct `=` assignment. This proves the
+calls inside the `try`:
+
+```ts
+let client: PoolClient | undefined;
+try {
+  client = await pool.connect();
+  await client.query(sql);
+} finally {
+  client?.release();
+}
+```
+
+The assignment must belong to the declaration's executing
 function and precede the call in the same statement list. Calls before the
 assignment or after that block remain unresolved. Competing writes, including
 destructuring and updates, do not gain executor proof from the annotation.

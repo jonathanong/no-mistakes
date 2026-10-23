@@ -161,7 +161,7 @@ fn delayed_try_receivers_share_low_max_proof_and_keep_policy_controlled_abstenti
                 .count();
             assert_eq!(
                 unresolved,
-                if policy == "report" { 8 } else { 0 },
+                if policy == "report" { 9 } else { 0 },
                 "{report}"
             );
             let verdicts = report["sqlVerdicts"].as_array().unwrap();
@@ -169,7 +169,7 @@ fn delayed_try_receivers_share_low_max_proof_and_keep_policy_controlled_abstenti
                 .iter()
                 .filter(|row| row["subcheck"] == "unresolved-configured-executor-receiver")
                 .collect::<Vec<_>>();
-            assert_eq!(abstentions.len(), 8, "{report}");
+            assert_eq!(abstentions.len(), 9, "{report}");
             assert!(
                 abstentions.iter().all(
                     |row| row["status"] == "abstain" && row["advisory"] == (policy == "advise")

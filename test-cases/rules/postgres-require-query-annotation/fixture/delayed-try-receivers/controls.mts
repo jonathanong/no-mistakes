@@ -56,3 +56,13 @@ export async function absent() {
   let client: PoolClient | undefined;
   await client.query('SELECT 17'); // unresolved: no assignment
 }
+
+export async function closure() {
+  let client: PoolClient | undefined;
+  try {
+    client = await pool.connect();
+    // The closure executes separately; being textually after setup is insufficient.
+    const query = async () => client.query('SELECT 18');
+    await query();
+  } finally { client?.release(); }
+}

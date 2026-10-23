@@ -9,8 +9,9 @@ use super::candidates::ImportClassification;
 use super::owners::{self, NameHit};
 use super::ScopedExecutors;
 use oxc_ast::ast::{
-    ArrowFunctionExpression, BindingPattern, BlockStatement, ForStatement, Function, FunctionBody,
-    Program, StaticBlock, SwitchStatement, VariableDeclaration, VariableDeclarationKind,
+    ArrowFunctionExpression, AssignmentTargetPropertyIdentifier, BindingPattern, BlockStatement,
+    ForStatement, Function, FunctionBody, Program, SimpleAssignmentTarget, StaticBlock,
+    SwitchStatement, VariableDeclaration, VariableDeclarationKind,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::{GetSpan, Span};
@@ -59,16 +60,19 @@ impl<'a> Visit<'a> for ScopeCollector {
         self.record_delayed_reference(id);
     }
 
-    fn visit_assignment_target(&mut self, target: &oxc_ast::ast::AssignmentTarget<'a>) {
-        self.delayed.writing += 1;
-        walk::walk_assignment_target(self, target);
-        self.delayed.writing -= 1;
+    fn visit_simple_assignment_target(&mut self, target: &SimpleAssignmentTarget<'a>) {
+        self.delayed.write = target.get_expression().map_or(target.span(), |expression| {
+            crate::codebase::ts_source::unwrap_ts_wrappers(expression).span()
+        });
+        walk::walk_simple_assignment_target(self, target);
     }
 
-    fn visit_update_expression(&mut self, value: &oxc_ast::ast::UpdateExpression<'a>) {
-        self.delayed.writing += 1;
-        walk::walk_update_expression(self, value);
-        self.delayed.writing -= 1;
+    fn visit_assignment_target_property_identifier(
+        &mut self,
+        target: &AssignmentTargetPropertyIdentifier<'a>,
+    ) {
+        self.delayed.write = target.binding.span;
+        walk::walk_assignment_target_property_identifier(self, target);
     }
 
     fn visit_statements(

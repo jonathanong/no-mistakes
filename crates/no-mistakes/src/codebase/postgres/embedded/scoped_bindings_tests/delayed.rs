@@ -22,7 +22,11 @@ fn single_same_function_assignment_proves_the_try_body_receiver() {
             .iter()
             .map(|call| call.sql_text.as_deref())
             .collect::<Vec<_>>(),
-        [Some("/* named_try */ SELECT 1"), Some("SELECT 2")]
+        [
+            Some("/* named_try */ SELECT 1"),
+            Some("SELECT 2"),
+            Some("/* after_reads */ SELECT 3")
+        ]
     );
     assert!(facts.undeclared_executor_types.is_empty());
 }
@@ -34,7 +38,7 @@ fn delayed_receiver_controls_remain_explicit_unresolved_occurrences() {
         facts.calls.is_empty(),
         "unsafe bindings must not become executors"
     );
-    assert_eq!(facts.undeclared_executor_types.len(), 8);
+    assert_eq!(facts.undeclared_executor_types.len(), 9);
     assert!(facts
         .undeclared_executor_types
         .iter()
@@ -109,4 +113,22 @@ fn relative_delayed_receivers_require_package_projection_and_keep_both_sql_heads
             assert!(facts.matched_type_names.is_empty());
         }
     }
+}
+
+#[test]
+fn shorthand_default_and_ts_wrapped_assignment_roots_stay_competing_writes() {
+    let path = super::fixture("delayed-target-writes.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let facts = extract_embedded_sql_from_source(
+        &path,
+        &source,
+        &EmbeddedSqlOptions::configured("pg", &[])
+            .with_scoped_executors(&[], &["PoolClient".into()]),
+    );
+    assert!(facts.calls.is_empty());
+    assert_eq!(facts.undeclared_executor_types.len(), 4);
+    assert!(facts
+        .undeclared_executor_types
+        .iter()
+        .all(|call| call.configured_type));
 }

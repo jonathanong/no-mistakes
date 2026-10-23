@@ -16,7 +16,8 @@ pub(super) struct Bindings {
     assignments: FxHashMap<u32, Span>,
     pub(super) candidates: FxHashSet<u32>,
     pub(super) functions: Vec<Span>,
-    pub(super) writing: usize,
+    // Unique reference spans distinguish root writes from member/key/default reads.
+    pub(super) write: Span,
 }
 
 impl ScopeCollector {
@@ -41,7 +42,7 @@ impl ScopeCollector {
             return;
         }
         let owner = self.delayed.functions.last().copied();
-        let writing = self.delayed.writing > 0;
+        let writing = self.delayed.write == id.span;
         self.delayed
             .references
             .entry(id.name.to_string())
@@ -115,7 +116,7 @@ impl ScopeCollector {
                 let Some(range) = self.delayed.assignments.get(&write.start) else {
                     continue;
                 };
-                // The unique write ends before this range, so its owned sites are reads.
+                // The unique write precedes this range; nested closure reads stay unresolved.
                 for (span, _, _) in references.iter().filter(owned).filter(|(span, owner, _)| {
                     owner == function && range.start <= span.start && span.end <= range.end
                 }) {
