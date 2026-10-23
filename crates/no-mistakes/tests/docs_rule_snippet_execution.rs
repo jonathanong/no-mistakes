@@ -284,6 +284,45 @@ fn text_email_is_file_content_not_a_path() {
 }
 
 #[test]
+fn explicitly_named_configs_preserve_project_facts_and_catalog_paths() {
+    let page = read(&repo_root().join("fixtures/docs-coverage/named-config/page.md"));
+    let fallback = docs_rule_snippets::rule_config_yaml(&page, "postgres-object-naming");
+    let section = docs_rule_snippets::heading_section(&page, "Named config");
+    let fences = docs_rule_snippets::fences(&section);
+    let runs = docs_rule_snippets::snippet_runs(&fences);
+    assert_eq!(runs.len(), 1);
+    let fixture = docs_rule_snippets::materialize_snippet(&fallback, &runs[0].1);
+    let config = std::fs::read_to_string(fixture.path().join(".no-mistakes.yml")).unwrap();
+    assert!(config.starts_with("projects:\n"), "{config}");
+    assert!(config.contains("root: web"), "{config}");
+    assert!(
+        !config.contains("jobs:"),
+        "named configs must not be workflow-wrapped"
+    );
+    assert!(fixture.path().join("db/catalog.json").exists());
+    assert!(!fixture.path().join("fallback.json").exists());
+    // Reading the real named config must enable the pattern, not merely copy YAML.
+    let hits = docs_rule_snippets::run_rule(fixture.path(), "postgres-object-naming").unwrap();
+    assert_eq!(hits.len(), 1, "{hits:?}");
+    assert!(hits[0].contains("uses: is literal text"), "{hits:?}");
+}
+
+#[test]
+fn unnamed_rule_config_examples_keep_the_synthesized_config() {
+    let page = read(&repo_root().join("fixtures/docs-coverage/named-config/page.md"));
+    let fallback = docs_rule_snippets::rule_config_yaml(&page, "postgres-object-naming");
+    let section = docs_rule_snippets::heading_section(&page, "Unnamed config");
+    let fixture =
+        docs_rule_snippets::materialize_snippet(&fallback, &docs_rule_snippets::fences(&section));
+    assert_eq!(
+        std::fs::read_to_string(fixture.path().join(".no-mistakes.yml")).unwrap(),
+        fallback
+    );
+    assert!(fixture.path().join("fallback.json").exists());
+    assert!(!fixture.path().join("ignored.json").exists());
+}
+
+#[test]
 fn text_at_prefixed_paths_are_path_listings() {
     let fixture = docs_rule_snippets::materialize_snippet(
         "rules:\n  - rule: test-email-domain-policy\n    scope: repository\n",

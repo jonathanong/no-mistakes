@@ -189,8 +189,18 @@ fn extract_options_block(source: &str) -> String {
 }
 
 pub fn materialize_snippet(config: &str, snippet: &[(String, String)]) -> TempDir {
+    // An explicitly named config is part of the example, including its project
+    // catalog and effects; unnamed rule examples retain the synthesized config.
+    let config = snippet
+        .iter()
+        .filter(|(lang, code)| {
+            matches!(lang.as_str(), "yaml" | "yml") && starts_with_path_comment(lang, code)
+        })
+        .flat_map(|(lang, code)| split_named_files(code, lang, None))
+        .find_map(|(name, body)| (name == ".no-mistakes.yml").then_some(body))
+        .unwrap_or_else(|| config.to_owned());
     let dir = TempDir::new().expect("temp fixture");
-    std::fs::write(dir.path().join(".no-mistakes.yml"), config).expect("write config");
+    std::fs::write(dir.path().join(".no-mistakes.yml"), &config).expect("write config");
     if snippet.iter().any(|(lang, _)| {
         matches!(
             lang.as_str(),
@@ -203,9 +213,12 @@ pub fn materialize_snippet(config: &str, snippet: &[(String, String)]) -> TempDi
             "{\n  \"compilerOptions\": { \"strict\": true },\n  \"include\": [\"**/*\"]\n}\n",
         );
     }
-    let catalog = schema_catalog_path(config);
+    let catalog = schema_catalog_path(&config);
     for (lang, code) in snippet {
-        if matches!(lang.as_str(), "yaml" | "yml") && code.contains("rules:") {
+        if matches!(lang.as_str(), "yaml" | "yml")
+            && code.contains("rules:")
+            && !starts_with_path_comment(lang, code)
+        {
             continue;
         }
         write_files(dir.path(), lang, code, catalog.as_deref());
@@ -251,7 +264,11 @@ fn write_files(root: &Path, lang: &str, code: &str, catalog: Option<&str>) {
     }
     let parts = split_named_files(code, lang, catalog);
     for (name, body) in parts {
-        write_path(root, &name, &wrap_workflow_yaml(lang, &body));
+        if name == ".no-mistakes.yml" {
+            write_path(root, &name, &body);
+        } else {
+            write_path(root, &name, &wrap_workflow_yaml(lang, &body));
+        }
     }
 }
 
