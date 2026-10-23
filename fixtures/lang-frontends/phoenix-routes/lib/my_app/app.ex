@@ -11,5 +11,9 @@ defmodule MyApp.App do
   # Extra closing brace is not a brace alias.
   alias MyApp.{Ghost}}
 
+  # The outer brace is intentionally missing: reject the nested body before
+  # accepting GhostNested as an otherwise valid comma-separated member.
+  alias MyApp.{Foo.{Bar, GhostNested}
+
   def run, do: User.list()
 end
