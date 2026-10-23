@@ -14,6 +14,10 @@ rules:
       importSpecifier: "@example/db"
 ```
 
+This example uses repository scope and sets `importSpecifier` on the rule. For
+project scope, set it under `projects.<name>.postgres.executors` and select
+that project on the rule.
+
 ## Why and when
 
 Use this when one module exports `const tables = {}` and another assigns `tables.users = 'app.users'` before SQL reads it. `const` does not freeze members. Agents otherwise treat the registry as a closed map.

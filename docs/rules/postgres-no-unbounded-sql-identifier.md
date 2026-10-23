@@ -14,6 +14,10 @@ rules:
       importSpecifier: "@example/db"
 ```
 
+This example uses repository scope and sets `importSpecifier` on the rule. For
+project scope, set it under `projects.<name>.postgres.executors` and select
+that project on the rule.
+
 ## Why and when
 
 Use this when `config.schema`, `process.env.SCHEMA`, a request parameter, or a database row is concatenated into a relation. Agents otherwise treat the identifier as a closed set.
