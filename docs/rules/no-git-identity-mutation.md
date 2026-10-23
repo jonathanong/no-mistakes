@@ -9,7 +9,15 @@ jobs.
 ## What it catches
 
 It catches `git config` commands that write `user.name` or `user.email` in
-selected scripts; read-only identity queries remain allowed.
+selected scripts; read-only identity queries remain allowed. Literal global
+options before `config` (for example `git -C . config` or
+`git --git-dir=.git config`) and single/double quotes around `git` or `config`
+are covered too, including a whole quoted `--git-dir=.git` option. Short
+options use separate arguments, such as `-C .` or `-c color.ui=false`.
+Global option arguments may be quoted shell words, including variables inside
+double quotes; their contents are never evaluated. Unquoted command
+substitutions and dynamically constructed executable/subcommand words are not
+interpreted.
 
 ## Options
 

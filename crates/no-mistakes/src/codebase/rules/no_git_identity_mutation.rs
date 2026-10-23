@@ -7,7 +7,9 @@ use regex::Regex;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+mod prefix;
 mod runner;
+use prefix::shell_pattern;
 
 use runner::is_managed_runner_only;
 
@@ -35,10 +37,7 @@ pub(crate) fn build_exclude_globset(patterns: &[String]) -> GlobSet {
 pub(crate) fn build_patterns() -> [Regex; 3] {
     [
         // Allow line continuations (\<newline>) between `git config` and `user.`
-        Regex::new(
-            r#"(?m)(^|[^a-zA-Z0-9_])git[ \t]+config(?:[^\n\\]|\\\n[ \t]*)*[ \t][`"']?user\.(name|email)[`"']?(?:[ \t]|\\\n[ \t]*)+[^#\s\\|&;<>]"#,
-        )
-        .expect("shell pattern"),
+        shell_pattern(),
         // Array form: ['git', 'config', ..., 'user.name|email', 'value']
         Regex::new(
             r#"(?ms)[`"']git[`"'].{0,500}?[`"']config[`"']\s*,\s*(?:[`"']--[a-zA-Z0-9-]+[`"']\s*,\s*)*[`"']user\.(name|email)[`"']\s*,\s*[^,\]\)]"#,
@@ -120,8 +119,13 @@ fn check_source(
     let mut findings = Vec::new();
 
     for pattern_re in patterns {
-        for mat in pattern_re.find_iter(content) {
-            if is_read_only_config_match(mat.as_str()) {
+        for captures in pattern_re.captures_iter(content) {
+            let mat = captures.get(0).expect("complete match");
+            // A global option argument named --get is not a config query flag.
+            let config_arguments = captures
+                .name("config")
+                .map_or(mat.as_str(), |config| &content[config.end()..mat.end()]);
+            if is_read_only_config_match(config_arguments) {
                 continue;
             }
             if mat
@@ -184,5 +188,7 @@ fn is_read_only_config_match(matched: &str) -> bool {
         })
 }
 
+#[cfg(test)]
+mod prefix_tests;
 #[cfg(test)]
 mod tests;
