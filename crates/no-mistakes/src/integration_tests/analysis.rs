@@ -2,13 +2,21 @@ use super::calls;
 use super::types::{CallTarget, FileAnalysis, FunctionInfo, FunctionKey, TestCase};
 use crate::ast;
 use anyhow::{Context, Result};
-use oxc_ast::ast::{BindingPattern, ModuleExportName, Program, Statement};
-use oxc_ast_visit::{walk, Visit};
-use oxc_span::{GetSpan, Span};
+use oxc_ast::ast::{BindingPattern, ModuleExportName, Program};
+use oxc_ast_visit::Visit;
+use oxc_span::Span;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 mod analysis_helpers;
+#[cfg(not(test))]
+macro_rules! record_discovery_visit {
+    () => {};
+}
+#[cfg(test)]
+#[macro_use]
+mod tests;
+mod visitor;
 
 pub(super) fn analyze_files_with_seed(
     files: &[PathBuf],
@@ -41,6 +49,7 @@ pub(crate) fn analyze_program_with_test_discovery(
     source: &str,
     collect_tests: bool,
 ) -> FileAnalysis {
+    let collect_tests = collect_tests || source_may_contain_nested_imports(source);
     let mut collector = AnalysisCollector {
         path,
         source,
@@ -52,7 +61,8 @@ pub(crate) fn analyze_program_with_test_discovery(
     };
     collector.visit_program(program);
     // Synthetic test functions share the historical helper namespace. Keep
-    // discovery if an exported or declared helper can collide with __test_N.
+    // discovery for nested import containers and helpers that can reference or
+    // collide with __test_N.
     if !collect_tests
         && (collector
             .result
@@ -71,16 +81,25 @@ pub(crate) fn analyze_program_with_test_discovery(
                 })
             }))
     {
-        let full = analyze_program(path, program, source);
-        #[cfg(test)]
-        let full = {
-            let mut full = full;
-            full.discovery_statement_visits += collector.result.discovery_statement_visits;
-            full
-        };
-        return full;
+        return analyze_program(path, program, source);
     }
     collector.result
+}
+
+// Ambient modules/namespaces can update the historical file-wide import table
+// at any nesting depth. Escapes conservatively cover contextual keyword lexer
+// variation; false positives retain full discovery without another AST pass.
+fn source_may_contain_nested_imports(source: &str) -> bool {
+    source.contains('\\')
+        || ["module", "namespace"].into_iter().any(|keyword| {
+            source.match_indices(keyword).any(|(start, _)| {
+                let end = start + keyword.len();
+                let identifier =
+                    |byte: u8| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$');
+                (start == 0 || !identifier(source.as_bytes()[start - 1]))
+                    && (end == source.len() || !identifier(source.as_bytes()[end]))
+            })
+        })
 }
 
 struct AnalysisCollector<'a, 'p> {
@@ -91,86 +110,6 @@ struct AnalysisCollector<'a, 'p> {
     statement_depth: usize,
     test_counter: usize,
     collect_tests: bool,
-}
-
-impl<'a> Visit<'a> for AnalysisCollector<'a, '_> {
-    fn visit_import_declaration(&mut self, import: &oxc_ast::ast::ImportDeclaration<'a>) {
-        let source = import.source.value.to_string();
-        if let Some(specifiers) = import.specifiers.as_ref() {
-            for specifier in specifiers {
-                self.collect_import(specifier, &source);
-            }
-        }
-    }
-
-    fn visit_statement(&mut self, statement: &Statement<'a>) {
-        #[cfg(test)]
-        {
-            self.result.discovery_statement_visits += 1;
-        }
-        if self.statement_depth == 0 {
-            match statement {
-                Statement::FunctionDeclaration(function) => {
-                    if let Some(id) = &function.id {
-                        self.collect_function(
-                            id.name.as_str(),
-                            function.span(),
-                            calls::collect_function_calls(function),
-                        );
-                    }
-                }
-                Statement::VariableDeclaration(declaration) => {
-                    for declarator in &declaration.declarations {
-                        let Some(name) = binding_name(&declarator.id) else {
-                            continue;
-                        };
-                        self.collect_init_function(name, declarator.init.as_ref());
-                    }
-                }
-                Statement::ExportNamedDeclaration(export) => {
-                    for specifier in &export.specifiers {
-                        self.result.exports.insert(
-                            module_export_name(&specifier.exported),
-                            module_export_name(&specifier.local),
-                        );
-                    }
-                }
-                Statement::ExportDeclaration(export) => {
-                    self.collect_export_declaration(&export.declaration);
-                }
-                Statement::ExportDefaultDeclaration(export) => self.collect_default_export(export),
-                _ => {}
-            }
-        }
-        if !self.collect_tests {
-            if let Statement::ImportDeclaration(import) = statement {
-                self.visit_import_declaration(import);
-            }
-            return;
-        }
-        self.statement_depth += 1;
-        walk::walk_statement(self, statement);
-        self.statement_depth -= 1;
-    }
-
-    fn visit_call_expression(&mut self, call: &oxc_ast::ast::CallExpression<'a>) {
-        if calls::is_skipped_describe(call) {
-            return;
-        }
-        if let Some(name) = calls::describe_name(call) {
-            self.describe_stack.push(name);
-            walk::walk_call_expression(self, call);
-            self.describe_stack.pop();
-            return;
-        }
-        if let Some(test_name) = calls::test_name(call) {
-            if let Some((argument, span)) = calls::callback_argument(call) {
-                self.collect_test(call.span.start, test_name, argument, span);
-                return;
-            }
-        }
-        walk::walk_call_expression(self, call);
-    }
 }
 
 impl AnalysisCollector<'_, '_> {
@@ -216,6 +155,3 @@ fn module_export_name(name: &ModuleExportName<'_>) -> String {
         ModuleExportName::StringLiteral(value) => value.value.to_string(),
     }
 }
-
-#[cfg(test)]
-mod scope_tests;

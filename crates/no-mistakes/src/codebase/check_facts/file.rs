@@ -1,3 +1,4 @@
+mod integration;
 use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::Path;

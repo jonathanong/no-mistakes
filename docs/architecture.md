@@ -765,5 +765,7 @@ explicit `include` lists, recursive test discovery is restricted to their union
 after each policy's `exclude` list. Runner-derived project selection retains
 full discovery. Parse failures remain global, and helpers that reference the
 historical synthetic `__test_N` function namespace retain full discovery to
-preserve cross-file resolution and declaration-order behavior. Direct fact
+preserve cross-file resolution and declaration-order behavior. Ambient-module
+keywords and escaped source conservatively retain full discovery so nested
+imports preserve the historical file-wide binding table. Direct fact
 requests default to full discovery.

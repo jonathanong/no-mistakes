@@ -1,0 +1,21 @@
+false|
+false|modular
+false|modules
+false|namespaces
+false|_module
+false|module_
+false|$module
+false|module$
+false|module0
+false|0namespace
+false|some_module_helper
+false|import './modules/helper';
+true|module
+true|namespace
+true|declare module 'ambient' {}
+true|export namespace Ambient {}
+true|module/*comment*/'ambient'{}
+true|function helper(){ namespace Ambient {} }
+true|name\u0073pace Ambient {}
+true|const escaped = '\n';
+true|αmoduleα

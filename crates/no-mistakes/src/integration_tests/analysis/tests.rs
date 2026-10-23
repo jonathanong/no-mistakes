@@ -1,3 +1,13 @@
+thread_local! {
+    pub(super) static DISCOVERY_VISITS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+macro_rules! record_discovery_visit {
+    () => {
+        super::tests::DISCOVERY_VISITS.with(|count| count.set(count.get() + 1))
+    };
+}
+
 use crate::codebase::check_facts::{
     collect_check_facts, configure_family_path_scopes, CheckFactPlan, FamilyPathScope,
 };
@@ -10,6 +20,23 @@ fn fixture() -> PathBuf {
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/integration-tests/discovery-scope/fixture"),
     )
+}
+
+fn selected_for_discovery(plan: &CheckFactPlan, path: &std::path::Path) -> bool {
+    match &plan.integration_test_paths {
+        FamilyPathScope::All => true,
+        FamilyPathScope::Only(paths) => paths.contains(path),
+    }
+}
+
+fn discovery_visits(path: &std::path::Path, collect_tests: bool) -> usize {
+    let source = std::fs::read_to_string(path).unwrap();
+    DISCOVERY_VISITS.with(|count| count.set(0));
+    crate::ast::with_program(path, &source, |program, source| {
+        super::analyze_program_with_test_discovery(path, program, source, collect_tests)
+    })
+    .unwrap();
+    DISCOVERY_VISITS.with(std::cell::Cell::get)
 }
 
 #[test]
@@ -51,7 +78,7 @@ fn explicit_suite_scope_preserves_helper_and_collision_findings_and_skips_walks(
     };
     assert_eq!(report(&scoped), report(&full));
     let findings = report(&scoped);
-    assert_eq!(findings.len(), 6, "{findings:#?}");
+    assert_eq!(findings.len(), 7, "{findings:#?}");
     assert!(
         findings
             .iter()
@@ -89,18 +116,18 @@ fn explicit_suite_scope_preserves_helper_and_collision_findings_and_skips_walks(
     ] {
         let path = root.join(relative);
         let narrow = scoped.ts[&path].integration.as_ref().unwrap();
-        let wide = full.ts[&path].integration.as_ref().unwrap();
         assert!(
-            narrow.discovery_statement_visits < wide.discovery_statement_visits,
-            "{relative}: {} vs {}",
-            narrow.discovery_statement_visits,
-            wide.discovery_statement_visits
+            discovery_visits(&path, selected_for_discovery(&plan, &path))
+                < discovery_visits(&path, true),
+            "{relative}"
         );
         assert!(narrow.tests.is_empty());
     }
     for relative in [
+        "helpers/ambient.ts",
         "helpers/collision-before.ts",
         "helpers/collision-call.ts",
+        "helpers/collision-call-unescaped.ts",
         "helpers/collision-export.ts",
         "helpers/collision-after.ts",
         "selected/suite.test.ts",
@@ -110,14 +137,18 @@ fn explicit_suite_scope_preserves_helper_and_collision_findings_and_skips_walks(
         let narrow = scoped.ts[&path].integration.as_ref().unwrap();
         let wide = full.ts[&path].integration.as_ref().unwrap();
         assert_eq!(narrow.tests, wide.tests, "{relative}");
-        if relative.starts_with("helpers/") {
+        if relative.starts_with("helpers/")
+            && !matches!(relative, "helpers/ambient.ts" | "helpers/collision-call.ts")
+        {
             assert!(
-                narrow.discovery_statement_visits > wide.discovery_statement_visits,
-                "collision fallback must execute full discovery: {relative}"
+                discovery_visits(&path, selected_for_discovery(&plan, &path))
+                    > discovery_visits(&path, true),
+                "compatibility fallback must execute full discovery: {relative}"
             );
         } else {
             assert_eq!(
-                narrow.discovery_statement_visits, wide.discovery_statement_visits,
+                discovery_visits(&path, selected_for_discovery(&plan, &path)),
+                discovery_visits(&path, true),
                 "{relative}"
             );
         }
@@ -193,27 +224,45 @@ fn runner_derived_invalid_and_unconfigured_scopes_keep_full_discovery() {
 
 #[test]
 fn test_discovery_scope_keeps_out_of_suite_parse_errors() {
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &fixture().join("../../discovery-scope-errors/fixture"),
-    );
-    let files = discover_files(&root, &[]);
-    let sources = crate::codebase::rules::source_store_for_files(&files);
-    let config =
-        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
-    let mut plan = CheckFactPlan {
-        integration: true,
-        source: true,
-        ..Default::default()
-    };
-    let full = collect_check_facts(&root, files.clone(), plan.clone());
-    configure_family_path_scopes(&root, &files, &config, &sources, &mut plan).unwrap();
-    let scoped = collect_check_facts(&root, files, plan);
-    let suites = test_support::configured_suites(&root, &config).unwrap();
-    let error = |facts: &crate::codebase::check_facts::CheckFactMap| {
-        checks::fail_on_dropped_files(&root, &suites, facts)
-            .unwrap_err()
-            .to_string()
-    };
-    assert_eq!(error(&scoped), error(&full));
-    assert!(error(&scoped).contains("unselected/broken.ts"));
+    for (case, expected) in [
+        ("discovery-scope-errors", "unselected/broken.ts"),
+        ("discovery-scope-namespace-error", "unselected/namespace.ts"),
+    ] {
+        let root = crate::codebase::ts_resolver::normalize_path(
+            &fixture().join(format!("../../{case}/fixture")),
+        );
+        let files = discover_files(&root, &[]);
+        let sources = crate::codebase::rules::source_store_for_files(&files);
+        let config =
+            crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+        let mut plan = CheckFactPlan {
+            integration: true,
+            source: true,
+            ..Default::default()
+        };
+        let full = collect_check_facts(&root, files.clone(), plan.clone());
+        configure_family_path_scopes(&root, &files, &config, &sources, &mut plan).unwrap();
+        let scoped = collect_check_facts(&root, files, plan);
+        let suites = test_support::configured_suites(&root, &config).unwrap();
+        let error = |facts: &crate::codebase::check_facts::CheckFactMap| {
+            checks::fail_on_dropped_files(&root, &suites, facts)
+                .unwrap_err()
+                .to_string()
+        };
+        assert_eq!(error(&scoped), error(&full));
+        assert!(error(&scoped).contains(expected));
+    }
+}
+
+#[test]
+fn nested_import_prefilter_has_conservative_keyword_boundaries() {
+    let source = std::fs::read_to_string(fixture().join("nested-import-anchors.txt")).unwrap();
+    for line in source.lines() {
+        let (expected, candidate) = line.split_once('|').unwrap();
+        assert_eq!(
+            super::source_may_contain_nested_imports(candidate),
+            expected == "true",
+            "{candidate}"
+        );
+    }
 }
