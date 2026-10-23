@@ -86,5 +86,6 @@ fn playwright_unique_policy(
         aggregate: false,
         configured_html_id_selector: false,
         literal_test_ids_only: false,
+        literal_html_ids_only: false,
     }
 }

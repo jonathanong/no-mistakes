@@ -48,8 +48,9 @@ repository scope and scans the configured source universe; Playwright
 `effort: max` is the default. It resolves supported identifier, helper,
 conditional, and imported bindings before judging HTML ID uniqueness.
 
-At effective `effort: low`, uniqueness accepts only a string literal HTML ID,
-including a JSX expression such as `id={"profile-title"}`:
+At effective `effort: low`, uniqueness accepts a string literal HTML ID,
+including a JSX expression such as `id={"profile-title"}`, or a prop with a
+literal default:
 
 ```tsx
 <h1 id="profile-title">Profile</h1>

@@ -64,6 +64,11 @@ pub(super) const SUPPORT: &[RuleEffortSupport] = &[
         partner_scope: |_, _| false,
     },
     RuleEffortSupport {
+        rule: "playwright-unique-html-ids",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
         rule: "playwright-coverage",
         partners: &[],
         partner_scope: |_, _| false,
