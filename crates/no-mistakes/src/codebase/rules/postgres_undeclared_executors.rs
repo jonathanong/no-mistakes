@@ -66,10 +66,7 @@ pub(crate) fn check(
                             call.type_name, call.module,
                         )
                     } else {
-                        format!(
-                            "receiver `{}` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
-                            call.receiver_name,
-                        )
+                        unknown_receiver_message(&call.receiver_name, true)
                     };
                     (
                         "unresolved-configured-executor-receiver",
@@ -80,10 +77,7 @@ pub(crate) fn check(
                     (
                         "undeclared-executor-type",
                         "undeclared-executor-type",
-                        format!(
-                            "receiver `{}` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked",
-                            call.receiver_name,
-                        ),
+                        unknown_receiver_message(&call.receiver_name, false),
                     )
                 } else {
                     (
@@ -126,6 +120,17 @@ pub(crate) fn check(
     }
     super::sort_findings(&mut findings);
     Ok(findings)
+}
+
+fn unknown_receiver_message(receiver_name: &str, configured_value_name: bool) -> String {
+    let message = format!(
+        "receiver `{receiver_name}` has no declared executor type available to this check; pass it to a helper with a parameter explicitly typed using its actual configured executor type, and add that type to executorTypeNames so the helper's SQL can be checked"
+    );
+    if configured_value_name {
+        format!("{message} (listing the value's name `{receiver_name}` alone is not enough)")
+    } else {
+        message
+    }
 }
 
 #[cfg(test)]

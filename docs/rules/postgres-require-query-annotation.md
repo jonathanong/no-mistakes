@@ -34,6 +34,12 @@ function listAccounts(pool: Pool) {
 listAccounts(writePool);
 ```
 
+The receiver-named message starts with ``receiver `<name>` has no declared
+executor type available to this check``. Its target is
+`undeclared-executor-type`; when the imported value name itself is listed in
+`executorTypeNames`, the target is `unresolved-configured-executor-receiver`
+and the message clarifies that listing the value's name alone is insufficient.
+
 The same `unanalyzable` policy applies: `report` emits a finding, `advise`
 emits an advisory, and `ignore` omits the diagnostic. A type already identified
 by an explicit receiver annotation keeps its type-specific message.
