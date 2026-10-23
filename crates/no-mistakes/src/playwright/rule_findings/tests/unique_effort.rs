@@ -1,4 +1,4 @@
-use super::{analysis, coverage_all, findings_from_report_with_effort};
+use super::{analysis, coverage_all, findings_from_report_with_effort, LowEffortFindings};
 use crate::config::v2::Unanalyzable;
 use crate::playwright::analysis::types::{CoverageReport, CoverageSelector, Summary};
 use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
@@ -56,7 +56,10 @@ fn low_effort_emits_unanalyzable_for_non_literal_exact_selectors() {
         false,
         false,
         coverage_all(false),
-        Some(Unanalyzable::Report),
+        LowEffortFindings {
+            unique_test_ids: Some(Unanalyzable::Report),
+            coverage: None,
+        },
     );
     assert!(outcome.advisories.is_empty());
     assert_eq!(outcome.findings.len(), 1);
@@ -104,7 +107,10 @@ fn low_effort_skips_html_ids_when_the_html_rule_is_enabled() {
         true,
         false,
         coverage_all(false),
-        Some(Unanalyzable::Report),
+        LowEffortFindings {
+            unique_test_ids: Some(Unanalyzable::Report),
+            coverage: None,
+        },
     );
     assert!(outcome.findings.is_empty());
     assert!(outcome.advisories.is_empty());

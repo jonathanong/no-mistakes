@@ -43,14 +43,14 @@ no-mistakes check --format json
 `no-mistakes check --effort low --format json` selects low effort only for
 rules that implement it (`postgres-require-query-annotation`,
 `nextjs-redirect-destinations`, `test-no-unmocked-dynamic-imports`,
-`playwright-unique-test-ids`, and `nextjs-no-caching`); `max`
-is the default and preserves current analysis.
+`playwright-unique-test-ids`, `playwright-coverage`, and `nextjs-no-caching`);
+`max` is the default and preserves current analysis.
 `test-no-unmocked-dynamic-imports` at `low` accepts only a top-level static
 import, a `vi.mock` or `jest.mock` call, or a literal `require()` in setup
 files; other setup-reachability shapes follow `unanalyzable`.
-`playwright-unique-test-ids` at `low` accepts a string literal test id,
-including JSX `data-testid={"save"}`, or a prop with a literal default; other
-selector shapes follow `unanalyzable`.
+`playwright-unique-test-ids` and `playwright-coverage` at `low` accept a
+string literal test id, including JSX `data-testid={"save"}`, or a prop with a
+literal default; other selector shapes follow `unanalyzable`.
 `nextjs-no-caching` at `low` checks literal fetch options, route segment exports,
 and direct configuration objects; indirect settings follow `unanalyzable`.
 If a low-effort rule's required partner check is missing or outside its

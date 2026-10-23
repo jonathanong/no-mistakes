@@ -2,8 +2,7 @@ use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::Unanalyzable;
 use crate::playwright::analysis::types::Analysis;
-use crate::playwright::rules::PLAYWRIGHT_UNIQUE_TEST_IDS;
-use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
+use crate::playwright::rules::{PLAYWRIGHT_COVERAGE, PLAYWRIGHT_UNIQUE_TEST_IDS};
 
 mod emit;
 
@@ -12,6 +11,12 @@ pub(crate) struct CoverageFindingOptions {
     pub(crate) enabled: bool,
     pub(crate) routes: bool,
     pub(crate) selectors: bool,
+}
+
+#[derive(Clone, Copy, Default)]
+pub(crate) struct LowEffortFindings {
+    pub unique_test_ids: Option<Unanalyzable>,
+    pub coverage: Option<Unanalyzable>,
 }
 
 pub(crate) struct ReportOutcome {
@@ -25,13 +30,13 @@ pub(crate) fn findings_from_report_with_effort(
     unique_html_ids: bool,
     prefer_test_id_locators: bool,
     coverage: CoverageFindingOptions,
-    unique_test_ids_low: Option<Unanalyzable>,
+    low: LowEffortFindings,
 ) -> ReportOutcome {
     let mut findings = Vec::new();
     let mut diagnostics = AnalysisDiagnostics::default();
     let report = &analysis.coverage;
     if coverage.enabled {
-        findings.extend(emit::coverage(report, coverage));
+        findings.extend(emit::coverage(report, coverage, low.coverage.is_some()));
     }
     if unique_test_ids || unique_html_ids {
         findings.extend(emit::unique(
@@ -40,31 +45,23 @@ pub(crate) fn findings_from_report_with_effort(
             unique_html_ids,
         ));
     }
-    if let Some(policy) = unique_test_ids_low {
-        for selector in &report.selectors {
-            if selector.literal_exact {
-                continue;
-            }
-            if selector.attribute == HTML_ID_ATTRIBUTE && unique_html_ids {
-                continue;
-            }
-            diagnostics.unanalyzable(
-                policy,
-                RuleFinding {
-                    rule: PLAYWRIGHT_UNIQUE_TEST_IDS.to_string(),
-                    file: selector.file.clone(),
-                    line: selector.line,
-                    message: format!(
-                        "selector [{}=\"{}\"] is unanalyzable at effort low; {}",
-                        selector.attribute,
-                        selector.value,
-                        crate::playwright::rules::effort::REWRITE
-                    ),
-                    import: None,
-                    target: Some(format!("{}={}", selector.attribute, selector.value)),
-                },
-            );
-        }
+    if unique_test_ids {
+        emit::unanalyzable(
+            &mut diagnostics,
+            report,
+            PLAYWRIGHT_UNIQUE_TEST_IDS,
+            low.unique_test_ids,
+            unique_html_ids,
+        );
+    }
+    if coverage.enabled && coverage.selectors {
+        emit::unanalyzable(
+            &mut diagnostics,
+            report,
+            PLAYWRIGHT_COVERAGE,
+            low.coverage,
+            false,
+        );
     }
     if prefer_test_id_locators {
         findings.extend(emit::prefer_test_id_locators(analysis));

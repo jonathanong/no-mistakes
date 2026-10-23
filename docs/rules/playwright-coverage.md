@@ -115,10 +115,57 @@ static relationships it can resolve from the configured app and test roots.
 
 ## Options and defaults
 
-The rule has no rule-local `options` block. `tests.playwright.coverage.routes`
+The rule has no coverage-specific `options` block. `tests.playwright.coverage.routes`
 and `.selectors` default to `true`; set either to `false` to disable that class
 of finding. `tests.playwright.selectors.htmlIds` defaults to `false`, and
 `tests.playwright.testIdAttribute` overrides static config discovery when set.
+Shared `effort` and `unanalyzable` options apply as described below.
+
+## Effort
+
+`effort: max` is the default. It recovers identifier, helper, ternary, object
+map, and imported bindings into exact test IDs before judging selector
+coverage. Route coverage is unchanged.
+
+At effective `effort: low`, selector coverage accepts only:
+
+- a string literal attribute, including JSX `data-testid={"save"}`
+- a prop whose default is a string literal, matching `playwright-literals`
+
+```tsx
+<button data-testid="save-profile" />
+<button data-testid={"cancel-profile"} />
+function SaveButton({ testId = "save-button" }) {
+  return <button data-testid={testId} />;
+}
+```
+
+Every other selector shape is unanalyzable: an identifier without a literal
+default, a ternary or logical leaf, a template, a helper call, or a
+cross-file binding. Those shapes are not uncovered-selector findings. The
+diagnostic names the rewrite:
+
+```text
+web/app/page.tsx:12: selector [data-testid="{id}"] is unanalyzable at effort low; use a literal test id such as data-pw="save-button", or a prop with a literal default
+```
+
+The shared `unanalyzable` policy controls that diagnostic: `report` fails,
+`advise` emits a non-failing advisory, and `ignore` skips it. Rejected shapes
+are never selector coverage evidence under any of those policies.
+
+These syntax proofs do not require a companion rule. The rule checks each
+selector once, so if any enabled application of this rule is not `low`, the
+invocation stays at `max`. The low grammar is a findings filter: recovered
+exact IDs are unanalyzable rather than uncovered hits. Identifier recovery
+itself is skipped only when every Playwright selector consumer in the
+invocation is effectively `low`.
+
+Suppress a low-effort shape on its own line:
+
+```tsx
+// no-mistakes-disable-next-line playwright-coverage
+<button data-testid={id} />
+```
 
 ## Valid example
 

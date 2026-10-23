@@ -141,6 +141,7 @@ fn check_selection_with_facts(
         allow_skipped_tests: false,
     };
     let unique_ids = effort::unique_test_ids_policy(config)?;
+    let coverage_effort = effort::coverage_policy(config)?;
     let unique_policy = unique_policy(
         selection.unique_test_ids,
         selection.unique_html_ids,
@@ -175,7 +176,10 @@ fn check_selection_with_facts(
             routes: selection.cover_routes,
             selectors: selection.cover_selectors,
         },
-        unique_ids.low.then_some(unique_ids.unanalyzable),
+        crate::playwright::rule_findings::LowEffortFindings {
+            unique_test_ids: unique_ids.low.then_some(unique_ids.unanalyzable),
+            coverage: coverage_effort.low.then_some(coverage_effort.unanalyzable),
+        },
     );
     Ok(PlaywrightCheckOutput {
         findings: filter_rule_findings(root, config, report.findings)?,

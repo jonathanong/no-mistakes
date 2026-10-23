@@ -73,10 +73,11 @@ shape uses the selected unanalyzable policy and names that static rewrite.
 These syntax proofs do not require a companion rule.
 
 [`playwright-unique-test-ids`](../rules/playwright-unique-test-ids.md#effort)
-supports `low`: accept a string literal test id, including JSX
-`data-testid={"save"}`, or a prop with a literal default. Every other selector
-shape uses the selected unanalyzable policy and names that static rewrite.
-These syntax proofs do not require a companion rule.
+and [`playwright-coverage`](../rules/playwright-coverage.md#effort) support
+`low`: accept a string literal test id, including JSX `data-testid={"save"}`,
+or a prop with a literal default. Every other selector shape uses the selected
+unanalyzable policy and names that static rewrite. These syntax proofs do not
+require a companion rule.
 [`nextjs-no-caching`](../rules/nextjs-no-caching.md#effort) supports `low`:
 check literal fetch options, route segment exports, and directly exported
 configuration objects without resolving constants or configuration wrappers.

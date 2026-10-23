@@ -39,10 +39,12 @@ import, a `vi.mock` or `jest.mock` call, or a literal `require()` in setup
 files. Other setup-reachability shapes use the shared unanalyzable policy and
 name that rewrite. See
 [the rule](../rules/test-no-unmocked-dynamic-imports.md#effort).
-For `playwright-unique-test-ids`, `low` accepts a string literal test id,
-including JSX `data-testid={"save"}`, or a prop with a literal default. Other
-selector shapes use the shared unanalyzable policy and name that rewrite. See
-[the rule](../rules/playwright-unique-test-ids.md#effort).
+For `playwright-unique-test-ids` and `playwright-coverage`, `low` accepts a
+string literal test id, including JSX `data-testid={"save"}`, or a prop with a
+literal default. Other selector shapes use the shared unanalyzable policy and
+name that rewrite. See
+[playwright-unique-test-ids](../rules/playwright-unique-test-ids.md#effort)
+and [playwright-coverage](../rules/playwright-coverage.md#effort).
 For `nextjs-no-caching`, `low` checks literal cache settings without constant
 propagation or configuration wrapper inference. Indirect settings follow the
 shared unanalyzable policy; literal violations, directives, and cache API checks

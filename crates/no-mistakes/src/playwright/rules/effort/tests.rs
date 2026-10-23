@@ -68,3 +68,22 @@ fn skip_dynamic_recovery_requires_every_selector_consumer_to_be_low() {
     ]);
     assert!(!skip_dynamic_recovery(&mixed, false).unwrap());
 }
+
+#[test]
+fn coverage_stays_max_when_any_application_is_not_low() {
+    let mixed = coverage_policy(&config(vec![
+        rule(PLAYWRIGHT_COVERAGE, Effort::Low, Unanalyzable::Ignore),
+        rule(PLAYWRIGHT_COVERAGE, Effort::Max, Unanalyzable::Advise),
+    ]))
+    .unwrap();
+    assert!(!mixed.low);
+
+    let low = coverage_policy(&config(vec![rule(
+        PLAYWRIGHT_COVERAGE,
+        Effort::Low,
+        Unanalyzable::Advise,
+    )]))
+    .unwrap();
+    assert!(low.low);
+    assert_eq!(low.unanalyzable, Unanalyzable::Advise);
+}
