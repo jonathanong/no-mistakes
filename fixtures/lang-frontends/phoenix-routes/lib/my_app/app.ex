@@ -8,6 +8,9 @@ defmodule MyApp.App do
   alias MyApp.Role
   {Foo, Bar} = {:ok, 1}
 
+  # A semicolon ends the alias statement before another expression.
+  alias MyApp.{User}; foo()
+
   # Extra closing brace is not a brace alias.
   alias MyApp.{Ghost}}
 

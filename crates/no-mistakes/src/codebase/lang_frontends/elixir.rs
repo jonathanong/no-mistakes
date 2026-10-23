@@ -138,7 +138,7 @@ pub(super) fn expand_brace_members(prefix: &str, rest: &str) -> Vec<String> {
         .map(|(line, _)| line)
         .unwrap_or(after)
         .trim_start_matches([' ', '\t']);
-    if !(after_line.is_empty() || after_line.starts_with('#')) {
+    if !(after_line.is_empty() || after_line.starts_with('#') || after_line.starts_with(';')) {
         return Vec::new();
     }
     if body.contains('{') {
