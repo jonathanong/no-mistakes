@@ -45,13 +45,57 @@ files. Generic rule filters remain separate from these rule-local globs.
 
 ## Valid example
 
+```yaml
+# .no-mistakes.yml
+projects:
+  web: {root: .}
+tests:
+  storybook:
+    configs: .storybook/main.ts
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      stories: ["stories/**/*.stories.tsx"]
+      includeAllReactNamedExports: true
+# .storybook/main.ts
+export default { stories: [] };
+```
+
 ```tsx
-export const Primary = meta.story({ component: UserCard });
+// src/UserCard.tsx
+export function UserCard() {
+  return <article>User</article>;
+}
+```
+
+```tsx
+// stories/UserCard.stories.tsx
+import { UserCard } from '../src/UserCard';
+
+export default { component: UserCard };
+export const Primary = {};
 ```
 
 ## Counterexample
 
+```yaml
+# .no-mistakes.yml
+projects:
+  web: {root: .}
+tests:
+  storybook:
+    configs: .storybook/main.ts
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      stories: ["stories/**/*.stories.tsx"]
+      includeAllReactNamedExports: true
+```
+
 ```tsx
+// src/UserCard.tsx
 export function UserCard() {
   return <article>User</article>;
 }

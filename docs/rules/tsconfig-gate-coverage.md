@@ -382,15 +382,38 @@ triggers, and project configuration provide the typecheck inputs.
 ## Valid example
 
 ```yaml
+# .no-mistakes.yml
 checks:
   commands:
     - name: typecheck
       command: [pnpm, exec, tsc, --noEmit, -p, tsconfig.json]
       fileArgs: none
       always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository
 ```
 
-An applicable workflow job runs the same project with a propagating shell.
+```json
+// tsconfig.json
+{ "compilerOptions": { "strict": true }, "include": ["src/**/*.ts"] }
+```
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on:
+  pull_request:
+    paths: ['src/**', tsconfig.json]
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pnpm exec tsc --noEmit --project tsconfig.json
+```
+
+The local command and workflow both type-check the tracked project.
 
 ## Counterexample
 
@@ -398,7 +421,40 @@ A tracked `web/tsconfig.json` exists, but CI only type-checks the root config an
 the local `checks.commands` block has no web project command.
 
 ```json
-{ "compilerOptions": { "strict": true } }
+// web/tsconfig.json
+{ "compilerOptions": { "strict": true }, "include": ["web/src/**/*.ts"] }
+```
+
+```yaml
+# .no-mistakes.yml
+checks:
+  commands:
+    - name: typecheck-root
+      command: [pnpm, exec, tsc, --noEmit, -p, tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository
+```
+
+```json
+// tsconfig.json
+{ "compilerOptions": { "strict": true }, "include": ["src/**/*.ts"] }
+```
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on:
+  pull_request:
+    paths: ['src/**', tsconfig.json]
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pnpm exec tsc --noEmit --project tsconfig.json
 ```
 
 

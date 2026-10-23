@@ -13,7 +13,7 @@ tests:
       backend:
         include: [backend/**/*.test.ts]
       shared:
-        include: [ts-shared/**/*.test.ts]
+        include: ["ts-shared/**/*.test.ts"]
 
 testPlan:
   vitest:
@@ -107,8 +107,62 @@ triggers are checked against their named runner projects.
 ## Valid example
 
 ```yaml
-paths:
-  - ts-shared/**
+# .no-mistakes.yml
+projects:
+  ts-shared: {root: ts-shared}
+tests:
+  vitest:
+    projects:
+      shared:
+        include: [ts-shared/**/*.test.ts]
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        ts-shared:
+          paths: ["ts-shared/**"]
+          targets: [shared]
+rules:
+  - rule: vitest-ci-path-coverage
+    scope: repository
+    options:
+      projectFilters:
+        shared: [shared]
+      sourceGlobsByProject:
+        shared: ['ts-shared/**/*.mts']
+      workflows:
+        - path: .github/workflows/ci.yml
+          job: detect-changes
+          stepId: filter
+```
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on: pull_request
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shared:
+              - 'ts-shared/**'
+```
+
+```ts
+// ts-shared/utils/index.test.ts
+import { it } from 'vitest';
+import { add } from './index.mts';
+
+it('adds values', () => add(1, 1));
+```
+
+```ts
+// ts-shared/utils/index.mts
+export const add = (left: number, right: number) => left + right;
 ```
 
 The filter covers `ts-shared/**/*.test.ts` and its source inputs.
@@ -116,8 +170,62 @@ The filter covers `ts-shared/**/*.test.ts` and its source inputs.
 ## Counterexample
 
 ```yaml
-paths:
-  - ts-shared/*/package.json
+# .no-mistakes.yml
+projects:
+  ts-shared: {root: ts-shared}
+tests:
+  vitest:
+    projects:
+      shared:
+        include: ["ts-shared/**/*.test.ts"]
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        ts-shared:
+          paths: ["ts-shared/**"]
+          targets: [shared]
+rules:
+  - rule: vitest-ci-path-coverage
+    scope: repository
+    options:
+      projectFilters:
+        shared: [shared]
+      sourceGlobsByProject:
+        shared: ['ts-shared/**/*.mts']
+      workflows:
+        - path: .github/workflows/ci.yml
+          job: detect-changes
+          stepId: filter
+```
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on: pull_request
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shared:
+              - 'ts-shared/*/package.json'
+```
+
+```ts
+// ts-shared/utils/index.test.ts
+import { it } from 'vitest';
+import { add } from './index.mts';
+
+it('adds values', () => add(1, 1));
+```
+
+```ts
+// ts-shared/utils/index.mts
+export const add = (left: number, right: number) => left + right;
 ```
 
 This misses a nested `ts-shared/utils/index.mts` change selected locally.

@@ -51,6 +51,7 @@ The runner still requires the installed `shellcheck` executable.
 ## Valid example
 
 ```sh
+# scripts/run.sh
 #!/usr/bin/env bash
 set -euo pipefail
 printf '%s\n' "${1:-default}"
@@ -59,11 +60,17 @@ printf '%s\n' "${1:-default}"
 ## Counterexample
 
 ```sh
+# scripts/run.sh
 #!/usr/bin/env bash
-echo $1
+run() {
+  local name=$(basename "$1")
+  printf '%s\n' "$name"
+}
+run "${1:-default}"
 ```
 
-Unquoted expansion and an unset positional argument are ShellCheck findings.
+Combining `local` with a command substitution can hide the command's failure
+status from `set -e`; ShellCheck reports this as SC2155 when installed.
 
 ## Fix
 

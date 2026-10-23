@@ -66,9 +66,31 @@ dynamic config parsing.
 ## Valid example
 
 ```yaml
-projects:
-  backend: {include: [backend/**/*.test.ts]}
-  web: {include: [web/**/*.test.ts]}
+# .no-mistakes.yml
+tests:
+  vitest:
+    projects:
+      backend: {include: ["backend/**/*.test.ts"]}
+      web: {include: ["web/**/*.test.ts"]}
+rules:
+  - rule: vitest-project-mapping
+    scope: repository
+    options:
+      explicitProjectsOnly: true
+```
+
+```ts
+// backend/api.test.ts
+import { it } from 'vitest';
+
+it('runs in the backend project', () => {});
+```
+
+```ts
+// web/profile.test.ts
+import { it } from 'vitest';
+
+it('runs in the web project', () => {});
 ```
 
 ## Counterexample
@@ -76,9 +98,25 @@ projects:
 `web/profile.test.ts` matches both `web/**/*.test.ts` and a broad
 `**/*.test.ts` project.
 
+```yaml
+# .no-mistakes.yml
+tests:
+  vitest:
+    projects:
+      broad: {include: ['**/*.test.ts']}
+      web: {include: ['web/**/*.test.ts']}
+rules:
+  - rule: vitest-project-mapping
+    scope: repository
+    options:
+      explicitProjectsOnly: true
+```
+
 ```ts
-// vitest.config.ts
-export default { test: { include: ['src/**/*.test.ts'] } };
+// web/profile.test.ts
+import { it } from 'vitest';
+
+it('has two matching projects', () => {});
 ```
 
 
