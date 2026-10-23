@@ -241,6 +241,18 @@ describe("playwright same-file recall", () => {
     );
   });
 
+  it("does not treat a non-scroll window member alias as raw scroll", () => {
+    assert.deepEqual(
+      messages(
+        fixture("playwright-no-raw-scroll-pagination/window-member-alias.spec.js"),
+        "playwright-no-raw-scroll-pagination",
+        undefined,
+        "e2e/window-member-alias.spec.js",
+      ),
+      [],
+    );
+  });
+
   it("follows single-write let and var aliases and ignores reassignment", () => {
     assert.deepEqual(
       messages(

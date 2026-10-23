@@ -42,7 +42,9 @@ function isRawScrollCall(node, context) {
     const variable = resolveVariable(callee, context);
     if (!variable || variable.defs.length === 0) return RAW_SCROLL_NAMES.has(callee.name);
     const alias = resolveAlias(callee, context, new Set());
-    return Boolean(alias && globalScrollInit(alias.declarator, context));
+    if (!alias || !globalScrollInit(alias.declarator, context)) return false;
+    // The local binding can rename the property. Only scroll, scrollBy, and scrollTo count.
+    return alias.kind !== "key" || RAW_SCROLL_NAMES.has(alias.key);
   }
   if (!RAW_SCROLL_NAMES.has(methodFromCallee(callee, context))) return false;
   const object =
