@@ -2,12 +2,12 @@ use super::*;
 
 /// Capture the actual post-constructor, post-refinement agreement inputs.
 /// Canonical edges cannot reconstruct their physical multiplicity or sources.
-pub(super) fn capture(
+pub(super) fn capture<'facts>(
     snapshot: &mut ReplacementProbeSnapshot,
     incoming: &ParameterInputs,
     sites: &[ResolvedCallSite],
-    indexes: &CallableResolutionIndexes,
-    facts: &dyn TsFactLookup,
+    indexes: &CallableResolutionIndexes<'facts>,
+    facts: &'facts dyn TsFactLookup,
 ) {
     let mut physical: FxHashMap<_, FxHashMap<_, Vec<_>>> = fx_map();
     for site in sites {

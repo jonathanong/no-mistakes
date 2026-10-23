@@ -5,11 +5,11 @@ use crate::codebase::dependencies::extract::CallTargetIdentity;
 /// alias, class, import, and re-export rules.
 struct CallSiteResolution<'a, 'b> {
     edge_inputs: &'a GraphEdgeBuildInputs<'b>,
-    facts: &'a dyn TsFactLookup,
+    facts: &'b dyn TsFactLookup,
     resolver: &'a dyn ImportResolution,
-    indexes: &'a CallableResolutionIndexes,
+    indexes: &'a CallableResolutionIndexes<'b>,
     path: &'a std::path::Path,
-    index: &'a CallableFileIndex,
+    index: &'a CallableFileIndex<'b>,
     /// Whether any file declares a namespace; without one, no import can
     /// lead to a namespace member and the lookups are skipped.
     namespaces_in_repo: bool,

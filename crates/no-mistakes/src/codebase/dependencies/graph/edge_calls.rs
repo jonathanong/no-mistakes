@@ -13,15 +13,15 @@ use crate::codebase::dependencies::extract::InvocationKind;
 /// deferred aliases. It honors `declared_at` (TDZ) and `invalidated_at`.
 /// Class-member maps are built separately by `index_class_members_by_id`.
 #[derive(Clone)]
-struct CallableFileIndex {
+struct CallableFileIndex<'facts> {
     values: FlowFileIndex,
     known_scopes: FxHashSet<String>,
     exported_scopes: FxHashSet<String>,
     class_scopes: FxHashSet<String>,
     callable_bindings: ScopedNameMap<crate::codebase::dependencies::extract::CallableId>,
     callable_assignments: ScopedNameMap<IndexedCallableAssignment>,
-    imported: FxHashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
-    type_imported: FxHashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
+    imported: FxHashMap<&'facts str, &'facts crate::codebase::dependencies::extract::ImportedBinding>,
+    type_imported: FxHashMap<&'facts str, &'facts crate::codebase::dependencies::extract::ImportedBinding>,
     exported: FxHashMap<String, crate::codebase::dependencies::extract::ExportedBinding>,
     aliases: ScopedNameMap<IndexedAlias>,
     binding_declared_at: ScopedNameMap<u32>,
@@ -60,8 +60,8 @@ use value_flow::{refine_value_calls, FlowFileIndex};
 include!("edge_calls/scoped_names.rs");
 include!("edge_calls/namespace_table.rs");
 
-impl CallableFileIndex {
-    fn from_facts(file: &crate::codebase::ts_source::facts::TsFileFacts) -> Self {
+impl<'facts> CallableFileIndex<'facts> {
+    fn from_facts(file: &'facts crate::codebase::ts_source::facts::TsFileFacts) -> Self {
         let class_scopes: FxHashSet<String> = file.class_scopes.iter().cloned().collect();
         let class_scope_by_id = file
             .callable_scope_ids
@@ -95,12 +95,12 @@ impl CallableFileIndex {
                 .imported_bindings
                 .iter()
                 .filter(|binding| !binding.is_type_only)
-                .map(|binding| (binding.local.clone(), binding.clone()))
+                .map(|binding| (binding.local.as_str(), binding))
                 .collect(),
             type_imported: file
                 .imported_bindings
                 .iter()
-                .map(|binding| (binding.local.clone(), binding.clone()))
+                .map(|binding| (binding.local.as_str(), binding))
                 .collect(),
             exported: file
                 .exported_bindings
@@ -144,6 +144,10 @@ impl CallableFileIndex {
     }
 }
 
+#[cfg(test)]
+#[path = "edge_calls/import_bindings_tests.rs"]
+mod import_bindings_tests;
+
 include!("edge_calls/class_resolution.rs");
 include!("edge_calls/this_resolution.rs");
 #[path = "edge_calls/alias_resolution.rs"]
@@ -152,8 +156,8 @@ include!("edge_calls/alias_liveness.rs");
 include!("edge_calls/traversal_filter.rs");
 
 #[derive(Clone, Default)]
-struct CallableResolutionIndexes {
-    files: dashmap::DashMap<std::path::PathBuf, std::sync::Arc<CallableFileIndex>>,
+struct CallableResolutionIndexes<'facts> {
+    files: dashmap::DashMap<std::path::PathBuf, std::sync::Arc<CallableFileIndex<'facts>>>,
     exports: dashmap::DashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
     namespace_roots: dashmap::DashMap<(std::path::PathBuf, String), RootLookup>,
 }
@@ -174,12 +178,12 @@ enum ExportedCallableResolution {
     Unknown,
 }
 
-impl CallableResolutionIndexes {
+impl<'facts> CallableResolutionIndexes<'facts> {
     fn file(
         &self,
-        facts: &dyn TsFactLookup,
+        facts: &'facts dyn TsFactLookup,
         path: &std::path::Path,
-    ) -> Option<std::sync::Arc<CallableFileIndex>> {
+    ) -> Option<std::sync::Arc<CallableFileIndex<'facts>>> {
         if let Some(index) = self.files.get(path) {
             return Some(index.clone());
         }

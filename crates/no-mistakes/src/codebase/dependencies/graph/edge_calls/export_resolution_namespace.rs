@@ -1,10 +1,10 @@
-fn resolve_exported_namespace_reexport_member(
-    edge_inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
+fn resolve_exported_namespace_reexport_member<'facts>(
+    edge_inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     path: &std::path::Path,
     export: (&CallableFileIndex, &str, &str),
-    indexes: &CallableResolutionIndexes,
+    indexes: &CallableResolutionIndexes<'facts>,
     visited: &mut Vec<(std::path::PathBuf, String)>,
 ) -> ExportedCallableResolution {
     let (file, namespace, member) = export;
@@ -38,13 +38,13 @@ fn resolve_exported_namespace_reexport_member(
     }
 }
 
-fn resolve_exported_namespace_member_alias(
-    edge_inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
+fn resolve_exported_namespace_member_alias<'facts>(
+    edge_inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     path: &std::path::Path,
     alias: (&CallableFileIndex, &str),
-    indexes: &CallableResolutionIndexes,
+    indexes: &CallableResolutionIndexes<'facts>,
     visited: &mut Vec<(std::path::PathBuf, String)>,
 ) -> Option<ExportedCallableResolution> {
     let (file, local) = alias;

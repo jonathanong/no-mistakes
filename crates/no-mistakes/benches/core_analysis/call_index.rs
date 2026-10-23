@@ -1,5 +1,5 @@
 use super::shard;
-use criterion::{black_box, BenchmarkId, Criterion, Throughput};
+use criterion::{black_box, BatchSize, BenchmarkId, Criterion, Throughput};
 
 pub(super) fn bench_callable_file_index_construction(c: &mut Criterion) {
     if !shard::should_run(shard::GRAPH_CORE) {
@@ -27,6 +27,52 @@ pub(super) fn bench_callable_file_index_construction(c: &mut Criterion) {
                 });
             },
         );
+    }
+    for entries in [4_096usize, 16_384] {
+        let fixture =
+            no_mistakes::benchmark_support::import_rich_callable_file_index_fixture(entries);
+        let (runtime, type_only) = fixture.import_binding_counts();
+        assert_eq!((runtime, type_only), (entries * 3 / 4, entries / 4));
+        let control = no_mistakes::benchmark_support::callable_file_index_fixture(entries);
+        assert_eq!(control.import_binding_counts(), (0, 0));
+        let control = no_mistakes::benchmark_support::construct_callable_file_index(&control);
+        assert_eq!(
+            no_mistakes::benchmark_support::construct_callable_file_index(&fixture).entries,
+            control.entries + runtime + entries
+        );
+        group.throughput(Throughput::Elements(entries as u64));
+        group.bench_function(BenchmarkId::new("import_rich", entries), |b| {
+            b.iter_batched(
+                || black_box(&fixture),
+                |fixture| {
+                    black_box(
+                        no_mistakes::benchmark_support::construct_callable_file_index(fixture),
+                    )
+                },
+                BatchSize::SmallInput,
+            );
+        });
+    }
+    for entries in [4_096usize, 16_384] {
+        let fixture =
+            no_mistakes::benchmark_support::type_only_callable_file_index_fixture(entries);
+        assert_eq!(fixture.import_binding_counts(), (0, entries));
+        let control = no_mistakes::benchmark_support::callable_file_index_fixture(entries);
+        assert_eq!(
+            no_mistakes::benchmark_support::construct_callable_file_index(&fixture).entries,
+            no_mistakes::benchmark_support::construct_callable_file_index(&control).entries
+                + entries
+        );
+        group.throughput(Throughput::Elements(entries as u64));
+        group.bench_function(BenchmarkId::new("type_only", entries), |b| {
+            b.iter(|| {
+                black_box(
+                    no_mistakes::benchmark_support::construct_callable_file_index(black_box(
+                        &fixture,
+                    )),
+                )
+            });
+        });
     }
     group.finish();
     bench_scoped_callable_indexes(c);

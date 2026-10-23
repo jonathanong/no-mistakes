@@ -1,5 +1,6 @@
 use crate::codebase::dependencies::extract::{
-    CallTargetIdentity, CallableAlias, CallableId, FunctionCall, InvocationKind,
+    CallTargetIdentity, CallableAlias, CallableId, FunctionCall, ImportedBinding,
+    ImportedBindingKind, InvocationKind,
 };
 use crate::codebase::ts_source::facts::TsFileFacts;
 
@@ -90,6 +91,54 @@ pub fn callable_file_index_fixture(entries: usize) -> CallableFileIndexFixture {
         });
     }
     CallableFileIndexFixture { facts, entries }
+}
+
+/// Keep the original constructor control unchanged and add an import-heavy file.
+pub fn import_rich_callable_file_index_fixture(entries: usize) -> CallableFileIndexFixture {
+    let mut fixture = callable_file_index_fixture(entries);
+    fixture.facts.imported_bindings = (0..entries)
+        .map(|index| {
+            let kind = match index % 3 {
+                0 => ImportedBindingKind::Named,
+                1 => ImportedBindingKind::Default,
+                _ => ImportedBindingKind::Namespace,
+            };
+            ImportedBinding {
+                specifier: format!("@bench/package-{index}/source/module"),
+                local: format!("import{index}"),
+                imported: match kind {
+                    ImportedBindingKind::Named => format!("Export{index}"),
+                    ImportedBindingKind::Default => "default".to_string(),
+                    ImportedBindingKind::Namespace => "*".to_string(),
+                },
+                kind,
+                is_type_only: index % 4 == 3,
+            }
+        })
+        .collect();
+    fixture
+}
+
+/// Pure type-only imports exercise the original empty-runtime projection path.
+pub fn type_only_callable_file_index_fixture(entries: usize) -> CallableFileIndexFixture {
+    let mut fixture = import_rich_callable_file_index_fixture(entries);
+    for binding in &mut fixture.facts.imported_bindings {
+        binding.is_type_only = true;
+    }
+    fixture
+}
+
+impl CallableFileIndexFixture {
+    /// Runtime and explicit type-only declarations in the immutable benchmark input.
+    pub fn import_binding_counts(&self) -> (usize, usize) {
+        let types = self
+            .facts
+            .imported_bindings
+            .iter()
+            .filter(|binding| binding.is_type_only)
+            .count();
+        (self.facts.imported_bindings.len() - types, types)
+    }
 }
 
 pub fn construct_callable_file_index(

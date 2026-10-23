@@ -34,11 +34,11 @@ pub(super) struct ReplacementFile {
     inherited_frames: ReplacementLookupProbe,
 }
 impl ReplacementCatalog {
-    pub(super) fn prepare(
-        inputs: &GraphEdgeBuildInputs<'_>,
-        facts: &dyn TsFactLookup,
+    pub(super) fn prepare<'facts>(
+        inputs: &GraphEdgeBuildInputs<'facts>,
+        facts: &'facts dyn TsFactLookup,
         resolver: &dyn ImportResolution,
-        indexes: &CallableResolutionIndexes,
+        indexes: &CallableResolutionIndexes<'facts>,
         pass: &CallPass,
         incoming: &ParameterInputs,
     ) -> Option<Self> {

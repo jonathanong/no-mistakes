@@ -115,6 +115,38 @@ fn callable_file_index_fixture_constructs_and_probes_call_sites() {
 }
 
 #[test]
+fn import_rich_callable_fixture_adds_runtime_and_type_only_bindings() {
+    let control = callable_file_index_fixture(16);
+    let fixture = import_rich_callable_file_index_fixture(16);
+    assert_eq!(control.import_binding_counts(), (0, 0));
+    assert_eq!(fixture.import_binding_counts(), (12, 4));
+    let type_only = type_only_callable_file_index_fixture(16);
+    assert_eq!(type_only.import_binding_counts(), (0, 16));
+    assert_eq!(
+        construct_callable_file_index(&type_only).entries,
+        construct_callable_file_index(&control).entries + 16
+    );
+    for kind in [
+        crate::codebase::dependencies::extract::ImportedBindingKind::Named,
+        crate::codebase::dependencies::extract::ImportedBindingKind::Default,
+        crate::codebase::dependencies::extract::ImportedBindingKind::Namespace,
+    ] {
+        for type_only in [false, true] {
+            assert!(fixture
+                .facts
+                .imported_bindings
+                .iter()
+                .any(|binding| binding.kind == kind && binding.is_type_only == type_only));
+        }
+    }
+    assert_eq!(
+        construct_callable_file_index(&fixture).entries,
+        construct_callable_file_index(&control).entries + 12 + 16,
+        "both import projections must retain every distinct applicable binding"
+    );
+}
+
+#[test]
 fn scoped_callable_fixtures_preserve_dense_and_sparse_probe_semantics() {
     for sparse in [false, true] {
         let fixture = scoped_callable_fixture(16, sparse);

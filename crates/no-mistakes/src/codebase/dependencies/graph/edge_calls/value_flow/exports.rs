@@ -1,10 +1,10 @@
 use super::*;
 
-pub(in super::super) fn resolve_value_exports(
-    inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
+pub(in super::super) fn resolve_value_exports<'facts>(
+    inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
     resolver: &dyn ImportResolution,
-    indexes: &CallableResolutionIndexes,
+    indexes: &CallableResolutionIndexes<'facts>,
     pass: &CallPass,
     exports: &mut FxHashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
 ) {

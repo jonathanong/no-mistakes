@@ -1,10 +1,10 @@
 use super::*;
 
-pub(super) fn refine_iteration(
-    inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
+pub(super) fn refine_iteration<'facts>(
+    inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
     resolver: &dyn ImportResolution,
-    indexes: &CallableResolutionIndexes,
+    indexes: &CallableResolutionIndexes<'facts>,
     base: &[ResolvedCallSite],
     data: ValueInputs<'_>,
     parameters_enabled: bool,

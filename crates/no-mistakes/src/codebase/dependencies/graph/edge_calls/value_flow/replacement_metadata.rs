@@ -26,10 +26,10 @@ fn replacement_mutations(
     }
     if let Some(histories) = &file.values.receiver_mutations {
         if let Some(names) = histories.get(&0) {
-            for name in file.imported.keys() {
+            for &name in file.imported.keys() {
                 if !receivers.contains_key(name) {
                     if let Some(history) = names.get(name) {
-                        let (properties, dynamic) = unsupported.entry(name.clone()).or_default();
+                        let (properties, dynamic) = unsupported.entry(name.to_string()).or_default();
                         if let Some(assigned) = &history.assigned {
                             properties.extend(assigned.members.keys().cloned());
                             *dynamic |= assigned.dynamic.is_some();

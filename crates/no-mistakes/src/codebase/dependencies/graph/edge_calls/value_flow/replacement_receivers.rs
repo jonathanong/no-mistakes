@@ -35,12 +35,12 @@ impl ReceiverIdentities {
     pub(super) fn local_ids(&self) -> usize {
         self.identities.len() - self.imported_ids.len()
     }
-    pub(super) fn file(
+    pub(super) fn file<'facts>(
         &mut self,
-        inputs: &GraphEdgeBuildInputs<'_>,
-        facts: &dyn TsFactLookup,
+        inputs: &GraphEdgeBuildInputs<'facts>,
+        facts: &'facts dyn TsFactLookup,
         resolver: &dyn ImportResolution,
-        indexes: &CallableResolutionIndexes,
+        indexes: &CallableResolutionIndexes<'facts>,
         path: &std::path::Path,
         index: &CallableFileIndex,
     ) -> FxHashMap<String, usize> {
@@ -86,11 +86,11 @@ impl ReceiverIdentities {
         receivers
     }
 }
-fn receiver_identity(
-    inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
+fn receiver_identity<'facts>(
+    inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
     resolver: &dyn ImportResolution,
-    indexes: &CallableResolutionIndexes,
+    indexes: &CallableResolutionIndexes<'facts>,
     path: &std::path::Path,
     binding: &crate::codebase::dependencies::extract::ImportedBinding,
 ) -> Option<ReceiverIdentity> {

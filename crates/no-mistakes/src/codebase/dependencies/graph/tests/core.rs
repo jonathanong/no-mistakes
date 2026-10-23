@@ -14,6 +14,7 @@ mod dotnet_edges;
 mod extra;
 mod extra_runtime;
 mod files_config;
+mod import_binding_type_projection;
 mod module_cases;
 mod call_source_nodes;
 mod swift_edges;

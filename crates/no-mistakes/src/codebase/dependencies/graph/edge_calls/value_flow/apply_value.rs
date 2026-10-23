@@ -1,9 +1,9 @@
 use super::*;
 
-pub(super) fn apply_value(
-    inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
-    indexes: &CallableResolutionIndexes,
+pub(super) fn apply_value<'facts>(
+    inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
+    indexes: &CallableResolutionIndexes<'facts>,
     site: &mut ResolvedCallSite,
     value: FlowValue,
     replacement_read: bool,

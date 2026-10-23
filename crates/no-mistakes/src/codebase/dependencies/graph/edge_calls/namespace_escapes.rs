@@ -19,12 +19,12 @@ impl CallSiteResolution<'_, '_> {
             if facts.declared.binary_search(used).is_ok() {
                 self.escape(self.path, used.split('.').next().unwrap_or(used));
             }
-            if let Some(binding) = self.index.imported.get(used) {
+            if let Some(binding) = self.index.imported.get(used.as_str()) {
                 self.escape_imported_value(binding, None);
             }
         }
         for (local, member) in &facts.member_uses {
-            if let Some(binding) = self.index.imported.get(local) {
+            if let Some(binding) = self.index.imported.get(local.as_str()) {
                 self.escape_imported_value(binding, Some(member));
             }
         }
@@ -86,7 +86,7 @@ impl CallSiteResolution<'_, '_> {
                     RootLookup::Root(root_file, root) => self.escape(&root_file, &root),
                     RootLookup::Other | RootLookup::Absent => {}
                     RootLookup::Unresolved => {
-                        let imported = index.imported.get(&binding.local);
+                        let imported = index.imported.get(binding.local.as_str());
                         let specifier = binding
                             .specifier
                             .as_deref()

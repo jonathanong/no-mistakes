@@ -79,6 +79,8 @@ pub fn construct_scoped_callable_index(fixture: &ScopedCallableFixture) -> usize
 }
 
 /// Prepare once; all subsequent probes borrow the index and input names.
-pub fn prepare_scoped_callable_index(fixture: &ScopedCallableFixture) -> BenchmarkCallableIndex {
+pub fn prepare_scoped_callable_index(
+    fixture: &ScopedCallableFixture,
+) -> BenchmarkCallableIndex<'_> {
     crate::codebase::dependencies::graph::benchmark_prepare_callable_index(&fixture.fixture.facts)
 }

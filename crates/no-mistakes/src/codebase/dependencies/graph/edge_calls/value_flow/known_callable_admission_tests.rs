@@ -21,9 +21,9 @@ fn site() -> ResolvedCallSite {
         returned_member_from: vec![],
     }
 }
-fn prepared() -> (CallableFileIndex, ValueCall) {
+fn prepared(facts: &crate::codebase::ts_source::facts::TsFileFacts) -> (CallableFileIndex<'_>, ValueCall) {
     let mut file =
-        CallableFileIndex::from_facts(&crate::codebase::ts_source::facts::TsFileFacts::default());
+        CallableFileIndex::from_facts(facts);
     file.callable_bindings
         .insert(0, ScopedNames::One("direct".into(), CallableId(10)));
     file.values.scopes.insert(CallableId(10), "direct".into());
@@ -77,7 +77,8 @@ fn exact_node_requires_same_file_symbol_and_callable_identity() {
 }
 #[test]
 fn lexical_proof_requires_exact_raw_scope_id_and_simple_unbound_name() {
-    let (mut file, mut call) = prepared();
+    let facts = crate::codebase::ts_source::facts::TsFileFacts::default();
+    let (mut file, mut call) = prepared(&facts);
     let site = site();
     assert!(exact_name(&file, &call, &site, CallableId(10), "direct"));
     assert!(!exact_name(&file, &call, &site, CallableId(11), "direct"));

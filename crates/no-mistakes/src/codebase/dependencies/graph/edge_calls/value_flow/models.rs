@@ -29,10 +29,10 @@ pub(super) struct ParameterInput {
     pub(super) callback: bool,
 }
 impl ParameterInput {
-    pub(super) fn from_site(
+    pub(super) fn from_site<'facts>(
         site: &ResolvedCallSite,
-        indexes: &CallableResolutionIndexes,
-        facts: &dyn TsFactLookup,
+        indexes: &CallableResolutionIndexes<'facts>,
+        facts: &'facts dyn TsFactLookup,
     ) -> Self {
         Self {
             callback: site.invocation == InvocationKind::Callback,

@@ -1,4 +1,4 @@
-impl CallableFileIndex {
+impl CallableFileIndex<'_> {
     fn alias_live_at(
         &self,
         alias: &IndexedAlias,

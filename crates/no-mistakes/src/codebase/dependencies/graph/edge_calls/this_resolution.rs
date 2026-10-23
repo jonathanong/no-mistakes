@@ -1,4 +1,4 @@
-impl CallableFileIndex {
+impl CallableFileIndex<'_> {
     fn resolve_this_member(
         &self,
         caller: Option<&str>,

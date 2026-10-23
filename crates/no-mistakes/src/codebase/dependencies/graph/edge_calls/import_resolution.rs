@@ -1,13 +1,13 @@
 /// Resolves a direct runtime import binding (including one static namespace
 /// member) to a callable in a visible local module.
-fn resolve_imported_call_target(
-    edge_inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
+fn resolve_imported_call_target<'facts>(
+    edge_inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     path: &std::path::Path,
     file: &CallableFileIndex,
     callee: &str,
-    indexes: &CallableResolutionIndexes,
+    indexes: &CallableResolutionIndexes<'facts>,
 ) -> Option<ResolvedCallTarget> {
     let (local, requested_export) = match callee.split_once('.') {
         Some((local, member)) if !member.contains('.') => (local, Some(member)),
@@ -87,13 +87,13 @@ fn resolve_imported_call_target(
     })
 }
 
-fn resolve_imported_class_static_member(
-    edge_inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
+fn resolve_imported_class_static_member<'facts>(
+    edge_inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     file: &CallableFileIndex,
     call: (&str, &std::path::Path, &str, &str),
-    indexes: &CallableResolutionIndexes,
+    indexes: &CallableResolutionIndexes<'facts>,
 ) -> Option<ResolvedCallTarget> {
     let (callee, target_path, base_export, member) = call;
     let ExportedCallableResolution::Callable(target_file, _, Some(class_id)) =

@@ -1,9 +1,9 @@
-/// Criterion adapter. Returns a size so the compiler cannot drop the index.
+/// Criterion adapter. Keep every constructed field observable to the optimizer.
 #[doc(hidden)]
 pub fn benchmark_construct_callable_file_index(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
 ) -> usize {
-    let index = CallableFileIndex::from_facts(facts);
+    let index = std::hint::black_box(CallableFileIndex::from_facts(facts));
     index
         .aliases
         .values()
@@ -20,6 +20,7 @@ pub fn benchmark_construct_callable_file_index(
             .map(|names| names.len())
             .sum::<usize>()
         + index.imported.len()
+        + index.type_imported.len()
         + index.exported.len()
 }
 
@@ -29,7 +30,11 @@ pub fn benchmark_probe_call_site_files(file_count: usize) -> usize {
     let mut sites = Vec::with_capacity(file_count);
     for index in 0..file_count {
         sites.push(ResolvedCallSite {
-            alternatives: Vec::new(), returned_from: Vec::new(), typed_from: Vec::new(), returned_member_from: Vec::new(), target_node: None,
+            alternatives: Vec::new(),
+            returned_from: Vec::new(),
+            typed_from: Vec::new(),
+            returned_member_from: Vec::new(),
+            target_node: None,
             file: std::path::PathBuf::from(format!("/{index}.ts")),
             caller: None,
             caller_id: None,
@@ -49,19 +54,19 @@ pub fn benchmark_probe_call_site_files(file_count: usize) -> usize {
 
 /// Prepared callable index for timing lookups independently of construction.
 #[doc(hidden)]
-pub struct BenchmarkCallableIndex {
-    index: CallableFileIndex,
+pub struct BenchmarkCallableIndex<'facts> {
+    index: CallableFileIndex<'facts>,
 }
 
 /// Build the same per-file index used by call and import reachability.
 #[doc(hidden)]
-pub fn benchmark_prepare_callable_index(facts: &TsFileFacts) -> BenchmarkCallableIndex {
+pub fn benchmark_prepare_callable_index(facts: &TsFileFacts) -> BenchmarkCallableIndex<'_> {
     BenchmarkCallableIndex {
         index: CallableFileIndex::from_facts(facts),
     }
 }
 
-impl BenchmarkCallableIndex {
+impl BenchmarkCallableIndex<'_> {
     pub fn local_id(&self, scope: usize, name: &str) -> Option<u32> {
         self.index
             .resolve_local_callable_id(Some(scope), name)

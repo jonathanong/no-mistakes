@@ -77,10 +77,10 @@ fn module_export_target(
     })
 }
 
-fn graph_call_target_node(
+fn graph_call_target_node<'facts>(
     interner: &crate::codebase::analysis_session::PathInterner,
-    facts: &dyn TsFactLookup,
-    indexes: &CallableResolutionIndexes,
+    facts: &'facts dyn TsFactLookup,
+    indexes: &CallableResolutionIndexes<'facts>,
     target: &ResolvedCallTarget,
     local_callable_id: Option<crate::codebase::dependencies::extract::CallableId>,
 ) -> Option<NodeId> {
@@ -109,10 +109,10 @@ fn graph_call_target_node(
     }
 }
 
-fn callable_node_for_call(
+fn callable_node_for_call<'facts>(
     interner: &crate::codebase::analysis_session::PathInterner,
-    facts: &dyn TsFactLookup,
-    indexes: &CallableResolutionIndexes,
+    facts: &'facts dyn TsFactLookup,
+    indexes: &CallableResolutionIndexes<'facts>,
     file: &std::path::Path,
     scope: &str,
     exact_id: Option<crate::codebase::dependencies::extract::CallableId>,

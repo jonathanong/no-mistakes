@@ -39,11 +39,11 @@ fn exported_names_for_file(
     names
 }
 
-fn populate_callable_export_resolutions(
-    edge_inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
+fn populate_callable_export_resolutions<'facts>(
+    edge_inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
     resolver: &dyn ImportResolution,
-    indexes: &CallableResolutionIndexes,
+    indexes: &CallableResolutionIndexes<'facts>,
     output: &mut FxHashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
 ) {
     let mut export_edges = FxHashMap::default();

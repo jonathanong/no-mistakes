@@ -141,7 +141,7 @@ impl CallSiteResolution<'_, '_> {
                 local => self.follow(file, specifier, local, visited),
             };
         }
-        let Some(imported) = index.imported.get(&binding.local) else {
+        let Some(imported) = index.imported.get(binding.local.as_str()) else {
             return RootLookup::Other;
         };
         match imported.kind {

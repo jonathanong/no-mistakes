@@ -6,11 +6,11 @@ use super::replacement_incoming;
 
 type FunctionKey = (std::path::PathBuf, CallableId);
 
-pub(in super::super::super) fn refine_value_calls(
-    inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
+pub(in super::super::super) fn refine_value_calls<'facts>(
+    inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
     resolver: &dyn ImportResolution,
-    indexes: &CallableResolutionIndexes,
+    indexes: &CallableResolutionIndexes<'facts>,
     pass: &mut CallPass,
 ) {
     let base = pass.sites.clone();
@@ -164,10 +164,10 @@ fn function_keys(site: &ResolvedCallSite) -> impl Iterator<Item = FunctionKey> +
         }
     })
 }
-fn site_argument(
+fn site_argument<'facts>(
     site: &ResolvedCallSite,
-    indexes: &CallableResolutionIndexes,
-    facts: &dyn TsFactLookup,
+    indexes: &CallableResolutionIndexes<'facts>,
+    facts: &'facts dyn TsFactLookup,
 ) -> ParameterInput {
     ParameterInput::from_site(site, indexes, facts)
 }

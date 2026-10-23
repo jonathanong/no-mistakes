@@ -1,8 +1,8 @@
-pub(super) fn incoming_inputs(
+pub(super) fn incoming_inputs<'facts>(
     sites: &[ResolvedCallSite],
     constructors: &ConstructorRoutes,
-    indexes: &CallableResolutionIndexes,
-    facts: &dyn TsFactLookup,
+    indexes: &CallableResolutionIndexes<'facts>,
+    facts: &'facts dyn TsFactLookup,
 ) -> ParameterInputs {
     let mut incoming: ParameterInputs = fx_map();
     for site in sites {

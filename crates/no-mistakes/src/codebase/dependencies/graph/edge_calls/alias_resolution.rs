@@ -2,7 +2,7 @@ use super::{resolve_local_call_scope, scoped_name, CallableFileIndex, ResolvedLo
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::fx::fx_set;
 
-impl CallableFileIndex {
+impl CallableFileIndex<'_> {
     pub(super) fn resolve_local_callable_id(
         &self,
         mut binding_scope: Option<usize>,

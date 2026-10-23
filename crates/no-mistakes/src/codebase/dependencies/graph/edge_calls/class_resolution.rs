@@ -1,4 +1,4 @@
-impl CallableFileIndex {
+impl CallableFileIndex<'_> {
     fn resolve_class_binding(
         &self,
         binding_scope: Option<usize>,

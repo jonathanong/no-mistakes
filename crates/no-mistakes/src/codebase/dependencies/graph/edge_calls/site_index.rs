@@ -15,7 +15,7 @@ fn index_sorted_call_sites_by_file(
     index
 }
 
-impl CallableFileIndex {
+impl CallableFileIndex<'_> {
     fn unique_scope_id(
         &self,
         scope: &str,

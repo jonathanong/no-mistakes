@@ -1,13 +1,13 @@
 /// Follows explicit local exports and named re-exports.  The visited key keeps
 /// malformed barrel cycles finite. `export *` resolves only if exactly one
 /// canonical target supplies the requested export; ambiguity is unknown.
-fn resolve_exported_callable(
-    edge_inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
+fn resolve_exported_callable<'facts>(
+    edge_inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     path: &std::path::Path,
     export: &str,
-    indexes: &CallableResolutionIndexes,
+    indexes: &CallableResolutionIndexes<'facts>,
     visited: &mut Vec<(std::path::PathBuf, String)>,
 ) -> ExportedCallableResolution {
     let key = (path.to_path_buf(), export.to_string());
@@ -95,7 +95,7 @@ fn resolve_exported_callable(
                     )
                 })
                 .or_else(|| {
-                    let imported = file.imported.get(&local).filter(|imported| {
+                    let imported = file.imported.get(local.as_str()).filter(|imported| {
                         imported.kind != crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
                     })?;
                     let visible_target = resolver

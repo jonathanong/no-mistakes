@@ -4,11 +4,11 @@ use super::*;
 mod worklist;
 pub(in super::super) use worklist::refine_value_calls;
 include!("refine_incoming.rs");
-fn refine_site_in_place(
-    inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
+fn refine_site_in_place<'facts>(
+    inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
     resolver: &dyn ImportResolution,
-    indexes: &CallableResolutionIndexes,
+    indexes: &CallableResolutionIndexes<'facts>,
     result: &mut ResolvedCallSite,
     data: ValueInputs<'_>,
     parameters_enabled: bool,
@@ -112,11 +112,11 @@ mod boundary_tests;
 mod owned_oracle;
 // Existing scalar boundary tests retain their original owned-return entrypoint.
 #[cfg(all(test, feature = "test-instrumentation"))]
-fn refine_site(
-    inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
+fn refine_site<'facts>(
+    inputs: &GraphEdgeBuildInputs<'facts>,
+    facts: &'facts dyn TsFactLookup,
     resolver: &dyn ImportResolution,
-    indexes: &CallableResolutionIndexes,
+    indexes: &CallableResolutionIndexes<'facts>,
     base: &ResolvedCallSite,
     data: ValueInputs<'_>,
     parameters_enabled: bool,

@@ -5,7 +5,7 @@ use member_key::same_member_root;
 
 include!("replacement_call_admission.rs");
 struct Proof<'a> {
-    file: &'a CallableFileIndex,
+    file: &'a CallableFileIndex<'a>,
     receivers: &'a FxHashMap<String, usize>,
     writes: &'a index::PreparedReplacements,
     snapshots: &'a FxHashMap<CallableId, (bool, bool)>,

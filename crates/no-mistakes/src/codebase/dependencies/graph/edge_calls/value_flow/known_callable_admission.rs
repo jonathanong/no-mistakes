@@ -2,9 +2,9 @@ use super::*;
 
 /// A fresh per-site flow cannot refine this direct lexical function identity.
 /// Keep every alias, import, projection, uncertain binding and non-singleton target.
-pub(super) fn needs_refinement(
-    facts: &dyn TsFactLookup,
-    indexes: &CallableResolutionIndexes,
+pub(super) fn needs_refinement<'facts>(
+    facts: &'facts dyn TsFactLookup,
+    indexes: &CallableResolutionIndexes<'facts>,
     site: &ResolvedCallSite,
     #[cfg(feature = "test-instrumentation")] probe: &admission_probe::AdmissionProbe,
 ) -> bool {
@@ -19,9 +19,9 @@ pub(super) fn needs_refinement(
     }
     !redundant
 }
-fn exact_direct_callable(
-    facts: &dyn TsFactLookup,
-    indexes: &CallableResolutionIndexes,
+fn exact_direct_callable<'facts>(
+    facts: &'facts dyn TsFactLookup,
+    indexes: &CallableResolutionIndexes<'facts>,
     site: &ResolvedCallSite,
 ) -> bool {
     let Some((target_id, target_scope)) = exact_identity(site) else {
@@ -86,7 +86,7 @@ fn exact_name(
     if call.bound
         || name.contains(['.', '/'])
         || name != &site.source_callee
-        || file.imported.contains_key(name)
+        || file.imported.contains_key(name.as_str())
         || scoped_name(&file.values.bindings, *scope, name).is_some()
         || scoped_name(&file.values.parameters, *scope, name).is_some()
         || scoped_name(&file.aliases, *scope, name).is_some()

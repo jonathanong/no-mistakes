@@ -30,9 +30,9 @@ use types::{BoundArguments, FlowValue};
 /// shared effect edge for every invocation of a helper.
 struct ValueFlowResolution<'a, 'b> {
     inputs: &'a GraphEdgeBuildInputs<'b>,
-    facts: &'a dyn TsFactLookup,
+    facts: &'b dyn TsFactLookup,
     resolver: &'a dyn ImportResolution,
-    indexes: &'a CallableResolutionIndexes,
+    indexes: &'a CallableResolutionIndexes<'b>,
     incoming: &'a ParameterInputs,
     supers: &'a ConstructorRoutes,
     replacements: Option<&'a replacement_catalog::ReplacementCatalog>,
