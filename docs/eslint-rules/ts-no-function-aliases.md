@@ -68,7 +68,7 @@ Direct and forwarded self-recursion are allowed.
 
 Imported signatures are unavailable to this file-local rule. An imported target
 is checked only for an unannotated wrapper; it does not prove that a declared
-parameter or return type is redundant:
+parameter type, optionality or return type is redundant:
 
 ```ts
 import { convert } from "./convert";

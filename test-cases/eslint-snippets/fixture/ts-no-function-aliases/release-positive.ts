@@ -39,3 +39,6 @@ function defaultCallable(value) { return value; }
 export default defaultCallable;
 const defaultIdentifierForwarder = value => defaultCallable(value);
 const parenthesizedForwarder = value => (api.create?.call)(api, value);
+
+export function optionalTarget(value?: string): string { return value ?? ""; }
+const optionalForwarder = (value?) => optionalTarget(value);

@@ -23,7 +23,7 @@ describe("reachable function alias release regression", () => {
   it("reports reachable imported and exported pass-throughs including forwarding", () => {
     assert.deepEqual(
       messages(fixture(`${rule}/release-positive.ts`), rule, undefined, "fixture.ts"),
-      Array.from({ length: 23 }, () => "alias"),
+      Array.from({ length: 24 }, () => "alias"),
     );
   });
 });
@@ -32,7 +32,7 @@ describe("reachable function alias Oxlint parity", () => {
   for (const [name, count] of [
     ["release-controls.ts", 0],
     ["release-jsdoc.mjs", 2],
-    ["release-positive.ts", 23],
+    ["release-positive.ts", 24],
     ["release-default-const.ts", 2],
     ["private-recall.ts", 0],
     ["suppress-next-line.ts", 1],

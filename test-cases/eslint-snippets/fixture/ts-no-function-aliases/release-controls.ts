@@ -98,3 +98,9 @@ function snapshotOriginal(value) { return value; }
 export default snapshotOriginal;
 snapshotOriginal = replacement;
 export const snapshotFacade = value => snapshotOriginal(value);
+
+// Explicit optionality is a declared signature even without a parameter type.
+const optionalImported = (value?) => imported(value);
+const optionalUntypedLocal = (value?): string => localRequired(value);
+export function defaultedTarget(value: string = "default"): string { return value; }
+const defaultContract = (value: string): string => defaultedTarget(value);

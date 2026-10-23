@@ -24,7 +24,9 @@ function identicalType(left, right) {
 
 function hasDeclaredSignature(node) {
   return Boolean(
-    node.typeParameters || node.returnType || node.params.some((param) => param.typeAnnotation),
+    node.typeParameters ||
+    node.returnType ||
+    node.params.some((param) => param.typeAnnotation || param.optional),
   );
 }
 
@@ -50,13 +52,11 @@ function signaturePreserved(node, target) {
     return false;
   if (node.returnType && !identicalType(node.returnType, original.returnType)) return false;
   return node.params.every((param, index) => {
-    if (!param.typeAnnotation) return true;
     const other = original.params[index];
-    return Boolean(
-      other &&
+    return (
       other.type === param.type &&
       param.optional === other.optional &&
-      identicalType(param.typeAnnotation, other.typeAnnotation),
+      (!param.typeAnnotation || identicalType(param.typeAnnotation, other.typeAnnotation))
     );
   });
 }
