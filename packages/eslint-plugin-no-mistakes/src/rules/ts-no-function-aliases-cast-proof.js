@@ -83,6 +83,8 @@ function resultCastPreserved(node, target, sourceCode) {
   return (
     (node.type === "TSAsExpression" || node.type === "TSTypeAssertion") &&
     target.callable &&
+    // The binding annotation can expose a wider contract than the initializer.
+    !target.annotation &&
     !wrapperHasOverloads(target.callable, sourceCode) &&
     !target.callable.typeParameters &&
     !target.callable.async &&

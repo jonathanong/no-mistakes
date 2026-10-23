@@ -28,5 +28,6 @@
 {"name": "dot-in-static-key", "code": "import * as db from './api'; const g = i => (db['a.b'] as typeof db.a.b)(i);", "expected": 0},
 {"name": "async-target-result", "code": "export async function createUser(i): string {return i;} const g = i => (createUser(i) as string);", "expected": 0},
 {"name": "generator-target-result", "code": "export function* createUser(i): string {yield i;} const g = i => (createUser(i) as string);", "expected": 0},
-{"name": "query-alias-cross-scope", "code": "import {f} from './api'; function scope(f) { type Handler = typeof f; const g = i => (f as Handler)(i); }", "expected": 0}
+{"name": "query-alias-cross-scope", "code": "import {f} from './api'; function scope(f) { type Handler = typeof f; const g = i => (f as Handler)(i); }", "expected": 0},
+{"name": "annotated-target-binding", "code": "export const createUser: (i: string) => string | number = (i: string): string => i; const g = i => (createUser(i) as string);", "expected": 0}
 ]
