@@ -49,6 +49,7 @@ describe("captured error-message values", () => {
       "captured-order.ts",
       "captured-with.js",
       "captured-rewrites.ts",
+      "captured-source-rewrites.ts",
     ]) {
       assert.deepEqual(check(name), [], name);
     }
@@ -68,6 +69,7 @@ describe("captured error-message values", () => {
       ["captured-values.ts", 7],
       ["captured-source-change.ts", 3],
       ["captured-rewrites.ts", 0],
+      ["captured-source-rewrites.ts", 0],
       ["captured-controls.ts", 0],
       ["captured-order.ts", 0],
       ["captured-with.js", 0],
