@@ -17,7 +17,7 @@ pub(super) fn finding(rel: &str, body: &Body, place: Option<&StepRun>, hit: Hit)
             )
         } else if hit.unanalyzable {
             format!(
-                "{rel}:{line}: job `{}` step {} download URL or argument shape `{}` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `{}` argument and use literal option names instead of assignments, expansions, or command substitutions.",
+                "{rel}:{line}: job `{}` step {} download URL or argument shape `{}` is unanalyzable at effort low; inline a literal HTTP(S) URL in the `{}` argument, use literal option names, and quote output or header values instead of allowing assignments, expansions, or command substitutions to change argument positions.",
                 body.target, body.step, hit.url, hit.command,
             )
         } else {
