@@ -20,10 +20,17 @@ test("reports every completed and skipped test while keeping the 5s boundary exc
     [4999.9, 1200.5],
   );
   assert.match(csv(result.rows), /"optional native case","pending",""/);
-  assert.match(
-    markdown(result),
-    /Completed: 2; passed: 2; failed: 0; skipped: 0; pending: 1; todo: 0/,
-  );
+  // Node 20 is supported and has no Object.groupBy. Keep artifact rendering portable.
+  const groupBy = Object.groupBy;
+  try {
+    Object.groupBy = undefined;
+    assert.match(
+      markdown(result),
+      /Completed: 2; passed: 2; failed: 0; skipped: 0; pending: 1; todo: 0/,
+    );
+  } finally {
+    Object.groupBy = groupBy;
+  }
 });
 
 test("the CLI writes complete timing artifacts and rejects a passed test at 5s", () => {

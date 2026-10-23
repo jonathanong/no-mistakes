@@ -77,11 +77,12 @@ function csv(rows) {
 }
 
 function markdown(summary) {
-  const counts = Object.groupBy(summary.rows, (row) => row.status);
+  const counts = {};
+  for (const row of summary.rows) counts[row.status] = (counts[row.status] ?? 0) + 1;
   const lines = [
     "### Real N-API test timing",
     "",
-    `Completed: ${summary.completed.length}; passed: ${counts.passed?.length ?? 0}; failed: ${counts.failed?.length ?? 0}; skipped: ${counts.skipped?.length ?? 0}; pending: ${counts.pending?.length ?? 0}; todo: ${counts.todo?.length ?? 0}.`,
+    `Completed: ${summary.completed.length}; passed: ${counts.passed ?? 0}; failed: ${counts.failed ?? 0}; skipped: ${counts.skipped ?? 0}; pending: ${counts.pending ?? 0}; todo: ${counts.todo ?? 0}.`,
     `Passed tests at or above ${LIMIT_MS} ms: ${summary.slowPassed.length}.`,
     "",
     "| Duration (ms) | Status | Test | File |",
