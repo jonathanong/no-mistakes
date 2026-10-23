@@ -1,7 +1,7 @@
 //! Direct mutable literal syntax, recorded during the existing head walk.
 use super::{syntax::Head, Span};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use crate::fx::FxHashMap;
+use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::*;
 mod proofs;
 pub(super) use proofs::Proofs;
@@ -28,6 +28,8 @@ pub(super) struct Write {
 pub(super) struct Assignments {
     pub context: Context,
     pub iteration_target: bool,
+    pub discarded_assignment: Option<Span>,
+    pub unsupported_writes: FxHashSet<Span>,
     pub declarations: FxHashMap<Span, Write>,
     pub writes: FxHashMap<Span, Write>,
 }
@@ -56,6 +58,28 @@ impl Assignments {
             }
         }
     }
+    pub fn unsupported_write(&mut self, span: oxc_span::Span) {
+        let span = (span.start, span.end);
+        if !self.writes.contains_key(&span) {
+            self.unsupported_writes.insert(span);
+        }
+    }
+    pub fn target(&mut self, target: &SimpleAssignmentTarget<'_>) {
+        let expression = match target {
+            SimpleAssignmentTarget::AssignmentTargetIdentifier(id) => {
+                self.unsupported_write(id.span);
+                return;
+            }
+            SimpleAssignmentTarget::TSAsExpression(value) => &value.expression,
+            SimpleAssignmentTarget::TSSatisfiesExpression(value) => &value.expression,
+            SimpleAssignmentTarget::TSNonNullExpression(value) => &value.expression,
+            SimpleAssignmentTarget::TSTypeAssertion(value) => &value.expression,
+            _ => return,
+        };
+        if let Expression::Identifier(id) = unwrap_ts_wrappers(expression) {
+            self.unsupported_write(id.span);
+        }
+    }
     pub fn assignment(&mut self, value: &AssignmentExpression<'_>) {
         if let AssignmentTarget::AssignmentTargetIdentifier(id) = &value.left {
             self.writes.insert(
@@ -64,7 +88,15 @@ impl Assignments {
                     span: (value.span.start, value.span.end),
                     context: self.context,
                     value: if value.operator == AssignmentOperator::Assign {
-                        literal(&value.right)
+                        let head = literal(&value.right);
+                        if matches!(head, Value::Literal(Head::Tag | Head::MissingTag))
+                            && self.discarded_assignment != Some((value.span.start, value.span.end))
+                        {
+                            // A used assignment result can leak a mutable tag builder.
+                            Value::Unknown
+                        } else {
+                            head
+                        }
                     } else {
                         Value::Unknown
                     },

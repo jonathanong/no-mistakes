@@ -224,7 +224,11 @@ same loop can reach the next iteration and is included. Initializers and
 iterable expressions run once per loop entry; an outer
 loop can still repeat that entry. The analysis conservatively considers direct
 same-function assignments that may reach the call; it does not infer values
-across calls or perform path-sensitive control-flow analysis. Rewrite
+across calls or perform path-sensitive control-flow analysis.
+Scalar literal bindings retain their heads through ordinary reads such as
+logging. Tagged builders keep the direct-use restriction: a standalone
+assignment can update the binding, but an assignment whose result is passed
+elsewhere can expose the builder and remains unanalyzable. Rewrite
 unresolved shapes as a named literal at the call or as one local `const`
 initialized with that literal head and passed directly. Existing file and line
 suppressions apply to definite findings too.
