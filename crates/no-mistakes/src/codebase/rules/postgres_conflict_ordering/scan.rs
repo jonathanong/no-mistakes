@@ -7,7 +7,9 @@ mod substitute;
 mod verdicts;
 
 use super::{CompiledOptions, RULE_ID};
-use crate::codebase::postgres::{recovered_sql_needs_insert_check, EmbeddedSqlKind};
+use crate::codebase::postgres::{
+    recovered_sql_needs_insert_check, EmbeddedSqlCall, EmbeddedSqlKind,
+};
 use crate::codebase::rules::postgres_lock_ordering::directive::has_safe_directive;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
@@ -75,11 +77,12 @@ pub(super) fn scan_with_sources(
             let sql = call.sql_text.as_deref();
             // Retained alternatives are complete statements even when more
             // outcomes remain. Check them, and report the residual separately.
-            if opts.fail_unanalyzable
-                && residual_reported != Some(call_index)
-                && original.variants_truncated()
-                && recovered_sql_needs_insert_check(call.sql_text.as_deref())
-            {
+            if should_report_residual(
+                opts.fail_unanalyzable,
+                residual_reported == Some(call_index),
+                original,
+                &call,
+            ) {
                 residual_reported = Some(call_index);
                 findings.push(unanalyzable_sql(&rel, call.line, DYNAMIC_INSERT_MESSAGE));
             }
@@ -170,6 +173,19 @@ pub(super) fn scan_with_sources(
     sql_sources::scan(root, opts, files, sources, catalog, &mut findings)?;
     findings.sort();
     Ok(findings)
+}
+
+// Report once on a non-exempt INSERT preview; cheap guards precede variant scans.
+fn should_report_residual(
+    fail_unanalyzable: bool,
+    already_reported: bool,
+    original: &EmbeddedSqlCall,
+    projected: &EmbeddedSqlCall,
+) -> bool {
+    fail_unanalyzable
+        && !already_reported
+        && original.variants_truncated()
+        && recovered_sql_needs_insert_check(projected.sql_text.as_deref())
 }
 
 fn unanalyzable_sql(rel: &str, line: u32, message: &'static str) -> RuleFinding {
