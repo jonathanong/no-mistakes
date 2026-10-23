@@ -159,3 +159,39 @@ fn both_if_else_append_arms_preserve_reversed_and_reused_guard_singletons() {
     }
     assert!(call.variants_truncated());
 }
+
+#[test]
+fn switch_paths_with_shared_sql_do_not_displace_distinct_append_witnesses() {
+    let calls = calls("variants-append-switch-witnesses.ts");
+    assert_eq!(calls.len(), 1);
+    let call = &calls[0];
+    assert!(call.variants_truncated());
+    assert!(call.is_unanalyzable());
+    let texts = texts(call);
+    assert!(texts.contains(&"SELECT 31"));
+    assert!(texts.contains(&"SELECT 32"));
+    for index in 0..20 {
+        assert!(
+            texts
+                .iter()
+                .any(|text| *text == format!("SELECT 31 /* g{index} */")
+                    || *text == format!("SELECT 32 /* g{index} */")),
+            "missing singleton {index}"
+        );
+    }
+}
+
+#[test]
+fn reused_guards_exclude_incompatible_suffixes_and_fluent_ids_remain_unique() {
+    let calls = calls("variants-append-correlated-heads.ts");
+    assert_eq!(calls.len(), 2);
+    let mut sql = texts(&calls[0]);
+    sql.sort_unstable();
+    assert_eq!(
+        sql,
+        ["SELECT 41 /* off */", "SELECT 41 /* on */ /* same */"]
+    );
+    assert!(!calls[0].variants_truncated());
+    assert_eq!(texts(&calls[1]), ["SELECT 42 /* first */ /* second */"]);
+    assert_eq!(calls[1].variants[0].append_sites.len(), 1);
+}

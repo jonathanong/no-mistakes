@@ -123,3 +123,20 @@ fn sql_text_and_executed_query_text_helpers() {
     );
     assert!(executed_query_text(inits[2], &HashMap::new()).is_none());
 }
+
+#[test]
+fn query_text_lookup_does_not_certify_calls_properties_or_non_string_values() {
+    let path = fixture("query-text-unknown-expression.ts");
+    let source = read_fixture("query-text-unknown-expression.ts");
+    let allocator = Allocator::default();
+    let parsed = crate::ast::parse(&path, &allocator, &source, SourceType::ts());
+    let mut bindings = HashMap::new();
+    bindings.insert("buildSql".into(), "SELECT 1".into());
+    bindings.insert("object".into(), "SELECT 2".into());
+    for statement in &parsed.program.body {
+        if let oxc_ast::ast::Statement::VariableDeclaration(declaration) = statement {
+            let expression = declaration.declarations[0].init.as_ref().unwrap();
+            assert!(executed_query_text(expression, &bindings).is_none());
+        }
+    }
+}
