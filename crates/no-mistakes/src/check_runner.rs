@@ -47,5 +47,8 @@ mod sql_verdict_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
+#[path = "check_runner/unique_test_ids_effort/tests.rs"]
+mod unique_test_ids_effort;
+#[cfg(test)]
 #[path = "check_runner/unmocked_import_effort/tests.rs"]
 mod unmocked_import_effort;

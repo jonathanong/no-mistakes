@@ -63,6 +63,8 @@ fn template_matchers_cover_structured_dynamic_values() {
         file: PathBuf::from("app/page.tsx"),
         attribute: "data-testid".to_string(),
         value: AppSelectorValue::Template(TemplatePattern::new("user-${id}-button").unwrap()),
+        line: 1,
+        recovered: false,
     };
     let source = fixture_source(&["ast-snippets", "selectors", "template-matchers.ts"]);
     let selectors = extract_playwright_selectors(
@@ -80,6 +82,8 @@ fn mismatched_attributes_and_values_do_not_cover() {
         file: PathBuf::from("app/page.tsx"),
         attribute: "data-testid".to_string(),
         value: AppSelectorValue::Exact("save".to_string()),
+        line: 1,
+        recovered: false,
     };
     let source = fixture_source(&["ast-snippets", "selectors", "mismatched.ts"]);
     let selectors = extract_playwright_selectors(&source, &attrs(), &["data-testid".to_string()]);
@@ -93,6 +97,8 @@ fn unsupported_dynamic_values_never_match() {
         file: PathBuf::from("app/page.tsx"),
         attribute: "data-testid".to_string(),
         value: AppSelectorValue::Unsupported("id".to_string()),
+        line: 1,
+        recovered: false,
     };
     let selectors = extract_playwright_selectors(
         &source,
@@ -115,6 +121,8 @@ fn regex_flags_are_applied_to_selector_matcher() {
         file: PathBuf::from("app/page.tsx"),
         attribute: "data-testid".to_string(),
         value: AppSelectorValue::Exact("SAVE".to_string()),
+        line: 1,
+        recovered: false,
     };
     assert!(app.matches_playwright(&selectors[0]));
 }
@@ -125,6 +133,8 @@ fn unsupported_regex_selector_does_not_panic_or_match() {
         file: PathBuf::from("app/page.tsx"),
         attribute: "data-testid".to_string(),
         value: AppSelectorValue::Exact("save".to_string()),
+        line: 1,
+        recovered: false,
     };
     let selectors = extract_playwright_selectors(
         "await page.getByTestId(/(?<=prefix)save/);",

@@ -105,6 +105,7 @@ pub(super) fn prepare_with_settings(
     let loaded_configs = loaded_configs?;
 
     let mut fact_plan = PlaywrightFactPlan::default();
+    fact_plan.skip_dynamic_recovery = super::effort::skip_dynamic_recovery(config, false)?;
     let mut test_files_by_project = BTreeMap::new();
     let mut prepared_selections = Vec::new();
     for (selection, settings) in prepared_settings {

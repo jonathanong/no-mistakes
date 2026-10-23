@@ -22,6 +22,9 @@ pub struct PlaywrightFactPlan {
     test_files_by_project: super::PlaywrightTestFilesByProject,
     module_resolution: Option<Arc<PlaywrightModuleResolution>>,
     regex_cache: SelectorRegexCache,
+    /// When true, skip identifier/helper/cross-file test-id recovery.
+    /// Default is false so existing Default plans keep today's analysis.
+    pub skip_dynamic_recovery: bool,
 }
 
 #[derive(Clone)]

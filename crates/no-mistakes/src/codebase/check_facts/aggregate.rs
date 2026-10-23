@@ -47,6 +47,8 @@ pub(crate) fn playwright_aggregate_facts(
                         file: selector.file.clone(),
                         attribute: selector.attribute.clone(),
                         value: AppSelectorValue::Exact(value.clone()),
+                        line: selector.line,
+                        recovered: true,
                     })),
                     None => selectors.push(selector.clone()),
                 }

@@ -41,6 +41,15 @@ pub(crate) struct CoverageSelector {
     pub(crate) selectors: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub(crate) helper_references: Vec<SelectorHelperReference>,
+    #[serde(skip)]
+    pub(crate) line: usize,
+    /// Copied from the app selector so a later coverage effort cut can
+    /// distinguish recovered exact IDs from literals.
+    #[serde(skip)]
+    #[allow(dead_code)]
+    pub(crate) recovered: bool,
+    #[serde(skip)]
+    pub(crate) literal_exact: bool,
 }
 
 #[derive(Serialize)]
@@ -188,6 +197,8 @@ pub(crate) struct UniqueSelectorPolicy {
     pub(crate) html_ids: bool,
     pub(crate) aggregate: bool,
     pub(crate) configured_html_id_selector: bool,
+    /// Skip recovered Exact values when judging unique test IDs.
+    pub(crate) literal_test_ids_only: bool,
 }
 
 pub(crate) type FetchIndex =

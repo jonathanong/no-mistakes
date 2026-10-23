@@ -38,6 +38,7 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
             html_ids: cli.assert_unique_html_ids,
             aggregate: false,
             configured_html_id_selector: false,
+            literal_test_ids_only: false,
         },
         &snapshot,
     );

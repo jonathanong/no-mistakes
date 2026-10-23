@@ -11,31 +11,43 @@ fn duplicate_selector_report_includes_exact_values_only() {
             file: PathBuf::from("/repo/web/app/b.tsx"),
             attribute: "data-pw".to_string(),
             value: AppSelectorValue::Exact("same".to_string()),
+            line: 1,
+            recovered: false,
         },
         selectors::AppSelector {
             file: PathBuf::from("/repo/web/app/b.tsx"),
             attribute: "data-pw".to_string(),
             value: AppSelectorValue::Exact("same".to_string()),
+            line: 1,
+            recovered: false,
         },
         selectors::AppSelector {
             file: PathBuf::from("/repo/web/app/b.tsx"),
             attribute: "data-testid".to_string(),
             value: AppSelectorValue::Exact("same".to_string()),
+            line: 1,
+            recovered: false,
         },
         selectors::AppSelector {
             file: PathBuf::from("/repo/web/app/a.tsx"),
             attribute: "data-testid".to_string(),
             value: AppSelectorValue::Exact("same".to_string()),
+            line: 1,
+            recovered: false,
         },
         selectors::AppSelector {
             file: PathBuf::from("/repo/web/app/c.tsx"),
             attribute: "data-testid".to_string(),
             value: AppSelectorValue::Unsupported("id".to_string()),
+            line: 1,
+            recovered: false,
         },
         selectors::AppSelector {
             file: PathBuf::from("/repo/web/app/d.tsx"),
             attribute: "data-testid".to_string(),
             value: AppSelectorValue::Exact("unique".to_string()),
+            line: 1,
+            recovered: false,
         },
     ];
 
@@ -63,11 +75,15 @@ fn duplicate_selector_report_keeps_html_ids_separate_from_test_ids() {
             file: PathBuf::from("/repo/web/app/a.tsx"),
             attribute: "data-testid".to_string(),
             value: AppSelectorValue::Exact("same".to_string()),
+            line: 1,
+            recovered: false,
         },
         selectors::AppSelector {
             file: PathBuf::from("/repo/web/app/b.tsx"),
             attribute: "id".to_string(),
             value: AppSelectorValue::Exact("same".to_string()),
+            line: 1,
+            recovered: false,
         },
     ];
 
@@ -91,11 +107,15 @@ fn deprecated_duplicate_selector_report_preserves_aggregate_grouping() {
             file: PathBuf::from("/repo/web/app/a.tsx"),
             attribute: "data-testid".to_string(),
             value: AppSelectorValue::Exact("same".to_string()),
+            line: 1,
+            recovered: false,
         },
         selectors::AppSelector {
             file: PathBuf::from("/repo/web/app/b.tsx"),
             attribute: "id".to_string(),
             value: AppSelectorValue::Exact("same".to_string()),
+            line: 1,
+            recovered: false,
         },
     ];
 
@@ -120,11 +140,15 @@ fn configured_html_id_selectors_count_as_test_ids_for_uniqueness() {
             file: PathBuf::from("/repo/web/app/a.tsx"),
             attribute: "id".to_string(),
             value: AppSelectorValue::Exact("same".to_string()),
+            line: 1,
+            recovered: false,
         },
         selectors::AppSelector {
             file: PathBuf::from("/repo/web/app/b.tsx"),
             attribute: "id".to_string(),
             value: AppSelectorValue::Exact("same".to_string()),
+            line: 1,
+            recovered: false,
         },
     ];
 
@@ -138,4 +162,46 @@ fn configured_html_id_selectors_count_as_test_ids_for_uniqueness() {
         },
     );
     assert_eq!(duplicates.len(), 2);
+}
+
+#[test]
+fn literal_test_ids_only_skips_recovered_exact_values() {
+    let root = Path::new("/repo");
+    let app_selectors = vec![
+        selectors::AppSelector {
+            file: PathBuf::from("/repo/web/app/a.tsx"),
+            attribute: "data-testid".to_string(),
+            value: AppSelectorValue::Exact("same".to_string()),
+            line: 4,
+            recovered: false,
+        },
+        selectors::AppSelector {
+            file: PathBuf::from("/repo/web/app/b.tsx"),
+            attribute: "data-testid".to_string(),
+            value: AppSelectorValue::Exact("same".to_string()),
+            line: 8,
+            recovered: true,
+        },
+    ];
+
+    let skipped = build_duplicate_selectors(
+        root,
+        &app_selectors,
+        UniqueSelectorPolicy {
+            test_ids: true,
+            literal_test_ids_only: true,
+            ..UniqueSelectorPolicy::default()
+        },
+    );
+    assert!(skipped.is_empty());
+
+    let recovered = build_duplicate_selectors(
+        root,
+        &app_selectors,
+        UniqueSelectorPolicy {
+            test_ids: true,
+            ..UniqueSelectorPolicy::default()
+        },
+    );
+    assert_eq!(recovered.len(), 2);
 }

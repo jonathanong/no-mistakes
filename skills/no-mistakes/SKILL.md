@@ -45,6 +45,9 @@ rules that implement it; `max` is the default and preserves current analysis.
 `test-no-unmocked-dynamic-imports` at `low` accepts only a top-level static
 import, a `vi.mock` or `jest.mock` call, or a literal `require()` in setup
 files; other setup-reachability shapes follow `unanalyzable`.
+`playwright-unique-test-ids` at `low` accepts a string literal test id,
+including JSX `data-testid={"save"}`, or a prop with a literal default; other
+selector shapes follow `unanalyzable`.
 If a low-effort rule's required partner check is missing or outside its
 configured scope, the check warns and falls back to `max` for that rule.
 JSON reports include `analysisFallbacks` for these partner fallbacks and omit

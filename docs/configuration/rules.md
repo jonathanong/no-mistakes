@@ -67,6 +67,12 @@ call, or a literal `require()` in setup files. Every other setup-reachability
 shape uses the selected unanalyzable policy and names that static rewrite.
 These syntax proofs do not require a companion rule.
 
+[`playwright-unique-test-ids`](../rules/playwright-unique-test-ids.md#effort)
+supports `low`: accept a string literal test id, including JSX
+`data-testid={"save"}`, or a prop with a literal default. Every other selector
+shape uses the selected unanalyzable policy and names that static rewrite.
+These syntax proofs do not require a companion rule.
+
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.

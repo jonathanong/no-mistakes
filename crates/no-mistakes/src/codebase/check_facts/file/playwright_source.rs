@@ -39,6 +39,7 @@ pub(super) fn collect(
                     program,
                     &source_plan.selector_regexes,
                     &source_plan.visible_files,
+                    !plan.skip_dynamic_recovery,
                 ));
             text_targets
                 .entry(source_plan.settings_key.clone())

@@ -38,6 +38,10 @@ For `test-no-unmocked-dynamic-imports`, `low` accepts a top-level static
 import, a `vi.mock` or `jest.mock` call, or a literal `require()` in setup
 files; other setup-reachability shapes use the same unanalyzable policy. See
 [its Effort section](rules/test-no-unmocked-dynamic-imports.md#effort).
+For `playwright-unique-test-ids`, `low` accepts a string literal test id,
+including JSX `data-testid={"save"}`, or a prop with a literal default; other
+selector shapes use the same unanalyzable policy. See
+[its Effort section](rules/playwright-unique-test-ids.md#effort).
 
 | CLI                                        | Node API                                                                                                                                                                                                                                                                   |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
