@@ -28,7 +28,7 @@ pub(super) fn collect<'a>(
     });
     let ts = facts::collect_file_facts_from_program_with_semantic(
         path,
-        ts_extract_plan(plan, path, playwright),
+        ts_extract_plan(root, plan, path, playwright),
         &ts_extract_context(root, plan),
         source,
         program,
