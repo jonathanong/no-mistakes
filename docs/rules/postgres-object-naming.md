@@ -151,8 +151,10 @@ configuration errors.
 
 `idx_ord_line_itms__order_id` on `order_line_items` matches
 `^idx_{table}__[a-z0-9_]+$` when abbreviations are enabled.
-`account_people` ends in the irregular plural `people`. `orders_pkey` is
-skipped while `checkConstraintBackedIndexes` stays at its default `false`.
+`account_people` ends in the irregular plural `people`. The primary index
+`orders_pkey` on `user_orders` is treated as constraint-backed even though the
+snapshot omits `constraintBacked`. It is skipped while
+`checkConstraintBackedIndexes` stays at its default `false`.
 
 ```json
 {
@@ -171,7 +173,15 @@ skipped while `checkConstraintBackedIndexes` stays at its default `false`.
         }
       }
     },
-    "account_people": {}
+    "account_people": {},
+    "user_orders": {
+      "indexes": {
+        "orders_pkey": {
+          "unique": true,
+          "primary": true
+        }
+      }
+    }
   }
 }
 ```
@@ -179,16 +189,46 @@ skipped while `checkConstraintBackedIndexes` stays at its default `false`.
 
 ## Counterexample
 
+The first case has an index name that does not match the configured pattern.
+
 ```json
 {
   "formatVersion": 2,
   "coverage": "complete",
   "tables": {
-    "invoice_line": {},
-    "app_cfg_values": {}
+    "order_line_items": {
+      "columns": { "order_id": { "dataType": "bigint" } },
+      "indexes": { "idx_oli__order_id": { "unique": false } }
+    }
   }
 }
 ```
+
+`invoice_line` ends in the singular `line`.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": { "invoice_line": {} }
+}
+```
+
+`app_cfg_values` contains the denied token `cfg`.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": { "app_cfg_values": {} }
+}
+```
+
+The findings include:
+
+- `index name does not match pattern ^idx_{table}__[a-z0-9_]+$`
+- `table name must end in a plural word; "line" is singular`
+- `name uses denied token "cfg"; use "configuration"`
 
 ## Fix
 

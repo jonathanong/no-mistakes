@@ -79,6 +79,24 @@ both pinned and name-matched gets only the literal finding.
     },
     "accounts": {
       "columns": { "display_name": { "dataType": "text" } }
+    },
+    "orders": {
+      "columns": { "status": { "dataType": "text" } },
+      "foreignKeys": {
+        "orders_status_fkey": {
+          "columns": ["status"],
+          "referencedTable": "order_statuses",
+          "referencedColumns": ["value"]
+        }
+      },
+      "checkConstraints": {
+        "orders_status_check": {
+          "definition": "CHECK (status IN ('draft', 'sent', 'paid'))"
+        }
+      }
+    },
+    "order_statuses": {
+      "columns": { "value": { "dataType": "text" } }
     }
   }
 }
@@ -87,6 +105,8 @@ both pinned and name-matched gets only the literal finding.
 An enum column is not text. `display_name` does not match the name pattern
 above. A column that is the only column of a foreign key is a lookup
 reference already, even when a check also lists its values.
+`orders.status` demonstrates that lookup exemption: it has both a CHECK list
+and a sole-column foreign key to `order_statuses.value`.
 
 ## Counterexample
 

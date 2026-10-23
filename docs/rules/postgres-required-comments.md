@@ -61,6 +61,8 @@ reports nothing for it.
 ## Valid example
 
 `COMMENT ON TABLE orders IS 'One row per checkout; immutable after payment'`.
+The same snapshot also documents `orders.display_name`, a regular view, and a
+materialized view.
 
 ```json
 {
@@ -70,10 +72,22 @@ reports nothing for it.
     "orders": {
       "comment": "One row per checkout; immutable after payment",
       "columns": {
-        "id": {
-          "dataType": "uuid"
+        "display_name": {
+          "dataType": "text",
+          "comment": "Customer visible display name"
         }
       }
+    }
+  },
+  "views": {
+    "active_orders": {
+      "definition": "SELECT id FROM orders WHERE active",
+      "comment": "Orders that can still be changed"
+    },
+    "daily_order_totals": {
+      "materialized": true,
+      "definition": "SELECT count(*) FROM orders",
+      "comment": "Daily count of all orders"
     }
   }
 }
@@ -82,9 +96,9 @@ reports nothing for it.
 
 ## Counterexample
 
-`orders` has no comment, a comment made only of whitespace, or a comment
-shorter than `minLength`. The same applies to a selected column, view, or
-materialized view.
+`orders` has no comment. The other three independent examples omit a selected
+column, view, or materialized-view comment while keeping unrelated objects
+commented.
 
 ```json
 {
@@ -92,11 +106,64 @@ materialized view.
   "coverage": "complete",
   "tables": {
     "orders": {
+      "columns": { "id": { "dataType": "uuid" } }
+    }
+  }
+}
+```
+
+`orders.display_name` has no column comment.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "comment": "One row per checkout; immutable after payment",
       "columns": {
-        "id": {
-          "dataType": "uuid"
-        }
+        "id": { "dataType": "uuid" },
+        "display_name": { "dataType": "text" }
       }
+    }
+  }
+}
+```
+
+`active_orders` has no view comment.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "comment": "One row per checkout; immutable after payment",
+      "columns": { "id": { "dataType": "uuid" } }
+    }
+  },
+  "views": {
+    "active_orders": { "definition": "SELECT id FROM orders" }
+  }
+}
+```
+
+`daily_order_totals` has no materialized-view comment.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "comment": "One row per checkout; immutable after payment",
+      "columns": { "id": { "dataType": "uuid" } }
+    }
+  },
+  "views": {
+    "daily_order_totals": {
+      "materialized": true,
+      "definition": "SELECT count(*) FROM orders"
     }
   }
 }

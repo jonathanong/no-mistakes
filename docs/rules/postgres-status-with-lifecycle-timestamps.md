@@ -60,9 +60,7 @@ A non-empty rule `message` replaces the finding text and keeps the
 ## Valid example
 
 `invoices.status` is `GENERATED ALWAYS AS (...) STORED` beside `sent_at` and
-`paid_at`. `invoices` with `status` and only `sent_at` is below the minimum.
-`receipts` has `sent_at` and `paid_at` and no status column. `orders` has
-`status` plus `created_at` and `updated_at`, and those verbs are not listed.
+`paid_at`.
 
 ```json
 {
@@ -87,12 +85,64 @@ A non-empty rule `message` replaces the finding text and keeps the
 }
 ```
 
+This `invoices` row has a stored status and only one configured lifecycle
+timestamp, below `minLifecycleColumns`.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "invoices": {
+      "columns": {
+        "status": { "dataType": "text" },
+        "sent_at": { "dataType": "timestamp with time zone" }
+      }
+    }
+  }
+}
+```
+
+`receipts` has `sent_at` and `paid_at`, but no status column.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "receipts": {
+      "columns": {
+        "sent_at": { "dataType": "timestamp with time zone" },
+        "paid_at": { "dataType": "timestamp with time zone" }
+      }
+    }
+  }
+}
+```
+
+`orders.created_at` and `orders.updated_at` are not configured lifecycle
+verbs, so they do not match this rule.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "status": { "dataType": "text" },
+        "created_at": { "dataType": "timestamp with time zone" },
+        "updated_at": { "dataType": "timestamp with time zone" }
+      }
+    }
+  }
+}
+```
+
 
 ## Counterexample
 
 `deliveries` stores `state text` next to `sent_at` and `failed_at`.
-`payments` stores `status payment_statuses` next to `paid_at` and
-`payment_failed_at`.
 
 ```json
 {
@@ -112,6 +162,28 @@ A non-empty rule `message` replaces the finding text and keeps the
         }
       }
     }
+  }
+}
+```
+
+`payments` stores `status payment_statuses` next to `paid_at` and
+`payment_failed_at`.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "payments": {
+      "columns": {
+        "status": { "dataType": "payment_statuses" },
+        "paid_at": { "dataType": "timestamp with time zone" },
+        "payment_failed_at": { "dataType": "timestamp with time zone" }
+      }
+    }
+  },
+  "enums": {
+    "payment_statuses": { "values": ["pending", "paid", "failed"] }
   }
 }
 ```

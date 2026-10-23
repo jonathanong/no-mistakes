@@ -115,6 +115,30 @@ fails `full-name`. `premium_accounts.id` and a self-reference
           "dataType": "timestamp with time zone"
         }
       }
+    },
+    "users": {
+      "columns": { "id": { "dataType": "uuid" } }
+    },
+    "premium_accounts": {
+      "columns": { "id": { "dataType": "uuid" } },
+      "foreignKeys": {
+        "premium_accounts_user_fkey": {
+          "columns": ["id"], "referencedTable": "users",
+          "referencedColumns": ["id"]
+        }
+      }
+    },
+    "categories": {
+      "columns": {
+        "id": { "dataType": "uuid" },
+        "parent_id": { "dataType": "uuid" }
+      },
+      "foreignKeys": {
+        "categories_parent_id_fkey": {
+          "columns": ["parent_id"], "referencedTable": "categories",
+          "referencedColumns": ["id"]
+        }
+      }
     }
   }
 }
