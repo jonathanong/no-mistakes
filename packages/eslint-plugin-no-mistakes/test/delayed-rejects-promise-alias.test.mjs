@@ -53,4 +53,37 @@ describe("delayed rejection promise-value aliases", () => {
       );
     }
   });
+
+  it("does not confuse with-object getters with lexical promise aliases in script mode", () => {
+    const name = "promise-alias-with.cjs";
+    const file = `${rule}/${name}`;
+    const source = fixture(file);
+    const eslint = lint(source, { [`no-mistakes/${rule}`]: "error" }, file, {}, "script");
+    assert.deepEqual(
+      eslint.map((diagnostic) => diagnostic.line),
+      [36],
+    );
+
+    const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture");
+    const result = spawnSync(
+      process.execPath,
+      [
+        resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+        "--config",
+        resolve(root, rule, ".oxlintrc-forwarding.json"),
+        "--format",
+        "json",
+        resolve(root, file),
+      ],
+      { encoding: "utf8" },
+    );
+    assert.equal(result.status, 1, result.stderr);
+    const actual = JSON.parse(result.stdout).diagnostics.filter(
+      (diagnostic) => diagnostic.code === `no-mistakes(${rule})`,
+    );
+    assert.deepEqual(
+      actual.map((diagnostic) => diagnostic.labels[0].span.line),
+      [36],
+    );
+  });
 });

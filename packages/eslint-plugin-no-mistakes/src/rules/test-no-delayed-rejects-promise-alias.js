@@ -11,6 +11,17 @@ function findVariable(scope, name) {
   return null;
 }
 
+function crossesWith(identifier, variable, context) {
+  for (
+    let scope = context.sourceCode.getScope(identifier);
+    scope !== variable.scope;
+    scope = scope.upper
+  ) {
+    if (scope.type === "with") return true;
+  }
+  return false;
+}
+
 function immutableDeclarator(identifier, context) {
   const variable = findVariable(context.sourceCode.getScope(identifier), identifier.name);
   if (variable?.defs.length !== 1) return null;
@@ -36,6 +47,8 @@ function originDeclarator(identifier, context) {
     const { declarator } = binding;
     const value = unwrapExpression(declarator.init);
     if (value.type !== "Identifier") return declarator;
+    // A with-object getter can replace an outer lexical value at either read.
+    if (crossesWith(reference, binding.variable, context)) return null;
     if (binding.variable.references.some((ref) => ref.isWrite() && !ref.init)) return null;
     // Reading an alias before initialization, or creating it from a binding
     // still in the TDZ, does not establish promise identity.
@@ -44,6 +57,7 @@ function originDeclarator(identifier, context) {
     // Each hop moves to an earlier initializer. That also rules out cycles.
     if (
       !target ||
+      crossesWith(value, target.variable, context) ||
       target.variable.references.some((ref) => ref.isWrite() && !ref.init) ||
       target.declarator.init.range[1] > declarator.init.range[0]
     )

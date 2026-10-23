@@ -87,6 +87,11 @@ the same promise. The rule does not infer identity through destructuring,
 mutable or reassigned bindings, conditional values, or cross-function flows;
 attach the rejection observer immediately in those forms.
 
+In script mode, a `with` object can intercept an outer binding read. An alias
+whose initializer or later reference crosses that object scope is not treated
+as the outer promise. Lexical promise and alias bindings declared inside the
+`with` body remain analyzable.
+
 Module-level delayed rejects are reported the same way as inside a function:
 
 ```ts
