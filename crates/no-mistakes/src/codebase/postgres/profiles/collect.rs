@@ -11,6 +11,7 @@ pub(super) fn configured_embedded_sql_options_with_annotation(
             if [
                 "postgres-no-unbounded-sql-identifier",
                 "postgres-no-mutable-sql-registry",
+                "postgres-no-offset",
             ]
             .contains(rule_id)
                 && config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low

@@ -48,6 +48,7 @@ pub fn configure_prepared_postgres_plan(
             && [
                 "postgres-no-unbounded-sql-identifier",
                 "postgres-no-mutable-sql-registry",
+                "postgres-no-offset",
             ]
             .contains(&rule.rule.as_str())
             && config.rule_has_effective_target(rule)
