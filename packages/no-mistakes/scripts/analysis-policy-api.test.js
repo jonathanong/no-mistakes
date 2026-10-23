@@ -6,6 +6,7 @@ const addon = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 const compiled = addon?.endsWith(".node");
 require("./annotation-assignment-api.test.js");
 require("./annotation-loop-header-api.test.js");
+require("./annotation-reference-api.test.js");
 
 test(
   "compiled check effort and shared policies preserve CLI and async API parity",

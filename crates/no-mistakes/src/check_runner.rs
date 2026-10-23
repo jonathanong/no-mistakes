@@ -49,3 +49,6 @@ mod tests;
 #[cfg(test)]
 #[path = "check_runner/unmocked_import_effort/tests.rs"]
 mod unmocked_import_effort;
+
+#[cfg(test)]
+mod low_reference_tests;
