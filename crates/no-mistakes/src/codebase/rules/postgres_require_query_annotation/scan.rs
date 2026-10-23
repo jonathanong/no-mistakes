@@ -44,16 +44,10 @@ pub(super) fn scan_with_sources(
         let invalid =
             composition::diagnostics(&rel, file, &opts.embedded, &statements, facts, observer);
         if facts.wants_sql_verdicts() {
-            verdicts::record(
-                &rel,
-                file,
-                &opts.embedded,
-                opts.unanalyzable_sql == super::UnanalyzableSql::Advise,
-                facts,
-                &invalid,
-            );
+            verdicts::record(&rel, file, opts, facts, &invalid, prepared, path);
         }
         for (call_index, (call, span)) in file.calls.iter().zip(&file.call_spans).enumerate() {
+            let mut retained_violation = false;
             if !call.variants.is_empty() {
                 for (variant_index, version) in call.statement_calls().enumerate() {
                     // A truncated residual has no complete statement to parse.
@@ -66,6 +60,7 @@ pub(super) fn scan_with_sources(
                         .copied()
                         .ok_or_else(|| anyhow::anyhow!("prepared SQL variant facts are missing"))?;
                     for finding in findings_for_call(&rel, &version) {
+                        retained_violation = true;
                         dedup.push(
                             &mut findings,
                             statement,
@@ -75,7 +70,16 @@ pub(super) fn scan_with_sources(
                         );
                     }
                 }
-                continue;
+                // Retained alternatives do not settle an unexplored residual.
+                // Preserve max's prefix proof / unanalyzable policy for that path.
+                if !call.variants_truncated() {
+                    continue;
+                }
+                // Concrete branch findings already identify this obligation.
+                // Its unknown remainder remains in the advisory/verdict ledger.
+                if retained_violation {
+                    continue;
+                }
             }
             if trusted_append::accepts(prepared, path, call, *span) {
                 continue;

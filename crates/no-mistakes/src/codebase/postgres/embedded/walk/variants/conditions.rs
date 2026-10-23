@@ -59,7 +59,20 @@ pub(super) fn choice_id(
     fallback: u32,
 ) -> (u64, u32) {
     let (key, arm) = binding_choice_key(visitor, expr);
-    (key.unwrap_or(u64::from(fallback)), arm)
+    let id = key.unwrap_or(u64::from(fallback));
+    if !visitor.head_calls_only {
+        visitor
+            .append_decision_offs
+            .borrow_mut()
+            .entry(id)
+            .and_modify(|prior| {
+                if fallback < prior.0 {
+                    *prior = (fallback, 1 - arm);
+                }
+            })
+            .or_insert((fallback, 1 - arm));
+    }
+    (id, arm)
 }
 
 impl super::super::ScopeVisitor<'_> {

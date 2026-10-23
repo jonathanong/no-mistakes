@@ -71,10 +71,12 @@ fn static_append_initializer_preserves_the_annotation_in_shared_sql_facts() {
         "../../test-cases/rules/postgres-require-query-annotation/fixture/append-composition/queries.mts",
     );
     let source = std::fs::read_to_string(&path).unwrap();
-    let options =
-        crate::codebase::postgres::EmbeddedSqlOptions::configured("@bench/db", &["read".into()]);
+    let options = no_mistakes::codebase::postgres::EmbeddedSqlOptions::configured(
+        "@bench/db",
+        &["read".into()],
+    );
     let facts =
-        crate::codebase::postgres::extract_embedded_sql_from_source(&path, &source, &options);
+        no_mistakes::codebase::postgres::extract_embedded_sql_from_source(&path, &source, &options);
     let call = &facts.calls[3];
     assert_eq!(
         call.sql_text.as_deref(),

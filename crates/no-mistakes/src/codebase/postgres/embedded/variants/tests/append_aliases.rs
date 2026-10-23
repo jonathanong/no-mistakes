@@ -33,11 +33,13 @@ fn append_mutations_do_not_reuse_stale_builder_alias_variants() {
         texts(&calls[14]),
         ["SELECT 16", "SELECT id FROM users LIMIT 1"]
     );
-    // The legacy chain resolver does not resolve an identifier receiver.
-    // Finite recovery must leave that existing nonbranching shape unchanged.
+    // The legacy call retains its unknown text, while trusted finite recovery
+    // now keeps the actual singleton append and its contributing occurrence.
     assert_eq!(calls[15].kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(calls[15].sql_text, None);
-    assert!(calls[15].variants.is_empty());
+    assert_eq!(texts(&calls[15]), ["SELECT id FROM users LIMIT 1"]);
+    assert_eq!(calls[15].variants[0].append_sites.len(), 1);
+    assert!(!calls[15].is_unanalyzable());
 }
 
 #[test]

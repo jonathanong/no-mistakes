@@ -64,3 +64,7 @@ mod unbounded_effort_tests;
 mod mutable_registry_low_tests;
 #[cfg(test)]
 mod append_composition_tests;
+#[cfg(test)]
+mod append_static_invalid_tests;
+#[cfg(test)]
+mod truncated_append_parity_tests;

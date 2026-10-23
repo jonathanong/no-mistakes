@@ -8,9 +8,10 @@ fn direct_parameter_helpers_keep_append_origins_and_renumbered_bind_positions() 
     assert_eq!(file.calls.len(), 14);
     let call = &file.calls[0];
     assert_eq!(call.variants.len(), 2);
+    // Both arms append; canonical BFS starts with the guard's off outcome.
     for (variant, marker, count) in [
-        (&call.variants[0], "sql_placeholder_10", 10),
-        (&call.variants[1], "sql_placeholder_2", 2),
+        (&call.variants[0], "sql_placeholder_2", 2),
+        (&call.variants[1], "sql_placeholder_10", 10),
     ] {
         assert_eq!(variant.recovered_placeholder_positions.len(), count);
         let offset = variant.sql_text.find(marker).unwrap();

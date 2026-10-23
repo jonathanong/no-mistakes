@@ -23,8 +23,11 @@ all-off first, then each singleton, then pairs, and larger combinations in that
 order. A loop contributes zero or one iteration; a changed builder remains incomplete
 because later iterations were not explored. The per-site budget is at least
 the baseline cap of 16 and the number of conditionals plus one, so every
-singleton fits. Remaining combinations beyond that budget are truncated; the
-explored alternatives are still checked and the truncation is advisory.
+singleton fits. Nested decisions retain their smallest feasible parent branch.
+Remaining combinations beyond that budget are truncated; the explored
+alternatives are still checked and the truncation is advisory. The unexplored
+remainder still needs a leading-prefix proof; otherwise the configured
+`unanalyzable` policy applies to it.
 
 An invalid composed SQL alternative is skipped for annotation findings and
 reported as a non-failing advisory. Valid siblings remain checked. Consumer

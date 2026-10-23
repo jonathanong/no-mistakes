@@ -38,6 +38,12 @@ fn max_proofs_require_trusted_append_origins_and_safe_local_uses() {
     let embedded = &file.embedded_sql[0].1;
     assert_eq!(embedded.calls.len(), 7);
     let heads = file.query_annotation_heads.as_ref().unwrap();
+    for index in [0, 6] {
+        let call = &embedded.calls[index];
+        assert_eq!(call.variants.len(), 1);
+        assert_eq!(call.variants[0].sql_text, call.sql_text.as_deref().unwrap());
+        assert!(!call.variants[0].append_sites.is_empty());
+    }
     assert_eq!(embedded.calls[1].kind, EmbeddedSqlKind::Composed);
     assert_eq!(embedded.calls[2].kind, EmbeddedSqlKind::Composed);
     assert_eq!(
@@ -46,7 +52,8 @@ fn max_proofs_require_trusted_append_origins_and_safe_local_uses() {
             .iter()
             .map(|span| heads.accepts_trusted_append(*span))
             .collect::<Vec<_>>(),
-        [true, false, false, false, false, false, true]
+        // Shared singleton facts already carry the trusted positive proof.
+        [false, false, false, false, false, false, false]
     );
 }
 

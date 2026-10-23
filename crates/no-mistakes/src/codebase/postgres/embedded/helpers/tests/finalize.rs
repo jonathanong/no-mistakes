@@ -69,3 +69,107 @@ fn trimmed_fragment_drops_placeholder_positions_past_the_hole() {
     assert!(fragments[1].recovered_placeholder_positions.is_empty());
     assert_eq!(fragments[2], untouched);
 }
+
+#[test]
+fn deterministic_singleton_helper_recovery_keeps_suffix_and_provenance() {
+    use super::{extract, plain, Marker};
+    use crate::codebase::postgres::embedded::helpers::splice::splice;
+    let facts = extract("singleton-append.ts");
+    assert!(facts.calls.iter().all(|call| {
+        call.sql_text
+            .as_deref()
+            .is_none_or(|sql| !sentinel::contains(sql))
+            && call
+                .variants
+                .iter()
+                .all(|variant| !sentinel::contains(&variant.sql_text))
+    }));
+    let pending = facts.pending_imported.first().expect("singleton pending");
+    assert_eq!(pending.template.variants.len(), 1);
+    assert!(pending.template.sql_text.is_none());
+    assert!(pending.template.sql_source_positions.is_empty());
+    assert!(pending.template.recovered_placeholder_positions.is_empty());
+    let helper = plain(
+        format!("helper = {INTERNAL_PLACEHOLDER}1"),
+        Marker {
+            line: 30,
+            path: Some("/helper.ts".into()),
+            origin: 700,
+        },
+    );
+    let holes = [(pending.sites[0].0, vec![helper])].into_iter().collect();
+    let filled = splice(&pending.template, &holes).expect("filled singleton");
+    assert!(filled.sql_text.is_none());
+    let [variant] = filled.variants.as_slice() else {
+        panic!("singleton")
+    };
+    assert_eq!(
+        variant.sql_text,
+        "SELECT sql_placeholder_1 WHERE helper = sql_placeholder_2 AND suffix = sql_placeholder_3"
+    );
+    assert_eq!(variant.recovered_placeholder_positions.len(), 3);
+    assert!(!sentinel::contains(&variant.sql_text));
+    let helper_at = variant.sql_text.find("helper").expect("helper");
+    assert_eq!(variant.sql_source_offsets[helper_at], 700);
+    assert!(variant
+        .sql_source_positions
+        .iter()
+        .any(|position| position.source_path.as_deref()
+            == Some(std::path::Path::new("/helper.ts"))
+            && position.source_line == 30));
+    let suffix_at = variant.sql_text.find("suffix").expect("suffix");
+    assert_ne!(variant.sql_source_offsets[suffix_at], 700);
+    assert_eq!(
+        super::origin_at(
+            &variant.sql_source_positions,
+            variant.line,
+            coordinate(&variant.sql_text, suffix_at)
+        ),
+        (9, None)
+    );
+    assert_eq!(variant.sql_source_offsets.len(), variant.sql_text.len());
+}
+
+#[test]
+fn incomplete_or_mismatched_singleton_helper_mirrors_stay_unknown() {
+    use super::extract;
+    use crate::codebase::postgres::embedded::EmbeddedSqlKind;
+    let facts = extract("singleton-append.ts");
+    let pending = facts.pending_imported.first().expect("singleton pending");
+    for invalid in 0..3 {
+        let mut call = pending.template.clone();
+        call.sql_text = Some(call.variants[0].sql_text.clone());
+        match invalid {
+            0 => call.kind = EmbeddedSqlKind::Dynamic,
+            1 => call.variants[0].variants_truncated = true,
+            _ => call
+                .sql_text
+                .as_mut()
+                .expect("raw mirror")
+                .push_str(" drift"),
+        }
+        let mut calls = [call];
+        let mut relative = [];
+        let mut fragments = [];
+        let mut variants = [];
+        let sites = vec![pending.sites[0].1.clone()];
+        let recovered = finalize(
+            Walked {
+                calls: &mut calls,
+                call_spans: &[pending.span],
+                pending_calls: &mut relative,
+                pending_spans: &BTreeMap::new(),
+                fragments: &mut fragments,
+                fragment_variants: &mut variants,
+            },
+            &sites,
+        );
+        assert!(recovered.is_empty(), "invalid shape {invalid}");
+        assert_eq!(calls[0].kind, EmbeddedSqlKind::Dynamic);
+        assert!(calls[0].variants.is_empty());
+        assert!(calls[0]
+            .sql_text
+            .as_deref()
+            .is_none_or(|sql| !sentinel::contains(sql)));
+    }
+}

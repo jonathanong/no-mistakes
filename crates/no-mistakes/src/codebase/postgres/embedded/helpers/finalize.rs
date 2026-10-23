@@ -74,14 +74,26 @@ fn take_pending(
     if !in_text && !in_variants {
         return None;
     }
+    // A deterministic singleton mirrors complete SQL in both representations.
+    // Keep only the variant: splice fills variants and otherwise clones raw SQL.
+    let singleton = in_text
+        && call.kind != EmbeddedSqlKind::Dynamic
+        && call.variants.len() == 1
+        && !call.variants_truncated()
+        && call.sql_text.as_deref() == Some(call.variants[0].sql_text.as_str());
     // Either the call's own text is a complete statement, or each of its
     // complete alternatives is and the legacy text holds no hole.
     let complete = if call.variants.is_empty() {
         in_text && call.kind != EmbeddedSqlKind::Dynamic
     } else {
-        !in_text
+        !in_text || singleton
     };
-    let template = call.clone();
+    let mut template = call.clone();
+    if singleton {
+        template.sql_text = None;
+        template.sql_source_positions.clear();
+        template.recovered_placeholder_positions.clear();
+    }
     scrub(call);
     if !complete {
         return None;

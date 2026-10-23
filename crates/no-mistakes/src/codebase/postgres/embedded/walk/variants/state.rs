@@ -85,7 +85,7 @@ impl ScopeVisitor<'_> {
         if !prefix.iter().all(|value| value.fragment) {
             return None;
         }
-        let suffix = Recovered {
+        let mut suffix = vec![Recovered {
             value: ValueKind::Sql,
             sql: hole.sql.clone(),
             line: hole.line,
@@ -95,14 +95,12 @@ impl ScopeVisitor<'_> {
             enumerated: false,
             choices: Vec::new(),
             append_sites: Vec::new(),
+            append_decisions: Vec::new(),
+            decision_offs: Vec::new(),
             variants_truncated: false,
-        };
-        combine(prefix, vec![suffix]).map(|mut versions| {
-            for version in &mut versions {
-                version.append_sites.push(site);
-            }
-            versions
-        })
+        }];
+        self.mark_append(&mut suffix, site);
+        combine(prefix, suffix)
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn appended_variants(
@@ -135,13 +133,9 @@ impl ScopeVisitor<'_> {
         if self.append_crosses_function(name) || !prefix.iter().all(|value| value.fragment) {
             return None;
         }
-        let suffix =
+        let mut suffix =
             self.recover_append_variants(super::super::super::first_call_argument(call)?)?;
-        combine(prefix, suffix).map(|mut versions| {
-            for version in &mut versions {
-                version.append_sites.push(call.span.start);
-            }
-            versions
-        })
+        self.mark_append(&mut suffix, call.span.start);
+        combine(prefix, suffix)
     }
 }

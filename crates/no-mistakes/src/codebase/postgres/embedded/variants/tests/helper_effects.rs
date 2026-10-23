@@ -36,7 +36,12 @@ fn direct_helper_mutations_invalidate_captured_builder_aliases_after_argument_ev
         calls[12].sql_text.as_deref(),
         Some("SELECT id FROM recent_users OFFSET 7 LIMIT 2")
     );
-    assert!(calls[12].variants.is_empty());
+    assert_eq!(calls[12].variants.len(), 1);
+    assert_eq!(
+        calls[12].variants[0].sql_text,
+        calls[12].sql_text.as_deref().unwrap()
+    );
+    assert_eq!(calls[12].variants[0].append_sites.len(), 2);
     assert!(calls[12]
         .sql_source_positions
         .iter()

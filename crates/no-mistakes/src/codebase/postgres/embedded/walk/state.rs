@@ -70,6 +70,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) fragment_variants: Vec<Vec<super::super::EmbeddedSqlVariant>>,
     pub(crate) suppress_nested_builder_fragments: usize,
     pub(crate) variant_paths: Vec<Vec<(u64, u32)>>,
+    pub(super) append_decision_offs: std::cell::RefCell<crate::fx::FxHashMap<u64, (u32, u32)>>,
     pub(super) variant_guard_owner: Option<usize>,
     pub(crate) control_depth: usize,
     pub(crate) loop_depth: usize,

@@ -63,6 +63,7 @@ pub(crate) fn collect_calls<'a>(
         fragment_sites: Vec::new(),
         suppress_nested_builder_fragments: 0,
         variant_paths: vec![Vec::new()],
+        append_decision_offs: Default::default(),
         variant_guard_owner: None,
         control_depth: 0,
         loop_depth: 0,

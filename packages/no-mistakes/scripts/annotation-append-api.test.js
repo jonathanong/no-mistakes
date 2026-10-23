@@ -32,8 +32,7 @@ test(
       const report = await pending;
       assert.deepEqual(report.warnings, []);
       const locations = (rows) => rows.map(({ file, line }) => [file, line]);
-      const expectedRules =
-        policy === "report" ? lines : definiteMissing;
+      const expectedRules = policy === "report" ? lines : definiteMissing;
       const expectedAdvisories = policy === "advise" ? unresolved : [];
       assert.deepEqual(
         locations(report.rules),

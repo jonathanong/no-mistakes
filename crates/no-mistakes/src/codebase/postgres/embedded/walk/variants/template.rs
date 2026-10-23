@@ -4,6 +4,7 @@ use crate::codebase::postgres::embedded::{first_call_argument, placeholders, tag
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use oxc_ast::ast::{CallExpression, Expression, TemplateLiteral};
 use oxc_span::GetSpan;
+mod append;
 pub(super) mod builder_text;
 pub(super) mod clauses;
 mod effects;
@@ -38,6 +39,8 @@ pub(super) fn recover(
                             value.origins = vec![expr.span().start; value.sql.len()];
                             value.positions.clear();
                             value.append_sites.clear();
+                            value.append_decisions.clear();
+                            value.decision_offs.clear();
                             value.line =
                                 byte_offset_to_line(visitor.source, expr.span().start as usize);
                         }
@@ -81,20 +84,7 @@ pub(super) fn call(
     };
     if let Some((object, property)) = member(&call.callee) {
         if property == "append" {
-            let prefix = expression::recover(visitor, object, depth, constraints)?;
-            if !prefix.iter().all(|value| value.fragment) {
-                return None;
-            }
-            return combine(
-                prefix,
-                expression::recover(visitor, first_call_argument(call)?, depth, constraints)?,
-            )
-            .map(|mut versions| {
-                for version in &mut versions {
-                    version.append_sites.push(call.span.start);
-                }
-                versions
-            });
+            return append::recover(visitor, call, depth, constraints);
         }
         if trusted(object) && property == "raw" {
             let arg = first_call_argument(call)?;

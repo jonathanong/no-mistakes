@@ -40,12 +40,9 @@ impl ScopeVisitor<'_> {
                 let changed = after
                     .as_ref()
                     .is_none_or(|after| !same_values(&before, after));
-                let mut joined = super::control::joined(
-                    Some(before),
-                    after,
-                    (1u64 << 63) | u64::from(start),
-                    (1, 0),
-                );
+                let id = (1u64 << 63) | u64::from(start);
+                let mut joined =
+                    super::control::joined(Some(before), after, id, (1, 0), Some((id, start, 1)));
                 // A loop can execute again after the one explored iteration.
                 // Mark changed builders as non-exhaustive so later SQL checks
                 // retain an unknown residual; unchanged builders remain exact.

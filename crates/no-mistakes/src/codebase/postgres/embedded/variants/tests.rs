@@ -4,6 +4,8 @@ use std::path::PathBuf;
 mod append_aliases;
 #[path = "tests/append_breadth.rs"]
 mod append_breadth;
+#[path = "tests/append_decisions.rs"]
+mod append_decisions;
 #[path = "tests/append_sites.rs"]
 mod append_sites;
 #[path = "tests/branch_correlation.rs"]
@@ -30,6 +32,8 @@ mod final_assignment_consumers;
 mod final_interpolation;
 #[path = "tests/final_rebinding.rs"]
 mod final_rebinding;
+#[path = "tests/folded_append_origins.rs"]
+mod folded_append_origins;
 #[path = "tests/guard_alias.rs"]
 mod guard_alias;
 #[path = "tests/helper_effects.rs"]
@@ -44,6 +48,8 @@ mod metadata;
 mod opaque_logical;
 #[path = "tests/positions.rs"]
 mod positions;
+#[path = "tests/static_append.rs"]
+mod static_append;
 #[path = "tests/switch_generators.rs"]
 mod switch_generators;
 #[path = "tests/switch_member_invocations.rs"]

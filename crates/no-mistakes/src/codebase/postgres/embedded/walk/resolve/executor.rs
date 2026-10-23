@@ -2,6 +2,7 @@ use super::super::super::{first_call_argument, EmbeddedSqlCall, EmbeddedSqlKind}
 use super::{classify_init, BindingState, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{CallExpression, Expression};
+mod variants;
 
 fn legacy_executor_call(
     visitor: &ScopeVisitor<'_>,
@@ -24,7 +25,7 @@ fn legacy_executor_call(
     };
     match unwrap_ts_wrappers(argument) {
         Expression::Identifier(ident) => {
-            let binding = visitor.lookup(ident.name.as_str());
+            let mut binding = visitor.lookup(ident.name.as_str());
             let (sql_text, recovered_placeholder_positions) = binding
                 .as_ref()
                 .and_then(|binding| binding.sql.clone())
@@ -33,8 +34,16 @@ fn legacy_executor_call(
                     || (None, Vec::new()),
                     |(sql, positions)| (Some(sql), positions),
                 );
+            let variants = binding
+                .as_mut()
+                .filter(|binding| {
+                    binding.kind == EmbeddedSqlKind::Composed
+                        && !visitor.append_crosses_function(ident.name.as_str())
+                })
+                .map(|binding| variants::publish(binding.variants.take(), binding.kind))
+                .unwrap_or_default();
             EmbeddedSqlCall {
-                variants: Vec::new(),
+                variants,
                 line,
                 callee,
                 sql_text,
@@ -111,24 +120,10 @@ pub(crate) fn executor_call(
         return recovered;
     }
     let mut recovered = legacy_executor_call(visitor, call, callee);
-    if recovered.kind == EmbeddedSqlKind::Dynamic {
+    if recovered.variants.is_empty() {
         recovered.variants = first_call_argument(call)
-            .and_then(|argument| visitor.recover_variants(argument))
-            .filter(|versions| {
-                versions
-                    .iter()
-                    .all(|version| version.value == super::super::variants::ValueKind::Sql)
-                    && versions
-                        .iter()
-                        .any(|version| version.enumerated || !version.choices.is_empty())
-            })
-            .unwrap_or_default()
-            .into_iter()
-            .map(|version| version.publish())
-            .fold(Vec::new(), |mut unique, variant| {
-                super::super::super::EmbeddedSqlVariant::push_unique(&mut unique, variant);
-                unique
-            });
+            .map(|argument| variants::argument(visitor, argument, recovered.kind))
+            .unwrap_or_default();
     }
     recovered
 }
@@ -149,25 +144,11 @@ pub(in crate::codebase::postgres::embedded::walk) fn executor_call_from_binding(
             || (None, Vec::new()),
             |(sql, positions)| (Some(sql), positions),
         );
-    let variants = if binding.kind == EmbeddedSqlKind::Dynamic {
-        binding
-            .variants
-            .clone()
-            .filter(|versions| {
-                versions
-                    .iter()
-                    .all(|version| version.value == super::super::variants::ValueKind::Sql)
-                    && versions
-                        .iter()
-                        .any(|version| version.enumerated || !version.choices.is_empty())
-            })
-            .unwrap_or_default()
-            .into_iter()
-            .map(|version| version.publish())
-            .fold(Vec::new(), |mut unique, variant| {
-                super::super::super::EmbeddedSqlVariant::push_unique(&mut unique, variant);
-                unique
-            })
+    let variants = if matches!(
+        binding.kind,
+        EmbeddedSqlKind::Dynamic | EmbeddedSqlKind::Composed
+    ) {
+        variants::publish(binding.variants.clone(), binding.kind)
     } else {
         Vec::new()
     };

@@ -29,11 +29,15 @@ pub(super) fn executor_call(
             let declaration_line = Some(single.line);
             let variant = single.clone().publish();
             return Some(EmbeddedSqlCall {
-                sql_text: Some(variant.sql_text),
+                sql_text: Some(variant.sql_text.clone()),
                 kind: EmbeddedSqlKind::Composed,
                 declaration_line,
-                sql_source_positions: variant.sql_source_positions,
-                recovered_placeholder_positions: variant.recovered_placeholder_positions,
+                sql_source_positions: variant.sql_source_positions.clone(),
+                recovered_placeholder_positions: variant.recovered_placeholder_positions.clone(),
+                variants: (!variant.append_sites.is_empty())
+                    .then_some(variant)
+                    .into_iter()
+                    .collect(),
                 ..base
             });
         }

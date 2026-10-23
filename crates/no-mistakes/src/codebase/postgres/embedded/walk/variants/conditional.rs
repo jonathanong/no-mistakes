@@ -74,9 +74,11 @@ pub(super) fn recover(
     let mut right = expression::recover(visitor, &branch.alternate, depth - 1, &no)?;
     for value in &mut left {
         value.choices.push((id, truth_arm));
+        super::append_decisions::conditional(visitor, value, id);
     }
     for value in &mut right {
         value.choices.push((id, 1 - truth_arm));
+        super::append_decisions::conditional(visitor, value, id);
     }
     binary_alternatives(left, right, id).map(mark)
 }
@@ -102,6 +104,7 @@ fn recover_arm(
         let recovered = expression::recover(visitor, arm, depth, &path)?;
         values.extend(recovered.into_iter().map(|mut value| {
             value.choices.extend(path.iter().copied());
+            super::append_decisions::conditional(visitor, &mut value, choice.0);
             value
         }));
     }

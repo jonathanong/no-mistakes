@@ -38,14 +38,6 @@ impl AnnotationHeads {
         self.trusted_append_calls.contains(&span)
     }
 }
-pub(crate) fn collect(
-    program: &Program<'_>,
-    ts: &TsFileFacts,
-    executor_calls: impl Iterator<Item = Span>,
-) -> AnnotationHeads {
-    collect_with_trusted_appends(program, ts, executor_calls, &Default::default(), true)
-}
-
 pub(crate) fn collect_with_trusted_appends(
     program: &Program<'_>,
     ts: &TsFileFacts,

@@ -7,6 +7,7 @@ const compiled = addon?.endsWith(".node");
 require("./annotation-assignment-api.test.js");
 require("./annotation-loop-header-api.test.js");
 require("./annotation-reference-api.test.js");
+require("./annotation-append-api.test.js");
 
 async function policyContext() {
   const cjs = require("../index.js");

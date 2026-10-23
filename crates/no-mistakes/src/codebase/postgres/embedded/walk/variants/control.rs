@@ -39,6 +39,11 @@ impl ScopeVisitor<'_> {
         id: u64,
         arms: (u32, u32),
     ) {
+        let off = self
+            .append_decision_offs
+            .borrow()
+            .get(&id)
+            .map(|(source, arm)| (id, *source, *arm));
         for (index, scope) in self.scopes.iter_mut().enumerate() {
             for (name, state) in scope {
                 let a = left
@@ -51,7 +56,7 @@ impl ScopeVisitor<'_> {
                     .and_then(|scope| scope.get(name))
                     .cloned()
                     .flatten();
-                state.variants = joined(a, b, id, arms);
+                state.variants = joined(a, b, id, arms, off);
             }
         }
     }

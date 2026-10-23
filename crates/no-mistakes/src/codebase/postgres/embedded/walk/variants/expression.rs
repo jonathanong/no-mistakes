@@ -149,6 +149,8 @@ fn literal(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, line: u32) -> Opti
         ),
         choices: Vec::new(),
         append_sites: Vec::new(),
+        append_decisions: Vec::new(),
+        decision_offs: Vec::new(),
         variants_truncated: false,
         enumerated: false,
     }])
