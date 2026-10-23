@@ -150,11 +150,12 @@ Executed PostgreSQL SQL must begin with a non-empty block comment. At `max`,
 
 ## Options and defaults
 
-`include` and `exclude` select which files can contain an annotation root's
-executor call. A rejected file that calls an executor directly is not a root.
-A rejected file that only forwards SQL stays a root, including through an
-excluded re-export, so the included executor still sees that call. Included
-callers of that re-export stay roots. `importSpecifier` has no default;
+`include` and `exclude` select which files' executor calls are checked. A rejected
+file stays an evaluation root when its imports reach an included executor,
+including through an excluded re-export, so its contextual SQL reaches that
+executor. This also applies when the rejected file has direct executor calls of
+its own; those calls are not reported. Rejected files that cannot reach an
+included executor are pruned. `importSpecifier` has no default;
 `executorNames` defaults to `[query, read, write]` only with a configured module.
 `unanalyzableSql` defaults to `report`; `ignore` skips residual unknown SQL and
 `advise` puts its reason, known prefix, and helper lines in non-failing

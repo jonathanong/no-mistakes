@@ -88,3 +88,16 @@ fn parse_failed_inventory_target_does_not_keep_its_importer() {
     assert_eq!(diagnostics.work["postgres.annotation.modules"], 2);
     assert_eq!(diagnostics.work["postgres.annotation.roots"], 1);
 }
+
+#[test]
+fn excluded_mixed_executor_caller_keeps_context_but_direct_only_is_pruned() {
+    let root = fixture("helper-tracing-excluded-mixed-root");
+    let (report, diagnostics) = observed_check(&root);
+    let finding = annotation_finding(&report);
+    assert_eq!(finding["file"], "src/wrap.ts");
+    assert_eq!(finding["line"], 2);
+    // The mixed caller and wrapper are roots. The third, direct-only excluded
+    // module must not seed demand merely because it has an executor call.
+    assert_eq!(diagnostics.work["postgres.annotation.modules"], 3);
+    assert_eq!(diagnostics.work["postgres.annotation.roots"], 2);
+}
