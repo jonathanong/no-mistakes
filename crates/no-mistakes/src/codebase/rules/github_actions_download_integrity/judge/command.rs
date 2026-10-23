@@ -26,9 +26,16 @@ pub(super) fn recover_downloader(
             return None;
         }
         let mut parsed = words::parse(&replaced);
-        if parsed.unterminated_heredoc || parsed.commands.is_empty() {
+        if parsed.commands.is_empty() {
+            if replaced.trim().is_empty() {
+                // Max elides this empty literal wrapper before seeing the command.
+                command.words.remove(at);
+                continue;
+            }
             return None;
         }
+        // A literal command prefix can open a heredoc closed later in the
+        // original script. Its partial parse proves identity, never URL safety.
         if parsed.commands.len() > 1 {
             // Max can substitute a literal prefix containing separators. Keep
             // only downloader identity proof, reporting the whole alias shape.

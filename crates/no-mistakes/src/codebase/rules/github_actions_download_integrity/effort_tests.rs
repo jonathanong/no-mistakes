@@ -230,3 +230,17 @@ fn non_ascii_non_url_operands_do_not_panic_during_prefix_classification() {
     assert!(judge::download_hits(&script, &[]).is_empty());
     assert!(judge::download_hits_low(&script, &[]).is_empty());
 }
+
+#[test]
+fn low_retains_downloader_scope_behind_empty_and_heredoc_prefixes() {
+    for name in ["elided-wrapper-command", "heredoc-command-prefix"] {
+        let script = argv_script(name);
+        let max = judge::download_hits(&script, &[]);
+        assert_eq!(max.len(), 1, "{name}");
+        let before = assign::expansion_count();
+        let low = judge::download_hits_low(&script, &[]);
+        assert_eq!(assign::expansion_count(), before, "{name}");
+        assert_eq!(low.len(), 1, "{name}");
+        assert!(low[0].unanalyzable && low[0].indirect_command, "{name}");
+    }
+}
