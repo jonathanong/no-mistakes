@@ -57,6 +57,11 @@ For `require-storybook-stories`, `low` keeps
 colocated-test coverage without transitive render-chain or dynamic/mock boundary
 analysis. `check({ effort: "low" })` and a check report in `analyzeProject()` use
 the same shared unanalyzable policy as CLI `--effort low`.
+For `postgres-no-offset`, `low` checks
+[literal SQL](rules/postgres-no-offset.md#effort) without helper evaluation.
+`check({ effort: "low" })` and check reports in `analyzeProject()` use the same
+unanalyzable policy, source locations, suppression, and SQL verdict controls as
+the CLI. Raw SQL files retain their existing analysis.
 For `github-actions-job-timeouts`, `check({ effort: "low" })` and a check report
 in `analyzeProject()` use the same covering `github-actions-step-timeouts`
 partner as CLI `--effort low`. With a certified step cap, the job rule skips

@@ -43,8 +43,8 @@ no-mistakes check --format json
 `no-mistakes check --effort low --format json` selects low effort only for
 rules that implement it (`postgres-require-query-annotation`,
 `nextjs-redirect-destinations`, `test-no-unmocked-dynamic-imports`,
-`playwright-unique-test-ids`, `playwright-coverage`, `nextjs-no-caching`, and
-`require-storybook-stories`);
+`playwright-unique-test-ids`, `playwright-coverage`, `nextjs-no-caching`,
+`require-storybook-stories`, and `postgres-no-offset`);
 `max` is the default and preserves current analysis.
 `test-no-unmocked-dynamic-imports` at `low` accepts only a top-level static
 import, a `vi.mock` or `jest.mock` call, or a literal `require()` in setup
@@ -57,6 +57,9 @@ and direct configuration objects; indirect settings follow `unanalyzable`.
 `require-storybook-stories` at `low` keeps direct story and configured colocated
 test coverage; coverage requiring render-chain or dynamic/mock boundary analysis
 follows `unanalyzable`.
+`postgres-no-offset` at `low` checks unescaped literal SQL directly or through
+one local const. Helpers, builders, interpolation, and unsupported executor
+forms follow `unanalyzable`; selected `.sql` files retain their existing checks.
 If a low-effort rule's required partner check is missing or outside its
 configured scope, the check warns and falls back to `max` for that rule.
 JSON reports include `analysisFallbacks` for these partner fallbacks and omit

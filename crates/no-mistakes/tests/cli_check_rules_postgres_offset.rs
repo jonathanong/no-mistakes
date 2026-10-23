@@ -305,3 +305,6 @@ fn project_include_skips_executor_calls_outside_the_project() {
 
 #[path = "cli_check_rules_postgres_offset/builder_mutation_escapes.rs"]
 mod builder_mutation_escapes;
+
+#[path = "cli_check_rules_postgres_offset/effort.rs"]
+mod effort;

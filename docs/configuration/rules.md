@@ -92,6 +92,13 @@ coverage through `options.unanalyzable`. With no direct coverage seeds, explicit
 included components still receive definite missing-story findings. These checks
 require no companion rule; unsupported coverage remains explicit.
 
+[`postgres-no-offset`](../rules/postgres-no-offset.md#effort) supports `low`:
+check unescaped literal SQL directly at an imported executor or through one local
+const, without evaluating helpers or builders. Other SQL inputs follow shared
+`options.unanalyzable` (`report`, `advise`, or `ignore`); legacy
+`unanalyzableSql: fail` means `report`. Selected `.sql` files keep their existing
+analysis. No companion rule is required.
+
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.

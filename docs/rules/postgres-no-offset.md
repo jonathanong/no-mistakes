@@ -6,12 +6,59 @@ Flags executed PostgreSQL SQL that uses an `OFFSET` clause. Offset pagination
 reads skipped rows again on every page and is usually the wrong default next to
 cursor pagination, `LIMIT + 1`, `COUNT`, `EXISTS`, or `ROW_NUMBER()`.
 
-The request boundary prepares embedded SQL and statement facts once. This rule
+The request boundary prepares the requested SQL facts once. This rule
 borrows those facts, including source locations, instead of reading or parsing
-source again. Unparseable statements are skipped while recoverable sibling
+source again. At max, unparseable statements are skipped while recoverable sibling
 statements remain checked; comments and prose are not clauses.
 
-Each complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)
+## Effort
+
+`max` is the default and preserves helper, builder, alias, and finite-alternative
+analysis. `low` checks SQL visible as a literal string or interpolation-free
+template at a directly imported executor, or through one immutable local const:
+
+```ts
+import { query } from '@example/db';
+query('SELECT id FROM posts OFFSET 10');
+const sql = `SELECT id FROM posts OFFSET 0`;
+query(sql);
+```
+
+Both efforts report those OFFSET clauses at their physical SQL locations.
+Low does not evaluate JavaScript helpers or builders. Interpolation, SQL tags,
+computed SQL, further aliases, and executor forms without a direct ownership
+proof remain unanalyzable. JavaScript escapes in SQL literals are also
+unanalyzable at low; use an unescaped literal or select max. Low requires the
+literal SQL to parse completely; malformed SQL follows the same uncertainty
+policy rather than being treated as clear.
+
+```yaml
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorNames: [query]
+      effort: low
+      unanalyzable: advise
+```
+
+The shared `unanalyzable` policy accepts `report` (the default), `advise`, and
+`ignore`. The legacy `unanalyzableSql: fail` spelling means `report`.
+`report` fails on unsupported SQL, `advise` emits a non-failing advisory, and
+`ignore` omits the residual diagnostic. Definite OFFSET violations remain
+findings under every policy. Rewrite uncertain inputs as a direct literal or
+one local const, or use max for inference. Low can report uncertainty that max
+resolves clear, so compare definite findings separately from residuals.
+
+Low-only requests skip the embedded JavaScript evaluator for this rule. Other
+max-effort SQL consumers retain their required facts. SQL files selected by
+`sqlInclude` keep their existing behavior at both efforts. Existing file and
+line suppression directives also suppress low-effort findings and advisories.
+No partner check is required because unsupported shapes remain explicit under
+the selected policy.
+
+At max, each complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)
 of a branching executor call is checked, up to 16 versions. An `OFFSET` in
 only one path is still reported at its physical branch-fragment location;
 all versions without OFFSET pass without an unanalyzable finding. Line
@@ -101,8 +148,8 @@ reported at the OFFSET keyword, just like a SELECT query.
 
 Executed, statically recoverable PostgreSQL SQL must not contain `OFFSET`.
 `.sql` files are checked only when `sqlInclude` matches them. Interpolated
-offsets are checked after placeholder normalization; prose and unparseable
-SQL are ignored. `OFFSET 0` asks for a `MATERIALIZED` CTE. Any other offset
+offsets are checked after placeholder normalization at max; prose is ignored.
+At max, unparseable SQL is skipped; at low, it follows the uncertainty policy. `OFFSET 0` asks for a `MATERIALIZED` CTE. Any other offset
 asks for cursor pagination, `LIMIT + 1`, `COUNT`, `EXISTS`, or `ROW_NUMBER()`.
 
 ### Unanalyzable SQL
