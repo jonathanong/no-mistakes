@@ -2,6 +2,7 @@
 use crate::codebase::ts_source::facts::TsFileFacts;
 use oxc_ast::ast::Program;
 use std::collections::BTreeMap;
+mod assignments;
 mod bindings;
 mod diagnostics;
 mod syntax;

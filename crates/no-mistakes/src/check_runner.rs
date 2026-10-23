@@ -11,6 +11,8 @@ pub(crate) use run_all::run_all_with_sql_verdicts;
 pub(crate) use run_all::{run_all_with_evidence, run_all_with_options, AnalysisOptions};
 
 #[cfg(test)]
+mod low_assignment_tests;
+#[cfg(test)]
 mod sql_verdict_annotation_tests;
 #[cfg(test)]
 mod sql_verdict_catalog_coverage_tests;
