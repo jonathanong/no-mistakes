@@ -17,7 +17,12 @@ function writesNamespaceMember(variable) {
 }
 
 function aliasUsesStayLocal(variable, context, seen = new Set()) {
-  if (seen.has(variable) || writesNamespaceMember(variable)) return false;
+  if (
+    seen.has(variable) ||
+    variable.defs[0].node?.parent?.parent?.type === "ExportNamedDeclaration" ||
+    writesNamespaceMember(variable)
+  )
+    return false;
   seen.add(variable);
   return variable.references.every((reference) => {
     if (reference.init) return true;

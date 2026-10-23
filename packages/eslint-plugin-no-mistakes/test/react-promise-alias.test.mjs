@@ -10,6 +10,7 @@ const cases = [
   ["window-read", [4]],
   ["controls", []],
   ["sibling-write", []],
+  ["export-sibling", []],
   ["root-assign", []],
   ["root-define", []],
   ["root-reassign", []],
