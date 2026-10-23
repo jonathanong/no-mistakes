@@ -10,6 +10,9 @@ use serde::Serialize;
 use std::path::{Path, PathBuf};
 
 mod ast;
+pub(crate) mod effort;
+pub(crate) mod low;
+pub use effort::configure_effort_plan;
 mod bindings;
 mod cache_imports;
 mod config;
@@ -27,6 +30,8 @@ pub const RULE_ID: &str = "nextjs-no-caching";
 pub(crate) struct NextjsCachingFinding {
     pub(crate) line: usize,
     pub(crate) message: String,
+    #[serde(skip)]
+    pub(crate) unanalyzable: bool,
 }
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
@@ -40,6 +45,23 @@ pub(crate) fn check_with_facts_for_aggregate(
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
+    Ok(diagnostics_with_facts_for_aggregate(
+        root,
+        config,
+        shared,
+        inferred_roots,
+        defer_suppression,
+    )?
+    .findings)
+}
+
+pub(crate) fn diagnostics_with_facts_for_aggregate(
+    root: &Path,
+    config: &NoMistakesConfig,
+    shared: &crate::codebase::check_facts::CheckFactMap,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    defer_suppression: bool,
+) -> Result<super::analysis_policy::AnalysisDiagnostics> {
     check_with_optional_inferred(root, config, shared, inferred_roots, defer_suppression)
 }
 
@@ -49,11 +71,13 @@ fn check_with_optional_inferred(
     shared: &crate::codebase::check_facts::CheckFactMap,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     defer_suppression: bool,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<super::analysis_policy::AnalysisDiagnostics> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
-    let mut findings = Vec::new();
+    let mut diagnostics = super::analysis_policy::AnalysisDiagnostics::default();
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     for rule in config.rule_applications(RULE_ID) {
+        let policy = config.effective_rule_analysis(rule)?;
+        let low = policy.effort == crate::config::v2::Effort::Low;
         let target_roots =
             super::target_roots_with_inferred(&root, config, rule, &mut inferred_roots);
         let filter = super::path_filter::RulePathFilter::new_with_inferred(
@@ -80,24 +104,37 @@ fn check_with_optional_inferred(
             let Some(source) = facts.source.as_ref() else {
                 bail!("{} requires source facts for {}", RULE_ID, path.display());
             };
-            let Some(cache_facts) = facts.nextjs_caching.as_ref() else {
+            let selected = if low {
+                &facts.nextjs_caching_low
+            } else {
+                &facts.nextjs_caching
+            };
+            let Some(cache_facts) = selected.as_ref() else {
                 bail!(
                     "{} requires Next.js caching facts for {}",
                     RULE_ID,
                     path.display()
                 );
             };
-            findings.extend(findings_for_file(
-                &root,
-                path,
-                source,
-                cache_facts,
-                defer_suppression,
-            ));
+            let file = relative_slash_path(&root, path);
+            if !defer_suppression && has_disable_file_comment(source, RULE_ID) {
+                continue;
+            }
+            for raw in cache_facts.iter().filter(|raw| {
+                defer_suppression || !has_disable_comment(source, raw.line as u32, RULE_ID)
+            }) {
+                let finding = project_finding(&file, raw);
+                if raw.unanalyzable {
+                    diagnostics.unanalyzable(policy.unanalyzable, finding);
+                } else {
+                    diagnostics.findings.push(finding);
+                }
+            }
         }
     }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::sort_findings(&mut diagnostics.findings);
+    super::sort_findings(&mut diagnostics.advisories);
+    Ok(diagnostics)
 }
 
 fn check_files(
@@ -108,6 +145,7 @@ fn check_files(
     let mut findings = Vec::new();
     let mut inferred_roots = crate::codebase::config::InferredRoots::default();
     for rule in config.rule_applications(RULE_ID) {
+        let policy = config.effective_rule_analysis(rule)?;
         let target_roots =
             super::target_roots_with_inferred(root, config, rule, &mut inferred_roots);
         let filter = super::path_filter::RulePathFilter::new_with_inferred(
@@ -130,10 +168,23 @@ fn check_files(
                     let Ok(source) = std::fs::read_to_string(path) else {
                         return Vec::new();
                     };
-                    let Ok(cache_facts) = extract(path, &source) else {
+                    let Ok(cache_facts) = (if policy.effort == crate::config::v2::Effort::Low {
+                        crate::ast::with_program(path, &source, |program, _| {
+                            low::extract_program(path, &source, program)
+                        })
+                    } else {
+                        extract(path, &source)
+                    }) else {
                         return Vec::new();
                     };
-                    findings_for_file(root, path, &source, &cache_facts, false)
+                    let selected = cache_facts
+                        .into_iter()
+                        .filter(|fact| {
+                            !fact.unanalyzable
+                                || policy.unanalyzable == crate::config::v2::Unanalyzable::Report
+                        })
+                        .collect::<Vec<_>>();
+                    findings_for_file(root, path, &source, &selected, false)
                 })
                 .collect::<Vec<_>>(),
         );
@@ -158,15 +209,19 @@ fn findings_for_file(
         .filter(|finding| {
             defer_suppression || !has_disable_comment(source, finding.line as u32, RULE_ID)
         })
-        .map(|finding| RuleFinding {
-            rule: RULE_ID.to_string(),
-            file: file.clone(),
-            line: finding.line,
-            message: finding.message.clone(),
-            import: None,
-            target: None,
-        })
+        .map(|finding| project_finding(&file, finding))
         .collect()
+}
+
+fn project_finding(file: &str, finding: &NextjsCachingFinding) -> RuleFinding {
+    RuleFinding {
+        rule: RULE_ID.to_string(),
+        file: file.to_string(),
+        line: finding.line,
+        message: finding.message.clone(),
+        import: None,
+        target: None,
+    }
 }
 
 pub(crate) fn extract(path: &Path, source: &str) -> Result<Vec<NextjsCachingFinding>> {

@@ -69,15 +69,16 @@ pub(super) fn caching(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
     crate::perf_trace::trace("rules.nextjs_no_caching", || {
-        Ok(RuleChunk::from_findings(
-            nextjs_no_caching::check_with_facts_for_aggregate(
-                req.root,
-                req.config,
-                req.shared,
-                req.inferred_roots,
-                req.defer_suppression,
-            )?,
-        ))
+        let diagnostics = nextjs_no_caching::diagnostics_with_facts_for_aggregate(
+            req.root,
+            req.config,
+            req.shared,
+            req.inferred_roots,
+            req.defer_suppression,
+        )?;
+        let mut chunk = RuleChunk::from_findings(diagnostics.findings);
+        chunk.advisories = diagnostics.advisories;
+        Ok(chunk)
     })
 }
 

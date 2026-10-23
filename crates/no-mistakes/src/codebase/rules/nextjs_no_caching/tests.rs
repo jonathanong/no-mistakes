@@ -516,3 +516,5 @@ mod config_shapes;
 mod coverage;
 mod nested;
 mod shadowing;
+
+mod effort;

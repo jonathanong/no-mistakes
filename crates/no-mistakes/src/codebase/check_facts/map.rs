@@ -99,6 +99,7 @@ pub(crate) struct CheckFileFacts {
         Option<crate::integration_tests::runner_config::RunnerConfigFileFacts>,
     pub dynamic_imports: Option<TestFacts>,
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
+    pub nextjs_caching_low: Option<Vec<NextjsCachingFinding>>,
     pub storybook: Option<StorybookFileFacts>,
     pub(crate) embedded_sql: Vec<(
         crate::codebase::postgres::EmbeddedSqlOptions,

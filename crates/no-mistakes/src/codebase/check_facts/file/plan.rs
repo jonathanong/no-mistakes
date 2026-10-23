@@ -88,6 +88,7 @@ pub(super) fn requires_parse(
             .is_some_and(|runner| runner.contains(path))
         || plan.dynamic_imports
         || plan.nextjs_caching
+        || plan.nextjs_caching_low
         || plan.storybook
         || plan.server_route_client_boundary
         || !plan.graph.is_empty()

@@ -44,8 +44,9 @@ impl<'a> NextjsCachingVisitor<'a> {
         }
     }
 
-    fn push(&mut self, byte_offset: u32, message: impl Into<String>) {
+    pub(super) fn push(&mut self, byte_offset: u32, message: impl Into<String>) {
         self.findings.push(NextjsCachingFinding {
+            unanalyzable: false,
             line: byte_offset_to_line(self.source, byte_offset as usize) as usize,
             message: message.into(),
         });
@@ -186,6 +187,6 @@ fn unstable_cache_message() -> &'static str {
     "Next.js unstable_cache is disabled; compute this value per request"
 }
 
-fn segment_config_message(name: &str) -> String {
+pub(super) fn segment_config_message(name: &str) -> String {
     format!("Next.js `{name}` cache segment config is disabled; remove static caching")
 }

@@ -53,6 +53,7 @@ pub(super) fn needs_scoped_facts(plan: &CheckFactPlan) -> bool {
         || plan.integration_runner_configs.is_some()
         || plan.dynamic_imports
         || plan.nextjs_caching
+        || plan.nextjs_caching_low
         || plan.storybook
         || plan.source
         || plan.raw_source

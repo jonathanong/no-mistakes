@@ -21,6 +21,7 @@ mod scopes;
 pub(super) struct FusedCheckFacts {
     pub dynamic_imports: Option<TestFacts>,
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
+    pub nextjs_caching_low: Option<Vec<NextjsCachingFinding>>,
     pub storybook: Option<StorybookFileFacts>,
 }
 
@@ -32,10 +33,11 @@ pub(super) fn collect_fused_check_program(
 ) -> FusedCheckFacts {
     let storybook = plan.storybook
         && crate::codebase::check_facts::family_scope::applies(&plan.storybook_paths, path);
-    if !plan.dynamic_imports && !plan.nextjs_caching && !storybook {
+    if !plan.dynamic_imports && !plan.nextjs_caching && !plan.nextjs_caching_low && !storybook {
         return FusedCheckFacts {
             dynamic_imports: None,
             nextjs_caching: None,
+            nextjs_caching_low: None,
             storybook: None,
         };
     }
@@ -46,12 +48,16 @@ pub(super) fn collect_fused_check_program(
         nextjs: plan
             .nextjs_caching
             .then(|| prepare_visitor(path, source, program)),
+        nextjs_low: plan.nextjs_caching_low.then(|| {
+            crate::codebase::rules::nextjs_no_caching::low::Collector::new(path, source, program)
+        }),
         storybook_ids: storybook.then(HashSet::new),
     };
     visitor.visit_program(program);
     FusedCheckFacts {
         dynamic_imports: visitor.dynamic.map(Collector::into_facts),
         nextjs_caching: visitor.nextjs.map(finish_visitor),
+        nextjs_caching_low: visitor.nextjs_low.map(|collector| collector.finish()),
         storybook: visitor.storybook_ids.map(|ids| {
             crate::codebase::storybook::extract_program_with_references(source, program, &ids)
         }),
@@ -61,6 +67,7 @@ pub(super) fn collect_fused_check_program(
 struct CheckProgramVisitor<'a> {
     dynamic: Option<Collector<'a>>,
     nextjs: Option<NextjsCachingVisitor<'a>>,
+    nextjs_low: Option<crate::codebase::rules::nextjs_no_caching::low::Collector<'a>>,
     storybook_ids: Option<HashSet<&'a str>>,
 }
 
@@ -75,6 +82,9 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
     fn visit_import_declaration(&mut self, import: &ImportDeclaration<'a>) {
         if let Some(nextjs) = &mut self.nextjs {
             nextjs.check_import(import);
+        }
+        if let Some(low) = &mut self.nextjs_low {
+            low.import_declaration(import);
         }
         walk::walk_import_declaration(self, import);
     }
@@ -108,12 +118,18 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
             nextjs.check_call(call);
             nextjs.check_fetch_call(call);
         }
+        if let Some(low) = &mut self.nextjs_low {
+            low.call_expression(call);
+        }
         walk::walk_call_expression(self, call);
     }
 
     fn visit_export_named_declaration(&mut self, export: &ExportNamedDeclaration<'a>) {
         if let Some(nextjs) = &mut self.nextjs {
             nextjs.check_export_specifiers(export);
+        }
+        if let Some(low) = &mut self.nextjs_low {
+            low.export_named_declaration(export);
         }
         walk::walk_export_named_declaration(self, export);
     }
@@ -122,12 +138,18 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
         if let Some(nextjs) = &mut self.nextjs {
             nextjs.check_export(export);
         }
+        if let Some(low) = &mut self.nextjs_low {
+            low.export_declaration(export);
+        }
         walk::walk_export_declaration(self, export);
     }
 
     fn visit_export_default_declaration(&mut self, export: &ExportDefaultDeclaration<'a>) {
         if let Some(nextjs) = &mut self.nextjs {
             nextjs.check_default_export(export);
+        }
+        if let Some(low) = &mut self.nextjs_low {
+            low.export_default_declaration(export);
         }
         walk::walk_export_default_declaration(self, export);
     }
@@ -141,6 +163,9 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
     }
 
     fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
+        if let Some(low) = &mut self.nextjs_low {
+            low.function_body(body);
+        }
         self.walk_function_body_scope(body);
     }
 
@@ -186,6 +211,9 @@ impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
         if let Some(nextjs) = &mut self.nextjs {
             nextjs.check_assignment(assignment);
+        }
+        if let Some(low) = &mut self.nextjs_low {
+            low.assignment_expression(assignment);
         }
         walk::walk_assignment_expression(self, assignment);
     }
