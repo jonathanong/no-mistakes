@@ -123,7 +123,7 @@ pub(super) fn extract_elixir_imports(source: &str) -> Vec<String> {
     values
 }
 
-fn expand_brace_members(prefix: &str, rest: &str) -> Vec<String> {
+pub(super) fn expand_brace_members(prefix: &str, rest: &str) -> Vec<String> {
     let Some(body) = rest.strip_prefix('{') else {
         return Vec::new();
     };

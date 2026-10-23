@@ -1,4 +1,4 @@
-use super::{collect_elixir_facts, extract_elixir_imports, primary_module};
+use super::{collect_elixir_facts, expand_brace_members, extract_elixir_imports, primary_module};
 use std::path::{Path, PathBuf};
 
 #[test]
@@ -32,6 +32,17 @@ alias MyApp.{User
 alias MyApp.{User}}
 "#;
     assert!(extract_elixir_imports(source).is_empty());
+}
+
+#[test]
+fn trailing_comment_after_brace_alias_still_expands() {
+    let source = "alias MyApp.{User} # keep\n";
+    assert_eq!(extract_elixir_imports(source), vec!["MyApp.User"]);
+}
+
+#[test]
+fn expand_brace_members_skips_non_brace_rest() {
+    assert!(expand_brace_members("MyApp", "User").is_empty());
 }
 
 #[test]
