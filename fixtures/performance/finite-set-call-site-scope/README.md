@@ -5,7 +5,7 @@ broad call-site consumer while `unique-exports` keeps symbol extraction active
 over the full project. It has no Next.js or test-runner setup.
 
 The literal source tree contains 39 TS/TSX files, 3,529 lines, and 212,875
-bytes. Thirty-two TSX component modules contribute 3,072 ordinary calls,
+bytes. Thirty-two TSX component modules contribute 3,072 helper calls plus 32 transform calls,
 JSX, static imports, type imports, and distinct exports. Two scheduler modules
 contain 42 `scheduler.register` calls total. The narrow config selects only
 the scheduler modules; the broad config contains exact-path specs for all 39
@@ -35,9 +35,9 @@ revisions, including the broad control's expected findings.
 From the repository root, set `FIXTURE_ROOT` to this directory and run:
 
 ```sh
-no-mistakes check --root "$FIXTURE_ROOT" --config "$FIXTURE_ROOT/consuming.yml" --tsconfig "$FIXTURE_ROOT/tsconfig.json" --format json
-no-mistakes check --root "$FIXTURE_ROOT" --config "$FIXTURE_ROOT/broad.yml" --tsconfig "$FIXTURE_ROOT/tsconfig.json" --format json
-no-mistakes check --root "$FIXTURE_ROOT" --config "$FIXTURE_ROOT/control.yml" --tsconfig "$FIXTURE_ROOT/tsconfig.json" --format json
+no-mistakes check --root "$FIXTURE_ROOT" --config "$FIXTURE_ROOT/consuming.yml" --format json
+no-mistakes check --root "$FIXTURE_ROOT" --config "$FIXTURE_ROOT/broad.yml" --format json
+no-mistakes check --root "$FIXTURE_ROOT" --config "$FIXTURE_ROOT/control.yml" --format json
 ```
 
 ## Reproduction and comparison
@@ -48,8 +48,8 @@ tree under `src/`.
 
 Build distinct baseline and candidate binaries from their exact revisions with
 identical toolchain, features, and release settings. Freeze and record each
-binary's SHA-256 before running the comparison; verify the hashes differ. Use
-fresh physical copies of this exact fixture tree for both revisions, and keep
+binary's SHA-256 before running the comparison; verify the hashes differ. Use one
+frozen physical fixture copy for both binaries and fresh invocations. Keep
 jobs, observer settings, command arguments, and machine constant. Do not compare
 one binary against itself or allow a shared build directory to substitute the
 wrong executable.
