@@ -64,6 +64,10 @@ the field when none occurred. A rule without a low implementation emits a
 named, non-failing warning when low was requested and stays at `max`.
 Repository and rule settings use `effort` and `unanalyzable`; the older
 SQL-specific `unanalyzableSql` setting remains an alias.
+For `shellcheck-runner`, a missing ShellCheck executable leaves selected
+scripts unanalyzed. Use `unanalyzable: report` (the default), `advise`, or
+`ignore` to choose whether that gap fails, advises, or is skipped; install
+ShellCheck in the analysis environment to check the scripts.
 
 Grouped residual advice, including a `target` that may list several checks, is described in
 [SQL verdicts](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).

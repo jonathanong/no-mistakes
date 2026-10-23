@@ -31,6 +31,12 @@ const { analyzeProject } = require("no-mistakes");
 [check options](node-api/check-verdicts.md) for precedence and fallback
 warnings.
 
+For `shellcheck-runner`, both APIs apply the same repository or
+rule-application `unanalyzable` policy when selected shell scripts cannot be
+checked because the ShellCheck executable is missing. The default is `report`;
+`advise` returns a non-failing advisory and `ignore` skips that uncertainty.
+See [the rule contract](rules/shellcheck-runner.md#what-it-catchesrequires).
+
 For `postgres-require-query-annotation`, `low` uses the same
 [literal-head proofs](rules/postgres-require-query-annotation.md#effort) and
 unanalyzable policy in both APIs; it omits annotation evaluator preparation.

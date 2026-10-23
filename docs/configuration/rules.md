@@ -39,6 +39,12 @@ typed parameter, for example `function run(client: PoolClient) { ... }`. Merely
 configuring a type does not prove a complex receiver. The policy does not promote
 unresolved calls into executed SQL.
 
+`shellcheck-runner` uses the shared policy when selected scripts cannot be
+checked because the ShellCheck executable is missing. The repository policy
+defaults to `report`; `options.unanalyzable` overrides it for one rule
+application. This rule has no low-effort analysis, so missing-tool reporting is
+independent of the `effort` setting.
+
 Helper and callback tracing still checks every recovered leading prefix.
 Grouped advice, including a `target` that may list several checks, is described
 in [SQL verdicts](../postgres-sql-verdicts.md).
