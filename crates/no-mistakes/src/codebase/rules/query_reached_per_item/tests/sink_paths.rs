@@ -146,6 +146,7 @@ fn production_reachable_reconstructs_only_reached_sink_paths() {
             // all-target implementation even when every finding is identical.
             assert_eq!(constructed, expected_paths);
             assert!(actual == legacy_reachable(&graph, &roots, &sinks, &excluded));
+            assert_eq!(take_call_path_count(), all.len());
             if excluded_name.is_none() {
                 assert_eq!(constructed, 2);
                 assert!(all.len() > constructed + 10);
