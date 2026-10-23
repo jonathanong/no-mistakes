@@ -8,21 +8,31 @@ use anyhow::Result;
 pub(crate) const REWRITE: &str =
     "use a literal test id such as data-pw=\"save-button\", or a prop with a literal default";
 
-pub(super) struct UniqueTestIdsPolicy {
+pub(super) struct RuleEffortPolicy {
     pub(super) low: bool,
     pub(super) unanalyzable: Unanalyzable,
 }
 
 /// Unique-test-ids checks each selector once. Any application that is not low
 /// keeps recovery at max so a max application cannot lose findings.
-pub(super) fn unique_test_ids_policy(config: &NoMistakesConfig) -> Result<UniqueTestIdsPolicy> {
+pub(super) fn unique_test_ids_policy(config: &NoMistakesConfig) -> Result<RuleEffortPolicy> {
+    rule_effort_policy(config, PLAYWRIGHT_UNIQUE_TEST_IDS)
+}
+
+/// Coverage checks each selector once. Any application that is not low keeps
+/// recovery at max so a max application cannot lose findings.
+pub(super) fn coverage_policy(config: &NoMistakesConfig) -> Result<RuleEffortPolicy> {
+    rule_effort_policy(config, PLAYWRIGHT_COVERAGE)
+}
+
+fn rule_effort_policy(config: &NoMistakesConfig, rule_id: &str) -> Result<RuleEffortPolicy> {
     let mut saw = false;
     let mut low = true;
     let mut unanalyzable = Unanalyzable::Ignore;
     for rule in config
         .rules
         .iter()
-        .filter(|rule| rule.enabled && rule.rule == PLAYWRIGHT_UNIQUE_TEST_IDS)
+        .filter(|rule| rule.enabled && rule.rule == rule_id)
     {
         saw = true;
         let resolved = config.effective_rule_analysis(rule)?;
@@ -32,12 +42,12 @@ pub(super) fn unique_test_ids_policy(config: &NoMistakesConfig) -> Result<Unique
         unanalyzable = stricter(unanalyzable, resolved.unanalyzable);
     }
     if !saw || !low {
-        return Ok(UniqueTestIdsPolicy {
+        return Ok(RuleEffortPolicy {
             low: false,
             unanalyzable: Unanalyzable::Report,
         });
     }
-    Ok(UniqueTestIdsPolicy {
+    Ok(RuleEffortPolicy {
         low: true,
         unanalyzable,
     })

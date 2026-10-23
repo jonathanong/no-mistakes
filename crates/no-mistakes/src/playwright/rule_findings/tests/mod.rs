@@ -6,8 +6,10 @@ use crate::playwright::analysis::types::{
 use crate::playwright::rules::{
     PLAYWRIGHT_COVERAGE, PLAYWRIGHT_PREFER_TEST_ID_LOCATORS, PLAYWRIGHT_UNIQUE_HTML_IDS,
 };
+use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
 use std::sync::Arc;
 
+mod coverage_effort;
 mod unique_effort;
 
 fn coverage_all(enabled: bool) -> CoverageFindingOptions {
@@ -31,7 +33,7 @@ fn findings_from_report(
         unique_html_ids,
         prefer_test_id_locators,
         coverage,
-        None,
+        LowEffortFindings::default(),
     )
     .findings
 }

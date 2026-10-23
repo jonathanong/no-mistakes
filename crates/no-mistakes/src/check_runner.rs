@@ -11,6 +11,9 @@ pub(crate) use run_all::run_all_with_sql_verdicts;
 pub(crate) use run_all::{run_all_with_evidence, run_all_with_options, AnalysisOptions};
 
 #[cfg(test)]
+#[path = "check_runner/coverage_effort/tests.rs"]
+mod coverage_effort;
+#[cfg(test)]
 mod low_assignment_tests;
 #[cfg(test)]
 mod low_loop_header_tests;

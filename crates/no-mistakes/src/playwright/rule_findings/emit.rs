@@ -1,5 +1,7 @@
 use super::CoverageFindingOptions;
+use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::RuleFinding;
+use crate::config::v2::Unanalyzable;
 use crate::playwright::analysis::types::{Analysis, CoverageReport, DuplicateSelector, Edge};
 use crate::playwright::rules::{
     PLAYWRIGHT_COVERAGE, PLAYWRIGHT_PREFER_TEST_ID_LOCATORS, PLAYWRIGHT_UNIQUE_HTML_IDS,
@@ -11,6 +13,7 @@ use std::collections::BTreeMap;
 pub(super) fn coverage(
     report: &CoverageReport,
     options: CoverageFindingOptions,
+    literal_selectors_only: bool,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     if options.routes {
@@ -31,11 +34,11 @@ pub(super) fn coverage(
     if !options.selectors {
         return findings;
     }
-    for selector in report
-        .selectors
-        .iter()
-        .filter(|selector| !selector.covered && !selector.unsupported_dynamic)
-    {
+    for selector in report.selectors.iter().filter(|selector| {
+        !selector.covered
+            && !selector.unsupported_dynamic
+            && !(literal_selectors_only && !selector.literal_exact)
+    }) {
         findings.push(RuleFinding {
             rule: PLAYWRIGHT_COVERAGE.to_string(),
             file: selector.file.clone(),
@@ -46,6 +49,42 @@ pub(super) fn coverage(
         });
     }
     findings
+}
+
+pub(super) fn unanalyzable(
+    diagnostics: &mut AnalysisDiagnostics,
+    report: &CoverageReport,
+    rule: &str,
+    policy: Option<Unanalyzable>,
+    skip_html_ids: bool,
+) {
+    let Some(policy) = policy else {
+        return;
+    };
+    for selector in &report.selectors {
+        if selector.literal_exact {
+            continue;
+        }
+        if skip_html_ids && selector.attribute == HTML_ID_ATTRIBUTE {
+            continue;
+        }
+        diagnostics.unanalyzable(
+            policy,
+            RuleFinding {
+                rule: rule.to_string(),
+                file: selector.file.clone(),
+                line: selector.line,
+                message: format!(
+                    "selector [{}=\"{}\"] is unanalyzable at effort low; {}",
+                    selector.attribute,
+                    selector.value,
+                    crate::playwright::rules::effort::REWRITE
+                ),
+                import: None,
+                target: Some(format!("{}={}", selector.attribute, selector.value)),
+            },
+        );
+    }
 }
 
 fn uncovered_selector_message(

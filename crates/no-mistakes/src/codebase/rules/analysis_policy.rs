@@ -52,6 +52,11 @@ const SUPPORT: &[RuleEffortSupport] = &[
         partners: &[],
         partner_scope: |_, _| false,
     },
+    RuleEffortSupport {
+        rule: "playwright-coverage",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
 ];
 
 pub fn prepare_rule_analysis(
