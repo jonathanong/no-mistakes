@@ -9,8 +9,9 @@ expression is a configured function of the primary key, such as
 ```yaml
 rules:
   - rule: postgres-generated-column-predicates
+    scope: repository
     options:
-      include: ["src/**/*.ts"]
+      executorNames: []
       sqlInclude: ["db/**/*.sql"]
       functions: [uuid_extract_timestamp]
       requireArgumentIsPrimaryKey: true
@@ -113,7 +114,16 @@ their existing scopes. See [the migration notes](../migrations/explicit-postgres
 
 ## Valid example
 
+The schema definitions make `orders.created_at` generated and
+`invoices.created_at` ordinary. Both are selected by `sqlInclude`.
+
 ```sql
+CREATE TABLE orders (
+  id uuid PRIMARY KEY,
+  created_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id)) STORED
+);
+CREATE TABLE invoices (id uuid PRIMARY KEY, created_at timestamptz);
+
 SELECT id, created_at FROM orders ORDER BY id DESC LIMIT 20;
 SELECT id FROM orders WHERE id > $1;
 SELECT id FROM orders WHERE created_at IS NULL;
@@ -126,8 +136,29 @@ SELECT id FROM invoices ORDER BY created_at;
 ## Counterexample
 
 ```sql
+CREATE TABLE orders (
+  id uuid PRIMARY KEY,
+  created_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id)) STORED
+);
+
 SELECT id FROM orders WHERE created_at > $1;
+```
+
+```sql
+CREATE TABLE orders (
+  id uuid PRIMARY KEY,
+  created_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id)) STORED
+);
+
 SELECT id FROM orders ORDER BY created_at DESC LIMIT 20;
+```
+
+```sql
+CREATE TABLE orders (
+  id uuid PRIMARY KEY,
+  created_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id)) STORED
+);
+
 SELECT o.id FROM orders o WHERE o.created_at BETWEEN $1 AND $2;
 ```
 

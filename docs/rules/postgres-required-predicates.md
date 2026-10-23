@@ -27,6 +27,7 @@ rules:
   - rule: postgres-required-predicates
     scope: repository
     options:
+      executorNames: []
       sqlInclude: ["**/*.sql"]
       schemaCatalogPath: db/schema.json
       partitionKeys: require
@@ -150,7 +151,43 @@ See [Executor SQL built by helpers](postgres-required-predicates-helpers.md) and
 
 ## Valid example
 
+This catalog makes `events.account_id` a partition key; `orders.account_id`
+is required by `relations` and `topics` needs the textual predicate:
+
+```json
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "topics": {
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "parent_id": {"dataType": "uuid", "nullable": true}
+      }
+    },
+    "events": {
+      "relationKind": "partitioned table",
+      "physicalPartition": {"key": "RANGE (account_id)"},
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "account_id": {"dataType": "uuid"},
+        "kind": {"dataType": "text"}
+      }
+    },
+    "orders": {
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "account_id": {"dataType": "uuid"},
+        "status": {"dataType": "text"}
+      }
+    }
+  }
+}
+```
+
 ```sql
+-- db/queries.sql
 SELECT id FROM topics WHERE parent_id IS NOT NULL AND id = $1;
 SELECT id FROM events WHERE account_id = $1;
 SELECT id FROM events WHERE account_id = ANY($1::uuid[]) AND kind = 'login';
@@ -163,7 +200,42 @@ not the partitioned table. Quoted CTE and column names preserve their case; all 
 
 ## Counterexample
 
+Use the same catalog to check all three requirements:
+
+```json
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "topics": {
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "parent_id": {"dataType": "uuid", "nullable": true}
+      }
+    },
+    "events": {
+      "relationKind": "partitioned table",
+      "physicalPartition": {"key": "RANGE (account_id)"},
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "account_id": {"dataType": "uuid"},
+        "kind": {"dataType": "text"}
+      }
+    },
+    "orders": {
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "account_id": {"dataType": "uuid"},
+        "status": {"dataType": "text"}
+      }
+    }
+  }
+}
+```
+
 ```sql
+-- db/queries.sql
 SELECT id FROM topics WHERE id = $1;
 SELECT id FROM events WHERE kind = 'login';
 DELETE FROM orders WHERE id = $1;

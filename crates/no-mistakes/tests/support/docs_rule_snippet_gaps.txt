@@ -4,15 +4,6 @@ no-mistakes-config.md: Counterexample[0] expected
 playwright-coverage.md: Valid example[0] run error:
 playwright-coverage.md: Counterexample[0] run error:
 playwright-prefer-test-id-locators.md: Counterexample[0] expected 
-postgres-bounded-statements.md: Valid example[0] run error:
-postgres-bounded-statements.md: Counterexample[0] run error:
-postgres-generated-column-predicates.md: Valid example[0] run error:
-postgres-generated-column-predicates.md: Counterexample[0] run error:
-postgres-require-query-annotation.md: Counterexample[0] expected 
-postgres-required-predicates.md: Valid example[0] run error:
-postgres-required-predicates.md: Counterexample[0] run error:
-postgres-sql-shape-policy.md: Valid example[0] run error:
-postgres-sql-shape-policy.md: Counterexample[0] run error:
 query-reached-per-item.md: Valid example[0] run error:
 query-reached-per-item.md: Counterexample[0] run error:
 require-storybook-stories.md: Valid example[0] run error:
