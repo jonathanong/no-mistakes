@@ -1,5 +1,6 @@
 use super::*;
 
+mod coverage;
 mod options;
 
 fn argv_script(name: &str) -> String {

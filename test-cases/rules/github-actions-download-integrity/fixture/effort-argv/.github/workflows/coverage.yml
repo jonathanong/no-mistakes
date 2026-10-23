@@ -1,0 +1,30 @@
+name: Download target and option boundary controls
+on: push
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: downloader-alias-without-http-url
+        run: |
+          CMD=curl
+          $CMD README.md
+      - name: unrelated-literal-binding
+        run: |
+          FOO=bar
+          $CMD https://untrusted.example.invalid/not-proven-download
+      - name: separator-only-command-prefix
+        run: |
+          CMD=';'
+          $CMD https://untrusted.example.invalid/not-a-command
+      - name: multiple-non-downloader-commands
+        run: |
+          CMD='echo one; echo two'
+          $CMD https://untrusted.example.invalid/not-a-download
+      - name: explicit-end-of-options
+        run: curl -- https://api.github.com/repos/example/project
+      - name: dynamic-short-option-name
+        run: |
+          FLAG=o
+          curl -$FLAG https://untrusted.example.invalid/output-filename
+      - name: ordinary-short-option-cluster
+        run: curl -fsSL https://api.github.com/repos/example/project
