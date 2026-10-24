@@ -1,0 +1,19 @@
+version: 2
+projects:
+  inferred-store:
+    type: nextjs
+    rules: [nextjs-no-api-routes, nextjs-no-caching]
+  admin:
+    type: nextjs
+    root: apps/admin
+    rules: [nextjs-no-api-routes]
+
+rules:
+  - rule: nextjs-no-api-routes
+    projects: [inferred-store, admin]
+    exclude:
+      - apps/admin/app/api/excluded/route.ts
+  - rule: nextjs-no-caching
+    projects: [inferred-store]
+    include: [src/**]
+    exclude: [src/invalid-utf8.ts]

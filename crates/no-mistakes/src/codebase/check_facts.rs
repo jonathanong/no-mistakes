@@ -105,7 +105,8 @@ pub use collect::{
 pub(crate) use collect::{collect_check_facts_with_precollected_graph_facts, graph_only_files};
 #[doc(hidden)]
 pub use family_scope::{
-    configure_family_path_scopes, configure_nextjs_caching_scope, FamilyPathScope,
+    configure_family_path_scopes, configure_nextjs_api_route_source_scope,
+    configure_nextjs_caching_scope, FamilyPathScope,
 };
 pub(crate) use file::{
     collect_file_facts_from_program, collect_file_facts_with_session_and_sources, is_mdx_file,

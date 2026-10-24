@@ -8,7 +8,7 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 mod aggregate;
-pub(crate) use aggregate::check_with_facts_for_aggregate;
+pub(crate) use aggregate::{check_with_facts_for_aggregate, target_roots};
 
 pub const RULE_ID: &str = "nextjs-no-api-routes";
 
@@ -65,7 +65,7 @@ fn finding_for_file(
     })
 }
 
-fn is_nextjs_api_route(path: &Path, target_roots: &[PathBuf]) -> bool {
+pub(crate) fn is_nextjs_api_route(path: &Path, target_roots: &[PathBuf]) -> bool {
     target_roots.iter().any(|target_root| {
         let Ok(rel) = path.strip_prefix(target_root) else {
             return false;

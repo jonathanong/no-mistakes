@@ -54,6 +54,10 @@ pub struct CheckFactPlan {
     pub boundary_paths: super::FamilyPathScope,
     pub source: bool,
     pub raw_source: bool,
+    /// Only route candidates require raw source for configured checks. Direct
+    /// fact requests keep the historical whole-file default.
+    #[doc(hidden)]
+    pub raw_source_paths: super::FamilyPathScope,
     pub postgres_schema: bool,
     pub embedded_sql: bool,
     /// Owned helper/callback summaries for the annotation-only projection.

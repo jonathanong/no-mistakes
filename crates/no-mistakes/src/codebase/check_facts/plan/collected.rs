@@ -18,7 +18,10 @@ impl CheckFactPlan {
         }
         plan.module_bindings |= self.query_annotation_heads;
         plan.symbols |= self.symbols;
-        plan.source |= self.source || self.raw_source;
+        plan.source |= self.source
+            || (self.raw_source
+                && (self.react
+                    || matches!(self.raw_source_paths, super::super::FamilyPathScope::All)));
         plan.react |= self.react;
         plan.queue_project |= self.queue;
         plan

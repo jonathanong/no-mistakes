@@ -84,6 +84,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         server_route_client_boundary: enabled.boundary_rules,
         boundary_paths: Default::default(),
         raw_source: enabled.nextjs_api_routes,
+        raw_source_paths: Default::default(),
         // Integration parse failures must retain their directive text so the
         // prepared integration projection can distinguish disabled suite
         // tests from malformed imported helpers without a second source read.
