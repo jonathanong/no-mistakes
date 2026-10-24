@@ -1,5 +1,6 @@
 use super::keys::yaml_top_level_key_line;
-use super::{finding, RuleFinding, FIX};
+use super::scan::finding;
+use super::{RuleFinding, FIX};
 use crate::codebase::ts_source::SourceStore;
 use std::path::Path;
 
@@ -21,7 +22,8 @@ pub(super) fn included_override_findings(
     else {
         return Vec::new();
     };
-    let mut findings = Vec::new();
+    let (mut findings, failed_sources) =
+        super::unavailable_includes::collect(root, source, sources, files);
     let root_selected = files.iter().any(|candidate| {
         crate::codebase::ts_resolver::normalize_path(candidate)
             == crate::codebase::ts_resolver::normalize_path(path)
@@ -45,7 +47,17 @@ pub(super) fn included_override_findings(
             .iter()
             .filter(|issue| issue.affects("overrides"))
         {
-            findings.push(finding(root, path, 1, issue.message.clone()));
+            // A selected source has a more precise read/parse diagnostic; retain
+            // independent invalid grants and escape errors on the selected root.
+            if failed_sources
+                .iter()
+                .any(|source| issue.message.contains(&format!("\"{source}\"")))
+            {
+                continue;
+            }
+            let mut note = finding(root, path, 1, issue.message.clone());
+            note.target = Some("unanalyzable".to_owned());
+            findings.push(note);
         }
     }
     for included in resolved.included_override_paths {
@@ -56,8 +68,17 @@ pub(super) fn included_override_findings(
         if !allowed {
             continue;
         }
-        let Ok(text) = sources.read_path(&included) else {
-            continue;
+        let text = match sources.read_path(&included) {
+            Ok(text) => text,
+            Err(error) => {
+                findings.push(super::super::manifest_analysis::unavailable(
+                    root,
+                    &included,
+                    super::RULE_ID,
+                    error,
+                ));
+                continue;
+            }
         };
         findings.push(finding(
             root,

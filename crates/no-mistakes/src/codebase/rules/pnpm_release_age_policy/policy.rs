@@ -35,7 +35,11 @@ pub(super) enum CooldownEntry {
     Other,
 }
 
-pub(super) fn check(opts: &Options, snapshot: &Snapshot) -> Vec<Issue> {
+pub(super) fn check_with_complete_names(
+    opts: &Options,
+    snapshot: &Snapshot,
+    complete: bool,
+) -> Vec<Issue> {
     let mut issues = Vec::new();
     let permanent = package_names(&opts.permanent_packages);
     let temporary = validation::temporary_selectors(opts, &mut issues);
@@ -44,7 +48,7 @@ pub(super) fn check(opts: &Options, snapshot: &Snapshot) -> Vec<Issue> {
     if let Some(cooldown) = &snapshot.cooldown {
         checks::dependabot(&mut issues, cooldown, &permanent);
     }
-    checks::graph(&mut issues, opts, snapshot, &permanent);
+    checks::graph(&mut issues, opts, snapshot, &permanent, complete);
     if let Some(keys) = &snapshot.lockfile_keys {
         checks::temporary_lockfile(&mut issues, keys, &temporary, lock_key_matches_selector);
     }

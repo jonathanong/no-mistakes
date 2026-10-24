@@ -55,7 +55,7 @@ fn kind_of_is_present_in_the_project_document() {
 }
 
 #[test]
-fn missing_lockfile_file_is_not_a_parse_error() {
+fn configured_missing_lockfile_is_unanalyzable_without_false_absence() {
     let root = issue_root("two-doc");
     let config = NoMistakesConfig {
         rules: vec![RuleDef {
@@ -81,16 +81,18 @@ fn missing_lockfile_file_is_not_a_parse_error() {
     .map(|file| root.join(file))
     .collect::<Vec<_>>();
     let findings = check_with_files(&root, &config, &files).unwrap();
+    // Missing requested lockfile contents cannot prove a package absent.
     assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("absent from")),
+        findings.iter().any(|finding| {
+            finding.target.as_deref() == Some("unanalyzable")
+                && finding.message.contains("could not be read")
+        }),
         "{findings:?}"
     );
     assert!(
         !findings
             .iter()
-            .any(|finding| finding.message.contains("could not be parsed")),
+            .any(|finding| finding.message.contains("absent from")),
         "{findings:?}"
     );
 }

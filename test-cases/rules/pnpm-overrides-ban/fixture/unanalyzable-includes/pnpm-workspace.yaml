@@ -1,0 +1,5 @@
+include:
+  ./pnpm/broken.yaml: [overrides]
+  ./pnpm/invalid-utf8.yaml: [overrides]
+  ./pnpm/excluded.yaml: [overrides]
+  ./pnpm/other.yaml: invalid-grant

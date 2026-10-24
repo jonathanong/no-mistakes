@@ -163,6 +163,10 @@ pub(super) fn run(
     } else {
         config
     };
+    let (config, manifest_diagnostics) =
+        super::manifests::run(root, config, files, &prepared.sources, defer_suppression)?;
+    diagnostics.append(manifest_diagnostics);
+    let config = config.as_ref();
     let findings = if defer_suppression {
         rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
             root, config, files, prepared, facts,

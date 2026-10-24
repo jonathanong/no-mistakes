@@ -183,15 +183,17 @@ fn skips_non_object_package_json() {
 }
 
 #[test]
-fn skips_unreadable_workspace_and_invalid_json() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let missing = root.join("pnpm-workspace.yaml");
-    let invalid = root.join("package.json");
-    std::fs::write(&invalid, "{not json").unwrap();
-    let files = vec![missing, invalid];
-    let findings = check_with_files(root, &config(), &files).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
+fn reports_unreadable_workspace_and_invalid_json() {
+    let root = fixture_root("unanalyzable");
+    let files = vec![
+        root.join("pnpm-workspace.yaml"),
+        root.join("packages/broken/package.json"),
+    ];
+    let findings = check_with_files(&root, &config(), &files).unwrap();
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(findings
+        .iter()
+        .all(|finding| finding.target.as_deref() == Some("unanalyzable")));
 }
 
 #[test]

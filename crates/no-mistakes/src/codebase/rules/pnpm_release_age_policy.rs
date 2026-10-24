@@ -6,6 +6,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod included_exclude;
+mod inputs;
 mod lockfile;
 mod policy;
 mod scan;
@@ -63,40 +64,10 @@ impl Options {
     }
 }
 
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
-}
-
-pub(crate) fn check_with_files_and_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.try_rule_options()?;
-        if !opts.configured() {
-            continue;
-        }
-        let target_roots = super::target_roots(root, config, rule);
-        let skip = super::skip_dir_set(config);
-        let files: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
-            .cloned()
-            .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan::scan(root, &opts, &files, sources));
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
+super::borrowed_source_rule_entrypoints!();
+mod effort;
+pub(crate) use effort::check_with_files_sources_and_deferred_suppression;
+pub use effort::diagnostics_with_files_and_sources;
 
 fn rel(root: &Path, path: &Path) -> String {
     relative_slash_path(root, path)

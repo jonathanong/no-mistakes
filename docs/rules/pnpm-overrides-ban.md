@@ -68,7 +68,9 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, the intent is that nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)). Known gap: invalid workspace YAML is already reported, but an unreadable pnpm workspace file and an unparseable or unreadable `package.json` are currently skipped without a finding ([#2659](https://github.com/jonathanong/no-mistakes/issues/2659)).
+Selected package manifests, workspace YAML, and declared included override files that cannot be read or parsed produce an `unanalyzable` diagnostic containing the file and error. Repair malformed JSON/YAML or restore read access so dependency policy can be checked. Absent optional inputs are allowed unless explicitly configured.
+
+`options.unanalyzable` uses the shared analysis policy: `report` (default) emits a finding, `advise` emits an advisory, and `ignore` omits the uncertain result. Definite violations remain findings under every policy. Read/parse failures are file-level diagnostics at line 1; use a file suppression for these failures. File suppressions apply before policy routing; malformed JSON can carry a leading `// no-mistakes-disable-file pnpm-overrides-ban` directive, and YAML supports the corresponding `#` directive. Rule include/exclude and project scope still limit the selected files. A custom rule `message` prefixes these diagnostics. When only included files are selected, the root workspace supplies declarations as context; diagnostics stay on selected declared files.
 
 ## Suppression
 

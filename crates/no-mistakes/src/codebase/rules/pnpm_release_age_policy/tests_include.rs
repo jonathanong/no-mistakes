@@ -1,5 +1,5 @@
 use super::included_exclude::included_exclude;
-use super::policy::{check as policy_check, ExcludeEntry, Snapshot};
+use super::policy::{check_with_complete_names as policy_check, ExcludeEntry, Snapshot};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -121,7 +121,7 @@ fn conflict_entries_skip_exclude_drift() {
         active_names: HashSet::new(),
         lockfile_keys: None,
     };
-    let messages = policy_check(&opts, &snapshot)
+    let messages = policy_check(&opts, &snapshot, true)
         .into_iter()
         .map(|issue| issue.message)
         .collect::<Vec<_>>();

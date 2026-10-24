@@ -41,7 +41,9 @@ pub(super) fn included_exclude(
         .iter()
         .filter(|issue| issue.affects("minimumReleaseAgeExclude"))
     {
-        notes.push(finding(file.clone(), format!("{file}: {}", issue.message)));
+        let mut note = finding(file.clone(), format!("{file}: {}", issue.message));
+        note.target = Some("unanalyzable".to_owned());
+        notes.push(note);
     }
     let exclude = match resolved.release_age_exclude {
         crate::codebase::workspaces::ReleaseAgeExclude::FromRoot => fallback,
