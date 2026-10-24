@@ -53,7 +53,10 @@ for (const id of userIds) {
   defaults to `[]`.
 - `executorTypeNames` lists imported type names whose annotated parameters
   (including optional and inline-destructured ones) are executors inside the
-  declaring function. It defaults to `[]`.
+  declaring function. With typed linting, this also follows required properties
+  of declared options types, including named interfaces, type aliases, and
+  destructured aliases. The property must resolve to a configured imported
+  executor type. It defaults to `[]`.
 - `trustedSqlTags` defaults to `[]`. Each entry has `module` and `name`.
   It is accepted so a shared executor configuration validates. This rule still
   reads every tagged template.

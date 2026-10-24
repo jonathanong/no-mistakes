@@ -78,6 +78,11 @@ dispatch({ query });
 ```
 
 This proof requires typed linting for both local and imported options types.
+The shared executor discovery also follows these declared properties inside
+the helper, including a destructured alias such as
+`function load({ query: execute }: QueryOptions)`. SQL checks inspect the
+executor calls there. A property may have another name, such as `execute`,
+when its declared type proves the same configured executor identity.
 Optional fields, structural callable lookalikes, computed keys, and objects
 containing a spread still report. Nested containers such as
 `dispatch({ nested: { query: read } })` and forwarding callbacks remain
@@ -104,6 +109,8 @@ receivers, and spread or computed calls still report. Storing an executor as a
 value, such as
 `locks.set(otherKey, read)` or `set.add(read)`, still reports because it can be
 retrieved and called later. Put data in the value slot instead.
+Assignments to aliases and storage inside another collection can expose a
+receiver to method replacement, so key uses of those receivers keep reporting.
 
 These call shapes are also judged:
 
