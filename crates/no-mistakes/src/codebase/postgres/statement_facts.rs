@@ -2,6 +2,7 @@ mod bounds;
 mod debug;
 mod iteration;
 mod locations;
+mod parse_failures;
 mod select;
 mod transformed;
 mod writes;
@@ -90,6 +91,8 @@ pub struct SqlStatementFileFacts {
     /// Limited single-table queries ordered by plain columns: pages of a key walk.
     pub sweeps: Vec<SqlSweepFact>,
     pub parse_failed: bool,
+    /// Source-ordered failed statement starts from the existing recovery pass.
+    pub parse_failures: Vec<super::types::SqlUnanalyzableStatement>,
     pub insert_keyword_count: usize,
     pub has_top_level_not_exists: bool,
     pub origin_line: usize,

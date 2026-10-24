@@ -17,6 +17,7 @@ pub(super) enum StatementProjection {
 #[derive(Default)]
 pub(super) struct StatementSources<'a> {
     pub(super) projection: StatementProjection,
+    pub(super) parse_failures: &'a [crate::codebase::postgres::SqlUnanalyzableStatement],
     pub(super) locations: crate::codebase::postgres::statement_facts::SqlLocationDemand,
     pub(super) tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
     // `recovery` is parallel to statements after a failed strict parse.

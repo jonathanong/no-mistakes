@@ -34,7 +34,8 @@ fn review_followups_preserve_shapes_locations_and_semantics() {
         ("polarity", vec![1, 2, 3, 4, 5, 6]),
         ("cte", vec![1, 2]),
         ("operators", vec![2, 4]),
-        ("count-edges", vec![1]),
+        // The malformed COUNT at line 3 has its own uncertainty location.
+        ("count-edges", vec![1, 3]),
     ] {
         let findings = check_with_files(
             &root,

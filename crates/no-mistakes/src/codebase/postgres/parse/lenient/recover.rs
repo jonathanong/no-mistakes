@@ -2,6 +2,7 @@ use super::LocatedStatement;
 mod bodies;
 mod copy;
 mod failure;
+pub(super) use failure::failed_source;
 mod locations;
 mod partition;
 mod procedural;
@@ -12,7 +13,7 @@ use bodies::{peel_do_body, recover_chr_encoded};
 use partition::recover_partition_change;
 pub(crate) use procedural::BodyState;
 use schema::start as schema_ddl_start;
-use sqlparser::ast::{DiscardObject, Statement};
+use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
@@ -22,6 +23,7 @@ pub(super) fn parse_chunks_with_function_calls(
     chunks: Vec<Vec<Token>>,
     original: &[TokenWithSpan],
     allow_concurrent_detach: bool,
+    recursive_views: &super::super::RecursiveViews,
 ) -> Vec<LocatedStatement> {
     let mut located = original
         .split(|token| token.token == Token::SemiColon)
@@ -48,27 +50,29 @@ pub(super) fn parse_chunks_with_function_calls(
         // sibling must not inherit this chunk's ON CONFLICT target.
         let tokens = original.map(Arc::<[TokenWithSpan]>::from);
         let mut handled_procedural = None;
-        let produced = parse_chunk(
+        let mut produced = parse_chunk(
             chunk,
             aligned.as_deref(),
             allow_concurrent_detach && !transaction_open,
             &mut handled_procedural,
         );
+        // Rejected compatibility ASTs need the same leaf failure marker as parse errors.
+        produced.retain(|item| recursive_views.validate(&item.statement).is_ok());
+        if handled_procedural.is_none() {
+            failure::partial_chunk(original, &mut produced);
+        }
         copy_data_pending = original.is_some_and(copy::owns_terminator);
         if produced.is_empty() || handled_procedural == Some(false) {
             if handled_procedural == Some(true) {
                 continue;
             }
             if let Some(tokens) = &tokens {
-                let mut marker = LocatedStatement::functions(
-                    Statement::Discard {
-                        object_type: DiscardObject::ALL,
-                    },
-                    false,
-                );
-                marker.recovery_failure = failure::unrecoverable_chunk(tokens, chunk_ordinal);
-                marker.chunk_tokens = Some(Arc::clone(tokens));
-                statements.push(marker);
+                statements.push(failure::marker(
+                    tokens,
+                    chunk_ordinal,
+                    handled_procedural == Some(false),
+                    &produced,
+                ));
             }
             if produced.is_empty() {
                 continue;
@@ -104,13 +108,15 @@ fn parse_chunk(
 ) -> Vec<LocatedStatement> {
     if let Some(body) = peel_do_body(&chunk) {
         let body = locations::align_do_body(&body, original);
-        let filtered = procedural::filter_body(super::parse_with_sources(&body, true, false));
         // Keep recovered facts alongside the outer marker if body lexing fails.
         *handled_procedural = Some(
             !body.trim().is_empty()
                 && !super::super::unicode::tokenize_with_location(&body, false).is_empty(),
         );
-        return filtered;
+        return procedural::filter_body(
+            super::parse_with_sources(&body, true, false),
+            *handled_procedural == Some(false),
+        );
     }
     let dialect = PostgreSqlDialect {};
     let mut parser = match original {
@@ -161,13 +167,6 @@ fn parse_chunk(
             }
         }
     }
-}
-
-fn is_begin_or_end(statement: &Statement) -> bool {
-    matches!(
-        statement,
-        Statement::StartTransaction { .. } | Statement::Commit { .. }
-    )
 }
 
 fn recover_schema_ddl(

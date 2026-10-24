@@ -55,17 +55,17 @@ pub(super) fn scan(
         let rel = relative_slash_path(root, &statement.path);
         let source = crate::codebase::rules::read_source(sources, &statement.path);
         let mut residuals = std::collections::BTreeMap::new();
-        if statement.parse_failed {
-            residuals.insert(statement.origin_line.max(1), "invalid-sql");
-        }
-        if statement.parse_failed && opts.fail_unanalyzable {
-            dedup.push(
-                &mut findings,
-                statement,
-                SqlFactSite::Origin,
-                source.as_deref(),
-                unknown(&rel, statement.origin_line.max(1)),
-            );
+        for (site, line) in statement.parse_failure_sites() {
+            residuals.insert(line, "invalid-sql");
+            if opts.fail_unanalyzable {
+                dedup.push(
+                    &mut findings,
+                    statement,
+                    site,
+                    source.as_deref(),
+                    unknown(&rel, line),
+                );
+            }
         }
         for (index, use_) in statement.transformed_column_uses.iter().enumerate() {
             match columns.resolve(use_) {

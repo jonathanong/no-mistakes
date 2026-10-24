@@ -48,19 +48,20 @@ pub(super) fn scan(
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path);
         if opts.fail_unanalyzable && file.parse_failed {
-            dedup.push(
-                &mut findings,
-                file,
-                crate::codebase::postgres::statements::SqlFactSite::Origin,
-                source.as_deref(),
-                finding(
-                    &rel,
-                    file.origin_line.max(1),
-                    "SQL could not be analyzed for bounded statements",
-                    "unanalyzable",
-                ),
-            );
-            continue;
+            for (site, line) in file.parse_failure_sites() {
+                dedup.push(
+                    &mut findings,
+                    file,
+                    site,
+                    source.as_deref(),
+                    finding(
+                        &rel,
+                        line,
+                        "SQL could not be analyzed for bounded statements",
+                        "unanalyzable",
+                    ),
+                );
+            }
         }
         let projected = crate::codebase::postgres::project_sql_bounds(file, catalog);
         for (bound_index, bound) in projected

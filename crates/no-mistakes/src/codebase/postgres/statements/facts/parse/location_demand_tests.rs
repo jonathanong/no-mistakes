@@ -30,9 +30,12 @@ fn conflict_projection_preserves_all_other_facts_and_reliability() {
         let sites = full.variant_locations.as_mut().unwrap();
         sites.locking.clear();
         sites.bound_tables.clear();
-        sites
-            .positions
-            .retain(|site, _| matches!(site, SqlFactSite::Origin | SqlFactSite::Conflict(_)));
+        sites.positions.retain(|site, _| {
+            matches!(
+                site,
+                SqlFactSite::Origin | SqlFactSite::Conflict(_) | SqlFactSite::ParseFailure(_)
+            )
+        });
         assert_eq!(narrow, full, "{name}");
     }
 }

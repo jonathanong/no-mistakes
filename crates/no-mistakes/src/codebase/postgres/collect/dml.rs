@@ -129,6 +129,11 @@ pub(crate) fn embedded_call_facts_with_demand(
                     writes: facts.writes,
                     variant_locations: locations,
                     parse_failed,
+                    parse_failures: if parse_failed {
+                        facts.parse_failures
+                    } else {
+                        Vec::new()
+                    },
                     ..Default::default()
                 };
             }

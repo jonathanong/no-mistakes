@@ -22,7 +22,8 @@ mod where_noop_gap_tests;
 mod where_noop_tests;
 
 use crate::codebase::postgres::statement_facts::{
-    SqlInsertFact, SqlOnConflictAction, SqlStatementFileFacts, SqlTriggerFact, SqlValueForm,
+    SqlFactSite, SqlInsertFact, SqlOnConflictAction, SqlStatementFileFacts, SqlTriggerFact,
+    SqlValueForm,
 };
 use crate::codebase::postgres::types::SqlSchemaFileFacts;
 
@@ -39,21 +40,42 @@ pub struct Catalog<'a> {
 }
 
 pub fn judge_file(file: &SqlStatementFileFacts, catalog: &Catalog<'_>) -> Vec<(usize, String)> {
-    judge_file_with_insert_indices(file, catalog)
+    judge_file_with_sites(file, catalog)
         .into_iter()
         .map(|(_, line, message)| (line, message))
         .collect()
 }
 
-pub(crate) fn judge_file_with_insert_indices(
+pub(crate) fn judge_file_with_sites(
     file: &SqlStatementFileFacts,
     catalog: &Catalog<'_>,
-) -> Vec<(Option<usize>, usize, String)> {
+) -> Vec<(SqlFactSite, usize, String)> {
     let mut findings = Vec::new();
-    if file.parse_failed && file.insert_keyword_count > file.inserts.len() {
+    if file.parse_failed && !file.parse_failures.is_empty() {
+        findings.extend(
+            file.parse_failures
+                .iter()
+                .enumerate()
+                .filter(|(_, failure)| {
+                    failure.insert_keyword_count > failure.recovered_insert_count
+                        && (failure.insert_keyword_count > 1 || !failure.has_top_level_not_exists)
+                })
+                .map(|(index, failure)| {
+                    (
+                        SqlFactSite::ParseFailure(index),
+                        failure.line.max(1),
+                        if failure.insert_keyword_count > 1 {
+                            "unparseable fragment carries more than one INSERT; hoist each statement"
+                        } else {
+                            "INSERT could not be proven replay-safe"
+                        }.to_string(),
+                    )
+                }),
+        );
+    } else if file.parse_failed && file.insert_keyword_count > file.inserts.len() {
         if file.insert_keyword_count > 1 {
             findings.push((
-                None,
+                SqlFactSite::Origin,
                 file.origin_line.max(1),
                 "unparseable fragment carries more than one INSERT; hoist each statement"
                     .to_string(),
@@ -64,7 +86,7 @@ pub(crate) fn judge_file_with_insert_indices(
             return findings;
         }
         findings.push((
-            None,
+            SqlFactSite::Origin,
             file.origin_line.max(1),
             "INSERT could not be proven replay-safe".to_string(),
         ));
@@ -75,7 +97,7 @@ pub(crate) fn judge_file_with_insert_indices(
             continue;
         }
         if let Some(message) = judge_insert(insert, catalog) {
-            findings.push((Some(index), insert.line.max(1), message));
+            findings.push((SqlFactSite::Insert(index), insert.line.max(1), message));
         }
     }
     findings

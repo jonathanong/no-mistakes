@@ -202,13 +202,16 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
 
   Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
 
-SQL schema statements selected by `sqlInclude` also retain diagnostics when the
-lenient parser cannot parse or recover them. Each diagnostic identifies the file,
-statement line, and statement head, and follows the same `options.unanalyzable`
-policy. Valid sibling statements remain available to the catalog. A real
-`DISCARD ALL` statement does not trigger this recovery diagnostic. Existing file
-and line suppressions apply; rewrite unsupported syntax into a supported static
-statement or suppress the specific diagnostic with a reason.
+Raw SQL parse failures are reported on the line of each failing statement's first
+code token. Separate statements produce separate findings, and a
+`no-mistakes-disable-next-line`
+directive immediately above one statement suppresses that failure independently.
+Successfully parsed sibling statements remain analyzable. Unsupported syntax,
+including expressions with `COLLATE`, still follows `options.unanalyzable`; this
+location behavior does not make that syntax parse successfully. A real `DISCARD
+ALL` statement does not trigger a recovery diagnostic. Rewrite unsupported syntax
+into a supported static statement or suppress the specific diagnostic with a
+reason.
 
 ## Suppression
 

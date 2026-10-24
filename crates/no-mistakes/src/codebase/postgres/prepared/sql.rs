@@ -71,7 +71,7 @@ pub(super) fn collect(
             let statements = plan.postgres_dml.then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, functions, _, failed, prepared)| {
+                    .map(|(statements, functions, failures, failed, prepared)| {
                         let mut value = crate::codebase::postgres::statements::extract_from_parsed_with_recovered_placeholders(
                             source.as_ref().unwrap(),
                             prepared,
@@ -84,6 +84,8 @@ pub(super) fn collect(
                                 functions,
                             },
                         );
+                        value.parse_failures = failures.iter()
+                            .filter(|failure| failure.statement_unanalyzable).cloned().collect();
                         value.path = path.clone();
                         Arc::new(vec![value])
                     })

@@ -1,8 +1,8 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactPlan;
 use crate::codebase::postgres::{
-    collect_postgres_facts, judge_file_with_insert_indices, EmbeddedSqlFileFacts,
-    IdempotentCatalog, SqlStatementFileFacts,
+    collect_postgres_facts, judge_file_with_sites, EmbeddedSqlFileFacts, IdempotentCatalog,
+    SqlStatementFileFacts,
 };
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Context;
@@ -88,16 +88,12 @@ fn collect_findings<'a>(
         let judged = if file.parse_failed && !opts.fail_unanalyzable {
             let mut recoverable = file.clone();
             recoverable.parse_failed = false;
-            judge_file_with_insert_indices(&recoverable, catalog)
+            judge_file_with_sites(&recoverable, catalog)
         } else {
-            judge_file_with_insert_indices(file, catalog)
+            judge_file_with_sites(file, catalog)
         };
         let source = crate::codebase::rules::read_source(sources, &file.path);
-        for (index, line, message) in judged {
-            let site = index.map_or(
-                crate::codebase::postgres::statements::SqlFactSite::Origin,
-                crate::codebase::postgres::statements::SqlFactSite::Insert,
-            );
+        for (site, line, message) in judged {
             dedup.push(
                 &mut findings,
                 file,

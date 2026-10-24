@@ -249,8 +249,13 @@ fn parse_chunks_with_sources(
     original: &[sqlparser::tokenizer::TokenWithSpan],
     allow: bool,
 ) -> Vec<super::LocatedStatement> {
-    super::parse_chunks_with_function_calls(chunks, original, allow)
-        .into_iter()
-        .filter(|located| !located.function_projection)
-        .collect()
+    super::parse_chunks_with_function_calls(
+        chunks,
+        original,
+        allow,
+        &crate::codebase::postgres::parse::RecursiveViews::default(),
+    )
+    .into_iter()
+    .filter(|located| !located.function_projection)
+    .collect()
 }

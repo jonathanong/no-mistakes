@@ -1,0 +1,26 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        },
+        "tenant_id": {
+          "dataType": "uuid"
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone"
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    }
+  }
+}

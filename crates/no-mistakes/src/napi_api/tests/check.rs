@@ -3,6 +3,8 @@ use serde_json::json;
 
 #[path = "check_config_locations.rs"]
 mod check_config_locations;
+#[path = "check_parse_failure_locations.rs"]
+mod check_parse_failure_locations;
 #[path = "check_tsconfig_alias_locations.rs"]
 mod check_tsconfig_alias_locations;
 

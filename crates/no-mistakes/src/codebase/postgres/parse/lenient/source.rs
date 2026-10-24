@@ -1,4 +1,4 @@
-use sqlparser::ast::Statement;
+use sqlparser::ast::{DiscardObject, Statement};
 use sqlparser::tokenizer::TokenWithSpan;
 use std::sync::Arc;
 
@@ -39,6 +39,17 @@ impl LocatedStatement {
         }
     }
 
+    pub(super) fn failed_source(sql: &str, line: usize, column: usize, ordinal: usize) -> Self {
+        Self {
+            recovery_failure: Some(super::recover::failed_source(sql, line, column, ordinal)),
+            ..Self::functions(
+                Statement::Discard {
+                    object_type: DiscardObject::ALL,
+                },
+                false,
+            )
+        }
+    }
     pub(super) fn functions(statement: Statement, synthetic_select: bool) -> Self {
         Self {
             function_projection: true,

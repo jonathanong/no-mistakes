@@ -32,13 +32,23 @@ pub struct SqlDeclaredIdentifier {
     pub line: usize,
 }
 
-/// A semicolon-delimited SQL chunk that lenient parsing could not recover.
+/// One SQL chunk that lenient parsing recovered partially or could not recover.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlUnanalyzableStatement {
     pub line: usize,
+    pub column: usize,
     pub head: String,
     /// Lexical statement ordinals, including enclosing routine bodies.
     pub source_order: Vec<usize>,
+    /// INSERT relevance belongs to this failed chunk, never a valid sibling.
+    pub insert_keyword_count: usize,
+    /// Successfully recovered INSERTs from this same failed chunk.
+    pub recovered_insert_count: usize,
+    pub has_top_level_not_exists: bool,
+    /// Partial AST recovery can prove schema facts while leaving DML uncertainty.
+    pub schema_unanalyzable: bool,
+    /// A failed routine wrapper leaves statement diagnostics to its exact lexical leaf.
+    pub statement_unanalyzable: bool,
 }
 
 /// Schema facts for one SQL file read through [`crate::codebase::ts_source::SourceStore`].

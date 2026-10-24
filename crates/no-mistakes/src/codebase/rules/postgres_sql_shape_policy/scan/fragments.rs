@@ -20,6 +20,35 @@ pub(super) struct Findings {
 }
 
 impl Findings {
+    pub(super) fn push_parse_failures(
+        &mut self,
+        rel: &str,
+        output: &mut crate::codebase::rules::PostgresFindings,
+        facts: &crate::codebase::postgres::SqlStatementFileFacts,
+        source: Option<&str>,
+        opts: &super::CompiledOptions,
+        dedup: &mut crate::codebase::rules::VariantFindingDedup,
+    ) {
+        if !opts.fail_unanalyzable {
+            return;
+        }
+        for (site, line) in facts.parse_failure_sites() {
+            self.push_complete(
+                output,
+                facts,
+                site,
+                source,
+                super::finding(
+                    rel,
+                    line,
+                    "SQL could not be analyzed for shape policy",
+                    opts.shapes.unanalyzable_target(),
+                ),
+                dedup,
+            );
+        }
+    }
+
     pub(super) fn push_complete(
         &mut self,
         output: &mut crate::codebase::rules::PostgresFindings,

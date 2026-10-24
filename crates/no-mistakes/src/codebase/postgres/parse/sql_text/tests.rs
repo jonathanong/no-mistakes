@@ -64,7 +64,10 @@ fn copy_payload_with_sql_punctuation_stays_out_of_statement_split() {
     let path = crate::test_support::rule_fixture_root("postgres-ddl-unanalyzable")
         .join("copy/migrations/001.sql");
     let sql = std::fs::read_to_string(path).unwrap();
-    let statements = top_level_statements(&sql);
+    let statements: Vec<_> = located_statements(&sql)
+        .into_iter()
+        .map(|(line, _, text)| (line, text))
+        .collect();
     assert_eq!(statements.len(), 3, "{statements:?}");
     assert_eq!(statements[2].0, 8);
     assert!(statements[2].1.starts_with("FROBULATE accounts"));

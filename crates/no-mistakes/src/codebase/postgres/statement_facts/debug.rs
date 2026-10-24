@@ -29,6 +29,9 @@ impl Debug for SqlStatementFileFacts {
             .field("insert_keyword_count", &self.insert_keyword_count)
             .field("has_top_level_not_exists", &self.has_top_level_not_exists)
             .field("origin_line", &self.origin_line);
+        if !self.parse_failures.is_empty() {
+            out.field("parse_failures", &self.parse_failures);
+        }
         if let Some(locations) = &self.variant_locations {
             out.field("variant_locations", locations);
         }

@@ -22,14 +22,10 @@ impl RecursiveViews {
         }
     }
 
-    pub(super) fn restore_valid(&self, statements: &mut Vec<super::LocatedStatement>) {
-        statements.retain_mut(|located| {
-            if self.validate(&located.statement).is_err() {
-                return false;
-            }
+    pub(super) fn restore_statements(&self, statements: &mut [super::LocatedStatement]) {
+        for located in statements {
             self.restore(&mut located.statement);
-            true
-        });
+        }
     }
 
     /// Preserve the implicit binding for every downstream AST consumer.

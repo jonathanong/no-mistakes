@@ -50,19 +50,20 @@ pub(super) fn scan(
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path);
         if opts.fail_unanalyzable && file.parse_failed {
-            dedup.push(
-                &mut findings,
-                file,
-                SqlFactSite::Origin,
-                source.as_deref(),
-                sql_finding(
-                    &rel,
-                    file.origin_line.max(1),
-                    "SQL could not be analyzed for explicit columns",
-                    "unanalyzable",
-                ),
-            );
-            continue;
+            for (site, line) in file.parse_failure_sites() {
+                dedup.push(
+                    &mut findings,
+                    file,
+                    site,
+                    source.as_deref(),
+                    sql_finding(
+                        &rel,
+                        line,
+                        "SQL could not be analyzed for explicit columns",
+                        "unanalyzable",
+                    ),
+                );
+            }
         }
         for (select_index, select) in file.selects.iter().enumerate() {
             for (star_index, star) in select.star_projections.iter().enumerate() {
