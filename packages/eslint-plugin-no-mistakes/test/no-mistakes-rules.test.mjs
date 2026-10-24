@@ -690,11 +690,11 @@ describe("ts-no-const-aliases", () => {
         undefined,
         "invalid.ts",
       ),
-      ["alias", "alias", "alias", "alias"],
+      Array(6).fill("alias"),
     );
   });
 
-  it("unwraps transparent TypeScript expressions without unwrapping await", () => {
+  it("reports non-null and instantiated aliases while preserving explicit type intent", () => {
     assert.deepEqual(
       messages(
         ruleFixture("ts-no-const-aliases", "coverage.ts"),
@@ -702,7 +702,19 @@ describe("ts-no-const-aliases", () => {
         undefined,
         "coverage.ts",
       ),
-      ["alias", "alias", "alias", "alias", "alias", "alias"],
+      ["alias", "alias"],
+    );
+  });
+
+  it("allows typed declarations through nested non-null and parenthesized wrappers", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("ts-no-const-aliases", "typed.ts"),
+        "ts-no-const-aliases",
+        undefined,
+        "typed.ts",
+      ),
+      [],
     );
   });
 });

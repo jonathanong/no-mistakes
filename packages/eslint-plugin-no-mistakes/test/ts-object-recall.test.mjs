@@ -14,7 +14,7 @@ describe("TypeScript and object recall audit", () => {
 
 describe("saved audit scope controls", () => {
   for (const [name, rule, id, count] of [
-    ["const-aliases", "ts-no-const-aliases", "alias", 2],
+    ["const-aliases", "ts-no-const-aliases", "alias", 1],
     ["export-renaming", "ts-no-export-renaming", "renamed", 2],
     ["placeholder-types", "no-placeholder-never-type-exports", "placeholder", 2],
     ["delete-property", "no-delete-property", "delete", 6],
