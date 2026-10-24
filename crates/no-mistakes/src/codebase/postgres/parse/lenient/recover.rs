@@ -101,9 +101,15 @@ fn parse_chunk(
     handled_procedural: &mut bool,
 ) -> Vec<LocatedStatement> {
     if let Some(body) = peel_do_body(&chunk) {
-        *handled_procedural = true;
         let body = locations::align_do_body(&body, original);
-        return procedural::filter_body(super::parse_with_sources(&body, true, false));
+        let filtered = procedural::filter_body(super::parse_with_sources(&body, true, false));
+        // A control-only body can yield no SQL statements. Only treat that as
+        // handled when the complete body still tokenizes; lexical failure must
+        // retain the outer DO marker.
+        *handled_procedural = !filtered.is_empty()
+            || !body.trim().is_empty()
+                && !super::super::unicode::tokenize_with_location(&body, false).is_empty();
+        return filtered;
     }
     let dialect = PostgreSqlDialect {};
     let mut parser = match original {
