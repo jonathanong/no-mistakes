@@ -1,7 +1,7 @@
 use super::{parse_postgres_expression, snapshot::SnapshotIndex};
 use crate::codebase::postgres::parse_postgres_sql;
-use sqlparser::ast::visit_expressions_mut;
-use sqlparser::ast::{BinaryOperator, Expr, ObjectNamePart, Statement};
+use sqlparser::ast::{visit_expressions, visit_expressions_mut};
+use sqlparser::ast::{BinaryOperator, Expr, ObjectNamePart, Statement, Value};
 use std::ops::ControlFlow;
 
 /// Catalog key evidence consumed only by the row-bounded evaluator.
@@ -30,11 +30,18 @@ pub(super) fn from_snapshot(index: &SnapshotIndex) -> Option<BoundedUniqueIndex>
         .keys
         .iter()
         .map(|key| {
-            parse_postgres_expression(&key.expression).map(|expr| canonical_bound_expr(&expr))
+            let expr = parse_postgres_expression(&key.expression)?;
+            (!contains_placeholder(&expr)).then(|| canonical_bound_expr(&expr))
         })
         .collect::<Option<Vec<_>>>()?;
     let predicate = match index.predicate.as_deref() {
-        Some(text) => Some(canonical_bound_expr(&parse_postgres_expression(text)?)),
+        Some(text) => {
+            let expr = parse_postgres_expression(text)?;
+            if contains_placeholder(&expr) {
+                return None;
+            }
+            Some(canonical_bound_expr(&expr))
+        }
         None => None,
     };
     let mut conjuncts = Vec::new();
@@ -62,6 +69,17 @@ pub(super) fn from_snapshot(index: &SnapshotIndex) -> Option<BoundedUniqueIndex>
         predicate: conjuncts,
         nulls_not_distinct,
     })
+}
+
+fn contains_placeholder(expr: &Expr) -> bool {
+    visit_expressions(expr, |child| {
+        if matches!(child, Expr::Value(value) if matches!(value.value, Value::Placeholder(_))) {
+            ControlFlow::Break(())
+        } else {
+            ControlFlow::Continue(())
+        }
+    })
+    .is_break()
 }
 
 pub(crate) fn conjuncts_of(expr: &Expr, out: &mut Vec<Expr>) {
