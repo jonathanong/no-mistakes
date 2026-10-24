@@ -1,0 +1,18 @@
+import { read } from "@example/db";
+import { run, untyped, rest, overloaded, object, structural, plainObject, unknownObject, wrongObject, singleOverload, unrelated, renamed, nested, array, computed } from "./helpers";
+run(read);
+object({ query: read });
+untyped(read);
+rest(read);
+overloaded(read);
+structural(read);
+plainObject({ query: read });
+unknownObject({ query: read });
+wrongObject({ query: read });
+singleOverload(read);
+run(read, read);
+unrelated(read);
+renamed({ query: read });
+nested({ query: read });
+array({ query: read });
+computed({ query: read });

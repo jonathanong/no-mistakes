@@ -6,8 +6,8 @@ A callback that only forwards its arguments to a trusted SQL executor hides
 that call from static analysis. `run((statement) => read(statement), account)`
 builds the statement inside `run` and reaches `read` only through the lambda
 parameter, so the executor call is unanalyzable. Passing the function value,
-`run(read, account)`, is the same blind spot: analysis does not connect an
-executor argument to the statement inside the helper.
+`run(read, account)`, has the same blind spot when the helper has no configured
+executor parameter type.
 
 Name the executor on the SQL text inside the helper. That shape is judged:
 
@@ -16,6 +16,40 @@ function run(account: string) {
   return read(sql`SELECT id FROM orders WHERE account_id = ${account}`);
 }
 ```
+
+A helper with a proven configured executor parameter is also judged. With
+`executorTypeNames: ["QueryExecutor"]`, passing the executor directly is allowed:
+
+```ts
+import { read, type QueryExecutor } from "@example/db";
+function load(query: QueryExecutor) {
+  return query("SELECT id FROM orders");
+}
+load(read);
+const loadOptional = (query?: QueryExecutor) => query?.("SELECT id FROM orders");
+loadOptional(read);
+function loadObject({ query }: { query: QueryExecutor }) {
+  return query("SELECT id FROM orders");
+}
+loadObject({ query: read });
+```
+
+Same-file function declarations and `const` arrow/function expressions use the
+parameter's declared imported type. Optional and defaulted parameters and inline
+destructured properties are supported. A shadowed type name cannot prove the
+configured type. Forwarding callbacks still report, including
+`load((statement) => read(statement))`.
+
+Imported helpers require typed linting: configure `@typescript-eslint/parser`
+with `parserOptions.project` or `projectService` so `parserServices.program`
+is available. The declared parameter must reference a configured type imported
+from the configured database module. Without that information, the call reports.
+Structural compatibility, inference, unknown callees, mutable helpers, overloads,
+rest parameters, and calls containing spread arguments do not establish proof.
+An object parameter such as `options: { query: QueryExecutor }` does not establish
+an inline destructured executor binding; `loadObject({ nested: { query: read } })`
+also reports. Rewrite these to the explicit supported parameter shape or name
+the executor inside the helper.
 
 These call shapes are also judged:
 
@@ -81,11 +115,12 @@ export function list(account: string, flag: boolean, tx: Tx) {
 }
 ```
 
-Passing an executor value is reported and not rewritten. The message names the
-executor inside the helper (``read(sql`…`)``, or ``write(sql`…`)``) instead of
+Passing an executor value to an unproven helper is reported and not rewritten.
+The message names the executor inside the helper (``read(sql`…`)``, or ``write(sql`…`)``) instead of
 passing it. A `const` bound to a conditional of executors also names
 ``(flag ? read : write)(sql`…`)`` when every branch is an identifier executor.
-`run(read, account)` is not a judged rewrite. The same passed-value report
+`run(read, account)` is not a judged rewrite when `run` has no proven configured
+executor parameter. The same passed-value report
 covers a fresh object property or array element, a `new` argument, and
 `read.bind(null)`. The rejected quote keeps the property or element around
 that executor (`run({ exec: read }, account)`, `run([read], account)`).
@@ -223,7 +258,8 @@ run(0 ?? read, account);
   defaults to `[]`. `var` is not a scoped executor.
 - `executorTypeNames` lists imported type names whose annotated parameters
   (including optional and inline-destructured ones) are executors inside the
-  declaring function. It defaults to `[]`.
+  declaring function. It also proves supported helper argument slots described
+  above. It defaults to `[]`.
 - `trustedSqlTags` defaults to `[]`. Each entry has `module` and `name`.
   It is accepted so a shared executor configuration validates. This rule does
   not read SQL text.
@@ -248,9 +284,8 @@ run(0 ?? read, account);
 ## Fix
 
 This rule does not autofix and does not offer a suggestion. Replacing the
-adapter with `run(read, account)` is not a judged rewrite: analysis does not
-follow an executor passed as a value, so the statement inside `run` stays
-unchecked. Name the executor inside the helper instead:
+adapter with `run(read, account)` requires a proven configured executor
+parameter on `run`; otherwise the statement inside `run` stays unchecked. Name the executor inside the helper instead:
 
 ```ts
 function run(account: string) {
