@@ -19,7 +19,9 @@ pub(super) struct ScanInput<'a> {
     pub(super) facts: Option<&'a dyn TsFactLookup>,
 }
 
-pub(super) fn scan(input: ScanInput<'_>) -> Result<Vec<RuleFinding>> {
+pub(super) fn scan(
+    input: ScanInput<'_>,
+) -> Result<super::super::analysis_policy::AnalysisDiagnostics> {
     let ScanInput {
         root,
         config,
@@ -43,9 +45,17 @@ pub(super) fn scan(input: ScanInput<'_>) -> Result<Vec<RuleFinding>> {
     } else {
         Vec::new()
     };
+    let policy = config.effective_rule_analysis(rule)?;
+    let mut output = super::super::analysis_policy::AnalysisDiagnostics::default();
+    let mut unsupported_sets = BTreeSet::new();
     let mut sets = BTreeMap::new();
     for spec in &opts.sets {
         if spec.name.is_empty() {
+            continue;
+        }
+        if policy.effort == crate::config::v2::Effort::Low && !super::low::supports(&spec.kind) {
+            super::low::record_unsupported(root, spec, target_roots, sources, policy, &mut output)?;
+            unsupported_sets.insert(spec.name.as_str());
             continue;
         }
         let extract_files = if spec.kind == extract::PATH_REGEX_CAPTURE {
@@ -59,7 +69,7 @@ pub(super) fn scan(input: ScanInput<'_>) -> Result<Vec<RuleFinding>> {
         sets.insert(spec.name.clone(), extracted);
     }
 
-    let mut findings = Vec::new();
+    let findings = &mut output.findings;
     for set in sets.values() {
         for issue in &set.issues {
             findings.push(RuleFinding {
@@ -79,6 +89,12 @@ pub(super) fn scan(input: ScanInput<'_>) -> Result<Vec<RuleFinding>> {
         }
     }
     for comparison in &opts.comparisons {
+        // Skipped extraction proves nothing, including after ignore or suppression.
+        if unsupported_sets.contains(comparison.left.as_str())
+            || unsupported_sets.contains(comparison.right.as_str())
+        {
+            continue;
+        }
         let (Some(left), Some(right)) = (sets.get(&comparison.left), sets.get(&comparison.right))
         else {
             continue;
@@ -92,10 +108,10 @@ pub(super) fn scan(input: ScanInput<'_>) -> Result<Vec<RuleFinding>> {
         {
             continue;
         }
-        comparison::compare(left, right, comparison, &mut findings);
+        comparison::compare(left, right, comparison, findings);
     }
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
-    Ok(findings)
+    Ok(output)
 }
 
 fn enforce_min_size(spec: &super::SetSpec, set: &mut ExtractedSet) {

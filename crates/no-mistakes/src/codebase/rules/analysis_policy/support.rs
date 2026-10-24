@@ -19,6 +19,11 @@ pub(super) const SUPPORT: &[RuleEffortSupport] = &[
         partner_scope: |_, _| false,
     },
     RuleEffortSupport {
+        rule: "finite-set-consistency",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
         rule: "declared-payload-compatibility",
         partners: &[],
         partner_scope: |_, _| false,

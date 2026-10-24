@@ -53,7 +53,6 @@ export const STATUS = ['open', 'closed'] as const;
 export const STATUS = ['open', 'closed'] as const;
 ```
 
-
 ## Counterexample
 
 ```ts
@@ -68,11 +67,56 @@ export const STATUS = ['open'] as const;
 
 ### Effort
 
-Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+`max` is the default and preserves every extractor, including TypeScript,
+SQL-enum, and Markdown extraction. `low` evaluates only the declarative data
+extractors `yaml-sequence`, `yaml-string-selector`, and `path-regex-capture`.
+Their values still receive the configured `stripPrefix` and `excludePrefix`
+transforms, `minSize` checks, and comparison modes.
 
 ### Unanalyzable inputs
 
-Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it compares finite sets extracted from explicitly configured sources, and a source that cannot be read or extracted is itself a finding, so `options.unanalyzable` has no effect on it.
+At low effort, the other documented extractor kinds are unavailable:
+`ts-string-union`, `ts-const-object-keys`, `ts-const-object-property`,
+`ts-array-literal`, `ts-const-array-property`,
+`ts-call-first-string-argument`, `markdown-table-code-cells`, and `sql-enum`.
+Each named unsupported set, including an unrecognized kind, produces one
+residual diagnostic under `options.unanalyzable` (`report`, `advise`, or
+`ignore`). The extractor does not run and `minSize` is not applied to its
+unavailable values, so an unsupported empty set cannot create a misleading
+minimum-size finding.
+
+Any comparison that uses an unsupported set is skipped, even when its residual
+is ignored or suppressed. Suppression hides the residual; it does not make an
+unknown set usable as comparison data. Comparisons between supported sets
+continue to run, and definite mismatches remain findings under all three
+policies. Supported extractor configuration and input errors, unreadable
+configured sources, and empty call targets remain hard errors.
+
+For example, low can compare a YAML package list with names captured from
+configured route paths while reporting an unanalyzable residual for a
+TypeScript union in the same rule application. Use the default or
+`effort: max` to analyze the union and other unsupported kinds, or rewrite the
+set as one of the supported declarative forms. No partner check is required.
+
+Low's definite findings are a subset of max's definite findings for the same
+application. With `unanalyzable: report`, total diagnostic counts can be higher
+at low: a compatible TypeScript union passes at max but reports one uncertainty
+at low. `advise` keeps that uncertainty non-failing; `ignore` omits it. Neither
+policy treats the unsupported extraction as a proven set.
+
+```yaml
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: advise
+      sets:
+        - name: routeFiles
+          kind: path-regex-capture
+          pattern: "^src/routes/(?<value>[^/]+)\\.ts$"
+          minSize: 1
+```
 
 ## Related rules
 

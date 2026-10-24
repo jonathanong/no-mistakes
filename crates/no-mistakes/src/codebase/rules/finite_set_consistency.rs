@@ -1,8 +1,11 @@
 mod comments;
 mod comparison;
+mod effort;
 mod extract;
 mod extraction_completeness;
+use effort::diagnostics_with_lookup;
 mod literals;
+mod low;
 mod markdown;
 mod object;
 mod scan;
@@ -14,8 +17,6 @@ use super::RuleFinding;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use rayon::prelude::*;
-use scan::{scan, ScanInput};
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -71,6 +72,8 @@ pub(crate) fn check_with_files_and_sources(
     check_with_files_sources_and_facts(root, config, all_files, sources, None)
 }
 
+// Legacy filesystem APIs return findings only. Check reports use the public
+// diagnostics entry point below to retain non-failing advisories separately.
 pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
@@ -78,34 +81,29 @@ pub(crate) fn check_with_files_sources_and_facts(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: Option<&dyn TsFactLookup>,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(ScanInput {
-                root,
-                config,
-                rule,
-                opts: &opts,
-                files: &files,
-                target_roots: &target_roots,
-                sources,
-                facts,
-            })
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    diagnostics_with_lookup(root, config, all_files, sources, facts, true)
+        .map(|diagnostics| diagnostics.findings)
+}
+
+/// Evaluate finite sets with each application's independent effort and residual policy.
+/// Returns findings and advisories; legacy filesystem Vec adapters return findings only.
+#[doc(hidden)]
+pub fn diagnostics_with_files_sources_and_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
+    defer_suppression: bool,
+) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+    diagnostics_with_lookup(
+        root,
+        config,
+        all_files,
+        sources,
+        facts.map(|facts| facts as &dyn TsFactLookup),
+        defer_suppression,
+    )
 }
 
 /// TypeScript files that must have function-call facts prepared for this rule.
@@ -128,6 +126,9 @@ pub fn try_required_call_site_fact_files(
         .into_iter()
         .map(|rule| {
             let opts: Options = rule.try_rule_options()?;
+            if config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low {
+                return Ok(Vec::new());
+            }
             let target_roots = super::target_roots(root, config, rule);
             Ok(opts
                 .sets
@@ -182,3 +183,7 @@ mod tests;
 #[cfg(test)]
 #[path = "finite_set_consistency/tests/ts_array.rs"]
 mod ts_array_tests;
+
+#[cfg(test)]
+#[path = "finite_set_consistency/low/tests.rs"]
+mod low_tests;

@@ -76,6 +76,13 @@ For `postgres-no-offset`, `low` checks
 unanalyzable policy, source locations, suppression, and SQL verdict controls as
 the CLI. Raw SQL files retain their existing analysis.
 
+For `finite-set-consistency`, `low` evaluates YAML sequences, YAML string
+selectors, and path-regex captures. Other extractor kinds use the same
+unanalyzable policy as the CLI, and comparisons that involve those sets are
+skipped even when their residual is ignored or suppressed. `minSize` does not
+run on unsupported sets. Supported-set mismatches remain definite findings;
+use `effort: "max"` to analyze TypeScript, SQL-enum, and Markdown sets.
+
 For `version-pin-consistency`, CLI `check`, `check(options)`, and check reports
 in `analyzeProject()` apply the same `unanalyzable` policy when a selected
 anchor's declared comparison source is outside the selected file set and is

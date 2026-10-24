@@ -1,0 +1,32 @@
+sets:
+  - name: all
+    kind: yaml-sequence
+    file: sets.yml
+    key: all
+  - name: partial
+    kind: yaml-string-selector
+    file: sets.yml
+    key: partial.[]
+  - name: paths
+    kind: path-regex-capture
+    pattern: '^src/routes/([^/]+)\.ts$'
+    minSize: 1
+  - name: array
+    kind: ts-array-literal
+    file: src/registry.ts
+    target: ROUTES
+    # Low must not invent a minSize failure from its skipped extraction.
+    minSize: 99
+  - name: calls
+    kind: ts-call-first-string-argument
+    file: src/registry.ts
+    target: register
+comparisons:
+  - left: all
+    right: partial
+  - left: all
+    right: paths
+  - left: array
+    right: partial
+  - left: partial
+    right: calls
