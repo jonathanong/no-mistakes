@@ -172,7 +172,7 @@ module.exports = rule(
 
     return {
       Program(node) {
-        bindings = executorBindings(node, options, context.filename);
+        bindings = executorBindings(node, options, context.filename, context);
       },
       CallExpression(node) {
         if (bindResultIsReported(node)) return;
