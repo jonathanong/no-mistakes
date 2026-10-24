@@ -25,7 +25,7 @@ fn unspecified_and_empty_profile_scans_keep_direct_plan_projections() {
         if explicit_empty {
             plan.embedded_sql_rule_ids.insert(profile.clone(), vec![]);
         }
-        let sources = crate::codebase::rules::source_store_for_files(&[path.clone()]);
+        let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&path));
         let facts = collect_check_facts_with_graph_files_playwright_and_sources(
             &root,
             vec![path.clone()],
