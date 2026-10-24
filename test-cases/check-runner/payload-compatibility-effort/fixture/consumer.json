@@ -1,0 +1,41 @@
+{
+  "$comment": "Consumer schemas for the effort contract matrix; nestedIncompatible is definitely incompatible at max.",
+  "$defs": {
+    "flatRequiredField": {
+      "type": "object",
+      "properties": {"userId": {"type": "string"}},
+      "required": ["userId"],
+      "additionalProperties": false
+    },
+    "flatEnum": {"type": "string", "enum": ["draft"]},
+    "nestedIncompatible": {
+      "type": "object",
+      "properties": {
+        "details": {
+          "type": "object",
+          "properties": {"id": {"type": "integer"}},
+          "required": ["id"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["details"],
+      "additionalProperties": false
+    },
+    "nestedCompatible": {
+      "type": "object",
+      "properties": {
+        "labels": {"type": "array", "items": {"type": "string"}}
+      },
+      "required": ["labels"],
+      "additionalProperties": false
+    },
+    "scalarCompatible": {"type": "string"},
+    "flatObjectCompatible": {
+      "type": "object",
+      "properties": {"id": {"type": "string"}},
+      "required": ["id"],
+      "additionalProperties": false
+    },
+    "arrayCompatible": {"type": "array", "items": {"type": "string"}}
+  }
+}

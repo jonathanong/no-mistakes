@@ -98,6 +98,12 @@ through one shared unanalyzable diagnostic. Literal-only commands retain their
 checks in CLI and Node API. The rule may inspect one binding to identify a
 dynamic command prefix. See
 [its Effort section](rules/github-actions-download-integrity.md#effort).
+For `declared-payload-compatibility`, `low` checks scalar roots, flat objects
+with scalar properties, and root arrays with scalar items. Nested child objects
+or arrays use the same contract-level unanalyzable policy in `check()` and
+`analyzeProject()` check reports; invalid documents, pointers, or configuration
+remain failures. See
+[its Effort section](rules/declared-payload-compatibility.md#effort).
 
 | CLI                                        | Node API                                                                                                                                                                                                                                                                   |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

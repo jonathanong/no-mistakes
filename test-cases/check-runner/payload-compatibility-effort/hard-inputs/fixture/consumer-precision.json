@@ -1,0 +1,9 @@
+{
+  "wrapper": {"raw": 1.0000000000000001},
+  "payload": {
+    "type": "object",
+    "properties": {"details": {"type": "object", "properties": {"id": {"type": "string"}}}},
+    "required": ["details"],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "wrapper": {"marker": 1, "marker": 2},
+  "payload": {
+    "type": "object",
+    "properties": {"details": {"type": "object", "properties": {"id": {"type": "string"}}}},
+    "required": ["details"],
+    "additionalProperties": false
+  }
+}

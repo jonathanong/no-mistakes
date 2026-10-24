@@ -1,0 +1,31 @@
+rules:
+  - rule: declared-payload-compatibility
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: report
+      contracts:
+        - name: flat-required-field
+          producer: {file: producer.json, pointer: /$defs/flatRequiredField}
+          consumer: {file: consumer.json, pointer: /$defs/flatRequiredField}
+        - name: flat-enum
+          producer: {file: producer.json, pointer: /$defs/flatEnum}
+          consumer: {file: consumer.json, pointer: /$defs/flatEnum}
+        - name: nested-incompatible
+          producer: {file: producer.json, pointer: /$defs/nestedIncompatible}
+          consumer: {file: consumer.json, pointer: /$defs/nestedIncompatible}
+        - name: nested-compatible
+          producer: {file: producer.json, pointer: /$defs/nestedCompatible}
+          consumer: {file: consumer.json, pointer: /$defs/nestedCompatible}
+        - name: scalar-compatible
+          producer: {file: producer.json, pointer: /$defs/scalarCompatible}
+          consumer: {file: consumer.json, pointer: /$defs/scalarCompatible}
+        - name: flat-object-compatible
+          producer: {file: producer.json, pointer: /$defs/flatObjectCompatible}
+          consumer: {file: consumer.json, pointer: /$defs/flatObjectCompatible}
+        - name: array-compatible
+          producer: {file: producer.json, pointer: /$defs/arrayCompatible}
+          consumer: {file: consumer.json, pointer: /$defs/arrayCompatible}
+        - name: pointer-compatible
+          producer: {file: wrapperdefs.json, pointer: /$defs/selected}
+          consumer: {file: wrapperdefs.json, pointer: /$defs/selected}

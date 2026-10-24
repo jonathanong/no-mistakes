@@ -1,0 +1,48 @@
+{
+  "$comment": "Producer schemas for the effort contract matrix; contracts select members by RFC 6901 pointer.",
+  "$defs": {
+    "flatRequiredField": {
+      "$comment": "Flat mismatch: consumer requires a different scalar property.",
+      "type": "object",
+      "properties": {"accountId": {"type": "string"}},
+      "required": ["accountId"],
+      "additionalProperties": false
+    },
+    "flatEnum": {
+      "$comment": "Flat mismatch: producer permits a value the consumer rejects.",
+      "type": "string",
+      "enum": ["draft", "published"]
+    },
+    "nestedIncompatible": {
+      "$comment": "Max can compare this nested child; low must report one contract-level unknown.",
+      "type": "object",
+      "properties": {
+        "details": {
+          "type": "object",
+          "properties": {"id": {"type": "string"}},
+          "required": ["id"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["details"],
+      "additionalProperties": false
+    },
+    "nestedCompatible": {
+      "$comment": "Max proves this nested array pair compatible; low still treats the contract shape as unknown.",
+      "type": "object",
+      "properties": {
+        "labels": {"type": "array", "items": {"type": "string"}}
+      },
+      "required": ["labels"],
+      "additionalProperties": false
+    },
+    "scalarCompatible": {"type": "string", "enum": ["created"]},
+    "flatObjectCompatible": {
+      "type": "object",
+      "properties": {"id": {"type": "string"}},
+      "required": ["id"],
+      "additionalProperties": false
+    },
+    "arrayCompatible": {"type": "array", "items": {"type": "string"}}
+  }
+}

@@ -43,9 +43,10 @@ nonempty `name`, `producer`, and `consumer`. Each reference requires `file` and
 may specify `pointer`. Unknown option fields and malformed option shapes are
 configuration errors. Schema problems produce findings labeled `unproven`;
 known declaration incompatibilities produce findings labeled `incompatible`.
-Both cause `check` to fail. Findings identify the contract, document, and nested
-payload property. The normal rule application `message` prefixes the diagnostic, preserving its
-incompatible/unproven classification.
+At the default `max` effort, both cause `check` to fail. Findings identify the
+contract, document, and nested payload property. The normal rule application
+`message` prefixes the diagnostic, preserving its incompatible/unproven
+classification.
 
 Files are relative to the invocation root, including project-scoped rules, and
 must belong to the prepared visible inventory and this rule's scope. Missing,
@@ -142,13 +143,56 @@ document integrity checks include wrapper metadata outside the selected schema.
 Floating enum/const values with magnitude at least 2^53 are `unproven` to avoid
 loss of precision. Nesting beyond 64 levels is `unproven`.
 
-All other keywords/forms are `unproven`, including `$schema`, `$id`, `$ref`,
-`$defs` inside the selected node, type unions, boolean schemas, combinations,
-tuple items, schema-valued additional properties, bounds, patterns, and formats.
-Even identical unsupported schemas fail. This deliberately bounded subset is
-not a general JSON Schema validator or a TypeScript type checker. A clean result
-means the selected supported declarations are compatible, not that runtime
-payloads have been validated.
+At `max`, all other keywords/forms are `unproven`, including `$schema`, `$id`,
+`$ref`, `$defs` inside the selected node, type unions, boolean schemas,
+combinations, tuple items, schema-valued additional properties, bounds,
+patterns, and formats. Even identical unsupported schemas fail. This
+deliberately bounded subset is not a general JSON Schema validator or a
+TypeScript type checker. A clean result means the selected supported
+declarations are compatible, not that runtime payloads have been validated.
+
+## Effort
+
+`effort: max` is the default and preserves recursive object/array comparison
+through 64 schema levels. `effort: low` checks a smaller schema grammar: scalar
+roots, root objects whose declared properties are scalar schemas, and root
+arrays whose `items` schema is scalar. It keeps the supported scalar, enum,
+`const`, required-property, and `additionalProperties` checks for those shapes.
+
+If either selected schema contains a nested child object or array, low treats
+the whole contract as one `unproven` shape. It does not compare only the parts
+it recognizes or conclude that the schemas are compatible. The selected
+`unanalyzable` policy controls that result: `report` fails, `advise` emits
+non-failing advice, and `ignore` emits no finding. A compatible nested pair can
+therefore be unproven at low, and low report can produce more diagnostics than
+max. Definite `incompatible` findings from low are still findings max would
+produce.
+
+The policy applies only to this unsupported low-effort schema shape. Duplicate
+JSON keys, numeric-token precision loss, malformed documents, missing or
+unreadable files, scope violations, invalid pointers, and configuration errors
+remain failing diagnostics under every policy. Both referenced documents are
+resolved and validated before low applies the shape policy. When readable, both
+documents are parsed and checked for document integrity; `ignore` does not hide
+invalid input.
+
+For the same nested wire payload, use `max` or flatten both declarations and
+the actual payloads. Selecting only a nested leaf with a pointer is not a
+drop-in rewrite: it can discard constraints on whether the outer property is
+required and on which other properties are accepted.
+
+```yaml
+rules:
+  - rule: declared-payload-compatibility
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: report
+      contracts:
+        - name: queue status
+          producer: {file: api/payloads.json, pointer: /status}
+          consumer: {file: worker/payloads.json, pointer: /status}
+```
 
 ## CLI and Node API
 

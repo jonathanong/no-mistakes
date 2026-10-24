@@ -1,0 +1,10 @@
+rules:
+  - rule: declared-payload-compatibility
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: ignore
+      contracts:
+        - name: nested-shape-with-invalid-pointer
+          producer: {file: producer.json, pointer: /payload}
+          consumer: {file: consumer-valid.json, pointer: /absent}

@@ -1,0 +1,10 @@
+rules:
+  - rule: declared-payload-compatibility
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: report
+      contracts:
+        - name: nested-compatible-only
+          producer: {file: producer.json, pointer: /payload}
+          consumer: {file: consumer.json, pointer: /payload}

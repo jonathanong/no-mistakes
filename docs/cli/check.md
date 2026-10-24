@@ -65,6 +65,11 @@ URL values. A known downloader command with a dynamic candidate URL is handled
 once through the shared unanalyzable policy; literal-only commands retain their
 checks. The rule may inspect one binding to identify a dynamic command prefix.
 See [the rule](../rules/github-actions-download-integrity.md#effort).
+For `declared-payload-compatibility`, `low` checks scalar roots, flat objects
+with scalar properties, and root arrays with scalar items. Nested child objects
+or arrays use the shared unanalyzable policy once per contract; malformed
+documents, bad pointers, and other input/configuration errors remain failures
+under every policy. See [the rule](../rules/declared-payload-compatibility.md#effort).
 For `require-storybook-stories`, `low` checks direct story and configured
 colocated-test coverage while skipping render-chain and dynamic/mock boundary
 analysis. Uncertain coverage follows the shared unanalyzable policy. See
