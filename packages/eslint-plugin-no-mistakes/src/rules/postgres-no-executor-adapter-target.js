@@ -59,14 +59,26 @@ function localTarget(fn, index, property, context, options) {
       entry.key.name === property &&
       entry.value.type === "Identifier",
   );
+  if (!bound) return false;
+  const services = context.sourceCode.parserServices;
+  if (services.program) {
+    const annotation = target.typeAnnotation?.typeAnnotation;
+    const node = annotation && services.esTreeNodeToTSNodeMap?.get(annotation);
+    return Boolean(
+      node && declaredOptionType(node, property, services.program.getTypeChecker(), options),
+    );
+  }
   const type = target.typeAnnotation?.typeAnnotation;
   const member =
     type?.type === "TSTypeLiteral" &&
     type.members.find(
       (entry) =>
-        entry.type === "TSPropertySignature" && !entry.computed && entry.key.name === property,
+        entry.type === "TSPropertySignature" &&
+        !entry.computed &&
+        !entry.optional &&
+        entry.key.name === property,
     );
-  return Boolean(bound && configuredType(member?.typeAnnotation?.typeAnnotation, context, options));
+  return configuredType(member?.typeAnnotation?.typeAnnotation, context, options);
 }
 
 function importedTarget(call, index, property, context, options, facts) {
@@ -94,26 +106,23 @@ function importedTarget(call, index, property, context, options, facts) {
   if (functionSymbol?.declarations.length > 1) return false;
   const params = declaration?.parameters;
   if (!params || params.some((param) => param.dotDotDotToken)) return false;
-  let type = params[index]?.type;
+  const type = params[index]?.type;
   if (property) {
     const pattern = params[index]?.name;
-    if (typeof pattern?.escapedText === "string") {
-      if (!declaredOptionType(type, property, checker, options)) return false;
-      const writes = sourceWrites(declaration.getSourceFile(), checker, facts);
-      return !writes.eval && !writes.symbols.has(target);
-    }
     const bound =
-      pattern?.getText().startsWith("{") &&
-      pattern.elements.some(
-        (element) =>
-          typeof element.name.text === "string" &&
-          !element.initializer &&
-          (!element.propertyName || typeof element.propertyName.text === "string") &&
-          (element.propertyName?.text ?? element.name.text) === property &&
-          !element.dotDotDotToken,
-      );
-    if (!bound) return false;
-    type = type?.members?.find((member) => member.name?.text === property)?.type;
+      typeof pattern?.escapedText === "string" ||
+      (pattern?.getText().startsWith("{") &&
+        pattern.elements.some(
+          (element) =>
+            typeof element.name.text === "string" &&
+            !element.initializer &&
+            (!element.propertyName || typeof element.propertyName.text === "string") &&
+            (element.propertyName?.text ?? element.name.text) === property &&
+            !element.dotDotDotToken,
+        ));
+    if (!bound || !declaredOptionType(type, property, checker, options)) return false;
+    const writes = sourceWrites(declaration.getSourceFile(), checker, facts);
+    return !writes.eval && !writes.symbols.has(target);
   }
   // Structural compatibility and inference do not prove an executor contract.
   if (!type?.typeName) return false;

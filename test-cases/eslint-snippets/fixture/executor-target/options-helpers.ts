@@ -1,4 +1,4 @@
-import type { QueryExecutor } from "@example/db";
+import { read, type QueryExecutor } from "@example/db";
 import type { QueryExecutor as ExecutorAlias } from "@example/db";
 import type { QueryExecutor as OtherExecutor } from "./types";
 
@@ -15,6 +15,8 @@ export type WrongOptions = { other: QueryExecutor };
 export type UnionOptions = NamedOptions | WrongOptions;
 // A mapped key has no explicit named property declaration.
 export type MappedOptions = { [K in "query"]: QueryExecutor };
+// Partial keeps the source declaration but makes the resolved property optional.
+export type PartialOptions = Partial<NamedOptions>;
 
 export function named(options: NamedOptions) { options.query("SELECT 1"); }
 export function alias(options: AliasOptions) { options.query("SELECT 1"); }
@@ -28,6 +30,11 @@ export function wrong(options: WrongOptions) {}
 export function plain(options) {}
 export function union(options: UnionOptions) {}
 export function mapped(options: MappedOptions) {}
+export function partial(options: PartialOptions) {}
+export function destructuredNamed({ query }: NamedOptions) { query("SELECT 1"); }
+export const destructuredAlias = ({ query: execute }: AliasOptions) => execute("SELECT 1");
+export function destructuredDefault({ query = read }: NamedOptions) {}
+export function destructuredComputed({ ["query"]: query }: NamedOptions) {}
 export function rest(...options: NamedOptions[]) {}
 export function overloaded(options: NamedOptions): void;
 export function overloaded(options: unknown): void {}

@@ -1,7 +1,7 @@
 import { read } from "@example/db";
 import type { QueryExecutor } from "@example/db";
 import type { NamedOptions, AliasOptions, ExtendedOptions } from "./options-helpers";
-import { named, alias, inherited, renamed, optional, structural, method, unrelated, wrong, plain, union, mapped, rest, overloaded, contextual, mutable, written } from "./options-helpers";
+import { named, alias, inherited, renamed, optional, structural, method, unrelated, wrong, plain, union, mapped, partial, destructuredNamed, destructuredAlias, destructuredDefault, destructuredComputed, rest, overloaded, contextual, mutable, written } from "./options-helpers";
 import { evaluated } from "./options-evaluated";
 function localNamed(options: NamedOptions) { options.query("SELECT 1"); }
 const localAlias = (options: AliasOptions) => options.query("SELECT 1");
@@ -40,3 +40,18 @@ function localUntyped(options) {}
 localUntyped({ query: read });
 plain({ query: read });
 mapped({ query: read });
+partial({ query: read });
+destructuredNamed({ query: read });
+destructuredAlias({ query: read });
+destructuredDefault({ query: read });
+destructuredComputed({ query: read });
+function localDestructuredNamed({ query }: NamedOptions) { query("SELECT 1"); }
+const localDestructuredAlias = ({ query: execute }: AliasOptions) => execute("SELECT 1");
+function localDestructuredDefault({ query = read }: NamedOptions) {}
+function localDestructuredComputed({ ["query"]: query }: NamedOptions) {}
+localDestructuredNamed({ query: read });
+localDestructuredAlias({ query: read });
+localDestructuredDefault({ query: read });
+localDestructuredComputed({ query: read });
+function localInlineOptional({ query }: { query?: QueryExecutor }) {}
+localInlineOptional({ query: read });
