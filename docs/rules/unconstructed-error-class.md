@@ -393,8 +393,12 @@ resolves.
   imports from internally symlinked declarations remain uncertain when their
   package dependency context cannot be proved; safe same-directory reexports
   remain supported. Distinct symlink spellings retain separate logical identities.
-- Mixin and expression bases (`extends withCode(Error)`) and class expressions
-  are not tracked.
+- Mixin and expression bases (`extends withCode(Error)`, `extends mixin(Base)`,
+  or a computed/conditional base) have unknown ancestry and follow
+  `options.unanalyzable`. An Error argument does not prove a factory returns an
+  Error constructor. Rewrite the base as a statically named class or analyzable
+  import. Known construction or subclassing still satisfies such a class.
+  Class expressions are not tracked.
 - A dead subclass still satisfies its base. The check converges over repeated
   runs as you delete dead classes.
 - Only exported classes are reported. A non-exported class that nothing uses is
