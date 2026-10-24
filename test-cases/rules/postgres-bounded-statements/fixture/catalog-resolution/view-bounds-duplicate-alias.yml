@@ -6,5 +6,5 @@ rules:
       schemaCatalogPath: catalog.json
       sqlInclude: [sql/view-allow.sql]
       viewBounds:
-        active_accounts: bounded
-        "public.active_accounts": bounded
+        bounded_customer_view: bounded
+        "public.bounded_customer_view": bounded
