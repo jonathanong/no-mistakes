@@ -48,7 +48,7 @@ and `afterEach` callbacks keep their ordinary cleanup boundaries.
 
 An opaque `.apply` list, a sparse list, a list containing a spread, or a `.call`
 argument spread is not followed. A function supplied only as the forwarding
-receiver is not a registered callback. Parameter-default destructures are not
+receiver is not a registered callback. Parameter-default destructuring patterns are not
 inferred: `function run({ test } = runner)` can receive another object.
 
 A runner re-exported by another file is not visible here.
