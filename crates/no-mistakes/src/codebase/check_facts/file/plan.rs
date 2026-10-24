@@ -5,8 +5,10 @@ use std::path::Path;
 #[cfg(test)]
 mod tests;
 
-pub(super) fn should_store_source(plan: &CheckFactPlan) -> bool {
-    plan.source || plan.raw_source
+pub(super) fn should_store_source(plan: &CheckFactPlan, path: &Path) -> bool {
+    plan.source
+        || (plan.raw_source
+            && crate::codebase::check_facts::family_scope::applies(&plan.raw_source_paths, path))
 }
 
 /// Graph/check TS extract demand for one file. Playwright test files also need
@@ -18,6 +20,7 @@ pub(super) fn ts_extract_plan(
     playwright: Option<&PlaywrightFactPlan>,
 ) -> TsFactPlan {
     let mut ts_plan = plan.collected_ts_plan();
+    ts_plan.source = plan.graph.source || should_store_source(plan, path);
     ts_plan.call_sites = plan.requires_call_sites(path);
     if !ts_plan.call_arguments {
         ts_plan.call_arguments = plan

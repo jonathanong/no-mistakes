@@ -93,3 +93,42 @@ pub fn configure_nextjs_caching_scope(
     }
     Ok(())
 }
+
+/// The aggregate API-route rule asks for source on every route candidate,
+/// even when a rule include later excludes that route.
+pub fn configure_nextjs_api_route_source_scope(
+    root: &Path,
+    visible: &[PathBuf],
+    config: &NoMistakesConfig,
+    inferred: &crate::codebase::config::InferredRoots,
+    plan: &mut CheckFactPlan,
+) {
+    if !plan.raw_source {
+        return;
+    }
+    if config
+        .rule_applications(crate::codebase::rules::NEXTJS_NO_API_ROUTES)
+        .is_empty()
+    {
+        return;
+    }
+    let roots =
+        crate::codebase::rules::nextjs_no_api_routes::target_roots(root, config, Some(inferred));
+    let matches = |path: &PathBuf| {
+        crate::codebase::rules::nextjs_no_api_routes::is_nextjs_api_route(path, &roots)
+    };
+    let Some(first_excluded) = visible.iter().position(|path| !matches(path)) else {
+        plan.raw_source_paths = FamilyPathScope::All;
+        return;
+    };
+    let selected = visible[..first_excluded]
+        .iter()
+        .chain(
+            visible[first_excluded + 1..]
+                .iter()
+                .filter(|path| matches(path)),
+        )
+        .map(|path| normalize_path(path))
+        .collect();
+    plan.raw_source_paths = FamilyPathScope::Only(Arc::new(selected));
+}

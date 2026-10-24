@@ -15,6 +15,7 @@ mod nextjs;
 mod rules;
 
 pub use configure::configure_family_path_scopes;
+pub use nextjs::configure_nextjs_api_route_source_scope;
 pub use nextjs::configure_nextjs_caching_scope;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -60,6 +61,12 @@ pub fn merge(
 }
 
 pub fn include_scopes(plan: &mut super::CheckFactPlan, other: &super::CheckFactPlan) {
+    plan.raw_source_paths = merge(
+        plan.raw_source,
+        &plan.raw_source_paths,
+        other.raw_source,
+        &other.raw_source_paths,
+    );
     plan.react_paths = merge(
         plan.react,
         &plan.react_paths,
