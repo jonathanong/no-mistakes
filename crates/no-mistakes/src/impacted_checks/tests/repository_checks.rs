@@ -1,5 +1,8 @@
 use super::*;
 
+const RUST_COMPLEXITY: &str =
+    "cargo crap --workspace --missing optimistic --fail-above --threshold 30 --summary";
+
 fn repository_report(files: &[&str]) -> ImpactedChecksReport {
     let mut request = args(files);
     // Use the real repository configuration: a copied fixture would miss its regression.
@@ -91,13 +94,19 @@ fn repository_quality_checks_stay_scoped_and_skip_empty_changes() {
     ] {
         assert!(repository_report(&files).checks.is_empty(), "{files:?}");
     }
-    for file in [
-        "crates/no-mistakes/src/impacted_checks.rs",
-        "packages/no-mistakes/vendor/generated.js",
+    for (file, expected) in [
+        (
+            "crates/no-mistakes/src/impacted_checks.rs",
+            vec![RUST_COMPLEXITY, "pnpm run lint:duplicates"],
+        ),
+        (
+            "packages/no-mistakes/vendor/generated.js",
+            vec!["pnpm run lint:duplicates"],
+        ),
     ] {
         assert_eq!(
             command_strings(&repository_report(&[file])),
-            ["pnpm run lint:duplicates"],
+            expected,
             "{file}"
         );
     }
@@ -114,9 +123,15 @@ fn repository_duplicate_gate_excludes_test_helpers_but_keeps_production_analyzer
         "crates/no-mistakes/tests/cli.rs",
         "packages/eslint-plugin-no-mistakes/test/helpers.mjs",
     ] {
+        let commands = command_strings(&repository_report(&[file]));
         assert!(
-            !command_strings(&repository_report(&[file]))
-                .contains(&"pnpm run lint:duplicates".to_string()),
+            !commands.contains(&"pnpm run lint:duplicates".to_string()),
+            "{file}"
+        );
+        // CI checks test complexity too, even where clone detection is excluded.
+        assert_eq!(
+            commands.contains(&RUST_COMPLEXITY.to_string()),
+            file.ends_with(".rs"),
             "{file}"
         );
     }
@@ -126,7 +141,7 @@ fn repository_duplicate_gate_excludes_test_helpers_but_keeps_production_analyzer
     ] {
         assert_eq!(
             command_strings(&repository_report(&[file])),
-            ["pnpm run lint:duplicates"],
+            [RUST_COMPLEXITY, "pnpm run lint:duplicates"],
             "{file}"
         );
     }
