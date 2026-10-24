@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: "../db.mjs"
+      executorNames: [query]
+      include:
+        - "src/components/component-00.tsx"
