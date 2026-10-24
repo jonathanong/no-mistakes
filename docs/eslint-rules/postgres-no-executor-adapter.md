@@ -83,6 +83,11 @@ the helper, including a destructured alias such as
 `function load({ query: execute }: QueryOptions)`. SQL checks inspect the
 executor calls there. A property may have another name, such as `execute`,
 when its declared type proves the same configured executor identity.
+Executor uses inside the helper must be direct calls or stable local `const`
+aliases that are called directly. Returning or storing the options object or
+executor value, forwarding it to opaque code, or replacing the property keeps
+the incoming call reported. Aliasing or destructuring the whole options object
+inside the body is also unproven; call the declared property directly instead.
 Optional fields, structural callable lookalikes, computed keys, and objects
 containing a spread still report. Nested containers such as
 `dispatch({ nested: { query: read } })` and forwarding callbacks remain
