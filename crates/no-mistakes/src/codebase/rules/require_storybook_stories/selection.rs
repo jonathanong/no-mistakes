@@ -53,7 +53,7 @@ pub(super) fn selected_components(
         if should_skip_file(facts, opts, explicit, defer_suppression) {
             continue;
         }
-        if facts.parse_error.is_some() {
+        if let Some(error) = &facts.parse_error {
             // Malformed facts cannot establish exports or React component kinds.
             // Only explicit file selection proves that coverage was requested.
             let line_disabled = !defer_suppression
@@ -66,7 +66,7 @@ pub(super) fn selected_components(
                     rule: RULE_ID.to_string(),
                     file: relative_slash_path(root, path),
                     line: 1,
-                    message: "Selected React source could not be analyzed, so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.".to_string(),
+                    message: format!("Selected React source could not be analyzed ({}), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.", error.lines().next().unwrap_or(error)),
                     import: None,
                     target: Some("unanalyzable".to_string()),
                 });

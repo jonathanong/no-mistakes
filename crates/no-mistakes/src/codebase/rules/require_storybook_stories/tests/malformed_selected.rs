@@ -32,6 +32,12 @@ fn malformed_selected_direct_and_node_reports_match_aggregate() {
     assert_eq!(direct.len(), 1, "{direct:#?}");
     assert_eq!(direct[0].line, 1);
     assert!(direct[0].message.contains("coverage is incomplete"));
+    // The saved malformed source must retain the parser cause in every public path.
+    assert!(
+        direct[0].message.contains("Expected `:` but found `<`"),
+        "{}",
+        direct[0].message
+    );
     assert!(!direct[0].message.contains("no reachable story"));
     let aggregate = crate::codebase::rules::run_check(&root, None, None).unwrap();
     assert_eq!(direct, aggregate);
