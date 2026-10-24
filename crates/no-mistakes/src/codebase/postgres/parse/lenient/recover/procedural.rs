@@ -1,4 +1,5 @@
 //! Recognize procedural-only chunks inside an already identified PL/pgSQL body.
+use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
 pub(crate) fn control_chunk(tokens: &[TokenWithSpan]) -> bool {
@@ -23,9 +24,11 @@ fn control(code: &[&Token]) -> bool {
     if word(first, "END") {
         return code.len() == 1
             || code.len() == 2
-                && ["IF", "LOOP", "CASE"]
+                && (["IF", "LOOP", "CASE"]
                     .iter()
-                    .any(|kind| word(code[1], kind));
+                    .any(|kind| word(code[1], kind))
+                    || label(code[1]))
+            || code.len() == 3 && word(code[1], "LOOP") && label(code[2]);
     }
     if ["IF", "ELSIF", "WHEN", "CASE"]
         .iter()
@@ -51,28 +54,71 @@ fn control(code: &[&Token]) -> bool {
     if word(first, "RETURN") && code.get(1).is_some_and(|next| word(next, "QUERY")) {
         return false;
     }
-    if ["EXIT", "CONTINUE", "RETURN", "RAISE", "PERFORM", "ASSERT"]
+    if word(first, "PERFORM") {
+        return simple_perform(&code[1..]);
+    }
+    if ["EXIT", "CONTINUE", "RETURN", "RAISE", "ASSERT"]
         .iter()
         .any(|kind| word(first, kind))
     {
         return true;
     }
-    if ["DECLARE", "GET", "OPEN", "FETCH", "MOVE", "CLOSE"]
-        .iter()
-        .any(|kind| word(first, kind))
-    {
-        return true;
+    if word(first, "DECLARE") {
+        return !code
+            .iter()
+            .any(|token| word(token, "CURSOR") || word(token, "FOR"));
     }
-    matches!(code.get(1), Some(Token::Assignment))
+    if word(first, "OPEN") {
+        return code.len() == 2 && label(code[1]);
+    }
+    if word(first, "GET") {
+        return code.get(1).is_some_and(|token| word(token, "DIAGNOSTICS"))
+            || code.get(1).is_some_and(|token| word(token, "STACKED"))
+                && code.get(2).is_some_and(|token| word(token, "DIAGNOSTICS"));
+    }
+    if word(first, "CLOSE") {
+        return code.len() == 2 && label(code[1]);
+    }
+    false
+}
+
+fn simple_perform(code: &[&Token]) -> bool {
+    match code {
+        [Token::Number(_, _)] | [Token::SingleQuotedString(_)] | [Token::Word(_)] => true,
+        [Token::Word(_), Token::LParen, ..] => {
+            let mut depth = 0usize;
+            for (at, token) in code.iter().enumerate().skip(1) {
+                match token {
+                    Token::LParen => depth += 1,
+                    Token::RParen => {
+                        depth = depth.saturating_sub(1);
+                        if depth == 0 {
+                            return at + 1 == code.len();
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            false
+        }
+        _ => false,
+    }
+}
+
+fn label(token: &Token) -> bool {
+    matches!(token, Token::Word(word) if word.quote_style.is_some() || word.keyword == Keyword::NoKeyword)
 }
 
 fn boundary(code: &[&Token], expected: &str) -> Option<usize> {
     let mut depth = 0usize;
+    let mut cases = 0usize;
     for (at, token) in code.iter().enumerate().skip(1) {
         match token {
             Token::LParen => depth += 1,
             Token::RParen => depth = depth.saturating_sub(1),
-            _ if depth == 0 && word(token, expected) => return Some(at),
+            _ if word(token, "CASE") => cases += 1,
+            _ if word(token, "END") => cases = cases.saturating_sub(1),
+            _ if depth == 0 && cases == 0 && word(token, expected) => return Some(at),
             _ => {}
         }
     }

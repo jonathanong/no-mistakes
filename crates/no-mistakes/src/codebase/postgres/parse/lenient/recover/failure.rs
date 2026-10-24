@@ -30,9 +30,16 @@ pub(super) fn unrecoverable_chunk(
         .collect::<Vec<_>>();
     // A procedural opener can share a semicolon chunk with the first SQL action.
     // Anchor a failure to that action, retaining the opener alone for its own marker.
-    let start = usize::from(significant.len() > 1 && significant.first().is_some_and(|token| {
-        matches!(&token.token, Token::Word(word) if word.quote_style.is_none() && ["BEGIN", "ELSE", "LOOP"].iter().any(|prefix| word.value.eq_ignore_ascii_case(prefix)))
-    }));
+    let mut start = 0;
+    while start + 1 < significant.len()
+        && matches!(&significant[start].token, Token::Word(word)
+            if word.quote_style.is_none()
+                && ["BEGIN", "ELSE", "LOOP"]
+                    .iter()
+                    .any(|prefix| word.value.eq_ignore_ascii_case(prefix)))
+    {
+        start += 1;
+    }
     let statement = significant.get(start..)?;
     let line = statement.first()?.span.start.line as usize;
     let head = statement

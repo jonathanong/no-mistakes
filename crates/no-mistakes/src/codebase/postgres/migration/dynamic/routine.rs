@@ -1,5 +1,6 @@
 use super::literal::{leading_string_expression, string_expression};
 use super::*;
+mod wrapper;
 
 #[derive(Clone, Debug)]
 pub(super) struct RoutineBody {
@@ -52,24 +53,14 @@ pub(super) fn bodies(sql: &str) -> Vec<RoutineBody> {
                 direct_facts_already_recovered: do_block && decoded.dollar_quoted,
                 source_order: vec![ordinal],
                 executed: do_block,
-                clear_outer_wrapper: (routine && routine_head(&code)
-                    || do_block && !decoded.dollar_quoted)
-                    && complete_body_suffix(&code, start, sql),
+                clear_outer_wrapper: if routine {
+                    wrapper::complete_routine(&code)
+                } else {
+                    do_block && !decoded.dollar_quoted && complete_body_suffix(&code, start, sql)
+                },
             })
         })
         .collect()
-}
-
-fn routine_head(code: &[&TokenWithSpan]) -> bool {
-    let at = if code.get(1).is_some_and(|token| word(token, "OR"))
-        && code.get(2).is_some_and(|token| word(token, "REPLACE"))
-    {
-        3
-    } else {
-        1
-    };
-    code.get(at)
-        .is_some_and(|token| word(token, "FUNCTION") || word(token, "PROCEDURE"))
 }
 
 fn complete_body_suffix(code: &[&TokenWithSpan], start: usize, sql: &str) -> bool {
