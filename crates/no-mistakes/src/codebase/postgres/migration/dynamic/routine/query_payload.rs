@@ -12,6 +12,11 @@ pub(super) fn push_query_payload(
         .iter()
         .filter(|token| !matches!(token.token, Token::Whitespace(_)))
         .collect();
+    // A leading SQL DECLARE CURSOR wrapper is parsed directly with its query. Its calls
+    // already belong to that AST; only later PL/pgSQL declaration chunks need projection.
+    if code.first().is_some_and(|token| keyword(token, "DECLARE")) {
+        return;
+    }
     let Some(at) = code.windows(2).position(|pair| {
         (keyword(pair[0], "FOR") || keyword(pair[0], "IN") || keyword(pair[0], "IS"))
             && (keyword(pair[1], "SELECT") || keyword(pair[1], "WITH"))
