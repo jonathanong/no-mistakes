@@ -58,6 +58,7 @@ impl<'a> Visit<'a> for Aliases<'_> {
             for heritage in &interface.extends {
                 uses.visit_ts_interface_heritage(heritage);
             }
+            uses.visit_ts_interface_body(&interface.body);
             for used in uses.found {
                 self.readers.entry(used).or_default().push(*id);
             }

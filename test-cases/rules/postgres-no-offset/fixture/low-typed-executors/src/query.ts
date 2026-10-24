@@ -87,4 +87,9 @@ export function objectRestTyped({ group: { ...executors } }: { group: { executor
 export function topRestTyped({ ...executors }: { executor: QueryExecutor }) {
   consume(executors); // UNSUPPORTED_TYPE
 }
+// Interface member dependencies retain the same unknowns as object aliases.
+interface MemberContext { executor: QueryExecutor }
+export function memberContext(context: MemberContext, sql: string) {
+  context.executor(sql); // UNSUPPORTED_TYPE
+}
 function consume(value: unknown) {}
