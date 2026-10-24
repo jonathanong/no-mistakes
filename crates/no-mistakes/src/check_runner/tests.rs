@@ -17,9 +17,9 @@ mod graph_scope;
 mod integration_gitignore;
 mod parse_cache;
 mod playwright_discovery;
+mod postgres_projection_scope;
 #[cfg(feature = "test-instrumentation")]
 mod prepared_parser_cache;
-mod postgres_projection_scope;
 mod prepared_tsconfig;
 mod tsconfig_catalog;
 
