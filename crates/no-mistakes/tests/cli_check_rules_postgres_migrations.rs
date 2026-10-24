@@ -87,10 +87,16 @@ fn postgres_constraint_validate_passes_when_paired() {
 }
 
 #[test]
-fn postgres_constraint_validate_passes_when_not_valid_is_inside_do() {
+fn postgres_constraint_validate_reports_recovery_marker_for_paired_not_valid_inside_do() {
     let root = fixture("postgres-constraint-validate", "pass-do-block");
     let out = check_fixture_config(&root);
-    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected recovery marker: {body}");
+    assert!(body.contains("postgres-constraint-validate"), "{body}");
+    assert!(
+        body.contains("SQL statement `END IF` could not be analyzed"),
+        "{body}"
+    );
 }
 
 #[test]

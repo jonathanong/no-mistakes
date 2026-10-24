@@ -52,7 +52,23 @@ fn paired_not_valid_and_validate_pass() {
 
 #[test]
 fn paired_not_valid_inside_do_block_passes() {
-    assert!(run(&fixture("pass-do-block")).is_empty());
+    let findings = run(&fixture("pass-do-block"));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 7);
+    assert_eq!(findings[0].target.as_deref(), Some("END IF"));
+    assert!(findings[0].message.contains("could not be analyzed"));
+}
+
+#[test]
+fn paired_not_valid_inside_do_block_passes_when_recovery_is_ignored() {
+    let root = fixture("pass-do-block");
+    let mut config = config();
+    config.rules[0].options =
+        serde_yaml::from_str("sqlInclude: [\"migrations/**/*.sql\"]\nunanalyzable: ignore")
+            .unwrap();
+    let files = vec![root.join("migrations/001.sql")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
