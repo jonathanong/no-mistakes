@@ -19,7 +19,7 @@ const propertyConsumer = {
     { argumentIndex: 0, propertyNames: ["enqueueEmail", "enqueueEmailCallback"] },
   ],
 };
-function reports(name, typed = false, awaitingConsumers) {
+function reports(name, typed = false, awaitingConsumers, parser = tsParser) {
   const filename = resolve(root, name);
   return new Linter({ cwd: dirname(filename) })
     .verify(
@@ -27,7 +27,7 @@ function reports(name, typed = false, awaitingConsumers) {
       {
         files: ["**/*.ts"],
         languageOptions: {
-          parser: tsParser,
+          parser,
           parserOptions: typed
             ? { project: resolve(root, "tsconfig.json"), disallowAutomaticSingleRunInference: true }
             : {},
@@ -42,19 +42,36 @@ function reports(name, typed = false, awaitingConsumers) {
 it.each([false, true])("proves same-file awaited callback invocations (typed=%s)", (typed) => {
   assert.deepEqual(
     reports("local.ts", typed),
-    [16, 19, 25, 27, 31, 38, 43, 50, 56].map((line) => [line, "disposition"]),
+    [16, 19, 25, 27, 31, 38, 43, 50, 56, 64].map((line) => [line, "disposition"]),
   );
 });
 it("proves resolvable imported consumer bodies", () => {
   assert.deepEqual(
     reports("imported.ts", true),
-    [7, 9, 11, 13, 17, 19, 21, 23, 25].map((line) => [line, "disposition"]),
+    [7, 9, 11, 13, 17, 19, 21, 23, 25, 28, 30, 32].map((line) => [line, "disposition"]),
   );
+});
+it("does not enumerate the parser program outside the resolved implementation", () => {
+  const parser = {
+    ...tsParser,
+    parseForESLint(...args) {
+      const parsed = tsParser.parseForESLint(...args);
+      parsed.services.program = new Proxy(parsed.services.program, {
+        get(target, key) {
+          assert.notEqual(key, "getSourceFiles", "consumer proofs must stay scoped");
+          const value = Reflect.get(target, key);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      });
+      return parsed;
+    },
+  };
+  assert.deepEqual(reports("imported.ts", true, undefined, parser), reports("imported.ts", true));
 });
 it("keeps imported bodies unproven without parser type information", () => {
   assert.deepEqual(
     reports("imported.ts"),
-    [3, 5, 7, 9, 11, 13, 17, 19, 21, 23, 25].map((line) => [line, "disposition"]),
+    [3, 5, 7, 9, 11, 13, 17, 19, 21, 23, 25, 28, 30, 32].map((line) => [line, "disposition"]),
   );
 });
 it("accepts only configured fresh dependency properties", () => {
@@ -84,8 +101,8 @@ it("validates exact dependency property contracts", () => {
 });
 it("matches real Oxlint for local proofs and configured imported or DI consumers", () => {
   for (const [name, lines] of [
-    ["local.ts", [16, 19, 25, 27, 31, 38, 43, 50, 56]],
-    ["imported.ts", [7, 9, 11, 13, 17, 19, 21, 23, 25]],
+    ["local.ts", [16, 19, 25, 27, 31, 38, 43, 50, 56, 64]],
+    ["imported.ts", [7, 9, 11, 13, 17, 19, 21, 23, 25, 28, 30, 32]],
     ["properties.ts", [7, 9, 11, 13, 15, 18, 20, 24, 28]],
   ]) {
     const result = spawnSync(

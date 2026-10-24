@@ -291,8 +291,10 @@ Without configuration, a stable same-file consumer can prove adoption when
 every use of its callback parameter is a direct invocation immediately awaited
 inside that consumer, including `result = await callback()`. Floating calls,
 parameter replacement, forwarding, or capture in a nested function keep the
-callback unproven. With a parser-owned TypeScript program, resolvable imports
-can use the same proof on their actual implementation. Missing bodies or type
+callback unproven. Executable parameter defaults are inspected too. With a
+parser-owned TypeScript program, resolvable imports can use the same proof on
+their actual implementation. Its module supplies cached stability facts; the
+rule does not enumerate other program files. Missing bodies or type
 information keep imports unproven; configure the contract when the lint host
 cannot expose the imported body.
 

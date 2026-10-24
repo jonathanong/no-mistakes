@@ -3,7 +3,7 @@ const { unwrapExpression } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { propertiesWritten } = require("./async-disposition-mocks");
 
-function importedAwaited(call, index, context) {
+function importedAwaited(call, index, context, sourceFacts) {
   const services = context.sourceCode.parserServices;
   if (
     !services?.program ||
@@ -71,36 +71,31 @@ function importedAwaited(call, index, context) {
     }
     current.forEachChild(visit);
   }
+  for (const parameter of fn.parameters) visit(parameter);
   visit(fn.body);
   if (!safe || !count) return false;
-  // Reject writes or escaping uses of the implementation anywhere in the borrowed program.
-  for (const source of services.program.getSourceFiles()) {
-    if (source.isDeclarationFile) continue;
+  // An ES import cannot replace its exporter's binding. Only inspect that
+  // implementation module, once per lint context, for local writes or escapes.
+  const source = owner.getSourceFile();
+  if (!sourceFacts.has(source)) {
+    const unsafe = new Set();
     function inspect(current) {
-      if (!safe) return;
-      if (
-        typeof current.escapedText === "string" &&
-        current !== fn.name &&
-        current !== owner.name
-      ) {
-        let referenced = checker.getSymbolAtLocation(current);
-        // TypeScript SymbolFlags.Alias; resolve only aliases supplied by the checker.
-        if (referenced?.flags & 2097152) referenced = checker.getAliasedSymbol(referenced);
-        if (referenced === symbol) {
-          const parent = current.parent;
-          const importName =
-            parent.parent?.parent?.parent?.moduleSpecifier ||
-            parent.parent?.parent?.moduleSpecifier ||
-            parent.parent?.moduleSpecifier;
-          if (!importName && (parent.expression !== current || !Array.isArray(parent.arguments)))
-            safe = false;
-        }
+      if (typeof current.escapedText === "string") {
+        const referenced = checker.getSymbolAtLocation(current);
+        const parent = current.parent;
+        if (
+          referenced &&
+          referenced.valueDeclaration?.name !== current &&
+          (parent.expression !== current || !Array.isArray(parent.arguments))
+        )
+          unsafe.add(referenced);
       }
       current.forEachChild(inspect);
     }
     inspect(source);
+    sourceFacts.set(source, unsafe);
   }
-  return safe;
+  return !sourceFacts.get(source).has(symbol);
 }
 
 module.exports = { importedAwaited };

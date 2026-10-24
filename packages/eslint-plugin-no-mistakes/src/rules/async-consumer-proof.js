@@ -42,6 +42,7 @@ function localBodySafe(fn, context) {
       else visit(child);
     }
   }
+  fn.params.forEach(visit);
   visit(fn.body);
   return safe;
 }
@@ -85,6 +86,7 @@ function locallyAwaited(call, index, context) {
 
 function createConsumerProof(context) {
   const results = new WeakMap();
+  const sourceFacts = new WeakMap();
   return function provenAwaitingConsumer(argument) {
     const value = unwrapTransparentParent(argument);
     const call = value.parent;
@@ -103,7 +105,7 @@ function createConsumerProof(context) {
     if (!slots.has(index))
       slots.set(
         index,
-        locallyAwaited(call, index, context) || importedAwaited(call, index, context),
+        locallyAwaited(call, index, context) || importedAwaited(call, index, context, sourceFacts),
       );
     return slots.get(index);
   };

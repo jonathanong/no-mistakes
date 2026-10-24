@@ -58,3 +58,8 @@ await argumentMutation(argumentsAlias);
 const inspected = () => enqueueEmail(13);
 void typeof inspected; // An unrelated non-argument read does not invalidate adoption.
 await consume(inspected);
+async function evaluatedDefault(callback: () => Promise<unknown>, result = eval("callback = async () => undefined")) {
+  await callback();
+}
+const defaultEvaluation = () => enqueueEmail(14);
+await evaluatedDefault(defaultEvaluation);

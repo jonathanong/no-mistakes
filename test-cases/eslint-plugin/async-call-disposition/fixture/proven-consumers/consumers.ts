@@ -29,3 +29,12 @@ export async function argumentsRead(callback: () => Promise<unknown>) {
   void arguments;
   await callback();
 }
+export async function initialized(callback: () => Promise<unknown>, result = callback()) {
+  await callback();
+}
+export async function replaced(callback: () => Promise<unknown>, result = (callback = async () => undefined)) {
+  await callback();
+}
+export async function forwarded(callback: () => Promise<unknown>, result = unknownConsumer(callback)) {
+  await callback();
+}
