@@ -187,5 +187,4 @@ mod input_mode;
 mod lines;
 pub use input_mode::SqlBoundInputMode;
 use sqlparser::ast::Expr;
-mod mapping;
 mod row_inputs;

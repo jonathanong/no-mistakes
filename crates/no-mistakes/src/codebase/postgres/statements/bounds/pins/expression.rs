@@ -27,6 +27,7 @@ pub(super) fn equate(
             out.push((
                 item,
                 SqlBoundPin {
+                    alternative: None,
                     column: String::new(),
                     unqualified_candidate: false,
                     expression: Some(expression),

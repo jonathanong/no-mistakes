@@ -1,3 +1,4 @@
+use super::super::query;
 use super::*;
 
 /// A subquery sizes the values it yields, unless it reads the row being checked: then every

@@ -114,6 +114,12 @@ jsonb_array_elements_text($1::jsonb) AS item)` reads the local function output
 and can bound the target key; a function in another schema remains opaque.
 A data-backed select-list set-returning function is opaque even when its
 SELECT has no FROM items; it cannot bound another relation joined to its output.
+An `ARRAY(SELECT generate_series(1, $2))` input has no relation to scan and is
+caller-sized. With `FROM accounts LIMIT 1`, even a caller-sized projection such
+as `generate_series(1, 0)::text::uuid` can emit zero rows for every account.
+The result LIMIT then may read the whole table; an independent account key
+predicate still bounds that input. Casts and ordinary expression wrappers do
+not remove this scan requirement.
 Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one
 whose arguments read a column, query or function result (`unnest(ARRAY[a.id])`,
 `unnest(get_all_account_ids())`), and the recursive reference of a `WITH RECURSIVE` are opaque: never

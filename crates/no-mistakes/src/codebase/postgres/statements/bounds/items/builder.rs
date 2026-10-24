@@ -1,4 +1,3 @@
-mod factors;
 use super::super::super::value::PlaceholderPositions;
 use super::super::using::Using;
 use super::super::{pins, Scope};

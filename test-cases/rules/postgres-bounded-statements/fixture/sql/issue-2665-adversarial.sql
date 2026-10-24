@@ -68,3 +68,9 @@ WITH ids AS (SELECT $1::uuid AS id) SELECT id FROM accounts WHERE id = ANY(ARRAY
 WITH ids AS (SELECT id FROM accounts LIMIT 1) SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT id::uuid FROM ids));
 WITH ids AS (SELECT * FROM accounts LIMIT 1) SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT id::uuid FROM ids));
 SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT (SELECT id FROM accounts LIMIT 1)::uuid));
+-- A zero-row SRF may scan every input row before LIMIT 1; casts cannot hide that work.
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT generate_series(1, 0)::text::uuid FROM accounts LIMIT 1));
+-- An independent input key still bounds that scan.
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT generate_series(1, 0)::text::uuid FROM accounts WHERE id = $1 LIMIT 1));
+-- ORDER BY expansion can also erase every projected row before LIMIT 1.
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT id FROM accounts ORDER BY generate_series(1, 0) LIMIT 1));

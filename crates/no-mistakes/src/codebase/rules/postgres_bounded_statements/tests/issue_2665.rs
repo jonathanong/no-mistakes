@@ -84,6 +84,8 @@ fn finite_output_rows_do_not_prove_array_elements_or_limit_values() {
             ("accounts", 60),
             ("accounts", 69),
             ("accounts", 70),
+            ("accounts", 72),
+            ("accounts", 76),
         ]
         .map(|(name, line)| (name.to_owned(), line))
     );
