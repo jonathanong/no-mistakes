@@ -19,6 +19,13 @@ function createCollectionEscape(checker, program, result) {
     if (!node || escapedValueNodes.has(node)) return;
     escapedValueNodes.add(node);
     if (node.getFirstToken?.()?.getText() === "typeof") return;
+    if (
+      (node.name?.text ?? node.argumentExpression?.text) === "prototype" &&
+      builtinCollection(checker.getTypeAtLocation(node))
+    ) {
+      result.uncertainMutation = true;
+      return;
+    }
     if (node.escapedText !== undefined) {
       const symbol =
         checker.getShorthandAssignmentValueSymbol(node.parent) ?? checker.getSymbolAtLocation(node);
@@ -27,8 +34,7 @@ function createCollectionEscape(checker, program, result) {
           seenSymbols.add(symbol);
           result.escapedSymbols.add(symbol);
           const declaration = symbol.valueDeclaration;
-          if (declaration?.initializer?.escapedText !== undefined)
-            escapeValue(declaration.initializer, seenSymbols);
+          if (declaration?.initializer) escapeValue(declaration.initializer, seenSymbols);
         }
       } else if (symbol && !seenSymbols.has(symbol)) {
         seenSymbols.add(symbol);

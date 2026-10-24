@@ -294,6 +294,13 @@ describe("postgres-no-executor-adapter collection keys", () => {
     assert.deepEqual(reports("destructured-receiver.ts"), [[10, "passed"]]);
   });
 
+  it("treats builtin prototypes passed to indirect mutation APIs as exposed", () => {
+    assert.deepEqual(reports("indirect-prototype.ts"), [[6, "passed"]]);
+    assert.deepEqual(reports("indirect-prototype-alias.ts"), [[6, "passed"]]);
+    assert.deepEqual(reports("indirect-prototype-computed.ts"), [[5, "passed"]]);
+    assert.deepEqual(reports("indirect-custom-prototype.ts"), []);
+  });
+
   it("tracks reflective mutations of builtin collection prototypes", () => {
     assert.deepEqual(reports("reflect-prototype-mutations.ts"), [
       [5, "passed"],
