@@ -1,6 +1,6 @@
--- These malformed catalog indexes cannot prove a unique match.
-SELECT 1 FROM placeholder_partial AS t WHERE t.email = $1 AND t.state = $2;
+-- Placeholder indexes cannot prove a match; NULLS NOT DISTINCT accepts IS NULL, plain UNIQUE does not.
+SELECT 1 FROM placeholder_partial AS t WHERE t.email = $2 AND t.state = $1;
 SELECT 1 FROM placeholder_expression AS t WHERE lower(t.email) || $1 = $2;
--- NULLS NOT DISTINCT treats the single NULL index entry as unique; ordinary UNIQUE does not.
+-- NULLS NOT DISTINCT accepts its single NULL index entry; plain UNIQUE permits duplicates.
 SELECT 1 FROM nulls_nd AS t WHERE t.email IS NULL;
 SELECT 1 FROM nulls_plain AS t WHERE t.email IS NULL;

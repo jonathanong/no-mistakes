@@ -9,6 +9,21 @@ fn dml_join_bounds_follow_the_target_key_and_do_not_leak_to_siblings() {
         actual,
         [
             (
+                "index-guards.sql".to_string(),
+                2,
+                "table:placeholder_partial".to_string(),
+            ),
+            (
+                "index-guards.sql".to_string(),
+                3,
+                "table:placeholder_expression".to_string(),
+            ),
+            (
+                "index-guards.sql".to_string(),
+                6,
+                "table:nulls_plain".to_string(),
+            ),
+            (
                 "joined-dml.sql".to_string(),
                 2,
                 "table:joined_targets".to_string(),
@@ -22,21 +37,6 @@ fn dml_join_bounds_follow_the_target_key_and_do_not_leak_to_siblings() {
                 "joined-dml.sql".to_string(),
                 13,
                 "table:joined_targets".to_string(),
-            ),
-            (
-                "index-guards.sql".to_string(),
-                2,
-                "table:placeholder_partial".to_string(),
-            ),
-            (
-                "index-guards.sql".to_string(),
-                3,
-                "table:placeholder_expression".to_string(),
-            ),
-            (
-                "index-guards.sql".to_string(),
-                5,
-                "table:nulls_plain".to_string(),
             ),
         ]
     );

@@ -10,7 +10,21 @@
         "payload": {"dataType": "text", "nullable": true, "ordinalPosition": 2}
       },
       "primaryKey": {"columns": ["id"]},
-      "indexes": {}
+      "indexes": {
+        "joined_targets_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX joined_targets_pkey ON public.joined_targets USING btree (id)",
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
     },
     "joined_sources": {
       "relationKind": "table",
@@ -20,13 +34,41 @@
         "tenant_id": {"dataType": "uuid", "nullable": true, "ordinalPosition": 3}
       },
       "primaryKey": {"columns": ["id"]},
-      "indexes": {}
+      "indexes": {
+        "joined_sources_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX joined_sources_pkey ON public.joined_sources USING btree (id)",
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
     },
     "joined_roots": {
       "relationKind": "table",
       "columns": {"id": {"dataType": "uuid", "nullable": false, "ordinalPosition": 1}},
       "primaryKey": {"columns": ["id"]},
-      "indexes": {}
+      "indexes": {
+        "joined_roots_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX joined_roots_pkey ON public.joined_roots USING btree (id)",
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
     },
     "joined_links": {
       "relationKind": "table",
@@ -37,6 +79,19 @@
       },
       "primaryKey": {"columns": ["id"]},
       "indexes": {
+        "joined_links_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX joined_links_pkey ON public.joined_links USING btree (id)",
+          "keys": [{"column": "id", "expression": "id"}]
+        },
         "joined_links_root_id_key": {
           "accessMethod": "btree",
           "unique": true,
