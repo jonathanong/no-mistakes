@@ -143,7 +143,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, inputs this rule cannot prove are never treated as clean ([how analysis works](README.md#how-analysis-works)); they follow `options.unanalyzable`:
+Following recall over precision, inputs this rule cannot prove are never treated as clean ([how analysis works](../../README.md#how-analysis-works)); they follow `options.unanalyzable`:
 
 - A selected anchor whose `sourceFile` is outside the selected file set and is missing, unreadable, or malformed.
 - A selected anchor that cannot be read as UTF-8.

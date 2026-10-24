@@ -472,7 +472,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, inputs this rule cannot prove are never treated as clean ([how analysis works](README.md#how-analysis-works)); workflow steps this rule cannot interpret (for example a custom `shell:` such as `python {0}`, or a step whose command depends on an unresolved expression) are never counted as a typecheck gate and conservatively block later steps and dependent jobs from counting. A project whose only gate sits behind such a step is therefore reported as lacking a `tsc` gate. `options.unanalyzable` does not apply; fix it by running `tsc` in a plain `run:` step before the opaque step.
+Following recall over precision, inputs this rule cannot prove are never treated as clean ([how analysis works](../../README.md#how-analysis-works)); workflow steps this rule cannot interpret (for example a custom `shell:` such as `python {0}`, or a step whose command depends on an unresolved expression) are never counted as a typecheck gate and conservatively block later steps and dependent jobs from counting. A project whose only gate sits behind such a step is therefore reported as lacking a `tsc` gate. `options.unanalyzable` does not apply; fix it by running `tsc` in a plain `run:` step before the opaque step.
 
 ## Suppression
 

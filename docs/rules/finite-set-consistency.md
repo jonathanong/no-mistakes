@@ -72,7 +72,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it compares finite sets extracted from explicitly configured sources, and a source that cannot be read or extracted is itself a finding, so `options.unanalyzable` has no effect on it.
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it compares finite sets extracted from explicitly configured sources, and a source that cannot be read or extracted is itself a finding, so `options.unanalyzable` has no effect on it.
 
 ## Related rules
 

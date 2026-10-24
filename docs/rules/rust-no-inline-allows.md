@@ -58,7 +58,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it matches `#[allow]` attributes in parsed Rust source, so `options.unanalyzable` has no effect on it.
+Following recall over precision, the intent is that nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)). Known gap: a file that cannot be read is currently skipped without a finding ([#2660](https://github.com/jonathanong/no-mistakes/issues/2660)).
 
 ## Suppression
 

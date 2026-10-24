@@ -169,7 +169,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it checks parsed pnpm configuration values, so `options.unanalyzable` has no effect on it.
+Following recall over precision, the intent is that nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)). Known gap: invalid workspace YAML is already reported, but an unreadable pnpm workspace file and an unparseable or unreadable `package.json` are currently skipped without a finding ([#2659](https://github.com/jonathanong/no-mistakes/issues/2659)).
 
 ## Suppression
 

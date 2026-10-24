@@ -77,7 +77,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it judges resolved import edges in the canonical graph, so `options.unanalyzable` has no effect on it.
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it judges resolved import edges in the canonical graph, so `options.unanalyzable` has no effect on it.
 
 ## Suppression
 

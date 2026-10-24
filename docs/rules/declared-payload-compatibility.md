@@ -174,7 +174,7 @@ Low reports a flat scalar mismatch such as a renamed required `userId` property.
 
 ### Unanalyzable inputs
 
-Following recall over precision, inputs this rule cannot prove are never treated as clean ([how analysis works](README.md#how-analysis-works)); they follow `options.unanalyzable`. At low effort the only such input is the nested-object-or-array shape above:
+Following recall over precision, inputs this rule cannot prove are never treated as clean ([how analysis works](../../README.md#how-analysis-works)); they follow `options.unanalyzable`. At low effort the only such input is the nested-object-or-array shape above:
 
 - `report` (default): fails as an `unproven` finding.
 - `advise`: a non-failing advisory.
