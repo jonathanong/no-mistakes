@@ -2,7 +2,6 @@
 
 const { unwrapExpression, unwrapSequence } = require("./async-ast");
 const {
-  isLocalRequire,
   isReassigned,
   memberPropertyName,
   namespaceSourceFromInit,
@@ -11,27 +10,8 @@ const {
   stableConstInitializer,
 } = require("./async-target-bindings");
 const { compileTargets, matchesAny, targetMatches } = require("./async-patterns");
-const { literalString, logicalCall } = require("./module-mock-helpers");
-
-function importSpecifierName(specifier) {
-  const imported = specifier.imported;
-  return imported.type === "Literal" ? String(imported.value) : imported.name;
-}
-
-function requireSource(node, context) {
-  const expression = unwrapExpression(node);
-  const source = literalString(unwrapExpression(expression?.arguments?.[0]));
-  if (
-    expression?.type !== "CallExpression" ||
-    expression.callee.type !== "Identifier" ||
-    expression.callee.name !== "require" ||
-    source === null ||
-    isLocalRequire(expression.callee, context)
-  ) {
-    return null;
-  }
-  return source;
-}
+const { importSpecifierName, requireSource } = require("./async-target-sources");
+const { logicalCall } = require("./module-mock-helpers");
 
 function createTargetMatcher(
   context,

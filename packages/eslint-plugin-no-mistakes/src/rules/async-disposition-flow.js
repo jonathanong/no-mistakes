@@ -94,6 +94,20 @@ function callbackReturnsNormally(node) {
   return fallsThrough(node);
 }
 
+function isMapCall(node) {
+  return (
+    node?.type === "CallExpression" &&
+    node.callee.type === "MemberExpression" &&
+    ["map", "flatMap"].includes(memberPropertyName(node.callee))
+  );
+}
+
+function isMapCallback(fn) {
+  const value = unwrapTransparentParent(fn);
+  const call = value.parent;
+  return isMapCall(call) && call.arguments[0] === value;
+}
+
 function callbackCompletes(push) {
   const fn = findContainingFunction(push);
   if (fn.body.type !== "BlockStatement") return true;
@@ -148,4 +162,12 @@ function laterDrain(from, to, createdHere = false) {
   return body.slice(body.indexOf(start) + 1, body.indexOf(attempt)).every(fallsThrough);
 }
 
-module.exports = { callbackReturnsNormally, collectionAnchor, laterDrain, laterInBlock, statement };
+module.exports = {
+  callbackReturnsNormally,
+  collectionAnchor,
+  isMapCall,
+  isMapCallback,
+  laterDrain,
+  laterInBlock,
+  statement,
+};

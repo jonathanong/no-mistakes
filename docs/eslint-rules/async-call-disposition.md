@@ -230,14 +230,45 @@ await awaitReportedEnqueueAdmission(() => {
 });
 unknownConsumer(() => enqueueOnTopicCreated(data)); // reported: no configured contract
 awaitReportedEnqueueAdmission(null, () => enqueueOnTopicCreated(data)); // reported: wrong slot
-awaitReportedEnqueueAdmission(() => { enqueueOnTopicCreated(data); }); // reported: not returned
+awaitReportedEnqueueAdmission(() => {
+  enqueueOnTopicCreated(data);
+}); // reported: not returned
+
+const accepted = () => enqueueOnTopicCreated(data);
+awaitReportedEnqueueAdmission(accepted); // accepted: stable callback returns its promise
+function unknown() {
+  return enqueueOnTopicCreated(data);
+}
+unknownConsumer(unknown); // reported: this consumer has no adoption contract
 ```
 
 Return the target promise (or an already supported retained, chained, or aggregate
-promise) from the configured callback. Matching follows import identity, including
-stable aliases and logical `.call` argument positions; shadowed or reassigned callees do not qualify. A spread
-argument before the callback prevents proving its position. The option does not
-inspect consumer bodies or infer contracts from names. As with ordinary function
-and mock callback returns, it does not prove that a caller invokes or awaits the
-consumer. Configure only APIs that honor this contract. Existing literal-array
-`.apply` callback return behavior remains unchanged.
+promise) from the configured callback.
+
+- **Accepted:** inline callbacks, callbacks bound to an unchanged `const`, and
+  function declarations with no reassignment follow the same return contract.
+  Every argument use must be a configured awaiting consumer, a recognized mock,
+  or a `.map` / `.flatMap` callback whose result reaches a handled native
+  `Promise.all`, `Promise.allSettled`, `Promise.any`, or `Promise.race`. A retained
+  mapped collection follows the same aggregate requirement described above.
+  Inline `.flatMap` callbacks follow this aggregate contract too.
+- **Reported:** mixed known and unknown consumers, wrong callback slots, and
+  spreads that obscure the callback position remain unproven. Callback-valued
+  conditional and logical branches, final comma operands, assignment results,
+  and tagged template interpolations also remain unproven. Passing a `.bind`
+  result does not establish an adoption contract.
+  `Promise.all([items.map(callback)])` leaves a nested array unhandled; pass the
+  mapped array directly or spread its members instead.
+- **Not an argument use:** `typeof`, comparisons, updates, untagged template
+  literals, conditional tests, and earlier comma operands do not pass the
+  callback. Neither do computed property keys, erased type arguments, or uses
+  as a tag or constructor. Ordinary functions and locally invoked bound
+  functions retain the ordinary return contract.
+- **Consumer identity:** matching follows imports, stable aliases, and logical
+  `.call` argument positions. Shadowed or reassigned callees do not qualify.
+  Existing literal-array `.apply` callback return behavior remains unchanged.
+
+The option does not inspect consumer bodies or infer contracts from names. As
+with ordinary function and mock callback returns, it does not prove that a
+caller invokes or awaits the consumer. Configure only APIs that honor this
+contract.

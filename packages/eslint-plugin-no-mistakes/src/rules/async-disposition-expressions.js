@@ -1,36 +1,43 @@
 "use strict";
 
-const { isPromiseAllCall, isPromiseMethodCall } = require("./async-disposition-bindings");
-const { callbackReturnsNormally } = require("./async-disposition-flow");
+const {
+  isPromiseAllCall,
+  isPromiseMethodCall,
+  retainedCollection,
+} = require("./async-disposition-bindings");
+const { callbackReturnsNormally, isMapCall, isMapCallback } = require("./async-disposition-flow");
 const { returnsThroughMock } = require("./async-disposition-mocks");
 const {
   findContainingFunction,
   isFunction,
   isTransparentExpression,
+  unwrapExpression,
   unwrapTransparentParent,
 } = require("./async-ast");
-const { memberPropertyName } = require("./async-targets");
 
-function directlyDisposed(node, context, returnsThroughConsumer) {
+function directlyDisposed(node, context, consumers) {
   const expression = unwrapTransparentParent(node);
   const parent = expression.parent;
   if (parent?.type === "ReturnStatement") {
     const fn = findContainingFunction(parent);
-    return !isCallArgument(fn) || returnsThroughMock(fn, context) || returnsThroughConsumer(fn);
+    return returnedFromFunction(fn, context, consumers);
   }
   if (parent?.type === "ArrowFunctionExpression" && parent.body === expression) {
-    if (isCallCallee(parent))
-      return directlyDisposed(parent.parent, context, returnsThroughConsumer);
-    return (
-      !isCallArgument(parent) ||
-      returnsThroughMock(parent, context) ||
-      returnsThroughConsumer(parent)
-    );
+    if (isCallCallee(parent)) return directlyDisposed(parent.parent, context, consumers);
+    return returnedFromFunction(parent, context, consumers);
   }
   return (
     parent?.type === "AwaitExpression" ||
     (parent?.type === "UnaryExpression" && parent.operator === "void")
   );
+}
+
+function returnedFromFunction(fn, context, consumers) {
+  if (!fn) return true;
+  if (isCallArgument(fn))
+    return returnsThroughMock(fn, context) || consumers.returnsThroughConsumer(fn);
+  const named = consumers.namedDisposition(fn);
+  return named ?? true;
 }
 
 function isCallArgument(node) {
@@ -44,19 +51,6 @@ function isCallCallee(node) {
 
 function isPromiseAllIterable(node, promiseAll) {
   return promiseAll.arguments[0] === node && (node.type === "ArrayExpression" || isMapCall(node));
-}
-
-function isMapCall(node) {
-  return (
-    node?.type === "CallExpression" &&
-    node.callee.type === "MemberExpression" &&
-    memberPropertyName(node.callee) === "map"
-  );
-}
-
-function isMapCallback(fn) {
-  const call = fn.parent;
-  return isMapCall(call) && call.arguments.includes(fn);
 }
 
 function expressionReturnedFromCallback(node, fn) {
@@ -74,7 +68,7 @@ function expressionReturnedFromCallback(node, fn) {
   return Boolean(returnStatement);
 }
 
-function canReachPromiseAll(node, promiseAll) {
+function canReachPromiseAll(node, promiseAll, collectionRole) {
   let current = node;
   // The caller supplies an ancestor aggregate; every path reaches it or rejects.
   for (;;) {
@@ -86,9 +80,12 @@ function canReachPromiseAll(node, promiseAll) {
         return false;
       }
       current = parent.parent;
+      collectionRole = true;
       continue;
     }
     if (parent?.type === "ArrayExpression") {
+      // A mapper collection differs from a configured async target named map.
+      if (collectionRole && isMapCall(unwrapExpression(current))) return false;
       if (parent.parent !== promiseAll || promiseAll.arguments[0] !== parent) return false;
       current = parent;
       continue;
@@ -135,14 +132,14 @@ function observedExpression(node, context) {
   return current;
 }
 
-function promiseAllDisposed(node, context, returnsThroughConsumer) {
+function promiseAllDisposed(node, context, consumers, collectionRole = false) {
   let current = node.parent;
   while (current) {
-    if (isPromiseAllCall(current, context) && canReachPromiseAll(node, current)) {
+    if (isPromiseAllCall(current, context) && canReachPromiseAll(node, current, collectionRole)) {
       return (
-        directlyDisposed(current, context, returnsThroughConsumer) ||
-        directlyDisposed(observedExpression(current, context), context, returnsThroughConsumer) ||
-        promiseAllDisposed(current, context, returnsThroughConsumer)
+        directlyDisposed(current, context, consumers) ||
+        directlyDisposed(observedExpression(current, context), context, consumers) ||
+        promiseAllDisposed(current, context, consumers)
       );
     }
     current = current.parent;
@@ -150,7 +147,29 @@ function promiseAllDisposed(node, context, returnsThroughConsumer) {
   return false;
 }
 
-function mappedPromise(node, disposed) {
+function mappedCollectionDisposed(call, context, consumers, disposed) {
+  return (
+    promiseAllDisposed(call, context, consumers, true) ||
+    retainedCollection(call, context, (value) => isPromiseAllCall(value, context), disposed)
+  );
+}
+
+function mapperCompletes(fn) {
+  return fn.async || fn.body.type !== "BlockStatement" || callbackReturnsNormally(fn.body);
+}
+
+function mappedArgumentDisposed(fn, argument, context, consumers, disposed) {
+  const value = unwrapTransparentParent(argument);
+  const call = value.parent;
+  return (
+    isMapCall(call) &&
+    call.arguments[0] === value &&
+    mapperCompletes(fn) &&
+    mappedCollectionDisposed(call, context, consumers, disposed)
+  );
+}
+
+function mappedPromise(node, context, consumers, disposed) {
   const parent = node.parent;
   const fn =
     parent.type === "ReturnStatement"
@@ -163,9 +182,15 @@ function mappedPromise(node, disposed) {
   return Boolean(
     fn &&
     isMapCallback(fn) &&
-    (fn.async || fn.body.type !== "BlockStatement" || callbackReturnsNormally(fn.body)) &&
-    disposed(fn.parent),
+    mapperCompletes(fn) &&
+    mappedCollectionDisposed(unwrapTransparentParent(fn).parent, context, consumers, disposed),
   );
 }
 
-module.exports = { directlyDisposed, observedExpression, promiseAllDisposed, mappedPromise };
+module.exports = {
+  directlyDisposed,
+  observedExpression,
+  promiseAllDisposed,
+  mappedArgumentDisposed,
+  mappedPromise,
+};
