@@ -17,3 +17,6 @@ fn nonrecursive_cte_base_reads_do_not_invent_outer_row_dependence() {
         .collect();
     assert_eq!(found, [("accounts".to_string(), 9)]);
 }
+
+#[path = "returning_ctes.rs"]
+mod returning_ctes;

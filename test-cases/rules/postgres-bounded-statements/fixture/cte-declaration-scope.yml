@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorNames: []
+      exclude: ['src/**']
+      schemaCatalogPath: schema-cte-returning.json
+      sqlInclude: ['sql/cte-returning/declaration-time-scope.sql']

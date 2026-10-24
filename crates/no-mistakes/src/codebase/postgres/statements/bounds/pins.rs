@@ -1,16 +1,15 @@
 mod array;
 mod correlated;
 mod resolver;
+mod source_merge;
 
 use super::{query, Scope};
 use crate::codebase::postgres::idents::unwrap_expr;
-use crate::codebase::postgres::statements::{
-    SqlBareRead, SqlBoundItem, SqlBoundPin, SqlPinSource, SqlQualifiedRead,
-};
+use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundPin, SqlPinSource};
 use array::{caller_array, constructor, finite_array, scalar_subquery};
 use resolver::Sourced;
+use source_merge::merge;
 use sqlparser::ast::{BinaryOperator, Expr, Query};
-use std::collections::BTreeSet;
 
 pub(super) use correlated::{projection_columns, Reads};
 pub(super) use resolver::Resolver;
@@ -129,6 +128,17 @@ pub(super) fn extract(
                 pin(left, source, false);
             }
         }
+        // A bare boolean predicate is true only for one value. The catalog later decides
+        // whether this column completes a primary or unique key; non-key columns get no credit.
+        Expr::Identifier(_) | Expr::CompoundIdentifier(_) => pin(
+            expr,
+            Some(Sourced {
+                source: SqlPinSource::Value,
+                reads: Vec::new(),
+                qualified_reads: Vec::new(),
+            }),
+            false,
+        ),
         _ => {}
     }
 }
@@ -178,33 +188,5 @@ fn equate(
     }
     if let Some((item, _)) = resolver.column(right) {
         pin(right, resolver.source(left, item), null_safe);
-    }
-}
-
-/// An `IN` list is sized by the caller, plus whatever other items its elements name.
-fn merge(sources: Vec<Sourced>) -> Sourced {
-    let mut reads: Vec<SqlBareRead> = Vec::new();
-    let mut qualified_reads: Vec<SqlQualifiedRead> = Vec::new();
-    let mut items: BTreeSet<usize> = BTreeSet::new();
-    for sourced in sources {
-        reads.extend(sourced.reads);
-        qualified_reads.extend(sourced.qualified_reads);
-        if let SqlPinSource::Items(named) = sourced.source {
-            items.extend(named);
-        }
-    }
-    reads.sort();
-    reads.dedup();
-    qualified_reads.sort();
-    qualified_reads.dedup();
-    let source = if items.is_empty() {
-        SqlPinSource::Value
-    } else {
-        SqlPinSource::Items(items.into_iter().collect())
-    };
-    Sourced {
-        source,
-        reads,
-        qualified_reads,
     }
 }

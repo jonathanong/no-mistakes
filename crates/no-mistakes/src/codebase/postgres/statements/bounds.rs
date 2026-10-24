@@ -152,11 +152,15 @@ fn collect_query(
     positions: super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlBoundFact>,
 ) {
-    let scope = query::with_scope(query, scope, positions);
-    if let Some(with) = &query.with {
+    let scope = query::with_scope_visiting_writes(query, scope, positions, |cte, visible| {
+        collect_query(cte, visible, positions, out);
+    });
+    // RECURSIVE exposes every sibling; keep its completed scope and declaration-order facts.
+    if let Some(with) = query.with.as_ref().filter(|with| with.recursive) {
         for cte in &with.cte_tables {
-            if let Some(statement) = query::modifying_statement(&cte.query) {
-                collect_in(statement, &scope, positions, out);
+            if query::modifying_statement(&cte.query).is_some() {
+                // A modifying CTE can itself have WITH bindings visible to its target query.
+                collect_query(&cte.query, &scope, positions, out);
             }
         }
     }

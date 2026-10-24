@@ -1,0 +1,55 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "boolean_keys": {
+      "relationKind": "table",
+      "columns": {
+        "enabled": { "dataType": "boolean", "nullable": false },
+        "archived": { "dataType": "boolean", "nullable": false }
+      },
+      "primaryKey": { "columns": ["enabled"] },
+      "indexes": {
+        "boolean_keys_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [{ "column": "enabled", "expression": "enabled" }]
+        }
+      }
+    },
+    "composite_boolean_keys": {
+      "relationKind": "table",
+      "columns": {
+        "tenant_id": { "dataType": "uuid", "nullable": false },
+        "enabled": { "dataType": "boolean", "nullable": false },
+        "archived": { "dataType": "boolean", "nullable": false }
+      },
+      "primaryKey": { "columns": ["tenant_id", "enabled"] },
+      "indexes": {
+        "composite_boolean_keys_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "keys": [
+            { "column": "tenant_id", "expression": "tenant_id" },
+            { "column": "enabled", "expression": "enabled" }
+          ]
+        }
+      }
+    }
+  }
+}
