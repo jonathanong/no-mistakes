@@ -5,6 +5,8 @@ const { matchesConfiguredModule } = require("./postgres-scoped-executors");
 const { resolveVariable } = require("./postgres-query-text");
 const { constInitializer, stableFunction } = require("./postgres-no-executor-adapter-binding");
 const { declaredOptionType } = require("./postgres-no-executor-adapter-options");
+const { localOptionBody } = require("./postgres-no-executor-adapter-option-local");
+const { tsOptionBody } = require("./postgres-no-executor-adapter-option-ts");
 const { allowsCollectionKey } = require("./postgres-no-executor-adapter-collection");
 
 function localFunction(callee, context) {
@@ -32,7 +34,7 @@ function configuredType(type, context, options) {
   );
 }
 
-function localTarget(fn, index, property, context, options) {
+function localTarget(fn, index, property, context, options, facts) {
   if (fn.params.some((param) => param.type === "RestElement")) return false;
   const param = fn.params[index];
   if (!param) return false;
@@ -48,12 +50,13 @@ function localTarget(fn, index, property, context, options) {
     const annotation = target.typeAnnotation?.typeAnnotation;
     if (!services.program || !annotation) return false;
     const node = services.esTreeNodeToTSNodeMap?.get(annotation);
-    return Boolean(
-      node && declaredOptionType(node, property, services.program.getTypeChecker(), options),
-    );
+    if (!declaredOptionType(node, property, services.program.getTypeChecker(), options))
+      return false;
+    const implementation = services.esTreeNodeToTSNodeMap.get(fn);
+    return tsOptionBody(implementation, index, property, services.program.getTypeChecker(), facts);
   }
   if (target.type !== "ObjectPattern") return false;
-  const bound = target.properties.some(
+  const bound = target.properties.find(
     (entry) =>
       entry.type === "Property" &&
       !entry.computed &&
@@ -65,9 +68,10 @@ function localTarget(fn, index, property, context, options) {
   if (services.program) {
     const annotation = target.typeAnnotation?.typeAnnotation;
     const node = annotation && services.esTreeNodeToTSNodeMap?.get(annotation);
-    return Boolean(
-      node && declaredOptionType(node, property, services.program.getTypeChecker(), options),
-    );
+    if (!declaredOptionType(node, property, services.program.getTypeChecker(), options))
+      return false;
+    const implementation = services.esTreeNodeToTSNodeMap.get(fn);
+    return tsOptionBody(implementation, index, property, services.program.getTypeChecker(), facts);
   }
   const type = target.typeAnnotation?.typeAnnotation;
   const member =
@@ -79,7 +83,10 @@ function localTarget(fn, index, property, context, options) {
         !entry.optional &&
         entry.key.name === property,
     );
-  return configuredType(member?.typeAnnotation?.typeAnnotation, context, options);
+  return (
+    configuredType(member?.typeAnnotation?.typeAnnotation, context, options) &&
+    localOptionBody(fn, bound.value, context, facts)
+  );
 }
 
 function importedTarget(call, index, property, context, options, facts) {
@@ -123,7 +130,11 @@ function importedTarget(call, index, property, context, options, facts) {
         ));
     if (!bound || !declaredOptionType(type, property, checker, options)) return false;
     const writes = sourceWrites(declaration.getSourceFile(), checker, facts, services.program);
-    return !writes.eval && !writes.symbols.has(target);
+    return (
+      !writes.eval &&
+      !writes.symbols.has(target) &&
+      tsOptionBody(declaration, index, property, checker, facts)
+    );
   }
   // Structural compatibility and inference do not prove an executor contract.
   if (!type?.typeName) return false;
@@ -159,7 +170,7 @@ function acceptsExecutor(call, index, quoteNode, context, options, facts) {
     return false;
   const property = quoteNode?.key.name;
   const fn = localFunction(call.callee, context);
-  if (fn) return localTarget(fn, index, property, context, options);
+  if (fn) return localTarget(fn, index, property, context, options, facts);
   const variable = resolveVariable(call.callee, context);
   if (!variable?.defs.some((def) => def.type === "ImportBinding")) return false;
   return importedTarget(call, index, property, context, options, facts);

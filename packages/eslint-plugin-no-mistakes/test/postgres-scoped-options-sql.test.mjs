@@ -53,6 +53,9 @@ describe("PostgreSQL rules for declared options executors", () => {
       "35:passed",
       "38:passed",
       "41:passed",
+      "43:passed",
+      "44:passed",
+      "45:passed",
     ]);
   });
 
