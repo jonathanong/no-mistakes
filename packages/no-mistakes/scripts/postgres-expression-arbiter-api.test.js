@@ -91,7 +91,7 @@ test(
       ["postgres-ddl-unanalyzable", "narrow.yml", 2, 0],
       ["postgres-ddl-unanalyzable", "report.yml", 3, 0, "unsupported-valid"],
       ["postgres-ddl-unanalyzable", "positive.yml", 1, 0, "copy"],
-      ["postgres-ddl-unanalyzable", "report.yml", 2, 0, "procedural"],
+      ["postgres-ddl-unanalyzable", "report.yml", 9, 0, "procedural"],
     ]) {
       const options = { root: join(fixtures, scenario, "fixture", subdirectory), config };
       const report = await cjs.check(options);

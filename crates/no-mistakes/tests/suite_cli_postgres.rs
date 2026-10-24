@@ -16,6 +16,8 @@ mod cli_check_rules_postgres_column_naming;
 mod cli_check_rules_postgres_column_trigger;
 #[path = "cli_check_rules_postgres_conflict.rs"]
 mod cli_check_rules_postgres_conflict;
+#[path = "cli_check_rules_postgres_ddl_unanalyzable.rs"]
+mod cli_check_rules_postgres_ddl_unanalyzable;
 #[path = "cli_check_rules_postgres_dml.rs"]
 mod cli_check_rules_postgres_dml;
 #[path = "cli_check_rules_postgres_duplicate_function.rs"]

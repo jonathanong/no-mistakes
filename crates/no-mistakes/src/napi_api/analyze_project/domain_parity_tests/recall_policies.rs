@@ -119,3 +119,19 @@ fn copy_stdin_data_and_terminators_do_not_add_node_findings() {
     assert_eq!(findings[0]["line"], 8);
     assert_eq!(findings[0]["target"], "FROBULATE accounts");
 }
+
+#[test]
+fn procedural_control_noise_keeps_node_reports_and_real_statement_lines_in_sync() {
+    let root = category_fixture("rules", "postgres-ddl-unanalyzable").join("procedural");
+    let report = recall_check_report(&root, "report.yml");
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 9, "{report:#?}");
+    assert!(findings.iter().all(|finding| {
+        !["migrations/valid.sql", "migrations/quoted-do-bodies.sql"]
+            .contains(&finding["file"].as_str().unwrap())
+    }));
+    let lines: Vec<_> = findings.iter()
+        .filter(|finding| finding["file"] == "migrations/top-level.sql")
+        .map(|finding| finding["line"].as_u64().unwrap()).collect();
+    assert_eq!(lines, vec![7, 13, 19, 21]);
+}

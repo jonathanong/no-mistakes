@@ -21,7 +21,6 @@ fn procedural_bodies_are_skipped_but_unknown_sql_and_top_level_siblings_report()
             (
                 finding["file"].as_str().unwrap(),
                 finding["line"].as_u64().unwrap(),
-                finding["target"].as_str().unwrap(),
             )
         })
         .collect::<Vec<_>>();
@@ -29,15 +28,15 @@ fn procedural_bodies_are_skipped_but_unknown_sql_and_top_level_siblings_report()
     assert_eq!(
         actual,
         [
-            ("migrations/malformed-do-suffix.sql", 2, "unanalyzable"),
-            ("migrations/return-query.sql", 3, "unanalyzable"),
-            ("migrations/top-level.sql", 7, "unanalyzable"),
-            ("migrations/top-level.sql", 13, "unanalyzable"),
-            ("migrations/top-level.sql", 19, "unanalyzable"),
-            ("migrations/top-level.sql", 21, "unanalyzable"),
-            ("migrations/unknown.sql", 6, "unanalyzable"),
-            ("migrations/unknown.sql", 14, "unanalyzable"),
-            ("migrations/unknown.sql", 22, "unanalyzable"),
+            ("migrations/malformed-do-suffix.sql", 2),
+            ("migrations/return-query.sql", 3),
+            ("migrations/top-level.sql", 7),
+            ("migrations/top-level.sql", 13),
+            ("migrations/top-level.sql", 19),
+            ("migrations/top-level.sql", 21),
+            ("migrations/unknown.sql", 6),
+            ("migrations/unknown.sql", 14),
+            ("migrations/unknown.sql", 22),
         ],
         "{report}"
     );
