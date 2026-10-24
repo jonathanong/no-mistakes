@@ -7,3 +7,19 @@ BEGIN
   END IF;
 END
 $$;
+
+DO $$
+BEGIN
+  IF true THEN
+    FROBULATE first_after_if;
+  END IF;
+END
+$$;
+
+DO $$
+BEGIN
+  LOOP
+    FROBULATE first_after_loop;
+  END LOOP;
+END
+$$;

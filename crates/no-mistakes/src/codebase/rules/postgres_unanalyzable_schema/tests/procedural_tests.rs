@@ -1,25 +1,36 @@
 use super::*;
 
 #[test]
-fn peeled_do_filters_only_its_end_if_marker() {
+fn procedural_bodies_filter_commands_but_retain_unknown_sql_markers() {
     let root = fixture().join("procedural");
     let config = load_v2_config(&root, Some(&root.join("report.yml"))).unwrap();
-    for (name, expected_line, expected_head) in [
-        ("valid.sql", None, ""),
-        ("unknown.sql", Some(6), "FROBULATE accounts"),
-        ("top-level.sql", Some(2), "END IF"),
+    for (name, expected) in [
+        ("valid.sql", &[][..]),
+        (
+            "unknown.sql",
+            &[
+                (6, "FROBULATE accounts"),
+                (14, "FROBULATE first_after_if"),
+                (22, "FROBULATE first_after_loop"),
+            ][..],
+        ),
+        (
+            "top-level.sql",
+            &[
+                (7, "FROBULATE after_do"),
+                (13, "FROBULATE after_function"),
+                (19, "FROBULATE after_procedure"),
+                (21, "END IF"),
+            ][..],
+        ),
     ] {
         let path = root.join("migrations").join(name);
         let sql = std::fs::read_to_string(&path).unwrap();
         let direct = extract_migration_facts(&sql).unanalyzable_statements;
-        assert_eq!(
-            direct.len(),
-            usize::from(expected_line.is_some()),
-            "{name}: {direct:?}"
-        );
-        if let Some(line) = expected_line {
-            assert_eq!(direct[0].line, line, "{name}");
-            assert_eq!(direct[0].head, expected_head, "{name}");
+        assert_eq!(direct.len(), expected.len(), "{name}: {direct:?}");
+        for (marker, (line, head)) in direct.iter().zip(expected) {
+            assert_eq!(marker.line, *line, "{name}");
+            assert_eq!(marker.head, *head, "{name}");
         }
 
         let files = vec![path];
@@ -42,8 +53,13 @@ fn peeled_do_filters_only_its_end_if_marker() {
             .unwrap()
             .findings;
         assert_eq!(findings.len(), direct.len(), "{name}: {findings:?}");
-        if let Some(line) = expected_line {
-            assert_eq!(findings[0].line, line, "{name}");
-        }
+        assert_eq!(
+            findings
+                .iter()
+                .map(|finding| finding.line)
+                .collect::<Vec<_>>(),
+            expected.iter().map(|(line, _)| *line).collect::<Vec<_>>(),
+            "{name}"
+        );
     }
 }
