@@ -166,6 +166,24 @@ spelling, and line; YAML application indexes must match declaration order.
 `test-cases/rules/forbidden-calls/workspace-package/` covers `function` targets
 reached through a workspace package name and one of its `exports` subpaths.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, the intent is that inputs this rule cannot prove are never treated as clean ([how analysis works](../../README.md#how-analysis-works)), but unresolved dynamic calls are governed by this rule's own `unknownCalls` option rather than `options.unanalyzable`:
+
+- `unknownCalls: finding` reports unresolved dynamic calls that match no `exact` or `terminal` selector as explicit policy findings.
+- `unknownCalls: ignore` omits them, and is the default, so unresolved dynamic calls are cleared by default.
+- `unknownArguments` defaults to `finding`, so a call whose arguments cannot be evaluated is reported.
+
+[#2663](https://github.com/jonathanong/no-mistakes/issues/2663) proposes a recall-first default for `unknownCalls`.
+
+Definite matches of a configured selector remain findings under either value. See below for the full description.
+
 ## Unknown calls and suppression
 
 `unknownCalls: ignore` omits unresolved dynamic calls that do not match an

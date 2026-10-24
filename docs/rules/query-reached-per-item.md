@@ -185,6 +185,16 @@ reviewed allow entry or suppression when sequential paging, ordered writes, or
 rate limits require the per-item behavior. For transaction-client sinks, merge
 the statements or batch them on that client.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it judges call shapes in parsed source against configured declarations, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line query-reached-per-item` or

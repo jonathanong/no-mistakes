@@ -82,6 +82,16 @@ one-table budget.
 Split the document into focused README-indexed documents. Do not replace a
 useful table or diagram with less-readable syntax merely to evade this rule.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it counts structural elements in parsed Markdown, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Suppressions use standard `no-mistakes` directives and should be exceptional.

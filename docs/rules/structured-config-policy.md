@@ -167,6 +167,16 @@ Repair the file's syntax or value shape, add the required key, remove the
 banned legacy key, restate lost ancestor override rules, or narrow the policy
 glob to its intended configs.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, the intent is that nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)). Known gap: parse errors are already reported, but a file that cannot be read is currently skipped without a finding ([#2660](https://github.com/jonathanong/no-mistakes/issues/2660)).
+
 ## Suppression
 
 Use a top-of-file `no-mistakes-disable-file structured-config-policy` directive

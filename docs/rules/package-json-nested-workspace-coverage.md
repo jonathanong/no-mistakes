@@ -99,6 +99,16 @@ or make the dependency target visible. Standard `no-mistakes-disable-file`,
 `no-mistakes-disable-line`, and `no-mistakes-disable-next-line` directives
 apply to the root manifest's `workspaces` field.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it compares parsed package manifests with workspace globs, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Manifest findings are file-level. Narrow `roots`, dependency fields, or package

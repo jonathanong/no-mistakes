@@ -59,6 +59,16 @@ agents/email/index.mts
 Add the required local README, or remove the directory from the configured roots
 if it is generated or owned by another documentation system.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it checks file presence in the file inventory, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Prefer adjusting `roots` or common excludes. Use

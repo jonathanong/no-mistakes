@@ -53,6 +53,16 @@ Rename the link text to `news-story-clusters.md`, rename the target to match
 the existing text, or use descriptive link text when the destination is not a
 local Markdown file.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it checks parsed Markdown link text, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Suppress only when the filename-style text is intentionally different from the

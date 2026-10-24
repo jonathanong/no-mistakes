@@ -62,6 +62,16 @@ check`. Advisory output includes the current character count, byte count,
 configured max, and remaining budget so pre-push hooks can surface context
 before a hard limit failure.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it only measures the size of discovered agent instruction files, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 If a file is intentionally exempted with a disable comment,

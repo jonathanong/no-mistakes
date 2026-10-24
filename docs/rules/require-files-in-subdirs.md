@@ -59,6 +59,16 @@ The directory is missing its required README and entrypoint alternative.
 Add the missing files or narrow the package root so generated/vendor folders
 are not selected.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it checks file presence in the file inventory, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Use the rule application's include/exclude scope for intentional exceptions;

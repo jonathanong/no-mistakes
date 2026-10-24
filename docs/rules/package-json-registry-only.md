@@ -56,6 +56,16 @@ A dependency under `packages/` that resolves from the npm registry passes.
 Use npm registry versions, `workspace:`, `catalog:`, or supported `npm:`
 aliases; keep lockfile package entries registry-backed.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, the intent is that nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)). Known gap: an unparseable or unreadable `package.json` is currently skipped without a finding ([#2659](https://github.com/jonathanong/no-mistakes/issues/2659)).
+
 ## Suppression
 
 Package manifests cannot contain directives. Narrow `scopes`, `lockfile`, or

@@ -161,6 +161,16 @@ Add the package to the appropriate permanent or temporary declaration, flatten
 the resulting selectors into pnpm settings, and mirror permanent names in
 Dependabot.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, the intent is that nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)). Known gap: invalid workspace YAML is already reported, but an unreadable pnpm workspace file and an unparseable or unreadable `package.json` are currently skipped without a finding ([#2659](https://github.com/jonathanong/no-mistakes/issues/2659)).
+
 ## Suppression
 
 Use `no-mistakes-disable-file pnpm-release-age-policy` only for a repository

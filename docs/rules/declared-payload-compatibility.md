@@ -151,36 +151,11 @@ deliberately bounded subset is not a general JSON Schema validator or a
 TypeScript type checker. A clean result means the selected supported
 declarations are compatible, not that runtime payloads have been validated.
 
-## Effort
+## Analysis
 
-`effort: max` is the default and preserves recursive object/array comparison
-through 64 schema levels. `effort: low` checks a smaller schema grammar: scalar
-roots, root objects whose declared properties are scalar schemas, and root
-arrays whose `items` schema is scalar. It keeps the supported scalar, enum,
-`const`, required-property, and `additionalProperties` checks for those shapes.
+### Effort
 
-If either selected schema contains a nested child object or array, low treats
-the whole contract as one `unproven` shape. It does not compare only the parts
-it recognizes or conclude that the schemas are compatible. The selected
-`unanalyzable` policy controls that result: `report` fails, `advise` emits
-non-failing advice, and `ignore` emits no finding. A compatible nested pair can
-therefore be unproven at low, and low report can produce more diagnostics than
-max. Definite `incompatible` findings from low are still findings max would
-produce.
-
-The policy applies only to this unsupported low-effort schema shape. Duplicate
-JSON keys, numeric-token precision loss, malformed documents, missing or
-unreadable files, scope violations, invalid pointers, and configuration errors
-remain failing diagnostics under every policy. Both referenced documents are
-resolved and validated before low applies the shape policy. When readable, both
-documents are parsed and checked for document integrity; `ignore` does not hide
-invalid JSON or bad references. Schema details behind the nested-shape boundary
-are not validated at low.
-
-For the same nested wire payload, use `max` or flatten both declarations and
-the actual payloads. Selecting only a nested leaf with a pointer is not a
-drop-in rewrite: it can discard constraints on whether the outer property is
-required and on which other properties are accepted.
+Supports `low` and `max` (default `max`). **Max** recursively compares objects and arrays through 64 schema levels. **Low** checks a smaller grammar: scalar roots, root objects whose declared properties are scalar schemas, and root arrays whose `items` schema is scalar, keeping the scalar, enum, `const`, required-property, and `additionalProperties` checks. If either selected schema contains a nested child object or array, low treats the whole contract as one `unproven` shape and routes it to `unanalyzable` instead of comparing only the parts it recognizes. Low has no partner requirement. Definite `incompatible` findings from low are still findings max would produce, but a compatible nested pair can be unproven at low.
 
 ```yaml
 rules:
@@ -194,6 +169,18 @@ rules:
           producer: {file: api/payloads.json, pointer: /notification}
           consumer: {file: worker/payloads.json, pointer: /notification}
 ```
+
+Low reports a flat scalar mismatch such as a renamed required `userId` property. Low routes a nested payload (a property whose schema is itself an `object` or `array`) to `unanalyzable`, even when max proves it compatible. For the same nested wire payload, use `max` or flatten both declarations and the actual payloads. Selecting only a nested leaf with a pointer is not a drop-in rewrite: it can discard constraints on whether the outer property is required and on which other properties are accepted.
+
+### Unanalyzable inputs
+
+Following recall over precision, inputs this rule cannot prove are never treated as clean ([how analysis works](../../README.md#how-analysis-works)); they follow `options.unanalyzable`. At low effort the only such input is the nested-object-or-array shape above:
+
+- `report` (default): fails as an `unproven` finding.
+- `advise`: a non-failing advisory.
+- `ignore`: omitted.
+
+Definite incompatibilities remain findings under every policy. Duplicate JSON keys, numeric-token precision loss, malformed documents, missing or unreadable files, scope violations, invalid pointers, and configuration errors remain failing diagnostics regardless of policy: both referenced documents are resolved and validated before the shape policy applies, and `ignore` does not hide invalid JSON or bad references. At `max`, unsupported schema keywords (`$ref`, type unions, combination keywords, bounds, and so on) are `unproven` findings that always fail.
 
 ## CLI and Node API
 

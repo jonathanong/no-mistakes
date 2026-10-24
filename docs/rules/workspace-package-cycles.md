@@ -72,6 +72,16 @@ workspace graph is acyclic.
 Extract shared types or utilities, invert one dependency through an interface,
 or split the package boundary so the runtime graph becomes directional.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it detects cycles in the workspace package graph built from parsed manifests, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Prefer a narrow, reasoned `allowlist` entry for a temporary cycle. Use a file
