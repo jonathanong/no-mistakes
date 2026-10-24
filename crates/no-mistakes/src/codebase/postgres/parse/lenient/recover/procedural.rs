@@ -43,92 +43,86 @@ impl BodyState {
             .map(|token| &token.token)
             .filter(|token| !matches!(token, Token::Whitespace(_) | Token::SemiColon))
             .collect();
-        let code = unlabeled(&code);
+        self.control(unlabeled(&code))
+    }
+
+    fn control(&mut self, code: &[&Token]) -> bool {
+        let code = unlabeled(code);
         if code.first().is_some_and(|token| word(token, "DECLARE")) {
             self.declarations = true;
             return code.len() == 1 || declaration::matches(&code[1..]);
         }
         if code.first().is_some_and(|token| word(token, "BEGIN")) {
             self.declarations = false;
+            return code.len() == 1 || self.control(&code[1..]);
         }
         if code.first().is_some_and(|token| word(token, "END")) {
             self.declarations = false;
+            return ending(&code[1..]);
         }
         if self.declarations && declaration::matches(code) {
             return true;
         }
-        control(code)
+        let Some(first) = code.first() else {
+            return false;
+        };
+        if word(first, "ELSE") {
+            return code.len() == 1 || self.control(&code[1..]);
+        }
+        if ["IF", "ELSIF", "WHEN", "CASE"]
+            .iter()
+            .any(|kind| word(first, kind))
+        {
+            return boundary(code, "THEN").is_some_and(|at| {
+                (!word(first, "IF") && !word(first, "ELSIF")
+                    || assignment::expression(&code[1..at]))
+                    && (at + 1 == code.len() || self.control(&code[at + 1..]))
+            });
+        }
+        if ["FOR", "WHILE", "FOREACH"]
+            .iter()
+            .any(|kind| word(first, kind))
+        {
+            return boundary(code, "LOOP").is_some_and(|at| {
+                (if word(first, "FOR") {
+                    commands::for_header(&code[..at])
+                } else if word(first, "WHILE") {
+                    assignment::expression(&code[1..at])
+                } else {
+                    commands::foreach_header(&code[..at])
+                }) && (at + 1 == code.len() || self.control(&code[at + 1..]))
+            });
+        }
+        if word(first, "LOOP") || word(first, "EXCEPTION") {
+            return code.len() == 1 || self.control(&code[1..]);
+        }
+        if word(first, "NULL") {
+            return code.len() == 1;
+        }
+        // RETURN QUERY carries SQL. If that SQL is unknown, keep its marker.
+        if word(first, "RETURN") && code.get(1).is_some_and(|next| word(next, "QUERY")) {
+            return false;
+        }
+        if word(first, "PERFORM") {
+            return assignment::expression(&code[1..]);
+        }
+        if ["EXIT", "CONTINUE", "RETURN", "RAISE", "ASSERT"]
+            .iter()
+            .any(|kind| word(first, kind))
+        {
+            return true;
+        }
+        assignment::matches(code) || commands::matches(code)
     }
 }
 
 fn unlabeled<'a>(code: &'a [&'a Token]) -> &'a [&'a Token] {
     if let [Token::ShiftLeft, label_token, Token::ShiftRight, rest @ ..] = code {
-        if label(label_token) {
+        if block_label(label_token) {
             return rest;
         }
     }
     code
-}
-
-fn control(code: &[&Token]) -> bool {
-    if let [Token::ShiftLeft, label_token, Token::ShiftRight, rest @ ..] = code {
-        return label(label_token) && control(rest);
-    }
-    let Some(first) = code.first() else {
-        return false;
-    };
-    if word(first, "BEGIN") {
-        return code.len() == 1 || control(&code[1..]);
-    }
-    if word(first, "ELSE") {
-        return code.len() == 1 || control(&code[1..]);
-    }
-    if word(first, "END") {
-        return ending(&code[1..]);
-    }
-    if ["IF", "ELSIF", "WHEN", "CASE"]
-        .iter()
-        .any(|kind| word(first, kind))
-    {
-        return boundary(code, "THEN").is_some_and(|at| {
-            (!word(first, "IF") && !word(first, "ELSIF") || assignment::expression(&code[1..at]))
-                && (at + 1 == code.len() || control(&code[at + 1..]))
-        });
-    }
-    if ["FOR", "WHILE", "FOREACH"]
-        .iter()
-        .any(|kind| word(first, kind))
-    {
-        return boundary(code, "LOOP").is_some_and(|at| {
-            (if word(first, "FOR") {
-                commands::for_header(&code[..at])
-            } else if word(first, "WHILE") {
-                assignment::expression(&code[1..at])
-            } else {
-                commands::foreach_header(&code[..at])
-            }) && (at + 1 == code.len() || control(&code[at + 1..]))
-        });
-    }
-    if word(first, "LOOP") || word(first, "EXCEPTION") {
-        return code.len() == 1 || control(&code[1..]);
-    }
-    if word(first, "NULL") {
-        return code.len() == 1;
-    }
-    // RETURN QUERY carries SQL. If that SQL is unknown, keep its marker.
-    if word(first, "RETURN") && code.get(1).is_some_and(|next| word(next, "QUERY")) {
-        return false;
-    }
-    if word(first, "PERFORM") {
-        return assignment::expression(&code[1..]);
-    }
-    if ["EXIT", "CONTINUE", "RETURN", "RAISE", "ASSERT"]
-        .iter()
-        .any(|kind| word(first, kind))
-    {
-        return true;
-    }
-    assignment::matches(code) || commands::matches(code)
 }
 
 fn ending(code: &[&Token]) -> bool {
@@ -142,6 +136,10 @@ fn ending(code: &[&Token]) -> bool {
 
 fn label(token: &Token) -> bool {
     matches!(token, Token::Word(word) if word.quote_style.is_some() || word.keyword == Keyword::NoKeyword)
+}
+
+fn block_label(token: &Token) -> bool {
+    matches!(token, Token::Word(_))
 }
 
 fn boundary(code: &[&Token], expected: &str) -> Option<usize> {
