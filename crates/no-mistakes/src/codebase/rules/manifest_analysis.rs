@@ -5,13 +5,16 @@ use anyhow::Result;
 use rayon::prelude::*;
 use std::path::Path;
 
+mod classification;
+pub(super) use classification::ClassifiedFinding;
+
 pub(super) fn collect(
     root: &Path,
     config: &NoMistakesConfig,
     rule_id: &str,
     sources: &SourceStore,
     defer_suppression: bool,
-    scan: impl Fn(&RuleDef) -> Result<Vec<RuleFinding>> + Sync,
+    scan: impl Fn(&RuleDef) -> Result<Vec<ClassifiedFinding>> + Sync,
 ) -> Result<AnalysisDiagnostics> {
     let batches: Result<Vec<AnalysisDiagnostics>> = config
         .rule_applications(rule_id)
@@ -25,21 +28,26 @@ pub(super) fn collect(
                     root,
                     &mut findings,
                     sources,
-                    |finding| super::suppression::SuppressionTarget {
-                        domain: "codebase",
-                        rule: &finding.rule,
-                        file: &finding.file,
-                        line: Some(finding.line),
-                        reason: &finding.message,
-                        identity: None,
+                    |classified| {
+                        let finding = classified.finding();
+                        super::suppression::SuppressionTarget {
+                            domain: "codebase",
+                            rule: &finding.rule,
+                            file: &finding.file,
+                            line: Some(finding.line),
+                            reason: &finding.message,
+                            identity: None,
+                        }
                     },
                 );
             }
-            for mut finding in findings {
+            for classified in findings {
+                let unanalyzable = matches!(&classified, ClassifiedFinding::Unanalyzable(_));
+                let mut finding = classified.into_public();
                 if let Some(message) = &rule.message {
                     finding.message = format!("{message} {}", finding.message);
                 }
-                if finding.target.as_deref() == Some("unanalyzable") {
+                if unanalyzable {
                     diagnostics.unanalyzable(policy, finding);
                 } else {
                     diagnostics.findings.push(finding);
@@ -62,13 +70,13 @@ pub(super) fn unavailable(
     path: &Path,
     rule: &str,
     error: impl std::fmt::Display,
-) -> RuleFinding {
+) -> ClassifiedFinding {
     let file = crate::codebase::ts_source::relative_slash_path(root, path);
-    RuleFinding {
+    ClassifiedFinding::Unanalyzable(RuleFinding {
         rule: rule.to_owned(), file: file.clone(), line: 1,
         message: format!("{file}: cannot verify dependency policy because this manifest could not be read or parsed: {error}. Repair the manifest or restore read access."),
         import: None, target: Some("unanalyzable".to_owned()),
-    }
+    })
 }
 
 #[cfg(test)]

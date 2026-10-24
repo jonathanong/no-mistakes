@@ -46,7 +46,7 @@ pub(super) fn active_names(
     root: &Path,
     files: &[PathBuf],
     sources: &SourceStore,
-    findings: &mut Vec<RuleFinding>,
+    findings: &mut Vec<ClassifiedFinding>,
 ) -> HashSet<String> {
     let mut names = HashSet::new();
     for path in files {

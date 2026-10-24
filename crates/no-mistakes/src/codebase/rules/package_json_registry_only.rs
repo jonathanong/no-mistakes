@@ -1,3 +1,4 @@
+use super::manifest_analysis::ClassifiedFinding;
 use super::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;

@@ -18,12 +18,18 @@ fn scan_dir(files: &[PathBuf]) -> Vec<RuleFinding> {
         files,
         &sources,
     )
+    .into_iter()
+    .map(ClassifiedFinding::into_public)
+    .collect()
 }
 
 fn scan_fixture(name: &str, files: &[PathBuf]) -> Vec<RuleFinding> {
     let root = fixture(name);
     let sources = source_store_for_files(files);
     scan::scan(&root, &Options::default(), files, &sources)
+        .into_iter()
+        .map(ClassifiedFinding::into_public)
+        .collect()
 }
 
 #[test]
