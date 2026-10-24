@@ -1,17 +1,19 @@
 //! Decide, against a schema catalog, whether a statement's rows are bounded.
 use super::view_bounds::{ViewBoundMode, ViewBounds};
 use crate::codebase::postgres::statements::{
-    SqlBareRead, SqlBoundFact, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
+    SqlBoundFact, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
 use crate::codebase::postgres::{CatalogObjectRef, SchemaCatalog};
 mod keys;
 mod lateral;
+mod outer_reads;
 mod ownership;
 mod possible_temporary;
 mod propagation;
 mod qualified;
 mod reads;
 mod scalar_output;
+use outer_reads::reads_outer;
 use reads::relation_offender;
 
 /// A catalog relation that a statement can read or change in unbounded numbers.
@@ -183,24 +185,4 @@ fn evaluate(
         items: bounded,
         offenders,
     }
-}
-
-/// Columns every table has without the catalog listing them.
-const SYSTEM_COLUMNS: &[&str] = &["ctid", "tableoid", "xmin", "xmax", "cmin", "cmax"];
-
-/// Whether a subquery reads the query around it: a bare column that none of the base tables it
-/// could belong to has, so PostgreSQL resolves it outward. A table the catalog does not
-/// describe may have it, and is taken to.
-fn reads_outer(reads: &[SqlBareRead], catalog: &SchemaCatalog) -> bool {
-    reads.iter().any(|read| {
-        !SYSTEM_COLUMNS.contains(&read.column.as_str())
-            && read.tables.iter().all(|table| {
-                catalog.bounded_relation(table).is_some_and(|table| {
-                    table
-                        .columns
-                        .iter()
-                        .all(|column| column.name != read.column)
-                })
-            })
-    })
 }
