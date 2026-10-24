@@ -98,6 +98,16 @@ CREATE INDEX events_topic_created_idx ON events (topic_id, created_at);
 Drop the strict-prefix index, or document why it is intentionally retained
 with the configured directive or allowlist.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. It judges SQL files selected by `sqlInclude`; executor calls in TS/JS are not evaluated.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. It judges only SQL files it has parsed. A failure to collect facts aborts the rule with an error instead of being routed through `options.unanalyzable`. The repository-level `unanalyzable` default does not affect it.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-redundant-index` for a one-off;

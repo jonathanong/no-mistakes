@@ -94,6 +94,16 @@ the shortened form unique among names that would otherwise share a prefix.
 CREATE INDEX idx_invoice_lines_account_created_status ON invoice_line_items (account_id);
 ```
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. It judges SQL files selected by `sqlInclude`; executor calls in TS/JS are not evaluated.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. It judges only SQL files it has parsed. A failure to collect facts aborts the rule with an error instead of being routed through `options.unanalyzable`. The repository-level `unanalyzable` default does not affect it.
+
 ## Suppression
 
 Put the directive on the statement line, the line before it, or at the top of

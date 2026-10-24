@@ -162,7 +162,9 @@ Configuration, SQL helper behavior, and callback forwarding are described in
 Use `check --include-sql-verdicts` for per-call proof and residual evidence;
 see [SQL verdicts](../postgres-sql-verdicts.md).
 
-## Effort
+## Analysis
+
+### Effort
 
 `effort: max` is the default and preserves helper, branch, builder, and imported
 value inference. At `effort: low`, a leading named literal at the executor call
@@ -173,6 +175,17 @@ remain failing findings under every policy; unresolved shapes follow
 See [low-effort examples, rewrites, and suppressions](../postgres-query-annotation/low-effort.md).
 See [append composition and bounded alternatives](../postgres-query-annotation/append-composition.md)
 for the SQL text model, truncation, and invalid-SQL advisories.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Executor calls whose leading comment cannot be determined (helper-built or imported SQL at low, opaque SQL at max), SQL with an unresolved head, and calls through a receiver whose type is imported from the executor module but missing from `executorTypeNames`.
+  - `report` (default): fails as a finding, e.g. an undeclared executor type diagnostic.
+  - `advise`: a non-failing advisory carrying the reason, known prefix, and helper lines.
+  - `ignore`: omitted.
+
+  A proven missing annotation (including a decidable literal head at low) remains a finding under every policy.
 
 ## Valid example
 

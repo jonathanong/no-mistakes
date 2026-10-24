@@ -166,6 +166,23 @@ why a unique-key lookup is effectively single-row with the configured safe
 directive. For an `unanalyzable` finding, make the executed SQL statically
 recoverable, add the safe directive, or set `unanalyzableSql: ignore`.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (up to 16 finite SQL alternatives per call). It does not read `.sql` files.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove: executor calls whose SQL cannot be recovered (a `FOR UPDATE` lock and its order cannot be checked), and `FOR UPDATE` SQL that fails to parse. They follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable, so a FOR UPDATE lock and its row order cannot be checked for ABBA deadlocks`.
+  - `advise`: a non-failing advisory with the same reason.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-lock-ordering` or

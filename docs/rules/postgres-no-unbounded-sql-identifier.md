@@ -34,7 +34,9 @@ Comma expressions use JavaScript's value semantics: only the final operand suppl
 
 A helper call around those values is reported unless the callee is a proven finite validator. Interpolations come from prepared template-expression facts, not a lexical `${...}` scan of the call span.
 
-## Effort
+## Analysis
+
+### Effort
 
 The default `effort: max` preserves cross-file provenance, helper validation,
 and the existing findings. `effort: low` skips JavaScript value evaluation,
@@ -77,6 +79,17 @@ are explicit unknowns rather than assumed safe. Fatal parse recovery that retain
 no configured import or call supplies no SQL proof, matching the max boundary;
 parser diagnostics remain in the prepared source facts. Includes, excludes and the
 suppression comments below apply to low findings and advisories too.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- At low: helpers, tags, alias chains, imported SQL values, computed executor selections, factory or type executors, CommonJS loaders, and `withTransaction` callbacks, for example `query(buildStatement())`. At max the rule abstains on a runtime-computed environment key (`process.env[key]`) and on unresolved imports or cyclic aliases; see Abstains.
+  - `report` (default): fails as a finding.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Proven direct `process.env.*` relation violations remain findings under every policy.
 
 ## Abstains
 
