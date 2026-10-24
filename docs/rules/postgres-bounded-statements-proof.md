@@ -85,9 +85,14 @@ LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` 
   (`FROM c WHERE t.id = c.id`, or `WHERE t.id IN (SELECT id … LIMIT n)`). `ctid` identifies
   one row of a plain table, so `WHERE ctid IN (SELECT ctid … LIMIT n)` bounds a statement,
   except on a partitioned table, whose leaves repeat `ctid` values, and on a relation the
-  catalog does not describe, which may be one. The relations joined to the
-  target only feed it values: each target row changes once. The target is always the
-  physical relation, even when a CTE of the same name exists.
+  catalog does not describe, which may be one. The relations joined to the target only
+  feed it values: each target row changes once. A bound on a joined source can also bound
+  the target when it pins the target's whole unique key, and that proof can pass through
+  several unique-key joins. A source joined through a non-unique target column does not
+  bound the target, and one bounded source cannot lend its bound to an unrelated unbounded
+  sibling. A direct target-key predicate still bounds the target even when another source
+  is unbounded. The target is always the physical relation, even when a CTE of the same
+  name exists.
 
 A set operation (`UNION`) is bounded only when every arm is (a `TABLE name` arm is an
 uncapped read of that relation, or of the CTE it names), a derived table or CTE is bounded when its own query is,

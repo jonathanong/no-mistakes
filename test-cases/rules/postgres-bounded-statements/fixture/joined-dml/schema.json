@@ -1,0 +1,139 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "joined_targets": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false, "ordinalPosition": 1},
+        "payload": {"dataType": "text", "nullable": true, "ordinalPosition": 2}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {}
+    },
+    "joined_sources": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false, "ordinalPosition": 1},
+        "target_id": {"dataType": "uuid", "nullable": true, "ordinalPosition": 2},
+        "tenant_id": {"dataType": "uuid", "nullable": true, "ordinalPosition": 3}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {}
+    },
+    "joined_roots": {
+      "relationKind": "table",
+      "columns": {"id": {"dataType": "uuid", "nullable": false, "ordinalPosition": 1}},
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {}
+    },
+    "joined_links": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false, "ordinalPosition": 1},
+        "root_id": {"dataType": "uuid", "nullable": false, "ordinalPosition": 2},
+        "target_id": {"dataType": "uuid", "nullable": false, "ordinalPosition": 3}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "joined_links_root_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX joined_links_root_id_key ON public.joined_links USING btree (root_id)",
+          "keys": [{"column": "root_id", "expression": "root_id"}]
+        }
+      }
+    },
+    "placeholder_partial": {
+      "relationKind": "table",
+      "columns": {
+        "email": {"dataType": "text", "nullable": true, "ordinalPosition": 1},
+        "state": {"dataType": "text", "nullable": true, "ordinalPosition": 2}
+      },
+      "primaryKey": null,
+      "indexes": {
+        "placeholder_partial_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "state = $1",
+          "definition": "CREATE UNIQUE INDEX placeholder_partial_email_key",
+          "keys": [{"column": "email", "expression": "email"}]
+        }
+      }
+    },
+    "placeholder_expression": {
+      "relationKind": "table",
+      "columns": {"email": {"dataType": "text", "nullable": true, "ordinalPosition": 1}},
+      "primaryKey": null,
+      "indexes": {
+        "placeholder_expression_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX placeholder_expression_email_key",
+          "keys": [{"column": null, "expression": "lower(email) || $1"}]
+        }
+      }
+    },
+    "nulls_nd": {
+      "relationKind": "table",
+      "columns": {"email": {"dataType": "text", "nullable": true, "ordinalPosition": 1}},
+      "primaryKey": null,
+      "indexes": {
+        "nulls_nd_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX nulls_nd_email_key ON public.nulls_nd USING btree (email) NULLS NOT DISTINCT",
+          "keys": [{"column": "email", "expression": "email"}]
+        }
+      }
+    },
+    "nulls_plain": {
+      "relationKind": "table",
+      "columns": {"email": {"dataType": "text", "nullable": true, "ordinalPosition": 1}},
+      "primaryKey": null,
+      "indexes": {
+        "nulls_plain_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX nulls_plain_email_key ON public.nulls_plain USING btree (email)",
+          "keys": [{"column": "email", "expression": "email"}]
+        }
+      }
+    }
+  }
+}
