@@ -4,6 +4,8 @@ const { collectPatternNames } = require("./ast-pattern-names");
 const { createCleanupTracker } = require("./test-no-shared-state-cleanup");
 const {
   SETUP_CALLEES,
+  callbackCall,
+  registrationCall,
   calleeName,
   importSpecifierName,
   isKnownTestCallee,
@@ -59,12 +61,13 @@ function isFunctionNode(node) {
 }
 
 function isInlineTestCallback(node) {
-  return node.parent?.type === "CallExpression" && isTestCall(node.parent);
+  const call = callbackCall(node);
+  return Boolean(call && isTestCall(call));
 }
 
 function isInlineSetupCallback(node) {
-  const p = node.parent;
-  return p?.type === "CallExpression" && SETUP_CALLEES.has(calleeName(p.callee));
+  const call = callbackCall(node);
+  return Boolean(call && SETUP_CALLEES.has(calleeName(call.callee)));
 }
 
 function isCalledFunction(node) {
@@ -138,6 +141,8 @@ function firstNamedCallbackArgument(args) {
 }
 
 module.exports = {
+  callbackCall,
+  registrationCall,
   childNodes,
   collectPatternNames,
   createCleanupTracker,

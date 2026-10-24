@@ -2,6 +2,7 @@
 
 const { literalString } = require("./module-mock-helpers");
 const {
+  callbackCall,
   isKnownTestCallee,
   isTestCall,
   setupCallbackKind,
@@ -60,9 +61,9 @@ function createRuleHelpers(context, testCalleeNames, namespaces) {
       );
     },
     isInlineCallback(node) {
-      const parent = node.parent;
+      const parent = callbackCall(node);
       return (
-        parent?.type === "CallExpression" &&
+        parent &&
         (setupCallbackKind(parent, testCalleeNames, namespaces) ||
           isTestCall(parent, testCalleeNames, namespaces))
       );
