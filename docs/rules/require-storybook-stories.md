@@ -52,6 +52,7 @@ and file suppression continue to apply. The diagnostic is suppressed by
 `no-mistakes-disable-file require-storybook-stories` or
 `no-mistakes-disable-line require-storybook-stories` on line 1.
 
+The message includes the first line of the recorded parser or read error.
 This diagnostic exists because malformed included source cannot be analyzed
 for component exports, so the rule cannot establish Storybook coverage for
 that file. Fix the parse error and use valid TSX/JSX; if the file is

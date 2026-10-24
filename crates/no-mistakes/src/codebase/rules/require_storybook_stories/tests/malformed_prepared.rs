@@ -52,7 +52,25 @@ fn malformed_selection_uses_only_prepared_source_and_never_recovers_exports() {
     std::sync::Arc::get_mut(shared.ts.get_mut(&broken).unwrap())
         .unwrap()
         .source = None;
-    assert_eq!(select(&shared).1.len(), 1);
+    for (error, expected) in [
+        ("cannot read selected source", "cannot read selected source"),
+        (
+            "cannot read selected source\ninternal detail",
+            "cannot read selected source",
+        ),
+        ("", ""),
+    ] {
+        std::sync::Arc::get_mut(shared.ts.get_mut(&broken).unwrap())
+            .unwrap()
+            .parse_error = Some(error.to_string());
+        let diagnostics = select(&shared).1;
+        assert_eq!(diagnostics.len(), 1);
+        assert!(diagnostics[0]
+            .message
+            .contains(&format!("could not be analyzed ({expected})")));
+        assert!(!diagnostics[0].message.contains("internal detail"));
+        assert!(!diagnostics[0].message.contains('\n'));
+    }
     shared.files.retain(|file| file != &broken);
     assert!(select(&shared).1.is_empty());
 }

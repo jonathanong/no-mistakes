@@ -176,7 +176,9 @@ an exception that covers findings and advisories when the anchor is readable.
 Incomplete-comparison diagnostics point to line 1, so
 `no-mistakes-disable-line` must be on that line. Definite mismatches retain the
 captured version's line and support `no-mistakes-disable-next-line` immediately
-before that line.
+before that line. An unreadable anchor cannot supply its own suppression
+comment because its text cannot be read; set `options.unanalyzable` to `advise`
+or `ignore`, or exclude the anchor instead.
 
 ## Related rules
 
