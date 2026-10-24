@@ -104,4 +104,15 @@ describe("executor option helper escapes", () => {
     assert.deepEqual(findings(true, undefined, "options-eval.ts"), ["7:passed", "8:passed"]);
     assert.deepEqual(findings(false, undefined, "options-eval.ts"), ["7:passed", "8:passed"]);
   });
+
+  it("does not exempt options captured by eval through erased assertions", () => {
+    assert.deepEqual(findings(true, undefined, "options-wrapped-eval.ts"), [
+      "7:passed",
+      "8:passed",
+    ]);
+    assert.deepEqual(findings(false, undefined, "options-wrapped-eval.ts"), [
+      "7:passed",
+      "8:passed",
+    ]);
+  });
 });

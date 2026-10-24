@@ -6,8 +6,7 @@ function opaqueScope(root) {
   const stack = [root];
   while (stack.length) {
     const node = stack.pop();
-    if (node.type === "Identifier" && node.name === "arguments") return true;
-    if (node.type === "CallExpression" && node.callee?.name === "eval") return true;
+    if (node.type === "Identifier" && ["arguments", "eval"].includes(node.name)) return true;
     stack.push(...childNodes(node));
   }
   return false;

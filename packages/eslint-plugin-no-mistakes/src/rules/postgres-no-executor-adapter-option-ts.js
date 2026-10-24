@@ -11,8 +11,8 @@ function referenceFacts(fn, checker, facts) {
     refs.get(symbol).push(node);
   }
   function visit(node) {
-    if (node.arguments && node.expression?.escapedText === "eval") opaqueScope = true;
-    if (node.escapedText === "arguments") opaqueScope = true;
+    // Eval may be wrapped in erased assertions and still access the parameter.
+    if (["arguments", "eval"].includes(node.escapedText)) opaqueScope = true;
     add(checker.getShorthandAssignmentValueSymbol(node), node);
     if (typeof node.escapedText === "string") {
       add(checker.getSymbolAtLocation(node), node);
