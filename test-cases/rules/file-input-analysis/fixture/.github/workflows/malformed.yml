@@ -1,0 +1,5 @@
+jobs:
+  test:
+    steps:
+      - uses: actions/checkout@v4
+invalid: [

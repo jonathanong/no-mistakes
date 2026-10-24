@@ -44,8 +44,8 @@ pub(crate) use super::finding::rule_enabled;
 pub use super::finding::RuleFinding;
 
 pub(crate) use super::entrypoints::{
-    borrowed_source_rule_entrypoints, prepared_file_rule_facts, prepared_rule_entrypoints,
-    sourced_file_rule_entrypoints,
+    borrowed_source_rule_entrypoints, diagnostic_source_rule_entrypoints, prepared_file_rule_facts,
+    prepared_rule_entrypoints, sourced_file_rule_entrypoints,
 };
 pub(crate) use super::masked_source::{scan_masked_file, scan_masked_files, MaskedFileContext};
 pub(crate) use super::postgres_findings::{LocatedRuleFinding, PostgresFindings};

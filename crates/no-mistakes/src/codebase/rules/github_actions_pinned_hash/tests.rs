@@ -252,12 +252,18 @@ fn exclude_path_option_skips_file() {
 
 #[test]
 fn multiple_violations_reported() {
-    let content = "\
-      - uses: actions/checkout@v6.0.2
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-";
-    let findings = run_on_workflow(content);
+    // Keep valid YAML here; malformed-workflow uncertainty has its own saved regression.
+    let root = crate::test_support::rule_fixture_root("file-input-analysis");
+    let path = root.join(".github/workflows/multiple-unpinned.yml");
+    let (uses_re, sha_re, version_re) = build_patterns();
+    let findings = check_file(
+        &path,
+        &root,
+        &build_exclude_globset(&[]),
+        &uses_re,
+        &sha_re,
+        &version_re,
+    );
     assert_eq!(findings.len(), 2, "expected 2 violations: {findings:?}");
 }
 
@@ -324,8 +330,7 @@ fn composite_action_yaml_extension_checked() {
 }
 
 #[test]
-fn unreadable_file_produces_no_findings() {
-    // check_file must return empty when the path does not exist
+fn unreadable_file_reports_unanalyzable_input() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join(".github/workflows/missing.yml");
     let (uses_re, sha_re, version_re) = build_patterns();
@@ -338,10 +343,8 @@ fn unreadable_file_produces_no_findings() {
         &sha_re,
         &version_re,
     );
-    assert!(
-        findings.is_empty(),
-        "missing file should produce no findings"
-    );
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]

@@ -111,10 +111,30 @@ route project if this directory is not actually a server route boundary.
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), inputs a rule can't prove should never be treated as clean, and this rule does not yet meet that bar.
+Upgrade note: in-scope files that cannot be read, or parsed where this rule
+requires parsing, now fail `check` under the default `unanalyzable: report`
+instead of silently passing. Fix or exclude those inputs, or set
+`options.unanalyzable: advise` or `ignore` to restore the previous successful
+exit status for uncertainty alone. Independent definite findings still fail
+under every policy.
 
-- Known gap: unreadable or unparseable files are skipped. The rule skips these silently instead of routing them through `options.unanalyzable` (tracked in [#2660](https://github.com/jonathanong/no-mistakes/issues/2660)), so a passing run does not prove they are clean.
+Selected files that cannot be read as UTF-8 produce an `unanalyzable`
+diagnostic instead of silently passing. Restore read access or repair the
+encoding so the rule can verify the file. The shared `options.unanalyzable`
+setting inherits the repository policy: `report` (the default) fails,
+`advise` emits non-failing advice, and `ignore` omits uncertainty. Definite
+violations remain failures under every policy, including when `effort: low`
+falls back to `max`.
 
+Configured scope, includes, excludes, and rule-specific exemptions still
+select the inputs. Suppressions apply to both channels, including directives
+retained in an invalid UTF-8 read error; source bytes are never reinterpreted
+as analyzable code. Rule-level custom messages apply to these diagnostics.
+
+TS/JS parse failures use the same policy for configured route candidates or
+files under a verified route folder. The prepared runner consumes its existing
+read/parse errors and boundary facts; it does not read or parse files again to
+recover missing facts. The standalone rule reports the same failures.
 
 ## Suppression
 

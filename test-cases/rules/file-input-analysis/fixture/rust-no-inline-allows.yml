@@ -1,0 +1,5 @@
+rules:
+  - rule: rust-no-inline-allows
+    scope: repository
+    include: [rust-allows/bad.rs, rust-allows/definite.rs, rust-allows/suppressed.rs, rust-allows/malformed.rs]
+    options: {}

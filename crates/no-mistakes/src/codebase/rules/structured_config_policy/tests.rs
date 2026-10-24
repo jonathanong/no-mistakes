@@ -103,7 +103,7 @@ policies:
 }
 
 #[test]
-fn ignores_unreadable_structured_config_paths() {
+fn reports_unreadable_structured_config_paths() {
     let root = fixture_root("fixture");
     let files = vec![root.join("config")];
     let findings = check_with_files(
@@ -119,7 +119,8 @@ policies:
     )
     .unwrap();
 
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]

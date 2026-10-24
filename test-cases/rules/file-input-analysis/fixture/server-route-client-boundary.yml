@@ -1,0 +1,10 @@
+projects:
+  backend:
+    type: server
+    root: boundary
+    routes: [api/**]
+rules:
+  - rule: server-route-client-boundary
+    scope: repository
+    include: [boundary/api/bad.ts, boundary/api/definite.ts, boundary/api/suppressed.ts, boundary/api/malformed.ts]
+    options: {}

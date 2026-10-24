@@ -1,7 +1,5 @@
-use super::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use rayon::prelude::*;
 use serde::{Deserialize, Deserializer};
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
@@ -114,41 +112,10 @@ where
     Ok(value.as_deref().and_then(AssertionKind::from_str))
 }
 
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
-}
-
-pub(crate) fn check_with_files_and_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let in_scope: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &in_scope)?;
-            scan(root, &opts, &files, &in_scope, &target_roots, sources)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
+mod execution;
+#[doc(hidden)]
+pub use execution::diagnostics_with_files_and_sources;
+super::diagnostic_source_rule_entrypoints!();
 
 fn value_at_key<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
     key.split('.')

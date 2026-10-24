@@ -127,6 +127,8 @@ mod byte_prefilter;
 mod catalog_rule;
 mod configured_root;
 mod entrypoints;
+#[doc(hidden)]
+pub mod file_diagnostics;
 pub mod filesystem_dispatch;
 mod masked_source;
 pub(crate) mod path_filter;

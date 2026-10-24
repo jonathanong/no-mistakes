@@ -1,0 +1,50 @@
+unanalyzable: ignore
+projects:
+  backend:
+    type: server
+    root: boundary
+    routes: [api/**]
+rules:
+  - rule: rust-max-lines-per-file
+    scope: repository
+    include: [rust-max/bad.rs, rust-max/definite.rs, rust-max/suppressed.rs]
+    options:
+      srcMax: 1
+      testMax: 1
+  - rule: rust-no-inline-allows
+    scope: repository
+    include: [rust-allows/bad.rs, rust-allows/definite.rs, rust-allows/suppressed.rs, rust-allows/malformed.rs]
+    options: {}
+  - rule: rust-no-inline-tests
+    scope: repository
+    include: [rust-tests/bad.rs, rust-tests/definite.rs, rust-tests/suppressed.rs, rust-tests/malformed.rs]
+    options: {}
+  - rule: csharp-max-lines-per-file
+    scope: repository
+    include: [csharp/bad.cs, csharp/definite.cs, csharp/suppressed.cs]
+    options:
+      srcMax: 1
+      testMax: 1
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+    include: [empty/bad.ts, empty/definite.ts, empty/suppressed.ts]
+    options: {}
+  - rule: no-raw-ephemeral-port
+    scope: repository
+    include: [ports/bad.ts, ports/definite.ts, ports/suppressed.ts]
+    options: {}
+  - rule: structured-config-policy
+    scope: repository
+    include: [structured/bad.json, structured/definite.json, structured/suppressed.json]
+    options:
+      policies:
+        - files: [structured/*.json]
+          requiredKeys: [required]
+  - rule: github-actions-pinned-hash
+    scope: repository
+    include: [.github/workflows/bad.yml, .github/workflows/definite.yml, .github/workflows/suppressed.yml]
+    options: {}
+  - rule: server-route-client-boundary
+    scope: repository
+    include: [boundary/api/bad.ts, boundary/api/definite.ts, boundary/api/suppressed.ts, boundary/api/malformed.ts]
+    options: {}

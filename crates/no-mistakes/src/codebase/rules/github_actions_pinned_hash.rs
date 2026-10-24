@@ -2,13 +2,15 @@ use super::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
-use rayon::prelude::*;
 use regex::Regex;
 use serde::Deserialize;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+mod execution;
 mod yaml_uses;
+#[doc(hidden)]
+pub use execution::diagnostics_with_files_and_sources;
 
 pub const RULE_ID: &str = "github-actions-pinned-hash";
 
@@ -18,7 +20,17 @@ pub(crate) struct Options {
     pub(crate) exclude_paths: Vec<String>,
 }
 
-super::sourced_file_rule_entrypoints!();
+super::borrowed_source_rule_entrypoints!();
+
+pub fn check(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+) -> Result<Vec<RuleFinding>> {
+    let root = crate::codebase::ts_resolver::normalize_path(root);
+    super::check_sourced_standalone(&root, config, check_with_files)
+}
+
+pub(crate) use execution::check_with_files_sources_and_deferred_suppression;
 
 pub(crate) fn build_exclude_globset(patterns: &[String]) -> GlobSet {
     let mut builder = GlobSetBuilder::new();
@@ -37,31 +49,6 @@ pub(crate) fn build_patterns() -> (Regex, Regex, Regex) {
         // Allow `# v1`, `# v1.2`, `# v1.2.3`, `# 1.87.0`, `# v1.0.0-beta+build.1`
         Regex::new(r"^#\s*v?\d+(?:\.\d+)*(?:[-+][\w.+-]+)?\s*$").expect("version comment pattern"),
     )
-}
-
-fn scan(
-    root: &Path,
-    opts: &Options,
-    files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let exclude_set = build_exclude_globset(&opts.exclude_paths);
-    let (uses_re, sha_re, version_re) = build_patterns();
-    let findings: Vec<RuleFinding> = files
-        .par_iter()
-        .flat_map(|path| {
-            check_file_with_sources(
-                path,
-                root,
-                &exclude_set,
-                &uses_re,
-                &sha_re,
-                &version_re,
-                sources,
-            )
-        })
-        .collect();
-    Ok(findings)
 }
 
 fn check_file_with_sources(
@@ -85,8 +72,9 @@ fn check_file_with_sources(
     {
         return Vec::new();
     }
-    let Some(content) = super::read_source(sources, path) else {
-        return Vec::new();
+    let content = match super::source_access::checked_source(sources, path, root, RULE_ID) {
+        Ok(source) => source,
+        Err(finding) => return vec![*finding],
     };
     check_source(path, root, uses_re, sha_re, version_re, &content, sources)
 }
@@ -139,7 +127,18 @@ fn check_source(
 
     // Parse failures keep the line-scan findings. Each document that parses
     // is walked, including a flow `uses` in a later document.
-    let documents = sources.parse_yaml_documents_path(path).ok();
+    let documents = match sources.parse_yaml_documents_path(path) {
+        Ok(documents) => Some(documents),
+        Err(error) => {
+            findings.push(super::source_access::unanalyzable_source(
+                root,
+                path,
+                RULE_ID,
+                format!("cannot parse YAML: {error}"),
+            ));
+            None
+        }
+    };
     yaml_uses::append_parsed_uses(
         content,
         documents.as_deref().unwrap_or(&[]),

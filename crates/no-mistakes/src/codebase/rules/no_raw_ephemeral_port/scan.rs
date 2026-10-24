@@ -28,11 +28,12 @@ pub(super) fn check_file_with_prefilter(
     prefilter: bool,
 ) -> Vec<RuleFinding> {
     let rel = relative_slash_path(root, path);
-    if opts.allow.is_match(&rel) {
+    if opts.allow.is_match(&rel) || (!is_tuple_bind_source(path) && !is_js_ts(path)) {
         return Vec::new();
     }
-    let Some(source) = super::super::read_source(sources, path) else {
-        return Vec::new();
+    let source = match super::super::source_access::checked_source(sources, path, root, RULE_ID) {
+        Ok(source) => source,
+        Err(finding) => return vec![*finding],
     };
     if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
     {

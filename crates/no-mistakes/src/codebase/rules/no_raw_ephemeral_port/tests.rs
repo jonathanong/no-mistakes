@@ -145,12 +145,17 @@ fn disable_file_comment_skips_the_source() {
 }
 
 #[test]
-fn unreadable_file_is_skipped() {
+fn unreadable_file_reports_unanalyzable_input() {
     let root = fixture("pass");
     let path = root.join("missing.py");
     let sources = super::super::source_store_for_files(&[]);
     let opts = compile_options(Options::default()).unwrap();
-    assert!(scan::check_file(&root, &path, &opts, &sources, false).is_empty());
+    assert_eq!(
+        scan::check_file(&root, &path, &opts, &sources, false)[0]
+            .target
+            .as_deref(),
+        Some("unanalyzable")
+    );
 }
 
 #[test]

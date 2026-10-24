@@ -1,0 +1,7 @@
+rules:
+  - rule: csharp-max-lines-per-file
+    scope: repository
+    include: [csharp/bad.cs, csharp/definite.cs, csharp/suppressed.cs]
+    options:
+      srcMax: 1
+      testMax: 1
