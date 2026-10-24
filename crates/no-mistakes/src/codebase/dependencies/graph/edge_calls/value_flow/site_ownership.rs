@@ -10,10 +10,6 @@ fn reset_resolution(site: &mut ResolvedCallSite, base: &ResolvedCallSite) -> Pre
         .clone_from(&base.returned_member_from);
     (target, node)
 }
-fn swap_resolution(site: &mut ResolvedCallSite, previous: &mut PreviousResolution) {
-    std::mem::swap(&mut site.target, &mut previous.0);
-    std::mem::swap(&mut site.target_node, &mut previous.1);
-}
 fn selected_sites<'a>(
     sites: &'a mut [ResolvedCallSite],
     batch: &[usize],
@@ -31,4 +27,78 @@ fn selected_sites<'a>(
             (index, site)
         })
         .collect()
+}
+
+fn function_keys(site: &ResolvedCallSite) -> impl Iterator<Item = FunctionKey> + '_ {
+    node_function_keys(site.invocation, site.target_nodes())
+}
+fn node_function_keys<'a>(
+    invocation: InvocationKind,
+    nodes: impl Iterator<Item = &'a NodeId> + 'a,
+) -> impl Iterator<Item = FunctionKey> + 'a {
+    nodes.filter_map(move |node| {
+        if invocation == InvocationKind::Membership {
+            return None;
+        }
+        match node {
+            NodeId::Symbol {
+                file,
+                callable_id: Some(id),
+                ..
+            } => Some((file.to_path_buf(), *id)),
+            _ => None,
+        }
+    })
+}
+fn site_argument(
+    site: &ResolvedCallSite,
+    indexes: &CallableResolutionIndexes,
+    facts: &dyn TsFactLookup,
+) -> ParameterInput {
+    ParameterInput::from_site(site, indexes, facts)
+}
+
+fn site_source(inputs: &GraphEdgeBuildInputs<'_>, site: &ResolvedCallSite) -> NodeId {
+    site.caller.as_deref().map_or_else(
+        || NodeId::file_in(&inputs.interner, &site.file),
+        |caller| NodeId::scoped_in(&inputs.interner, &site.file, caller, site.caller_id),
+    )
+}
+
+// The serial incoming update needs canonical old nodes, not the old target's names.
+// Compare before dropping that target: changed targets can share the same node.
+enum PreviousCallNodes {
+    Unchanged,
+    Single(Option<NodeId>),
+    Alternatives(std::sync::Arc<ResolvedCallAlternatives>),
+}
+impl PreviousCallNodes {
+    fn project(previous: PreviousResolution, site: &ResolvedCallSite) -> Self {
+        if previous.0 == site.target && previous.1 == site.target_node {
+            return Self::Unchanged;
+        }
+        match previous.0 {
+            ResolvedCallTarget::Alternatives(alternatives) => Self::Alternatives(alternatives),
+            _ => Self::Single(previous.1),
+        }
+    }
+    fn changed(&self) -> bool {
+        !matches!(self, Self::Unchanged)
+    }
+    fn target_nodes(&self) -> ResolvedCallNodes<'_> {
+        match self {
+            Self::Alternatives(alternatives) => ResolvedCallNodes {
+                single: None,
+                alternatives: alternatives.nodes.iter(),
+            },
+            Self::Single(node) => ResolvedCallNodes {
+                single: node.as_ref(),
+                alternatives: [].iter(),
+            },
+            Self::Unchanged => ResolvedCallNodes {
+                single: None,
+                alternatives: [].iter(),
+            },
+        }
+    }
 }
