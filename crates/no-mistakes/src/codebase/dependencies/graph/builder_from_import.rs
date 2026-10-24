@@ -16,6 +16,7 @@ impl DepGraph {
             module_files: fx_map(),
             resolved_call_sites: Vec::new(),
             class_declarations: Vec::new(),
+            class_ancestry: Default::default(),
             call_sites_by_file: fx_map(),
             vitest_setup_projects: Vec::new(),
             effective_edges: OnceLock::new(),

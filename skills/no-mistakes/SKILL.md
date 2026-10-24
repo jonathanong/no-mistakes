@@ -94,12 +94,14 @@ invocations. Other launcher errors, such as permission denied, are hard errors.
 
 For `unconstructed-error-class`, unresolved production constructors, escaped
 namespaces without known construction or inheritance, and unconstructed classes
-with external or unresolved base ancestry follow `options.unanalyzable`:
+with unresolved base ancestry follow `options.unanalyzable`:
 `report` fails by default, `advise` emits advisories, and `ignore` omits them.
 Unknown constructors never credit their enclosing class or prove it unused;
 that class follows the policy too unless known construction or inheritance
 proves it used. Use named constructors,
-direct namespace member references, or analyzable repository bases. Suppressions
+direct namespace member references, or analyzable bases. Usable package type
+declarations can prove a non-Error class (skipped) or an Error subclass (judged);
+missing or opaque declarations remain uncertain. Suppressions
 apply at the construction or class line in both report channels. The rule remains
 `max` only; a requested `low` warns and runs `max`.
 

@@ -86,7 +86,17 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
     } else {
         Default::default()
     };
+    let ancestry = if plan.function_calls
+        && (!import_facts.class_scopes.is_empty()
+            || import_facts.unknown_calls.iter().any(|call| {
+                call.invocation == crate::codebase::dependencies::extract::InvocationKind::Construct
+            })) {
+        super::super::ancestry::collect(program, source, &import_facts.unknown_calls)
+    } else {
+        Default::default()
+    };
     TsFileFacts {
+        ancestry,
         module_bindings: (plan.module_bindings || plan.call_arguments).then(|| {
             Arc::new(match semantic {
                 Some(built) => module_facts::extract_from_semantic(

@@ -40,7 +40,7 @@ pub(super) fn unknown_constructs(
         rule: RULE_ID.to_string(),
         file: relative_slash_path(root, &site.file),
         line: site.line.max(1) as usize,
-        message: message(application, &format!("Cannot resolve construction target `{}`, so error-class construction coverage is incomplete. Replace the dynamic constructor with a statically named class or an analyzable import, then rerun the check.", site.source_callee)),
+        message: message(application, &format!("Cannot resolve {}, so error-class construction coverage is incomplete. Replace the dynamic constructor with a statically named class or an analyzable import, then rerun the check.", constructor_subject(&site.source_callee, graph.constructor_expression(&site.file, site.offset)))),
         import: None,
         target: Some("unanalyzable".to_string()),
     }).collect()
@@ -51,4 +51,15 @@ fn message(application: &RuleDef, detail: &str) -> String {
         || detail.to_string(),
         |custom| format!("{custom}: {detail}"),
     )
+}
+
+fn constructor_subject(callee: &str, expression: Option<&str>) -> String {
+    if callee == "<unknown>" {
+        expression.map_or_else(
+            || "a computed or conditional constructor expression".to_string(),
+            |expression| format!("constructor expression `{expression}`"),
+        )
+    } else {
+        format!("construction target `{callee}`")
+    }
 }

@@ -435,3 +435,12 @@ mod uncertainty;
 
 #[path = "tests/ancestry_compatibility.rs"]
 mod ancestry_compatibility;
+
+#[path = "tests/declaration_fact_boundaries.rs"]
+mod declaration_fact_boundaries;
+#[path = "tests/declaration_ownership.rs"]
+mod declaration_ownership;
+#[path = "tests/diagnostic_expressions.rs"]
+mod diagnostic_expressions;
+#[path = "tests/external_declarations.rs"]
+mod external_declarations;

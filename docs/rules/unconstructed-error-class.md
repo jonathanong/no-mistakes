@@ -294,7 +294,8 @@ Inputs whose construction or error ancestry cannot be proved follow the shared
   `new this()` factory is definitely unused.
 - An exported error class whose namespace escapes, unless a known construction
   or subclass already proves it used. It is reported at the class line.
-- An exported class with an external-package or otherwise unresolved base, or
+- An exported class with unresolved base ancestry, including an external package
+  without usable class declarations, or
   a repository subclass whose ancestry reaches that base, unless known
   construction or inheritance already proves it used. It is reported at the
   class line because the graph cannot determine whether it is an error class.
@@ -312,7 +313,8 @@ requested `low` that falls back to `max`.
 
 Rewrite dynamic constructors as statically named classes or analyzable imports,
 replace namespace aliases with direct class references, and include repository
-base source or extend a locally analyzable error class. Suppressions below work
+base source or usable package type declarations, or extend a locally analyzable
+error class. Suppressions below work
 for findings and advisories, at the diagnostic's class or construction line.
 
 ```yaml
@@ -322,6 +324,24 @@ rules:
     options:
       unanalyzable: advise
 ```
+
+## Upgrading
+
+This change adds default-report diagnostics to repositories already running the
+rule. Review these inputs when upgrading:
+
+- unresolved `new` targets, including `new this()`, `new someParam()`, and
+  computed or conditional constructors;
+- class bases whose ancestry remains unresolved, including package bases with
+  unavailable or unsupported type declarations;
+- otherwise-unconstructed error classes in escaping namespaces.
+
+Use statically named constructors and analyzable class bases where possible.
+Set `options.unanalyzable: advise` while reviewing these cases, or `ignore` to
+omit their uncertainty. Repository `unanalyzable` supplies the default when no
+rule override is set. Unrelated definite unconstructed classes still fail under
+every policy. For intentional dynamic boundaries, use a reasoned file, line, or
+next-line suppression at each reported class or construction site.
 
 ## Suppression
 
@@ -340,6 +360,10 @@ export class PluginError extends Error {}
 `no-mistakes-disable-file unconstructed-error-class` at the top of a file (every
 class and construction in it) work too.
 
+`Reflect.construct(ReflectedError, [])` is not recognized as construction.
+Its class can still receive a definite finding, even when `unanalyzable` is
+`advise` or `ignore`; suppress that class declaration or file explicitly.
+
 ## Limitations
 
 The rule reads static code only. Most limitations below hide a dead class; the
@@ -350,9 +374,22 @@ resolves.
   without proving which class is constructed. Reflection such as
   `Reflect.construct` is not recognized as construction; suppress a class built
   only through reflection.
-- A base class imported from an external package (`TRPCError`, `HttpError`) has
-  unknown ancestry because the package source is not analyzed. An unconstructed
-  class extending it follows `options.unanalyzable`.
+- Imported bases reuse the canonical class graph. Package `types`/`typings`,
+  exact `exports` entries with a `types` branch, and `@types` declarations can
+  prove class ancestry, including local declaration reexports and `export =`
+  namespaces. Runtime-only package entries can fall back to `@types` when no
+  conflicting declaration sidecar exists. A resolved non-Error class such as
+  `React.Component` is skipped; a declared Error subclass is judged. Supported
+  versioned `types` conditions use the consuming project's installed TypeScript
+  version, including through declaration reexports; conflicting applicable
+  targets remain uncertain. `typesVersions` is ignored when `exports` owns
+  resolution; legacy version maps, export patterns, missing compiler versions
+  needed by conditions, opaque aliases/functions and unsupported conditions stay
+  unknown and follow `options.unanalyzable`. Anonymous default classes without a
+  stable class identity also remain unknown. This is a conservative ancestry
+  projection, not full TypeScript compiler resolution; ordinary import and call
+  targets retain their existing semantics. Distinct symlink spellings remain
+  separate logical declaration paths rather than one canonical package identity.
 - Mixin and expression bases (`extends withCode(Error)`) and class expressions
   are not tracked.
 - A dead subclass still satisfies its base. The check converges over repeated
@@ -365,9 +402,9 @@ resolves.
 - An exported alias of a class is not recognized as an export, so the class is
   not reported. With `const PublicError = InternalError;` and
   `export { PublicError };`, `InternalError` is skipped.
-- An alias of a built-in error used as a base is not followed, so the class is
-  not reported. With `const BaseError = Error;`, a class that extends
-  `BaseError` is skipped.
+- An alias of a built-in error used as a base is not a recognized error root.
+  With `const E2 = Error; export class Al extends E2 {}`, the class follows
+  `options.unanalyzable` because the base cannot be proved.
 - An unresolved `new`, such as `new this()`, follows the unanalyzable policy;
   it does not credit an enclosing class.
 

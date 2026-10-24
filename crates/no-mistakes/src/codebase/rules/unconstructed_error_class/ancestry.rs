@@ -84,7 +84,8 @@ pub(super) fn error_kinds(graph: &DepGraph, classes: &[ClassDeclaration]) -> Vec
             .push(index);
         by_id.insert((class.file.as_path(), class.callable_id), index);
     }
-    let mut flags = vec![ErrorKind::Other; classes.len()];
+    // A closed ancestry cycle has no positive non-Error root proof.
+    let mut flags = vec![ErrorKind::Unknown; classes.len()];
     let mut changed = true;
     while changed {
         changed = false;
@@ -106,7 +107,13 @@ pub(super) fn error_kinds(graph: &DepGraph, classes: &[ClassDeclaration]) -> Vec
                         .get(&base.key)
                         .and_then(|parents| parents.iter().map(|parent| flags[*parent]).max()),
                 }
-                .unwrap_or(ErrorKind::Other);
+                .unwrap_or_else(|| {
+                    if graph.class_is_root(base.key.0, base.key.1, base.id) {
+                        ErrorKind::Other
+                    } else {
+                        ErrorKind::Unknown
+                    }
+                });
                 kind = kind.max(parent_kind);
             }
             changed |= flags[index] != kind;

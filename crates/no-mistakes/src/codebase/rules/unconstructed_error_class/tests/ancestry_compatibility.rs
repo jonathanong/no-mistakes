@@ -25,7 +25,7 @@ fn graph() -> (PathBuf, DepGraph) {
 }
 
 #[test]
-fn scope_only_base_symbols_preserve_known_unknown_and_non_error_ancestry() {
+fn scope_only_base_symbols_preserve_ancestry_without_inventing_root_class_proof() {
     let (root, graph) = graph();
     let classes = graph.class_declarations();
     // Legacy symbol projections may omit parser IDs. Erase IDs on real fixture
@@ -57,14 +57,19 @@ fn scope_only_base_symbols_preserve_known_unknown_and_non_error_ancestry() {
     );
     let original = error_kinds(&graph, classes);
     let projected = error_kinds(&projected, classes);
-    assert!(
-        projected == original,
-        "scope-only projection changed ancestry"
-    );
+    // The synthetic legacy graph intentionally has no exact root-class metadata.
+    // Erasing Plain's parser ID cannot prove it is a class rather than a factory.
+    for (class, (before, after)) in classes.iter().zip(original.iter().zip(&projected)) {
+        if class.scope == "NotAnError" {
+            assert!(*before == ErrorKind::Other && *after == ErrorKind::Unknown);
+        } else {
+            assert!(before == after, "{}", class.scope);
+        }
+    }
     for (name, expected) in [
         ("ChildError", ErrorKind::Error),
         ("ExternalChild", ErrorKind::Unknown),
-        ("NotAnError", ErrorKind::Other),
+        ("NotAnError", ErrorKind::Unknown),
     ] {
         let index = classes
             .iter()

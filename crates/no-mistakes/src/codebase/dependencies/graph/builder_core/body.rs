@@ -146,6 +146,17 @@
             .visible_paths
             .or(owned_playwright_snapshot.as_ref());
 
+        let class_ancestry = if plan.extends || plan.calls {
+            class_ancestry_for_graph(
+                &edge_inputs,
+                facts.expect("class/call facts prepared"),
+                &resolver,
+                &session,
+            )
+        } else {
+            Default::default()
+        };
+
         collect_and_merge_all_edges(
             &edge_inputs,
             playwright_snapshot,
@@ -168,5 +179,20 @@
             },
         )?;
 
+        if plan.extends {
+            class_declarations.extend(class_ancestry.classes.iter().cloned());
+            for ((path, id), target) in &class_ancestry.targets {
+                if let Some(class) = class_declarations
+                    .iter()
+                    .find(|class| &class.file == path && class.callable_id == *id)
+                {
+                    merge_edges(
+                        &mut forward,
+                        &mut reverse,
+                        vec![(class.node(), target.clone(), EdgeKind::Extends)],
+                    );
+                }
+            }
+        }
         include!("finish.rs")
 }

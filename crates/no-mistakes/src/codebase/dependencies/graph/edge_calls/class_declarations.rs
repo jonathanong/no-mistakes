@@ -40,6 +40,30 @@ impl ClassDeclaration {
 }
 
 impl DepGraph {
+    pub(crate) fn class_is_root(
+        &self,
+        file: &std::path::Path,
+        scope: &str,
+        id: Option<crate::codebase::dependencies::extract::CallableId>,
+    ) -> bool {
+        id.is_some_and(|id| {
+            self.class_ancestry
+                .roots
+                .contains(&NodeId::callable(file, scope, id))
+        })
+    }
+
+    pub(crate) fn constructor_expression(
+        &self,
+        file: &std::path::Path,
+        offset: u32,
+    ) -> Option<&str> {
+        self.class_ancestry
+            .expressions
+            .get(&(file.to_path_buf(), offset))
+            .map(String::as_str)
+    }
+
     pub fn class_declarations(&self) -> &[ClassDeclaration] {
         &self.class_declarations
     }

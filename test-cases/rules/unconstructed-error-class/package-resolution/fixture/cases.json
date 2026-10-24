@@ -1,0 +1,734 @@
+[
+  {
+    "name": "explicit declaration ts",
+    "specifier": "./relative/base.d.ts",
+    "importer": "src/main.ts",
+    "expected": "src/relative/base.d.ts"
+  },
+  {
+    "name": "explicit declaration mts",
+    "specifier": "./relative/base.d.mts",
+    "importer": "src/main.ts",
+    "expected": "src/relative/base.d.mts"
+  },
+  {
+    "name": "explicit declaration cts",
+    "specifier": "./relative/base.d.cts",
+    "importer": "src/main.ts",
+    "expected": "src/relative/base.d.cts"
+  },
+  {
+    "name": "emitted js",
+    "specifier": "./relative/base.js",
+    "importer": "src/main.ts",
+    "expected": "src/relative/base.d.ts"
+  },
+  {
+    "name": "emitted mjs",
+    "specifier": "./relative/base.mjs",
+    "importer": "src/main.ts",
+    "expected": "src/relative/base.d.mts"
+  },
+  {
+    "name": "emitted cjs",
+    "specifier": "./relative/base.cjs",
+    "importer": "src/main.ts",
+    "expected": "src/relative/base.d.cts"
+  },
+  {
+    "name": "ambiguous declaration variants",
+    "specifier": "./relative/base",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "file declaration precedes directory index",
+    "specifier": "./relative/only",
+    "importer": "src/main.ts",
+    "expected": "src/relative/only.d.ts"
+  },
+  {
+    "name": "directory declaration",
+    "specifier": "./relative/directory",
+    "importer": "src/main.ts",
+    "expected": "src/relative/directory/index.d.cts"
+  },
+  {
+    "name": "ambiguous directory declarations",
+    "specifier": "./relative/ambiguous",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "relative declaration reexport",
+    "specifier": "./only.js",
+    "importer": "src/relative/barrel.d.ts",
+    "expected": "src/relative/only.d.ts"
+  },
+  {
+    "name": "parent declaration reexport",
+    "specifier": "../relative/only.js",
+    "importer": "src/nested/entry.d.ts",
+    "expected": "src/relative/only.d.ts"
+  },
+  {
+    "name": "explicit ordinary source is not declaration",
+    "specifier": "./main.ts",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "missing declaration",
+    "specifier": "./missing.d.ts",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "missing all extension candidates",
+    "specifier": "./absent",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "unreadable declaration text",
+    "specifier": "./relative/binary.d.ts",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "declaration path is directory",
+    "specifier": "./relative/folder.d.ts",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "relative importer has no parent",
+    "specifier": "./relative/only",
+    "importer": "/",
+    "expected": null
+  },
+  {
+    "name": "package importer has no parent",
+    "specifier": "typed",
+    "importer": "/",
+    "expected": null
+  },
+  {
+    "name": "invalid importer ancestor is file",
+    "specifier": "typed",
+    "importer": "src/main.ts/child.ts",
+    "expected": null
+  },
+  {
+    "name": "package types",
+    "specifier": "typed",
+    "importer": "src/main.ts",
+    "expected": "node_modules/typed/types/base.d.ts"
+  },
+  {
+    "name": "package typings",
+    "specifier": "legacy",
+    "importer": "src/main.ts",
+    "expected": "node_modules/legacy/index.d.mts"
+  },
+  {
+    "name": "types has documented priority over typings",
+    "specifier": "both",
+    "importer": "src/main.ts",
+    "expected": "node_modules/both/first.d.ts"
+  },
+  {
+    "name": "implicit declaration without manifest",
+    "specifier": "no-manifest",
+    "importer": "src/main.ts",
+    "expected": "node_modules/no-manifest/index.d.ts"
+  },
+  {
+    "name": "implicit declaration with package manifest",
+    "specifier": "index-only",
+    "importer": "src/main.ts",
+    "expected": "node_modules/index-only/index.d.ts"
+  },
+  {
+    "name": "directory types entry",
+    "specifier": "nested-types",
+    "importer": "src/main.ts",
+    "expected": "node_modules/nested-types/types/index.d.ts"
+  },
+  {
+    "name": "direct package subpath",
+    "specifier": "subpaths/part",
+    "importer": "src/main.ts",
+    "expected": "node_modules/subpaths/part.d.ts"
+  },
+  {
+    "name": "directory package subpath",
+    "specifier": "subpaths/folder",
+    "importer": "src/main.ts",
+    "expected": "node_modules/subpaths/folder/index.d.ts"
+  },
+  {
+    "name": "exports types root",
+    "specifier": "exported",
+    "importer": "src/main.ts",
+    "expected": "node_modules/exported/index.d.ts"
+  },
+  {
+    "name": "exports types subpath",
+    "specifier": "exported/part",
+    "importer": "src/main.ts",
+    "expected": "node_modules/exported/part.d.cts"
+  },
+  {
+    "name": "exports missing subpath is not guessed",
+    "specifier": "exported/missing",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "direct declaration exports",
+    "specifier": "direct-export",
+    "importer": "src/main.ts",
+    "expected": "node_modules/direct-export/index.d.mts"
+  },
+  {
+    "name": "direct exports does not imply subpath",
+    "specifier": "direct-export/part",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "exports top-level type condition",
+    "specifier": "condition-export",
+    "importer": "src/main.ts",
+    "expected": "node_modules/condition-export/index.d.ts"
+  },
+  {
+    "name": "condition exports does not imply subpath",
+    "specifier": "condition-export/part",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "runtime package gets @types fallback",
+    "specifier": "runtime",
+    "importer": "src/main.ts",
+    "expected": "node_modules/@types/runtime/index.d.ts"
+  },
+  {
+    "name": "realistic installed React and versioned @types using consumer TS6",
+    "specifier": "react",
+    "importer": "src/main.ts",
+    "expected": "node_modules/@types/react/index.d.ts"
+  },
+  {
+    "name": "explicit @types package",
+    "specifier": "@types/react",
+    "importer": "src/main.ts",
+    "expected": "node_modules/@types/react/index.d.ts"
+  },
+  {
+    "name": "scoped @types fallback",
+    "specifier": "@scope/widget",
+    "importer": "src/main.ts",
+    "expected": "node_modules/@types/scope__widget/index.d.ts"
+  },
+  {
+    "name": "no recursive @types of @types fallback",
+    "specifier": "@types/empty",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "nearest untyped package does not use outer package",
+    "specifier": "shadow",
+    "importer": "workspace/src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "nearest typed package wins",
+    "specifier": "nearest",
+    "importer": "workspace/src/main.ts",
+    "expected": "workspace/node_modules/nearest/index.d.cts"
+  },
+  {
+    "name": "malformed nearer package blocks outer lookup",
+    "specifier": "invalid-json",
+    "importer": "workspace/src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "invalid-array",
+    "specifier": "invalid-array",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "version-map",
+    "specifier": "version-map",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "typed-number",
+    "specifier": "typed-number",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "missing-target",
+    "specifier": "missing-target",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "empty-target",
+    "specifier": "empty-target",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "escape-target",
+    "specifier": "escape-target",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "absolute-target",
+    "specifier": "absolute-target",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "glob-target",
+    "specifier": "glob-target",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "backslash-target",
+    "specifier": "backslash-target",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "complex-conditions",
+    "specifier": "complex-conditions",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "custom-condition",
+    "specifier": "custom-condition",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "runtime-export",
+    "specifier": "runtime-export",
+    "importer": "src/main.ts",
+    "expected": "node_modules/runtime-export/index.d.ts"
+  },
+  {
+    "name": "runtime-object-export",
+    "specifier": "runtime-object-export",
+    "importer": "src/main.ts",
+    "expected": "node_modules/runtime-object-export/index.d.ts"
+  },
+  {
+    "name": "exports-null",
+    "specifier": "exports-null",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "exports-array",
+    "specifier": "exports-array",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "exports-empty",
+    "specifier": "exports-empty",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "exports-type-number",
+    "specifier": "exports-type-number",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "exports-nested-default",
+    "specifier": "exports-nested-default",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "exports-runtime-types",
+    "specifier": "exports-runtime-types",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "exports-unqualified",
+    "specifier": "exports-unqualified",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "exports-escape",
+    "specifier": "exports-escape",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "exports-missing",
+    "specifier": "exports-missing",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "exports-mixed-map",
+    "specifier": "exports-mixed-map",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "exports-pattern",
+    "specifier": "exports-pattern/part",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "missing-package",
+    "specifier": "absent-package",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "absolute-specifier",
+    "specifier": "/tmp/module",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "parent-package-component",
+    "specifier": "pkg/../other",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "empty-package-component",
+    "specifier": "pkg//part",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "scope-missing-name",
+    "specifier": "@scope",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "empty-scope",
+    "specifier": "@/pkg",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "bare-at",
+    "specifier": "@",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "alias-specifier",
+    "specifier": "#alias",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "url-specifier",
+    "specifier": "node:util",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "backslash-specifier",
+    "specifier": "pkg\\part",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "query-specifier",
+    "specifier": "pkg?x",
+    "importer": "src/main.ts",
+    "expected": null
+  },
+  {
+    "name": "all runtime sidecars absent permits @types",
+    "specifier": "runtime-fallback",
+    "expected": "node_modules/@types/runtime-fallback/index.d.ts",
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "possible own Error declaration blocks benign @types fallback",
+    "specifier": "runtime-conflict",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "differing runtime declarations are unknown",
+    "specifier": "runtime-different",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "identical runtime sidecars can resolve",
+    "specifier": "runtime-identical",
+    "expected": "node_modules/runtime-identical/index.d.ts",
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "unreadable runtime declaration never permits @types",
+    "specifier": "runtime-unreadable",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "main declaration is authoritative over benign root index",
+    "specifier": "main-conflict",
+    "expected": "node_modules/main-conflict/dist/index.d.ts",
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "unsupported-main",
+    "specifier": "unsupported-main",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "invalid-main",
+    "specifier": "invalid-main",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "escaping-main",
+    "specifier": "escaping-main",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "default-before-types active Error and nonError conflict",
+    "specifier": "active-conflict",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "fixed consumer TS6 wins over transitive private TS5",
+    "specifier": "versioned",
+    "expected": "node_modules/versioned/error.d.ts",
+    "importer": "node_modules/consumer-library/nested/entry.d.ts",
+    "consumer": "."
+  },
+  {
+    "name": "direct caller private context is distinct",
+    "specifier": "versioned",
+    "expected": "node_modules/versioned/benign.d.ts",
+    "importer": "node_modules/consumer-library/nested/entry.d.ts"
+  },
+  {
+    "name": "React old-compiler cannot pick ambiguous fallback",
+    "specifier": "react",
+    "expected": null,
+    "importer": "src/main.ts",
+    "consumer": "old-compiler"
+  },
+  {
+    "name": "React missing-version cannot pick ambiguous fallback",
+    "specifier": "react",
+    "expected": null,
+    "importer": "src/main.ts",
+    "consumer": "missing-version"
+  },
+  {
+    "name": "React invalid-version cannot pick ambiguous fallback",
+    "specifier": "react",
+    "expected": null,
+    "importer": "src/main.ts",
+    "consumer": "invalid-version"
+  },
+  {
+    "name": "React short-version cannot pick ambiguous fallback",
+    "specifier": "react",
+    "expected": null,
+    "importer": "src/main.ts",
+    "consumer": "short-version"
+  },
+  {
+    "name": "React long-version cannot pick ambiguous fallback",
+    "specifier": "react",
+    "expected": null,
+    "importer": "src/main.ts",
+    "consumer": "long-version"
+  },
+  {
+    "name": "React prerelease-version cannot pick ambiguous fallback",
+    "specifier": "react",
+    "expected": null,
+    "importer": "src/main.ts",
+    "consumer": "prerelease-version"
+  },
+  {
+    "name": "unknown version harmless with identical fallback",
+    "specifier": "coalesced",
+    "expected": "node_modules/coalesced/index.d.ts",
+    "importer": "src/main.ts",
+    "consumer": "missing-version"
+  },
+  {
+    "name": "unsupported version range cannot choose benign branch",
+    "specifier": "unsupported-range",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "unsupported range harmless only with identical fallback",
+    "specifier": "same-unsupported-range",
+    "expected": "node_modules/same-unsupported-range/index.d.ts",
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "condition-lt",
+    "specifier": "condition-lt",
+    "expected": "node_modules/condition-lt/index.d.ts",
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "condition-gt",
+    "specifier": "condition-gt",
+    "expected": "node_modules/condition-gt/index.d.ts",
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "condition-eq",
+    "specifier": "condition-eq",
+    "expected": "node_modules/condition-eq/index.d.ts",
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "no active versioned export is unknown",
+    "specifier": "inactive-only",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "absent runtime sidecar does not defeat explicit Error types",
+    "specifier": "explicit-types-absent-runtime",
+    "importer": "src/main.ts",
+    "expected": "node_modules/explicit-types-absent-runtime/types/index.d.ts"
+  },
+  {
+    "name": "numeric-version",
+    "specifier": "react",
+    "expected": null,
+    "importer": "src/main.ts",
+    "consumer": "numeric-version"
+  },
+  {
+    "name": "minor-invalid-version",
+    "specifier": "react",
+    "expected": null,
+    "importer": "src/main.ts",
+    "consumer": "minor-invalid-version"
+  },
+  {
+    "name": "major-invalid-version",
+    "specifier": "react",
+    "expected": null,
+    "importer": "src/main.ts",
+    "consumer": "major-invalid-version"
+  },
+  {
+    "name": "malformed local compiler does not select ancestor",
+    "specifier": "react",
+    "expected": null,
+    "importer": "src/main.ts",
+    "consumer": "syntax-invalid-version"
+  },
+  {
+    "name": "bound-missing-minor",
+    "specifier": "bound-missing-minor",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "bound-major-invalid",
+    "specifier": "bound-major-invalid",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "bound-minor-invalid",
+    "specifier": "bound-minor-invalid",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "nested runtime path key is unsupported",
+    "specifier": "nested-runtime-path",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "runtime non-code target is unknown",
+    "specifier": "invalid-runtime-extension",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "invalid nested runtime value is unknown",
+    "specifier": "invalid-nested-runtime",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "known default sidecar plus absent conditional never selects benign fallback",
+    "specifier": "default-own-conflict",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "unreadable explicit types target is unknown",
+    "specifier": "unreadable-types",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "malformed types-only package is unknown",
+    "specifier": "malformed-only",
+    "expected": null,
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "main-mjs",
+    "specifier": "main-mjs",
+    "expected": "node_modules/main-mjs/dist/index.d.mts",
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "main-cjs",
+    "specifier": "main-cjs",
+    "expected": "node_modules/main-cjs/dist/index.d.cts",
+    "importer": "src/main.ts"
+  },
+  {
+    "name": "main unsupported extension is unknown",
+    "specifier": "main-unsupported-extension",
+    "expected": null,
+    "importer": "src/main.ts"
+  }
+]
