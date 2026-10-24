@@ -36,7 +36,7 @@ loadObject({ query: read });
 
 Same-file function declarations and `const` arrow/function expressions use the
 parameter's declared imported type. Optional and defaulted parameters and inline
-destructured properties are supported. A shadowed type name cannot prove the
+destructured properties without property defaults are supported. A shadowed type name cannot prove the
 configured type. Forwarding callbacks still report, including
 `load((statement) => read(statement))`.
 

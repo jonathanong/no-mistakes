@@ -24,3 +24,5 @@ explicitExpression(read);
 ambient(read);
 import { fromMethod } from "./helpers";
 fromMethod(read);
+import { defaultObject } from "./helpers";
+defaultObject({ query: read });

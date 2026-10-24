@@ -1,4 +1,4 @@
-import type { QueryExecutor } from "@example/db";
+import { read, type QueryExecutor } from "@example/db";
 export function run(exec?: QueryExecutor) {}
 export function object({ query }: { query: QueryExecutor }) {}
 export function untyped(exec: any) {}
@@ -29,3 +29,8 @@ export declare function ambient(query: QueryExecutor): void;
 // A named interface method signature still provides only contextual typing.
 interface Helpers { run(query: QueryExecutor): void }
 export const fromMethod: Helpers["run"] = query => { query("SELECT 1"); };
+
+// Low-effort SQL analysis cannot prove defaulted object bindings.
+export function defaultObject({ query = read }: { query: QueryExecutor }) {
+  query("SELECT id FROM orders OFFSET 1");
+}

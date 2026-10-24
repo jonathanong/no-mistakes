@@ -82,6 +82,7 @@ function importedTarget(call, index, property, context, options) {
       pattern.elements.some(
         (element) =>
           typeof element.name.text === "string" &&
+          !element.initializer &&
           (!element.propertyName || typeof element.propertyName.text === "string") &&
           (element.propertyName?.text ?? element.name.text) === property &&
           !element.dotDotDotToken,
