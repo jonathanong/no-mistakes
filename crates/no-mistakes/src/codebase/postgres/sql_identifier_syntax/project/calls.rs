@@ -167,7 +167,7 @@ fn append_escapes(
             }
             calls.push(SqlCall {
                 span: at,
-                line: syntax.metadata.line(at, source),
+                line: syntax.metadata.line(&at, source),
                 input: Input::Unknown,
             });
         }
