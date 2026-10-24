@@ -76,6 +76,17 @@ need that explicit opt-in. Dotnet and Swift stay inside that framework in
 `tests_plan_json_reports_configured_swift_source_impact`
 (`crates/no-mistakes/src/napi_api/tests/tests_native_fallback.rs`).
 
+## Recall over precision
+
+A missed mistake is worse than a noisy report. An over-report costs a reviewer
+or agent a moment to dismiss or suppress; a silent omission cannot be detected
+at all. So `no-mistakes` never treats an input it cannot prove as clean:
+uncertain inputs (dynamic or unproven shapes) are surfaced through the
+`unanalyzable` policy, while definite violations are always findings. When a
+report says an input is unanalyzable, rewrite the code to a statically provable
+shape, raise `effort`, or suppress it with a reason. See
+[how analysis works](../README.md#how-analysis-works).
+
 ## Three jobs
 
 1. **Scope the change.** Callers, routes, queues, workflows, and named
