@@ -22,7 +22,7 @@ pub(super) fn run(
         let policy = config.effective_rule_analysis(rule)?.unanalyzable;
         let per_file: Vec<_> = files
             .par_iter()
-            .map(|path| check_file(path, root, &patterns, sources, policy))
+            .map(|path| check_file(path, root, &patterns, sources, policy, defer_suppression))
             .collect();
         for result in per_file {
             diagnostics.append(result);
@@ -43,6 +43,7 @@ fn check_file(
     patterns: &[Regex],
     sources: &SourceStore,
     policy: Unanalyzable,
+    defer_suppression: bool,
 ) -> AnalysisDiagnostics {
     let mut diagnostics = AnalysisDiagnostics::default();
     let rel = relative_slash_path(root, path);
@@ -69,7 +70,7 @@ fn check_file(
             };
             let mut findings = vec![finding];
             // Only inspect retained bytes for directives; never analyze lossy YAML or re-read.
-            if let Some(error) = invalid_utf8 {
+            if let Some(error) = invalid_utf8.filter(|_| !defer_suppression) {
                 rules::suppress_rule_findings_with_source(
                     &mut findings,
                     &String::from_utf8_lossy(error.as_bytes()),

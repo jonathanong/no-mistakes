@@ -52,7 +52,11 @@ fn unreadable_selected_sources_route_policy_without_reclassifying_expressions() 
                         .unwrap();
                 assert_eq!(
                     (result.findings.len(), result.advisories.len()),
-                    expected,
+                    if deferred && prefix == "suppressed-" {
+                        (failures * 3, advice * 3)
+                    } else {
+                        expected
+                    },
                     "{prefix}{policy} deferred={deferred}"
                 );
             }
