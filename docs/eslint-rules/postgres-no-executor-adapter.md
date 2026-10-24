@@ -104,6 +104,8 @@ locks.delete(read);
 This requires typed linting and an unchanged built-in method. The receiver must
 come from a proven built-in allocation or a stable alias of one. A parameter
 annotation alone cannot prove that a custom implementation was not supplied.
+The key type need not name an executor: native `new Map()` and
+`Map<any, any>` allocations can also prove a key operation.
 Unknown receivers, same-named custom collections, overridden methods, escaped
 receivers, and spread or computed calls still report. Storing an executor as a
 value, such as

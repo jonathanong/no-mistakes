@@ -42,7 +42,7 @@ function builtinCollection(type, program) {
 function stableCollectionValue(receiver, collection, context, checker, services, seen) {
   const def = stableReceiverBinding(receiver, context);
   if (!def || def.type === "Parameter") return null;
-  if (seen.has(def.node) || !def.node.init) return null;
+  if (seen.has(def.node) || !def.node.init || def.node.id.type !== "Identifier") return null;
   seen.add(def.node);
   if (def.node.init.type === "Identifier") {
     return stableCollectionValue(def.node.init, collection, context, checker, services, seen);

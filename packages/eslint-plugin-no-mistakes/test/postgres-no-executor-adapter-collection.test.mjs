@@ -290,6 +290,10 @@ describe("postgres-no-executor-adapter collection keys", () => {
     ]);
   });
 
+  it("does not infer a destructured receiver's allocation from its container", () => {
+    assert.deepEqual(reports("destructured-receiver.ts"), [[10, "passed"]]);
+  });
+
   it("tracks reflective mutations of builtin collection prototypes", () => {
     assert.deepEqual(reports("reflect-prototype-mutations.ts"), [
       [5, "passed"],
