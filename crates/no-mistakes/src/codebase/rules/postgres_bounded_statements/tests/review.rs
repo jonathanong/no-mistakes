@@ -222,16 +222,20 @@ fn a_lateral_source_that_reads_the_row_through_a_bare_column_bounds_nothing() {
 }
 
 #[test]
-fn a_data_modifying_cte_bounds_nothing_pinned_to_it() {
-    // RETURNING yields a row per modified row; nothing in the text sizes it.
-    for sql in [
-        "WITH moved AS (INSERT INTO archive SELECT * FROM orders RETURNING id) \
-         DELETE FROM orders USING moved WHERE orders.id = moved.id",
+fn a_data_modifying_cte_bounds_joined_rows_only_when_its_target_is_bounded() {
+    // INSERT remains opaque; a key-pinned DELETE RETURNING carries its target row cap.
+    assert_eq!(
+        names(
+            "WITH moved AS (INSERT INTO archive SELECT * FROM orders RETURNING id) \
+             DELETE FROM orders USING moved WHERE orders.id = moved.id"
+        ),
+        ["orders"]
+    );
+    assert!(names(
         "WITH d AS (DELETE FROM sessions WHERE id = $1 RETURNING id) \
-         SELECT 1 FROM orders o JOIN d ON o.id = d.id",
-    ] {
-        assert_eq!(names(sql), ["orders"], "{sql}");
-    }
+         SELECT 1 FROM orders o JOIN d ON o.id = d.id"
+    )
+    .is_empty());
 }
 
 #[test]

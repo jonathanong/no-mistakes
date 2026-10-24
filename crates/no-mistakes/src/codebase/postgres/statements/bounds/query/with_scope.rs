@@ -32,10 +32,15 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope<'a>(
     for index in order {
         let cte = &with.cte_tables[index];
         let name = ident_key(&cte.alias.name);
-        let mut bound = if modifying_statement(&cte.query).is_some() {
-            // `RETURNING` yields one row per modified row, which nothing in the text sizes: it
-            // bounds nothing pinned to it. The statement inside is judged on its own.
-            opaque(start(cte.query.span()))
+        let mut bound = if let Some(statement) = modifying_statement(&cte.query) {
+            // A recursive result may grow independently of a bounded anchor. The ordinary DML
+            // statement is judged separately, even when its CTE output must stay opaque.
+            if with.recursive {
+                opaque(start(cte.query.span()))
+            } else {
+                super::super::dml::returning_bound(statement, &scope, positions)
+                    .unwrap_or_else(|| opaque(start(cte.query.span())))
+            }
         } else {
             let bound = if with.recursive {
                 // A recursive reference is whatever the recursion has produced so far: it

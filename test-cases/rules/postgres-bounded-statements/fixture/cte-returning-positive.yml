@@ -1,0 +1,13 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema-cte-returning.json
+      executorNames: [query, read, write]
+      exclude: ['src/**']
+      sqlInclude:
+        - 'sql/cte-returning/update-pk.sql'
+        - 'sql/cte-returning/delete-pk.sql'
+        - 'sql/cte-returning/select-pk.sql'
+        - 'sql/cte-returning/nested-projection.sql'

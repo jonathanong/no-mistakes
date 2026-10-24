@@ -1,0 +1,13 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema-cte-returning.json
+      executorNames: [query, read, write]
+      exclude: ['src/**']
+      sqlInclude:
+        - 'sql/cte-returning/unbounded-update.sql'
+        - 'sql/cte-returning/auxiliary-unbounded.sql'
+        - 'sql/cte-returning/non-pk-join.sql'
+        - 'sql/cte-returning/recursive-opaque.sql'
