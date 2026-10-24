@@ -183,8 +183,12 @@ loop tests; those shapes use the existing maximum-effort analysis. If every
 reachable path resets the literal or exits before the next iteration, this
 witness stays silent. Stable complementary tests can suppress an apparent path only
 when neither fixed truth value has a witness. Same-polarity tests and tests whose
-inputs change in the loop keep possible paths; tests with member access or calls
-may over-report because their branches join independently.
+inputs change in the loop keep possible paths. Writes to that same binding from
+another function (including closures and hoisted declarations), post-initializer
+writes to module-level `let`/`var`, and unsupported update/destructuring writes prevent
+correlation. Immutable conditions, shadowed writes to another binding, and
+ordinary same-function assignments before the loop retain correlation. Tests
+with member access or calls may over-report because their branches join independently.
 
 `effort: max` is the default and preserves helper, branch, builder, and imported
 value inference. At `effort: low`, a leading named literal at the executor call

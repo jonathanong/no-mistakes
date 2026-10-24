@@ -99,3 +99,52 @@ fn malformed_loop_and_source_false_positive_do_not_build_a_binding_index() {
         }
     }
 }
+
+#[test]
+fn called_condition_writes_invalidate_only_the_same_binding() {
+    let root = super::tests::fixture("loop-condition-writes");
+    let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();
+    for effort in ["low", "max"] {
+        let expected = source
+            .lines()
+            .enumerate()
+            .filter_map(|(index, line)| {
+                (if effort == "low" {
+                    line.contains("read(q)")
+                } else {
+                    line.contains("// missing:")
+                })
+                .then_some(index + 1)
+            })
+            .collect::<Vec<_>>();
+        let mut config = crate::config::v2::load_v2_config(
+            &root,
+            Some(&root.join(format!(".no-mistakes-{effort}.yml"))),
+        )
+        .unwrap();
+        let files = [root.join("src/query.mts")];
+        let sources = super::super::source_store_for_files(&files);
+        super::super::analysis_policy::prepare_rule_analysis(&root, &mut config, &files, &sources)
+            .unwrap();
+        assert_eq!(
+            config
+                .effective_rule_analysis(&config.rules[0])
+                .unwrap()
+                .effort,
+            if effort == "low" {
+                crate::config::v2::Effort::Low
+            } else {
+                crate::config::v2::Effort::Max
+            }
+        );
+        let findings = check_with_files_and_sources(&root, &config, &files, &sources).unwrap();
+        let lines = findings
+            .iter()
+            .filter(|finding| {
+                finding.rule == RULE_ID && finding.message.contains("query execution must start")
+            })
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>();
+        assert_eq!(lines, expected, "{effort}: {findings:#?}");
+    }
+}
