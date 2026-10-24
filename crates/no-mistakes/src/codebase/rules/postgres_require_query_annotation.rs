@@ -104,3 +104,6 @@ mod nested_fragment_tests;
 mod tests;
 #[cfg(test)]
 mod verdict_tests;
+
+#[cfg(test)]
+mod loop_carried_tests;

@@ -31,3 +31,16 @@ pub(super) fn candidates(
         .map(|(_, span)| *span)
         .collect()
 }
+
+pub(super) fn has_annotation_executors(
+    plan: &CheckFactPlan,
+    embedded: &[(EmbeddedSqlOptions, EmbeddedSqlFileFacts)],
+) -> bool {
+    embedded.iter().any(|(profile, file)| {
+        !file.call_spans.is_empty()
+            && plan
+                .query_annotation_options
+                .as_ref()
+                .is_none_or(|profiles| profiles.contains(profile))
+    })
+}

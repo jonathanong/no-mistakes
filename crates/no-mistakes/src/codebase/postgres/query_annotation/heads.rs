@@ -8,6 +8,7 @@ mod assignments;
 mod bindings;
 mod diagnostics;
 mod literal_helpers;
+mod loop_carried;
 mod syntax;
 mod tag_constants;
 #[cfg(test)]
@@ -26,6 +27,7 @@ pub(crate) enum HeadProof {
 #[derive(Clone, Debug, Default)]
 pub(crate) struct AnnotationHeads {
     pub(crate) calls: BTreeMap<Span, HeadProof>,
+    pub(crate) loop_carried_missing: BTreeMap<Span, Option<String>>,
     helper_calls: Option<BTreeMap<Span, (String, HeadProof)>>,
     pub(crate) trusted_append_calls: crate::fx::FxHashSet<Span>,
 }
@@ -47,19 +49,40 @@ impl AnnotationHeads {
         self.trusted_append_calls.contains(&span)
     }
 }
-pub(crate) fn collect_with_helpers(
+pub(crate) struct PreparedLoopHeads(syntax::Syntax);
+
+/// Negative source filtering skips the visitor entirely for ordinary max files.
+/// Positive matches are confirmed by the existing heads visitor, then reused.
+pub(crate) fn prepare_loop_heads(
+    program: &Program<'_>,
+    source: &str,
+    append: bool,
+    helpers: bool,
+) -> Option<PreparedLoopHeads> {
+    if !source.contains("for") {
+        return None;
+    }
+    let syntax = syntax::collect_with_helpers(program, append, helpers);
+    (!syntax.loop_candidates.is_empty() || append || helpers).then_some(PreparedLoopHeads(syntax))
+}
+
+pub(crate) fn collect_prepared(
     program: &Program<'_>,
     ts: &TsFileFacts,
     executor_calls: impl Iterator<Item = Span>,
     candidates: &crate::fx::FxHashSet<Span>,
     include_all_calls: bool,
     helpers: bool,
+    prepared: Option<PreparedLoopHeads>,
 ) -> AnnotationHeads {
     if ts.parse_error.is_some() || ts.operational_error.is_some() || ts.fatal_parse_error {
         return AnnotationHeads::default();
     }
-    let syntax = syntax::collect_with_helpers(program, !candidates.is_empty(), helpers);
+    let syntax = prepared
+        .map(|prepared| prepared.0)
+        .unwrap_or_else(|| syntax::collect_with_helpers(program, !candidates.is_empty(), helpers));
     let bindings = bindings::Bindings::new(&syntax, ts, executor_calls);
+    let loop_carried_missing = loop_carried::proofs(&syntax, &bindings);
     let calls = syntax
         .calls
         .iter()
@@ -70,6 +93,7 @@ pub(crate) fn collect_with_helpers(
     let helper_calls = literal_helpers::proofs(&syntax, &bindings, ts);
     AnnotationHeads {
         helper_calls,
+        loop_carried_missing,
         calls,
         trusted_append_calls,
     }

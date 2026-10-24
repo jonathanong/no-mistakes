@@ -19,6 +19,9 @@ impl<'a> Bindings<'a> {
         ts: &'a TsFileFacts,
         executor_calls: impl Iterator<Item = Span>,
     ) -> Self {
+        if let Some(observer) = crate::diagnostics::current() {
+            observer.increment("postgres.annotation.head_binding_indexes", 1);
+        }
         let candidates = || {
             syntax
                 .calls
@@ -26,17 +29,21 @@ impl<'a> Bindings<'a> {
                 .map(|call| call.head)
                 .chain(syntax.constants.values().copied())
         };
-        let wanted = candidates()
-            .filter_map(|head| head.reference())
-            .chain(syntax.append_tags.values().copied())
-            .chain(
-                syntax
-                    .literal_helpers
-                    .iter()
-                    .flatten()
-                    .map(|call| call.reference),
-            )
-            .collect::<FxHashSet<_>>();
+        let wanted =
+            candidates()
+                .filter_map(|head| head.reference())
+                .chain(syntax.append_tags.values().copied())
+                .chain(syntax.loop_candidates.iter().flat_map(|candidate| {
+                    std::iter::once(candidate.assignment).chain(candidate.tag)
+                }))
+                .chain(
+                    syntax
+                        .literal_helpers
+                        .iter()
+                        .flatten()
+                        .map(|call| call.reference),
+                )
+                .collect::<FxHashSet<_>>();
         let mut index = Self {
             owners: FxHashMap::default(),
             constants: &syntax.constants,

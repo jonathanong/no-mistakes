@@ -162,6 +162,9 @@ impl<'a> Visit<'a> for Syntax {
         self.leave_node(kind);
     }
     fn visit_for_of_statement(&mut self, value: &ForOfStatement<'a>) {
+        if let Some(candidate) = super::super::loop_carried::candidate(value) {
+            self.loop_candidates.push(candidate);
+        }
         let kind = AstKind::ForOfStatement(self.alloc(value));
         self.enter_node(kind);
         self.enter_scope(ScopeFlags::empty(), &value.scope_id);

@@ -1,4 +1,5 @@
-use super::super::{collect_with_helpers, AnnotationHeads, Span};
+use super::super::{AnnotationHeads, Span};
+use super::collect_with_helpers;
 use crate::codebase::postgres::EmbeddedSqlOptions;
 use crate::codebase::ts_source::facts::{
     collect_file_facts_from_program, TsFactContext, TsFactPlan, TsFileFacts,

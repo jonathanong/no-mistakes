@@ -104,7 +104,7 @@ fn configured_helpers_fail_closed_without_prepared_module_or_import_ownership() 
                     .imports
                     .clear();
             }
-            let heads = super::collect_with_helpers(
+            let heads = super::tests::collect_with_helpers(
                 program,
                 &ts,
                 spans.iter().copied(),

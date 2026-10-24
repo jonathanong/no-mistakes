@@ -69,3 +69,28 @@ fn canonical_direct_eval_gap_rejects_const_beyond_its_call_span() {
         .any(|diagnostic| { diagnostic.message == "Dynamic eval may change binding semantics" }));
     assert_eq!(assert_markers(&source, &heads), 1);
 }
+
+#[path = "loop_witness_tests.rs"]
+mod loop_witness_tests;
+
+use super::{AnnotationHeads, Span};
+use crate::codebase::ts_source::facts::TsFileFacts;
+use oxc_ast::ast::Program;
+pub(super) fn collect_with_helpers(
+    program: &Program<'_>,
+    ts: &TsFileFacts,
+    executor_calls: impl Iterator<Item = Span>,
+    candidates: &crate::fx::FxHashSet<Span>,
+    include_all_calls: bool,
+    helpers: bool,
+) -> AnnotationHeads {
+    super::collect_prepared(
+        program,
+        ts,
+        executor_calls,
+        candidates,
+        include_all_calls,
+        helpers,
+        None,
+    )
+}

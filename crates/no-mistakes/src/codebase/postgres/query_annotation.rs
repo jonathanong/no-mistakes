@@ -126,3 +126,9 @@ pub(crate) fn collect(
 }
 
 mod module_ids;
+
+impl QueryAnnotationFileFacts {
+    pub(crate) fn trusts_loop_tag(&self, name: &str) -> bool {
+        self.trusted_tags.contains(name)
+    }
+}
