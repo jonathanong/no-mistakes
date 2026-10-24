@@ -13,6 +13,7 @@ rules:
     options:
       schemaCatalogPath: db/schema.json
       sqlInclude: ["db/**/*.sql"]
+      executorNames: []
       unanalyzableSql: ignore
 ```
 
@@ -63,7 +64,34 @@ be analyzed follows the configured `unanalyzableSql` policy.
 
 ## Valid example
 
+```json
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "users": {
+      "columns": { "id": { "dataType": "uuid" } },
+      "primaryKey": { "definition": "PRIMARY KEY (id)", "columns": ["id"] }
+    },
+    "sessions": {
+      "columns": { "user_id": { "dataType": "uuid" } },
+      "foreignKeys": {
+        "sessions_user_id_fkey": {
+          "columns": ["user_id"],
+          "referencedTable": "users",
+          "referencedColumns": ["id"]
+        }
+      }
+    }
+  },
+  "views": {},
+  "functions": {}
+}
+```
+
 ```sql
+-- db/queries.sql
 -- The indexed key remains bare; casts and bounds are on the parameter side.
 SELECT id FROM users WHERE id = $1::uuid;
 SELECT id FROM users WHERE id >= uuidv7_lower_bound($1);
@@ -74,7 +102,34 @@ SELECT uuid_extract_timestamp(id) FROM users WHERE id = $1;
 
 ## Counterexample
 
+```json
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "users": {
+      "columns": { "id": { "dataType": "uuid" } },
+      "primaryKey": { "definition": "PRIMARY KEY (id)", "columns": ["id"] }
+    },
+    "sessions": {
+      "columns": { "user_id": { "dataType": "uuid" } },
+      "foreignKeys": {
+        "sessions_user_id_fkey": {
+          "columns": ["user_id"],
+          "referencedTable": "users",
+          "referencedColumns": ["id"]
+        }
+      }
+    }
+  },
+  "views": {},
+  "functions": {}
+}
+```
+
 ```sql
+-- db/queries.sql
 SELECT id FROM users WHERE id::text = $1;
 SELECT id FROM users WHERE CAST(id AS text) = $1;
 SELECT id FROM users WHERE uuid_extract_timestamp(id) > $1;
