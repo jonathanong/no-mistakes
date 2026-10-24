@@ -23,6 +23,8 @@ mod references;
 mod result;
 mod run;
 mod scope;
+mod snapshot_map;
+pub(super) use snapshot_map::SnapshotMap;
 mod slot_write;
 mod slots;
 mod statements;
@@ -66,11 +68,11 @@ pub(super) struct Evaluator<'a, F> {
     pub mapped_parameter_indices: FxHashMap<u64, FxHashMap<String, usize>>,
     pub deleted_argument_slots: FxHashSet<(u64, Option<usize>)>,
     pub argument_objects: ArgumentObjects,
-    pub argument_extra_slots: FxHashMap<u64, BTreeMap<usize, Value>>,
+    pub argument_extra_slots: SnapshotMap<u64, BTreeMap<usize, Value>>,
     pub definite_deleted_argument_slots: FxHashSet<(u64, usize)>,
     pub recreated_argument_slots: FxHashSet<(u64, usize)>,
     pub disconnected_argument_slots: FxHashSet<(u64, usize)>,
-    pub fresh_mapped_parameters: FxHashMap<Environment, FxHashSet<String>>,
+    pub fresh_mapped_parameters: SnapshotMap<Environment, FxHashSet<String>>,
     pub fresh_mapped_argument_bindings: FxHashMap<u64, FxHashMap<Environment, FxHashSet<String>>>,
     pub mapped_arguments: FxHashMap<Environment, Vec<(u64, Vec<String>)>>,
 }

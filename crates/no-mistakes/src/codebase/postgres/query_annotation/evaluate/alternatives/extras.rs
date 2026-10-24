@@ -1,11 +1,10 @@
 use super::{super::Value, merge};
-use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
-use crate::fx::FxHashMap;
+use crate::codebase::postgres::query_annotation::evaluate::{ArgumentObjects, SnapshotMap};
 use std::collections::BTreeMap;
 
 pub(super) fn join(
-    joined: &mut Option<FxHashMap<u64, BTreeMap<usize, Value>>>,
-    current: &FxHashMap<u64, BTreeMap<usize, Value>>,
+    joined: &mut Option<SnapshotMap<u64, BTreeMap<usize, Value>>>,
+    current: &SnapshotMap<u64, BTreeMap<usize, Value>>,
     original_ids: &ArgumentObjects,
 ) {
     let Some(joined) = joined else {

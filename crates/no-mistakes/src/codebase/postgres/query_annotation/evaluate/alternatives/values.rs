@@ -69,20 +69,36 @@ fn compare<const OBSERVED: bool>(
     }
 }
 
-pub(super) fn apply_taint(scopes: &mut [Scope], changed: &FxHashSet<u64>) {
+pub(super) fn apply_taint(scopes: &mut [Scope], changed: &FxHashSet<u64>) -> bool {
     if changed.is_empty() {
-        return;
+        return false;
     }
+    // Aliased frames share one bindings snapshot. Taint that snapshot once and
+    // install it everywhere, instead of cloning every alias on the first write.
+    let mut tainted = crate::fx::FxHashMap::<usize, Scope>::default();
+    let mut wrote = false;
     for scope in scopes {
         if !scope.contains_builders(changed) {
+            continue;
+        }
+        let shared = scope.snapshot_addr();
+        if let Some(done) = tainted.get(&shared) {
+            *scope = done.clone();
             continue;
         }
         for value in scope.values_mut() {
             if let Value::Prefix(_, _, Some(id)) = value {
                 if changed.contains(id) {
                     *value = Value::Unknown;
+                    wrote = true;
                 }
             }
         }
+        tainted.insert(shared, scope.clone());
     }
+    wrote
 }
+
+#[cfg(test)]
+#[path = "values_taint_tests.rs"]
+mod taint_tests;

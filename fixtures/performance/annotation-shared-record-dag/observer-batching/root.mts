@@ -1,6 +1,6 @@
 import { read } from '@data-stores/psql'
 import sql from 'sql-template-strings'
-// Aliases stay reference-bearing so binding pruning cannot erase the batching workload.
+// Aliases stay reference-bearing. An unchanged shared scope does not rewalk them.
 const query = sql`/* batched */ SELECT 1`
 const alias0 = query
 const alias1 = query

@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::postgres::query_annotation::evaluate::SnapshotMap;
 
 #[test]
 fn remapping_preserves_shared_values_without_environments() {
@@ -98,10 +99,10 @@ fn unchanged_compaction_keeps_shared_scopes_and_indexes_while_pruning_dead_state
         (1, vec![(42, vec!["parameter".into()])]),
         (2, vec![(99, vec!["dead".into()])]),
     ]);
-    let mut fresh = FxHashMap::from_iter([
+    let mut fresh = SnapshotMap::from(FxHashMap::from_iter([
         (1, FxHashSet::from_iter(["parameter".into()])),
         (2, FxHashSet::from_iter(["dead".into()])),
-    ]);
+    ]));
     let mut captured = FxHashMap::from_iter([
         (1, FxHashMap::from_iter([("builder".into(), 0)]).into()),
         (2, FxHashMap::from_iter([("dead".into(), 2)]).into()),

@@ -1,4 +1,5 @@
 use super::super::{ArgumentObjects, Environment, Evaluator, Value};
+
 use crate::codebase::postgres::query_annotation::evaluate::Scope;
 use crate::codebase::postgres::query_annotation::Expr;
 use crate::fx::FxHashSet;
@@ -46,6 +47,8 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         let mut deleted_changed = deleted.clone();
         let mut returned = Vec::new();
         let mut final_live = None;
+        let mut proved_live = None;
+        let mut quiet_structure = false;
         let mut prefix_roots = super::reachable::Prefix::default();
         let mut changed = FxHashSet::default();
         for (arm_index, arm) in arms.iter().enumerate() {
@@ -55,9 +58,12 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.active_callback_functions.clone_from(&seen);
             self.active_callback_executions.clone_from(&executions);
             self.modules.clone_from(&modules);
-            self.argument_extra_slots
-                .retain(|id, _| !objects.contains_key(id));
-            self.argument_extra_slots.extend(extra_slots.clone());
+            if !self.argument_extra_slots.ptr_eq(&extra_slots) {
+                self.argument_extra_slots
+                    .retain(|id, _| !objects.contains_key(id));
+                self.argument_extra_slots
+                    .extend(extra_slots.iter().map(|(id, slots)| (*id, slots.clone())));
+            }
             self.restore_builder_updates(None, updates.clone(), original_ids);
             self.remove_alternative_captured_readers(scopes.len());
             self.captured_bindings
@@ -69,8 +75,10 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.recreated_argument_slots.clone_from(&recreated);
             self.disconnected_argument_slots.clone_from(&disconnected);
             super::freshness::restore(&mut self.fresh_mapped_parameters, scopes.len(), &fresh);
-            for (id, slots) in &objects {
-                self.argument_objects.insert(*id, slots.clone());
+            if !self.argument_objects.ptr_eq(&objects) {
+                for (id, slots) in &objects {
+                    self.argument_objects.insert(*id, slots.clone());
+                }
             }
             self.restore_alternative_modules();
             // Existing frames retain their capture origins. Only frames made by
@@ -102,8 +110,24 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                         path,
                         None,
                         || {
+                            let changed_arguments = super::scope_skip::changed_argument_ids(
+                                &objects,
+                                &self.argument_objects,
+                                &extra_slots,
+                                &self.argument_extra_slots,
+                            );
                             let mut work = super::values::Walk::new();
                             for (before, after) in comparisons {
+                                // Shared module frames are not written by a local arm.
+                                // Argument arenas stay outside the scope Arc, so a
+                                // changed identity still has to be compared.
+                                if super::scope_skip::unchanged_shared_scope(
+                                    before,
+                                    after,
+                                    &changed_arguments,
+                                ) {
+                                    continue;
+                                }
                                 for (name, value) in before.reference_bindings() {
                                     // An arm can drop a name the other branch still has.
                                     if !precise_records {
@@ -165,15 +189,17 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             );
             joined_scopes = Some(self.scopes[..scopes.len()].to_vec());
             joined.clone_from(&self.argument_objects);
-            if arm_index + 1 == arms.len()
-                && self.can_reuse_final_live(
+            if arm_index + 1 == arms.len() {
+                quiet_structure = self.final_live_structure(scopes.len(), &indices.indices);
+                if self.can_reuse_final_live(
                     scopes.len(),
                     captured.is_empty(),
                     original.is_empty() && changed.is_empty(),
                     &indices.indices,
-                )
-            {
-                final_live = Some((indices.arguments, indices.identities));
+                ) {
+                    final_live = Some((indices.arguments.clone(), indices.identities.clone()));
+                }
+                proved_live = Some((indices.arguments, indices.identities));
             }
         }
         // Keep the final snapshot moves in this lexical scope and their original order.

@@ -3,6 +3,7 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::Path;
 use std::sync::Arc;
 
+mod annotation_profile;
 mod embedded_sql;
 mod plan;
 mod playwright_source;

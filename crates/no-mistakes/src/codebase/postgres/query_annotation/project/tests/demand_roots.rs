@@ -23,9 +23,13 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
             "type-only",
         ],
     );
-    for (_, file) in &mut files {
+    for (path, file) in &mut files {
         file.query_annotation.truncate(1);
         file.embedded_sql.truncate(1);
+        // entry.mts only forwards SQL. Rejecting the file keeps it as a root.
+        if path.ends_with("entry.mts") {
+            file.query_annotation[0].1.annotation_event = false;
+        }
     }
     let candidates = files.keys().cloned().collect::<BTreeSet<_>>();
     let resolve = |specifier: &str, from: &std::path::Path| {
@@ -91,4 +95,41 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
         executor.query_annotation[0].1.calls[&(start, start + 10)].as_deref(),
         Some("SELECT 1")
     );
+
+    // An excluded barrel re-exports the executor. Demand must still reach the
+    // included caller on the other side of that barrel.
+    for (path, file) in &mut files {
+        if path.ends_with("entry.mts") {
+            file.query_annotation[0].1.annotation_event = true;
+        }
+        if path.ends_with("barrel.mts") {
+            file.query_annotation[0].1.annotation_event = false;
+        }
+    }
+    let collected = files
+        .iter()
+        .map(|(path, file)| {
+            (
+                path.clone(),
+                super::super::File {
+                    module: Arc::new(super::super::Module::new(Arc::clone(&file.ts))),
+                    facts: &file.query_annotation[0].1,
+                    executors: file.embedded_sql[0].1.call_spans.iter().copied().collect(),
+                },
+            )
+        })
+        .collect();
+    let selected = super::super::demand::roots(&collected, &resolve)
+        .into_iter()
+        .map(|path| path.file_stem().unwrap().to_str().unwrap())
+        .collect::<BTreeSet<_>>();
+    assert!(
+        selected.contains("entry"),
+        "included caller of an excluded re-export"
+    );
+    assert!(
+        selected.contains("barrel"),
+        "excluded re-export still forwards demand"
+    );
+    assert!(selected.contains("executor"));
 }

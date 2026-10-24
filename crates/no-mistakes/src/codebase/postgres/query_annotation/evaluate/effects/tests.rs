@@ -196,3 +196,50 @@ fn mutable_argument_cycles_extra_slots_and_deletion_are_not_cached() {
     assert!(new.contains(&11));
     assert!(!new.contains(&ids(&spec, "dead_builder")));
 }
+
+#[test]
+fn repeated_invalidation_reuses_unchanged_scope_reference_summaries() {
+    use crate::diagnostics::{with_observer, InvocationObserver};
+    let files = FxHashMap::default();
+    let mut evaluator = evaluator(
+        &files,
+        FxHashMap::from_iter([(
+            "sql".into(),
+            Value::Prefix("SELECT 1".into(), true, Some(1)),
+        )]),
+    );
+    for id in 2..24 {
+        evaluator.scopes.push(
+            FxHashMap::from_iter([(
+                "sql".into(),
+                Value::Prefix(format!("SELECT {id}"), true, Some(id)),
+            )])
+            .into(),
+        );
+    }
+    let observer = InvocationObserver::new(true);
+    let (warmed, repeated) = with_observer(Some(observer.clone()), || {
+        evaluator.invalidate_live_builders();
+        evaluator.invalidate_live_builders();
+        let warmed = observer
+            .snapshot()
+            .work
+            .get("postgres.annotation.prefix_scope_scans")
+            .copied()
+            .unwrap_or(0);
+        evaluator.invalidate_live_builders();
+        let repeated = observer
+            .snapshot()
+            .work
+            .get("postgres.annotation.prefix_scope_scans")
+            .copied()
+            .unwrap_or(0);
+        (warmed, repeated)
+    });
+    assert_eq!(warmed, repeated);
+    assert!(evaluator.invalidated_builders.contains(&1));
+    assert!(matches!(
+        evaluator.scopes[0].get("sql"),
+        Some(Value::Unknown)
+    ));
+}

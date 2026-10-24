@@ -1,0 +1,39 @@
+{
+  "repos/jonathanong/no-mistakes/pulls/2585": {
+    "number": 2585,
+    "state": "open",
+    "html_url": "https://github.com/jonathanong/no-mistakes/pull/2585",
+    "head": {
+      "ref": "hosted-check-candidate",
+      "sha": "1111111111111111111111111111111111111111",
+      "repo": { "full_name": "jonathanong/no-mistakes" }
+    },
+    "base": {
+      "ref": "main",
+      "repo": { "full_name": "jonathanong/no-mistakes" }
+    }
+  },
+  "repos/jonathanong/no-mistakes/commits/1111111111111111111111111111111111111111": {
+    "sha": "1111111111111111111111111111111111111111",
+    "commit": { "tree": { "sha": "2222222222222222222222222222222222222222" } }
+  },
+  "invalid": {
+    "closed": { "state": "closed" },
+    "forkHead": { "head": { "repo": { "full_name": "someone/fork" } } },
+    "wrongBase": { "base": { "ref": "release" } },
+    "forkBase": { "base": { "repo": { "full_name": "someone/fork" } } },
+    "wrongNumber": { "number": 2586 },
+    "wrongUrl": { "html_url": "https://example.com/not-a-pr" },
+    "movedHead": { "head": { "sha": "3333333333333333333333333333333333333333" } },
+    "movedCommit": { "sha": "3333333333333333333333333333333333333333" },
+    "invalidTree": { "commit": { "tree": { "sha": "not-a-tree" } } },
+    "missingTree": { "sha": "1111111111111111111111111111111111111111" },
+    "differentExpectedHead": "3333333333333333333333333333333333333333",
+    "differentCandidateCommit": "3333333333333333333333333333333333333333",
+    "wrongCandidateRef": "refs/heads/hosted-check-candidate",
+    "forkRepository": "someone/fork",
+    "wrongBaseRef": "release",
+    "scheduledEvent": "schedule",
+    "wrongKind": "main"
+  }
+}

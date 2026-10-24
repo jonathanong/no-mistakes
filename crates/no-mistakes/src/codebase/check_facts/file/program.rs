@@ -122,13 +122,16 @@ pub(crate) fn collect_file_facts_from_program(
                 .map(|(options, _)| options.clone())
                 .collect()
         });
+        let rel = crate::codebase::ts_source::relative_slash_path(root, path);
         options
             .iter()
             .map(|options| {
-                (
-                    options.clone(),
-                    crate::codebase::postgres::query_annotation::collect(program, source, options),
-                )
+                let mut facts =
+                    crate::codebase::postgres::query_annotation::collect(program, source, options);
+                if !super::annotation_profile::annotation_event(plan, options, &rel) {
+                    facts.annotation_event = false;
+                }
+                (options.clone(), facts)
             })
             .collect()
     } else {

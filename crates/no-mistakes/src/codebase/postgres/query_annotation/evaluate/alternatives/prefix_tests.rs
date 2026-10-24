@@ -1,5 +1,5 @@
 use super::super::{Evaluator, File};
-use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
+use crate::codebase::postgres::query_annotation::evaluate::{ArgumentObjects, SnapshotMap};
 use crate::codebase::postgres::query_annotation::modules::Module;
 use crate::codebase::postgres::{query_annotation, EmbeddedSqlOptions};
 use crate::codebase::ts_source::facts::TsFileFacts;
@@ -144,22 +144,22 @@ fn evaluated_prefix_comparison_rejects_a_lost_annotation_on_the_same_alias() {
         matches!(&dense_joined[&1000][0], Value::Possible(values) if values.contains(&callback) && values.contains(&Value::Unknown))
     );
     let mut sparse_joined = None;
-    let first = FxHashMap::from_iter([(
+    let first = SnapshotMap::from(FxHashMap::from_iter([(
         1000,
         std::collections::BTreeMap::from([(2000, callback.clone())]),
-    )]);
+    )]));
     super::extras::join(&mut sparse_joined, &first, &Default::default());
-    let second = FxHashMap::from_iter([(
+    let second = SnapshotMap::from(FxHashMap::from_iter([(
         1000,
         std::collections::BTreeMap::from([(2000, Value::Unknown)]),
-    )]);
+    )]));
     super::extras::join(&mut sparse_joined, &second, &Default::default());
     // A genuinely distinct arm-created container retains its own callback,
     // rather than joining an absent slot from a different runtime identity.
-    let later = FxHashMap::from_iter([(
+    let later = SnapshotMap::from(FxHashMap::from_iter([(
         1001,
         std::collections::BTreeMap::from([(2000, callback.clone())]),
-    )]);
+    )]));
     super::extras::join(&mut sparse_joined, &later, &Default::default());
     let joined = sparse_joined.unwrap();
     assert!(matches!(&joined[&1001][&2000], Value::Function(..)));

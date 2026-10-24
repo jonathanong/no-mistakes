@@ -12,6 +12,7 @@ pub(super) mod modules;
 mod prune;
 mod reachable;
 mod run;
+mod scope_skip;
 mod updates;
 mod values;
 
@@ -38,6 +39,9 @@ mod observer_tests;
 
 #[cfg(test)]
 mod reference_binding_tests;
+
+#[cfg(test)]
+mod unchanged_scope_tests;
 
 #[cfg(test)]
 pub(super) mod value_equality_test_support;

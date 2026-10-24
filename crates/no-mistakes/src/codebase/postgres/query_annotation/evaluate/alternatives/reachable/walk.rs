@@ -12,6 +12,8 @@ pub(super) fn collect<const WARM: bool>(
     if let Some(observer) = crate::diagnostics::current() {
         observer.increment("postgres.annotation.reachability_walks", 1);
     }
+    // Distinct frames often share one immutable snapshot. Union its edges once.
+    let mut seen_edges = FxHashSet::<usize>::default();
     let mut found = Reachable::default();
     found.pending_env.extend(roots.environments.iter().copied());
     found.pending_args.extend(roots.arguments.iter().copied());
@@ -35,8 +37,10 @@ pub(super) fn collect<const WARM: bool>(
                 }
                 let cached = WARM.then(|| scopes[env].cached_references()).flatten();
                 if let Some(edges) = cached {
-                    extend(&mut found, edges);
-                } else {
+                    if seen_edges.insert(std::ptr::from_ref(edges) as usize) {
+                        extend(&mut found, edges);
+                    }
+                } else if seen_edges.insert(scopes[env].snapshot_addr()) {
                     for value in scopes[env].values() {
                         record_raw_binding!();
                         found.value(value);
@@ -55,8 +59,10 @@ pub(super) fn collect<const WARM: bool>(
                 let slots = &arena.objects[&id];
                 let cached = WARM.then(|| slots.cached_references()).flatten();
                 if let Some(edges) = cached {
-                    extend(&mut found, edges);
-                } else {
+                    if seen_edges.insert(std::ptr::from_ref(edges) as usize) {
+                        extend(&mut found, edges);
+                    }
+                } else if seen_edges.insert(std::ptr::from_ref(slots) as usize) {
                     for value in slots.iter() {
                         record_raw_slot!();
                         found.value(value);

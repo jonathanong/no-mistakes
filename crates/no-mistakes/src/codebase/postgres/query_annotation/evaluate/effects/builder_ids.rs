@@ -24,7 +24,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         ids
     }
 
-    fn collect_builder_value(
+    pub(super) fn collect_builder_value(
         &self,
         value: &Value,
         ids: &mut FxHashSet<u64>,

@@ -29,7 +29,8 @@ Negative controls preserve the depth but remove one property:
 - `dag-single-child` removes the duplicate child reference at each record level.
 
 All three controls complete. `shared-object-dag-12` is the small, completing
-fixture used to verify report parity and diagnostic work accounting in tests.
+fixture used to verify report parity. Its two arms share one scope, so the
+test records the arm and binding scans and does not expect a second prefix walk.
 The unresolved imports are intentional configured executor/tag identities;
 these fixtures need no installed dependencies or consumer checkout.
 
@@ -62,10 +63,10 @@ These work bounds establish the reduced-case improvement; full-consumer resource
 measurements and findings parity remain the acceptance gate.
 
 `observer-batching` keeps 32 aliases of one builder before an unknown conditional.
-The aliases remain reference-bearing so binding pruning cannot erase the
-publication-bound workload. Its ordinary legacy evaluator compares all aliases.
-The observer-on/off test retains the same missing-annotation finding while
-publishing two nonempty prefix-counter batches for the two arms. This establishes
-publication bounds and report parity, not measured CPU improvement.
+The aliases remain reference-bearing, so binding scans still see them. The two
+arms share that scope and do not publish prefix-counter batches. The
+observer-on/off test retains the same missing-annotation finding and the two
+arm traces. This establishes the skip and report parity, not measured CPU
+improvement.
 Its branch-only `precise-root.mts` keeps references live for the prepared
 precise-records control, which must create no legacy prefix observation.

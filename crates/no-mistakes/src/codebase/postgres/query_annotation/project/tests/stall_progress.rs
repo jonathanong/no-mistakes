@@ -14,13 +14,16 @@ fn saved_shared_record_fixture_retains_report_and_exposes_walk_work() {
         enabled.work["postgres.annotation.module_initializations_completed"],
         1
     );
-    assert!(enabled.work["postgres.annotation.prefix_nodes"] > 1);
-    assert!(enabled.work["postgres.annotation.prefix_nodes"] <= 2_000);
-    assert!(enabled.work["postgres.annotation.prefix_containers"] > 1);
-    assert_eq!(
-        enabled.work["postgres.annotation.prefix_walks"],
-        enabled.work["postgres.annotation.prefix_walks_completed"],
-    );
+    // Both arms share one scope, so the record DAG is not walked again.
+    assert_eq!(enabled.work["postgres.annotation.prefix_compare_arm"], 2);
+    assert_eq!(enabled.work["postgres.annotation.prefix_binding_scans"], 15);
+    assert_eq!(enabled.work["postgres.annotation.prefix_scope_scans"], 1);
+    assert!(!enabled
+        .work
+        .contains_key("postgres.annotation.prefix_nodes"));
+    assert!(!enabled
+        .work
+        .contains_key("postgres.annotation.prefix_walks"));
 }
 
 #[test]
@@ -85,16 +88,12 @@ fn legacy_bindings_share_arm_publications_without_changing_findings() {
         + 1;
     assert_eq!(report["rules"][0]["line"], unsafe_line);
     let work = enabled.work;
-    // Reference-bearing aliases keep this legacy workload valid after binding pruning.
-    assert!(work["postgres.annotation.prefix_compare"] > 64);
-    assert_eq!(
-        work["postgres.annotation.prefix_walks"],
-        work["postgres.annotation.prefix_compare"]
-    );
-    assert_eq!(
-        work["postgres.annotation.prefix_walks_completed"],
-        work["postgres.annotation.prefix_walks"]
-    );
+    // The aliases stay reference-bearing and are still scanned. The shared scope
+    // does not publish a prefix walk or an observer batch.
     assert_eq!(work["postgres.annotation.prefix_compare_arm"], 2);
-    assert_eq!(work["postgres.annotation.prefix_observer_batches"], 2);
+    assert_eq!(work["postgres.annotation.prefix_binding_scans"], 34);
+    assert_eq!(work["postgres.annotation.prefix_scope_scans"], 1);
+    assert!(!work.contains_key("postgres.annotation.prefix_compare"));
+    assert!(!work.contains_key("postgres.annotation.prefix_walks"));
+    assert!(!work.contains_key("postgres.annotation.prefix_observer_batches"));
 }

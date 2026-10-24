@@ -1,3 +1,4 @@
+use super::super::scope::Scope;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Function;
 use crate::fx::FxHashMap;
@@ -180,8 +181,20 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
 
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn refresh_captured_bindings(
         &mut self,
-    ) {
+        entry: &[Scope],
+    ) -> bool {
+        let mut wrote = false;
         for (frame, bindings) in &self.captured_bindings {
+            // Unchanged shared frames already show their origin values. Name
+            // lookups here walk every capture in the import graph.
+            if *frame < entry.len()
+                && self.scopes[*frame].same_bindings(&entry[*frame])
+                && bindings.values().all(|origin| {
+                    *origin < entry.len() && self.scopes[*origin].same_bindings(&entry[*origin])
+                })
+            {
+                continue;
+            }
             for (name, origin) in bindings {
                 let value = self.scopes[*origin].get(name).unwrap_or(&Value::Unknown);
                 // A missing binding must still acquire Unknown; equal writes
@@ -189,9 +202,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 if self.scopes[*frame].get(name) != Some(value) {
                     let value = value.clone();
                     self.scopes[*frame].insert(name.clone(), value);
+                    wrote = true;
                 }
             }
         }
+        wrote
     }
 }
 

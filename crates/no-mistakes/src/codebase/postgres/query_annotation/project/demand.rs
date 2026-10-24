@@ -78,6 +78,8 @@ pub(super) fn roots<'a>(
                     if let Some(low) = low {
                         parent.low = parent.low.min(low);
                     }
+                    // Excluded files stay on the import path. Root selection
+                    // applies the path filter after the whole graph is demanded.
                     parent.demanded |= demanded;
                 } else {
                     enter(target, files, &mut visits, &mut component, &mut frames);
@@ -102,7 +104,8 @@ pub(super) fn roots<'a>(
             frames.pop();
             if let Some(parent) = frames.last() {
                 let demanded = visits[path].demanded;
-                let parent = visits.get_mut(parent.path).unwrap();
+                let parent_path = parent.path;
+                let parent = visits.get_mut(parent_path).unwrap();
                 parent.low = parent.low.min(low);
                 parent.demanded |= demanded;
             }
@@ -110,6 +113,8 @@ pub(super) fn roots<'a>(
     }
     visits
         .into_iter()
+        // Every importer that reaches an included executor can supply SQL,
+        // even if it also contains an excluded executor call of its own.
         .filter_map(|(path, visit)| visit.demanded.then_some(path))
         .collect()
 }
@@ -128,7 +133,9 @@ fn enter<'a>(
             index,
             low: index,
             active: true,
-            demanded: !files[path].executors.is_empty(),
+            // Only an included executor call seeds the walk. Excluded callers
+            // can still become roots through imports reaching an included call.
+            demanded: !files[path].executors.is_empty() && files[path].facts.annotation_event,
         },
     );
     component.push(path);

@@ -69,6 +69,10 @@ impl Scope {
             .get_or_init(|| self.0.values.values().any(Value::contains_reference))
     }
 
+    pub(super) fn snapshot_addr(&self) -> usize {
+        std::ptr::from_ref(self.0.as_ref()) as usize
+    }
+
     pub(super) fn same_bindings(&self, other: &Self) -> bool {
         Arc::ptr_eq(&self.0, &other.0)
     }

@@ -179,3 +179,36 @@ fn delayed_try_receivers_share_low_max_proof_and_keep_policy_controlled_abstenti
         }
     }
 }
+
+#[test]
+fn excluded_mixed_executor_caller_preserves_findings_under_report_and_ignore() {
+    let root = fixture("helper-tracing-excluded-mixed-root");
+    let reports = [".no-mistakes.yml", "ignore.yml"].map(|config| {
+        let output = Command::new(bin())
+            .args(["check", "--root"])
+            .arg(&root)
+            .arg("--config")
+            .arg(root.join(config))
+            .args(["--format", "json"])
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(output.status.code(), Some(1), "{report}");
+        let findings = report["rules"].as_array().unwrap();
+        assert_eq!(findings.len(), 1, "{report}");
+        assert_eq!(findings[0]["rule"], RULE);
+        assert_eq!(findings[0]["file"], "src/wrap.ts");
+        assert_eq!(findings[0]["line"], 2);
+        assert!(
+            findings[0]["message"]
+                .as_str()
+                .unwrap()
+                .ends_with("query execution must start with a /* name */ annotation"),
+            "{report}"
+        );
+        report
+    });
+    // Ignoring unknown SQL must never suppress the proven literal passed by
+    // an excluded caller that also executes a query directly.
+    assert_eq!(reports[0]["rules"], reports[1]["rules"]);
+}
