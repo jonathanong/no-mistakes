@@ -1,5 +1,5 @@
 use super::{assignment, label, word};
-use sqlparser::ast::Statement;
+use sqlparser::ast::{SetExpr, Statement};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
 use sqlparser::tokenizer::Token;
@@ -31,18 +31,25 @@ pub(super) fn query(code: &[&Token]) -> bool {
 
 pub(super) fn row_query(code: &[&Token]) -> bool {
     match parsed_statement(code) {
-        Some(Statement::Query(_)) => true,
-        Some(Statement::Insert(statement)) => {
-            statement.returning.is_some_and(|items| !items.is_empty())
-        }
-        Some(Statement::Update(statement)) => {
-            statement.returning.is_some_and(|items| !items.is_empty())
-        }
-        Some(Statement::Delete(statement)) => {
-            statement.returning.is_some_and(|items| !items.is_empty())
-        }
+        Some(Statement::Query(query)) => match query.body.as_ref() {
+            SetExpr::Insert(statement)
+            | SetExpr::Update(statement)
+            | SetExpr::Delete(statement) => dml_returning(statement),
+            _ => true,
+        },
+        Some(statement) => dml_returning(&statement),
         _ => false,
     }
+}
+
+fn dml_returning(statement: &Statement) -> bool {
+    let returning = match statement {
+        Statement::Insert(statement) => &statement.returning,
+        Statement::Update(statement) => &statement.returning,
+        Statement::Delete(statement) => &statement.returning,
+        _ => return false,
+    };
+    returning.as_ref().is_some_and(|items| !items.is_empty())
 }
 
 fn parsed_statement(code: &[&Token]) -> Option<Statement> {

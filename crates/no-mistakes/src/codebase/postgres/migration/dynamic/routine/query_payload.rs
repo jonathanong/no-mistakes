@@ -1,5 +1,5 @@
 use super::*;
-use sqlparser::ast::Statement;
+use sqlparser::ast::{SetExpr, Statement};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
 
@@ -21,27 +21,28 @@ pub(super) fn push_query_payload(
         return;
     }
     let Some(at) = code.windows(2).position(|pair| {
-        let select = keyword(pair[1], "SELECT") || keyword(pair[1], "WITH");
-        let dml = ["INSERT", "UPDATE", "DELETE"]
-            .iter()
-            .any(|name| keyword(pair[1], name));
-        (select && (keyword(pair[0], "FOR") || keyword(pair[0], "IN") || keyword(pair[0], "IS")))
-            || dml && keyword(pair[0], "IN")
+        (keyword(pair[0], "FOR") || keyword(pair[0], "IN") || keyword(pair[0], "IS"))
+            && (keyword(pair[1], "SELECT") || keyword(pair[1], "WITH"))
     }) else {
         return;
     };
     let query = code[at + 1];
     let start = location_offset(&body.sql, query.span.start.line, query.span.start.column);
-    let loop_start = keyword(code[at], "IN")
+    let loop_token = keyword(code[at], "IN")
         .then(|| loop_boundary(&code[at + 2..]))
-        .flatten()
-        .and_then(|token| {
-            location_offset(&body.sql, token.span.start.line, token.span.start.column)
-        });
+        .flatten();
+    let loop_start = loop_token.and_then(|token| {
+        location_offset(&body.sql, token.span.start.line, token.span.start.column)
+    });
     let (Some(start), end) = (start, loop_start.unwrap_or(chunk_end)) else {
         return;
     };
     if start >= end {
+        return;
+    }
+    // The guarded DML suffix recovery already owns function and schema facts.
+    // A WITH-prefixed DML query reaches here as a Query AST, so avoid projecting it twice.
+    if keyword(query, "WITH") && with_dml_body(&code[at + 1..], loop_token) {
         return;
     }
     push_schema_statement(body, start, end, ordinal, executed, false, result);
@@ -50,6 +51,18 @@ pub(super) fn push_query_payload(
         // A declared cursor's query is parsed now but runs only when opened later.
         payload.executed &= !code.iter().any(|token| keyword(token, "CURSOR"));
     }
+}
+
+fn with_dml_body(code: &[&TokenWithSpan], loop_token: Option<&TokenWithSpan>) -> bool {
+    let end = loop_token.and_then(|end| code.iter().position(|token| std::ptr::eq(*token, end)));
+    let tokens = code[..end.unwrap_or(code.len())]
+        .iter()
+        .map(|token| (*token).clone())
+        .collect();
+    let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(tokens);
+    matches!(parser.parse_statement(), Ok(Statement::Query(query))
+        if matches!(query.body.as_ref(), SetExpr::Insert(_) | SetExpr::Update(_) | SetExpr::Delete(_)))
+        && parser.peek_token().token == Token::EOF
 }
 
 fn complete_sql_declare(code: &[&TokenWithSpan]) -> bool {
