@@ -1,7 +1,7 @@
 use super::{parse_postgres_expression, snapshot::SnapshotIndex};
 use crate::codebase::postgres::parse_postgres_sql;
 use sqlparser::ast::visit_expressions_mut;
-use sqlparser::ast::{BinaryOperator, Expr, Statement};
+use sqlparser::ast::{BinaryOperator, Expr, ObjectNamePart, Statement};
 use std::ops::ControlFlow;
 
 /// Catalog key evidence consumed only by the row-bounded evaluator.
@@ -89,10 +89,20 @@ pub(crate) fn unnest(expr: &Expr) -> Expr {
 pub(crate) fn canonical_bound_expr(expr: &Expr) -> Expr {
     let mut normalized = unnest(expr);
     let _: ControlFlow<()> = visit_expressions_mut(&mut normalized, |expr| {
-        if let Expr::Identifier(ident) = expr {
-            if ident.quote_style.is_none() {
+        match expr {
+            Expr::Identifier(ident) if ident.quote_style.is_none() => {
                 ident.value.make_ascii_lowercase();
             }
+            Expr::Function(function) => {
+                for part in &mut function.name.0 {
+                    if let ObjectNamePart::Identifier(ident) = part {
+                        if ident.quote_style.is_none() {
+                            ident.value.make_ascii_lowercase();
+                        }
+                    }
+                }
+            }
+            _ => {}
         }
         ControlFlow::Continue(())
     });
