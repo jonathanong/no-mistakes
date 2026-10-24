@@ -60,10 +60,50 @@ Structural compatibility, inference, unknown callees, mutable helpers,
 overloads, rest parameters, and calls containing spread arguments do not
 establish proof.
 For example, `load(...[read])` reports; use the explicit argument `load(read)`.
-An object parameter such as `options: { query: QueryExecutor }` does not
-establish an inline destructured executor binding;
-`loadObject({ nested: { query: read } })` also reports. Rewrite these to the
-explicit supported parameter shape or name the executor inside the helper.
+With typed linting, a fresh options object can also target a declared object
+parameter. The type checker must resolve the named property to a required field
+declared with a configured imported executor type. Interfaces, type aliases,
+inherited fields, and named destructured options types are supported. A field
+may use a local alias of the configured type; an intersection must resolve to
+one unambiguous required field declaration:
+
+```ts
+interface QueryOptions { query: QueryExecutor; limit?: number }
+function dispatch(options: QueryOptions) {
+  return options.query("SELECT id FROM orders");
+}
+dispatch({ query: read });
+const query = read;
+dispatch({ query });
+```
+
+This proof requires typed linting for both local and imported options types.
+Optional fields, structural callable lookalikes, computed keys, and objects
+containing a spread still report. Nested containers such as
+`dispatch({ nested: { query: read } })` and forwarding callbacks remain
+unproven. Use an explicit required executor property or name the executor inside
+the helper.
+
+An executor can also be a key in a typed built-in collection. A stable receiver
+typed as the standard-library `Map` or `WeakMap` accepts argument zero of
+`.get`, `.set`, `.has`, and `.delete`; `Set` and `WeakSet` accept argument zero
+of `.has` and `.delete`. These operations do not invoke the key:
+
+```ts
+const locks = new WeakMap<QueryExecutor, object>();
+locks.set(read, {});
+locks.get(read);
+locks.delete(read);
+```
+
+This requires typed linting and an unchanged built-in method. The receiver must
+come from an unshadowed built-in allocation or a stable alias of one. A parameter
+annotation alone cannot prove that a custom implementation was not supplied.
+Unknown receivers, same-named custom collections, overridden methods, escaped
+receivers, and spread or computed calls still report. Storing an executor as a
+value, such as
+`locks.set(otherKey, read)` or `set.add(read)`, still reports because it can be
+retrieved and called later. Put data in the value slot instead.
 
 These call shapes are also judged:
 
@@ -273,7 +313,8 @@ run(0 ?? read, account);
 - `executorTypeNames` lists imported type names whose annotated parameters
   (including optional and inline-destructured ones) are executors inside the
   declaring function. It also proves supported helper argument slots described
-  above. It defaults to `[]`.
+  above, including proven required options-object fields with typed linting.
+  It defaults to `[]`.
 - `trustedSqlTags` defaults to `[]`. Each entry has `module` and `name`.
   It is accepted so a shared executor configuration validates. This rule does
   not read SQL text.

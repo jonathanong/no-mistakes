@@ -5,6 +5,7 @@ const { matchesConfiguredModule } = require("./postgres-scoped-executors");
 const { resolveVariable } = require("./postgres-query-text");
 const { constInitializer, stableFunction } = require("./postgres-no-executor-adapter-binding");
 const { declaredOptionType } = require("./postgres-no-executor-adapter-options");
+const { allowsCollectionKey } = require("./postgres-no-executor-adapter-collection");
 
 function localFunction(callee, context) {
   const variable = resolveVariable(callee, context);
@@ -121,7 +122,7 @@ function importedTarget(call, index, property, context, options, facts) {
             !element.dotDotDotToken,
         ));
     if (!bound || !declaredOptionType(type, property, checker, options)) return false;
-    const writes = sourceWrites(declaration.getSourceFile(), checker, facts);
+    const writes = sourceWrites(declaration.getSourceFile(), checker, facts, services.program);
     return !writes.eval && !writes.symbols.has(target);
   }
   // Structural compatibility and inference do not prove an executor contract.
@@ -139,11 +140,12 @@ function importedTarget(call, index, property, context, options, facts) {
     }),
   );
   if (!configured) return false;
-  const writes = sourceWrites(declaration.getSourceFile(), checker, facts);
+  const writes = sourceWrites(declaration.getSourceFile(), checker, facts, services.program);
   return !writes.eval && !writes.symbols.has(target);
 }
 
 function acceptsExecutor(call, index, quoteNode, context, options, facts) {
+  if (!quoteNode && allowsCollectionKey(call, index, context, facts)) return true;
   if (
     call.type !== "CallExpression" ||
     call.callee.type !== "Identifier" ||

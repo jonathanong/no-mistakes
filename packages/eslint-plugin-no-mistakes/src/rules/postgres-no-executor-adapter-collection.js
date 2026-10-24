@@ -103,17 +103,18 @@ function allowsCollectionKey(call, index, context, facts) {
   const receiverSymbol = checker.getSymbolAtLocation(tsReceiver);
   const constructor = checker
     .getSymbolsInScope(tsReceiver, ts.SymbolFlags.Value)
-    .find((symbol) =>
-      symbol.getName() === collection &&
-      symbol.declarations?.length &&
-      symbol.declarations.every((declaration) =>
-        builtinTypeDeclaration(declaration, collection, services.program),
-      ),
+    .find(
+      (symbol) =>
+        symbol.getName() === collection &&
+        symbol.declarations?.length &&
+        symbol.declarations.every((declaration) =>
+          builtinTypeDeclaration(declaration, collection, services.program),
+        ),
     );
-  const constructorMutated = constructor && (
-    writes.symbols.has(constructor) ||
-    constructor.declarations.some((declaration) => writes.declarations.has(declaration))
-  );
+  const constructorMutated =
+    constructor &&
+    (writes.symbols.has(constructor) ||
+      constructor.declarations.some((declaration) => writes.declarations.has(declaration)));
   return (
     !writes.uncertainMutation &&
     !writes.eval &&

@@ -128,10 +128,13 @@ describe("postgres-no-executor-adapter collection keys", () => {
                 const checker = program.getTypeChecker();
                 return new Proxy(checker, {
                   get(target, key) {
-                    if (key === "getSymbolAtLocation") return (node) => {
-                      const symbol = target.getSymbolAtLocation(node);
-                      return node.getText?.() === "get" && symbol ? { ...symbol, declarations: undefined } : symbol;
-                    };
+                    if (key === "getSymbolAtLocation")
+                      return (node) => {
+                        const symbol = target.getSymbolAtLocation(node);
+                        return node.getText?.() === "get" && symbol
+                          ? { ...symbol, declarations: undefined }
+                          : symbol;
+                      };
                     const value = target[key];
                     return typeof value === "function" ? value.bind(target) : value;
                   },
