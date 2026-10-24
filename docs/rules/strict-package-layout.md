@@ -64,6 +64,16 @@ These paths violate the configured root/subdirectory and extension policy.
 Move files into an allowed directory, add an allowed root file only when it is
 part of the package contract, or adjust the package policy deliberately.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it checks the file inventory against the configured layout, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Prefer a package-specific configuration entry for generated or legacy packages.

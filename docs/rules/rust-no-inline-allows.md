@@ -50,6 +50,16 @@ fn unfinished_api() {}
 Remove the unused code, correct the lint, or move a deliberately broad lint
 policy to the repository's approved configuration.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it matches `#[allow]` attributes in parsed Rust source, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 This rule intentionally rejects inline `allow` as an escape hatch. Use the

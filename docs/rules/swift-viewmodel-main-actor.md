@@ -65,6 +65,16 @@ final class ProfileViewModel {}
 Annotate the class with `@MainActor` (or the explicitly accepted unsafe form)
 and keep UI mutations on that actor.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it matches class declarations and attributes in parsed Swift source, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Use `allow` for a stable generated or framework-owned path. Use a line or file

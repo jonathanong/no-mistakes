@@ -123,6 +123,16 @@ The file is tracked beside a config that includes only `src`.
 Add the file to a compiler `include`/`files` set or add a precise `allow` entry
 with why it intentionally stays outside the program.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it compares tsconfig `include` coverage with the file inventory, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Prefer a reasoned `allow` entry. Use a top-of-file file directive for a

@@ -167,6 +167,16 @@ Repair the file's syntax or value shape, add the required key, remove the
 banned legacy key, restate lost ancestor override rules, or narrow the policy
 glob to its intended configs.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it asserts explicit values in parsed structured files, and a file that cannot be parsed is a definite finding, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Use a top-of-file `no-mistakes-disable-file structured-config-policy` directive

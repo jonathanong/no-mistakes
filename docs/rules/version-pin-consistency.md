@@ -135,6 +135,40 @@ patterns together so one canonical pin remains. For an unanalyzable finding,
 restore the source file or correct `sourceFile`/its format, or restore an
 unreadable anchor as UTF-8 text, so the selected anchor can be compared.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, inputs this rule cannot prove are never treated as clean ([how analysis works](README.md#how-analysis-works)); they follow `options.unanalyzable`:
+
+- A selected anchor whose `sourceFile` is outside the selected file set and is missing, unreadable, or malformed.
+- A selected anchor that cannot be read as UTF-8.
+
+Policies:
+
+- `report` (default): fails as an `unanalyzable` finding at line 1 of the anchor.
+- `advise`: a non-failing advisory.
+- `ignore`: omitted.
+
+Definite anchor mismatches remain findings under every policy.
+
+```yaml
+rules:
+  - rule: version-pin-consistency
+    scope: repository
+    options:
+      unanalyzable: advise
+      sourceFile: .mise.toml
+      sourceKey: tools.aqua:example-org/example-tool
+      anchors:
+        - file: .github/actions/setup-example-tool/action.yml
+          pattern: 'EXAMPLE_TOOL_VERSION:\s*(\d+\.\d+\.\d+)'
+```
+
 ## Suppression
 
 Use `no-mistakes-disable-file version-pin-consistency` in the anchor file for

@@ -60,6 +60,16 @@ print("loaded profile")
 Send the event through the process logger, or add the specific logging file to
 `allow` when it is the logger implementation itself.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it matches `print` calls in parsed Swift source, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Prefer `allow` for a stable logger fallback. Use

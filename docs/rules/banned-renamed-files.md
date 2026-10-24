@@ -33,6 +33,16 @@ export const proxy = true;
 export const middleware = true;
 ```
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it compares tracked file paths and rename status against configured patterns, so `options.unanalyzable` has no effect on it.
+
 ## Suppression and related rules
 
 Findings are on line 1, so use file suppression only for an intentional legacy

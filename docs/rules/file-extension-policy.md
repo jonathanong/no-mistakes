@@ -41,6 +41,16 @@ export const ok = 1;
 export const bad = 1;
 ```
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it judges file extensions from the file inventory, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Findings are on the file at line 1, so use `no-mistakes-disable-file

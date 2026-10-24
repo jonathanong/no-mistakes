@@ -53,6 +53,16 @@ mod tests { #[test] fn adds() {} }
 Move the module body into `src/tests.rs` or an integration test under `tests/`,
 and put reusable fixtures under `fixtures/` or `test-cases/`.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it matches inline test modules in parsed Rust source, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Prefer moving the tests. Use a file directive only for generated or external

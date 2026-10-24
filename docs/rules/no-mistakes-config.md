@@ -68,6 +68,16 @@ rules:
     scope: repository
 ```
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it validates the parsed no-mistakes configuration, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Fix configuration rather than suppressing it. For an intentional generated

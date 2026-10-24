@@ -32,6 +32,16 @@ A placeholder file containing only `// TODO`.
 // TODO
 ```
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it judges file content that is fully read and tokenized, so `options.unanalyzable` has no effect on it.
+
 ## Related rules
 
 [`agents-md-max-size`](agents-md-max-size.md) constrains instruction-file size;

@@ -58,6 +58,16 @@ pub fn too_long() {
 Split cohesive modules, move fixtures to `fixtures/` or `test-cases/`, and keep
 the production file focused.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it counts lines in Rust files, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Adjust the configured limit for a deliberate generated file or use a file

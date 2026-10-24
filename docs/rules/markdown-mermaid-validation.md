@@ -81,6 +81,16 @@ full recovery of Markdown fences nested directly inside MDX JSX blocks. When
 `file` is omitted, clear JSX component blocks are detected automatically while
 standard Markdown HTML blocks retain CommonMark semantics.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because a Mermaid block that fails to parse is itself a definite finding rather than an uncertain input, so `options.unanalyzable` has no effect on it.
+
 ## Related rules
 
 [`markdown-structure-budget`](markdown-structure-budget.md) controls diagram

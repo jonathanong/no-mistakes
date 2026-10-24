@@ -161,6 +161,16 @@ Add the package to the appropriate permanent or temporary declaration, flatten
 the resulting selectors into pnpm settings, and mirror permanent names in
 Dependabot.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](README.md#how-analysis-works)); this rule has no unanalyzable inputs because it checks parsed pnpm configuration values, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Use `no-mistakes-disable-file pnpm-release-age-policy` only for a repository
