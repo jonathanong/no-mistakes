@@ -2,6 +2,7 @@
 
 const { literalString } = require("./module-mock-helpers");
 const {
+  callbackCall,
   isKnownTestCallee,
   isTestCall,
   setupCallbackKind,
@@ -49,7 +50,7 @@ function calleeHasProperty(callee, name) {
   return prop === name || calleeHasProperty(callee.object, name);
 }
 
-function createRuleHelpers(context, testCalleeNames, namespaces) {
+function createRuleHelpers(context, testCalleeNames, namespaces, testAliases) {
   return {
     calleeHasProperty,
     isDescribeCall(node) {
@@ -60,9 +61,10 @@ function createRuleHelpers(context, testCalleeNames, namespaces) {
       );
     },
     isInlineCallback(node) {
-      const parent = node.parent;
+      const parent = callbackCall(node);
       return (
-        parent?.type === "CallExpression" &&
+        parent &&
+        !testAliases.isShadowed(parent.callee) &&
         (setupCallbackKind(parent, testCalleeNames, namespaces) ||
           isTestCall(parent, testCalleeNames, namespaces))
       );

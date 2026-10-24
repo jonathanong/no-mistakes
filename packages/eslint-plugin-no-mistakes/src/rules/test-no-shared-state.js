@@ -20,6 +20,7 @@ const {
   isTestCall,
   mutationRootName,
   namedCallbackArgument,
+  registrationCall,
   setupCallbackKind,
 } = require("./test-no-shared-state-helpers");
 const { createMutationHandlers } = require("./test-no-shared-state-mutations");
@@ -66,7 +67,7 @@ module.exports = rule(
       isDescribeCall,
       isInlineCallback,
       resolveFunctionCallback,
-    } = createRuleHelpers(context, testCalleeNames, namespaces);
+    } = createRuleHelpers(context, testCalleeNames, namespaces, testAliases);
     const mutationHandlers = createMutationHandlers({
       cleanupTracker,
       context,
@@ -119,6 +120,8 @@ module.exports = rule(
       },
       CallExpression(node) {
         viMockTracker.collectFactoryReferences(node);
+        node = registrationCall(node);
+        if (!node) return;
         const isShadowed = testAliases.isShadowed(node.callee);
         const isDescribe =
           !isShadowed && (isDescribeCall(node) || testAliases.isDescribeAliasCall(node.callee));
@@ -127,7 +130,7 @@ module.exports = rule(
           (testAliases.hasProperty(node.callee, "serial") ||
             testAliases.isSerialAlias(node.callee));
         if (isDescribe) cleanupTracker.enterSuite(isSerialSuite);
-        if (configureSerialMode(node)) cleanupTracker.markCurrentSuiteSerial();
+        if (!isShadowed && configureSerialMode(node)) cleanupTracker.markCurrentSuiteSerial();
         if (!isShadowed && isTestCall(node, testCalleeNames, namespaces)) {
           testDepth += 1;
           const callback = namedCallbackArgument(node.arguments);
@@ -162,19 +165,21 @@ module.exports = rule(
         mutationHandlers.reportIfShared(node, mutationRootName(node.argument));
       },
       "CallExpression:exit"(node) {
-        const isShadowed = testAliases.isShadowed(node.callee);
+        const original = node;
+        node = registrationCall(node);
+        const isShadowed = !node || testAliases.isShadowed(node.callee);
         if (!isShadowed && isTestCall(node, testCalleeNames, namespaces)) testDepth -= 1;
         if (!isShadowed && setupCallbackKind(node, testCalleeNames, namespaces)) {
           setupDepth -= 1;
           cleanupTracker.endSetup();
         }
         const isInsideNested = isInsideUncalledNestedFunction(
-          node,
+          original,
           testDepth,
           setupDepth,
           isInlineCallback,
         );
-        if (!isInsideNested) mutationHandlers.rememberCall(node);
+        if (!isInsideNested) mutationHandlers.rememberCall(original);
         if (!isShadowed && (isDescribeCall(node) || testAliases.isDescribeAliasCall(node.callee))) {
           cleanupTracker.exitSuite();
         }

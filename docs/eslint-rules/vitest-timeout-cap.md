@@ -170,6 +170,22 @@ reports an unknown timeout. Use a literal or immutable scalar budget at the
 registration. A Vitest default import is not a supported runner binding; imports
 or re-exports from another file do not prove Vitest identity here.
 
+```ts
+import runner from "vitest";
+import { remoteTest } from "./runner"; // That file re-exports Vitest's `it`.
+runner("default import", () => {}, 60_000);
+runner.it("default member", () => {}, 60_000);
+remoteTest("cross-file runner", () => {}, 60_000);
+```
+
+Rewrite the registration with a named Vitest import and a local immutable budget:
+
+```ts
+import { it } from "vitest";
+const budget = 4_000;
+it("runs", () => {}, budget);
+```
+
 ## Options
 
 - `defaultMax` sets the maximum config/project `testTimeout` and `hookTimeout`

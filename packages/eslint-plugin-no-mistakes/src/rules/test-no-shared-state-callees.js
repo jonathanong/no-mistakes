@@ -1,5 +1,7 @@
 "use strict";
 
+const { unwrapTransparentParent } = require("./async-ast");
+const { logicalCall } = require("./logical-call");
 const { literalString } = require("./module-mock-helpers");
 
 const TEST_CALLEES = new Set(["it", "test", "describe"]);
@@ -118,8 +120,26 @@ function setupCallbackKind(node, testCallees = TEST_CALLEES, namespaces = new Se
   return prop === "afterAll" ? "once" : null;
 }
 
+// A callback in a literal .apply list is still registered by its containing call.
+// Other array/container children are not inline test callbacks.
+function callbackCall(node) {
+  const callback = unwrapTransparentParent(node);
+  let call = callback.parent;
+  while (call?.type === "ArrayExpression") call = unwrapTransparentParent(call).parent;
+  const invoked = registrationCall(call);
+  return invoked?.arguments.includes(callback) ? invoked : null;
+}
+
+function registrationCall(node) {
+  // Track the effective receiver through nested intrinsic forwarding.
+  const invoked = logicalCall(node, () => false);
+  return invoked?.callee ? { ...node, ...invoked } : null;
+}
+
 module.exports = {
   SETUP_CALLEES,
+  callbackCall,
+  registrationCall,
   calleeName,
   importSpecifierName,
   isKnownTestCallee,
