@@ -11,7 +11,9 @@ borrows those facts, including source locations, instead of reading or parsing
 source again. At max, unparseable statements are skipped while recoverable sibling
 statements remain checked; comments and prose are not clauses.
 
-## Effort
+## Analysis
+
+### Effort
 
 `max` is the default and preserves helper, builder, alias, and finite-alternative
 analysis. `low` checks SQL visible as a literal string or interpolation-free
@@ -138,6 +140,17 @@ String literals that mention the word "offset" are not findings.
 Use `no-mistakes-disable-next-line postgres-no-offset` or
 `no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
 when a whole file is an intentional exception.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- At max: executor calls whose SQL has no complete recovered alternative or exceeds the 16-alternative cap (an opaque helper result, a mutated builder). At low: interpolated or tagged SQL, computed SQL, aliases beyond one `const`, JavaScript escapes in literals, and embedded SQL that does not parse completely. Unparseable statements at max are skipped while recoverable siblings stay checked.
+  - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out`.
+  - `advise`: a non-failing advisory with the same reason.
+  - `ignore`: omitted.
+
+  Definite `OFFSET` clauses remain findings under every policy.
 
 ## Why and when
 

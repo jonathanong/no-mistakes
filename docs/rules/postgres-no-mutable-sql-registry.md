@@ -128,7 +128,9 @@ export const tables = { users: "app.users" } as const;
 
 `importSpecifier` defaults to empty and must be set (or set `executorNames`) to select executor calls when the rule does not inherit a project postgres block. `executorNames` defaults to `query`, `read`, and `write` when a specifier is set. `executorFactoryNames`, `executorTypeNames`, and `trustedSqlTags` default to empty. `include` and `exclude` default to empty (all indexable files).
 
-## Effort
+## Analysis
+
+### Effort
 
 `effort: max` is the default and preserves cross-file registry analysis.
 Low effort never emits a cross-file write finding; it only emits unanalyzable diagnostics for unsupported inputs.
@@ -167,6 +169,17 @@ to the namespace receiver or its method.
 These policies do not certify an unsupported registry immutable. The shared
 repository, rule, and invocation effort/policy precedence applies. No partner
 check is required because unsupported inputs are explicitly classified.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- At low: a registry relation such as ``query(`SELECT id FROM ${tables.users}`)``, helpers, aliases, namespace executor calls, and unsupported executor factories or type receivers. At max the rule abstains on routes it cannot tie to one canonical producer (dynamic or conditional `require`, ambiguous re-exports) rather than reporting them.
+  - `report` (default): fails as a finding at the unsupported use.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Proven cross-file writes remain findings at max under every policy.
 
 ## Suppression
 

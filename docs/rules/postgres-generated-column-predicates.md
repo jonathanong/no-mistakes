@@ -172,6 +172,23 @@ Compare or sort the source primary key instead:
 SELECT id FROM orders WHERE id > $1 ORDER BY id DESC LIMIT 20;
 ```
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files selected by `sqlInclude`.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove: executor calls whose SQL has no complete recovered alternative or exceeds the 16-alternative cap (for example `query(buildSql(filters))` with an unrecoverable helper), and SQL, embedded or in a `sqlInclude` file, that fails to parse. They follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable for generated column predicates` or `SQL could not be analyzed for generated column predicates`.
+  - `advise`: a non-failing advisory with the same reason.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+
 ## Suppression
 
 SQL and TypeScript honor `-- no-mistakes-disable-line`,

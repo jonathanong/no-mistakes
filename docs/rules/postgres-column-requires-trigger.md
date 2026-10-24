@@ -128,6 +128,16 @@ Add the trigger the requirement names, or drop the column when the table should
 not maintain it. Drop a leftover trigger after dropping the column. Set
 `allowColumnList` only when an `UPDATE OF` list is the intended contract.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. It judges the generated schema catalog (`schemaCatalogPath`); executor calls in TS/JS are not evaluated.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. This rule has no unanalyzable inputs: it judges the configured schema catalog, a JSONC file read directly from `schemaCatalogPath` (no SQL is parsed by the rule), so every entry is either present or absent. A catalog that cannot be read, is not valid JSONC, is empty, or is not a valid snapshot is a hard error, not an unanalyzable input. The repository-level `unanalyzable` default does not affect it.
+
 ## Suppression
 
 For example, add an exception with a reason:

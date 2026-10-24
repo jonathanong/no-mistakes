@@ -77,6 +77,16 @@ CREATE TABLE children (
 Choose and declare the delete action that matches the product's retention and
 ownership semantics.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. It judges SQL files selected by `sqlInclude`; executor calls in TS/JS are not evaluated.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. Known gap: statements the lenient SQL parser cannot parse become `DISCARD ALL` markers and produce no finding, so they are silently unchecked rather than routed through `options.unanalyzable` ([#2661](https://github.com/jonathanong/no-mistakes/issues/2661)). A failure to collect facts aborts the rule with an error. The repository-level `unanalyzable` default does not affect it.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-require-fk-on-delete` or

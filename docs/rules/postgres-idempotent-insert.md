@@ -140,6 +140,23 @@ ON CONFLICT (id) DO UPDATE SET seen = now();
 Use `DO NOTHING`, `WHERE NOT EXISTS`, `SET col = EXCLUDED.col`, or
 `COALESCE(table.col, now())` so replay is an identity.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (up to 16 finite SQL alternatives per call) unless `scanEmbedded: false`, and SQL files selected by `sqlInclude`.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove: executed `INSERT` calls with no complete recovered alternative or over the cap, and unparseable SQL. They follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `executed INSERT SQL is not statically recoverable`.
+  - `advise`: a non-failing advisory with the same reason.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-idempotent-insert` or

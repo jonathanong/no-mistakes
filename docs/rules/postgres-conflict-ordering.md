@@ -203,6 +203,23 @@ Write both the target and source order in the catalog order:
 ON CONFLICT (left_id, right_id) DO NOTHING
 ```
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files selected by `sqlInclude`.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove: recovered dynamic SQL without complete alternatives whose static fragments identify an `INSERT`, an opaque executor argument such as `write(assembleWriter())`, `INSERT ... ON CONFLICT` SQL that fails to parse, and an exhausted exploration budget (retained complete alternatives are still checked, even under `ignore`). Dynamic SQL that is not an `INSERT` is outside the rule, not unanalyzable. They follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. target `unanalyzable-sql` with `keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked`.
+  - `advise`: a non-failing advisory with the same reason.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+
 ## Dynamic SQL and suppression
 
 Each complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)

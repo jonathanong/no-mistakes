@@ -103,6 +103,16 @@ Use an allowed stable key type, then keep a natural text identifier as a
 separate unique constraint. For foreign keys, reference that stable key instead
 of the natural text column.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. It judges the generated schema catalog (`schemaCatalogPath`); executor calls in TS/JS are not evaluated.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. This rule has no unanalyzable inputs: it judges the configured schema catalog, a JSONC file read directly from `schemaCatalogPath` (no SQL is parsed by the rule), so every entry is either present or absent. A catalog that cannot be read, is not valid JSONC, is empty, or is not a valid snapshot is a hard error, not an unanalyzable input. The repository-level `unanalyzable` default does not affect it.
+
 ## Suppression
 
 Add an allow entry for the exact constraint identity and provide a reason. A
