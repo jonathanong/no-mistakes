@@ -231,6 +231,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
     );
 
     let prefix_only_options = GraphConfigOptions {
+        assertion_owners: Vec::new(),
         route: crate::codebase::config::RouteOptions::default(),
         queue: crate::codebase::config::QueueOptions::default(),
         http_route: crate::codebase::config::HttpRouteOptions::default(),

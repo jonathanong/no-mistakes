@@ -22,3 +22,4 @@ export * from "./declared-payload-types";
 export type * from "./forbidden-call-types";
 export type * from "./postgres-mutable-sql-registry-types";
 export type * from "./postgres-uuid-predicate-types";
+export type * from "./coverage-assertion-owner-types";

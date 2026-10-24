@@ -1,6 +1,7 @@
 use crate::codebase::check_facts::PlaywrightSettingsKey;
 use crate::codebase::dependencies::extract::{
     ExportedBinding, ExtractedImport, FunctionCall, ImportedBinding, UnknownCall,
+    UnreachableCallRange,
 };
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
@@ -54,6 +55,8 @@ pub struct TsFactPlan {
     pub module_bindings: bool,
     /// Opt-in finite literal argument summaries for call-policy predicates.
     pub call_arguments: bool,
+    /// Opt-in lexical call-execution exclusions for assertion ownership.
+    pub call_eligibility: bool,
     pub imports: bool,
     pub function_calls: bool,
     /// Value provenance needed by canonical call and effect consumers.
@@ -103,6 +106,8 @@ pub struct TsFileFacts {
     pub star_reexport_specifiers: Vec<String>,
     pub per_item_calls: Vec<crate::codebase::dependencies::extract::PerItemCall>,
     pub function_calls: Vec<FunctionCall>,
+    /// Sorted, disjoint dead ranges per exact callable; syntactic graph output stays unchanged.
+    pub unreachable_call_ranges: Vec<UnreachableCallRange>,
     pub unknown_calls: Vec<UnknownCall>,
     pub call_sites: Vec<CallSiteFact>,
     pub resource_calls: Vec<ResourceCall>,
@@ -163,44 +168,7 @@ pub struct TsFileFacts {
     pub trpc_calls: Vec<crate::codebase::ts_trpc::TrpcCallFact>,
 }
 
-#[derive(Clone)]
-enum TsFactSlot {
-    Owned(Box<TsFileFacts>),
-    Shared(Arc<TsFileFacts>),
-}
-
-impl TsFactSlot {
-    fn as_facts(&self) -> &TsFileFacts {
-        match self {
-            Self::Owned(facts) => facts,
-            Self::Shared(facts) => facts.as_ref(),
-        }
-    }
-
-    fn into_owned(self) -> TsFileFacts {
-        match self {
-            Self::Owned(facts) => *facts,
-            Self::Shared(facts) => Arc::unwrap_or_clone(facts),
-        }
-    }
-
-    fn materialize_owned(&mut self) {
-        if matches!(self, Self::Owned(_)) {
-            return;
-        }
-        // Take the slot first so a uniquely owned Shared Arc can unwrap
-        // instead of cloning after a temporary extra strong count.
-        let taken = std::mem::replace(self, Self::Owned(Box::default()));
-        *self = Self::Owned(Box::new(taken.into_owned()));
-    }
-
-    fn as_facts_mut(&mut self) -> &mut TsFileFacts {
-        match self {
-            Self::Owned(facts) => facts,
-            Self::Shared(_) => unreachable!("shared slots were materialized"),
-        }
-    }
-}
+include!("facts/slot.rs");
 
 #[derive(Clone)]
 pub struct TsFactMap {

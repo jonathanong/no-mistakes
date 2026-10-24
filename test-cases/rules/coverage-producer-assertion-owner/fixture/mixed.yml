@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers: [{ file: src/producers.mts, symbol: mixed }, { file: src/producers.mts, symbol: mixedTarget }]
+      assertions: [{ module: "node:assert", export: strictEqual }]

@@ -58,6 +58,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
     );
 
     let missing_register_options = GraphConfigOptions {
+        assertion_owners: Vec::new(),
         route: crate::codebase::config::RouteOptions::default(),
         queue: crate::codebase::config::QueueOptions::default(),
         http_route: crate::codebase::config::HttpRouteOptions {
@@ -92,6 +93,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
         ci: crate::config::v2::schema::CiConfig::default(),
     };
     let invalid_glob_options = GraphConfigOptions {
+        assertion_owners: Vec::new(),
         route: crate::codebase::config::RouteOptions::default(),
         queue: crate::codebase::config::QueueOptions::default(),
         http_route: crate::codebase::config::HttpRouteOptions {
@@ -149,6 +151,7 @@ fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
     .is_empty());
 
     let queue_options = GraphConfigOptions {
+        assertion_owners: Vec::new(),
         route: crate::codebase::config::RouteOptions::default(),
         queue: crate::codebase::config::QueueOptions {
             queue_pattern: "src/**/*.ts".to_string(),

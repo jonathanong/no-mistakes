@@ -6,6 +6,9 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct CallableId(pub u32);
 
+/// A lexically dead source interval paired with its exact callable owner.
+pub type UnreachableCallRange = (Option<CallableId>, u32, u32);
+
 /// The syntactic import form that produced an extracted module specifier.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ImportKind {

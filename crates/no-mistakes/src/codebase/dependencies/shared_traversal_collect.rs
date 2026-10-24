@@ -55,7 +55,7 @@ pub(crate) fn collect_and_filter_entries_prepared(
     validate_direction(
         &direction,
         &entrypoints,
-        has_call_relationship(allowed.as_ref()),
+        has_callable_relationship(allowed.as_ref()),
     )?;
 
     let roots: Vec<NodeId> = entrypoints

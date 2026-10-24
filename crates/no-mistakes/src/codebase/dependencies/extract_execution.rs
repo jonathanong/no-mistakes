@@ -86,6 +86,7 @@ fn visit_if_with_execution<'a>(
 ) {
     collector.visit_expression(&statement.test);
     let truthy = literal_truthiness(&statement.test);
+    record_dead_branch(collector, truthy, &statement.consequent, statement.alternate.as_ref());
     with_conditional_execution(collector, truthy != Some(true), |collector| {
         visit_guarded_receiver_arm(collector, &statement.consequent, truthy.is_none());
     });

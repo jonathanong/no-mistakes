@@ -181,7 +181,7 @@ fn no_mistakes_rules_have_docs() {
     let root = repo_root();
     let index = read(&root.join("docs/rules/README.md"));
     let rule_ids = rule_ids_from_source(&root);
-    assert_eq!(rule_ids.len(), 114, "source rule inventory changed");
+    assert_eq!(rule_ids.len(), 115, "source rule inventory changed");
     for rule_id in rule_ids {
         let file = format!("{rule_id}.md");
         let path = root.join("docs/rules").join(&file);
@@ -236,6 +236,7 @@ fn graph_edge_kinds_are_documented() {
     let root = repo_root();
     let body = read(&root.join("docs/graph-edges.md"));
     let edge_kinds = [
+        "assertion-owner",
         "import",
         "type-import",
         "dynamic-import",
