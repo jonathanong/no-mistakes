@@ -57,13 +57,12 @@ pub(super) fn collect(
                     .map(|(statements, functions, failures, _, prepared)| {
                         let mut functions = functions.clone();
                         functions.extend_from_slice(&prepared.functions());
-                        let mut value = crate::codebase::postgres::migration::extract_from_parsed(
+                        let mut value = crate::codebase::postgres::migration::extract_from_parsed_with_failures(
                             source.as_ref().unwrap(),
                             statements,
                             &functions,
+                            failures,
                         );
-                        value.unanalyzable_statements.extend(failures.iter().cloned());
-                        value.unanalyzable_statements.sort_by_key(|item| item.line);
                         value.path = path.clone();
                         Arc::new(value)
                     })

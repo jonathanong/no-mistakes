@@ -37,6 +37,8 @@ pub struct SqlDeclaredIdentifier {
 pub struct SqlUnanalyzableStatement {
     pub line: usize,
     pub head: String,
+    /// Lexical statement ordinals, including enclosing routine bodies.
+    pub source_order: Vec<usize>,
 }
 
 /// Schema facts for one SQL file read through [`crate::codebase::ts_source::SourceStore`].

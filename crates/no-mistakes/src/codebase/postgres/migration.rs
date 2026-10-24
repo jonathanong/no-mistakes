@@ -4,6 +4,7 @@ use sqlparser::ast::{ObjectName, ObjectNamePart, ObjectType, Statement};
 
 mod constraints;
 mod dynamic;
+mod dynamic_merge;
 mod identifiers;
 mod indexes;
 mod lines;
@@ -21,12 +22,7 @@ pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
         .into_iter()
         .map(|located| located.statement)
         .collect();
-    let mut facts = extract_from_parsed(sql, &statements, &functions);
-    facts
-        .unanalyzable_statements
-        .extend(unanalyzable_statements);
-    facts.unanalyzable_statements.sort_by_key(|item| item.line);
-    facts
+    extract_from_parsed_with_failures(sql, &statements, &functions, &unanalyzable_statements)
 }
 
 pub(crate) fn extract_from_parsed(
@@ -34,15 +30,29 @@ pub(crate) fn extract_from_parsed(
     statements: &[Statement],
     functions: &[super::SqlFunctionCallFact],
 ) -> SqlSchemaFileFacts {
-    let mut facts = extract_parsed_migration_facts(sql, statements);
+    extract_from_parsed_with_failures(sql, statements, functions, &[])
+}
+
+pub(crate) fn extract_from_parsed_with_failures(
+    sql: &str,
+    statements: &[Statement],
+    functions: &[super::SqlFunctionCallFact],
+    failures: &[super::types::SqlUnanalyzableStatement],
+) -> SqlSchemaFileFacts {
+    let mut facts = extract_parsed_migration_facts(sql, statements, failures);
     facts.function_calls.extend_from_slice(functions);
     facts
 }
 
 pub(crate) use statements::{policy_facts, SUPPORTED_KINDS};
 
-fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSchemaFileFacts {
+fn extract_parsed_migration_facts(
+    sql: &str,
+    statements: &[Statement],
+    failures: &[super::types::SqlUnanalyzableStatement],
+) -> SqlSchemaFileFacts {
     let mut facts = SqlSchemaFileFacts {
+        unanalyzable_statements: failures.to_vec(),
         table_events_collected: true,
         tables: statements
             .iter()
@@ -114,49 +124,10 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
             _ => {}
         }
     }
-    // Analyze direct body DDL and static EXECUTE SQL through the same extractor,
-    // so every downstream PostgreSQL rule consumes identical schema facts.
-    for dynamic_sql in dynamic::schema_bodies(sql)
-        .into_iter()
-        .chain(dynamic::extract(sql))
-    {
-        let mut dynamic_facts = extract_migration_facts(&dynamic_sql.sql);
-        if !dynamic_sql.executed {
-            dynamic_facts.table_events.clear();
-        }
-        dynamic::remap_fact_lines(&mut dynamic_facts, &dynamic_sql);
-        merge_dynamic_facts(&mut facts, dynamic_facts);
-    }
+    dynamic_merge::append(sql, &mut facts);
+    facts.unanalyzable_statements.sort_by_key(|item| item.line);
     table_positions.apply_transaction_projection(&mut facts.table_events);
     facts
-}
-
-fn merge_dynamic_facts(facts: &mut SqlSchemaFileFacts, dynamic: SqlSchemaFileFacts) {
-    facts
-        .unanalyzable_statements
-        .extend(dynamic.unanalyzable_statements);
-    facts.tables.extend(dynamic.tables);
-    facts.table_events.extend(dynamic.table_events);
-    facts.indexes.extend(dynamic.indexes);
-    facts.dropped_indexes.extend(dynamic.dropped_indexes);
-    facts.dropped_tables.extend(dynamic.dropped_tables);
-    facts.foreign_keys.extend(dynamic.foreign_keys);
-    facts.add_columns.extend(dynamic.add_columns);
-    facts
-        .unnamed_constraints
-        .extend(dynamic.unnamed_constraints);
-    facts.statement_kinds.extend(dynamic.statement_kinds);
-    facts.setting_uses.extend(dynamic.setting_uses);
-    facts.function_calls.extend(dynamic.function_calls);
-    facts
-        .not_valid_constraints
-        .extend(dynamic.not_valid_constraints);
-    facts
-        .validated_constraints
-        .extend(dynamic.validated_constraints);
-    facts
-        .declared_identifiers
-        .extend(dynamic.declared_identifiers);
 }
 
 pub(super) fn relation(name: &ObjectName) -> String {

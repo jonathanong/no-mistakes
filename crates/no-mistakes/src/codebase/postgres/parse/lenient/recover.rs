@@ -28,7 +28,7 @@ pub(super) fn parse_chunks_with_function_calls(
         });
     let mut statements = Vec::new();
     let mut transaction_open = false;
-    for chunk in chunks {
+    for (ordinal, chunk) in chunks.into_iter().enumerate() {
         let original = located.next();
         let aligned = original.map(|source| locations::align(&chunk, source));
         // Own the chunk text even when recovery emits no statement. A later
@@ -47,13 +47,16 @@ pub(super) fn parse_chunks_with_function_calls(
                     },
                     false,
                 );
-                marker.recovery_failure = unrecoverable_chunk(&tokens);
+                marker.recovery_failure = unrecoverable_chunk(&tokens, ordinal);
                 marker.chunk_tokens = Some(tokens);
                 statements.push(marker);
             }
             continue;
         }
         for mut statement in produced {
+            if let Some(failure) = &mut statement.recovery_failure {
+                failure.source_order.insert(0, ordinal);
+            }
             match &statement.statement {
                 Statement::StartTransaction { .. } => transaction_open = true,
                 Statement::Commit { chain, .. }
@@ -74,6 +77,7 @@ pub(super) fn parse_chunks_with_function_calls(
 
 fn unrecoverable_chunk(
     tokens: &[TokenWithSpan],
+    ordinal: usize,
 ) -> Option<super::super::super::types::SqlUnanalyzableStatement> {
     let significant = tokens
         .iter()
@@ -86,7 +90,11 @@ fn unrecoverable_chunk(
         .map(|token| token.token.to_string())
         .collect::<Vec<_>>()
         .join(" ");
-    Some(super::super::super::types::SqlUnanalyzableStatement { line, head })
+    Some(super::super::super::types::SqlUnanalyzableStatement {
+        line,
+        head,
+        source_order: vec![ordinal],
+    })
 }
 
 fn parse_chunk(

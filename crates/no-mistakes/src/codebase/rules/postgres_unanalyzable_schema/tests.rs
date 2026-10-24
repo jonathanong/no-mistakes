@@ -92,15 +92,37 @@ fn static_execute_markers_match_direct_and_prepared_schema_facts() {
     let root = fixture().join("dynamic");
     let sql = std::fs::read_to_string(root.join("migrations/001.sql")).unwrap();
     let direct = extract_migration_facts(&sql).unanalyzable_statements;
-    assert!(direct
-        .iter()
-        .any(|item| item.head.starts_with("ALTER TABLE")));
+    assert_eq!(direct.len(), 1, "{direct:?}");
+    assert_eq!(direct[0].line, 2);
+    assert!(direct[0].head.starts_with("ALTER TABLE"));
     let (_, files, facts) = prepared(&root, "report.yml");
     let projected = &facts
         .postgres_schema_file(&files[0])
         .unwrap()
         .unanalyzable_statements;
     assert_eq!(projected, &direct);
+}
+
+#[test]
+fn valid_static_execute_has_no_marker_but_unknown_execute_remains_opaque() {
+    for (name, count) in [("dynamic-valid", 0), ("dynamic-unknown", 1)] {
+        let root = fixture().join(name);
+        let sql = std::fs::read_to_string(root.join("migrations/001.sql")).unwrap();
+        let direct = extract_migration_facts(&sql).unanalyzable_statements;
+        assert_eq!(direct.len(), count, "{name}: {direct:?}");
+        if name == "dynamic-unknown" {
+            assert!(direct[0].head.contains("EXECUTE"));
+        }
+        let (_, files, facts) = prepared(&root, "report.yml");
+        assert_eq!(
+            &facts
+                .postgres_schema_file(&files[0])
+                .unwrap()
+                .unanalyzable_statements,
+            &direct,
+            "{name}"
+        );
+    }
 }
 
 #[test]
