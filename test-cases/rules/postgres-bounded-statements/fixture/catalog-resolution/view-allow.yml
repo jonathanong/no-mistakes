@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalog.json
+      sqlInclude: [sql/view-allow.sql]
+      viewBounds:
+        "public.unbounded_archive": unbounded
+      allow:
+        - object: "view:public.unbounded_archive"
+          reason: The bounded-statement owner accepts this intentionally unbounded relation.
