@@ -92,12 +92,19 @@ pub(crate) fn prepare(
                         if let Some(observer) = &observer {
                             observer.increment("postgres.prepared.statement_projections", 1);
                         }
-                        Arc::new(super::collect::dml::embedded_call_facts_with_demand(
+                        let statements = super::collect::dml::embedded_call_facts_with_demand(
                             file,
                             plan.postgres_bounds,
                             !plan.postgres_dml,
                             demand,
-                        ))
+                        );
+                        if let Some(observer) = &observer {
+                            observer.increment(
+                                "postgres.prepared.statement_records",
+                                statements.len() as u64,
+                            );
+                        }
+                        Arc::new(statements)
                     })
                     .map_err(|error| {
                         Arc::new(PreparationError {
