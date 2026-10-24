@@ -5,6 +5,8 @@ use oxc_ast::{ast::*, AstKind};
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 
+mod loops;
+
 impl Syntax {
     fn context(&mut self, context: Context, walk: impl FnOnce(&mut Self)) {
         let previous = std::mem::replace(&mut self.assignments.context, context);
@@ -127,61 +129,19 @@ impl<'a> Visit<'a> for Syntax {
         });
     }
     fn visit_for_statement(&mut self, value: &ForStatement<'a>) {
-        let kind = AstKind::ForStatement(self.alloc(value));
-        self.enter_node(kind);
-        self.enter_scope(ScopeFlags::empty(), &value.scope_id);
-        self.visit_span(&value.span);
-        // The initializer executes once, retaining any enclosing loop context.
-        if let Some(init) = &value.init {
-            self.visit_for_statement_init(init);
-        }
-        self.repeating(value.span, |this| {
-            if let Some(test) = &value.test {
-                this.visit_expression(test);
-            }
-            if let Some(update) = &value.update {
-                this.visit_expression(update);
-            }
-            this.visit_statement(&value.body);
-        });
-        self.leave_scope();
-        self.leave_node(kind);
+        self.walk_for_loop(value);
     }
     fn visit_for_in_statement(&mut self, value: &ForInStatement<'a>) {
-        let kind = AstKind::ForInStatement(self.alloc(value));
-        self.enter_node(kind);
-        self.enter_scope(ScopeFlags::empty(), &value.scope_id);
-        self.visit_span(&value.span);
-        self.repeating(value.span, |this| {
-            this.visit_for_statement_left(&value.left);
-        });
-        // The iterable executes once; an outer loop can still repeat it.
-        self.visit_expression(&value.right);
-        self.repeating(value.span, |this| this.visit_statement(&value.body));
-        self.leave_scope();
-        self.leave_node(kind);
+        self.walk_for_in_loop(value);
     }
     fn visit_for_of_statement(&mut self, value: &ForOfStatement<'a>) {
-        let kind = AstKind::ForOfStatement(self.alloc(value));
-        self.enter_node(kind);
-        self.enter_scope(ScopeFlags::empty(), &value.scope_id);
-        self.visit_span(&value.span);
-        self.repeating(value.span, |this| {
-            this.visit_for_statement_left(&value.left);
-        });
-        // The iterable executes once; an outer loop can still repeat it.
-        self.visit_expression(&value.right);
-        self.repeating(value.span, |this| this.visit_statement(&value.body));
-        self.leave_scope();
-        self.leave_node(kind);
+        self.walk_for_of_loop(value);
     }
     fn visit_while_statement(&mut self, value: &WhileStatement<'a>) {
-        self.repeating(value.span, |this| walk::walk_while_statement(this, value));
+        self.walk_while_loop(value);
     }
     fn visit_do_while_statement(&mut self, value: &DoWhileStatement<'a>) {
-        self.repeating(value.span, |this| {
-            walk::walk_do_while_statement(this, value)
-        });
+        self.walk_do_while_loop(value);
     }
     fn visit_for_statement_left(&mut self, value: &ForStatementLeft<'a>) {
         let previous = std::mem::replace(&mut self.assignments.iteration_target, true);

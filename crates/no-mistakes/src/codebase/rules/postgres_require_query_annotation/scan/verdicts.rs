@@ -20,7 +20,7 @@ pub(super) fn record(
 ) {
     for (call_index, (call, span)) in embedded.calls.iter().zip(&embedded.call_spans).enumerate() {
         let (status, evidence, residual_reasons, known_prefix) =
-            if let Some(result) = literal_helpers::verdict(prepared, path, opts, *span) {
+            if let Some(result) = super::head_verdict(prepared, path, opts, *span) {
                 result
             } else if !call.variants.is_empty() {
                 let branches = call
@@ -112,7 +112,8 @@ pub(super) fn record(
         let invalid_composed = residual_reasons
             .iter()
             .any(|reason| reason == "invalid-composed-sql");
-        let advisory = literal_helpers::advisory(prepared, path, opts, *span)
+        let advisory = !super::loop_carried::proves_missing(prepared, path, opts, *span)
+            && literal_helpers::advisory(prepared, path, opts, *span)
             && !invalid_composed
             && !call.variants_truncated();
         facts.record_sql_verdict(SqlObligationVerdict {

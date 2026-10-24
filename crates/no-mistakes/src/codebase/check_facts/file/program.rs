@@ -27,8 +27,20 @@ pub(crate) fn collect_file_facts_from_program(
                 .flat_map(|(_, file)| file.call_spans.iter().copied()),
         );
     }
+    let loop_heads = (plan.query_annotation
+        && !plan.query_annotation_heads
+        && heads::has_annotation_executors(plan, &embedded_sql))
+    .then(|| {
+        crate::codebase::postgres::query_annotation::heads::prepare_loop_heads(
+            program,
+            source,
+            !head_candidates.is_empty(),
+            helpers,
+        )
+    })
+    .flatten();
     let mut ts_plan = ts_extract_plan(root, plan, path, playwright);
-    ts_plan.module_bindings |= !head_candidates.is_empty();
+    ts_plan.module_bindings |= !head_candidates.is_empty() || loop_heads.is_some();
     let stored_source =
         owned_source.or_else(|| should_store_source(plan, path).then(|| Arc::<str>::from(source)));
     let super::prepared_program::PreparedProgramFacts { ts, semantic } =
@@ -122,21 +134,24 @@ pub(crate) fn collect_file_facts_from_program(
     } else {
         Vec::new()
     };
-    let query_annotation_heads =
-        (plan.query_annotation_heads || !head_candidates.is_empty()).then(|| {
-            Arc::new(
-                crate::codebase::postgres::query_annotation::heads::collect_with_helpers(
-                    program,
-                    &ts,
-                    embedded_sql
-                        .iter()
-                        .flat_map(|(_, file)| file.call_spans.iter().copied()),
-                    &head_candidates,
-                    plan.query_annotation_heads,
-                    helpers,
-                ),
-            )
-        });
+    let query_annotation_heads = (plan.query_annotation_heads
+        || !head_candidates.is_empty()
+        || loop_heads.is_some())
+    .then(|| {
+        Arc::new(
+            crate::codebase::postgres::query_annotation::heads::collect_prepared(
+                program,
+                &ts,
+                embedded_sql
+                    .iter()
+                    .flat_map(|(_, file)| file.call_spans.iter().copied()),
+                &head_candidates,
+                plan.query_annotation_heads,
+                helpers,
+                loop_heads,
+            ),
+        )
+    });
     let sql_identifier_syntax =
         super::sql_identifier::collect(root, path, source, program, &ts, plan);
     let symbols = ts.symbols.clone();

@@ -20,19 +20,12 @@ pub(super) fn proof(
         .helper(span, &opts.embedded.sql_literal_helpers)
 }
 
-type HelperVerdict = (
-    crate::codebase::postgres::SqlVerdictStatus,
-    Option<crate::codebase::postgres::SqlEvidenceKind>,
-    Vec<String>,
-    Option<String>,
-);
-
 pub(super) fn verdict(
     facts: &CheckFactMap,
     path: &Path,
     opts: &CompiledOptions,
     span: (u32, u32),
-) -> Option<HelperVerdict> {
+) -> Option<super::AnnotationVerdict> {
     use crate::codebase::postgres::{SqlEvidenceKind, SqlVerdictStatus};
     let status = match proof(facts, path, opts, span)? {
         HeadProof::Literal => SqlVerdictStatus::ProvenClear,

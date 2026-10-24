@@ -1,5 +1,5 @@
 use super::{CompiledOptions, RULE_ID};
-use crate::codebase::check_facts::SqlFactContext;
+use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::sql_requires_query_annotation;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
@@ -7,9 +7,27 @@ use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 mod composition;
 mod literal_helpers;
+mod loop_carried;
 mod low;
 mod trusted_append;
 mod verdicts;
+
+type AnnotationVerdict = (
+    crate::codebase::postgres::SqlVerdictStatus,
+    Option<crate::codebase::postgres::SqlEvidenceKind>,
+    Vec<String>,
+    Option<String>,
+);
+
+fn head_verdict(
+    facts: &CheckFactMap,
+    path: &Path,
+    opts: &CompiledOptions,
+    span: (u32, u32),
+) -> Option<AnnotationVerdict> {
+    loop_carried::verdict(facts, path, opts, span)
+        .or_else(|| literal_helpers::verdict(facts, path, opts, span))
+}
 
 pub(super) fn scan_with_sources(
     root: &Path,
@@ -48,6 +66,10 @@ pub(super) fn scan_with_sources(
             verdicts::record(&rel, file, opts, facts, &invalid, prepared, path);
         }
         for (call_index, (call, span)) in file.calls.iter().zip(&file.call_spans).enumerate() {
+            if loop_carried::proves_missing(prepared, path, opts, *span) {
+                findings.push(missing_annotation_finding(&rel, call.line));
+                continue;
+            }
             if let Some(proof) = literal_helpers::proof(prepared, path, opts, *span) {
                 use crate::codebase::postgres::query_annotation::heads::HeadProof;
                 if proof == HeadProof::Missing
@@ -139,15 +161,16 @@ pub(super) fn findings_for_call(
     if !sql_requires_query_annotation(sql) {
         return Vec::new();
     }
-    vec![RuleFinding {
+    vec![missing_annotation_finding(file, call.line)]
+}
+
+fn missing_annotation_finding(file: &str, line: u32) -> RuleFinding {
+    RuleFinding {
         rule: RULE_ID.to_string(),
         file: file.to_string(),
-        line: call.line as usize,
-        message: format!(
-            "{file}:{}: query execution must start with a /* name */ annotation",
-            call.line
-        ),
+        line: line as usize,
+        message: format!("{file}:{line}: query execution must start with a /* name */ annotation"),
         import: None,
         target: Some("annotation".to_string()),
-    }]
+    }
 }

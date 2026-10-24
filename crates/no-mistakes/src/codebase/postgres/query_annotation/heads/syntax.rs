@@ -17,6 +17,7 @@ pub(super) struct Syntax {
     pub collect_append_tags: bool,
     pub literal_helpers: Option<Vec<super::literal_helpers::Candidate>>,
     pub calls: Vec<Call>,
+    pub loop_candidates: Vec<super::loop_carried::Candidate>,
     pub constants: FxHashMap<Span, Head>,
     pub assignments: super::assignments::Assignments,
     pub append_receivers: FxHashSet<Span>,
@@ -141,6 +142,9 @@ pub(super) fn collect_with_helpers(
     collect_append_tags: bool,
     helpers: bool,
 ) -> Syntax {
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("postgres.annotation.head_syntax_visits", 1);
+    }
     let mut syntax = Syntax {
         collect_append_tags,
         literal_helpers: helpers.then(Vec::new),
