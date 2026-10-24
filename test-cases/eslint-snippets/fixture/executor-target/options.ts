@@ -1,7 +1,7 @@
 import { read } from "@example/db";
 import type { QueryExecutor } from "@example/db";
 import type { NamedOptions, AliasOptions, ExtendedOptions } from "./options-helpers";
-import { named, alias, inherited, renamed, optional, structural, method, unrelated, wrong, plain, union, mapped, partial, aliasChain, structuralAlias, unrelatedAlias, cycle, intersection, ambiguous, destructuredNamed, destructuredAlias, destructuredDefault, destructuredComputed, rest, overloaded, contextual, mutable, written } from "./options-helpers";
+import { named, alias, inherited, renamed, optional, structural, method, unrelated, wrong, plain, union, mapped, partial, aliasChain, structuralAlias, unrelatedAlias, cycle, intersection, ambiguous, invalidFunctionType, destructuredNamed, destructuredAlias, destructuredDefault, destructuredComputed, rest, overloaded, contextual, mutable, written } from "./options-helpers";
 import { evaluated } from "./options-evaluated";
 function localNamed(options: NamedOptions) { options.query("SELECT 1"); }
 const localAlias = (options: AliasOptions) => options.query("SELECT 1");
@@ -65,3 +65,4 @@ type LocalExecutor = QueryExecutor;
 type LocalOptions = { query: LocalExecutor };
 function localAliasChain(options: LocalOptions) { options.query("SELECT 1"); }
 localAliasChain({ query: read });
+invalidFunctionType({ query: read });

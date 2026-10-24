@@ -50,6 +50,10 @@ export function unrelatedAlias(options: UnrelatedAliasOptions) { options.query("
 export function cycle(options: CycleOptions) {}
 export function intersection(options: IntersectionOptions) { options.query("SELECT 1"); }
 export function ambiguous(options: AmbiguousOptions) {}
+// A function name in a type slot cannot stand in for an executor type alias.
+export function functionType(): QueryExecutor { return read; }
+export type FunctionTypeOptions = { query: functionType };
+export function invalidFunctionType(options: FunctionTypeOptions) {}
 export function destructuredNamed({ query }: NamedOptions) { query("SELECT 1"); }
 export const destructuredAlias = ({ query: execute }: AliasOptions) => execute("SELECT 1");
 export function destructuredDefault({ query = read }: NamedOptions) {}
