@@ -59,10 +59,6 @@ enum Access {
     Unknown,
 }
 
-pub(super) fn triggers_workflow_call(doc: &Mapping) -> bool {
-    mapping_get(doc, "on").is_some_and(is_workflow_call)
-}
-
 pub(super) fn job_proof(
     job: &Mapping,
     workflow: Option<&Value>,
@@ -164,17 +160,6 @@ fn grant(origin: Origin, text: &str) -> String {
     match origin {
         Origin::Job => format!("job permissions grant {text}"),
         Origin::Workflow => format!("workflow permissions grant {text}"),
-    }
-}
-
-fn is_workflow_call(on: &Value) -> bool {
-    match on {
-        Value::String(name) => name == "workflow_call",
-        Value::Sequence(items) => items
-            .iter()
-            .any(|item| item.as_str() == Some("workflow_call")),
-        Value::Mapping(map) => map.keys().any(|key| key.as_str() == Some("workflow_call")),
-        _ => false,
     }
 }
 

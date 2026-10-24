@@ -12,7 +12,12 @@ known upper bounds; unsafe write bounds remain findings under all policies,
 with job permissions taking precedence over workflow defaults. Only checkout
 steps are judged, so a valid `pull_request_target` workflow without checkout
 stays clean.
-See the [rule contract](rules/github-actions-checkout-credentials.md#analysis).
+`pull_request_target` also checks PR-head refs independently of persistence;
+unresolved refs/repositories use the shared policy. Configure the optional
+`defaultBranch` convention in YAML selected by `configPath`, not as a `check()`
+argument. The Node/N-API signature and report types are unchanged. A checkout
+can have separate credential and ref rows. See the
+[rule contract](rules/github-actions-checkout-credentials.md#analysis).
 
 ```js
 const { analyzeProject } = require("no-mistakes");

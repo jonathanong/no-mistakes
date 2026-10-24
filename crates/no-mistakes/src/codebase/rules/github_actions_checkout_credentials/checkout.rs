@@ -1,7 +1,10 @@
+use super::events::has_event;
+use super::findings::{finding, reference, uncertain};
+use super::gha_kind;
 use super::inputs::{verdict, Verdict};
-use super::permissions::{job_proof, triggers_workflow_call, Proof};
+use super::permissions::{job_proof, Proof};
+use super::refs::{self, RefRisk};
 use super::uses::is_checkout_uses;
-use super::{gha_kind, RuleFinding, RULE_ID};
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::github_actions_script_expressions::{step_uses_lines, StepUse};
 use crate::config::v2::Unanalyzable;
@@ -12,13 +15,15 @@ struct Checkout {
     step: usize,
     verdict: Verdict,
     declared_maximum: bool,
+    reference: RefRisk,
 }
 
-pub(super) fn analyze(
+pub(super) fn analyze_with_default_branch(
     rel: &str,
     source: &str,
     assume_unspecified: bool,
     policy: Unanalyzable,
+    default_branch: Option<&str>,
 ) -> AnalysisDiagnostics {
     let mut diagnostics = AnalysisDiagnostics::default();
     if gha_kind(rel) != Some(false) {
@@ -43,7 +48,7 @@ pub(super) fn analyze(
         }
     };
     let locations = step_uses_lines(source);
-    for checkout in workflow_checkouts(&value, assume_unspecified) {
+    for checkout in workflow_checkouts(&value, assume_unspecified, default_branch) {
         let line = located_line(&locations, &checkout.job, checkout.step);
         match checkout.verdict {
             Verdict::Safe => {}
@@ -60,25 +65,20 @@ pub(super) fn analyze(
                 uncertain(rel, line, &checkout.job, &checkout.step.to_string(), reason),
             ),
         }
+        match checkout.reference {
+            RefRisk::Base => {}
+            RefRisk::Head => {
+                diagnostics
+                    .findings
+                    .push(reference(rel, line, &checkout.job, checkout.step, true))
+            }
+            RefRisk::Unknown => diagnostics.unanalyzable(
+                policy,
+                reference(rel, line, &checkout.job, checkout.step, false),
+            ),
+        }
     }
     diagnostics
-}
-
-fn uncertain(rel: &str, line: usize, job: &str, step: &str, reason: &str) -> RuleFinding {
-    let message = format!(
-        "{rel}:{line}: job `{job}` step {step}: cannot analyze checkout credentials ({reason}). \
-         Set with.persist-credentials to literal false, or use the default GITHUB_TOKEN with \
-         literal read-only permissions; persisted write credentials let later steps modify \
-         GitHub state."
-    );
-    RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: rel.to_string(),
-        line,
-        message,
-        import: None,
-        target: Some(job.to_string()),
-    }
 }
 
 fn located_line(locations: &[StepUse], job: &str, step: usize) -> usize {
@@ -89,11 +89,16 @@ fn located_line(locations: &[StepUse], job: &str, step: usize) -> usize {
         .unwrap_or(1)
 }
 
-fn workflow_checkouts(value: &Value, assume_unspecified: bool) -> Vec<Checkout> {
+fn workflow_checkouts(
+    value: &Value,
+    assume_unspecified: bool,
+    default_branch: Option<&str>,
+) -> Vec<Checkout> {
     let Some(doc) = value.as_mapping() else {
         return Vec::new();
     };
-    let callable = triggers_workflow_call(doc);
+    let callable = has_event(doc, "workflow_call");
+    let pull_target = has_event(doc, "pull_request_target");
     let workflow_permissions = mapping_get(doc, "permissions");
     let Some(jobs) = mapping_get(doc, "jobs").and_then(Value::as_mapping) else {
         return Vec::new();
@@ -106,7 +111,15 @@ fn workflow_checkouts(value: &Value, assume_unspecified: bool) -> Vec<Checkout> 
         let job_name = scalar_name(job_id);
         let (proof, declared) = job_proof(job, workflow_permissions, assume_unspecified);
         // This labels a permitted maximum, not the caller's actual runtime grant.
-        collect_steps(job, &job_name, &proof, callable && declared, &mut checkouts);
+        collect_steps(
+            job,
+            &job_name,
+            &proof,
+            callable && declared,
+            pull_target,
+            default_branch,
+            &mut checkouts,
+        );
     }
     checkouts
 }
@@ -116,6 +129,8 @@ fn collect_steps(
     job_name: &str,
     proof: &Proof,
     declared_maximum: bool,
+    pull_target: bool,
+    default_branch: Option<&str>,
     checkouts: &mut Vec<Checkout>,
 ) {
     let Some(steps) = mapping_get(job, "steps").and_then(Value::as_sequence) else {
@@ -137,6 +152,11 @@ fn collect_steps(
             step: index + 1,
             verdict,
             declared_maximum,
+            reference: if pull_target {
+                refs::classify(step, default_branch)
+            } else {
+                RefRisk::Base
+            },
         });
     }
 }
@@ -152,31 +172,4 @@ fn scalar_name(key: &Value) -> String {
 
 fn mapping_get<'a>(map: &'a Mapping, key: &str) -> Option<&'a Value> {
     map.get(Value::String(key.to_owned()))
-}
-
-fn finding(
-    rel: &str,
-    line: usize,
-    job: &str,
-    step: usize,
-    reason: &str,
-    declared_maximum: bool,
-) -> RuleFinding {
-    let access = if declared_maximum {
-        "the reusable workflow's declared permissions may allow GITHUB_TOKEN write access"
-    } else {
-        "the GITHUB_TOKEN can write"
-    };
-    RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: rel.to_string(),
-        line,
-        message: format!(
-            "{rel}:{line}: job `{job}` step {step} uses actions/checkout while {access} \
-             ({reason}), but persist-credentials is not false. actions/checkout writes \
-             that token into the git credential store unless with.persist-credentials is false."
-        ),
-        import: None,
-        target: Some(job.to_string()),
-    }
 }

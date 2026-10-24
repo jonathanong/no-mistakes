@@ -1,4 +1,4 @@
-use super::checkout::analyze;
+use super::analysis_tests::analyze;
 use super::{gha_kind, RULE_ID};
 
 #[path = "assume_write_tests.rs"]

@@ -1,0 +1,11 @@
+name: head-empty
+on: pull_request_target
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: false

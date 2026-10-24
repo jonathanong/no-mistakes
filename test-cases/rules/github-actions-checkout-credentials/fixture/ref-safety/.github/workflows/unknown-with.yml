@@ -1,0 +1,14 @@
+on: pull_request_target
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: null
+      - uses: actions/checkout@v4
+        with: ${{ inputs.checkout }}
+      - uses: actions/checkout@v4
+        with: [input]

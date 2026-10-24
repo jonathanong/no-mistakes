@@ -9,7 +9,8 @@ call the GitHub API with that token. The default is to persist credentials, so
 an omitted input is not safe when the token can write.
 
 The rule reports persisted credentials under declared write-capable bounds,
-and inputs it cannot analyze.
+pull-request head checkouts in trusted `pull_request_target` workflows, and
+inputs it cannot analyze.
 Action files that cannot grant a token are skipped.
 
 ## What it catches
@@ -22,7 +23,8 @@ have no job permissions of their own, and a pasted `permissions` or
 `workflow_call` key is not applied by GitHub.
 
 Only actual `actions/checkout` steps are judged: a valid `pull_request_target`
-workflow without a checkout produces no finding. It flags a checkout when both are true:
+workflow without a checkout produces no finding. It reports a credential-
+persistence finding when both are true:
 
 - `with.persist-credentials` is omitted or a literal true (`true` or the
   string `true` in any letter case). A null value is unanalyzable. YAML treats
@@ -65,9 +67,49 @@ shared unanalyzable policy unless persistence is literal false. This includes
 credential is safe. A null `with` is treated like an omitted `with`.
 Invalid YAML also uses that policy and includes the parser error and location.
 
-`persist-credentials: false` is allowed even when the token can write. The
+`persist-credentials: false` clears the credential-persistence risk even when
+the token can write; the independent ref check below still applies. The
 checkout name is `actions/checkout` with an optional ref and trailing slash.
 `actions/checkout/extra`, a local path, and `docker://` are different actions.
+
+## `pull_request_target` refs
+
+This trusted event has an independent ref obligation. A checkout of
+`${{ github.event.pull_request.head.sha }}`,
+`${{ github.event.pull_request.head.ref }}`, `${{ github.head_ref }}`, or a
+`refs/pull/*` ref is a definite finding under every policy, even with literal
+`persist-credentials: false` and read-only, empty, or missing permissions.
+Pull-request code may expose trusted credentials or runner context; removing
+stored git credentials does not make that code trusted.
+
+With the workflow's repository, omitted or empty-string `ref` uses the event's
+base-side ref. Exact expressions for `github.sha`, `github.ref`,
+`github.base_ref`, `github.event.pull_request.base.sha`,
+`github.event.pull_request.base.ref`, and
+`github.event.repository.default_branch` also establish a base-side ref.
+Literal default-branch names require the explicit `defaultBranch` option below;
+no branch name is guessed. Other expressions, unsupported values (including
+null `ref`), and unresolved literals use `options.unanalyzable`, even when
+persistence is false.
+
+Base proofs also require an omitted or empty-string `repository`, or an exact
+expression for `github.repository`, `github.event.repository.full_name`, or
+`github.event.pull_request.base.repo.full_name`. An unresolved repository or
+PR-fork repository makes the ref proof unknown: the same branch name in a fork
+is not proof of base code. Known PR-head refs remain definite risks regardless
+of that override. This is ref-resolution evidence, not a separate repository
+rule.
+
+Credential and ref obligations are independent and can produce separate rows
+at the same checkout. A known persisted-write finding remains failing even
+when an unresolved ref becomes advisory or is ignored. Outside
+`pull_request_target`, the ref obligation does not apply.
+
+See the [GitHub context semantics][contexts] and
+[checkout input defaults][checkout-inputs].
+
+[contexts]: https://docs.github.com/en/actions/reference/workflows-and-actions/contexts
+[checkout-inputs]: https://github.com/actions/checkout/blob/v4/src/input-helper.ts
 
 ## Options
 
@@ -78,6 +120,17 @@ judged as write. Literal declared bounds are checked independently of this
 option; a `workflow_call` write bound with persistence remains an ordinary
 unsafe finding. A null `permissions:` value
 stays unknown when the option is on. Unknown option keys are rejected.
+`defaultBranch` is an optional literal convention for this repository's default
+branch. It has no default. For example, `defaultBranch: integration` accepts
+`with.ref: integration` and `with.ref: refs/heads/integration` when the checkout
+repository is statically the base repository. A `refs/heads/` prefix on the
+option is normalized. Empty names, expression-valued names, and `refs/pull/*`
+conventions are configuration errors; a PR ref cannot be whitelisted by this
+option. Bare 40- or 64-character hex values remain unknown because checkout
+can interpret them as commit IDs; use `refs/heads/<configured-name>` for such
+a branch name. The semantic `${{ github.event.repository.default_branch }}` works
+without configuring a literal name. This option does not infer token permissions.
+
 Listing the rule is what turns it on. Product defaults do not enable it.
 
 ```yaml
@@ -86,12 +139,21 @@ rules:
     scope: repository
     options:
       assumeWriteWhenUnspecified: true
+      defaultBranch: integration # Only when this is the repository default branch.
       unanalyzable: report
 ```
 
 ## Upgrading
 
-This changes the default result of an already enabled rule. Unknown checkout
+For `pull_request_target`, a base-side checkout in the base repository with
+literal false remains quiet even under write job permissions. A PR-head ref
+with literal false now reports a distinct, definite risk under every policy,
+regardless of permissions. Unresolved refs or repositories follow the shared
+policy. Declare `defaultBranch` for literal default-branch names, or use the
+semantic default-branch expression. Use a base repository, a base-side ref,
+AND literal false to resolve both obligations.
+
+This also changes the default result of an already enabled rule. Unknown checkout
 credentials used to be silently skipped; `options.unanalyzable` now defaults
 to `report`, which emits failing findings. For checkouts that might persist
 credentials, review these previously silent cases:
@@ -181,6 +243,22 @@ jobs:
       - uses: actions/checkout@v4
 ```
 
+This trusted-event checkout is also unsafe despite disabling persistence and
+having an empty permission bound:
+
+```yaml
+on: pull_request_target
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+```
+
 ## Fix
 
 Set the input to false:
@@ -191,7 +269,19 @@ Set the input to false:
           persist-credentials: false
 ```
 
-The same fix applies to `permissions: write-all` and to a job block that grants
+For `pull_request_target`, resolve both obligations with a trusted repository
+and base-side ref as well:
+
+```yaml
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.sha }}
+          persist-credentials: false
+```
+
+The same persistence fix applies to `permissions: write-all` and to a job block
+that grants
 any write scope above. Narrowing the token to `contents: read` is the other fix
 when the job does not need to write. For reusable workflows, use literal
 read-only permissions or disable persistence; a declared write maximum remains
@@ -204,7 +294,10 @@ permissions are a definite violation when credentials persist. A null
 
 ### Effort
 
-- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+- Runs at `max` only. Configuring `effort: low` on the rule, or as a repository
+  or CLI default, is not an error. `check` records the warning
+  `requested effort low; effective effort max because this rule has no low implementation`
+  and runs the rule at `max`.
 
 ### Unanalyzable inputs
 
@@ -216,19 +309,24 @@ Definite violations remain failing under every policy.
 Expressions or unsupported values in `persist-credentials`, non-null
 non-mapping `with`, custom `with.token`, unknown permission scopes/access values,
 and permissions absent at both job and workflow levels are unanalyzable.
+For `pull_request_target`, unresolved refs or checkout repositories also use
+this policy, independently of credential diagnostics.
 For the default `GITHUB_TOKEN`, literal reusable write bounds with omitted or
 literal true persistence are ordinary findings. Custom tokens and unknown
 persistence still follow their independent unanalyzable handling.
 Known write grants still establish a violation even beside unknown scopes.
-Literal `persist-credentials: false` is safe regardless of token or permissions.
-Read-only or empty permissions without a custom token remain safe when
-persistence is literal or omitted. An unknown persistence input still follows
-the unanalyzable policy even with literal read-only permissions. A null `with`
+Literal `persist-credentials: false` clears the credential obligation regardless
+of token or permissions; the independent `pull_request_target` ref obligation
+still applies.
+Read-only or empty permissions without a custom token clear the credential
+obligation when persistence is literal or omitted. An unknown persistence input
+still follows the unanalyzable policy even with literal read-only permissions. A null `with`
 is treated like omitted `with`.
 
-Diagnostics name the file, job, step, and a static rewrite: set
+Credential diagnostics name the file, job, step, and a static rewrite: set
 `with.persist-credentials: false`, or use the default token with literal
-read-only permissions. Invalid YAML reports its parser error and line;
+read-only permissions. Ref diagnostics require a base repository, a base-side
+ref, AND literal false. Invalid YAML reports its parser error and line;
 job and step are `unknown` because the document could not be parsed.
 Repair the YAML before relying on a clean result. Suppression comments apply
 to both findings and advisories; malformed YAML supports file suppression
@@ -240,7 +338,8 @@ Use a YAML comment. `no-mistakes-disable-next-line github-actions-checkout-crede
 suppresses the next line. `no-mistakes-disable-line github-actions-checkout-credentials`
 suppresses the same line. `no-mistakes-disable-file github-actions-checkout-credentials`
 in the leading comment block suppresses the file. The standalone Rust `check()`
-applies these directives too; its findings-only result omits advisories.
+applies these directives too; its findings-only result omits advisories. A
+directive on a checkout suppresses both credential and ref rows at that line.
 
 ```yaml
 # no-mistakes-disable-next-line github-actions-checkout-credentials

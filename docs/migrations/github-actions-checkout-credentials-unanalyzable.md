@@ -6,6 +6,40 @@ already listed, the shared `options.unanalyzable` policy now defaults to
 `report`: unknown inputs become failing findings in CLI and programmatic checks.
 The rule remains opt-in.
 
+## Trusted-event ref checks
+
+`pull_request_target` now checks the ref independently of credential persistence.
+Base-repository/base-side refs with literal `persist-credentials: false` remain
+quiet even with write job permissions. PR-head expressions (`head.sha`,
+`head.ref`, `github.head_ref`) and `refs/pull/*` refs remain definite risks under
+all policies, even with false and read-only, empty, or missing permissions.
+Unresolved refs and repository overrides use the shared policy.
+
+Omitted/empty refs and the documented base-side context expressions are known
+base refs for the base repository. For literal branch names, explicitly set
+`options.defaultBranch: integration` (using your repository's actual default);
+this also accepts `refs/heads/integration`. No branch name is built in.
+`${{ github.event.repository.default_branch }}` needs no convention option.
+An empty, expression-valued, or PR-ref convention is a configuration error.
+A same-named branch in a PR fork is unknown, not a base proof.
+
+The static rewrite resolves both risks:
+
+```yaml
+with:
+  repository: ${{ github.repository }}
+  ref: ${{ github.sha }}
+  persist-credentials: false
+```
+
+The two obligations can produce separate rows on one checkout. Known credential
+failures remain hard findings under `advise` and `ignore` even when ref uncertainty
+becomes advisory or disappears. Outside this event, existing ref behavior is
+unchanged. See the
+[complete ref contract](../rules/github-actions-checkout-credentials.md#pull_request_target-refs).
+
+## Credential persistence
+
 When credentials might persist, review these previously silent cases:
 
 - `permissions` missing at both job and workflow levels: repository or
@@ -23,9 +57,9 @@ When credentials might persist, review these previously silent cases:
 - Invalid YAML: the parser cannot establish the checkout inputs and permissions.
 
 Other unsupported permission and persistence shapes follow the same policy.
-Literal `with.persist-credentials: false` remains safe, including with a custom
-token. A null `with` is treated like an omitted `with`; other non-mapping `with`
-values are unknown.
+Literal `with.persist-credentials: false` clears the credential risk, including
+with a custom token; the trusted-event ref check still applies. A null `with`
+is treated like an omitted `with`; other non-mapping `with` values are unknown.
 
 The [reviewed unchanged old `abstain` fixture/configuration snapshot][reviewed-abstain]
 exited 0 with no findings on the base and exited 1 with 36 findings on the head.

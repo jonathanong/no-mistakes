@@ -16,6 +16,7 @@ pub fn run(
     let mut diagnostics = AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let options: Options = rule.try_rule_options()?;
+        let default_branch = options.default_branch()?;
         let files = rules::selected_rule_files(root, config, rule, files)?;
         let policy = config.effective_rule_analysis(rule)?.unanalyzable;
         let per_file: Vec<_> = files
@@ -28,6 +29,7 @@ pub fn run(
                     sources,
                     policy,
                     defer_suppression,
+                    default_branch,
                 )
             })
             .collect();
@@ -51,6 +53,7 @@ fn check_file(
     sources: &SourceStore,
     policy: Unanalyzable,
     defer_suppression: bool,
+    default_branch: Option<&str>,
 ) -> AnalysisDiagnostics {
     let mut diagnostics = AnalysisDiagnostics::default();
     let rel = relative_slash_path(root, path);
@@ -58,7 +61,15 @@ fn check_file(
         return diagnostics;
     }
     match sources.read_path(path) {
-        Ok(content) => diagnostics = checkout::analyze(&rel, &content, assume_unspecified, policy),
+        Ok(content) => {
+            diagnostics = checkout::analyze_with_default_branch(
+                &rel,
+                &content,
+                assume_unspecified,
+                policy,
+                default_branch,
+            )
+        }
         Err(error) => {
             let finding = rules::github_actions_workflow_files::unreadable_finding(
                 &error,

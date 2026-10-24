@@ -1,4 +1,4 @@
-use super::super::checkout::analyze;
+use super::super::analysis_tests::analyze;
 use crate::codebase::rules::RuleFinding;
 
 #[path = "assume_write_fixture_tests.rs"]

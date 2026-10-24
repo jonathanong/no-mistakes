@@ -176,3 +176,7 @@ Definite persisted-write violations, including unsafe declared reusable bounds,
 remain failures under every policy. Job permissions override workflow defaults,
 and a valid workflow without a checkout step is not a finding. See
 [checkout credential analysis](../rules/github-actions-checkout-credentials.md#analysis).
+For `pull_request_target`, PR-head refs fail even with false persistence;
+unresolved refs/repositories use the shared policy. Configure `defaultBranch`
+in rule YAML for literal default-branch names. Separate credential and ref risks
+can produce separate rows on one checkout.

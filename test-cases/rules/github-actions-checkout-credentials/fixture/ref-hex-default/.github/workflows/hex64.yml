@@ -1,0 +1,16 @@
+# Bare hex text can be a commit ID; only the qualified branch proves the convention.
+on: pull_request_target
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: "bcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbc"
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: "refs/heads/bcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbc"
+          persist-credentials: false

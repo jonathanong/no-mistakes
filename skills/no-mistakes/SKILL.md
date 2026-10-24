@@ -76,7 +76,11 @@ follow `unanalyzable: report | advise | ignore` (default `report`). Set
 read-only permissions. Reusable declarations are known upper bounds; unsafe
 write bounds stay failing under every policy. Job permissions override workflow
 defaults, and valid workflows without checkout have no finding. Inspect advisories before
-treating a run as clean.
+treating a run as clean. For `pull_request_target`, a PR-head ref is a definite
+risk even with false persistence; unresolved refs/repositories follow the policy.
+Use the base repository, a base-side ref, AND literal false. Declare YAML
+`options.defaultBranch` for a literal default-branch name; no name is guessed.
+Credential/ref risks can produce separate rows on the same checkout.
 
 Repository and rule settings use `effort` and `unanalyzable`; the older
 SQL-specific `unanalyzableSql` setting remains an alias.

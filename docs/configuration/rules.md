@@ -210,6 +210,15 @@ permissions, custom tokens (including `secrets.GITHUB_TOKEN`), and invalid YAML;
 `report` is the default. Definite violations remain failing under every policy.
 The rule stays off until a configuration lists it.
 
+For `pull_request_target`, PR-head refs are definite risks even with false
+persistence; unresolved refs or repositories use the shared policy. The optional
+`options.defaultBranch` names this repository's literal default branch (for
+example, `integration`), also accepting `refs/heads/integration`. It has no
+built-in branch name. Empty, expression-valued, and PR-ref conventions are
+configuration errors. A base-side ref also needs the base repository. Credential
+and ref obligations can produce separate rows; neither policy hides known
+credential failures. See the [ref contract](../rules/github-actions-checkout-credentials.md#pull_request_target-refs).
+
 For [`github-actions-download-integrity`](../rules/github-actions-download-integrity.md),
 `options.trustedHosts` defaults to `localhost`, `127.0.0.1`, `api.github.com`,
 and `objects.githubusercontent.com`. Omitting the option keeps that default.
