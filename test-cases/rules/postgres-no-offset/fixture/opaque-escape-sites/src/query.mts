@@ -44,3 +44,9 @@ export class RuntimeReceiver {
     );
   }
 }
+export function suppressedEscape(query: QueryExecutor) {
+  // no-mistakes-disable-next-line postgres-no-offset
+  helper( // CLEAR: suppression belongs to the displayed invocation line.
+    query,
+  );
+}
