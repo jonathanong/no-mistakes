@@ -7,11 +7,11 @@ implementation. Baseline and candidate ran `check --root <saved fixture>
 executables have distinct SHA-256 hashes:
 
 - Baseline: `a39870ab344c278df4effb20448429837277cdea284411c00bb9849ced3daee5`
-- Candidate: `7cc9ee03f562076901cff088d65dc53d2ee57872f5a657290501e1152015efc2`
+- Candidate: `394641c9247fde0cd23abdb84d5250c747cce21ed645c7c2d5d4cad5822f222d`
 
-All 107 configurations were compared by stdout, stderr and exit status.
-89 are byte-identical; 18 change intentionally. Repeating the comparison after
-the rebase retained all 107 prior candidate reports, stderr and statuses.
+All 108 configurations were compared by stdout, stderr and exit status.
+91 are byte-identical; 17 change intentionally. The comparison records the final
+procedural correction as well as the two default changes.
 [The comparison](check-comparison.json) retains counts, statuses and hashes.
 
 | Saved configuration | Before | After |
@@ -35,9 +35,12 @@ rule uses its own selected files and `sqlInclude`, rather than the union of
 prepared SQL facts. Snapshot catalog rules read JSONC and are outside this
 migration-parser path.
 
-Existing procedural fixtures intentionally gain recovery diagnostics, including
-the constraint-validation DO block's unsupported `END IF`. Tests retain their
-original definite-violation assertions and separately check the recovery markers.
+Recognized `END IF` recovery markers are excluded only from a peeled `DO`
+body. Existing paired constraint-validation migrations remain passing, while
+standalone `END IF` and unsupported SQL inside the body still report. Saved
+procedural controls compare pre-fix head `253c6989b` (four findings) with the
+corrected parser (two findings), retaining the unknown statement and top-level
+`END IF`. Definite-violation assertions remain intact.
 An explicit `ignore` policy still omits only unanalyzable findings. Standalone
 idempotent-insert source read errors remain errors; its prepared aggregate scan
 and generated-write scan retain their existing recorded-read-error tolerance.
@@ -54,7 +57,7 @@ fixtures cover `ALTER DEFAULT PRIVILEGES`, `CREATE PUBLICATION` and
 
 Validation:
 
-- The complete locked all-features workspace CI test script passes: 13,270
+- The complete locked all-features workspace CI test script passes: 13,271
   library tests, 444 binary tests and 1,387 integration tests. Three existing
   library tests remain ignored. This includes all 86 contract tests and the
   executable rule-documentation examples.
@@ -67,10 +70,11 @@ Validation:
   marker extraction, prepared projection and dynamic merge reached 100% line
   coverage; shared routing reached 98.21%.
   [The original focused report](focused-coverage.json) records that provenance.
-- Review-source `f769f4d56` coverage ran 222 focused parser, migration, prepared
-  and schema-policy tests before the final rebase. The review Rust patch is
-  unchanged by that rebase. New terminator ownership and the extracted marker
+- Final review-source `d1745ce2c` coverage ran 223 focused parser, migration,
+  prepared and schema-policy tests. New COPY ownership and the extracted marker
   helper have 100% line coverage; SQL text normalization also has 100%.
+  The procedural filter is exercised in valid, unknown-sibling and top-level
+  controls.
   [The review report](review-coverage.json) retains all seven affected file
   totals. No filenames were excluded from either coverage run.
 - Complete standalone and aggregate Node check reports match across the default,
@@ -82,4 +86,4 @@ Validation:
 
 No public report fields are added. The asynchronous Node check API and CLI share
 the corrected request-owned facts. No `query_annotation` or `relative_scope`
-files are edited. All five task worker worktrees have been removed.
+files are edited. All seven task worker worktrees have been removed.

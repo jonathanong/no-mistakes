@@ -22,7 +22,8 @@ Valid but unsupported statements, including `ALTER DEFAULT PRIVILEGES`,
 `CREATE PUBLICATION`, and `REFRESH MATERIALIZED VIEW`, can be reported alongside
 invalid SQL. Parsed sibling statements in the same file still contribute their
 schema facts. A `COPY ... FROM STDIN` data payload is not reported as a failed
-SQL statement.
+SQL statement. Recognized `END IF` terminators in a peeled `DO` body
+are also excluded; unsupported SQL within that body still reports.
 
 The rule's configured roots, path filters, and `sqlInclude` determine which
 files are checked. Set `options.unanalyzable` on a rule application to `report`

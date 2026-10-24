@@ -91,25 +91,25 @@
         "percent": 0.0
       },
       "functions": {
-        "count": 11,
-        "covered": 11,
+        "count": 13,
+        "covered": 13,
         "percent": 100.0
       },
       "instantiations": {
-        "count": 11,
-        "covered": 11,
+        "count": 13,
+        "covered": 13,
         "percent": 100.0
       },
       "lines": {
-        "count": 137,
-        "covered": 131,
-        "percent": 95.62043795620438
+        "count": 146,
+        "covered": 140,
+        "percent": 95.8904109589041
       },
       "regions": {
-        "count": 224,
-        "covered": 209,
+        "count": 234,
+        "covered": 219,
         "notcovered": 15,
-        "percent": 93.30357142857143
+        "percent": 93.58974358974358
       }
     }
   },
