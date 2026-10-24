@@ -112,8 +112,11 @@ pub fn configure_nextjs_api_route_source_scope(
     {
         return;
     }
-    let roots =
-        crate::codebase::rules::nextjs_no_api_routes::target_roots(root, config, Some(inferred));
+    let roots = crate::codebase::rules::nextjs_no_api_routes::target_roots(
+        &normalize_path(root),
+        config,
+        Some(inferred),
+    );
     let matches = |path: &PathBuf| {
         crate::codebase::rules::nextjs_no_api_routes::is_nextjs_api_route(path, &roots)
     };
