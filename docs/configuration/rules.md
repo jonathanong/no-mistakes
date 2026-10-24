@@ -15,8 +15,17 @@ rules:
 Common fields: `name`, `rule`, `message`, `enabled`, `projects`, `tests`,
 `scope`, `include`, `exclude`, and rule-specific `options`.
 
-Rules are opt-in. `include` and `exclude` filters apply to each rule
-application and are interpreted relative to the configured root.
+Rules are opt-in. Top-level `include` and `exclude` filters narrow each rule
+application within its selected projects. Shared project scope filtering accepts
+paths relative to either the repository root or the selected project root; a
+matching glob does not select files from an unselected project. Repository-scoped
+applications use repository-relative paths.
+
+Rule-specific `options.include` and `options.exclude` can have different
+selection semantics. For example, Storybook's `options.include` explicitly adds
+project-relative components alongside export-kind selections. Use a top-level
+`include` to restrict the entire Storybook application; see
+[`require-storybook-stories`](../rules/require-storybook-stories.md#options-and-defaults).
 
 For [`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md),
 `options.unanalyzableSql` remains an alias for `options.unanalyzable`.

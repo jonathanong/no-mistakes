@@ -1,0 +1,12 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+  admin:
+    type: nextjs
+    root: admin
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      include: [components/**/*.tsx]
