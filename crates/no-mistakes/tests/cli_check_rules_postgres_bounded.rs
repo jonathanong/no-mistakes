@@ -249,7 +249,7 @@ fn unique_index_shape_guards_survive_cli_preparation() {
 #[test]
 fn catalog_key_ownership_and_view_policies_survive_cli_preparation() {
     for (directory, config, expected) in [
-        ("catalog-resolution", "key-resolution.yml", 5),
+        ("catalog-resolution", "key-resolution.yml", 6),
         ("catalog-resolution", "key-operators.yml", 4),
         ("catalog-resolution", "key-booleans.yml", 1),
         ("catalog-resolution", "view-bounds.yml", 1),
@@ -260,4 +260,31 @@ fn catalog_key_ownership_and_view_policies_survive_cli_preparation() {
         let actual = findings_of(check_in(&fixture().join(directory), config));
         assert_eq!(actual.len(), expected, "{config}: {actual:?}");
     }
+}
+
+#[test]
+fn schemaless_bare_catalog_keys_still_judge_qualified_tables() {
+    let root = fixture().join("schemaless-key-resolution");
+    let mut actual = findings_of(check_in(&root, "qualified-bare-tables.yml"));
+    actual.sort();
+    assert_eq!(
+        actual,
+        [
+            (
+                "sql/qualified-bare-tables.sql".to_string(),
+                1,
+                "table:big".to_string(),
+            ),
+            (
+                "sql/qualified-bare-tables.sql".to_string(),
+                2,
+                "table:big".to_string(),
+            ),
+            (
+                "sql/qualified-bare-tables.sql".to_string(),
+                3,
+                "table:b".to_string(),
+            ),
+        ]
+    );
 }

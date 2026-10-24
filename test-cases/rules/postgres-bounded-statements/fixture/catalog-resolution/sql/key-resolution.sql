@@ -9,3 +9,5 @@ SELECT 1 FROM public.customer_accounts AS c JOIN external_email_source AS e ON t
 SELECT 1 FROM public.customer_accounts AS c JOIN get_email_intake_ids() AS e(email_intake_id) ON true WHERE email_intake_id = $1;
 -- A self-join creates two possible owners even though both aliases share one catalog table.
 SELECT 1 FROM public.customer_accounts AS l JOIN public.customer_accounts AS r ON l.id = r.id WHERE email_intake_id = $1;
+-- LATERAL remains a possible owner, so the visible table's unique key cannot clear this read.
+SELECT 1 FROM public.customer_accounts AS c, LATERAL (SELECT c.id) AS l WHERE email_intake_id = $1;

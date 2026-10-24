@@ -315,7 +315,7 @@
   "views": {
     "public.bounded_customer_view": {
       "materialized": false,
-      "definition": "SELECT id, customer_id FROM public.owner_jobs"
+      "definition": "SELECT customer_id FROM public.owner_jobs GROUP BY customer_id UNION SELECT customer_id FROM public.owner_jobs"
     },
     "public.unbounded_archive": {
       "materialized": false,

@@ -47,6 +47,7 @@ fn a_unique_unqualified_key_owner_bounds_joined_known_tables() {
             (7, "table:public.customer_accounts"),
             (9, "table:public.customer_accounts"),
             (11, "table:public.customer_accounts"),
+            (13, "table:public.customer_accounts"),
         ]
     );
 }

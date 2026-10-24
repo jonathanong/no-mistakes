@@ -1,0 +1,36 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "clash": {
+      "relationKind": "table",
+      "columns": {},
+      "primaryKey": null,
+      "indexes": {}
+    },
+    "exact_view": {
+      "relationKind": "table",
+      "columns": {},
+      "primaryKey": null,
+      "indexes": {}
+    },
+    "public.exact_table": {
+      "relationKind": "table",
+      "columns": {},
+      "primaryKey": null,
+      "indexes": {}
+    },
+    "big": {
+      "relationKind": "table",
+      "columns": {},
+      "primaryKey": null,
+      "indexes": {}
+    }
+  },
+  "views": {
+    "clash": {"materialized": false, "definition": "SELECT 1"},
+    "public.exact_view": {"materialized": false, "definition": "SELECT 1"},
+    "exact_table": {"materialized": false, "definition": "SELECT 1"},
+    "archive.big": {"materialized": false, "definition": "SELECT 1"}
+  }
+}

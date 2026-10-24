@@ -54,8 +54,11 @@ or `unbounded`, for example `viewBounds: {"public.small_codes": bounded,
 "public.activity_feed": unbounded}`. These are explicit cardinality assertions;
 the rule does not infer a bound from a view's definition.
 
-- `bounded` declares that the view supplies a finite set of rows and can size
-  another relation through a unique-key join.
+- `bounded` is an unchecked user assertion that the view supplies a finite set of
+  rows. The rule trusts it without inspecting the SQL definition, including when
+  the view is an `UPDATE` or `DELETE` target. For example, a `GROUP BY` or `UNION`
+  view is still trusted if configured `bounded`; confirm its cardinality yourself.
+  A bounded view can also size another relation through a unique-key join.
 - `unbounded` treats the view as an unsized relation. A statement cap can bound
   it; otherwise the finding targets `view:<catalog-name>`.
 - Views without a policy retain their `unknown-relation` verdicts. Use
