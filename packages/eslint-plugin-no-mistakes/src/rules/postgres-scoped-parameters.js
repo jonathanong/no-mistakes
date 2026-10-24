@@ -18,7 +18,14 @@ function declaredProperties(target, context, options) {
   if (options.executorTypeNames.length === 0) return null;
   const services = context?.sourceCode?.parserServices;
   const annotation = target.typeAnnotation?.typeAnnotation;
-  if (!services?.program || !services.esTreeNodeToTSNodeMap || !annotation) return null;
+  // Parser autofix fallback programs cannot resolve imported option contracts.
+  if (
+    !services?.program ||
+    services.program.getCompilerOptions().noResolve ||
+    !services.esTreeNodeToTSNodeMap ||
+    !annotation
+  )
+    return null;
   const node = services.esTreeNodeToTSNodeMap.get(annotation);
   if (!node) return null;
   const checker = services.program.getTypeChecker();

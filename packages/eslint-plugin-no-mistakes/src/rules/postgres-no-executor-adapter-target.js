@@ -48,7 +48,8 @@ function localTarget(fn, index, property, context, options, facts) {
   if (target.type === "Identifier") {
     const services = context.sourceCode.parserServices;
     const annotation = target.typeAnnotation?.typeAnnotation;
-    if (!services.program || !annotation) return false;
+    if (!services.program || services.program.getCompilerOptions().noResolve || !annotation)
+      return false;
     const node = services.esTreeNodeToTSNodeMap?.get(annotation);
     if (!declaredOptionType(node, property, services.program.getTypeChecker(), options))
       return false;
@@ -65,7 +66,7 @@ function localTarget(fn, index, property, context, options, facts) {
   );
   if (!bound) return false;
   const services = context.sourceCode.parserServices;
-  if (services.program) {
+  if (services.program && !services.program.getCompilerOptions().noResolve) {
     const annotation = target.typeAnnotation?.typeAnnotation;
     const node = annotation && services.esTreeNodeToTSNodeMap?.get(annotation);
     if (!declaredOptionType(node, property, services.program.getTypeChecker(), options))
@@ -91,7 +92,12 @@ function localTarget(fn, index, property, context, options, facts) {
 
 function importedTarget(call, index, property, context, options, facts) {
   const services = context.sourceCode.parserServices;
-  if (!services.program || !services.esTreeNodeToTSNodeMap) return false;
+  if (
+    !services.program ||
+    services.program.getCompilerOptions().noResolve ||
+    !services.esTreeNodeToTSNodeMap
+  )
+    return false;
   const checker = services.program.getTypeChecker();
   const node = services.esTreeNodeToTSNodeMap.get(call.callee);
   const signatures = checker.getTypeAtLocation(node).getCallSignatures();

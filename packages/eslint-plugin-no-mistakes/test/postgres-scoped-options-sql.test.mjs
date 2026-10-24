@@ -20,7 +20,13 @@ function findings(rule, typed = true) {
         files: ["**/*.ts"],
         languageOptions: {
           parser: tsParser,
-          parserOptions: typed ? { project: resolve(dirname(filename), "tsconfig.json") } : {},
+          // Each test re-lints the same file; this is not an ESLint autofix cycle.
+          parserOptions: typed
+            ? {
+                project: resolve(dirname(filename), "tsconfig.json"),
+                disallowAutomaticSingleRunInference: true,
+              }
+            : {},
         },
         plugins: { "no-mistakes": plugin },
         rules: { [`no-mistakes/${rule}`]: ["error", options] },

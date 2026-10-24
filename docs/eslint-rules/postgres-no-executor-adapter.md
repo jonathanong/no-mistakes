@@ -78,6 +78,8 @@ dispatch({ query });
 ```
 
 This proof requires typed linting for both local and imported options types.
+Parser fallback programs with module resolution disabled cannot prove named or
+imported options contracts, so those arguments keep reporting.
 The shared executor discovery also follows these declared properties inside
 the helper, including a destructured alias such as
 `function load({ query: execute }: QueryOptions)`. SQL checks inspect the

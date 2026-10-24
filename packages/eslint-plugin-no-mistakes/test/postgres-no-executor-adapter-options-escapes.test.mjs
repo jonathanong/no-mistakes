@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { dirname, resolve } from "node:path";
 import tsParser from "@typescript-eslint/parser";
 import { Linter } from "eslint";
-import { describe, it } from "vitest";
+import { describe, it, vi } from "vitest";
 import { __dirname, fixture, plugin } from "./helpers.mjs";
 
 function findings(
@@ -22,7 +22,13 @@ function findings(
         files: ["**/*.ts"],
         languageOptions: {
           parser,
-          parserOptions: typed ? { project: resolve(dirname(filename), "tsconfig.json") } : {},
+          // Repeated rule assertions need the project, rather than autofix fallback.
+          parserOptions: typed
+            ? {
+                project: resolve(dirname(filename), "tsconfig.json"),
+                disallowAutomaticSingleRunInference: true,
+              }
+            : {},
         },
         plugins: { "no-mistakes": plugin },
         rules: {
@@ -38,6 +44,20 @@ function findings(
 }
 
 describe("executor option helper escapes", () => {
+  it("retains diagnostics when repeated single-run parsing loses module resolution", () => {
+    vi.stubEnv("TSESTREE_SINGLE_RUN", "true");
+    try {
+      assert.deepEqual(findings(true, undefined, "isolated-options.ts"), []);
+      assert.deepEqual(findings(true, undefined, "isolated-options.ts"), [
+        "9:passed",
+        "10:passed",
+        "12:passed",
+      ]);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it("keeps reporting when the parser cannot map the implementation body", () => {
     const parser = {
       ...tsParser,
