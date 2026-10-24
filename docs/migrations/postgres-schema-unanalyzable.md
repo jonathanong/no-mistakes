@@ -23,13 +23,15 @@ Valid but unsupported statements, including `ALTER DEFAULT PRIVILEGES`,
 invalid SQL. Parsed sibling statements in the same file still contribute their
 schema facts. A `COPY ... FROM STDIN` data payload is not reported as a failed
 SQL statement. In recognized `DO` blocks and dollar-quoted PL/pgSQL function
-and procedure bodies, procedural structure and commands such as `IF`/`ELSIF`/`ELSE`,
-`CASE`, loops, `EXIT`, `CONTINUE`, `RETURN`, `RAISE`, and `PERFORM` are not
-reported as failed SQL statements. This does not imply that those commands are
-executed or that their conditions are evaluated. Unknown SQL nested in a body
-still reports, including as the first statement after an `IF ... THEN` or loop
-prefix. Top-level `END IF` and unsupported SQL statements
-after a body still report at their own lines.
+and procedure bodies, procedural declarations and assignments, `IF`/`ELSIF`/`ELSE`,
+`CASE`, loops, `EXIT`, `CONTINUE`, `RETURN`, `RAISE`, `PERFORM`, cursor operations,
+`SELECT INTO`, `EXECUTE INTO`, diagnostics, and exception handlers are not reported
+as failed SQL statements. This does not imply that those commands are executed or
+that their conditions are evaluated. Unknown or malformed SQL nested inside their
+cursor, loop-query, `SELECT`, or `EXECUTE` payloads still reports, as does unknown
+SQL after an `IF ... THEN` or loop prefix. Top-level assignment/declaration-shaped statements,
+`END IF`, and unsupported SQL statements after a body still report at their own
+lines.
 
 The rule's configured roots, path filters, and `sqlInclude` determine which
 files are checked. Set `options.unanalyzable` on a rule application to `report`

@@ -41,6 +41,28 @@ fn procedural_bodies_filter_commands_but_retain_unknown_sql_markers() {
                 (15, "DECLARE bad_cursor"),
             ][..],
         ),
+        (
+            "unknown-payloads.sql",
+            &[
+                (7, "FROBULATE"),
+                (8, "FROBULATE"),
+                (9, "SELECT"),
+                (10, "GET DIAGNOSTICS"),
+                (11, "SELECT"),
+            ][..],
+        ),
+        (
+            "top-level-shapes.sql",
+            &[(2, "DECLARE"), (3, "local_count")][..],
+        ),
+        ("unknown-loop-query.sql", &[(6, "FOR")][..]),
+        (
+            "command-followups.sql",
+            &[
+                (11, "FROBULATE after_command_do"),
+                (20, "FROBULATE after_command_function"),
+            ][..],
+        ),
     ] {
         let path = root.join("migrations").join(name);
         let sql = std::fs::read_to_string(&path).unwrap();
