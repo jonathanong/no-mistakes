@@ -1,0 +1,13 @@
+on: workflow_call
+jobs:
+  read:
+    permissions: { contents: read }
+    runs-on: ubuntu-latest
+    steps:
+      # Read-only bounds do not remove the existing unknown-persistence policy.
+      - uses: actions/checkout@v4
+        with: { persist-credentials: "${{ inputs.persist }}" }
+      - uses: actions/checkout@v4
+        with: { token: "${{ secrets.RELEASE_PAT }}" }
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false, token: "${{ secrets.RELEASE_PAT }}" }

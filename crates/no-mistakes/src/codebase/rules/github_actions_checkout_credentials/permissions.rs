@@ -59,39 +59,29 @@ enum Access {
     Unknown,
 }
 
-pub(super) fn triggers_workflow_call(doc: &Mapping) -> bool {
-    mapping_get(doc, "on").is_some_and(is_workflow_call)
-}
-
 pub(super) fn job_proof(
     job: &Mapping,
     workflow: Option<&Value>,
-    callable: bool,
     assume_unspecified: bool,
-) -> Proof {
+) -> (Proof, bool) {
     let specified = if let Some(permissions) = mapping_get(job, "permissions") {
         Some(proof_of(permissions, Origin::Job))
     } else {
         workflow.map(|permissions| proof_of(permissions, Origin::Workflow))
     };
-    // No permissions key at either level. Only the opt-in treats that as write.
-    // An explicit grant on workflow_call is still not proof below.
+    // Literal declarations are known bounds, including in reusable workflows.
+    // The flag records declaration presence even when its value is unknown.
     let Some(proof) = specified else {
-        return if assume_unspecified {
+        let proof = if assume_unspecified {
             Proof::Write(
                 "permissions are unspecified and assumeWriteWhenUnspecified is set".to_string(),
             )
         } else {
             Proof::Unknown
         };
+        return (proof, false);
     };
-    // A called workflow can only keep or lower the caller token. A write
-    // grant in this file does not prove the token that actually runs.
-    if callable && matches!(proof, Proof::Write(_)) {
-        Proof::Unknown
-    } else {
-        proof
-    }
+    (proof, true)
 }
 
 fn proof_of(value: &Value, origin: Origin) -> Proof {
@@ -170,17 +160,6 @@ fn grant(origin: Origin, text: &str) -> String {
     match origin {
         Origin::Job => format!("job permissions grant {text}"),
         Origin::Workflow => format!("workflow permissions grant {text}"),
-    }
-}
-
-fn is_workflow_call(on: &Value) -> bool {
-    match on {
-        Value::String(name) => name == "workflow_call",
-        Value::Sequence(items) => items
-            .iter()
-            .any(|item| item.as_str() == Some("workflow_call")),
-        Value::Mapping(map) => map.keys().any(|key| key.as_str() == Some("workflow_call")),
-        _ => false,
     }
 }
 

@@ -1,0 +1,5 @@
+rules:
+  - rule: github-actions-checkout-credentials
+    scope: repository
+    options:
+      defaultBranch: ${{ github.event.repository.default_branch }}

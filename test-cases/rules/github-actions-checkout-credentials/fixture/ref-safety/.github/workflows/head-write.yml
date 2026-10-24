@@ -1,0 +1,32 @@
+name: head-write
+on: pull_request_target
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/pull/42/head
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/pull/42/merge
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.number }}/head
+          persist-credentials: false

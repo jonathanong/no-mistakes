@@ -3,6 +3,22 @@
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
+`check()` and check reports in `analyzeProject()` apply the shared
+`unanalyzable` policy to `github-actions-checkout-credentials`: unknown
+persistence or permissions, custom tokens, and malformed YAML report by
+default, advise without failing, or are ignored. Both APIs share suppression
+and source locations with the CLI. Reusable-workflow literal permissions are
+known upper bounds; unsafe write bounds remain findings under all policies,
+with job permissions taking precedence over workflow defaults. Only checkout
+steps are judged, so a valid `pull_request_target` workflow without checkout
+stays clean.
+`pull_request_target` also checks PR-head refs independently of persistence;
+unresolved refs/repositories use the shared policy. Configure the optional
+`defaultBranch` convention in YAML selected by `configPath`, not as a `check()`
+argument. The Node/N-API signature and report types are unchanged. A checkout
+can have separate credential and ref rows. See the
+[rule contract](rules/github-actions-checkout-credentials.md#analysis).
+
 ```js
 const { analyzeProject } = require("no-mistakes");
 (async () => {

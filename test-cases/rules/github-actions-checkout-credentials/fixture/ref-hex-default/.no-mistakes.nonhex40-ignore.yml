@@ -1,0 +1,8 @@
+rules:
+  - rule: github-actions-checkout-credentials
+    scope: repository
+    include:
+      - .github/workflows/nonhex40.yml
+    options:
+      defaultBranch: "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+      unanalyzable: ignore

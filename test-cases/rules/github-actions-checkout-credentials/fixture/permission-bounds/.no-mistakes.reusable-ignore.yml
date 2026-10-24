@@ -1,0 +1,9 @@
+rules:
+  - rule: github-actions-checkout-credentials
+    scope: repository
+    include:
+      - .github/workflows/reusable-job-write.yml
+      - .github/workflows/reusable-workflow-write.yml
+      - .github/workflows/reusable-write-all.yml
+    options:
+      unanalyzable: ignore

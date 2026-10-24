@@ -1,0 +1,2 @@
+# Invalid UTF-8 is retained only for suppression, never YAML analysis.
+ÿ

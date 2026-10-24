@@ -1,0 +1,8 @@
+rules:
+  - rule: github-actions-checkout-credentials
+    scope: repository
+    include:
+      - .github/workflows/hex64.yml
+    options:
+      defaultBranch: "bcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcbc"
+      unanalyzable: ignore

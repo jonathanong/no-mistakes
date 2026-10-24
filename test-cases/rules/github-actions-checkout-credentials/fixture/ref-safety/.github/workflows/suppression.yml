@@ -1,0 +1,35 @@
+name: suppression
+on: pull_request_target
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # no-mistakes-disable-next-line github-actions-checkout-credentials
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@v4 # no-mistakes-disable-line github-actions-checkout-credentials
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: false
+      # Both the credential and ref obligations are suppressed on this step.
+      # no-mistakes-disable-next-line github-actions-checkout-credentials
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+      - uses: actions/checkout@v4 # no-mistakes-disable-line github-actions-checkout-credentials
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true

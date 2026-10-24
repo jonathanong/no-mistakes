@@ -3,3 +3,5 @@ rules:
     scope: repository
     options:
       assumeWriteWhenUnspecified: true
+      # This fixture locks definite violations; the unanalyzable fixture tests all policies.
+      unanalyzable: ignore

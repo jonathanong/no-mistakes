@@ -1,0 +1,19 @@
+on: pull_request_target
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: integration
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/heads/integration
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/pull/42/head
+          persist-credentials: false

@@ -1,0 +1,16 @@
+# A 40-character nonhex name is a literal branch, not a commit ID.
+on: pull_request_target
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: "refs/heads/zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+          persist-credentials: false

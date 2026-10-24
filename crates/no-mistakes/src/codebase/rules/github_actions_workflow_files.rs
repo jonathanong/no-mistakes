@@ -47,3 +47,29 @@ pub(super) fn scan_files(
     super::sort_findings(&mut findings);
     Ok(findings)
 }
+
+/// Recover only directive bytes after a failed read; never analyze lossy workflow YAML.
+pub(super) fn unreadable_finding(
+    error: &std::io::Error,
+    defer_suppression: bool,
+    finding: impl FnOnce(usize) -> RuleFinding,
+) -> Option<RuleFinding> {
+    let invalid_utf8 = error
+        .get_ref()
+        .and_then(|error| error.downcast_ref::<std::string::FromUtf8Error>());
+    let line = invalid_utf8.map_or(1, |error| {
+        error.as_bytes()[..error.utf8_error().valid_up_to()]
+            .iter()
+            .filter(|&&byte| byte == b'\n')
+            .count()
+            + 1
+    });
+    let mut findings = vec![finding(line)];
+    if let Some(error) = invalid_utf8.filter(|_| !defer_suppression) {
+        super::suppress_rule_findings_with_source(
+            &mut findings,
+            &String::from_utf8_lossy(error.as_bytes()),
+        );
+    }
+    findings.pop()
+}

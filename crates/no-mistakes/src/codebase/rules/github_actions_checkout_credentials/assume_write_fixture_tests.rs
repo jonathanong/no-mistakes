@@ -64,7 +64,7 @@ fn assert_checkout_lines(root: &Path, findings: &[RuleFinding]) {
 }
 
 #[test]
-fn saved_fixture_reports_only_unspecified_permissions() {
+fn saved_fixture_keeps_declared_bounds_and_optional_unspecified_assumptions() {
     let root = assume_unspecified_root();
     let files = assume_unspecified_files(&root);
     let config = saved_config(&root, ".no-mistakes.yml");
@@ -72,6 +72,7 @@ fn saved_fixture_reports_only_unspecified_permissions() {
     assert_eq!(
         finding_ids(&findings),
         vec![
+            "callable-write.yml:build".to_string(),
             "callable.yml:build".to_string(),
             "missing.yml:build".to_string(),
             "suppressed.yml:build".to_string(),
@@ -94,7 +95,10 @@ fn saved_fixture_reports_only_unspecified_permissions() {
     let off_findings = super::super::super::check_with_files(&root, &off, &files).unwrap();
     assert_eq!(
         finding_ids(&off_findings),
-        vec!["write.yml:build".to_string()]
+        vec![
+            "callable-write.yml:build".to_string(),
+            "write.yml:build".to_string()
+        ]
     );
     assert_checkout_lines(&root, &off_findings);
     assert!(off_findings[0]
@@ -118,6 +122,7 @@ fn saved_fixture_reports_only_unspecified_permissions() {
     assert_eq!(
         finding_ids(&filtered),
         vec![
+            "callable-write.yml:build".to_string(),
             "callable.yml:build".to_string(),
             "missing.yml:build".to_string(),
             "write.yml:build".to_string(),
@@ -135,7 +140,10 @@ fn saved_fixture_reports_only_unspecified_permissions() {
     .unwrap();
     assert_eq!(
         finding_ids(&filtered_off),
-        vec!["write.yml:build".to_string()]
+        vec![
+            "callable-write.yml:build".to_string(),
+            "write.yml:build".to_string()
+        ]
     );
 }
 

@@ -200,10 +200,24 @@ until a configuration lists it.
 For [`github-actions-checkout-credentials`](../rules/github-actions-checkout-credentials.md),
 `options.assumeWriteWhenUnspecified` defaults to `false`. Leave it off unless
 the repository or organization default `GITHUB_TOKEN` can write. When it is
-true, a missing `permissions` key is judged as write, including on
-`workflow_call`. An explicit permissions value is unchanged, so a callable
-workflow that sets `contents: write` still is not a finding. The rule stays
-off until a configuration lists it.
+true, permissions absent at both job and workflow levels are judged as write,
+including on `workflow_call`. A job declaration replaces the workflow default.
+Literal reusable permissions are known upper bounds: a declared write bound
+with omitted or literal true persistence stays an ordinary unsafe finding
+under every policy, even when the caller can lower actual token access.
+`options.unanalyzable: report | advise | ignore` controls unknown persistence,
+permissions, custom tokens (including `secrets.GITHUB_TOKEN`), and invalid YAML;
+`report` is the default. Definite violations remain failing under every policy.
+The rule stays off until a configuration lists it.
+
+For `pull_request_target`, PR-head refs are definite risks even with false
+persistence; unresolved refs or repositories use the shared policy. The optional
+`options.defaultBranch` names this repository's literal default branch (for
+example, `integration`), also accepting `refs/heads/integration`. It has no
+built-in branch name. Empty, expression-valued, and PR-ref conventions are
+configuration errors. A base-side ref also needs the base repository. Credential
+and ref obligations can produce separate rows; neither policy hides known
+credential failures. See the [ref contract](../rules/github-actions-checkout-credentials.md#pull_request_target-refs).
 
 For [`github-actions-download-integrity`](../rules/github-actions-download-integrity.md),
 `options.trustedHosts` defaults to `localhost`, `127.0.0.1`, `api.github.com`,

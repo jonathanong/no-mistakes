@@ -1,4 +1,4 @@
-use super::checkout::check_source;
+use super::analysis_tests::analyze;
 use super::{gha_kind, RULE_ID};
 
 #[path = "assume_write_tests.rs"]
@@ -11,8 +11,9 @@ use std::path::{Path, PathBuf};
 const WORKFLOW: &str = ".github/workflows/ci.yml";
 const ACTION: &str = ".github/actions/local/action.yml";
 
+// Lock definite violations here; policy_tests separately checks default report and advice.
 fn check(rel: &str, source: &str) -> Vec<RuleFinding> {
-    check_source(rel, source, false)
+    analyze(rel, source, false, crate::config::v2::Unanalyzable::Ignore).findings
 }
 
 fn step_of(message: &str) -> usize {
@@ -36,7 +37,7 @@ fn identity(finding: &RuleFinding) -> String {
     )
 }
 
-fn fixture_root(scenario: &str) -> PathBuf {
+pub(super) fn fixture_root(scenario: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/github-actions-checkout-credentials/fixture")
@@ -261,14 +262,14 @@ jobs:
 }
 
 #[test]
-fn saved_fixtures_flag_only_proven_persisted_write_tokens() {
+fn ignore_policy_preserves_definite_persisted_write_findings() {
     let (root, config, files) = load_fixture("pass");
     let findings = super::check_with_files(&root, &config, &files).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 
     let (root, config, files) = load_fixture("abstain");
     let findings = super::check_with_files(&root, &config, &files).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
+    super::permission_bounds_tests::assert_legacy_abstain(&findings);
 
     let (root, config, files) = load_fixture("fail");
     let findings = super::check_with_files(&root, &config, &files).unwrap();

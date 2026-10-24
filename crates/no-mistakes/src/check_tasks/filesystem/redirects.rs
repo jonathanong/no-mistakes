@@ -104,6 +104,25 @@ pub(super) fn run(
     } else {
         config
     };
+    let mut without_checkout_credentials;
+    let config = if config.rule_configured(rules::github_actions_checkout_credentials::RULE_ID) {
+        diagnostics.append(
+            rules::github_actions_checkout_credentials::diagnostics_with_files_and_sources(
+                root,
+                config,
+                files,
+                &prepared.sources,
+                defer_suppression,
+            )?,
+        );
+        without_checkout_credentials = config.clone();
+        without_checkout_credentials
+            .rules
+            .retain(|rule| rule.rule != rules::github_actions_checkout_credentials::RULE_ID);
+        &without_checkout_credentials
+    } else {
+        config
+    };
     let mut without_manifest_fields;
     let config = if config.rule_configured(rules::PACKAGE_JSON_REQUIRED_FIELDS) {
         diagnostics.append(

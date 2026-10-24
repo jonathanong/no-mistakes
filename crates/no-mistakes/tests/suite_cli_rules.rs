@@ -11,6 +11,9 @@ mod gitignore_fixture;
 #[path = "common/saved_fixture.rs"]
 mod saved_fixture;
 
+#[path = "cli_checkout_credentials.rs"]
+mod cli_checkout_credentials;
+
 #[path = "cli_check_banned_paths.rs"]
 mod cli_check_banned_paths;
 #[path = "cli_check_deadline_evidence.rs"]

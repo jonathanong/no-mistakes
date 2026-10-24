@@ -1,0 +1,6 @@
+on: push
+permissions: { contents: write, future: write } # A known write still wins beside unknown scopes.
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4

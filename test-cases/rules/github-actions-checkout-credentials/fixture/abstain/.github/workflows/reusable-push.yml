@@ -1,4 +1,4 @@
-# push plus workflow_call still cannot prove a write token for every run.
+# Mixed triggers do not replace the missing job and workflow permissions.
 name: reusable
 on:
   push:

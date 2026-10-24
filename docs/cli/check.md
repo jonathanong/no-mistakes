@@ -168,3 +168,15 @@ unanalyzable; use a literal relation or select `max`. See
 bare in WHERE, JOIN ON, and HAVING predicates. It supports literal SQL at low
 effort and reports unsupported SQL through the shared unanalyzable policy.
 See [the rule's analysis contract](../rules/postgres-no-transformed-uuid-predicates.md#analysis).
+
+`github-actions-checkout-credentials` routes unknown persistence or permissions,
+custom tokens, and malformed workflow YAML through `options.unanalyzable`
+(`report` by default, `advise` for non-failing advice, `ignore` to omit).
+Definite persisted-write violations, including unsafe declared reusable bounds,
+remain failures under every policy. Job permissions override workflow defaults,
+and a valid workflow without a checkout step is not a finding. See
+[checkout credential analysis](../rules/github-actions-checkout-credentials.md#analysis).
+For `pull_request_target`, PR-head refs fail even with false persistence;
+unresolved refs/repositories use the shared policy. Configure `defaultBranch`
+in rule YAML for literal default-branch names. Separate credential and ref risks
+can produce separate rows on one checkout.

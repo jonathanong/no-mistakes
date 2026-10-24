@@ -68,6 +68,20 @@ configured scope, the check warns and falls back to `max` for that rule.
 JSON reports include `analysisFallbacks` for these partner fallbacks and omit
 the field when none occurred. A rule without a low implementation emits a
 named, non-failing warning when low was requested and stays at `max`.
+
+For `github-actions-checkout-credentials`, uncertain persistence, permissions,
+custom tokens (including `secrets.GITHUB_TOKEN`), and invalid workflow YAML
+follow `unanalyzable: report | advise | ignore` (default `report`). Set
+`with.persist-credentials: false` or use the default token with literal
+read-only permissions. Reusable declarations are known upper bounds; unsafe
+write bounds stay failing under every policy. Job permissions override workflow
+defaults, and valid workflows without checkout have no finding. Inspect advisories before
+treating a run as clean. For `pull_request_target`, a PR-head ref is a definite
+risk even with false persistence; unresolved refs/repositories follow the policy.
+Use the base repository, a base-side ref, AND literal false. Declare YAML
+`options.defaultBranch` for a literal default-branch name; no name is guessed.
+Credential/ref risks can produce separate rows on the same checkout.
+
 Repository and rule settings use `effort` and `unanalyzable`; the older
 SQL-specific `unanalyzableSql` setting remains an alias.
 For `shellcheck-runner`, the shared policy handles a missing executable or a
