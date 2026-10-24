@@ -215,7 +215,9 @@ effort. Rewrite SQL as a literal at the executor call or one local literal
 calls use the same SQL contract as named executors; erased type
 references create no findings. Defaulted typed parameters, typed callbacks and
 supported immutable factory bindings use the same ownership contract in
-[executor bindings](../postgres-facts/executor-bindings.md).
+[executor bindings](../postgres-facts/executor-bindings.md). Companion receiver
+arguments are exempt only for helpers selected by `executorFactoryNames`;
+opaque helper uses remain unknown even when their callback is typed.
 Unsupported executor factories and runtime
 executor escapes are diagnosed at their configured binding reference. See
 [executor bindings](../postgres-facts/executor-bindings.md). A one-hop local

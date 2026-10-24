@@ -182,3 +182,6 @@ fn low_typed_candidates_cannot_repair_missing_semantic_bindings() {
     })
     .unwrap();
 }
+
+#[path = "transport_shape_tests.rs"]
+mod transport_shape_tests;

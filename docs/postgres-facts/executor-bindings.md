@@ -28,9 +28,11 @@ findings. Dynamic or unsupported SQL is reported at its executor call; passing
 a configured executor through an unmodeled runtime use remains an unknown escape.
 
 For low SQL-structure checks, a typed parameter may default to a configured
-executor export. Typed callback parameters keep the same literal-SQL contract;
-passing a known receiver alongside that callback is transport, not another SQL
-statement. A configured factory result bound to an immutable `const`, `using`,
+executor export. Typed callback parameters keep the same literal-SQL contract.
+For a wrapper declared in `executorFactoryNames`, passing a known receiver
+alongside that callback is transport, not another SQL statement. An unconfigured
+helper still retains uncertainty for any executor passed to it. A configured
+factory result bound to an immutable `const`, `using`,
 or `await using` local is checked at its actual executor calls. Reassignment
 and unsupported defaults remain uncertain. Imported type identities can come
 from another module when explicitly declared in `effects.postgres.typedExecutors`
