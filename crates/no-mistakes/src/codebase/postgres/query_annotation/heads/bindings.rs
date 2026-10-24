@@ -110,14 +110,30 @@ impl<'a> Bindings<'a> {
             .map(|&reference| {
                 let owner = self.owner(reference)?;
                 let declaration = (owner.span.start, owner.span.end);
+                // Called closures can write outside the loop's lexical span;
+                // retain exact function ownership instead of assuming locality.
+                let function = syntax
+                    .contexts
+                    .get(&reference)
+                    .copied()
+                    .flatten()
+                    .map(|span| span.0);
+                let module_mutable = syntax
+                    .assignments
+                    .declarations
+                    .get(&declaration)
+                    .is_some_and(|initial| initial.context.function.is_none());
                 if owner.imported
                     || inside(loop_span, declaration)
                     || owner.references.iter().any(|usage| {
                         let span = (usage.span.start, usage.span.end);
                         usage.runtime
-                            && inside(loop_span, span)
-                            && (syntax.assignments.writes.contains_key(&span)
-                                || syntax.assignments.unsupported_writes.contains(&span))
+                            && (syntax.assignments.unsupported_writes.contains(&span)
+                                || syntax.assignments.writes.get(&span).is_some_and(|write| {
+                                    inside(loop_span, span)
+                                        || write.context.function != function
+                                        || module_mutable
+                                }))
                     })
                 {
                     None
