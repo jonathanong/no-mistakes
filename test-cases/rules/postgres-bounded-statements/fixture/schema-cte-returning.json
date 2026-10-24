@@ -119,15 +119,10 @@
           "nullable": false,
           "ordinalPosition": 1
         },
-        "email": {
-          "dataType": "text",
+        "source_id": {
+          "dataType": "uuid",
           "nullable": false,
           "ordinalPosition": 2
-        },
-        "name": {
-          "dataType": "text",
-          "nullable": false,
-          "ordinalPosition": 3
         }
       },
       "primaryKey": {
@@ -136,24 +131,6 @@
         ]
       },
       "indexes": {
-        "accounts_email_key": {
-          "accessMethod": "btree",
-          "unique": true,
-          "primary": false,
-          "constraintBacked": true,
-          "valid": true,
-          "ready": true,
-          "live": true,
-          "immediate": true,
-          "predicate": null,
-          "definition": "CREATE UNIQUE INDEX accounts_email_key",
-          "keys": [
-            {
-              "column": "email",
-              "expression": "email"
-            }
-          ]
-        },
         "shadows_pkey": {
           "accessMethod": "btree",
           "unique": true,
