@@ -15,8 +15,8 @@ export function aliased(query: QueryExecutor, statement: string) {
   alias(statement); // A real unknown executor call must still advise.
 }
 export function destructured(options: QueryOptions, statement: string) {
-  const { query } = options;
-  query(statement); // Receiver destructuring needs actual-call negative tracking.
+  const { query } = options; // INITIALIZER_CLEAR
+  query(statement); // ADVISE: receiver destructuring retains actual-call negative tracking.
 }
 export function nested(options: QueryOptions) {
   read('SELECT 1', unknownHelper(options)); // ADVISE: nested opaque call owns this use.
@@ -27,3 +27,29 @@ export function nested(options: QueryOptions) {
 }
 declare const Opaque: new (value: unknown) => unknown;
 declare const opaqueTag: (strings: TemplateStringsArray, ...args: unknown[]) => unknown;
+export function assignedMetadata(query: QueryExecutor, statement: string) {
+  let alias: any;
+  read('SELECT 1', alias = query); // ADVISE: assignment creates an executor escape.
+  alias(statement);
+}
+export function renamedDestructure(options: QueryOptions, statement: string) {
+  const { query: alias } = options; // INITIALIZER_CLEAR
+  alias(statement); // ADVISE: renamed receiver alias retains unknown SQL.
+}
+export function literalDestructure(options: QueryOptions) {
+  const { query: alias } = options; // INITIALIZER_CLEAR
+  alias('SELECT 1'); // ADVISE: destructuring is negative tracking, never a literal proof.
+}
+export function unsupportedDestructure(options: QueryOptions) {
+  const { query: alias, ...rest } = options; // FALLBACK: unsupported pattern retains the source use.
+  alias('SELECT 1');
+  return rest;
+}
+export function shadowedDestructure(options: QueryOptions, statement: string) {
+  unknownHelper(options); // ADVISE: the outer configured receiver still escapes.
+  {
+    const options: any = {};
+    const { query: alias } = options; // INITIALIZER_CLEAR
+    alias(statement); // SHADOW_CLEAR: an unrelated binding does not gain executor identity.
+  }
+}

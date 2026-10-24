@@ -22,3 +22,14 @@ export function returnedBind(options: QueryOptions) {
 export function unsupportedReceiverBind(options: QueryOptions | undefined) {
   read(SQL`SELECT ${options} AS value`); // BIND_CLEAR: the receiver is only bound data here.
 }
+export function assignedBind(query: QueryExecutor, statement: string) {
+  let alias: any;
+  read(SQL`SELECT ${alias = query} AS value`); // BIND_ESCAPE: assignment creates an executor escape.
+  alias(statement);
+}
+export function* yieldedBind(query: QueryExecutor) {
+  read(SQL`SELECT ${yield query} AS value`); // BIND_ESCAPE: generator suspension can expose the executor.
+}
+export function classBind(query: QueryExecutor) {
+  read(SQL`SELECT ${class { field = query }} AS value`); // BIND_ESCAPE: class field captures the executor.
+}

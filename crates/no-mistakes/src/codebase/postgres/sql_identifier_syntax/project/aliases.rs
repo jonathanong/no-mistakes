@@ -42,15 +42,31 @@ impl<'a> Visit<'a> for Aliases<'_> {
     fn visit_variable_declaration(&mut self, value: &VariableDeclaration<'a>) {
         if value.kind.is_const() {
             for declaration in &value.declarations {
-                let BindingPattern::BindingIdentifier(alias) = &declaration.id else {
-                    continue;
-                };
                 let Some((source, parts)) = declaration.init.as_ref().and_then(chain) else {
                     continue;
                 };
-                if !(parts.len() == 1 || (parts.len() == 2 && parts[1] == "query")) {
-                    continue;
-                }
+                let alias = match &declaration.id {
+                    BindingPattern::BindingIdentifier(alias)
+                        if parts.len() == 1 || (parts.len() == 2 && parts[1] == "query") =>
+                    {
+                        alias
+                    }
+                    BindingPattern::ObjectPattern(object)
+                        if parts.len() == 1
+                            && object.properties.len() == 1
+                            && object.rest.is_none() =>
+                    {
+                        let property = &object.properties[0];
+                        if property.key.static_name().as_deref() != Some("query") {
+                            continue;
+                        }
+                        let BindingPattern::BindingIdentifier(alias) = &property.value else {
+                            continue;
+                        };
+                        alias
+                    }
+                    _ => continue,
+                };
                 let Some(owner) = self.sources.get(&source) else {
                     continue;
                 };

@@ -100,6 +100,15 @@ impl<'a> Visit<'a> for Syntax {
             self.metadata.restore(previous);
         }
     }
+    fn visit_assignment_expression(&mut self, value: &oxc_ast::ast::AssignmentExpression<'a>) {
+        self.opaque_metadata(|this| walk::walk_assignment_expression(this, value));
+    }
+    fn visit_yield_expression(&mut self, value: &oxc_ast::ast::YieldExpression<'a>) {
+        self.opaque_metadata(|this| walk::walk_yield_expression(this, value));
+    }
+    fn visit_class(&mut self, value: &oxc_ast::ast::Class<'a>) {
+        self.opaque_metadata(|this| walk::walk_class(this, value));
+    }
     fn visit_function(&mut self, value: &Function<'a>, flags: ScopeFlags) {
         self.opaque_metadata(|this| walk::walk_function(this, value, flags));
     }
