@@ -37,21 +37,35 @@ function check(name, typed = false) {
       },
       { filename },
     )
-    .map((message) => message.messageId);
+    .map((message) => `${message.line}:${message.messageId}`);
 }
+
+const passed = (lines) => lines.map((line) => `${line}:passed`);
 
 describe("typed executor argument targets", () => {
   it("accepts declared local executor slots, preserving callback reports", () => {
-    assert.deepEqual(check("local.ts"), ["forward", "blocked"]);
+    assert.deepEqual(check("local.ts"), ["11:forward", "17:blocked"]);
   });
   it("keeps reporting unproven, overloaded, rest and spread targets", () => {
-    assert.deepEqual(check("unsafe.ts"), Array(20).fill("passed"));
+    assert.deepEqual(
+      check("unsafe.ts"),
+      passed([8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 25, 28, 30, 32, 35, 38, 40]),
+    );
   });
   it("rejects imported helpers with writes or direct eval, preserving shadowed bindings", () => {
-    assert.deepEqual(check("stability.ts", true), Array(11).fill("passed"));
+    assert.deepEqual(check("stability.ts", true), passed([5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]));
   });
   it("requires parser type information for imported targets", () => {
-    assert.deepEqual(check("imported.ts"), Array(26).fill("passed"));
-    assert.deepEqual(check("imported.ts", true), Array(19).fill("passed"));
+    assert.deepEqual(
+      check("imported.ts"),
+      passed([
+        3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 26, 28, 30, 31,
+        33, 35,
+      ]),
+    );
+    assert.deepEqual(
+      check("imported.ts", true),
+      passed([5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 21, 24, 26, 28, 30, 31, 33, 35]),
+    );
   });
 });

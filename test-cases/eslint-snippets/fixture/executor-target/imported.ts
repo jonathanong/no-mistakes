@@ -31,3 +31,5 @@ abstractContext(read);
 concreteContext(read);
 import { mutable } from "./helpers";
 mutable(read);
+import { ambientConst } from "./helpers";
+ambientConst(read);
