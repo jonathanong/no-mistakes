@@ -1,6 +1,6 @@
 # `rust-max-lines-per-file`
 
-Caps Rust source and test file length.
+Caps Rust source and test file length in **code lines**, not physical lines.
 
 ```yaml
 rules:
@@ -23,7 +23,29 @@ not crowd production modules.
 ## What it catches/requires
 
 Non-test Rust files must stay within `srcMax`; test files must stay within
-`testMax`. Blank lines and comments are ignored, while literal body lines count.
+`testMax`. Blank lines and comment-only lines (including documentation and
+nested block comments) are ignored. A line containing code and a trailing comment counts once.
+String and raw-string literal body lines containing text count even when they
+contain comment markers; entirely blank lines are skipped, including inside literals.
+
+A test file has basename `tests.rs` or a repository-relative path containing a
+`tests/` directory. Names such as `options_tests.rs` outside that directory use
+`srcMax`; the rule does not inspect `#[cfg(test)]` to classify files.
+
+The repository's contributor guideline is stricter: 200 physical lines for
+source and 500 for tests. Audit tracked files with the command below and split cohesive modules when they
+exceed that guideline:
+
+```sh
+git ls-files -z '*.rs' | xargs -0 wc -l
+```
+
+A passing check proves only the configured code-line limits, scopes, exclusions,
+and suppressions. For example, a nine-line file with six blank/comment-only
+lines and three code lines passes `srcMax: 3`, but fails `srcMax: 2`.
+File suppressions can also hide code-line overages;
+`check --include-suppressed --format json` exposes suppression accounting. This distinction does not change
+the rule's thresholds or counting behavior.
 
 ## Options and defaults
 

@@ -60,6 +60,10 @@ graph. Details:
 
 ## Development
 
+- Keep Rust source files within 200 physical lines and test files within 500.
+  Audit with `wc -l`; `rust-max-lines-per-file` counts code lines instead, so a
+  passing check does not establish this guideline. See the [rule](docs/rules/rust-max-lines-per-file.md).
+
 - Run `rustup update stable` before validation (`rust-toolchain.toml` pins stable).
 - When finding an error, always create a regression test
 - Continuously add test fixtures for cases you find. Which tree (`test-cases/` or `fixtures/`) a suite loads is in [Contributing](CONTRIBUTING.md); add to the tree its loader reads.
