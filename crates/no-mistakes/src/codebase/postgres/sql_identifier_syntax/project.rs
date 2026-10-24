@@ -6,6 +6,19 @@ pub(crate) fn collect(
     source: &str,
     profiles: &[EmbeddedSqlOptions],
 ) -> FileFacts {
+    collect_with_types(program, ts, source, profiles, &Default::default())
+}
+
+pub(crate) fn collect_with_types(
+    program: &Program<'_>,
+    ts: &TsFileFacts,
+    source: &str,
+    profiles: &[EmbeddedSqlOptions],
+    declared_types: &std::collections::BTreeMap<
+        EmbeddedSqlOptions,
+        Vec<crate::config::v2::schema::EffectTargetConfig>,
+    >,
+) -> FileFacts {
     let Some(module) = ts.module_bindings.as_deref() else {
         return FileFacts::default();
     };
@@ -13,10 +26,12 @@ pub(crate) fn collect(
         .iter()
         .map(|profile| {
             let mut selection = Selection::new(profile, module);
-            let (typed, unsupported, runtime) =
-                typed::collect(program, module, profile, &selection.unsupported);
+            let types = declared_types.get(profile).map_or(&[][..], Vec::as_slice);
+            let (typed, unsupported, runtime, transports) =
+                typed::collect(program, module, profile, &selection, types);
             selection.typed = typed;
             selection.runtime = runtime;
+            selection.transports = transports;
             selection.unsupported.extend(unsupported);
             selection
         })

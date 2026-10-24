@@ -29,7 +29,7 @@ export function destructured({ executor }: { executor: QueryExecutor }, sql: str
   executor(sql); // UNKNOWN
 }
 consume(QueryExecutor); // RUNTIME_TYPE
-const factory = createExecutor(); // FACTORY
+const factory = createExecutor(); // CLEAR factory transport executes no statement
 export function union(executor: QueryExecutor | undefined) {
   executor?.("/* union */ SELECT 1 OFFSET 1"); // UNSUPPORTED_TYPE
 }

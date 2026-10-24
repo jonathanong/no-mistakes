@@ -61,7 +61,14 @@ pub(super) fn collect(
     if profiles.is_empty() {
         return Default::default();
     }
-    sql_identifier_syntax::collect(program, ts, source, &profiles)
+    let typed = typed_executor_types_by_profile(root, path, plan)
+        .into_iter()
+        .collect::<std::collections::BTreeMap<_, _>>();
+    if typed.is_empty() {
+        sql_identifier_syntax::collect(program, ts, source, &profiles)
+    } else {
+        sql_identifier_syntax::collect_with_types(program, ts, source, &profiles, &typed)
+    }
 }
 pub(super) fn invalid(
     root: &Path,

@@ -13,10 +13,9 @@ pub(super) fn collect(
     let mut bindings = FxHashMap::default();
     for binding in &module.bindings {
         bindings.insert((binding.span.start, binding.span.end), binding);
-        if selections
-            .iter()
-            .any(|selection| selection.selected.contains(&binding.id))
-        {
+        if selections.iter().any(|selection| {
+            selection.selected.contains(&binding.id) || selection.typed.contains(&binding.id)
+        }) {
             for usage in &binding.references {
                 sources.insert((usage.span.start, usage.span.end), binding.id);
             }
@@ -46,20 +45,19 @@ impl<'a> Visit<'a> for Aliases<'_> {
                 let BindingPattern::BindingIdentifier(alias) = &declaration.id else {
                     continue;
                 };
-                let Some(Expression::Identifier(source)) =
-                    declaration.init.as_ref().map(unwrap_ts_wrappers)
-                else {
+                let Some((source, parts)) = declaration.init.as_ref().and_then(chain) else {
                     continue;
                 };
-                let Some(owner) = self.sources.get(&span(source.span)) else {
+                if !(parts.len() == 1 || (parts.len() == 2 && parts[1] == "query")) {
+                    continue;
+                }
+                let Some(owner) = self.sources.get(&source) else {
                     continue;
                 };
                 let Some(binding) = self.bindings.get(&span(alias.span)) else {
                     continue;
                 };
-                self.syntax
-                    .alias_initializers
-                    .insert(span(source.span), *owner);
+                self.syntax.alias_initializers.insert(source, *owner);
                 for usage in binding.references.iter().filter(|usage| usage.runtime) {
                     self.syntax
                         .aliases
