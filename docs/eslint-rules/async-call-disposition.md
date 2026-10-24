@@ -230,11 +230,15 @@ await awaitReportedEnqueueAdmission(() => {
 });
 unknownConsumer(() => enqueueOnTopicCreated(data)); // reported: no configured contract
 awaitReportedEnqueueAdmission(null, () => enqueueOnTopicCreated(data)); // reported: wrong slot
-awaitReportedEnqueueAdmission(() => { enqueueOnTopicCreated(data); }); // reported: not returned
+awaitReportedEnqueueAdmission(() => {
+  enqueueOnTopicCreated(data);
+}); // reported: not returned
 
 const accepted = () => enqueueOnTopicCreated(data);
 awaitReportedEnqueueAdmission(accepted); // accepted: stable callback returns its promise
-function unknown() { return enqueueOnTopicCreated(data); }
+function unknown() {
+  return enqueueOnTopicCreated(data);
+}
 unknownConsumer(unknown); // reported: this consumer has no adoption contract
 ```
 
@@ -247,11 +251,14 @@ promise) from the configured callback.
   or a `.map` / `.flatMap` callback whose result reaches a handled native
   `Promise.all`, `Promise.allSettled`, `Promise.any`, or `Promise.race`. A retained
   mapped collection follows the same aggregate requirement described above.
+  Inline `.flatMap` callbacks follow this aggregate contract too.
 - **Reported:** mixed known and unknown consumers, wrong callback slots, and
   spreads that obscure the callback position remain unproven. Callback-valued
   conditional and logical branches, final comma operands, assignment results,
   and tagged template interpolations also remain unproven. Passing a `.bind`
   result does not establish an adoption contract.
+  `Promise.all([items.map(callback)])` leaves a nested array unhandled; pass the
+  mapped array directly or spread its members instead.
 - **Not an argument use:** `typeof`, comparisons, updates, untagged template
   literals, conditional tests, and earlier comma operands do not pass the
   callback. Neither do computed property keys, erased type arguments, or uses
