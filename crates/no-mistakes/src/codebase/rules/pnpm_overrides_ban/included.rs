@@ -1,6 +1,6 @@
 use super::keys::yaml_top_level_key_line;
 use super::scan::finding;
-use super::{RuleFinding, FIX};
+use super::{ClassifiedFinding, FIX};
 use crate::codebase::ts_source::SourceStore;
 use std::path::Path;
 
@@ -10,7 +10,7 @@ pub(super) fn included_override_findings(
     source: &str,
     sources: &SourceStore,
     files: &[std::path::PathBuf],
-) -> Vec<RuleFinding> {
+) -> Vec<ClassifiedFinding> {
     let root_yaml = crate::codebase::ts_resolver::normalize_path(&root.join("pnpm-workspace.yaml"));
     if crate::codebase::ts_resolver::normalize_path(path) != root_yaml {
         return Vec::new();
@@ -34,12 +34,12 @@ pub(super) fn included_override_findings(
             .iter()
             .any(|setting| setting == "overrides")
     {
-        findings.push(finding(
+        findings.push(ClassifiedFinding::Definite(finding(
             root,
             path,
             1,
             "setting \"overrides\" is claimed by more than one pnpm source",
-        ));
+        )));
     }
     if root_selected {
         for issue in resolved
@@ -57,7 +57,7 @@ pub(super) fn included_override_findings(
             }
             let mut note = finding(root, path, 1, issue.message.clone());
             note.target = Some("unanalyzable".to_owned());
-            findings.push(note);
+            findings.push(ClassifiedFinding::Unanalyzable(note));
         }
     }
     for included in resolved.included_override_paths {
@@ -80,12 +80,12 @@ pub(super) fn included_override_findings(
                 continue;
             }
         };
-        findings.push(finding(
+        findings.push(ClassifiedFinding::Definite(finding(
             root,
             &included,
             yaml_top_level_key_line(&text, "overrides"),
             format!("top-level \"overrides\" is banned. {FIX}"),
-        ));
+        )));
     }
     findings
 }

@@ -1,4 +1,4 @@
-use super::{RuleFinding, RULE_ID};
+use super::{ClassifiedFinding, RULE_ID};
 use crate::codebase::ts_source::SourceStore;
 use std::path::{Path, PathBuf};
 
@@ -7,7 +7,7 @@ pub(super) fn collect(
     source: &str,
     sources: &SourceStore,
     files: &[PathBuf],
-) -> (Vec<RuleFinding>, Vec<String>) {
+) -> (Vec<ClassifiedFinding>, Vec<String>) {
     let Ok(yaml) = serde_yaml::from_str::<serde_yaml::Value>(source) else {
         return (Vec::new(), Vec::new());
     };

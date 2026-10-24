@@ -9,6 +9,9 @@ use std::path::Path;
 fn check_package_json(path: &Path, root: &Path) -> Vec<RuleFinding> {
     let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
     check_package_json_with_sources(path, root, &sources)
+        .into_iter()
+        .map(ClassifiedFinding::into_public)
+        .collect()
 }
 
 fn fixture(path: &str) -> std::path::PathBuf {

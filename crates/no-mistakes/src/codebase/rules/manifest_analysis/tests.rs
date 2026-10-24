@@ -304,3 +304,5 @@ fn registry_explicit_lockfile_failures_use_the_same_policy() {
         assert_eq!(sources.physical_read_count(), 1);
     }
 }
+
+mod collision;

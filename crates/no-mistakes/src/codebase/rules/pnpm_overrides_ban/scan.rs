@@ -4,8 +4,8 @@ pub(super) fn scan(
     root: &Path,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
-    let mut findings: Vec<RuleFinding> = files
+) -> Vec<ClassifiedFinding> {
+    let mut findings: Vec<ClassifiedFinding> = files
         .par_iter()
         .flat_map(
             |path| match path.file_name().and_then(|name| name.to_str()) {
@@ -36,7 +36,7 @@ fn check_workspace(
     path: &Path,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
+) -> Vec<ClassifiedFinding> {
     let source = match sources.read_path(path) {
         Ok(source) => source,
         Err(error) => {
@@ -49,12 +49,12 @@ fn check_workspace(
         Ok(value) => {
             let mut findings = Vec::new();
             if yaml_has_key(&value, "overrides") {
-                findings.push(finding(
+                findings.push(ClassifiedFinding::Definite(finding(
                     root,
                     path,
                     yaml_top_level_key_line(&source, "overrides"),
                     format!("top-level \"overrides\" is banned. {FIX}"),
-                ));
+                )));
             }
             findings.extend(included::included_override_findings(
                 root, path, &source, sources, files,
@@ -74,7 +74,7 @@ fn check_package_json(
     root: &Path,
     path: &Path,
     sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
+) -> Vec<ClassifiedFinding> {
     let source = match sources.read_path(path) {
         Ok(source) => source,
         Err(error) => {
@@ -96,24 +96,24 @@ fn check_package_json(
     };
     let mut findings = Vec::new();
     if object.contains_key("overrides") {
-        findings.push(finding(
+        findings.push(ClassifiedFinding::Definite(finding(
             root,
             path,
             json_key_line(&source, "overrides"),
             format!("top-level \"overrides\" is banned. {FIX}"),
-        ));
+        )));
     }
     if object
         .get("pnpm")
         .and_then(serde_json::Value::as_object)
         .is_some_and(|pnpm| pnpm.contains_key("overrides"))
     {
-        findings.push(finding(
+        findings.push(ClassifiedFinding::Definite(finding(
             root,
             path,
             json_nested_key_line(&source, "pnpm", "overrides"),
             format!("\"pnpm.overrides\" is banned. {FIX}"),
-        ));
+        )));
     }
     findings
 }

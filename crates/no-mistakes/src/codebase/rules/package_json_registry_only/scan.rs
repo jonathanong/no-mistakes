@@ -7,8 +7,8 @@ pub(super) fn scan(
     target_roots: &[PathBuf],
     rule_filter: &super::super::path_filter::RulePathFilter,
     sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
-    let mut findings: Vec<RuleFinding> = files
+) -> Vec<ClassifiedFinding> {
+    let mut findings: Vec<ClassifiedFinding> = files
         .par_iter()
         .filter(|p| {
             p.file_name()
@@ -40,7 +40,12 @@ pub(super) fn scan(
             })
             .collect::<Vec<_>>(),
     );
-    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
+    findings.sort_by(|a, b| {
+        a.finding()
+            .file
+            .cmp(&b.finding().file)
+            .then(a.finding().message.cmp(&b.finding().message))
+    });
     findings
 }
 
@@ -48,7 +53,7 @@ pub(super) fn check_package_json_with_sources(
     path: &Path,
     root: &Path,
     sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
+) -> Vec<ClassifiedFinding> {
     let json = match sources.parse_json_path(path) {
         Ok(json) => json,
         Err(error) => {
@@ -64,7 +69,7 @@ fn check_package_json_value(
     path: &Path,
     root: &Path,
     json: &serde_json::Value,
-) -> Vec<RuleFinding> {
+) -> Vec<ClassifiedFinding> {
     let file = relative_slash_path(root, path);
     let mut findings = Vec::new();
     for field in DEP_FIELDS {
@@ -76,7 +81,7 @@ fn check_package_json_value(
         for (dep, val) in sorted {
             let spec = val.as_str().unwrap_or("");
             if is_blocked_specifier(spec) {
-                findings.push(RuleFinding {
+                findings.push(ClassifiedFinding::Definite(RuleFinding {
                     rule: RULE_ID.to_string(),
                     file: file.clone(),
                     line: 1,
@@ -86,7 +91,7 @@ fn check_package_json_value(
                     ),
                     import: None,
                     target: None,
-                });
+                }));
             }
         }
     }

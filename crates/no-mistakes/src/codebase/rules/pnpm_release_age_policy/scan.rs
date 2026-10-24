@@ -1,7 +1,7 @@
 use super::inputs::{active_names, cooldown, lockfile_keys};
 use super::lockfile::package_name_from_lock_key;
 use super::policy::{check_with_complete_names, ExcludeEntry, FileKind, Issue, Snapshot};
-use super::{rel, Options, RuleFinding, RULE_ID};
+use super::{rel, ClassifiedFinding, Options, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::SourceStore;
 use serde_yaml::Value as Yaml;
 use std::collections::HashMap;
@@ -12,7 +12,7 @@ pub(super) fn scan(
     opts: &Options,
     files: &[PathBuf],
     sources: &SourceStore,
-) -> Vec<RuleFinding> {
+) -> Vec<ClassifiedFinding> {
     let by_rel: HashMap<String, &PathBuf> =
         files.iter().map(|path| (rel(root, path), path)).collect();
     let Some(workspace) = by_rel.get(opts.workspace_yaml()) else {
@@ -84,7 +84,7 @@ pub(super) fn scan(
     findings.extend(
         check_with_complete_names(opts, &snapshot, complete_names)
             .into_iter()
-            .map(|issue| issue_finding(root, opts, &by_rel, issue)),
+            .map(|issue| ClassifiedFinding::Definite(issue_finding(root, opts, &by_rel, issue))),
     );
     findings
 }

@@ -8,7 +8,7 @@ pub(super) fn check(
     lockfile_root: &Path,
     opts: &Options,
     sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
+) -> Vec<ClassifiedFinding> {
     let Some(lockfile_path) = &opts.lockfile else {
         return Vec::new();
     };
@@ -62,7 +62,7 @@ pub(super) fn check(
                 if !seen.insert((pkg_name.to_string(), blocked_key.to_string())) {
                     break;
                 }
-                findings.push(RuleFinding {
+                findings.push(ClassifiedFinding::Definite(RuleFinding {
                     rule: RULE_ID.to_string(),
                     file: file.clone(),
                     line: 1,
@@ -72,7 +72,7 @@ pub(super) fn check(
                     ),
                     import: None,
                     target: None,
-                });
+                }));
                 break;
             }
         }
@@ -80,13 +80,13 @@ pub(super) fn check(
     findings
 }
 
-fn parse_finding(file: &str, detail: &str) -> RuleFinding {
-    RuleFinding {
+fn parse_finding(file: &str, detail: &str) -> ClassifiedFinding {
+    ClassifiedFinding::Unanalyzable(RuleFinding {
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line: 1,
         message: format!("{file}: pnpm lockfile {detail}"),
         import: None,
         target: Some("unanalyzable".to_owned()),
-    }
+    })
 }
