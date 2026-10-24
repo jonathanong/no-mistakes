@@ -1,15 +1,19 @@
 "use strict";
 
-const { isPromiseAllCall, isPromiseMethodCall } = require("./async-disposition-bindings");
-const { callbackReturnsNormally } = require("./async-disposition-flow");
+const {
+  isPromiseAllCall,
+  isPromiseMethodCall,
+  retainedCollection,
+} = require("./async-disposition-bindings");
+const { callbackReturnsNormally, isMapCall, isMapCallback } = require("./async-disposition-flow");
 const { returnsThroughMock } = require("./async-disposition-mocks");
 const {
   findContainingFunction,
   isFunction,
   isTransparentExpression,
+  unwrapExpression,
   unwrapTransparentParent,
 } = require("./async-ast");
-const { memberPropertyName } = require("./async-targets");
 
 function directlyDisposed(node, context, consumers) {
   const expression = unwrapTransparentParent(node);
@@ -49,19 +53,6 @@ function isPromiseAllIterable(node, promiseAll) {
   return promiseAll.arguments[0] === node && (node.type === "ArrayExpression" || isMapCall(node));
 }
 
-function isMapCall(node) {
-  return (
-    node?.type === "CallExpression" &&
-    node.callee.type === "MemberExpression" &&
-    memberPropertyName(node.callee) === "map"
-  );
-}
-
-function isMapCallback(fn) {
-  const call = fn.parent;
-  return isMapCall(call) && call.arguments.includes(fn);
-}
-
 function expressionReturnedFromCallback(node, fn) {
   let current = node;
   let returnStatement = null;
@@ -92,6 +83,8 @@ function canReachPromiseAll(node, promiseAll) {
       continue;
     }
     if (parent?.type === "ArrayExpression") {
+      // An aggregate over [mappedArray] never visits that array's promises.
+      if (isMapCall(unwrapExpression(current))) return false;
       if (parent.parent !== promiseAll || promiseAll.arguments[0] !== parent) return false;
       current = parent;
       continue;
@@ -153,7 +146,29 @@ function promiseAllDisposed(node, context, consumers) {
   return false;
 }
 
-function mappedPromise(node, disposed) {
+function mappedCollectionDisposed(call, context, consumers, disposed) {
+  return (
+    promiseAllDisposed(call, context, consumers) ||
+    retainedCollection(call, context, (value) => isPromiseAllCall(value, context), disposed)
+  );
+}
+
+function mapperCompletes(fn) {
+  return fn.async || fn.body.type !== "BlockStatement" || callbackReturnsNormally(fn.body);
+}
+
+function mappedArgumentDisposed(fn, argument, context, consumers, disposed) {
+  const value = unwrapTransparentParent(argument);
+  const call = value.parent;
+  return (
+    isMapCall(call) &&
+    call.arguments[0] === value &&
+    mapperCompletes(fn) &&
+    mappedCollectionDisposed(call, context, consumers, disposed)
+  );
+}
+
+function mappedPromise(node, context, consumers, disposed) {
   const parent = node.parent;
   const fn =
     parent.type === "ReturnStatement"
@@ -166,9 +181,15 @@ function mappedPromise(node, disposed) {
   return Boolean(
     fn &&
     isMapCallback(fn) &&
-    (fn.async || fn.body.type !== "BlockStatement" || callbackReturnsNormally(fn.body)) &&
-    disposed(fn.parent),
+    mapperCompletes(fn) &&
+    mappedCollectionDisposed(unwrapTransparentParent(fn).parent, context, consumers, disposed),
   );
 }
 
-module.exports = { directlyDisposed, observedExpression, promiseAllDisposed, mappedPromise };
+module.exports = {
+  directlyDisposed,
+  observedExpression,
+  promiseAllDisposed,
+  mappedArgumentDisposed,
+  mappedPromise,
+};

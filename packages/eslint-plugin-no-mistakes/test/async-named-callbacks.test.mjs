@@ -65,6 +65,50 @@ it("distinguishes callback values from expressions built from callbacks", () => 
   );
 });
 
+it.each([false, true])(
+  "matches inline map and flatMap adoption (awaitingConsumers=%s)",
+  (withConsumers) => {
+    const mapped = readFileSync(
+      resolve(
+        __dirname,
+        "../../../test-cases/eslint-plugin/async-call-disposition/fixture/named-map-callbacks.ts",
+      ),
+      "utf8",
+    );
+    const options = withConsumers ? { targets, awaitingConsumers } : { targets };
+    const result = lint(
+      mapped,
+      { "no-mistakes/async-call-disposition": ["error", options] },
+      "named-map.ts",
+    );
+    assert.deepEqual(
+      result.map(({ line, messageId }) => [line, messageId]),
+      [22, 25, 29, 31, 33, 37, 39, 42, 47, 49, 51, 53, 57, 66, 72, 75, 80, 93, 95, 96, 98, 103].map(
+        (line) => [line, "disposition"],
+      ),
+    );
+  },
+);
+
+it("rejects a mutated global Promise aggregate for a named mapper", () => {
+  const mapped = readFileSync(
+    resolve(
+      __dirname,
+      "../../../test-cases/eslint-plugin/async-call-disposition/fixture/named-map-mutated-promise.ts",
+    ),
+    "utf8",
+  );
+  const result = lint(
+    mapped,
+    { "no-mistakes/async-call-disposition": ["error", { targets, awaitingConsumers }] },
+    "named-map-mutated.ts",
+  );
+  assert.deepEqual(
+    result.map(({ line, messageId }) => [line, messageId]),
+    [[3, "disposition"]],
+  );
+});
+
 it("preserves a CommonJS top-level return as an ordinary return", () => {
   const commonjs = readFileSync(
     resolve(

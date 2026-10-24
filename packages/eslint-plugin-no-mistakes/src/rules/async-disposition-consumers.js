@@ -6,7 +6,7 @@ const { propertiesWritten, returnsThroughMock } = require("./async-disposition-m
 const { compileTargets, targetMatches } = require("./async-patterns");
 const { createTargetMatcher } = require("./async-targets");
 
-function createAwaitingConsumers(context) {
+function createAwaitingConsumers(context, mappedArgumentDisposed) {
   const matcher = createTargetMatcher(
     context,
     "awaitingConsumers",
@@ -36,12 +36,17 @@ function createAwaitingConsumers(context) {
 
   function namedDisposition(fn) {
     if (!namedResults.has(fn)) {
+      // Aggregate proofs can re-enter this function through a returned mapper.
+      namedResults.set(fn, false);
       namedResults.set(
         fn,
         namedCallbackDisposition(
           fn,
           context,
-          (argument) => returnsThroughMock(argument, context) || returnsThroughConsumer(argument),
+          (argument) =>
+            returnsThroughMock(argument, context) ||
+            returnsThroughConsumer(argument) ||
+            mappedArgumentDisposed(fn, argument),
         ),
       );
     }

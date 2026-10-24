@@ -5,11 +5,11 @@ const { ruleSuppression } = require("../rule-suppression");
 const {
   collectedPromise,
   isPromiseAllCall,
-  retainedCollection,
   retainedPromise,
 } = require("./async-disposition-bindings");
 const {
   directlyDisposed,
+  mappedArgumentDisposed,
   observedExpression,
   promiseAllDisposed,
   mappedPromise,
@@ -28,14 +28,7 @@ function isDisposed(node, context, consumers, seen = new Set()) {
     directlyDisposed(observed, context, consumers) ||
     promiseAllDisposed(observed, context, consumers) ||
     retainedPromise(observed, context, disposed) ||
-    mappedPromise(observed, (value) =>
-      retainedCollection(
-        value,
-        context,
-        (aggregate) => isPromiseAllCall(aggregate, context),
-        disposed,
-      ),
-    ) ||
+    mappedPromise(observed, context, consumers, disposed) ||
     collectedPromise(
       observed,
       context,
@@ -63,7 +56,11 @@ module.exports = rule(
   },
   (context) => {
     const matcher = createTargetMatcher(context);
-    const consumers = createAwaitingConsumers(context);
+    const consumers = createAwaitingConsumers(context, (fn, argument) =>
+      mappedArgumentDisposed(fn, argument, context, consumers, (value) =>
+        isDisposed(value, context, consumers),
+      ),
+    );
     const suppressed = ruleSuppression(context, "async-call-disposition");
     if (!matcher.hasTargets) return {};
 

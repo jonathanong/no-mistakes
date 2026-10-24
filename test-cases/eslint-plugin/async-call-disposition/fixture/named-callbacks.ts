@@ -101,3 +101,8 @@ twiceLocal.bind(null).bind(null)();
 const chainedLocal = twiceLocal.bind(null).bind(null);
 chainedLocal();
 unknownConsumer(twiceLocal.bind(null).bind(null)());
+// A mapped promise is adopted when the resulting collection reaches Promise.all.
+const mappedKnown = (item) => enqueueEmail(item);
+await Promise.all(items.map(mappedKnown));
+function flatMappedKnown(item) { return enqueueEmail(item); }
+await Promise.all(items.flatMap(flatMappedKnown));
