@@ -1,10 +1,10 @@
-use super::{path_kind, push, Kind, Ref};
+use super::{path_kind, push, Field, Kind, Ref};
 use crate::config::v2::NoMistakesConfig;
 use serde_yaml::Value;
 
-pub(super) fn collect(config: &NoMistakesConfig, refs: &mut Vec<Ref>) {
+pub(super) fn collect(config: &NoMistakesConfig, refs: &mut Vec<Ref>, origins: bool) {
     for (index, rule) in config.rules.iter().enumerate() {
-        let field = format!("rules[{index}].options");
+        let field = Field::new("rules", origins).index(index).key("options");
         collect_rule_paths(&rule.rule, &rule.options, &field, refs);
     }
 }
@@ -12,7 +12,7 @@ pub(super) fn collect(config: &NoMistakesConfig, refs: &mut Vec<Ref>) {
 // Rule options are deliberately not traversed by key name. Several rules use
 // names such as `allowlist` for package identities rather than filesystem
 // paths, so only each rule's declared path-bearing schema fields belong here.
-fn collect_rule_paths(rule: &str, value: &Value, field: &str, refs: &mut Vec<Ref>) {
+fn collect_rule_paths(rule: &str, value: &Value, field: &Field, refs: &mut Vec<Ref>) {
     match rule {
         "agents-md-max-size"
         | "required-local-docs"
@@ -82,7 +82,7 @@ fn collect_rule_paths(rule: &str, value: &Value, field: &str, refs: &mut Vec<Ref
     }
 }
 
-fn banned_pattern_globs(value: &Value, field: &str, refs: &mut Vec<Ref>) {
+fn banned_pattern_globs(value: &Value, field: &Field, refs: &mut Vec<Ref>) {
     let Some(patterns) = value.get("bannedPatterns").and_then(Value::as_sequence) else {
         return;
     };
@@ -90,10 +90,14 @@ fn banned_pattern_globs(value: &Value, field: &str, refs: &mut Vec<Ref>) {
         let Some(files) = item.get("files") else {
             continue;
         };
-        for (file_index, path) in string_values(files).into_iter().enumerate() {
+        for (file_index, (authored, path)) in string_values(files).into_iter().enumerate() {
             push_path(
                 refs,
-                format!("{field}.bannedPatterns[{index}].files[{file_index}]"),
+                field
+                    .key("bannedPatterns")
+                    .index(index)
+                    .key("files")
+                    .index_at(file_index, authored),
                 Kind::Glob,
                 path,
             );
@@ -101,12 +105,12 @@ fn banned_pattern_globs(value: &Value, field: &str, refs: &mut Vec<Ref>) {
     }
 }
 
-fn paths_at(value: &Value, key: &str, field: &str, kind: Kind, refs: &mut Vec<Ref>) {
+fn paths_at(value: &Value, key: &str, field: &Field, kind: Kind, refs: &mut Vec<Ref>) {
     let Some(value) = value.get(key) else {
         return;
     };
-    for (index, path) in string_values(value).into_iter().enumerate() {
-        push_path(refs, format!("{field}.{key}[{index}]"), kind, path);
+    for (index, (authored, path)) in string_values(value).into_iter().enumerate() {
+        push_path(refs, field.key(key).index_at(index, authored), kind, path);
     }
 }
 
@@ -114,7 +118,7 @@ fn object_paths_at(
     value: &Value,
     key: &str,
     nested_key: &str,
-    field: &str,
+    field: &Field,
     kind: Kind,
     refs: &mut Vec<Ref>,
 ) {
@@ -127,14 +131,14 @@ fn object_paths_at(
         };
         push_path(
             refs,
-            format!("{field}.{key}[{index}].{nested_key}"),
+            field.key(key).index(index).key(nested_key),
             kind,
             path,
         );
     }
 }
 
-fn push_path(refs: &mut Vec<Ref>, field: String, kind: Kind, value: &str) {
+fn push_path(refs: &mut Vec<Ref>, field: Field, kind: Kind, value: &str) {
     let value = value.trim();
     if value.is_empty() || value.starts_with('!') {
         return;
@@ -147,10 +151,14 @@ fn push_path(refs: &mut Vec<Ref>, field: String, kind: Kind, value: &str) {
     push(refs, field, kind, value);
 }
 
-fn string_values(value: &Value) -> Vec<&str> {
+fn string_values(value: &Value) -> Vec<(usize, &str)> {
     match value {
-        Value::String(value) => vec![value],
-        Value::Sequence(values) => values.iter().filter_map(Value::as_str).collect(),
+        Value::String(value) => vec![(0, value)],
+        Value::Sequence(values) => values
+            .iter()
+            .enumerate()
+            .filter_map(|(index, value)| value.as_str().map(|value| (index, value)))
+            .collect(),
         _ => Vec::new(),
     }
 }

@@ -1,0 +1,10 @@
+# Both accepted layout aliases can occur in the same authored configuration.
+test_plan:
+  vitest:
+    dependencies:
+      - name: legacy
+        paths:
+          - missing-deprecated-list.ts
+rules:
+  - rule: no-mistakes-config
+    scope: repository

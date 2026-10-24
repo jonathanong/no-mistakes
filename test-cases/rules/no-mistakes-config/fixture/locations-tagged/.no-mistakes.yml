@@ -1,0 +1,11 @@
+# Tagged and untagged keys are distinct in the loader's Value options mapping.
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+  - rule: forbidden-dependencies
+    enabled: false
+    options:
+      roots:
+        - missing-real.ts
+      !metadata roots:
+        - ignored-tagged.ts

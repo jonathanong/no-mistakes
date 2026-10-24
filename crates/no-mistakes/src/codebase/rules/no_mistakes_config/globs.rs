@@ -1,5 +1,5 @@
-use super::finding;
 use super::paths::frameworks;
+use super::{context::Context, field::Field};
 use crate::codebase::rules::path_filter::GlobMatcher;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
@@ -9,24 +9,34 @@ use std::collections::BTreeSet;
 pub(super) fn lint(
     config: &NoMistakesConfig,
     tracked: &BTreeSet<String>,
-    config_file: &str,
+    context: &Context<'_>,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for (framework, plan) in frameworks(config) {
         for (env_name, env) in &plan.environments {
             lint_patterns(
-                &format!("testPlan.{framework}.environments.{env_name}.include"),
+                &context
+                    .field("testPlan")
+                    .key(framework)
+                    .key("environments")
+                    .key(env_name)
+                    .key("include"),
                 &env.include,
                 tracked,
-                config_file,
+                context,
                 None,
                 &mut findings,
             )?;
             lint_patterns(
-                &format!("testPlan.{framework}.environments.{env_name}.exclude"),
+                &context
+                    .field("testPlan")
+                    .key(framework)
+                    .key("environments")
+                    .key(env_name)
+                    .key("exclude"),
                 &env.exclude,
                 tracked,
-                config_file,
+                context,
                 None,
                 &mut findings,
             )?;
@@ -34,36 +44,36 @@ pub(super) fn lint(
     }
     for (name, project) in &config.projects {
         lint_patterns(
-            &format!("projects.{name}.include"),
+            &context.field("projects").key(name).key("include"),
             &project.include,
             tracked,
-            config_file,
+            context,
             project.root.as_deref(),
             &mut findings,
         )?;
         lint_patterns(
-            &format!("projects.{name}.exclude"),
+            &context.field("projects").key(name).key("exclude"),
             &project.exclude,
             tracked,
-            config_file,
+            context,
             project.root.as_deref(),
             &mut findings,
         )?;
     }
     for (index, rule) in config.rules.iter().enumerate() {
         lint_patterns(
-            &format!("rules[{index}].include"),
+            &context.field("rules").index(index).key("include"),
             &rule.include,
             tracked,
-            config_file,
+            context,
             None,
             &mut findings,
         )?;
         lint_patterns(
-            &format!("rules[{index}].exclude"),
+            &context.field("rules").index(index).key("exclude"),
             &rule.exclude,
             tracked,
-            config_file,
+            context,
             None,
             &mut findings,
         )?;
@@ -72,10 +82,10 @@ pub(super) fn lint(
 }
 
 fn lint_patterns(
-    field: &str,
+    field: &Field,
     patterns: &[String],
     tracked: &BTreeSet<String>,
-    config_file: &str,
+    context: &Context<'_>,
     project_root: Option<&str>,
     findings: &mut Vec<RuleFinding>,
 ) -> Result<()> {
@@ -96,11 +106,15 @@ fn lint_patterns(
                 )
             })
             .unwrap_or_else(|| pattern.clone());
-        let matcher = GlobMatcher::new(std::slice::from_ref(&effective_pattern), field)?;
+        let matcher = GlobMatcher::new(std::slice::from_ref(&effective_pattern), &field.label)
+            .map_err(|error| {
+                let finding = context.finding(&field.index(index), format!(": {error}"));
+                anyhow::anyhow!("{}:{}: {}", finding.file, finding.line, finding.message)
+            })?;
         if !tracked.iter().any(|rel| matcher.is_match(rel)) {
-            findings.push(finding(
-                config_file,
-                format!("{field}[{index}]: glob `{pattern}` matches no tracked files"),
+            findings.push(context.finding(
+                &field.index(index),
+                format!(": glob `{pattern}` matches no tracked files"),
             ));
         }
     }

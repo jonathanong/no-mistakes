@@ -1,0 +1,2 @@
+# Explicit tags cannot be assigned the same identity across typed and Value maps.
+root: !!str missing

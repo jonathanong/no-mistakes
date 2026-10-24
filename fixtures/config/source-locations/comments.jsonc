@@ -1,0 +1,11 @@
+// Comments and trailing commas are part of the existing JSONC contract.
+{
+  "projects": {
+    /* location */ "web": {
+      "include": [
+        "src", // item
+        "tests",
+      ],
+    },
+  },
+}

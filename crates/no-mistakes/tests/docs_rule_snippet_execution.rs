@@ -231,10 +231,42 @@ fn no_mistakes_config_examples_execute_unknown_key_and_missing_root_independentl
         if !unknown_key {
             assert_eq!(
                 findings,
-                [".no-mistakes.yml:1:projects.web.root: missing directory `apps/missing`"]
+                [".no-mistakes.yml:3:projects.web.root: missing directory `apps/missing`"]
             );
         }
     }
+}
+
+#[test]
+fn no_mistakes_config_documented_line_suppression_targets_the_real_entry() {
+    let rule = "no-mistakes-config";
+    let page = docs_rule_snippets::load_page(&repo_root(), rule);
+    let section = docs_rule_snippets::heading_section(&page.body, "Suppression");
+    let fences = docs_rule_snippets::fences(&section);
+    let runs = docs_rule_snippets::snippet_runs(&fences);
+    assert_eq!(runs.len(), 1);
+    let fallback = docs_rule_snippets::rule_config_yaml(&page.body, rule);
+    let fixture = docs_rule_snippets::materialize_snippet(&fallback, &runs[0].1);
+    assert!(docs_rule_snippets::run_rule(fixture.path(), rule)
+        .unwrap()
+        .is_empty());
+    // Removing just the directive must expose the documented missing root.
+    let unsuppressed: Vec<_> = runs[0]
+        .1
+        .iter()
+        .map(|(lang, code)| {
+            let code = code
+                .lines()
+                .filter(|line| !line.contains("no-mistakes-disable-next-line"))
+                .collect::<Vec<_>>()
+                .join("\n");
+            (lang.clone(), code)
+        })
+        .collect();
+    let fixture = docs_rule_snippets::materialize_snippet(&fallback, &unsuppressed);
+    let findings = docs_rule_snippets::run_rule(fixture.path(), rule).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].contains("projects.web.root: missing directory `generated-at-deploy`"));
 }
 
 #[test]

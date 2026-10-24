@@ -1,0 +1,17 @@
+# Comments are presentation metadata, not nodes.
+projects:
+  web:
+    root: apps/web
+    include:
+      - src/**/*.ts
+      - tests/**/*.ts
+    multiline: |
+      root: not a key
+      include: not a key
+    after: value
+"quoted.key":
+  "with[brackets]": value
+"\u00e9":
+  'it''s': value
+scalar:
+  one
