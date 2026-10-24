@@ -38,6 +38,12 @@ and unsupported defaults remain uncertain. Imported type identities can come
 from another module when explicitly declared in `effects.postgres.typedExecutors`
 and selected by `executorTypeNames`; matching only a type's spelling is insufficient.
 
+Receiver values used as proven SQL bind data or direct executor metadata do not
+create another SQL obligation. Passing an executor into an opaque helper or as
+an executable callback still retains uncertainty. Such helper-argument diagnostics
+point to the nearest invocation; stored values and deferred bodies retain their
+own use location.
+
 An assertion (`as T` or `<T>value`) or `satisfies T` with a possible configured
 executor type retains an unknown at its runtime operand. A function, arrow, or
 method with such a return type retains an unknown at each returned value. The

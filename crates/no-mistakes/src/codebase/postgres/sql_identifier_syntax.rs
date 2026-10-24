@@ -35,6 +35,7 @@ pub(crate) type TransformedLiteral =
     std::result::Result<Option<Vec<super::statements::SqlTransformedColumnUseFact>>, ()>;
 #[derive(Default)]
 pub(crate) struct FileFacts {
+    pub low_applications: Vec<(EmbeddedSqlOptions, String, usize)>,
     pub profiles: Vec<(EmbeddedSqlOptions, Vec<SqlCall>)>,
     pub transformed_literals:
         std::sync::OnceLock<std::collections::BTreeMap<Span, TransformedLiteral>>,

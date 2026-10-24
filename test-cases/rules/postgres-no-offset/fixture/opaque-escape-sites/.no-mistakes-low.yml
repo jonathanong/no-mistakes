@@ -7,4 +7,4 @@ rules:
       importSpecifier: '@example/db'
       executorNames: [read, write]
       executorTypeNames: [QueryOptions, QueryExecutor]
-      include: ['src/**/*.mts']
+      include: ['src/query.mts']
