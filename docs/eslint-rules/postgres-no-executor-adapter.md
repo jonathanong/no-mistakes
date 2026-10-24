@@ -97,7 +97,7 @@ locks.delete(read);
 ```
 
 This requires typed linting and an unchanged built-in method. The receiver must
-come from an unshadowed built-in allocation or a stable alias of one. A parameter
+come from a proven built-in allocation or a stable alias of one. A parameter
 annotation alone cannot prove that a custom implementation was not supplied.
 Unknown receivers, same-named custom collections, overridden methods, escaped
 receivers, and spread or computed calls still report. Storing an executor as a
