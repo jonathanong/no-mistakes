@@ -35,7 +35,8 @@ because it contains invalid UTF-8, the rule cannot inspect its scripts. That
 input follows `options.unanalyzable`: `report` (the default) emits a failing
 diagnostic, `advise` emits non-failing advice, and `ignore` omits the
 uncertainty. Restore readable text or correct the file encoding so the rule can
-inspect the scripts. The diagnostic is attached to the selected file at line 1.
+inspect the scripts. For invalid UTF-8, the diagnostic points to the first
+invalid byte's line; other read failures use line 1.
 
 Invalid YAML remains a definite finding under every unanalyzable policy.
 Anchors, aliases, and flow-style steps that the line scan cannot align with the
@@ -45,6 +46,10 @@ reason. Rewrite these shapes as ordinary block-style `run` or `with.script`
 bodies; changing `options.unanalyzable` does not suppress them.
 
 ## Options
+
+`options.unanalyzable` inherits the repository policy (`report` by default) for
+source read failures. It does not change definite expression, YAML, or alignment
+findings.
 
 `constantContexts` is a list of regular expressions. A pattern allows an
 expression only when the trimmed expression is a full match, not a substring.
@@ -150,15 +155,14 @@ For a shell script the same shape is `env: VALUE: ${{ <expr> }}`, then
 
 ## Suppression
 
-Both findings and non-failing advice honor suppression. A source-read
-unanalyzable diagnostic is attached at line 1, so suppress it with
-`no-mistakes-disable-file github-actions-script-expressions` in the file's
-leading comment block or `no-mistakes-disable-line
-github-actions-script-expressions` on line 1. A next-line directive before
-line 1 cannot suppress it. Definite script findings retain their actual capture
-lines and support `disable-line` or `disable-next-line` at those locations.
-`no-mistakes-disable-file github-actions-script-expressions` suppresses either
-kind for the whole file.
+Both findings and non-failing advice honor suppression. Invalid UTF-8 input
+can still carry ASCII suppression directives: the rule inspects the cached
+bytes for directives without treating lossy text as YAML. Use
+`no-mistakes-disable-file github-actions-script-expressions` for the file, or
+`disable-line` / `disable-next-line` at the reported invalid-byte line.
+Definite script findings retain their actual capture lines. If the file cannot
+be read at all, its directives are unavailable; narrow `include`/`exclude` or
+set `unanalyzable: ignore` until the input is restored.
 
 ```yaml
 # no-mistakes-disable-next-line github-actions-script-expressions

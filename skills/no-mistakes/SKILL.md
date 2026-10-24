@@ -86,9 +86,9 @@ For `github-actions-script-expressions`, a selected workflow or composite
 action that cannot be read (including invalid UTF-8) follows `unanalyzable`:
 `report` by default, `advise`, or `ignore`. Invalid YAML and inputs whose
 source locations or expression shape cannot be analyzed remain definite
-findings under every policy. The source-read diagnostic is at line 1 and both
-findings and advice honor suppression there; use a file directive or a
-line-1 directive, since a next-line directive before line 1 cannot suppress it.
+findings under every policy. Invalid UTF-8 diagnostics point to the first
+invalid byte's line, and cached bytes preserve suppression directives. Other
+read failures use line 1; configure exclusions when the file is unavailable.
 
 Grouped residual advice, including a `target` that may list several checks, is described in
 [SQL verdicts](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).

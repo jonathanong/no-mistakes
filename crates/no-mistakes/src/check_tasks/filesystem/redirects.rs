@@ -86,7 +86,7 @@ pub(super) fn run(
         config
     };
     let mut without_script_expressions;
-    let config = if config.rule_configured(rules::GITHUB_ACTIONS_SCRIPT_EXPRESSIONS) {
+    let config = if config.rule_configured(rules::github_actions_script_expressions::RULE_ID) {
         diagnostics.append(
             rules::github_actions_script_expressions::diagnostics_with_files_and_sources(
                 root,
@@ -99,7 +99,7 @@ pub(super) fn run(
         without_script_expressions = config.clone();
         without_script_expressions
             .rules
-            .retain(|rule| rule.rule != rules::GITHUB_ACTIONS_SCRIPT_EXPRESSIONS);
+            .retain(|rule| rule.rule != rules::github_actions_script_expressions::RULE_ID);
         &without_script_expressions
     } else {
         config
