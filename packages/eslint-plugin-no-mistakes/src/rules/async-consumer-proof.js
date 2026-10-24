@@ -129,7 +129,9 @@ function importedAwaited(call, index, context) {
         if (referenced === symbol) {
           const parent = current.parent;
           const importName =
-            parent.parent?.parent?.moduleSpecifier || parent.parent?.moduleSpecifier;
+            parent.parent?.parent?.parent?.moduleSpecifier ||
+            parent.parent?.parent?.moduleSpecifier ||
+            parent.parent?.moduleSpecifier;
           if (!importName && (parent.expression !== current || !Array.isArray(parent.arguments)))
             safe = false;
         }
