@@ -19,6 +19,12 @@ pub(super) fn ts_extract_plan(
 ) -> TsFactPlan {
     let mut ts_plan = plan.collected_ts_plan();
     ts_plan.call_sites = plan.requires_call_sites(path);
+    if !ts_plan.call_arguments {
+        ts_plan.call_arguments = plan
+            .forbidden_call_arguments
+            .as_ref()
+            .is_some_and(|scope| scope.applies(path));
+    }
     ts_plan.module_bindings |= super::sql_identifier::selected(root, path, plan);
     ts_plan.imports |= plan.production_import_paths.contains(path);
     if playwright.is_some_and(|plan| plan.file(path).is_some()) {
@@ -94,6 +100,10 @@ pub(super) fn requires_parse(
         || plan.storybook
         || plan.server_route_client_boundary
         || !plan.graph.is_empty()
+        || plan
+            .forbidden_call_arguments
+            .as_ref()
+            .is_some_and(|scope| scope.applies(path))
         || match playwright {
             Some(plan) => plan.file(path).is_some() || plan.contains_source(path),
             None => false,

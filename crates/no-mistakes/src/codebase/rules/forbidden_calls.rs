@@ -1,6 +1,9 @@
 //! Binding-aware call policy projected from the prepared canonical graph.
 
+mod argument_scope;
 mod arguments;
+pub(crate) use argument_scope::argument_facts_covered;
+pub use argument_scope::{configure_argument_facts, ArgumentFactScope};
 mod config;
 mod findings;
 mod roots;
@@ -15,19 +18,10 @@ mod tests;
 
 /// Declares opt-in argument demand without parsing application options twice.
 pub fn argument_facts_required(config: &crate::config::v2::NoMistakesConfig) -> bool {
-    config.rule_applications(RULE_ID).iter().any(|application| {
-        application
-            .options
-            .get("targets")
-            .and_then(serde_yaml::Value::as_sequence)
-            .is_some_and(|targets| {
-                targets.iter().any(|target| {
-                    target
-                        .get("whenArguments")
-                        .is_some_and(|value| !value.is_null())
-                })
-            })
-    })
+    config
+        .rule_applications(RULE_ID)
+        .iter()
+        .any(|application| argument_scope::requires_arguments(application))
 }
 
 /// True when a forbidden-calls application names a `vitest:` collection root.

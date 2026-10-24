@@ -136,6 +136,7 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
     {
         let graph_only = super::graph_only_files(&request.files, &request.graph_files);
         let graph_plan = CheckFactPlan {
+            forbidden_call_arguments: request.plan.forbidden_call_arguments.clone(),
             graph: request.plan.graph,
             call_site_paths: request.plan.call_site_paths.clone(),
             graph_context: request.plan.graph_context.clone(),

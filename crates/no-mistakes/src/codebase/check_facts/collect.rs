@@ -52,6 +52,7 @@ fn collect_check_facts_inner(
     };
     let playwright = playwright.as_ref();
     let graph_plan = CheckFactPlan {
+        forbidden_call_arguments: plan.forbidden_call_arguments.clone(),
         graph: plan.graph,
         call_site_paths: plan.call_site_paths.clone(),
         graph_context: plan.graph_context.clone(),

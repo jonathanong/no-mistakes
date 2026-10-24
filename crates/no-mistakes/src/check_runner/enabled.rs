@@ -56,6 +56,7 @@ pub(crate) struct EnabledChecks {
 
 pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
     CheckFactPlan {
+        forbidden_call_arguments: None,
         sql_identifier_profiles: Default::default(),
         imports: enabled.dynamic_import_rules,
         call_site_paths: Default::default(),

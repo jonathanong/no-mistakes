@@ -133,8 +133,7 @@ impl SharedCheckContext {
         }
         plan.graph.per_item_calls |=
             config.rule_configured(crate::codebase::rules::QUERY_REACHED_PER_ITEM);
-        plan.graph.call_arguments |=
-            crate::codebase::rules::forbidden_calls::argument_facts_required(config);
+        crate::codebase::rules::forbidden_calls::configure_argument_facts(&root, config, &mut plan);
         let mut fact_demand = crate::check_runner::finite_set_plan::prepare(
             &root,
             config,

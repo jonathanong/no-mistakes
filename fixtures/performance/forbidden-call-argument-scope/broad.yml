@@ -1,0 +1,18 @@
+version: 2
+rules:
+  - name: broad-argument-policy
+    rule: forbidden-calls
+    scope: repository
+    include:
+      - src/**
+    options:
+      roots:
+        - glob: ["src/**/*.ts", "src/**/*.tsx"]
+      traversal: file
+      targets:
+        - exact: scheduler.register
+          whenArguments:
+            all:
+              - position: 1
+                property: attempt
+                equals: 0
