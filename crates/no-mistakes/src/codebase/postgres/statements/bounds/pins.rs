@@ -1,4 +1,6 @@
+mod any_source;
 mod array;
+mod candidate;
 mod correlated;
 mod equality;
 mod evidence;
@@ -9,7 +11,6 @@ mod source_merge;
 use super::{query, Scope};
 use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundPin, SqlPinSource};
-use array::{caller_array, constructor, finite_array, scalar_subquery};
 use resolver::Sourced;
 use source_merge::merge;
 use sqlparser::ast::{BinaryOperator, Expr, Query};
@@ -42,6 +43,7 @@ pub(super) fn extract(
                     item,
                     SqlBoundPin {
                         column,
+                        unqualified_candidate: false,
                         expression: None,
                         source,
                         null_safe,
@@ -67,10 +69,12 @@ pub(super) fn extract(
             right,
         } => {
             equality::equate(left, right, false, resolver, &mut pin);
+            candidate::equate(left, right, false, resolver, restricted, out);
             expression::equate(left, right, false, resolver, restricted, out);
         }
         Expr::IsNotDistinctFrom(left, right) => {
             equality::equate(left, right, true, resolver, &mut pin);
+            candidate::equate(left, right, true, resolver, restricted, out);
             expression::equate(left, right, true, resolver, restricted, out);
         }
         Expr::InList {
@@ -85,71 +89,58 @@ pub(super) fn extract(
                     .collect();
                 pin(expr, sources.map(merge), false);
             }
+            candidate::pin(expr, false, resolver, restricted, out, |item| {
+                list.iter()
+                    .map(|value| resolver.source(value, item))
+                    .collect::<Option<Vec<_>>>()
+                    .map(merge)
+            });
         }
         Expr::InSubquery {
             expr,
             subquery,
             negated: false,
-        } => pin(
-            expr,
-            Some(subquery_source(subquery, resolver, scope, positions)),
-            false,
-        ),
+        } => {
+            let source = subquery_source(subquery, resolver, scope, positions);
+            pin(expr, Some(source.clone()), false);
+            candidate::pin(expr, false, resolver, restricted, out, |_| {
+                Some(source.clone())
+            });
+        }
         Expr::AnyOp {
             left,
             compare_op: BinaryOperator::Eq,
             right,
             ..
         } => {
-            if let Some((item, _)) = resolver.column(left) {
-                let source = match unwrap_expr(right) {
-                    Expr::Subquery(subquery) => {
-                        Some(subquery_source(subquery, resolver, scope, positions))
-                    }
-                    other if scalar_subquery(other).is_some() => {
-                        let mut sourced = subquery_source(
-                            scalar_subquery(other).unwrap(),
-                            resolver,
-                            scope,
-                            positions,
-                        );
-                        if let SqlPinSource::Query(query) = sourced.source {
-                            sourced.source = SqlPinSource::ReadQuery(query);
-                        }
-                        Some(sourced)
-                    }
-                    other if constructor(other).is_some() => {
-                        finite_array(&constructor(other).unwrap().elem, item, resolver, positions)
-                    }
-                    // Retain stored-array syntax without crediting its owning row's bound.
-                    other => resolver.stored_source(other).map(|mut sourced| {
-                        if !matches!(sourced.source, SqlPinSource::Value)
-                            || !sourced.reads.is_empty()
-                            || !caller_array(other)
-                        {
-                            let items = match sourced.source {
-                                SqlPinSource::Items(items) => items,
-                                _ => Vec::new(),
-                            };
-                            sourced.source = SqlPinSource::StoredArray(items);
-                        }
-                        sourced
-                    }),
-                };
-                pin(left, source, false);
+            let resolved = resolver.column(left);
+            if resolved.is_none() && resolver.candidate_column(left).is_none() {
+                return;
             }
+            let shared = any_source::query(right, resolver, scope, positions);
+            let source_for = |item| {
+                shared
+                    .clone()
+                    .or_else(|| any_source::other(right, item, resolver, positions))
+            };
+            if let Some((item, _)) = resolved {
+                pin(left, source_for(item), false);
+            }
+            candidate::pin(left, false, resolver, restricted, out, source_for);
         }
         // A bare boolean predicate is true only for one value. The catalog later decides
         // whether this column completes a primary or unique key; non-key columns get no credit.
-        Expr::Identifier(_) | Expr::CompoundIdentifier(_) => pin(
-            expr,
-            Some(Sourced {
+        Expr::Identifier(_) | Expr::CompoundIdentifier(_) => {
+            let source = Sourced {
                 source: SqlPinSource::Value,
                 reads: Vec::new(),
                 qualified_reads: Vec::new(),
-            }),
-            false,
-        ),
+            };
+            pin(expr, Some(source.clone()), false);
+            candidate::pin(expr, false, resolver, restricted, out, |_| {
+                Some(source.clone())
+            });
+        }
         _ => {}
     }
 }

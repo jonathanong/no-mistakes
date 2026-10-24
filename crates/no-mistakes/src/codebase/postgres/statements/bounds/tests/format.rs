@@ -6,7 +6,9 @@ pub(super) fn item(item: &SqlBoundItem) -> String {
         .iter()
         // These syntax-only snapshots describe legacy column pins; expression-key evidence and
         // catalog-resolved qualified reads are exercised by their own focused tests.
-        .filter(|pin| pin.qualified_reads.is_empty() && pin.expression.is_none())
+        .filter(|pin| {
+            pin.qualified_reads.is_empty() && pin.expression.is_none() && !pin.unqualified_candidate
+        })
         .map(|pin| {
             // `~=` is the null-safe `IS NOT DISTINCT FROM`.
             let operator = if pin.null_safe { "~=" } else { "=" };

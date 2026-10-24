@@ -43,9 +43,39 @@ defaults to `[]`, so `.sql` files are not scanned until you set globs.
 rejected like it is for every other rule that needs complete facts. `statements`
 defaults to `[select, update, delete]`; an empty list, an unknown kind or a duplicate is
 a configuration error. `allow` defaults to `[]`: each entry is `{object, reason}`
-with an object such as `table:currencies`. An empty reason, an object that is not a
+with an object such as `table:currencies` or `view:public.small_codes`. An empty reason, an object that is not a
 catalog ref, or a duplicate is a configuration error, and an entry that suppresses
 nothing is reported as stale. The catalog's name for the table is the object ref.
+
+### Catalog views
+
+`viewBounds` defaults to `{}`. It maps specific catalog view names to `bounded`
+or `unbounded`, for example `viewBounds: {"public.small_codes": bounded,
+"public.activity_feed": unbounded}`. These are explicit cardinality assertions;
+the rule does not infer a bound from a view's definition.
+
+- `bounded` is an unchecked user assertion that the view supplies a finite set of
+  rows. The rule trusts it without inspecting the SQL definition, including when
+  the view is an `UPDATE` or `DELETE` target. For example, a `GROUP BY` or `UNION`
+  view is still trusted if configured `bounded`; confirm its cardinality yourself.
+  A bounded view can also size another relation through a unique-key join.
+- `unbounded` treats the view as an unsized relation. A statement cap can bound
+  it; otherwise the finding targets `view:<catalog-name>`.
+- Views without a policy retain their `unknown-relation` verdicts. Use
+  `unanalyzableSql: advise` for residual advice and `--include-sql-verdicts` to
+  inspect the individual verdicts.
+
+Each key must resolve to one catalog view. Missing names, ambiguous bare names,
+table/view collisions and duplicate aliases for one view are configuration
+errors. A qualified view name can use a bare catalog entry only when the catalog's
+`schema` proves that qualification. Qualified table references retain table lookup
+behavior, including bare table keys in catalogs without a declared `schema`.
+Quote names exactly, for example
+`'public."Mixed Name"': bounded`. A bare SQL name shared by a table and a view
+remains unknown; use the qualified relation name.
+
+`allow` and line/file suppressions apply to view findings using `view:<name>`.
+See the [saved policy example](../../test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/view-bounds.yml).
 
 ### Executor configuration
 

@@ -10,6 +10,9 @@ use std::path::{Path, PathBuf};
 mod arrays;
 mod evaluate;
 mod scan;
+mod view_bounds;
+use std::collections::BTreeMap;
+use view_bounds::ViewBoundMode;
 
 pub const RULE_ID: &str = "postgres-bounded-statements";
 
@@ -28,6 +31,7 @@ struct Options {
     schema_catalog_path: String,
     statements: Option<Vec<String>>,
     allow: Vec<AllowEntry>,
+    view_bounds: BTreeMap<String, ViewBoundMode>,
 }
 
 pub(crate) struct CompiledOptions {
@@ -38,6 +42,7 @@ pub(crate) struct CompiledOptions {
     schema_catalog_path: String,
     statements: Vec<SqlBoundKind>,
     allow: AllowList,
+    view_bounds: BTreeMap<String, ViewBoundMode>,
 }
 
 super::prepared_rule_entrypoints!(super::check_prepared_sql_rule);
@@ -77,6 +82,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         schema_catalog_path: opts.schema_catalog_path.clone(),
         statements: statement_kinds(opts.statements.as_deref())?,
         allow: AllowList::compile(RULE_ID, opts.allow.clone())?,
+        view_bounds: opts.view_bounds.clone(),
     })
 }
 

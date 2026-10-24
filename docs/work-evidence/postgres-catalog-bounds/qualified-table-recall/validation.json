@@ -1,0 +1,23 @@
+{
+  "reviewedHead": "bf0d7eb87aea5cf30f624f6dbe24b299a53b1dfb",
+  "rebasedBaseline": "56b9829a0660921493434e3d242d182e6b6dd7bb",
+  "main": "17139a03be47301db3164557d609fd2a7d376a68",
+  "baselineBinarySha256": "a39c74526408ae1501e50c6f6f8f6341fcc88056242e57d8f767a9b5c28b3890",
+  "candidateBinarySha256": "b5fe9a15f0176d9bac22ada327dae8061696a3ca9b80942c6924fb22324fafc0",
+  "runtimeSourceSha256": {
+    "crates/no-mistakes/src/codebase/postgres/catalog/view_relation.rs": "96fb2111761b7ecae0cf459a9a5dc23754c8b6a3caec3eaeb9c60b015af252bc"
+  },
+  "rust": {
+    "libraryPassed": 13276,
+    "existingIgnored": 3,
+    "binaryPassed": 449,
+    "integrationPassed": 1389
+  },
+  "compiledNativePassed": 575,
+  "globalCoverage": {
+    "regionsPercent": 98.55,
+    "functionsPercent": 99.34,
+    "linesPercent": 99.34
+  },
+  "minimumPercent": 98
+}

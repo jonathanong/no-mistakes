@@ -1,0 +1,31 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "public.active_accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "active_accounts_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true,
+          "constraintBacked": true, "valid": true, "ready": true,
+          "live": true, "immediate": true, "predicate": null,
+          "definition": "CREATE UNIQUE INDEX active_accounts_pkey",
+          "keys": [{ "column": "id", "expression": "id" }]
+        }
+      }
+    }
+  },
+  "functions": {},
+  "enums": {},
+  "views": {
+    "archive.active_accounts": {
+      "materialized": false,
+      "definition": "SELECT id FROM public.active_accounts"
+    }
+  }
+}

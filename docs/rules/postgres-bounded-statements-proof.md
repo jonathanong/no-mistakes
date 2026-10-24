@@ -179,6 +179,16 @@ These do not prove one row:
 - Only part of a composite key.
 - Equality alternatives (`id = $1 OR id = $2`), ranges and `LIKE`.
 
+### Unqualified key columns
+
+With a complete catalog and several known base tables, an unqualified key
+column is assigned when exactly one visible relation has it. The same ownership
+proof applies to equality, null-safe equality, finite `IN`/`ANY` pins and boolean
+key predicates. Ambiguous names, unknown or opaque competitors, derived sources,
+views and positional column aliases keep the proof conservative. Row-dependent
+values such as `key = key` do not become caller-supplied values. Qualify the key
+column to make an ambiguous reference explicit.
+
 The bound covers SELECT relation reads, including explicit subqueries, and the
 target-row selection of UPDATE and DELETE. DML source scans are not independently
 bounded: `DELETE FROM accounts USING (SELECT * FROM orders) o WHERE accounts.id = $1`

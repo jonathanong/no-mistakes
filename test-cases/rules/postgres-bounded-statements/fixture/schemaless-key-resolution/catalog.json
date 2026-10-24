@@ -1,0 +1,75 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "big": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false, "ordinalPosition": 1},
+        "email": {"dataType": "text", "nullable": false, "ordinalPosition": 2}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "big_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX big_pkey",
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    },
+    "a": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false, "ordinalPosition": 1},
+        "email": {"dataType": "text", "nullable": false, "ordinalPosition": 2}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "a_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX a_email_key",
+          "keys": [{"column": "email", "expression": "email"}]
+        }
+      }
+    },
+    "b": {
+      "relationKind": "table",
+      "columns": {
+        "id": {"dataType": "uuid", "nullable": false, "ordinalPosition": 1},
+        "email": {"dataType": "text", "nullable": false, "ordinalPosition": 2}
+      },
+      "primaryKey": {"columns": ["id"]},
+      "indexes": {
+        "b_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX b_pkey",
+          "keys": [{"column": "id", "expression": "id"}]
+        }
+      }
+    }
+  }
+}

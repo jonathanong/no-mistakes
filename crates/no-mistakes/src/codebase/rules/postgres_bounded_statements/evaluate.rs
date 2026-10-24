@@ -1,21 +1,23 @@
 //! Decide, against a schema catalog, whether a statement's rows are bounded.
+use super::view_bounds::{ViewBoundMode, ViewBounds};
 use crate::codebase::postgres::statements::{
     SqlBareRead, SqlBoundFact, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
-use crate::codebase::postgres::SchemaCatalog;
-
-mod possible_temporary;
-mod reads;
-use reads::table_offender;
+use crate::codebase::postgres::{CatalogObjectRef, SchemaCatalog};
 mod keys;
+mod ownership;
+mod possible_temporary;
 mod propagation;
 mod qualified;
+mod reads;
+use reads::relation_offender;
 
 /// A catalog relation that a statement can read or change in unbounded numbers.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Offender {
     /// The catalog's name for the table.
     pub(super) table: String,
+    pub(super) object: CatalogObjectRef,
     pub(super) line: usize,
     pub(super) column: usize,
     blocking_input: bool,
@@ -31,21 +33,35 @@ struct Evaluation {
 
 /// The relations that make `fact` unbounded. A relation the catalog does not know is not
 /// judged, and it bounds nothing either: it can supply every value of a column pinned to it.
+#[cfg(any(test, feature = "test-instrumentation"))]
 pub(super) fn offenders(fact: &SqlBoundFact, catalog: &SchemaCatalog) -> Vec<Offender> {
-    offenders_with_columns(fact, catalog, false)
+    offenders_with_columns(fact, catalog, &ViewBounds::default(), false)
 }
 
-pub(super) fn variant_offenders(fact: &SqlBoundFact, catalog: &SchemaCatalog) -> Vec<Offender> {
-    offenders_with_columns(fact, catalog, true)
+pub(super) fn offenders_with_views(
+    fact: &SqlBoundFact,
+    catalog: &SchemaCatalog,
+    views: &ViewBounds,
+) -> Vec<Offender> {
+    offenders_with_columns(fact, catalog, views, false)
+}
+
+pub(super) fn variant_offenders_with_views(
+    fact: &SqlBoundFact,
+    catalog: &SchemaCatalog,
+    views: &ViewBounds,
+) -> Vec<Offender> {
+    offenders_with_columns(fact, catalog, views, true)
 }
 
 fn offenders_with_columns(
     fact: &SqlBoundFact,
     catalog: &SchemaCatalog,
+    views: &ViewBounds,
     precise_columns: bool,
 ) -> Vec<Offender> {
     let query = possible_temporary::project(&fact.query, catalog);
-    let evaluation = evaluate(&query, catalog, precise_columns);
+    let evaluation = evaluate(&query, catalog, views, precise_columns);
     let Some(target) = fact.target else {
         return evaluation.offenders;
     };
@@ -55,14 +71,21 @@ fn offenders_with_columns(
     }
     let item = &query.items[target];
     match &item.kind {
-        SqlBoundItemKind::Table(name) => table_offender(name, item.line, item.column, catalog)
-            .into_iter()
-            .collect(),
+        SqlBoundItemKind::Table(name) => {
+            relation_offender(name, item.line, item.column, catalog, views)
+                .into_iter()
+                .collect()
+        }
         _ => Vec::new(),
     }
 }
 
-fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog, precise_columns: bool) -> Evaluation {
+fn evaluate(
+    query: &SqlBoundQuery,
+    catalog: &SchemaCatalog,
+    views: &ViewBounds,
+    precise_columns: bool,
+) -> Evaluation {
     if query.input_mode == SqlBoundInputMode::Skipped {
         return Evaluation {
             bounded: true,
@@ -74,7 +97,9 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog, precise_columns: boo
         .items
         .iter()
         .map(|item| match &item.kind {
-            SqlBoundItemKind::Query(inner) => Some(evaluate(inner, catalog, precise_columns)),
+            SqlBoundItemKind::Query(inner) => {
+                Some(evaluate(inner, catalog, views, precise_columns))
+            }
             _ => None,
         })
         .collect();
@@ -87,7 +112,7 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog, precise_columns: boo
                 .iter()
                 .map(|pin| match &pin.source {
                     SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) => {
-                        Some(evaluate(inner, catalog, precise_columns))
+                        Some(evaluate(inner, catalog, views, precise_columns))
                     }
                     _ => None,
                 })
@@ -95,6 +120,7 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog, precise_columns: boo
         })
         .collect();
     let pin_arrays = super::arrays::pin_sources(query, catalog);
+    let owners = ownership::owners(&query.items, catalog);
     let mut bounded: Vec<bool> = query
         .items
         .iter()
@@ -102,7 +128,9 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog, precise_columns: boo
         .map(|(item, nested)| match &item.kind {
             // A table is bounded only by its pins, known to the catalog or not: an unknown one is
             // never reported, but it cannot size the relations pinned to it.
-            SqlBoundItemKind::Table(_) => false,
+            SqlBoundItemKind::Table(name) => views
+                .get(name, catalog)
+                .is_some_and(|(_, mode)| mode == ViewBoundMode::Bounded),
             // A LATERAL source that reads earlier items is sized per row of them, so it bounds
             // nothing itself; the relations inside it are still judged below.
             SqlBoundItemKind::Query(_) => {
@@ -121,7 +149,14 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog, precise_columns: boo
         .iter()
         .enumerate()
         .map(|(index, item)| {
-            keys::prepare(item, &pin_subqueries[index], &pin_arrays[index], catalog)
+            keys::prepare(
+                item,
+                index,
+                &owners,
+                &pin_subqueries[index],
+                &pin_arrays[index],
+                catalog,
+            )
         })
         .collect();
     propagation::bound(&keys, &mut bounded);
@@ -131,6 +166,7 @@ fn evaluate(query: &SqlBoundQuery, catalog: &SchemaCatalog, precise_columns: boo
         &pin_subqueries,
         &bounded,
         catalog,
+        views,
         precise_columns,
     );
     Evaluation {
@@ -150,7 +186,7 @@ fn reads_outer(reads: &[SqlBareRead], catalog: &SchemaCatalog) -> bool {
     reads.iter().any(|read| {
         !SYSTEM_COLUMNS.contains(&read.column.as_str())
             && read.tables.iter().all(|table| {
-                catalog.relation(table).is_some_and(|table| {
+                catalog.bounded_relation(table).is_some_and(|table| {
                     table
                         .columns
                         .iter()

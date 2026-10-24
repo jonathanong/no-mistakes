@@ -435,6 +435,7 @@ require("./postgres-expression-span-api.test.js");
 require("./postgres-clause-policy-api.test.js");
 require("./postgres-key-column-types-api.test.js");
 require("./postgres-unique-index-bounds-api.test.js");
+require("./postgres-catalog-bounds-api.test.js");
 
 test(
   "compiled deadline evidence retains opaque roots and alias uncertainty without ordinary changes",

@@ -33,7 +33,7 @@ pub(super) fn pin_sources(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Vec
                                 let SqlBoundItemKind::Table(name) = &source.kind else {
                                     return false;
                                 };
-                                let Some(table) = catalog.relation(name) else {
+                                let Some(table) = catalog.bounded_relation(name) else {
                                     return false;
                                 };
                                 if let Some(column) =

@@ -1,5 +1,5 @@
 //! Construct fallback indexes only when exact catalog lookup is insufficient.
-use super::{names, CatalogTable};
+use super::names;
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone)]
@@ -8,7 +8,7 @@ pub(super) struct RelationFallback {
     pub(super) bare_keys: BTreeMap<String, String>,
 }
 
-pub(super) fn build(tables: &BTreeMap<String, CatalogTable>) -> RelationFallback {
+pub(super) fn build<T>(tables: &BTreeMap<String, T>) -> RelationFallback {
     let mut unique = BTreeMap::new();
     let mut bare_keys = BTreeMap::new();
     for key in tables.keys() {

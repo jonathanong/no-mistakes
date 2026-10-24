@@ -1,4 +1,5 @@
-use super::evaluate::{offenders, variant_offenders};
+use super::evaluate::{offenders_with_views, variant_offenders_with_views};
+use super::view_bounds::ViewBounds;
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::SqlBoundKind;
@@ -22,12 +23,13 @@ pub(super) fn scan(
         prepared.map(|facts| facts.prepared()),
     )?;
     let catalog = inputs.catalog;
+    let views = ViewBounds::compile(&opts.view_bounds, catalog)?;
     let statements = inputs.statements;
     let embedded = inputs.embedded;
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     if let Some(prepared) = prepared.filter(|facts| facts.wants_sql_verdicts()) {
-        verdicts::record(root, opts, &embedded, catalog, prepared)?;
+        verdicts::record(root, opts, &embedded, catalog, &views, prepared)?;
     }
     for file in embedded {
         let rel = relative_slash_path(root, &file.path);
@@ -67,11 +69,11 @@ pub(super) fn scan(
             .filter(|(_, bound)| opts.statements.contains(&bound.kind))
         {
             let evaluate = if file.variant_locations.is_some() {
-                variant_offenders
+                variant_offenders_with_views
             } else {
-                offenders
+                offenders_with_views
             };
-            for offender in evaluate(bound, catalog) {
+            for offender in evaluate(bound, catalog, &views) {
                 // Keep suppression and its audit in the shared layer. A directive
                 // on the statement start anchors all of that statement's findings.
                 let line = bound
@@ -100,8 +102,8 @@ pub(super) fn scan(
                     finding(
                         &rel,
                         line,
-                        &message(bound.kind, &offender.table),
-                        &format!("table:{}", offender.table),
+                        &message(bound.kind, &offender.table, &offender.object),
+                        &offender.object.to_string(),
                     ),
                 );
             }
@@ -126,7 +128,14 @@ pub(super) fn statement_directive_line(source: Option<&str>, line: usize) -> Opt
     }
 }
 
-fn message(kind: SqlBoundKind, table: &str) -> String {
+fn message(
+    kind: SqlBoundKind,
+    table: &str,
+    object: &crate::codebase::postgres::CatalogObjectRef,
+) -> String {
+    if matches!(object, crate::codebase::postgres::CatalogObjectRef::View(_)) {
+        return format!("{kind:?} can read unbounded rows from view {table}; add a row cap or configure viewBounds as bounded only when its result is finite");
+    }
     match kind {
         SqlBoundKind::Select => format!(
             "SELECT can return every row of {table}; add a LIMIT, look rows up by a primary or unique key, or allow the table with a reason"

@@ -1,0 +1,34 @@
+{
+  "configurations": 56,
+  "identical": 55,
+  "changes": [
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/schemaless-key-resolution/qualified-bare-tables.yml",
+      "before": [],
+      "after": [
+        {
+          "file": "sql/qualified-bare-tables.sql",
+          "line": 1,
+          "target": "table:big"
+        },
+        {
+          "file": "sql/qualified-bare-tables.sql",
+          "line": 2,
+          "target": "table:big"
+        },
+        {
+          "file": "sql/qualified-bare-tables.sql",
+          "line": 3,
+          "target": "table:a"
+        },
+        {
+          "file": "sql/qualified-bare-tables.sql",
+          "line": 3,
+          "target": "table:b"
+        }
+      ],
+      "beforeStatus": 0,
+      "afterStatus": 1
+    }
+  ]
+}

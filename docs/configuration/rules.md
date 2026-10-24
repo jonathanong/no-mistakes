@@ -39,6 +39,12 @@ typed parameter, for example `function run(client: PoolClient) { ... }`. Merely
 configuring a type does not prove a complex receiver. The policy does not promote
 unresolved calls into executed SQL.
 
+`postgres-bounded-statements` also accepts application-local `options.viewBounds`,
+a map from catalog view names to `bounded` or `unbounded`. It declares each
+selected view's cardinality contract; views without a policy remain unknown.
+See [catalog views](../rules/postgres-bounded-statements.md#catalog-views) for
+identity validation, examples and suppression.
+
 Helper and callback tracing still checks every recovered leading prefix.
 Grouped advice, including a `target` that may list several checks, is described
 in [SQL verdicts](../postgres-sql-verdicts.md).

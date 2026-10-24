@@ -1,0 +1,66 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "public.customer_accounts": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "email_intake_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 2 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "customer_accounts_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true,
+          "constraintBacked": true, "valid": true, "ready": true,
+          "live": true, "immediate": true, "predicate": null,
+          "definition": "CREATE UNIQUE INDEX customer_accounts_pkey",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "customer_accounts_email_intake_id_key": {
+          "accessMethod": "btree", "unique": true, "primary": false,
+          "constraintBacked": true, "valid": true, "ready": true,
+          "live": true, "immediate": true, "predicate": null,
+          "definition": "CREATE UNIQUE INDEX customer_accounts_email_intake_id_key",
+          "keys": [{ "column": "email_intake_id", "expression": "email_intake_id" }]
+        }
+      }
+    },
+    "public.owner_jobs": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "customer_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 2 },
+        "email_intake_id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "indexes": {
+        "owner_jobs_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true,
+          "constraintBacked": true, "valid": true, "ready": true,
+          "live": true, "immediate": true, "predicate": null,
+          "definition": "CREATE UNIQUE INDEX owner_jobs_pkey",
+          "keys": [{ "column": "id", "expression": "id" }]
+        },
+        "owner_jobs_customer_key": {
+          "accessMethod": "btree", "unique": true, "primary": false,
+          "constraintBacked": true, "valid": true, "ready": true,
+          "live": true, "immediate": true, "predicate": null,
+          "definition": "CREATE UNIQUE INDEX owner_jobs_customer_key",
+          "keys": [{ "column": "customer_id", "expression": "customer_id" }]
+        },
+        "owner_jobs_email_intake_id_key": {
+          "accessMethod": "btree", "unique": true, "primary": false,
+          "constraintBacked": true, "valid": true, "ready": true,
+          "live": true, "immediate": true, "predicate": null,
+          "definition": "CREATE UNIQUE INDEX owner_jobs_email_intake_id_key",
+          "keys": [{ "column": "email_intake_id", "expression": "email_intake_id" }]
+        }
+      }
+    }
+  },
+  "functions": {},
+  "enums": {},
+  "views": {}
+}

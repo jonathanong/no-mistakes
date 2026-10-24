@@ -28,6 +28,7 @@ pub(in super::super) struct Resolver {
 }
 
 /// What a pin's value is sized by, and the bare columns its subqueries read.
+#[derive(Clone)]
 pub(super) struct Sourced {
     pub(super) source: SqlPinSource,
     pub(super) reads: Vec<SqlBareRead>,
@@ -99,6 +100,18 @@ impl Resolver {
             Expr::CompoundIdentifier(parts) => {
                 let (qualifier, column) = qualified(parts)?;
                 Some((self.item_named(&qualifier)?, column))
+            }
+            _ => None,
+        }
+    }
+
+    pub(super) fn candidate_column(&self, expr: &Expr) -> Option<String> {
+        match unwrap_expr(expr) {
+            Expr::Identifier(ident)
+                if self.names.len() > 1
+                    && !is_placeholder_ident_at(ident, self.positions.as_deref()) =>
+            {
+                Some(ident_key(ident))
             }
             _ => None,
         }

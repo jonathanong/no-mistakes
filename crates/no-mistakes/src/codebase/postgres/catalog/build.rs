@@ -29,6 +29,7 @@ pub(super) fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<SchemaCata
         functions: functions(snapshot.functions),
         enums: enums(snapshot.enums),
         views: views(snapshot.views),
+        view_fallback: Default::default(),
         column_lines: BTreeMap::new(),
     })
 }
@@ -67,7 +68,7 @@ fn views(views: BTreeMap<String, super::snapshot::SnapshotView>) -> BTreeMap<Str
         .into_iter()
         .map(|(name, view)| {
             (
-                name.clone(),
+                normalize_table_name(&name),
                 CatalogView {
                     name,
                     materialized: view.materialized,

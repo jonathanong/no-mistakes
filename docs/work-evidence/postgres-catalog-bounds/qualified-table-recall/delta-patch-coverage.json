@@ -1,0 +1,13 @@
+{
+  "base": "56b9829a0660921493434e3d242d182e6b6dd7bb",
+  "measuredChangedLines": 9,
+  "coveredChangedLines": 9,
+  "coveragePercent": 100.0,
+  "requiredPercent": 98.0,
+  "uncoveredChangedLines": {},
+  "changedFilesWithoutLineRecords": [
+    "crates/no-mistakes/src/codebase/postgres/catalog/tests/view_relation.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_bounded_statements/tests/catalog_resolution.rs",
+    "crates/no-mistakes/tests/cli_check_rules_postgres_bounded.rs"
+  ]
+}

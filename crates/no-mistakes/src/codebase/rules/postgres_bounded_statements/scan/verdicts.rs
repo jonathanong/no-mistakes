@@ -1,4 +1,6 @@
-use super::{offenders, variant_offenders, CompiledOptions, RULE_ID};
+use super::super::evaluate::{offenders_with_views, variant_offenders_with_views};
+use super::super::view_bounds::ViewBounds;
+use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::statements::{SqlBoundItemKind, SqlBoundQuery};
 use crate::codebase::postgres::{
@@ -13,6 +15,7 @@ pub(super) fn record(
     opts: &CompiledOptions,
     embedded: &[&EmbeddedSqlFileFacts],
     catalog: &SchemaCatalog,
+    views: &ViewBounds,
     facts: &dyn SqlFactContext,
 ) -> anyhow::Result<()> {
     let prepared = facts.prepared();
@@ -33,7 +36,7 @@ pub(super) fn record(
             &opts.embedded,
             &checks,
             opts.advise_unanalyzable,
-            |check, _, statement| judge(check, statement, opts, catalog),
+            |check, _, statement| judge(check, statement, opts, catalog, views),
         );
     }
     Ok(())
@@ -44,23 +47,24 @@ fn judge(
     statement: &SqlStatementFileFacts,
     opts: &CompiledOptions,
     catalog: &SchemaCatalog,
+    views: &ViewBounds,
 ) -> SqlBranchJudgment {
     let mut unknown_relation = false;
     for bound in project_sql_bounds(statement, catalog)
         .iter()
         .filter(|bound| kind_name(bound.kind) == check)
     {
-        if has_unknown_relation(&bound.query, catalog) {
+        if has_unknown_relation(&bound.query, catalog, views) {
             unknown_relation = true;
         }
         let evaluate = if statement.variant_locations.is_some() {
-            variant_offenders
+            variant_offenders_with_views
         } else {
-            offenders
+            offenders_with_views
         };
-        if evaluate(bound, catalog)
+        if evaluate(bound, catalog, views)
             .iter()
-            .any(|offender| !opts.allow.contains(&format!("table:{}", offender.table)))
+            .any(|offender| !opts.allow.contains(&offender.object.to_string()))
         {
             // A later LIMIT or key predicate could bound a partial statement.
             return SqlBranchJudgment::violation(false);
@@ -73,10 +77,16 @@ fn judge(
     }
 }
 
-fn has_unknown_relation(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> bool {
+fn has_unknown_relation(
+    query: &SqlBoundQuery,
+    catalog: &SchemaCatalog,
+    views: &ViewBounds,
+) -> bool {
     query.items.iter().any(|item| match &item.kind {
-        SqlBoundItemKind::Table(name) => catalog.relation(name).is_none(),
-        SqlBoundItemKind::Query(inner) => has_unknown_relation(inner, catalog),
+        SqlBoundItemKind::Table(name) => {
+            catalog.bounded_relation(name).is_none() && views.get(name, catalog).is_none()
+        }
+        SqlBoundItemKind::Query(inner) => has_unknown_relation(inner, catalog, views),
         _ => false,
     })
 }

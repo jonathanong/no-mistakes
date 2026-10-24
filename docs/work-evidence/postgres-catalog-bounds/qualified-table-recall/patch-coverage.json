@@ -1,0 +1,31 @@
+{
+  "base": "17139a03be47301db3164557d609fd2a7d376a68",
+  "measuredChangedLines": 404,
+  "coveredChangedLines": 400,
+  "coveragePercent": 99.0099,
+  "requiredPercent": 98.0,
+  "uncoveredChangedLines": {
+    "crates/no-mistakes/src/codebase/postgres/statements/bounds/pins.rs": [
+      118
+    ],
+    "crates/no-mistakes/src/codebase/rules/postgres_bounded_statements/evaluate/keys/indexes.rs": [
+      64
+    ],
+    "crates/no-mistakes/src/codebase/rules/postgres_bounded_statements/evaluate/ownership.rs": [
+      25
+    ],
+    "crates/no-mistakes/src/codebase/rules/postgres_bounded_statements/evaluate/reads.rs": [
+      82
+    ]
+  },
+  "changedFilesWithoutLineRecords": [
+    "crates/no-mistakes/src/codebase/postgres/catalog/tests.rs",
+    "crates/no-mistakes/src/codebase/postgres/catalog/tests/view_relation.rs",
+    "crates/no-mistakes/src/codebase/postgres/statements/bounds/tests/format.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_bounded_statements/scan/verdicts/tests.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_bounded_statements/tests.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_bounded_statements/tests/catalog_identity_edges.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_bounded_statements/tests/catalog_resolution.rs",
+    "crates/no-mistakes/tests/cli_check_rules_postgres_bounded.rs"
+  ]
+}
