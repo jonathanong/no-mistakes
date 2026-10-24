@@ -244,6 +244,10 @@ Removal is suggested only when every one of these is true:
 If any check fails, the rule reports nothing. It does not guess, and it does
 not tell you to keep `async`.
 
+Array destructuring holes (`[, value]`), sparse array literals, and absent
+optional AST children are skipped during type collection. They do not produce
+a finding or stop the rule from checking builders elsewhere in the file.
+
 ## Fix
 
 There is no autofix and no editor suggestion. When the rule reports, delete

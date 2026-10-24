@@ -81,6 +81,7 @@ function combine(results) {
 }
 
 function walkAst(context, node, visit) {
+  if (!node?.type) return;
   visit(node);
   for (const key of context.sourceCode.visitorKeys[node.type]) {
     const value = node[key];
