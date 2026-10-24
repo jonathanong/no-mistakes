@@ -26,7 +26,11 @@ pub(super) fn append(sql: &str, facts: &mut SqlSchemaFileFacts) {
         // A peeled DO body can leave an opaque PL/pgSQL EXECUTE wrapper marker.
         // The exact statement path proves that the static expression was projected.
         facts.unanalyzable_statements.retain(|marker| {
-            marker.source_order != source.source_order || !execute_wrapper(&marker.head)
+            let wrapper = marker.source_order == source.source_order
+                || marker.source_order.len() == source.source_order.len() + 1
+                    && marker.source_order.starts_with(&source.source_order)
+                    && marker.source_order.last() == Some(&0);
+            !wrapper || !execute_wrapper(&marker.head)
         });
         append_one(facts, source, false);
     }

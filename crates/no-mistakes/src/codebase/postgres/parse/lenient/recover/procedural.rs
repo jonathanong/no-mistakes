@@ -120,7 +120,7 @@ fn control(code: &[&Token]) -> bool {
         return false;
     }
     if word(first, "PERFORM") {
-        return simple_perform(&code[1..]);
+        return assignment::expression(&code[1..]);
     }
     if ["EXIT", "CONTINUE", "RETURN", "RAISE", "ASSERT"]
         .iter()
@@ -136,29 +136,6 @@ fn ending(code: &[&Token]) -> bool {
         [] => true,
         [kind] => ["IF", "LOOP", "CASE"].iter().any(|name| word(kind, name)) || label(kind),
         [kind, name] => word(kind, "LOOP") && label(name),
-        _ => false,
-    }
-}
-
-fn simple_perform(code: &[&Token]) -> bool {
-    match code {
-        [Token::Number(_, _)] | [Token::SingleQuotedString(_)] | [Token::Word(_)] => true,
-        [Token::Word(_), Token::LParen, ..] => {
-            let mut depth = 0usize;
-            for (at, token) in code.iter().enumerate().skip(1) {
-                match token {
-                    Token::LParen => depth += 1,
-                    Token::RParen => {
-                        depth = depth.saturating_sub(1);
-                        if depth == 0 {
-                            return at + 1 == code.len();
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            false
-        }
         _ => false,
     }
 }
