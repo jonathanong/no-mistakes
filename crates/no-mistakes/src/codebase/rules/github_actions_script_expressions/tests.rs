@@ -419,13 +419,7 @@ fn benign_workflow_shapes_pass() {
 }
 
 #[test]
-fn non_workflow_paths_and_missing_sources_are_skipped() {
-    let patterns = compile_patterns(&Options::default()).unwrap();
-    let sources = crate::codebase::rules::source_store_for_files(&[]);
-    let readme = Path::new("README.md");
-    assert!(super::check_file(readme, Path::new("/missing"), &patterns, &sources).is_empty());
-    let workflow = Path::new(".github/workflows/ci.yml");
-    assert!(super::check_file(workflow, Path::new("/missing"), &patterns, &sources).is_empty());
+fn non_workflow_paths_are_skipped() {
     assert!(super::analyze::gha_kind("docs/readme.yml").is_none());
     assert!(super::analyze::gha_kind(".github/actions/build/action.md").is_none());
     assert_eq!(
@@ -433,3 +427,6 @@ fn non_workflow_paths_and_missing_sources_are_skipped() {
         Some(false)
     );
 }
+
+#[path = "unreadable_tests.rs"]
+mod unreadable_tests;

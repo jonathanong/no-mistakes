@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: github-actions-script-expressions
+    scope: repository
+    include: [".github/actions/build/action.yml"]
+    options:
+      unanalyzable: report

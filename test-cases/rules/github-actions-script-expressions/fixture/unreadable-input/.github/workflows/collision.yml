@@ -1,0 +1,5 @@
+jobs:
+  build:
+    steps:
+      # This expression deliberately collides with the diagnostic display target.
+      - run: echo "${{ unanalyzable }}"

@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: github-actions-script-expressions
+    scope: repository
+    include: [".github/workflows/suppressed*.yml"]
+    options:
+      unanalyzable: ignore

@@ -6,7 +6,8 @@ use std::sync::Arc;
 /// `String` copy after the filesystem buffer.
 pub(super) fn read_utf8_arc(path: &Path) -> io::Result<Arc<str>> {
     let bytes = std::fs::read(path)?;
+    // Keep invalid bytes inside the memoized error for suppression-only inspection.
     let string = String::from_utf8(bytes)
-        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error.utf8_error()))?;
+        .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
     Ok(Arc::from(string))
 }
