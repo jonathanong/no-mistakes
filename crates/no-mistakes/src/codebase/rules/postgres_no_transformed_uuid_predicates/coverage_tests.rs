@@ -62,11 +62,13 @@ fn excludes_apply_to_sql_and_embedded_inputs() {
 fn invalid_globs_fail_before_scanning() {
     for field in ["include", "exclude", "sqlInclude"] {
         let root = fixture();
-        let result = check_with_files(
-            &root,
-            &config(&format!("{field}: ['[']\n")),
-            &[root.join("schema.json")],
-        );
+        let mut cfg = config("");
+        cfg.rules[0]
+            .options
+            .as_mapping_mut()
+            .unwrap()
+            .insert(field.into(), serde_yaml::from_str("['[']").unwrap());
+        let result = check_with_files(&root, &cfg, &[root.join("schema.json")]);
         assert!(result.is_err(), "{field}");
     }
 }

@@ -1,6 +1,5 @@
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
-use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -14,6 +13,8 @@ mod coverage_tests;
 mod effort_tests;
 mod evaluate;
 mod low;
+#[cfg(test)]
+mod policy_tests;
 mod scan;
 #[cfg(test)]
 mod tests;
@@ -76,15 +77,8 @@ pub(crate) fn check_with_files_sources_and_facts(
                 if config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low {
                     low::scan(root, &opts, &files, sources, facts, index, rule)?
                 } else {
-                    let view = facts.for_sql_application(index, rule.name.as_deref());
-                    scan::scan(
-                        root,
-                        &opts,
-                        &files,
-                        sources,
-                        view.as_ref()
-                            .map_or(facts as &dyn SqlFactContext, |view| view),
-                    )?
+                    let view = facts.for_sql_application_with_advice(index, rule.name.as_deref());
+                    scan::scan(root, &opts, &files, sources, &view)?
                 };
             if let Some(message) = &rule.message {
                 for located in &mut findings.0 {

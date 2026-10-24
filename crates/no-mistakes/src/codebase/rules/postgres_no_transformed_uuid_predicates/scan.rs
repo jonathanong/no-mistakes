@@ -1,3 +1,4 @@
+mod raw_advice;
 use super::evaluate::Columns;
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
@@ -53,6 +54,10 @@ pub(super) fn scan(
     for statement in inputs.statements {
         let rel = relative_slash_path(root, &statement.path);
         let source = crate::codebase::rules::read_source(sources, &statement.path);
+        let mut residuals = std::collections::BTreeMap::new();
+        if statement.parse_failed {
+            residuals.insert(statement.origin_line.max(1), "invalid-sql");
+        }
         if statement.parse_failed && opts.fail_unanalyzable {
             dedup.push(
                 &mut findings,
@@ -71,14 +76,25 @@ pub(super) fn scan(
                     source.as_deref(),
                     finding(&rel, table, use_),
                 ),
-                Err(_) if opts.fail_unanalyzable => dedup.push(
-                    &mut findings,
-                    statement,
-                    SqlFactSite::TransformedColumn(index),
-                    source.as_deref(),
-                    unknown(&rel, use_.line),
-                ),
+                Err(reason) => {
+                    residuals.entry(use_.line).or_insert(reason);
+                    if opts.fail_unanalyzable {
+                        dedup.push(
+                            &mut findings,
+                            statement,
+                            SqlFactSite::TransformedColumn(index),
+                            source.as_deref(),
+                            unknown(&rel, use_.line),
+                        );
+                    }
+                }
                 _ => {}
+            }
+        }
+        if opts.advise_unanalyzable && rel.ends_with(".sql") {
+            let advice = raw_advice::RawSqlAdvice::new(source.as_deref().unwrap_or_default());
+            for (line, reason) in residuals {
+                advice.record(context, opts, &rel, line, reason);
             }
         }
     }

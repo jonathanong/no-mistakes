@@ -1,5 +1,5 @@
 SELECT 1 FROM "Case" WHERE "ID"::text = $1;
-SELECT 1 FROM case WHERE id::text = $1;
+SELECT 1 FROM "case" WHERE id::text = $1;
 SELECT 1 FROM "Case" "A" WHERE "A"."ID"::text = $1;
 SELECT 1 FROM public."Case" WHERE public."Case"."ID"::text = $1;
 SELECT 1 FROM "dot.table" WHERE "dot.table".id::text = $1;
