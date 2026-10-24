@@ -37,6 +37,7 @@ pub(crate) fn collect_with_types(
         })
         .collect::<Vec<_>>();
     let mut syntax = Syntax {
+        metadata: metadata::Metadata::new(module, &selections),
         template_binds: template_binds::TemplateBinds::new(module, source),
         loose_query: profiles.iter().any(|profile| {
             profile.import_specifier.is_empty()

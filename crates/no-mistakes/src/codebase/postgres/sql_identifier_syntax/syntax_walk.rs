@@ -92,7 +92,7 @@ impl<'a> Visit<'a> for Syntax {
                 callee,
             });
         }
-        let previous = self.metadata.enter_call(root);
+        let previous = self.metadata.enter_call(root, Some(span(value.span)));
         walk::walk_call_expression(self, value);
         self.metadata.restore(previous);
     }
@@ -105,6 +105,16 @@ impl<'a> Visit<'a> for Syntax {
             self.visit_argument(argument);
             self.metadata.restore(previous);
         }
+    }
+    fn visit_object_expression(&mut self, value: &oxc_ast::ast::ObjectExpression<'a>) {
+        let previous = self.metadata.aggregate();
+        walk::walk_object_expression(self, value);
+        self.metadata.restore(previous);
+    }
+    fn visit_array_expression(&mut self, value: &oxc_ast::ast::ArrayExpression<'a>) {
+        let previous = self.metadata.aggregate();
+        walk::walk_array_expression(self, value);
+        self.metadata.restore(previous);
     }
     fn visit_assignment_expression(&mut self, value: &oxc_ast::ast::AssignmentExpression<'a>) {
         self.opaque_metadata(|this| walk::walk_assignment_expression(this, value));
@@ -122,11 +132,13 @@ impl<'a> Visit<'a> for Syntax {
         self.opaque_metadata(|this| walk::walk_arrow_function_expression(this, value));
     }
     fn visit_new_expression(&mut self, value: &NewExpression<'a>) {
-        self.opaque_metadata(|this| walk::walk_new_expression(this, value));
+        let previous = self.metadata.enter_call(None, Some(span(value.span)));
+        walk::walk_new_expression(self, value);
+        self.metadata.restore(previous);
     }
     fn visit_tagged_template_expression(&mut self, value: &TaggedTemplateExpression<'a>) {
         let owner = self.template_binds.tag_owner(&value.tag);
-        let previous = self.metadata.enter_tag(owner);
+        let previous = self.metadata.enter_tag(owner, span(value.span));
         walk::walk_tagged_template_expression(self, value);
         self.metadata.restore(previous);
     }

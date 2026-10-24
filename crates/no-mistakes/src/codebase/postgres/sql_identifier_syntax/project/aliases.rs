@@ -76,6 +76,9 @@ impl<'a> Visit<'a> for Aliases<'_> {
                 self.syntax.alias_initializers.insert(source, *owner);
                 for usage in binding.references.iter().filter(|usage| usage.runtime) {
                     self.syntax
+                        .metadata
+                        .track_alias((usage.span.start, usage.span.end));
+                    self.syntax
                         .aliases
                         .insert((usage.span.start, usage.span.end), *owner);
                 }
