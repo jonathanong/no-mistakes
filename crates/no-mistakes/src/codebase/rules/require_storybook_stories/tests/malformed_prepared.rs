@@ -65,9 +65,14 @@ fn malformed_selection_uses_only_prepared_source_and_never_recovers_exports() {
             .parse_error = Some(error.to_string());
         let diagnostics = select(&shared).1;
         assert_eq!(diagnostics.len(), 1);
+        let detail = if expected.is_empty() {
+            String::new()
+        } else {
+            format!(" ({expected})")
+        };
         assert!(diagnostics[0]
             .message
-            .contains(&format!("could not be analyzed ({expected})")));
+            .contains(&format!("could not be analyzed{detail},")));
         assert!(!diagnostics[0].message.contains("internal detail"));
         assert!(!diagnostics[0].message.contains('\n'));
     }

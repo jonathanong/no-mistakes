@@ -26,3 +26,15 @@ Fix the syntax and use valid TSX/JSX, or deliberately remove the file from
 coverage with an explicit exclude or a reasoned allow entry. A file selected
 only through inferred React exports remains outside this check: its exports
 cannot be established after parsing fails.
+
+### Malformed stories
+
+`fixture/malformed-stories` protects application-scoped incomplete coverage:
+valid stories still cover known components, malformed stories leave the other
+web components unknown, and the separate project's missing component remains
+a definite finding. Saved file/line exemptions exercise suppression audits;
+`advise.yml` and `ignore.yml` retain the same uncertainty under each policy.
+
+`fixture/unreadable-story` saves invalid UTF-8 story bytes. Public rule,
+aggregate, and N-API checks report a repository-relative read error at the
+story without claiming its component has no story.

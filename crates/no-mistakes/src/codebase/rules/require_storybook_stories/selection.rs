@@ -62,14 +62,12 @@ pub(super) fn selected_components(
                     .as_deref()
                     .is_some_and(|source| has_disable_line_comment(source, 1, RULE_ID));
             if explicit && !line_disabled {
-                unanalyzable.push(super::RuleFinding {
-                    rule: RULE_ID.to_string(),
-                    file: relative_slash_path(root, path),
-                    line: 1,
-                    message: format!("Selected React source could not be analyzed ({}), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, exclude this file, or add a documented no-mistakes-disable-file exemption.", error.lines().next().unwrap_or(error)),
-                    import: None,
-                    target: Some("unanalyzable".to_string()),
-                });
+                unanalyzable.push(super::diagnostics::malformed_finding(
+                    root,
+                    path,
+                    error,
+                    "Selected React source",
+                ));
             }
             continue;
         }

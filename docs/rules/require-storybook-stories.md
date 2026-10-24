@@ -148,6 +148,25 @@ Following [recall over precision](../../README.md#how-analysis-works), inputs th
 
   Definite violations remain findings under every policy.
 
+- A configured or reachable story with a syntax or read error produces one
+  line-1 `unanalyzable` diagnostic at the story path. Coverage remains unknown
+  for otherwise uncovered components in that rule application: a failed parse
+  can hide imports, so the rule cannot claim those components have no story.
+  Valid stories still establish known coverage, and other rule applications
+  retain their own missing-story findings. Definite namespace and allow-entry
+  violations remain findings. This behavior applies at both efforts.
+- Fix the malformed story and rerun to recover complete coverage. Story-path
+  rule/project filters, reasoned `allowFiles` entries, and file/line suppression
+  directives control diagnostic visibility; they cannot turn incomplete facts
+  into definite missing coverage. If every malformed-story diagnostic is hidden,
+  otherwise uncovered selected components receive residual `unanalyzable`
+  diagnostics so a source-only rule scope cannot silently pass incomplete
+  coverage. `unanalyzable: advise` and `ignore` likewise leave coverage unknown.
+  Suppression audits retain real suppressed story
+  diagnostics under `report` and `advise`.
+- Error details include the first cause line when present, with the current
+  source path relative to the repository; empty causes omit parentheses.
+
 ## Valid example
 
 ```yaml
