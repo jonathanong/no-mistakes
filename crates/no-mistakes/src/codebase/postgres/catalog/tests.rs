@@ -24,6 +24,7 @@ mod order;
 mod parse;
 mod relation;
 mod resolve;
+mod view_relation;
 
 fn load_fixture(name: &str) -> Result<SchemaCatalog, String> {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/postgres/catalog");

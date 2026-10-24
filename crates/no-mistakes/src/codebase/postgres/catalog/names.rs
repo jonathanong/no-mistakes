@@ -1,3 +1,13 @@
+#[cfg(test)]
+thread_local! {
+    static KEY_SPLITS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+#[cfg(test)]
+pub(super) fn key_split_count() -> usize {
+    KEY_SPLITS.with(std::cell::Cell::get)
+}
+
 fn parts(raw: &str) -> Vec<String> {
     let mut parts = Vec::new();
     let mut part = String::new();
@@ -50,6 +60,8 @@ pub(super) fn split_name(name: &str) -> (Option<String>, String) {
 /// The same for a key of the catalog, which is already normalized: its parts are unquoted but
 /// never case-folded again, since a mixed-case key (`Order Items`) is exact.
 pub(super) fn split_key(key: &str) -> (Option<String>, String) {
+    #[cfg(test)]
+    KEY_SPLITS.with(|count| count.set(count.get() + 1));
     let unquote = |part: &String| match part.strip_prefix('"').and_then(|p| p.strip_suffix('"')) {
         Some(inner) => inner.replace("\"\"", "\""),
         None => part.clone(),

@@ -37,6 +37,9 @@ impl ViewBounds {
         name: &str,
         catalog: &'a SchemaCatalog,
     ) -> Option<(&'a CatalogView, ViewBoundMode)> {
+        if self.0.is_empty() {
+            return None;
+        }
         let view = catalog.bounded_view_relation(name)?;
         let mode = self.0.get(&view.name)?;
         Some((view, *mode))
