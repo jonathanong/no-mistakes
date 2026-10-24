@@ -189,7 +189,7 @@ fn reads_outer(reads: &[SqlBareRead], catalog: &SchemaCatalog) -> bool {
     reads.iter().any(|read| {
         !SYSTEM_COLUMNS.contains(&read.column.as_str())
             && read.tables.iter().all(|table| {
-                catalog.relation(table).is_some_and(|table| {
+                catalog.bounded_relation(table).is_some_and(|table| {
                     table
                         .columns
                         .iter()

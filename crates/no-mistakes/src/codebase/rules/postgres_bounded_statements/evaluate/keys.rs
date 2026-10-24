@@ -19,7 +19,7 @@ pub(super) fn prepare(
     let SqlBoundItemKind::Table(name) = &item.kind else {
         return Vec::new();
     };
-    let Some(table) = catalog.relation(name) else {
+    let Some(table) = catalog.bounded_relation(name) else {
         return Vec::new();
     };
     let mut keys: Vec<Vec<(String, String)>> = catalog

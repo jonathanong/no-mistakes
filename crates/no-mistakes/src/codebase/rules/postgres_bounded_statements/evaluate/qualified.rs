@@ -8,7 +8,7 @@ use crate::codebase::postgres::SchemaCatalog;
 /// shadow the outer relation.
 pub(super) fn reads_outer(reads: &[SqlQualifiedRead], catalog: &SchemaCatalog) -> bool {
     reads.iter().any(|read| {
-        if catalog.relation(&read.qualifier).is_none() {
+        if catalog.bounded_relation(&read.qualifier).is_none() {
             return true;
         }
         for scope in &read.scopes {
@@ -17,7 +17,7 @@ pub(super) fn reads_outer(reads: &[SqlQualifiedRead], catalog: &SchemaCatalog) -
             }
             let mut resolved_scope = false;
             for name in &scope.tables {
-                if catalog.relation(name).is_none() {
+                if catalog.bounded_relation(name).is_none() {
                     return true;
                 }
                 if catalog.same_relation(&read.qualifier, name) {

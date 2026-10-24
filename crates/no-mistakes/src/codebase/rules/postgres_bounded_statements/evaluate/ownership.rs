@@ -24,7 +24,7 @@ pub(super) fn owners(items: &[SqlBoundItem], catalog: &SchemaCatalog) -> BTreeMa
         if !item.column_aliases.is_empty() {
             return BTreeMap::new();
         }
-        let Some(table) = catalog.relation(name) else {
+        let Some(table) = catalog.bounded_relation(name) else {
             return BTreeMap::new();
         };
         for column in &table.columns {

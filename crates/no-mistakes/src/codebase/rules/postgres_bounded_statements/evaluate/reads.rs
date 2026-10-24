@@ -81,7 +81,7 @@ pub(super) fn relation_offender(
     if views.get(name, catalog).is_some() {
         return None;
     }
-    let table = catalog.relation(name)?;
+    let table = catalog.bounded_relation(name)?;
     Some(Offender {
         table: table.name.clone(),
         object: CatalogObjectRef::Table(table.name.clone()),
