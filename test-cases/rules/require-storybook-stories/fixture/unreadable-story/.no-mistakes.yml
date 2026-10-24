@@ -1,0 +1,9 @@
+version: 2
+projects:
+  web: {type: nextjs, root: .}
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      include: ["Card.tsx"]
+      stories: ["*.stories.tsx"]

@@ -17,12 +17,18 @@ fn prepared_story_errors_use_authoritative_causes_and_sources() {
     );
     let stories = std::collections::BTreeSet::from([story.clone()]);
     let causes = [
-        String::new(),
-        "  ".into(),
-        "cause\nprivate detail".into(),
-        format!("failed to read {}: unavailable", story.display()),
+        (String::new(), "could not be analyzed,"),
+        ("  ".into(), "could not be analyzed,"),
+        (
+            "cause\nprivate detail".into(),
+            "could not be analyzed (cause),",
+        ),
+        (
+            format!("failed to read {}: unavailable", story.display()),
+            "could not be analyzed (failed to read web/stories/Broken.stories.tsx: unavailable),",
+        ),
     ];
-    for cause in causes {
+    for (cause, expected) in causes {
         std::sync::Arc::get_mut(shared.ts.get_mut(&story).unwrap())
             .unwrap()
             .parse_error = Some(cause.clone());
@@ -30,6 +36,7 @@ fn prepared_story_errors_use_authoritative_causes_and_sources() {
             diagnostics::malformed_stories(&root, &shared, &stories, false);
         assert!(incomplete);
         assert_eq!(findings.len(), 1);
+        assert!(findings[0].message.contains(expected), "{findings:#?}");
         assert!(!findings[0].message.contains("()"));
         assert!(!findings[0].message.contains("private detail"));
         assert!(!findings[0].message.contains(root.to_str().unwrap()));
@@ -61,6 +68,30 @@ fn prepared_story_errors_use_authoritative_causes_and_sources() {
             .len(),
         1
     );
+}
+
+#[test]
+fn unreadable_story_reports_repo_relative_read_error_through_public_checks() {
+    let root = fixture("unreadable-story");
+    let cfg = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let direct = check(&root, &cfg, None).unwrap();
+    assert_eq!(direct.len(), 1, "{direct:#?}");
+    assert_eq!(direct[0].file, "Card.stories.tsx");
+    assert_eq!(direct[0].target.as_deref(), Some("unanalyzable"));
+    assert!(direct[0]
+        .message
+        .contains("failed to read Card.stories.tsx:"));
+    assert!(!direct[0].message.contains(root.to_str().unwrap()));
+    assert_eq!(
+        direct,
+        crate::codebase::rules::run_check(&root, None, None).unwrap()
+    );
+    let json = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({ "root": root }).to_string(),
+    ))
+    .unwrap();
+    let report: serde_json::Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(report["rules"], serde_json::to_value(direct).unwrap());
 }
 
 #[test]

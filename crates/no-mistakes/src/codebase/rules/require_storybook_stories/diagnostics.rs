@@ -127,18 +127,6 @@ pub(super) fn incomplete_component(component: super::types::Component) -> RuleFi
     }
 }
 
-pub(super) struct RuleCheck<'a> {
-    pub(super) root: &'a Path,
-    pub(super) project_root: &'a Path,
-    pub(super) config: &'a NoMistakesConfig,
-    pub(super) rule: &'a crate::config::v2::schema::RuleDef,
-    pub(super) shared: &'a CheckFactMap,
-    pub(super) resolver: &'a dyn ImportResolution,
-    pub(super) inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
-    pub(super) defer_suppression: bool,
-    pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
-}
-
 fn story_suppressed(shared: &CheckFactMap, path: &Path) -> bool {
     shared
         .ts

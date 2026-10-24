@@ -1,6 +1,6 @@
 pub(super) use super::diagnostics::check_with_resolver;
-use super::diagnostics::RuleCheck;
 use super::suppression::unsuppressed_component_keys;
+use super::types::RuleCheck;
 use super::{
     all_react_component_keys, colocated_test_covered_components, component_disabled,
     directly_covered_components, dynamic_or_mock_boundary_files, effective_story_patterns,

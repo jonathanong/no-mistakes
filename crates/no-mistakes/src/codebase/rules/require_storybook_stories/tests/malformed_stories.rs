@@ -31,29 +31,37 @@ fn malformed_story_makes_only_its_application_incomplete_in_public_reports() {
 #[test]
 fn malformed_story_policy_and_visibility_never_create_missing_claims() {
     let root = fixture("malformed-stories");
-    for scope in ["include", "exclude", "project", "allow", "ignore", "advise"] {
-        let mut cfg = fixture_config();
-        match scope {
-            "include" => cfg.rules[0].include = vec!["web/components/**".into()],
-            "exclude" => cfg.rules[0].exclude = vec!["web/stories/**".into()],
-            "project" => cfg.projects.get_mut("web").unwrap().exclude = vec!["stories/**".into()],
-            "allow" => {
-                cfg.rules[0].options["allowFiles"]["stories/Broken.stories.tsx"] =
-                    "Separate harness".into()
+    for effort in [
+        crate::config::v2::Effort::Low,
+        crate::config::v2::Effort::Max,
+    ] {
+        for scope in ["include", "exclude", "project", "allow", "ignore", "advise"] {
+            let mut cfg = fixture_config();
+            cfg.effort_override = Some(effort);
+            match scope {
+                "include" => cfg.rules[0].include = vec!["web/components/**".into()],
+                "exclude" => cfg.rules[0].exclude = vec!["web/stories/**".into()],
+                "project" => {
+                    cfg.projects.get_mut("web").unwrap().exclude = vec!["stories/**".into()]
+                }
+                "allow" => {
+                    cfg.rules[0].options["allowFiles"]["stories/Broken.stories.tsx"] =
+                        "Separate harness".into()
+                }
+                policy => cfg.rules[0].options["unanalyzable"] = policy.into(),
             }
-            policy => cfg.rules[0].options["unanalyzable"] = policy.into(),
-        }
-        let findings = check(&root, &cfg, None).unwrap();
-        let count = if matches!(scope, "ignore" | "advise") {
-            1
-        } else {
-            2
-        };
-        assert_eq!(findings.len(), count, "{scope}: {findings:#?}");
-        assert_eq!(findings[0].file, "other/components/Missing.tsx");
-        if count == 2 {
-            assert_eq!(findings[1].file, "web/components/Unknown.tsx");
-            assert_eq!(findings[1].target.as_deref(), Some("unanalyzable"));
+            let findings = check(&root, &cfg, None).unwrap();
+            let count = if matches!(scope, "ignore" | "advise") {
+                1
+            } else {
+                2
+            };
+            assert_eq!(findings.len(), count, "{scope}: {findings:#?}");
+            assert_eq!(findings[0].file, "other/components/Missing.tsx");
+            if count == 2 {
+                assert_eq!(findings[1].file, "web/components/Unknown.tsx");
+                assert_eq!(findings[1].target.as_deref(), Some("unanalyzable"));
+            }
         }
     }
 }
