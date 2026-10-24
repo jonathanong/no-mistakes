@@ -121,9 +121,20 @@ function namedCallbackDisposition(fn, context, acceptsArgument) {
         continue;
       }
       const use = argumentUse(id, value);
-      if (!use) continue;
+      if (!use) {
+        // Ordinary direct calls retain their established return contract; escaping
+        // reads cannot borrow a separate argument contract.
+        const invocation = value.parent;
+        const result =
+          invocation?.type === "CallExpression" && invocation.callee === value
+            ? unwrapTransparentParent(invocation)
+            : null;
+        if (!result) accepted = false;
+        continue;
+      }
       passed = true;
-      if (!stable || !use.direct || !acceptsArgument(use.value)) accepted = false;
+      if (!stable || (!use.direct && value.parent?.type !== "Property") || !acceptsArgument(value))
+        accepted = false;
     }
   }
 
