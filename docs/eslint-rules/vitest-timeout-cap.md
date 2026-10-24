@@ -107,7 +107,6 @@ list, so a prior deletion still exposes inherited setters and retains unknown
 values. Receiver aliases, nested receivers, functions, loops, branches, and
 uncertain deletion keys do not establish this execution order.
 
-
 Object and array spreads make shallow copies. Replacing, updating, or deleting a
 copy's own property does not make the source's timeout unknown; the copy's own
 timeout still becomes unknown. Nested references remain shared, so a write such
@@ -169,6 +168,22 @@ The parameter follows `unknownValues`: the default ignores it and `"finding"`
 reports an unknown timeout. Use a literal or immutable scalar budget at the
 registration. A Vitest default import is not a supported runner binding; imports
 or re-exports from another file do not prove Vitest identity here.
+
+```ts
+import runner from "vitest";
+import { remoteTest } from "./runner"; // That file re-exports Vitest's `it`.
+runner("default import", () => {}, 60_000);
+runner.it("default member", () => {}, 60_000);
+remoteTest("cross-file runner", () => {}, 60_000);
+```
+
+Rewrite the registration with a named Vitest import and a local immutable budget:
+
+```ts
+import { it } from "vitest";
+const budget = 4_000;
+it("runs", () => {}, budget);
+```
 
 ## Options
 
