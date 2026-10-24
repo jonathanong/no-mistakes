@@ -55,3 +55,6 @@ async function argumentMutation(callback: () => Promise<unknown>) {
 }
 const argumentsAlias = () => enqueueEmail(12);
 await argumentMutation(argumentsAlias);
+const inspected = () => enqueueEmail(13);
+void typeof inspected; // An unrelated non-argument read does not invalidate adoption.
+await consume(inspected);
