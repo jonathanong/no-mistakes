@@ -136,12 +136,29 @@ fn low_display_locations_require_the_exact_rule_local_application() {
         .join("../../test-cases/rules/postgres-no-offset/fixture/opaque-escape-sites");
     let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
     let path = root.join("src/mixed.mts");
-    let config =
+    let mut config =
         no_mistakes::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes-mixed.yml")))
             .unwrap();
     let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
         std::slice::from_ref(&path),
     ))));
+    no_mistakes::codebase::rules::analysis_policy::prepare_rule_analysis(
+        &root,
+        &mut config,
+        std::slice::from_ref(&path),
+        &sources,
+    )
+    .unwrap();
+    let applications = config.rule_applications("postgres-no-offset");
+    for (application, effort) in applications.iter().zip([
+        no_mistakes::config::v2::Effort::Low,
+        no_mistakes::config::v2::Effort::Max,
+    ]) {
+        assert_eq!(
+            config.effective_rule_analysis(application).unwrap().effort,
+            effort
+        );
+    }
     let mut plan = CheckFactPlan::default();
     configure_prepared_postgres_plan(&root, &config, &mut plan).unwrap();
     let facts = collect_check_facts_with_graph_files_playwright_and_sources(
