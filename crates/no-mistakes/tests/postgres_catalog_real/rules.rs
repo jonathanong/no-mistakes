@@ -7,6 +7,21 @@ fn committed() -> std::path::PathBuf {
 }
 
 #[test]
+fn catalog_rule_fixture_inventory_is_complete_without_a_database() {
+    let config: serde_yaml::Value =
+        serde_yaml::from_slice(&std::fs::read(committed().join(".no-mistakes.yml")).unwrap())
+            .unwrap();
+    let configured: std::collections::BTreeSet<_> = config["rules"]
+        .as_sequence()
+        .unwrap()
+        .iter()
+        .map(|entry| entry["rule"].as_str().unwrap())
+        .collect();
+    let expected: std::collections::BTreeSet<_> = SCHEMA_CATALOG_RULE_IDS.iter().copied().collect();
+    assert_eq!(configured, expected);
+}
+
+#[test]
 fn generated_catalog_is_stable_and_matches_the_committed_fixture() {
     let Some(database) = Database::create("fixture") else {
         return;
