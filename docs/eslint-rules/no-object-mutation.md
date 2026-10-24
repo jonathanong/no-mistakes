@@ -127,7 +127,6 @@ The exemption assumes the native array callback contract for unknown receivers.
 Known local custom object or class methods named `reduce` keep ordinary callback
 parameter reporting.
 
-
 ```ts
 function build(extra) {
   const box = {};
@@ -221,8 +220,11 @@ function indexed(xs) {
 }
 ```
 
-`xs.reduce((acc, x) => { acc[x] = 1; return acc }, {})` is reported because
-`acc` is a parameter. `indexed` builds the object in one expression instead.
+`xs.reduce((acc, x) => { acc[x] = 1; return acc }, {})` is allowed because
+its literal seed is locally owned. With an identifier seed such as `shared`,
+`xs.reduce((acc, x) => { acc[x] = 1; return acc }, shared)` is still reported.
+Build a fresh literal accumulator instead. `indexed` is another option that
+builds the object in one expression.
 
 `literal-rewrite.mts` declares `tables` once, so the query resolves
 `app.users`, and `replicaClient` returns a known object. `rows-rewrite.mts`
