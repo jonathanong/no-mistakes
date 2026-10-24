@@ -19,13 +19,13 @@ fn bounded_collision_lookups_reuse_catalog_name_indexes() {
         }
     };
     lookup();
-    let indexed = names::key_split_count();
+    let indexed = names::key_work::count();
     // Measure catalog-key processing, rather than only output equality: the old scans split
     // every competing catalog key on each of these statement-sized lookups.
     for _ in 0..1000 {
         lookup();
     }
-    assert_eq!(names::key_split_count(), indexed);
+    assert_eq!(names::key_work::count(), indexed);
 }
 
 #[test]
@@ -34,10 +34,10 @@ fn catalogs_without_views_skip_table_collision_indexing() {
         .join("catalog-resolution/catalog-ambiguous-owner.json");
     let catalog = SchemaCatalog::from_json(&std::fs::read_to_string(path).unwrap()).unwrap();
     assert_eq!(catalog.views().count(), 0);
-    let before = names::key_split_count();
+    let before = names::key_work::count();
     for _ in 0..1000 {
         assert!(catalog.view_relation("customer_accounts").is_none());
     }
-    assert_eq!(names::key_split_count(), before);
+    assert_eq!(names::key_work::count(), before);
     assert!(catalog.relation_fallback.get().is_none());
 }
