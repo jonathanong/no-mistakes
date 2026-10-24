@@ -23,16 +23,16 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Value::Promise(inner) | Value::Evaluated(inner, _) => {
                 self.refresh_argument(inner);
             }
+            // Borrow the summary before coercion can detach immutable records.
             Value::Aggregate(values)
             | Value::References(values)
             | Value::Object(values)
             | Value::Record(values, _)
             | Value::Joined(values)
-            | Value::Possible(values) => {
-                // A borrowed summary avoids detaching immutable scalar records.
-                if values.contains_reference() {
-                    self.refresh_arguments(values);
-                }
+            | Value::Possible(values)
+                if values.contains_reference() =>
+            {
+                self.refresh_arguments(values);
             }
             // Argument containers already resolve their slots by identity.
             _ => {}
