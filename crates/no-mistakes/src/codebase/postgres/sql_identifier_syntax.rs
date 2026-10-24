@@ -119,3 +119,6 @@ mod runtime_span_tests;
 
 #[cfg(test)]
 mod escape_site_tests;
+
+#[cfg(test)]
+mod low_max_bind_parity_tests;

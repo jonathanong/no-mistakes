@@ -1,0 +1,61 @@
+effort: low
+unanalyzable: advise
+rules:
+  - rule: postgres-no-offset
+    name: low-offset
+    scope: repository
+    options:
+      effort: low
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']
+  - rule: postgres-no-unbounded-sql-identifier
+    name: low-identifier
+    scope: repository
+    options:
+      effort: low
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']
+  - rule: postgres-no-mutable-sql-registry
+    name: low-registry
+    scope: repository
+    options:
+      effort: low
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']
+  - rule: postgres-no-transformed-uuid-predicates
+    name: low-uuid
+    scope: repository
+    options:
+      effort: low
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']
+      schemaCatalogPath: schema.json
+  - rule: postgres-no-offset
+    name: max-offset
+    scope: repository
+    options:
+      effort: max
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']
+  - rule: postgres-no-unbounded-sql-identifier
+    name: max-identifier
+    scope: repository
+    options:
+      effort: max
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']
+  - rule: postgres-no-mutable-sql-registry
+    name: max-registry
+    scope: repository
+    options:
+      effort: max
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']
+  - rule: postgres-no-transformed-uuid-predicates
+    name: max-uuid
+    scope: repository
+    options:
+      effort: max
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']
+      schemaCatalogPath: schema.json

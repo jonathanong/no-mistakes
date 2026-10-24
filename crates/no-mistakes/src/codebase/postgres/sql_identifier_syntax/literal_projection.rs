@@ -75,11 +75,15 @@ pub(crate) fn project_literals<T: Clone>(
                 {
                     return Ok(None);
                 }
-                if let Some(facts) = prepared
-                    .get(profile)
-                    .and_then(|calls| calls.get(&call.span))
-                {
-                    return facts.clone();
+                // Low library tags publish actual binds and physical positions;
+                // max may publish identifier markers at the same executor span.
+                if parameterized.is_none() {
+                    if let Some(facts) = prepared
+                        .get(profile)
+                        .and_then(|calls| calls.get(&call.span))
+                    {
+                        return facts.clone();
+                    }
                 }
                 if let Some(observer) = &observer {
                     observer.increment(projection.parse_metric, 1);
