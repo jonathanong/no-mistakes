@@ -23,9 +23,9 @@ source spelling. Identifier receivers (`page.waitForTimeout()`), renamed
 receivers (`browser.waitForTimeout()`), `this.waitForTimeout()`, static
 computed members (`page["waitForTimeout"]()`), and chained receivers recorded
 as `<unknown>.waitForTimeout()` all match `terminal: waitForTimeout`. Dynamic
-computed access such as `page[method]()` stays ignored when
-`unknownCalls: ignore`. Other unresolved, shadowed, computed, or dynamic calls
-are not reported unless the application sets `unknownCalls: finding`.
+computed access such as `page[method]()` and other unresolved, shadowed, or
+dynamic calls report `unknown call` by default. Set `unknownCalls: ignore` to
+omit unmatched unknown calls; definite selector matches still report.
 
 ## Options and roots
 
@@ -53,7 +53,6 @@ rules:
       roots:
         - glob: src/**/*.ts
       traversal: file
-      unknownCalls: ignore
       targets:
         - global: setTimeout
 ```
@@ -90,10 +89,10 @@ Transitive source selection shares one breadth-first traversal across expanded
 roots, without constructing per-root call traces. At `maxDepth: N`, only call
 sites whose owners are fewer than N call hops from a root are selected.
 
-`traversal` defaults to `direct`, `unknownCalls` defaults to `ignore`, and
+`traversal` defaults to `direct`, `unknownCalls` defaults to `finding`, and
 `invocations` defaults to `call`. An omitted `maxDepth` is unbounded for
 `file` and `transitive` traversal. `targets` must be non-empty unless
-`unknownCalls: finding` is selected.
+`unknownCalls: finding` is selected (including the default).
 
 Every selector is a one-key mapping. These are the accepted shapes:
 
@@ -148,13 +147,15 @@ graph without changing what `forbidden-calls` reports.
 
 ## Valid example
 
-A selected file that does not invoke a forbidden timer API passes. Inject a
-clock or import an approved wrapper instead of calling `setTimeout` directly.
+A selected file with statically resolved calls and no forbidden timer API
+passes. This test clock advances without scheduling a real timer.
 
 ```ts
-export function wait(clock: { sleep(ms: number): void }) {
-  clock.sleep(1);
+let now = 0;
+function advanceClock(ms: number) {
+  now += ms;
 }
+advanceClock(1);
 ```
 
 The consumer acceptance matrix in
@@ -176,18 +177,19 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 Following recall over precision, the intent is that inputs this rule cannot prove are never treated as clean ([how analysis works](../../README.md#how-analysis-works)), but unresolved dynamic calls are governed by this rule's own `unknownCalls` option rather than `options.unanalyzable`:
 
-- `unknownCalls: finding` reports unresolved dynamic calls that match no `exact` or `terminal` selector as explicit policy findings.
-- `unknownCalls: ignore` omits them, and is the default, so unresolved dynamic calls are cleared by default.
+- `unknownCalls: finding` is the default and reports unresolved dynamic calls that match no `exact` or `terminal` selector as explicit policy findings.
+- `unknownCalls: ignore` explicitly omits those unmatched calls.
 - `unknownArguments` defaults to `finding`, so a call whose arguments cannot be evaluated is reported.
 
-[#2663](https://github.com/jonathanong/no-mistakes/issues/2663) proposes a recall-first default for `unknownCalls`.
+See the [migration note](../migrations/forbidden-calls-unknown-calls.md) for
+the finding change in existing configurations.
 
 Definite matches of a configured selector remain findings under either value. See below for the full description.
 
 ## Unknown calls and suppression
 
 `unknownCalls: ignore` omits unresolved dynamic calls that do not match an
-`exact` or `terminal` selector. `unknownCalls: finding` reports remaining
+`exact` or `terminal` selector. The default, `finding`, reports remaining
 unknown calls as explicit policy findings. Configuration errors, such as an
 invalid root, selector, or a requested root that fails to parse, are never
 suppressible.
@@ -200,8 +202,8 @@ root. Source findings honor ordinary `no-mistakes-disable-file`,
 setTimeout(complete, 1);
 ```
 
-Counterexample: configuring a root without a target (and without
-`unknownCalls: finding`) is invalid; suppressions cannot hide that error.
+Counterexample: configuring a root without a target while explicitly setting
+`unknownCalls: ignore` is invalid; suppressions cannot hide that error.
 
 ## Counterexample
 
@@ -212,9 +214,13 @@ setTimeout(() => {}, 0);
 
 ## Fix
 
-Inject the behavior, use the repository's approved wrapper, or narrow the rule
-application to the layer where the call is forbidden. Do not add a textual
-allowlist for aliases or namespace imports: configure the canonical target.
+Use a statically resolved approved wrapper, or narrow the rule
+application to the layer where the call is forbidden. For an `unknown call`,
+rewrite dynamic invocation to a statically resolved call when possible; set
+`unknownCalls: ignore` only if the application intentionally permits unmatched
+dynamic calls, including calls through an injected clock or callback. Do not add
+a textual allowlist for aliases or namespace imports:
+configure the canonical target.
 
 ## Related rules
 

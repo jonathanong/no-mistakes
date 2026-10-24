@@ -27,9 +27,13 @@ test(
       } else if (scenario === "expression-arbiter-recovered") {
         assert.deepEqual(
           report.rules.map(({ file }) => file),
-          ["sql/malformed-neighbor.sql"],
+          ["sql/malformed-neighbor.sql", "sql/malformed-neighbor.sql"],
         );
         assert.match(report.rules[0].message, /expression arbiter depends on email/);
+        // Recovery keeps the INSERT proof and reports its unsupported neighbor.
+        assert.equal(report.rules[1].line, 4);
+        assert.equal(report.rules[1].target, "SELECT * FROM");
+        assert.match(report.rules[1].message, /could not be analyzed/);
       } else {
         assert.deepEqual(
           report.rules.map(({ file }) => file),
@@ -66,6 +70,37 @@ test(
           expression.sql,
         );
       }
+    }
+  },
+);
+
+test(
+  "compiled checks preserve recall policies across CJS, ESM and project reports",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const fixtures = join(__dirname, "../../../test-cases/rules");
+    for (const [scenario, config, findings, advisories, subdirectory = ""] of [
+      ["forbidden-calls/consumer-matrix", "configs/unknown-calls-default.yml", 1, 0],
+      ["forbidden-calls/consumer-matrix", "configs/unknown-calls-finding.yml", 1, 0],
+      ["forbidden-calls/consumer-matrix", "configs/unknown-calls-ignore.yml", 0, 0],
+      ["postgres-ddl-unanalyzable", "report.yml", 22, 0],
+      ["postgres-ddl-unanalyzable", "advise.yml", 0, 22],
+      ["postgres-ddl-unanalyzable", "ignore.yml", 0, 0],
+      ["postgres-ddl-unanalyzable", "narrow.yml", 2, 0],
+      ["postgres-ddl-unanalyzable", "report.yml", 3, 0, "unsupported-valid"],
+      ["postgres-ddl-unanalyzable", "positive.yml", 1, 0, "copy"],
+      ["postgres-ddl-unanalyzable", "report.yml", 69, 0, "procedural"],
+    ]) {
+      const options = { root: join(fixtures, scenario, "fixture", subdirectory), config };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      const prepared = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+      assert.deepEqual(prepared.reports[0].result, report);
+      assert.deepEqual(report.warnings, []);
+      assert.equal(report.rules.length, findings, config);
+      assert.equal(report.advisories.length, advisories, config);
     }
   },
 );

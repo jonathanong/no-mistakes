@@ -1,0 +1,13 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - name: unknown-calls-default
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - file: src/unit/dynamic.test.mts
+      traversal: file
+      targets:
+        - global: setTimeout

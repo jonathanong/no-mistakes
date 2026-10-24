@@ -90,6 +90,14 @@ pub(crate) fn check_prepared_sql_rule(
     let config = prepared_config.as_ref().unwrap_or(config);
     let facts = prepare_sql_rule_facts(root, config, all_files, sources, rule_id)?;
     let mut findings = check(root, config, all_files, sources, &facts)?;
+    if super::postgres_unanalyzable_schema::RULE_IDS.contains(&rule_id) {
+        findings.extend(
+            super::postgres_unanalyzable_schema::diagnostics_for_rule(
+                root, config, all_files, &facts, rule_id,
+            )?
+            .findings,
+        );
+    }
     findings.extend(super::postgres_undeclared_executors::check(
         root, config, rule_id, all_files, &facts,
     )?);

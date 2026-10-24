@@ -1,0 +1,1092 @@
+[
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/config-error.yml",
+    "key": "f5ce0bd41be99a5e",
+    "status": 1,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "3e5252e5212bdbb8fcb65ca842f07c0a766b11da2d9c14101b6d12fb412176fe",
+    "stderr": "2f919376cfc98d5ecef438ee701c2dd3d88d95aac29e002fa4f8c515aa0839c8"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/exact-unknown.yml",
+    "key": "7f100ed417776ba9",
+    "status": 1,
+    "findings": 2,
+    "advisories": 0,
+    "stdout": "2ac97dabad8bfb7843253fe19373a3d2bb7f875f02c21c7814ee1bb4fc37e92c",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/exclude-integration.yml",
+    "key": "1fc5dbd678e6f837",
+    "status": 1,
+    "findings": 3,
+    "advisories": 0,
+    "stdout": "1a5ff79199d7d3cb505c05b0cc2570d8e8e0fc6c909437e75e9847f050a80cf7",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/explicit-only.yml",
+    "key": "0d17ca38238849e5",
+    "status": 1,
+    "findings": 2,
+    "advisories": 0,
+    "stdout": "90ecb422bcf590c4b54cd7c9f1c3137a158d7e74a58a1c525073caf9e99495de",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/malformed-root.yml",
+    "key": "c233161c8b4d1f68",
+    "status": 1,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "2e88d530662d2b1d3a8e974b08f8476156903a4873f9f8bc485529ada578316e",
+    "stderr": "c1a0c5beb72d33e7a5ccb38322d6c21b069795d77564b8054f9bad69b278aec3"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/named-unit.yml",
+    "key": "abe887890b16e433",
+    "status": 1,
+    "findings": 2,
+    "advisories": 0,
+    "stdout": "4ac024ba73f1827df45ac7f853887e149c33fa6926ab65133f11ee8914ce41ab",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/overlap-unit.yml",
+    "key": "beb9f7a69e3e7850",
+    "status": 1,
+    "findings": 2,
+    "advisories": 0,
+    "stdout": "9adbf8854b934cf16bd4081a92e869eda109f496c1501bbb91ad1167159c3dbc",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/retired-forbidden-calls.yml",
+    "key": "ed4da49d1853e58d",
+    "status": 2,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr": "ed4dbe6a07bb7ad4abd9627718766f100eb2d5580f0a672c0908c22288a285d2"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/root-exclusion-all-selectors.yml",
+    "key": "78fb63f7f790652c",
+    "status": 1,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "b4af448eb1d8c489e3237832bd0dec196550e4a8c6c49c2b29aaf3631ca9a3f0",
+    "stderr": "98931df7842bcc30c3c5da52a815615b06b7f0ddc08a1a6f5523b8677dcef759"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/root-exclusion-blank-pattern.yml",
+    "key": "59a6562716000c11",
+    "status": 1,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "dbdc36743a03518929efc9243b30702957610c930420697f06d5cf1f4aa133c6",
+    "stderr": "4d7e28895b5c0e4b870de1934b4fa9ebbd020a50bf7efcf8bc0bb63e2d6fdbec"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/root-exclusion-empty-list.yml",
+    "key": "46170a9493c40f1e",
+    "status": 1,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "dbdc36743a03518929efc9243b30702957610c930420697f06d5cf1f4aa133c6",
+    "stderr": "4d7e28895b5c0e4b870de1934b4fa9ebbd020a50bf7efcf8bc0bb63e2d6fdbec"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/root-exclusion-invalid.yml",
+    "key": "335043da5c5ee1bc",
+    "status": 1,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "792b3a0f0e64e6bcdf5700b86663a7395d458f930754b1b923de1edd478cba76",
+    "stderr": "fb6939d6d8e71545351a8a59648a3fa1afb8445dc97346288d7b1f33f7dd1a78"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/root-exclusion-partial-path.yml",
+    "key": "178ac2b71811098d",
+    "status": 1,
+    "findings": 3,
+    "advisories": 0,
+    "stdout": "7403c646810d6ee114bd26bcd1a1ae2425493a4b8da25634467b0e9700920ce8",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/root-exclusion-rule-exclude.yml",
+    "key": "056b0e271d290c15",
+    "status": 1,
+    "findings": 2,
+    "advisories": 0,
+    "stdout": "97af723b316b1722febf43a1d65790e5d19464c3447d87313900e10971ae469c",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/root-exclusion-unfiltered.yml",
+    "key": "6197e6aaa3e5a92d",
+    "status": 1,
+    "findings": 3,
+    "advisories": 0,
+    "stdout": "a980702c8485ef12bb07211658e47959bd7fda1921d5694d3fd4f7ce352429a0",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/root-exclusion.yml",
+    "key": "5ad3107203dd3d2f",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "ab3c2b014d5ae3fc1c3100275adcc66ad5354709251942c5b7cbfea0cf7e05c3",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/unknown-calls-default.yml",
+    "key": "0e6a2d3dab2aaa98",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "10c39e33b63b44cdc3ae81c835eba70879ce36972016d5ccf5a7fbb9d444a797",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/unknown-calls-finding.yml",
+    "key": "58fbbf820778cdc3",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "72350cb18f234c41edf5cbc38e04c3e5a435af97f253dee51540da59f63dcd3b",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/unknown-calls-ignore.yml",
+    "key": "42bed258a51a2009",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/forbidden-calls/consumer-matrix/fixture",
+    "config": "configs/unknown-project.yml",
+    "key": "d00489ff881f11e6",
+    "status": 1,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "ca63ba376fd377cfdec86c534b5817bff0ccad4d7e099df79724d35fafcabec2",
+    "stderr": "dc4af9b407efb9012e166542631fa1c7171d20665aee27f9aa57f2c29a0d0e72"
+  },
+  {
+    "root": "test-cases/rules/postgres-constraint-validate/fixture/fail-do-missing",
+    "config": ".no-mistakes.yml",
+    "key": "fca7223314968552",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "3685d9a82041efd561170e42d15406f12065d965352dcb3570c14cddd7323323",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-constraint-validate/fixture/fail-missing",
+    "config": ".no-mistakes.yml",
+    "key": "1e915694d2fd1eb1",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "f38f4be039bb118b4b7976a815f809e7a7da7efb649e61499018055a6d3d6ae1",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-constraint-validate/fixture/fail-orphan",
+    "config": ".no-mistakes.yml",
+    "key": "fff989253eecfdd2",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "ec48b248ed471dd1541b49aba5c1e6470dd9ff93df3efa0f5caaca04a29155cb",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-constraint-validate/fixture/fail-set-null-columns",
+    "config": ".no-mistakes.yml",
+    "key": "07020c5ce4ca144e",
+    "status": 1,
+    "findings": 2,
+    "advisories": 0,
+    "stdout": "9f28d594b2f0d5427e11061facf7d74a91deb77019561664e60bc2c2346faa38",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-constraint-validate/fixture/pass",
+    "config": ".no-mistakes.yml",
+    "key": "11be48bf41943641",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-constraint-validate/fixture/pass-do-block",
+    "config": ".no-mistakes.yml",
+    "key": "cbdd1590cb714218",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-constraint-validate/fixture/pass-set-null",
+    "config": ".no-mistakes.yml",
+    "key": "0d20ef6167533847",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-constraint-validate/fixture/pass-set-null-columns",
+    "config": ".no-mistakes.yml",
+    "key": "4c5a96cdd903167a",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture",
+    "config": "advise.yml",
+    "key": "6e32b4e9737c5e3d",
+    "status": 0,
+    "findings": 0,
+    "advisories": 22,
+    "stdout": "8262c7173895bd762368e715b639ac9498efe0b100527c1681b11754bcafcf6f",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture",
+    "config": "ignore.yml",
+    "key": "ff0c0b6374c9e69d",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture",
+    "config": "low.yml",
+    "key": "3980f8a893415f86",
+    "status": 1,
+    "findings": 22,
+    "advisories": 0,
+    "stdout": "526513076e1a5d898bdc4e913d4e62b493989a1dd15b2ee4c1b66c66639a4b9e",
+    "stderr": "2360d4108c540039aedcf06fb5516687c1854251ec86a4a0843c2868204c1056"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture",
+    "config": "narrow.yml",
+    "key": "d50290a7c29695b2",
+    "status": 1,
+    "findings": 2,
+    "advisories": 0,
+    "stdout": "304eb989c5576c77f4ef67c7a161c3b316deaa7ea403ff54ea19bde24a20ee2c",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture",
+    "config": "report.yml",
+    "key": "9aa98ec8c6989305",
+    "status": 1,
+    "findings": 22,
+    "advisories": 0,
+    "stdout": "067a02d9cba0fb4eaa35aa35b2461daaf9f21488e85b374484ef54d889fbb551",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/copy",
+    "config": "positive.yml",
+    "key": "0589cbf5b25ac6e5",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "16cb12757507c32012739336d80b8ffe9f7512705b46f739d204acc771576993",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/copy",
+    "config": "report.yml",
+    "key": "1ac8b91d83bde1a8",
+    "status": 1,
+    "findings": 6,
+    "advisories": 0,
+    "stdout": "4ade0b685d2fadf13b5f9b2062935375f9e732fa822dd3b8235a0d2db4d96ec3",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/dynamic",
+    "config": "report.yml",
+    "key": "a22f598ff4e45c7b",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "20ffbd2315815664598c51fd5e1cacb723944c40def44503a6e6e8a89f9b049d",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/dynamic-unknown",
+    "config": "report.yml",
+    "key": "ac889254d6465bd1",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "31261bc590697287ea40c5f5134d6cc9313426e4ef1eaa11c8226b74df6b87af",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/dynamic-valid",
+    "config": "report.yml",
+    "key": "a61ba9dc881ae5d0",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/nested",
+    "config": "report.yml",
+    "key": "a4358abf2a085ab8",
+    "status": 1,
+    "findings": 2,
+    "advisories": 0,
+    "stdout": "94ff322d386b56b23242052ffaa02be92833dbfb36469c1ac55cc6ce76adefe9",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/procedural",
+    "config": "report.yml",
+    "key": "b4410a7b3f604979",
+    "status": 1,
+    "findings": 172,
+    "advisories": 0,
+    "stdout": "e321ed8b947a784c1eb2ae5e6d8c675da70aa801085e6d788980f8feb717e159",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/suppress",
+    "config": "advise.yml",
+    "key": "00f7f10ef0c5e632",
+    "status": 0,
+    "findings": 0,
+    "advisories": 1,
+    "stdout": "a9e6e875e245d112b8a6f792140e5bd9a4e214185250e95f730519227418e2ae",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/suppress",
+    "config": "report.yml",
+    "key": "70513e1557d4b2d8",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "b1361ec3f6996d4589bbbe48940a9cfb3c80ed01e8137c41f7cd5c5e62f8ae41",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/suppress-file",
+    "config": "report.yml",
+    "key": "0c18a288fb36bde7",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/unreadable",
+    "config": "report.yml",
+    "key": "857de4b3df896ab6",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/unsupported-valid",
+    "config": "report.yml",
+    "key": "ea2290bd533f7572",
+    "status": 1,
+    "findings": 3,
+    "advisories": 0,
+    "stdout": "2d16c31d0a581511eae800b766f6ce2a27154aa5c3657e262151ba3c5216e51d",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-fk-index/fixture/allow",
+    "config": ".no-mistakes.yml",
+    "key": "dc464dd1a71a5046",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-fk-index/fixture/directive",
+    "config": ".no-mistakes.yml",
+    "key": "daa033c6b6272369",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-fk-index/fixture/fail",
+    "config": ".no-mistakes.yml",
+    "key": "048c960e2371866c",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "e0e8a1238a1f201024a7eb24216d4eb488bf00aa1c6a8e8ae3016623efb1d198",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-fk-index/fixture/gin",
+    "config": ".no-mistakes.yml",
+    "key": "08f372bf63b1236b",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "e0e8a1238a1f201024a7eb24216d4eb488bf00aa1c6a8e8ae3016623efb1d198",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-fk-index/fixture/pass",
+    "config": ".no-mistakes.yml",
+    "key": "9b0472e58fcfe2f0",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-fk-index/fixture/stale",
+    "config": ".no-mistakes.yml",
+    "key": "9545fa748d8c6406",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "59d6dc87c84d4ce089a4e6f0cdabf0f367b8c42c36cf94dee21b5004a762bddf",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-generated-column-predicates/fixture/embedded",
+    "config": ".no-mistakes.yml",
+    "key": "cdab001b311b6970",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "564dcc4c266edd6e9a945ac312609940d82625226b380453f36010ece6fd1af5",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-generated-column-predicates/fixture/fail",
+    "config": ".no-mistakes.yml",
+    "key": "3a90c9d1084fb8ab",
+    "status": 1,
+    "findings": 4,
+    "advisories": 0,
+    "stdout": "e605e90d1cd7c15cf66f70263e2fdd42ac174c9ee8fe335d5561b4cb793d4df7",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-generated-column-predicates/fixture/pass",
+    "config": ".no-mistakes.yml",
+    "key": "c6aa1f69244b47da",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-generated-column-predicates/fixture/pass-suppressed",
+    "config": ".no-mistakes.yml",
+    "key": "11c282b66d3f0d8d",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-idempotent-insert/fixture/expression-arbiter-recovered",
+    "config": ".no-mistakes.yml",
+    "key": "db5b899869929453",
+    "status": 1,
+    "findings": 2,
+    "advisories": 0,
+    "stdout": "790f53541e3ec2e8338f5f2cb090b165e02756e9954e73791a05548b3388c03f",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-idempotent-insert/fixture/expression-arbiters",
+    "config": ".no-mistakes.yml",
+    "key": "8a9898139aaef38c",
+    "status": 1,
+    "findings": 7,
+    "advisories": 0,
+    "stdout": "942557fef14d6219aa971e4a27d5c8393cd8424696deb53a23dbfe9b2c037fc0",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-idempotent-insert/fixture/expression-arbiters-safe",
+    "config": ".no-mistakes.yml",
+    "key": "3c70532c09fdba62",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-idempotent-insert/fixture/fail",
+    "config": ".no-mistakes.yml",
+    "key": "13372c171552504b",
+    "status": 1,
+    "findings": 4,
+    "advisories": 0,
+    "stdout": "eb096a84c4f0ce5d4ef112bb1a23aea3e1808041da1b80a443c1e27a043e53ee",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-idempotent-insert/fixture/fail-dynamic",
+    "config": ".no-mistakes.yml",
+    "key": "902aea6a4d3ec171",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "6ae8c3c836fc133b79a9af48add43a822d282449644c2b917e6d4809e778106f",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-idempotent-insert/fixture/fail-embedded",
+    "config": ".no-mistakes.yml",
+    "key": "ee266bb5c539e1ef",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "64a1ca0573ce743a228eb830162d949081acf443922b4706e7c48427a2927485",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-idempotent-insert/fixture/fail-volatile",
+    "config": ".no-mistakes.yml",
+    "key": "c94519ed0e8ad41e",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "67bddc9898ba36a8c0df9bf0011029d2eadd21478eeff514863c1edf790a2277",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-idempotent-insert/fixture/fail-volatile-proof",
+    "config": ".no-mistakes.yml",
+    "key": "2a10000945712282",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "2d7286b07eafc0eb6d7b4530e63da5fce54bb7934f12f9a764addc6de7d32842",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-idempotent-insert/fixture/pass-do-nothing",
+    "config": ".no-mistakes.yml",
+    "key": "7b867e2246f6e204",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-idempotent-insert/fixture/pass-not-exists",
+    "config": ".no-mistakes.yml",
+    "key": "1aa08dc30b833f7c",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-idempotent-insert/fixture/pass-partial-where",
+    "config": ".no-mistakes.yml",
+    "key": "89e65b0ade075732",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-identifier-length/fixture/fail",
+    "config": ".no-mistakes.yml",
+    "key": "a1b1d8c12b9b3702",
+    "status": 1,
+    "findings": 22,
+    "advisories": 0,
+    "stdout": "bfad9ed49fe276a4da089a1a5e6d246b1631b68330f7fdcbd3a71709b60367f7",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-identifier-length/fixture/pass",
+    "config": ".no-mistakes.yml",
+    "key": "0eb0de93f84088e5",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-identifier-length/fixture/pass-suppressed",
+    "config": ".no-mistakes.yml",
+    "key": "d4419b7e2f441bd8",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-identifier-length/fixture/suppress-file",
+    "config": ".no-mistakes.yml",
+    "key": "2c6d88f1fe612c8c",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-identifier-length/fixture/suppress-line",
+    "config": ".no-mistakes.yml",
+    "key": "14ccb05b03c503ae",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-no-add-column/fixture/allowed",
+    "config": ".no-mistakes.yml",
+    "key": "8cf0bbf8796c4b98",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-no-add-column/fixture/allowed-do",
+    "config": ".no-mistakes.yml",
+    "key": "0fb945c73b72dbd5",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-no-add-column/fixture/dynamic",
+    "config": ".no-mistakes.yml",
+    "key": "7db92bc5c53f8b5a",
+    "status": 1,
+    "findings": 2,
+    "advisories": 0,
+    "stdout": "60cc708d7998e7f5f2d4da26ef91b5757c43ed3a2e9c4d155745ffd27726e297",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-no-add-column/fixture/fail",
+    "config": ".no-mistakes.yml",
+    "key": "be9ecf0b87f8d736",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "d703066c8529f336ac2660f854162da305a8cf0ab52c2381d5afa38eece1ed4b",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-no-add-column/fixture/fail-do-block",
+    "config": ".no-mistakes.yml",
+    "key": "70094ca9fe302ea7",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "910682f14c63c4a02dd6194ace7d3fad7ce19cbd8fb33ea33f0b56ce7c25555e",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-no-add-column/fixture/mismatch",
+    "config": ".no-mistakes.yml",
+    "key": "4c847206a330a06f",
+    "status": 1,
+    "findings": 2,
+    "advisories": 0,
+    "stdout": "29a8e4898ffeff3afb6a624ca15ca21c6382e6d709eb083bc8e16883a9d9863a",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-no-add-column/fixture/pass",
+    "config": ".no-mistakes.yml",
+    "key": "dbebcdbfb70ecc41",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-no-add-column/fixture/qualified-repeat",
+    "config": ".no-mistakes.yml",
+    "key": "731230bd4de939ca",
+    "status": 1,
+    "findings": 2,
+    "advisories": 0,
+    "stdout": "ecfa2b23143be70ad473e475ba016eceafdf3e8ab794b73e34aa0e885632178b",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-no-generated-column-writes/fixture",
+    "config": ".no-mistakes.yml",
+    "key": "489b358b924d72a7",
+    "status": 1,
+    "findings": 5,
+    "advisories": 0,
+    "stdout": "0a34e2672f54678397b9833e6b50da028dbd670e1bcbb013c266ff5af2260d19",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/allow",
+    "config": ".no-mistakes.yml",
+    "key": "f08ddc301bd5c505",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/concurrent-drop",
+    "config": ".no-mistakes.yml",
+    "key": "e1160851a225cab9",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/dropped",
+    "config": ".no-mistakes.yml",
+    "key": "730b525a270d11b6",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/dropped-table",
+    "config": ".no-mistakes.yml",
+    "key": "1eb0ac00a9650246",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/earlier-drop",
+    "config": ".no-mistakes.yml",
+    "key": "b8ecd5b7214a47a4",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "535c2e1411a73e51f5ae6a5aae06e9fbb241606269197482f2b4075caaccd3b2",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/fail",
+    "config": ".no-mistakes.yml",
+    "key": "b5d46ceff039735f",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "d9d5d3876038f10406d6fff75b93a0a2cbeef81fb03e11dda91f9d3e251669bf",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/flyway-order",
+    "config": ".no-mistakes.yml",
+    "key": "1aee387513faa7b4",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/multiline",
+    "config": ".no-mistakes.yml",
+    "key": "df628c3eb97d8ba3",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/numeric-order",
+    "config": ".no-mistakes.yml",
+    "key": "b61ed0c3642fde11",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/pass",
+    "config": ".no-mistakes.yml",
+    "key": "d5ab0ef2d1ec010d",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/predicate-case",
+    "config": ".no-mistakes.yml",
+    "key": "3fb288086c8cfc6e",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/schema",
+    "config": ".no-mistakes.yml",
+    "key": "d7776ecada0152c5",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-redundant-index/fixture/schema-drop",
+    "config": ".no-mistakes.yml",
+    "key": "d66a05d32b6f7e55",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "dfbfb97b7b81e20b6b9e118dacd8de663e9645db9ccc11c6752ae02f6bb2ba18",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-require-fk-on-delete/fixture/fail",
+    "config": ".no-mistakes.yml",
+    "key": "df2f05eb1ccf25a0",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "0d8ea3351be1e271e553b63adaa0ceff0fcf95d8e347cec5fce38ea32f6d2c67",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-require-fk-on-delete/fixture/fail-alter",
+    "config": ".no-mistakes.yml",
+    "key": "867b6ee54333a6fb",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "6e4fc89a8f9fc2963c5728102951c692af2d27949a8f2f08358d4ed0c25b2916",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-require-fk-on-delete/fixture/fail-do-block",
+    "config": ".no-mistakes.yml",
+    "key": "e44c2a0327791a05",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "5d3c5fdbdf3584cff4c68e7f9bcb5468d2c1ff0c89d440185bca675f2f30d9eb",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-require-fk-on-delete/fixture/fail-no-action",
+    "config": ".no-mistakes.yml",
+    "key": "aff5f7db52d7cb30",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "0d8ea3351be1e271e553b63adaa0ceff0fcf95d8e347cec5fce38ea32f6d2c67",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-require-fk-on-delete/fixture/pass",
+    "config": ".no-mistakes.yml",
+    "key": "d773052d46853e35",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-require-named-constraints/fixture/fail-check",
+    "config": ".no-mistakes.yml",
+    "key": "a910f6c2f69b6c5e",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "db20b37a2703e62b75e283552a6013c28c71e3f0a2420697942484ce4639362a",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-require-named-constraints/fixture/fail-do-block",
+    "config": ".no-mistakes.yml",
+    "key": "4d1d7fd3b9fac205",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "875b647302743fbe2e1bd405c893fbbb1d6e3ae639569a02a5d60b05248241db",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-require-named-constraints/fixture/fail-fk",
+    "config": ".no-mistakes.yml",
+    "key": "40dfde171d42d5c1",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "4947a8855f9f7b654431b45987552ff541f01d76b20b62be9cfd10cace3dadad",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-require-named-constraints/fixture/pass",
+    "config": ".no-mistakes.yml",
+    "key": "b51193692005a28d",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-sql-statement-policy/fixture/embedded",
+    "config": ".no-mistakes.yml",
+    "key": "b251bf5ad3c4fec2",
+    "status": 1,
+    "findings": 3,
+    "advisories": 0,
+    "stdout": "dcea7cfb4c4374c1da8ea63cdcd15ebde78776a1d8c707d08e035f87a99f982e",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-sql-statement-policy/fixture/expanded",
+    "config": ".no-mistakes.yml",
+    "key": "6c387da7dab8e3d2",
+    "status": 1,
+    "findings": 109,
+    "advisories": 0,
+    "stdout": "1d1d5b9ad286649a998558e57bf0e333f98ff6e85893ab468521727d0432d244",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-sql-statement-policy/fixture/fail",
+    "config": ".no-mistakes.yml",
+    "key": "2340a85859d6e7f8",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "ba48e318b250de7f673c864abfe8b376c05a015b18bc913263ce0baceeecebad",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-sql-statement-policy/fixture/fail-do-block",
+    "config": ".no-mistakes.yml",
+    "key": "b85749f326764a3a",
+    "status": 1,
+    "findings": 1,
+    "advisories": 0,
+    "stdout": "46ddcf6cd270228a4bb59adcd3d05f3dbe5d8f5171277d5f1a418432a163d5aa",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-sql-statement-policy/fixture/fail-kinds",
+    "config": ".no-mistakes.yml",
+    "key": "1abe32552983e4ff",
+    "status": 1,
+    "findings": 7,
+    "advisories": 0,
+    "stdout": "7d85b9498b3b0a4658ac5f272a0d48c750b585702c461c22af4d1b2ae53028cb",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-sql-statement-policy/fixture/pass",
+    "config": ".no-mistakes.yml",
+    "key": "b88d456ba3aad474",
+    "status": 0,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-sql-statement-policy/fixture/unknown-kind",
+    "config": ".no-mistakes.yml",
+    "key": "512978d7d4103368",
+    "status": 2,
+    "findings": 0,
+    "advisories": 0,
+    "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr": "19e8c3cd128a95cff5637e3d2df19d5d3b5f09ce6b6af2bb78caf6d1df74b769"
+  }
+]

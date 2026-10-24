@@ -1,0 +1,13 @@
+rules:
+  - rule: postgres-fk-index
+    scope: repository
+    options: {sqlInclude: ['migrations/001.sql']}
+  - rule: postgres-no-add-column
+    scope: repository
+    options: {sqlInclude: ['migrations/clean.sql']}
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      executorNames: []
+      sqlInclude: ['migrations/**/*.sql']
+      include: ['other/**']

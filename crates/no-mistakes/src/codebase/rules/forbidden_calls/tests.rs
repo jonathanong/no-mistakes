@@ -61,36 +61,7 @@ fn coverage_findings(yaml: &str) -> anyhow::Result<Vec<crate::codebase::rules::R
     run_check(&root, Some(config.path()), None)
 }
 
-#[test]
-fn validation_rejects_empty_and_invalid_selectors() {
-    for yaml in [
-        "targets: [{ global: setTimeout }]",
-        "roots: [{ file: src/entry.mts }]",
-        "roots: [{ file: src/entry.mts }]\nmaxDepth: 0\ntargets: [{ global: setTimeout }]",
-        "roots: [{ vitest: false }]\ntargets: [{ global: setTimeout }]",
-        "roots: [{ file: src/entry.mts }]\ntargets: [{ moduleExport: { module: '', export: setTimeout } }]",
-        "roots: [{ file: src/entry.mts }]\ntargets: [{ function: { file: '', symbol: run } }]",
-    ] {
-        assert!(config::validate(&options(yaml)).is_err(), "{yaml}");
-    }
-    assert!(config::validate(&options(
-        "roots: [{ file: src/entry.mts }]\nunknownCalls: finding"
-    ))
-    .is_ok());
-}
-
-#[test]
-fn validation_rejects_empty_vitest_project_lists_and_call_target_names() {
-    for yaml in [
-        "roots: [{ vitest: [] }]\ntargets: [{ global: setTimeout }]",
-        "roots: [{ file: src/entry.mts }]\ntargets: [{ global: '' }]",
-        "roots: [{ file: src/entry.mts }]\ntargets: [{ exact: '' }]",
-        "roots: [{ file: src/entry.mts }]\ntargets: [{ terminal: '' }]",
-    ] {
-        let error = config::validate(&options(yaml)).expect_err("empty selector must be rejected");
-        assert!(error.to_string().contains("must not be empty"), "{error:#}");
-    }
-}
+mod config_validation;
 
 #[test]
 fn graph_plan_requests_calls_for_repeated_applications() {
@@ -280,7 +251,7 @@ fn traversal_limits_and_cycles_are_deterministic() {
 #[test]
 fn file_and_module_roots_select_their_callable_sources() {
     let findings = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/entry.mts }, { module: src/selectors.mts }]\n      traversal: file\n      targets: [{ global: setTimeout }]\n",
+        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/entry.mts }, { module: src/selectors.mts }]\n      traversal: file\n      unknownCalls: ignore\n      targets: [{ global: setTimeout }]\n",
     )
     .unwrap();
 
@@ -319,7 +290,7 @@ fn binding_aware_targets_distinguish_global_module_and_repository_calls() {
         ),
     ] {
         let findings = coverage_findings(&format!(
-            "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ file: src/selectors.mts }}]\n      traversal: file\n      targets: [{target}]\n"
+            "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ file: src/selectors.mts }}]\n      traversal: file\n      unknownCalls: ignore\n      targets: [{target}]\n"
         ))
         .unwrap();
         assert_eq!(findings.len(), expected, "{target}: {findings:#?}");
@@ -329,11 +300,11 @@ fn binding_aware_targets_distinguish_global_module_and_repository_calls() {
 #[test]
 fn construct_and_unknown_call_policies_are_explicit() {
     let call = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/selectors.mts }]\n      traversal: file\n      invocations: [call]\n      targets: [{ global: Date }]\n",
+        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/selectors.mts }]\n      traversal: file\n      invocations: [call]\n      unknownCalls: ignore\n      targets: [{ global: Date }]\n",
     )
     .unwrap();
     let construct = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/selectors.mts }]\n      traversal: file\n      invocations: [construct]\n      targets: [{ global: Date }]\n",
+        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/selectors.mts }]\n      traversal: file\n      invocations: [construct]\n      unknownCalls: ignore\n      targets: [{ global: Date }]\n",
     )
     .unwrap();
     let ignored = coverage_findings(
@@ -383,7 +354,7 @@ fn all_vitest_roots_and_default_call_invocations_are_inclusive() {
     )
     .unwrap();
     let default_calls = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/selectors.mts }]\n      traversal: file\n      targets: [{ global: Date }]\n",
+        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/selectors.mts }]\n      traversal: file\n      unknownCalls: ignore\n      targets: [{ global: Date }]\n",
     )
     .unwrap();
 

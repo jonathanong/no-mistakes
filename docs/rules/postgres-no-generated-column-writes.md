@@ -117,6 +117,12 @@ Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`,
 
 ### Unanalyzable inputs
 
+Valid PostgreSQL can still be unsupported by this analyzer. When it cannot
+recover statements such as `ALTER DEFAULT PRIVILEGES`, `CREATE PUBLICATION`,
+or `REFRESH MATERIALIZED VIEW`, it reports them under
+[`options.unanalyzable`](../migrations/postgres-schema-unanalyzable.md);
+the diagnostic does not mean PostgreSQL would reject the statement.
+
 Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
 
 - Inputs this rule cannot prove: dynamic executor calls that could assign a generated or trigger-maintained column and cannot be ruled out. They follow `options.unanalyzable`:
@@ -125,6 +131,14 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
   - `ignore`: omitted.
 
   Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+
+SQL schema statements selected by `sqlInclude` also retain diagnostics when the
+lenient parser cannot parse or recover them. Each diagnostic identifies the file,
+statement line, and statement head, and follows the same `options.unanalyzable`
+policy. Valid sibling statements remain available to the catalog. A real
+`DISCARD ALL` statement does not trigger this recovery diagnostic. Existing file
+and line suppressions apply; rewrite unsupported syntax into a supported static
+statement or suppress the specific diagnostic with a reason.
 
 ## Suppression
 

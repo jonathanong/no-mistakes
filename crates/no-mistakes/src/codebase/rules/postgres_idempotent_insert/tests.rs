@@ -115,11 +115,18 @@ fn prepared_embedded_facts_missing_errors() {
 fn missing_source_file_errors() {
     let root = fixture("fail");
     let missing = root.join("sql/does-not-exist.sql");
-    let error = check_with_files(&root, &default_config(), &[missing]).expect_err("read");
-    assert!(
-        error.to_string().contains("failed to collect PostgreSQL"),
-        "{error}"
-    );
+    for policy in ["report", "ignore"] {
+        let config = config_yaml(&format!(
+            "sqlInclude: ['sql/**/*.sql']\nunanalyzable: {policy}"
+        ));
+        // SQL recovery policy does not turn a standalone source read error into clean input.
+        let error =
+            check_with_files(&root, &config, std::slice::from_ref(&missing)).expect_err("read");
+        assert!(
+            error.to_string().contains("failed to collect PostgreSQL"),
+            "{error}"
+        );
+    }
 }
 
 #[test]

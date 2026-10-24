@@ -22,10 +22,10 @@ fn terminal_selectors_use_unresolved_member_source_spelling() {
     let root = coverage_root();
     let app = application(
         "terminal",
-        "roots: [{ file: src/selectors.mts }]\ntargets: [{ terminal: waitForTimeout }]",
+        "roots: [{ file: src/selectors.mts }]\nunknownCalls: ignore\ntargets: [{ terminal: waitForTimeout }]",
     );
     let opts =
-        options("roots: [{ file: src/selectors.mts }]\ntargets: [{ terminal: waitForTimeout }]");
+        options("roots: [{ file: src/selectors.mts }]\nunknownCalls: ignore\ntargets: [{ terminal: waitForTimeout }]");
     let site = ResolvedCallSite {
         alternatives: Vec::new(),
         returned_from: Vec::new(),

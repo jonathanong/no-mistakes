@@ -129,6 +129,15 @@ fn skip_quoted(bytes: &[u8], mut index: usize, quote: u8, line: &mut usize) -> u
 
 /// COPY payloads are data, so tokenizer quotes and semicolons must not own them.
 pub(crate) fn normalize_copy_data(sql: &str) -> std::borrow::Cow<'_, str> {
+    normalize_copy(sql, true)
+}
+
+/// Token-only consumers need SQL positions without COPY payload or terminator tokens.
+pub(crate) fn normalize_copy_data_for_tokens(sql: &str) -> std::borrow::Cow<'_, str> {
+    normalize_copy(sql, false)
+}
+
+fn normalize_copy(sql: &str, retain_terminator: bool) -> std::borrow::Cow<'_, str> {
     if !sql
         .as_bytes()
         .windows(5)
@@ -143,12 +152,13 @@ pub(crate) fn normalize_copy_data(sql: &str) -> std::borrow::Cow<'_, str> {
     }
     let mut bytes = sql.as_bytes().to_vec();
     for (start, end, after) in ranges.into_iter().rev() {
-        for byte in &mut bytes[start..end] {
+        let blank_end = if retain_terminator { end } else { after };
+        for byte in &mut bytes[start..blank_end] {
             if !matches!(*byte, b'\n' | b'\r') {
                 *byte = b' ';
             }
         }
-        if after > end {
+        if retain_terminator && after > end {
             // sqlparser needs a delimiter after its COPY data terminator.
             let terminator_end = end + sql[end..after].find("\\.").unwrap() + 2;
             bytes.insert(terminator_end, b';');

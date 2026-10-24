@@ -172,6 +172,11 @@ Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.
 
+`forbidden-calls` now defaults `options.unknownCalls` to `finding`: a selected
+unresolved call reports `unknown call` even when no target matches. Set
+`unknownCalls: ignore` explicitly to keep the earlier unmatched-call behavior.
+See the [migration note](../migrations/forbidden-calls-unknown-calls.md).
+
 [`declared-payload-compatibility`](../rules/declared-payload-compatibility.md)
 accepts `options.contracts`, an opt-in list of named producer/consumer JSON
 Schema references. Paths are relative to the invocation root; optional RFC 6901

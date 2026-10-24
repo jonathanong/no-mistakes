@@ -1,5 +1,8 @@
-use super::literal::leading_string_expression;
+use super::literal::{leading_string_expression, string_expression};
 use super::*;
+mod query_payload;
+mod wrapper;
+use query_payload::push_query_payload;
 
 #[derive(Clone, Debug)]
 pub(super) struct RoutineBody {
@@ -7,14 +10,17 @@ pub(super) struct RoutineBody {
     pub(super) line: usize,
     pub(super) source_bytes: Vec<usize>,
     direct_facts_already_recovered: bool,
+    pub(super) peeled_column_offset: Option<usize>,
     pub(super) source_order: Vec<usize>,
     pub(super) executed: bool,
+    clear_outer_wrapper: bool,
 }
 
 /// Executable PL/pgSQL DO/function/procedure bodies, including dollar, plain,
 /// E, U&, and PostgreSQL newline-concatenated string literals.
 pub(super) fn bodies(sql: &str) -> Vec<RoutineBody> {
-    let all = tokenize(sql);
+    let normalized = super::super::super::parse::normalize_copy_data_for_tokens(sql);
+    let all = tokenize(&normalized);
     statements(&all)
         .into_iter()
         .enumerate()
@@ -48,11 +54,40 @@ pub(super) fn bodies(sql: &str) -> Vec<RoutineBody> {
                 sql: decoded.sql,
                 source_bytes: decoded.source_bytes,
                 direct_facts_already_recovered: do_block && decoded.dollar_quoted,
+                peeled_column_offset: if do_block && decoded.dollar_quoted {
+                    match &code[start].token {
+                        Token::DollarQuotedString(quoted) => Some(
+                            code[start].span.start.column as usize
+                                + quoted.tag.as_deref().map_or(0, str::len)
+                                + 1,
+                        ),
+                        _ => None,
+                    }
+                } else {
+                    None
+                },
                 source_order: vec![ordinal],
                 executed: do_block,
+                clear_outer_wrapper: if routine {
+                    wrapper::complete_routine(&code)
+                } else {
+                    do_block && !decoded.dollar_quoted && complete_body_suffix(&code, start, sql)
+                },
             })
         })
         .collect()
+}
+
+fn complete_body_suffix(code: &[&TokenWithSpan], start: usize, sql: &str) -> bool {
+    let end = if code.len() >= start + 3
+        && word(code[code.len() - 2], "LANGUAGE")
+        && crate::codebase::postgres::parse::is_plpgsql_language(&code[code.len() - 1].token)
+    {
+        code.len() - 2
+    } else {
+        code.len()
+    };
+    string_expression(&code[start..end], Some(sql)).is_some()
 }
 
 /// Routine bodies whose direct schema statements are not already peeled by
@@ -82,26 +117,44 @@ fn schema_statements(body: &RoutineBody) -> Vec<DynamicSql> {
     let mut start_token = 0usize;
     let mut ordinal = 0usize;
     let mut scope = execution::Scope::default();
+    let mut procedural = super::super::super::parse::ProceduralBodyState::default();
     for (at, token) in tokens.iter().enumerate() {
         if !matches!(token.token, Token::SemiColon) {
             continue;
         }
         let end = location_offset(&body.sql, token.span.start.line, token.span.start.column)
             .map_or(body.sql.len(), |offset| offset + 1);
-        let executed = scope.advance(&significant(&tokens[start_token..at])) && body.executed;
-        push_schema_statement(body, start, end, ordinal, executed, &mut result);
+        let chunk = &tokens[start_token..at];
+        let executed = scope.advance(&significant(chunk)) && body.executed;
+        let control = procedural.control_chunk(chunk);
+        push_schema_statement(body, start, end, ordinal, executed, control, &mut result);
+        if control {
+            push_query_payload(body, chunk, end, ordinal, executed, &mut result);
+        }
         start_token = at + 1;
         start = end;
         ordinal += 1;
     }
+    let control = procedural.control_chunk(&tokens[start_token..]);
     push_schema_statement(
         body,
         start,
         body.sql.len(),
         ordinal,
         scope.advance(&significant(&tokens[start_token..])) && body.executed,
+        control,
         &mut result,
     );
+    if control {
+        push_query_payload(
+            body,
+            &tokens[start_token..],
+            body.sql.len(),
+            ordinal,
+            body.executed,
+            &mut result,
+        );
+    }
     result
 }
 
@@ -111,6 +164,7 @@ fn push_schema_statement(
     end: usize,
     ordinal: usize,
     executed: bool,
+    procedural_control: bool,
     result: &mut Vec<DynamicSql>,
 ) {
     let Some(sql) = body.sql.get(start..end) else {
@@ -123,6 +177,11 @@ fn push_schema_statement(
     let source_lines = source_lines(sql, source_bytes, body.line);
     result.push(DynamicSql {
         executed,
+        procedural_control,
+        query_payload: false,
+        body_start: Some(start),
+        call_range: None,
+        clear_outer_wrapper: body.clear_outer_wrapper,
         sql: sql.to_owned(),
         line: source_lines.first().copied().unwrap_or(body.line),
         source_lines,

@@ -57,6 +57,7 @@ fn rollback_restores_tables_and_discards_aborted_columns() {
 #[test]
 fn unresolved_format_relations_remain_broad_facts_but_not_live_events() {
     let root = unit_fixture("format-identities");
+    // Procedural assignments no longer add schema noise; keep every definite write.
     assert_eq!(lines("format-identities"), [1, 2, 3, 4, 5]);
 
     let sql = std::fs::read_to_string(root.join("schema.sql")).unwrap();

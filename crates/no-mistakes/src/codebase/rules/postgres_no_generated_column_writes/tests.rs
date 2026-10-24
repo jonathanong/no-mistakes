@@ -37,6 +37,43 @@ fn config_with_options(yaml: &str) -> NoMistakesConfig {
     config
 }
 
+/// Keep write assertions focused while checking every new schema marker against
+/// its saved SQL source and the direct migration projection.
+fn verified_schema_markers(
+    root: &Path,
+    schema: &str,
+    findings: Vec<RuleFinding>,
+) -> Vec<RuleFinding> {
+    let (markers, definite): (Vec<_>, Vec<_>) = findings.into_iter().partition(|finding| {
+        finding.message.contains("SQL statement `")
+            && finding
+                .message
+                .contains("could not be analyzed for postgres-no-generated-column-writes")
+    });
+    let source = std::fs::read_to_string(root.join(schema)).unwrap();
+    let expected =
+        crate::codebase::postgres::extract_migration_facts(&source).unanalyzable_statements;
+    let mut actual = markers
+        .iter()
+        .map(|finding| {
+            assert_eq!(finding.file, schema);
+            (finding.line, finding.target.clone().unwrap())
+        })
+        .collect::<Vec<_>>();
+    let mut expected = expected
+        .into_iter()
+        .map(|marker| (marker.line, marker.head))
+        .collect::<Vec<_>>();
+    actual.sort();
+    expected.sort();
+    assert!(
+        !actual.is_empty(),
+        "expected saved schema markers in {schema}"
+    );
+    assert_eq!(actual, expected);
+    definite
+}
+
 fn fixture_files(root: &Path) -> Vec<PathBuf> {
     vec![
         root.join("schema.sql"),
@@ -234,8 +271,9 @@ fn empty_catalog_dynamic_sql_and_invalid_schema() {
         &config_with_options("sqlInclude: ['**/broken.sql']"),
         &[invalid.join("broken.sql")],
     )
-    .expect("unparseable schema is skipped");
-    assert!(skipped.is_empty(), "{skipped:#?}");
+    .expect("unparseable schema is reported");
+    let definite = verified_schema_markers(&invalid, "broken.sql", skipped);
+    assert!(definite.is_empty(), "{definite:#?}");
 
     let mixed = unit_fixture("mixed-unparseable");
     let findings = check_with_files(
@@ -244,8 +282,9 @@ fn empty_catalog_dynamic_sql_and_invalid_schema() {
         &[mixed.join("schema.sql"), mixed.join("write.ts")],
     )
     .expect("mixed schema");
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].import.as_deref(), Some("items.created_at"));
+    let definite = verified_schema_markers(&mixed, "schema.sql", findings);
+    assert_eq!(definite.len(), 1, "{definite:#?}");
+    assert_eq!(definite[0].import.as_deref(), Some("items.created_at"));
 }
 
 #[test]

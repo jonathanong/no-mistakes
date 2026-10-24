@@ -26,6 +26,30 @@ fn every_new_category_survives_do_function_and_static_execute_recovery() {
     let root = fixture("expanded");
     let findings =
         check_with_files(&root, &config(false), &[root.join("all-contexts.sql")]).unwrap();
+    let unanalyzable: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.message.contains("could not be analyzed"))
+        .map(|finding| (finding.line, finding.target.as_deref().unwrap()))
+        .collect();
+    assert_eq!(
+        unanalyzable,
+        vec![
+            (3, "CREATE DATABASE scratch TEMPLATE template0"),
+            (5, "ALTER DATABASE app SET statement_timeout = '1s'"),
+            (6, "ALTER SYSTEM SET statement_timeout = '2s'"),
+            (13, "CREATE OR REPLACE PROCEDURE empty_proc ( ) LANGUAGE"),
+            (21, "CREATE DATABASE scratch TEMPLATE template0"),
+            (23, "ALTER DATABASE app SET statement_timeout = '1s'"),
+            (24, "ALTER SYSTEM SET statement_timeout = '2s'"),
+            (39, "CREATE DATABASE scratch TEMPLATE template0"),
+            (41, "ALTER DATABASE app SET statement_timeout = '1s'"),
+            (42, "ALTER SYSTEM SET statement_timeout = '2s'"),
+        ]
+    );
+    let findings: Vec<_> = findings
+        .iter()
+        .filter(|finding| !finding.message.contains("could not be analyzed"))
+        .collect();
     assert_eq!(findings.len(), 49, "{findings:?}");
     for kind in &crate::codebase::postgres::SUPPORTED_KINDS[7..] {
         let count = findings

@@ -229,6 +229,57 @@ fn unknown_calls_finding_reports_dynamic_access() {
 }
 
 #[test]
+fn unknown_calls_default_matches_explicit_finding_and_ignore_opts_out() {
+    let root = git_tracked_rule::materialize_rule("forbidden-calls", "consumer-matrix");
+    let (_, _, default) = check(
+        root.path(),
+        &config(root.path(), "unknown-calls-default.yml"),
+    );
+    let (_, _, explicit) = check(
+        root.path(),
+        &config(root.path(), "unknown-calls-finding.yml"),
+    );
+    let (ignored_ok, ignored_output, ignored) = check(
+        root.path(),
+        &config(root.path(), "unknown-calls-ignore.yml"),
+    );
+    assert!(ignored_ok, "{ignored_output}");
+    assert_eq!(default["warnings"], serde_json::json!([]), "{default:#?}");
+    assert_eq!(explicit["warnings"], serde_json::json!([]), "{explicit:#?}");
+
+    let default: Vec<_> = rules(&default)
+        .iter()
+        .map(|finding| {
+            (
+                finding["file"].as_str().unwrap().to_owned(),
+                finding["line"].as_u64().unwrap(),
+                finding["target"].as_str().unwrap().to_owned(),
+            )
+        })
+        .collect();
+    let explicit: Vec<_> = rules(&explicit)
+        .iter()
+        .map(|finding| {
+            (
+                finding["file"].as_str().unwrap().to_owned(),
+                finding["line"].as_u64().unwrap(),
+                finding["target"].as_str().unwrap().to_owned(),
+            )
+        })
+        .collect();
+    assert_eq!(default, explicit);
+    assert_eq!(
+        default,
+        [(
+            "src/unit/dynamic.test.mts".to_owned(),
+            9,
+            "unknown call".to_owned()
+        )]
+    );
+    assert!(rules(&ignored).is_empty(), "{ignored:#?}");
+}
+
+#[test]
 fn exact_selector_matches_unresolved_page_wait_for_timeout() {
     let root = git_tracked_rule::materialize_rule("forbidden-calls", "consumer-matrix");
     let (_, _, report) = check(root.path(), &config(root.path(), "exact-unknown.yml"));

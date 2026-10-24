@@ -18,8 +18,25 @@ pub(super) fn config(settings: bool) -> NoMistakesConfig {
 fn every_new_kind_and_pg_variants_are_reported() {
     let root = fixture("expanded");
     let findings = check_with_files(&root, &config(false), &[root.join("kinds.sql")]).unwrap();
+    let unanalyzable: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.message.contains("could not be analyzed"))
+        .map(|finding| finding.target.as_deref().unwrap())
+        .collect();
     assert_eq!(
-        findings
+        unanalyzable,
+        vec![
+            "CREATE DATABASE scratch OWNER postgres TEMPLATE template0 ENCODING",
+            "ALTER DATABASE app SET statement_timeout = '1s'",
+            "ALTER SYSTEM SET statement_timeout = '2s'",
+        ]
+    );
+    let definite: Vec<_> = findings
+        .iter()
+        .filter(|finding| !finding.message.contains("could not be analyzed"))
+        .collect();
+    assert_eq!(
+        definite
             .iter()
             .map(|f| f.target.as_deref().unwrap())
             .collect::<Vec<_>>(),
