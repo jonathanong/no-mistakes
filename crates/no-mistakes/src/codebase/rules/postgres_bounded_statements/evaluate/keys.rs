@@ -2,6 +2,7 @@
 use super::{qualified, reads_outer, Evaluation};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlPinSource};
 use crate::codebase::postgres::{RelationKind, SchemaCatalog};
+use std::collections::BTreeMap;
 mod indexes;
 
 /// Keys, their required columns, and alternative source-item dependencies for each column.
@@ -9,6 +10,8 @@ pub(super) type Keys = Vec<Vec<Vec<Vec<usize>>>>;
 
 pub(super) fn prepare(
     item: &SqlBoundItem,
+    item_index: usize,
+    owners: &BTreeMap<String, usize>,
     subqueries: &[Option<Evaluation>],
     arrays: &[bool],
     catalog: &SchemaCatalog,
@@ -77,7 +80,10 @@ pub(super) fn prepare(
                         .iter()
                         .zip(&sources)
                         .filter_map(|(pin, source)| {
-                            (pin.column == visible && (!pin.null_safe || not_null))
+                            (pin.column == visible
+                                && (!pin.unqualified_candidate
+                                    || owners.get(&pin.column) == Some(&item_index))
+                                && (!pin.null_safe || not_null))
                                 .then(|| source.clone())
                                 .flatten()
                         })
@@ -86,6 +92,15 @@ pub(super) fn prepare(
                 .collect()
         })
         .collect();
-    indexes::append(&mut prepared, item, table, name, &sources, catalog);
+    indexes::append(
+        &mut prepared,
+        item,
+        item_index,
+        owners,
+        table,
+        name,
+        &sources,
+        catalog,
+    );
     prepared
 }

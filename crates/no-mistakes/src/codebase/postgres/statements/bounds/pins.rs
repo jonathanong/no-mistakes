@@ -1,4 +1,5 @@
 mod array;
+mod candidate;
 mod correlated;
 mod equality;
 mod evidence;
@@ -42,6 +43,7 @@ pub(super) fn extract(
                     item,
                     SqlBoundPin {
                         column,
+                        unqualified_candidate: false,
                         expression: None,
                         source,
                         null_safe,
@@ -67,10 +69,12 @@ pub(super) fn extract(
             right,
         } => {
             equality::equate(left, right, false, resolver, &mut pin);
+            candidate::equate(left, right, false, resolver, restricted, out);
             expression::equate(left, right, false, resolver, restricted, out);
         }
         Expr::IsNotDistinctFrom(left, right) => {
             equality::equate(left, right, true, resolver, &mut pin);
+            candidate::equate(left, right, true, resolver, restricted, out);
             expression::equate(left, right, true, resolver, restricted, out);
         }
         Expr::InList {

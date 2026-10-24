@@ -33,6 +33,7 @@ mod table_scope;
 #[cfg(test)]
 mod tests;
 mod trigger;
+mod view_relation;
 
 use arbiter::ArbiterTable;
 pub use arbiter::{CanonicalIndex, CanonicalOrderKey, ResolvedArbiter};
@@ -68,6 +69,7 @@ pub struct SchemaCatalog {
     functions: BTreeMap<String, CatalogFunction>,
     enums: BTreeMap<String, CatalogEnum>,
     views: BTreeMap<String, CatalogView>,
+    view_fallback: std::sync::OnceLock<fallback::RelationFallback>,
     column_lines: BTreeMap<(String, String), usize>,
 }
 

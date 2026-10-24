@@ -104,6 +104,18 @@ impl Resolver {
         }
     }
 
+    pub(super) fn candidate_column(&self, expr: &Expr) -> Option<String> {
+        match unwrap_expr(expr) {
+            Expr::Identifier(ident)
+                if self.names.len() > 1
+                    && !is_placeholder_ident_at(ident, self.positions.as_deref()) =>
+            {
+                Some(ident_key(ident))
+            }
+            _ => None,
+        }
+    }
+
     fn item_named(&self, qualifier: &str) -> Option<usize> {
         let matches: Vec<usize> = self
             .names

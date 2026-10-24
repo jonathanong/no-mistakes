@@ -53,6 +53,7 @@ impl<'a> Using<'a> {
                     pinned,
                     SqlBoundPin {
                         column: object_name_key(column),
+                        unqualified_candidate: false,
                         expression: None,
                         source: SqlPinSource::Items(vec![other]),
                         null_safe: false,

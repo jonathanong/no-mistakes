@@ -3,10 +3,13 @@ use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
 use crate::codebase::postgres::statements::SqlBoundItem;
 use crate::codebase::postgres::{CatalogTable, SchemaCatalog};
 use sqlparser::ast::Expr;
+use std::collections::BTreeMap;
 
 pub(super) fn append(
     prepared: &mut Keys,
     item: &SqlBoundItem,
+    item_index: usize,
+    owners: &BTreeMap<String, usize>,
     table: &CatalogTable,
     name: &str,
     sources: &[Option<Vec<usize>>],
@@ -57,7 +60,10 @@ pub(super) fn append(
                             Some(visible) => pin.expression.is_none() && pin.column == *visible,
                             None => pin.expression.as_ref() == Some(expression),
                         };
-                        (matches && (!pin.null_safe || not_null || index.nulls_not_distinct))
+                        (matches
+                            && (!pin.unqualified_candidate
+                                || owners.get(&pin.column) == Some(&item_index))
+                            && (!pin.null_safe || not_null || index.nulls_not_distinct))
                             .then(|| source.clone())
                             .flatten()
                     })

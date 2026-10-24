@@ -154,6 +154,8 @@ pub enum SqlBoundItemKind {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlBoundPin {
     pub column: String,
+    /// Bare column with multiple possible FROM owners; only catalog projection may credit it.
+    pub unqualified_candidate: bool,
     /// The canonical table-local expression fixed by this equality, when it is not a column.
     pub expression: Option<Expr>,
     pub source: SqlPinSource,
