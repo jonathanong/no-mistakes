@@ -6,9 +6,15 @@ use std::path::Path;
 mod tests;
 
 pub(super) fn should_store_source(plan: &CheckFactPlan, path: &Path) -> bool {
+    // React checks parse-error suppression before filtering target files.
     plan.source
         || (plan.raw_source
-            && crate::codebase::check_facts::family_scope::applies(&plan.raw_source_paths, path))
+            && (plan.react
+                || plan.graph.source
+                || crate::codebase::check_facts::family_scope::applies(
+                    &plan.raw_source_paths,
+                    path,
+                )))
 }
 
 /// Graph/check TS extract demand for one file. Playwright test files also need

@@ -20,7 +20,8 @@ impl CheckFactPlan {
         plan.symbols |= self.symbols;
         plan.source |= self.source
             || (self.raw_source
-                && matches!(self.raw_source_paths, super::super::FamilyPathScope::All));
+                && (self.react
+                    || matches!(self.raw_source_paths, super::super::FamilyPathScope::All)));
         plan.react |= self.react;
         plan.queue_project |= self.queue;
         plan

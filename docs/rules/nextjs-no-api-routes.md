@@ -23,7 +23,8 @@ route source still reports when no other configured check requires a parse.
 The runner limits this rule's raw-source reads and retention to API-route
 candidates beneath the resolved roots. Candidates excluded by a later rule
 filter still supply source to preserve the aggregate check's existing
-behavior. Other checks retain their own source and parse demand.
+behavior. Mixed checks retain their own source and parse demand, including
+source needed to suppress React parse errors and graph source facts.
 
 ## Options
 

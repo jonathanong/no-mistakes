@@ -20,6 +20,35 @@ fn files(results: &super::CheckResults) -> Vec<String> {
 }
 
 #[test]
+fn api_route_demand_preserves_suppressed_react_parse_errors_without_candidates() {
+    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/react-analyze-suppressed-parse-error");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = fixture.path().canonicalize().unwrap();
+    let react_only = run_all(root.clone(), Some(root.join(".no-mistakes.yml")), None).unwrap();
+    let with_api = run_all(root.clone(), Some(root.join("with-api.yml")), None).unwrap();
+
+    assert!(react_only.react.is_empty(), "{:?}", react_only.react);
+    assert!(with_api.react.is_empty(), "{:?}", with_api.react);
+    assert_eq!(react_only.warnings.len(), 1, "{:?}", react_only.warnings);
+    assert!(react_only.warnings[0].contains("react check skipped: failed to parse"));
+    assert!(with_api.queues.is_empty(), "{:?}", with_api.queues);
+    assert!(
+        with_api.integration.is_empty(),
+        "{:?}",
+        with_api.integration
+    );
+    assert!(with_api.codebase.is_empty(), "{:?}", with_api.codebase);
+    assert!(with_api.rules.is_empty(), "{:?}", with_api.rules);
+    // The frozen runner skips the suppressed parse error when this raw-source
+    // consumer is enabled; preserve its successful, warning-free result.
+    assert!(with_api.warnings.is_empty(), "{:?}", with_api.warnings);
+    assert_eq!(with_api.analysis_warning_count, 0);
+    assert!(with_api.analysis_fallbacks.is_empty());
+    assert!(with_api.advisories.is_empty(), "{:?}", with_api.advisories);
+}
+
+#[test]
 fn raw_api_route_requests_read_only_selected_route_candidates() {
     let fixture = fixture();
     let root = fixture.path().canonicalize().unwrap();

@@ -36,6 +36,83 @@ fn raw_source_scope_preserves_graph_and_generic_source_demand() {
 }
 
 #[test]
+fn graph_source_with_scoped_raw_source_reuses_owned_text_on_success_and_error() {
+    use crate::codebase::check_facts::FamilyPathScope;
+    use crate::codebase::ts_source::{FileInventory, SourceStore};
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/shared-facts/fixture");
+    let files = [root.join("src/everything.tsx"), root.join("src/invalid.ts")];
+    let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&files)));
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let plan = CheckFactPlan {
+        raw_source: true,
+        raw_source_paths: FamilyPathScope::Only(Arc::new(Default::default())),
+        graph: TsFactPlan {
+            source: true,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    for (index, path) in files.iter().enumerate() {
+        let original = sources.read_path(path).unwrap();
+        let facts = super::super::collect_file_facts_with_session_and_sources(
+            &session, &root, path, &plan, None, &sources, false,
+        )
+        .unwrap();
+        assert!(Arc::ptr_eq(facts.source.as_ref().unwrap(), &original));
+        assert!(Arc::ptr_eq(facts.ts.source.as_ref().unwrap(), &original));
+        assert_eq!(facts.parse_error.is_some(), index == 1);
+    }
+
+    let graph_only = CheckFactPlan {
+        raw_source: false,
+        ..plan
+    };
+    let facts = super::super::collect_file_facts_with_session_and_sources(
+        &session,
+        &root,
+        &files[0],
+        &graph_only,
+        None,
+        &sources,
+        false,
+    )
+    .unwrap();
+    assert!(facts.source.is_none());
+    assert!(facts.ts.source.is_some());
+}
+
+#[test]
+fn react_parse_error_suppression_keeps_raw_source_outside_route_scope() {
+    use crate::codebase::check_facts::FamilyPathScope;
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/react-analyze-suppressed-parse-error");
+    let path = root.join("app/Broken.tsx");
+    let plan = CheckFactPlan {
+        react: true,
+        raw_source: true,
+        raw_source_paths: FamilyPathScope::Only(Arc::new(Default::default())),
+        ..Default::default()
+    };
+    assert!(plan.collected_ts_plan().source);
+    let facts =
+        crate::codebase::check_facts::tests::collect_file_facts(&root, &path, &plan, None).unwrap();
+    assert!(facts.parse_error.is_some());
+    assert!(facts.source.as_deref().is_some_and(|source| {
+        crate::codebase::ts_source::has_disable_file_comment(source, "assert-no-fetch")
+    }));
+    assert!(facts.ts.source.is_some());
+    assert!(
+        !CheckFactPlan {
+            react: true,
+            ..Default::default()
+        }
+        .collected_ts_plan()
+        .source
+    );
+}
+
+#[test]
 fn ts_source_reuses_the_same_arc_pointer() {
     let source: Arc<str> = Arc::from("export const value = 1;\n");
     let first = ts_source(Some(Arc::clone(&source)));
