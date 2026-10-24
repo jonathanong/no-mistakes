@@ -1,5 +1,6 @@
 //! Low-effort SQL inputs from the request's parsed program and semantic bindings.
 //! This does not evaluate JavaScript or infer provenance through executor/value aliases.
+pub(crate) mod literal_projection;
 use super::EmbeddedSqlOptions;
 use crate::codebase::ts_source::{facts::TsFileFacts, unwrap_ts_wrappers};
 use crate::fx::{FxHashMap, FxHashSet};
