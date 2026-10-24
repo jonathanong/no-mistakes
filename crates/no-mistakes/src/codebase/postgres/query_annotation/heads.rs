@@ -27,7 +27,7 @@ pub(crate) enum HeadProof {
 #[derive(Clone, Debug, Default)]
 pub(crate) struct AnnotationHeads {
     pub(crate) calls: BTreeMap<Span, HeadProof>,
-    pub(crate) loop_carried_missing: BTreeMap<Span, Option<String>>,
+    pub(crate) loop_carried_missing: BTreeMap<Span, Vec<Option<String>>>,
     helper_calls: Option<BTreeMap<Span, (String, HeadProof)>>,
     pub(crate) trusted_append_calls: crate::fx::FxHashSet<Span>,
 }
@@ -59,11 +59,24 @@ pub(crate) fn prepare_loop_heads(
     append: bool,
     helpers: bool,
 ) -> Option<PreparedLoopHeads> {
-    if !source.contains("for") && !source.contains("while") {
+    if !has_loop_word(source) {
         return None;
     }
     let syntax = syntax::collect_with_helpers(program, append, helpers);
     (!syntax.loop_candidates.is_empty() || append || helpers).then_some(PreparedLoopHeads(syntax))
+}
+
+fn has_loop_word(source: &str) -> bool {
+    fn identifier(byte: u8) -> bool {
+        byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'$'
+    }
+    let bytes = source.as_bytes();
+    ["for", "while"].into_iter().any(|word| {
+        source.match_indices(word).any(|(start, _)| {
+            (start == 0 || !identifier(bytes[start - 1]))
+                && (start + word.len() == bytes.len() || !identifier(bytes[start + word.len()]))
+        })
+    })
 }
 
 pub(crate) fn collect_prepared(

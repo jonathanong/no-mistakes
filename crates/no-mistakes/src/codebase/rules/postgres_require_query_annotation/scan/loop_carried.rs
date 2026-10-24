@@ -11,16 +11,18 @@ pub(super) fn proves_missing(
     let Some(file) = facts.ts.get(path) else {
         return false;
     };
-    let Some(tag) = file
+    let Some(tags) = file
         .query_annotation_heads
         .as_ref()
         .and_then(|heads| heads.loop_carried_missing.get(&span))
     else {
         return false;
     };
-    tag.as_ref().is_none_or(|tag| {
-        file.query_annotation.iter().any(|(options, annotation)| {
-            options == &opts.embedded && annotation.trusts_loop_tag(tag)
+    tags.iter().any(|tag| {
+        tag.as_ref().is_none_or(|tag| {
+            file.query_annotation.iter().any(|(options, annotation)| {
+                options == &opts.embedded && annotation.trusts_loop_tag(tag)
+            })
         })
     })
 }

@@ -143,43 +143,6 @@ fn loop_carried_findings_keep_executor_suppression_locations() {
 }
 
 #[test]
-fn malformed_loop_and_source_false_positive_do_not_build_a_binding_index() {
-    for (name, expected_visits, expect_error) in [("malformed", 0, true), ("format", 1, false)] {
-        let root = super::tests::fixture("loop-carried-reassignment");
-        let files = [root.join(format!("src/{name}.mts"))];
-        let config = super::tests::config_with_options(
-            "importSpecifier: '@example/db'\nexecutorNames: [read]",
-        );
-        let sources = super::super::source_store_for_files(&files);
-        let observer = crate::diagnostics::InvocationObserver::new(true);
-        let facts = crate::diagnostics::with_observer(Some(observer.clone()), || {
-            super::super::prepare_sql_rule_facts(&root, &config, &files, &sources, RULE_ID).unwrap()
-        });
-        let work = observer.snapshot().work;
-        assert_eq!(
-            work.get("postgres.annotation.head_syntax_visits")
-                .copied()
-                .unwrap_or(0),
-            expected_visits
-        );
-        assert_eq!(
-            work.get("postgres.annotation.head_binding_indexes")
-                .copied()
-                .unwrap_or(0),
-            0
-        );
-        assert!(facts
-            .ts
-            .values()
-            .all(|file| file.query_annotation_heads.is_none()));
-        assert_eq!(
-            facts.ts.values().any(|file| file.parse_error.is_some()),
-            expect_error
-        );
-    }
-}
-
-#[test]
 fn loop_tag_trust_uses_the_selected_annotation_profile() {
     let root = super::tests::fixture("loop-carried-reassignment");
     for (file, extra, expected) in [

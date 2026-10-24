@@ -89,6 +89,9 @@ impl<'a> Bindings<'a> {
             && !gaps.overlaps((owner.span.start, owner.span.end)))
         .then_some(owner)
     }
+    pub(super) fn valid_mutable_call(&self, reference: Span) -> bool {
+        self.mutable.calls.contains_key(&reference)
+    }
     pub fn proof(&self, head: Head, call: Span) -> HeadProof {
         match head {
             Head::Reference(span) | Head::AppendReference(span) => {
