@@ -3,10 +3,9 @@ use super::*;
 #[test]
 fn low_preparation_does_not_parse_an_unrequested_offset_rule() {
     let root = super::tests::fixture();
-    let config: crate::config::v2::NoMistakesConfig = serde_yaml::from_str(
-        &std::fs::read_to_string(root.join("unrequested-rule.yml")).unwrap(),
-    )
-    .unwrap();
+    let config: crate::config::v2::NoMistakesConfig =
+        serde_yaml::from_str(&std::fs::read_to_string(root.join("unrequested-rule.yml")).unwrap())
+            .unwrap();
     let files = [root.join("embedded.ts"), root.join("schema.json")];
     let findings = check_with_files(&root, &config, &files).unwrap();
     assert_eq!(findings.len(), 3, "{findings:#?}");
