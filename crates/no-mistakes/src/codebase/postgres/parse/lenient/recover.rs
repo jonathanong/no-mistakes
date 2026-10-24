@@ -96,7 +96,9 @@ fn parse_chunk(
         let body = locations::align_do_body(&body, original);
         return super::parse_with_sources(&body, true, false)
             .into_iter()
-            .filter(|located| !is_begin_or_end(&located.statement))
+            .filter(|located| {
+                !is_begin_or_end(&located.statement) && !is_procedural_end_if_marker(located)
+            })
             .collect();
     }
     let dialect = PostgreSqlDialect {};
@@ -152,6 +154,14 @@ fn is_begin_or_end(statement: &Statement) -> bool {
         statement,
         Statement::StartTransaction { .. } | Statement::Commit { .. }
     )
+}
+
+fn is_procedural_end_if_marker(located: &LocatedStatement) -> bool {
+    // Only a peeled DO body gives END IF procedural meaning.
+    located
+        .recovery_failure
+        .as_ref()
+        .is_some_and(|failure| failure.head.eq_ignore_ascii_case("END IF"))
 }
 
 fn recover_schema_ddl(
