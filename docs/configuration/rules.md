@@ -134,7 +134,7 @@ pointers select each declaration. It checks supported declaration compatibility
 and, at `max`, reports unsupported schemas as unproven, without inferring
 runtime adoption. The rule supports `effort: low` for scalar roots, flat objects
 with scalar properties, and root arrays with scalar items. Nested child objects
-or arrays use `options.unanalyzable`; document integrity and input/configuration
+or arrays use `options.unanalyzable`; document integrity and reference/configuration
 errors remain failures under every policy. See its
 [Effort section](../rules/declared-payload-compatibility.md#effort).
 

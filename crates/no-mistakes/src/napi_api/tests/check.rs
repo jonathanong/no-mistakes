@@ -380,3 +380,6 @@ mod check_storybook_effort;
 
 #[path = "check_offset_effort.rs"]
 mod check_offset_effort;
+
+#[path = "check_payload_effort.rs"]
+mod check_payload_effort;

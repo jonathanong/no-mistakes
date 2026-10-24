@@ -174,7 +174,8 @@ unreadable files, scope violations, invalid pointers, and configuration errors
 remain failing diagnostics under every policy. Both referenced documents are
 resolved and validated before low applies the shape policy. When readable, both
 documents are parsed and checked for document integrity; `ignore` does not hide
-invalid input.
+invalid JSON or bad references. Schema details behind the nested-shape boundary
+are not validated at low.
 
 For the same nested wire payload, use `max` or flatten both declarations and
 the actual payloads. Selecting only a nested leaf with a pointer is not a

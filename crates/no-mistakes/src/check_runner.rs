@@ -74,3 +74,7 @@ mod mutable_registry_low_tests;
 mod truncated_append_parity_tests;
 #[cfg(test)]
 mod unbounded_effort_tests;
+
+#[cfg(test)]
+#[path = "check_runner/payload_compatibility_effort/tests.rs"]
+mod payload_compatibility_effort;
