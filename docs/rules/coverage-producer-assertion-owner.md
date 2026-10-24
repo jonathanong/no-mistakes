@@ -34,11 +34,12 @@ Callback inference requires a resolved actual invocation. Different incoming
 callback identities which the canonical graph cannot reconcile remain
 unanalyzable, even when those known callbacks individually own assertions.
 
-Counterexample:
+## Counterexample
 
 ```ts
-import { execute } from './production.mjs';
+// tests/coverage.mts
 import { strictEqual } from 'node:assert';
+function execute() { return 1; }
 export function produceCoverage() { execute(); }
 function neverCalled() { strictEqual(1, 1); }
 ```
@@ -49,6 +50,9 @@ Fix by calling an assertion-bearing owner from the producer, directly or through
 resolved helpers:
 
 ```ts
+// tests/coverage.mts
+import { strictEqual } from 'node:assert';
+function execute() { return 1; }
 export function produceCoverage() { strictEqual(execute(), 1); }
 ```
 
@@ -57,6 +61,8 @@ path, literal dead conditional/logical arms and loop bodies, and calls after a s
 satisfy the producer. A helper which merely calls the producer is not reachable
 in the producer's forward call direction. Branch feasibility beyond these
 syntactic exclusions and semantic assertion adequacy remain outside this rule.
+
+## Ownership contracts
 
 For an intentionally modeled callback or cross-process dispatch, configure a
 genuine ownership contract:
