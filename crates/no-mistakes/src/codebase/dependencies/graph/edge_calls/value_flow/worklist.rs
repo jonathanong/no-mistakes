@@ -17,12 +17,12 @@ pub(in super::super::super) fn refine_value_calls(
     if pass.parameter_cache.site_storage.cloning() || pass.parameter_cache.site_storage.original() {
         return owned_worklist::refine_value_calls(inputs, facts, resolver, indexes, pass);
     }
-    let base = pass.sites.clone();
-    let mut incoming = incoming_inputs(&base, &pass.constructor_routes, indexes, facts);
+    let site_count = pass.sites.len();
+    let mut incoming = incoming_inputs(&pass.sites, &pass.constructor_routes, indexes, facts);
     let replacements = replacement_catalog::ReplacementCatalog::prepare(
         inputs, facts, resolver, indexes, pass, &incoming,
     );
-    let pending = base.iter().enumerate().filter(|(_, site)| {
+    let pending = pass.sites.iter().enumerate().filter(|(_, site)| {
         site.invocation != InvocationKind::Construct
             && (site.target_node.is_none()
                 || site.invocation == InvocationKind::Call
@@ -45,6 +45,7 @@ pub(in super::super::super) fn refine_value_calls(
             .admission(site.target_node.is_some())
     });
     let mut pending: FxHashSet<usize> = pending.map(|(index, _)| index).collect();
+    let base = InitialResolutions::new(&pass.sites, &pending);
     let mut dependencies: FxHashMap<FunctionKey, FxHashSet<usize>> = fx_map();
     let mut previous_dependencies: FxHashMap<usize, FxHashSet<FunctionKey>> = fx_map();
     let mut visits: FxHashMap<usize, usize> = fx_map();
@@ -60,8 +61,8 @@ pub(in super::super::super) fn refine_value_calls(
         let results: Vec<_> = selected
             .into_par_iter()
             .map(|(index, site)| {
-                let enabled = visits[&index] <= base.len() + 1;
-                let previous = reset_resolution(site, &base[index]);
+                let enabled = visits[&index] <= site_count + 1;
+                let previous = reset_resolution(site, base.get(index));
                 let used = refine_site_in_place(
                     inputs,
                     facts,
@@ -125,7 +126,7 @@ pub(in super::super::super) fn refine_value_calls(
                     users
                         .iter()
                         .copied()
-                        .filter(|index| visits[index] <= base.len() + 1),
+                        .filter(|index| visits[index] <= site_count + 1),
                 );
             }
         }
@@ -134,9 +135,13 @@ pub(in super::super::super) fn refine_value_calls(
     super::super::super::value_flow_metrics::record(visits.values().sum());
     let mut processed: Vec<_> = visits.into_keys().collect();
     processed.sort_unstable();
-    replace_call_edges(&mut pass.edges, &base, &pass.sites, &processed, |site| {
-        site_source(inputs, site)
-    });
+    replace_call_edges(
+        &mut pass.edges,
+        |index| base.get(index).target_nodes(),
+        &pass.sites,
+        &processed,
+        |site| site_source(inputs, site),
+    );
     #[cfg(all(test, feature = "test-instrumentation"))]
     pass.parameter_cache.site_storage.finish();
     #[cfg(feature = "test-instrumentation")]
