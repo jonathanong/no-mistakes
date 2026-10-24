@@ -4,6 +4,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
+      # Each pair differs only by quoting. Unquoted `$OUT` splits into an extra option; quoted keeps one field.
       - name: unquoted-output-operand
         run: |
           OUT='file --output'
