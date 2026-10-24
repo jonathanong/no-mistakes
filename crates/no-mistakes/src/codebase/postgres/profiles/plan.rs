@@ -49,6 +49,7 @@ pub fn configure_prepared_postgres_plan(
                 "postgres-no-unbounded-sql-identifier",
                 "postgres-no-mutable-sql-registry",
                 "postgres-no-offset",
+                "postgres-no-transformed-uuid-predicates",
             ]
             .contains(&rule.rule.as_str())
             && config.rule_has_effective_target(rule)
@@ -118,6 +119,7 @@ pub fn configure_prepared_postgres_plan(
         "postgres-idempotent-insert",
         "postgres-required-predicates",
         "postgres-no-offset",
+        "postgres-no-transformed-uuid-predicates",
         "postgres-generated-column-predicates",
         "postgres-explicit-columns",
         "postgres-bounded-statements",
@@ -135,6 +137,7 @@ pub fn configure_prepared_postgres_plan(
         .rule_applications("postgres-sql-shape-policy")
         .is_empty();
     let schema_rules = [
+        "postgres-no-transformed-uuid-predicates",
         "postgres-idempotent-insert",
         "postgres-generated-column-predicates",
         "postgres-no-generated-column-writes",

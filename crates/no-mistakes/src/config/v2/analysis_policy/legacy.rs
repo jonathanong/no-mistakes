@@ -59,6 +59,7 @@ pub(in super::super) fn sql_policy_rule(rule: &str) -> bool {
             | "postgres-lock-ordering"
             | "postgres-no-generated-column-writes"
             | "postgres-no-offset"
+            | "postgres-no-transformed-uuid-predicates"
             | "postgres-require-query-annotation"
             | "postgres-required-predicates"
             | "postgres-sql-shape-policy"

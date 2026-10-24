@@ -1,0 +1,49 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "users": {
+      "columns": {
+        "id": { "dataType": "uuid" },
+        "email": { "dataType": "text" },
+        "external_ref": { "dataType": "uuid" },
+        "trace_id": { "dataType": "uuid" }
+      },
+      "primaryKey": { "definition": "PRIMARY KEY (id)", "columns": ["id"] },
+      "indexes": {
+        "users_trace_id_idx": {
+          "accessMethod": "btree",
+          "unique": false,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "keys": [{ "column": "trace_id", "expression": "trace_id", "opclass": "uuid_ops", "descending": false, "nullsFirst": false }],
+          "includedColumns": [],
+          "predicate": null
+        }
+      },
+      "uniqueConstraints": {
+        "users_email_key": { "columns": ["email"] },
+        "users_external_ref_key": { "columns": ["external_ref"] }
+      }
+    },
+    "sessions": {
+      "columns": {
+        "id": { "dataType": "uuid" },
+        "user_id": { "dataType": "uuid" },
+        "created_at": { "dataType": "timestamptz" }
+      },
+      "primaryKey": { "definition": "PRIMARY KEY (id)", "columns": ["id"] },
+      "foreignKeys": {
+        "sessions_user_id_fkey": {
+          "columns": ["user_id"],
+          "referencedTable": "users",
+          "referencedColumns": ["id"]
+        }
+      }
+    }
+  },
+  "views": {},
+  "functions": {}
+}

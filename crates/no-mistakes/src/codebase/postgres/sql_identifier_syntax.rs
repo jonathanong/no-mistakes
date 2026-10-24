@@ -1,5 +1,6 @@
 //! Low-effort SQL inputs from the request's parsed program and semantic bindings.
 //! This does not evaluate JavaScript or infer provenance through executor/value aliases.
+pub(crate) mod literal_projection;
 use super::EmbeddedSqlOptions;
 use crate::codebase::ts_source::{facts::TsFileFacts, unwrap_ts_wrappers};
 use crate::fx::{FxHashMap, FxHashSet};
@@ -28,9 +29,13 @@ pub(crate) struct SqlCall {
     pub input: Input,
 }
 pub(crate) type OffsetLiteral = std::result::Result<Option<Vec<super::SqlOffsetFact>>, ()>;
+pub(crate) type TransformedLiteral =
+    std::result::Result<Option<Vec<super::statements::SqlTransformedColumnUseFact>>, ()>;
 #[derive(Default)]
 pub(crate) struct FileFacts {
     pub profiles: Vec<(EmbeddedSqlOptions, Vec<SqlCall>)>,
+    pub transformed_literals:
+        std::sync::OnceLock<std::collections::BTreeMap<Span, TransformedLiteral>>,
     pub offset_literals: std::sync::OnceLock<std::collections::BTreeMap<Span, OffsetLiteral>>,
 }
 struct Call {

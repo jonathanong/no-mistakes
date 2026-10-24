@@ -274,3 +274,8 @@ cross-file mutation analysis;
 unsupported inputs use the shared `unanalyzable` report/advice/ignore policy.
 
 The async `check()` API accepts `PostgresRequireQueryAnnotationOptions.sqlLiteralHelpers` in rule configuration, for example `["pg-copy-streams#from"]`. Both effort modes recognize direct imported helper calls with one static literal argument; `SqlExecutorProfile.sqlLiteralHelpers` records the configured identities in requested SQL verdicts. See [the annotation rule](rules/postgres-require-query-annotation.md#configured-single-literal-sql-helpers).
+
+`check()` and check reports in `analyzeProject()` support
+[`postgres-no-transformed-uuid-predicates`](rules/postgres-no-transformed-uuid-predicates.md).
+Import `PostgresNoTransformedUuidPredicatesOptions` to name its catalog, executor,
+and effort options. Both APIs preserve findings and non-failing advisories.

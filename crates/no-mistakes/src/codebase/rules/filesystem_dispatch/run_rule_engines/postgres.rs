@@ -121,6 +121,16 @@ fn run_naming_and_query_rules(
             ),
         },
         POSTGRES_NO_OFFSET => no_offset::run(root, config, files, sources, facts),
+        POSTGRES_NO_TRANSFORMED_UUID_PREDICATES => match facts {
+            Some(facts) => {
+                postgres_no_transformed_uuid_predicates::check_with_files_sources_and_facts(
+                    root, config, files, sources, facts,
+                )
+            }
+            None => postgres_no_transformed_uuid_predicates::check_with_files_and_sources(
+                root, config, files, sources,
+            ),
+        },
         POSTGRES_ARRAY_COLUMNS => array_columns(root, config, files, sources, facts),
         POSTGRES_FINITE_TEXT_COLUMNS => finite_text(root, config, files, sources, facts),
         POSTGRES_COLUMN_NAMING => column_naming(root, config, files, sources, facts),

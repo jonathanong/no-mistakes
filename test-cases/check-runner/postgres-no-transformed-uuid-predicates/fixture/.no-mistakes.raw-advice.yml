@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      # SQL selection is independent; this selector intentionally excludes TS/JS.
+      include: ['**/*.sql']
+      sqlInclude: [raw-ambiguous.sql, raw-invalid.sql]
+      executorNames: []
+unanalyzable: advise

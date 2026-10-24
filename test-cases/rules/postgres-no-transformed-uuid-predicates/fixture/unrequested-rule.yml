@@ -1,0 +1,14 @@
+effort: low
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      sqlInclude: ['*.sql']
+      importSpecifier: db
+      executorNames: [query]
+  # Standalone UUID checking must neither parse nor prepare this unrelated rule.
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      executorNames: 42

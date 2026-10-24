@@ -139,3 +139,18 @@ fn supplied_tracked_entrypoint_rejects_invalid_prepared_catalog_options() {
     let error = run_filesystem_rules_with_config(&root, &config, &[]).unwrap_err();
     assert!(error.to_string().contains("schemaCatalogPath"), "{error:#}");
 }
+
+#[test]
+fn dispatch_with_files_returns_configuration_errors() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/filesystem-dispatch/invalid-config");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let error = run_filesystem_rules_with_visible_and_snapshot(
+        &root,
+        Some(&root.join(".no-mistakes.yml")),
+        &[],
+        &snapshot,
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("parse"), "{error:#}");
+}

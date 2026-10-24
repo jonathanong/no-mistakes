@@ -12,48 +12,15 @@ use std::path::{Path, PathBuf};
 
 #[path = "support/docs_coverage_cli_helpers.rs"]
 mod cli_docs_helpers;
+#[path = "support/docs_coverage_rule_helpers.rs"]
+mod rule_docs_helpers;
+use rule_docs_helpers::{read, repo_root, rule_ids_from_source};
 #[path = "support/docs_review_regressions.rs"]
 mod docs_review_regressions;
 use cli_docs_helpers::{
     consumer_identifier_paths, enum_block, enum_variants, kebab_case, reachable_cli_pages,
     rust_sources, subcommand_enums,
 };
-
-fn repo_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
-}
-
-fn read(path: &Path) -> String {
-    std::fs::read_to_string(path).unwrap_or_else(|err| panic!("{}: {err}", path.display()))
-}
-
-fn rule_ids_from_source(root: &Path) -> BTreeSet<String> {
-    let rules_dir = root.join("crates/no-mistakes/src/codebase/rules");
-    let mut sources = rust_sources(&rules_dir);
-    sources.extend([
-        root.join("crates/no-mistakes/src/codebase/unique_exports.rs"),
-        root.join("crates/no-mistakes/src/playwright/rules.rs"),
-    ]);
-
-    sources
-        .into_iter()
-        .flat_map(|path| {
-            read(&path)
-                .lines()
-                .filter_map(|line| {
-                    let line = line.trim();
-                    let is_rule_constant = line.starts_with("pub const RULE_ID: &str = \"")
-                        || line.starts_with("pub const REQUIRED_DOC_SECTION_RULE_ID: &str = \"")
-                        || line.starts_with("pub const PLAYWRIGHT_");
-                    is_rule_constant
-                        .then(|| line.split_once("= \"")?.1.split_once('"').map(|(id, _)| id))
-                        .flatten()
-                        .map(str::to_string)
-                })
-                .collect::<Vec<_>>()
-        })
-        .collect()
-}
 
 #[test]
 fn cli_commands_have_docs() {
@@ -214,7 +181,7 @@ fn no_mistakes_rules_have_docs() {
     let root = repo_root();
     let index = read(&root.join("docs/rules/README.md"));
     let rule_ids = rule_ids_from_source(&root);
-    assert_eq!(rule_ids.len(), 113, "source rule inventory changed");
+    assert_eq!(rule_ids.len(), 114, "source rule inventory changed");
     for rule_id in rule_ids {
         let file = format!("{rule_id}.md");
         let path = root.join("docs/rules").join(&file);

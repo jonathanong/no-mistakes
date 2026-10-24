@@ -10,6 +10,7 @@ pub(crate) const RULE_IDS: &[&str] = &[
     "postgres-required-predicates",
     "postgres-sql-shape-policy",
     "postgres-no-offset",
+    "postgres-no-transformed-uuid-predicates",
     "postgres-no-mutable-sql-registry",
     "postgres-no-unbounded-sql-identifier",
     "postgres-conflict-ordering",

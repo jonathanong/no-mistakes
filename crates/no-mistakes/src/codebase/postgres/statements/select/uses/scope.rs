@@ -2,13 +2,16 @@ use super::super::super::predicates::base_table;
 use crate::codebase::postgres::idents::{ident_key, object_name_key};
 use sqlparser::ast::{TableFactor, TableWithJoins};
 
-pub(super) struct BaseRel {
-    pub(super) table: String,
-    pub(super) alias: Option<String>,
-    pub(super) unknown: bool,
+pub(in crate::codebase::postgres::statements) struct BaseRel {
+    pub(in crate::codebase::postgres::statements) table: String,
+    pub(in crate::codebase::postgres::statements) alias: Option<String>,
+    pub(in crate::codebase::postgres::statements) unknown: bool,
 }
 
-pub(super) fn base_relations(from: &[TableWithJoins], ctes: &[String]) -> Vec<BaseRel> {
+pub(in crate::codebase::postgres::statements) fn base_relations(
+    from: &[TableWithJoins],
+    ctes: &[String],
+) -> Vec<BaseRel> {
     let mut rels = Vec::new();
     for table in from {
         push_factor(&table.relation, ctes, &mut rels);
@@ -19,7 +22,11 @@ pub(super) fn base_relations(from: &[TableWithJoins], ctes: &[String]) -> Vec<Ba
     rels
 }
 
-pub(super) fn push_factor(factor: &TableFactor, ctes: &[String], rels: &mut Vec<BaseRel>) {
+pub(in crate::codebase::postgres::statements) fn push_factor(
+    factor: &TableFactor,
+    ctes: &[String],
+    rels: &mut Vec<BaseRel>,
+) {
     match factor {
         TableFactor::Table { name, alias, .. } => {
             let Some(_) = base_table(name, ctes) else {
