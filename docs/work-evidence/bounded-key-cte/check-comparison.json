@@ -1,0 +1,212 @@
+[
+  {
+    "config": "boolean-cte-embedded.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 4,
+    "afterFindings": 1,
+    "changed": true,
+    "beforeSha256": "d212f78cade9f56b551b8829d9f9171ce01aa9a294990b9b657ecf574a62b92c",
+    "afterSha256": "d0febf0b9b507e472a730d8a453b772a70692720cda8b520846c9394b6f90d17"
+  },
+  {
+    "config": "boolean-keys.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 14,
+    "afterFindings": 9,
+    "changed": true,
+    "beforeSha256": "b8b9f1caf8b96a84c22574a8a3398b47f698d69b00ca9fc55f92db3f41f3c55c",
+    "afterSha256": "db18d80a7f1eb746e924ee1fd1544d5d016ac1c4e63538d1133ffd08f0bc4d50"
+  },
+  {
+    "config": "caller-projection.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 7,
+    "afterFindings": 7,
+    "changed": false,
+    "beforeSha256": "8fc64c2a02a6ecfc62640c01f673105bd1d7ae1cf4c82f3f0cbe127e1540b908",
+    "afterSha256": "8fc64c2a02a6ecfc62640c01f673105bd1d7ae1cf4c82f3f0cbe127e1540b908"
+  },
+  {
+    "config": "cte-returning-negative.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 7,
+    "afterFindings": 8,
+    "changed": true,
+    "beforeSha256": "6ce80db3ee5d0c9f9b82932e1ff30dd2baf9cc56e2d6d3da4050f0dda34a1c01",
+    "afterSha256": "c10263881f1eda2998fe1363455fe1eb06f45483f0248f13b2ce643f57b3d7f5"
+  },
+  {
+    "config": "cte-returning-positive.yml",
+    "beforeExit": 1,
+    "afterExit": 0,
+    "beforeFindings": 6,
+    "afterFindings": 0,
+    "changed": true,
+    "beforeSha256": "7d336eaaf1ed550f21c521a8d4917eae07144a3f0d88b9b617c5aff0ba32fbab",
+    "afterSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "config": "delete-only.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 1,
+    "afterFindings": 1,
+    "changed": false,
+    "beforeSha256": "5bb483f5d960f2e2e3fce5a06827aa6d49f6c0ca40207d812e5f589dd420c72e",
+    "afterSha256": "5bb483f5d960f2e2e3fce5a06827aa6d49f6c0ca40207d812e5f589dd420c72e"
+  },
+  {
+    "config": "embedded.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 1,
+    "afterFindings": 1,
+    "changed": false,
+    "beforeSha256": "156e769dc0d54ad1d23d08965d5215051b8410df68ea033646f7f63ff96fa2e2",
+    "afterSha256": "156e769dc0d54ad1d23d08965d5215051b8410df68ea033646f7f63ff96fa2e2"
+  },
+  {
+    "config": "graph.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 6,
+    "afterFindings": 6,
+    "changed": false,
+    "beforeSha256": "bccae4fa29898816da15cf267d43a1ab1dd836b3c2913a8dd586a5f3a4523189",
+    "afterSha256": "bccae4fa29898816da15cf267d43a1ab1dd836b3c2913a8dd586a5f3a4523189"
+  },
+  {
+    "config": "ignore-unanalyzable.yml",
+    "beforeExit": 0,
+    "afterExit": 0,
+    "beforeFindings": 0,
+    "afterFindings": 0,
+    "changed": false,
+    "beforeSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "afterSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "config": "invalid.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 3,
+    "afterFindings": 3,
+    "changed": false,
+    "beforeSha256": "7792bb9a3bcf07fe61d9581ff3b8f7e04698eae18a2c43230075811e31c1e458",
+    "afterSha256": "7792bb9a3bcf07fe61d9581ff3b8f7e04698eae18a2c43230075811e31c1e458"
+  },
+  {
+    "config": "keys.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 7,
+    "afterFindings": 7,
+    "changed": false,
+    "beforeSha256": "75e27224a1c5017f7cae83f211b7ab9e64e6fea33f7ce411e757cfb0fad73686",
+    "afterSha256": "75e27224a1c5017f7cae83f211b7ab9e64e6fea33f7ce411e757cfb0fad73686"
+  },
+  {
+    "config": "no-catalog.yml",
+    "beforeExit": 2,
+    "afterExit": 2,
+    "beforeFindings": 0,
+    "afterFindings": 0,
+    "changed": false,
+    "beforeSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "afterSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "config": "ordering.yml",
+    "beforeExit": 2,
+    "afterExit": 2,
+    "beforeFindings": 0,
+    "afterFindings": 0,
+    "changed": false,
+    "beforeSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "afterSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "config": "stale-allow.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 1,
+    "afterFindings": 1,
+    "changed": false,
+    "beforeSha256": "93f055f3501cf729837d739b85000e379f8c72d40bad349564a4be03d70aec7e",
+    "afterSha256": "93f055f3501cf729837d739b85000e379f8c72d40bad349564a4be03d70aec7e"
+  },
+  {
+    "config": "statement-suppressions.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 1,
+    "afterFindings": 1,
+    "changed": false,
+    "beforeSha256": "866a6099871023c94e94d38378b530b39d436193c181b5aa040101fbd0a33fa1",
+    "afterSha256": "866a6099871023c94e94d38378b530b39d436193c181b5aa040101fbd0a33fa1"
+  },
+  {
+    "config": "suppress.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 1,
+    "afterFindings": 1,
+    "changed": false,
+    "beforeSha256": "04d2067cfd70921dde5b7289242b96b9db7e2bbb7d83edc16b508bc46b192dda",
+    "afterSha256": "04d2067cfd70921dde5b7289242b96b9db7e2bbb7d83edc16b508bc46b192dda"
+  },
+  {
+    "config": "template.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 2,
+    "afterFindings": 2,
+    "changed": false,
+    "beforeSha256": "25488b568e3d869a7cd0c5e50269a2cb4529c123351568c489d9f38b53f6d730",
+    "afterSha256": "25488b568e3d869a7cd0c5e50269a2cb4529c123351568c489d9f38b53f6d730"
+  },
+  {
+    "config": "temporary-partition-drop.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 1,
+    "afterFindings": 1,
+    "changed": false,
+    "beforeSha256": "5e31c789eaef6808cdfdb9b4c3ff8cad48e37092891a6f7a7ac06e44258e222b",
+    "afterSha256": "5e31c789eaef6808cdfdb9b4c3ff8cad48e37092891a6f7a7ac06e44258e222b"
+  },
+  {
+    "config": "unanalyzable.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 2,
+    "afterFindings": 2,
+    "changed": false,
+    "beforeSha256": "37eb183924e2deec1b4ac0f215d7d1e6d85dcbee7b0fbe4aaf11c7044cebb42e",
+    "afterSha256": "37eb183924e2deec1b4ac0f215d7d1e6d85dcbee7b0fbe4aaf11c7044cebb42e"
+  },
+  {
+    "config": "valid.yml",
+    "beforeExit": 0,
+    "afterExit": 0,
+    "beforeFindings": 0,
+    "afterFindings": 0,
+    "changed": false,
+    "beforeSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "afterSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "config": "wrapped-statement-suppressions.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 2,
+    "afterFindings": 2,
+    "changed": false,
+    "beforeSha256": "f630689f7632e636ad9c94e81ac452a8841768f6eb7ca33e66e4e52404585e9b",
+    "afterSha256": "f630689f7632e636ad9c94e81ac452a8841768f6eb7ca33e66e4e52404585e9b"
+  }
+]

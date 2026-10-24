@@ -93,11 +93,8 @@ fn unused_modifying_cte_without_returning_stays_opaque() {
     let Statement::Query(query) = statements.remove(0) else {
         panic!("expected WITH query");
     };
-    let scope = super::super::super::query::with_scope(
-        &query,
-        &super::super::super::Scope::default(),
-        None,
-    );
+    let outer = super::super::super::Scope::default();
+    let scope = super::super::super::query::with_scope(&query, &outer, None);
     let changed = scope.get("changed").expect("CTE in scope");
     assert!(matches!(&changed.items[0].kind, SqlBoundItemKind::Opaque));
 }

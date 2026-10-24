@@ -102,3 +102,38 @@ Parenthesized FETCH counts follow the same fixed-count rules as LIMIT. For examp
 `FETCH FIRST (COALESCE(NULL, 100)) ROWS ONLY` supplies a fixed cap, while an all-NULL
 count or a data-derived subquery does not. `WITH TIES` retains its existing
 conservative policy even when the count expression is fixed.
+
+## Boolean keys and data-modifying CTEs
+
+A bare boolean column in a conjunct is a comparison with `true`. When the
+catalog proves that column is the entire primary or unique key, `WHERE enabled`
+and `WHERE t.enabled` are key lookups, just like `WHERE enabled = true`.
+A composite key still needs every key column pinned in the same conjunction.
+A non-key boolean, an `OR` alternative, or a negated expression does not gain
+an implicit true pin. This proof does not infer bounds from `CHECK` constraints.
+
+An `UPDATE` or `DELETE` CTE outside a recursive `WITH` clause can carry its
+returned target row bound into a later primary or unique key join:
+
+```sql
+WITH u AS (
+  UPDATE orders SET status = 'processed' WHERE id = $1 RETURNING account_id
+)
+UPDATE accounts SET name = 'updated' FROM u WHERE accounts.id = u.account_id;
+```
+
+When `orders.id` and `accounts.id` are primary keys, the inner write returns
+at most one row, and the outer key join also changes at most one row. The same
+join proof applies to a key-bounded SELECT CTE. The ordinary write is still
+checked independently; an unbounded write never becomes bounded merely because
+its output is used by a later statement.
+
+Nested `WITH` bindings inside the modifying CTE keep their lexical scope; a
+physical catalog relation with the same name cannot supply its key proof.
+
+The returned-row proof keeps only target pins independent of auxiliary
+`FROM`/`USING` items: caller-sized values and independent subquery pins.
+Pins that depend on removed source items receive no propagated credit.
+Recursive CTEs and unsupported modifying statements remain opaque. These are
+conservative limits; use an explicit finite target selection for other cases.
+Normal file and line suppression directives continue to apply.

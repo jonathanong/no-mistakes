@@ -1,0 +1,154 @@
+[
+  {
+    "file": "src/codebase/postgres/statements/bounds/dml.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 7,
+        "covered": 7,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 7,
+        "covered": 7,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 103,
+        "covered": 103,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 124,
+        "covered": 120,
+        "notcovered": 4,
+        "percent": 96.7741935483871
+      }
+    }
+  },
+  {
+    "file": "src/codebase/postgres/statements/bounds/pins.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 7,
+        "covered": 7,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 7,
+        "covered": 7,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 136,
+        "covered": 134,
+        "percent": 98.52941176470588
+      },
+      "regions": {
+        "count": 199,
+        "covered": 196,
+        "notcovered": 3,
+        "percent": 98.49246231155779
+      }
+    }
+  },
+  {
+    "file": "src/codebase/postgres/statements/bounds/pins/source_merge.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 1,
+        "covered": 1,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 1,
+        "covered": 1,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 23,
+        "covered": 23,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 38,
+        "covered": 38,
+        "notcovered": 0,
+        "percent": 100.0
+      }
+    }
+  },
+  {
+    "file": "src/codebase/postgres/statements/bounds/query/with_scope.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 4,
+        "covered": 4,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 4,
+        "covered": 4,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 56,
+        "covered": 56,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 111,
+        "covered": 111,
+        "notcovered": 0,
+        "percent": 100.0
+      }
+    }
+  }
+]
