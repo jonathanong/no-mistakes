@@ -87,6 +87,12 @@ Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`,
 
 ### Unanalyzable inputs
 
+Valid PostgreSQL can still be unsupported by this analyzer. When it cannot
+recover statements such as `ALTER DEFAULT PRIVILEGES`, `CREATE PUBLICATION`,
+or `REFRESH MATERIALIZED VIEW`, it reports them under
+[`options.unanalyzable`](../migrations/postgres-schema-unanalyzable.md);
+the diagnostic does not mean PostgreSQL would reject the statement.
+
 SQL statements selected by `sqlInclude` that the lenient parser cannot parse or
 recover follow `options.unanalyzable`: `report` (default) emits a finding,
 `advise` emits a non-failing advisory, and `ignore` omits the diagnostic. The

@@ -187,6 +187,12 @@ Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`,
 
 ### Unanalyzable inputs
 
+Valid PostgreSQL can still be unsupported by this analyzer. When it cannot
+recover statements such as `ALTER DEFAULT PRIVILEGES`, `CREATE PUBLICATION`,
+or `REFRESH MATERIALIZED VIEW`, it reports them under
+[`options.unanalyzable`](../migrations/postgres-schema-unanalyzable.md);
+the diagnostic does not mean PostgreSQL would reject the statement.
+
 Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
 
 - Inputs this rule cannot prove: executor calls whose SQL has no complete recovered alternative or exceeds the 16-alternative cap (for example `query(buildSql(filters))` with an unrecoverable helper), and SQL, embedded or in a `sqlInclude` file, that fails to parse. They follow `options.unanalyzable`:
