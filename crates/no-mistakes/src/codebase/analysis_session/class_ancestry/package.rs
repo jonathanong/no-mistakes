@@ -5,6 +5,8 @@ use std::path::{Component, Path, PathBuf};
 
 #[path = "package_conditions.rs"]
 mod conditions;
+#[path = "package_context.rs"]
+mod context;
 #[path = "package_exports.rs"]
 mod exports;
 #[path = "package_paths.rs"]
@@ -16,6 +18,8 @@ pub(super) fn resolve_in_context(
     consumer_root: &Path,
     sources: &SourceStore,
 ) -> Option<PathBuf> {
+    let importer = lookup_context(specifier, importer, consumer_root)?;
+    let consumer_root = std::fs::canonicalize(consumer_root).ok()?;
     if specifier.starts_with("./") || specifier.starts_with("../") {
         return paths::declaration(&importer.parent()?.join(specifier), sources).ok()?;
     }
@@ -30,7 +34,7 @@ pub(super) fn resolve_in_context(
         if !installed(&root).ok()? {
             continue;
         }
-        if let Some(path) = entry(&root, &subpath, consumer_root, sources).ok()? {
+        if let Some(path) = entry(&root, &subpath, &consumer_root, sources).ok()? {
             return Some(path);
         }
         // An installed nearer package shadows outer versions, even without types.
@@ -42,7 +46,7 @@ pub(super) fn resolve_in_context(
     for modules in directories {
         let root = modules.join("@types").join(&types_name);
         if installed(&root).ok()? {
-            return entry(&root, &subpath, consumer_root, sources).ok()?;
+            return entry(&root, &subpath, &consumer_root, sources).ok()?;
         }
     }
     None
@@ -180,3 +184,11 @@ fn required(path: &Path, sources: &SourceStore) -> Result<Option<PathBuf>, ()> {
 #[cfg(test)]
 #[path = "package_tests.rs"]
 mod tests;
+
+pub(super) fn lookup_context(
+    specifier: &str,
+    importer: &Path,
+    consumer_root: &Path,
+) -> Option<PathBuf> {
+    context::lookup_importer(specifier, importer, consumer_root)
+}

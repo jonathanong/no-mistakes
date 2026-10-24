@@ -444,3 +444,6 @@ mod declaration_ownership;
 mod diagnostic_expressions;
 #[path = "tests/external_declarations.rs"]
 mod external_declarations;
+#[cfg(unix)]
+#[path = "tests/symlink_declarations.rs"]
+mod symlink_declarations;

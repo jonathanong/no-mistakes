@@ -389,8 +389,10 @@ resolves.
   unknown and follow `options.unanalyzable`. Anonymous default classes without a
   stable class identity also remain unknown. This is a conservative ancestry
   projection, not full TypeScript compiler resolution; ordinary import and call
-  targets retain their existing semantics. Distinct symlink spellings remain
-  separate logical declaration paths rather than one canonical package identity.
+  targets retain their existing semantics. Transitive bare or parent-relative
+  imports from internally symlinked declarations remain uncertain when their
+  package dependency context cannot be proved; safe same-directory reexports
+  remain supported. Distinct symlink spellings retain separate logical identities.
 - Mixin and expression bases (`extends withCode(Error)`) and class expressions
   are not tracked.
 - A dead subclass still satisfies its base. The check converges over repeated

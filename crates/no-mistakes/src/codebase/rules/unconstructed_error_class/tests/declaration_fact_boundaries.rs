@@ -134,3 +134,97 @@ fn recovered_primary_class_syntax_cannot_supply_import_ancestry_proof() {
         .iter()
         .all(|class| class.global_base.is_none()));
 }
+
+#[cfg(unix)]
+#[test]
+fn remapped_supplemental_targets_do_not_reuse_lexical_dependency_choices() {
+    use super::super::ancestry::{error_kinds, ErrorKind};
+    let root = fixture()
+        .parent()
+        .unwrap()
+        .join("declaration-projection/whole-root-alias");
+    let declaration = root.join("src/base.d.ts");
+    for (source, alias, expected) in [
+        ("classes.ts", false, ErrorKind::Error),
+        ("aliased.ts", true, ErrorKind::Unknown),
+    ] {
+        let paths = vec![root.join(format!("src/{source}")), declaration.clone()];
+        let files = GraphFiles::from_files_with_resource_candidates_excluding_indexable(
+            paths.clone(),
+            paths,
+            &std::collections::HashSet::from([declaration.clone()]),
+        );
+        let session = AnalysisSession::disabled();
+        let plan = GraphBuildPlan {
+            extends: true,
+            ..Default::default()
+        };
+        let facts = collect_ts_facts_with_session_and_context(
+            &session,
+            files.indexable(),
+            plan.ts_fact_plan(),
+            &TsFactContext {
+                root: root.clone(),
+                ..Default::default()
+            },
+        );
+        let config = TsConfig {
+            dir: root.clone(),
+            paths_dir: root.clone(),
+            paths: if alias {
+                vec![("decl-base".to_string(), vec!["src/base.d.ts".to_string()])]
+            } else {
+                Vec::new()
+            },
+            ..Default::default()
+        };
+        let graph = DepGraph::build_with_plan_files_config_facts_and_session(
+            &root,
+            &config,
+            plan,
+            &files,
+            None,
+            Some(&facts),
+            session,
+        )
+        .unwrap();
+        let classes = graph.class_declarations();
+        assert!(error_kinds(&graph, classes)[0] == expected);
+    }
+}
+
+#[cfg(unix)]
+#[test]
+fn supplied_primary_declarations_keep_canonical_authority_through_root_aliases() {
+    use super::super::ancestry::{error_kinds, ErrorKind};
+    let root = fixture()
+        .parent()
+        .unwrap()
+        .join("declaration-projection/whole-root-alias");
+    let files = GraphFiles::from_files(vec![
+        root.join("src/aliased.ts"),
+        root.join("src/base.d.ts"),
+    ]);
+    let config = TsConfig {
+        dir: root.clone(),
+        paths_dir: root.clone(),
+        paths: vec![("decl-base".to_string(), vec!["src/base.d.ts".to_string()])],
+        ..Default::default()
+    };
+    let graph = DepGraph::build_with_plan_and_files(
+        &root,
+        &config,
+        GraphBuildPlan {
+            extends: true,
+            ..Default::default()
+        },
+        &files,
+    )
+    .unwrap();
+    let classes = graph.class_declarations();
+    let index = classes
+        .iter()
+        .position(|class| class.scope == "Aliased")
+        .unwrap();
+    assert!(error_kinds(&graph, classes)[index] == ErrorKind::Error);
+}

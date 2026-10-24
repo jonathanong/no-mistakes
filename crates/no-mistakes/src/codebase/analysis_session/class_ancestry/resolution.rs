@@ -108,18 +108,34 @@ impl<'a> Builder<'a> {
     }
 
     fn module(&self, importer: &Path, specifier: &str) -> Option<PathBuf> {
-        if let Some(path) = self.request.resolver.resolve(specifier, importer) {
-            // A project target never falls through to an unrelated installed package.
-            return (self.request.facts.get_ts_facts(&path).is_some()
-                || [".d.ts", ".d.mts", ".d.cts"]
-                    .iter()
-                    .any(|suffix| path.to_string_lossy().ends_with(suffix)))
-            .then_some(path);
-        }
         let sources = self
             .session
             .existing_sources_for(self.request.root)
             .unwrap_or_else(|| self.session.supplemental_sources.clone());
+        if let Some(path) = self.request.resolver.resolve(specifier, importer) {
+            // Supplied facts retain their canonical resolver/catalog authority.
+            if self.request.facts.get_ts_facts(&path).is_some() {
+                return Some(path);
+            }
+            if ![".d.ts", ".d.mts", ".d.cts"]
+                .iter()
+                .any(|suffix| path.to_string_lossy().ends_with(suffix))
+            {
+                return None;
+            }
+            let context = package::lookup_context(specifier, importer, self.request.root)?;
+            if context == importer {
+                return Some(path);
+            }
+            // A remapped relative request must use its actual helper context.
+            // Bare aliases without supplied proof remain uncertain instead of
+            // retaining a lexical dependency choice from another package scope.
+            return (specifier.starts_with("./") || specifier.starts_with("../"))
+                .then(|| {
+                    package::resolve_in_context(specifier, importer, self.request.root, &sources)
+                })
+                .flatten();
+        }
         // A real local candidate hidden by the graph's scope still owns this
         // specifier; do not reinterpret it as a same-named external package.
         if !specifier.starts_with('.')
