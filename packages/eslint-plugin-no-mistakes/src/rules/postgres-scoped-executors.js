@@ -225,4 +225,4 @@ function isScopedExecutor(scoped, name, node) {
   );
 }
 
-module.exports = { collectScopedExecutors, isScopedExecutor };
+module.exports = { collectScopedExecutors, isScopedExecutor, matchesConfiguredModule };

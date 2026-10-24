@@ -20,6 +20,8 @@ const {
   resolvePassed,
 } = require("./postgres-no-executor-adapter-passed");
 
+const { acceptsExecutor } = require("./postgres-no-executor-adapter-target");
+
 const RULE_ID = "postgres-no-executor-adapter";
 
 module.exports = rule(
@@ -43,6 +45,7 @@ module.exports = rule(
     const options = executorOptionDefaults(context.options?.[0] ?? {});
     const suppressed = ruleSuppression(context, RULE_ID);
     const source = context.sourceCode;
+    const targetFacts = new WeakMap();
     let bindings = { scoped: [], queryMembers: false };
 
     function quotedExecutor(quoteNode, name) {
@@ -85,8 +88,12 @@ module.exports = rule(
       });
     }
 
-    function visitArgument(argument, call, index, quoteNode) {
-      if (!argument || argument.type === "SpreadElement") return;
+    function visitArgument(argument, call, index, quoteNode, nested = false) {
+      if (!argument) return;
+      if (argument.type === "SpreadElement") {
+        visitArgument(argument.argument, call, index, argument, true);
+        return;
+      }
       let expr = argument;
       let wrapped = false;
       while (expr && (TS_ASSERTIONS.has(expr.type) || expr.type === "ChainExpression")) {
@@ -94,7 +101,7 @@ module.exports = rule(
         expr = expr.expression;
       }
       if (expr.type === "ObjectExpression" || expr.type === "ArrayExpression") {
-        visitFresh(expr, call, index);
+        visitFresh(expr, call, index, nested || Boolean(quoteNode));
         return;
       }
       if (expr.type === "ConditionalExpression") {
@@ -102,6 +109,8 @@ module.exports = rule(
         // Every branch is an executor, so the conditional callee itself is judged.
         // A partial conditional falls through and names only the proven branches.
         if (leaves) {
+          if (!nested && acceptsExecutor(call, index, quoteNode, context, options, targetFacts))
+            return;
           reportAdapter(
             argument,
             {
@@ -131,18 +140,20 @@ module.exports = rule(
         reportAdapter(argument, passed.adapter, call, index, quoteNode);
         return;
       }
-      reportPassed(argument, passed);
+      if (nested || !acceptsExecutor(call, index, quoteNode, context, options, targetFacts)) {
+        reportPassed(argument, passed);
+      }
     }
 
-    function visitFresh(expr, call, index) {
+    function visitFresh(expr, call, index, nested) {
       if (expr.type === "ObjectExpression") {
         for (const property of expr.properties) {
           if (property.type !== "Property" || property.kind !== "init") continue;
-          visitArgument(property.value, call, index, property);
+          visitArgument(property.value, call, index, property, nested);
         }
         return;
       }
-      for (const element of expr.elements) visitArgument(element, call, index, element);
+      for (const element of expr.elements) visitArgument(element, call, index, element, nested);
     }
 
     // The bind result is already the reported value. Its arguments are not a

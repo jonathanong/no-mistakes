@@ -4,6 +4,7 @@ use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 pub(super) struct Selection {
     pub selected: FxHashSet<usize>,
     pub namespaces: FxHashSet<usize>,
+    pub typed: FxHashSet<usize>,
     pub unsupported: FxHashSet<usize>,
 }
 impl Selection {
@@ -55,6 +56,7 @@ impl Selection {
         Self {
             selected,
             namespaces,
+            typed: FxHashSet::default(),
             unsupported,
         }
     }

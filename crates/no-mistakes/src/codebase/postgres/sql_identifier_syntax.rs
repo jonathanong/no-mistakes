@@ -47,6 +47,7 @@ struct Call {
 struct Syntax {
     targets: FxHashSet<Span>,
     namespace_targets: FxHashMap<Span, FxHashSet<String>>,
+    typed_targets: FxHashSet<Span>,
     loose_query: bool,
     calls: Vec<Call>,
     constants: FxHashMap<Span, Input>,
@@ -115,10 +116,12 @@ impl<'a> Visit<'a> for Syntax {
         if selected {
             self.calls.push(Call {
                 span: span(value.span),
-                input: if callee
-                    .as_ref()
-                    .is_some_and(|(root, parts)| parts.len() == 1 && self.targets.contains(root))
-                {
+                input: if callee.as_ref().is_some_and(|(root, parts)| {
+                    (parts.len() == 1 && self.targets.contains(root))
+                        || (parts.len() == 2
+                            && parts[1] == "query"
+                            && self.typed_targets.contains(root))
+                }) {
                     value
                         .arguments
                         .first()
@@ -160,6 +163,7 @@ impl<'a> Visit<'a> for Constants<'_> {
     }
 }
 mod selection;
+mod typed;
 use selection::Selection;
 mod project;
 pub(crate) use project::collect;

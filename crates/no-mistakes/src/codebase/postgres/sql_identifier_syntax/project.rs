@@ -11,7 +11,11 @@ pub(crate) fn collect(
     };
     let selections = profiles
         .iter()
-        .map(|profile| Selection::new(profile, module))
+        .map(|profile| {
+            let mut selection = Selection::new(profile, module);
+            selection.typed = typed::collect(program, module, profile);
+            selection
+        })
         .collect::<Vec<_>>();
     let mut syntax = Syntax {
         loose_query: profiles.iter().any(|profile| {
@@ -24,10 +28,16 @@ pub(crate) fn collect(
         for binding in &module.bindings {
             for reference in &binding.references {
                 let at = (reference.span.start, reference.span.end);
-                if selection.selected.contains(&binding.id) {
+                if selection.typed.contains(&binding.id) {
+                    syntax.typed_targets.insert(at);
+                }
+                if selection.selected.contains(&binding.id) || selection.typed.contains(&binding.id)
+                {
                     syntax.targets.insert(at);
                 }
-                if selection.namespaces.contains(&binding.id) {
+                if selection.namespaces.contains(&binding.id)
+                    || selection.typed.contains(&binding.id)
+                {
                     syntax
                         .namespace_targets
                         .entry(at)

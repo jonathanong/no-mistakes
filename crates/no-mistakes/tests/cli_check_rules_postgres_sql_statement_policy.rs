@@ -132,3 +132,63 @@ fn unknown_statement_group_is_a_cli_configuration_error() {
         "{body}"
     );
 }
+
+#[test]
+fn typed_executor_parameters_preserve_named_executor_policy_at_each_effort() {
+    let root = fixture("typed-executor-parity");
+    for effort in ["max", "low"] {
+        let output = Command::new(bin())
+            .args(["check", "--root"])
+            .arg(&root)
+            .args(["--format", "json", "--effort", effort])
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(output.status.code(), Some(1), "{effort}: {report}");
+        let warnings = report["warnings"].as_array().unwrap();
+        assert_eq!(warnings.is_empty(), effort == "max", "{report}");
+        if effort == "low" {
+            assert!(
+                warnings
+                    .iter()
+                    .any(|warning| warning.as_str().unwrap().contains(
+                        "postgres-sql-statement-policy: requested effort low; effective effort max"
+                    )),
+                "{report}"
+            );
+        }
+        let mut actual = report["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|finding| {
+                (
+                    finding["rule"].as_str().unwrap().to_string(),
+                    finding["line"].as_u64().unwrap(),
+                )
+            })
+            .collect::<Vec<_>>();
+        actual.sort();
+        let mut expected = Vec::new();
+        for line in [6, 11, 16, 26] {
+            expected.push((RULE.to_string(), line));
+        }
+        for line in [7, 12, 17, 27] {
+            expected.push(("postgres-no-offset".to_string(), line));
+        }
+        for line in [6, 7, 11, 12, 16, 17, 26, 27] {
+            expected.push(("postgres-require-query-annotation".to_string(), line));
+        }
+        for line in [31, 32, 33] {
+            expected.push(("postgres-no-generated-column-writes".to_string(), line));
+        }
+        expected.sort();
+        assert_eq!(actual, expected, "{effort}: {report}");
+    }
+}
+
+#[test]
+fn typed_executor_parameters_require_configured_import_identity_at_low_effort() {
+    let output = check_fixture_config(&fixture("typed-executor-negative"));
+    assert!(output.status.success(), "{}", stdout(&output));
+}
