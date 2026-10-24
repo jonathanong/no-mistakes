@@ -16,7 +16,10 @@ pub(crate) use selection::{check_with_graph, graph_plan};
 #[cfg(test)]
 mod tests;
 
-/// Declares opt-in argument demand without parsing application options twice.
+/// Compatibility probe for callers that only need to know whether any
+/// forbidden-calls application requests argument facts. Prepared runners use
+/// [`configure_argument_facts`] to retain each application's file scope.
+/// Retained for public Rust API compatibility; its only internal callers are tests.
 pub fn argument_facts_required(config: &crate::config::v2::NoMistakesConfig) -> bool {
     config
         .rule_applications(RULE_ID)

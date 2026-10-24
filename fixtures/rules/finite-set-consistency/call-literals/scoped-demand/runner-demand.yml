@@ -1,0 +1,21 @@
+version: 2
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: scheduled
+          file: schedules.ts
+          kind: ts-call-first-string-argument
+          target: register
+        - name: registered
+          file: registry.mts
+          kind: ts-const-array-property
+          target: AI_AGENTS_SCHEDULED_JOBS
+          property: id
+      comparisons:
+        - left: scheduled
+          right: registered

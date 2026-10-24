@@ -157,3 +157,85 @@ fn explicit_runner_deadline_demand_does_not_admit_unrelated_primary_sources() {
     assert!(demand.supplemental_call_site_files(&[], &[]).is_empty());
     assert!(!plan.integration);
 }
+
+#[test]
+fn runner_prepare_limits_call_fact_work_to_configured_sources() {
+    use no_mistakes::codebase::analysis_session::AnalysisSession;
+    use no_mistakes::codebase::check_facts::collect_check_facts_with_supplemental_call_sites;
+    use no_mistakes::codebase::ts_source::facts::TsFactPlan;
+
+    let saved = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/finite-set-consistency/call-literals/scoped-demand");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = fixture.path().canonicalize().unwrap();
+    let config_path = root.join("runner-demand.yml");
+    let config = no_mistakes::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let selected = root.join("schedules.ts");
+    let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let discovered = snapshot
+        .paths_for(&root)
+        .iter()
+        .filter(|path| no_mistakes::codebase::dependencies::extract::is_indexable(path))
+        .cloned()
+        .collect::<Vec<_>>();
+    let sources = snapshot.source_store_for(&root);
+    assert_eq!(discovered.len(), 5, "fixture must expose all TS sources");
+
+    let collect = |broad: bool| {
+        let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+        let session = AnalysisSession::new(Some(Arc::clone(&observer)));
+        let mut plan = CheckFactPlan {
+            imports: true,
+            symbols: true,
+            graph: TsFactPlan {
+                imports: true,
+                call_sites: broad,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let demand = super::prepare(&root, &config, &mut plan, broad, false).unwrap();
+        assert_eq!(plan.graph.call_sites, broad);
+        assert!(plan.call_site_paths.contains(&selected));
+        assert_eq!(plan.call_site_paths.len(), 1);
+        let primary = demand.primary_files(discovered.clone());
+        assert_eq!(primary.len(), discovered.len());
+        let supplemental = demand.supplemental_call_site_files(&primary, &[]);
+        assert!(supplemental.is_empty());
+        let facts = no_mistakes::diagnostics::with_observer(Some(Arc::clone(&observer)), || {
+            no_mistakes::ast::with_request_parse_cache(|| {
+                collect_check_facts_with_supplemental_call_sites(
+                    &session,
+                    &root,
+                    (primary, Vec::new()),
+                    supplemental,
+                    plan,
+                    None,
+                    Arc::clone(&sources),
+                )
+            })
+        });
+        assert_eq!(facts.files().len(), discovered.len());
+        observer.snapshot().work
+    };
+
+    let scoped_work = collect(false);
+    let broad_work = collect(true);
+    assert_eq!(scoped_work.get("parse.files"), Some(&5), "{scoped_work:#?}");
+    assert_eq!(broad_work.get("parse.files"), Some(&5), "{broad_work:#?}");
+    // The runner's unrelated helper/config/registry/TSX sources must not pay
+    // for call-site walks when only schedules.ts requests call literals.
+    assert_eq!(scoped_work.get("ast.walks"), Some(&1), "{scoped_work:#?}");
+    assert_eq!(broad_work.get("ast.walks"), Some(&5), "{broad_work:#?}");
+
+    let results =
+        crate::check_runner::run_all_with_evidence(root, Some(config_path), None, false, false)
+            .unwrap();
+    let findings = results
+        .rules
+        .iter()
+        .filter(|finding| finding.rule == no_mistakes::codebase::rules::FINITE_SET_CONSISTENCY)
+        .collect::<Vec<_>>();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].target.as_deref(), Some("missing"));
+}
