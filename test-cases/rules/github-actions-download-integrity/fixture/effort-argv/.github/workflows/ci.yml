@@ -48,6 +48,7 @@ jobs:
           FETCH='echo setup; curl'
           $FETCH https://untrusted.example.invalid/separator.tgz
       - name: unicode-non-url-operand
+        # Keep this multibyte operand: byte offsets 7 and 8 are not UTF-8 boundaries.
         run: curl 漢字漢
       - name: elided-wrapper-command
         run: |
