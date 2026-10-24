@@ -80,7 +80,7 @@ fn copy_on_write_mutation_keeps_candidate_joins_and_original_snapshot() {
         after.remove("unknown");
         assert!(!before.same_bindings(&after));
         let (result, visits) = compare(&before, &after, &before, whole_sql);
-        assert_eq!(visits, before.len());
+        assert_eq!(visits, before.len(), "tiny scopes retain the borrowed scan");
         assert!(
             result["argument"]
                 == Value::Joined(vec![Value::Arguments(9), Value::Arguments(11)].into())
@@ -88,5 +88,55 @@ fn copy_on_write_mutation_keeps_candidate_joins_and_original_snapshot() {
         assert!(result["unknown"] == Value::Unknown);
         assert!(before["argument"] == Value::Arguments(9));
         assert!(before.contains_key("unknown"));
+    }
+}
+
+#[test]
+fn dense_sparse_writes_compare_only_the_written_key_and_bulk_writes_fall_back() {
+    for whole_sql in [false, true] {
+        let mut before = scope();
+        for index in 0..61 {
+            before.insert(format!("stable{index}"), Value::Primitive);
+        }
+        let mut after = before.clone();
+        after.insert("argument".into(), Value::Arguments(11));
+        let (result, visits) = compare(&before, &after, &before, whole_sql);
+        assert_eq!(visits, 1);
+        assert!(result["argument"] != before["argument"]);
+        assert!(result["builder"] == before["builder"]);
+        let (_, visits) = compare(&after, &before, &before, whole_sql);
+        assert_eq!(
+            visits, 1,
+            "the changed first arm also supplies a sparse key set"
+        );
+        // Bulk mutation has no proven key set; retain the borrowed legacy scan.
+        after.entry("argument".into()).or_insert(Value::Unknown);
+        let (_, visits) = compare(&before, &after, &before, whole_sql);
+        assert_eq!(visits, before.len());
+    }
+}
+
+#[test]
+fn sparse_candidates_cannot_resurrect_a_binding_deleted_from_the_joined_arm() {
+    for whole_sql in [false, true] {
+        let mut initial = scope();
+        for index in 0..61 {
+            initial.insert(format!("stable{index}"), Value::Primitive);
+        }
+        let mut before = initial.clone();
+        before.remove("argument");
+        let mut after = initial.clone();
+        after.insert("unknown".into(), Value::Arguments(11));
+        let (result, visits) = compare(&before, &after, &initial, whole_sql);
+        assert!(!result.contains_key("argument"));
+        assert_eq!(
+            visits, 1,
+            "the absent dirty key is skipped before comparison"
+        );
+        assert!(
+            result["unknown"] == Value::Joined(vec![Value::Unknown, Value::Arguments(11)].into())
+        );
+        assert!(result["builder"] == initial["builder"]);
+        assert!(initial.contains_key("argument") && after.contains_key("argument"));
     }
 }

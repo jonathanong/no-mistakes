@@ -28,8 +28,9 @@ impl Clone for Data {
 pub(in crate::codebase::postgres::query_annotation) struct Values(Arc<Data>);
 
 impl PartialEq for Values {
+    #[inline(always)]
     fn eq(&self, other: &Self) -> bool {
-        Arc::ptr_eq(&self.0, &other.0) || self.0.values == other.0.values
+        Arc::ptr_eq(&self.0, &other.0) || equality::values(self, other)
     }
 }
 impl Eq for Values {}

@@ -13,3 +13,7 @@ macro_rules! sql_component {
     };
 }
 pub(super) use {fallback, identity, sql_component};
+
+pub(super) const fn memoize() -> bool {
+    true
+}

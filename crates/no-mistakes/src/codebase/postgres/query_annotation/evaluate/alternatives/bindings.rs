@@ -70,14 +70,35 @@ pub(super) fn join_with_sql(
         }
         // Inspect shared snapshots before taking a mutable view: unchanged
         // branches must not clone every binding in the captured environment.
-        let changed = before
-            .iter()
-            .filter(|(name, value)| {
-                record_join_binding!();
-                after.get(*name) != Some(*value) || !initial.contains_key(*name)
+        let dirty_candidates = if before.has_binding_changes() || after.has_binding_changes() {
+            before.changed_binding_names(initial).and_then(|mut names| {
+                names.extend(after.changed_binding_names(initial)?);
+                Some(names)
             })
-            .map(|(name, _)| name.clone())
-            .collect::<Vec<_>>();
+        } else {
+            None
+        };
+        let changed = if let Some(names) = dirty_candidates {
+            names
+                .into_iter()
+                .filter(|name| {
+                    let Some(value) = before.get(name) else {
+                        return false;
+                    };
+                    record_join_binding!();
+                    after.get(name) != Some(value) || !initial.contains_key(name)
+                })
+                .collect::<Vec<_>>()
+        } else {
+            before
+                .iter()
+                .filter(|(name, value)| {
+                    record_join_binding!();
+                    after.get(*name) != Some(*value) || !initial.contains_key(*name)
+                })
+                .map(|(name, _)| name.clone())
+                .collect::<Vec<_>>()
+        };
         for name in changed {
             let value = before.get_mut(&name).expect("existing binding");
             // Divergent arms add and drop names. Neither hole is a builder.

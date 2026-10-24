@@ -6,7 +6,9 @@ use crate::codebase::postgres::query_annotation::{
     modules::Module,
 };
 use crate::codebase::postgres::{extract_embedded_sql_from_program, EmbeddedSqlOptions};
-use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::codebase::ts_source::facts::{
+    collect_file_facts_from_program, TsFactContext, TsFactPlan, TsFileFacts,
+};
 use crate::fx::FxHashMap;
 use std::{path::PathBuf, sync::Arc};
 fn scope_state(scopes: &[Scope]) -> Vec<std::collections::BTreeMap<String, String>> {
@@ -20,15 +22,36 @@ fn scope_state(scopes: &[Scope]) -> Vec<std::collections::BTreeMap<String, Strin
         })
         .collect()
 }
-fn run() -> (Vec<String>, usize) {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/performance/annotation-shared-record-dag/value-equality/root.mts");
+type Resolve = fn(&str, &std::path::Path) -> Option<PathBuf>;
+fn with_fixture<T>(
+    name: &str,
+    precise_records: bool,
+    inspect: impl FnOnce(&mut Evaluator<'_, Resolve>, &std::path::Path, &str) -> T,
+) -> T {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
+        "../../fixtures/performance/annotation-shared-record-dag/{name}/root.mts"
+    ));
     let source = std::fs::read_to_string(&path).unwrap();
     let options = EmbeddedSqlOptions::configured("@bench/db", &[]);
-    let (facts, embedded) = crate::ast::with_program(&path, &source, |program, _| {
+    let (facts, embedded, ts) = crate::ast::with_program(&path, &source, |program, _| {
+        let mut facts = query_annotation::collect(program, &source, &options);
+        facts.precise_records = precise_records;
         (
-            query_annotation::collect(program, &source, &options),
+            facts,
             extract_embedded_sql_from_program(&path, program, &source, &options),
+            if precise_records {
+                collect_file_facts_from_program(
+                    &path,
+                    TsFactPlan::imports(),
+                    &TsFactContext::default(),
+                    &source,
+                    program,
+                    None,
+                    None,
+                )
+            } else {
+                TsFileFacts::default()
+            },
         )
     })
     .unwrap();
@@ -36,13 +59,13 @@ fn run() -> (Vec<String>, usize) {
         path.clone(),
         File {
             facts: &facts,
-            module: Arc::new(Module::new(TsFileFacts::default().into())),
+            module: Arc::new(Module::new(ts.into())),
             executors: embedded.call_spans.iter().copied().collect(),
         },
     )]);
     let mut evaluator = Evaluator {
         files: &files,
-        resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+        resolve: (|_: &str, _: &std::path::Path| -> Option<PathBuf> { None }) as Resolve,
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
@@ -69,54 +92,61 @@ fn run() -> (Vec<String>, usize) {
         mapped_arguments: Default::default(),
     };
     evaluator.run(&path);
-    for (sql, annotation) in [("/* clean */ SELECT 1", false), ("SELECT 2", true)] {
-        let call = format!("read(\"{sql}\")");
-        let start = source.find(&call).unwrap() as u32;
-        let events = &evaluator.events[&(path.clone(), (start, start + call.len() as u32))];
-        assert!(!events.is_empty());
-        assert!(events.iter().all(|(_, value)| matches!(value, Value::Prefix(text, _, _)
-            if text == sql && crate::codebase::postgres::sql_requires_query_annotation(text) == annotation)));
-    }
-    let env = evaluator.module_environment(&path);
-    assert!(matches!(
-        evaluator.scopes[env].get("shared0"),
-        Some(Value::Record(_, _))
-    ));
-    let current = evaluator.scopes.clone();
-    let mut initial = current.clone();
-    assert!(initial[env].remove("shared0").is_some());
-    let current_before = scope_state(&current);
-    let initial_before = scope_state(&initial);
-    let evaluator_before = scope_state(&evaluator.scopes);
-    let mut joined = current.clone();
-    assert!(joined[env].same_bindings(&current[env]));
-    assert!(!joined[env].same_bindings(&initial[env]));
-    // A binding absent initially must stay unproven even when both arms share
-    // their entire fixture-derived scope. The three-scope guard cannot skip it.
-    value_equality_test_support::join(&mut joined, &current, &initial);
-    assert!(matches!(joined[env].get("shared0"), Some(Value::Unknown)));
-    assert_eq!(scope_state(&current), current_before);
-    assert_eq!(scope_state(&initial), initial_before);
-    assert_eq!(scope_state(&evaluator.scopes), evaluator_before);
-    assert!(current[env].same_bindings(&evaluator.scopes[env]));
-    assert!(!joined[env].same_bindings(&current[env]));
-    let mut expected_join = current_before;
-    expected_join[env].insert("shared0".into(), legacy::describe(&Value::Unknown));
-    assert_eq!(scope_state(&joined), expected_join);
-    let mut output = vec![format!(
-        "joined={:?};current={:?};initial={:?};evaluator={:?}",
-        scope_state(&joined),
-        scope_state(&current),
-        scope_state(&initial),
-        scope_state(&evaluator.scopes)
-    )];
-    output.extend(evaluator.events.iter().flat_map(|(key, events)| {
-        events
-            .iter()
-            .map(move |(generic, value)| format!("{key:?}:{generic}:{}", legacy::describe(value)))
-    }));
-    (output, evaluator.scopes.len())
+    inspect(&mut evaluator, &path, &source)
 }
+fn run() -> (Vec<String>, usize) {
+    with_fixture("value-equality", false, |evaluator, path, source| {
+        for (sql, annotation) in [("/* clean */ SELECT 1", false), ("SELECT 2", true)] {
+            let call = format!("read(\"{sql}\")");
+            let start = source.find(&call).unwrap() as u32;
+            let events =
+                &evaluator.events[&(path.to_path_buf(), (start, start + call.len() as u32))];
+            assert!(!events.is_empty());
+            assert!(events.iter().all(|(_, value)| matches!(value, Value::Prefix(text, _, _)
+            if text == sql && crate::codebase::postgres::sql_requires_query_annotation(text) == annotation)));
+        }
+        let env = evaluator.module_environment(path);
+        assert!(matches!(
+            evaluator.scopes[env].get("shared0"),
+            Some(Value::Record(_, _))
+        ));
+        let current = evaluator.scopes.clone();
+        let mut initial = current.clone();
+        assert!(initial[env].remove("shared0").is_some());
+        let current_before = scope_state(&current);
+        let initial_before = scope_state(&initial);
+        let evaluator_before = scope_state(&evaluator.scopes);
+        let mut joined = current.clone();
+        assert!(joined[env].same_bindings(&current[env]));
+        assert!(!joined[env].same_bindings(&initial[env]));
+        // A binding absent initially must stay unproven even when both arms share
+        // their entire fixture-derived scope. The three-scope guard cannot skip it.
+        value_equality_test_support::join(&mut joined, &current, &initial);
+        assert!(matches!(joined[env].get("shared0"), Some(Value::Unknown)));
+        assert_eq!(scope_state(&current), current_before);
+        assert_eq!(scope_state(&initial), initial_before);
+        assert_eq!(scope_state(&evaluator.scopes), evaluator_before);
+        assert!(current[env].same_bindings(&evaluator.scopes[env]));
+        assert!(!joined[env].same_bindings(&current[env]));
+        let mut expected_join = current_before;
+        expected_join[env].insert("shared0".into(), legacy::describe(&Value::Unknown));
+        assert_eq!(scope_state(&joined), expected_join);
+        let mut output = vec![format!(
+            "joined={:?};current={:?};initial={:?};evaluator={:?}",
+            scope_state(&joined),
+            scope_state(&current),
+            scope_state(&initial),
+            scope_state(&evaluator.scopes)
+        )];
+        output.extend(evaluator.events.iter().flat_map(|(key, events)| {
+            events.iter().map(move |(generic, value)| {
+                format!("{key:?}:{generic}:{}", legacy::describe(value))
+            })
+        }));
+        (output, evaluator.scopes.len())
+    })
+}
+
 #[test]
 fn saved_evaluator_fixture_matches_legacy_with_real_identity_work() {
     let mut findings = None;
@@ -137,4 +167,60 @@ fn saved_evaluator_fixture_matches_legacy_with_real_identity_work() {
             eprintln!("value equality observed={observed}: fallback entries {old_work} -> {work}");
         });
     }
+}
+
+#[test]
+fn saved_distinct_dag_fixture_preserves_events_and_reduces_real_comparisons() {
+    // Matches executed_source/imports.rs: supplied-source whole-SQL evaluation
+    // declares precise records. Ordinary annotation projection stays unchanged.
+    let run = || {
+        with_fixture("value-equality-distinct", true, |evaluator, path, _| {
+            let env = evaluator.module_environment(path);
+            let chosen = &evaluator.scopes[env]["chosen"];
+            assert!(matches!(chosen, Value::Record(_, _)));
+            assert!(legacy::equal(chosen, &evaluator.scopes[env]["left12"]));
+            let state = scope_state(&evaluator.scopes);
+            let mut events = evaluator
+                .events
+                .values()
+                .flat_map(|events| events.iter().map(|(_, value)| legacy::describe(value)))
+                .collect::<Vec<_>>();
+            events.sort();
+            assert_eq!(
+                events,
+                vec![
+                    "Prefix(\"/* clean */ SELECT 1\", true, None)",
+                    "Prefix(\"/* same */ SELECT 1\", true, None)",
+                ],
+                "the joined record must still expose its exact annotated SQL leaf"
+            );
+            (events, state)
+        })
+    };
+    let (expected, before) = hooks::measure(true, run);
+    let (actual, after) = hooks::measure(false, run);
+    assert_eq!(actual, expected);
+    eprintln!("saved distinct DAG evaluator fallbacks: {before} -> {after}");
+    assert!(
+        before > after * 10,
+        "real branch joins must reuse completed pairs"
+    );
+}
+
+#[test]
+fn ordinary_annotation_keeps_conservative_deep_member_projection() {
+    with_fixture(
+        "value-equality-distinct",
+        false,
+        |evaluator, path, source| {
+            let call = "read(chosen.a.a.a.a.a.a.a.a.a.a.a.a)";
+            let start = source.find(call).unwrap() as u32;
+            let events =
+                &evaluator.events[&(path.to_path_buf(), (start, start + call.len() as u32))];
+            assert!(!events.is_empty());
+            assert!(events
+                .iter()
+                .all(|(_, value)| matches!(value, Value::Aggregate(_))));
+        },
+    );
 }

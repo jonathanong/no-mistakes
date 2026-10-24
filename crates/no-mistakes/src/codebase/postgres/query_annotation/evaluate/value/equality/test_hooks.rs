@@ -44,7 +44,7 @@ macro_rules! prefix {
         if hooks::legacy_prefix() {
             hooks::sql_component!($a, $a2) && $b == $b2 && $c == $c2
         } else {
-            prefix_order::compare!($a, $b, $c, $a2, $b2, $c2)
+            $crate::codebase::postgres::query_annotation::evaluate::value::equality::prefix_order::compare!($a, $b, $c, $a2, $b2, $c2)
         }
     };
 }
@@ -59,3 +59,7 @@ macro_rules! fallback {
     };
 }
 pub(super) use {fallback, identity, prefix, sql_component};
+
+pub(super) fn memoize() -> bool {
+    !LEGACY.get()
+}

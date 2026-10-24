@@ -123,3 +123,5 @@ fn saved_unchanged_branches_match_legacy_state_and_reduce_actual_binding_visits(
         );
     }
 }
+
+mod dirty;

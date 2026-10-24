@@ -3,6 +3,9 @@ use std::path::{Path, PathBuf};
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(in super::super) fn refresh_arguments(&self, values: &mut [Value]) {
+        if self.builder_updates.is_empty() && self.invalidated_builders.is_empty() {
+            return;
+        }
         for value in values {
             self.refresh_argument(value);
         }
@@ -20,12 +23,17 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Value::Promise(inner) | Value::Evaluated(inner, _) => {
                 self.refresh_argument(inner);
             }
+            // Borrow the summary before coercion can detach immutable records.
             Value::Aggregate(values)
             | Value::References(values)
             | Value::Object(values)
             | Value::Record(values, _)
             | Value::Joined(values)
-            | Value::Possible(values) => self.refresh_arguments(values),
+            | Value::Possible(values)
+                if values.contains_reference() =>
+            {
+                self.refresh_arguments(values);
+            }
             // Argument containers already resolve their slots by identity.
             _ => {}
         }

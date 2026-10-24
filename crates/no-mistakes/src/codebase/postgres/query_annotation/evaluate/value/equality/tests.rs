@@ -2,6 +2,8 @@ use super::{hooks, Value};
 use crate::codebase::postgres::query_annotation::{evaluate::Scope, Function};
 use crate::fx::FxHashMap;
 use std::sync::Arc;
+mod admission;
+mod distinct_dag;
 mod evaluator;
 #[path = "legacy.rs"]
 mod legacy;
