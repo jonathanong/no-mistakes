@@ -1,0 +1,16 @@
+import { query } from "@example/db";
+import * as db from "@example/db";
+const begin = "BEGIN";
+const first = begin;
+const second = first;
+query(second);
+const commit = `COMMIT` as const;
+const finish = (commit satisfies string)!;
+db.query(finish);
+query.call(null, second);
+query.apply(null, [second]);
+const execute = (sql: string) => query(sql);
+execute(second);
+const rollback = "ROLLBACK";
+const abort = rollback;
+query(abort);

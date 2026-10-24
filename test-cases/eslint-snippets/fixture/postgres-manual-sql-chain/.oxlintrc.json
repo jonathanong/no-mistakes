@@ -1,0 +1,5 @@
+{
+  "plugins": [],
+  "jsPlugins": [{ "name": "no-mistakes", "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js" }],
+  "rules": { "no-mistakes/postgres-no-manual-transaction": ["error", { "importSpecifier": "@example/db" }] }
+}

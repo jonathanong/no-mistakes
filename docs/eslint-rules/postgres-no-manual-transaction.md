@@ -102,10 +102,71 @@ A computed identifier key (`const { [key]: q } = db`) or a property default
 destructure, so its default does not prove the caller supplied that executor.
 A nested parameter named `query` shadows the configured import.
 
+### SQL value aliases
+
+When released SQL-text recovery cannot resolve an argument, the rule also
+follows a chain of completed, unwritten `const` identifier initializers to a
+string literal or interpolation-free template:
+
+```ts
+import { query } from "@example/db";
+const begin = "BEGIN";
+const first = begin;
+const command = first;
+await query(command);
+```
+
+Each binding and all its references must stay in that binding's lexical scope.
+This includes function-local chains whose declarations and reads share the
+same function scope. A reference in another block or function, even an unrelated
+read, keeps the new chain unproved. This boundary avoids following reads through
+nearer dynamic bindings, such as `with` or a non-strict function's eval-created
+local. It does not claim that every use of eval is excluded.
+
+The added path does not evaluate tags, interpolations, concatenation, helpers,
+containers, imports, destructuring, mutable bindings, forward reads, or cycles.
+TypeScript wrappers are erased only to recover the underlying primitive value.
+Existing direct and one-hop SQL recovery stays unchanged, including its broader
+released decisions for mutable bindings, outer-scope constants and tagged SQL.
+
+```ts
+const begin = "BEGIN";
+const command = begin;
+function later() {
+  query(command); // A new chain crossing a function boundary is not followed.
+}
+```
+
+```ts
+import { command } from "./transaction-commands";
+query(command); // A value re-exported by another file is not proved here.
+```
+
 ## Fix
 
 Move transaction control into the reviewed transaction helper and pass its
 executor to the operation callback.
+
+The repair for a SQL alias chain is a lifecycle migration, not replacing one
+isolated `BEGIN`, `COMMIT`, or `ROLLBACK` call with a new empty transaction.
+Move the surrounding business operation into `withTransaction` or the
+appropriate `withTransactionOptions` helper, preserving transaction options and
+the helper's completion/error contract. Let that helper own commit, rollback
+and cleanup:
+
+```ts
+await withTransaction(async (tx) => {
+  await tx.query("/* update-user */ UPDATE users SET active = true");
+});
+```
+
+This applies to the direct argument, namespace member, `.call`, literal-array
+`.apply`, and existing transparent executor-forwarder forms. Keep non-lifecycle
+work, conditions, wrapper contracts, and any receiver/argument side effects in
+their original order. Use the helper-provided executor inside the operation.
+Remove SQL aliases only when unused elsewhere; their other consumers and
+forwarder definitions need not change. There is no automatic fix because the
+operation boundary and owner-helper contract require application knowledge.
 
 ## Suppression
 
