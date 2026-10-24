@@ -196,3 +196,44 @@ export function nestedUnconfigured(other: OtherExecutor, sql: string) {
     query(sql), // UNKNOWN
   );
 }
+// Return annotations stay erased; only their own executing value is uncertain.
+declare function unconfiguredAny(): any; // CLEAR
+function getDb(): QueryExecutor { // CLEAR
+  return unconfiguredAny(); // UNSUPPORTED_TYPE
+}
+const returnedDb = getDb(); // CLEAR
+returnedDb.query("SELECT 1 OFFSET 1"); // CLEAR
+const assertedDb = unconfiguredAny() as QueryExecutor; // UNSUPPORTED_TYPE
+assertedDb.query("SELECT 1 OFFSET 1"); // CLEAR
+const angleDb = <QueryExecutor>unconfiguredAny(); // UNSUPPORTED_TYPE
+angleDb.query("SELECT 1 OFFSET 1"); // CLEAR
+const satisfiedDb = unconfiguredAny() satisfies QueryExecutor; // UNSUPPORTED_TYPE
+satisfiedDb.query("SELECT 1 OFFSET 1"); // CLEAR
+const objectDb = {
+  db: null as any as QueryExecutor, // UNSUPPORTED_TYPE
+  run() { this.db.query("SELECT 1 OFFSET 1"); }, // CLEAR
+};
+objectDb.run(); // CLEAR
+// Nested functions own their return obligation; enclosing annotations do not leak.
+function outerTyped(): QueryExecutor { // CLEAR
+  function innerUntyped() { return unconfiguredAny(); } // CLEAR
+  innerUntyped(); // CLEAR
+  return unconfiguredAny(); // UNSUPPORTED_TYPE
+}
+function outerUntyped() { // CLEAR
+  function innerTyped(): QueryExecutor { // CLEAR
+    return unconfiguredAny(); // UNSUPPORTED_TYPE
+  }
+  innerTyped(); // CLEAR
+  return unconfiguredAny(); // CLEAR
+}
+const arrowTyped = (): QueryExecutor => unconfiguredAny(); // UNSUPPORTED_TYPE
+const blockArrowTyped = (): QueryExecutor => { // CLEAR
+  return unconfiguredAny(); // UNSUPPORTED_TYPE
+};
+class ReturningMethod {
+  getDb(): QueryExecutor { // CLEAR
+    return unconfiguredAny(); // UNSUPPORTED_TYPE
+  }
+}
+type ErasedReturn = ReturnType<typeof getDb>; // CLEAR

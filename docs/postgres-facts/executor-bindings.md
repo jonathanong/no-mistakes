@@ -26,6 +26,12 @@ same literal/one-local-constant contract as named executors. Type annotations,
 type aliases, and `typeof` type queries are erased uses and never create SQL
 findings. Dynamic or unsupported SQL is reported at its executor call; passing
 a configured executor as a runtime value remains an unknown escape at that use.
+An assertion (`as T` or `<T>value`) or `satisfies T` with a possible configured
+executor type retains an unknown at its runtime operand. A function, arrow, or
+method with such a return type retains an unknown at each returned value. The
+type header by itself is erased, and these unknowns do not prove SQL passed to
+a later call through the produced value. Nested functions use their own return
+type; ambient declarations have no returned value to report.
 For the SQL-structure low rules, indirect annotations (such as local type aliases
 or interfaces derived from a configured type, generic constraints/defaults,
 intersections, and array/rest or nested binding patterns) retain unknown runtime

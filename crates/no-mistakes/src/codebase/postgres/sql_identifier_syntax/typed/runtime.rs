@@ -2,6 +2,7 @@ use super::*;
 use oxc_ast::ast::{Class, ClassElement, Function, MethodDefinitionKind, StaticMemberExpression};
 
 mod parameters;
+mod producers;
 
 // A field annotation is only a possible executor. Keep runtime receiver reads,
 // scoped to its owning class, without promoting any SQL argument to a literal.
@@ -17,6 +18,7 @@ pub(super) fn collect(program: &Program<'_>, possible: &FxHashSet<Span>) -> FxHa
         uses: FxHashSet::default(),
     };
     visitor.visit_program(program);
+    visitor.uses.extend(producers::collect(program, possible));
     visitor.uses
 }
 struct Runtime<'s> {
