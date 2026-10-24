@@ -36,7 +36,9 @@ Typed parameters support direct calls and `.query` calls, including renamed
 bindings destructured from an inline object parameter type. The type must be a
 reference to the configured named import; a same-named local type is insufficient.
 Defaulted parameters and typed callback parameters use the same ownership
-contract. Supported factory results and declared type identities are described
+contract. Only helpers selected by `executorFactoryNames` exempt companion
+receiver arguments; opaque helpers remain unknown even with a typed callback.
+Supported factory results and declared type identities are described
 in [executor bindings](../postgres-facts/executor-bindings.md).
 These literal calls remain definite findings with `unanalyzable: ignore`.
 Erased type references never create a function-declaration finding. Clear literal

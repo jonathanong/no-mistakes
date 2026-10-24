@@ -103,6 +103,8 @@ its diagnostic uses the invocation line so a disable-next-line comment above
 `run(sql)` suppresses that call.
 Configured typed callbacks and supported factory bindings share the literal SQL
 contract described in [executor bindings](../postgres-facts/executor-bindings.md).
+Companion receiver arguments are exempt only for helpers selected by
+`executorFactoryNames`; a typed callback cannot exempt an opaque helper.
 Other wrapper uses remain unknown at low; select max or expose a directly
 configured executor. Namespace
 executor calls and escapes are also unanalyzable; unrelated named methods stay outside

@@ -10,7 +10,7 @@ rules:
     options:
       importSpecifier: '@example/db'
       executorNames: [read, write]
-      executorFactoryNames: [beginTransaction]
+      executorFactoryNames: [beginTransaction, runWithTransaction]
       executorTypeNames: [QueryExecutor, TransactionQuery, QueryOptions]
       effort: max
       unanalyzable: advise
@@ -19,7 +19,7 @@ rules:
     options:
       importSpecifier: '@example/db'
       executorNames: [read, write]
-      executorFactoryNames: [beginTransaction]
+      executorFactoryNames: [beginTransaction, runWithTransaction]
       executorTypeNames: [QueryExecutor, TransactionQuery, QueryOptions]
       effort: max
       unanalyzable: advise
@@ -28,7 +28,7 @@ rules:
     options:
       importSpecifier: '@example/db'
       executorNames: [read, write]
-      executorFactoryNames: [beginTransaction]
+      executorFactoryNames: [beginTransaction, runWithTransaction]
       executorTypeNames: [QueryExecutor, TransactionQuery, QueryOptions]
       effort: max
       unanalyzable: advise

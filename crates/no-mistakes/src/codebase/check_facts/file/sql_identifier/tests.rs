@@ -75,7 +75,7 @@ fn typed_executor_demand_sorts_and_deduplicates_module_export_identity() {
         profile.clone(),
         vec![
             scan(0).with_typed_executor_types(&[another.clone(), duplicate.clone()]),
-            scan(1).with_typed_executor_types(&[duplicate.clone()]),
+            scan(1).with_typed_executor_types(std::slice::from_ref(&duplicate)),
         ],
     );
 

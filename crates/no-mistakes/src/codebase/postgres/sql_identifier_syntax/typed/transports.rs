@@ -117,9 +117,9 @@ impl Typed {
                 }
             }
         }
-        // Declared callback parameter identities prove its SQL receiver. Passing
-        // another known executor/options receiver alongside it is value transport.
-        if typed_callback {
+        // A typed callback proves its own receiver, not an opaque helper's uses.
+        // Only an explicitly configured factory can own companion transport.
+        if typed_callback && factory.is_some() {
             if let Some((root, _)) = chain(&call.callee) {
                 self.transports.insert(root);
             }
