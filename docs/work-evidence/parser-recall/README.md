@@ -1,13 +1,13 @@
 <!-- cspell:ignore Clippy -->
 # PostgreSQL recovery diagnostics and unknown calls
 
-Baseline: `00d788489`, Rust 1.99.1. Final candidate rebased onto `24dc5e9d4`. The baseline CLI was built and frozen before
+Baseline: `00d788489`, Rust 1.99.1. Final candidate rebased onto `ba08f7a21`. The baseline CLI was built and frozen before
 implementation. Baseline and candidate ran `check --root <saved fixture>
 --config <name> --format json` against identical saved inputs. The frozen
 executables have distinct SHA-256 hashes:
 
 - Baseline: `a39870ab344c278df4effb20448429837277cdea284411c00bb9849ced3daee5`
-- Candidate: `63a6c02667ab9a5f354b1dc285bf56dd163c9b5496dc2858c4e207e790969388`
+- Candidate: `c4cabdf268ce6c18f19b91982fc88edee9b1aefc0cdb99a9eb199f8d3bcd2d63`
 
 All 104 configurations were compared by stdout, stderr and exit status.
 89 are byte-identical; 15 change intentionally. Repeating the comparison after
@@ -42,13 +42,19 @@ and generated-write scan retain their existing recorded-read-error tolerance.
 
 Validation:
 
-- The locked all-features workspace library, binary and integration build passes.
-- 3,798 PostgreSQL, forbidden-call, project-analysis, runner, filesystem and
-  task/policy tests pass, with two existing ignored tests.
-- All 437 PostgreSQL CLI tests and 198 general rule CLI tests pass.
-- All 574 compiled Node API tests across the same 21 files as Linux CI pass,
+- The complete locked all-features workspace CI test script passes: 13,237
+  library tests, 438 binary tests and 1,387 integration tests. Three existing
+  library tests remain ignored. This includes all 86 contract tests and the
+  executable rule-documentation examples.
+- The full local run uses ShellCheck 0.11.0 and a clean task-owned temporary
+  root: unrelated ancestor Git metadata at the normal temporary root otherwise
+  violates the ad hoc discovery fixture's assumption. No tests were excluded.
+- At head `2ce29a055`, all 574 compiled Node API tests across the same 21 files
+  as Linux CI pass,
   including the new CJS/ESM/project policy cases and corrected invalid-neighbor
   assertion. The definite expression-arbiter violation still reports separately.
+  The only later PR code change is the resolved documentation example; the Rust
+  and Node implementation patches are unchanged by the later rebase.
 - Coverage was measured at original head `749f16152` before the rebase:
   3,754 tests pass with LLVM coverage. The PR's Rust patches are unchanged by
   the rebase; final combined-source checks above were repeated. Marker extraction, prepared
