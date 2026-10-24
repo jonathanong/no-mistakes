@@ -152,7 +152,11 @@ fn append_escapes(
             }
             // Type annotations and type queries are erased even when their
             // imported binding also denotes an unsupported runtime executor.
-            if direct.contains(&at) || !usage.runtime || selection.transports.contains(&at) {
+            if direct.contains(&at)
+                || !usage.runtime
+                || selection.transports.contains(&at)
+                || syntax.metadata.belongs_to(&at, direct)
+            {
                 continue;
             }
             if syntax.alias_initializers.get(&at) == Some(&binding.id) {
@@ -166,7 +170,10 @@ fn append_escapes(
         }
     }
     for (at, owner) in &syntax.aliases {
-        if (selected.contains(owner) || typed.contains(owner)) && !direct.contains(at) {
+        if (selected.contains(owner) || typed.contains(owner))
+            && !direct.contains(at)
+            && !syntax.metadata.belongs_to(at, direct)
+        {
             calls.push(SqlCall {
                 span: *at,
                 line: crate::codebase::ts_source::byte_offset_to_line(source, at.0 as usize),
