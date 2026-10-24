@@ -40,6 +40,7 @@ function variableIsScopedExecutor(variable, scoped, node) {
   const def = variable.defs[0];
   return scoped.some((entry) => {
     if (
+      entry.property ||
       entry.name !== node.name ||
       node.range[0] < entry.range[0] ||
       node.range[0] >= entry.range[1]

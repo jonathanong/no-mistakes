@@ -63,7 +63,7 @@ function executorBindings(program, options = {}, filename, context) {
   const bindings = new Set();
   const defaults = executorOptionDefaults(options);
   const { importSpecifier, executorNames } = defaults;
-  bindings.scoped = collectScopedExecutors(program, defaults, filename);
+  bindings.scoped = collectScopedExecutors(program, defaults, filename, context);
   bindings.queryMembers = Boolean(importSpecifier) || executorNames.includes(QUERY_PROPERTY);
   for (const statement of program?.body ?? []) {
     if (statement.type !== "ImportDeclaration") continue;
@@ -86,7 +86,8 @@ function executorBindings(program, options = {}, filename, context) {
       memberPropertyName,
       (def, node) =>
         bindings.scoped.some(
-          (entry) => entry.name === node.name && entry.range[0] === def.node.range[0],
+          (entry) =>
+            !entry.property && entry.name === node.name && entry.range[0] === def.node.range[0],
         ),
     );
   }

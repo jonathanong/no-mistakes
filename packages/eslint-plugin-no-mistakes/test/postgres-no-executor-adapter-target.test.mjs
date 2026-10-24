@@ -52,6 +52,9 @@ describe("typed executor argument targets", () => {
       passed([8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 25, 28, 30, 32, 35, 38, 40]),
     );
   });
+  it("keeps executor uses inside spread containers unproven", () => {
+    assert.deepEqual(check("spread-containers.ts"), [...passed([5, 6, 7, 8, 9, 10]), "12:forward"]);
+  });
   it("rejects imported helpers with writes or direct eval, preserving shadowed bindings", () => {
     assert.deepEqual(check("stability.ts", true), passed([5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]));
   });
@@ -65,7 +68,7 @@ describe("typed executor argument targets", () => {
     );
     assert.deepEqual(
       check("imported.ts", true),
-      passed([5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 21, 24, 26, 28, 30, 31, 33, 35]),
+      passed([5, 6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 21, 24, 26, 28, 30, 31, 33, 35]),
     );
   });
 });

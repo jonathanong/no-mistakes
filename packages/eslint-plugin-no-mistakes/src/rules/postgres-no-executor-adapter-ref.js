@@ -1,6 +1,8 @@
 "use strict";
 
 const { childNodes, resolveVariable } = require("./postgres-query-text");
+const { memberPropertyName } = require("./postgres-executor");
+const { isScopedMember } = require("./postgres-scoped-executors");
 const {
   TS_ASSERTIONS,
   constInitializer,
@@ -36,6 +38,19 @@ function executorRef(node, context, bindings, options) {
       return { name: current.name, kind: "identifier", aliasable: false };
     }
     return destructuredExecutor(current, context, bindings, options);
+  }
+  if (
+    current.type === "MemberExpression" &&
+    !current.optional &&
+    current.object.type === "Identifier" &&
+    isScopedMember(
+      bindings.scoped,
+      current.object.name,
+      memberPropertyName(current),
+      resolveVariable(current.object, context),
+    )
+  ) {
+    return { name: context.sourceCode.getText(current), kind: "member", aliasable: false };
   }
   if (isProvenQueryMember(current, context, bindings, options)) {
     return { name: context.sourceCode.getText(current), kind: "member", aliasable: false };

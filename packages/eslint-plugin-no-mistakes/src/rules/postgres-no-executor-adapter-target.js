@@ -4,6 +4,10 @@ const { sourceWrites } = require("./postgres-no-executor-adapter-source");
 const { matchesConfiguredModule } = require("./postgres-scoped-executors");
 const { resolveVariable } = require("./postgres-query-text");
 const { constInitializer, stableFunction } = require("./postgres-no-executor-adapter-binding");
+const { declaredOptionType } = require("./postgres-no-executor-adapter-options");
+const { localOptionBody } = require("./postgres-no-executor-adapter-option-local");
+const { tsOptionBody } = require("./postgres-no-executor-adapter-option-ts");
+const { allowsCollectionKey } = require("./postgres-no-executor-adapter-collection");
 
 function localFunction(callee, context) {
   const variable = resolveVariable(callee, context);
@@ -30,7 +34,7 @@ function configuredType(type, context, options) {
   );
 }
 
-function localTarget(fn, index, property, context, options) {
+function localTarget(fn, index, property, context, options, facts) {
   if (fn.params.some((param) => param.type === "RestElement")) return false;
   const param = fn.params[index];
   if (!param) return false;
@@ -41,27 +45,59 @@ function localTarget(fn, index, property, context, options) {
       configuredType(target.typeAnnotation?.typeAnnotation, context, options)
     );
   }
+  if (target.type === "Identifier") {
+    const services = context.sourceCode.parserServices;
+    const annotation = target.typeAnnotation?.typeAnnotation;
+    if (!services.program || services.program.getCompilerOptions().noResolve || !annotation)
+      return false;
+    const node = services.esTreeNodeToTSNodeMap?.get(annotation);
+    if (!declaredOptionType(node, property, services.program.getTypeChecker(), options))
+      return false;
+    const implementation = services.esTreeNodeToTSNodeMap.get(fn);
+    return tsOptionBody(implementation, index, property, services.program.getTypeChecker(), facts);
+  }
   if (target.type !== "ObjectPattern") return false;
-  const bound = target.properties.some(
+  const bound = target.properties.find(
     (entry) =>
       entry.type === "Property" &&
       !entry.computed &&
       entry.key.name === property &&
       entry.value.type === "Identifier",
   );
+  if (!bound) return false;
+  const services = context.sourceCode.parserServices;
+  if (services.program && !services.program.getCompilerOptions().noResolve) {
+    const annotation = target.typeAnnotation?.typeAnnotation;
+    const node = annotation && services.esTreeNodeToTSNodeMap?.get(annotation);
+    if (!declaredOptionType(node, property, services.program.getTypeChecker(), options))
+      return false;
+    const implementation = services.esTreeNodeToTSNodeMap.get(fn);
+    return tsOptionBody(implementation, index, property, services.program.getTypeChecker(), facts);
+  }
   const type = target.typeAnnotation?.typeAnnotation;
   const member =
     type?.type === "TSTypeLiteral" &&
     type.members.find(
       (entry) =>
-        entry.type === "TSPropertySignature" && !entry.computed && entry.key.name === property,
+        entry.type === "TSPropertySignature" &&
+        !entry.computed &&
+        !entry.optional &&
+        entry.key.name === property,
     );
-  return Boolean(bound && configuredType(member?.typeAnnotation?.typeAnnotation, context, options));
+  return (
+    configuredType(member?.typeAnnotation?.typeAnnotation, context, options) &&
+    localOptionBody(fn, bound.value, context, facts)
+  );
 }
 
 function importedTarget(call, index, property, context, options, facts) {
   const services = context.sourceCode.parserServices;
-  if (!services.program || !services.esTreeNodeToTSNodeMap) return false;
+  if (
+    !services.program ||
+    services.program.getCompilerOptions().noResolve ||
+    !services.esTreeNodeToTSNodeMap
+  )
+    return false;
   const checker = services.program.getTypeChecker();
   const node = services.esTreeNodeToTSNodeMap.get(call.callee);
   const signatures = checker.getTypeAtLocation(node).getCallSignatures();
@@ -84,21 +120,27 @@ function importedTarget(call, index, property, context, options, facts) {
   if (functionSymbol?.declarations.length > 1) return false;
   const params = declaration?.parameters;
   if (!params || params.some((param) => param.dotDotDotToken)) return false;
-  let type = params[index]?.type;
+  const type = params[index]?.type;
   if (property) {
     const pattern = params[index]?.name;
     const bound =
-      pattern?.getText().startsWith("{") &&
-      pattern.elements.some(
-        (element) =>
-          typeof element.name.text === "string" &&
-          !element.initializer &&
-          (!element.propertyName || typeof element.propertyName.text === "string") &&
-          (element.propertyName?.text ?? element.name.text) === property &&
-          !element.dotDotDotToken,
-      );
-    if (!bound) return false;
-    type = type?.members?.find((member) => member.name?.text === property)?.type;
+      typeof pattern?.escapedText === "string" ||
+      (pattern?.getText().startsWith("{") &&
+        pattern.elements.some(
+          (element) =>
+            typeof element.name.text === "string" &&
+            !element.initializer &&
+            (!element.propertyName || typeof element.propertyName.text === "string") &&
+            (element.propertyName?.text ?? element.name.text) === property &&
+            !element.dotDotDotToken,
+        ));
+    if (!bound || !declaredOptionType(type, property, checker, options)) return false;
+    const writes = sourceWrites(declaration.getSourceFile(), checker, facts, services.program);
+    return (
+      !writes.eval &&
+      !writes.symbols.has(target) &&
+      tsOptionBody(declaration, index, property, checker, facts)
+    );
   }
   // Structural compatibility and inference do not prove an executor contract.
   if (!type?.typeName) return false;
@@ -115,11 +157,12 @@ function importedTarget(call, index, property, context, options, facts) {
     }),
   );
   if (!configured) return false;
-  const writes = sourceWrites(declaration.getSourceFile(), checker, facts);
+  const writes = sourceWrites(declaration.getSourceFile(), checker, facts, services.program);
   return !writes.eval && !writes.symbols.has(target);
 }
 
 function acceptsExecutor(call, index, quoteNode, context, options, facts) {
+  if (!quoteNode && allowsCollectionKey(call, index, context, facts)) return true;
   if (
     call.type !== "CallExpression" ||
     call.callee.type !== "Identifier" ||
@@ -133,7 +176,7 @@ function acceptsExecutor(call, index, quoteNode, context, options, facts) {
     return false;
   const property = quoteNode?.key.name;
   const fn = localFunction(call.callee, context);
-  if (fn) return localTarget(fn, index, property, context, options);
+  if (fn) return localTarget(fn, index, property, context, options, facts);
   const variable = resolveVariable(call.callee, context);
   if (!variable?.defs.some((def) => def.type === "ImportBinding")) return false;
   return importedTarget(call, index, property, context, options, facts);

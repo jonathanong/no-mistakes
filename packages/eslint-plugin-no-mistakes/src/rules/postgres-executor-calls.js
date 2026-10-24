@@ -1,6 +1,7 @@
 "use strict";
 
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
+const { isScopedMember } = require("./postgres-scoped-executors");
 
 function immutableDefinition(identifier, context) {
   const variable = resolveVariable(identifier, context);
@@ -58,6 +59,16 @@ function executorCallResolver(bindings, context, options, propertyName, scopedEx
     if (node.type === "SequenceExpression") return target(node.expressions.at(-1), seen);
     if (node.type === "MemberExpression") {
       const name = memberName(node);
+      if (
+        node.object.type === "Identifier" &&
+        isScopedMember(
+          bindings.scoped,
+          node.object.name,
+          name,
+          resolveVariable(node.object, context),
+        )
+      )
+        return { name };
       if (
         name &&
         options.executorNames.includes(name) &&

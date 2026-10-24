@@ -147,9 +147,14 @@ module.exports = rule(
 
     function visitFresh(expr, call, index, nested) {
       if (expr.type === "ObjectExpression") {
+        const unproven = nested || expr.properties.some((entry) => entry.type === "SpreadElement");
         for (const property of expr.properties) {
+          if (property.type === "SpreadElement") {
+            visitArgument(property, call, index, property, true);
+            continue;
+          }
           if (property.type !== "Property" || property.kind !== "init") continue;
-          visitArgument(property.value, call, index, property, nested);
+          visitArgument(property.value, call, index, property, unproven);
         }
         return;
       }
@@ -167,7 +172,7 @@ module.exports = rule(
 
     return {
       Program(node) {
-        bindings = executorBindings(node, options, context.filename);
+        bindings = executorBindings(node, options, context.filename, context);
       },
       CallExpression(node) {
         if (bindResultIsReported(node)) return;
