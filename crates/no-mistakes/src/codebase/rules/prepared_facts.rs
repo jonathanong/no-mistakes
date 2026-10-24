@@ -77,7 +77,10 @@ pub(crate) fn check_prepared_sql_rule(
         &CheckFactMap,
     ) -> Result<Vec<RuleFinding>>,
 ) -> Result<Vec<RuleFinding>> {
-    let prepared_config = if rule_id == "postgres-no-offset" {
+    let prepared_config = if matches!(
+        rule_id,
+        "postgres-no-offset" | "postgres-no-transformed-uuid-predicates"
+    ) {
         super::analysis_policy::prepare_requested_rule_config(
             root, rule_id, config, all_files, sources,
         )?

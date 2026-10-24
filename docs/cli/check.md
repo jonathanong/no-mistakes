@@ -156,3 +156,8 @@ For `postgres-no-mutable-sql-registry`, `--effort low` avoids cross-file mutatio
 and call-graph preparation. SQL with imported registry relations is explicitly
 unanalyzable; use a literal relation or select `max`. See
 [the effort grammar](../rules/postgres-no-mutable-sql-registry.md#effort).
+
+`postgres-no-transformed-uuid-predicates` keeps catalog-resolved UUID columns
+bare in WHERE, JOIN ON, and HAVING predicates. It supports literal SQL at low
+effort and reports unsupported SQL through the shared unanalyzable policy.
+See [the rule's analysis contract](../rules/postgres-no-transformed-uuid-predicates.md#analysis).

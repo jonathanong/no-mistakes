@@ -14,7 +14,13 @@ fn run(
     let sources = super::super::source_store_for_files(&files);
     super::super::analysis_policy::prepare_rule_analysis(&root, &mut cfg, &files, &sources)
         .unwrap();
-    let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
+    let mut plan =
+        crate::codebase::check_facts::CheckFactPlan {
+            postgres_schema_catalog_paths:
+                crate::codebase::postgres::configured_schema_catalog_paths(&cfg, &[RULE_ID])
+                    .unwrap(),
+            ..Default::default()
+        };
     crate::codebase::postgres::configure_prepared_postgres_plan(&root, &cfg, &mut plan).unwrap();
     crate::codebase::postgres::assign_prepared_embedded_sql_options(&cfg, &mut plan).unwrap();
     let mut facts =

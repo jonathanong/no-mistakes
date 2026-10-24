@@ -53,39 +53,43 @@ pub(crate) fn check_with_files_sources_and_facts(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
+    let observer = crate::diagnostics::current();
     let all: Result<Vec<super::PostgresFindings>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
         .enumerate()
         .map(|(index, rule)| {
-            let opts = compile_options(&rule.try_rule_options()?)?;
-            let files = super::selected_rule_files(root, config, rule, all_files)?;
-            let sql_paths =
-                crate::codebase::postgres::postgres_sql_paths(root, &files, &opts.schema)?;
-            let sql_files = crate::codebase::check_facts::PathMembership::new(&sql_paths);
-            let files = files
-                .into_iter()
-                .filter(|path| {
-                    let rel = crate::codebase::ts_source::relative_slash_path(root, path);
-                    (opts.exclude.is_empty() || !opts.exclude.is_match(&rel))
-                        && (sql_files.contains(path)
-                            || (crate::codebase::dependencies::extract::is_indexable(path)
-                                && (opts.include.is_empty() || opts.include.is_match(&rel))))
-                })
-                .collect::<Vec<_>>();
-            let mut findings =
-                if config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low {
+            crate::diagnostics::with_observer(observer.clone(), || {
+                let opts = compile_options(&rule.try_rule_options()?)?;
+                let files = super::selected_rule_files(root, config, rule, all_files)?;
+                let sql_paths =
+                    crate::codebase::postgres::postgres_sql_paths(root, &files, &opts.schema)?;
+                let sql_files = crate::codebase::check_facts::PathMembership::new(&sql_paths);
+                let files = files
+                    .into_iter()
+                    .filter(|path| {
+                        let rel = crate::codebase::ts_source::relative_slash_path(root, path);
+                        (opts.exclude.is_empty() || !opts.exclude.is_match(&rel))
+                            && (sql_files.contains(path)
+                                || (crate::codebase::dependencies::extract::is_indexable(path)
+                                    && (opts.include.is_empty() || opts.include.is_match(&rel))))
+                    })
+                    .collect::<Vec<_>>();
+                let mut findings = if config.effective_rule_analysis(rule)?.effort
+                    == crate::config::v2::Effort::Low
+                {
                     low::scan(root, &opts, &files, sources, facts, index, rule)?
                 } else {
                     let view = facts.for_sql_application_with_advice(index, rule.name.as_deref());
                     scan::scan(root, &opts, &files, sources, &view)?
                 };
-            if let Some(message) = &rule.message {
-                for located in &mut findings.0 {
-                    located.finding.message = format!("{message}: {}", located.finding.message);
+                if let Some(message) = &rule.message {
+                    for located in &mut findings.0 {
+                        located.finding.message = format!("{message}: {}", located.finding.message);
+                    }
                 }
-            }
-            Ok(findings)
+                Ok(findings)
+            })
         })
         .collect();
     Ok(all?
@@ -117,3 +121,9 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         advise_unanalyzable: opts.unanalyzable_sql.trim().eq_ignore_ascii_case("advise"),
     })
 }
+
+#[cfg(test)]
+mod cache_tests;
+
+#[cfg(test)]
+mod low_contract_tests;

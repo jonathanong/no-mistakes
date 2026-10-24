@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      include: [suppressed-query.ts]
+      sqlInclude: [suppressed.sql]
+      importSpecifier: '@db'
+      executorNames: [query]

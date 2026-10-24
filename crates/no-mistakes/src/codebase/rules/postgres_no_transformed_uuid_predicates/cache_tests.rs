@@ -11,7 +11,7 @@ type Prepared = (
     Arc<SourceStore>,
     CheckFactMap,
 );
-fn prepare(name: &str, mut cfg: NoMistakesConfig) -> Prepared {
+pub(super) fn prepare(name: &str, mut cfg: NoMistakesConfig) -> Prepared {
     let root = fixture();
     let files = vec![root.join(name), root.join("schema.json")];
     let sources = super::super::source_store_for_files(&files);

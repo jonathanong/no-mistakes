@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      include: [no-executor-input.ts]
+      sqlInclude: [raw-ambiguous.sql, raw-invalid.sql]
+      executorNames: []
+unanalyzable: advise

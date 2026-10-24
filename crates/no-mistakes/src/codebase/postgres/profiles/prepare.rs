@@ -23,16 +23,19 @@ pub(crate) fn prepare_rule_sql_facts(
     let low_annotation = rule_ids.contains(&"postgres-require-query-annotation")
         && super::annotation_effort::low_requested(config)?;
     let patterns = sql_patterns(config, rule_ids)?;
-    let low_offset = rule_ids.contains(&"postgres-no-offset")
-        && config
-            .rule_applications("postgres-no-offset")
-            .iter()
-            .any(|rule| {
+    let low_ids = [
+        "postgres-no-offset",
+        "postgres-no-transformed-uuid-predicates",
+    ];
+    let low_sql = low_ids.iter().any(|id| {
+        rule_ids.contains(id)
+            && config.rule_applications(id).iter().any(|rule| {
                 config
                     .effective_rule_analysis(rule)
                     .is_ok_and(|policy| policy.effort == crate::config::v2::Effort::Low)
-            });
-    let selected = if profiles.is_empty() && !low_offset {
+            })
+    });
+    let selected = if profiles.is_empty() && !low_sql {
         crate::codebase::postgres::postgres_sql_paths(
             root,
             files,
@@ -45,11 +48,11 @@ pub(crate) fn prepare_rule_sql_facts(
         files.to_vec()
     };
     let mut low_plan = crate::codebase::check_facts::CheckFactPlan::default();
-    if low_offset {
+    if low_sql {
         let mut scoped = config.clone();
         scoped
             .rules
-            .retain(|rule| rule.rule == "postgres-no-offset");
+            .retain(|rule| low_ids.contains(&rule.rule.as_str()));
         super::plan::configure_prepared_postgres_plan(root, &scoped, &mut low_plan)?;
     }
     Ok(
@@ -69,7 +72,7 @@ pub(crate) fn prepare_rule_sql_facts(
                             | "postgres-conflict-ordering"
                     )
                 }),
-                postgres_dml: low_offset
+                postgres_dml: low_sql
                     || (!profiles.is_empty()
                         && dml_ids
                             .iter()

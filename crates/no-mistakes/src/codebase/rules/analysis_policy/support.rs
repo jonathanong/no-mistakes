@@ -14,6 +14,11 @@ pub struct RuleEffortSupport {
 // unsupported syntax explicitly under the caller's unanalyzable policy.
 pub(super) const SUPPORT: &[RuleEffortSupport] = &[
     RuleEffortSupport {
+        rule: "postgres-no-transformed-uuid-predicates",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
         rule: "declared-payload-compatibility",
         partners: &[],
         partner_scope: |_, _| false,

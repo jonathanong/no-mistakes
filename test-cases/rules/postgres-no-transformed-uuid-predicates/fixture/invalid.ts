@@ -1,2 +1,2 @@
 import { query } from "db";
-query("SELECT FROM WHERE");
+query("SELECT id FROM accounts WHERE (");

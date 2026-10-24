@@ -1,5 +1,15 @@
 const { assert, test, readFileSync, join, packageRoot } = require("./context");
 
+test("UUID predicate rule exports its catalog and effort configuration", () => {
+  const types = readFileSync(join(packageRoot, "postgres-uuid-predicate-types.d.ts"), "utf8");
+  const exports = readFileSync(join(packageRoot, "types.d.ts"), "utf8");
+  assert.match(types, /export interface PostgresNoTransformedUuidPredicatesOptions/);
+  assert.match(types, /schemaCatalogPath\?: string;/);
+  assert.match(types, /effort\?: Effort;/);
+  assert.match(types, /unanalyzable\?: Unanalyzable;/);
+  assert.match(exports, /export type \* from "\.\/postgres-uuid-predicate-types"/);
+});
+
 test("generatePostgresCatalog declarations separate complete and ordering catalogs", () => {
   const types = readFileSync(join(packageRoot, "postgres-catalog-types.d.ts"), "utf8");
   const index = readFileSync(join(packageRoot, "index-ci-infra.d.ts"), "utf8");

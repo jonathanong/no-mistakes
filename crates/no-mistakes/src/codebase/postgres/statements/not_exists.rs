@@ -98,3 +98,8 @@ fn ident_boundary(text: &str, end: usize) -> bool {
     };
     !next.is_ascii_alphanumeric() && next != b'_' && next != b'$' && next < 0x80
 }
+
+/// Whether SQL contains a top-level conjunctive NOT EXISTS predicate.
+pub fn has_top_level_not_exists_in(sql: &str) -> bool {
+    has_top_level_conjunctive_not_exists(&super::fallback::mask_quoted_sql(sql))
+}

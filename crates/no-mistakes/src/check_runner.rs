@@ -78,3 +78,7 @@ mod unbounded_effort_tests;
 #[cfg(test)]
 #[path = "check_runner/payload_compatibility_effort/tests.rs"]
 mod payload_compatibility_effort;
+
+#[cfg(test)]
+#[path = "check_runner/transformed_uuid_predicates/tests.rs"]
+mod transformed_uuid_predicates;

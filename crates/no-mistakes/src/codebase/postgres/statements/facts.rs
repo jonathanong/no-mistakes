@@ -199,6 +199,4 @@ fn extract_from_parsed_and_sources(
     facts
 }
 
-pub fn has_top_level_not_exists_in(sql: &str) -> bool {
-    not_exists::has_top_level_conjunctive_not_exists(&fallback::mask_quoted_sql(sql))
-}
+pub use super::not_exists::has_top_level_not_exists_in;

@@ -12,7 +12,13 @@ fn low_literals_are_parsed_once_across_rule_applications() {
     let sources = super::super::source_store_for_files(&files);
     super::super::analysis_policy::prepare_rule_analysis(&root, &mut config, &files, &sources)
         .unwrap();
-    let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
+    let mut plan =
+        crate::codebase::check_facts::CheckFactPlan {
+            postgres_schema_catalog_paths:
+                crate::codebase::postgres::configured_schema_catalog_paths(&config, &[RULE_ID])
+                    .unwrap(),
+            ..Default::default()
+        };
     crate::codebase::postgres::configure_prepared_postgres_plan(&root, &config, &mut plan).unwrap();
     crate::codebase::postgres::assign_prepared_embedded_sql_options(&config, &mut plan).unwrap();
     let facts =
