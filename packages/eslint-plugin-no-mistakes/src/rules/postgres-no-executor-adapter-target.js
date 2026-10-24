@@ -4,6 +4,7 @@ const { sourceWrites } = require("./postgres-no-executor-adapter-source");
 const { matchesConfiguredModule } = require("./postgres-scoped-executors");
 const { resolveVariable } = require("./postgres-query-text");
 const { constInitializer, stableFunction } = require("./postgres-no-executor-adapter-binding");
+const { declaredOptionType } = require("./postgres-no-executor-adapter-options");
 
 function localFunction(callee, context) {
   const variable = resolveVariable(callee, context);
@@ -39,6 +40,15 @@ function localTarget(fn, index, property, context, options) {
     return (
       target.type === "Identifier" &&
       configuredType(target.typeAnnotation?.typeAnnotation, context, options)
+    );
+  }
+  if (target.type === "Identifier") {
+    const services = context.sourceCode.parserServices;
+    const annotation = target.typeAnnotation?.typeAnnotation;
+    if (!services.program || !annotation) return false;
+    const node = services.esTreeNodeToTSNodeMap?.get(annotation);
+    return Boolean(
+      node && declaredOptionType(node, property, services.program.getTypeChecker(), options),
     );
   }
   if (target.type !== "ObjectPattern") return false;
@@ -87,6 +97,11 @@ function importedTarget(call, index, property, context, options, facts) {
   let type = params[index]?.type;
   if (property) {
     const pattern = params[index]?.name;
+    if (typeof pattern?.escapedText === "string") {
+      if (!declaredOptionType(type, property, checker, options)) return false;
+      const writes = sourceWrites(declaration.getSourceFile(), checker, facts);
+      return !writes.eval && !writes.symbols.has(target);
+    }
     const bound =
       pattern?.getText().startsWith("{") &&
       pattern.elements.some(
