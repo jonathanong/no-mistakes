@@ -94,3 +94,6 @@ mod cli_check_storybook_effort;
 mod cli_check_version_pin_policy;
 #[path = "cli_check_workflow_unreadable_policy.rs"]
 mod cli_check_workflow_unreadable_policy;
+
+#[path = "cli_coverage_assertion_owners.rs"]
+mod cli_coverage_assertion_owners;

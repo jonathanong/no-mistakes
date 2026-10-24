@@ -2,6 +2,7 @@ use super::*;
 
 fn empty_options() -> GraphConfigOptions {
     GraphConfigOptions {
+        assertion_owners: Vec::new(),
         route: Default::default(),
         queue: Default::default(),
         http_route: Default::default(),

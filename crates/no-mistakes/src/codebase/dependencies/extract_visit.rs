@@ -1,5 +1,6 @@
 impl<'a> Visit<'a> for ImportCollector {
     fn visit_statements(&mut self, statements: &oxc_allocator::Vec<'a, Statement<'a>>) {
+        record_dead_statement_suffix(self, statements);
         visit_statements_with_receiver_region(self, statements);
     }
     fn visit_expression(&mut self, expression: &Expression<'a>) {
@@ -15,12 +16,14 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_if_with_execution(self, statement);
     }
     fn visit_logical_expression(&mut self, expression: &oxc_ast::ast::LogicalExpression<'a>) {
+        record_dead_logical_arm(self, expression);
         visit_logical_with_execution(self, expression);
     }
     fn visit_conditional_expression(
         &mut self,
         expression: &oxc_ast::ast::ConditionalExpression<'a>,
     ) {
+        record_dead_expression_arm(self, expression);
         visit_conditional_with_execution(self, expression);
     }
     fn visit_assignment_pattern(&mut self, pattern: &oxc_ast::ast::AssignmentPattern<'a>) {
@@ -102,6 +105,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
+        record_dead_for_body(self, statement);
         visit_for_statement_with_scope(self, statement);
     }
 
@@ -114,6 +118,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_while_statement(&mut self, statement: &oxc_ast::ast::WhileStatement<'a>) {
+        if self.collect_call_eligibility && literal_truthiness(&statement.test) == Some(false) { record_dead_call_span(self, statement.body.span()); }
         with_repeat_execution(self, statement, visit_while_statement_per_item);
     }
     fn visit_do_while_statement(&mut self, statement: &oxc_ast::ast::DoWhileStatement<'a>) {

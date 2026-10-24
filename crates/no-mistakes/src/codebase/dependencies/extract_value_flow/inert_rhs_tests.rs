@@ -98,6 +98,7 @@ fn inert_pending_fullfacts_order_and_budget() {
                 false,
                 false,
                 demand,
+                false,
                 Some(a.clone()),
             );
             let new = crate::codebase::dependencies::extract::extract_import_facts_with_rhs_probe(
@@ -106,6 +107,7 @@ fn inert_pending_fullfacts_order_and_budget() {
                 false,
                 false,
                 demand,
+                false,
                 Some(b.clone()),
             );
             assert_eq!(old, new, "full ImportFacts {name} demand={demand}");
@@ -155,6 +157,7 @@ fn inert_pending_request_and_rayon_isolation() {
             false,
             false,
             true,
+            false,
             Some(p.clone()),
         );
         assert_eq!(

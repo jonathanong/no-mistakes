@@ -286,3 +286,5 @@ The async `check()` API accepts `PostgresRequireQueryAnnotationOptions.sqlLitera
 [`postgres-no-transformed-uuid-predicates`](rules/postgres-no-transformed-uuid-predicates.md).
 Import `PostgresNoTransformedUuidPredicatesOptions` to name its catalog, executor,
 and effort options. Both APIs preserve findings and non-failing advisories.
+
+`check()` also runs configured [coverage-producer-assertion-owner](rules/coverage-producer-assertion-owner.md) applications, returning ordinary `rules` findings or `advisories`. Its exported option types are `CoverageProducerAssertionOwnerOptions`, `CoverageProducerFunction`, `CoverageAssertionImport`, and `CoverageAssertionOwnership`. The existing asynchronous `check` → `checkJson` binding remains the runtime entrypoint.

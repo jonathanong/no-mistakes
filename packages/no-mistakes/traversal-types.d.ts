@@ -1,5 +1,6 @@
 export type Relationship =
   | "call"
+  | "assertion-owner"
   | "import"
   | "import-static"
   | "import-dynamic"

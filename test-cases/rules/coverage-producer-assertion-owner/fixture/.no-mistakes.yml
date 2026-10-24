@@ -1,0 +1,47 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/producers.mts, symbol: direct }
+        - { file: src/producers.mts, symbol: imported }
+        - { file: src/producers.mts, symbol: callback }
+        - { file: src/producers.mts, symbol: productionOnly }
+        - { file: src/producers.mts, symbol: unreachable }
+        - { file: src/producers.mts, symbol: dynamic }
+        - { file: src/producers.mts, symbol: crossProcess }
+        - { file: src/producers.mts, symbol: unmodeledProcess }
+        - { file: src/producers.mts, symbol: emptyContract }
+        - { file: src/producers.mts, symbol: deadBranch }
+        - { file: src/producers.mts, symbol: afterReturn }
+        - { file: src/producers.mts, symbol: hoistedAfterReturn }
+        - { file: src/producers.mts, symbol: deadWhile }
+        - { file: src/producers.mts, symbol: deadFor }
+        - { file: src/producers.mts, symbol: deadConditional }
+        - { file: src/producers.mts, symbol: deadAnd }
+        - { file: src/producers.mts, symbol: deadOr }
+        - { file: src/producers.mts, symbol: deadNullish }
+        - { file: src/producers.mts, symbol: lexicalSibling }
+        - { file: src/producers.mts, symbol: deadProcess }
+        - { file: src/producers.mts, symbol: empty }
+        - { file: src/producers.mts, symbol: cycle }
+        - { file: src/producers.mts, symbol: afterBreak }
+        - { file: src/producers.mts, symbol: afterContinue }
+        - { file: src/producers.mts, symbol: inlineCallback }
+        - { file: src/producers.mts, symbol: registeredCallback }
+        - { file: src/producers.mts, symbol: memberOnly }
+        - { file: src/producers.mts, symbol: constructOnly }
+        - { file: src/producers.mts, symbol: nestedDeadRanges }
+      assertions:
+        - { module: 'node:assert', export: strictEqual }
+      ownership:
+        - producer: { file: src/producers.mts, symbol: crossProcess }
+          owner: { file: src/assertions.mts, symbol: assertResult }
+          via: { module: 'node:child_process', export: spawn }
+        - producer: { file: src/producers.mts, symbol: emptyContract }
+          owner: { file: src/producers.mts, symbol: ownerWithoutAssertion }
+          via: { module: 'node:child_process', export: spawn }
+        - producer: { file: src/producers.mts, symbol: deadProcess }
+          owner: { file: src/assertions.mts, symbol: assertResult }
+          via: { module: 'node:child_process', export: spawn }

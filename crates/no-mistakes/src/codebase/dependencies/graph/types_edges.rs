@@ -10,6 +10,8 @@ pub enum EdgeKind {
     /// Statically resolved lexical function invocation. This opt-in edge is
     /// intentionally excluded from the default graph until callers request it.
     Call,
+    /// Explicit configured producer dispatch to an assertion owner. Opt-in.
+    AssertionOwner,
     /// Statically resolved class `extends` relationship: derived class ->
     /// base class. Nothing is invoked at an `extends` clause, so this is not a
     /// `Call`. Opt-in like `Call`, and excluded from the default graph.
@@ -147,6 +149,7 @@ impl EdgeKind {
     fn as_core_str(&self) -> Option<&'static str> {
         match self {
             Self::Call => Some("call"),
+            Self::AssertionOwner => Some("assertion-owner"),
             Self::Extends => Some("extends"),
             Self::Import => Some("import"),
             Self::TypeImport => Some("type-import"),

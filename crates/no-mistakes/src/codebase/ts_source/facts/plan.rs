@@ -4,6 +4,7 @@ impl TsFactPlan {
     pub fn include(&mut self, other: Self) {
         self.module_bindings |= other.module_bindings;
         self.call_arguments |= other.call_arguments;
+        self.call_eligibility |= other.call_eligibility;
         self.imports |= other.imports;
         self.function_calls |= other.function_calls;
         self.value_flow |= other.value_flow;
@@ -32,7 +33,7 @@ impl TsFactPlan {
     }
 
     pub(crate) fn needs_import_facts(self) -> bool {
-        self.imports || self.function_calls || self.needs_value_flow()
+        self.imports || self.function_calls || self.call_eligibility || self.needs_value_flow()
     }
 
     pub fn imports() -> Self {
@@ -56,6 +57,7 @@ impl TsFactPlan {
     pub fn is_empty(self) -> bool {
         !self.module_bindings
             && !self.call_arguments
+            && !self.call_eligibility
             && !self.imports
             && !self.function_calls
             && !self.value_flow
@@ -102,6 +104,7 @@ impl TsFactPlan {
     fn covers_syntax_facts(self, required: Self) -> bool {
         (!required.module_bindings || self.module_bindings || self.call_arguments)
             && (!required.call_arguments || self.call_arguments)
+            && (!required.call_eligibility || self.call_eligibility)
             && (!required.imports || self.imports)
             && (!required.function_calls || self.function_calls)
             && (!required.value_flow || self.needs_value_flow())

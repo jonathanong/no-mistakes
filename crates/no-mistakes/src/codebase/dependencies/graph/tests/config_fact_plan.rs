@@ -27,6 +27,7 @@ fn effective_fact_plan_skips_config_dependent_domains_without_required_config() 
     assert!(!route_and_http.queue_factory);
 
     let queue_options = GraphConfigOptions {
+        assertion_owners: Vec::new(),
         route: crate::codebase::config::RouteOptions::default(),
         queue: crate::codebase::config::QueueOptions {
             queue_pattern: "src/**/*.ts".to_string(),

@@ -217,6 +217,7 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         | EdgeKind::TerraformModuleRef
         | EdgeKind::TerraformOutputRef
         | EdgeKind::Call
+        | EdgeKind::AssertionOwner
         | EdgeKind::Extends
         | EdgeKind::WorkflowJob
         | EdgeKind::WorkflowStep

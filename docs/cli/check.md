@@ -168,3 +168,5 @@ unanalyzable; use a literal relation or select `max`. See
 bare in WHERE, JOIN ON, and HAVING predicates. It supports literal SQL at low
 effort and reports unsupported SQL through the shared unanalyzable policy.
 See [the rule's analysis contract](../rules/postgres-no-transformed-uuid-predicates.md#analysis).
+
+The opt-in [coverage-producer-assertion-owner](../rules/coverage-producer-assertion-owner.md) rule checks configured coverage producers for reachable assertions; uncertain dispatch follows `unanalyzable`.
