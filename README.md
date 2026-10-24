@@ -69,13 +69,17 @@ pagination (use cursor pagination), and
 with `banned-function-call` can ban `uuidv7()` calls inside `WHERE`, `JOIN ON`,
 and `HAVING` predicates, so the key is compared against a stable bound computed
 once per statement.
+[`postgres-generated-column-predicates`](docs/rules/postgres-generated-column-predicates.md)
+also bans filtering or sorting on a generated column derived from the primary
+key (such as `uuid_extract_timestamp(id)`); compare the key column itself. UUIDv7
+cast and index-loss coverage is coming in #2652.
 
 See the [PostgreSQL rules](docs/rules/README.md) and
 [`postgres`](docs/cli/postgres.md).
 
 ## How analysis works
 
-**Recall over precision** governs both. A missed mistake is worse than a
+**Recall over precision** governs both `effort` and `unanalyzable`. A missed mistake is worse than a
 noisy report: an over-report costs a moment to dismiss or suppress, while a
 silent omission cannot be detected. So `no-mistakes` never treats an input it
 cannot prove as clean (see [why](docs/why.md#recall-over-precision)).
@@ -107,7 +111,9 @@ adopt it: `declared-payload-compatibility`, `github-actions-download-integrity`,
 order, highest first: CLI `--effort` / N-API `effort`, then `options.effort`,
 then repo-level `effort`, then `max`. `--effort` overrides every rule, so use
 it deliberately. If a partner-backed low rule's partner check is missing or out
-of scope, it warns and falls back to `max`.
+of scope, it warns and falls back to `max`. A rule outside this list
+configured with `effort: low` warns "requested effort low; effective effort
+max because this rule has no low implementation" and runs at `max`.
 
 ```yaml
 effort: max # repo default
@@ -122,10 +128,7 @@ rules:
 the analyzer cannot soundly resolve (dynamic or unproven shapes). `report`
 fails the run and is the default; `advise` emits a non-failing advisory;
 `ignore` omits it. Set it repo-wide or per rule with `options.unanalyzable`.
-The legacy `unanalyzableSql: fail` alias means `report`. Definite violations
-stay findings under every policy. Uncertain inputs go through this policy
-instead of being silently cleared, in line with the recall-first principle.
-`low` can report more uncertainty than `max` resolves, so compare definite
+The legacy `unanalyzableSql: fail` alias means `report`. `low` can report more uncertainty than `max` resolves, so compare definite
 findings separately.
 
 ## How it works
