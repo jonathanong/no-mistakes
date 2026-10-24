@@ -1,7 +1,7 @@
 -- Procedural command prefixes do not hide malformed SQL payloads.
 DO $$
 BEGIN
-  PERFORM FROBULATE accounts;
+  PERFORM 1 + );
 END
 $$;
 

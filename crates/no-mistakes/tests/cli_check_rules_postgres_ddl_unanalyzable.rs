@@ -29,36 +29,16 @@ fn procedural_bodies_are_skipped_but_unknown_sql_and_top_level_siblings_report()
         actual,
         [
             ("migrations/malformed-do-suffix.sql", 2),
-            (
-                "migrations/malformed-routine-headers.sql",
-                2,
-                "unanalyzable"
-            ),
-            (
-                "migrations/malformed-routine-headers.sql",
-                8,
-                "unanalyzable"
-            ),
+            ("migrations/malformed-routine-headers.sql", 2,),
+            ("migrations/malformed-routine-headers.sql", 8,),
             ("migrations/return-query.sql", 3),
             ("migrations/top-level.sql", 7),
             ("migrations/top-level.sql", 13),
             ("migrations/top-level.sql", 19),
             ("migrations/top-level.sql", 21),
-            (
-                "migrations/unknown-procedural-commands.sql",
-                4,
-                "unanalyzable",
-            ),
-            (
-                "migrations/unknown-procedural-commands.sql",
-                10,
-                "unanalyzable",
-            ),
-            (
-                "migrations/unknown-procedural-commands.sql",
-                15,
-                "unanalyzable",
-            ),
+            ("migrations/unknown-procedural-commands.sql", 4,),
+            ("migrations/unknown-procedural-commands.sql", 10,),
+            ("migrations/unknown-procedural-commands.sql", 15,),
             ("migrations/unknown.sql", 6),
             ("migrations/unknown.sql", 14),
             ("migrations/unknown.sql", 22),

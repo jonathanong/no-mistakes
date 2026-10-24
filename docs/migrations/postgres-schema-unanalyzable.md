@@ -28,7 +28,7 @@ and procedure bodies, procedural structure and commands such as `IF`/`ELSIF`/`EL
 reported as failed SQL statements. This does not imply that those commands are
 executed or that their conditions are evaluated. Unknown SQL nested in a body
 still reports, including as the first statement after an `IF ... THEN` or loop
-prefix. Top-level `END IF`, `PERFORM`, and other unsupported SQL statements
+prefix. Top-level `END IF` and unsupported SQL statements
 after a body still report at their own lines.
 
 The rule's configured roots, path filters, and `sqlInclude` determine which

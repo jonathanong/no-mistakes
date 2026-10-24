@@ -25,13 +25,7 @@ fn control(code: &[&Token]) -> bool {
         return code.len() == 1 || control(&code[1..]);
     }
     if word(first, "END") {
-        return code.len() == 1
-            || code.len() == 2
-                && (["IF", "LOOP", "CASE"]
-                    .iter()
-                    .any(|kind| word(code[1], kind))
-                    || label(code[1]))
-            || code.len() == 3 && word(code[1], "LOOP") && label(code[2]);
+        return ending(&code[1..]);
     }
     if ["IF", "ELSIF", "WHEN", "CASE"]
         .iter()
@@ -83,6 +77,15 @@ fn control(code: &[&Token]) -> bool {
         return code.len() == 2 && label(code[1]);
     }
     false
+}
+
+fn ending(code: &[&Token]) -> bool {
+    match code {
+        [] => true,
+        [kind] => ["IF", "LOOP", "CASE"].iter().any(|name| word(kind, name)) || label(kind),
+        [kind, name] => word(kind, "LOOP") && label(name),
+        _ => false,
+    }
 }
 
 fn simple_perform(code: &[&Token]) -> bool {

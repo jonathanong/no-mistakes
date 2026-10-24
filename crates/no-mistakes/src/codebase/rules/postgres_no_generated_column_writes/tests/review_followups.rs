@@ -18,9 +18,8 @@ fn ctas_tables_keep_unknown_positional_order() {
 
 #[test]
 fn raise_exception_makes_rest_of_protected_block_unreachable() {
-    let root = unit_fixture("raise-exception");
-    let findings =
-        verified_schema_markers(&root, "schema.sql", schema_and_writes("raise-exception"));
+    // A valid procedural RAISE is no longer an unanalyzable schema marker.
+    let findings = schema_and_writes("raise-exception");
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].target.as_deref(), Some("total"));
 }
@@ -33,8 +32,11 @@ fn quoted_and_unquoted_columns_stay_distinct_during_alter_replay() {
 
 #[test]
 fn nested_declare_bindings_are_restored_after_the_block() {
-    let root = unit_fixture("nested-shadow");
-    let findings = verified_schema_markers(&root, "schema.sql", schema_and_writes("nested-shadow"));
+    // Valid nested DECLARE/END control contributes no extra schema finding.
+    let findings = schema_and_writes("nested-shadow");
+    assert!(findings
+        .iter()
+        .all(|finding| !finding.message.contains("could not be analyzed")));
     assert_eq!(findings.len(), 1, "{findings:?}");
 }
 

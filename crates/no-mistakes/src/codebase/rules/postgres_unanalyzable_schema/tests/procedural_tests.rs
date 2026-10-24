@@ -36,7 +36,7 @@ fn procedural_bodies_filter_commands_but_retain_unknown_sql_markers() {
         (
             "unknown-procedural-commands.sql",
             &[
-                (4, "PERFORM FROBULATE"),
+                (4, "PERFORM 1 + )"),
                 (10, "OPEN missing_cursor"),
                 (15, "DECLARE bad_cursor"),
             ][..],

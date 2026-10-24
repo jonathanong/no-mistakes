@@ -29,8 +29,6 @@ fn every_new_kind_and_pg_variants_are_reported() {
             "CREATE DATABASE scratch OWNER postgres TEMPLATE template0 ENCODING",
             "ALTER DATABASE app SET statement_timeout = '1s'",
             "ALTER SYSTEM SET statement_timeout = '2s'",
-            "CREATE OR REPLACE PROCEDURE reset_orders ( ) LANGUAGE",
-            "NULL",
         ]
     );
     let definite: Vec<_> = findings

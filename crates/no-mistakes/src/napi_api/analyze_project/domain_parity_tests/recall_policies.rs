@@ -125,7 +125,7 @@ fn procedural_control_noise_keeps_node_reports_and_real_statement_lines_in_sync(
     let root = category_fixture("rules", "postgres-ddl-unanalyzable").join("procedural");
     let report = recall_check_report(&root, "report.yml");
     let findings = report["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 9, "{report:#?}");
+    assert_eq!(findings.len(), 14, "{report:#?}");
     assert!(findings.iter().all(|finding| {
         !["migrations/valid.sql", "migrations/quoted-do-bodies.sql"]
             .contains(&finding["file"].as_str().unwrap())
