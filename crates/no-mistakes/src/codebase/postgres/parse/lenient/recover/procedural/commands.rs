@@ -26,13 +26,33 @@ pub(super) fn matches(code: &[&Token]) -> bool {
 }
 
 pub(super) fn query(code: &[&Token]) -> bool {
+    matches!(parsed_statement(code), Some(Statement::Query(_)))
+}
+
+pub(super) fn row_query(code: &[&Token]) -> bool {
+    match parsed_statement(code) {
+        Some(Statement::Query(_)) => true,
+        Some(Statement::Insert(statement)) => {
+            statement.returning.is_some_and(|items| !items.is_empty())
+        }
+        Some(Statement::Update(statement)) => {
+            statement.returning.is_some_and(|items| !items.is_empty())
+        }
+        Some(Statement::Delete(statement)) => {
+            statement.returning.is_some_and(|items| !items.is_empty())
+        }
+        _ => false,
+    }
+}
+
+fn parsed_statement(code: &[&Token]) -> Option<Statement> {
     if code.is_empty() {
-        return false;
+        return None;
     }
     let tokens = code.iter().map(|token| (**token).clone()).collect();
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens(tokens);
-    matches!(parser.parse_statement(), Ok(Statement::Query(_)))
-        && parser.peek_token().token == Token::EOF
+    let statement = parser.parse_statement().ok()?;
+    (parser.peek_token().token == Token::EOF).then_some(statement)
 }
 
 fn diagnostics(code: &[&Token]) -> bool {

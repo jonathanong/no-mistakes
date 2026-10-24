@@ -15,7 +15,7 @@ pub(in super::super) fn for_header(code: &[&Token]) -> bool {
     if reverse {
         source = &source[1..];
     }
-    if query(source) {
+    if row_query(source) {
         return !reverse;
     }
     let step = source.iter().position(|token| word(token, "BY"));

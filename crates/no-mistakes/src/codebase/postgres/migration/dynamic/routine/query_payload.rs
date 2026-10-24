@@ -18,8 +18,12 @@ pub(super) fn push_query_payload(
         return;
     }
     let Some(at) = code.windows(2).position(|pair| {
-        (keyword(pair[0], "FOR") || keyword(pair[0], "IN") || keyword(pair[0], "IS"))
-            && (keyword(pair[1], "SELECT") || keyword(pair[1], "WITH"))
+        let select = keyword(pair[1], "SELECT") || keyword(pair[1], "WITH");
+        let dml = ["INSERT", "UPDATE", "DELETE"]
+            .iter()
+            .any(|name| keyword(pair[1], name));
+        (select && (keyword(pair[0], "FOR") || keyword(pair[0], "IN") || keyword(pair[0], "IS")))
+            || dml && keyword(pair[0], "IN")
     }) else {
         return;
     };
