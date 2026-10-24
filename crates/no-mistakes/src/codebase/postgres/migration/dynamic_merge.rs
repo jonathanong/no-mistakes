@@ -1,6 +1,6 @@
 use super::{dynamic, extract_migration_facts};
 use crate::codebase::postgres::types::SqlSchemaFileFacts;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 /// Merge the already discovered routine body SQL and static EXECUTE SQL.
 pub(super) fn append(sql: &str, facts: &mut SqlSchemaFileFacts) {
@@ -19,8 +19,19 @@ pub(super) fn append(sql: &str, facts: &mut SqlSchemaFileFacts) {
                 head.eq_ignore_ascii_case("DO") || head.eq_ignore_ascii_case("CREATE")
             })
     });
+    let call_owners: BTreeMap<_, _> = bodies
+        .iter()
+        .filter_map(|source| {
+            source
+                .call_range
+                .map(|range| (source.source_order.clone(), range))
+        })
+        .collect();
     for source in bodies {
-        append_one(facts, source, true);
+        let owned = (!source.query_payload)
+            .then(|| call_owners.get(&source.source_order).copied())
+            .flatten();
+        append_one(facts, source, true, owned);
     }
     // Peeled DO bodies already contribute direct SQL; only their cursor/FOR query payloads
     // need a separate AST projection after their procedural wrappers were filtered.
@@ -28,7 +39,13 @@ pub(super) fn append(sql: &str, facts: &mut SqlSchemaFileFacts) {
         .into_iter()
         .filter(|source| source.query_payload)
     {
-        append_one(facts, source, true);
+        if let Some((start, end)) = source.call_range.and_then(|range| range.physical) {
+            facts.function_calls.retain(|call| {
+                let position = (call.line, call.column);
+                position < start || position >= end
+            });
+        }
+        append_one(facts, source, true, None);
     }
     for source in dynamic::extract(sql) {
         // A peeled DO body can leave an opaque PL/pgSQL EXECUTE wrapper marker.
@@ -40,7 +57,7 @@ pub(super) fn append(sql: &str, facts: &mut SqlSchemaFileFacts) {
                     && marker.source_order.last() == Some(&0);
             !wrapper || !execute_wrapper(&marker.head)
         });
-        append_one(facts, source, false);
+        append_one(facts, source, false, None);
     }
 }
 
@@ -49,8 +66,23 @@ fn execute_wrapper(head: &str) -> bool {
     upper.starts_with("EXECUTE ") || upper.starts_with("BEGIN EXECUTE ")
 }
 
-fn append_one(facts: &mut SqlSchemaFileFacts, source: dynamic::DynamicSql, body: bool) {
+fn append_one(
+    facts: &mut SqlSchemaFileFacts,
+    source: dynamic::DynamicSql,
+    body: bool,
+    owned_calls: Option<dynamic::CallRange>,
+) {
     let mut nested = extract_migration_facts(&source.sql);
+    if let (Some(range), Some(body_start)) = (owned_calls, source.body_start) {
+        nested.function_calls.retain(|call| {
+            dynamic::location_offset(&source.sql, call.line as u64, call.column as u64).is_none_or(
+                |at| {
+                    let position = body_start + at;
+                    position < range.start || position >= range.end
+                },
+            )
+        });
+    }
     if body && source.procedural_control {
         // The source is a recognized body-control chunk. Keep any nested SQL failure.
         nested

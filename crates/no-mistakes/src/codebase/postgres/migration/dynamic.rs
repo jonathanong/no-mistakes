@@ -14,6 +14,13 @@ pub(super) use remap::remap_fact_lines;
 
 use routine::RoutineBody;
 
+#[derive(Clone, Copy, Debug)]
+pub(super) struct CallRange {
+    pub(super) start: usize,
+    pub(super) end: usize,
+    pub(super) physical: Option<((usize, usize), (usize, usize))>,
+}
+
 #[derive(Clone, Debug)]
 pub(super) struct DynamicSql {
     pub(super) sql: String,
@@ -24,6 +31,8 @@ pub(super) struct DynamicSql {
     pub(super) procedural_control: bool,
     /// A validated SELECT carried by a cursor or FOR wrapper, not a second wrapper.
     pub(super) query_payload: bool,
+    pub(super) body_start: Option<usize>,
+    pub(super) call_range: Option<CallRange>,
     pub(super) clear_outer_wrapper: bool,
 }
 
@@ -39,6 +48,8 @@ impl DynamicSql {
             executed: true,
             procedural_control: false,
             query_payload: false,
+            body_start: None,
+            call_range: None,
             clear_outer_wrapper: false,
         }
     }
@@ -106,7 +117,7 @@ fn body_line(body: &RoutineBody, token: &TokenWithSpan) -> usize {
         .unwrap_or(body.line)
 }
 
-fn location_offset(sql: &str, line: u64, column: u64) -> Option<usize> {
+pub(super) fn location_offset(sql: &str, line: u64, column: u64) -> Option<usize> {
     let line_start = sql
         .split_inclusive('\n')
         .take(line.saturating_sub(1) as usize)

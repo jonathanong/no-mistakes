@@ -1,5 +1,5 @@
 use super::*;
-use sqlparser::ast::{SetExpr, Statement};
+use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
 
@@ -36,28 +36,37 @@ pub(super) fn push_query_payload(
     });
     let end = loop_start.unwrap_or(chunk_end);
     assert!(start < end, "validated query starts before its chunk end");
-    // The guarded DML suffix recovery already owns function and schema facts.
-    // A WITH-prefixed DML query reaches here as a Query AST, so avoid projecting it twice.
-    if keyword(query, "WITH") && with_dml_body(&code[at + 1..], loop_token) {
-        return;
-    }
     push_schema_statement(body, start, end, ordinal, executed, false, result);
     let payload = result.last_mut().expect("query payload was just added");
     payload.query_payload = true;
+    payload.call_range = Some(CallRange {
+        start,
+        end,
+        physical: body.peeled_column_offset.map(|column| {
+            (
+                physical_position(body, column, start),
+                physical_position(body, column, end),
+            )
+        }),
+    });
     // A declared cursor's query is parsed now but runs only when opened later.
     payload.executed &= !code.iter().any(|token| keyword(token, "CURSOR"));
 }
 
-fn with_dml_body(code: &[&TokenWithSpan], loop_token: Option<&TokenWithSpan>) -> bool {
-    let end = loop_token.and_then(|end| code.iter().position(|token| std::ptr::eq(*token, end)));
-    let tokens = code[..end.unwrap_or(code.len())]
-        .iter()
-        .map(|token| (*token).clone())
-        .collect();
-    let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(tokens);
-    matches!(parser.parse_statement(), Ok(Statement::Query(query))
-        if matches!(query.body.as_ref(), SetExpr::Insert(_) | SetExpr::Update(_) | SetExpr::Delete(_)))
-        && parser.peek_token().token == Token::EOF
+fn physical_position(body: &RoutineBody, first_column_offset: usize, at: usize) -> (usize, usize) {
+    let prefix = &body.sql[..at];
+    let line = body.line + prefix.bytes().filter(|byte| *byte == b'\n').count();
+    let line_start = prefix.rfind('\n').map_or(0, |at| at + 1);
+    let column = prefix[line_start..].chars().count() + 1;
+    (
+        line,
+        column
+            + if line_start == 0 {
+                first_column_offset
+            } else {
+                0
+            },
+    )
 }
 
 fn complete_sql_declare(code: &[&TokenWithSpan]) -> bool {

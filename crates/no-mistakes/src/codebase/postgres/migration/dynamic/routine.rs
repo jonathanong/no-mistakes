@@ -10,6 +10,7 @@ pub(super) struct RoutineBody {
     pub(super) line: usize,
     pub(super) source_bytes: Vec<usize>,
     direct_facts_already_recovered: bool,
+    pub(super) peeled_column_offset: Option<usize>,
     pub(super) source_order: Vec<usize>,
     pub(super) executed: bool,
     clear_outer_wrapper: bool,
@@ -53,6 +54,18 @@ pub(super) fn bodies(sql: &str) -> Vec<RoutineBody> {
                 sql: decoded.sql,
                 source_bytes: decoded.source_bytes,
                 direct_facts_already_recovered: do_block && decoded.dollar_quoted,
+                peeled_column_offset: if do_block && decoded.dollar_quoted {
+                    match &code[start].token {
+                        Token::DollarQuotedString(quoted) => Some(
+                            code[start].span.start.column as usize
+                                + quoted.tag.as_deref().map_or(0, str::len)
+                                + 1,
+                        ),
+                        _ => None,
+                    }
+                } else {
+                    None
+                },
                 source_order: vec![ordinal],
                 executed: do_block,
                 clear_outer_wrapper: if routine {
@@ -166,6 +179,8 @@ fn push_schema_statement(
         executed,
         procedural_control,
         query_payload: false,
+        body_start: Some(start),
+        call_range: None,
         clear_outer_wrapper: body.clear_outer_wrapper,
         sql: sql.to_owned(),
         line: source_lines.first().copied().unwrap_or(body.line),
