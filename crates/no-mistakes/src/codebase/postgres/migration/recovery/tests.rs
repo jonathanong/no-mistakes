@@ -265,7 +265,7 @@ fn canonical_failures_preserve_procedural_leaf_locations_and_order() {
         [(5, 5, vec![1, 1], 1), (9, 5, vec![1, 3, 1], 0)]
     );
     assert!(failures[0].head.starts_with("INSERT INTO"));
-    assert!(failures[1].head.starts_with("CREATE VIEW"));
+    assert!(failures[1].head.starts_with("CREATE RECURSIVE VIEW"));
     assert_eq!(
         crate::codebase::postgres::extract_migration_facts(&source).unanalyzable_statements,
         failures
@@ -388,4 +388,36 @@ fn lexical_body_failures_share_canonical_records_without_duplicate_projection_si
         schema.unanalyzable_statements
     );
     assert_eq!(sources.physical_read_count(), 1);
+}
+
+#[test]
+fn recursive_heads_preserve_canonical_failures_and_valid_sibling_asts() {
+    let path = crate::test_support::rule_fixture_root("postgres-ddl-unanalyzable")
+        .join("recursive-heads/migrations/001.sql");
+    let source = std::fs::read_to_string(path).unwrap();
+    let parsed =
+        crate::codebase::postgres::parse::parse_postgres_sql_with_function_sources(&source);
+    let canonical = super::recovery_failures(&parsed);
+    assert_eq!(
+        crate::codebase::postgres::extract_migration_facts(&source).unanalyzable_statements,
+        canonical
+            .iter()
+            .filter(|failure| failure.schema_unanalyzable)
+            .cloned()
+            .collect::<Vec<_>>()
+    );
+    assert_eq!(
+        extract_sql_statement_facts(&source).parse_failures,
+        canonical
+    );
+    // Invalid siblings must not change valid recursive views or create failures for them.
+    assert_eq!(
+        parsed
+            .iter()
+            .filter(|located| matches!(&located.statement,
+            sqlparser::ast::Statement::CreateView(view)
+                if view.query.with.as_ref().is_some_and(|with| with.recursive)))
+            .count(),
+        2
+    );
 }

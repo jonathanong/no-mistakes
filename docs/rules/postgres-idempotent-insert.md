@@ -142,10 +142,16 @@ Use `DO NOTHING`, `WHERE NOT EXISTS`, `SET col = EXCLUDED.col`, or
 
 ## Analysis
 
-Raw SQL parse failures retain each failing statement's first code token. Separate
-statements produce separate findings, and a `no-mistakes-disable-next-line`
-directive immediately above one statement suppresses that failure independently.
-Successfully parsed sibling statements remain analyzable.
+Raw SQL parse failures retain each failing statement chunk's first code token.
+If recovery cannot extract an `INSERT` from a failed chunk, the rule reports
+`INSERT could not be proven replay-safe` at that chunk's own line; successfully
+parsed sibling `INSERT` statements do not turn it into the old line-1
+`more than one INSERT` finding. A failed chunk containing multiple `INSERT`s
+still uses `more than one INSERT` when INSERT recovery is incomplete.
+Separate statements produce separate findings, and a
+`no-mistakes-disable-next-line` directive immediately above one statement
+suppresses that failure independently. Successfully parsed sibling statements
+remain analyzable.
 Only failed statements containing an `INSERT` produce replay-safety uncertainty;
 a malformed non-INSERT sibling does not make a valid INSERT unsafe.
 
@@ -158,8 +164,10 @@ Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`,
 Valid PostgreSQL can still be unsupported by this analyzer. When it cannot
 recover statements such as `ALTER DEFAULT PRIVILEGES`, `CREATE PUBLICATION`,
 or `REFRESH MATERIALIZED VIEW`, it reports them under
-[`options.unanalyzable`](../migrations/postgres-schema-unanalyzable.md);
-the diagnostic does not mean PostgreSQL would reject the statement.
+[`options.unanalyzable`](../migrations/postgres-schema-unanalyzable.md). The
+same diagnostic also catches rejected syntax such as `CREATE RECURSIVE VIEW`
+without its required explicit column list; it reports missing analyzer facts,
+not a PostgreSQL validity verdict.
 
 Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
 

@@ -4,6 +4,8 @@ The 11 rules below now report each selected SQL statement that the lenient
 PostgreSQL parser cannot parse or recover. This changes the default result:
 previously such a statement could disappear from schema analysis without a
 diagnostic; now `options.unanalyzable: report` produces a finding at its line.
+This includes rejected syntax such as `CREATE RECURSIVE VIEW` without its
+required explicit column list, which could previously disappear from analysis.
 
 - [`postgres-constraint-validate`](../rules/postgres-constraint-validate.md)
 - [`postgres-fk-index`](../rules/postgres-fk-index.md)
@@ -17,13 +19,15 @@ diagnostic; now `options.unanalyzable: report` produces a finding at its line.
 - [`postgres-require-named-constraints`](../rules/postgres-require-named-constraints.md)
 - [`postgres-sql-statement-policy`](../rules/postgres-sql-statement-policy.md)
 
-A finding says the analyzer lacks proof, not that PostgreSQL rejects the SQL.
-Valid but unsupported statements, including `ALTER DEFAULT PRIVILEGES`,
+A finding means the analyzer could not establish schema facts for that
+statement. It does not decide whether PostgreSQL accepts the SQL: valid but
+unsupported statements, including `ALTER DEFAULT PRIVILEGES`,
 `CREATE PUBLICATION`, and `REFRESH MATERIALIZED VIEW`, can be reported alongside
-invalid SQL. Parsed sibling statements in the same file still contribute their
-schema facts. A `COPY ... FROM STDIN` data payload is not reported as a failed
-SQL statement. In recognized `DO` blocks and dollar-quoted PL/pgSQL function
-and procedure bodies, procedural declarations and assignments, `IF`/`ELSIF`/`ELSE`,
+syntax PostgreSQL rejects. Parsed sibling statements in the same file still
+contribute their schema facts. A `COPY ... FROM STDIN` data payload is not
+reported as a failed SQL statement. In recognized `DO` blocks and dollar-quoted
+PL/pgSQL function and procedure bodies, procedural declarations and assignments,
+`IF`/`ELSIF`/`ELSE`,
 `CASE`, loops, `EXIT`, `CONTINUE`, `RETURN`, `RAISE`, `PERFORM`, cursor operations,
 `SELECT INTO`, `EXECUTE INTO`, diagnostics, and exception handlers are not reported
 as failed SQL statements. This does not imply that those commands are executed or

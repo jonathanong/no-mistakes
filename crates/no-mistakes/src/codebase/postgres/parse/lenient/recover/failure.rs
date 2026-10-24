@@ -27,44 +27,9 @@ pub(super) fn unrecoverable_chunk(
     tokens: &[TokenWithSpan],
     ordinal: usize,
 ) -> Option<SqlUnanalyzableStatement> {
-    let significant = tokens
-        .iter()
-        .filter(|token| !matches!(token.token, Token::Whitespace(_) | Token::EOF))
-        .collect::<Vec<_>>();
-    // A procedural opener can share a semicolon chunk with the first SQL action.
-    // Anchor a failure to that action, retaining the opener alone for its own marker.
-    let mut start = 0;
-    loop {
-        if start + 3 < significant.len()
-            && matches!(&significant[start].token, Token::ShiftLeft)
-            && matches!(&significant[start + 1].token, Token::Word(_))
-            && matches!(&significant[start + 2].token, Token::ShiftRight)
-        {
-            start += 3;
-            continue;
-        }
-        if start + 1 < significant.len()
-            && matches!(&significant[start].token, Token::Word(word)
-                if word.quote_style.is_none()
-                    && ["BEGIN", "ELSE", "LOOP"]
-                        .iter()
-                        .any(|prefix| word.value.eq_ignore_ascii_case(prefix)))
-        {
-            start += 1;
-            continue;
-        }
-        break;
-    }
-    let statement = significant.get(start..)?;
-    let first = statement.first()?;
-    let line = first.span.start.line.max(1) as usize;
-    let column = first.span.start.column.max(1) as usize;
-    let head = statement
-        .iter()
-        .take(8)
-        .map(|token| token.token.to_string())
-        .collect::<Vec<_>>()
-        .join(" ");
+    let (location, head) = super::super::super::statement_head::head(tokens)?;
+    let line = location.line.max(1) as usize;
+    let column = location.column.max(1) as usize;
     let sql = tokens
         .iter()
         .map(|token| token.token.to_string())
