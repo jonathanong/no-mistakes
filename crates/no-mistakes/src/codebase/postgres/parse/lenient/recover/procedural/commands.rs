@@ -7,9 +7,8 @@ mod loops;
 pub(super) use loops::{for_header, foreach_header};
 
 pub(super) fn matches(code: &[&Token]) -> bool {
-    let Some(first) = code.first() else {
-        return false;
-    };
+    // BodyState dispatches only nonempty chunks here.
+    let first = code[0];
     if word(first, "GET") {
         return diagnostics(code);
     }

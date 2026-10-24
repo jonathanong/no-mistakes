@@ -11,8 +11,8 @@ pub(super) fn matches(code: &[&Token]) -> bool {
     if tail.first().is_some_and(|token| word(token, "ALIAS")) {
         return tail.len() == 3 && word(tail[1], "FOR") && matches!(tail[2], Token::Placeholder(_));
     }
-    if tail.iter().any(|token| word(token, "CURSOR")) {
-        return cursor(tail);
+    if let Some(cursor) = tail.iter().position(|token| word(token, "CURSOR")) {
+        return cursor(tail, cursor);
     }
     let default = tail
         .iter()
@@ -24,10 +24,7 @@ pub(super) fn matches(code: &[&Token]) -> bool {
     type_shape(datatype) && initializer.is_none_or(assignment::expression)
 }
 
-fn cursor(tail: &[&Token]) -> bool {
-    let Some(cursor) = tail.iter().position(|token| word(token, "CURSOR")) else {
-        return false;
-    };
+fn cursor(tail: &[&Token], cursor: usize) -> bool {
     let prefix = &tail[..cursor];
     if !prefix.is_empty()
         && !(prefix.len() == 1 && word(prefix[0], "SCROLL"))
