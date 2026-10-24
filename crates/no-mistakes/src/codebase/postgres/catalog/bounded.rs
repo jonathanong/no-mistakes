@@ -47,6 +47,16 @@ pub(super) fn from_snapshot(index: &SnapshotIndex) -> Option<BoundedUniqueIndex>
         .is_some_and(|statement| {
             matches!(statement, Statement::CreateIndex(index) if index.nulls_distinct == Some(false))
         });
+    // The existing plain-key path already covers these indexes without extra AST evidence.
+    if conjuncts.is_empty()
+        && !nulls_not_distinct
+        && index
+            .keys
+            .iter()
+            .all(|key| super::names::plain_column(&key.expression).is_some())
+    {
+        return None;
+    }
     Some(BoundedUniqueIndex {
         keys,
         predicate: conjuncts,
