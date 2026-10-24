@@ -23,7 +23,8 @@ Each selected shell file must pass the installed ShellCheck binary. A ShellCheck
 finding is a proven script issue. If at least one script is selected but the
 `shellcheck` executable is missing, the rule cannot analyze those scripts and
 routes that uncertainty through the shared `unanalyzable` policy. It does not
-claim the scripts are clean.
+claim the scripts are clean. Other launcher errors, such as permission denied,
+are hard errors and do not go through this policy.
 
 The policy defaults to the repository `unanalyzable` setting, which defaults to
 `report`; `options.unanalyzable` can override it for this rule. `report` emits a
@@ -32,11 +33,12 @@ failing unanalyzable diagnostic, `advise` emits a non-failing advisory, and
 environment that runs `no-mistakes` to analyze the selected scripts. This rule
 has no low-effort variant; a low-effort invocation runs it at `max`.
 
-A failed invocation that produces no recognized GCC-format diagnostics also
-prevents analysis of selected scripts. An abnormal exit preserves recognized
-script findings and applies `unanalyzable` to the remaining selected scripts.
-Run ShellCheck manually and repair its execution before retrying; a broken
-launcher must not silently make the rule pass.
+A nonzero invocation that produces no recognized GCC-format diagnostics marks
+all selected scripts unanalyzable. An abnormal exit that does produce
+recognized diagnostics preserves those definite findings and applies
+`unanalyzable` to selected scripts without recognized diagnostics. Run
+ShellCheck manually and repair its execution before retrying; a failed run must
+not silently make the rule pass.
 
 ## Options and defaults
 
@@ -64,7 +66,9 @@ shebangs, and `shellFiles`.
 `options.unanalyzable` accepts `report`, `advise`, or `ignore`. It inherits the
 repository `unanalyzable` policy and defaults to `report` when neither scope
 sets a value. It applies when selected scripts cannot be checked because the
-ShellCheck executable is missing. This is independent of `shellcheck.severity`.
+ShellCheck executable is missing or a nonzero invocation yields no recognized
+diagnostic for them. Other launcher errors, such as permission denied, are
+hard errors. This policy is independent of `shellcheck.severity`.
 
 ## Valid example
 

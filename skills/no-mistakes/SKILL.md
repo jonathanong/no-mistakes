@@ -67,15 +67,20 @@ the field when none occurred. A rule without a low implementation emits a
 named, non-failing warning when low was requested and stays at `max`.
 Repository and rule settings use `effort` and `unanalyzable`; the older
 SQL-specific `unanalyzableSql` setting remains an alias.
-For `shellcheck-runner`, a missing ShellCheck executable leaves selected
-scripts unanalyzed. Use `unanalyzable: report` (the default), `advise`, or
-`ignore` to choose whether that gap fails, advises, or is skipped; install
-ShellCheck in the analysis environment to check the scripts.
+For `shellcheck-runner`, the shared policy handles a missing executable or a
+failed invocation with no recognized diagnostics. If an abnormal exit has
+some recognized diagnostics, those findings remain and the policy handles
+selected scripts without recognized diagnostics. Use `unanalyzable: report`
+(the default), `advise`, or `ignore` to choose whether incomplete analysis
+fails, advises, or is skipped; install ShellCheck and repair failed
+invocations. Other launcher errors, such as permission denied, are hard errors.
 
-For `version-pin-consistency`, an unreadable or malformed source outside the
-selected file set for a selected anchor follows `unanalyzable` (`report` by
-default, `advise`, or `ignore`). A valid source outside the selected file set still supplies
-the comparison pin; definite mismatches remain failures.
+For `version-pin-consistency`, a missing, unreadable, or malformed declared
+comparison source outside the selected file set for a selected anchor, or a
+selected anchor that cannot be read as UTF-8, follows `unanalyzable` (`report`
+by default, `advise`, or `ignore`). This includes actual read failures on the
+selected anchor. A valid comparison source outside the selected file set still
+supplies the pin; definite mismatches remain failures.
 
 Grouped residual advice, including a `target` that may list several checks, is described in
 [SQL verdicts](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).

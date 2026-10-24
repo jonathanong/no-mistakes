@@ -152,3 +152,38 @@ fn selected_unreadable_source_still_reports_without_selected_anchors() {
         assert!(findings[0].message.contains("cannot read"));
     }
 }
+
+#[test]
+fn unreadable_selected_anchor_routes_actual_error_through_every_policy() {
+    let root = fixture("unavailable-source");
+    let files = vec![root.join("invalid-utf8.md")];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    for policy in ["report", "advise", "ignore"] {
+        let mut cfg = saved_config(&format!("{policy}.yml"));
+        cfg.rules[0].include = vec!["invalid-utf8.md".into()];
+        cfg.rules[0].options["sourceFile"] = "valid.toml".into();
+        cfg.rules[0].options["anchors"][0]["file"] = "invalid-utf8.md".into();
+        let first =
+            diagnostics_with_files_and_sources(&root, &cfg, &files, &sources, false).unwrap();
+        let second =
+            diagnostics_with_files_and_sources(&root, &cfg, &files, &sources, false).unwrap();
+        assert_eq!(first.findings, second.findings, "{policy}");
+        assert_eq!(first.advisories, second.advisories, "{policy}");
+        let expected_findings = usize::from(policy == "report");
+        let expected_advisories = usize::from(policy == "advise");
+        assert_eq!(first.findings.len(), expected_findings, "{policy}");
+        assert_eq!(first.advisories.len(), expected_advisories, "{policy}");
+        let finding = first.findings.first().or_else(|| first.advisories.first());
+        if let Some(finding) = finding {
+            assert_eq!(finding.file, "invalid-utf8.md");
+            assert_eq!(finding.line, 1);
+            assert_eq!(finding.target.as_deref(), Some("unanalyzable"));
+            assert!(finding.message.contains("cannot read invalid-utf8.md"));
+            assert!(finding.message.contains("invalid utf-8 sequence"));
+            assert!(finding.message.contains("readable UTF-8 text"));
+            assert!(!finding.message.contains("could not find"));
+        }
+    }
+    // The readable source and failed anchor are each read once across all checks.
+    assert_eq!(sources.physical_read_count(), 2);
+}

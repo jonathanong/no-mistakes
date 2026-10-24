@@ -88,7 +88,10 @@ fn check_anchor(
         Ok(pin) => pin,
         Err(message) => return source_finding(source.tracked, source.rel, line, message),
     };
-    let anchor_text = read_text(root, anchor_rel, sources).unwrap_or_default();
+    let anchor_text = match read_text(root, anchor_rel, sources) {
+        Ok(text) => text,
+        Err(error) => return super::source::unreadable_anchor(anchor_rel, &error),
+    };
     capture_findings(&regex, &anchor_text, pin, anchor_rel, source.rel, label)
 }
 

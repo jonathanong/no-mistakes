@@ -43,11 +43,15 @@ Helper and callback tracing still checks every recovered leading prefix.
 Grouped advice, including a `target` that may list several checks, is described
 in [SQL verdicts](../postgres-sql-verdicts.md).
 
-`shellcheck-runner` uses the shared policy when selected scripts cannot be
-checked because the ShellCheck executable is missing. The repository policy
-defaults to `report`; `options.unanalyzable` overrides it for one rule
-application. This rule has no low-effort analysis, so missing-tool reporting is
-independent of the `effort` setting.
+`shellcheck-runner` uses the shared policy when the ShellCheck executable is
+missing or a failed invocation yields no recognized diagnostics. If an
+abnormal exit has some recognized diagnostics, those findings are preserved
+and the policy applies to selected scripts without recognized diagnostics.
+Other launcher errors, such as permission denied, are hard errors. The
+repository policy defaults to `report`; `options.unanalyzable` overrides it
+for one rule application. This rule has no low-effort analysis, so
+incomplete-analysis reporting is independent of the `effort` setting. See the
+[rule contract](../rules/shellcheck-runner.md#what-it-catchesrequires).
 
 Rule applications that support alternate effort levels can set
 `options.effort: low` or `options.effort: max`. The repository-level
@@ -111,10 +115,13 @@ const, without evaluating helpers or builders. Other SQL inputs follow shared
 analysis. No companion rule is required.
 
 [`version-pin-consistency`](../rules/version-pin-consistency.md) also uses
-`options.unanalyzable` when a selected anchor's source is outside the selected
-file set and cannot be read or parsed. The default `report` fails, `advise`
-emits non-failing advice, and `ignore` stays silent. A valid source outside the selected file set still supplies the comparison pin, and definite mismatches remain
-failures under every policy.
+`options.unanalyzable` when a selected anchor's declared comparison source is
+outside the selected file set and cannot be read or parsed, or when a selected
+anchor itself cannot be read as UTF-8. This includes actual read failures, not
+only missing files. The default `report` fails, `advise` emits non-failing
+advice, and `ignore` stays silent. A valid source outside the selected file
+set still supplies the comparison pin, and definite mismatches remain failures
+under every policy.
 
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the

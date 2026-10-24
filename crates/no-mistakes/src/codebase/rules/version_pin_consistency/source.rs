@@ -29,6 +29,18 @@ pub(super) fn load(
     }
 }
 
+pub(super) fn unreadable_anchor(anchor: &str, error: &str) -> Vec<RuleFinding> {
+    let mut result = finding(
+        anchor,
+        1,
+        format!(
+            "{anchor}: version comparison is incomplete because the selected anchor could not be analyzed ({error}). Restore the anchor as readable UTF-8 text so its pin can be compared."
+        ),
+    );
+    result.target = Some("unanalyzable".to_owned());
+    vec![result]
+}
+
 fn incomplete(source: &str, anchors: &[&Anchor], reason: &str) -> Vec<RuleFinding> {
     anchors.iter().map(|anchor| {
         let rel = super::parse::configured_rel(&anchor.file);
