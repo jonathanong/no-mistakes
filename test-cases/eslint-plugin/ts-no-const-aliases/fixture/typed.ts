@@ -14,3 +14,9 @@ const assertedNonNull = (original!) as Config;
 const checkedNonNull = (original!) satisfies Config;
 const annotatedNonNull: Config = (original!);
 const firstTyped: Config = original, secondTyped: Config = original;
+
+// Exhaustiveness bindings carry a compile-time proof and must keep their annotation.
+function assertNever(value: never) {
+  const unexpected: never = value;
+  return unexpected;
+}
