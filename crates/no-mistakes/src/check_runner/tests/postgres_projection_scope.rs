@@ -59,6 +59,11 @@ fn low_check(config: &str) -> (serde_json::Value, u64, u64, u64) {
         .unwrap()
     };
     let work = observer.snapshot().work;
+    assert_eq!(
+        work.get("postgres.no_offset.low.calls").copied(),
+        Some(2),
+        "the fixture must select low effort through options.effort: {work:#?}"
+    );
     (
         crate::check_runner::json_value(&result),
         work["postgres.prepared.statement_projections"],
