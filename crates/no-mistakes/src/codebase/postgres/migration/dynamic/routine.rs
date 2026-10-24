@@ -1,6 +1,8 @@
 use super::literal::{leading_string_expression, string_expression};
 use super::*;
+mod query_payload;
 mod wrapper;
+use query_payload::push_query_payload;
 
 #[derive(Clone, Debug)]
 pub(super) struct RoutineBody {
@@ -113,6 +115,9 @@ fn schema_statements(body: &RoutineBody) -> Vec<DynamicSql> {
         let executed = scope.advance(&significant(chunk)) && body.executed;
         let control = procedural.control_chunk(chunk);
         push_schema_statement(body, start, end, ordinal, executed, control, &mut result);
+        if control {
+            push_query_payload(body, chunk, end, ordinal, executed, &mut result);
+        }
         start_token = at + 1;
         start = end;
         ordinal += 1;
@@ -127,6 +132,16 @@ fn schema_statements(body: &RoutineBody) -> Vec<DynamicSql> {
         control,
         &mut result,
     );
+    if control {
+        push_query_payload(
+            body,
+            &tokens[start_token..],
+            body.sql.len(),
+            ordinal,
+            body.executed,
+            &mut result,
+        );
+    }
     result
 }
 
@@ -150,6 +165,7 @@ fn push_schema_statement(
     result.push(DynamicSql {
         executed,
         procedural_control,
+        query_payload: false,
         clear_outer_wrapper: body.clear_outer_wrapper,
         sql: sql.to_owned(),
         line: source_lines.first().copied().unwrap_or(body.line),

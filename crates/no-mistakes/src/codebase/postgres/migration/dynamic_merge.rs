@@ -22,6 +22,14 @@ pub(super) fn append(sql: &str, facts: &mut SqlSchemaFileFacts) {
     for source in bodies {
         append_one(facts, source, true);
     }
+    // Peeled DO bodies already contribute direct SQL; only their cursor/FOR query payloads
+    // need a separate AST projection after their procedural wrappers were filtered.
+    for source in dynamic::peeled_schema_bodies(sql)
+        .into_iter()
+        .filter(|source| source.query_payload)
+    {
+        append_one(facts, source, true);
+    }
     for source in dynamic::extract(sql) {
         // A peeled DO body can leave an opaque PL/pgSQL EXECUTE wrapper marker.
         // The exact statement path proves that the static expression was projected.
