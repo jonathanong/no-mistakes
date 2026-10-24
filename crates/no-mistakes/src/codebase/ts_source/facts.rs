@@ -111,8 +111,8 @@ pub struct TsFileFacts {
     pub exported_functions: Vec<String>,
     pub exported_resource_roots: Vec<String>,
     pub exported_resource_scopes: Vec<String>,
-    pub known_function_scopes: Vec<String>,
-    pub callable_scope_ids: Vec<(crate::codebase::dependencies::extract::CallableId, String)>,
+    pub known_function_scopes: Vec<std::sync::Arc<str>>,
+    pub callable_scope_ids: Vec<(crate::codebase::dependencies::extract::CallableId, Arc<str>)>,
     pub callable_bindings: Vec<(
         usize,
         String,
@@ -135,7 +135,7 @@ pub struct TsFileFacts {
         crate::codebase::dependencies::extract::CallableId,
     )>,
     pub lexical_scope_parents: Vec<(usize, Option<usize>)>,
-    pub callable_scopes: Vec<String>,
+    pub callable_scopes: Vec<std::sync::Arc<str>>,
     pub class_scopes: Vec<String>,
     /// One-based declaration line of each class that names a static base.
     pub class_declaration_lines: Vec<(crate::codebase::dependencies::extract::CallableId, u32)>,

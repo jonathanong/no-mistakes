@@ -3,7 +3,7 @@ use super::*;
 impl FlowFileIndex {
     pub(in super::super) fn new(
         flow: &crate::codebase::dependencies::extract::ValueFlowFacts,
-        scopes: &[(CallableId, String)],
+        scopes: &[(CallableId, std::sync::Arc<str>)],
         function_calls: &[crate::codebase::dependencies::extract::FunctionCall],
     ) -> Self {
         let mut returns: FxHashMap<_, Vec<_>> = fx_map();
@@ -47,7 +47,7 @@ impl FlowFileIndex {
             async_callables: flow.async_callables.clone(),
             generator_callables: flow.generator_callables.clone(),
             sites,
-            scopes: scopes.iter().cloned().collect(),
+            scopes: scopes.iter().map(|(id, scope)| (*id, scope.to_string())).collect(),
             bindings: index_scoped_names(
                 flow.bindings
                     .iter()

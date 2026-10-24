@@ -32,7 +32,7 @@ fn callable_returns_literals(facts: &CheckFactMap, file: &Path, name: &str) -> b
     let ids: Vec<CallableId> = ts
         .callable_scope_ids
         .iter()
-        .filter(|(_, scope)| scope == name || scope.ends_with(&format!(".{name}")))
+        .filter(|(_, scope)| scope.as_ref() == name || scope.ends_with(&format!(".{name}")))
         .map(|(id, _)| *id)
         .collect();
     if ids.iter().any(|id| returns_literals(ts, *id)) {

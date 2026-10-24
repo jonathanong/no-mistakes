@@ -33,8 +33,8 @@ pub fn callable_file_index_fixture(entries: usize) -> CallableFileIndexFixture {
     for index in 0..entries {
         let name = format!("fn{index}");
         let id = CallableId(index as u32);
-        facts.callable_scopes.push(name.clone());
-        facts.callable_scope_ids.push((id, name.clone()));
+        facts.callable_scopes.push(name.clone().into());
+        facts.callable_scope_ids.push((id, name.clone().into()));
         facts.callable_bindings.push((0, name.clone(), id));
         facts.callable_aliases.push(CallableAlias {
             scope: None,
@@ -64,8 +64,10 @@ pub fn callable_file_index_fixture(entries: usize) -> CallableFileIndexFixture {
         let name = format!("Class{class}");
         let class_id = CallableId(1_000_000 + class as u32);
         facts.class_scopes.push(name.clone());
-        facts.callable_scopes.push(name.clone());
-        facts.callable_scope_ids.push((class_id, name.clone()));
+        facts.callable_scopes.push(name.clone().into());
+        facts
+            .callable_scope_ids
+            .push((class_id, name.clone().into()));
         facts.callable_bindings.push((0, name, class_id));
         for member in 0..members_per_class {
             facts.class_member_callable_ids.push((

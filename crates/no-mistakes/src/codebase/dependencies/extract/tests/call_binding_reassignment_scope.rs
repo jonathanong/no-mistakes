@@ -24,7 +24,10 @@ fn reassignment_of_an_inner_shadow_does_not_invalidate_the_outer_callable() {
         calls[1].target_identity,
         CallTargetIdentity::RepositoryFunction
     );
-    assert!(facts.callable_scopes.iter().any(|scope| scope == "target"));
+    assert!(facts
+        .callable_scopes
+        .iter()
+        .any(|scope| scope.as_ref() == "target"));
 }
 
 #[test]

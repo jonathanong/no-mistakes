@@ -446,7 +446,7 @@ fn call_facts_predeclare_later_function_declarations_as_callable() {
         assert!(facts
             .callable_scopes
             .iter()
-            .any(|candidate| candidate == scope));
+            .any(|candidate| candidate.as_ref() == scope));
     }
 }
 

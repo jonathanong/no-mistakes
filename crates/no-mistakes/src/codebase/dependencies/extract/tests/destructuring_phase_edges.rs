@@ -53,7 +53,7 @@ fn phase_catalogs_preserve_alias_projection_rest_and_nested_rhs_boundaries() {
     let owner = facts
         .callable_scope_ids
         .iter()
-        .find(|(_, name)| name == "saved")
+        .find(|(_, name)| name.as_ref() == "saved")
         .unwrap()
         .0;
     let before_owned = source.find("read(owned)").unwrap() as u32;

@@ -30,7 +30,7 @@ fn nested_aggregate_callable_members_reach_only_invoked_bodies_and_imports() {
             file_facts
                 .callable_scope_ids
                 .iter()
-                .any(|(id, candidate)| candidate == scope && reachable.contains(id)),
+                .any(|(id, candidate)| candidate.as_ref() == scope && reachable.contains(id)),
             "{scope} must be reached from its invoked aggregate member: {:#?}",
             file_facts.function_calls
         );

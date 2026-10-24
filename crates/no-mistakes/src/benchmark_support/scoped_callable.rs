@@ -22,8 +22,8 @@ pub fn scoped_callable_fixture(entries: usize, sparse: bool) -> ScopedCallableFi
             *scope = index + 1;
             if index < entries {
                 *name = "fn".to_string();
-                facts.callable_scope_ids[index].1 = "fn".to_string();
-                facts.callable_scopes[index] = "fn".to_string();
+                facts.callable_scope_ids[index].1 = "fn".into();
+                facts.callable_scopes[index] = "fn".into();
             }
         }
         for (index, alias) in facts.callable_aliases.iter_mut().enumerate() {
@@ -49,8 +49,8 @@ pub fn scoped_callable_fixture(entries: usize, sparse: bool) -> ScopedCallableFi
         facts.lexical_scope_parents.push((child, Some(parent)));
         let id = CallableId(3_000_000 + depth as u32);
         let display = format!("nested-{depth}/other");
-        facts.callable_scopes.push(display.clone());
-        facts.callable_scope_ids.push((id, display));
+        facts.callable_scopes.push(display.clone().into());
+        facts.callable_scope_ids.push((id, display.into()));
         facts
             .callable_bindings
             .push((child, "other".to_string(), id));

@@ -49,7 +49,7 @@ impl CallableFileIndex {
             .or_else(|| class.static_setter_ids.get(caller_method))
             .copied();
         let display = format!("{}/{}", class.scope, caller_method);
-        let ids = self.scope_ids_by_display.get(&display);
+        let ids = self.scope_ids_by_display.get(display.as_str());
         if let Some(caller_id) = caller_id {
             if static_id == Some(caller_id) {
                 return Some(true);
@@ -152,7 +152,7 @@ impl CallableFileIndex {
         member: &str,
     ) -> Option<crate::codebase::dependencies::extract::CallableId> {
         let display = format!("{}/{}", class.scope, member);
-        let ids = self.scope_ids_by_display.get(&display)?;
+        let ids = self.scope_ids_by_display.get(display.as_str())?;
         let static_id = class.static_member_ids.get(member);
         let mut found = None;
         for id in ids {

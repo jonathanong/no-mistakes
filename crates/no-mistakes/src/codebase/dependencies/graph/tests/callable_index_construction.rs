@@ -46,12 +46,12 @@ fn callable_file_index_looks_up_preindexed_class_members() {
         }
     };
     let facts = crate::codebase::ts_source::facts::TsFileFacts {
-        callable_scopes: vec!["Alpha".to_string(), "Beta".to_string(), "Gamma".to_string()],
+        callable_scopes: vec!["Alpha".into(), "Beta".into(), "Gamma".into()],
         class_scopes: vec!["Alpha".to_string(), "Beta".to_string()],
         callable_scope_ids: vec![
-            (CallableId(1), "Alpha".to_string()),
-            (CallableId(2), "Beta".to_string()),
-            (CallableId(3), "Gamma".to_string()),
+            (CallableId(1), "Alpha".into()),
+            (CallableId(2), "Beta".into()),
+            (CallableId(3), "Gamma".into()),
         ],
         callable_bindings: vec![
             (0, "Alpha".to_string(), CallableId(1)),
@@ -144,7 +144,7 @@ fn callable_file_index_construction_preindexes_class_members() {
     // Output equality cannot detect a quadratic membership scan. Keep the
     // constructor using the same hash index retained for later resolution.
     assert!(
-        source.contains(".filter(|(_, scope)| class_scopes.contains(scope))"),
+        source.contains(".filter(|(_, scope)| class_scopes.contains(scope.as_ref()))"),
         "callable identities must probe the prebuilt class membership index",
     );
     assert!(

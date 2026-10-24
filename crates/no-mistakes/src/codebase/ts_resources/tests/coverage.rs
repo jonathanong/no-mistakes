@@ -32,7 +32,7 @@ fn resource_callable_ids_match_import_extraction_for_variable_values_and_class_f
         assert!(imports
             .callable_scope_ids
             .iter()
-            .any(|(id, candidate)| *id == resource_id && candidate == scope));
+            .any(|(id, candidate)| *id == resource_id && candidate.as_ref() == scope));
     }
 }
 

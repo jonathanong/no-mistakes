@@ -43,11 +43,11 @@ impl NamespaceTable {
             locals.entry(path.clone()).or_default().insert(name.clone());
         }
         let member_ids: FxHashSet<CallableId> = facts.members.iter().map(|m| m.id).collect();
-        let scopes: FxHashMap<CallableId, &String> = file
+        let scopes: FxHashMap<CallableId, &str> = file
             .callable_scope_ids
             .iter()
             .filter(|(id, _)| member_ids.contains(id))
-            .map(|(id, scope)| (*id, scope))
+            .map(|(id, scope)| (*id, scope.as_ref()))
             .collect();
         Self {
             members: facts
@@ -55,7 +55,7 @@ impl NamespaceTable {
                 .iter()
                 .filter_map(|member| {
                     let scope = scopes.get(&member.id)?;
-                    Some((member.path.clone(), ((*scope).clone(), member.id)))
+                    Some((member.path.clone(), (scope.to_string(), member.id)))
                 })
                 .collect(),
             declared: facts.declared.iter().cloned().collect(),

@@ -122,7 +122,7 @@ fn overload_signatures_share_the_implementation_callable_id() {
     let parse_ids: Vec<_> = facts
         .callable_scope_ids
         .iter()
-        .filter_map(|(id, scope)| (scope == "parse").then_some(*id))
+        .filter_map(|(id, scope)| (scope.as_ref() == "parse").then_some(*id))
         .collect();
 
     assert_eq!(parse_ids.len(), 1);
@@ -141,7 +141,7 @@ fn class_method_overload_signatures_share_the_implementation_callable_id() {
     let parse_ids: Vec<_> = facts
         .callable_scope_ids
         .iter()
-        .filter_map(|(id, scope)| (scope == "Parser/parse").then_some(*id))
+        .filter_map(|(id, scope)| (scope.as_ref() == "Parser/parse").then_some(*id))
         .collect();
 
     assert_eq!(parse_ids.len(), 1);
@@ -163,7 +163,7 @@ fn bound_anonymous_class_overloads_share_implementation_callable_ids() {
             facts
                 .callable_scope_ids
                 .iter()
-                .filter(|(_, candidate)| candidate == scope)
+                .filter(|(_, candidate)| candidate.as_ref() == scope)
                 .count(),
             1,
             "{scope} must use only its implementation identity: {:?}",
@@ -203,7 +203,7 @@ fn bound_named_class_expression_keeps_its_internal_identity() {
             facts
                 .callable_scope_ids
                 .iter()
-                .filter(|(_, candidate)| candidate == &method_scope)
+                .filter(|(_, candidate)| candidate.as_ref() == method_scope.as_str())
                 .count(),
             1,
             "{method_scope} must collapse overloads to its implementation ID"
@@ -211,7 +211,7 @@ fn bound_named_class_expression_keeps_its_internal_identity() {
         assert!(!facts
             .callable_scope_ids
             .iter()
-            .any(|(_, candidate)| candidate == &format!("{outward}/parse")));
+            .any(|(_, candidate)| candidate.as_ref() == format!("{outward}/parse")));
         for callee in [outward.to_string(), format!("{outward}.load")] {
             assert!(facts.function_calls.iter().any(|call| {
                 call.callee == callee
@@ -242,7 +242,7 @@ fn nested_aggregate_callables_keep_their_owner_and_member_identity() {
             facts
                 .callable_scope_ids
                 .iter()
-                .any(|(_, candidate)| candidate == scope),
+                .any(|(_, candidate)| candidate.as_ref() == scope),
             "{scope} must retain a callable identity: {:?}",
             facts.callable_scope_ids
         );
@@ -277,7 +277,7 @@ fn nested_aggregate_callables_keep_their_owner_and_member_identity() {
     let class_id = facts
         .callable_scope_ids
         .iter()
-        .find_map(|(id, scope)| (scope == "boot/Service").then_some(*id))
+        .find_map(|(id, scope)| (scope.as_ref() == "boot/Service").then_some(*id))
         .expect("nested class identity");
     for (member, specifier) in [
         ("run", "./field-called.mts"),
@@ -319,7 +319,7 @@ fn class_declaration_lines_cover_only_classes_with_a_statically_named_base() {
             let scope = facts
                 .callable_scope_ids
                 .iter()
-                .find_map(|(id, scope)| (id == class_id).then_some(scope.as_str()));
+                .find_map(|(id, scope)| (id == class_id).then_some(scope.as_ref()));
             (scope.expect("class scope"), *line)
         })
         .collect();
@@ -346,7 +346,7 @@ fn ambient_classes_are_flagged_and_namespace_members_are_tracked() {
             facts
                 .callable_scope_ids
                 .iter()
-                .find_map(|(id, scope)| (id == class_id).then_some(scope.as_str()))
+                .find_map(|(id, scope)| (id == class_id).then_some(scope.as_ref()))
                 .expect("class scope")
         })
         .collect();

@@ -141,7 +141,7 @@ fn collect_exported_value_edges(input: ExportedValueEdgeInputs<'_>, edges: &mut 
                     let scope_is_callable = file_facts
                         .callable_scopes
                         .iter()
-                        .any(|candidate| candidate == &scope);
+                        .any(|candidate| candidate.as_ref() == scope);
                     if !root_is_callable || !scope_is_callable {
                         queue.push_back(scope);
                     }

@@ -18,7 +18,7 @@ fn inline_export_function_predeclaration_records_its_callable_binding_id() {
     let helper_id = facts
         .callable_scope_ids
         .iter()
-        .find_map(|(id, scope)| (scope == "helper").then_some(*id))
+        .find_map(|(id, scope)| (scope.as_ref() == "helper").then_some(*id))
         .expect("helper callable identity");
 
     assert_eq!(call.target_identity, CallTargetIdentity::RepositoryFunction);
@@ -41,7 +41,7 @@ fn named_default_function_predeclaration_records_its_callable_binding_id() {
     let default_id = facts
         .callable_scope_ids
         .iter()
-        .find_map(|(id, scope)| (scope == "namedDefault").then_some(*id))
+        .find_map(|(id, scope)| (scope.as_ref() == "namedDefault").then_some(*id))
         .expect("named default callable identity");
 
     assert_eq!(call.target_identity, CallTargetIdentity::RepositoryFunction);
@@ -58,7 +58,7 @@ fn named_default_class_binds_in_the_module_scope() {
     let class_id = facts
         .callable_scope_ids
         .iter()
-        .find_map(|(id, scope)| (scope == "Service").then_some(*id))
+        .find_map(|(id, scope)| (scope.as_ref() == "Service").then_some(*id))
         .expect("named default class identity");
     let construction = facts
         .function_calls
@@ -149,7 +149,7 @@ fn wrapped_default_class_uses_its_class_scope_and_default_binding_identity() {
     let class_id = facts
         .callable_scope_ids
         .iter()
-        .find_map(|(id, scope)| (scope == "Wrapped").then_some(*id))
+        .find_map(|(id, scope)| (scope.as_ref() == "Wrapped").then_some(*id))
         .expect("wrapped class callable identity");
     let helper_call = facts
         .function_calls

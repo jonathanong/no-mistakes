@@ -26,7 +26,7 @@ fn known_function_scopes(
     // Function declarations can be called before their body contributes an
     // import, resource, or nested call fact. Their canonical callable catalog
     // is the complete hoisted/local target set.
-    scopes.extend(facts.callable_scopes.iter().cloned());
+    scopes.extend(facts.callable_scopes.iter().map(ToString::to_string));
     scopes.extend(
         facts
             .function_calls

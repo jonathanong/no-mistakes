@@ -119,7 +119,7 @@ fn exported_function_scope(
     let duplicates = facts
         .callable_scope_ids
         .iter()
-        .filter(|(_, display)| Some(display.as_str()) == scope)
+        .filter(|(_, display)| Some(display.as_ref()) == scope)
         .count();
     if duplicates <= 1 {
         return true;
