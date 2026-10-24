@@ -101,7 +101,7 @@ fn recovered_primary_class_syntax_cannot_supply_import_ancestry_proof() {
     let session = AnalysisSession::disabled();
     let facts = collect_ts_facts_with_session_and_context(
         &session,
-        &[path.clone()],
+        std::slice::from_ref(&path),
         plan.ts_fact_plan(),
         &TsFactContext {
             root: root.clone(),

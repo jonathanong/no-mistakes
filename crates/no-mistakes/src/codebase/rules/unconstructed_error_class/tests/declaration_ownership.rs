@@ -61,7 +61,7 @@ fn ancestry_reuses_sources_and_facts_without_widening_calls_or_imports() {
         calls_only.dependencies_of_node(&NodeId::file(&path)),
         ancestry.dependencies_of_node(&NodeId::file(&path))
     );
-    assert_eq!(files.indexable(), [path.clone()]);
+    assert_eq!(files.indexable(), std::slice::from_ref(&path));
     let work = session.work_snapshot();
     for suffix in [
         "src/classes.ts",
