@@ -25,3 +25,7 @@ declare const other: (...args: any[]) => unknown;
 test.call.call(other, null, "another function", () => { items.push(1); });
 test.apply.call(other, null, ["another function", () => { items.push(1); }]);
 test.call.apply(other, [null, "another function", () => { items.push(1); }]);
+// Arbitrary nested arrays are not callback registrations, even inside an apply list.
+test.apply(null, ["nested container", [() => { items.push(1); }]]);
+test.apply.apply(test, [null, ["nested unknown", ...args, () => { items.push(1); }]]);
+test.apply.apply(test, [null, ["nested container", [() => { items.push(1); }]]]);

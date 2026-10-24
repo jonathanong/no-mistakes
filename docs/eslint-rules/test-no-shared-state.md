@@ -34,6 +34,13 @@ test("user", () => {
 Create mutable values inside each test or reset them in the lifecycle hook that
 owns the test isolation boundary.
 
+For a forwarded registration, keep the registration and move the mutable value
+into its callback. For example, rewrite
+`test.apply.apply(test, [null, ["case", () => { shared.push(1); }]])` to
+`test.apply.apply(test, [null, ["case", () => { const local = []; local.push(1); }]])`.
+The same callback-local rewrite applies to direct calls, `.call`, and literal
+`.apply` lists; suite and hook forwarding does not extend cleanup to sibling tests.
+
 ## Limits
 
 A namespace `v.test`, a Playwright default import, `test["only"]`, optional chaining, and one top-level `const` alias are the same test callback. A top-level `const suite = v.describe` is still that suite, so a hook inside it does not cover tests outside it. A comma callee such as `(0, v.describe)` is that same suite. `const suite = v.describe.serial` keeps the serial modifier. A nested binding that reuses a namespace import's local name is not that namespace. Namespace setup hooks such as `v.beforeEach` are the same cleanup boundary as a named import. Vitest's default import is not a runner. A computed identifier key is not a static modifier. A top-level `const check = v.test` is recorded, so a nested parameter named `check` is not that test. `v.describe.configure({ mode: "serial" })` marks the file serial.
@@ -45,6 +52,10 @@ named callback. For example, `test["call"](null, "case", callback)` and
 `describe.apply(null, ["suite", callback])` owns only the hooks and tests inside
 that callback; its cleanup does not cover sibling tests. Forwarded `beforeEach`
 and `afterEach` callbacks keep their ordinary cleanup boundaries.
+Nested intrinsic forwarding, such as
+`test.apply.apply(test, [null, ["case", callback]])`, retains the final callback
+boundary when each forwarded argument list is a literal array. Arbitrary nested
+arrays do not register their contained functions.
 
 An opaque `.apply` list, a sparse list, a list containing a spread, or a `.call`
 argument spread is not followed. A function supplied only as the forwarding

@@ -124,8 +124,8 @@ function setupCallbackKind(node, testCallees = TEST_CALLEES, namespaces = new Se
 // Other array/container children are not inline test callbacks.
 function callbackCall(node) {
   const callback = unwrapTransparentParent(node);
-  const parent = callback.parent;
-  const call = parent?.type === "ArrayExpression" ? unwrapTransparentParent(parent).parent : parent;
+  let call = callback.parent;
+  while (call?.type === "ArrayExpression") call = unwrapTransparentParent(call).parent;
   const invoked = registrationCall(call);
   return invoked?.arguments.includes(callback) ? invoked : null;
 }

@@ -36,3 +36,11 @@ v.test["apply"](v, ["outside namespace suite", () => { outside.set("x", 1); }]);
 // Type wrappers around the method, literal list, and callback keep the registration.
 (test.apply as typeof test.apply)(null, ["asserted list", () => { items.push(1); }] as const); // report
 test.apply(null, ["asserted callback", (() => { items.push(1); }) as () => void]); // report
+// Nested intrinsic forwarding preserves the final literal callback list.
+test.apply.apply(test, [null, ["nested test", () => { items.push(1); }]]); // report
+const nested = new Map();
+describe.apply.apply(describe, [null, ["nested suite", () => {
+  beforeEach.apply.apply(beforeEach, [null, [() => { nested.clear(); }]]);
+  test.apply.apply(test, [null, ["nested clean", () => { nested.set("x", 1); }]]);
+}]]);
+test.apply.apply(test, [null, ["nested sibling", () => { nested.set("x", 1); }]]); // report
