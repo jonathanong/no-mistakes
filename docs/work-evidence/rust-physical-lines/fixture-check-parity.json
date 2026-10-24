@@ -1,7 +1,9 @@
 {
-  "baselineRevision": "7aad4eb71",
-  "baselineBinarySha256": "b123c5ed31368e42f81039bd2f6f926d3c936b047cb8cb89c9630dd1877e0ac2",
-  "candidateBinarySha256": "675671e9a51d6ef127eae21cb0d2c5087709c49af300523ca96e4ba56019bad5",
+  "baselineRevision": "341ad89a8",
+  "candidateRevision": "6e327bee850e2914630a919eb1f550dfacb77640",
+  "candidateRustSourceTree": "4e066ef9479ef5c32041f00fc489a208f86288c9",
+  "baselineBinarySha256": "ef2a70201ac151456bc266b5f66ffc5d05df2131737a8d7ffa4791d8b6395c7d",
+  "candidateBinarySha256": "43aa20cc278a6a642e8469f72eaffe59cc6ea45d9a2a16fd40c29b5ade1dcf7e",
   "command": [
     "check",
     "--root",

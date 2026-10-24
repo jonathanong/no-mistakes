@@ -1,6 +1,7 @@
+<!-- cspell:ignore clippy -->
 # Rust physical line audit
 
-Baseline: `7aad4eb71` (2026-10-23). Scope: all 6,234 tracked `*.rs` files,
+Baseline: `341ad89a8` (2026-10-23). Scope: all 6,238 tracked `*.rs` files,
 including saved fixtures. `audit-before.tsv` records every physical overage,
 ordered by excess lines, with the rule's own code-line count alongside it.
 Physical counts were cross-checked with:
@@ -44,7 +45,7 @@ preserving its current-main test bodies:
 | `playwright/rule_findings/emit.rs` | 201 | 140 |
 
 The two obsolete size suppressions are removed. The candidate inventory has
-6,254 Rust files and leaves 282 physical overages for later cohesive refactors;
+6,258 Rust files and leaves 282 physical overages for later cohesive refactors;
 none exceeds its code-line budget. No `query_annotation/` or `relative_scope*`
 files are changed.
 
