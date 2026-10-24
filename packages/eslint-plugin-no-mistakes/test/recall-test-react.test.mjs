@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "vitest";
-import { fixture, messages } from "./helpers.mjs";
+import { fixture, lint, messages } from "./helpers.mjs";
 
 const snippet = (name) => fixture(name);
 
@@ -241,14 +241,13 @@ describe("test and react same-file recall", () => {
       ).length,
       1,
     );
-    assert.equal(
-      messages(
+    assert.deepEqual(
+      lint(
         snippet("test-no-shared-state/shadow-namespace.test.ts"),
-        "test-no-shared-state",
-        undefined,
+        { "no-mistakes/test-no-shared-state": "error" },
         "shadow-namespace.test.ts",
-      ).length,
-      2,
+      ).map(({ messageId, line }) => [messageId, line]),
+      [["shared", 13]],
     );
     assert.deepEqual(
       messages(

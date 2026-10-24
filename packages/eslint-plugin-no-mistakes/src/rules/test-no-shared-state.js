@@ -67,7 +67,7 @@ module.exports = rule(
       isDescribeCall,
       isInlineCallback,
       resolveFunctionCallback,
-    } = createRuleHelpers(context, testCalleeNames, namespaces);
+    } = createRuleHelpers(context, testCalleeNames, namespaces, testAliases);
     const mutationHandlers = createMutationHandlers({
       cleanupTracker,
       context,

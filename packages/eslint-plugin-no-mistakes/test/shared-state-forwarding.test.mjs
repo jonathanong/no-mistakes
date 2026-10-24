@@ -12,6 +12,8 @@ const ruleName = "test-no-shared-state";
 const cases = [
   "forwarded",
   "forwarded-controls",
+  "forwarded-invalid-intrinsics",
+  "forwarded-shadowed-callbacks",
   "forwarded-suppressed",
   "forwarded-file",
   "forwarded-shadowed-serial",

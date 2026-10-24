@@ -133,7 +133,7 @@ function callbackCall(node) {
 function registrationCall(node) {
   // Track the effective receiver through nested intrinsic forwarding.
   const invoked = logicalCall(node, () => false);
-  return invoked && { ...node, ...invoked };
+  return invoked?.callee ? { ...node, ...invoked } : null;
 }
 
 module.exports = {

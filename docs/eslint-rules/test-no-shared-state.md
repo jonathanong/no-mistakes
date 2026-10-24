@@ -9,9 +9,7 @@ into hidden input.
 
 ```ts
 let currentUser;
-test("first", () => {
-  currentUser = makeUser();
-});
+test("first", () => { currentUser = makeUser(); });
 test("second", () => expect(currentUser).toBeDefined());
 ```
 

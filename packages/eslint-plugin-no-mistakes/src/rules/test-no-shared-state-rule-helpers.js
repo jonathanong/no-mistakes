@@ -50,7 +50,7 @@ function calleeHasProperty(callee, name) {
   return prop === name || calleeHasProperty(callee.object, name);
 }
 
-function createRuleHelpers(context, testCalleeNames, namespaces) {
+function createRuleHelpers(context, testCalleeNames, namespaces, testAliases) {
   return {
     calleeHasProperty,
     isDescribeCall(node) {
@@ -64,6 +64,7 @@ function createRuleHelpers(context, testCalleeNames, namespaces) {
       const parent = callbackCall(node);
       return (
         parent &&
+        !testAliases.isShadowed(parent.callee) &&
         (setupCallbackKind(parent, testCalleeNames, namespaces) ||
           isTestCall(parent, testCalleeNames, namespaces))
       );
