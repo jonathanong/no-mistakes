@@ -1,0 +1,33 @@
+version: 2
+effort: max
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: ['src/**/*.ts']
+      sqlInclude: []
+      importSpecifier: '@db/a'
+      executorNames: [query]
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      include: ['src/**/*.ts']
+      sqlInclude: []
+      importSpecifier: '@db/a'
+      executorNames: [query]
+      bannedShapes: [literal-limit]
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: ['src/**/*.ts']
+      sqlInclude: []
+      importSpecifier: '@db/b'
+      executorNames: [query]
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      include: ['src/**/*.ts']
+      sqlInclude: []
+      importSpecifier: '@db/b'
+      executorNames: [query]
+      bannedShapes: [literal-limit]

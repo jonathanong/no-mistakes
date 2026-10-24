@@ -8,6 +8,7 @@ use std::{
     sync::Arc,
 };
 
+mod embedded;
 mod sql;
 
 #[derive(Clone, Debug)]
@@ -46,49 +47,7 @@ pub(crate) fn prepare(
         sql::collect(root, files, sources, plan, &mut out);
     }
     if plan.postgres_dml || plan.postgres_fragments || plan.postgres_variants {
-        for path in files
-            .iter()
-            .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
-        {
-            for profile in &plan.embedded_sql_options {
-                let file = facts.embedded_sql(path, profile);
-                if plan.postgres_fragments {
-                    let entry = file
-                        .as_ref()
-                        .map(|file| Arc::new(fragments::collect(file)))
-                        .map_err(|error| {
-                            Arc::new(PreparationError {
-                                message: Arc::from(format!(
-                                    "failed to collect PostgreSQL facts: {error}"
-                                )),
-                                source_kind: None,
-                            })
-                        });
-                    out.fragments.insert((path.clone(), profile.clone()), entry);
-                }
-                if !plan.postgres_dml && !plan.postgres_variants {
-                    continue;
-                }
-                let entry = file
-                    .map(|file| {
-                        Arc::new(super::collect::dml::embedded_call_facts_with_demand(
-                            file,
-                            plan.postgres_bounds,
-                            !plan.postgres_dml,
-                            demand,
-                        ))
-                    })
-                    .map_err(|error| {
-                        Arc::new(PreparationError {
-                            message: Arc::from(format!(
-                                "failed to collect PostgreSQL facts: {error}"
-                            )),
-                            source_kind: None,
-                        })
-                    });
-                out.embedded.insert((path.clone(), profile.clone()), entry);
-            }
-        }
+        embedded::collect(root, files, plan, facts, demand, &mut out);
     }
     out
 }

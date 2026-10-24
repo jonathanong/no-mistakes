@@ -10,7 +10,16 @@ fn trace_rule_records_only_verbose_observers() {
         Arc::new(FileInventory::from_paths(&[])),
         Some(verbose.clone()),
     );
-    assert_eq!(trace_rule(&sources, "special", || 42), 42);
+    assert_eq!(
+        trace_rule(&sources, "special", || {
+            let current = crate::diagnostics::current().expect("rule observer must be installed");
+            assert!(Arc::ptr_eq(&current, &verbose));
+            current.increment("test.rule.work", 1);
+            42
+        }),
+        42
+    );
+    assert_eq!(verbose.snapshot().work["test.rule.work"], 1);
     let timings = verbose.snapshot().timings;
     assert_eq!(timings.len(), 1);
     assert_eq!(timings[0].label, "rules.special");

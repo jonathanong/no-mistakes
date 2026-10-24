@@ -192,11 +192,15 @@ pub(super) fn trace_rule<T>(
     rule_id: &str,
     run: impl FnOnce() -> T,
 ) -> T {
-    timing::trace_rule(
-        sources.observer().map(|observer| observer.as_ref()),
-        || format!("rules.{rule_id}"),
-        run,
-    )
+    // Rayon rule tasks must install the source owner's observer before nested
+    // application workers capture it for their own work counters and spans.
+    crate::diagnostics::with_observer(sources.observer().cloned(), || {
+        timing::trace_rule(
+            sources.observer().map(|observer| observer.as_ref()),
+            || format!("rules.{rule_id}"),
+            run,
+        )
+    })
 }
 
 #[cfg(test)]
