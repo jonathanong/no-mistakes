@@ -21,7 +21,13 @@ fn dynamic_bases_follow_policy_without_guessing_error_ancestry() {
             .filter(|finding| finding["target"] != "unanalyzable")
             .map(|finding| finding["target"].as_str().unwrap())
             .collect();
-        assert_eq!(definite, ["DefinitelyDead"], "{policy}: {result}");
+        // The value import proves this same package declaration is analyzable;
+        // the one-line type-only import must still remain uncertain.
+        assert_eq!(
+            definite,
+            ["DefinitelyDead", "RuntimeError"],
+            "{policy}: {result}"
+        );
         let uncertain: Vec<_> = rules
             .iter()
             .chain(advisories)
@@ -30,6 +36,7 @@ fn dynamic_bases_follow_policy_without_guessing_error_ancestry() {
         let names = [
             "MixedError",
             "MixedBase",
+            "default",
             "ExpressionBase",
             "ComputedBase",
             "StaticChild",
@@ -59,12 +66,12 @@ fn dynamic_bases_follow_policy_without_guessing_error_ancestry() {
         }
         assert_eq!(
             rules.len(),
-            if policy == "report" { 8 } else { 1 },
+            if policy == "report" { 10 } else { 2 },
             "{result}"
         );
         assert_eq!(
             advisories.len(),
-            if policy == "advise" { 7 } else { 0 },
+            if policy == "advise" { 8 } else { 0 },
             "{result}"
         );
         assert_eq!(
@@ -102,6 +109,10 @@ fn dynamic_ancestry_is_additive_without_synthetic_source_calls() {
     let without = build(false, true);
     assert_eq!(with.resolved_call_sites(), without.resolved_call_sites());
     assert!(without.class_declarations().is_empty());
+    assert!(with
+        .class_declarations()
+        .iter()
+        .all(|class| class.scope != "Expression"));
     let mixed = with
         .class_declarations()
         .iter()

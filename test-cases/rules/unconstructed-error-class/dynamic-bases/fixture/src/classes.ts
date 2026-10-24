@@ -19,3 +19,5 @@ export class Suppressed extends mixin(Error) {}
 export namespace Errors { export class Dynamic extends mixin(Error) {} }
 // Dynamic class expressions remain outside declaration ancestry analysis.
 export const Expression = class extends mixin(Error) {};
+// A statically named non-Error base remains known and is not reported.
+export class KnownPlain extends Base {}

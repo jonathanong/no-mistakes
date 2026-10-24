@@ -447,6 +447,9 @@ class.
   Error constructor. Rewrite the base as a statically named class or analyzable
   import. Known construction or subclassing still satisfies such a class.
   Class expressions are not tracked.
+- A type-only imported base stays unknown even when its package declaration
+  extends `Error`. Use a value import when the base is a runtime constructor;
+  type declarations alone do not prove that runtime binding.
 - A dead subclass still satisfies its base. The check converges over repeated
   runs as you delete dead classes.
 - Only exported classes are reported. A non-exported class that nothing uses is

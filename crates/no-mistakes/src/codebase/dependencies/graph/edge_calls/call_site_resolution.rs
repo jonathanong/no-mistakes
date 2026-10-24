@@ -148,8 +148,8 @@ impl CallSiteResolution<'_, '_> {
             .collect()
     }
 
-    /// The statically named `extends` base of every class in `file`, resolved
-    /// like a call target. The base's synthetic construct record is not a
+    /// Declared `extends` bases, resolved like call targets. A dynamic base
+    /// retains an unresolved declaration, without an edge. The synthetic record is not a
     /// source call, so it becomes an `Extends` edge and a class declaration
     /// instead of a `Call` edge and a call site.
     fn class_bases(&self, file: &TsFileFacts) -> (Vec<Edge>, Vec<ClassDeclaration>) {

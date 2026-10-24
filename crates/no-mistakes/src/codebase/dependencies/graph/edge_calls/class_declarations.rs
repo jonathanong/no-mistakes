@@ -1,5 +1,5 @@
-/// A class ancestry declaration. Source classes name a static `extends` base;
-/// demanded ambient declarations may retain an unresolved base. The base is the
+/// A class ancestry declaration. An unresolved or dynamic `extends` base keeps
+/// the declaration without inventing a target. A resolved base is the
 /// [`EdgeKind::Extends`] edge leaving [`ClassDeclaration::node`]; this record
 /// carries what an edge cannot: where the class is declared, whether it is
 /// exported, ambient or a namespace member, and a base that names a global
