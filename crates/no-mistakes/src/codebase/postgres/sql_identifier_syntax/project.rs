@@ -13,7 +13,10 @@ pub(crate) fn collect(
         .iter()
         .map(|profile| {
             let mut selection = Selection::new(profile, module);
-            selection.typed = typed::collect(program, module, profile);
+            let (typed, unsupported) =
+                typed::collect(program, module, profile, &selection.unsupported);
+            selection.typed = typed;
+            selection.unsupported.extend(unsupported);
             selection
         })
         .collect::<Vec<_>>();

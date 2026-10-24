@@ -19,6 +19,20 @@ a configured `importSpecifier`, plus relative imports that resolve into that
 package (see the
 [migration notes](../migrations/explicit-postgres-executors.md#scoped-executors)). With neither option set, no executor calls are collected.
 
+At low effort, parameters annotated directly with a configured imported executor
+type support direct calls and `.query` calls, including optional calls and
+bindings destructured from an inline object parameter type. Their SQL uses the
+same literal/one-local-constant contract as named executors. Type annotations,
+type aliases, and `typeof` type queries are erased uses and never create SQL
+findings. Dynamic or unsupported SQL is reported at its executor call; passing
+a configured executor as a runtime value remains an unknown escape at that use.
+For the SQL-structure low rules, indirect annotations (such as local type aliases
+or interfaces derived from a configured type, intersections, and array/rest or
+nested binding patterns) retain unknown runtime uses;
+they do not prove a literal call safe. The annotation rule retains its existing
+receiver scope and independently checks the visible leading comment at each
+execution call. See [low-effort annotation](../postgres-query-annotation/low-effort.md).
+
 An uninitialized `let` annotated with a declared executor type can also be used
 inside the block containing its single direct `=` assignment. This proves the
 calls inside the `try`:

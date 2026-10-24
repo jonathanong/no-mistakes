@@ -31,6 +31,9 @@ Typed parameters support direct calls and `.query` calls, including renamed
 bindings destructured from an inline object parameter type. The type must be a
 reference to the configured named import; a same-named local type is insufficient.
 These literal calls remain definite findings with `unanalyzable: ignore`.
+Erased type references never create a function-declaration finding. Clear literal
+calls stay clear under the default failure policy; dynamic SQL is reported at
+its execution call, while a runtime executor escape is reported at that use.
 
 Both efforts report those OFFSET clauses at their physical SQL locations.
 Low does not evaluate JavaScript helpers or builders. Interpolation, SQL tags,

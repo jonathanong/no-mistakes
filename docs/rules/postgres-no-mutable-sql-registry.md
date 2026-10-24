@@ -137,7 +137,7 @@ Low effort never emits a cross-file write finding; it only emits unanalyzable di
 
 `effort: low` does not request the call graph, helper evaluator, or
 mutation/provenance analysis. Other checks can still require that shared
-preparation. At a directly imported named executor, it accepts SQL written as a
+preparation. At a directly imported named executor or a proven typed parameter, it accepts SQL written as a
 literal, or through one local `const` initialized with that literal. Direct templates with interpolations only
 in SQL value positions also qualify: their parsed relation names contain no
 interpolation. These calls cannot interpolate a registry into a relation:
@@ -155,9 +155,10 @@ unanalyzable at low effort, including when the registry uses `as const` or
 a freeze does not establish the whole imported object's provenance or nested
 immutability. Helpers, aliases, and other indirect SQL also require maximum
 effort. Rewrite SQL as a literal at the executor call or one local literal
-`const`, or select `max` to inspect the cross-file registry. Unsupported executor
-factories and type-based receivers are diagnosed at their configured binding
-reference. A one-hop local executor alias (`const run = query`) remains
+`const`, or select `max` to inspect the cross-file registry. Typed parameter calls use the same SQL contract as named executors; erased type
+references create no findings. Unsupported executor factories and runtime
+executor escapes are diagnosed at their configured binding reference. See
+[executor bindings](../postgres-facts/executor-bindings.md). A one-hop local executor alias (`const run = query`) remains
 unanalyzable. A visible alias invocation is diagnosed at the call line, so a
 `no-mistakes-disable-next-line` suppression goes immediately before that call.
 Other runtime escapes are diagnosed at their use.
@@ -174,7 +175,7 @@ check is required because unsupported inputs are explicitly classified.
 
 Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
 
-- At low: a registry relation such as ``query(`SELECT id FROM ${tables.users}`)``, helpers, aliases, namespace executor calls, and unsupported executor factories or type receivers. At max the rule abstains on routes it cannot tie to one canonical producer (dynamic or conditional `require`, ambiguous re-exports) rather than reporting them.
+- At low: a registry relation such as ``query(`SELECT id FROM ${tables.users}`)``, helpers, aliases, namespace executor calls, and unsupported executor factories or unproven type receivers. At max the rule abstains on routes it cannot tie to one canonical producer (dynamic or conditional `require`, ambiguous re-exports) rather than reporting them.
   - `report` (default): fails as a finding at the unsupported use.
   - `advise`: a non-failing advisory.
   - `ignore`: omitted.

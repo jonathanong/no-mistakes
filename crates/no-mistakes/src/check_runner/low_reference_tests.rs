@@ -51,3 +51,82 @@ fn literal_scalar_reads_stay_decidable_and_tagged_assignment_results_cannot_esca
         assert!(result.warnings.is_empty(), "{:?}", result.warnings);
     }
 }
+
+#[test]
+fn typed_executor_low_adopters_ignore_erased_uses_and_keep_statement_locations() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-offset/fixture/low-typed-executors");
+    let source = std::fs::read_to_string(root.join("src/query.ts")).unwrap();
+    let rules = [
+        "postgres-no-offset",
+        "postgres-require-query-annotation",
+        "postgres-no-mutable-sql-registry",
+        "postgres-no-unbounded-sql-identifier",
+        "postgres-no-transformed-uuid-predicates",
+    ];
+    for mode in ["default", "advise", "ignore"] {
+        let result = super::run_all_with_sql_verdicts(
+            root.clone(),
+            Some(root.join(format!(".no-mistakes-{mode}.yml"))),
+            None,
+            false,
+            false,
+            false,
+        )
+        .unwrap();
+        assert!(result.warnings.is_empty(), "{:?}", result.warnings);
+        for rule in rules {
+            let mut unknown = marked(&source, "// UNKNOWN");
+            // Annotation uses its own embedded projection: a visible head is
+            // enough, and executor escapes are outside that rule's obligation.
+            if rule != "postgres-require-query-annotation" {
+                for marker in [
+                    "// OUTSIDE",
+                    "// ESCAPE",
+                    "// RUNTIME_TYPE",
+                    "// FACTORY",
+                    "// UNSUPPORTED_TYPE",
+                ] {
+                    unknown.extend(marked(&source, marker));
+                }
+            }
+            unknown.sort_unstable();
+            let violations = if rule == "postgres-no-offset" {
+                marked(&source, "// OFFSET")
+            } else {
+                Vec::new()
+            };
+            let mut expected = violations;
+            if mode == "default" {
+                expected.extend(&unknown);
+            }
+            expected.sort_unstable();
+            let actual = lines(
+                &result
+                    .rules
+                    .iter()
+                    .filter(|row| row.rule == rule)
+                    .cloned()
+                    .collect::<Vec<_>>(),
+            );
+            assert_eq!(actual, expected, "{mode} {rule}: {:?}", result.rules);
+            let advice = lines(
+                &result
+                    .advisories
+                    .iter()
+                    .filter(|row| row.rule == rule)
+                    .cloned()
+                    .collect::<Vec<_>>(),
+            );
+            assert_eq!(
+                advice,
+                if mode == "advise" {
+                    unknown
+                } else {
+                    Vec::new()
+                },
+                "{mode} {rule}"
+            );
+        }
+    }
+}

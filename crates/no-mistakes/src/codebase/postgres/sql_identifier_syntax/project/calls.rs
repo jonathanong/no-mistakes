@@ -146,7 +146,9 @@ fn append_escapes(
             {
                 continue;
             }
-            if direct.contains(&at) || (!usage.runtime && !unsupported.contains(&binding.id)) {
+            // Type annotations and type queries are erased even when their
+            // imported binding also denotes an unsupported runtime executor.
+            if direct.contains(&at) || !usage.runtime {
                 continue;
             }
             if syntax.alias_initializers.get(&at) == Some(&binding.id) {

@@ -44,13 +44,16 @@ call-graph construction, and cross-file provenance for this rule. It reads
 the shared parsed program and semantic binding facts instead.
 
 Low accepts a literal SQL string or untagged template directly at a configured
-named imported executor, or through one same-file lexical `const` initialized with
+named imported executor or proven typed parameter, or through one same-file lexical `const` initialized with
 that syntax. SQL parsing distinguishes relation interpolation from bound values.
 Direct `process.env.KEY` relation inputs whose `process` binding is not shadowed remain proven violations;
 a template such as `SELECT * FROM public.users WHERE id = ${id}` stays clear.
 
 Helpers, tags, alias chains, imported SQL values, computed executor selections,
-factory/type executors, and CommonJS loaders are unanalyzable at low.
+factory executors, unproven type receivers, and CommonJS loaders are unanalyzable at low.
+Erased type references create no findings. Supported typed parameter calls share
+the named executor contract; unsupported SQL and runtime escapes are diagnosed
+at their own use. See [executor bindings](../postgres-facts/executor-bindings.md).
 A single local `const run = query` executor alias also remains unanalyzable;
 its diagnostic uses the invocation line so a disable-next-line comment above
 `run(sql)` suppresses that call.
@@ -84,7 +87,7 @@ suppression comments below apply to low findings and advisories too.
 
 Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
 
-- At low: helpers, tags, alias chains, imported SQL values, computed executor selections, factory or type executors, CommonJS loaders, and `withTransaction` callbacks, for example `query(buildStatement())`. At max the rule abstains on a runtime-computed environment key (`process.env[key]`) and on unresolved imports or cyclic aliases; see Abstains.
+- At low: helpers, tags, alias chains, imported SQL values, computed executor selections, factory executors or unproven type receivers, CommonJS loaders, and `withTransaction` callbacks, for example `query(buildStatement())`. At max the rule abstains on a runtime-computed environment key (`process.env[key]`) and on unresolved imports or cyclic aliases; see Abstains.
   - `report` (default): fails as a finding.
   - `advise`: a non-failing advisory.
   - `ignore`: omitted.

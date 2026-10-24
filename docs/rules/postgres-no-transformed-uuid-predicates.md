@@ -82,7 +82,10 @@ uncertainty; use a file directive when deliberately suppressing that case.
 
 At `effort: low`, the rule analyzes supported literal SQL directly in SQL files
 and executor calls. Direct strings, interpolation-free templates, and one local
-constant are supported; JavaScript escapes and other construction follow the
+constant are supported at named executors and proven typed parameters. Erased
+type references create no findings; dynamic SQL and runtime executor escapes
+are diagnosed at their own use. See [executor bindings](../postgres-facts/executor-bindings.md).
+JavaScript escapes and other construction follow the
 unanalyzable policy. At `effort: max`, it also analyzes supported prepared SQL
 builders and helper-returned statements. Unanalyzable or dynamic query text
 follows the configured `unanalyzableSql` policy.
