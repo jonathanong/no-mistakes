@@ -46,9 +46,8 @@ fn cursor(tail: &[&Token]) -> bool {
         || args.len() >= 3
             && matches!(args.first(), Some(Token::LParen))
             && matches!(args.last(), Some(Token::RParen))
-            && args[1..args.len() - 1]
-                .split(|token| matches!(token, Token::Comma))
-                .all(matches);
+            && assignment::comma_parts(&args[1..args.len() - 1])
+                .is_some_and(|parts| parts.into_iter().all(matches));
     args_valid && commands::query(&tail[start + 1..])
 }
 
@@ -60,11 +59,16 @@ fn type_shape(code: &[&Token]) -> bool {
     if code.len() >= 2 && word(code[code.len() - 2], "NOT") && word(code[code.len() - 1], "NULL") {
         code = &code[..code.len() - 2];
     }
-    if code.len() >= 2 && word(code[code.len() - 2], "COLLATE") {
-        if !matches!(code.last(), Some(Token::Word(_))) {
+    if let Some(collate) = code.iter().position(|token| word(token, "COLLATE")) {
+        let name = &code[collate + 1..];
+        if name.is_empty()
+            || !name
+                .split(|token| matches!(token, Token::Period))
+                .all(|part| part.len() == 1 && matches!(part[0], Token::Word(_)))
+        {
             return false;
         }
-        code = &code[..code.len() - 2];
+        code = &code[..collate];
     }
     if code.is_empty() {
         return false;

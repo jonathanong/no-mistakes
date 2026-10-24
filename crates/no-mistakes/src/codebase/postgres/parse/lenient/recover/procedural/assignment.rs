@@ -45,4 +45,26 @@ pub(super) fn operator(code: &[&Token]) -> Option<usize> {
     }
     None
 }
+
+pub(super) fn comma_parts<'a>(code: &'a [&'a Token]) -> Option<Vec<&'a [&'a Token]>> {
+    let mut parts = Vec::new();
+    let mut start = 0;
+    let mut depth = 0usize;
+    for (at, token) in code.iter().enumerate() {
+        match token {
+            Token::LParen | Token::LBracket => depth += 1,
+            Token::RParen | Token::RBracket => depth = depth.checked_sub(1)?,
+            Token::Comma if depth == 0 => {
+                parts.push(&code[start..at]);
+                start = at + 1;
+            }
+            _ => {}
+        }
+    }
+    if depth != 0 {
+        return None;
+    }
+    parts.push(&code[start..]);
+    Some(parts)
+}
 use sqlparser::ast::Expr;

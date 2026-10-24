@@ -3,6 +3,8 @@ use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
 use sqlparser::tokenizer::Token;
+mod loops;
+pub(super) use loops::{for_header, foreach_header};
 
 pub(super) fn matches(code: &[&Token]) -> bool {
     let Some(first) = code.first() else {
@@ -33,43 +35,6 @@ pub(super) fn query(code: &[&Token]) -> bool {
         && parser.peek_token().token == Token::EOF
 }
 
-pub(super) fn for_header(code: &[&Token]) -> bool {
-    let Some(into) = code.iter().position(|token| word(token, "IN")) else {
-        return false;
-    };
-    if into < 2 || !matches!(code[1], Token::Word(_)) {
-        return false;
-    }
-    let mut source = &code[into + 1..];
-    if source.first().is_some_and(|token| word(token, "REVERSE")) {
-        source = &source[1..];
-    }
-    if query(source) {
-        return true;
-    }
-    // sqlparser lexes the compact PL/pgSQL range `1..0` as `1.` and `.0`.
-    if let [Token::Number(left, _), Token::Number(right, _)] = source {
-        if left.ends_with('.') && right.starts_with('.') {
-            return true;
-        }
-    }
-    let Some(range) = source
-        .windows(2)
-        .position(|pair| *pair[0] == Token::Period && *pair[1] == Token::Period)
-    else {
-        return false;
-    };
-    assignment::expression(&source[..range]) && assignment::expression(&source[range + 2..])
-}
-
-pub(super) fn foreach_header(code: &[&Token]) -> bool {
-    code.len() >= 5
-        && matches!(code[1], Token::Word(_))
-        && word(code[2], "IN")
-        && word(code[3], "ARRAY")
-        && assignment::expression(&code[4..])
-}
-
 fn diagnostics(code: &[&Token]) -> bool {
     let mut at = 1;
     if code
@@ -83,14 +48,14 @@ fn diagnostics(code: &[&Token]) -> bool {
     }
     let parts = &code[at + 1..];
     !parts.is_empty()
-        && parts
-            .split(|token| matches!(token, Token::Comma))
-            .all(|part| {
+        && assignment::comma_parts(parts).is_some_and(|parts| {
+            parts.into_iter().all(|part| {
                 assignment::matches(part)
                     && assignment::operator(part).is_some_and(|at| {
                         part.len() == at + 2 && matches!(part[at + 1], Token::Word(_))
                     })
             })
+        })
 }
 
 fn open(code: &[&Token]) -> bool {
@@ -103,15 +68,23 @@ fn open(code: &[&Token]) -> bool {
     if code.len() == 1 {
         return true;
     }
-    let tail = &code[1..];
+    let mut tail = &code[1..];
     if tail.len() >= 2
         && matches!(tail.first(), Some(Token::LParen))
         && matches!(tail.last(), Some(Token::RParen))
     {
         return tail.len() == 2
-            || tail[1..tail.len() - 1]
-                .split(|token| matches!(token, Token::Comma))
-                .all(assignment::expression);
+            || assignment::comma_parts(&tail[1..tail.len() - 1])
+                .is_some_and(|parts| parts.into_iter().all(assignment::expression));
+    }
+    if tail.first().is_some_and(|token| word(token, "NO")) {
+        if !tail.get(1).is_some_and(|token| word(token, "SCROLL")) {
+            return false;
+        }
+        tail = &tail[1..];
+    }
+    if tail.first().is_some_and(|token| word(token, "SCROLL")) {
+        tail = &tail[1..];
     }
     if tail.first().is_some_and(|token| word(token, "FOR")) {
         return query(&tail[1..]) || static_execute(&tail[1..]);
@@ -120,12 +93,23 @@ fn open(code: &[&Token]) -> bool {
 }
 
 fn static_execute(code: &[&Token]) -> bool {
-    code.len() == 2
-        && code.first().is_some_and(|token| word(token, "EXECUTE"))
-        && matches!(
+    if !code.first().is_some_and(|token| word(token, "EXECUTE"))
+        || !matches!(
             code.get(1),
-            Some(Token::SingleQuotedString(_) | Token::DollarQuotedString(_))
+            Some(
+                Token::SingleQuotedString(_)
+                    | Token::DollarQuotedString(_)
+                    | Token::EscapedStringLiteral(_)
+                    | Token::UnicodeStringLiteral(_)
+            )
         )
+    {
+        return false;
+    }
+    code.len() == 2
+        || code.get(2).is_some_and(|token| word(token, "USING"))
+            && assignment::comma_parts(&code[3..])
+                .is_some_and(|parts| parts.into_iter().all(assignment::expression))
 }
 
 fn fetch(code: &[&Token]) -> bool {
@@ -134,7 +118,9 @@ fn fetch(code: &[&Token]) -> bool {
     };
     let source = &code[..into];
     let target = &code[into + 1..];
-    cursor_source(source) && assignment::target(target)
+    cursor_source(source)
+        && assignment::comma_parts(target)
+            .is_some_and(|parts| parts.into_iter().all(assignment::target))
 }
 
 fn cursor_move(code: &[&Token]) -> bool {
@@ -160,7 +146,7 @@ fn cursor_source(code: &[&Token]) -> bool {
             && ["NEXT", "PRIOR", "FIRST", "LAST", "ALL"]
                 .iter()
                 .any(|name| word(direction[0], name))
-        || direction.len() == 2
+        || direction.len() >= 2
             && ["ABSOLUTE", "RELATIVE", "FORWARD", "BACKWARD"]
                 .iter()
                 .any(|name| word(direction[0], name))
