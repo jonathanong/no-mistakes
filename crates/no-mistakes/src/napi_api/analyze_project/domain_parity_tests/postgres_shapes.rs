@@ -87,3 +87,21 @@ fn prepared_postgres_boolean_keys_and_returning_ctes_match_standalone() {
         assert_eq!(aggregate["reports"][0]["result"], standalone, "{config}");
     }
 }
+
+#[test]
+fn prepared_postgres_unique_index_shapes_match_standalone() {
+    let root = category_fixture("rules", "postgres-bounded-statements").join("unique-index-shapes");
+    let options = json!({"root": root, "config": ".no-mistakes.yml"});
+    let standalone = parse_json(
+        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    );
+    let aggregate = parse_json(
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(json!({
+            "root": root, "config": ".no-mistakes.yml", "reports": [{"type": "check"}]
+        })))
+        .unwrap(),
+    );
+    assert_eq!(standalone["rules"].as_array().unwrap().len(), 24);
+    assert_eq!(standalone["warnings"], json!([]));
+    assert_eq!(aggregate["reports"][0]["result"], standalone);
+}

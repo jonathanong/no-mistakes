@@ -29,4 +29,26 @@ impl SchemaCatalog {
         }
         SearchPathResolution::Temporary
     }
+    /// Whether explicit evidence proves an earlier search-path entry or pg_temp hides the
+    /// selected catalog relation. Unknown entries preserve the conservative catalog check.
+    pub(crate) fn hides_selected_relation(&self, earlier: &[String], name: &str) -> bool {
+        let bare = super::decoded_parts(name)
+            .last()
+            .cloned()
+            .unwrap_or_default();
+        for schema in earlier {
+            if schema == "$user" {
+                return false;
+            }
+            let Some(relations) = self.search_path_evidence.get(schema) else {
+                return false;
+            };
+            if let Some(relations) = relations {
+                if relations.contains(&bare) {
+                    return self.schema.as_deref() != Some(schema) || self.relation(name).is_none();
+                }
+            }
+        }
+        true
+    }
 }

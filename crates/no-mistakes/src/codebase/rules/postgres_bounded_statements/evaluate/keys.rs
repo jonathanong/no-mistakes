@@ -2,6 +2,7 @@
 use super::{qualified, reads_outer, Evaluation};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlPinSource};
 use crate::codebase::postgres::{RelationKind, SchemaCatalog};
+mod indexes;
 
 /// Keys, their required columns, and alternative source-item dependencies for each column.
 pub(super) type Keys = Vec<Vec<Vec<Vec<usize>>>>;
@@ -62,7 +63,8 @@ pub(super) fn prepare(
             }
         })
         .collect();
-    keys.into_iter()
+    let mut prepared: Keys = keys
+        .into_iter()
         .map(|key| {
             key.into_iter()
                 .map(|(visible, physical)| {
@@ -83,5 +85,7 @@ pub(super) fn prepare(
                 })
                 .collect()
         })
-        .collect()
+        .collect();
+    indexes::append(&mut prepared, item, table, name, &sources, catalog);
+    prepared
 }

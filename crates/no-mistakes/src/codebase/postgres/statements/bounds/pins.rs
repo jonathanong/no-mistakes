@@ -1,5 +1,8 @@
 mod array;
 mod correlated;
+mod equality;
+mod evidence;
+mod expression;
 mod resolver;
 mod source_merge;
 
@@ -12,6 +15,7 @@ use source_merge::merge;
 use sqlparser::ast::{BinaryOperator, Expr, Query};
 
 pub(super) use correlated::{projection_columns, Reads};
+pub(super) use evidence::collect as collect_evidence;
 pub(super) use resolver::Resolver;
 
 /// Collect the pins that the conjuncts of `expr` impose on the `restricted` items.
@@ -38,6 +42,7 @@ pub(super) fn extract(
                     item,
                     SqlBoundPin {
                         column,
+                        expression: None,
                         source,
                         null_safe,
                         reads,
@@ -60,8 +65,14 @@ pub(super) fn extract(
             left,
             op: BinaryOperator::Eq,
             right,
-        } => equate(left, right, false, resolver, &mut pin),
-        Expr::IsNotDistinctFrom(left, right) => equate(left, right, true, resolver, &mut pin),
+        } => {
+            equality::equate(left, right, false, resolver, &mut pin);
+            expression::equate(left, right, false, resolver, restricted, out);
+        }
+        Expr::IsNotDistinctFrom(left, right) => {
+            equality::equate(left, right, true, resolver, &mut pin);
+            expression::equate(left, right, true, resolver, restricted, out);
+        }
         Expr::InList {
             expr,
             list,
@@ -172,21 +183,5 @@ fn subquery_source(
         },
         reads: reads.bare,
         qualified_reads: reads.qualified,
-    }
-}
-
-/// Pin either side of `left = right` that is a column of one item to the other side.
-fn equate(
-    left: &Expr,
-    right: &Expr,
-    null_safe: bool,
-    resolver: &Resolver,
-    pin: &mut impl FnMut(&Expr, Option<Sourced>, bool),
-) {
-    if let Some((item, _)) = resolver.column(left) {
-        pin(left, resolver.source(right, item), null_safe);
-    }
-    if let Some((item, _)) = resolver.column(right) {
-        pin(right, resolver.source(left, item), null_safe);
     }
 }

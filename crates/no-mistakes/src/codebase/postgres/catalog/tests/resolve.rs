@@ -30,6 +30,7 @@ fn catalog() -> SchemaCatalog {
     tables.insert(
         "users".to_owned(),
         ArbiterTable {
+            bounded_indexes: Vec::new(),
             indexes: vec![
                 index("users_id_key", &["id"], true),
                 index("users_email_index", &["email"], true),
@@ -47,6 +48,7 @@ fn catalog() -> SchemaCatalog {
     tables.insert(
         "partial_users".to_owned(),
         ArbiterTable {
+            bounded_indexes: Vec::new(),
             indexes: vec![CanonicalIndex {
                 ordering_supported: true,
                 predicate: Some("is_live".to_owned()),

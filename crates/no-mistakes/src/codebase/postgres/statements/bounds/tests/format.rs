@@ -4,8 +4,9 @@ pub(super) fn item(item: &SqlBoundItem) -> String {
     let pins: Vec<String> = item
         .pins
         .iter()
-        // Catalog-resolved qualified reads remain deferred facts in these syntax-only snapshots.
-        .filter(|pin| pin.qualified_reads.is_empty())
+        // These syntax-only snapshots describe legacy column pins; expression-key evidence and
+        // catalog-resolved qualified reads are exercised by their own focused tests.
+        .filter(|pin| pin.qualified_reads.is_empty() && pin.expression.is_none())
         .map(|pin| {
             // `~=` is the null-safe `IS NOT DISTINCT FROM`.
             let operator = if pin.null_safe { "~=" } else { "=" };

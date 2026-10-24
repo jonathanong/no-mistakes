@@ -1,0 +1,437 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "partial_docs": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "slug": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "archived": {
+          "dataType": "boolean",
+          "nullable": false,
+          "ordinalPosition": 4
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "partial_docs_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX partial_docs_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        },
+        "partial_docs_active_slug_idx": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(active = true)",
+          "definition": "CREATE UNIQUE INDEX partial_docs_active_slug_idx",
+          "keys": [
+            {
+              "column": "slug",
+              "expression": "slug"
+            }
+          ]
+        }
+      }
+    },
+    "directories": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "email": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": false,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "directories_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX directories_pkey",
+          "keys": [
+            {
+              "column": "id",
+              "expression": "id"
+            }
+          ]
+        }
+      }
+    },
+    "normalized_emails": {
+      "relationKind": "table",
+      "columns": {
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "normalized_emails_lower_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX normalized_emails_lower_key",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(email)"
+            }
+          ]
+        }
+      }
+    },
+    "partial_emails": {
+      "relationKind": "table",
+      "columns": {
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "partial_emails_lower_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(email IS NOT NULL)",
+          "definition": "CREATE UNIQUE INDEX partial_emails_lower_key",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(email)"
+            }
+          ]
+        }
+      }
+    },
+    "partial_logins": {
+      "relationKind": "table",
+      "columns": {
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "partial_logins_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "(email IS NOT NULL)",
+          "definition": "CREATE UNIQUE INDEX partial_logins_email_key",
+          "keys": [
+            {
+              "column": "email",
+              "expression": "email"
+            }
+          ]
+        }
+      }
+    },
+    "nd_contacts": {
+      "relationKind": "table",
+      "columns": {
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        },
+        "label": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "nd_contacts_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX nd_contacts_email_key ON public.nd_contacts USING btree (email) NULLS NOT DISTINCT",
+          "keys": [
+            {
+              "column": "email",
+              "expression": "email"
+            }
+          ]
+        }
+      }
+    },
+    "plain_contacts": {
+      "relationKind": "table",
+      "columns": {
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "plain_contacts_email_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX plain_contacts_email_key ON public.plain_contacts USING btree (email)",
+          "keys": [
+            {
+              "column": "email",
+              "expression": "email"
+            }
+          ]
+        }
+      }
+    },
+    "community_members": {
+      "relationKind": "table",
+      "columns": {
+        "community_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "user_id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "removed_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": true,
+          "ordinalPosition": 3
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "community_members_active_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "removed_at IS NULL",
+          "definition": "CREATE UNIQUE INDEX community_members_active_key ON community_members (community_id, user_id) WHERE removed_at IS NULL",
+          "keys": [
+            {
+              "column": "community_id",
+              "expression": "community_id"
+            },
+            {
+              "column": "user_id",
+              "expression": "user_id"
+            }
+          ]
+        }
+      }
+    },
+    "partial_multi": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "slug": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "active": {
+          "dataType": "boolean",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "archived": {
+          "dataType": "boolean",
+          "nullable": false,
+          "ordinalPosition": 4
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      },
+      "indexes": {
+        "partial_multi_slug_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "((active = true) AND (archived = false))",
+          "definition": "CREATE UNIQUE INDEX partial_multi_slug_key ON partial_multi (slug) WHERE active = true AND archived = false",
+          "keys": [
+            {
+              "column": "slug",
+              "expression": "slug"
+            }
+          ]
+        }
+      }
+    },
+    "nd_emails": {
+      "relationKind": "table",
+      "columns": {
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "nd_emails_lower_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX nd_emails_lower_key ON nd_emails (lower(email)) NULLS NOT DISTINCT",
+          "keys": [
+            {
+              "column": null,
+              "expression": "lower(email)"
+            }
+          ]
+        }
+      }
+    },
+    "partial_expr_nullguard": {
+      "relationKind": "table",
+      "columns": {
+        "email": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 1
+        }
+      },
+      "primaryKey": null,
+      "indexes": {
+        "partial_expr_nullguard_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "live": true,
+          "immediate": true,
+          "predicate": "lower(email) IS NOT NULL",
+          "definition": "CREATE UNIQUE INDEX partial_expr_nullguard_key ON partial_expr_nullguard (email) WHERE lower(email) IS NOT NULL",
+          "keys": [
+            {
+              "column": "email",
+              "expression": "email"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
