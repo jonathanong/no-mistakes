@@ -1,16 +1,17 @@
 <!-- cspell:ignore Clippy -->
 # PostgreSQL recovery diagnostics and unknown calls
 
-Baseline: `00d788489`, Rust 1.99.1. The baseline CLI was built and frozen before
+Baseline: `00d788489`, Rust 1.99.1. Final candidate rebased onto `24dc5e9d4`. The baseline CLI was built and frozen before
 implementation. Baseline and candidate ran `check --root <saved fixture>
 --config <name> --format json` against identical saved inputs. The frozen
 executables have distinct SHA-256 hashes:
 
 - Baseline: `a39870ab344c278df4effb20448429837277cdea284411c00bb9849ced3daee5`
-- Candidate: `31237563718680bf4b5e8664da7f149865cb522add5481ffcd3ae38e2abb41c7`
+- Candidate: `63a6c02667ab9a5f354b1dc285bf56dd163c9b5496dc2858c4e207e790969388`
 
 All 104 configurations were compared by stdout, stderr and exit status.
-89 are byte-identical; 15 change intentionally.
+89 are byte-identical; 15 change intentionally. Repeating the comparison after
+the rebase retained all 104 prior candidate reports, stderr and statuses.
 [The comparison](check-comparison.json) retains counts, statuses and hashes.
 
 | Saved configuration | Before | After |
@@ -42,10 +43,15 @@ and generated-write scan retain their existing recorded-read-error tolerance.
 Validation:
 
 - The locked all-features workspace library, binary and integration build passes.
-- 3,754 PostgreSQL, forbidden-call, project-analysis, runner and filesystem tests
-  pass, with two existing ignored tests. Four additional task/policy tests pass.
-- All 433 PostgreSQL CLI tests and 198 general rule CLI tests pass.
-- The same 3,754 tests pass with LLVM coverage. New marker extraction, prepared
+- 3,798 PostgreSQL, forbidden-call, project-analysis, runner, filesystem and
+  task/policy tests pass, with two existing ignored tests.
+- All 437 PostgreSQL CLI tests and 198 general rule CLI tests pass.
+- All 574 compiled Node API tests across the same 21 files as Linux CI pass,
+  including the new CJS/ESM/project policy cases and corrected invalid-neighbor
+  assertion. The definite expression-arbiter violation still reports separately.
+- Coverage was measured at original head `749f16152` before the rebase:
+  3,754 tests pass with LLVM coverage. The PR's Rust patches are unchanged by
+  the rebase; final combined-source checks above were repeated. Marker extraction, prepared
   projection and dynamic merge have 100% line coverage; shared routing has 98.21%.
   [The focused report](focused-coverage.json) includes existing file totals too.
   No filenames were excluded.
