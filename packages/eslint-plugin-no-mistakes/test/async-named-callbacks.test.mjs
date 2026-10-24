@@ -46,6 +46,25 @@ it("keeps named callback returns unproven without an awaiting consumer", () => {
   );
 });
 
+it("distinguishes callback values from expressions built from callbacks", () => {
+  const valueUses = readFileSync(
+    resolve(
+      __dirname,
+      "../../../test-cases/eslint-plugin/async-call-disposition/fixture/named-callback-value-uses.ts",
+    ),
+    "utf8",
+  );
+  const result = lint(
+    valueUses,
+    { "no-mistakes/async-call-disposition": ["error", { targets, awaitingConsumers }] },
+    "value-uses.ts",
+  );
+  assert.deepEqual(
+    result.map(({ line, messageId }) => [line, messageId]),
+    [24, 26, 28, 30, 32, 35].map((line) => [line, "disposition"]),
+  );
+});
+
 it("preserves a CommonJS top-level return as an ordinary return", () => {
   const commonjs = readFileSync(
     resolve(

@@ -3,6 +3,7 @@
 const { unwrapTransparentParent } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { memberPropertyName } = require("./async-targets");
+const valuePreservingAssignments = new Set(["=", "&&=", "||=", "??="]);
 
 function namedBinding(fn, context) {
   const value = unwrapTransparentParent(fn);
@@ -56,6 +57,25 @@ function argumentUse(id, result) {
   while (value.parent) {
     const parent = value.parent;
     if (parent.type === "MemberExpression") return null;
+    if (
+      parent.type === "UnaryExpression" ||
+      parent.type === "BinaryExpression" ||
+      parent.type === "UpdateExpression"
+    )
+      return null;
+    if (parent.type === "TemplateLiteral") {
+      // Tags receive interpolation values; ordinary templates stringify them.
+      return parent.parent?.type === "TaggedTemplateExpression" && parent.parent.quasi === parent
+        ? { value, direct: false }
+        : null;
+    }
+    if (parent.type === "ConditionalExpression" && parent.test === value) return null;
+    if (parent.type === "SequenceExpression" && parent.expressions.at(-1) !== value) return null;
+    if (
+      parent.type === "AssignmentExpression" &&
+      (parent.right !== value || !valuePreservingAssignments.has(parent.operator))
+    )
+      return null;
     if (parent.type === "CallExpression") {
       if (parent.callee === value) return null;
       return { value, direct: value === unwrapTransparentParent(id) };

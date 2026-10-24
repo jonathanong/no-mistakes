@@ -244,7 +244,11 @@ unchanged `const`, and function declarations with no reassignment are checked.
 Every call argument use of a named callback must be a configured awaiting consumer
 or a recognized mock that passes through its return. A mixed known and unknown
 consumer use remains reported. Ordinary functions that are not passed as call
-arguments still dispose a promise by returning it. Matching follows import
+arguments still dispose a promise by returning it. A reference used only in a
+`typeof`, comparison, update, untagged template literal, conditional test, or
+earlier comma operand does not pass the callback. Callback-valued conditional
+and logical branches, final comma operands, assignment results, and tagged
+template interpolations remain unproven argument uses. Matching follows import
 identity, including stable aliases and logical `.call` argument positions;
 shadowed or reassigned callees do not qualify. A spread argument before the
 callback prevents proving its position. A `.bind` result passed to a consumer
