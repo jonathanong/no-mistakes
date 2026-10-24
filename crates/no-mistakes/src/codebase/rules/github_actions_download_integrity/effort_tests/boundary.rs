@@ -62,3 +62,45 @@ fn command_alias_diagnostics_name_the_direct_call_rewrite() {
         .contains("downloader command is unanalyzable at effort low")
         && row.message.contains("directly")));
 }
+
+#[test]
+fn trusted_command_alias_adds_uncertainty_without_changing_definite_findings() {
+    let workflow = ".github/workflows/trusted-alias-subset.yml";
+    let source = std::fs::read_to_string(fixture_root("effort-argv").join(workflow)).unwrap();
+    let max = runs::check_source(workflow, &source, &hosts(), &[]);
+    let low = runs::check_source_low(workflow, &source, &hosts(), &[], Unanalyzable::Report);
+    assert_eq!(max.len(), 1, "{max:?}");
+    assert_eq!(low.findings.len(), 2, "{:?}", low.findings);
+    assert!(low.advisories.is_empty());
+    let definite: Vec<_> = low
+        .findings
+        .iter()
+        .filter(|finding| !finding.message.contains("unanalyzable at effort low"))
+        .cloned()
+        .collect();
+    assert_eq!(definite, max);
+    let shapes: Vec<_> = low
+        .findings
+        .iter()
+        .filter(|finding| finding.message.contains("unanalyzable at effort low"))
+        .collect();
+    assert_eq!(shapes.len(), 1);
+    assert!(shapes[0].message.contains("step 2 downloader command"));
+    assert!(shapes[0].message.contains("call `curl` directly"));
+    assert!(shapes[0]
+        .message
+        .contains("literal HTTP(S) URL arguments instead of a command alias"));
+    assert!(max
+        .iter()
+        .all(|finding| !finding.message.contains("step 2 ")));
+
+    // The URL is literal and trusted; only the command alias makes low uncertain.
+    let parsed: serde_yaml::Value = serde_yaml::from_str(&source).unwrap();
+    let script = parsed["jobs"]["verify"]["steps"][1]["run"]
+        .as_str()
+        .unwrap();
+    let raw = judge::download_hits_low(script, &[]);
+    assert_eq!(raw.len(), 1);
+    assert!(raw[0].indirect_command && raw[0].unanalyzable);
+    assert_eq!(raw[0].url, "https://api.github.com/repos/example/project");
+}
