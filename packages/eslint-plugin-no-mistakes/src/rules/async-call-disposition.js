@@ -18,15 +18,15 @@ const { dispositionOptionsSchema } = require("./async-schema");
 const { createTargetMatcher } = require("./async-targets");
 const { createAwaitingConsumers } = require("./async-disposition-consumers");
 
-function isDisposed(node, context, returnsThroughConsumer, seen = new Set()) {
+function isDisposed(node, context, consumers, seen = new Set()) {
   if (seen.has(node)) return false;
   seen.add(node);
   const observed = observedExpression(node, context);
-  const disposed = (value) => isDisposed(value, context, returnsThroughConsumer, seen);
+  const disposed = (value) => isDisposed(value, context, consumers, seen);
   return (
-    directlyDisposed(node, context, returnsThroughConsumer) ||
-    directlyDisposed(observed, context, returnsThroughConsumer) ||
-    promiseAllDisposed(observed, context, returnsThroughConsumer) ||
+    directlyDisposed(node, context, consumers) ||
+    directlyDisposed(observed, context, consumers) ||
+    promiseAllDisposed(observed, context, consumers) ||
     retainedPromise(observed, context, disposed) ||
     mappedPromise(observed, (value) =>
       retainedCollection(
@@ -78,11 +78,7 @@ module.exports = rule(
         ]),
       ),
       CallExpression(node) {
-        if (
-          !matcher.isTargetCall(node) ||
-          suppressed(node) ||
-          isDisposed(node, context, consumers.returnsThroughConsumer)
-        )
+        if (!matcher.isTargetCall(node) || suppressed(node) || isDisposed(node, context, consumers))
           return;
         context.report({
           node,

@@ -231,13 +231,26 @@ await awaitReportedEnqueueAdmission(() => {
 unknownConsumer(() => enqueueOnTopicCreated(data)); // reported: no configured contract
 awaitReportedEnqueueAdmission(null, () => enqueueOnTopicCreated(data)); // reported: wrong slot
 awaitReportedEnqueueAdmission(() => { enqueueOnTopicCreated(data); }); // reported: not returned
+
+const accepted = () => enqueueOnTopicCreated(data);
+awaitReportedEnqueueAdmission(accepted); // accepted: stable callback returns its promise
+function unknown() { return enqueueOnTopicCreated(data); }
+unknownConsumer(unknown); // reported: this consumer has no adoption contract
 ```
 
 Return the target promise (or an already supported retained, chained, or aggregate
-promise) from the configured callback. Matching follows import identity, including
-stable aliases and logical `.call` argument positions; shadowed or reassigned callees do not qualify. A spread
-argument before the callback prevents proving its position. The option does not
-inspect consumer bodies or infer contracts from names. As with ordinary function
+promise) from the configured callback. Inline callbacks, callbacks bound to an
+unchanged `const`, and function declarations with no reassignment are checked.
+Every call argument use of a named callback must be a configured awaiting consumer
+or a recognized mock that passes through its return. A mixed known and unknown
+consumer use remains reported. Ordinary functions that are not passed as call
+arguments still dispose a promise by returning it. Matching follows import
+identity, including stable aliases and logical `.call` argument positions;
+shadowed or reassigned callees do not qualify. A spread argument before the
+callback prevents proving its position. A `.bind` result passed to a consumer
+does not establish an adoption contract; a bound function invoked locally still
+uses the ordinary return contract. The option does not inspect consumer
+bodies or infer contracts from names. As with ordinary function
 and mock callback returns, it does not prove that a caller invokes or awaits the
 consumer. Configure only APIs that honor this contract. Existing literal-array
 `.apply` callback return behavior remains unchanged.

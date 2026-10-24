@@ -11,26 +11,29 @@ const {
 } = require("./async-ast");
 const { memberPropertyName } = require("./async-targets");
 
-function directlyDisposed(node, context, returnsThroughConsumer) {
+function directlyDisposed(node, context, consumers) {
   const expression = unwrapTransparentParent(node);
   const parent = expression.parent;
   if (parent?.type === "ReturnStatement") {
     const fn = findContainingFunction(parent);
-    return !isCallArgument(fn) || returnsThroughMock(fn, context) || returnsThroughConsumer(fn);
+    return returnedFromFunction(fn, context, consumers);
   }
   if (parent?.type === "ArrowFunctionExpression" && parent.body === expression) {
-    if (isCallCallee(parent))
-      return directlyDisposed(parent.parent, context, returnsThroughConsumer);
-    return (
-      !isCallArgument(parent) ||
-      returnsThroughMock(parent, context) ||
-      returnsThroughConsumer(parent)
-    );
+    if (isCallCallee(parent)) return directlyDisposed(parent.parent, context, consumers);
+    return returnedFromFunction(parent, context, consumers);
   }
   return (
     parent?.type === "AwaitExpression" ||
     (parent?.type === "UnaryExpression" && parent.operator === "void")
   );
+}
+
+function returnedFromFunction(fn, context, consumers) {
+  if (!fn) return true;
+  if (isCallArgument(fn))
+    return returnsThroughMock(fn, context) || consumers.returnsThroughConsumer(fn);
+  const named = consumers.namedDisposition(fn);
+  return named ?? true;
 }
 
 function isCallArgument(node) {
@@ -135,14 +138,14 @@ function observedExpression(node, context) {
   return current;
 }
 
-function promiseAllDisposed(node, context, returnsThroughConsumer) {
+function promiseAllDisposed(node, context, consumers) {
   let current = node.parent;
   while (current) {
     if (isPromiseAllCall(current, context) && canReachPromiseAll(node, current)) {
       return (
-        directlyDisposed(current, context, returnsThroughConsumer) ||
-        directlyDisposed(observedExpression(current, context), context, returnsThroughConsumer) ||
-        promiseAllDisposed(current, context, returnsThroughConsumer)
+        directlyDisposed(current, context, consumers) ||
+        directlyDisposed(observedExpression(current, context), context, consumers) ||
+        promiseAllDisposed(current, context, consumers)
       );
     }
     current = current.parent;
