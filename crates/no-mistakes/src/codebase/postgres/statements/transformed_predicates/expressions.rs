@@ -1,5 +1,7 @@
 use super::{Clause, SqlTransformedColumnUseFact};
-use crate::codebase::postgres::idents::{visit_child_exprs, visit_function_args};
+use crate::codebase::postgres::idents::{
+    ident_key, relation_part_key, relation_suffix_key, visit_child_exprs, visit_function_args,
+};
 use crate::codebase::postgres::statements::select::uses::{columns::bare, scope::BaseRel};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
 use sqlparser::ast::{Expr, FunctionArguments, Spanned};
@@ -43,7 +45,17 @@ impl Inputs<'_, '_, '_> {
             }
             Expr::Cast { expr, .. } => self.walk(expr, Some(transformation.unwrap_or("cast"))),
             Expr::Identifier(_) | Expr::CompoundIdentifier(_) if transformation.is_some() => {
-                if let Some((qualifier, column)) = bare(expr, self.positions) {
+                if let Some((_, column)) = bare(expr, self.positions) {
+                    let qualifier = match expr {
+                        Expr::CompoundIdentifier(parts) => Some(
+                            parts[..parts.len() - 1]
+                                .iter()
+                                .map(|part| relation_part_key(&ident_key(part)))
+                                .collect::<Vec<_>>()
+                                .join("."),
+                        ),
+                        _ => None,
+                    };
                     let (table, candidate_tables) = owner(self.relations, qualifier.as_deref());
                     self.out.push(SqlTransformedColumnUseFact {
                         table,
@@ -71,7 +83,7 @@ fn owner(relations: &[BaseRel], qualifier: Option<&str>) -> (String, Option<Vec<
     };
     let mut matches = relations.iter().filter(|rel| {
         rel.alias.as_deref().map_or_else(
-            || rel.table == qualifier || rel.table.rsplit('.').next() == Some(qualifier),
+            || rel.table == qualifier || relation_suffix_key(&rel.table) == qualifier,
             |alias| alias == qualifier,
         )
     });

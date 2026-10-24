@@ -1,9 +1,10 @@
 //! Project predicate transformations from the request's already parsed SQL AST.
+mod cte_scope;
 mod expressions;
 mod scope;
 use super::value::PlaceholderPositions;
 use super::{SqlTransformedColumnClause as Clause, SqlTransformedColumnUseFact};
-use crate::codebase::postgres::idents::ident_key;
+use cte_scope::QueryScopes;
 use scope::base_relations;
 use sqlparser::ast::{Expr, Query, Select, SetExpr, Statement, TableWithJoins, Visit, Visitor};
 use std::ops::ControlFlow;
@@ -14,14 +15,14 @@ pub(super) fn collect(
     out: &mut Vec<SqlTransformedColumnUseFact>,
 ) {
     let _: ControlFlow<()> = statement.visit(&mut Collector {
-        ctes: Vec::new(),
+        ctes: QueryScopes::default(),
         positions,
         out,
     });
 }
 
 struct Collector<'a, 'b> {
-    ctes: Vec<Vec<String>>,
+    ctes: QueryScopes,
     positions: PlaceholderPositions<'a>,
     out: &'b mut Vec<SqlTransformedColumnUseFact>,
 }
@@ -74,24 +75,17 @@ impl Collector<'_, '_> {
 impl Visitor for Collector<'_, '_> {
     type Break = ();
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
-        self.ctes.push(
-            query
-                .with
-                .iter()
-                .flat_map(|with| &with.cte_tables)
-                .map(|cte| ident_key(&cte.alias.name))
-                .collect(),
-        );
-        let ctes = self.ctes.iter().flatten().cloned().collect::<Vec<_>>();
+        self.ctes.enter(query);
+        let ctes = self.ctes.visible().to_vec();
         self.body(&query.body, &ctes);
         ControlFlow::Continue(())
     }
     fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-        self.ctes.pop();
+        self.ctes.exit();
         ControlFlow::Continue(())
     }
     fn pre_visit_statement(&mut self, statement: &Statement) -> ControlFlow<()> {
-        let ctes = self.ctes.iter().flatten().cloned().collect::<Vec<_>>();
+        let ctes = self.ctes.visible().to_vec();
         match statement {
             Statement::Update(update) => {
                 let mut tables = vec![update.table.clone()];

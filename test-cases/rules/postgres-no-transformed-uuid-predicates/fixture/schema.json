@@ -67,6 +67,34 @@
           "dataType": "text"
         }
       }
+    },
+    "\"Case\"": {
+      "columns": {
+        "ID": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "case": {
+      "columns": {
+        "id": {
+          "dataType": "text"
+        }
+      }
+    },
+    "\"dot.table\"": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "\"odd.schema\".\"Mixed\"": {
+      "columns": {
+        "ID": {
+          "dataType": "uuid"
+        }
+      }
     }
   }
 }
