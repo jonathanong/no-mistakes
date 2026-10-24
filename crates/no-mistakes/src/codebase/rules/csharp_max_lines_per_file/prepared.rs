@@ -97,6 +97,9 @@ fn normalize_roots(opts: &Options, root: &Path, target_roots: &[PathBuf]) -> Vec
                 .collect()
         })
         .unwrap_or_else(|| target_roots.to_vec())
+        .into_iter()
+        .map(|root| crate::codebase::ts_resolver::normalize_path(&root))
+        .collect()
 }
 
 fn effective_excludes(opts: &Options) -> Vec<String> {

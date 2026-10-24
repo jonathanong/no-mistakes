@@ -149,6 +149,16 @@ findings under every policy.
 when a field check is enabled. Definite field violations remain failures under
 every policy; empty options request no manifest checks.
 
+Required file inputs for `rust-max-lines-per-file`, `rust-no-inline-allows`,
+`rust-no-inline-tests`, `csharp-max-lines-per-file`,
+`no-empty-or-comments-only-files`, `no-raw-ephemeral-port`,
+`structured-config-policy`, `github-actions-pinned-hash`, and
+`server-route-client-boundary` use the shared `options.unanalyzable` policy
+for read failures. Requested Rust AST checks, YAML pin analysis, and server
+boundary analysis also route their parse failures through that policy;
+structured-config parse errors remain definite findings. See each rule's
+Analysis section for its input scope and parsing requirements.
+
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.

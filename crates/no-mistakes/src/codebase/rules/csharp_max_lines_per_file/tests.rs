@@ -1,7 +1,8 @@
 use super::prepared::{
     count_physical_lines, is_test_file, DEFAULT_SRC_MAX, DEFAULT_TEST_MAX, DEFAULT_TEST_ROOTS,
 };
-use super::scan::{check_file, check_source};
+use super::scan::check_source;
+use super::tests_support::check_file;
 use super::*;
 use crate::codebase::rules::path_filter::GlobMatcher;
 use crate::config::v2::{
@@ -257,10 +258,16 @@ fn check_respects_excludes() {
 }
 
 #[test]
-fn check_file_skips_unreadable_file() {
+fn check_file_reports_unreadable_file() {
     let root = fixture("pass");
     let path = root.join("missing.cs");
-    assert!(check_file(&path, &root, 5, false).is_none());
+    assert_eq!(
+        check_file(&path, &root, 5, false)
+            .unwrap()
+            .target
+            .as_deref(),
+        Some("unanalyzable")
+    );
 }
 
 #[test]
@@ -343,14 +350,16 @@ fn check_with_files_and_sources_reads_once() {
 }
 
 #[test]
-fn check_with_files_skips_missing_source() {
+fn check_with_files_reports_missing_source() {
     let root = fixture("fail");
     let files = vec![root.join("missing.cs")];
     let sources = crate::codebase::rules::source_store_for_files(&files);
     let findings =
         check_with_files_and_sources(&root, &config_with_rule("{srcMax: 3}"), &files, &sources)
             .unwrap();
-    assert!(findings.is_empty());
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
+    assert_eq!(sources.physical_read_count(), 1);
 }
 
 #[test]

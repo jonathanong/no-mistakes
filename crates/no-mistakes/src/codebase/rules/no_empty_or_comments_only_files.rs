@@ -1,6 +1,6 @@
 use super::RuleFinding;
 use crate::codebase::comment_only::{classify_content, ContentKind};
-use crate::codebase::ts_source::{discover_files, relative_slash_path};
+use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
@@ -21,62 +21,11 @@ pub(crate) struct Options {
     pub(crate) intentionally_empty: Vec<String>,
 }
 
-pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
-    let skip = &config.filesystem.skip_directories;
-    let per_rule: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| {
-            let opts: Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let files: Vec<PathBuf> = target_roots
-                .iter()
-                .flat_map(|r| discover_files(r, skip))
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files, None)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = per_rule?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
-
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
-}
-
-pub(crate) fn check_with_files_and_sources(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let per_rule: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| {
-            let opts: Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files, Some(sources))
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = per_rule?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
+mod execution;
+pub use execution::check;
+#[doc(hidden)]
+pub use execution::diagnostics_with_files_and_sources;
+super::diagnostic_source_rule_entrypoints!();
 
 fn effective_extensions(opts: &Options) -> Vec<&str> {
     if opts.extensions.is_empty() {
@@ -90,7 +39,7 @@ fn scan(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],
-    sources: Option<&crate::codebase::ts_source::SourceStore>,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let extensions = effective_extensions(opts);
     let exempt: HashSet<&str> = opts
@@ -109,21 +58,11 @@ fn scan(
             if !has_ext {
                 return Vec::new();
             }
-            match sources {
-                Some(sources) => check_file_with_sources(path, root, sources),
-                None => check_file(path, root),
-            }
+            check_file_with_sources(path, root, sources)
         })
         .collect();
     findings.sort_by(|a, b| a.file.cmp(&b.file));
     Ok(findings)
-}
-
-pub(crate) fn check_file(path: &Path, root: &Path) -> Vec<RuleFinding> {
-    let Ok(content) = std::fs::read_to_string(path) else {
-        return Vec::new();
-    };
-    check_source(path, root, &content)
 }
 
 fn check_file_with_sources(
@@ -131,8 +70,9 @@ fn check_file_with_sources(
     root: &Path,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    let Some(content) = super::read_source(sources, path) else {
-        return Vec::new();
+    let content = match super::source_access::checked_source(sources, path, root, RULE_ID) {
+        Ok(source) => source,
+        Err(finding) => return vec![*finding],
     };
     check_source(path, root, &content)
 }
@@ -157,3 +97,5 @@ fn check_source(path: &Path, root: &Path, content: &str) -> Vec<RuleFinding> {
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_support;

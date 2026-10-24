@@ -1,0 +1,8 @@
+rules:
+  - rule: structured-config-policy
+    scope: repository
+    include: [structured/bad.json, structured/definite.json, structured/suppressed.json]
+    options:
+      policies:
+        - files: [structured/*.json]
+          requiredKeys: [required]

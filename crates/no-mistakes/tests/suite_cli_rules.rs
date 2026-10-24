@@ -97,3 +97,6 @@ mod cli_check_storybook_effort;
 mod cli_check_version_pin_policy;
 #[path = "cli_check_workflow_unreadable_policy.rs"]
 mod cli_check_workflow_unreadable_policy;
+
+#[path = "cli_check_file_input_analysis.rs"]
+mod cli_check_file_input_analysis;

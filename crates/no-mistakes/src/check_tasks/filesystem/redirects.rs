@@ -142,6 +142,27 @@ pub(super) fn run(
     } else {
         config
     };
+    let mut remaining_required_files;
+    let config = if config
+        .rules
+        .iter()
+        .any(|rule| rule.enabled && rules::file_diagnostics::handles(&rule.rule))
+    {
+        diagnostics.append(rules::file_diagnostics::diagnostics_with_files_and_sources(
+            root,
+            config,
+            files,
+            &prepared.sources,
+            defer_suppression,
+        )?);
+        remaining_required_files = config.clone();
+        remaining_required_files
+            .rules
+            .retain(|rule| !rules::file_diagnostics::handles(&rule.rule));
+        &remaining_required_files
+    } else {
+        config
+    };
     let findings = if defer_suppression {
         rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
             root, config, files, prepared, facts,

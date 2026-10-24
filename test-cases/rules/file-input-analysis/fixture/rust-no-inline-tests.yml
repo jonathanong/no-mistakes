@@ -1,0 +1,5 @@
+rules:
+  - rule: rust-no-inline-tests
+    scope: repository
+    include: [rust-tests/bad.rs, rust-tests/definite.rs, rust-tests/suppressed.rs, rust-tests/malformed.rs]
+    options: {}

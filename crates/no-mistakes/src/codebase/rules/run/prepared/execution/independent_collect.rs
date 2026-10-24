@@ -35,15 +35,17 @@ pub(super) fn boundary(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
     crate::perf_trace::trace("rules.server_route_client_boundary", || {
-        Ok(RuleChunk::from_findings(
-            server_route_client_boundary::check_with_facts_for_aggregate(
-                req.root,
-                req.config,
-                req.shared,
-                req.inferred_roots,
-                req.defer_suppression,
-            )?,
-        ))
+        let output = server_route_client_boundary::diagnostics_with_facts_for_aggregate(
+            req.root,
+            req.config,
+            req.shared,
+            req.sources,
+            req.inferred_roots,
+            req.defer_suppression,
+        )?;
+        let mut chunk = RuleChunk::from_findings(output.findings);
+        chunk.advisories = output.advisories;
+        Ok(chunk)
     })
 }
 

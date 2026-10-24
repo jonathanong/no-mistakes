@@ -99,10 +99,22 @@ rules:
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), inputs a rule can't prove should never be treated as clean, and this rule does not yet meet that bar.
+Selected files that cannot be read as UTF-8 produce an `unanalyzable`
+diagnostic instead of silently passing. Restore read access or repair the
+encoding so the rule can verify the file. The shared `options.unanalyzable`
+setting inherits the repository policy: `report` (the default) fails,
+`advise` emits non-failing advice, and `ignore` omits uncertainty. Definite
+violations remain failures under every policy, including when `effort: low`
+falls back to `max`.
 
-- Known gap: unreadable or unparseable workflow files are skipped. The rule skips these silently instead of routing them through `options.unanalyzable` (tracked in [#2660](https://github.com/jonathanong/no-mistakes/issues/2660)), so a passing run does not prove they are clean.
+Configured scope, includes, excludes, and rule-specific exemptions still
+select the inputs. Suppressions apply to both channels, including directives
+retained in an invalid UTF-8 read error; source bytes are never reinterpreted
+as analyzable code. Rule-level custom messages apply to these diagnostics.
 
+YAML parse failures also use this policy. Definite pin violations recovered
+by the line scan remain findings when YAML cannot be parsed, including with
+`advise` or `ignore`.
 
 ## Suppression
 

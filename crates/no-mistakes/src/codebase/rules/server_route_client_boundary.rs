@@ -2,14 +2,13 @@ use super::RuleFinding;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::{bail, Result};
-use paths::{relative_path, route_globset_for_rule, ExcludeMatcher};
-use rayon::prelude::*;
 use serde::Deserialize;
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 mod ast;
 mod execution;
+mod selection;
+use selection::{check_items, CheckContext};
 mod paths;
 use execution::{check_files, BorrowedFactItem};
 
@@ -44,112 +43,47 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     super::check_indexed_standalone(root, config, check_files)
 }
 
-pub(crate) fn check_with_facts_for_aggregate(
+pub(crate) fn diagnostics_with_facts_for_aggregate(
     root: &Path,
     config: &NoMistakesConfig,
     shared: &crate::codebase::check_facts::CheckFactMap,
+    sources: &crate::codebase::ts_source::SourceStore,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     defer_suppression: bool,
-) -> Result<Vec<RuleFinding>> {
-    check_with_optional_inferred(root, config, shared, inferred_roots, defer_suppression)
-}
-
-fn check_with_optional_inferred(
-    root: &Path,
-    config: &NoMistakesConfig,
-    shared: &crate::codebase::check_facts::CheckFactMap,
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-    defer_suppression: bool,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<super::analysis_policy::AnalysisDiagnostics> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut facts = Vec::new();
     for path in shared.files() {
+        if !crate::codebase::dependencies::extract::is_indexable(path) {
+            continue;
+        }
         let Some(file) = shared.ts.get(path) else {
             continue;
         };
         let Some(boundary) = file.server_route_client_boundary.as_ref() else {
             bail!("{} requires boundary facts for {}", RULE_ID, path.display());
         };
-        facts.push(BorrowedFactItem::new(path.as_path(), boundary));
+        facts.push(BorrowedFactItem::new(
+            path.as_path(),
+            boundary,
+            file.ts
+                .operational_error
+                .as_deref()
+                .or(file.parse_error.as_deref()),
+        ));
     }
     check_items(
-        &root,
-        config,
+        CheckContext {
+            root: &root,
+            config,
+            sources,
+            inferred_roots,
+            defer_suppression,
+        },
         &facts,
         |item| item.path,
-        |item| item.facts,
-        inferred_roots,
-        defer_suppression,
+        |item| (item.facts, item.error),
     )
-}
-
-pub(super) fn check_items<T>(
-    root: &Path,
-    config: &NoMistakesConfig,
-    items: &[T],
-    path_for: impl Fn(&T) -> &Path + Sync,
-    facts_for: impl Fn(&T) -> &FileFacts + Sync,
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-    defer_suppression: bool,
-) -> Result<Vec<RuleFinding>>
-where
-    T: Sync,
-{
-    let mut findings = Vec::new();
-    let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.try_rule_options()?;
-        let exclude_matcher = ExcludeMatcher::new(&opts.excludes);
-        let filter = super::path_filter::RulePathFilter::new_with_inferred(
-            root,
-            config,
-            rule,
-            &mut inferred_roots,
-        );
-        let filter = filter?;
-        let Some(route_globset) = route_globset_for_rule(config, rule) else {
-            continue;
-        };
-        let route_dirs: HashSet<PathBuf> = items
-            .par_iter()
-            .filter_map(|item| {
-                let path = path_for(item);
-                (route_globset.is_match(relative_path(root, path))
-                    && !exclude_matcher.is_match(root, path)
-                    && filter.is_match(path))
-                .then(|| {
-                    facts_for(item)
-                        .has_server_route_shape
-                        .then(|| path.parent().map(Path::to_path_buf))
-                        .flatten()
-                })
-                .flatten()
-            })
-            .collect();
-        if route_dirs.is_empty() {
-            continue;
-        }
-        findings.extend(
-            items
-                .par_iter()
-                .filter(|item| {
-                    let path = path_for(item);
-                    !exclude_matcher.is_match(root, path)
-                        && filter.is_match(path)
-                        && path.ancestors().any(|dir| route_dirs.contains(dir))
-                })
-                .flat_map(|item| {
-                    let path = path_for(item);
-                    if !defer_suppression && facts_for(item).disabled {
-                        return Vec::new();
-                    }
-                    client_findings_for_file(root, path, facts_for(item))
-                })
-                .collect::<Vec<_>>(),
-        );
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
 }
 
 fn client_findings_for_file(root: &Path, path: &Path, facts: &FileFacts) -> Vec<RuleFinding> {
@@ -171,3 +105,5 @@ fn client_findings_for_file(root: &Path, path: &Path, facts: &FileFacts) -> Vec<
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_support;

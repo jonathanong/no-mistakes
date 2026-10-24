@@ -14,22 +14,24 @@ use super::RuleFinding;
 pub const RULE_ID: &str = "csharp-max-lines-per-file";
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
-    let skip = &config.filesystem.skip_directories;
-    let mut findings = Vec::new();
+    let normalized_root = crate::codebase::ts_resolver::normalize_path(root);
+    let root = normalized_root.as_path();
+    let mut roots = std::collections::BTreeSet::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts = rule.try_rule_options()?;
-        let prepared = PreparedRule::new(&opts, root, &super::target_roots(root, config, rule))?;
-        let files: Vec<PathBuf> = prepared
-            .roots
-            .iter()
-            .flat_map(|rule_root| discover_with_extensions(rule_root, skip, &["cs"]))
-            .filter(|path| !prepared.is_excluded(root, path))
-            .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan(root, &prepared, &files, None, false)?);
+        roots.extend(
+            PreparedRule::new(&opts, root, &super::target_roots(root, config, rule))?.roots,
+        );
     }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    let mut files: Vec<_> = roots
+        .into_iter()
+        .flat_map(|root| {
+            discover_with_extensions(&root, &config.filesystem.skip_directories, &["cs"])
+        })
+        .collect();
+    files.sort();
+    files.dedup();
+    check_with_files(root, config, &files)
 }
 
 pub(crate) fn check_with_files(
@@ -57,8 +59,20 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     sources: &SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
+    diagnostics_with_files_and_sources(root, config, all_files, sources, defer_suppression)
+        .map(|output| output.findings)
+}
+
+#[doc(hidden)]
+pub fn diagnostics_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &SourceStore,
+    defer_suppression: bool,
+) -> Result<super::analysis_policy::AnalysisDiagnostics> {
     let skip = super::skip_dir_set(config);
-    let mut findings = Vec::new();
+    let mut diagnostics = super::analysis_policy::AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts = rule.try_rule_options()?;
         let prepared = PreparedRule::new(&opts, root, &super::target_roots(root, config, rule))?;
@@ -72,17 +86,21 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan(
+        let findings = scan(root, &prepared, &files, sources, defer_suppression)?;
+        diagnostics.append(super::file_diagnostics::application(
             root,
-            &prepared,
-            &files,
-            Some(sources),
+            sources,
+            config,
+            rule,
+            findings,
             defer_suppression,
+            super::file_diagnostics::InputUncertainty::Read,
         )?);
     }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    Ok(super::file_diagnostics::sorted(diagnostics))
 }
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_support;

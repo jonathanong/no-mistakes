@@ -1,3 +1,4 @@
+use super::tests_support::*;
 use super::*;
 use crate::codebase::rules::{path_filter, rust_max_lines_per_file, sort_findings, target_roots};
 use crate::config::v2::{
@@ -29,8 +30,9 @@ fn check_with_files(
         let files: Vec<PathBuf> = all_files
             .iter()
             .filter(|path| {
-                roots.iter().any(|rule_root| path.starts_with(rule_root))
-                    && !is_excluded(root, path, &opts.excludes)
+                roots.iter().any(|rule_root| {
+                    crate::codebase::ts_resolver::normalize_path(path).starts_with(rule_root)
+                }) && !is_excluded(root, path, &opts.excludes)
                     && !rust_max_lines_per_file::is_test_file(root, path)
             })
             .cloned()
@@ -89,15 +91,20 @@ fn normalizes_namespaced_lint_tokens() {
 }
 
 #[test]
-fn invalid_rust_source_returns_no_findings() {
-    assert!(check_fixture("unit/invalid.rs").is_empty());
+fn invalid_rust_with_allow_marker_reports_uncertainty() {
+    let findings = check_fixture("unit/invalid.rs");
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]
-fn unreadable_file_returns_no_findings() {
+fn unreadable_file_reports_unanalyzable_input() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("missing.rs");
-    assert!(check_file(&path, tmp.path()).is_empty());
+    assert_eq!(
+        check_file(&path, tmp.path())[0].target.as_deref(),
+        Some("unanalyzable")
+    );
 }
 
 #[test]
@@ -161,7 +168,12 @@ fn helpers_cover_unrooted_excludes_and_non_list_allow_attrs() {
     let findings = findings_from_parsed(Path::new("/repo/a.rs"), root, &parsed);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("allow()"));
-    assert!(check_file(Path::new("/repo/missing.rs"), root).is_empty());
+    assert_eq!(
+        check_file(Path::new("/repo/missing.rs"), root)[0]
+            .target
+            .as_deref(),
+        Some("unanalyzable")
+    );
 }
 
 #[test]

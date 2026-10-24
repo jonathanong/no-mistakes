@@ -107,3 +107,22 @@ macro_rules! sourced_file_rule_entrypoints {
     };
 }
 pub(crate) use sourced_file_rule_entrypoints;
+
+/// Required source rules expose the same two diagnostic channels at every boundary.
+macro_rules! diagnostic_source_rule_entrypoints {
+    () => {
+        super::borrowed_source_rule_entrypoints!();
+
+        pub(crate) fn check_with_files_sources_and_deferred_suppression(
+            root: &std::path::Path,
+            config: &crate::config::v2::NoMistakesConfig,
+            files: &[std::path::PathBuf],
+            sources: &crate::codebase::ts_source::SourceStore,
+            defer_suppression: bool,
+        ) -> anyhow::Result<Vec<super::RuleFinding>> {
+            diagnostics_with_files_and_sources(root, config, files, sources, defer_suppression)
+                .map(|output| output.findings)
+        }
+    };
+}
+pub(crate) use diagnostic_source_rule_entrypoints;

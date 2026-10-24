@@ -1,0 +1,5 @@
+rules:
+  - rule: github-actions-pinned-hash
+    scope: repository
+    include: [.github/workflows/bad.yml, .github/workflows/definite.yml, .github/workflows/suppressed.yml]
+    options: {}

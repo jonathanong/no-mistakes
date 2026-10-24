@@ -1,0 +1,5 @@
+rules:
+  - rule: no-raw-ephemeral-port
+    scope: repository
+    include: [ports/bad.ts, ports/definite.ts, ports/suppressed.ts]
+    options: {}

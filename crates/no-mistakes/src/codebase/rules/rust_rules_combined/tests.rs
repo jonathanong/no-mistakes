@@ -1,4 +1,5 @@
-use super::scan::{
+use super::selection::is_excluded;
+use super::tests_support::{
     scan_file_with_deferred_suppression, scan_file_with_source_and_deferred_suppression,
 };
 use super::*;
@@ -6,7 +7,7 @@ use crate::config::v2::schema::{RuleDef, RuleScope};
 
 fn scan_test_file(root: &Path, path: &Path, work: &RustWork) -> Vec<RuleFinding> {
     let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
-    scan::scan_file_with_deferred_suppression(root, path, work, &sources, false)
+    scan_file_with_deferred_suppression(root, path, work, &sources, false)
 }
 
 fn config_with_rule(rule: &str) -> NoMistakesConfig {
@@ -36,23 +37,26 @@ fn max_lines_work_uses_default_test_limit_for_test_files() {
 }
 
 #[test]
-fn scan_file_returns_empty_for_unreadable_file() {
+fn scan_file_reports_each_requested_rule_for_unreadable_file() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let missing = root.join("tests/does-not-exist.rs");
     let work = RustWork {
         max_limits: vec![1],
         inline_tests: true,
         inline_allows: true,
+        ..Default::default()
     };
 
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&missing));
-    assert!(
-        scan_file_with_deferred_suppression(&root, &missing, &work, &sources, false).is_empty()
-    );
+    let findings = scan_file_with_deferred_suppression(&root, &missing, &work, &sources, false);
+    assert_eq!(findings.len(), 3);
+    assert!(findings
+        .iter()
+        .all(|finding| finding.target.as_deref() == Some("unanalyzable")));
 }
 
 #[test]
-fn scan_file_ignores_parse_errors_for_inline_rules() {
+fn marker_positive_invalid_rust_reports_each_requested_ast_check() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/filesystem-dispatch/rust-combined/fixture");
     let root = crate::codebase::ts_resolver::normalize_path(&root);
@@ -61,9 +65,14 @@ fn scan_file_ignores_parse_errors_for_inline_rules() {
         max_limits: Vec::new(),
         inline_tests: true,
         inline_allows: true,
+        ..Default::default()
     };
 
-    assert!(scan_test_file(&root, &path, &work).is_empty());
+    let findings = scan_test_file(&root, &path, &work);
+    assert_eq!(findings.len(), 2);
+    assert!(findings
+        .iter()
+        .all(|finding| finding.target.as_deref() == Some("unanalyzable")));
 }
 
 #[test]
@@ -165,4 +174,71 @@ fn matching_files_cover_roots_excludes_inline_work_and_invalid_options() {
     invalid_opts.rules[0].options = serde_yaml::from_str("true").unwrap();
     work.clear();
     assert!(add_max_lines_work(&root, &invalid_opts, &[lib], &mut work).is_err());
+}
+
+#[test]
+fn requested_rust_ast_checks_share_one_parse_and_marker_negative_paths_skip_it() {
+    let root = crate::test_support::rule_fixture_root("file-input-analysis");
+    for (name, work, parses, uncertain) in [
+        (
+            "both-markers.rs",
+            RustWork {
+                inline_allows: true,
+                inline_tests: true,
+                ..Default::default()
+            },
+            1,
+            2,
+        ),
+        (
+            "negative-marker.rs",
+            RustWork {
+                inline_allows: true,
+                inline_tests: true,
+                ..Default::default()
+            },
+            0,
+            0,
+        ),
+        (
+            "both-markers.rs",
+            RustWork {
+                max_limits: vec![1],
+                ..Default::default()
+            },
+            0,
+            0,
+        ),
+    ] {
+        let path = root.join("rust-allows").join(name);
+        let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
+        let source = sources.read_path(&path).unwrap();
+        let calls = std::cell::Cell::new(0);
+        let findings =
+            scan::scan_outputs_with_parser(&root, &path, &work, &source, false, |source| {
+                calls.set(calls.get() + 1);
+                syn::parse_file(source)
+            });
+        assert_eq!(calls.get(), parses, "{name}");
+        assert_eq!(
+            findings
+                .iter()
+                .filter(|(_, finding)| finding.target.as_deref() == Some("unanalyzable"))
+                .count(),
+            uncertain,
+            "{name}"
+        );
+        assert_eq!(sources.physical_read_count(), 1);
+    }
+}
+
+#[test]
+fn combined_rust_parse_failure_honors_file_suppression() {
+    let root = crate::test_support::rule_fixture_root("file-input-analysis");
+    let path = root.join("rust-allows/suppressed-malformed.rs");
+    let work = RustWork {
+        inline_allows: true,
+        ..Default::default()
+    };
+    assert!(scan_test_file(&root, &path, &work).is_empty());
 }

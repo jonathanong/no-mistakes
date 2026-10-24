@@ -1,3 +1,4 @@
+use super::tests_support::*;
 use super::*;
 use crate::codebase::rules::{path_filter, rust_max_lines_per_file, sort_findings, target_roots};
 use crate::config::v2::{
@@ -29,8 +30,9 @@ fn check_with_files(
         let files: Vec<PathBuf> = all_files
             .iter()
             .filter(|path| {
-                roots.iter().any(|rule_root| path.starts_with(rule_root))
-                    && !is_excluded(root, path, &opts.excludes)
+                roots.iter().any(|rule_root| {
+                    crate::codebase::ts_resolver::normalize_path(path).starts_with(rule_root)
+                }) && !is_excluded(root, path, &opts.excludes)
                     && !rust_max_lines_per_file::is_test_file(root, path)
             })
             .cloned()

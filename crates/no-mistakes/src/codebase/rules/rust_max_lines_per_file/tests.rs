@@ -1,3 +1,4 @@
+use super::tests_support::*;
 use super::*;
 use crate::codebase::rules::{path_filter, sort_findings, target_roots};
 use crate::config::v2::{
@@ -29,8 +30,9 @@ fn check_with_files(
         let files: Vec<PathBuf> = all_files
             .iter()
             .filter(|path| {
-                roots.iter().any(|rule_root| path.starts_with(rule_root))
-                    && !is_excluded(root, path, &opts.excludes)
+                roots.iter().any(|rule_root| {
+                    crate::codebase::ts_resolver::normalize_path(path).starts_with(rule_root)
+                }) && !is_excluded(root, path, &opts.excludes)
             })
             .cloned()
             .collect();
@@ -234,12 +236,11 @@ fn check_respects_excludes() {
 }
 
 #[test]
-fn check_file_skips_unreadable_file() {
+fn check_file_reports_unreadable_file() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("missing.rs");
-    // Path does not exist → read_to_string fails → returns None
-    let finding = check_file(&path, tmp.path(), 5);
-    assert!(finding.is_none());
+    let finding = check_file(&path, tmp.path(), 5).unwrap();
+    assert_eq!(finding.target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]
