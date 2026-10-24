@@ -1,4 +1,7 @@
 use super::*;
+use sqlparser::ast::Statement;
+use sqlparser::dialect::PostgreSqlDialect;
+use sqlparser::parser::Parser;
 
 pub(super) fn push_query_payload(
     body: &RoutineBody,
@@ -12,9 +15,9 @@ pub(super) fn push_query_payload(
         .iter()
         .filter(|token| !matches!(token.token, Token::Whitespace(_)))
         .collect();
-    // A leading SQL DECLARE CURSOR wrapper is parsed directly with its query. Its calls
-    // already belong to that AST; only later PL/pgSQL declaration chunks need projection.
-    if code.first().is_some_and(|token| keyword(token, "DECLARE")) {
+    // A complete SQL DECLARE CURSOR already owns its query's calls. A PL/pgSQL
+    // declaration with cursor parameters is not necessarily a SQL DECLARE AST.
+    if complete_sql_declare(&code) {
         return;
     }
     let Some(at) = code.windows(2).position(|pair| {
@@ -47,6 +50,16 @@ pub(super) fn push_query_payload(
         // A declared cursor's query is parsed now but runs only when opened later.
         payload.executed &= !code.iter().any(|token| keyword(token, "CURSOR"));
     }
+}
+
+fn complete_sql_declare(code: &[&TokenWithSpan]) -> bool {
+    if !code.first().is_some_and(|token| keyword(token, "DECLARE")) {
+        return false;
+    }
+    let tokens = code.iter().map(|token| (*token).clone()).collect();
+    let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(tokens);
+    matches!(parser.parse_statement(), Ok(Statement::Declare { .. }))
+        && parser.peek_token().token == Token::EOF
 }
 
 fn loop_boundary<'a>(code: &[&'a TokenWithSpan]) -> Option<&'a TokenWithSpan> {
