@@ -1,6 +1,6 @@
 use super::*;
 
-pub(super) fn for_header(code: &[&Token]) -> bool {
+pub(in super::super) fn for_header(code: &[&Token]) -> bool {
     let Some(into) = code.iter().position(|token| word(token, "IN")) else {
         return false;
     };
@@ -40,7 +40,7 @@ pub(super) fn for_header(code: &[&Token]) -> bool {
     assignment::expression(&source[..range]) && assignment::expression(&source[range + 2..])
 }
 
-pub(super) fn foreach_header(code: &[&Token]) -> bool {
+pub(in super::super) fn foreach_header(code: &[&Token]) -> bool {
     if code.len() < 5 || !matches!(code[1], Token::Word(_)) {
         return false;
     }
