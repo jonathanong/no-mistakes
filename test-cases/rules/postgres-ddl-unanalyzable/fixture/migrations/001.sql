@@ -1,4 +1,4 @@
-CREATE TABLE accounts (id bigint PRIMARY KEY);
+SELECT 1;
 -- This unsupported DDL must be reported without hiding its parsed siblings.
 ALTER TABLE accounts ADD COLUMN;
 DISCARD ALL;
