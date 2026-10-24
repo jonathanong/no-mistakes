@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "cli_check_rules_postgres_bounded/joined_dml.rs"]
+mod joined_dml;
+
 fn fixture() -> PathBuf {
     fixture_dir("fixture")
 }

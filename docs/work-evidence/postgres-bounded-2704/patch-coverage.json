@@ -1,0 +1,12 @@
+{
+  "base": "17139a03be47301db3164557d609fd2a7d376a68",
+  "measuredChangedLines": 39,
+  "coveredChangedLines": 39,
+  "coveragePercent": 100.0,
+  "requiredPercent": 98.0,
+  "uncoveredChangedLines": {},
+  "changedFilesWithoutLineRecords": [
+    "crates/no-mistakes/tests/cli_check_rules_postgres_bounded.rs",
+    "crates/no-mistakes/tests/cli_check_rules_postgres_bounded/joined_dml.rs"
+  ]
+}

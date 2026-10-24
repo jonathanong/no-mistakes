@@ -1,0 +1,70 @@
+{
+  "configurations": 40,
+  "identical": 39,
+  "changes": [
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/joined-dml/.no-mistakes.yml",
+      "before": [
+        {
+          "file": "index-guards.sql",
+          "line": 5,
+          "target": "table:nulls_nd"
+        },
+        {
+          "file": "index-guards.sql",
+          "line": 6,
+          "target": "table:nulls_plain"
+        },
+        {
+          "file": "joined-dml.sql",
+          "line": 2,
+          "target": "table:joined_targets"
+        },
+        {
+          "file": "joined-dml.sql",
+          "line": 3,
+          "target": "table:joined_targets"
+        },
+        {
+          "file": "joined-dml.sql",
+          "line": 13,
+          "target": "table:joined_targets"
+        }
+      ],
+      "after": [
+        {
+          "file": "index-guards.sql",
+          "line": 2,
+          "target": "table:placeholder_partial"
+        },
+        {
+          "file": "index-guards.sql",
+          "line": 3,
+          "target": "table:placeholder_expression"
+        },
+        {
+          "file": "index-guards.sql",
+          "line": 6,
+          "target": "table:nulls_plain"
+        },
+        {
+          "file": "joined-dml.sql",
+          "line": 2,
+          "target": "table:joined_targets"
+        },
+        {
+          "file": "joined-dml.sql",
+          "line": 3,
+          "target": "table:joined_targets"
+        },
+        {
+          "file": "joined-dml.sql",
+          "line": 13,
+          "target": "table:joined_targets"
+        }
+      ],
+      "beforeStatus": 1,
+      "afterStatus": 1
+    }
+  ]
+}

@@ -77,6 +77,17 @@ pub(super) fn extract(
             candidate::equate(left, right, true, resolver, restricted, out);
             expression::equate(left, right, true, resolver, restricted, out);
         }
+        // NULL selects one value only under NULLS NOT DISTINCT (or on an impossible NOT NULL
+        // column). Reuse null-safe key evaluation so an ordinary nullable UNIQUE stays unproved.
+        Expr::IsNull(column) => pin(
+            column,
+            Some(Sourced {
+                source: SqlPinSource::Value,
+                reads: Vec::new(),
+                qualified_reads: Vec::new(),
+            }),
+            true,
+        ),
         Expr::InList {
             expr,
             list,
