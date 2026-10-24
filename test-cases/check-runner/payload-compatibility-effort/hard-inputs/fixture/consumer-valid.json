@@ -1,0 +1,9 @@
+{
+  "$comment": "Valid compatible nested consumer schema.",
+  "payload": {
+    "type": "object",
+    "properties": {"details": {"type": "object", "properties": {"id": {"type": "string"}}}},
+    "required": ["details"],
+    "additionalProperties": false
+  }
+}

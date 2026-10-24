@@ -1,0 +1,11 @@
+rules:
+  - rule: declared-payload-compatibility
+    scope: repository
+    exclude: [consumer-valid.json]
+    options:
+      effort: low
+      unanalyzable: ignore
+      contracts:
+        - name: nested-shape-with-excluded-consumer
+          producer: {file: producer.json, pointer: /payload}
+          consumer: {file: consumer-valid.json, pointer: /payload}

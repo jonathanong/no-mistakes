@@ -1,0 +1,7 @@
+{
+  "$comment": "Only /$defs/selected is checked; the unused ref is outside the selected schema.",
+  "$defs": {
+    "selected": {"type": "string", "enum": ["stable"]},
+    "unused": {"$ref": "#/not-resolved"}
+  }
+}

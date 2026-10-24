@@ -131,7 +131,12 @@ policy boundary that produced them.
 accepts `options.contracts`, an opt-in list of named producer/consumer JSON
 Schema references. Paths are relative to the invocation root; optional RFC 6901
 pointers select each declaration. It checks supported declaration compatibility
-and reports unsupported schemas as unproven, without inferring runtime adoption.
+and, at `max`, reports unsupported schemas as unproven, without inferring
+runtime adoption. The rule supports `effort: low` for scalar roots, flat objects
+with scalar properties, and root arrays with scalar items. Nested child objects
+or arrays use `options.unanalyzable`; document integrity and reference/configuration
+errors remain failures under every policy. See its
+[Effort section](../rules/declared-payload-compatibility.md#effort).
 
 For [`github-actions-job-timeouts`](../rules/github-actions-job-timeouts.md),
 `options.rejectJobAtOrAboveStepSum` defaults to `false`. Enable it to require a

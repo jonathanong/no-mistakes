@@ -1,0 +1,16 @@
+{
+  "$comment": "Separate files deliberately prove that consumer-only uncertainty is anchored to the consumer declaration.",
+  "payload": {
+    "type": "object",
+    "properties": {
+      "profile": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

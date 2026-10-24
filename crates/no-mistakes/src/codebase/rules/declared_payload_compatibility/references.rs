@@ -1,7 +1,9 @@
 use super::{document::Documents, schema, DeclaredPayloadSchema};
 use crate::codebase::ts_source::SourceStore;
+use serde_json::Value;
 use std::collections::BTreeSet;
 use std::path::{Component, Path};
+use std::sync::Arc;
 
 pub(super) fn load(
     root: &Path,
@@ -10,6 +12,18 @@ pub(super) fn load(
     sources: &SourceStore,
     documents: &Documents,
 ) -> Result<schema::Schema, String> {
+    let document = read_document(root, reference, allowed, sources, documents)?;
+    schema::parse(selected(&document, reference)?, "$", 0)
+}
+
+/// Validate document identity and integrity before low may skip schema proof.
+pub(super) fn read_document(
+    root: &Path,
+    reference: &DeclaredPayloadSchema,
+    allowed: &BTreeSet<String>,
+    sources: &SourceStore,
+    documents: &Documents,
+) -> Result<Arc<Value>, String> {
     let path = Path::new(&reference.file);
     if reference.file.is_empty()
         || path
@@ -27,10 +41,16 @@ pub(super) fn load(
     }
     validate_pointer(&reference.pointer)?;
     let document = documents.get(sources, &root.join(path))?;
-    let value = document
+    Ok(document)
+}
+
+pub(super) fn selected<'a>(
+    document: &'a Value,
+    reference: &DeclaredPayloadSchema,
+) -> Result<&'a Value, String> {
+    document
         .pointer(&reference.pointer)
-        .ok_or_else(|| "JSON pointer does not select a schema".to_string())?;
-    schema::parse(value, "$", 0)
+        .ok_or_else(|| "JSON pointer does not select a schema".to_string())
 }
 
 fn validate_pointer(pointer: &str) -> Result<(), String> {

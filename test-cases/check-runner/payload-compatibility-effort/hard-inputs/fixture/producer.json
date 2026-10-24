@@ -1,0 +1,9 @@
+{
+  "$comment": "Valid nested producer used to ensure low-ignore cannot hide hard consumer input errors.",
+  "payload": {
+    "type": "object",
+    "properties": {"details": {"type": "object", "properties": {"id": {"type": "string"}}}},
+    "required": ["details"],
+    "additionalProperties": false
+  }
+}

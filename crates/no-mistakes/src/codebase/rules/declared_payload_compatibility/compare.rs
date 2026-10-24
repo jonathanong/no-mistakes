@@ -2,6 +2,7 @@ use super::schema::{equal, Schema};
 use serde_json::Value;
 
 pub(super) fn subset(producer: &Schema, consumer: &Schema, path: &str) -> Result<(), String> {
+    super::probe::comparison();
     let kind_compatible = producer.kind == consumer.kind
         || (producer.kind == "integer" && consumer.kind == "number")
         || (producer.kind == "number"
