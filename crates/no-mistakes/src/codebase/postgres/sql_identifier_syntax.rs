@@ -130,6 +130,8 @@ impl<'a> Visit<'a> for Syntax {
         let callee = chain(&value.callee);
         let selected = callee.as_ref().is_some_and(|(root, parts)| {
             (parts.len() == 1 && (self.targets.contains(root) || self.aliases.contains_key(root)))
+                || (parts.len() == 2 && self.aliases.contains_key(root) && parts[1] == "query")
+                || (self.typed_targets.contains(root) && input::indirect_executor_call(parts))
                 || (parts.len() == 2
                     && self
                         .namespace_targets
@@ -174,6 +176,7 @@ mod typed;
 use selection::Selection;
 mod project;
 pub(crate) use project::collect;
+pub(crate) use project::collect_with_types;
 
 mod invalid;
 pub(crate) use invalid::collect_invalid;

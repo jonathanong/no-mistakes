@@ -59,3 +59,11 @@ pub(super) fn input(
         _ => Input::Unknown,
     }
 }
+
+// Indirect receiver operations retain uncertainty without selecting data methods.
+pub(super) fn indirect_executor_call(parts: &[String]) -> bool {
+    parts.last().is_some_and(|name| {
+        (parts.len() > 2 && name == "query")
+            || (parts.len() >= 2 && matches!(name.as_str(), "call" | "apply" | "bind"))
+    })
+}

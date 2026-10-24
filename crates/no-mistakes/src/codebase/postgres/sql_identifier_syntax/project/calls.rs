@@ -48,16 +48,18 @@ fn direct_calls(
         };
         let owner = owners.get(root).copied();
         let named = owner.is_some_and(|binding| selected.contains(&binding.id)) && parts.len() == 1;
-        let alias = parts.len() == 1
+        let alias = (parts.len() == 1 || (parts.len() == 2 && parts[1] == "query"))
             && syntax
                 .aliases
                 .get(root)
-                .is_some_and(|id| selected.contains(id));
+                .is_some_and(|id| selected.contains(id) || typed.contains(id));
         let namespace = owner.is_some_and(|binding| namespaces.contains(&binding.id))
             && parts.len() == 2
             && parts[1] == "query";
         let typed = owner.is_some_and(|binding| typed.contains(&binding.id))
-            && (parts.len() == 1 || (parts.len() == 2 && parts[1] == "query"));
+            && (parts.len() == 1
+                || (parts.len() == 2 && parts[1] == "query")
+                || input::indirect_executor_call(parts));
         // Broad member selection has no positive receiver ownership proof.
         let loose = profile.import_specifier.is_empty()
             && parts.len() > 1
@@ -139,7 +141,8 @@ fn append_escapes(
         }
         for usage in &binding.references {
             let at = (usage.span.start, usage.span.end);
-            if namespaces.contains(&binding.id)
+            if (namespaces.contains(&binding.id)
+                || (typed.contains(&binding.id) && !unsupported.contains(&binding.id)))
                 && syntax
                     .namespace_members
                     .get(&at)
@@ -149,7 +152,7 @@ fn append_escapes(
             }
             // Type annotations and type queries are erased even when their
             // imported binding also denotes an unsupported runtime executor.
-            if direct.contains(&at) || !usage.runtime {
+            if direct.contains(&at) || !usage.runtime || selection.transports.contains(&at) {
                 continue;
             }
             if syntax.alias_initializers.get(&at) == Some(&binding.id) {
@@ -163,7 +166,7 @@ fn append_escapes(
         }
     }
     for (at, owner) in &syntax.aliases {
-        if selected.contains(owner) && !direct.contains(at) {
+        if (selected.contains(owner) || typed.contains(owner)) && !direct.contains(at) {
             calls.push(SqlCall {
                 span: *at,
                 line: crate::codebase::ts_source::byte_offset_to_line(source, at.0 as usize),
@@ -173,28 +176,4 @@ fn append_escapes(
     }
 }
 
-fn append_loads(
-    module: &TypeScriptModuleFacts,
-    profile: &EmbeddedSqlOptions,
-    source: &str,
-    calls: &mut Vec<SqlCall>,
-) {
-    if profile.selects_executors() {
-        for load in &module.loads {
-            if !profile.import_specifier.is_empty()
-                && crate::codebase::postgres::embedded::scoped_bindings::from_configured_module(
-                    &load.specifier,
-                    &profile.import_specifier,
-                )
-                && matches!(load.kind.as_str(), "require" | "dynamicImport")
-            {
-                let at = (load.span.start, load.span.end);
-                calls.push(SqlCall {
-                    span: at,
-                    line: crate::codebase::ts_source::byte_offset_to_line(source, at.0 as usize),
-                    input: Input::Unknown,
-                });
-            }
-        }
-    }
-}
+include!("calls/loads.rs");

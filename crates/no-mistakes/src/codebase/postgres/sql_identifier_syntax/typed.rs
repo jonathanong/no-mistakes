@@ -1,10 +1,13 @@
 use super::*;
 use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
-use oxc_ast::ast::{FormalParameters, TSSignature, TSType, TSTypeName};
+use crate::config::v2::schema::EffectTargetConfig;
+use oxc_ast::ast::{TSType, TSTypeName};
 
+mod parameters;
 mod patterns;
 mod possible;
 mod runtime;
+mod transports;
 
 // Match both type references and parameters by semantic identity. A local type
 // with the same spelling as the configured import is never an executor proof.
@@ -12,20 +15,36 @@ pub(super) fn collect(
     program: &Program<'_>,
     module: &TypeScriptModuleFacts,
     profile: &EmbeddedSqlOptions,
-    unsupported: &FxHashSet<usize>,
-) -> (FxHashSet<usize>, FxHashSet<usize>, FxHashSet<Span>) {
+    selection: &Selection,
+    declared_types: &[EffectTargetConfig],
+) -> (
+    FxHashSet<usize>,
+    FxHashSet<usize>,
+    FxHashSet<Span>,
+    FxHashSet<Span>,
+) {
+    let declared = declared_types
+        .iter()
+        .map(|selector| (selector.module.as_str(), selector.export.as_str()))
+        .collect::<FxHashSet<_>>();
+    let declared = &declared;
     let types = module
         .imports
         .iter()
-        .filter(|import| {
-            super::super::embedded::scoped_bindings::from_configured_module(
-                &import.specifier,
-                &profile.import_specifier,
-            )
+        .flat_map(|import| {
+            import
+                .bindings
+                .iter()
+                .filter(move |binding| {
+                    profile.executor_type_names.contains(&binding.imported)
+                        && (super::super::embedded::scoped_bindings::from_configured_module(
+                            &import.specifier,
+                            &profile.import_specifier,
+                        ) || declared
+                            .contains(&(import.specifier.as_str(), binding.imported.as_str())))
+                })
+                .map(|binding| binding.binding_id)
         })
-        .flat_map(|import| &import.bindings)
-        .filter(|binding| profile.executor_type_names.contains(&binding.imported))
-        .map(|binding| binding.binding_id)
         .collect::<FxHashSet<_>>();
     let references = module
         .bindings
@@ -37,9 +56,16 @@ pub(super) fn collect(
     let bindings = module
         .bindings
         .iter()
-        .map(|binding| ((binding.span.start, binding.span.end), binding.id))
+        .flat_map(|binding| {
+            std::iter::once(((binding.span.start, binding.span.end), binding.id)).chain(
+                binding
+                    .references
+                    .iter()
+                    .map(|usage| ((usage.span.start, usage.span.end), binding.id)),
+            )
+        })
         .collect();
-    let candidates = types.union(unsupported).copied().collect();
+    let candidates = types.union(&selection.unsupported).copied().collect();
     let possible = possible::references(program, module, &candidates, &bindings);
     let mut visitor = Typed {
         references,
@@ -47,10 +73,21 @@ pub(super) fn collect(
         bindings,
         selected: FxHashSet::default(),
         unsupported: FxHashSet::default(),
+        sources: transports::sources(module, selection),
+        transports: FxHashSet::default(),
+        factory_bindings: FxHashMap::default(),
+        writes: FxHashSet::default(),
+        immutable: false,
     };
     visitor.visit_program(program);
+    visitor.finish_transports();
     let runtime = runtime::collect(program, &visitor.possible);
-    (visitor.selected, visitor.unsupported, runtime)
+    (
+        visitor.selected,
+        visitor.unsupported,
+        runtime,
+        visitor.transports,
+    )
 }
 
 struct Typed {
@@ -59,74 +96,73 @@ struct Typed {
     bindings: FxHashMap<Span, usize>,
     selected: FxHashSet<usize>,
     unsupported: FxHashSet<usize>,
+    sources: FxHashMap<Span, bool>,
+    transports: FxHashSet<Span>,
+    factory_bindings: FxHashMap<usize, bool>,
+    writes: FxHashSet<usize>,
+    immutable: bool,
 }
 impl<'a> Visit<'a> for Typed {
     fn visit_variable_declarator(&mut self, variable: &oxc_ast::ast::VariableDeclarator<'a>) {
         if let Some(annotation) = &variable.type_annotation {
             self.unknown_pattern(&variable.id, &annotation.type_annotation);
         }
+        self.factory_binding(variable);
         walk::walk_variable_declarator(self, variable);
     }
-    fn visit_formal_parameters(&mut self, parameters: &FormalParameters<'a>) {
-        for parameter in &parameters.items {
-            let Some(annotation) = &parameter.type_annotation else {
-                continue;
-            };
-            match (&parameter.pattern, &annotation.type_annotation) {
-                (BindingPattern::BindingIdentifier(binding), ty) => self.record(binding, ty),
-                (BindingPattern::ObjectPattern(object), TSType::TSTypeLiteral(literal)) => {
-                    for property in &object.properties {
-                        let Some(key) = property.key.static_name() else {
-                            continue;
-                        };
-                        for signature in &literal.members {
-                            if let TSSignature::TSPropertySignature(signature) = signature {
-                                if signature.key.static_name().as_deref() == Some(key.as_ref()) {
-                                    if let Some(annotation) = &signature.type_annotation {
-                                        match &property.value {
-                                            BindingPattern::BindingIdentifier(binding) => {
-                                                self.record(binding, &annotation.type_annotation)
-                                            }
-                                            pattern => self.unknown_pattern(
-                                                pattern,
-                                                &annotation.type_annotation,
-                                            ),
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if let Some(rest) = &object.rest {
-                        self.unknown_pattern(&rest.argument, &annotation.type_annotation);
-                    }
-                }
-                (pattern, ty) => self.unknown_pattern(pattern, ty),
-            }
-        }
-        if let Some(rest) = &parameters.rest {
-            if let Some(annotation) = &rest.type_annotation {
-                self.unknown_pattern(&rest.rest.argument, &annotation.type_annotation);
-            }
-        }
+    fn visit_formal_parameters(&mut self, parameters: &oxc_ast::ast::FormalParameters<'a>) {
+        self.parameters(parameters);
         walk::walk_formal_parameters(self, parameters);
+    }
+    fn visit_variable_declaration(&mut self, value: &VariableDeclaration<'a>) {
+        let old = self.immutable;
+        self.immutable = matches!(
+            value.kind,
+            oxc_ast::ast::VariableDeclarationKind::Const
+                | oxc_ast::ast::VariableDeclarationKind::Using
+                | oxc_ast::ast::VariableDeclarationKind::AwaitUsing
+        );
+        walk::walk_variable_declaration(self, value);
+        self.immutable = old;
+    }
+    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        self.wrapper(call);
+        walk::walk_call_expression(self, call);
+    }
+    fn visit_simple_assignment_target(
+        &mut self,
+        target: &oxc_ast::ast::SimpleAssignmentTarget<'a>,
+    ) {
+        if let Some(at) = super::template_binds::assignment_root(target) {
+            self.write(at);
+        }
+        if let oxc_ast::ast::SimpleAssignmentTarget::ComputedMemberExpression(value) = target {
+            if let Some((root, _)) = chain(&value.expression) {
+                self.transports.insert(root);
+            }
+        }
+        walk::walk_simple_assignment_target(self, target);
+    }
+    fn visit_assignment_target_property_identifier(
+        &mut self,
+        target: &oxc_ast::ast::AssignmentTargetPropertyIdentifier<'a>,
+    ) {
+        self.write(span(target.binding.span));
+        walk::walk_assignment_target_property_identifier(self, target);
     }
 }
 
 impl Typed {
+    fn direct_type(&self, ty: &TSType<'_>) -> bool {
+        matches!(ty, TSType::TSTypeReference(reference)
+            if matches!(&reference.type_name, TSTypeName::IdentifierReference(name)
+                if self.references.contains(&span(name.span))))
+    }
     // Only direct imported types on formal parameters prove literal SQL. Other
     // annotation shapes retain runtime Unknown uses without evaluating SQL.
     fn record(&mut self, binding: &oxc_ast::ast::BindingIdentifier<'_>, ty: &TSType<'_>) {
         if let Some(id) = self.bindings.get(&span(binding.span)) {
-            let direct = match ty {
-                TSType::TSTypeReference(reference) => match &reference.type_name {
-                    TSTypeName::IdentifierReference(name) => {
-                        self.references.contains(&span(name.span))
-                    }
-                    _ => false,
-                },
-                _ => false,
-            };
+            let direct = self.direct_type(ty);
             if direct || possible::contains(&self.possible, ty) {
                 self.selected.insert(*id);
                 if !direct {

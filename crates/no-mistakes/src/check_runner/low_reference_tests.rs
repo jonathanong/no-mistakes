@@ -120,7 +120,6 @@ fn typed_executor_low_adopters_ignore_erased_uses_and_keep_statement_locations()
                     "// OUTSIDE",
                     "// ESCAPE",
                     "// RUNTIME_TYPE",
-                    "// FACTORY",
                     "// UNSUPPORTED_TYPE",
                 ] {
                     unknown.extend(marked(&source, marker));
@@ -166,3 +165,6 @@ fn typed_executor_low_adopters_ignore_erased_uses_and_keep_statement_locations()
         }
     }
 }
+
+#[path = "low_executor_transport_tests.rs"]
+mod low_executor_transport_tests;

@@ -1,0 +1,34 @@
+effects:
+  postgres:
+    typedExecutors:
+      - { module: '@example/executor-types', export: QueryExecutor }
+      - { module: '@example/executor-types', export: TransactionQuery }
+      - { module: '@example/executor-types', export: QueryOptions }
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorNames: [read, write]
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [QueryExecutor, TransactionQuery, QueryOptions]
+      effort: max
+      unanalyzable: advise
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorNames: [read, write]
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [QueryExecutor, TransactionQuery, QueryOptions]
+      effort: max
+      unanalyzable: advise
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorNames: [read, write]
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [QueryExecutor, TransactionQuery, QueryOptions]
+      effort: max
+      unanalyzable: advise

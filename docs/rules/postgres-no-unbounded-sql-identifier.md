@@ -85,23 +85,26 @@ Low accepts a literal SQL string or untagged template directly at a configured
 named imported executor or proven typed parameter, or through one same-file
 lexical `const` initialized with
 that syntax. SQL parsing distinguishes relation interpolation from bound values.
+Exact imported `sql-template-strings` default/`SQL` tags also qualify: every
+interpolation is a bind placeholder, including SQL-looking strings and nested
+tagged values. A local constant holding that builder must have no mutation or
+unmodeled use. Unrelated tags retain uncertainty.
 Direct `process.env.KEY` relation inputs whose `process` binding is not shadowed
 remain proven violations;
 a template such as `SELECT * FROM public.users WHERE id = ${id}` stays clear.
 
-Helpers, tags, alias chains, imported SQL values, computed executor selections,
-factory executors, unproven type receivers, and CommonJS loaders are unanalyzable at low.
+Helpers, unmodeled tags, alias chains, imported SQL values, computed executor selections,
+unsupported factory executors, unproven type receivers, and CommonJS loaders are unanalyzable at low.
 Erased type references create no findings. Supported typed parameter calls share
 the named executor contract; unsupported SQL and runtime escapes are diagnosed
 at their own use. See [executor bindings](../postgres-facts/executor-bindings.md).
 A single local `const run = query` executor alias also remains unanalyzable;
 its diagnostic uses the invocation line so a disable-next-line comment above
 `run(sql)` suppresses that call.
-The existing configured-module `withTransaction` and `withTransactionOptions`
-imports also imply executor selection at max. Low conservatively reports their
-uses as unknown, including a SQL-free callback, because it does not interpret
-callbacks or namespace receiver mutation. Choose max for that form or expose a
-direct configured executor. Namespace
+Configured typed callbacks and supported factory bindings share the literal SQL
+contract described in [executor bindings](../postgres-facts/executor-bindings.md).
+Other wrapper uses remain unknown at low; select max or expose a directly
+configured executor. Namespace
 executor calls and escapes are also unanalyzable; unrelated named methods stay outside
 the configured target scope. Rewrite SQL at the direct imported call, keep
 relation names literal, and pass external values as bind parameters. For example:
@@ -130,9 +133,9 @@ Following recall over precision ([how analysis
 works](../../README.md#how-analysis-works)), inputs this rule cannot prove are
 never treated as clean; they follow `options.unanalyzable`.
 
-- At low: helpers, tags, alias chains, imported SQL values, computed executor
-  selections, factory executors or unproven type receivers, CommonJS loaders,
-  and `withTransaction` callbacks, for example `query(buildStatement())`. At max
+- At low: helpers, unmodeled tags, alias chains, imported SQL values, computed executor
+  selections, unsupported factory executors or unproven type receivers, CommonJS loaders,
+  and untyped wrapper callbacks, for example `query(buildStatement())`. At max
   the rule abstains on a runtime-computed environment key (`process.env[key]`)
   and on unresolved imports or cyclic aliases; see Abstains.
   - `report` (default): fails as a finding.

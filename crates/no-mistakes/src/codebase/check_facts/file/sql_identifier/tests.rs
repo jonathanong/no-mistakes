@@ -5,7 +5,7 @@ use crate::config::v2::schema::EffectTargetConfig;
 #[test]
 fn typed_executor_demand_is_profiled_and_path_scoped() {
     let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
-        .join("fixture/effort-low");
+        .join("effort-low");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let rule = config.rule_applications("postgres-no-unbounded-sql-identifier")[0];
     let typed = [EffectTargetConfig {
@@ -27,8 +27,12 @@ fn typed_executor_demand_is_profiled_and_path_scoped() {
         .insert(profile.clone(), vec![selected.clone(), untyped]);
     plan.sql_identifier_profiles
         .insert(other_profile.clone(), vec![selected.clone()]);
+    let unmatched =
+        SqlIdentifierScan::new(&root, &config, rule, 3, &["src/excluded.ts".into()], &[])
+            .unwrap()
+            .with_typed_executor_types(&typed);
     plan.sql_identifier_profiles
-        .insert(unmatched_profile, vec![selected]);
+        .insert(unmatched_profile, vec![unmatched]);
     plan.sql_identifier_profiles.insert(
         no_identity_profile,
         vec![
@@ -49,7 +53,7 @@ fn typed_executor_demand_is_profiled_and_path_scoped() {
 #[test]
 fn typed_executor_demand_sorts_and_deduplicates_module_export_identity() {
     let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
-        .join("fixture/effort-low");
+        .join("effort-low");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     let rule = config.rule_applications("postgres-no-unbounded-sql-identifier")[0];
     let duplicate = EffectTargetConfig {

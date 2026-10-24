@@ -35,14 +35,22 @@ query(sql);
 Typed parameters support direct calls and `.query` calls, including renamed
 bindings destructured from an inline object parameter type. The type must be a
 reference to the configured named import; a same-named local type is insufficient.
+Defaulted parameters and typed callback parameters use the same ownership
+contract. Supported factory results and declared type identities are described
+in [executor bindings](../postgres-facts/executor-bindings.md).
 These literal calls remain definite findings with `unanalyzable: ignore`.
 Erased type references never create a function-declaration finding. Clear literal
 calls stay clear under the default failure policy; dynamic SQL is reported at
 its execution call, while a runtime executor escape is reported at that use.
 
 Both efforts report those OFFSET clauses at their physical SQL locations.
-Low does not evaluate JavaScript helpers or builders. Interpolation, SQL tags,
-computed SQL, further aliases, and executor forms without a direct ownership
+Low also accepts `sql-template-strings` templates through their exact imported
+default or `SQL` bindings, including aliases and namespace members. Their
+interpolations become bind placeholders, not SQL fragments. One local constant
+qualifies only when its builder is not mutated or passed to an unmodeled use.
+SQL positions remain tied to the literal text, including multiline binds.
+Low does not evaluate JavaScript helpers or builders. Untagged interpolation,
+other SQL tags, computed SQL, further aliases, and executor forms without a direct ownership
 proof remain unanalyzable. JavaScript escapes in SQL literals are also
 unanalyzable at low; use an unescaped literal or select max. Low requires
 embedded literal SQL to parse completely; malformed embedded SQL follows the same
@@ -165,7 +173,7 @@ never treated as clean; they follow `options.unanalyzable`.
 
 - At max: executor calls whose SQL has no complete recovered alternative or
   exceeds the 16-alternative cap (an opaque helper result, a mutated builder).
-  At low: interpolated or tagged SQL, computed SQL, aliases beyond one `const`,
+  At low: untagged interpolated SQL or unmodeled tags, computed SQL, aliases beyond one `const`,
   JavaScript escapes in literals, and embedded SQL that does not parse
   completely. Unparseable statements at max are skipped while recoverable
   siblings stay checked.

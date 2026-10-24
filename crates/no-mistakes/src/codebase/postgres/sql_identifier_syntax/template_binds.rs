@@ -54,24 +54,7 @@ impl TemplateBinds {
         }
     }
     pub fn write(&mut self, target: &SimpleAssignmentTarget<'_>) {
-        let at = match target {
-            SimpleAssignmentTarget::AssignmentTargetIdentifier(id) => Some(span(id.span)),
-            SimpleAssignmentTarget::StaticMemberExpression(value) => {
-                chain(&value.object).map(|v| v.0)
-            }
-            SimpleAssignmentTarget::ComputedMemberExpression(value) => {
-                chain(&value.object).map(|v| v.0)
-            }
-            SimpleAssignmentTarget::TSAsExpression(value) => chain(&value.expression).map(|v| v.0),
-            SimpleAssignmentTarget::TSSatisfiesExpression(value) => {
-                chain(&value.expression).map(|v| v.0)
-            }
-            SimpleAssignmentTarget::TSNonNullExpression(value) => {
-                chain(&value.expression).map(|v| v.0)
-            }
-            SimpleAssignmentTarget::TSTypeAssertion(value) => chain(&value.expression).map(|v| v.0),
-            _ => None,
-        };
+        let at = assignment_root(target);
         if let Some(at) = at {
             self.write_span(at);
         }
@@ -159,4 +142,22 @@ pub(super) fn safe_constants(module: &TypeScriptModuleFacts, calls: &[Call]) -> 
         })
         .map(|binding| (binding.span.start, binding.span.end))
         .collect()
+}
+
+// A computed key is read, not written: seen[executor] mutates only seen.
+pub(super) fn assignment_root(target: &SimpleAssignmentTarget<'_>) -> Option<Span> {
+    match target {
+        SimpleAssignmentTarget::AssignmentTargetIdentifier(id) => Some(span(id.span)),
+        SimpleAssignmentTarget::StaticMemberExpression(value) => chain(&value.object).map(|v| v.0),
+        SimpleAssignmentTarget::ComputedMemberExpression(value) => {
+            chain(&value.object).map(|v| v.0)
+        }
+        SimpleAssignmentTarget::TSAsExpression(value) => chain(&value.expression).map(|v| v.0),
+        SimpleAssignmentTarget::TSSatisfiesExpression(value) => {
+            chain(&value.expression).map(|v| v.0)
+        }
+        SimpleAssignmentTarget::TSNonNullExpression(value) => chain(&value.expression).map(|v| v.0),
+        SimpleAssignmentTarget::TSTypeAssertion(value) => chain(&value.expression).map(|v| v.0),
+        _ => None,
+    }
 }
