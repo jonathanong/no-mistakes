@@ -215,7 +215,7 @@ fn caller_directives_still_suppress_sql_reported_in_the_helper() {
 #[test]
 fn module_level_string_constants_are_judged_and_computed_forms_stay_unanalyzable() {
     let unknown = [
-        86, 92, 100, 106, 112, 118, 124, 129, 133, 137, 141, 146, 151,
+        69, 86, 92, 100, 106, 112, 118, 124, 129, 133, 137, 141, 146, 151,
     ];
     let mut rows = vec![("src/caller.mts", 74, "orders")];
     rows.extend(

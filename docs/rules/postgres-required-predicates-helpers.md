@@ -34,8 +34,11 @@ literal into an untagged template or `.append` when no local binding shadows
 method, type-only, and non-const reads stay unanalyzable. Namespace recovery
 accepts only string constants: a tagged builder fragment such as `names.FRAGMENT`
 stays unanalyzable even in `.append`, because the exported object can mutate
-after its declaration. Named fragment imports keep their established append
-behavior.
+after its declaration. Named and default imports of tagged builder fragments
+also stay unanalyzable, including through barrels and `.append`: another
+importer can mutate the object. Named imports of primitive string constants
+still recover. Use an exported string literal instead of a shared builder when
+the fragment must be recoverable without cross-module mutation analysis.
 
 Helpers with control flow are checked too. A helper that returns early, branches
 on its arguments, calls other helpers (up to 8 deep), appends to a
