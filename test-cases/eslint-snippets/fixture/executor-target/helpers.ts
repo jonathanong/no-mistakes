@@ -25,6 +25,8 @@ export const contextual: Helper = query => { query("SELECT 1"); };
 export const explicitArrow = (query: QueryExecutor) => { query("SELECT 1"); };
 export const explicitExpression = function(query: QueryExecutor) { query("SELECT 1"); };
 export declare function ambient(query: QueryExecutor): void;
+// Callable variable types are contextual, unlike an explicit function declaration.
+export declare const ambientConst: (query: QueryExecutor) => void;
 
 // A named interface method signature still provides only contextual typing.
 interface Helpers { run(query: QueryExecutor): void }

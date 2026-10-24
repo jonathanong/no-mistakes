@@ -111,3 +111,53 @@ fn low_literal_annotation_violations_survive_every_policy_in_the_public_check_ap
         );
     }
 }
+
+#[test]
+fn low_typed_executors_keep_statement_lines_in_the_public_check_api() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-offset/fixture/low-typed-executors");
+    let source = std::fs::read_to_string(root.join("src/query.ts")).unwrap();
+    let options = serde_json::json!({
+        "root": root,
+        "config": root.join(".no-mistakes-default.yml"),
+    });
+    let result: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),
+    )
+    .unwrap();
+    let rows = result["rules"].as_array().unwrap();
+    for rule in [
+        "postgres-no-offset",
+        "postgres-require-query-annotation",
+        "postgres-no-mutable-sql-registry",
+        "postgres-no-unbounded-sql-identifier",
+        "postgres-no-transformed-uuid-predicates",
+    ] {
+        for (index, line) in source.lines().enumerate() {
+            let found = rows
+                .iter()
+                .any(|row| row["rule"] == rule && row["line"] == index + 1);
+            if line.contains("// UNKNOWN")
+                || (matches!(
+                    rule,
+                    "postgres-no-offset"
+                        | "postgres-require-query-annotation"
+                        | "postgres-no-transformed-uuid-predicates"
+                ) && line.contains("// FALLBACK_UNKNOWN"))
+                || (rule != "postgres-require-query-annotation"
+                    && line.contains("// UNSUPPORTED_TYPE"))
+            {
+                assert!(found, "{rule}:{}", index + 1);
+            }
+            if line.contains("// CLEAR")
+                || line.starts_with("export function")
+                || line.starts_with("type ")
+            {
+                assert!(!found, "{rule}:{}", index + 1);
+            }
+            if rule == "postgres-no-offset" && line.contains("// OFFSET") {
+                assert!(found, "OFFSET violation must survive the default policy");
+            }
+        }
+    }
+}

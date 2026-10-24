@@ -1,0 +1,47 @@
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      include: ["src/**"]
+      importSpecifier: "@example/db"
+      executorNames: [query]
+      executorTypeNames: [QueryExecutor]
+      executorFactoryNames: [createExecutor]
+      effort: low
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      include: ["src/**"]
+      importSpecifier: "@example/db"
+      executorNames: [query]
+      executorTypeNames: [QueryExecutor]
+      executorFactoryNames: [createExecutor]
+      effort: low
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    options:
+      include: ["src/**"]
+      importSpecifier: "@example/db"
+      executorNames: [query]
+      executorTypeNames: [QueryExecutor]
+      executorFactoryNames: [createExecutor]
+      effort: low
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      include: ["src/**"]
+      importSpecifier: "@example/db"
+      executorNames: [query]
+      executorTypeNames: [QueryExecutor]
+      executorFactoryNames: [createExecutor]
+      effort: low
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      include: ["src/**"]
+      importSpecifier: "@example/db"
+      executorNames: [query]
+      executorTypeNames: [QueryExecutor]
+      executorFactoryNames: [createExecutor]
+      effort: low
+      schemaCatalogPath: schema.json

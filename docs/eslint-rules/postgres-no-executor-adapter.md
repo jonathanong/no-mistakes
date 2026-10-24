@@ -18,7 +18,8 @@ function run(account: string) {
 ```
 
 A helper with a proven configured executor parameter is also judged. With
-`executorTypeNames: ["QueryExecutor"]`, passing the executor directly is allowed:
+`executorTypeNames: ["QueryExecutor"]`, passing the executor directly is
+allowed:
 
 ```ts
 import { read, type QueryExecutor } from "@example/db";
@@ -26,7 +27,8 @@ function load(query: QueryExecutor) {
   return query("SELECT id FROM orders");
 }
 load(read);
-const loadOptional = (query?: QueryExecutor) => query?.("SELECT id FROM orders");
+const loadOptional = (query?: QueryExecutor) =>
+  query?.("SELECT id FROM orders");
 loadOptional(read);
 function loadObject({ query }: { query: QueryExecutor }) {
   return query("SELECT id FROM orders");
@@ -36,26 +38,32 @@ loadObject({ query: read });
 
 Same-file function declarations and `const` arrow/function expressions use the
 parameter's declared imported type. Optional and defaulted parameters and inline
-destructured properties without property defaults are supported. A shadowed type name cannot prove the
-configured type. Forwarding callbacks still report, including
-`load((statement) => read(statement))`.
+destructured properties without property defaults are supported. A shadowed type
+name cannot prove the configured type. Forwarding callbacks still report,
+including `load((statement) => read(statement))`.
 
 Imported helpers require typed linting: configure `@typescript-eslint/parser`
 with `parserOptions.project` or `projectService` so `parserServices.program`
 is available. The declared parameter must reference a configured type imported
-from the configured database module, and its signature must belong to the imported
-function declaration or `const` function initializer. The exporting source must have
-no direct `eval` call, and no assignments, destructuring writes, updates, or loop
-assignments to that helper binding. Writes to a shadowed local binding do not
-invalidate the exported helper. Without that information, the call reports.
+from the configured database module, and its signature must belong to the
+imported function declaration or `const` function initializer. The exporting
+source must have no direct `eval` call, and no assignments, destructuring writes,
+updates, or loop assignments to that helper binding. Writes to a shadowed local
+binding do not invalidate the exported helper. Without that information, the
+call reports.
+The implementation body must also be available in the TypeScript program.
+Ambient function declarations and ambient callable variables keep reporting:
+their signatures describe a contract but do not expose SQL for analysis.
 Contextual function types such as `const run: Helper = query => query(sql)`
 do not annotate the implementation parameter and still report.
-Structural compatibility, inference, unknown callees, mutable helpers, overloads,
-rest parameters, and calls containing spread arguments do not establish proof.
-An object parameter such as `options: { query: QueryExecutor }` does not establish
-an inline destructured executor binding; `loadObject({ nested: { query: read } })`
-also reports. Rewrite these to the explicit supported parameter shape or name
-the executor inside the helper.
+Structural compatibility, inference, unknown callees, mutable helpers,
+overloads, rest parameters, and calls containing spread arguments do not
+establish proof.
+For example, `load(...[read])` reports; use the explicit argument `load(read)`.
+An object parameter such as `options: { query: QueryExecutor }` does not
+establish an inline destructured executor binding;
+`loadObject({ nested: { query: read } })` also reports. Rewrite these to the
+explicit supported parameter shape or name the executor inside the helper.
 
 These call shapes are also judged:
 
@@ -291,7 +299,8 @@ run(0 ?? read, account);
 
 This rule does not autofix and does not offer a suggestion. Replacing the
 adapter with `run(read, account)` requires a proven configured executor
-parameter on `run`; otherwise the statement inside `run` stays unchecked. Name the executor inside the helper instead:
+parameter on `run`; otherwise the statement inside `run` stays unchecked. Name
+the executor inside the helper instead:
 
 ```ts
 function run(account: string) {

@@ -148,3 +148,37 @@ fn low_syntax_scope_union_keeps_distinct_applications_once() {
     assert_eq!(existing[&profile].len(), 2);
     assert!(existing[&profile][1].includes(&root, &root.join("src/selection.ts")));
 }
+
+#[test]
+fn low_typed_candidates_cannot_repair_missing_semantic_bindings() {
+    let path = crate::test_support::rule_fixture_root("postgres-no-offset")
+        .join("low-typed-executors/src/query.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    crate::ast::with_program(&path, &source, |program, _| {
+        let mut ts = collect_file_facts_from_program(
+            &path,
+            TsFactPlan {
+                module_bindings: true,
+                ..Default::default()
+            },
+            &TsFactContext::default(),
+            &source,
+            program,
+            None,
+            None,
+        );
+        // Incomplete supplied facts cannot prove either direct or alias types.
+        std::sync::Arc::make_mut(ts.module_bindings.as_mut().unwrap())
+            .bindings
+            .retain(|binding| binding.imported);
+        let profile = EmbeddedSqlOptions::configured("@example/db", &[])
+            .with_scoped_executors(&["createExecutor".into()], &["QueryExecutor".into()]);
+        let module = ts.module_bindings.as_deref().unwrap();
+        let selection = Selection::new(&profile, module);
+        let (selected, unsupported, _) =
+            typed::collect(program, module, &profile, &selection.unsupported);
+        assert!(selected.is_empty());
+        assert!(unsupported.is_empty());
+    })
+    .unwrap();
+}

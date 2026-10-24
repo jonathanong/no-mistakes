@@ -54,12 +54,17 @@ fn unbounded_effort_narrows_files_profiles_and_input_synthesis() {
 #[test]
 fn unbounded_effort_scoped_executors_and_loaders_are_explicit_unknowns() {
     let report = run(".no-mistakes-scoped.yml", false);
-    for file in ["src/scoped.ts", "src/loaders.ts"] {
-        assert!(
-            report.rules.iter().filter(|row| row.file == file).count() >= 2,
-            "{file}: {:?}",
-            report.rules
-        );
+    for (file, expected) in [
+        ("src/scoped.ts", vec![3]),
+        ("src/loaders.ts", vec![1, 4, 8]),
+    ] {
+        let lines = report
+            .rules
+            .iter()
+            .filter(|row| row.file == file)
+            .map(|row| row.line)
+            .collect::<Vec<_>>();
+        assert_eq!(lines, expected, "{file}: {:?}", report.rules);
     }
     assert!(report
         .rules

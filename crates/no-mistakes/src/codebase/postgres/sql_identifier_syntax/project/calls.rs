@@ -2,7 +2,6 @@ use super::*;
 use crate::codebase::ts_source::module_facts::{ModuleBinding, TypeScriptModuleFacts};
 
 type Owners<'a> = FxHashMap<Span, &'a ModuleBinding>;
-
 pub(super) fn project(
     profile: &EmbeddedSqlOptions,
     selection: &Selection,
@@ -39,6 +38,7 @@ fn direct_calls(
         namespaces,
         unsupported,
         typed,
+        ..
     } = selection;
     let mut calls = Vec::new();
     let mut direct = FxHashSet::default();
@@ -125,6 +125,7 @@ fn append_escapes(
         namespaces,
         unsupported,
         typed,
+        ..
     } = selection;
     // Reporting the imported reference catches aliases and factories without
     // interpreting their result or silently losing their downstream sinks.
@@ -146,7 +147,9 @@ fn append_escapes(
             {
                 continue;
             }
-            if direct.contains(&at) || (!usage.runtime && !unsupported.contains(&binding.id)) {
+            // Type annotations and type queries are erased even when their
+            // imported binding also denotes an unsupported runtime executor.
+            if direct.contains(&at) || !usage.runtime {
                 continue;
             }
             if syntax.alias_initializers.get(&at) == Some(&binding.id) {

@@ -2,7 +2,12 @@
 
 # `postgres-no-transformed-uuid-predicates`
 
-A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+A `projects: [<name>]` entry inherits
+[`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when
+that block is set. Do not restate `importSpecifier`, `executorNames`,
+`executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`,
+`schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and
+`sqlInclude` may only narrow the project scope.
 
 Require catalog-resolved UUID columns to stay bare in `WHERE`, `JOIN ON`, and
 `HAVING` predicates. This preserves indexable comparisons against UUID
@@ -82,7 +87,11 @@ uncertainty; use a file directive when deliberately suppressing that case.
 
 At `effort: low`, the rule analyzes supported literal SQL directly in SQL files
 and executor calls. Direct strings, interpolation-free templates, and one local
-constant are supported; JavaScript escapes and other construction follow the
+constant are supported at named executors and proven typed parameters. Erased
+type references create no findings; dynamic SQL and runtime executor escapes
+are diagnosed at their own use. See [executor
+bindings](../postgres-facts/executor-bindings.md).
+JavaScript escapes and other construction follow the
 unanalyzable policy. At `effort: max`, it also analyzes supported prepared SQL
 builders and helper-returned statements. Unanalyzable or dynamic query text
 follows the configured `unanalyzableSql` policy.

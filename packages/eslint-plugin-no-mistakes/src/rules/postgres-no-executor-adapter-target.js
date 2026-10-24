@@ -67,6 +67,7 @@ function importedTarget(call, index, property, context, options, facts) {
   const signatures = checker.getTypeAtLocation(node).getCallSignatures();
   if (signatures.length !== 1) return false;
   const declaration = signatures[0].getDeclaration();
+  if (!declaration?.body) return false;
   // The signature must belong to this callee's declaration or const initializer.
   // A contextual method type can point at a different, fully annotated body.
   const target = checker.getAliasedSymbol(checker.getSymbolAtLocation(node));

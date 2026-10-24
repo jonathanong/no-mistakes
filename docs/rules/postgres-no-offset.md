@@ -1,6 +1,11 @@
 # `postgres-no-offset`
 
-A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when that block is set. Do not restate `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`, `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and `sqlInclude` may only narrow the project scope.
+A `projects: [<name>]` entry inherits
+[`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when
+that block is set. Do not restate `importSpecifier`, `executorNames`,
+`executorFactoryNames`, `executorTypeNames`, `trustedSqlTags`,
+`schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and
+`sqlInclude` may only narrow the project scope.
 
 Flags executed PostgreSQL SQL that uses an `OFFSET` clause. Offset pagination
 reads skipped rows again on every page and is usually the wrong default next to
@@ -31,6 +36,9 @@ Typed parameters support direct calls and `.query` calls, including renamed
 bindings destructured from an inline object parameter type. The type must be a
 reference to the configured named import; a same-named local type is insufficient.
 These literal calls remain definite findings with `unanalyzable: ignore`.
+Erased type references never create a function-declaration finding. Clear literal
+calls stay clear under the default failure policy; dynamic SQL is reported at
+its execution call, while a runtime executor escape is reported at that use.
 
 Both efforts report those OFFSET clauses at their physical SQL locations.
 Low does not evaluate JavaScript helpers or builders. Interpolation, SQL tags,
@@ -111,7 +119,8 @@ rules:
       unanalyzableSql: fail
 ```
 
-`importSpecifier` has no default. `executorNames` defaults to `query`, `read`, and `write` only when `importSpecifier` is configured.
+`importSpecifier` has no default. `executorNames` defaults to `query`, `read`,
+and `write` only when `importSpecifier` is configured.
 `unanalyzableSql` defaults to `fail` (`fail`, `ignore`, or `advise`; other values are a
 configuration error).
 
@@ -121,7 +130,8 @@ is recoverable, the call follows `unanalyzableSql` instead of checking stale
 SQL from before the assignment.
 
 Counterexample: `query(\`SELECT id FROM posts OFFSET 10\`)`. Interpolated
-offsets such as `OFFSET ${limit}`are findings once the template becomes`OFFSET sql_placeholder_1`.
+offsets such as `OFFSET ${limit}`are findings once the template becomes`OFFSET
+sql_placeholder_1`.
 A same-file const string or unwritten object member spliced into that template
 is checked as if it were written in place. See
 [Embedded SQL facts](../postgres-facts/embedded-sql-facts.md).
@@ -149,10 +159,18 @@ when a whole file is an intentional exception.
 
 ### Unanalyzable inputs
 
-Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+Following recall over precision ([how analysis
+works](../../README.md#how-analysis-works)), inputs this rule cannot prove are
+never treated as clean; they follow `options.unanalyzable`.
 
-- At max: executor calls whose SQL has no complete recovered alternative or exceeds the 16-alternative cap (an opaque helper result, a mutated builder). At low: interpolated or tagged SQL, computed SQL, aliases beyond one `const`, JavaScript escapes in literals, and embedded SQL that does not parse completely. Unparseable statements at max are skipped while recoverable siblings stay checked.
-  - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out`.
+- At max: executor calls whose SQL has no complete recovered alternative or
+  exceeds the 16-alternative cap (an opaque helper result, a mutated builder).
+  At low: interpolated or tagged SQL, computed SQL, aliases beyond one `const`,
+  JavaScript escapes in literals, and embedded SQL that does not parse
+  completely. Unparseable statements at max are skipped while recoverable
+  siblings stay checked.
+  - `report` (default): fails as a finding, e.g. `executed SQL is not statically
+    recoverable, so an OFFSET in a dynamic SELECT cannot be ruled out`.
   - `advise`: a non-failing advisory with the same reason.
   - `ignore`: omitted.
 
@@ -189,7 +207,8 @@ See [Unanalyzable SQL](postgres-no-offset-dynamic.md) and
 
 `include` and `exclude` select source files. `sqlInclude` defaults to `[]`,
 so `.sql` files are not scanned unless a glob selects them. `importSpecifier`
-has no module default, and `executorNames` defaults to `[query, read, write]` only when `importSpecifier` is configured.
+has no module default, and `executorNames` defaults to `[query, read, write]`
+only when `importSpecifier` is configured.
 `unanalyzableSql` defaults to `fail`; `ignore` skips dynamic executor SQL that
 cannot be checked instead of reporting it.
 
@@ -251,7 +270,11 @@ Use `no-mistakes-disable-next-line postgres-no-offset` or
 at the executor call); use the file directive only for an intentionally
 offset-based reporting query.
 
-SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
+SQL recovered from an imported helper is reported in the helper's module at the
+helper's line. A directive in the helper's file suppresses it, and so does a
+directive in the calling file (file-level, on the executor call, or on the
+imported-helper call). See [Helper-line attribution and
+suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
 
 ## Related rules
 
