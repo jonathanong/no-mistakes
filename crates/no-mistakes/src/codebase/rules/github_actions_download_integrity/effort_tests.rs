@@ -72,7 +72,6 @@ fn low_routes_expansions_and_dynamic_paths_without_reclassifying_literal_finding
         .cloned()
         .collect();
     assert_eq!(shapes.len(), 5, "{:?}", report.findings);
-    assert_eq!(report.findings.len(), max.len());
     let literal: Vec<_> = report
         .findings
         .iter()

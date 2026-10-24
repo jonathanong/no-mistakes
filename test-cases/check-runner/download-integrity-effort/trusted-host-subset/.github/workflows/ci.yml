@@ -1,0 +1,17 @@
+name: Definite download findings stay a subset across effort levels
+on: push
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: literal-untrusted-url
+        run: curl -fsSL https://untrusted.example.invalid/literal.tgz -o literal.tgz
+      - name: assigned-untrusted-url
+        run: |
+          BASE_URL="https://untrusted.example.invalid"
+          curl "$BASE_URL/assigned.tgz" -o assigned.tgz
+      # One literal binding per script lets max prove trust without making it literal at low.
+      - name: assigned-trusted-url
+        run: |
+          BASE_URL="https://api.github.com"
+          curl "$BASE_URL/repos/example/project" -o project.json

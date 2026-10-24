@@ -1,0 +1,5 @@
+rules:
+  - rule: github-actions-download-integrity
+    scope: repository
+    options:
+      effort: max

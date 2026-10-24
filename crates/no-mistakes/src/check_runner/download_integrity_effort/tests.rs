@@ -51,7 +51,7 @@ fn default_is_explicit_max_on_existing_and_new_fixtures() {
 }
 
 #[test]
-fn low_routes_uncertain_commands_once_and_max_reports_at_least_as_many() {
+fn low_routes_uncertain_commands_once_and_preserves_definite_findings() {
     let root = fixture();
     let max = run(&root, Some("max.yml"), None);
     assert_eq!(max.rules.len(), 4, "{:?}", max.rules);
@@ -61,8 +61,10 @@ fn low_routes_uncertain_commands_once_and_max_reports_at_least_as_many() {
         assert_eq!(low.analysis_warning_count, 0);
         assert_eq!(low.rules.len(), findings, "{policy}: {:?}", low.rules);
         assert_eq!(low.advisories.len(), advisories, "{policy}");
-        assert!(max.rules.len() >= low.rules.len());
         assert_eq!(low.rules.iter().filter(|row| !shape(row)).count(), 2);
+        for finding in low.rules.iter().filter(|row| !shape(row)) {
+            assert!(max.rules.contains(finding), "{policy}: {finding:?}");
+        }
         let shapes = low
             .rules
             .iter()
@@ -88,6 +90,44 @@ fn low_routes_uncertain_commands_once_and_max_reports_at_least_as_many() {
             .chain(&low.advisories)
             .all(|row| !row.file.ends_with("disabled.yml")));
     }
+}
+
+#[test]
+fn trusted_dynamic_host_adds_uncertainty_while_definite_low_findings_stay_a_subset() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/check-runner/download-integrity-effort/trusted-host-subset"),
+    );
+    let max = run(&root, Some("max.yml"), None);
+    let low = run(&root, Some("low-report.yml"), None);
+    assert_eq!(max.rules.len(), 2, "{:?}", max.rules);
+    assert_eq!(low.rules.len(), 3, "{:?}", low.rules);
+    assert!(max.advisories.is_empty() && low.advisories.is_empty());
+    assert!(low.analysis_fallbacks.is_empty());
+    assert_eq!(low.analysis_warning_count, 0);
+    let definite: Vec<_> = low.rules.iter().filter(|finding| !shape(finding)).collect();
+    assert_eq!(definite.len(), 1);
+    assert!(max.rules.contains(definite[0]));
+    let shapes: Vec<_> = low.rules.iter().filter(|finding| shape(finding)).collect();
+    assert_eq!(shapes.len(), 2);
+    let trusted = shapes
+        .iter()
+        .find(|finding| finding.message.contains("step 3 "))
+        .unwrap();
+    assert_eq!(trusted.file, ".github/workflows/ci.yml");
+    assert!(trusted.message.contains("$BASE_URL/repos/example/project"));
+    // Max proves this assignment is trusted; low reports its unresolved URL shape.
+    assert!(max
+        .rules
+        .iter()
+        .all(|finding| !finding.message.contains("step 3 ")));
+    assert!(max
+        .rules
+        .iter()
+        .any(|finding| finding.message.contains("step 2 ")
+            && finding
+                .message
+                .contains("https://untrusted.example.invalid/assigned.tgz")));
 }
 
 #[test]
