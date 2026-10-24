@@ -135,6 +135,11 @@ page_size)`. A physical data value is not a caller-owned cap. A potentially empt
 CTE or a `NULL` count cannot supply this proof: a missing scalar row becomes
 `NULL`, and PostgreSQL interprets `LIMIT NULL` as unlimited.
 
+PostgreSQL accepts `TABLESAMPLE` only on tables and materialized views, so
+`FROM cursor_cte TABLESAMPLE SYSTEM (0)` is invalid SQL. Boundedness findings
+for parser-accepted statements that PostgreSQL rejects are outside this rule's
+contract.
+
 Recursive key walks remain reported without a proven total-depth bound. A
 single-row seed and one key lookup per step bound branching, but do not bound
 the number of steps; `UNION ALL` may also revisit a cycle forever. Use an
