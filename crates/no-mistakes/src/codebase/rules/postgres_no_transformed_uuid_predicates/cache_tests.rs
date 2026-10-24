@@ -182,9 +182,8 @@ fn recovered_parameters_inside_casts_and_functions_are_not_columns() {
         root.join("parameter-functions.ts"),
         root.join("schema.json"),
     ];
-    assert!(check_with_files(&root, &config(""), &files)
-        .unwrap()
-        .is_empty());
+    let cfg = config("trustedSqlTags: [{module: db, name: sql}]\n");
+    assert!(check_with_files(&root, &cfg, &files).unwrap().is_empty());
 }
 #[test]
 fn values_and_parenthesized_query_bodies_still_visit_inner_predicates() {
