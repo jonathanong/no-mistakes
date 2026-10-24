@@ -99,6 +99,17 @@ skipped even when their residual is ignored or suppressed. `minSize` does not
 run on unsupported sets. Supported-set mismatches remain definite findings;
 use `effort: "max"` to analyze TypeScript, SQL-enum, and Markdown sets.
 
+For `unconstructed-error-class`, unresolved production constructors, escaped
+namespaces without known construction or inheritance, and unconstructed classes
+with external or unresolved base ancestry follow `options.unanalyzable`:
+`report` fails by default, `advise` emits advisories, and `ignore` omits them.
+Unknown constructors never credit their enclosing class or prove it unused;
+that class follows the policy too unless known construction or inheritance
+proves it used. Use named constructors,
+direct namespace member references, or analyzable repository bases. Suppressions
+apply at the construction or class line in both report channels. The rule remains
+`max` only; a requested `low` warns and runs `max`.
+
 For `version-pin-consistency`, CLI `check`, `check(options)`, and check reports
 in `analyzeProject()` apply the same `unanalyzable` policy when a selected
 anchor's declared comparison source is outside the selected file set and is

@@ -15,7 +15,9 @@ pub(super) struct GraphRuleRequest<'a> {
         Option<&'a crate::codebase::rules::PreparedPlaywrightProjectCatalog>,
 }
 
-pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
+pub(super) fn graph_rule_findings(
+    request: GraphRuleRequest<'_>,
+) -> Result<crate::codebase::rules::analysis_policy::AnalysisDiagnostics> {
     let GraphRuleRequest {
         root,
         config,
@@ -28,6 +30,7 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
         prepared_playwright_projects,
     } = request;
     let mut findings = Vec::new();
+    let mut advisories = Vec::new();
     if rule_enabled(config, FORBIDDEN_CALLS) {
         findings.extend(crate::perf_trace::trace("rules.forbidden_calls", || {
             forbidden_calls::check_with_graph(
@@ -73,16 +76,15 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
         )?);
     }
     if rule_enabled(config, UNCONSTRUCTED_ERROR_CLASS) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.unconstructed_error_class",
-            || {
-                unconstructed_error_class::check_with_graph(
-                    root,
-                    config,
-                    dependency_graph.expect("unconstructed-error-class requires canonical graph"),
-                )
-            },
-        )?);
+        let diagnostics = crate::perf_trace::trace("rules.unconstructed_error_class", || {
+            unconstructed_error_class::check_with_graph(
+                root,
+                config,
+                dependency_graph.expect("unconstructed-error-class requires canonical graph"),
+            )
+        })?;
+        findings.extend(diagnostics.findings);
+        advisories.extend(diagnostics.advisories);
     }
     if rule_enabled(config, query_reached_per_item::RULE_ID) {
         findings.extend(crate::perf_trace::trace(
@@ -147,7 +149,12 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
             )?,
         );
     }
-    Ok(findings)
+    Ok(
+        crate::codebase::rules::analysis_policy::AnalysisDiagnostics {
+            findings,
+            advisories,
+        },
+    )
 }
 
 #[cfg(test)]

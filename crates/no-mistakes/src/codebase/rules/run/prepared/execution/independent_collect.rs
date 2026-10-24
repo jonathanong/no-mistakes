@@ -132,17 +132,18 @@ pub(super) fn playwright(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> 
 }
 
 pub(super) fn graph_rules(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
-    Ok(RuleChunk::from_findings(graph_rule_findings(
-        graph_rules::GraphRuleRequest {
-            root: req.root,
-            config: req.config,
-            config_path: req.config_path,
-            shared: req.shared,
-            prepared_graph: req.prepared_graph,
-            dependency_graph: req.dependency_graph,
-            inferred_roots: req.inferred_roots,
-            prepared_vitest_projects: req.prepared_vitest_projects,
-            prepared_playwright_projects: req.prepared_playwright_projects,
-        },
-    )?))
+    let diagnostics = graph_rule_findings(graph_rules::GraphRuleRequest {
+        root: req.root,
+        config: req.config,
+        config_path: req.config_path,
+        shared: req.shared,
+        prepared_graph: req.prepared_graph,
+        dependency_graph: req.dependency_graph,
+        inferred_roots: req.inferred_roots,
+        prepared_vitest_projects: req.prepared_vitest_projects,
+        prepared_playwright_projects: req.prepared_playwright_projects,
+    })?;
+    let mut chunk = RuleChunk::from_findings(diagnostics.findings);
+    chunk.advisories = diagnostics.advisories;
+    Ok(chunk)
 }

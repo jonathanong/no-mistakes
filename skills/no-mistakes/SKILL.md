@@ -92,6 +92,17 @@ selected scripts without recognized diagnostics. Use `unanalyzable: report`
 fails, advises, or is skipped; install ShellCheck and repair failed
 invocations. Other launcher errors, such as permission denied, are hard errors.
 
+For `unconstructed-error-class`, unresolved production constructors, escaped
+namespaces without known construction or inheritance, and unconstructed classes
+with external or unresolved base ancestry follow `options.unanalyzable`:
+`report` fails by default, `advise` emits advisories, and `ignore` omits them.
+Unknown constructors never credit their enclosing class or prove it unused;
+that class follows the policy too unless known construction or inheritance
+proves it used. Use named constructors,
+direct namespace member references, or analyzable repository bases. Suppressions
+apply at the construction or class line in both report channels. The rule remains
+`max` only; a requested `low` warns and runs `max`.
+
 For `version-pin-consistency`, a missing, unreadable, or malformed declared
 comparison source outside the selected file set for a selected anchor, or a
 selected anchor that cannot be read as UTF-8, follows `unanalyzable` (`report`
