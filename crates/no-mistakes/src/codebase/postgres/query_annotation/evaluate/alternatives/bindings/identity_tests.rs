@@ -115,3 +115,28 @@ fn dense_sparse_writes_compare_only_the_written_key_and_bulk_writes_fall_back() 
         assert_eq!(visits, before.len());
     }
 }
+
+#[test]
+fn sparse_candidates_cannot_resurrect_a_binding_deleted_from_the_joined_arm() {
+    for whole_sql in [false, true] {
+        let mut initial = scope();
+        for index in 0..61 {
+            initial.insert(format!("stable{index}"), Value::Primitive);
+        }
+        let mut before = initial.clone();
+        before.remove("argument");
+        let mut after = initial.clone();
+        after.insert("unknown".into(), Value::Arguments(11));
+        let (result, visits) = compare(&before, &after, &initial, whole_sql);
+        assert!(!result.contains_key("argument"));
+        assert_eq!(
+            visits, 1,
+            "the absent dirty key is skipped before comparison"
+        );
+        assert!(
+            result["unknown"] == Value::Joined(vec![Value::Unknown, Value::Arguments(11)].into())
+        );
+        assert!(result["builder"] == initial["builder"]);
+        assert!(initial.contains_key("argument") && after.contains_key("argument"));
+    }
+}

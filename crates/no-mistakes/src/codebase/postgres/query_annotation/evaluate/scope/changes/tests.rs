@@ -2,6 +2,8 @@ use super::*;
 use crate::codebase::postgres::query_annotation::evaluate::Value;
 use crate::fx::FxHashMap;
 
+mod untracked;
+
 fn scope() -> Scope {
     let mut values = (0..62)
         .map(|index| (format!("stable{index}"), Value::Primitive))
