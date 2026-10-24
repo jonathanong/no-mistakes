@@ -13,6 +13,11 @@ pub(super) fn append(
     catalog: &SchemaCatalog,
 ) {
     for index in catalog.bounded_unique_indexes(name) {
+        // Positional aliases can exchange physical predicate columns while retaining the same
+        // visible spelling. Without an ordinal projection, no partial predicate is proved.
+        if !index.predicate.is_empty() && !item.column_aliases.is_empty() {
+            continue;
+        }
         if !index
             .predicate
             .iter()
