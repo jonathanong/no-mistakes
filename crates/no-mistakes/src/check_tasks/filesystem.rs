@@ -141,6 +141,7 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
 
 mod download_integrity;
 mod finite_sets;
+mod manifests;
 mod payload_compatibility;
 mod redirects;
 fn run_enabled_filesystem_rules(

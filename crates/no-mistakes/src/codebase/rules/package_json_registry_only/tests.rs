@@ -1,3 +1,4 @@
+use super::scan::check_package_json_with_sources;
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -8,6 +9,9 @@ use std::path::Path;
 fn check_package_json(path: &Path, root: &Path) -> Vec<RuleFinding> {
     let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
     check_package_json_with_sources(path, root, &sources)
+        .into_iter()
+        .map(ClassifiedFinding::into_public)
+        .collect()
 }
 
 fn fixture(path: &str) -> std::path::PathBuf {
@@ -189,9 +193,11 @@ fn node_modules_excluded() {
 }
 
 #[test]
-fn unreadable_package_json_returns_empty() {
-    let findings = check_package_json(Path::new("/nonexistent/package.json"), Path::new("/"));
-    assert!(findings.is_empty());
+fn unreadable_package_json_is_unanalyzable() {
+    let root = fixture("missing-input");
+    let findings = check_package_json(&root.join("missing/package.json"), &root);
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]
@@ -355,11 +361,16 @@ fn lockfile_registry_integrity_allowed() {
 }
 
 #[test]
-fn missing_lockfile_is_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let config = config_with_options("lockfile: nonexistent.yaml");
-    let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
-    assert!(findings.is_empty());
+fn configured_missing_lockfile_is_unanalyzable() {
+    let root = fixture("missing-input");
+    let findings = check_with_files(
+        &root,
+        &config_with_options("lockfile: nonexistent.yaml"),
+        &[],
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]
@@ -391,15 +402,11 @@ fn check_standalone_produces_no_findings_for_empty_dir() {
 }
 
 #[test]
-fn invalid_json_in_package_json_is_skipped() {
-    // check_package_json returns Vec::new() on JSON parse error (line 120).
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_package_json(tmp.path(), "not json at all {{{");
-    let findings = check_package_json(&path, tmp.path());
-    assert!(
-        findings.is_empty(),
-        "invalid JSON should produce no findings"
-    );
+fn invalid_json_in_package_json_is_unanalyzable() {
+    let root = fixture("unanalyzable");
+    let findings = check_package_json(&root.join("packages/broken/package.json"), &root);
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]

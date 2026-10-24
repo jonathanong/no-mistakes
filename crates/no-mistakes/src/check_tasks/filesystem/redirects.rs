@@ -104,25 +104,10 @@ pub(super) fn run(
     } else {
         config
     };
-    let mut without_manifest_fields;
-    let config = if config.rule_configured(rules::PACKAGE_JSON_REQUIRED_FIELDS) {
-        diagnostics.append(
-            rules::package_json_required_fields::diagnostics_with_files_and_sources(
-                root,
-                config,
-                files,
-                &prepared.sources,
-                defer_suppression,
-            )?,
-        );
-        without_manifest_fields = config.clone();
-        without_manifest_fields
-            .rules
-            .retain(|rule| rule.rule != rules::PACKAGE_JSON_REQUIRED_FIELDS);
-        &without_manifest_fields
-    } else {
-        config
-    };
+    let (config, manifest_diagnostics) =
+        super::manifests::run(root, config, files, &prepared.sources, defer_suppression)?;
+    diagnostics.append(manifest_diagnostics);
+    let config = config.as_ref();
     let findings = if defer_suppression {
         rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
             root, config, files, prepared, facts,

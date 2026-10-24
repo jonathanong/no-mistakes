@@ -15,12 +15,12 @@ registry policy.
 `scopes` is an optional list of repository-relative directory prefixes. A
 `package.json` is checked when `scopes` is empty or the file sits under one of
 those prefixes. `lockfile` optionally names a pnpm lockfile to check the same
-way; omitted values use the documented registry-only defaults.
+way; when omitted, only selected package manifests are checked.
 A pnpm lockfile check reads `packages` in every YAML document, so a non-registry
 config dependency in the env document is reported along with project packages.
 A lockfile that cannot be parsed, or whose leading document is not an env
 lockfile, is reported instead of passing with no findings. A configured lockfile
-path that does not exist is skipped.
+path that does not exist produces an `unanalyzable` diagnostic.
 
 ```yaml
 rules:
@@ -28,10 +28,10 @@ rules:
     scope: repository
     options:
       scopes: [packages]
-      lockfile: pnpm-lock.yaml
 ```
 
-`scopes: [packages]` limits the check to manifests under `packages/`.
+`scopes: [packages]` limits the check to manifests under `packages/`. Add
+`lockfile: pnpm-lock.yaml` to also check that required lockfile.
 
 ## Valid example
 
@@ -64,12 +64,15 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, the intent is that nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)). Known gap: an unparseable or unreadable `package.json` is currently skipped without a finding ([#2659](https://github.com/jonathanong/no-mistakes/issues/2659)).
+Selected package manifests and explicitly configured lockfiles that cannot be read or parsed produce an `unanalyzable` diagnostic containing the file and error. Repair malformed JSON/YAML or restore read access so dependency policy can be checked. Absent optional inputs are allowed unless explicitly configured.
+
+`options.unanalyzable` uses the shared analysis policy: `report` (default) emits a finding, `advise` emits an advisory, and `ignore` omits the uncertain result. Definite violations remain findings under every policy. Read/parse failures are file-level diagnostics at line 1; use a file suppression for these failures. File suppressions apply before policy routing; malformed JSON can carry a leading `// no-mistakes-disable-file package-json-registry-only` directive, and YAML supports the corresponding `#` directive. Rule include/exclude and project scope still limit the selected files. A custom rule `message` prefixes these diagnostics.
 
 ## Suppression
 
-Package manifests cannot contain directives. Narrow `scopes`, `lockfile`, or
-the rule application for an intentional exceptional registry source.
+For an intentional exception, narrow `scopes`, `lockfile`, or the rule
+application. A malformed manifest can use the leading file directive described
+above to suppress its read/parse diagnostic; lockfile YAML uses a `#` directive.
 
 ## Related rules
 

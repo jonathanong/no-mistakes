@@ -1,54 +1,58 @@
+use super::inputs::{active_names, cooldown, lockfile_keys};
 use super::lockfile::package_name_from_lock_key;
-use super::policy::{check, CooldownEntry, ExcludeEntry, FileKind, Issue, Snapshot};
-use super::{rel, Options, RuleFinding, RULE_ID};
+use super::policy::{check_with_complete_names, ExcludeEntry, FileKind, Issue, Snapshot};
+use super::{rel, ClassifiedFinding, Options, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::SourceStore;
-use serde_json::Value as Json;
 use serde_yaml::Value as Yaml;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-
-const DEP_FIELDS: [&str; 4] = [
-    "dependencies",
-    "devDependencies",
-    "optionalDependencies",
-    "peerDependencies",
-];
 
 pub(super) fn scan(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],
     sources: &SourceStore,
-) -> Vec<RuleFinding> {
+) -> Vec<ClassifiedFinding> {
     let by_rel: HashMap<String, &PathBuf> =
         files.iter().map(|path| (rel(root, path), path)).collect();
     let Some(workspace) = by_rel.get(opts.workspace_yaml()) else {
         return Vec::new();
     };
-    let Ok(source) = sources.read_path(workspace) else {
-        return Vec::new();
+    let source = match sources.read_path(workspace) {
+        Ok(source) => source,
+        Err(error) => {
+            return vec![super::super::manifest_analysis::unavailable(
+                root, workspace, RULE_ID, error,
+            )]
+        }
     };
     let yaml = match serde_yaml::from_str::<Yaml>(&source) {
         Ok(Yaml::Mapping(map)) => Yaml::Mapping(map),
         Ok(_) => return Vec::new(),
         Err(error) => {
-            return vec![finding(
-                rel(root, workspace),
+            return vec![super::super::manifest_analysis::unavailable(
+                root,
+                workspace,
+                RULE_ID,
                 format!("failed to parse YAML: {error}"),
-                opts.workspace_yaml(),
             )];
         }
     };
+    let mut findings = Vec::new();
     let lockfile_keys = match by_rel.get(opts.lockfile_path()) {
         Some(path) => match lockfile_keys(sources, path) {
             Ok(keys) => keys,
             Err(message) => {
-                return vec![finding(rel(root, path), message, opts.lockfile_path())];
+                findings.push(super::super::manifest_analysis::unavailable(
+                    root, path, RULE_ID, message,
+                ));
+                None
             }
         },
         None => None,
     };
-    let mut active_names = active_names(files, sources);
+    let mut active_names = active_names(root, files, sources, &mut findings);
+    let complete_names = findings.is_empty();
     if let Some(keys) = &lockfile_keys {
         for key in keys {
             if let Some(name) = package_name_from_lock_key(key) {
@@ -56,20 +60,31 @@ pub(super) fn scan(
             }
         }
     }
-    let (exclude, mut findings) =
+    let (exclude, included_findings) =
         super::included_exclude::included_exclude(root, workspace, sources, exclude_entries(&yaml));
+    findings.extend(included_findings);
+    let cooldown = match by_rel.get(opts.dependabot_path()) {
+        Some(path) => match cooldown(sources, path) {
+            Ok(value) => value,
+            Err(error) => {
+                findings.push(super::super::manifest_analysis::unavailable(
+                    root, path, RULE_ID, error,
+                ));
+                None
+            }
+        },
+        None => None,
+    };
     let snapshot = Snapshot {
         exclude,
-        cooldown: by_rel
-            .get(opts.dependabot_path())
-            .and_then(|path| cooldown(sources, path)),
+        cooldown,
         active_names,
         lockfile_keys,
     };
     findings.extend(
-        check(opts, &snapshot)
+        check_with_complete_names(opts, &snapshot, complete_names)
             .into_iter()
-            .map(|issue| issue_finding(root, opts, &by_rel, issue)),
+            .map(|issue| ClassifiedFinding::Definite(issue_finding(root, opts, &by_rel, issue))),
     );
     findings
 }
@@ -85,58 +100,6 @@ fn exclude_entries(yaml: &Yaml) -> Vec<ExcludeEntry> {
             .collect(),
         _ => Vec::new(),
     }
-}
-
-fn cooldown(sources: &SourceStore, path: &Path) -> Option<Vec<CooldownEntry>> {
-    let source = sources.read_path(path).ok()?;
-    let yaml: Yaml = serde_yaml::from_str(&source).ok()?;
-    let updates = yaml.get("updates")?.as_sequence()?;
-    let npm = updates.iter().find(|entry| {
-        entry.get("package-ecosystem").and_then(Yaml::as_str) == Some("npm")
-            && entry.get("directory").and_then(Yaml::as_str) == Some("/")
-    })?;
-    Some(match npm.get("cooldown").and_then(|c| c.get("exclude")) {
-        Some(Yaml::Sequence(seq)) => seq
-            .iter()
-            .map(|entry| match entry.as_str() {
-                Some(pattern) => CooldownEntry::Pattern(pattern.to_string()),
-                None => CooldownEntry::Other,
-            })
-            .collect(),
-        _ => Vec::new(),
-    })
-}
-
-fn active_names(files: &[PathBuf], sources: &SourceStore) -> HashSet<String> {
-    let mut names = HashSet::new();
-    for path in files {
-        if path.file_name().and_then(|name| name.to_str()) != Some("package.json") {
-            continue;
-        }
-        let Ok(json) = sources.parse_json_path(path) else {
-            continue;
-        };
-        for field in DEP_FIELDS {
-            let Some(deps) = json.get(field).and_then(Json::as_object) else {
-                continue;
-            };
-            names.extend(deps.keys().cloned());
-        }
-    }
-    names
-}
-
-fn lockfile_keys(sources: &SourceStore, path: &Path) -> Result<Option<Vec<String>>, String> {
-    let source = match sources.read_path(path) {
-        Ok(source) => source,
-        Err(_) => return Ok(None),
-    };
-    let docs = crate::codebase::lockfile::pnpm::load_documents(&source)
-        .map_err(|_| "pnpm lockfile could not be parsed".to_string())?;
-    crate::codebase::lockfile::pnpm::validate_env_prefix(&docs).map_err(|_| {
-        "pnpm lockfile has a non-env document before the project lockfile".to_string()
-    })?;
-    Ok(crate::codebase::lockfile::pnpm::package_key_strings(&docs))
 }
 
 fn issue_finding(

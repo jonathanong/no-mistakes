@@ -1,0 +1,7 @@
+rules:
+  - rule: package-json-registry-only
+    scope: repository
+    message: Repair dependency policy metadata.
+    options:
+      effort: low
+      unanalyzable: report

@@ -1,0 +1,2 @@
+# The package name is legitimate and must not act as an internal diagnostic tag.
+minimumReleaseAgeExclude: [acme, unanalyzable, unanalyzable]
