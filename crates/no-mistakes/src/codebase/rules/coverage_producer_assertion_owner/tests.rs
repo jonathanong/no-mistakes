@@ -24,6 +24,7 @@ fn configured_producers_require_actual_reachable_assertion_owners() {
         "crossProcess",
         "hoistedAfterReturn",
         "inlineCallback",
+        "assertionCtor",
     ] {
         assert!(!symbols.contains(&accepted), "{findings:#?}");
     }
@@ -51,6 +52,10 @@ fn configured_producers_require_actual_reachable_assertion_owners() {
         "constructOnly",
         "deadProcess",
         "nestedDeadRanges",
+        "unusedConstructorMethod",
+        "unconsumedGenerator",
+        "consumedGenerator",
+        "asyncGenerator",
     ] {
         assert!(symbols.contains(&rejected), "{findings:#?}");
     }
@@ -178,3 +183,5 @@ fn mixed_known_unknown_assertion_target_cannot_pass() {
 mod source_failures;
 
 mod public_query;
+
+mod execution;

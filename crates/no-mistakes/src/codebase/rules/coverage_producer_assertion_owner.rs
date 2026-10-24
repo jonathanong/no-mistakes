@@ -78,27 +78,39 @@ pub(super) fn source(site: &ResolvedCallSite) -> NodeId {
     }
 }
 pub(super) fn eligible(site: &ResolvedCallSite, facts: &dyn TsFactLookup) -> bool {
-    // Synthetic callback/member edges preserve conservative dependency recall;
-    // creating or forwarding a function value does not prove it executes.
-    if !matches!(
+    // Canonical collection verifies class ownership for constructor membership;
+    // its bridge executes on construction, unlike reference-only callbacks/members.
+    let bridge = crate::codebase::dependencies::graph::is_constructor_bridge(
         site.invocation,
-        crate::codebase::dependencies::extract::InvocationKind::Call
-            | crate::codebase::dependencies::extract::InvocationKind::Construct
-    ) {
+        &site.source_callee,
+    );
+    if !bridge
+        && !matches!(
+            site.invocation,
+            crate::codebase::dependencies::extract::InvocationKind::Call
+                | crate::codebase::dependencies::extract::InvocationKind::Construct
+        )
+    {
         return false;
     }
     facts.get_ts_facts(&site.file).is_some_and(|facts| {
-        !failed(facts) && {
-            let ranges = &facts.unreachable_call_ranges;
-            let end = ranges.partition_point(|(owner, start, _)| {
-                (*owner, *start) <= (site.caller_id, site.offset)
-            });
-            end == 0 || {
-                let (owner, _, until) = ranges[end - 1];
-                owner != site.caller_id || site.offset >= until
-            }
-        }
+        !failed(facts)
+            && (bridge || {
+                let ranges = &facts.unreachable_call_ranges;
+                let end = ranges.partition_point(|(owner, start, _)| {
+                    (*owner, *start) <= (site.caller_id, site.offset)
+                });
+                end == 0 || {
+                    let (owner, _, until) = ranges[end - 1];
+                    owner != site.caller_id || site.offset >= until
+                }
+            })
     })
+}
+
+pub(super) fn generator(node: &NodeId, facts: &dyn TsFactLookup) -> bool {
+    matches!(node, NodeId::Symbol { file, callable_id: Some(id), .. }
+        if facts.get_ts_facts(file).is_some_and(|file| file.value_flow.generator_callables.contains(id)))
 }
 #[cfg(test)]
 mod tests;

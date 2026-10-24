@@ -75,6 +75,14 @@ callable supplies no evidence. Contracts belong to their rule application and
 cannot satisfy another application's producers. These are trusted declarations
 of real runtime contracts; the analyzer cannot validate a process protocol.
 
+Class construction follows the canonical constructor bridge; unused methods do
+not execute merely because their class is constructed. Calling a generator only
+creates an iterator and never proves that assertions in its body executed. This
+rule does not model iterator consumption, including `.next()` and asynchronous
+generators: reaching a generator uses `unanalyzable` policy, even if its import is
+configured as an assertion or dispatch selector. Configured generator producers
+and generator ownership targets follow the same policy.
+
 `maxDepth` (default 64) and `maxNodes` (default 10000, including the producer)
 are positive traversal bounds. A reached bound with unexplored work is
 unanalyzable. Dynamic targets, unknown alternatives, source/parse failures, and

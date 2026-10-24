@@ -34,7 +34,9 @@ pub(crate) fn ownership_edges(
         let options: Options = application.try_rule_options()?;
         options.validate()?;
         for contract in resolve(root, &options, graph, facts)? {
-            if unavailable(contract.from.as_file().expect("callable file"), facts)
+            if generator(&contract.from, facts)
+                || generator(&contract.to, facts)
+                || unavailable(contract.from.as_file().expect("callable file"), facts)
                 || unavailable(contract.to.as_file().expect("callable file"), facts)
             {
                 continue;
@@ -45,6 +47,7 @@ pub(crate) fn ownership_edges(
                 .any(|site| {
                     source(site) == contract.from
                         && eligible(site, facts)
+                        && !site.target_nodes().any(|target| generator(target, facts))
                         && contract.via.matches(site)
                 })
             {

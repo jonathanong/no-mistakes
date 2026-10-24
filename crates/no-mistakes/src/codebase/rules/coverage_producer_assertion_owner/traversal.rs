@@ -19,7 +19,7 @@ pub(super) fn analyze(
     let mut queue = VecDeque::from([(root.clone(), 0usize)]);
     while let Some((node, depth)) = queue.pop_front() {
         let file = node.as_file().expect("callable file");
-        if unavailable(file, facts) {
+        if unavailable(file, facts) || generator(&node, facts) {
             out.uncertain = true;
             continue;
         }
@@ -31,6 +31,12 @@ pub(super) fn analyze(
             .copied()
             .filter(|site| eligible(site, facts))
         {
+            // Calling a generator creates an iterator; neither a configured
+            // selector nor a contract makes that occurrence execute its body.
+            if site.target_nodes().any(|target| generator(target, facts)) {
+                out.uncertain = true;
+                continue;
+            }
             if options
                 .assertions
                 .iter()
@@ -43,9 +49,10 @@ pub(super) fn analyze(
                 .iter()
                 .filter(|contract| contract.from == node && contract.via.matches(site))
                 .collect::<Vec<_>>();
-            out.uncertain |= modeled
-                .iter()
-                .any(|contract| unavailable(contract.to.as_file().expect("callable file"), facts));
+            out.uncertain |= modeled.iter().any(|contract| {
+                unavailable(contract.to.as_file().expect("callable file"), facts)
+                    || generator(&contract.to, facts)
+            });
             targets.extend(modeled.iter().map(|contract| contract.to.clone()));
             targets.extend(site.target_nodes().cloned());
             // External calls are opaque boundaries unless explicitly modeled. Known
