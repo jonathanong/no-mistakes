@@ -1,0 +1,103 @@
+{
+  "$comment": "Nested compatible contracts deliberately report uncertainty at low; total report counts need not be monotonic.",
+  "scalar": {
+    "type": "string"
+  },
+  "enum": {
+    "type": "string",
+    "enum": [
+      "ready"
+    ]
+  },
+  "flat": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "required": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id"
+    ],
+    "additionalProperties": false
+  },
+  "nested": {
+    "type": "object",
+    "properties": {
+      "profile": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "objectArray": {
+    "type": "object",
+    "properties": {
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "arrayObject": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "arrayArray": {
+    "type": "array",
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "array": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    }
+  },
+  "invalid": {
+    "type": "string",
+    "format": "uuid"
+  },
+  "badProperties": {
+    "type": "object",
+    "properties": []
+  },
+  "badChild": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "unknown"
+      }
+    }
+  },
+  "badItems": {
+    "type": "array"
+  },
+  "notSchema": false
+}

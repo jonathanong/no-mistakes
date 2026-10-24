@@ -11,9 +11,20 @@ use std::path::{Path, PathBuf};
 
 mod compare;
 mod document;
+mod effort;
+mod low;
 mod numeric;
 mod references;
 mod schema;
+
+#[cfg(test)]
+#[path = "declared_payload_compatibility/probe_tests.rs"]
+mod probe;
+#[cfg(not(test))]
+#[path = "declared_payload_compatibility/probe_disabled.rs"]
+mod probe;
+
+pub use effort::diagnostics_with_files_and_sources;
 
 pub const RULE_ID: &str = "declared-payload-compatibility";
 
@@ -57,42 +68,8 @@ pub(crate) fn check_with_files_and_sources(
     files: &[PathBuf],
     sources: &SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let documents = document::Documents::default();
-    let results: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| {
-            let options: DeclaredPayloadCompatibilityOptions = rule.try_rule_options()?;
-            let allowed = super::path_filter::filter_rule_files(root, config, rule, files)?;
-            let allowed: BTreeSet<_> = allowed
-                .iter()
-                .map(|p| relative_slash_path(root, p))
-                .collect();
-            Ok(options
-                .contracts
-                .par_iter()
-                .filter_map(|contract| {
-                    let result = check_contract(root, contract, &allowed, sources, &documents);
-                    result.err().map(|(file, reason)| RuleFinding {
-                        rule: RULE_ID.to_string(),
-                        line: references::finding_line(root, &file, &allowed, sources),
-                        file,
-                        message: match &rule.message {
-                            Some(message) => {
-                                format!("{message}: contract `{}`: {reason}", contract.name)
-                            }
-                            None => format!("contract `{}`: {reason}", contract.name),
-                        },
-                        import: None,
-                        target: Some(contract.name.clone()),
-                    })
-                })
-                .collect())
-        })
-        .collect();
-    let mut findings = results?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    // The filesystem compatibility boundary applies suppression in its caller.
+    Ok(diagnostics_with_files_and_sources(root, config, files, sources, true)?.findings)
 }
 
 fn check_contract(
@@ -133,5 +110,7 @@ fn check_contract(
     })
 }
 
+#[cfg(test)]
+mod effort_tests;
 #[cfg(test)]
 mod tests;

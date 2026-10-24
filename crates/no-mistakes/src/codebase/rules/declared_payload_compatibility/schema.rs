@@ -12,6 +12,7 @@ pub(super) struct Schema {
 }
 
 pub(super) fn parse(value: &Value, path: &str, depth: usize) -> Result<Schema, String> {
+    super::probe::schema_visit(depth);
     if depth > 64 {
         return Err(format!("{path}: schema nesting exceeds 64 levels"));
     }
