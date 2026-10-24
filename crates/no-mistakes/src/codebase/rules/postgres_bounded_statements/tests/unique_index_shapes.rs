@@ -6,10 +6,14 @@ fn fixture_root() -> std::path::PathBuf {
         .join("unique-index-shapes")
 }
 
-fn observed(sql_file: &str) -> Vec<Vec<String>> {
+pub(super) fn observed(sql_file: &str) -> Vec<Vec<String>> {
+    observed_with_catalog(sql_file, "schema.json")
+}
+
+pub(super) fn observed_with_catalog(sql_file: &str, catalog_file: &str) -> Vec<Vec<String>> {
     let root = fixture_root();
     let catalog =
-        SchemaCatalog::from_json(&std::fs::read_to_string(root.join("schema.json")).unwrap())
+        SchemaCatalog::from_json(&std::fs::read_to_string(root.join(catalog_file)).unwrap())
             .unwrap();
     let sql = std::fs::read_to_string(root.join(sql_file)).unwrap();
     let facts = extract_sql_statement_facts(&sql);
@@ -49,6 +53,8 @@ fn expression_unique_keys_match_equality_and_bound_joins() {
             vec![],
             vec![],
             vec!["normalized_emails"],
+            vec!["normalized_emails"],
+            vec![],
             vec!["normalized_emails"],
         ]
     );

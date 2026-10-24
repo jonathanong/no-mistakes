@@ -38,9 +38,10 @@ pub(super) fn append(
                 let visible = physical.as_deref().map(|physical| {
                     super::super::super::arrays::key_visible(table, &item.column_aliases, physical)
                 });
-                if matches!(visible, Some(None)) {
-                    return None;
-                }
+                let visible = match visible {
+                    Some(value) => Some(value?),
+                    None => None,
+                };
                 let not_null = physical.as_deref().is_some_and(|physical| {
                     table
                         .columns
@@ -53,11 +54,8 @@ pub(super) fn append(
                     .zip(sources)
                     .filter_map(|(pin, source)| {
                         let matches = match &visible {
-                            Some(Some(visible)) => {
-                                pin.expression.is_none() && pin.column == *visible
-                            }
+                            Some(visible) => pin.expression.is_none() && pin.column == *visible,
                             None => pin.expression.as_ref() == Some(expression),
-                            Some(None) => false,
                         };
                         (matches && (!pin.null_safe || not_null || index.nulls_not_distinct))
                             .then(|| source.clone())

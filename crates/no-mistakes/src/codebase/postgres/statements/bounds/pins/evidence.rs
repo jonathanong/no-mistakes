@@ -1,7 +1,7 @@
 use super::Resolver;
 use sqlparser::ast::{BinaryOperator, Expr};
 
-pub(super) fn collect(
+pub(in super::super) fn collect(
     expr: &Expr,
     resolver: &Resolver,
     restricted: &[usize],

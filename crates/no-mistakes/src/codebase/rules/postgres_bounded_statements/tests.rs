@@ -59,6 +59,7 @@ mod shadow_drop;
 mod suppression;
 mod trigger_scope;
 mod unique_index_shapes;
+mod unique_index_joins;
 mod view_dependencies;
 mod wrapped_suppression;
 mod xml_array;

@@ -204,7 +204,7 @@ fn nonbranching_calls_retain_their_legacy_fields_and_statement_projection_bytes(
             format!("{original:?}").into_bytes(),
             format!("{projected:?}").into_bytes()
         );
-        // The baseline was generated with the pre-variant public extractor.
+        // Lock the legacy call projection with additive bounded-proof metadata included.
         snapshot.push_str(&format!(
             "{:?}\n{original:?}\n",
             (

@@ -95,10 +95,11 @@ pub(crate) fn canonical_bound_expr(expr: &Expr) -> Expr {
             }
             Expr::Function(function) => {
                 for part in &mut function.name.0 {
-                    if let ObjectNamePart::Identifier(ident) = part {
-                        if ident.quote_style.is_none() {
+                    match part {
+                        ObjectNamePart::Identifier(ident) if ident.quote_style.is_none() => {
                             ident.value.make_ascii_lowercase();
                         }
+                        _ => {}
                     }
                 }
             }
