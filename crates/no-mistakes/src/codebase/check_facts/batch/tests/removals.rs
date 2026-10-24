@@ -36,6 +36,8 @@ fn prepared_runner_and_playwright_configs_are_removed_after_overrides() {
     );
     request.playwright = Some(playwright);
     let requests = [request];
+    #[cfg(feature = "test-instrumentation")]
+    super::historical::assert_parity(&requests);
     let mut slots = demands::graph_plans(&requests);
     let mut clones = 0;
     let demands = demands::demands_by_path::<true>(&requests, &mut slots, &mut clones);

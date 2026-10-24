@@ -3,6 +3,8 @@ use crate::codebase::ts_source::{FileInventory, SourceStore};
 use std::collections::BTreeMap;
 use std::path::Path;
 
+#[cfg(feature = "test-instrumentation")]
+mod historical;
 mod removals;
 
 fn root() -> PathBuf {
@@ -48,6 +50,8 @@ fn borrows_primary_and_graph_plans_owning_only_legacy_override() {
             ..Default::default()
         },
     )];
+    #[cfg(feature = "test-instrumentation")]
+    historical::assert_parity(&requests);
     let mut slots = demands::graph_plans(&requests);
     let mut clones = 0;
     let demands = demands::demands_by_path::<true>(&requests, &mut slots, &mut clones);
@@ -99,6 +103,8 @@ fn playwright_override_clones_once_without_widening_other_requests() {
         first,
         request(&root, &["web/primary.ts"], &[], CheckFactPlan::default()),
     ];
+    #[cfg(feature = "test-instrumentation")]
+    historical::assert_parity(&requests);
     let mut slots = demands::graph_plans(&requests);
     let mut clones = 0;
     let demands = demands::demands_by_path::<true>(&requests, &mut slots, &mut clones);
@@ -142,6 +148,8 @@ fn counted_false_keeps_counter_untouched_for_needed_and_unneeded_overrides() {
         playwright.set_source_files(vec![root.join("web/primary.ts")]);
         request.playwright = Some(playwright);
         let requests = [request];
+        #[cfg(feature = "test-instrumentation")]
+        historical::assert_parity(&requests);
         let mut slots = demands::graph_plans(&requests);
         let mut clones = 7;
         let demands = demands::demands_by_path::<false>(&requests, &mut slots, &mut clones);
@@ -161,6 +169,8 @@ fn expired_request_does_not_construct_graph_plan_or_clone() {
         &[],
         CheckFactPlan::default(),
     )];
+    #[cfg(feature = "test-instrumentation")]
+    historical::assert_parity(&requests);
     let mut slots = demands::graph_plans(&requests);
     let _deadline =
         crate::invocation::install_test_deadline(std::time::Duration::from_nanos(1)).unwrap();
@@ -200,6 +210,8 @@ fn graph_only_demands_retain_exact_request_local_call_site_scopes() {
             },
         ),
     ];
+    #[cfg(feature = "test-instrumentation")]
+    historical::assert_parity(&requests);
     let mut slots = demands::graph_plans(&requests);
     let mut clones = 0;
     let demands = demands::demands_by_path::<true>(&requests, &mut slots, &mut clones);
