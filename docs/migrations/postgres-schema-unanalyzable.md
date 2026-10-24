@@ -1,9 +1,10 @@
 # PostgreSQL schema statements that cannot be analyzed
 
-The 11 rules below now report each selected SQL statement that the lenient
-PostgreSQL parser cannot parse or recover. This changes the default result:
-previously such a statement could disappear from schema analysis without a
-diagnostic; now `options.unanalyzable: report` produces a finding at its line.
+The 11 rules below diagnose each selected SQL statement that the lenient
+PostgreSQL parser cannot parse or recover. By default, complete recognized
+unsupported PostgreSQL forms produce non-failing advisories; malformed or
+unrecognized forms produce findings at their source lines. Explicit
+`options.unanalyzable: report` produces findings for both classes.
 This includes rejected syntax such as `CREATE RECURSIVE VIEW` without its
 required explicit column list, which could previously disappear from analysis.
 
@@ -19,12 +20,32 @@ required explicit column list, which could previously disappear from analysis.
 - [`postgres-require-named-constraints`](../rules/postgres-require-named-constraints.md)
 - [`postgres-sql-statement-policy`](../rules/postgres-sql-statement-policy.md)
 
-A finding means the analyzer could not establish schema facts for that
+A diagnostic means the analyzer could not establish schema facts for that
 statement. It does not decide whether PostgreSQL accepts the SQL: valid but
 unsupported statements, including `ALTER DEFAULT PRIVILEGES`,
-`CREATE PUBLICATION`, and `REFRESH MATERIALIZED VIEW`, can be reported alongside
-syntax PostgreSQL rejects. Parsed sibling statements in the same file still
-contribute their schema facts. A `COPY ... FROM STDIN` data payload is not
+`CREATE PUBLICATION`, and `REFRESH MATERIALIZED VIEW`, are advised when their
+complete syntax matches the conservative recognizer.
+Recognition covers selected GRANT forms of ALTER DEFAULT PRIVILEGES,
+CREATE PUBLICATION with FOR ALL TABLES or plain table lists, and REFRESH
+MATERIALIZED VIEW with optional CONCURRENTLY and WITH [NO] DATA.
+Other rejected forms remain findings: a recognized prefix alone never proves
+valid syntax. Recognition checks syntax, not database permissions, object
+existence, or privilege/object compatibility. This is not a full PostgreSQL
+validator. Parsed sibling statements in the same file still contribute their
+schema facts.
+
+Enum types, triggers, comments on functions/tables/triggers, indexes on `ONLY`
+tables, index partition attachments, and text search configurations now parse
+without an unanalyzable diagnostic. Where the parser has a matching AST, the
+analyzer preserves it. Function signatures in comments and `ONLY` in index
+definitions use compatibility normalization. Trigger argument strings are
+validated and omitted from the native AST's incompatible parameter-type field;
+the trigger's function, target, events, and condition remain available.
+Validated utility metadata without
+a matching AST uses a neutral analysis marker and contributes no invented schema
+facts.
+
+A `COPY ... FROM STDIN` data payload is not
 reported as a failed SQL statement. In recognized `DO` blocks and dollar-quoted
 PL/pgSQL function and procedure bodies, procedural declarations and assignments,
 `IF`/`ELSIF`/`ELSE`,
@@ -34,13 +55,13 @@ as failed SQL statements. This does not imply that those commands are executed o
 that their conditions are evaluated. Unknown or malformed SQL nested inside their
 cursor, loop-query, `SELECT`, or `EXECUTE` payloads still reports, as does unknown
 SQL after an `IF ... THEN` or loop prefix. Top-level assignment/declaration-shaped statements,
-`END IF`, and unsupported SQL statements after a body still report at their own
-lines.
+`END IF`, and unsupported SQL statements after a body retain diagnostics at their own
+lines, using the same default classification.
 
 The rule's configured roots, path filters, and `sqlInclude` determine which
 files are checked. Set `options.unanalyzable` on a rule application to `report`
-(the default), `advise` for a non-failing advisory, or `ignore` to omit these
-diagnostics. For example:
+(explicitly for both classes), `advise` for a non-failing advisory, or `ignore`
+to omit these diagnostics. For example:
 
 ```yaml
 rules:

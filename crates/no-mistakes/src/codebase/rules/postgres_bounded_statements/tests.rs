@@ -4,6 +4,7 @@ mod cardinality_basics;
 mod catalog_identity_edges;
 mod catalog_resolution;
 mod current_database;
+mod ddl_compat_lifecycle;
 mod ddl_search_path;
 mod fetch_expressions;
 mod fixed_catalog_functions;

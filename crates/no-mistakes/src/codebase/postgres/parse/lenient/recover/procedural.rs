@@ -6,6 +6,7 @@ use std::sync::Arc;
 mod assignment;
 mod commands;
 mod declaration;
+mod sql;
 
 /// Declaration sections last across semicolon chunks, including in nested blocks.
 #[derive(Default)]
@@ -125,7 +126,7 @@ impl BodyState {
             return false;
         }
         if word(first, "PERFORM") {
-            return assignment::expression(&code[1..]);
+            return sql::perform(&code[1..]);
         }
         if ["EXIT", "CONTINUE", "RETURN", "RAISE", "ASSERT"]
             .iter()
@@ -133,7 +134,7 @@ impl BodyState {
         {
             return true;
         }
-        assignment::matches(code) || commands::matches(code)
+        assignment::matches(code) || commands::matches(code) || sql::matches(code)
     }
 }
 
@@ -189,3 +190,6 @@ fn is_begin_or_end(statement: &Statement) -> bool {
         Statement::StartTransaction { .. } | Statement::Commit { .. }
     )
 }
+
+#[cfg(test)]
+mod tests;

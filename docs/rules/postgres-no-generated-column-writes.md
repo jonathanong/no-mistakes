@@ -119,7 +119,7 @@ Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`,
 
 Valid PostgreSQL can still be unsupported by this analyzer. When it cannot
 recover statements such as `ALTER DEFAULT PRIVILEGES`, `CREATE PUBLICATION`,
-or `REFRESH MATERIALIZED VIEW`, it reports them under
+or `REFRESH MATERIALIZED VIEW`, it diagnoses them under
 [`options.unanalyzable`](../migrations/postgres-schema-unanalyzable.md). The
 same diagnostic also catches rejected syntax such as `CREATE RECURSIVE VIEW`
 without its required explicit column list; it reports missing analyzer facts,
@@ -141,6 +141,13 @@ policy. Valid sibling statements remain available to the catalog. A real
 `DISCARD ALL` statement does not trigger this recovery diagnostic. Existing file
 and line suppressions apply; rewrite unsupported syntax into a supported static
 statement or suppress the specific diagnostic with a reason.
+
+For schema parse failures, the implicit default advises for complete, recognized
+unsupported PostgreSQL forms; malformed and unrecognized forms retain findings.
+Recognition is conservative: it covers selected `ALTER DEFAULT PRIVILEGES ... GRANT`,
+`CREATE PUBLICATION ... FOR`, and `REFRESH MATERIALIZED VIEW` forms, not all
+PostgreSQL grammar. Explicit rule or repository `unanalyzable` policies override
+both classes. See the [schema diagnostic migration](../migrations/postgres-schema-unanalyzable.md).
 
 ## Suppression
 

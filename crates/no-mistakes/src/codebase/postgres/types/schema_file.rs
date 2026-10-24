@@ -38,6 +38,8 @@ pub struct SqlUnanalyzableStatement {
     pub line: usize,
     pub column: usize,
     pub head: String,
+    /// A complete, narrowly recognized PostgreSQL grammar unsupported by the AST parser.
+    pub valid_unsupported: bool,
     /// Lexical statement ordinals, including enclosing routine bodies.
     pub source_order: Vec<usize>,
     /// INSERT relevance belongs to this failed chunk, never a valid sibling.

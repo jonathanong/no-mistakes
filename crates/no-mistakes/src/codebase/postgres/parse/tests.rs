@@ -114,19 +114,21 @@ fn parse_error_from_recursion_limit_is_not_empty() {
 }
 
 #[test]
-fn lenient_parse_skips_create_type_in_do_and_accepts_virtual_generated() {
-    let statements = parse_postgres_sql_lenient(
-        "DO $$ BEGIN CREATE TYPE t AS ENUM ('a'); END $$;\n\
-         CREATE TABLE items (\n\
-           id uuid,\n\
-           created_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id)) VIRTUAL\n\
-         );",
+fn lenient_parse_keeps_create_type_in_do_and_accepts_virtual_generated() {
+    let statements = parse_postgres_sql_lenient(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-no-generated-column-writes/unit-fixture/mixed-unparseable/schema.sql"
+    )));
+    assert!(
+        matches!(
+            statements.as_slice(),
+            [
+                sqlparser::ast::Statement::CreateType { .. },
+                sqlparser::ast::Statement::CreateTable(_)
+            ]
+        ),
+        "{statements:#?}"
     );
-    assert_eq!(statements.len(), 1, "{statements:#?}");
-    assert!(matches!(
-        statements[0],
-        sqlparser::ast::Statement::CreateTable(_)
-    ));
 }
 
 #[test]

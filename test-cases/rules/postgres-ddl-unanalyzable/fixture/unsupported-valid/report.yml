@@ -1,4 +1,4 @@
 rules:
   - rule: postgres-fk-index
     scope: repository
-    options: {sqlInclude: ['migrations/**/*.sql']}
+    options: {unanalyzable: report, sqlInclude: ['migrations/**/*.sql']}

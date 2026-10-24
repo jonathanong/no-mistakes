@@ -1,5 +1,6 @@
 use super::super::LocatedStatement;
 use super::queries;
+mod unsupported;
 use crate::codebase::postgres::types::SqlUnanalyzableStatement;
 use sqlparser::ast::{visit_statements, DiscardObject, Statement};
 use sqlparser::tokenizer::{Token, TokenWithSpan};
@@ -36,6 +37,7 @@ pub(super) fn unrecoverable_chunk(
         .collect::<String>();
     Some(SqlUnanalyzableStatement {
         head,
+        valid_unsupported: unsupported::valid(tokens),
         ..failed_source(&sql, line, column, ordinal)
     })
 }
@@ -60,6 +62,7 @@ pub(in super::super) fn failed_source(
             .take(8)
             .collect::<Vec<_>>()
             .join(" "),
+        valid_unsupported: false,
         source_order: vec![ordinal],
         insert_keyword_count: crate::codebase::postgres::statements::insert_keyword_count(&masked),
         recovered_insert_count: 0,
