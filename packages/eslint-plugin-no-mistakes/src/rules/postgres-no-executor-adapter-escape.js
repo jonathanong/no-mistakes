@@ -15,41 +15,6 @@ function createCollectionEscape(checker, program, result) {
       ? name
       : null;
   }
-  function builtinOwner(node, name, member) {
-    const symbol = node?.expression?.escapedText === name && node.name?.text === member
-      ? checker.getSymbolAtLocation(node.expression)
-      : null;
-    return Boolean(symbol?.declarations?.length && symbol.declarations.every((declaration) =>
-      program.isSourceFileDefaultLibrary(declaration.getSourceFile()) && declaration.name?.text === name,
-    ));
-  }
-  function collectionPrototype(node) {
-    const name = node?.expression?.escapedText;
-    const owner = ["Map", "WeakMap", "Set", "WeakSet"].includes(name)
-      ? checker.getSymbolAtLocation(node.expression) : null;
-    return node?.name?.text === "prototype" && owner?.declarations?.length &&
-      owner.declarations.every((declaration) =>
-        program.isSourceFileDefaultLibrary(declaration.getSourceFile()) && declaration.name?.text === name,
-      ) ? name : null;
-  }
-  function reflectPrototypeMutation(node) {
-    const callee = node.expression;
-    const api = ["defineProperty", "deleteProperty", "setPrototypeOf"].find((name) => builtinOwner(callee, "Reflect", name));
-    if (!api || !collectionPrototype(node.arguments[0])) return;
-    if (api === "setPrototypeOf") { result.uncertainMutation = true; return; }
-    const property = node.arguments[1];
-    const text = property?.getText?.();
-    const name = typeof property?.text === "string" &&
-      ((text?.startsWith('"') && text.endsWith('"')) || (text?.startsWith("'") && text.endsWith("'")))
-      ? property.text : null;
-    const type = checker.getTypeAtLocation(node.arguments[0]);
-    const symbols = name ? [checker.getPropertyOfType(type, name)].filter(Boolean) : checker.getPropertiesOfType(type);
-    if (!name) result.uncertainMutation = true;
-    for (const symbol of symbols) {
-      result.symbols.add(symbol);
-      for (const declaration of symbol.declarations ?? []) result.declarations.add(declaration);
-    }
-  }
   function escapeValue(node, seenSymbols = new Set()) {
     if (!node || escapedValueNodes.has(node)) return;
     escapedValueNodes.add(node);
@@ -103,23 +68,21 @@ function createCollectionEscape(checker, program, result) {
     const callee = node.expression;
     const wrapper = ["call", "apply"].includes(callee?.name?.text) ? callee.name.text : null;
     const method = wrapper ? callee.expression : callee;
-    const collection = method?.name && method.expression &&
+    const collection =
+      method?.name &&
+      method.expression &&
       builtinCollection(checker.getTypeAtLocation(method.expression));
     if (!collection) return null;
     const name = method.name.text;
-    const valid = collection === "Map" || collection === "WeakMap"
-      ? ["get", "set", "has", "delete"].includes(name)
-      : ["has", "delete", "add"].includes(name);
+    const valid =
+      collection === "Map" || collection === "WeakMap"
+        ? ["get", "set", "has", "delete"].includes(name)
+        : ["has", "delete", "add"].includes(name);
     return valid ? { collection, name, wrapper } : null;
   }
   function visit(node) {
-    if (node.arguments?.length) reflectPrototypeMutation(node);
-    if (node.operatorToken?.getText() === "=" && node.right) {
-      const targetType = checker.getTypeAtLocation(node.left);
-      const sourceCollection = builtinCollection(checker.getTypeAtLocation(node.right));
-      if (sourceCollection && sourceCollection !== builtinCollection(targetType)) escapeValue(node.right);
-      else if (["any", "unknown"].includes(checker.typeToString(targetType))) escapeValue(node.right);
-    }
+    if (["=", "&&=", "||=", "??="].includes(node.operatorToken?.getText()) && node.right)
+      escapeValue(node.right);
     if (node.initializer && node.name) {
       const initializer = node.initializer;
       const sourceType = builtinCollection(checker.getTypeAtLocation(initializer));
@@ -165,8 +128,7 @@ function createCollectionEscape(checker, program, result) {
         const elements = args?.elements;
         if (Array.isArray(elements) && !elements.some((element) => element.dotDotDotToken)) {
           for (const index of valueIndexes) escapeValue(elements[index]);
-        }
-        else escapeValue(args);
+        } else escapeValue(args);
       } else for (const index of valueIndexes) escapeValue(node.arguments[index]);
       return;
     }

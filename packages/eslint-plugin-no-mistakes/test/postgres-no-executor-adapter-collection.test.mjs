@@ -271,11 +271,24 @@ describe("postgres-no-executor-adapter collection keys", () => {
     assert.deepEqual(reports("collection-assignment-escape.ts"), [[7, "passed"]]);
   });
 
+  it("tracks same-typed and logical assignment escapes", () => {
+    assert.deepEqual(reports("typed-assignment-escape.ts"), [
+      [9, "passed"],
+      [15, "passed"],
+      [20, "passed"],
+      [25, "passed"],
+      [30, "passed"],
+    ]);
+  });
+
   it("tracks reflective mutations of builtin collection prototypes", () => {
     assert.deepEqual(reports("reflect-prototype-mutations.ts"), [
       [5, "passed"],
       [9, "passed"],
-      [13, "passed"],
+      [14, "passed"],
+      [19, "passed"],
+      [24, "passed"],
+      [28, "passed"],
     ]);
   });
 

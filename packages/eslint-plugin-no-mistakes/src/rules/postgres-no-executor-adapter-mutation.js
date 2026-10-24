@@ -57,7 +57,10 @@ function createMutationCollector(checker, program, result, addSymbol) {
       (builtinOwner(node, "Object", "defineProperty") && "Object.defineProperty") ||
       (builtinOwner(node, "Object", "defineProperties") && "Object.defineProperties") ||
       (builtinOwner(node, "Object", "setPrototypeOf") && "Object.setPrototypeOf") ||
-      (builtinOwner(node, "Reflect", "set") && "Reflect.set");
+      (builtinOwner(node, "Reflect", "set") && "Reflect.set") ||
+      (builtinOwner(node, "Reflect", "defineProperty") && "Reflect.defineProperty") ||
+      (builtinOwner(node, "Reflect", "deleteProperty") && "Reflect.deleteProperty") ||
+      (builtinOwner(node, "Reflect", "setPrototypeOf") && "Reflect.setPrototypeOf");
     return api || null;
   }
   function visit(node) {
@@ -119,8 +122,15 @@ function createMutationCollector(checker, program, result, addSymbol) {
       mutateTarget(node.arguments[0], null);
       return;
     }
-    if ((api === "Object.defineProperty" || api === "Reflect.set") && node.arguments.length > 1)
+    if (
+      (api === "Object.defineProperty" ||
+        api === "Reflect.set" ||
+        api === "Reflect.defineProperty" ||
+        api === "Reflect.deleteProperty") &&
+      node.arguments.length > 1
+    )
       mutateTarget(node.arguments[0], staticPropertyName(node.arguments[1]));
+    if (api === "Reflect.setPrototypeOf") mutateTarget(node.arguments[0], null);
   }
   function finish(onUnknownCall) {
     for (const node of deferredMutationCalls) {
