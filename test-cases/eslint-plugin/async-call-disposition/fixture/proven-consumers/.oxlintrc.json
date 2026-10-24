@@ -1,0 +1,33 @@
+{
+  "categories": { "correctness": "off" },
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/async-call-disposition": [
+      "error",
+      {
+        "targets": [
+          { "sourceSpecifierPatterns": ["@app/jobs"], "calleeNamePatterns": ["enqueueEmail"] }
+        ],
+        "awaitingConsumers": [
+          {
+            "sourceSpecifierPatterns": ["./consumers"],
+            "calleeNamePatterns": ["consume", "consumeConst"],
+            "callbackArgumentIndexes": [0]
+          },
+          {
+            "sourceSpecifierPatterns": ["@app/consumer"],
+            "calleeNamePatterns": ["consume"],
+            "callbackArgumentProperties": [
+              { "argumentIndex": 0, "propertyNames": ["enqueueEmail", "enqueueEmailCallback"] }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

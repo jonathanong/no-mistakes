@@ -25,12 +25,8 @@ function importedAwaited(call, index, context) {
   const node = services.esTreeNodeToTSNodeMap.get(callee);
   const imported = node && checker.getSymbolAtLocation(node);
   if (!imported) return false;
-  let symbol;
-  try {
-    symbol = checker.getAliasedSymbol(imported);
-  } catch {
-    return false;
-  }
+  // The ESLint binding above is an import, so its checker symbol is an alias.
+  const symbol = checker.getAliasedSymbol(imported);
   if (symbol?.declarations?.length !== 1) return false;
   const owner = symbol.declarations[0];
   const fn = owner.body ? owner : owner.initializer;

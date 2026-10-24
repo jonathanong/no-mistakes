@@ -208,9 +208,13 @@ enqueueEmail(user.id);
 
 `awaitingConsumers` explicitly trusts an imported API to await or otherwise adopt
 its callback's returned promise. Each entry uses `sourceSpecifierPatterns` and
-`calleeNamePatterns` like `targets`, and requires `callbackArgumentIndexes`: a
-nonempty array of distinct, nonnegative, zero-based argument positions. Omit this
-option to retain the default callback behavior.
+`calleeNamePatterns` like `targets`. Specify `callbackArgumentIndexes` for direct
+callbacks: a nonempty array of distinct, nonnegative, zero-based argument
+positions. For dependency injection, specify `callbackArgumentProperties` with
+an `argumentIndex` and nonempty, distinct `propertyNames`. Only named properties
+in a fresh object literal at that slot receive this contract; spreads, duplicate
+keys, computed properties and nested objects remain unproven. Each entry must
+specify at least one of these two callback contracts.
 
 ```js
 {
@@ -222,6 +226,21 @@ option to retain the default callback behavior.
   }],
 }
 ```
+
+For a consumer that awaits `dependencies.enqueueEmail()`, configure its property
+explicitly:
+
+```js
+{
+  sourceSpecifierPatterns: ["@app/admission"],
+  calleeNamePatterns: ["awaitReportedEnqueueAdmission"],
+  callbackArgumentProperties: [{ argumentIndex: 0, propertyNames: ["enqueueEmail"] }],
+}
+```
+
+Then `awaitReportedEnqueueAdmission({ enqueueEmail: accepted })` accepts an
+unchanged named callback that returns the target promise. An unrelated property
+or an unknown consumer still reports.
 
 ```typescript
 import { awaitReportedEnqueueAdmission } from "@app/admission";
@@ -247,8 +266,8 @@ promise) from the configured callback.
 
 - **Accepted:** inline callbacks, callbacks bound to an unchanged `const`, and
   function declarations with no reassignment follow the same return contract.
-  Every argument use must be a configured awaiting consumer, a recognized mock,
-  or a `.map` / `.flatMap` callback whose result reaches a handled native
+  Every argument use must be a proven or configured awaiting consumer, a
+  recognized mock, or a `.map` / `.flatMap` callback whose result reaches a handled native
   `Promise.all`, `Promise.allSettled`, `Promise.any`, or `Promise.race`. A retained
   mapped collection follows the same aggregate requirement described above.
   Inline `.flatMap` callbacks follow this aggregate contract too.
@@ -268,7 +287,16 @@ promise) from the configured callback.
   `.call` argument positions. Shadowed or reassigned callees do not qualify.
   Existing literal-array `.apply` callback return behavior remains unchanged.
 
-The option does not inspect consumer bodies or infer contracts from names. As
-with ordinary function and mock callback returns, it does not prove that a
-caller invokes or awaits the consumer. Configure only APIs that honor this
-contract.
+Without configuration, a stable same-file consumer can prove adoption when
+every use of its callback parameter is a direct invocation immediately awaited
+inside that consumer, including `result = await callback()`. Floating calls,
+parameter replacement, forwarding, or capture in a nested function keep the
+callback unproven. With a parser-owned TypeScript program, resolvable imports
+can use the same proof on their actual implementation. Missing bodies or type
+information keep imports unproven; configure the contract when the lint host
+cannot expose the imported body.
+
+Configured contracts trust the API rather than inspecting its body or inferring
+behavior from names. As with ordinary function and mock callback returns, the
+rule does not prove that a caller invokes or awaits the consumer. Configure only
+APIs that honor this contract.

@@ -133,7 +133,12 @@ function namedCallbackDisposition(fn, context, acceptsArgument) {
         continue;
       }
       passed = true;
-      if (!stable || (!use.direct && value.parent?.type !== "Property") || !acceptsArgument(value))
+      if (
+        !stable ||
+        bound ||
+        (!use.direct && value.parent?.type !== "Property") ||
+        !acceptsArgument(value)
+      )
         accepted = false;
     }
   }

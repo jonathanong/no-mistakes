@@ -390,7 +390,7 @@ Read the results as:
   remain unresolved — see `lightweight-queries.md`.
 
 Then classify every call site the `call-sites` JSON returned, not just the
-ones this regex matches — it only finds *handled* dispositions by
+ones this regex matches — it only finds _handled_ dispositions by
 construction, so a bare floating `enqueueEmail(...)` with no wrapper produces
 no match here and must be found by its absence, not its presence:
 
@@ -407,7 +407,10 @@ later expression shares the same statement as `Promise.all`. The
 eslint rule enforces disposition going forward on configured enqueue APIs, but
 it is not a discovery graph — existing callers still need this manual pass.
 For imported APIs that adopt callback returns, configure `awaitingConsumers`
-with explicit `callbackArgumentIndexes`; unknown callback APIs remain reported.
+with explicit `callbackArgumentIndexes`, or `callbackArgumentProperties` for
+named properties of fresh DI objects. Same-file awaited consumers can prove
+adoption directly; imported bodies require parser-owned type information.
+Unknown callback APIs remain reported.
 
 For file-local API prevention policies, configure the opt-in
 [`restricted-api-usage`](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-rules/restricted-api-usage.md)
