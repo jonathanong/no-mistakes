@@ -5,5 +5,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
+          # The expanded option consumes the URL-looking argument as a filename.
           FLAG=output
           curl --$FLAG https://untrusted.example.invalid/output-filename

@@ -1,4 +1,5 @@
 jobs:
+  # Only doubled backslashes leave an expandable dollar; the other filenames keep it literal.
   verify:
     runs-on: ubuntu-latest
     steps:

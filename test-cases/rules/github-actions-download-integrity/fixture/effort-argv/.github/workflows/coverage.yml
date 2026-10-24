@@ -1,4 +1,5 @@
 name: Download target and option boundary controls
+# Negative prefixes must not prove an HTTP download merely because they contain curl.
 on: push
 jobs:
   verify:

@@ -1,4 +1,5 @@
 name: Download integrity low effort argv boundaries
+# Keep indirect prefixes and operands: these cases protect low's argument-shape boundary.
 on: push
 
 jobs:
