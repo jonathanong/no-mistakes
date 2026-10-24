@@ -144,6 +144,7 @@ impl SharedCheckContext {
         crate::check_runner::results::finalize_domain_checks(
             crate::check_runner::results::FinalizeInput {
                 root: &self.root,
+                facts,
                 runner_config_deadlines,
                 config,
                 filesystem_files: &self.fs_files,
