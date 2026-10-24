@@ -72,3 +72,23 @@ fn invalid_globs_fail_before_scanning() {
         assert!(result.is_err(), "{field}");
     }
 }
+
+#[test]
+fn nested_join_on_chains_keep_their_own_predicate_scope() {
+    let findings = findings("nested-joins.sql", "");
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [1, 2, 2, 3, 4, 4],
+        "{findings:#?}"
+    );
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.message.contains("JOIN ON"))
+            .count(),
+        5
+    );
+}

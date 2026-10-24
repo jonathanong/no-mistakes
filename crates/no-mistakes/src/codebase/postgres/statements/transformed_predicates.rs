@@ -6,7 +6,9 @@ use super::value::PlaceholderPositions;
 use super::{SqlTransformedColumnClause as Clause, SqlTransformedColumnUseFact};
 use cte_scope::QueryScopes;
 use scope::base_relations;
-use sqlparser::ast::{Expr, Query, Select, SetExpr, Statement, TableWithJoins, Visit, Visitor};
+use sqlparser::ast::{
+    Expr, Query, Select, SetExpr, Statement, TableFactor, TableWithJoins, Visit, Visitor,
+};
 use std::ops::ControlFlow;
 
 pub(super) fn collect(
@@ -61,14 +63,24 @@ impl Collector<'_, '_> {
         }
         // ON sees preceding factors in its own join chain, never later joins.
         for table in tables {
+            self.nested_joins(&table.relation, ctes);
             let mut visible = Vec::new();
             scope::push_factor(&table.relation, ctes, &mut visible);
             for join in &table.joins {
+                self.nested_joins(&join.relation, ctes);
                 scope::push_factor(&join.relation, ctes, &mut visible);
                 if let Some(expr) = super::select::join_expr(&join.join_operator) {
                     expressions::collect(expr, Clause::Join, &visible, self.positions, self.out);
                 }
             }
+        }
+    }
+    fn nested_joins(&mut self, factor: &TableFactor, ctes: &[String]) {
+        if let TableFactor::NestedJoin {
+            table_with_joins, ..
+        } = factor
+        {
+            self.predicates(std::slice::from_ref(table_with_joins), None, ctes);
         }
     }
 }
