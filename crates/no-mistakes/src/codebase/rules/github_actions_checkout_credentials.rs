@@ -53,4 +53,5 @@ pub use diagnostics::run as diagnostics_with_files_and_sources;
 mod tests;
 
 #[cfg(test)]
+#[path = "github_actions_checkout_credentials/tests/policy.rs"]
 mod policy_tests;
