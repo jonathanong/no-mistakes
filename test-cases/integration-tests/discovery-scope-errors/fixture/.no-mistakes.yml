@@ -1,0 +1,16 @@
+tests:
+  vitest:
+    configs: []
+    projects:
+      selected:
+        include: [selected/**/*.ts]
+        exclude: [selected/excluded.ts]
+        integration_suites:
+          selected: [aws]
+  playwright:
+    configs: []
+    projects:
+      selected:
+        include: [selected/**/*.spec.ts]
+        integration_suites:
+          selected: [aws]

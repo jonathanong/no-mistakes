@@ -1,6 +1,5 @@
 use super::{CheckFactMap, CheckFactPlan, PlaywrightFactPlan};
 use rayon::prelude::*;
-use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -13,12 +12,25 @@ pub(crate) struct BatchCheckFactRequest {
     pub(crate) sources: Arc<crate::codebase::ts_source::SourceStore>,
 }
 
-struct FactDemand {
+struct FactDemand<'a> {
     request: usize,
-    plan: CheckFactPlan,
+    plan: plan::DemandPlan<'a>,
 }
 
-type CollectedDemand = (PathBuf, Vec<FactDemand>, Vec<Option<super::CheckFileFacts>>);
+type CollectedDemand<'a> = (
+    PathBuf,
+    Vec<FactDemand<'a>>,
+    Vec<Option<super::CheckFileFacts>>,
+);
+
+#[cfg(feature = "test-instrumentation")]
+pub(crate) mod benchmark;
+mod demands;
+mod plan;
+#[cfg(feature = "test-instrumentation")]
+mod test_support;
+#[cfg(test)]
+mod tests;
 
 pub(crate) fn collect_check_fact_batch_with_session(
     session: &crate::codebase::analysis_session::AnalysisSession,
@@ -36,7 +48,8 @@ pub(crate) fn collect_check_fact_batch_with_session(
             let _ = runner.parse_all();
         }
     }
-    let demands = demands_by_path(&requests);
+    let mut graph_plans = demands::graph_plans(&requests);
+    let demands = demands::demands_by_path::<false>(&requests, &mut graph_plans, &mut 0);
     let cache = crate::ast::current_request_parse_cache();
     let mut collected = Vec::new();
     let demands = demands
@@ -84,6 +97,8 @@ pub(crate) fn collect_check_fact_batch_with_session(
             }
         }
     }
+    // Release graph-only Arc owners before assembling maps from the original plans.
+    drop(graph_plans);
     requests
         .into_iter()
         .zip(precollected)
@@ -101,12 +116,12 @@ pub(crate) fn collect_check_fact_batch_with_session(
         .collect()
 }
 
-fn collect_demand(
+fn collect_demand<'a>(
     session: &crate::codebase::analysis_session::AnalysisSession,
     requests: &[BatchCheckFactRequest],
     path: PathBuf,
-    demands: Vec<FactDemand>,
-) -> Option<CollectedDemand> {
+    demands: Vec<FactDemand<'a>>,
+) -> Option<CollectedDemand<'a>> {
     crate::invocation::check_timeout().ok().map(|()| {
         crate::ast::with_request_parse_cache(|| {
             let variants = demands
@@ -115,7 +130,7 @@ fn collect_demand(
                     let request = &requests[demand.request];
                     super::file::CheckFactVariant {
                         root: &request.root,
-                        plan: &demand.plan,
+                        plan: demand.plan.as_ref(),
                         playwright: request.playwright.as_ref(),
                     }
                 })
@@ -125,85 +140,4 @@ fn collect_demand(
             (path, demands, facts)
         })
     })
-}
-
-fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<FactDemand>> {
-    let mut demands = BTreeMap::<PathBuf, Vec<FactDemand>>::new();
-    for (request_id, request) in requests
-        .iter()
-        .enumerate()
-        .take_while(|_| crate::invocation::check_timeout().is_ok())
-    {
-        let graph_only = super::graph_only_files(&request.files, &request.graph_files);
-        let graph_plan = CheckFactPlan {
-            forbidden_call_arguments: request.plan.forbidden_call_arguments.clone(),
-            graph: request.plan.graph,
-            call_site_paths: request.plan.call_site_paths.clone(),
-            graph_context: request.plan.graph_context.clone(),
-            integration_runner_configs: request.plan.integration_runner_configs.clone(),
-            ..CheckFactPlan::default()
-        };
-        let mut plans = BTreeMap::new();
-        for path in &request.files {
-            plans.insert(normalize(path), request.plan.clone());
-        }
-        for path in request.plan.production_import_paths.iter() {
-            plans
-                .entry(normalize(path))
-                .or_insert_with(|| request.plan.clone());
-        }
-        for path in graph_only {
-            let path = normalize(&path);
-            let mut plan = graph_plan.clone();
-            if request.plan.legacy_symbol_paths.contains(&path) {
-                // An explicit symbols target can be visible to the graph while
-                // remaining outside the configured check file scope.
-                plan.symbols = request.plan.symbols;
-                plan.legacy_symbol_paths.insert(path.clone());
-            }
-            plans.entry(path).or_insert(plan);
-        }
-        if let Some(playwright) = &request.playwright {
-            for path in playwright.paths() {
-                plans.entry(normalize(path)).or_insert(graph_plan.clone());
-            }
-            for path in playwright.source_files().iter() {
-                let plan = plans.entry(normalize(path)).or_insert(graph_plan.clone());
-                // Staged Playwright decides whether source imports are needed
-                // after test facts exist. Collect that request-local superset
-                // in the same parse; map assembly retains the exact graph plan.
-                plan.graph.imports = true;
-            }
-            for path in playwright.config_files() {
-                let path = normalize(path);
-                if plans.contains_key(&path) {
-                    // Staged collection derives the exact union fact from the
-                    // already-cached config AST, so a Rayon demand would only
-                    // force the same config through a second parser cache.
-                    plans.remove(&path);
-                }
-            }
-        }
-        if let Some(runner) = &request.plan.integration_runner_configs {
-            for path in runner.paths() {
-                plans.remove(&normalize(path));
-            }
-        }
-        for (path, plan) in plans {
-            if crate::codebase::dependencies::extract::is_indexable(&path)
-                || plan.production_import_paths.contains(&path)
-                || plan.storybook && super::is_mdx_file(&path)
-            {
-                demands.entry(path).or_default().push(FactDemand {
-                    request: request_id,
-                    plan,
-                });
-            }
-        }
-    }
-    demands
-}
-
-fn normalize(path: &std::path::Path) -> PathBuf {
-    crate::codebase::ts_resolver::normalize_path(path)
 }

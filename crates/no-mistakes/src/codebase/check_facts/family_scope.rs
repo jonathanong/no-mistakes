@@ -85,6 +85,12 @@ pub fn include_scopes(plan: &mut super::CheckFactPlan, other: &super::CheckFactP
         other.integration,
         &other.integration_paths,
     );
+    plan.integration_test_paths = merge(
+        plan.integration,
+        &plan.integration_test_paths,
+        other.integration,
+        &other.integration_test_paths,
+    );
     plan.symbols_paths = merge(
         plan.symbols,
         &plan.symbols_paths,

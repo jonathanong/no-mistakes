@@ -1,5 +1,9 @@
 mod aggregate;
 mod batch;
+#[cfg(feature = "test-instrumentation")]
+pub(crate) use batch::benchmark::{
+    demand_builder_fixture, run_demand_builder, DemandBuilderFixture,
+};
 mod collect;
 mod collect_helpers;
 mod family_scope;

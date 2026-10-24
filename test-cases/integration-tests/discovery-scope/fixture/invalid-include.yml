@@ -1,0 +1,8 @@
+tests:
+  vitest:
+    configs: []
+    projects:
+      selected:
+        include: ['[']
+        integration_suites:
+          selected: [aws]

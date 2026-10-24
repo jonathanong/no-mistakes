@@ -1,0 +1,13 @@
+# Parsing/graph work with no integration annotation consumer.
+tests:
+  vitest:
+    configs: []
+  playwright:
+    configs: []
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [web]
+      forbiddenModules: [integration-discovery-unavailable-package]
+      relationships: [import]

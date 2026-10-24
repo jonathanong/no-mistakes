@@ -1,0 +1,15 @@
+# Saved workload policy for the frozen Vouchington corpus; helper facts remain global.
+tests:
+  vitest:
+    configs: []
+    projects:
+      integration:
+        include:
+          - backend/**/*.test.mts
+          - integration-tests/**/*.test.mts
+        exclude:
+          - '**/*.mock.test.mts'
+        integration_suites:
+          external: [aws]
+  playwright:
+    configs: []

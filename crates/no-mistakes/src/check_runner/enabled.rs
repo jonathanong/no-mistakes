@@ -74,6 +74,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         queue_factory_roles: enabled.queue_factory_roles,
         integration: enabled.integration,
         integration_paths: Default::default(),
+        integration_test_paths: Default::default(),
         integration_runner_configs: None,
         dynamic_imports: enabled.dynamic_import_rules,
         nextjs_caching: enabled.nextjs_caching,

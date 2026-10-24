@@ -3,6 +3,8 @@ use super::*;
 use serde_json::{json, Value};
 use std::path::PathBuf;
 
+mod integration_discovery;
+
 fn fixture_root(name: &str) -> String {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

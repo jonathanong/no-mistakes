@@ -9,6 +9,8 @@ use anyhow::Result;
 use std::path::Path;
 
 mod annotation_modules;
+mod demand_builder;
+pub use demand_builder::{construct_fact_demands, prepare_fact_demands, FactDemandFixture};
 mod bench_shard;
 mod call_index;
 mod language_frontends;

@@ -758,3 +758,14 @@ capsules carry an explicit marker; default externally prepared capsules remain
 conservative. Any receiver write, region, call proof, or unsafe owner requires
 receiver resolution. This representation preserves the single request-owned
 fact pass and canonical dependency graph; it adds no persistent cache.
+
+Integration annotation checks retain helper import/export/function summaries for
+the complete prepared source universe. When all integration policies declare
+explicit `include` lists, recursive test discovery is restricted to their union
+after each policy's `exclude` list. Runner-derived project selection retains
+full discovery. Parse failures remain global, and helpers that reference the
+historical synthetic `__test_N` function namespace retain full discovery to
+preserve cross-file resolution and declaration-order behavior. Ambient-module
+keywords and escaped source conservatively retain full discovery so nested
+imports preserve the historical file-wide binding table. Direct fact
+requests default to full discovery.

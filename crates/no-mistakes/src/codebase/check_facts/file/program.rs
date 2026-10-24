@@ -73,9 +73,7 @@ pub(crate) fn collect_file_facts_from_program(
             plan.graph_context.visible_files.as_deref(),
         )
     });
-    let integration = (plan.integration
-        && crate::codebase::check_facts::family_scope::applies(&plan.integration_paths, path))
-    .then(|| crate::integration_tests::analysis::analyze_program(path, program, source));
+    let integration = super::integration::collect(path, program, source, plan);
     let integration_runner_config = plan
         .integration_runner_configs
         .as_ref()
