@@ -1,0 +1,9 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": { "no-mistakes/ts-preserve-null-option-defaults": "error" }
+}
