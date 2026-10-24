@@ -2,6 +2,7 @@ use super::{Clause, SqlTransformedColumnUseFact};
 use crate::codebase::postgres::idents::{
     ident_key, relation_part_key, relation_suffix_key, visit_child_exprs, visit_function_args,
 };
+use crate::codebase::postgres::statements::bounds::is_aggregate;
 use crate::codebase::postgres::statements::select::uses::{columns::bare, scope::BaseRel};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
 use sqlparser::ast::{BinaryOperator as Op, Expr, FunctionArguments, Spanned, UnaryOperator};
@@ -54,12 +55,18 @@ impl Inputs<'_, '_, '_> {
                 }
             }
             Expr::Function(function) => {
-                let name = function.name.to_string();
-                let transform = transformation.unwrap_or(&name);
-                for args in [&function.parameters, &function.args] {
-                    if let FunctionArguments::List(list) = args {
-                        // Argument labels and aggregate ordering are syntax, not transformed inputs.
-                        visit_function_args(&list.args, &mut |arg| self.walk(arg, Some(transform)));
+                // Aggregate values do not constrain a base-row UUID lookup. Their
+                // FILTER predicates and nested queries still get independent analysis.
+                if !is_aggregate(&function.name) {
+                    let name = function.name.to_string();
+                    let transform = transformation.unwrap_or(&name);
+                    for args in [&function.parameters, &function.args] {
+                        if let FunctionArguments::List(list) = args {
+                            // Argument labels and ordering are syntax, not transformed inputs.
+                            visit_function_args(&list.args, &mut |arg| {
+                                self.walk(arg, Some(transform))
+                            });
+                        }
                     }
                 }
                 if let Some(filter) = &function.filter {

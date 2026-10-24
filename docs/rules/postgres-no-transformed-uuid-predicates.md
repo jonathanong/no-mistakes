@@ -9,9 +9,9 @@ that block is set. Do not restate `importSpecifier`, `executorNames`,
 `schemaCatalogPath`, or `unanalyzableSql` on the rule. `include`, `exclude`, and
 `sqlInclude` may only narrow the project scope.
 
-Require catalog-resolved UUID columns to stay bare in `WHERE`, `JOIN ON`, and
-`HAVING` predicates. This preserves indexable comparisons against UUID
-parameters or bounds.
+Require catalog-resolved UUID columns to stay bare when they are compared in
+`WHERE`, `JOIN ON`, and `HAVING` predicates. This preserves indexable
+comparisons against UUID parameters or bounds.
 
 ```yaml
 rules:
@@ -36,16 +36,28 @@ their UUID indexes.
 
 ## What it catches/requires
 
-The rule reports a cast or function call applied to a catalog-resolved UUID
-column when that expression participates in a predicate in `WHERE`, `JOIN ON`,
-or `HAVING`. It covers UUID primary keys, foreign keys, unique keys, and
-ordinary UUID columns, including columns with plain indexes. The catalog's
-column type determines the scope; a conventional name such as `id` does not.
+The rule reports a cast or scalar function call applied to a
+catalog-resolved UUID column when that transformed column is an operand of a
+comparison in `WHERE`, `JOIN ON`, or `HAVING`. It covers UUID primary keys,
+foreign keys, unique keys, and ordinary UUID columns, including columns with
+plain indexes. The catalog's column type determines the scope; a conventional
+name such as `id` does not.
 
-The rule checks the transformed UUID column operand of a predicate. Casting a
-parameter to UUID or computing a bound before comparing it to a bare UUID column
-is allowed. A transformed column used only in the `SELECT` list is also allowed
-because it does not constrain the scan.
+The rule checks which operand contains the UUID column. Casting a parameter to
+UUID or computing a bound on the other side of a comparison to a bare UUID
+column is allowed. For example, `id >= fn_min_child_uuidv7($1)` leaves the
+indexed column bare. Aggregate results such as `COUNT(DISTINCT id)`, `MIN(id)`,
+`MAX(id)`, and `ARRAY_AGG(id)` are also allowed: they compute aggregate values
+from rows rather than applying a scalar transformation to the UUID operand of
+the comparison. A transformed column used only in the `SELECT` list is allowed
+because it does not constrain the scan. A schema-qualified custom scalar
+function such as `app.min(id)` remains reportable; matching an aggregate's
+name does not establish that it is a built-in aggregate.
+
+Aggregate value inputs are outside the row-lookup predicate: even
+`COUNT(id::text)` compares a count rather than the UUID column. Aggregate
+`FILTER` conditions are still predicates, so a transformation such as
+`COUNT(id) FILTER (WHERE id::text = $1)` is reported at the cast.
 
 A cast or function around a boolean comparison result leaves its UUID operands
 bare and is allowed. Transformations inside that comparison remain checked.
@@ -135,6 +147,8 @@ be analyzed follows the configured `unanalyzableSql` policy.
 -- The indexed key remains bare; casts and bounds are on the parameter side.
 SELECT id FROM users WHERE id = $1::uuid;
 SELECT id FROM users WHERE id >= uuidv7_lower_bound($1);
+-- A computed bound on the other operand leaves the UUID column bare.
+SELECT id FROM users WHERE id >= fn_min_child_uuidv7($1);
 
 -- A projection can derive a timestamp without wrapping a predicate key.
 SELECT uuid_extract_timestamp(id) FROM users WHERE id = $1;
@@ -142,6 +156,15 @@ SELECT uuid_extract_timestamp(id) FROM users WHERE id = $1;
 -- Wrapping a comparison result does not transform its UUID operand.
 SELECT id FROM users WHERE CAST(id = $1 AS boolean);
 SELECT id FROM users WHERE COALESCE(id = $1, false);
+
+-- Aggregate results operate on the group result, not as scalar wrappers on
+-- the UUID column operand of a row comparison.
+SELECT COUNT(DISTINCT id) FROM users HAVING COUNT(DISTINCT id) >= 2;
+SELECT MIN(id) FROM users HAVING MIN(id) >= $1::uuid;
+SELECT MAX(id) FROM users HAVING MAX(id) < $2::uuid;
+SELECT COUNT(*) FROM users HAVING cardinality(ARRAY_AGG(id)) >= 2;
+SELECT COUNT(*) FROM users HAVING COUNT(id::text) >= 2;
+SELECT COUNT(*) FROM users HAVING lower(MIN(id)::text) = $1;
 ```
 
 ## Counterexample
@@ -176,7 +199,7 @@ SELECT id FROM users WHERE COALESCE(id = $1, false);
 -- db/queries.sql
 SELECT id FROM users WHERE id::text = $1;
 SELECT id FROM users WHERE CAST(id AS text) = $1;
-SELECT id FROM users WHERE uuid_extract_timestamp(id) > $1;
+SELECT id FROM users WHERE uuid_extract_timestamp(id) >= $1;
 
 SELECT s.id
 FROM sessions s
@@ -185,6 +208,10 @@ JOIN users u ON s.user_id::text = u.id::text;
 SELECT user_id, count(*) FROM sessions
 GROUP BY user_id
 HAVING uuid_extract_timestamp(user_id) > $1;
+
+-- FILTER still compares a transformed UUID column in its row predicate.
+SELECT COUNT(*) FROM users
+HAVING COUNT(id) FILTER (WHERE id::text = $1) >= 2;
 ```
 
 ## Fix

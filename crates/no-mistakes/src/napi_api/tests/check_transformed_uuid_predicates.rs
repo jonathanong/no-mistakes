@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "check_uuid_aggregate_operands.rs"]
+mod check_uuid_aggregate_operands;
+
 fn root() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

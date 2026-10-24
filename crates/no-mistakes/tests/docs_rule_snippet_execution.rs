@@ -3,6 +3,9 @@
 #[path = "support/docs_rule_snippets.rs"]
 pub(super) mod docs_rule_snippets;
 
+#[path = "support/docs_uuid_predicate_operands.rs"]
+mod uuid_predicate_operands;
+
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
