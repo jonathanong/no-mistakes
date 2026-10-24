@@ -1,0 +1,12 @@
+[
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/procedural",
+    "config": "report.yml",
+    "beforeFindings": 172,
+    "afterFindings": 69,
+    "beforeAdvisories": 0,
+    "afterAdvisories": 0,
+    "beforeStatus": 1,
+    "afterStatus": 1
+  }
+]
