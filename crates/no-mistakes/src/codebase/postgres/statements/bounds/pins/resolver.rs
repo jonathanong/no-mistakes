@@ -28,6 +28,7 @@ pub(in super::super) struct Resolver {
 }
 
 /// What a pin's value is sized by, and the bare columns its subqueries read.
+#[derive(Clone)]
 pub(super) struct Sourced {
     pub(super) source: SqlPinSource,
     pub(super) reads: Vec<SqlBareRead>,
