@@ -46,7 +46,10 @@ names. A static namespace read such as `ns.CONST`, without optional chaining,
 follows that export through the same prepared module resolver, including named
 re-exports and star barrels. The namespace must be a runtime import with no
 local shadow; methods, computed or nested members, type-only imports, unresolved
-modules, and non-const exports stay unknown. An imported tagged fragment constant is spliced only by `.append`; an untagged template would
+modules, and non-const exports stay unknown. Namespace reads recover only string
+constants: tagged SQL-builder fragments remain unknown, including in `.append`,
+because a const binding does not make the object immutable. A named imported
+tagged fragment constant is spliced only by `.append`; an untagged template would
 stringify the statement object. `let`, reassigned bindings, computed
 initializers, spreads, computed keys or writes, nested members, numeric keys,
 getters, and methods stay unknown. `no-object-mutation` (#2219) keeps object

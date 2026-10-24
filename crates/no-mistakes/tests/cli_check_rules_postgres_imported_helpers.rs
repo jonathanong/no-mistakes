@@ -451,7 +451,7 @@ fn default_exported_string_constants_are_spliced() {
 fn namespace_constants_report_precise_findings_at_both_efforts() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-required-predicates/variants/namespace-const-sql");
-    let mut expected = unanalyzable(&[20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 35]);
+    let mut expected = unanalyzable(&[16, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 35]);
     // Whole-query constants retain the declaration's location for the missing predicate.
     expected.push(("src/constants.mts".to_string(), 5, "orders".to_string()));
     expected.sort();
@@ -483,3 +483,6 @@ fn namespace_constants_report_precise_findings_at_both_efforts() {
         assert_eq!(findings, expected, "{effort}: {report}");
     }
 }
+
+#[path = "cli_check_rules_postgres_imported_helpers/namespace_fragments.rs"]
+mod namespace_fragments;

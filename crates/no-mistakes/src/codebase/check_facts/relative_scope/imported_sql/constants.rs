@@ -26,8 +26,9 @@ pub(super) fn recovered<R: FnMut(&str, &Path) -> Option<PathBuf>>(
         .iter()
         .find(|(known, _)| known == options)?;
     let constant = embedded.exported_constants.get(&local)?;
-    // Untagged `${frag}` stringifies a statement object. Only `.append` copies it.
-    if constant.fragment && !allow_fragment {
+    // Untagged `${frag}` stringifies a statement object. Namespace fragment
+    // objects can mutate after their export snapshot, even through a const binding.
+    if constant.fragment && (!allow_fragment || site.member.is_some()) {
         return None;
     }
     let sql = constant.sql.clone();

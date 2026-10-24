@@ -31,9 +31,11 @@ For `import * as names from "./tables.mts"`, `names.TABLE` splices an exported
 literal into an untagged template or `.append` when no local binding shadows
 `names`.
 `names.default` also selects a default-exported literal. Computed, optional,
-method, type-only, and non-const reads stay unanalyzable. A tagged fragment
-constant is copied by `.append(names.FRAGMENT)`; interpolating it in an
-untagged template stays unanalyzable because that stringifies the object.
+method, type-only, and non-const reads stay unanalyzable. Namespace recovery
+accepts only string constants: a tagged builder fragment such as `names.FRAGMENT`
+stays unanalyzable even in `.append`, because the exported object can mutate
+after its declaration. Named fragment imports keep their established append
+behavior.
 
 Helpers with control flow are checked too. A helper that returns early, branches
 on its arguments, calls other helpers (up to 8 deep), appends to a

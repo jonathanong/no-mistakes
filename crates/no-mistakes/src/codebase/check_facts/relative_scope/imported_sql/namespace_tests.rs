@@ -20,9 +20,9 @@ fn namespace_constants_follow_prepared_exports_and_preserve_unknown_reads() {
             "the literal retains its declaring module: {call:?}"
         );
     }
-    assert_eq!(
-        calls[7].sql_text.as_deref(),
-        Some("SELECT id FROM orders WHERE true AND account_id = $1")
+    assert!(
+        calls[7].is_unanalyzable(),
+        "a namespace fragment object can mutate despite its const export"
     );
     assert_eq!(
         calls[8].sql_text.as_deref(),
@@ -138,7 +138,7 @@ fn namespace_constant_fill_preserves_one_origin_per_sql_byte() {
         }
     }
     assert!(
-        recovered >= 10,
+        recovered >= 9,
         "successful expansions must exercise the origin invariant"
     );
 }
