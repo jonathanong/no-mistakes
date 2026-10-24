@@ -19,6 +19,10 @@ nested SELECT projections, nested WITH, independently bounded target rows with
 an unbounded auxiliary input, and an unused write without RETURNING. The embedded
 TypeScript case requires both fixes and retains one genuine non-key scan.
 
+Repeated RETURNING references retain the shared CTE expansion cap. A saved
+two-reference chain asserts conservative opaque compaction instead of exponential
+fact growth.
+
 The extra negative finding is intentional. An inner `WITH shadows AS (...)`
 previously borrowed the key of a physical catalog namesake. Its actual CTE can
 supply many distinct target keys. Both the write and its outer join must remain
@@ -34,11 +38,12 @@ Validation:
 
 - Locked all-features workspace build includes libraries, binaries and integration
   suites through `.github/scripts/rust-validation.sh build`.
-- 3,616 PostgreSQL, rule, prepared-check and N-API project tests pass; two existing
+- 3,617 PostgreSQL, rule, prepared-check and N-API project tests pass; two existing
   ignored tests remain ignored. All 431 PostgreSQL CLI suite tests pass.
 - N-API standalone and aggregate checks have identical complete reports for all
   four configurations above. The new TypeScript fixture passes `resolve-check`.
-- Focused LLVM coverage runs all 224 bounded-statements rule tests. Modified DML
+- Focused LLVM coverage runs 399 bound-fact and rule tests, including all 224
+  bounded-statements rule tests. Modified DML
   and CTE scope code and the extracted source-merge helper have 100% line coverage;
   the pin extractor has 98.53%. [The focused report](focused-coverage.json) retains
   line, function and region totals. No filenames were excluded from coverage.

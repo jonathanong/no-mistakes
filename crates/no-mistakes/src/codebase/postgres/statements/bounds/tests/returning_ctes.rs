@@ -98,3 +98,22 @@ fn unused_modifying_cte_without_returning_stays_opaque() {
     let changed = scope.get("changed").expect("CTE in scope");
     assert!(matches!(&changed.items[0].kind, SqlBoundItemKind::Opaque));
 }
+
+#[test]
+fn repeated_returning_ctes_keep_the_shared_expansion_cap() {
+    use crate::codebase::postgres::statements::SqlBoundQuery;
+    fn contains_opaque(query: &SqlBoundQuery) -> bool {
+        query.items.iter().any(|item| {
+            matches!(item.kind, SqlBoundItemKind::Opaque)
+                || matches!(&item.kind, SqlBoundItemKind::Query(inner) if contains_opaque(inner))
+                || item.pins.iter().any(|pin| {
+                    matches!(&pin.source, SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner)
+                        if contains_opaque(inner))
+                })
+        })
+    }
+    let found = super::super::facts(&fixture("expansion-chain.sql"));
+    assert_eq!(found.len(), 14);
+    // Without compaction this two-reference chain expands exponentially, with no opaque marker.
+    assert!(contains_opaque(&found.last().unwrap().query));
+}

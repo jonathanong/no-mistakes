@@ -41,25 +41,20 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope<'a>(
                 super::super::dml::returning_bound(&cte.query, statement, &scope, positions)
                     .unwrap_or_else(|| opaque(start(cte.query.span())))
             }
+        } else if with.recursive {
+            // A recursive reference is whatever the recursion has produced so far: it
+            // bounds nothing joined to it.
+            let mut inner = scope.child();
+            inner.insert(name.clone(), opaque(start(cte.query.span())));
+            bound_query(&cte.query, &inner, positions)
         } else {
-            let bound = if with.recursive {
-                // A recursive reference is whatever the recursion has produced so far: it
-                // bounds nothing joined to it.
-                let mut inner = scope.child();
-                inner.insert(name.clone(), opaque(start(cte.query.span())));
-                bound_query(&cte.query, &inner, positions)
-            } else {
-                bound_query(&cte.query, &scope, positions)
-            };
-            // Each reference clones the CTE's bound, so a chain of CTEs that each read the one
-            // before twice grows exponentially. Compact oversized bounds conservatively,
-            // retaining the distinct uncapped relations instead of hiding their reads.
-            if size(&bound) > MAX_BOUND_ITEMS {
-                compact(&bound, start(cte.query.span()))
-            } else {
-                bound
-            }
+            bound_query(&cte.query, &scope, positions)
         };
+        // SELECT and RETURNING CTEs can both duplicate prior bound trees. Keep the same
+        // conservative expansion cap before either kind enters the shared scope.
+        if size(&bound) > MAX_BOUND_ITEMS {
+            bound = compact(&bound, start(cte.query.span()));
+        }
         for (output, alias) in bound.outputs.iter_mut().zip(&cte.alias.columns) {
             output.name = Some(ident_key(&alias.name));
         }
