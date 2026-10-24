@@ -447,3 +447,6 @@ mod external_declarations;
 #[cfg(unix)]
 #[path = "tests/symlink_declarations.rs"]
 mod symlink_declarations;
+
+#[path = "tests/dynamic_bases.rs"]
+mod dynamic_bases;

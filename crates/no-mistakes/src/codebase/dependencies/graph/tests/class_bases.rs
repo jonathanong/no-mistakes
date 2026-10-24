@@ -76,6 +76,8 @@ fn class_declarations_record_line_export_state_and_global_base() {
             ("src/classes.ts", "SameFile", true, 9, None),
             ("src/classes.ts", "Builtin", true, 10, Some("TypeError")),
             ("src/classes.ts", "FromPackage", true, 11, None),
+            // Dynamic heritage retains the declaration, without claiming a base.
+            ("src/classes.ts", "Opaque", true, 13, None),
             ("src/classes.ts", "Private", true, 15, Some("Error")),
             ("src/classes.ts", "default", true, 18, Some("Error")),
         ]
