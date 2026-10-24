@@ -39,6 +39,25 @@ test("mutable", (ctx) => {
   omit();
   omit = () => {};
 });
+test("reassigned destructure", ({ skip }) => {
+  skip = () => {};
+  skip();
+});
+test("reassigned chained destructure", ({ skip }) => {
+  skip = () => {};
+  const later = skip;
+  later();
+});
+test("reassigned context", (ctx) => {
+  ctx = { skip() {} };
+  const omit = ctx.skip;
+  omit();
+});
+test("reassigned destructure source", (ctx) => {
+  ctx = { skip() {} };
+  const { skip: omit } = ctx;
+  omit();
+});
 test("other object", (ctx) => {
   const other = { skip() {} };
   const omit = other.skip;

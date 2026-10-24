@@ -1,11 +1,7 @@
 "use strict";
 const { rule, options } = require("../helpers");
-const {
-  memberName,
-  testBinding,
-  isContextObject,
-  isContextSkipAlias,
-} = require("./test-no-skips-bindings");
+const { memberName, testBinding, isContextObject } = require("./test-no-skips-bindings");
+const { isContextSkipAlias } = require("./test-no-skips-context");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression } = require("./async-ast");

@@ -111,7 +111,7 @@ The rule follows call identity and syntax rather than property spelling. Data
 fields such as `options.skip`, ordinary object methods, and names such as
 `skipIfDeleted()` are allowed. A function's unrelated `skip()` method is also
 allowed; Vitest's bound callback context `context.skip()` and its bound local
-aliases are not. Mutable local captures remain unresolved.
+aliases are not. Reassigned context or `skip` bindings remain unresolved.
 
 ```ts
 const options = { skip: "explain a skipped result" };
