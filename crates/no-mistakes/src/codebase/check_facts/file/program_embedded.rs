@@ -38,4 +38,3 @@ pub(in crate::codebase::check_facts::file) fn prepared_embedded_sql(
         })
         .collect()
 }
-
