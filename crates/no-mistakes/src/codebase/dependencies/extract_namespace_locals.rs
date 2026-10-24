@@ -35,7 +35,7 @@ fn add_dotted_local(collector: &mut ImportCollector, path: &str, name: &str) {
     collector.namespace.facts.locals.push(local);
 }
 
-fn statement_value_names(statement: &Statement<'_>) -> Vec<String> {
+pub(crate) fn statement_value_names(statement: &Statement<'_>) -> Vec<String> {
     match statement {
         Statement::ClassDeclaration(class) => class_value_names(class),
         Statement::FunctionDeclaration(function) => function_name(function).into_iter().collect(),

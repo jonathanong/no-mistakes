@@ -1,0 +1,1 @@
+../elsewhere/index.d.ts

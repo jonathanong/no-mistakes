@@ -1,0 +1,9 @@
+version: 2
+unanalyzable: ignore
+rules:
+  - rule: unconstructed-error-class
+    scope: repository
+    include: ["src/**"]
+    options:
+      testFiles: ["src/test-helpers/**"]
+      unanalyzable: report

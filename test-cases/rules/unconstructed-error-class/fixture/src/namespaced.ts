@@ -3,7 +3,7 @@
 // reference below, and `Errors` is only ever the head of a `new` or an
 // `extends`, so the namespace never escapes.
 export namespace Errors {
-  // Not flagged: the static factory builds the class with `new this()`.
+  // Unknown `new this()` is uncertain and does not prove construction.
   export class TopicError extends Error {
     static create() {
       return new this();
@@ -36,7 +36,7 @@ export namespace Errors {
     // Not flagged: built below as `new Errors.Inner.DeepBuilt()`.
     export class DeepBuilt extends Error {}
 
-    // Not flagged: the static factory builds it, as for `TopicError`.
+    // Unknown nested `new this()` cannot prove construction either.
     export class DeepError extends Error {
       static create() {
         return (() => new this())();

@@ -29,6 +29,9 @@ type RouteReachableFilesCache = Arc<
     >,
 >;
 
+#[doc(hidden)]
+pub mod ancestry;
+mod ancestry_namespaces;
 pub(crate) mod call_sites;
 mod collect;
 pub(crate) mod domain;
@@ -137,6 +140,9 @@ pub struct TsFileFacts {
     pub lexical_scope_parents: Vec<(usize, Option<usize>)>,
     pub callable_scopes: Vec<String>,
     pub class_scopes: Vec<String>,
+    /// Exact class shapes and constructor display spans from the shared AST.
+    #[doc(hidden)]
+    pub ancestry: ancestry::AncestryFacts,
     /// One-based declaration line of each class that names a static base.
     pub class_declaration_lines: Vec<(crate::codebase::dependencies::extract::CallableId, u32)>,
     /// Namespace declarations, the uses of their names, and the classes that
@@ -163,44 +169,7 @@ pub struct TsFileFacts {
     pub trpc_calls: Vec<crate::codebase::ts_trpc::TrpcCallFact>,
 }
 
-#[derive(Clone)]
-enum TsFactSlot {
-    Owned(Box<TsFileFacts>),
-    Shared(Arc<TsFileFacts>),
-}
-
-impl TsFactSlot {
-    fn as_facts(&self) -> &TsFileFacts {
-        match self {
-            Self::Owned(facts) => facts,
-            Self::Shared(facts) => facts.as_ref(),
-        }
-    }
-
-    fn into_owned(self) -> TsFileFacts {
-        match self {
-            Self::Owned(facts) => *facts,
-            Self::Shared(facts) => Arc::unwrap_or_clone(facts),
-        }
-    }
-
-    fn materialize_owned(&mut self) {
-        if matches!(self, Self::Owned(_)) {
-            return;
-        }
-        // Take the slot first so a uniquely owned Shared Arc can unwrap
-        // instead of cloning after a temporary extra strong count.
-        let taken = std::mem::replace(self, Self::Owned(Box::default()));
-        *self = Self::Owned(Box::new(taken.into_owned()));
-    }
-
-    fn as_facts_mut(&mut self) -> &mut TsFileFacts {
-        match self {
-            Self::Owned(facts) => facts,
-            Self::Shared(_) => unreachable!("shared slots were materialized"),
-        }
-    }
-}
+include!("facts/slots.rs");
 
 #[derive(Clone)]
 pub struct TsFactMap {

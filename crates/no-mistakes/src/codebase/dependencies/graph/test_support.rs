@@ -52,6 +52,7 @@ pub(crate) fn from_raw_maps(
         module_files: fx_map(),
         resolved_call_sites: Vec::new(),
         class_declarations: Vec::new(),
+        class_ancestry: Default::default(),
         call_sites_by_file: fx_map(),
         vitest_setup_projects: Vec::new(),
         effective_edges: std::sync::OnceLock::new(),
@@ -71,6 +72,7 @@ pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap)
         module_files: fx_map(),
         resolved_call_sites: Vec::new(),
         class_declarations: Vec::new(),
+        class_ancestry: Default::default(),
         call_sites_by_file: fx_map(),
         vitest_setup_projects: Vec::new(),
         effective_edges: std::sync::OnceLock::new(),
@@ -81,6 +83,11 @@ pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap)
 }
 
 impl DepGraph {
+    pub(crate) fn without_class_ancestry_metadata(mut self) -> Self {
+        self.class_ancestry = Default::default();
+        self
+    }
+
     pub(crate) fn vitest_setup_edges_materialized(&self) -> bool {
         self.effective_edges.get().is_some()
     }

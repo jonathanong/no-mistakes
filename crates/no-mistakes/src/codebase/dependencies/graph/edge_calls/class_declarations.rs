@@ -1,4 +1,5 @@
-/// A class with a statically named `extends` base. The base itself is the
+/// A class ancestry declaration. Source classes name a static `extends` base;
+/// demanded ambient declarations may retain an unresolved base. The base is the
 /// [`EdgeKind::Extends`] edge leaving [`ClassDeclaration::node`]; this record
 /// carries what an edge cannot: where the class is declared, whether it is
 /// exported, ambient or a namespace member, and a base that names a global
@@ -40,6 +41,30 @@ impl ClassDeclaration {
 }
 
 impl DepGraph {
+    pub(crate) fn class_is_root(
+        &self,
+        file: &std::path::Path,
+        scope: &str,
+        id: Option<crate::codebase::dependencies::extract::CallableId>,
+    ) -> bool {
+        id.is_some_and(|id| {
+            self.class_ancestry
+                .roots
+                .contains(&NodeId::callable(file, scope, id))
+        })
+    }
+
+    pub(crate) fn constructor_expression(
+        &self,
+        file: &std::path::Path,
+        offset: u32,
+    ) -> Option<&str> {
+        self.class_ancestry
+            .expressions
+            .get(&(file.to_path_buf(), offset))
+            .map(String::as_str)
+    }
+
     pub fn class_declarations(&self) -> &[ClassDeclaration] {
         &self.class_declarations
     }

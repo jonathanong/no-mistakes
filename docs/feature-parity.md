@@ -11,6 +11,12 @@ query and `query-reached-per-item` rule support opt-in module/export selectors w
 resolver while retaining spelling-based string configuration. CLI, async Node,
 and batched `analyzeProject` queries share this behavior.
 
+TS/JS `unconstructed-error-class` uses canonical class ancestry for imported
+bases, including conservatively resolved package type declarations. Positive
+non-Error class ancestry is skipped; unresolved or opaque ancestry follows the
+shared unanalyzable policy. CLI `check`, async `check()` and `analyzeProject()`
+check reports share this behavior without widening ordinary import/call queries.
+
 Explicit Vitest and Playwright configurations expose optional declared
 case/hook/fixture deadline evidence through Rust, CLI
 `check --include-runner-config-deadlines`, async Node `check()` and

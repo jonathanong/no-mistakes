@@ -1,0 +1,108 @@
+[
+  {
+    "name": "internal directory symlink bare import stays unknown",
+    "specifier": "dep",
+    "importer": "context/pkg-link/index.d.ts",
+    "consumer": ".",
+    "expected": null
+  },
+  {
+    "name": "internal directory symlink parent-relative stays unknown",
+    "specifier": "../dep",
+    "importer": "context/pkg-link/index.d.ts",
+    "consumer": ".",
+    "expected": null
+  },
+  {
+    "name": "internal directory symlink safe child remains readable",
+    "specifier": "./within",
+    "importer": "context/pkg-link/index.d.ts",
+    "consumer": ".",
+    "expected": "context/pkg-link/within.d.ts"
+  },
+  {
+    "name": "relative traversal containing parent segment stays unknown",
+    "specifier": "./nested/../within",
+    "importer": "context/pkg-link/index.d.ts",
+    "consumer": ".",
+    "expected": null
+  },
+  {
+    "name": "file symlink changing sibling directory stays unknown",
+    "specifier": "./base",
+    "importer": "context/file-home/index.d.ts",
+    "consumer": ".",
+    "expected": null
+  },
+  {
+    "name": "same-parent file symlink has stable child scope",
+    "specifier": "./base",
+    "importer": "context/same-dir/alias.d.ts",
+    "consumer": ".",
+    "expected": "context/same-dir/base.d.ts"
+  },
+  {
+    "name": "whole consuming-root alias maps lookup scope",
+    "specifier": "dep",
+    "importer": "context/root-alias/src/main.ts",
+    "consumer": "context/root-alias",
+    "expected": "context/root-real/node_modules/dep/index.d.ts"
+  },
+  {
+    "name": "whole root alias declaration importer maps dependency scope",
+    "specifier": "dep",
+    "importer": "context/root-alias/types/index.d.ts",
+    "consumer": "context/root-alias",
+    "expected": "context/root-real/node_modules/dep/index.d.ts"
+  },
+  {
+    "name": "common ancestor alias above consumer maps dependency scope",
+    "specifier": "dep",
+    "importer": "context/ancestor-alias/types/index.d.ts",
+    "consumer": "context/ancestor-alias/subproject",
+    "expected": "context/root-real/node_modules/dep/index.d.ts"
+  },
+  {
+    "name": "physical declaration importer remains supported",
+    "specifier": "dep",
+    "importer": "context/root-real/types/index.d.ts",
+    "consumer": "context/root-real",
+    "expected": "context/root-real/node_modules/dep/index.d.ts"
+  },
+  {
+    "name": "physical importer with aliased consumer is supported",
+    "specifier": "dep",
+    "importer": "context/root-real/types/index.d.ts",
+    "consumer": "context/root-alias",
+    "expected": "context/root-real/node_modules/dep/index.d.ts"
+  },
+  {
+    "name": "whole-root alias keeps canonical consumer compiler context",
+    "specifier": "version-ctx-target",
+    "importer": "context/compiler-alias/src/main.ts",
+    "consumer": "context/compiler-alias",
+    "expected": "context/compiler-store/project/node_modules/version-ctx-target/error.d.ts"
+  },
+  {
+    "name": "relative consumer cannot certify absolute importer context",
+    "specifier": "dep",
+    "importer": "src/main.ts",
+    "consumer": "relative-consumer",
+    "consumer_relative": true,
+    "expected": null
+  },
+  {
+    "name": "missing common directory cannot certify lookup",
+    "specifier": "dep",
+    "importer": "context/absent-common/index.d.ts",
+    "consumer": "context/absent-common",
+    "expected": null
+  },
+  {
+    "name": "raw internal-link parent traversal with absent mapped parent is unknown",
+    "specifier": "./child",
+    "importer": "context/pkg-link/../hidden-parent/index.d.ts",
+    "consumer": ".",
+    "expected": null
+  }
+]

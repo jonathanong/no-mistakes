@@ -385,6 +385,9 @@ mod check_redirect_effort;
 #[path = "check_storybook_effort.rs"]
 mod check_storybook_effort;
 
+#[path = "check_unconstructed_error.rs"]
+mod check_unconstructed_error;
+
 #[path = "check_offset_effort.rs"]
 mod check_offset_effort;
 

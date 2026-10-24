@@ -6,8 +6,10 @@
 //! imports, and `extends` chains without re-parsing.
 
 mod analysis;
+mod ancestry;
 mod check;
 mod config;
+mod diagnostics;
 
 pub const RULE_ID: &str = "unconstructed-error-class";
 
