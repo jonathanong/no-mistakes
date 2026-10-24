@@ -2,6 +2,8 @@
 mod cte_scope;
 mod expressions;
 mod scope;
+#[cfg(test)]
+mod tests;
 use super::value::PlaceholderPositions;
 use super::{SqlTransformedColumnClause as Clause, SqlTransformedColumnUseFact};
 use cte_scope::QueryScopes;

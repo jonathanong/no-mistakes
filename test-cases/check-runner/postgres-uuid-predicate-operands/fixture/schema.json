@@ -1,0 +1,19 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "users": {
+      "columns": {
+        "id": { "dataType": "uuid" },
+        "external_ref": { "dataType": "uuid" },
+        "email": { "dataType": "text" }
+      },
+      "primaryKey": { "definition": "PRIMARY KEY (id)", "columns": ["id"] }
+    },
+    "sessions": {
+      "columns": { "id": { "dataType": "uuid" } }
+    }
+  },
+  "views": {},
+  "functions": {}
+}

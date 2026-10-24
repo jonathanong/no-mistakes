@@ -26,6 +26,11 @@ use sqlparser::ast::{CopySource, Query, Spanned, Statement};
 use std::collections::{BTreeMap, BTreeSet};
 use std::{cell::RefCell, rc::Rc};
 
+/// Share the canonical builtin aggregate identity with other statement projections.
+pub(super) fn is_aggregate(name: &sqlparser::ast::ObjectName) -> bool {
+    functions::is_aggregate(name)
+}
+
 /// CTE names in scope, with the bound of each.
 #[derive(Clone, Default)]
 pub(super) struct Scope {
