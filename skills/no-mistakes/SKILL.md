@@ -92,18 +92,18 @@ selected scripts without recognized diagnostics. Use `unanalyzable: report`
 fails, advises, or is skipped; install ShellCheck and repair failed
 invocations. Other launcher errors, such as permission denied, are hard errors.
 
-For `unconstructed-error-class`, unresolved production constructors, escaped
-namespaces without known construction or inheritance, and unconstructed classes
-with unresolved base ancestry follow `options.unanalyzable`:
-`report` fails by default, `advise` emits advisories, and `ignore` omits them.
-Unknown constructors never credit their enclosing class or prove it unused;
-that class follows the policy too unless known construction or inheritance
-proves it used. Use named constructors,
-direct namespace member references, or analyzable bases. Usable package type
-declarations can prove a non-Error class (skipped) or an Error subclass (judged);
-missing or opaque declarations remain uncertain. Suppressions
-apply at the construction or class line in both report channels. The rule remains
-`max` only; a requested `low` warns and runs `max`.
+For `unconstructed-error-class`, unresolved constructor targets and otherwise-unused
+classes with unresolved constructors or base ancestry produce non-failing
+advisories even with `options.unanalyzable: report` (the default).
+`advise` also advises; `ignore` omits these diagnostics. Namespace-escape-only
+uncertainty keeps the shared policy: `report` fails, `advise` advises, and
+`ignore` omits it. Definite unused Error classes remain failures under every
+policy. Known constructor targets reuse the prepared resolver, including
+path aliases and usable package declarations, and credit the actual class.
+Known non-Error globals are quiet; shadowed names resolve independently.
+Ordinary import/call query results remain unchanged. Suppressions apply at the
+construction or class line in both report channels. The rule remains `max`
+only; a requested `low` warns and runs `max`.
 
 For `version-pin-consistency`, a missing, unreadable, or malformed declared
 comparison source outside the selected file set for a selected anchor, or a

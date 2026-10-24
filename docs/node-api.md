@@ -99,19 +99,18 @@ skipped even when their residual is ignored or suppressed. `minSize` does not
 run on unsupported sets. Supported-set mismatches remain definite findings;
 use `effort: "max"` to analyze TypeScript, SQL-enum, and Markdown sets.
 
-For `unconstructed-error-class`, unresolved production constructors, escaped
-namespaces without known construction or inheritance, and unconstructed classes
-with unresolved base ancestry follow `options.unanalyzable`:
-`report` fails by default, `advise` emits advisories, and `ignore` omits them.
-Unknown constructors never credit their enclosing class or prove it unused;
-that class follows the policy too unless known construction or inheritance
-proves it used. Use named constructors,
-direct namespace member references, or analyzable bases. Package declarations
-can prove a base is a non-Error class (skipped) or an Error subclass (judged);
-unresolved or opaque declarations retain the policy. This ancestry-only
-projection leaves ordinary import/call query results unchanged. Suppressions
-apply at the construction or class line in both report channels. The rule remains
-`max` only; a requested `low` warns and runs `max`.
+For `unconstructed-error-class`, unresolved constructor targets and otherwise-unused
+classes with unresolved constructors or base ancestry produce non-failing
+advisories even with `options.unanalyzable: report` (the default).
+`advise` also advises; `ignore` omits these diagnostics. Namespace-escape-only
+uncertainty keeps the shared policy: `report` fails, `advise` advises, and
+`ignore` omits it. Definite unused Error classes remain failures under every
+policy. Known constructor targets reuse the prepared resolver, including
+path aliases and usable package declarations, and credit the actual class.
+Known non-Error globals are quiet; shadowed names resolve independently.
+Ordinary import/call query results remain unchanged. Suppressions apply at the
+construction or class line in both report channels. The rule remains `max`
+only; a requested `low` warns and runs `max`.
 
 For `version-pin-consistency`, CLI `check`, `check(options)`, and check reports
 in `analyzeProject()` apply the same `unanalyzable` policy when a selected

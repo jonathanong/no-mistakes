@@ -6,11 +6,13 @@ external modules, virtual queue jobs, or virtual GitHub Actions workflow jobs
 and steps. Every edge has an internal `EdgeKind`,
 serialized in JSON/YAML/text output through the `via` field.
 
-Class-base analysis can demand package declaration facts through the request-owned
-source store. These facts add canonical `Extends` targets and ambient class
-records only: ordinary import/call targets and the discovered file universe stay
-unchanged. Positive class identity is required to prove non-Error ancestry;
-missing, opaque or unsupported declaration resolution remains uncertain. See
+Class-base and constructor analysis can demand package declaration facts through
+the request-owned source store. These facts add canonical `Extends` targets,
+ambient class records, and internal constructor proof metadata. Ordinary
+import/call targets and the discovered file universe stay unchanged; constructor
+metadata adds no new edge kind. Positive class identity is required to prove
+non-Error ancestry; missing, opaque or unsupported declaration resolution remains
+uncertain. See
 [error-class ancestry](rules/unconstructed-error-class.md#limitations).
 
 The canonical in-memory edge index is also used by `queues edges|related` and

@@ -35,6 +35,30 @@ fn reported(findings: &[RuleFinding]) -> Vec<String> {
         .collect()
 }
 
+fn diagnostic_report(root: &std::path::Path) -> serde_json::Value {
+    let output = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({"root":root}).to_string(),
+    ))
+    .unwrap();
+    serde_json::from_str(&output).unwrap()
+}
+
+fn reported_channel(report: &serde_json::Value, channel: &str) -> Vec<String> {
+    report[channel]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| {
+            format!(
+                "{}:{} {}",
+                row["file"].as_str().unwrap(),
+                row["line"],
+                row["target"].as_str().unwrap()
+            )
+        })
+        .collect()
+}
+
 #[test]
 fn default_config_reports_exactly_the_dead_error_classes() {
     let found = findings(".no-mistakes.yml").unwrap();
@@ -436,6 +460,8 @@ mod uncertainty;
 #[path = "tests/ancestry_compatibility.rs"]
 mod ancestry_compatibility;
 
+#[path = "tests/construction_targets.rs"]
+mod construction_targets;
 #[path = "tests/declaration_fact_boundaries.rs"]
 mod declaration_fact_boundaries;
 #[path = "tests/declaration_ownership.rs"]

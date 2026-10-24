@@ -1,0 +1,18 @@
+new Intl.Collator();
+new Intl.DateTimeFormat();
+new Intl.DisplayNames(['en'], { type: 'language' });
+new Intl.DurationFormat();
+new Intl.ListFormat();
+new Intl.Locale('en');
+new Intl.NumberFormat();
+new Intl.PluralRules();
+new Intl.RelativeTimeFormat();
+new Intl.Segmenter();
+new WebAssembly.Module(new Uint8Array());
+new WebAssembly.Instance(module);
+new WebAssembly.Memory({ initial: 1 });
+new WebAssembly.Table({ initial: 0, element: 'anyfunc' });
+new WebAssembly.Global({ value: 'i32' });
+new WebAssembly.Tag({ parameters: [] });
+new WebAssembly.Exception(tag, []);
+new globalThis.WebAssembly.Memory({ initial: 1 });

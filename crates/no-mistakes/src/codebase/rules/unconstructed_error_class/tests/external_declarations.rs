@@ -1,17 +1,24 @@
 use super::*;
 
+fn assert_channels(root: &std::path::Path, failures: &[&str], advisories: &[&str]) {
+    let report = diagnostic_report(root);
+    assert_eq!(reported_channel(&report, "rules"), failures);
+    assert_eq!(reported_channel(&report, "advisories"), advisories);
+}
+
 #[test]
 fn package_declarations_prove_only_class_ancestry() {
     let root = fixture().parent().unwrap().join("declarations/fixture");
-    let findings = run_check(&root, None, None).unwrap();
-    assert_eq!(
-        reported(&findings),
-        [
+    assert_channels(
+        &root,
+        &[
             "src/classes.ts:5 ImportedError",
+            "src/classes.ts:13 ImportedCjsError",
+        ],
+        &[
             "src/classes.ts:6 unanalyzable",
             "src/classes.ts:8 unanalyzable",
-            "src/classes.ts:13 ImportedCjsError",
-        ]
+        ],
     );
 }
 
@@ -20,9 +27,9 @@ fn declaration_ancestry_preserves_policy_and_effort_channels() {
     let root = fixture().parent().unwrap().join("declarations/fixture");
     let mut baseline = None;
     for (config, failures, advisories) in [
-        (".no-mistakes.yml", 4, 0),
-        ("max.yml", 4, 0),
-        ("low.yml", 4, 0),
+        (".no-mistakes.yml", 2, 2),
+        ("max.yml", 2, 2),
+        ("low.yml", 2, 2),
         ("advise.yml", 2, 2),
         ("ignore.yml", 2, 0),
     ] {
@@ -62,16 +69,18 @@ fn declared_namespace_bases_follow_lexical_class_shadowing() {
         .parent()
         .unwrap()
         .join("declaration-scopes/fixture");
-    assert_eq!(
-        reported(&run_check(&root, None, None).unwrap()),
-        [
+    assert_channels(
+        &root,
+        &[
             "src/classes.ts:2 DirectError",
             "src/classes.ts:3 NestedError",
-            "src/classes.ts:6 unanalyzable",
-            "src/classes.ts:8 unanalyzable",
             "src/classes.ts:11 MergedExportedError",
             "src/classes.ts:13 AmbientMergedError",
-        ]
+        ],
+        &[
+            "src/classes.ts:6 unanalyzable",
+            "src/classes.ts:8 unanalyzable",
+        ],
     );
 }
 
@@ -81,10 +90,10 @@ fn declaration_export_boundaries_remain_unknown_without_positive_class_proof() {
         .parent()
         .unwrap()
         .join("declaration-exports/fixture");
-    assert_eq!(
-        reported(&run_check(&root, None, None).unwrap()),
-        [
-            "src/classes.ts:7 StarError",
+    assert_channels(
+        &root,
+        &["src/classes.ts:7 StarError"],
+        &[
             "src/classes.ts:9 unanalyzable",
             "src/classes.ts:10 unanalyzable",
             "src/classes.ts:11 unanalyzable",
@@ -96,7 +105,7 @@ fn declaration_export_boundaries_remain_unknown_without_positive_class_proof() {
             "src/classes.ts:18 unanalyzable",
             "src/classes.ts:19 unanalyzable",
             "src/classes.ts:20 unanalyzable",
-        ]
+        ],
     );
 }
 
@@ -106,10 +115,7 @@ fn private_members_of_other_nonambient_namespace_blocks_never_supply_class_proof
         .parent()
         .unwrap()
         .join("declaration-private/fixture");
-    assert_eq!(
-        reported(&run_check(&root, None, None).unwrap()),
-        ["src/classes.ts:9 MergedPrivateError"]
-    );
+    assert_channels(&root, &["src/classes.ts:9 MergedPrivateError"], &[]);
 }
 
 #[test]
@@ -118,17 +124,19 @@ fn repository_and_declaration_closures_preserve_class_and_opaque_binding_proof()
         .parent()
         .unwrap()
         .join("declaration-local/fixture");
-    assert_eq!(
-        reported(&run_check(&root, None, None).unwrap()),
-        [
+    assert_channels(
+        &root,
+        &[
             "src/classes.ts:3 RepositoryChild",
             "src/classes.ts:4 DeclaredChild",
-            "src/classes.ts:5 unanalyzable",
             "src/classes.ts:10 NamespaceChild",
+        ],
+        &[
+            "src/classes.ts:5 unanalyzable",
             "src/classes.ts:15 unanalyzable",
             "src/classes.ts:17 unanalyzable",
             "src/classes.ts:18 unanalyzable",
-        ]
+        ],
     );
 }
 

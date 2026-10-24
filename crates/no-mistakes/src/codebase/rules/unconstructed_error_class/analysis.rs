@@ -1,7 +1,7 @@
 use super::ancestry::{bases, error_kinds, ClassKey, ErrorKind};
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{
-    ClassDeclaration, DepGraph, KnownCallTargetRef, ResolvedCallSite,
+    ClassDeclaration, DepGraph, KnownCallTargetRef, NodeId, ResolvedCallSite, ResolvedCallTarget,
 };
 use crate::fx::{fx_map, fx_set, FxHashMap};
 use std::path::Path;
@@ -13,6 +13,12 @@ pub(super) fn is_declaration_file(path: &Path) -> bool {
     [".d.ts", ".d.mts", ".d.cts"]
         .iter()
         .any(|extension| name.ends_with(extension))
+}
+
+pub(super) fn unresolved_constructor(graph: &DepGraph, site: &ResolvedCallSite) -> bool {
+    site.has_unknown_target()
+        && (!matches!(site.target, ResolvedCallTarget::Unknown)
+            || !graph.constructor_is_resolved(&site.file, site.offset))
 }
 
 /// Possible constructed classes, credited without duplicating source calls.
@@ -68,20 +74,18 @@ pub(super) fn unconstructed<'a>(
                 unknown_constructor: false,
             });
     }
-    let mut credit = |key: ClassKey<'a>, file: &Path| {
-        if !is_test(file) {
-            unused.remove(&key);
-        }
-    };
     let mut uncertain_constructors = fx_set();
     for site in graph
         .resolved_call_sites()
         .iter()
         .filter(|site| site.invocation == InvocationKind::Construct)
     {
+        if is_test(&site.file) {
+            continue;
+        }
         // An unknown call is not proof of construction or non-construction.
         // Retain its lexical association only as uncertainty, never credit.
-        if site.has_unknown_target() && !is_test(&site.file) {
+        if unresolved_constructor(graph, site) {
             if let Some(scope) = site
                 .caller
                 .as_deref()
@@ -90,13 +94,31 @@ pub(super) fn unconstructed<'a>(
                 uncertain_constructors.insert((site.file.as_path(), scope));
             }
         }
+        // Credit exact metadata before the legacy display-key fallback. A
+        // known graph target must agree; unknown alternatives remain unknown.
+        if let Some(
+            target @ NodeId::Symbol {
+                file,
+                symbol,
+                callable_id: Some(id),
+            },
+        ) = graph.constructor_class(&site.file, site.offset)
+        {
+            let proven = matches!(site.target, ResolvedCallTarget::Unknown)
+                || (!site.has_unknown_target() && site.target_nodes().any(|node| node == target));
+            if proven {
+                if let Some(classes) = unused.get_mut(&(file.as_ref(), symbol.as_ref())) {
+                    classes.retain(|result| result.class.callable_id != *id);
+                }
+            }
+        }
         for key in constructed_classes(site) {
-            credit(key, &site.file);
+            unused.remove(&key);
         }
     }
-    for class in classes {
+    for class in classes.iter().filter(|class| !is_test(&class.file)) {
         for base in bases(graph, class) {
-            credit(base.key, &class.file);
+            unused.remove(&base.key);
         }
     }
     let mut classes: Vec<_> = unused.into_values().flatten().collect();

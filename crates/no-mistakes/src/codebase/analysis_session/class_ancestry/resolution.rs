@@ -1,6 +1,8 @@
 use super::*;
 #[path = "classes.rs"]
 mod classes;
+#[path = "constructors.rs"]
+mod constructors;
 #[path = "exports.rs"]
 mod exports;
 #[path = "references.rs"]
@@ -32,6 +34,10 @@ pub(super) fn prepare(session: &AnalysisSession, request: AncestryRequest<'_>) -
         }
         if !builder.request.resolve_bases {
             continue;
+        }
+        let namespaces = crate::codebase::dependencies::graph::NamespaceTable::from_facts(file);
+        for call in &file.function_calls {
+            builder.record_constructor(path, file, call, &namespaces);
         }
         for class in &file.ancestry.classes {
             if !class.has_base {

@@ -1,4 +1,7 @@
-use super::{analysis::is_declaration_file, RULE_ID};
+use super::{
+    analysis::{is_declaration_file, unresolved_constructor},
+    RULE_ID,
+};
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::rules::RuleFinding;
@@ -33,7 +36,7 @@ pub(super) fn unknown_constructs(
     is_reported: impl Fn(&Path) -> bool,
 ) -> Vec<RuleFinding> {
     graph.resolved_call_sites().iter().filter(|site| {
-        site.invocation == InvocationKind::Construct && site.has_unknown_target()
+        site.invocation == InvocationKind::Construct && unresolved_constructor(graph, site)
             && !is_test(&site.file) && is_reported(&site.file)
             && !is_declaration_file(&site.file)
     }).map(|site| RuleFinding {

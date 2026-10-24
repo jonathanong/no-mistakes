@@ -18,13 +18,13 @@ fn uncertain_inputs_route_through_every_shared_policy_and_supported_effort() {
     let baseline = report(".no-mistakes.yml", false);
     assert_eq!(baseline["warnings"], serde_json::json!([]));
     for (config, failures, advisories) in [
-        (".no-mistakes.yml", 8, 0),
-        ("max.yml", 8, 0),
-        ("low.yml", 8, 0),
+        (".no-mistakes.yml", 2, 6),
+        ("max.yml", 2, 6),
+        ("low.yml", 2, 6),
         ("advise.yml", 1, 7),
         ("ignore.yml", 1, 0),
         ("repo-advise.yml", 1, 7),
-        ("override.yml", 8, 0),
+        ("override.yml", 2, 6),
     ] {
         let value = report(config, false);
         assert_eq!(
@@ -39,6 +39,7 @@ fn uncertain_inputs_route_through_every_shared_policy_and_supported_effort() {
         );
         if matches!(config, "max.yml" | "low.yml") {
             assert_eq!(value["rules"], baseline["rules"], "{config}");
+            assert_eq!(value["advisories"], baseline["advisories"], "{config}");
         }
         if config == "low.yml" {
             assert!(value["warnings"][0]
@@ -66,10 +67,13 @@ fn uncertain_inputs_route_through_every_shared_policy_and_supported_effort() {
         ("src/external.ts", 5, "base is outside"),
     ] {
         assert!(
-            rules.iter().any(|finding| finding["file"] == file
-                && finding["line"] == line
-                && finding["target"] == "unanalyzable"
-                && finding["message"].as_str().unwrap().contains(cause)),
+            rules
+                .iter()
+                .chain(baseline["advisories"].as_array().unwrap())
+                .any(|finding| finding["file"] == file
+                    && finding["line"] == line
+                    && finding["target"] == "unanalyzable"
+                    && finding["message"].as_str().unwrap().contains(cause)),
             "{file}:{line}: {baseline}"
         );
     }
@@ -102,16 +106,31 @@ fn uncertainty_honors_line_file_suppression_and_audit_for_both_channels() {
 #[test]
 fn custom_messages_preserve_uncertainty_causes_and_rule_scope_is_authoritative() {
     let custom = report("custom.yml", false);
-    assert_eq!(custom["rules"].as_array().unwrap().len(), 8, "{custom}");
-    assert!(custom["rules"].as_array().unwrap().iter().all(|finding| {
-        finding["message"]
-            .as_str()
-            .unwrap()
-            .starts_with("Inspect error construction:")
-    }));
+    assert_eq!(custom["rules"].as_array().unwrap().len(), 2, "{custom}");
+    assert_eq!(
+        custom["advisories"].as_array().unwrap().len(),
+        6,
+        "{custom}"
+    );
+    assert!(custom["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .chain(custom["advisories"].as_array().unwrap())
+        .all(|finding| {
+            finding["message"]
+                .as_str()
+                .unwrap()
+                .starts_with("Inspect error construction:")
+        }));
     let included = report("include.yml", false);
-    assert_eq!(included["rules"].as_array().unwrap().len(), 4, "{included}");
-    assert!(included["rules"]
+    assert_eq!(included["rules"].as_array().unwrap().len(), 0, "{included}");
+    assert_eq!(
+        included["advisories"].as_array().unwrap().len(),
+        4,
+        "{included}"
+    );
+    assert!(included["advisories"]
         .as_array()
         .unwrap()
         .iter()
@@ -121,7 +140,8 @@ fn custom_messages_preserve_uncertainty_causes_and_rule_scope_is_authoritative()
 #[test]
 fn static_this_factories_remain_uncertain_rather_than_definitely_unconstructed() {
     let root = fixture();
-    let all = run_check(&root, None, None).unwrap();
+    let report = diagnostic_report(&root);
+    let all = report["advisories"].as_array().unwrap();
     for name in [
         "ThisFactoryError",
         "NestedFactoryError",
@@ -129,15 +149,23 @@ fn static_this_factories_remain_uncertain_rather_than_definitely_unconstructed()
         "Errors.Inner.DeepError",
     ] {
         assert!(
-            all.iter()
-                .any(|finding| finding.target.as_deref() == Some("unanalyzable")
-                    && finding.message.contains(&format!("`{name}`"))
-                    && finding.message.contains("unresolved constructor occurs")),
+            all.iter().any(|finding| finding["target"] == "unanalyzable"
+                && finding["message"]
+                    .as_str()
+                    .unwrap()
+                    .contains(&format!("`{name}`"))
+                && finding["message"]
+                    .as_str()
+                    .unwrap()
+                    .contains("unresolved constructor occurs")),
             "{name}: {all:#?}"
         );
         assert!(
-            !all.iter()
-                .any(|finding| finding.target.as_deref() == Some(name)),
+            !report["rules"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|finding| finding["target"] == name),
             "{name}"
         );
     }

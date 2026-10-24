@@ -41,6 +41,19 @@ impl ClassDeclaration {
 }
 
 impl DepGraph {
+    pub(crate) fn constructor_class(&self, file: &std::path::Path, offset: u32) -> Option<&NodeId> {
+        self.class_ancestry.constructors.get(file)?.get(&offset)
+    }
+
+    pub(crate) fn constructor_is_resolved(&self, file: &std::path::Path, offset: u32) -> bool {
+        self.constructor_class(file, offset).is_some()
+            || self
+                .class_ancestry
+                .global_constructors
+                .get(file)
+                .is_some_and(|offsets| offsets.contains(&offset))
+    }
+
     pub(crate) fn class_is_root(
         &self,
         file: &std::path::Path,
