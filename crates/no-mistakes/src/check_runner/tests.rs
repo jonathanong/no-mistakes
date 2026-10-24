@@ -19,6 +19,7 @@ mod parse_cache;
 mod playwright_discovery;
 #[cfg(feature = "test-instrumentation")]
 mod prepared_parser_cache;
+mod postgres_projection_scope;
 mod prepared_tsconfig;
 mod tsconfig_catalog;
 

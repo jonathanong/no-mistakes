@@ -1,0 +1,32 @@
+version: 2
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    analysis:
+      effort: max
+    options:
+      include: ['src/max.ts']
+      sqlInclude: []
+      importSpecifier: '@db/a'
+      executorNames: [query]
+      bannedShapes: [literal-limit]
+      unanalyzableSql: ignore
+  - rule: postgres-no-offset
+    scope: repository
+    analysis:
+      effort: low
+    options:
+      include: ['src/low.ts', 'src/invalid.ts']
+      sqlInclude: []
+      importSpecifier: '@db/a'
+      executorNames: [query]
+      unanalyzableSql: advise
+  # This non-statement consumer widens the shared profile scan union only.
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    analysis:
+      effort: max
+    options:
+      include: ['src/max.ts']
+      importSpecifier: '@db/a'
+      executorNames: [query]

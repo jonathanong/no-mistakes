@@ -46,16 +46,34 @@ pub(crate) fn prepare(
         sql::collect(root, files, sources, plan, &mut out);
     }
     if plan.postgres_dml || plan.postgres_fragments || plan.postgres_variants {
+        let observer = crate::diagnostics::current();
         for path in files
             .iter()
             .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
         {
+            let rel = crate::codebase::ts_source::relative_slash_path(root, path);
             for profile in &plan.embedded_sql_options {
+                // Keep extraction broad for imported helpers; only consumer-owned
+                // SQL projections follow the union of configured rule scans.
+                if plan
+                    .embedded_sql_rule_ids
+                    .get(profile)
+                    .is_some_and(|scans| {
+                        !scans.is_empty() && !scans.iter().any(|scan| scan.paths.includes(&rel))
+                    })
+                {
+                    continue;
+                }
                 let file = facts.embedded_sql(path, profile);
                 if plan.postgres_fragments {
                     let entry = file
                         .as_ref()
-                        .map(|file| Arc::new(fragments::collect(file)))
+                        .map(|file| {
+                            if let Some(observer) = &observer {
+                                observer.increment("postgres.prepared.fragment_projections", 1);
+                            }
+                            Arc::new(fragments::collect(file))
+                        })
                         .map_err(|error| {
                             Arc::new(PreparationError {
                                 message: Arc::from(format!(
@@ -71,6 +89,9 @@ pub(crate) fn prepare(
                 }
                 let entry = file
                     .map(|file| {
+                        if let Some(observer) = &observer {
+                            observer.increment("postgres.prepared.statement_projections", 1);
+                        }
                         Arc::new(super::collect::dml::embedded_call_facts_with_demand(
                             file,
                             plan.postgres_bounds,
