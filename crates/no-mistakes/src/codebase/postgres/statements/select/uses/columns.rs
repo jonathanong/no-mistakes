@@ -8,7 +8,7 @@ pub(super) fn is_recovered_bind(ident: &Ident, positions: PlaceholderPositions<'
     positions.is_some() && is_placeholder_ident_at(ident, positions)
 }
 
-pub(super) fn bare(
+pub(in crate::codebase::postgres::statements) fn bare(
     expr: &Expr,
     positions: PlaceholderPositions<'_>,
 ) -> Option<(Option<String>, String)> {

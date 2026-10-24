@@ -18,6 +18,7 @@ mod predicates;
 mod select;
 mod sweeps;
 mod tokens;
+mod transformed_predicates;
 mod trigger;
 pub(in crate::codebase::postgres) mod value;
 mod wrappers;

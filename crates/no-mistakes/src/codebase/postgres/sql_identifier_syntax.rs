@@ -28,9 +28,13 @@ pub(crate) struct SqlCall {
     pub input: Input,
 }
 pub(crate) type OffsetLiteral = std::result::Result<Option<Vec<super::SqlOffsetFact>>, ()>;
+pub(crate) type TransformedLiteral =
+    std::result::Result<Option<Vec<super::statements::SqlTransformedColumnUseFact>>, ()>;
 #[derive(Default)]
 pub(crate) struct FileFacts {
     pub profiles: Vec<(EmbeddedSqlOptions, Vec<SqlCall>)>,
+    pub transformed_literals:
+        std::sync::OnceLock<std::collections::BTreeMap<Span, TransformedLiteral>>,
     pub offset_literals: std::sync::OnceLock<std::collections::BTreeMap<Span, OffsetLiteral>>,
 }
 struct Call {

@@ -104,6 +104,13 @@ pub(super) fn rebase_embedded_lines(
     for (i, use_) in facts.mutation_column_uses.iter_mut().enumerate() {
         use_.line = physical_line(SqlFactSite::MutationColumn(i), use_.line, 1);
     }
+    for (i, use_) in facts.transformed_column_uses.iter_mut().enumerate() {
+        use_.line = physical_line(
+            SqlFactSite::TransformedColumn(i),
+            use_.line,
+            use_.column_position,
+        );
+    }
     for (i, star) in facts.returning_stars.iter_mut().enumerate() {
         star.line = physical_line(SqlFactSite::ReturningStar(i), star.line, 1);
     }

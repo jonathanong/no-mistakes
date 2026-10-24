@@ -3,6 +3,7 @@ mod debug;
 mod iteration;
 mod locations;
 mod select;
+mod transformed;
 mod writes;
 pub use bounds::{
     SqlBareRead, SqlBoundFact, SqlBoundInputMode, SqlBoundItem, SqlBoundItemKind, SqlBoundKind,
@@ -19,6 +20,7 @@ pub use select::{
 use sqlparser::ast::Statement;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
+pub use transformed::{SqlTransformedColumnClause, SqlTransformedColumnUseFact};
 pub use writes::{SqlWriteColumns, SqlWriteFact};
 
 /// Prepared, source-ordered lifecycle inputs for catalog-dependent SQL bounds.
@@ -74,6 +76,8 @@ pub struct SqlStatementFileFacts {
     pub returning_stars: Vec<SqlStarProjectionFact>,
     /// Bare column comparisons on UPDATE/DELETE WHERE and JOIN ON predicates.
     pub mutation_column_uses: Vec<SqlColumnUseFact>,
+    /// Cast and function inputs in WHERE, JOIN ON and HAVING predicates.
+    pub transformed_column_uses: Vec<SqlTransformedColumnUseFact>,
     /// Executed OFFSET occurrences in source order.
     pub offset_uses: Vec<super::offset::SqlOffsetFact>,
     /// Row-count bounds of each executed SELECT, UPDATE and DELETE.

@@ -51,6 +51,7 @@ fn extract_from_parsed_and_sources(
     let mut returning_stars = Vec::new();
     let mut bounds = Vec::new();
     let mut mutation_column_uses = Vec::new();
+    let mut transformed_column_uses = Vec::new();
     let mut insert_n = 0usize;
     let mut trigger_n = 0usize;
     let tokens = Tokens::with_prepared(sql, prepared_sql.tokens());
@@ -112,6 +113,11 @@ fn extract_from_parsed_and_sources(
                 locations.collect(statement);
             }
             writes::collect(statement, &mut writes);
+            super::transformed_predicates::collect(
+                statement,
+                placeholder_positions,
+                &mut transformed_column_uses,
+            );
             collect_one(
                 sql,
                 statement,
@@ -168,6 +174,7 @@ fn extract_from_parsed_and_sources(
         triggers,
         returning_stars,
         mutation_column_uses,
+        transformed_column_uses,
         offset_uses: super::super::offset::offset_facts_prepared(prepared_sql, statements),
         bounds,
         lifecycle: lifecycle.finish(),

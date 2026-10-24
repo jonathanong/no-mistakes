@@ -31,6 +31,7 @@ pub enum SqlFactSite {
     UpdateRelation(usize, usize),
     DeleteRelation(usize, usize),
     MutationColumn(usize),
+    TransformedColumn(usize),
     ReturningStar(usize),
     Offset(usize),
     Limit(usize),

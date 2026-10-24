@@ -16,6 +16,7 @@ impl Debug for SqlStatementFileFacts {
             .field("triggers", &self.triggers)
             .field("returning_stars", &self.returning_stars)
             .field("mutation_column_uses", &self.mutation_column_uses)
+            .field("transformed_column_uses", &self.transformed_column_uses)
             .field("offset_uses", &self.offset_uses)
             .field("bounds", &self.bounds)
             .field("lifecycle", &self.lifecycle)

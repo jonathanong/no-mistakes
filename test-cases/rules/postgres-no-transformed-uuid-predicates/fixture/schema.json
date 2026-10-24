@@ -1,0 +1,72 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "email": {
+          "dataType": "text"
+        },
+        "token": {
+          "dataType": "pg_catalog.uuid"
+        },
+        "custom": {
+          "dataType": "\"UUID\""
+        },
+        "array": {
+          "dataType": "uuid[]"
+        }
+      },
+      "primaryKey": {
+        "columns": [
+          "id"
+        ]
+      }
+    },
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "UUID"
+        },
+        "account_id": {
+          "dataType": "\"pg_catalog\".\"uuid\""
+        },
+        "value": {
+          "dataType": "integer"
+        }
+      }
+    },
+    "other": {
+      "columns": {
+        "label": {
+          "dataType": "text"
+        }
+      }
+    },
+    "text_ids": {
+      "columns": {
+        "id": {
+          "dataType": "text"
+        }
+      }
+    },
+    "public.dupes": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "audit.dupes": {
+      "columns": {
+        "id": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}
