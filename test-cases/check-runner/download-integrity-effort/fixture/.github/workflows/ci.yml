@@ -1,0 +1,37 @@
+name: Download integrity effort fixture
+on: push
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Literal unverified download
+        run: curl -fsSL https://untrusted.example.invalid/literal.tgz -o literal.tgz
+      - name: Download through one uppercase literal assignment
+        run: |
+          BASE_URL="https://untrusted.example.invalid/base"
+          curl --url "$BASE_URL/assigned.tgz" --output "$OUTPUT_FILE"
+      - name: Same-step checksum verification
+        run: |
+          curl -fsSL https://untrusted.example.invalid/verified.tgz -o verified.tgz
+          sha256sum --check verified.sha256
+      - name: Checksum file download
+        run: curl -fsSL https://untrusted.example.invalid/SHA256SUMS.txt -o SHA256SUMS.txt
+      - name: Trusted URL with URL-looking header and output path
+        run: |
+          curl --header "X-Origin: https://untrusted.example.invalid/header" --output "https://untrusted.example.invalid/output-name" https://api.github.com/repos/example/project
+      - name: Trusted wget URL with output document
+        run: wget --output-document="$OUTPUT_FILE" https://objects.githubusercontent.com/releases/project.tar.gz
+      - name: Intentional skip
+        run: |
+          # integrity-check: skip reason=approved-vendor
+          curl -fsSL https://untrusted.example.invalid/vendor.tgz -o vendor.tgz
+      - name: Next-line suppression for assignment URL
+        run: |
+          BASE_URL="https://untrusted.example.invalid/next-line"
+          # no-mistakes-disable-next-line github-actions-download-integrity
+          curl --url "$BASE_URL/suppressed.tgz" -o suppressed-next.tgz
+      - name: Same-line suppression for assignment URL
+        run: |
+          BASE_URL="https://untrusted.example.invalid/same-line"
+          curl --url "$BASE_URL/suppressed.tgz" -o suppressed-line.tgz # no-mistakes-disable-line github-actions-download-integrity

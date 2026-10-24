@@ -14,6 +14,9 @@ pub(crate) use run_all::{run_all_with_evidence, run_all_with_options, AnalysisOp
 #[path = "check_runner/coverage_effort/tests.rs"]
 mod coverage_effort;
 #[cfg(test)]
+#[path = "check_runner/download_integrity_effort/tests.rs"]
+mod download_integrity_effort;
+#[cfg(test)]
 mod low_assignment_tests;
 #[cfg(test)]
 mod low_loop_header_tests;

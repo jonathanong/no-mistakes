@@ -1,0 +1,13 @@
+name: Trusted command aliases can add low uncertainty
+on: push
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: literal-untrusted-url
+        run: curl https://untrusted.example.invalid/literal.tgz
+      # Max resolves FETCH and clears the trusted host; low keeps the command alias uncertain.
+      - name: trusted-url-with-command-alias
+        run: |
+          FETCH=curl
+          $FETCH https://api.github.com/repos/example/project

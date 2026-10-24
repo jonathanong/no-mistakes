@@ -178,7 +178,10 @@ For [`github-actions-download-integrity`](../rules/github-actions-download-integ
 and `objects.githubusercontent.com`. Omitting the option keeps that default.
 An explicit list, including `[]`, replaces it. `options.downloadHelpers` adds
 command names beside `curl` and `wget`; the default is no extra helpers. The
-rule stays off until a configuration lists it.
+rule stays off until a configuration lists it. It also supports `effort: low`:
+literal-only commands retain their checks, while a known downloader command
+with any dynamic candidate URL uses the shared unanalyzable policy once. See its
+[Effort section](../rules/github-actions-download-integrity.md#effort).
 
 Configured types alone do not prove every receiver shape. Calls through class
 fields or constructor parameter properties (`this.db.query`), typed object

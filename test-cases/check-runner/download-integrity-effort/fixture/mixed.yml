@@ -1,0 +1,12 @@
+rules:
+  - rule: github-actions-download-integrity
+    scope: repository
+    include: [.github/workflows/ci.yml]
+    options:
+      effort: low
+      unanalyzable: advise
+  - rule: github-actions-download-integrity
+    scope: repository
+    include: [.github/actions/fetch/action.yml]
+    options:
+      effort: max

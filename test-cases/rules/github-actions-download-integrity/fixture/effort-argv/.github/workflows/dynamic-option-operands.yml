@@ -1,0 +1,31 @@
+name: Quoted option operands preserve URL positions
+on: push
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      # Each pair differs only by quoting. Unquoted `$OUT` splits into an extra option; quoted keeps one field.
+      - name: unquoted-output-operand
+        run: |
+          OUT='file --output'
+          curl --output $OUT https://untrusted.example.invalid/separate
+      - name: quoted-output-operand
+        run: |
+          OUT='file --output'
+          curl --output "$OUT" https://untrusted.example.invalid/separate
+      - name: unquoted-attached-output
+        run: |
+          OUT='file --output'
+          curl -o$OUT https://untrusted.example.invalid/attached
+      - name: quoted-attached-output
+        run: |
+          OUT='file --output'
+          curl -o"$OUT" https://untrusted.example.invalid/attached
+      - name: unquoted-inline-output
+        run: |
+          OUT='file --output'
+          curl --output=$OUT https://untrusted.example.invalid/inline
+      - name: quoted-inline-output
+        run: |
+          OUT='file --output'
+          curl --output="$OUT" https://untrusted.example.invalid/inline

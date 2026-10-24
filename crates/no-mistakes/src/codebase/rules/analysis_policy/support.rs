@@ -19,6 +19,11 @@ pub(super) const SUPPORT: &[RuleEffortSupport] = &[
         partner_scope: |_, _| false,
     },
     RuleEffortSupport {
+        rule: "github-actions-download-integrity",
+        partners: &[],
+        partner_scope: |_, _| false,
+    },
+    RuleEffortSupport {
         rule: "require-storybook-stories",
         partners: &[],
         partner_scope: |_, _| false,
