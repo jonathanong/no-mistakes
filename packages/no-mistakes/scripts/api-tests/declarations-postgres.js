@@ -7,6 +7,8 @@ test("UUID predicate rule exports its catalog and effort configuration", () => {
   assert.match(types, /schemaCatalogPath\?: string;/);
   assert.match(types, /effort\?: Effort;/);
   assert.match(types, /unanalyzable\?: Unanalyzable;/);
+  assert.match(types, /export type PostgresUuidPredicateUnanalyzableSql =/);
+  assert.match(types, /unanalyzableSql\?: PostgresUuidPredicateUnanalyzableSql;/);
   assert.match(exports, /export type \* from "\.\/postgres-uuid-predicate-types"/);
 });
 

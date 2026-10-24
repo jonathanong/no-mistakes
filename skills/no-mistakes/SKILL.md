@@ -238,6 +238,12 @@ CTEs, subqueries, and recoverable PL/pgSQL bodies use the same prepared facts.
 Configure `trustedSqlTags` for custom named SQL tag imports. See
 [shape policy](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-shape-policy.md).
 
+To keep catalog-resolved UUID columns bare in WHERE, JOIN ON, and HAVING, use
+`postgres-no-transformed-uuid-predicates` with `schemaCatalogPath`. It rejects
+column-side casts and functions while allowing parameter casts and precomputed
+bounds. Literal SQL supports `effort: low`; see the rule's
+[analysis contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-transformed-uuid-predicates.md#analysis).
+
 For test files that must always run in CI, enable the ESLint/Oxlint
 `no-mistakes/test-no-skips` rule in explicit flat-config `files` globs.
 It checks Vitest/Playwright modifiers and bound Vitest context `skip()` calls;
