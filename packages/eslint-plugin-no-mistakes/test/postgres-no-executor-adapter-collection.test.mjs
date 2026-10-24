@@ -1,0 +1,223 @@
+import assert from "node:assert/strict";
+import { resolve, dirname } from "node:path";
+import { describe, it } from "vitest";
+import { createRequire } from "node:module";
+import tsParser from "@typescript-eslint/parser";
+import { Linter } from "eslint";
+import { fixture, __dirname, plugin } from "./helpers.mjs";
+
+const require = createRequire(import.meta.url);
+const { allowsCollectionKey } = require("../src/rules/postgres-no-executor-adapter-collection");
+
+function reports(name, typed = true, parser = tsParser) {
+  const filename = resolve(
+    __dirname,
+    `../../../test-cases/eslint-snippets/fixture/executor-collection-key/${name}`,
+  );
+  return new Linter({ cwd: dirname(filename) })
+    .verify(
+      fixture(`executor-collection-key/${name}`),
+      {
+        files: ["**/*.ts"],
+        languageOptions: {
+          parser,
+          parserOptions: typed ? { project: resolve(dirname(filename), "tsconfig.json") } : {},
+        },
+        plugins: { "no-mistakes": plugin },
+        rules: {
+          "no-mistakes/postgres-no-executor-adapter": ["error", { importSpecifier: "@example/db" }],
+        },
+      },
+      { filename },
+    )
+    .map((message) => [message.line, message.messageId]);
+}
+
+function helperReports(name, parser = tsParser) {
+  const filename = resolve(
+    __dirname,
+    `../../../test-cases/eslint-snippets/fixture/executor-collection-key/${name}`,
+  );
+  const probe = {
+    create(context) {
+      const facts = new WeakMap();
+      return {
+        CallExpression(node) {
+          node.arguments.forEach((_, index) => {
+            if (allowsCollectionKey(node, index, context, facts)) {
+              context.report({ node: node.arguments[index], messageId: "allowed-key" });
+            }
+          });
+        },
+      };
+    },
+    meta: { messages: { "allowed-key": "allowed key" }, schema: [] },
+  };
+  return new Linter({ cwd: dirname(filename) })
+    .verify(
+      fixture(`executor-collection-key/${name}`),
+      {
+        files: ["**/*.ts"],
+        languageOptions: {
+          parser,
+          parserOptions: { project: resolve(dirname(filename), "tsconfig.json") },
+        },
+        plugins: { probe: { rules: { collection: probe } } },
+        rules: { "probe/collection": "error" },
+      },
+      { filename },
+    )
+    .map((message) => [message.line, message.messageId]);
+}
+
+describe("postgres-no-executor-adapter collection keys", () => {
+  it("uses the supplied per-run source facts", () => {
+    assert.deepEqual(helperReports("helper-api.ts"), [[5, "allowed-key"]]);
+  });
+
+  it("fails closed when parser services omit the TypeScript node map", () => {
+    const partialParserServices = {
+      meta: tsParser.meta,
+      parseForESLint(code, options) {
+        const parsed = tsParser.parseForESLint(code, options);
+        return {
+          ...parsed,
+          services: { ...parsed.services, program: {}, esTreeNodeToTSNodeMap: null },
+        };
+      },
+    };
+    assert.deepEqual(helperReports("helper-api.ts", partialParserServices), []);
+  });
+
+  it("fails closed when the TypeScript node map misses the method node", () => {
+    const partialParserServices = {
+      meta: tsParser.meta,
+      parseForESLint(code, options) {
+        const parsed = tsParser.parseForESLint(code, options);
+        const originalMap = parsed.services.esTreeNodeToTSNodeMap;
+        return {
+          ...parsed,
+          services: {
+            ...parsed.services,
+            esTreeNodeToTSNodeMap: {
+              get(node) {
+                if (node.type === "Identifier" && node.name === "get") return undefined;
+                return originalMap.get(node);
+              },
+            },
+          },
+        };
+      },
+    };
+    assert.deepEqual(helperReports("helper-api.ts", partialParserServices), []);
+  });
+
+  it("allows only direct executor arguments in typed collection key slots", () => {
+    assert.deepEqual(reports("executor-calls.ts"), [
+      [8, "passed"],
+      [15, "passed"],
+      [20, "passed"],
+      [25, "passed"],
+      [32, "passed"],
+      [35, "passed"],
+      [37, "passed"],
+      [45, "passed"],
+      [54, "passed"],
+      [63, "passed"],
+      [65, "passed"],
+      [66, "passed"],
+      [67, "passed"],
+      [68, "passed"],
+      [71, "passed"],
+      [74, "passed"],
+      [75, "forward"],
+      [82, "passed"],
+      [83, "passed"],
+      [88, "passed"],
+      [93, "passed"],
+      [98, "passed"],
+      [99, "passed"],
+      [101, "passed"],
+      [103, "passed"],
+      [104, "passed"],
+    ]);
+  });
+
+  it("keeps reporting when typed collection methods may have been changed", () => {
+    assert.deepEqual(reports("mutated-executor.ts"), [
+      [6, "passed"],
+      [10, "passed"],
+      [14, "passed"],
+      [18, "passed"],
+      [22, "passed"],
+    ]);
+    assert.deepEqual(reports("mutated-assign.ts"), [[5, "passed"]]);
+    assert.deepEqual(reports("mutated-assign-alias.ts"), [[6, "passed"]]);
+    assert.deepEqual(reports("mutated-assign-reassigned.ts"), [[7, "passed"]]);
+    assert.deepEqual(reports("mutated-assign-builtin.ts"), [[6, "passed"]]);
+    assert.deepEqual(reports("mutated-assign-bound.ts"), [[6, "passed"]]);
+    assert.deepEqual(reports("mutated-define.ts"), [[5, "passed"]]);
+    assert.deepEqual(reports("mutated-reflect.ts"), [[5, "passed"]]);
+    assert.deepEqual(reports("mutated-prototype.ts"), [[7, "passed"]]);
+  });
+
+  it("rejects collection keys after opaque property mutation", () => {
+    assert.deepEqual(reports("uncertain-mutation.ts"), [
+      [6, "passed"],
+      [10, "passed"],
+      [14, "passed"],
+      [19, "passed"],
+      [23, "passed"],
+    ]);
+  });
+
+  it("treats opaque mutation targets conservatively", () => {
+    assert.deepEqual(reports("uncertain-target.ts"), [[8, "passed"]]);
+    assert.deepEqual(reports("plain-property.ts"), []);
+  });
+
+  it("requires typed builtin identity before allowing a key", () => {
+    assert.deepEqual(reports("executor-calls.ts", false), [
+      [4, "passed"],
+      [5, "passed"],
+      [6, "passed"],
+      [7, "passed"],
+      [8, "passed"],
+      [11, "passed"],
+      [12, "passed"],
+      [13, "passed"],
+      [14, "passed"],
+      [15, "passed"],
+      [18, "passed"],
+      [19, "passed"],
+      [20, "passed"],
+      [23, "passed"],
+      [24, "passed"],
+      [25, "passed"],
+      [32, "passed"],
+      [35, "passed"],
+      [37, "passed"],
+      [45, "passed"],
+      [54, "passed"],
+      [63, "passed"],
+      [65, "passed"],
+      [66, "passed"],
+      [67, "passed"],
+      [68, "passed"],
+      [71, "passed"],
+      [74, "passed"],
+      [75, "forward"],
+      [78, "passed"],
+      [82, "passed"],
+      [83, "passed"],
+      [86, "passed"],
+      [88, "passed"],
+      [93, "passed"],
+      [98, "passed"],
+      [99, "passed"],
+      [101, "passed"],
+      [103, "passed"],
+      [104, "passed"],
+    ]);
+  });
+});
