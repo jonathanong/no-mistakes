@@ -4,6 +4,7 @@ use oxc_ast::ast::{FormalParameters, TSSignature, TSType, TSTypeName};
 
 mod patterns;
 mod possible;
+mod runtime;
 
 // Match both type references and parameters by semantic identity. A local type
 // with the same spelling as the configured import is never an executor proof.
@@ -12,7 +13,7 @@ pub(super) fn collect(
     module: &TypeScriptModuleFacts,
     profile: &EmbeddedSqlOptions,
     unsupported: &FxHashSet<usize>,
-) -> (FxHashSet<usize>, FxHashSet<usize>) {
+) -> (FxHashSet<usize>, FxHashSet<usize>, FxHashSet<Span>) {
     let types = module
         .imports
         .iter()
@@ -48,7 +49,8 @@ pub(super) fn collect(
         unsupported: FxHashSet::default(),
     };
     visitor.visit_program(program);
-    (visitor.selected, visitor.unsupported)
+    let runtime = runtime::collect(program, &visitor.possible);
+    (visitor.selected, visitor.unsupported, runtime)
 }
 
 struct Typed {
@@ -59,6 +61,12 @@ struct Typed {
     unsupported: FxHashSet<usize>,
 }
 impl<'a> Visit<'a> for Typed {
+    fn visit_variable_declarator(&mut self, variable: &oxc_ast::ast::VariableDeclarator<'a>) {
+        if let Some(annotation) = &variable.type_annotation {
+            self.unknown_pattern(&variable.id, &annotation.type_annotation);
+        }
+        walk::walk_variable_declarator(self, variable);
+    }
     fn visit_formal_parameters(&mut self, parameters: &FormalParameters<'a>) {
         for parameter in &parameters.items {
             let Some(annotation) = &parameter.type_annotation else {
@@ -106,6 +114,8 @@ impl<'a> Visit<'a> for Typed {
 }
 
 impl Typed {
+    // Only direct imported types on formal parameters prove literal SQL. Other
+    // annotation shapes retain runtime Unknown uses without evaluating SQL.
     fn record(&mut self, binding: &oxc_ast::ast::BindingIdentifier<'_>, ty: &TSType<'_>) {
         if let Some(id) = self.bindings.get(&span(binding.span)) {
             let direct = match ty {

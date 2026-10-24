@@ -175,7 +175,7 @@ fn low_typed_candidates_cannot_repair_missing_semantic_bindings() {
             .with_scoped_executors(&["createExecutor".into()], &["QueryExecutor".into()]);
         let module = ts.module_bindings.as_deref().unwrap();
         let selection = Selection::new(&profile, module);
-        let (selected, unsupported) =
+        let (selected, unsupported, _) =
             typed::collect(program, module, &profile, &selection.unsupported);
         assert!(selected.is_empty());
         assert!(unsupported.is_empty());

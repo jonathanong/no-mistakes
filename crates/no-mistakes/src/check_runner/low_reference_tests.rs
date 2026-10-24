@@ -64,6 +64,14 @@ fn typed_executor_low_adopters_ignore_erased_uses_and_keep_statement_locations()
         "postgres-no-unbounded-sql-identifier",
         "postgres-no-transformed-uuid-predicates",
     ];
+    let annotation = |rows: &[RuleFinding]| {
+        serde_json::to_value(
+            rows.iter()
+                .filter(|row| row.rule == "postgres-require-query-annotation")
+                .collect::<Vec<_>>(),
+        )
+        .unwrap()
+    };
     for mode in ["default", "advise", "ignore"] {
         let result = super::run_all_with_sql_verdicts(
             root.clone(),
@@ -75,8 +83,36 @@ fn typed_executor_low_adopters_ignore_erased_uses_and_keep_statement_locations()
         )
         .unwrap();
         assert!(result.warnings.is_empty(), "{:?}", result.warnings);
+        // Union syntax demand must not change the annotation receiver projection.
+        let annotation_only = super::run_all_with_sql_verdicts(
+            root.clone(),
+            Some(root.join(format!(".no-mistakes-annotation-{mode}.yml"))),
+            None,
+            false,
+            false,
+            false,
+        )
+        .unwrap();
+        assert_eq!(
+            annotation(&result.rules),
+            annotation(&annotation_only.rules),
+            "{mode}"
+        );
+        assert_eq!(
+            annotation(&result.advisories),
+            annotation(&annotation_only.advisories),
+            "{mode}"
+        );
         for rule in rules {
             let mut unknown = marked(&source, "// UNKNOWN");
+            if matches!(
+                rule,
+                "postgres-no-offset"
+                    | "postgres-require-query-annotation"
+                    | "postgres-no-transformed-uuid-predicates"
+            ) {
+                unknown.extend(marked(&source, "// FALLBACK_UNKNOWN"));
+            }
             // Annotation uses its own embedded projection: a visible head is
             // enough, and executor escapes are outside that rule's obligation.
             if rule != "postgres-require-query-annotation" {

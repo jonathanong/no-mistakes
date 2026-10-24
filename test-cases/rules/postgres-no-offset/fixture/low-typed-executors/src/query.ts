@@ -1,5 +1,6 @@
 import { query, QueryExecutor, createExecutor, withTransaction, withTransactionOptions } from "@example/db";
 import type { QueryExecutor as TypeExecutor } from "@example/db/types";
+import type { OtherExecutor } from "@example/db";
 
 // Erased references must never become function-line SQL findings.
 type Alias = QueryExecutor;
@@ -104,4 +105,94 @@ export function genericDefault(executor: DefaultExecutor, sql: string) {
 interface DefaultContext<T = QueryExecutor> { executor: T }
 export function interfaceDefault(context: DefaultContext, sql: string) {
   context.executor(sql); // UNSUPPORTED_TYPE
+}
+// Non-parameter annotations preserve runtime uncertainty, never literal proof.
+declare function unconfigured(): QueryExecutor;
+const annotatedLocal: QueryExecutor = unconfigured();
+annotatedLocal("/* local */ SELECT 1 OFFSET 1"); // UNSUPPORTED_TYPE
+export class FieldRunner {
+  db!: QueryExecutor;
+  run() { this.db.query("/* field */ SELECT 1 OFFSET 1"); } // UNKNOWN
+}
+export class ParameterRunner {
+  constructor(private db: QueryExecutor) {}
+  run() { this.db.query("/* parameter property */ SELECT 1 OFFSET 1"); } // UNKNOWN
+}
+// A same-spelled field in another class and dynamic this are unrelated.
+export class OtherRunner {
+  db!: unknown;
+  run() { this.db.query("SELECT 1 OFFSET 1"); } // CLEAR
+}
+export class ScopedRunner {
+  db!: QueryExecutor;
+  static run() { this.db.query("SELECT 1 OFFSET 1"); } // CLEAR
+  method() {
+    function dynamicThis() { this.db.query("SELECT 1 OFFSET 1"); } // CLEAR
+    const arrow = () => this.db.query("SELECT 1 OFFSET 1"); // UNKNOWN
+    class Nested { run() { this.db.query("SELECT 1 OFFSET 1"); } } // CLEAR
+    return arrow;
+  }
+}
+type ErasedField = typeof FieldRunner.prototype.db;
+export function shadowedLocal() {
+  type QueryExecutor = { query(sql: string): unknown };
+  const local: QueryExecutor = unconfigured();
+  local.query("SELECT 1 OFFSET 1"); // CLEAR
+}
+export class MemberShapes {
+  db!: QueryExecutor;
+  #db!: QueryExecutor;
+  ordinary = 1;
+  constructor(ordinary: string) {}
+  field = this.db; // UNSUPPORTED_TYPE
+  static { consume(this.db); } // UNSUPPORTED_TYPE
+  static db: QueryExecutor = unconfigured();
+  static run() { this.db.query("SELECT 1 OFFSET 1"); } // UNSUPPORTED_TYPE
+  run() {
+    this[unconfigured()].query("SELECT 1 OFFSET 1"); // CLEAR
+    this['db'].query("SELECT 1 OFFSET 1"); // UNKNOWN
+    this.#db.query("SELECT 1 OFFSET 1"); // UNSUPPORTED_TYPE
+  }
+}
+declare function makeBase(value: unknown): any;
+export class EnclosingTyped {
+  db!: QueryExecutor;
+  run() {
+    class Inner extends makeBase(this.db) { db!: unknown; } // UNSUPPORTED_TYPE
+    class Keyed { [consume(this.db)]() {} } // UNSUPPORTED_TYPE
+  }
+}
+export class EnclosingUntyped {
+  db!: unknown;
+  run() {
+    class Inner extends makeBase(this.db) { db!: QueryExecutor; } // CLEAR
+    class Keyed { db!: QueryExecutor; [consume(this.db)]() {} } // CLEAR
+  }
+}
+export class AccessorRunner {
+  accessor db: QueryExecutor = unconfigured();
+  accessor saved = this.db; // UNSUPPORTED_TYPE
+  run() { this.db.query("SELECT 1 OFFSET 1"); } // UNSUPPORTED_TYPE
+}
+export class PrivateIdentity {
+  #db!: QueryExecutor;
+  '#db'!: unknown;
+  run() { this['#db'].query("SELECT 1 OFFSET 1"); } // CLEAR
+}
+// An erased class index signature never becomes a runtime executor use.
+export class ErasedIndexSignature { [key: string]: QueryExecutor; } // CLEAR
+// A parameter property without an annotation supplies no executor type proof.
+export class InferredProperty { constructor(private db = unconfigured()) {} } // CLEAR
+// Nested runtime obligations keep their own runtime use lines.
+annotatedLocal( // UNSUPPORTED_TYPE
+  annotatedLocal("/* nested local */ SELECT 1 OFFSET 1"), // UNSUPPORTED_TYPE
+);
+// An unknown enclosing or nested SQL call never covers a distinct receiver.
+export function nestedUnconfigured(other: OtherExecutor, sql: string) {
+  query( // UNKNOWN
+    other.query(sql), // FALLBACK_UNKNOWN
+  );
+  other.query( // FALLBACK_UNKNOWN
+    query(sql), // UNKNOWN
+  );
 }

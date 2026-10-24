@@ -13,9 +13,10 @@ pub(crate) fn collect(
         .iter()
         .map(|profile| {
             let mut selection = Selection::new(profile, module);
-            let (typed, unsupported) =
+            let (typed, unsupported, runtime) =
                 typed::collect(program, module, profile, &selection.unsupported);
             selection.typed = typed;
+            selection.runtime = runtime;
             selection.unsupported.extend(unsupported);
             selection
         })
@@ -88,7 +89,14 @@ pub(crate) fn collect(
             output.profiles.push((profile.clone(), Vec::new()));
             continue;
         }
-        let calls = calls::project(profile, &selection, module, &syntax, &owners, source);
+        let mut calls = calls::project(profile, &selection, module, &syntax, &owners, source);
+        calls.extend(selection.runtime.iter().map(|at| SqlCall {
+            span: *at,
+            line: crate::codebase::ts_source::byte_offset_to_line(source, at.0 as usize),
+            input: Input::Unknown,
+        }));
+        calls.sort_by_key(|call| call.span);
+        calls.dedup_by_key(|call| call.span);
         output.profiles.push((profile.clone(), calls));
     }
     output

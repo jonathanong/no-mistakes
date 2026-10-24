@@ -137,7 +137,16 @@ fn low_typed_executors_keep_statement_lines_in_the_public_check_api() {
             let found = rows
                 .iter()
                 .any(|row| row["rule"] == rule && row["line"] == index + 1);
-            if line.contains("// UNKNOWN") {
+            if line.contains("// UNKNOWN")
+                || (matches!(
+                    rule,
+                    "postgres-no-offset"
+                        | "postgres-require-query-annotation"
+                        | "postgres-no-transformed-uuid-predicates"
+                ) && line.contains("// FALLBACK_UNKNOWN"))
+                || (rule != "postgres-require-query-annotation"
+                    && line.contains("// UNSUPPORTED_TYPE"))
+            {
                 assert!(found, "{rule}:{}", index + 1);
             }
             if line.contains("// CLEAR")

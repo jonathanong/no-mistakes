@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      include: ["src/**"]
+      importSpecifier: "@example/db"
+      executorNames: [query]
+      executorTypeNames: [QueryExecutor]
+      executorFactoryNames: [createExecutor]
+      effort: low
+      unanalyzable: advise

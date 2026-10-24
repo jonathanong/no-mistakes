@@ -31,7 +31,8 @@ pub(crate) fn check(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for (index, rule) in config.rule_applications(rule_id).into_iter().enumerate() {
-        let policy = config.effective_rule_analysis(rule)?.unanalyzable;
+        let analysis = config.effective_rule_analysis(rule)?;
+        let policy = analysis.unanalyzable;
         if policy == Unanalyzable::Ignore && !facts.wants_sql_verdicts() {
             continue;
         }
@@ -64,7 +65,35 @@ pub(crate) fn check(
             let Ok(file) = facts.embedded_sql(&path, &profile) else {
                 continue;
             };
+            // Only canonical low SQL obligations replace these fallback rows.
+            let low = analysis.effort == crate::config::v2::Effort::Low
+                && matches!(
+                    rule_id,
+                    "postgres-no-offset"
+                        | "postgres-no-mutable-sql-registry"
+                        | "postgres-no-unbounded-sql-identifier"
+                        | "postgres-no-transformed-uuid-predicates"
+                );
+            let covered = facts
+                .ts
+                .get(&path)
+                .filter(|_| low)
+                .and_then(|file| {
+                    file.sql_identifier_syntax
+                        .profiles
+                        .iter()
+                        .find(|(selected, _)| selected == &profile)
+                })
+                .map_or_else(crate::fx::FxHashMap::default, |(_, calls)| {
+                    coverage::unknown_ends(calls)
+                });
             for call in &file.undeclared_executor_types {
+                if covered
+                    .get(&call.span.0)
+                    .is_some_and(|end| *end <= call.span.1)
+                {
+                    continue;
+                }
                 let (subcheck, target, message) = if call.configured_type {
                     let message = if call.known_type {
                         format!(
@@ -141,3 +170,5 @@ fn unknown_receiver_message(receiver_name: &str, configured_value_name: bool) ->
 
 #[cfg(test)]
 mod tests;
+
+mod coverage;
