@@ -91,7 +91,15 @@ pub(crate) fn check_with_files_and_sources(
         config,
         &[RULE_ID],
     )?;
-    check_applications(root, config, all_files, sources, &facts)
+    let mut findings = check_applications(root, config, all_files, sources, &facts)?;
+    findings.extend(
+        super::postgres_unanalyzable_schema::diagnostics_for_rule(
+            root, config, all_files, &facts, RULE_ID,
+        )?
+        .findings,
+    );
+    super::sort_findings(&mut findings);
+    Ok(findings)
 }
 
 fn check_applications(

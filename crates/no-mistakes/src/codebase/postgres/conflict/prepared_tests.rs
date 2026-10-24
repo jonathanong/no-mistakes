@@ -137,6 +137,7 @@ fn statements_without_chunk_tokens_are_not_orphan_chunks() {
         policy_arbiter: None,
         complete: true,
         chunk_tokens: None,
+        recovery_failure: None,
     };
     assert!(
         crate::codebase::postgres::parse::orphan_chunk_tokens(std::slice::from_ref(&located))

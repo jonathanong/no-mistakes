@@ -47,6 +47,7 @@ pub(super) fn parse_chunks_with_function_calls(
                     },
                     false,
                 );
+                marker.recovery_failure = unrecoverable_chunk(&tokens);
                 marker.chunk_tokens = Some(tokens);
                 statements.push(marker);
             }
@@ -69,6 +70,23 @@ pub(super) fn parse_chunks_with_function_calls(
         }
     }
     statements
+}
+
+fn unrecoverable_chunk(
+    tokens: &[TokenWithSpan],
+) -> Option<super::super::super::types::SqlUnanalyzableStatement> {
+    let significant = tokens
+        .iter()
+        .filter(|token| !matches!(token.token, Token::Whitespace(_)))
+        .collect::<Vec<_>>();
+    let line = significant.first()?.span.start.line as usize;
+    let head = significant
+        .iter()
+        .take(8)
+        .map(|token| token.token.to_string())
+        .collect::<Vec<_>>()
+        .join(" ");
+    Some(super::super::super::types::SqlUnanalyzableStatement { line, head })
 }
 
 fn parse_chunk(

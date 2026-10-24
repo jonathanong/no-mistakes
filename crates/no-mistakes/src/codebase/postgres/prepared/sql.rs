@@ -36,23 +36,25 @@ pub(super) fn collect(
                 let prepared = crate::codebase::postgres::parse::PreparedSql::new(source);
                 let parsed = prepared.parse_policy();
                 let failed = parsed.is_err();
-                let (statements, functions) = match parsed {
-                    Ok(statements) => (statements, Vec::new()),
+                let (statements, functions, failures) = match parsed {
+                    Ok(statements) => (statements, Vec::new(), Vec::new()),
                     Err(_) => {
-                        let (mut located, functions) = crate::codebase::postgres::parse::partition_function_sources(crate::codebase::postgres::parse::parse_postgres_sql_lenient_with_sources(
+                        let recovered = crate::codebase::postgres::parse::parse_postgres_sql_lenient_with_sources(
                             source,
                             prepared.normalized(),
-                        ));
+                        );
+                        let failures = crate::codebase::postgres::migration::recovery_failures(&recovered);
+                        let (mut located, functions) = crate::codebase::postgres::parse::partition_function_sources(recovered);
                         prepared.adopt_recovered_arbiters(&mut located);
-                        (located.into_iter().map(|located| located.statement).collect(), functions)
+                        (located.into_iter().map(|located| located.statement).collect(), functions, failures)
                     }
                 };
-                (statements, functions, failed, prepared)
+                (statements, functions, failures, failed, prepared)
             });
             let schema = (plan.postgres_schema && schema_set.contains(path)).then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, functions, _, prepared)| {
+                    .map(|(statements, functions, failures, _, prepared)| {
                         let mut functions = functions.clone();
                         functions.extend_from_slice(&prepared.functions());
                         let mut value = crate::codebase::postgres::migration::extract_from_parsed(
@@ -60,6 +62,8 @@ pub(super) fn collect(
                             statements,
                             &functions,
                         );
+                        value.unanalyzable_statements.extend(failures.iter().cloned());
+                        value.unanalyzable_statements.sort_by_key(|item| item.line);
                         value.path = path.clone();
                         Arc::new(value)
                     })
@@ -68,7 +72,7 @@ pub(super) fn collect(
             let statements = plan.postgres_dml.then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, functions, failed, prepared)| {
+                    .map(|(statements, functions, _, failed, prepared)| {
                         let mut value = crate::codebase::postgres::statements::extract_from_parsed_with_recovered_placeholders(
                             source.as_ref().unwrap(),
                             prepared,

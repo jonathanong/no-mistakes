@@ -8,18 +8,25 @@ mod identifiers;
 mod indexes;
 mod lines;
 mod predicate;
+mod recovery;
 mod statements;
 mod table_events;
+pub(crate) use recovery::recovery_failures;
 
 pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
-    let (located, functions) = super::parse::partition_function_sources(
-        super::parse::parse_postgres_sql_with_function_sources(sql),
-    );
+    let parsed = super::parse::parse_postgres_sql_with_function_sources(sql);
+    let unanalyzable_statements = recovery_failures(&parsed);
+    let (located, functions) = super::parse::partition_function_sources(parsed);
     let statements: Vec<_> = located
         .into_iter()
         .map(|located| located.statement)
         .collect();
-    extract_from_parsed(sql, &statements, &functions)
+    let mut facts = extract_from_parsed(sql, &statements, &functions);
+    facts
+        .unanalyzable_statements
+        .extend(unanalyzable_statements);
+    facts.unanalyzable_statements.sort_by_key(|item| item.line);
+    facts
 }
 
 pub(crate) fn extract_from_parsed(
@@ -125,6 +132,9 @@ fn extract_parsed_migration_facts(sql: &str, statements: &[Statement]) -> SqlSch
 }
 
 fn merge_dynamic_facts(facts: &mut SqlSchemaFileFacts, dynamic: SqlSchemaFileFacts) {
+    facts
+        .unanalyzable_statements
+        .extend(dynamic.unanalyzable_statements);
     facts.tables.extend(dynamic.tables);
     facts.table_events.extend(dynamic.table_events);
     facts.indexes.extend(dynamic.indexes);

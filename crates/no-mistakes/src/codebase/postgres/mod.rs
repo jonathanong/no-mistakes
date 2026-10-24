@@ -140,7 +140,8 @@ pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,
     SqlColumnMetadata, SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlDeclaredIdentifier,
     SqlDropIndexMetadata, SqlForeignKeyMetadata, SqlIndexParam, SqlNamedConstraint,
-    SqlSchemaFileFacts, SqlSettingUse, SqlStatementKind, SqlTableSchemaEvent, SqlUnnamedConstraint,
+    SqlSchemaFileFacts, SqlSettingUse, SqlStatementKind, SqlTableSchemaEvent,
+    SqlUnanalyzableStatement, SqlUnnamedConstraint,
 };
 pub(crate) use verdict::sql_evidence_for_call;
 pub use verdict::{

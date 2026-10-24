@@ -132,6 +132,12 @@ pub(super) fn run(
             root, config, files, prepared, facts,
         )?
     };
+    if let Some(facts) = facts {
+        diagnostics.advisories.extend(
+            rules::postgres_unanalyzable_schema::diagnostics(root, config, files, facts)?
+                .advisories,
+        );
+    }
     diagnostics.findings.sort();
     diagnostics.findings.dedup();
     diagnostics.advisories.sort();
