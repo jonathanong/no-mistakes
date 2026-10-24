@@ -154,23 +154,48 @@ function testBinding(node, context, visited = new Set()) {
   if (name === "each" || name === "for") return { ...binding, table: name };
   return name === "describe" ? { ...binding, name } : binding;
 }
-function isContextSkip(node, context) {
-  const object = unwrapExpression(node.object);
-  if (object.type !== "Identifier") return false;
-  const variable = resolveVariable(object, context);
-  for (const def of variable?.defs || []) {
-    const callback = def.node;
-    if (def.type !== "Parameter" || !isFunction(callback)) continue;
-    const call = callback.parent;
-    if (call.type !== "CallExpression" || !call.arguments.includes(callback)) continue;
-    const binding = testBinding(call.callee, context);
-    if (binding?.framework !== "vitest" || binding.name === "describe" || binding.table === "each")
-      continue;
-    // each supplies table values; for preserves its second parameter as TestContext.
-    const parameter = callback.params[binding.table === "for" ? 1 : 0];
-    if (parameter?.type === "Identifier" && resolveVariable(parameter, context) === variable)
-      return true;
-  }
-  return false;
+function contextParameter(callback, context) {
+  const call = isFunction(callback) ? callback.parent : null;
+  if (call?.type !== "CallExpression" || !call.arguments.includes(callback)) return null;
+  const binding = testBinding(call.callee, context);
+  if (binding?.framework !== "vitest" || binding.name === "describe" || binding.table === "each")
+    return null;
+  // each supplies table values; for preserves its second parameter as TestContext.
+  return callback.params[binding.table === "for" ? 1 : 0];
 }
-module.exports = { memberName, testBinding, isContextSkip };
+function isContextObject(node, context) {
+  node = unwrapExpression(node);
+  if (node?.type !== "Identifier") return false;
+  const variable = resolveVariable(node, context);
+  return (
+    variable?.defs.some((def) => {
+      if (def.type !== "Parameter") return false;
+      const parameter = contextParameter(def.node, context);
+      return parameter?.type === "Identifier" && resolveVariable(parameter, context) === variable;
+    }) || false
+  );
+}
+function bindsSkip(pattern, variable, context) {
+  return pattern.properties.some((property) => {
+    if (property.type !== "Property" || propertyKey(property) !== "skip") return false;
+    const value = unwrapBinding(property.value);
+    return value.type === "Identifier" && resolveVariable(value, context) === variable;
+  });
+}
+function isContextSkipAlias(node, context, seen = new Set()) {
+  const variable = resolveVariable(node, context);
+  if (!variable || seen.has(variable) || variable.defs.length !== 1) return false;
+  const def = variable.defs[0];
+  if (def.type === "Parameter") {
+    const parameter = contextParameter(def.node, context);
+    return parameter?.type === "ObjectPattern" && bindsSkip(parameter, variable, context);
+  }
+  if (def.type !== "Variable" || def.parent?.kind !== "const") return false;
+  if (def.node.id.type === "ObjectPattern")
+    return bindsSkip(def.node.id, variable, context) && isContextObject(def.node.init, context);
+  const init = unwrapExpression(stableConstInitializer(node, context, seen));
+  if (init?.type === "MemberExpression")
+    return memberName(init, context) === "skip" && isContextObject(init.object, context);
+  return init?.type === "Identifier" && isContextSkipAlias(init, context, seen);
+}
+module.exports = { memberName, testBinding, isContextObject, isContextSkipAlias };

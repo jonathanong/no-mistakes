@@ -18,9 +18,19 @@ and `describe` globals in files selected by ESLint. Member chains
 such as `test.skip.each(cases)(...)`, `test.concurrent.only(...)`, and
 `test.only.for(cases)(...)` are checked, as are Playwright forms such as
 `test.describe.fixme(...)`. In Vitest callbacks, a call to the actual callback
-context's `skip()` is also reported. A `.each` callback receives row data,
+context's `skip()` is also reported, including a top-level destructured `skip`
+binding (with a rename or default) and a stable local `const` captured or
+destructured from the callback context. A `.each` callback receives row data,
 while `.for` receives its test context as the second callback parameter; only
 the latter is treated as a context `skip()`.
+
+```ts
+import { test } from "vitest";
+
+test("hidden", ({ skip: omit }) => omit()); // reported
+test("also hidden", (ctx) => { const omit = ctx.skip; omit(); }); // reported
+test.each([{ skip() {} }])("row data", ({ skip }) => skip()); // allowed
+```
 
 For Playwright, the rule also reports statically visible `skip` and `fixme`
 `annotation` values in test and suite declaration details. It follows same-file
@@ -100,7 +110,8 @@ browser.skip("same-file fixture skip", async () => {});
 The rule follows call identity and syntax rather than property spelling. Data
 fields such as `options.skip`, ordinary object methods, and names such as
 `skipIfDeleted()` are allowed. A function's unrelated `skip()` method is also
-allowed; Vitest's bound callback context `context.skip()` is not.
+allowed; Vitest's bound callback context `context.skip()` and its bound local
+aliases are not. Mutable local captures remain unresolved.
 
 ```ts
 const options = { skip: "explain a skipped result" };

@@ -41,6 +41,21 @@ describe(rule, () => {
     );
     assert.ok(findings.every((item) => item.messageId === "modifier"));
   });
+  it("follows Vitest callback skip bindings without treating table data as context", () => {
+    const findings = lint(
+      code("context-bindings"),
+      { [`no-mistakes/${rule}`]: "error" },
+      "suite.test.ts",
+    );
+    assert.deepEqual(
+      findings.map(({ line, messageId }) => [line, messageId]),
+      [4, 5, 6, 7, 10, 15, 19, 21, 24].map((line) => [line, "modifier"]),
+    );
+    assert.deepEqual(
+      messages(code("context-bindings"), rule, { allow: ["skip"] }, "suite.test.ts"),
+      [],
+    );
+  });
   it("ignores test data, unrelated members, and shadowed bindings", () => {
     assert.deepEqual(messages(code("lookalikes"), rule, undefined, "suite.test.ts"), []);
   });
@@ -317,5 +332,13 @@ it("loads test-no-skips in Oxlint with the same import and suppression semantics
   const suppressed = run("suppression-file");
   assert.ok(
     !JSON.parse(suppressed.stdout).diagnostics.some((item) => item.code?.includes("test-no-skips")),
+  );
+  const bound = run("context-bindings");
+  assert.notEqual(bound.status, 0);
+  assert.deepEqual(
+    JSON.parse(bound.stdout)
+      .diagnostics.filter((item) => item.code?.includes("test-no-skips"))
+      .map((item) => item.labels[0].span.line),
+    [4, 5, 6, 7, 10, 15, 19, 21, 24],
   );
 });

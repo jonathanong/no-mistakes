@@ -1,6 +1,11 @@
 "use strict";
 const { rule, options } = require("../helpers");
-const { memberName, testBinding, isContextSkip } = require("./test-no-skips-bindings");
+const {
+  memberName,
+  testBinding,
+  isContextObject,
+  isContextSkipAlias,
+} = require("./test-no-skips-bindings");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression } = require("./async-ast");
@@ -157,11 +162,19 @@ module.exports = rule(
           modifier === "skip" &&
           node.parent.type === "CallExpression" &&
           node.parent.callee === node &&
-          isContextSkip(node, context);
+          isContextObject(node.object, context);
         if (!test && !contextCall) return;
         context.report({ node: node.property, messageId: "modifier", data: { modifier } });
       },
       CallExpression(node) {
+        if (
+          banned.has("skip") &&
+          node.callee.type === "Identifier" &&
+          !suppressed(node.callee) &&
+          isContextSkipAlias(node.callee, context)
+        ) {
+          context.report({ node: node.callee, messageId: "modifier", data: { modifier: "skip" } });
+        }
         // extend's arguments are fixture options, not test declaration details.
         if (
           node.callee.type === "MemberExpression" &&
