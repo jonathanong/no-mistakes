@@ -119,9 +119,9 @@ fn dormant_and_conditional_routine_ddl_does_not_remove_live_generated_columns() 
         ],
     )
     .unwrap();
-    let definite = verified_schema_markers(&root, "execution.sql", findings);
-    assert_eq!(definite.len(), 1, "{definite:?}");
-    assert_eq!(definite[0].import.as_deref(), Some("orders.computed"));
+    // Valid declaration/assignment syntax leaves only the actual generated-column write.
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].import.as_deref(), Some("orders.computed"));
 }
 
 #[test]

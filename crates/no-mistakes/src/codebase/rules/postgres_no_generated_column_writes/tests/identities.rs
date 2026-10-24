@@ -13,20 +13,6 @@ fn lines(name: &str) -> Vec<usize> {
     .collect()
 }
 
-fn lines_with_schema_markers(name: &str) -> Vec<usize> {
-    let root = unit_fixture(name);
-    let findings = check_with_files(
-        &root,
-        &config_with_options(""),
-        &[root.join("schema.sql"), root.join("writes.sql")],
-    )
-    .unwrap();
-    verified_schema_markers(&root, "schema.sql", findings)
-        .into_iter()
-        .map(|finding| finding.line)
-        .collect()
-}
-
 #[test]
 fn quoted_dots_and_case_remain_distinct_from_qualification() {
     assert_eq!(lines("quoted-identity"), [1, 3, 5, 7]);
@@ -71,10 +57,8 @@ fn rollback_restores_tables_and_discards_aborted_columns() {
 #[test]
 fn unresolved_format_relations_remain_broad_facts_but_not_live_events() {
     let root = unit_fixture("format-identities");
-    assert_eq!(
-        lines_with_schema_markers("format-identities"),
-        [1, 2, 3, 4, 5]
-    );
+    // Procedural assignments no longer add schema noise; keep every definite write.
+    assert_eq!(lines("format-identities"), [1, 2, 3, 4, 5]);
 
     let sql = std::fs::read_to_string(root.join("schema.sql")).unwrap();
     let facts = crate::codebase::postgres::extract_migration_facts(&sql);
@@ -119,7 +103,7 @@ fn unresolved_format_relations_remain_broad_facts_but_not_live_events() {
 
 #[test]
 fn conditional_variable_assignments_do_not_change_definite_live_history() {
-    assert_eq!(lines_with_schema_markers("conditional-assignment"), [1]);
+    assert_eq!(lines("conditional-assignment"), [1]);
     let root = unit_fixture("conditional-assignment");
     let sql = std::fs::read_to_string(root.join("schema.sql")).unwrap();
     let facts = crate::codebase::postgres::extract_migration_facts(&sql);

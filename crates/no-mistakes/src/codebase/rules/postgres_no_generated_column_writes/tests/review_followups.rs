@@ -49,12 +49,7 @@ fn create_if_not_exists_resolves_unqualified_relation_before_inserting() {
 #[test]
 fn quoted_control_keywords_do_not_open_conditional_scopes() {
     // The unconditional recreate replaces the generated table, so no finding remains.
-    let root = unit_fixture("quoted-control-keyword");
-    let findings = verified_schema_markers(
-        &root,
-        "schema.sql",
-        schema_and_writes("quoted-control-keyword"),
-    );
+    let findings = schema_and_writes("quoted-control-keyword");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
@@ -78,10 +73,9 @@ fn same_line_ddl_precedes_a_following_write() {
 
 #[test]
 fn labeled_nested_blocks_restore_outer_bindings() {
-    let root = unit_fixture("labeled-shadow");
-    let findings =
-        verified_schema_markers(&root, "schema.sql", schema_and_writes("labeled-shadow"));
+    let findings = schema_and_writes("labeled-shadow");
     assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].import.as_deref(), Some("orders.total"));
 }
 
 #[test]

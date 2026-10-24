@@ -31,7 +31,7 @@ BEGIN
   ELSE
     PERFORM 3;
   END IF;
-  IF CASE WHEN true THEN true ELSE false END THEN
+  IF (CASE WHEN true THEN true ELSE false END) THEN
     RAISE NOTICE 'case condition';
   END IF;
   LOOP

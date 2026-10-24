@@ -47,7 +47,7 @@ pub(super) fn parse_chunks_with_function_calls(
         // Own the chunk text even when recovery emits no statement. A later
         // sibling must not inherit this chunk's ON CONFLICT target.
         let tokens = original.map(Arc::<[TokenWithSpan]>::from);
-        let mut handled_procedural = false;
+        let mut handled_procedural = None;
         let produced = parse_chunk(
             chunk,
             aligned.as_deref(),
@@ -55,22 +55,24 @@ pub(super) fn parse_chunks_with_function_calls(
             &mut handled_procedural,
         );
         copy_data_pending = original.is_some_and(copy::owns_terminator);
-        if produced.is_empty() {
-            if handled_procedural {
+        if produced.is_empty() || handled_procedural == Some(false) {
+            if handled_procedural == Some(true) {
                 continue;
             }
-            if let Some(tokens) = tokens {
+            if let Some(tokens) = &tokens {
                 let mut marker = LocatedStatement::functions(
                     Statement::Discard {
                         object_type: DiscardObject::ALL,
                     },
                     false,
                 );
-                marker.recovery_failure = failure::unrecoverable_chunk(&tokens, chunk_ordinal);
-                marker.chunk_tokens = Some(tokens);
+                marker.recovery_failure = failure::unrecoverable_chunk(tokens, chunk_ordinal);
+                marker.chunk_tokens = Some(Arc::clone(tokens));
                 statements.push(marker);
             }
-            continue;
+            if produced.is_empty() {
+                continue;
+            }
         }
         for mut statement in produced {
             if let Some(failure) = &mut statement.recovery_failure {
@@ -98,17 +100,16 @@ fn parse_chunk(
     chunk: Vec<Token>,
     original: Option<&[TokenWithSpan]>,
     allow_concurrent_detach: bool,
-    handled_procedural: &mut bool,
+    handled_procedural: &mut Option<bool>,
 ) -> Vec<LocatedStatement> {
     if let Some(body) = peel_do_body(&chunk) {
         let body = locations::align_do_body(&body, original);
         let filtered = procedural::filter_body(super::parse_with_sources(&body, true, false));
-        // A control-only body can yield no SQL statements. Only treat that as
-        // handled when the complete body still tokenizes; lexical failure must
-        // retain the outer DO marker.
-        *handled_procedural = !filtered.is_empty()
-            || !body.trim().is_empty()
-                && !super::super::unicode::tokenize_with_location(&body, false).is_empty();
+        // Keep recovered facts alongside the outer marker if body lexing fails.
+        *handled_procedural = Some(
+            !body.trim().is_empty()
+                && !super::super::unicode::tokenize_with_location(&body, false).is_empty(),
+        );
         return filtered;
     }
     let dialect = PostgreSqlDialect {};

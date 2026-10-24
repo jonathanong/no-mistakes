@@ -13,6 +13,17 @@ DECLARE
     WITH chosen AS (SELECT id FROM grammar_option_rows)
     SELECT id FROM chosen;
 BEGIN
+  BEGIN DECLARE
+    inner_value integer := 1;
+    other_value integer DEFAULT 2;
+  BEGIN
+    inner_value := other_value;
+  END; END;
+  <<inner>> DECLARE
+    labeled_value integer := 1;
+  BEGIN
+    labeled_value = 2;
+  END;
   matrix_value[1][1] := 5;
   OPEN selected_rows;
   FETCH NEXT FROM selected_rows INTO selected_id;
@@ -63,6 +74,13 @@ BEGIN
       RETURNING id
     )
     SELECT id FROM inserted
+  LOOP
+    selected_id := row_value.id;
+  END LOOP;
+  FOR row_value IN
+    WITH seed AS (SELECT 5 AS id)
+    INSERT INTO grammar_option_rows (id, label)
+    SELECT id, 'with dml' FROM seed RETURNING id
   LOOP
     selected_id := row_value.id;
   END LOOP;

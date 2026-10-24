@@ -60,8 +60,8 @@ impl BodyState {
             self.declarations = false;
             return ending(&code[1..]);
         }
-        if self.declarations && declaration::matches(code) {
-            return true;
+        if self.declarations {
+            return declaration::matches(code);
         }
         let Some(first) = code.first() else {
             return false;

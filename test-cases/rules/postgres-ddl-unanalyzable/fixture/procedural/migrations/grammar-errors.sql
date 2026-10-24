@@ -38,3 +38,23 @@ BEGIN
   END LOOP;
 END
 $$;
+
+-- Malformed options must not be accepted by the procedural classifier.
+DO $$
+DECLARE
+  wrong_scroll NO WRONG CURSOR FOR SELECT 1;
+  missing_type CONSTANT;
+  wrong_collation text COLLATE 1;
+BEGIN
+  GET CURRENT WRONG value = ROW_COUNT;
+  OPEN 1;
+  OPEN cursor_value NO WRONG FOR SELECT 1;
+  OPEN cursor_value BOGUS;
+  OPEN cursor_value ((1);
+  MOVE;
+  MOVE 1;
+  FETCH NEXT FROM cursor_value;
+  FOR range_value IN 1 2 LOOP NULL; END LOOP;
+  FOREACH row_value ARRAY ARRAY[1] LOOP NULL; END LOOP;
+END
+$$;
