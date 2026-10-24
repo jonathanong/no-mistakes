@@ -1,5 +1,5 @@
 use super::{CompiledOptions, RULE_ID};
-use crate::codebase::check_facts::SqlFactContext;
+use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::sql_requires_query_annotation;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
@@ -18,6 +18,16 @@ type AnnotationVerdict = (
     Vec<String>,
     Option<String>,
 );
+
+fn head_verdict(
+    facts: &CheckFactMap,
+    path: &Path,
+    opts: &CompiledOptions,
+    span: (u32, u32),
+) -> Option<AnnotationVerdict> {
+    loop_carried::verdict(facts, path, opts, span)
+        .or_else(|| literal_helpers::verdict(facts, path, opts, span))
+}
 
 pub(super) fn scan_with_sources(
     root: &Path,
