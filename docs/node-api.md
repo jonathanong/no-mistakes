@@ -85,6 +85,15 @@ read as UTF-8. Actual read failures on the selected anchor use this policy too.
 suppresses the uncertainty. A valid source outside the selected file set still
 supplies the comparison pin, and definite mismatches remain failures.
 
+For `github-actions-script-expressions`, CLI `check`, `check(options)`, and
+check reports in `analyzeProject()` apply the same `unanalyzable` policy when a
+selected workflow or composite-action file cannot be read, including invalid
+UTF-8. `report` fails by default, `advise` emits non-failing advice, and
+`ignore` omits the uncertainty. Invalid YAML, unmatched source locations, and
+unsupported expression shapes retain definite findings under every policy.
+Both findings and advice honor suppression. Invalid UTF-8 points to its first
+invalid byte's line; other read failures use line 1.
+
 For `github-actions-job-timeouts`, `check({ effort: "low" })` and a check report
 in `analyzeProject()` use the same covering `github-actions-step-timeouts`
 partner as CLI `--effort low`. With a certified step cap, the job rule skips

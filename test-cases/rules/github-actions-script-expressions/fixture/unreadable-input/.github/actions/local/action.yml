@@ -1,0 +1,4 @@
+runs:
+  using: composite
+  # invalid UTF-8 must not bypass analysis
+ÿ

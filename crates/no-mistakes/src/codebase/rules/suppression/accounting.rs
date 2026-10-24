@@ -104,7 +104,7 @@ pub fn suppress_domain_findings_with_source_locations<T>(
                 } else {
                     sources.validated_regular_path(&lexical_root, &candidate)
                 }?;
-                super::super::read_source(sources, &path)
+                read_directive_source(sources, &path)
             });
         let Some(directive) = source
             .as_deref()
@@ -129,3 +129,26 @@ pub fn suppress_domain_findings_with_source_locations<T>(
     suppressed.sort();
     suppressed
 }
+
+/// Invalid UTF-8 remains an analyzer error. Its retained bytes are usable only
+/// here, for matching suppression directives after the caller validates the path.
+fn read_directive_source(
+    sources: &crate::codebase::ts_source::SourceStore,
+    path: &Path,
+) -> Option<std::sync::Arc<str>> {
+    match sources.read_path(path) {
+        Ok(source) => Some(source),
+        Err(error) => {
+            let retained = error
+                .get_ref()?
+                .downcast_ref::<std::string::FromUtf8Error>()?;
+            Some(std::sync::Arc::from(String::from_utf8_lossy(
+                retained.as_bytes(),
+            )))
+        }
+    }
+}
+
+#[cfg(test)]
+#[path = "accounting_tests.rs"]
+mod tests;

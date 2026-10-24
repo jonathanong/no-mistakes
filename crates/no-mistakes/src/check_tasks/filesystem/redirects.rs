@@ -85,6 +85,25 @@ pub(super) fn run(
     } else {
         config
     };
+    let mut without_script_expressions;
+    let config = if config.rule_configured(rules::github_actions_script_expressions::RULE_ID) {
+        diagnostics.append(
+            rules::github_actions_script_expressions::diagnostics_with_files_and_sources(
+                root,
+                config,
+                files,
+                &prepared.sources,
+                defer_suppression,
+            )?,
+        );
+        without_script_expressions = config.clone();
+        without_script_expressions
+            .rules
+            .retain(|rule| rule.rule != rules::github_actions_script_expressions::RULE_ID);
+        &without_script_expressions
+    } else {
+        config
+    };
     let findings = if defer_suppression {
         rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
             root, config, files, prepared, facts,

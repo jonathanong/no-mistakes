@@ -30,13 +30,26 @@ flagged. `if`, `defaults.run`, workflow `env`, job `env`, and reusable-workflow
 `with` are not script bodies. The fix for everything else is to pass the value
 through `env`, where the shell or JavaScript reads it as data.
 
-Invalid YAML is one finding. The rule does not guess expressions in a file it
-cannot parse. Anchors, aliases, and flow-style steps that the line scan cannot
-align with the parsed script are one unanalyzable finding for the file. Rewrite
-them as ordinary block-style `run` or `with.script` bodies. An expression split
-across lines is unanalyzable for the same reason.
+If a selected workflow or composite-action file cannot be read, including
+because it contains invalid UTF-8, the rule cannot inspect its scripts. That
+input follows `options.unanalyzable`: `report` (the default) emits a failing
+diagnostic, `advise` emits non-failing advice, and `ignore` omits the
+uncertainty. Restore readable text or correct the file encoding so the rule can
+inspect the scripts. For invalid UTF-8, the diagnostic points to the first
+invalid byte's line; other read failures use line 1.
+
+Invalid YAML remains a definite finding under every unanalyzable policy.
+Anchors, aliases, and flow-style steps that the line scan cannot align with the
+parsed script remain definite unanalyzable findings under every policy.
+Expressions split across lines also remain definite findings for the same
+reason. Rewrite these shapes as ordinary block-style `run` or `with.script`
+bodies; changing `options.unanalyzable` does not suppress them.
 
 ## Options
+
+`options.unanalyzable` inherits the repository policy (`report` by default) for
+source read failures. It does not change definite expression, YAML, or alignment
+findings.
 
 `constantContexts` is a list of regular expressions. A pattern allows an
 expression only when the trimmed expression is a full match, not a substring.
@@ -142,10 +155,14 @@ For a shell script the same shape is `env: VALUE: ${{ <expr> }}`, then
 
 ## Suppression
 
-Use a YAML comment. `no-mistakes-disable-next-line github-actions-script-expressions`
-suppresses the next line. `no-mistakes-disable-line github-actions-script-expressions`
-suppresses the same line. `no-mistakes-disable-file github-actions-script-expressions`
-in the leading comment block suppresses the file.
+Both findings and non-failing advice honor suppression. Invalid UTF-8 input
+can still carry ASCII suppression directives: the rule inspects the cached
+bytes for directives without treating lossy text as YAML. Use
+`no-mistakes-disable-file github-actions-script-expressions` for the file, or
+`disable-line` / `disable-next-line` at the reported invalid-byte line.
+Definite script findings retain their actual capture lines. If the file cannot
+be read at all, its directives are unavailable; narrow `include`/`exclude` or
+set `unanalyzable: ignore` until the input is restored.
 
 ```yaml
 # no-mistakes-disable-next-line github-actions-script-expressions

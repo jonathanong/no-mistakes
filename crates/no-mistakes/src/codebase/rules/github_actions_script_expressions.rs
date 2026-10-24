@@ -1,7 +1,5 @@
 use super::RuleFinding;
-use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
-use rayon::prelude::*;
 use regex::Regex;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
@@ -34,22 +32,38 @@ pub(crate) struct Options {
     pub(crate) constant_contexts: Option<Vec<String>>,
 }
 
-super::sourced_file_rule_entrypoints!();
+super::borrowed_source_rule_entrypoints!();
 
-fn scan(
+pub fn check(
     root: &Path,
-    opts: &Options,
+    config: &crate::config::v2::NoMistakesConfig,
+) -> Result<Vec<RuleFinding>> {
+    super::check_sourced_standalone(root, config, check_with_files)
+}
+
+pub(crate) fn check_with_files_sources_and_deferred_suppression(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
-    let patterns = compile_patterns(opts)?;
-    let mut findings: Vec<RuleFinding> = files
-        .par_iter()
-        .flat_map(|path| check_file(path, root, &patterns, sources))
-        .collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    diagnostics_with_files_and_sources(root, config, files, sources, defer_suppression)
+        .map(|diagnostics| diagnostics.findings)
 }
+
+#[doc(hidden)]
+pub fn diagnostics_with_files_and_sources(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+    diagnostics::run(root, config, files, sources, defer_suppression)
+}
+
+mod diagnostics;
 
 fn compile_patterns(opts: &Options) -> Result<Vec<Regex>> {
     let configured = opts
@@ -73,22 +87,6 @@ pub(crate) fn default_constant_contexts() -> Vec<String> {
         .iter()
         .map(|pattern| (*pattern).to_string())
         .collect()
-}
-
-fn check_file(
-    path: &Path,
-    root: &Path,
-    patterns: &[Regex],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
-    let rel = relative_slash_path(root, path);
-    if analyze::gha_kind(&rel).is_none() {
-        return Vec::new();
-    }
-    let Some(content) = super::read_source(sources, path) else {
-        return Vec::new();
-    };
-    analyze::check_source(&rel, &content, patterns)
 }
 
 #[cfg(test)]
