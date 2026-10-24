@@ -1,6 +1,6 @@
-fn replace_call_edges(
+fn replace_call_edges<'a>(
     edges: &mut Vec<Edge>,
-    base: &[ResolvedCallSite],
+    initial_targets: impl Fn(usize) -> ResolvedCallNodes<'a>,
     sites: &[ResolvedCallSite],
     processed: &[usize],
     source: impl Fn(&ResolvedCallSite) -> NodeId,
@@ -10,8 +10,8 @@ fn replace_call_edges(
     // edges; identical calls and implicit constructor routes must survive.
     let mut removed: FxHashMap<Edge, usize> = fx_map();
     for index in processed {
-        let site = &base[*index];
-        for node in site.target_nodes() {
+        let site = &sites[*index];
+        for node in initial_targets(*index) {
             *removed
                 .entry((source(site), node.clone(), EdgeKind::Call))
                 .or_default() += 1;

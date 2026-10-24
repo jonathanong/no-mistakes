@@ -14,6 +14,11 @@ pub(in super::super::super) fn refine_value_calls(
     pass: &mut CallPass,
 ) {
     let base = pass.sites.clone();
+    super::snapshot_tests::record(
+        base.len(),
+        base.capacity() * size_of::<ResolvedCallSite>(),
+        base.len(),
+    );
     let mut incoming = incoming_inputs(&base, &pass.constructor_routes, indexes, facts);
     let replacements = replacement_catalog::ReplacementCatalog::prepare(
         inputs, facts, resolver, indexes, pass, &incoming,
@@ -129,9 +134,13 @@ pub(in super::super::super) fn refine_value_calls(
     super::super::super::value_flow_metrics::record(visits.values().sum());
     let mut processed: Vec<_> = visits.into_keys().collect();
     processed.sort_unstable();
-    replace_call_edges(&mut pass.edges, &base, &pass.sites, &processed, |site| {
-        site_source(inputs, site)
-    });
+    replace_call_edges(
+        &mut pass.edges,
+        |index| base[index].target_nodes(),
+        &pass.sites,
+        &processed,
+        |site| site_source(inputs, site),
+    );
     #[cfg(all(test, feature = "test-instrumentation"))]
     pass.parameter_cache.site_storage.finish();
     #[cfg(feature = "test-instrumentation")]
@@ -178,5 +187,3 @@ fn site_source(inputs: &GraphEdgeBuildInputs<'_>, site: &ResolvedCallSite) -> No
         |caller| NodeId::scoped_in(&inputs.interner, &site.file, caller, site.caller_id),
     )
 }
-
-

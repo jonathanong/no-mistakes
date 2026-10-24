@@ -30,7 +30,13 @@ fn replacing_one_physical_call_keeps_other_call_and_implicit_edge() {
     let replacement = sites[0].target_node.clone().unwrap();
     // Two source calls plus an implicit constructor Call with equal endpoints.
     let mut edges = vec![(source.clone(), original.clone(), EdgeKind::Call); 3];
-    replace_call_edges(&mut edges, &base, &sites, &[0], |_| source.clone());
+    replace_call_edges(
+        &mut edges,
+        |index| base[index].target_nodes(),
+        &sites,
+        &[0],
+        |_| source.clone(),
+    );
     assert_eq!(
         edges
             .iter()
@@ -55,6 +61,12 @@ fn unknown_replacement_removes_only_the_refined_physical_edge() {
     let source = NodeId::file(&base[0].file);
     let original = base[0].target_node.clone().unwrap();
     let mut edges = vec![(source.clone(), original.clone(), EdgeKind::Call); 2];
-    replace_call_edges(&mut edges, &base, &sites, &[0], |_| source.clone());
+    replace_call_edges(
+        &mut edges,
+        |index| base[index].target_nodes(),
+        &sites,
+        &[0],
+        |_| source.clone(),
+    );
     assert_eq!(edges, [(source, original, EdgeKind::Call)]);
 }
