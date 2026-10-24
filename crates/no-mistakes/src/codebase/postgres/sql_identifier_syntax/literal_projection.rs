@@ -10,6 +10,7 @@ pub(crate) struct LiteralProjection<T> {
     pub project: fn(&SqlStatementFileFacts) -> Vec<T>,
     pub parse: fn(&str) -> Result<Vec<T>, ()>,
     pub rebase: fn(&mut T, usize),
+    pub position: fn(&T) -> (usize, usize),
     pub parse_metric: &'static str,
 }
 pub(crate) fn project_literals<T: Clone>(
@@ -59,23 +60,30 @@ pub(crate) fn project_literals<T: Clone>(
                 source_span,
                 text,
                 holes,
+                parameterized,
+                positions,
             } = &call.input
             else {
                 continue;
             };
             out.entry(*source_span).or_insert_with(|| {
                 if !holes.is_empty()
-                    || source
-                        .get(source_span.0 as usize + 1..source_span.1 as usize - 1)
-                        .is_none_or(|raw| !literal_matches(raw, text))
+                    || (parameterized.is_none()
+                        && source
+                            .get(source_span.0 as usize + 1..source_span.1 as usize - 1)
+                            .is_none_or(|raw| !literal_matches(raw, text)))
                 {
                     return Ok(None);
                 }
-                if let Some(facts) = prepared
-                    .get(profile)
-                    .and_then(|calls| calls.get(&call.span))
-                {
-                    return facts.clone();
+                // Low library tags publish actual binds and physical positions;
+                // max may publish identifier markers at the same executor span.
+                if parameterized.is_none() {
+                    if let Some(facts) = prepared
+                        .get(profile)
+                        .and_then(|calls| calls.get(&call.span))
+                    {
+                        return facts.clone();
+                    }
                 }
                 if let Some(observer) = &observer {
                     observer.increment(projection.parse_metric, 1);
@@ -85,7 +93,14 @@ pub(crate) fn project_literals<T: Clone>(
                     crate::codebase::ts_source::byte_offset_to_line(source, source_span.0 as usize)
                         as usize;
                 for fact in &mut facts {
-                    (projection.rebase)(fact, base);
+                    let (line, column) = (projection.position)(fact);
+                    let origin = positions.iter().rev().find(|position| {
+                        (position.sql_line as usize, position.sql_column as usize) <= (line, column)
+                    });
+                    let source_line = origin.map_or(base + line - 1, |position| {
+                        position.source_line as usize + line - position.sql_line as usize
+                    });
+                    (projection.rebase)(fact, source_line - line + 1);
                 }
                 Ok(Some(facts))
             });
@@ -93,7 +108,7 @@ pub(crate) fn project_literals<T: Clone>(
     }
     out
 }
-fn literal_matches(raw: &str, cooked: &str) -> bool {
+pub(super) fn literal_matches(raw: &str, cooked: &str) -> bool {
     // JavaScript normalizes physical CRLF template endings without decoding escapes.
     raw == cooked || (raw.contains('\r') && raw.replace("\r\n", "\n") == cooked)
 }

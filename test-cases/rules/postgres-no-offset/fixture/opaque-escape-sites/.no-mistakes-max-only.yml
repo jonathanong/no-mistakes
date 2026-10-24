@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-no-offset
+    name: max-helper
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      include: ['src/mixed.mts']
+      effort: max
+      unanalyzable: advise

@@ -16,25 +16,7 @@ pub fn assign_prepared_embedded_sql_options(
     Ok(())
 }
 
-pub(super) fn head_calls_only_profiles(
-    options: &[EmbeddedSqlOptions],
-    annotation: &[EmbeddedSqlOptions],
-    scans: &super::scans::EmbeddedSqlRuleScans,
-) -> Vec<EmbeddedSqlOptions> {
-    options
-        .iter()
-        .filter(|profile| {
-            !annotation.contains(profile)
-                && scans.get(*profile).is_some_and(|scans| {
-                    !scans.is_empty()
-                        && scans
-                            .iter()
-                            .all(|scan| scan.rule_id == "postgres-require-query-annotation")
-                })
-        })
-        .cloned()
-        .collect()
-}
+include!("plan/head_calls.rs");
 
 /// Declare SQL projections before the shared request fact pass.
 pub fn configure_prepared_postgres_plan(
@@ -65,6 +47,11 @@ pub fn configure_prepared_postgres_plan(
                 &options.executor_type_names,
             )
             .with_trusted_sql_tags(&options.trusted_sql_tags);
+            let typed_executor_types = config
+                .effects
+                .get("postgres")
+                .map(|effects| effects.typed_executors.as_slice())
+                .unwrap_or_default();
             let scan =
                 crate::codebase::postgres::sql_identifier_syntax::plan::SqlIdentifierScan::new(
                     root,
@@ -73,7 +60,8 @@ pub fn configure_prepared_postgres_plan(
                     index,
                     &options.include,
                     &options.exclude,
-                )?;
+                )?
+                .with_typed_executor_types(typed_executor_types);
             plan.sql_identifier_profiles
                 .entry(profile)
                 .or_default()
