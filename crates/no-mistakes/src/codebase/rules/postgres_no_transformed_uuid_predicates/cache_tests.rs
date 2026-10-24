@@ -131,3 +131,66 @@ fn physical_crlf_templates_match_cooked_text_and_keep_physical_finding_lines() {
         [4, 6]
     );
 }
+
+#[test]
+fn verdicts_distinguish_non_uuid_unknown_and_definite_transformed_columns() {
+    for effort in [
+        crate::config::v2::Effort::Low,
+        crate::config::v2::Effort::Max,
+    ] {
+        let mut cfg = config("unanalyzableSql: advise\n");
+        cfg.effort = Some(effort);
+        let (cfg, files, sources, mut facts) = prepare("verdict-inputs.ts", cfg);
+        facts.enable_sql_verdicts();
+        let findings =
+            check_with_files_sources_and_facts(&fixture(), &cfg, &files, &sources, &facts).unwrap();
+        assert_eq!(findings.len(), 2, "{findings:#?}");
+        let verdicts = facts.sql_verdicts();
+        assert_eq!(
+            verdicts
+                .iter()
+                .map(|verdict| verdict.status)
+                .collect::<Vec<_>>(),
+            [
+                SqlVerdictStatus::ProvenClear,
+                SqlVerdictStatus::Abstain,
+                SqlVerdictStatus::Abstain,
+                SqlVerdictStatus::Violation,
+                SqlVerdictStatus::Violation
+            ],
+            "{verdicts:#?}"
+        );
+    }
+}
+#[test]
+fn low_owner_uncertainty_produces_advice_without_enabling_all_verdicts() {
+    let mut cfg = config("unanalyzableSql: advise\n");
+    cfg.effort = Some(crate::config::v2::Effort::Low);
+    let (cfg, files, sources, facts) = prepare("verdict-inputs.ts", cfg);
+    assert!(!facts.wants_sql_verdicts());
+    check_with_files_sources_and_facts(&fixture(), &cfg, &files, &sources, &facts).unwrap();
+    let records = facts.sql_verdicts();
+    assert_eq!(records.len(), 2, "{records:#?}");
+    assert!(records
+        .iter()
+        .all(|record| record.advisory && record.status == SqlVerdictStatus::Abstain));
+}
+#[test]
+fn recovered_parameters_inside_casts_and_functions_are_not_columns() {
+    let root = fixture();
+    let files = [
+        root.join("parameter-functions.ts"),
+        root.join("schema.json"),
+    ];
+    assert!(check_with_files(&root, &config(""), &files)
+        .unwrap()
+        .is_empty());
+}
+#[test]
+fn values_and_parenthesized_query_bodies_still_visit_inner_predicates() {
+    let root = fixture();
+    let files = [root.join("values.sql"), root.join("schema.json")];
+    let findings = check_with_files(&root, &config(""), &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 2);
+}
