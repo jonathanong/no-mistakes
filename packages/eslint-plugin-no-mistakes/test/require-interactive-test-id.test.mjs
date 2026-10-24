@@ -55,6 +55,26 @@ tester.run("playwright-require-interactive-test-id", rule, {
   ],
   invalid: [
     {
+      // Exercise slots through the direct rule entrypoint as well as the plugin loader.
+      code: fixture("playwright-require-interactive-test-id/slots-missing.tsx"),
+      options: [{ interactiveComponents: ["Button"] }],
+      errors: [2, 5, 8, 11, 14, 17, 20, 23].map((line) => ({
+        messageId: "slot",
+        line,
+      })),
+    },
+    {
+      code: fixture("playwright-require-interactive-test-id/slots-controls.tsx"),
+      options: [{ interactiveComponents: ["Button"] }],
+      errors: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22]
+        .map((line) => ({ messageId: "missing", line }))
+        .concat([
+          { messageId: "slot", line: 23 },
+          { messageId: "missing", line: 23 },
+          { messageId: "missing", line: 23 },
+        ]),
+    },
+    {
       code: fixture("playwright-require-interactive-test-id/branches.jsx"),
       options: [{ interactiveComponents: ["/(/"] }],
       errors: Array.from({ length: 4 }, () => ({ messageId: "missing" })),
