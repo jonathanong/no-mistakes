@@ -237,3 +237,8 @@ class ReturningMethod {
   }
 }
 type ErasedReturn = ReturnType<typeof getDb>; // CLEAR
+// A return annotation and transparent assertion describe one runtime value.
+function assertedReturn(): QueryExecutor { // CLEAR
+  return (unconfiguredAny() as QueryExecutor); // UNSUPPORTED_TYPE
+}
+const objectProducer = { query: unconfiguredAny() } satisfies { query: QueryExecutor }; // UNSUPPORTED_TYPE

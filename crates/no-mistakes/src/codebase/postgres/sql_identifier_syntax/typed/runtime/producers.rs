@@ -7,6 +7,7 @@ use oxc_span::GetSpan;
 
 // A type at a runtime producer preserves uncertainty at the value expression.
 // Erased declarations and return headers alone are never runtime obligations.
+// Transparent wrappers share one value span, including typed asserted returns.
 pub(super) fn collect(program: &Program<'_>, possible: &FxHashSet<Span>) -> FxHashSet<Span> {
     let mut visitor = Producers {
         possible,
@@ -26,7 +27,8 @@ struct Producers<'s> {
 impl Producers<'_> {
     fn value(&mut self, expression: &Expression<'_>, ty: &TSType<'_>) {
         if possible::contains(self.possible, ty) {
-            self.uses.insert(span(expression.span()));
+            self.uses
+                .insert(span(expression.get_inner_expression().span()));
         }
     }
 }
@@ -64,7 +66,8 @@ impl<'a> Visit<'a> for Producers<'_> {
         });
         if self.returns_executor {
             if let Some(expression) = arrow.body.as_expression() {
-                self.uses.insert(span(expression.span()));
+                self.uses
+                    .insert(span(expression.get_inner_expression().span()));
             }
         }
         walk::walk_arrow_function_expression(self, arrow);
@@ -74,7 +77,8 @@ impl<'a> Visit<'a> for Producers<'_> {
     fn visit_return_statement(&mut self, statement: &ReturnStatement<'a>) {
         if self.returns_executor {
             if let Some(expression) = &statement.argument {
-                self.uses.insert(span(expression.span()));
+                self.uses
+                    .insert(span(expression.get_inner_expression().span()));
             }
         }
         walk::walk_return_statement(self, statement);
