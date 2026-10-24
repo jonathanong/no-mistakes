@@ -22,8 +22,16 @@ impl SchemaCatalog {
             if let Some(table) = self.model_tables.get(&normalized) {
                 return Some(table);
             }
-            // A bare stored key has no known qualified identity without a declared schema.
-            if qualifier.as_ref() != self.schema.as_ref() {
+            // Without a declared schema, a bare table key retains relation()'s qualified
+            // fallback. A competing view with the same bare name makes that identity unsafe.
+            if self.schema.is_none() && views.bare_keys.contains_key(&bare) {
+                return None;
+            }
+            if self
+                .schema
+                .as_ref()
+                .is_some_and(|schema| qualifier.as_ref() != Some(schema))
+            {
                 return None;
             }
             return self.relation(name);
