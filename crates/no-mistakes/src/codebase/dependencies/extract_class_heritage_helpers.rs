@@ -20,7 +20,7 @@ fn record_class_base_construction(
         }
         // Preserve the existing class-expression boundary; this fallback is
         // for declarations whose dynamic ancestry used to disappear entirely.
-        None if class.r#type == ClassType::ClassExpression => return,
+        None if class.r#type == oxc_ast::ast::ClassType::ClassExpression => return,
         None => ("<unknown>".to_string(), CallTargetIdentity::Unknown),
     };
     collector
