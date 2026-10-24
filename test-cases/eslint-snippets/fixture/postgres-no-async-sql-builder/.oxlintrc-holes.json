@@ -1,0 +1,14 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/postgres-no-async-sql-builder": [
+      "error",
+      { "builders": [{ "names": ["build"] }] }
+    ]
+  }
+}
