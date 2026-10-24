@@ -72,7 +72,11 @@ an exempt component key or file path to its required reason and default empty.
 defaults to `false`; enable it to skip `index` and underscore-private source
 files. Generic rule filters remain separate from these rule-local globs.
 
-## Effort
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: follows the component render graph and resolves dynamic and mock boundary imports for transitive coverage. **Low**: proves direct story coverage only and routes transitive coverage and export-kind boundary exemptions to `unanalyzable`. No partner rule is required.
 
 `max` is the default and preserves transitive component coverage and dynamic or
 mock boundary analysis. Use the shared `options.effort: low` to check direct
@@ -131,6 +135,17 @@ and reuse the same source inventory and parse.
 The same file and line suppression directives suppress low-effort findings and
 advisories. Existing parse-error diagnostics continue to follow `unanalyzable`
 at both efforts.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (a parse-error file under `include`, and at low effort a child component covered only through a parent's render chain) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `src/UserCard.tsx:1: unanalyzable (file has a parse error)`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
 
 ## Valid example
 

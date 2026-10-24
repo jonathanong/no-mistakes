@@ -121,7 +121,11 @@ of finding. `tests.playwright.selectors.htmlIds` defaults to `false`, and
 `tests.playwright.testIdAttribute` overrides static config discovery when set.
 Shared `effort` and `unanalyzable` options apply as described below.
 
-## Effort
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: recovers identifier, helper, ternary, map, and imported bindings into exact test IDs before judging selector coverage; route coverage is unchanged. **Low**: accepts only string-literal attributes and props with literal defaults and routes other selector shapes to `unanalyzable`. No partner rule is required; if any application is not `low`, the invocation stays at `max`.
 
 `effort: max` is the default. It recovers identifier, helper, ternary, object
 map, and imported bindings into exact test IDs before judging selector
@@ -166,6 +170,17 @@ Suppress a low-effort shape on its own line:
 // no-mistakes-disable-next-line playwright-coverage
 <button data-testid={id} />
 ```
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (at low effort, selectors given by an identifier without a literal default, a ternary, template, helper call, or cross-file binding) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `web/app/page.tsx:12: selector [data-testid="{id}"] is unanalyzable at effort low`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
 
 ## Valid example
 

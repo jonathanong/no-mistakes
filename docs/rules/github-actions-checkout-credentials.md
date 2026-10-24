@@ -145,6 +145,18 @@ a more restrictive token, and this rule does not read the caller. With
 is a finding, because the option treats that missing key as write. A null
 `persist-credentials` value is not a finding either.
 
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+
+- This rule has no unanalyzable inputs: it judges the literal `persist-credentials` setting of parsed `actions/checkout` steps. Nothing is routed through `options.unanalyzable`.
+
 ## Suppression
 
 Use a YAML comment. `no-mistakes-disable-next-line github-actions-checkout-credentials`

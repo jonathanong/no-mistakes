@@ -139,7 +139,11 @@ Use `no-mistakes-disable-file nextjs-redirect-destinations` to opt a Next.js
 config out, or `no-mistakes-disable-next-line nextjs-redirect-destinations`
 on a destination line.
 
-## Effort
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: recovers helper, binding, `.map()` callback, and template destinations. **Low**: accepts only literal arrays and objects returned from `redirects()` / `rewrites()` and routes everything else to `unanalyzable`. No partner rule is required.
 
 `effort: max` is the default and preserves helper, binding, map-callback, and
 template inference described below. At effective `effort: low`, this rule
@@ -192,6 +196,17 @@ async redirects() {
   return rows.map((row) => row);
 }
 ```
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (at low effort, identifiers, helpers, `.map()` callbacks, spreads, destructuring, and interpolated templates; at either effort, an unreadable or unparsable `next.config.*`) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `next.config.ts: redirects() destinations are unanalyzable at effort low`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
 
 ## Static destination construction
 

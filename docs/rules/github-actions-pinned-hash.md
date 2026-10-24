@@ -91,6 +91,18 @@ rules:
         - .github/workflows/release.yml
 ```
 
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+
+- This rule has no unanalyzable inputs: it judges the literal `uses:` reference text. Nothing is routed through `options.unanalyzable`.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line github-actions-pinned-hash` to suppress a

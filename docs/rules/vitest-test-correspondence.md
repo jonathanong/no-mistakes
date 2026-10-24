@@ -66,6 +66,18 @@ duplicate stem policy that matches the repository naming convention. When
 `stemSuffixesToStrip` is set, use the suffixes named in the finding to map the
 rejected path onto the configured naming convention.
 
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+
+- This rule has no unanalyzable inputs: it judges the presence of sibling test files. Nothing is routed through `options.unanalyzable`.
+
 ## Suppression
 
 Use a narrow exclude for generated or adapter-only sources. Use the file

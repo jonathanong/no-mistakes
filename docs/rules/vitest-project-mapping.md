@@ -125,6 +125,18 @@ it('has two matching projects', () => {});
 Make project globs mutually exclusive, add the missing include, or enable
 `explicitProjectsOnly` for a runtime-generated config with explicit ownership.
 
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+
+- This rule has no unanalyzable inputs: it maps test files to configured Vitest projects by glob. Nothing is routed through `options.unanalyzable`.
+
 ## Suppression
 
 Prefer correcting project ownership. Use a file directive only for a generated

@@ -120,6 +120,18 @@ is judged too. `options:` on a service is read for `-p` and `--publish`.
 An empty list item is not a publish. A container port alone, including a
 flow list such as `ports: [6004]`, is not a finding.
 
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+
+- This rule has no unanalyzable inputs: it judges literal Docker port mappings in parsed workflow input. Nothing is routed through `options.unanalyzable`.
+
 ## Suppression
 
 Use a YAML comment. `no-mistakes-disable-next-line github-actions-docker-host-ports`

@@ -65,7 +65,11 @@ rules:
 `timeout-minutes` must be a number or numeric string. Invalid YAML is a
 diagnostic, and unused `allow` entries for jobs in scanned files are findings.
 
-## Effort
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: compares every step timeout with the job timeout. **Low**: skips the redundant per-step comparison when enabled `github-actions-step-timeouts` partners certify a literal step cap. Without a covering partner it falls back to `max` with a warning.
 
 `effort: max` is the default and keeps every job and step comparison above.
 `effort: low` uses enabled, unsuppressed
@@ -141,6 +145,12 @@ comparison: a five-minute step exceeds that job even though it satisfies the
 partner's cap. At `max`, the job rule also reports a step exceeding a job's
 timeout. A low-effort report can therefore have fewer *job-rule* findings;
 the partner reports over-cap steps.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+
+- This rule has no unanalyzable inputs: it judges literal `timeout-minutes` values and their sums, and a missing, malformed, or over-cap value is a definite finding. Nothing is routed through `options.unanalyzable`.
 
 ## Valid example
 
