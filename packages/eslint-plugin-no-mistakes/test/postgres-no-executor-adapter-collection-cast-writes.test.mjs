@@ -31,15 +31,13 @@ function reports(name) {
 
 describe("postgres-no-executor-adapter cast writes", () => {
   it("invalidates typed collection methods written through assertions", () => {
-    assert.deepEqual(reports("cast-write-properties.ts"), [
-      [5, "passed"],
-      [9, "passed"],
-      [13, "passed"],
-      [18, "passed"],
-      [22, "passed"],
-      [26, "passed"],
-      [30, "passed"],
-    ]);
+    assert.deepEqual(reports("cast-write-direct.ts"), [[5, "passed"]]);
+    assert.deepEqual(reports("cast-write-delete.ts"), [[5, "passed"]]);
+    assert.deepEqual(reports("cast-write-computed.ts"), [[5, "passed"]]);
+    assert.deepEqual(reports("cast-write-dynamic-member.ts"), [[6, "passed"]]);
+    assert.deepEqual(reports("cast-write-proto.ts"), [[5, "passed"]]);
+    assert.deepEqual(reports("cast-write-destructure.ts"), [[5, "passed"]]);
+    assert.deepEqual(reports("cast-write-constructor-prototype.ts"), [[5, "passed"]]);
     assert.deepEqual(reports("cast-write-iteration.ts"), [[5, "passed"]]);
     assert.deepEqual(reports("cast-write-globalthis.ts"), [[5, "passed"]]);
     assert.deepEqual(reports("cast-write-dynamic-globalthis.ts"), [[6, "passed"]]);

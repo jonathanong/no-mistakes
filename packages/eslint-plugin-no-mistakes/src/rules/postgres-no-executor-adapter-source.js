@@ -29,6 +29,20 @@ function sourceWrites(source, checker, facts, program) {
       node = node.expression;
     return node;
   }
+  function builtinCollectionType(node) {
+    const type = checker.getTypeAtLocation(node);
+    const symbol = type?.symbol,
+      name = symbol?.getName();
+    return ["Map", "WeakMap", "Set", "WeakSet"].includes(name) &&
+      symbol.declarations?.length &&
+      symbol.declarations.every(
+        (declaration) =>
+          program.isSourceFileDefaultLibrary(declaration.getSourceFile()) &&
+          declaration.name?.text === name,
+      )
+      ? type
+      : null;
+  }
   function writtenCollectionMember(node) {
     const target = unwrap(node);
     if (!target?.expression) return;
@@ -40,7 +54,7 @@ function sourceWrites(source, checker, facts, program) {
         (text?.startsWith("'") && text.endsWith("'")))
         ? argument.text
         : null;
-    const property = target.name?.escapedText ?? computedName;
+    const property = target.name?.text ?? computedName;
     const receiver = unwrap(target.expression);
     if (receiver?.escapedText === "globalThis") {
       const symbol = checker.getSymbolAtLocation(receiver);
@@ -63,19 +77,13 @@ function sourceWrites(source, checker, facts, program) {
         result.uncertainMutation = true;
       return;
     }
-    const type = checker.getTypeAtLocation(receiver),
-      collection = type?.symbol;
-    const name = collection?.getName();
-    if (
-      !["Map", "WeakMap", "Set", "WeakSet"].includes(name) ||
-      !collection.declarations?.length ||
-      !collection.declarations.every(
-        (declaration) =>
-          program.isSourceFileDefaultLibrary(declaration.getSourceFile()) &&
-          declaration.name?.text === name,
-      )
-    )
-      return;
+    let type = builtinCollectionType(receiver);
+    if (!type && receiver?.name?.escapedText === "prototype") {
+      const constructor = unwrap(receiver.expression);
+      if (constructor?.name?.escapedText === "constructor")
+        type = builtinCollectionType(unwrap(constructor.expression));
+    }
+    if (!type) return;
     const methods =
       property === "__proto__" || property == null
         ? checker.getPropertiesOfType(type)
