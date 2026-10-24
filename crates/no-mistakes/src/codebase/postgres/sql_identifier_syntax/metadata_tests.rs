@@ -21,7 +21,10 @@ fn executor_metadata_is_not_an_additional_sql_obligation() {
             .iter()
             .filter(|row| row["file"] == "src/query.mts" && row["line"] == index + 1)
             .count();
-        if line.contains("SQL is known") {
+        if line.contains("SQL is known")
+            || line.contains("INITIALIZER_CLEAR")
+            || line.contains("SHADOW_CLEAR")
+        {
             assert_eq!(count, 0, "{rows:#?}");
         } else if line.contains("exactly the dynamic")
             || line.contains("Unknown helper")
@@ -29,6 +32,8 @@ fn executor_metadata_is_not_an_additional_sql_obligation() {
             || line.contains("// ADVISE:")
         {
             assert_eq!(count, 1, "line {}: {rows:#?}", index + 1);
+        } else if line.contains("// FALLBACK:") {
+            assert!(count > 0, "{rows:#?}");
         }
     }
 }
