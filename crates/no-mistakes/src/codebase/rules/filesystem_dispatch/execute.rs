@@ -6,7 +6,8 @@ mod next_config;
 mod parallel;
 mod special;
 mod timing;
-use parallel::{run_enabled_rules, trace_rule};
+use parallel::run_enabled_rules;
+pub(super) use parallel::trace_rule;
 pub(super) type ResultAccumulator = Mutex<Vec<(&'static str, Result<Vec<RuleFinding>>)>>;
 
 pub(super) struct RuleRunInputs<'a> {
@@ -163,7 +164,8 @@ fn run_prepared_filesystem_rules(
     }
     if let Some(facts) = facts {
         findings.extend(
-            super::postgres_unanalyzable_schema::diagnostics(root, config, files, facts)?.findings,
+            super::super::postgres_unanalyzable_schema::diagnostics(root, config, files, facts)?
+                .findings,
         );
     }
     if !defer_suppression {

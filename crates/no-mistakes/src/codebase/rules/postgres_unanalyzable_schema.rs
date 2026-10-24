@@ -113,7 +113,18 @@ fn append_rule(
     output: &mut AnalysisDiagnostics,
 ) -> Result<()> {
     for path in postgres_sql_paths(root, files, schema)? {
-        let file = facts.postgres_schema_file(&path)?;
+        let file = if matches!(
+            rule_id,
+            "postgres-idempotent-insert" | "postgres-no-generated-column-writes"
+        ) {
+            // These scans tolerate recorded source failures but still reject missing fact demand.
+            let Some(file) = facts.postgres_readable_schema(&path)? else {
+                continue;
+            };
+            file
+        } else {
+            facts.postgres_schema_file(&path)?
+        };
         let rel = relative_slash_path(root, &path);
         for statement in &file.unanalyzable_statements {
             let line = statement.line.max(1);

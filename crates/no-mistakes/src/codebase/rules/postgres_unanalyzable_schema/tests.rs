@@ -116,3 +116,24 @@ fn line_suppressions_apply_to_marker_findings() {
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].line, 4);
 }
+
+#[test]
+fn readable_schema_rules_keep_their_source_failure_tolerance() {
+    let root = fixture().join("unreadable");
+    let config = load_v2_config(&root, Some(&root.join("report.yml"))).unwrap();
+    let files = vec![root.join("migrations/bad.sql")];
+    let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+        &root,
+        &files,
+        source_store_for_files(&files),
+        &config,
+        &[
+            "postgres-idempotent-insert",
+            "postgres-no-generated-column-writes",
+        ],
+    )
+    .unwrap();
+    let output = diagnostics(&root, &config, &files, &facts).unwrap();
+    assert!(output.findings.is_empty());
+    assert!(output.advisories.is_empty());
+}

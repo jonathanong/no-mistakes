@@ -5,7 +5,7 @@ pub(super) fn run_enabled_rules(inputs: &RuleRunInputs<'_>) {
     crate::filesystem_rules!(run_rules);
 }
 
-pub(super) fn trace_rule<T>(
+pub(in crate::codebase::rules::filesystem_dispatch) fn trace_rule<T>(
     sources: &crate::codebase::ts_source::SourceStore,
     rule_id: &str,
     run: impl FnOnce() -> T,
