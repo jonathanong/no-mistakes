@@ -117,12 +117,14 @@ fn saved_unknown_shapes_obey_each_policy_and_effort_with_suppressions() {
                     );
                 }
             }
+            // Compare paths as components so this fixture accounting also holds on Windows.
+            let workflow_dir = root.join(".github").join("workflows");
             assert_eq!(
                 sources.physical_read_count(),
                 files
                     .iter()
                     .filter(|path| path.extension().is_some_and(|ext| ext == "yml")
-                        && path.to_string_lossy().contains("/workflows/"))
+                        && path.parent() == Some(workflow_dir.as_path()))
                     .count()
             );
         }
