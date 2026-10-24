@@ -19,6 +19,12 @@ fn cached_invalid_utf8_accounts_directives_without_rereading_or_recovering_sourc
         let original_error = sources.read_path(&path).unwrap_err();
         assert_eq!(sources.physical_read_count(), 1);
 
+        // Absolute provenance is accepted only after explicit snapshot trust.
+        sources.register_trusted_regular_paths(
+            std::slice::from_ref(&path),
+            std::slice::from_ref(&root),
+        );
+
         // The saved invalid bytes must remain an error for every analyzer, even
         // after suppression accounts for the deferred unreadable-input finding.
         for source_file in [file.clone(), path.to_string_lossy().into_owned()] {
