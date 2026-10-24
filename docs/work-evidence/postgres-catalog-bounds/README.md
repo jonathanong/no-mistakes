@@ -80,3 +80,24 @@ ignored), 444 binary tests, 1,388 integration tests and all 575 compiled native
 API tests. The default CLI has a clean repository check, and all 40 fixture
 outputs match the pre-rebase candidate byte for byte. The comparison artifact
 records the new executable hash separately from the original measured build.
+
+Review fix `787025372` replaces per-lookup catalog collision scans with the
+existing request-scoped name indexes. Empty view policies skip view lookup, and
+catalogs with no views skip table collision indexing. Two fixture-backed
+operation-count tests ensure 12,000 warmed-up table/view lookups do not split
+catalog keys again, and 1,000 no-view lookups build no collision index.
+
+All 469 focused tests and all 575 compiled native tests pass after this fix.
+All 469 focused LLVM tests pass without filename exclusions: view identity
+covers 63/63 lines and view policy covers 25/25; see the
+[updated report](review-focused-coverage.json). Clippy, formatting, ast-grep,
+complexity and physical caps pass. The final default CLI has a clean repository
+check, and all 40 saved configuration outputs match the pre-review candidate
+byte for byte. The comparison artifact records its executable hash. Review
+coverage build output is removed after reporting.
+
+The operation counter is subsequently moved into a sibling module behind the
+existing `test-instrumentation` feature pattern (`7e3b17af0`), meeting the
+repository's ban on inline test-only source items. All 469 focused tests and
+Clippy pass again; the measured view helpers are unchanged. The counter remains
+absent from default production builds.

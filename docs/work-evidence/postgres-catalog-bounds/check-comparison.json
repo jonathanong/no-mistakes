@@ -775,5 +775,15 @@
     "base": "4c1bc0e04b70b677a2b15a04394363f5eff1df8a",
     "sha256": "149174828f48dda79d727283c99bf20344ba828c67f58bc832c5589facb8eb74",
     "outputComparison": "All 40 saved configuration outputs match the pre-rebase candidate."
+  },
+  "reviewCandidate": {
+    "revision": "787025372d4d7f2ae7db971d7458eeae863a448e",
+    "sha256": "2693025a6df2722cdef8a34e91967c53dc834e8b511b9e4d54d0dc53806c318d",
+    "outputComparison": "All 40 saved configuration outputs match the pre-review candidate."
+  },
+  "reviewFinalCandidate": {
+    "revision": "7e3b17af0",
+    "sha256": "fb5a956af7ea4940cd83331cf0947c5167c520ddffbc5b346e600fbd0c98eca5",
+    "outputComparison": "All 40 saved configuration outputs match the pre-review candidate; repository check clean after counter module relocation."
   }
 }
