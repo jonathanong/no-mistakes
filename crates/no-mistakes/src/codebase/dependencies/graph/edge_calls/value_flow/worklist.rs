@@ -17,6 +17,10 @@ pub(in super::super::super) fn refine_value_calls(
     if pass.parameter_cache.site_storage.cloning() || pass.parameter_cache.site_storage.original() {
         return owned_worklist::refine_value_calls(inputs, facts, resolver, indexes, pass);
     }
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    if result_tests::original() {
+        return result_oracle::refine_value_calls(inputs, facts, resolver, indexes, pass);
+    }
     let base = pass.sites.clone();
     let mut incoming = incoming_inputs(&base, &pass.constructor_routes, indexes, facts);
     let replacements = replacement_catalog::ReplacementCatalog::prepare(
@@ -77,11 +81,13 @@ pub(in super::super::super) fn refine_value_calls(
                     },
                     enabled,
                 );
-                (index, previous, used)
+                (index, PreviousCallNodes::project(previous, site), used)
             })
             .collect();
+        #[cfg(all(test, feature = "test-instrumentation"))]
+        result_tests::record_buffer(&results, results.capacity());
         let mut changed = fx_set();
-        for (index, mut previous, used) in results {
+        for (index, previous, used) in results {
             let site = &mut pass.sites[index];
             for key in previous_dependencies.remove(&index).into_iter().flatten() {
                 if let Some(users) = dependencies.get_mut(&key) {
@@ -92,10 +98,11 @@ pub(in super::super::super) fn refine_value_calls(
                 dependencies.entry(key.clone()).or_default().insert(index);
             }
             previous_dependencies.insert(index, used);
-            if previous.0 != site.target || previous.1 != site.target_node {
-                swap_resolution(site, &mut previous);
-                for key in function_keys(site) {
+            if previous.changed() {
+                for key in node_function_keys(site.invocation, previous.target_nodes()) {
                     if let Some(arguments) = incoming.get_mut(&key) {
+                        // Incoming arguments use only physical call fields, so
+                        // changing target/node does not change their identity.
                         let previous = site_argument(site, indexes, facts);
                         if let Some(position) =
                             arguments.iter().position(|argument| argument == &previous)
@@ -105,7 +112,6 @@ pub(in super::super::super) fn refine_value_calls(
                     }
                     changed.insert(key);
                 }
-                swap_resolution(site, &mut previous);
                 for key in function_keys(site) {
                     incoming
                         .entry(key.clone())
@@ -132,6 +138,8 @@ pub(in super::super::super) fn refine_value_calls(
     }
     #[cfg(feature = "test-instrumentation")]
     super::super::super::value_flow_metrics::record(visits.values().sum());
+    #[cfg(all(test, feature = "test-instrumentation"))]
+    result_tests::record_dependencies(&dependencies, &previous_dependencies, &visits);
     let mut processed: Vec<_> = visits.into_keys().collect();
     processed.sort_unstable();
     replace_call_edges(&mut pass.edges, &base, &pass.sites, &processed, |site| {
@@ -155,36 +163,6 @@ pub(in super::super::super) fn refine_value_calls(
 include!("worklist_edges.rs");
 include!("site_ownership.rs");
 
-fn function_keys(site: &ResolvedCallSite) -> impl Iterator<Item = FunctionKey> + '_ {
-    site.target_nodes().filter_map(move |node| {
-        if site.invocation == InvocationKind::Membership {
-            return None;
-        }
-        match node {
-            NodeId::Symbol {
-                file,
-                callable_id: Some(id),
-                ..
-            } => Some((file.to_path_buf(), *id)),
-            _ => None,
-        }
-    })
-}
-fn site_argument(
-    site: &ResolvedCallSite,
-    indexes: &CallableResolutionIndexes,
-    facts: &dyn TsFactLookup,
-) -> ParameterInput {
-    ParameterInput::from_site(site, indexes, facts)
-}
-
-fn site_source(inputs: &GraphEdgeBuildInputs<'_>, site: &ResolvedCallSite) -> NodeId {
-    site.caller.as_deref().map_or_else(
-        || NodeId::file_in(&inputs.interner, &site.file),
-        |caller| NodeId::scoped_in(&inputs.interner, &site.file, caller, site.caller_id),
-    )
-}
-
 #[cfg(test)]
 #[path = "replacement_edges_tests.rs"]
 mod tests;
@@ -192,3 +170,10 @@ mod tests;
 #[cfg(all(test, feature = "test-instrumentation"))]
 #[path = "worklist_owned_oracle_tests.rs"]
 mod owned_worklist;
+
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "result_buffer_oracle_tests.rs"]
+mod result_oracle;
+#[cfg(all(test, feature = "test-instrumentation"))]
+#[path = "result_projection_tests.rs"]
+mod result_tests;
