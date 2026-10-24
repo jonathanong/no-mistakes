@@ -1,0 +1,62 @@
+{
+  "scope": "2154 focused tests, 2 existing ignored; no filename exclusions",
+  "note": "Marker helper contents unchanged by the later token/whitespace-only module extraction.",
+  "files": [
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/migration/dynamic/routine/wrapper.rs",
+      "sha256": "d98b6be1e1ccc0a9bd19a2ed4e5c5342814bf03a29f85cef2c0ec2b5171512ff",
+      "lines": {
+        "count": 24,
+        "covered": 21,
+        "percent": 87.5
+      },
+      "functions": {
+        "count": 4,
+        "covered": 4,
+        "percent": 100.0
+      }
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/migration/dynamic_merge.rs",
+      "sha256": "98761c4401292f9d7dcaaf41c1ead8f3a6810f3ba405a049a3e5cff3ac9e2c4b",
+      "lines": {
+        "count": 72,
+        "covered": 72,
+        "percent": 100.0
+      },
+      "functions": {
+        "count": 9,
+        "covered": 9,
+        "percent": 100.0
+      }
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/failure.rs",
+      "sha256": "6a9e2e62bc058a7cd5eaacddb214db20859c1c9be7b81274e68dfd37805dd53b",
+      "lines": {
+        "count": 59,
+        "covered": 59,
+        "percent": 100.0
+      },
+      "functions": {
+        "count": 5,
+        "covered": 5,
+        "percent": 100.0
+      }
+    },
+    {
+      "file": "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/procedural.rs",
+      "sha256": "6d03e73b87ace3b064f7ed1aab36d42858700157cad315e084a9295b28a2dbbf",
+      "lines": {
+        "count": 124,
+        "covered": 113,
+        "percent": 91.12903225806451
+      },
+      "functions": {
+        "count": 19,
+        "covered": 16,
+        "percent": 84.21052631578947
+      }
+    }
+  ]
+}
