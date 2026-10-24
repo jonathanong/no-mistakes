@@ -106,14 +106,7 @@ pub(crate) fn collect_with_types(
             output.profiles.push((profile.clone(), Vec::new()));
             continue;
         }
-        let mut calls = calls::project(profile, &selection, module, &syntax, &owners, source);
-        calls.extend(selection.runtime.iter().map(|at| SqlCall {
-            span: *at,
-            line: crate::codebase::ts_source::byte_offset_to_line(source, at.0 as usize),
-            input: Input::Unknown,
-        }));
-        calls.sort_by_key(|call| call.span);
-        calls.dedup_by_key(|call| call.span);
+        let calls = calls::project(profile, &selection, module, &syntax, &owners, source);
         output.profiles.push((profile.clone(), calls));
     }
     output
