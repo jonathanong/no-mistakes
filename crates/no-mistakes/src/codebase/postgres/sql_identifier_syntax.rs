@@ -21,6 +21,7 @@ pub(crate) enum Input {
         parameterized: Option<usize>,
         positions: Vec<super::EmbeddedSqlSourcePosition>,
     },
+    Recovered(std::sync::Arc<helper_recovery::Recovered>),
     Reference(Span),
     Unknown,
 }
@@ -30,16 +31,32 @@ pub(crate) struct SqlCall {
     pub line: u32,
     pub input: Input,
 }
-pub(crate) type OffsetLiteral = std::result::Result<Option<Vec<super::SqlOffsetFact>>, ()>;
+pub(crate) type OffsetLiteral = literal_projection::ProjectedLiteral<super::SqlOffsetFact>;
 pub(crate) type TransformedLiteral =
-    std::result::Result<Option<Vec<super::statements::SqlTransformedColumnUseFact>>, ()>;
+    literal_projection::ProjectedLiteral<super::statements::SqlTransformedColumnUseFact>;
 #[derive(Default)]
 pub(crate) struct FileFacts {
     pub low_applications: Vec<(EmbeddedSqlOptions, String, usize)>,
     pub profiles: Vec<(EmbeddedSqlOptions, Vec<SqlCall>)>,
-    pub transformed_literals:
-        std::sync::OnceLock<std::collections::BTreeMap<Span, TransformedLiteral>>,
-    pub offset_literals: std::sync::OnceLock<std::collections::BTreeMap<Span, OffsetLiteral>>,
+    pub recovery: helper_recovery::FileModels,
+    pub application_calls:
+        std::collections::BTreeMap<helper_recovery::ApplicationKey, Vec<SqlCall>>,
+    pub transformed_literals: std::sync::OnceLock<
+        std::collections::BTreeMap<
+            (Option<helper_recovery::ApplicationKey>, Span),
+            TransformedLiteral,
+        >,
+    >,
+    pub offset_literals: std::sync::OnceLock<
+        std::collections::BTreeMap<(Option<helper_recovery::ApplicationKey>, Span), OffsetLiteral>,
+    >,
+    /// One SQL parse per recovered alternative, shared by low policy projections.
+    pub recovered_statements: std::sync::OnceLock<
+        std::collections::BTreeMap<
+            (helper_recovery::ApplicationKey, Span),
+            Vec<Result<std::sync::Arc<super::SqlStatementFileFacts>, ()>>,
+        >,
+    >,
 }
 struct Call {
     span: Span,
@@ -47,7 +64,10 @@ struct Call {
     input: Input,
 }
 #[derive(Default)]
-struct Syntax {
+struct Syntax<'source> {
+    source: &'source str,
+    recovery_bindings: helper_recovery::lower::Bindings,
+    recovery: helper_recovery::FileModels,
     template_binds: template_binds::TemplateBinds,
     safe_parameterized: FxHashSet<Span>,
     metadata: metadata::Metadata,
@@ -82,15 +102,16 @@ fn chain(expression: &Expression<'_>) -> Option<(Span, Vec<String>)> {
     }
 }
 mod constants;
+pub(crate) mod helper_recovery;
 mod input;
 mod template_binds;
 use input::input;
 mod metadata;
 mod syntax_walk;
 
-struct Constants<'s> {
+struct Constants<'s, 'source> {
     wanted: &'s FxHashSet<Span>,
-    syntax: &'s mut Syntax,
+    syntax: &'s mut Syntax<'source>,
 }
 
 mod selection;

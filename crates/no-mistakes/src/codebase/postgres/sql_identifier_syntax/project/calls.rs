@@ -9,8 +9,8 @@ pub(super) fn project(
     syntax: &Syntax,
     owners: &Owners<'_>,
     source: &str,
-) -> Vec<SqlCall> {
-    let (mut calls, direct) = direct_calls(
+) -> (Vec<SqlCall>, FxHashSet<Span>) {
+    let (mut calls, direct, trusted) = direct_calls(
         profile,
         selection,
         syntax,
@@ -23,7 +23,7 @@ pub(super) fn project(
     append_runtime(selection, syntax, &direct, source, &mut calls);
     calls.sort_by_key(|call| call.span);
     calls.dedup_by_key(|call| call.span);
-    calls
+    (calls, trusted)
 }
 
 fn direct_calls(
@@ -33,7 +33,7 @@ fn direct_calls(
     owners: &Owners<'_>,
     source: &str,
     gaps: bool,
-) -> (Vec<SqlCall>, FxHashSet<Span>) {
+) -> (Vec<SqlCall>, FxHashSet<Span>, FxHashSet<Span>) {
     let Selection {
         selected,
         namespaces,
@@ -43,6 +43,7 @@ fn direct_calls(
     } = selection;
     let mut calls = Vec::new();
     let mut direct = FxHashSet::default();
+    let mut trusted = FxHashSet::default();
     for call in &syntax.calls {
         let Some((root, parts)) = &call.callee else {
             continue;
@@ -70,14 +71,17 @@ fn direct_calls(
             continue;
         }
         direct.insert(*root);
-        let value = if gaps
+        let uncertain = gaps
             || alias
             || (namespace && !typed)
             || loose
             || unsupported
                 .iter()
-                .any(|id| owner.is_some_and(|binding| binding.id == *id))
-        {
+                .any(|id| owner.is_some_and(|binding| binding.id == *id));
+        if !uncertain && !input::indirect_executor_call(parts) {
+            trusted.insert(call.span);
+        }
+        let value = if uncertain {
             Input::Unknown
         } else {
             call.input.clone()
@@ -88,7 +92,7 @@ fn direct_calls(
             input: normalize_input(value, syntax, owners),
         });
     }
-    (calls, direct)
+    (calls, direct, trusted)
 }
 
 fn append_escapes(

@@ -1,0 +1,39 @@
+effort: low
+unanalyzable: advise
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    name: unbounded-policy-file
+    options:
+      importSpecifier: "@example/db"
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ["src/policy-consumers.mts"]
+  - rule: postgres-no-offset
+    scope: repository
+    name: offset-policy-file
+    options:
+      importSpecifier: "@example/db"
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ["src/policy-consumers.mts"]
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    name: registry-policy-file
+    options:
+      importSpecifier: "@example/db"
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ["src/policy-consumers.mts"]
+  - rule: postgres-no-offset
+    scope: repository
+    name: offset-async-file
+    options:
+      importSpecifier: "@example/db"
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ["src/async.mts"]
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    name: uuid-policy-file
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ["src/policy-consumers.mts"]

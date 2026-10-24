@@ -41,12 +41,13 @@ pub(super) fn scan(
             .ts
             .get(path)
             .ok_or_else(|| anyhow::anyhow!("{RULE_ID}: prepared facts missing for {rel}"))?;
-        let calls = file
-            .sql_identifier_syntax
-            .profiles
-            .iter()
-            .find(|(profile, _)| profile == &opts.embedded)
-            .map(|(_, calls)| calls.as_slice());
+        let application =
+            crate::codebase::postgres::sql_identifier_syntax::helper_recovery::ApplicationKey::new(
+                &opts.embedded,
+                RULE_ID,
+                index,
+            );
+        let calls = file.sql_identifier_syntax.calls_for(&application);
         let Some(calls) = calls else {
             if file.parse_error.is_some() || file.ts.parse_error.is_some() {
                 continue;
@@ -60,31 +61,68 @@ pub(super) fn scan(
             if let Some(observer) = &observer {
                 observer.increment("postgres.no_offset.low.calls", 1);
             }
-            let result = match &call.input {
+            let is_unknown;
+            let mut invalid = false;
+            let mut has_violation = false;
+            match &call.input {
                 Input::Sql { source_span, .. } => {
-                    literals.get(source_span).cloned().unwrap_or(Ok(None))
-                }
-                _ => Ok(None),
-            };
-            let is_unknown = !matches!(&result, Ok(Some(_)));
-            let invalid = result.is_err();
-            let offsets = result.ok().flatten();
-            if let Some(offsets) = &offsets {
-                for offset in offsets {
-                    ordinal += 1;
-                    let mut offset = *offset;
-                    if crate::codebase::ts_source::matching_disable_directive(
-                        &source,
-                        Some(call.line),
-                        RULE_ID,
-                    )
-                    .is_some()
-                    {
-                        offset.line = call.line as usize;
+                    let result = literals
+                        .get(&(None, *source_span))
+                        .map(|value| match value {
+                            crate::codebase::postgres::sql_identifier_syntax::literal_projection::ProjectedLiteral::Direct(result) => result.clone(),
+                            _ => Ok(None),
+                        })
+                        .unwrap_or(Ok(None));
+                    is_unknown = !matches!(&result, Ok(Some(_)));
+                    invalid = result.is_err();
+                    if let Ok(Some(offsets)) = result {
+                        has_violation = !offsets.is_empty();
+                        for mut offset in offsets {
+                            ordinal += 1;
+                            if crate::codebase::ts_source::matching_disable_directive(
+                                &source,
+                                Some(call.line),
+                                RULE_ID,
+                            )
+                            .is_some()
+                            {
+                                offset.line = call.line as usize;
+                            }
+                            findings.push(super::scan::finding(&rel, &offset, ordinal));
+                        }
                     }
-                    findings.push(super::scan::finding(&rel, &offset, ordinal));
                 }
-            } else if is_unknown && opts.fail_unanalyzable {
+                Input::Recovered(proof) => {
+                    match literals.get(&(Some(application.clone()), call.span)) {
+                        Some(crate::codebase::postgres::sql_identifier_syntax::literal_projection::ProjectedLiteral::Recovered { alternatives, .. }) => {
+                            for (sql, facts) in alternatives {
+                                match facts {
+                                    Ok(offsets) => {
+                                        has_violation |= !offsets.is_empty();
+                                        for offset in offsets {
+                                            ordinal += 1;
+                                            let (origin, line) = crate::codebase::postgres::sql_identifier_syntax::helper_recovery::Recovered::position(sql, offset.line, offset.column, path);
+                                            let mut offset = *offset;
+                                            offset.line = line;
+                                            let mut origin_rel = relative_slash_path(root, origin);
+                                            if crate::codebase::ts_source::matching_disable_directive(&source, Some(call.line), RULE_ID).is_some() {
+                                                origin_rel = rel.clone();
+                                                offset.line = call.line as usize;
+                                            }
+                                            findings.push(super::scan::finding(&origin_rel, &offset, ordinal));
+                                        }
+                                    }
+                                    Err(()) => invalid = true,
+                                }
+                            }
+                        },
+                        _ => invalid = true,
+                    }
+                    is_unknown = !proof.complete() || invalid;
+                }
+                _ => is_unknown = true,
+            }
+            if is_unknown && opts.fail_unanalyzable {
                 findings.push(unknown(&rel, call));
             }
             if !context.wants_sql_verdicts() && !(is_unknown && opts.advise_unanalyzable) {
@@ -97,18 +135,20 @@ pub(super) fn scan(
                 subcheck: "offset".into(),
                 file: rel.clone(),
                 span: call.span,
-                status: match &offsets {
-                    None => SqlVerdictStatus::Abstain,
-                    Some(offsets) if offsets.is_empty() => SqlVerdictStatus::ProvenClear,
-                    Some(_) => SqlVerdictStatus::Violation,
+                status: if has_violation {
+                    SqlVerdictStatus::Violation
+                } else if is_unknown {
+                    SqlVerdictStatus::Abstain
+                } else {
+                    SqlVerdictStatus::ProvenClear
                 },
-                advisory: offsets.is_none() && opts.advise_unanalyzable,
+                advisory: is_unknown && opts.advise_unanalyzable,
                 evidence: None,
                 known_prefix: None,
                 helper_lines: Vec::new(),
                 residual_reasons: if invalid {
                     vec!["invalid-sql".into()]
-                } else if offsets.is_none() {
+                } else if is_unknown {
                     vec![format!("SQL is unanalyzable at effort low; {REWRITE}")]
                 } else {
                     Vec::new()
@@ -126,6 +166,15 @@ pub(super) fn scan(
 }
 
 fn unknown(file: &str, call: &SqlCall) -> RuleFinding {
-    RuleFinding { rule: RULE_ID.into(), file: file.into(), line: call.line as usize,
-        message: format!("{file}:{}: SQL is unanalyzable at effort low, so an OFFSET cannot be ruled out; {REWRITE}", call.line), import: None, target: Some("unanalyzable".into()) }
+    RuleFinding {
+        rule: RULE_ID.into(),
+        file: file.into(),
+        line: call.line as usize,
+        message: format!(
+            "{file}:{}: SQL is unanalyzable at effort low, so an OFFSET cannot be ruled out; {REWRITE}",
+            call.line
+        ),
+        import: None,
+        target: Some("unanalyzable".into()),
+    }
 }

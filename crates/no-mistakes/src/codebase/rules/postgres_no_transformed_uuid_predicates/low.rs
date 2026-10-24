@@ -2,7 +2,8 @@ use super::evaluate::Columns;
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::{
-    sql_identifier_syntax::Input, SqlObligationVerdict, SqlVerdictStatus,
+    sql_identifier_syntax::{literal_projection::ProjectedLiteral, Input},
+    SqlObligationVerdict, SqlVerdictStatus,
 };
 use crate::codebase::rules::PostgresFindings;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
@@ -36,13 +37,13 @@ pub(super) fn scan(
             .ts
             .get(path)
             .ok_or_else(|| anyhow::anyhow!("{RULE_ID}: prepared facts missing for {rel}"))?;
-        let Some(calls) = file
-            .sql_identifier_syntax
-            .profiles
-            .iter()
-            .find(|(profile, _)| profile == &opts.embedded)
-            .map(|(_, calls)| calls)
-        else {
+        let application =
+            crate::codebase::postgres::sql_identifier_syntax::helper_recovery::ApplicationKey::new(
+                &opts.embedded,
+                RULE_ID,
+                index,
+            );
+        let Some(calls) = file.sql_identifier_syntax.calls_for(&application) else {
             if file.parse_error.is_some() || file.ts.parse_error.is_some() {
                 continue;
             }
@@ -57,55 +58,116 @@ pub(super) fn scan(
                 RULE_ID,
             )
             .is_some();
-            let result = match &call.input {
-                Input::Sql { source_span, .. } => {
-                    literals.get(source_span).cloned().unwrap_or(Ok(None))
-                }
-                _ => Ok(None),
-            };
             let mut status = SqlVerdictStatus::ProvenClear;
             let mut reasons = Vec::new();
-            match result {
-                Ok(Some(uses)) => {
-                    for use_ in &uses {
-                        match columns.resolve(use_) {
-                            Ok((table, true)) => {
-                                status = SqlVerdictStatus::Violation;
-                                let mut finding = super::scan::finding(&rel, table, use_);
-                                if suppressed_call {
-                                    finding.line = call.line as usize;
+            let mut uncertain = false;
+            match &call.input {
+                Input::Sql { source_span, .. } => match literals.get(&(None, *source_span)) {
+                    Some(ProjectedLiteral::Direct(Ok(Some(uses)))) => {
+                        for use_ in uses {
+                            match columns.resolve(use_) {
+                                Ok((table, true)) => {
+                                    status = SqlVerdictStatus::Violation;
+                                    let mut finding = super::scan::finding(&rel, table, use_);
+                                    if suppressed_call {
+                                        finding.line = call.line as usize;
+                                    }
+                                    findings.push(finding);
                                 }
-                                findings.push(finding);
+                                Err(reason) => {
+                                    uncertain = true;
+                                    if status != SqlVerdictStatus::Violation {
+                                        status = SqlVerdictStatus::Abstain;
+                                    }
+                                    reasons.push(reason.into());
+                                    if opts.fail_unanalyzable {
+                                        let line = if suppressed_call {
+                                            call.line as usize
+                                        } else {
+                                            use_.line
+                                        };
+                                        findings.push(super::scan::unknown(&rel, line));
+                                    }
+                                }
+                                _ => {}
                             }
-                            Err(reason) => {
-                                if status != SqlVerdictStatus::Violation {
-                                    status = SqlVerdictStatus::Abstain;
+                        }
+                    }
+                    Some(ProjectedLiteral::Direct(Err(())))
+                    | Some(ProjectedLiteral::Direct(Ok(None)))
+                    | None => {
+                        uncertain = true;
+                        status = SqlVerdictStatus::Abstain;
+                        reasons.push("SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max".into());
+                        if opts.fail_unanalyzable {
+                            findings.push(super::scan::unknown(&rel, call.line as usize));
+                        }
+                    }
+                    _ => cache::mark_input_unknown(&mut status, &mut uncertain, &mut reasons),
+                },
+                Input::Recovered(proof) => {
+                    let mut invalid = false;
+                    if let Some(ProjectedLiteral::Recovered { alternatives, .. }) =
+                        literals.get(&(Some(application.clone()), call.span))
+                    {
+                        for (sql, facts) in alternatives {
+                            match facts {
+                                Ok(uses) => {
+                                    for use_ in uses {
+                                        match columns.resolve(use_) {
+                                            Ok((table, true)) => {
+                                                status = SqlVerdictStatus::Violation;
+                                                let mut finding = cache::recovered_finding(
+                                                    root, path, sql, use_, table,
+                                                );
+                                                if suppressed_call {
+                                                    finding.file = rel.clone();
+                                                    finding.line = call.line as usize;
+                                                }
+                                                findings.push(finding);
+                                            }
+                                            Err(reason) => {
+                                                uncertain = true;
+                                                if status != SqlVerdictStatus::Violation {
+                                                    status = SqlVerdictStatus::Abstain;
+                                                }
+                                                reasons.push(reason.into());
+                                                if opts.fail_unanalyzable {
+                                                    findings.push(super::scan::unknown(
+                                                        &rel,
+                                                        call.line as usize,
+                                                    ));
+                                                }
+                                            }
+                                            _ => {}
+                                        }
+                                    }
                                 }
-                                reasons.push(reason.into());
-                                if opts.fail_unanalyzable {
-                                    let line = if suppressed_call {
-                                        call.line as usize
-                                    } else {
-                                        use_.line
-                                    };
-                                    findings.push(super::scan::unknown(&rel, line));
+                                Err(()) => {
+                                    invalid = true;
+                                    uncertain = true;
                                 }
                             }
-                            _ => {}
+                        }
+                    } else {
+                        invalid = true;
+                    }
+                    if !proof.complete() || invalid {
+                        uncertain = true;
+                        cache::mark_uncertain(&mut status, &mut reasons, invalid);
+                        if opts.fail_unanalyzable {
+                            findings.push(super::scan::unknown(&rel, call.line as usize));
                         }
                     }
                 }
                 _ => {
-                    status = SqlVerdictStatus::Abstain;
-                    reasons.push("SQL is unanalyzable at effort low; pass a literal string or interpolation-free template directly to the imported executor or through one local const, or use effort max".into());
+                    cache::mark_input_unknown(&mut status, &mut uncertain, &mut reasons);
                     if opts.fail_unanalyzable {
                         findings.push(super::scan::unknown(&rel, call.line as usize));
                     }
                 }
             }
-            if !context.wants_sql_verdicts()
-                && !(status == SqlVerdictStatus::Abstain && opts.advise_unanalyzable)
-            {
+            if !context.wants_sql_verdicts() && !(uncertain && opts.advise_unanalyzable) {
                 continue;
             }
             let verdict = SqlObligationVerdict {
@@ -116,7 +178,7 @@ pub(super) fn scan(
                 file: rel.clone(),
                 span: call.span,
                 status,
-                advisory: status == SqlVerdictStatus::Abstain && opts.advise_unanalyzable,
+                advisory: uncertain && opts.advise_unanalyzable,
                 evidence: None,
                 known_prefix: None,
                 helper_lines: Vec::new(),

@@ -48,6 +48,10 @@ uncertainty at that invocation. A global-looking intrinsic call is still opaque
 until the analysis proves no local binding or mutation overrides it. Configured callback
 and factory wrappers transport executor values; their callback parameter
 headers do not create extra SQL obligations.
+The four SQL structure low rules also support
+[bounded helper and builder recovery](low-helper-recovery.md): a helper transport
+is cleared only after its executor uses are analyzed. Opaque helpers and
+unmodeled executable callbacks retain uncertainty at their actual invocation.
 
 An assertion (`as T` or `<T>value`) or `satisfies T` with a possible configured
 executor type does not create a SQL obligation by itself. The low pass carries

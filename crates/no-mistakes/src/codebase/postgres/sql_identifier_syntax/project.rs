@@ -37,6 +37,8 @@ pub(crate) fn collect_with_types(
         })
         .collect::<Vec<_>>();
     let mut syntax = Syntax {
+        source,
+        recovery_bindings: helper_recovery::lower::Bindings::new(module),
         metadata: metadata::Metadata::new(module, &selections),
         template_binds: template_binds::TemplateBinds::new(module, source),
         loose_query: profiles.iter().any(|profile| {
@@ -107,9 +109,22 @@ pub(crate) fn collect_with_types(
             output.profiles.push((profile.clone(), Vec::new()));
             continue;
         }
-        let calls = calls::project(profile, &selection, module, &syntax, &owners, source);
+        syntax.recovery.executors.insert(
+            profile.clone(),
+            selection
+                .selected
+                .union(&selection.typed)
+                .filter(|id| !selection.unsupported.contains(id))
+                .copied()
+                .collect(),
+        );
+        let (calls, trusted) =
+            calls::project(profile, &selection, module, &syntax, &owners, source);
+        syntax.recovery.sinks.insert(profile.clone(), trusted);
         output.profiles.push((profile.clone(), calls));
     }
+    syntax.recovery.validate(&syntax.template_binds);
+    output.recovery = syntax.recovery;
     output
 }
 

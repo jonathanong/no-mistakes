@@ -77,9 +77,9 @@ not a lexical `${...}` scan of the call span.
 ### Effort
 
 The default `effort: max` preserves cross-file provenance, helper validation,
-and the existing findings. `effort: low` skips JavaScript value evaluation,
-call-graph construction, and cross-file provenance for this rule. It reads
-the shared parsed program and semantic binding facts instead.
+and the existing findings. `effort: low` skips the max-effort evaluator and call-graph construction. It
+uses shared parsed-program facts and a [bounded helper and builder
+analysis](../postgres-facts/low-helper-recovery.md).
 
 Low accepts a literal SQL string or untagged template directly at a configured
 named imported executor or proven typed parameter, or through one same-file
@@ -93,7 +93,7 @@ Direct `process.env.KEY` relation inputs whose `process` binding is not shadowed
 remain proven violations;
 a template such as `SELECT * FROM public.users WHERE id = ${id}` stays clear.
 
-Helpers, unmodeled tags, alias chains, imported SQL values, computed executor selections,
+Unmodeled helpers, unmodeled tags, alias chains, imported SQL values, computed executor selections,
 unsupported factory executors, unproven type receivers, and CommonJS loaders are unanalyzable at low.
 Erased type references create no findings. Supported typed parameter calls share
 the named executor contract; unsupported SQL and runtime escapes are diagnosed
@@ -105,8 +105,8 @@ Configured typed callbacks and supported factory bindings share the literal SQL
 contract described in [executor bindings](../postgres-facts/executor-bindings.md).
 Companion receiver arguments are exempt only for helpers selected by
 `executorFactoryNames`; a typed callback cannot exempt an opaque helper.
-Other wrapper uses remain unknown at low; select max or expose a directly
-configured executor. Namespace
+Other wrapper uses remain unknown unless bounded analysis proves every
+executor use; select max or expose a directly configured executor. Namespace
 executor calls and escapes are also unanalyzable; unrelated named methods stay outside
 the configured target scope. Rewrite SQL at the direct imported call, keep
 relation names literal, and pass external values as bind parameters. For example:
@@ -116,7 +116,7 @@ relation names literal, and pass external values as bind parameters. For example
 const statement = `SELECT id FROM public.users WHERE tenant = ${process.env.TENANT}`;
 query(statement);
 
-// Unanalyzable at low: expose the statement at the executor instead.
+// Unanalyzable if the helper cannot be resolved or exceeds the low limits.
 query(buildStatement());
 ```
 
@@ -135,7 +135,7 @@ Following recall over precision ([how analysis
 works](../../README.md#how-analysis-works)), inputs this rule cannot prove are
 never treated as clean; they follow `options.unanalyzable`.
 
-- At low: helpers, unmodeled tags, alias chains, imported SQL values, computed executor
+- At low: unmodeled helpers, unmodeled tags, alias chains, imported SQL values, computed executor
   selections, unsupported factory executors or unproven type receivers, CommonJS loaders,
   and untyped wrapper callbacks, for example `query(buildStatement())`. At max
   the rule abstains on a runtime-computed environment key (`process.env[key]`)

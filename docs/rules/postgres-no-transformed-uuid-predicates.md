@@ -98,6 +98,8 @@ statement. Multiple failures keep separate locations, so a `disable-next-line`
 directive immediately above a statement suppresses only that statement's
 uncertainty. Independently parsed sibling statements remain analyzable.
 
+Low also supports [bounded helper and builder recovery](../postgres-facts/low-helper-recovery.md).
+
 At `effort: low`, the rule analyzes supported literal SQL directly in SQL files
 and executor calls. Direct strings, interpolation-free templates, and one local
 constant are supported at named executors and proven typed parameters. Exact

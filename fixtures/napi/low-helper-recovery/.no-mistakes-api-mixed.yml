@@ -1,0 +1,34 @@
+effort: low
+unanalyzable: advise
+rules:
+  # This different rule makes planner-global and OFFSET-local indices differ.
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ['src/policy-consumers.mts']
+  - rule: postgres-no-offset
+    name: api-wide-low
+    scope: repository
+    options:
+      effort: low
+      importSpecifier: '@example/db'
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ['src/policy-consumers.mts', 'src/helpers.mts']
+  - rule: postgres-no-offset
+    name: api-max
+    scope: repository
+    options:
+      effort: max
+      importSpecifier: '@example/db'
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ['src/policy-consumers.mts', 'src/helpers.mts']
+  - rule: postgres-no-offset
+    name: api-narrow-low
+    scope: repository
+    options:
+      effort: low
+      importSpecifier: '@example/db'
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ['src/policy-consumers.mts']
