@@ -123,6 +123,13 @@ advice, and `ignore` stays silent. A valid source outside the selected file
 set still supplies the comparison pin, and definite mismatches remain failures
 under every policy.
 
+[`github-actions-script-expressions`](../rules/github-actions-script-expressions.md)
+uses `options.unanalyzable` when a selected workflow or composite-action file
+cannot be read, including invalid UTF-8. The default `report` fails, `advise`
+emits non-failing advice, and `ignore` omits that uncertainty. Invalid YAML,
+unmatched source locations, and unsupported expression shapes remain definite
+findings under every policy.
+
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.

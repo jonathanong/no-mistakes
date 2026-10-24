@@ -30,11 +30,19 @@ flagged. `if`, `defaults.run`, workflow `env`, job `env`, and reusable-workflow
 `with` are not script bodies. The fix for everything else is to pass the value
 through `env`, where the shell or JavaScript reads it as data.
 
-Invalid YAML is one finding. The rule does not guess expressions in a file it
-cannot parse. Anchors, aliases, and flow-style steps that the line scan cannot
-align with the parsed script are one unanalyzable finding for the file. Rewrite
-them as ordinary block-style `run` or `with.script` bodies. An expression split
-across lines is unanalyzable for the same reason.
+If a selected workflow or composite-action file cannot be read, including
+because it contains invalid UTF-8, the rule cannot inspect its scripts. That
+input follows `options.unanalyzable`: `report` (the default) emits a failing
+diagnostic, `advise` emits non-failing advice, and `ignore` omits the
+uncertainty. Restore readable text or correct the file encoding so the rule can
+inspect the scripts. The diagnostic is attached to the selected file at line 1.
+
+Invalid YAML remains a definite finding under every unanalyzable policy.
+Anchors, aliases, and flow-style steps that the line scan cannot align with the
+parsed script remain definite unanalyzable findings under every policy.
+Expressions split across lines also remain definite findings for the same
+reason. Rewrite these shapes as ordinary block-style `run` or `with.script`
+bodies; changing `options.unanalyzable` does not suppress them.
 
 ## Options
 
@@ -142,10 +150,15 @@ For a shell script the same shape is `env: VALUE: ${{ <expr> }}`, then
 
 ## Suppression
 
-Use a YAML comment. `no-mistakes-disable-next-line github-actions-script-expressions`
-suppresses the next line. `no-mistakes-disable-line github-actions-script-expressions`
-suppresses the same line. `no-mistakes-disable-file github-actions-script-expressions`
-in the leading comment block suppresses the file.
+Both findings and non-failing advice honor suppression. A source-read
+unanalyzable diagnostic is attached at line 1, so suppress it with
+`no-mistakes-disable-file github-actions-script-expressions` in the file's
+leading comment block or `no-mistakes-disable-line
+github-actions-script-expressions` on line 1. A next-line directive before
+line 1 cannot suppress it. Definite script findings retain their actual capture
+lines and support `disable-line` or `disable-next-line` at those locations.
+`no-mistakes-disable-file github-actions-script-expressions` suppresses either
+kind for the whole file.
 
 ```yaml
 # no-mistakes-disable-next-line github-actions-script-expressions
