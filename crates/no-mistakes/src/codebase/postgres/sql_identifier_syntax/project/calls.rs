@@ -70,7 +70,7 @@ fn direct_calls(
             continue;
         }
         direct.insert(*root);
-        let mut value = if gaps
+        let value = if gaps
             || alias
             || (namespace && !typed)
             || loose
@@ -82,34 +82,10 @@ fn direct_calls(
         } else {
             call.input.clone()
         };
-        if let Input::Reference(reference) = value {
-            value = owners
-                .get(&reference)
-                .filter(|binding| !binding.imported && binding.runtime)
-                .and_then(|binding| {
-                    syntax
-                        .constants
-                        .get(&(binding.span.start, binding.span.end))
-                })
-                .cloned()
-                .unwrap_or(Input::Unknown);
-        }
-        if let Input::Sql { holes, .. } = &mut value {
-            for (_, hole) in holes {
-                if let Some(key) = hole {
-                    let reference = syntax.env_references[key];
-                    if owners.contains_key(&reference) {
-                        *hole = None;
-                    } else {
-                        *key = key.rsplit_once('@').unwrap().0.to_string();
-                    }
-                }
-            }
-        }
         calls.push(SqlCall {
             span: call.span,
             line: crate::codebase::ts_source::byte_offset_to_line(source, call.span.0 as usize),
-            input: value,
+            input: normalize_input(value, syntax, owners),
         });
     }
     (calls, direct)
@@ -191,3 +167,5 @@ fn append_escapes(
 include!("calls/loads.rs");
 
 include!("calls/runtime.rs");
+
+include!("calls/input.rs");
