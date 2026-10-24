@@ -1,0 +1,101 @@
+{
+  "base": "c94f1b7939d5c234c2f3409440cd3f199a08bcc2",
+  "sourceCommit": "1cb715644c16c225745b453638d682f6fd2191e3",
+  "baselineBinarySha256": "ad025d1c995c317e9017e9db579660c054140c92e242b7e77b90f0e2bee6e94c",
+  "candidateBinarySha256": "61fcc7fb09829534f95082c605c28ca06332e211e27cf86d5ef1d1308c7ea8ea",
+  "configurations": 1063,
+  "byteIdentical": 1059,
+  "changes": [
+    {
+      "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/issue-2731",
+      "config": "low.yml",
+      "key": "ff166280e9a536c1",
+      "beforeFindings": 321,
+      "afterFindings": 387,
+      "beforeAdvisories": 0,
+      "afterAdvisories": 0,
+      "beforeStatus": 1,
+      "afterStatus": 1
+    },
+    {
+      "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/issue-2731",
+      "config": "report.yml",
+      "key": "2a2a65e95c463e1e",
+      "beforeFindings": 321,
+      "afterFindings": 387,
+      "beforeAdvisories": 0,
+      "afterAdvisories": 0,
+      "beforeStatus": 1,
+      "afterStatus": 1
+    },
+    {
+      "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/recursive-heads",
+      "config": "low.yml",
+      "key": "1db5b4c877cbe6ed",
+      "beforeFindings": 88,
+      "afterFindings": 99,
+      "beforeAdvisories": 0,
+      "afterAdvisories": 0,
+      "beforeStatus": 1,
+      "afterStatus": 1
+    },
+    {
+      "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/recursive-heads",
+      "config": "report.yml",
+      "key": "4d3f528eb59a51a8",
+      "beforeFindings": 88,
+      "afterFindings": 99,
+      "beforeAdvisories": 0,
+      "afterAdvisories": 0,
+      "beforeStatus": 1,
+      "afterStatus": 1
+    }
+  ],
+  "comparisonArtifactSha256": {
+    "before-comparison.json": "c4aa92ec2d63413853cffacd104bf820f529f14f85db3cc617cfdf1645ada718",
+    "after-comparison.json": "745a4c03301a0b2232aaf19fce1a0f350aebb141b21efd132cfeacee53eb39a3",
+    "config-inputs.json": "2454bc20ea27e7a67d59dbbef5f62f40a8b088414e60536b37763fc51092e03e"
+  },
+  "generatedCatalogComparisons": [
+    {
+      "fixture": "bounded",
+      "identical": true,
+      "status": 1,
+      "findings": 4
+    },
+    {
+      "fixture": "external-enum-arrays",
+      "identical": true,
+      "status": 0,
+      "findings": 0
+    },
+    {
+      "fixture": "parity",
+      "identical": true,
+      "status": 1,
+      "findings": 2
+    }
+  ],
+  "rust": {
+    "libraryPassed": 13436,
+    "libraryExistingIgnored": 3,
+    "binaryPassed": 458,
+    "integrationPassed": 1401,
+    "scope": "Canonical CI lib/bins/tests targets; final integration targets rerun separately after correcting the new CLI warning assertion, with passing library/binary profiles retained."
+  },
+  "native": {
+    "files": 21,
+    "passed": 577
+  },
+  "coverage": {
+    "regions": 98.55,
+    "functions": 99.35,
+    "lines": 99.32,
+    "minimum": 98
+  },
+  "complexity": {
+    "functions": 15632,
+    "threshold": 30,
+    "exceeded": 0
+  }
+}
