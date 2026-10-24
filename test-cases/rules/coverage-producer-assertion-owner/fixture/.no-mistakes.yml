@@ -33,6 +33,11 @@ rules:
         - { file: src/producers.mts, symbol: memberOnly }
         - { file: src/producers.mts, symbol: constructOnly }
         - { file: src/producers.mts, symbol: nestedDeadRanges }
+        - { file: src/producers.mts, symbol: assertionCtor }
+        - { file: src/producers.mts, symbol: unusedConstructorMethod }
+        - { file: src/producers.mts, symbol: unconsumedGenerator }
+        - { file: src/producers.mts, symbol: consumedGenerator }
+        - { file: src/producers.mts, symbol: asyncGenerator }
       assertions:
         - { module: 'node:assert', export: strictEqual }
       ownership:

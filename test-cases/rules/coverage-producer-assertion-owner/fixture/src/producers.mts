@@ -1,6 +1,7 @@
 import { strictEqual } from 'node:assert';
 import { spawn } from 'node:child_process';
-import { assertResult } from './assertions.mjs';
+import { generatorAssertion as aliasedGenerator } from './assertions.mjs';
+import { assertResult, generatorAssertion } from './assertions.mjs';
 import { execute } from './production.mjs';
 export function direct() { strictEqual(execute(), 1); }
 export function imported() { assertResult(); }
@@ -78,3 +79,16 @@ export function ambiguousCallbackB() { ambiguousOwner(localAssertionOwner); }
 export function nestedDeadRanges() {
   if (false) { if (false) { assertResult(); } execute(); }
 }
+// Construction executes the constructor, but never an unused method.
+class AssertionCtor { constructor() { strictEqual(1, 1); } }
+class UnusedMethod { constructor() { execute(); } unused() { strictEqual(1, 1); } }
+export function assertionCtor() { new AssertionCtor(); }
+export function unusedConstructorMethod() { new UnusedMethod(); }
+export function* generatorRoot() { strictEqual(1, 1); }
+export function unconsumedGenerator() { execute(); generatorRoot(); }
+export function consumedGenerator() { generatorRoot().next(); }
+async function* asyncOwner() { strictEqual(1, 1); }
+export function asyncGenerator() { asyncOwner(); }
+export function selectedGenerator() { aliasedGenerator(); }
+export function generatorContract() { generatorAssertion(); }
+export function generatorContractOwner() { spawn('worker'); }
