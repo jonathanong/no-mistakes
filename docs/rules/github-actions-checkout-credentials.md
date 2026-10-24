@@ -179,7 +179,8 @@ and line suppression at the reported parser-error location.
 Use a YAML comment. `no-mistakes-disable-next-line github-actions-checkout-credentials`
 suppresses the next line. `no-mistakes-disable-line github-actions-checkout-credentials`
 suppresses the same line. `no-mistakes-disable-file github-actions-checkout-credentials`
-in the leading comment block suppresses the file.
+in the leading comment block suppresses the file. The standalone Rust `check()`
+applies these directives too; its findings-only result omits advisories.
 
 ```yaml
 # no-mistakes-disable-next-line github-actions-checkout-credentials

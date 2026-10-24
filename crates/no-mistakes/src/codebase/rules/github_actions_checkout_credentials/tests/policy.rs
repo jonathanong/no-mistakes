@@ -145,7 +145,6 @@ fn default_policy_reports_and_deferred_suppression_preserves_both_channels() {
         output.advisories
     );
     assert!(output.advisories.is_empty());
-    assert_eq!(super::check(&root, &config).unwrap(), output.findings);
     config.rules[0].options = serde_yaml::from_str("unanalyzable: advise").unwrap();
     let output =
         diagnostics_with_files_and_sources(&root, &config, &files, &sources, true).unwrap();
@@ -217,5 +216,39 @@ fn invalid_scope_and_analysis_policy_are_errors_instead_of_clean_results() {
             .err()
             .expect("invalid configuration must fail");
         assert!(error.to_string().contains(message), "{error}");
+    }
+}
+
+#[test]
+fn standalone_check_filters_suppressions_without_changing_raw_dispatch() {
+    let (root, _, files) = fixture();
+    let known_root = super::tests::fixture_root("suppression");
+    for (name, visible, raw) in [
+        (".no-mistakes.yml", 20, 26),
+        (".no-mistakes.advise.yml", 1, 1),
+        (".no-mistakes.ignore.yml", 1, 1),
+    ] {
+        let config =
+            serde_yaml::from_str(&std::fs::read_to_string(root.join(name)).unwrap()).unwrap();
+        let findings = super::check(&root, &config).unwrap();
+        assert_eq!(findings.len(), visible, "{findings:?}");
+        assert!(findings
+            .iter()
+            .all(|finding| !finding.file.ends_with("suppression.yml")
+                && !finding.file.ends_with("disabled.yml")
+                && !finding.file.ends_with("suppressed.yml")));
+        assert_eq!(
+            super::check_with_files(&root, &config, &files)
+                .unwrap()
+                .len(),
+            raw
+        );
+        // The same next-line/file/line directives must also hide definite violations,
+        // even when unknown inputs are advised or ignored by this findings-only API.
+        let known = super::check(&known_root, &config).unwrap();
+        assert_eq!(known.len(), 2, "{known:?}");
+        assert!(known
+            .iter()
+            .any(|finding| finding.file.ends_with("ci.yml") && finding.message.contains("step 3")));
     }
 }

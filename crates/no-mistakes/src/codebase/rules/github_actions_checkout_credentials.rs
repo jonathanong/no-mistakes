@@ -24,7 +24,17 @@ pub fn check(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
 ) -> Result<Vec<RuleFinding>> {
-    super::check_sourced_standalone(root, config, check_with_files)
+    super::check_sourced_standalone(root, config, |root, config, files| {
+        super::check_with_borrowed_source_store(
+            root,
+            config,
+            files,
+            |root, config, files, sources| {
+                diagnostics_with_files_and_sources(root, config, files, sources, false)
+                    .map(|output| output.findings)
+            },
+        )
+    })
 }
 
 pub(crate) fn check_with_files(
