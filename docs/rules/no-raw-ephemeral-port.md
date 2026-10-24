@@ -71,6 +71,19 @@ sock.bind(("127.0.0.1", 0))
 Bind through an allowlisted allocator, or pass a non-zero / non-literal port.
 Put the binder implementation itself in `allow`.
 
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs a rule can't prove should never be treated as clean, and this rule does not yet meet that bar.
+
+- Known gap: unreadable or unparseable files are skipped. The rule skips these silently instead of routing them through `options.unanalyzable` (tracked in [#2660](https://github.com/jonathanong/no-mistakes/issues/2660)), so a passing run does not prove they are clean.
+
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line no-raw-ephemeral-port` or

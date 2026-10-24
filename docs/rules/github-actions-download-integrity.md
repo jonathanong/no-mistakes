@@ -84,7 +84,11 @@ http(s) URL. The default is only `curl` and `wget`. An explicit list is extra,
 not a replacement, so `[]` leaves `curl` and `wget` in place. A helper is a
 single command token such as `ci_download_to`.
 
-## Effort
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: expands one whole-line uppercase literal assignment before checking `$VAR` URL arguments. **Low**: accepts only literal URL arguments and routes a command with any dynamic candidate URL to `unanalyzable`. No partner rule is required.
 
 `effort: max` is the default. It keeps the current expansion of one whole-line
 uppercase assignment with a literal value, such as `BASE_URL="https://example.invalid/base"`,
@@ -158,6 +162,17 @@ rules:
       downloadHelpers:
         - ci_download_to
 ```
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (a downloader URL built from a variable, a dynamic option name such as `curl --$FLAG URL`, an unquoted dynamic option value, or an indirect command prefix, at low effort) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `curl URL argument "$BASE/x.sh" is unanalyzable at effort low`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
 
 ## Valid example
 

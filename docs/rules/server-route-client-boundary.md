@@ -98,6 +98,19 @@ in its sibling file violates it.
 Move the client/helper into the configured service/client area, or narrow the
 route project if this directory is not actually a server route boundary.
 
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs a rule can't prove should never be treated as clean, and this rule does not yet meet that bar.
+
+- Known gap: unreadable or unparseable files are skipped. The rule skips these silently instead of routing them through `options.unanalyzable` (tracked in [#2660](https://github.com/jonathanong/no-mistakes/issues/2660)), so a passing run does not prove they are clean.
+
+
 ## Suppression
 
 Use a narrower project or route glob for intentional mixed folders. A file

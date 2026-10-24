@@ -137,6 +137,18 @@ Use `getByTestId` for the stable contract, or keep the text/role locator only
 when the copy itself is the behavior under test and suppress that intentional
 exception.
 
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+
+- This rule has no unanalyzable inputs: it judges literal Playwright locator calls against test-id attributes present in source. Nothing is routed through `options.unanalyzable`.
+
 ## Suppression
 
 Use `no-mistakes-disable-line playwright-prefer-test-id-locators` or

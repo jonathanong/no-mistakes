@@ -167,7 +167,11 @@ executions. An application `include` or code-project scope still limits the
 selected execution, and each execution uses its own setup files when deciding
 whether a dynamic import is mocked.
 
-## Effort
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: walks setup files for every mock-registration shape. **Low**: accepts only top-level static imports, literal `vi.mock` / `jest.mock`, and literal top-level `require()`, and routes other setup-reachability shapes to `unanalyzable`. No partner rule is required.
 
 `effort: max` is the default. It preserves the setup walk above, including
 conditional eager `require()`, `vi.doMock` / `jest.doMock`, `jest.setMock`,
@@ -220,6 +224,17 @@ Suppress a low-effort shape on its own line:
 // no-mistakes-disable-next-line test-no-unmocked-dynamic-imports
 import("./dynamic-helper.mts");
 ```
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (at low effort, a non-literal `vi.mock` specifier, an aliased or computed mock call, `vi.doMock`, `module.require()`, or a runtime `import()` in setup) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `src/setup.mts:12: setup reachability is unanalyzable at effort low`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
 
 ## Valid example
 

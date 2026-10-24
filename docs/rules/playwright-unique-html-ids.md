@@ -43,7 +43,11 @@ There are no rule-local options. The rule uses the selected project or
 repository scope and scans the configured source universe; Playwright
 `selectors.htmlIds` only affects coverage, not this rule.
 
-## Effort
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: resolves identifier, helper, conditional, and imported `id` bindings. **Low**: accepts only string-literal IDs and props with literal defaults and routes other expressions to `unanalyzable`. No partner rule is required; if any application is not `low`, the invocation stays at `max`.
 
 `effort: max` is the default. It resolves supported identifier, helper,
 conditional, and imported bindings before judging HTML ID uniqueness.
@@ -68,6 +72,17 @@ does not disable this uniqueness rule. These syntax checks require no companion
 rule. If any enabled application of this rule is not `low`, the invocation
 keeps `max` analysis for the rule. If another Playwright selector consumer is
 configured at `max`, its demand also keeps shared selector recovery enabled.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (at low effort, an `id` given by an identifier or helper result) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `web/app/page.tsx:12: selector [id="{id}"] is unanalyzable at effort low`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
 
 ## Valid example
 

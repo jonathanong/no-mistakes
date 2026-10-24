@@ -145,6 +145,19 @@ a more restrictive token, and this rule does not read the caller. With
 is a finding, because the option treats that missing key as write. A null
 `persist-credentials` value is not a finding either.
 
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs a rule can't prove should never be treated as clean, and this rule does not yet meet that bar.
+
+- Known gap: expression-valued `persist-credentials`, unknown or expression `permissions`, and a custom `with.token` are cleared without a finding, and invalid YAML yields no result. The rule skips these silently instead of routing them through `options.unanalyzable` (tracked in [#2658](https://github.com/jonathanong/no-mistakes/issues/2658)), so a passing run does not prove they are clean.
+
+
 ## Suppression
 
 Use a YAML comment. `no-mistakes-disable-next-line github-actions-checkout-credentials`

@@ -65,7 +65,54 @@ rules:
 `timeout-minutes` must be a number or numeric string. Invalid YAML is a
 diagnostic, and unused `allow` entries for jobs in scanned files are findings.
 
-## Effort
+## Valid example
+
+With a cap of 10, these two step bounds sum to 13. The job timeout of 10 is at
+least the longest step timeout (8) and below the sum, so it satisfies the
+configured checks and cap.
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - run: echo again
+        timeout-minutes: 5
+      - run: echo last
+        timeout-minutes: 8
+```
+
+## Counterexample
+
+This job fails the sum check because its job timeout equals the two step bounds
+combined (5 + 8 = 13).
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-slim
+    timeout-minutes: 13
+    steps:
+      - run: echo again
+        timeout-minutes: 5
+      - run: echo last
+        timeout-minutes: 8
+```
+
+## Fix
+
+With both timeout relationship checks enabled, set a literal job timeout that
+is at least the longest step and strictly below the sum. Under the example cap
+of 10, valid values are 8 through 10. Use an `allow` entry with a higher cap
+only when the job legitimately needs to exceed that cap; it does not change
+the sum requirement.
+
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: compares every step timeout with the job timeout. **Low**: skips the redundant per-step comparison when enabled `github-actions-step-timeouts` partners certify a literal step cap. Without a covering partner it falls back to `max` with a warning.
 
 `effort: max` is the default and keeps every job and step comparison above.
 `effort: low` uses enabled, unsuppressed
@@ -142,48 +189,11 @@ partner's cap. At `max`, the job rule also reports a step exceeding a job's
 timeout. A low-effort report can therefore have fewer *job-rule* findings;
 the partner reports over-cap steps.
 
-## Valid example
+### Unanalyzable inputs
 
-With a cap of 10, these two step bounds sum to 13. The job timeout of 10 is at
-least the longest step timeout (8) and below the sum, so it satisfies the
-configured checks and cap.
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
 
-```yaml
-jobs:
-  test:
-    runs-on: ubuntu-slim
-    timeout-minutes: 10
-    steps:
-      - run: echo again
-        timeout-minutes: 5
-      - run: echo last
-        timeout-minutes: 8
-```
-
-## Counterexample
-
-This job fails the sum check because its job timeout equals the two step bounds
-combined (5 + 8 = 13).
-
-```yaml
-jobs:
-  test:
-    runs-on: ubuntu-slim
-    timeout-minutes: 13
-    steps:
-      - run: echo again
-        timeout-minutes: 5
-      - run: echo last
-        timeout-minutes: 8
-```
-
-## Fix
-
-With both timeout relationship checks enabled, set a literal job timeout that
-is at least the longest step and strictly below the sum. Under the example cap
-of 10, valid values are 8 through 10. Use an `allow` entry with a higher cap
-only when the job legitimately needs to exceed that cap; it does not change
-the sum requirement.
+- This rule has no unanalyzable inputs: it judges literal `timeout-minutes` values and their sums, and a missing, malformed, or over-cap value is a definite finding. Nothing is routed through `options.unanalyzable`.
 
 ## Related rules
 

@@ -38,7 +38,11 @@ uses the selected project and the shared rule
 `include`/`exclude` path filters; its Next.js cache patterns are fixed by the
 analyzer.
 
-## Effort
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: resolves same-file constants and configuration wrappers. **Low**: checks literal settings at the use site and routes indirect shapes to `unanalyzable`. No partner rule is required.
 
 `max` is the default and preserves same-file constant resolution and configuration
 wrapper analysis. `low` checks literal settings directly at the use site:
@@ -93,6 +97,17 @@ rule's selected applications. Mixed efforts share that union and can prepare
 both projections within it; each application still consumes its own effort's
 facts. Other rules and graph relationships retain their own analysis demand.
 Suppression still applies after extraction.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (at low effort, fetch options that are not an inline object, spreads, computed keys, indirect segment exports, and configuration wrappers) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `app/page.tsx:2: fetch cache option is unanalyzable at effort low`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
 
 ## Valid example
 

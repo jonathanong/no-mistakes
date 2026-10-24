@@ -153,6 +153,24 @@ Pass the value through `env` and read it as data:
 For a shell script the same shape is `env: VALUE: ${{ <expr> }}`, then
 `run: echo "$VALUE"`.
 
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean.
+
+- Unreadable or non-UTF-8 workflow and action files follow `options.unanalyzable`:
+  - `report` (default): fails as a finding ("cannot read GitHub Actions source as UTF-8 ... script expressions could not be checked").
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
+- Anchors, aliases, flow-style steps, and split expressions that the line scan cannot align with the parsed script are reported as one failing `unanalyzable` finding per file. This case is not routed through `options.unanalyzable`; rewrite them as block-style `run` or `with.script` bodies.
+
 ## Suppression
 
 Both findings and non-failing advice honor suppression. Invalid UTF-8 input

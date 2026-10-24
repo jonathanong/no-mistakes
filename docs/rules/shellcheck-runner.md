@@ -114,6 +114,23 @@ reported SC codes rather than suppressing the entire script. For an intentional
 temporary exception, set `options.unanalyzable` to `advise` or `ignore` with an
 explicit plan to restore ShellCheck coverage.
 
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (a missing `shellcheck` executable, or a nonzero ShellCheck run with no recognized diagnostics) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `scripts/run.sh: shellcheck analysis is incomplete: ShellCheck executable was not found; install shellcheck and make it available on PATH. This check requires ShellCheck to validate selected shell scripts.`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
+
 ## Suppression
 
 Use a ShellCheck-specific inline directive only when the code is intentional;
