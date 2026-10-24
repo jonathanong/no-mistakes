@@ -87,6 +87,7 @@ pub(super) fn graph(
     opts: &Options,
     snapshot: &Snapshot,
     permanent: &HashSet<String>,
+    complete: bool,
 ) {
     if !opts.scoped_prefixes.is_empty() {
         for name in &snapshot.active_names {
@@ -106,7 +107,7 @@ pub(super) fn graph(
         }
     }
     for name in permanent {
-        if !snapshot.active_names.contains(name) {
+        if complete && !snapshot.active_names.contains(name) {
             push(
                 issues,
                 FileKind::Lockfile,

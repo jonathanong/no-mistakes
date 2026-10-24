@@ -13,13 +13,26 @@ pub(super) fn check(
         return Vec::new();
     };
     let lockfile_abs = lockfile_root.join(lockfile_path);
-    let Some(content) = super::super::read_source(sources, &lockfile_abs) else {
-        return Vec::new();
+    let content = match sources.read_path(&lockfile_abs) {
+        Ok(content) => content,
+        Err(error) => {
+            return vec![super::super::manifest_analysis::unavailable(
+                root,
+                &lockfile_abs,
+                RULE_ID,
+                error,
+            )]
+        }
     };
     let file = relative_slash_path(root, &lockfile_abs);
     let docs = match crate::codebase::lockfile::pnpm::load_documents(&content) {
         Ok(docs) => docs,
-        Err(_) => return vec![parse_finding(&file, "could not be parsed")],
+        Err(error) => {
+            return vec![parse_finding(
+                &file,
+                &format!("could not be parsed: {error:?}"),
+            )]
+        }
     };
     if crate::codebase::lockfile::pnpm::validate_env_prefix(&docs).is_err() {
         return vec![parse_finding(
@@ -74,6 +87,6 @@ fn parse_finding(file: &str, detail: &str) -> RuleFinding {
         line: 1,
         message: format!("{file}: pnpm lockfile {detail}"),
         import: None,
-        target: None,
+        target: Some("unanalyzable".to_owned()),
     }
 }

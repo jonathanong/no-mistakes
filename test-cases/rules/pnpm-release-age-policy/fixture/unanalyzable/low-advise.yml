@@ -1,0 +1,9 @@
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: advise
+      permanentPackages:
+        - name: acme
+          reason: first-party

@@ -1,0 +1,10 @@
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository
+    message: Repair dependency policy metadata.
+    options:
+      effort: low
+      unanalyzable: report
+      permanentPackages:
+        - name: acme
+          reason: first-party

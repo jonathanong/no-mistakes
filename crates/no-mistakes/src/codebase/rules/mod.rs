@@ -29,6 +29,7 @@ mod ids;
 pub mod integration_test_no_mocks;
 mod lexical_mask;
 pub mod lockfile_allowlist;
+mod manifest_analysis;
 pub mod markdown_child_links;
 pub mod markdown_eval_tests;
 pub(crate) mod markdown_facts;

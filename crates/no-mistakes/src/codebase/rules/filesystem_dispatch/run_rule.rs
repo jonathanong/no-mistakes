@@ -99,13 +99,31 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
             workspace_package_cycles::check_with_files_and_sources(root, config, files, sources)
         }
         PACKAGE_JSON_REGISTRY_ONLY => {
-            package_json_registry_only::check_with_files_and_sources(root, config, files, sources)
+            package_json_registry_only::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
         }
         PNPM_OVERRIDES_BAN => {
-            pnpm_overrides_ban::check_with_files_and_sources(root, config, files, sources)
+            pnpm_overrides_ban::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
         }
         PNPM_RELEASE_AGE_POLICY => {
-            pnpm_release_age_policy::check_with_files_and_sources(root, config, files, sources)
+            pnpm_release_age_policy::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
         }
         PRODUCTION_DEPENDENCY_DECLARATIONS => {
             production_dependency_declarations::check_with_files_sources_and_facts(
