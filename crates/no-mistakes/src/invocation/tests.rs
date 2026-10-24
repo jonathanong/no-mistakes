@@ -19,6 +19,8 @@ mod napi_options;
 #[cfg(unix)]
 #[path = "tests/progress.rs"]
 mod progress;
+#[cfg(unix)]
+include!("tests/signal_forwarding.rs");
 
 fn fixture_path(name: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -388,33 +390,6 @@ fn command_output_deadline_kills_descendants_holding_output_pipes() {
     let error = command_output(&mut command).unwrap_err();
     assert_eq!(error.kind(), std::io::ErrorKind::TimedOut);
     assert!(started.elapsed() < Duration::from_secs(1));
-}
-
-#[cfg(unix)]
-#[test]
-fn child_process_group_receives_forwarded_termination_signal() {
-    use std::io::Read;
-
-    let mut command = Command::new("sh");
-    command
-        .args([
-            "-c",
-            "trap 'exit 42' TERM; sleep 10 & worker=$!; printf x; wait \"$worker\"",
-        ])
-        .stdout(std::process::Stdio::piped());
-    super::child::configure_process_group(&mut command);
-    let mut child = command.spawn().unwrap();
-    let process_tree = super::child::ProcessTree::attach(&child);
-    let mut ready = [0u8; 1];
-    child.stdout.take().unwrap().read_exact(&mut ready).unwrap();
-    assert_eq!(ready, *b"x");
-    signals::forward_signal(child.id() as i32, signal_hook::consts::SIGTERM);
-    let Some(status) = child.wait_timeout(Duration::from_secs(1)).unwrap() else {
-        process_tree.terminate(&mut child).unwrap();
-        panic!("forwarded signal did not terminate the child process group");
-    };
-    drop(process_tree);
-    assert_eq!(status.code(), Some(42));
 }
 
 #[cfg(unix)]
