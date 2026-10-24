@@ -67,3 +67,42 @@ fn opaque_escapes_anchor_to_calls_without_losing_reference_identity() {
     })
     .unwrap();
 }
+
+#[test]
+fn mixed_low_max_profiles_keep_application_specific_display_locations() {
+    let root = fixture();
+    let run = |config: &str| {
+        let options = crate::napi_api::options::test_json_arg(serde_json::json!({
+            "root": root, "config": root.join(config)
+        }));
+        serde_json::from_str::<serde_json::Value>(
+            &crate::napi_api::check_json_impl(options).unwrap(),
+        )
+        .unwrap()
+    };
+    let mixed = run(".no-mistakes-mixed.yml");
+    let baseline = run(".no-mistakes-max-only.yml");
+    let rows = mixed["advisories"].as_array().unwrap();
+    let low = rows
+        .iter()
+        .filter(|row| row["message"].as_str().unwrap().contains("low-helper"))
+        .map(|row| row["line"].as_u64().unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(low, vec![3, 7], "{mixed}");
+    let max = rows
+        .iter()
+        .filter(|row| row["message"].as_str().unwrap().contains("max-helper"))
+        .map(|row| (row["file"].clone(), row["line"].clone()))
+        .collect::<Vec<_>>();
+    let expected = baseline["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| (row["file"].clone(), row["line"].clone()))
+        .collect::<Vec<_>>();
+    assert!(!max.is_empty(), "{mixed}");
+    assert_eq!(
+        max, expected,
+        "mixed low preparation must preserve max locations"
+    );
+}

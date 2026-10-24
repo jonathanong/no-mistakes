@@ -64,11 +64,25 @@ pub(super) fn collect(
     let typed = typed_executor_types_by_profile(root, path, plan)
         .into_iter()
         .collect::<std::collections::BTreeMap<_, _>>();
-    if typed.is_empty() {
+    let mut facts = if typed.is_empty() {
         sql_identifier_syntax::collect(program, ts, source, &profiles)
     } else {
         sql_identifier_syntax::collect_with_types(program, ts, source, &profiles, &typed)
-    }
+    };
+    facts.low_applications = plan
+        .sql_identifier_profiles
+        .iter()
+        .flat_map(|(profile, scans)| {
+            scans
+                .iter()
+                .filter(|scan| scan.includes(root, path))
+                .filter_map(|scan| {
+                    scan.application_index
+                        .map(|index| (profile.clone(), scan.rule.clone(), index))
+                })
+        })
+        .collect();
+    facts
 }
 pub(super) fn invalid(
     root: &Path,

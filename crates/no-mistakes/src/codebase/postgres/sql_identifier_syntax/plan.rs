@@ -7,6 +7,8 @@ use std::{collections::BTreeMap, path::Path, sync::Arc};
 #[derive(Clone)]
 pub struct SqlIdentifierScan {
     pub(crate) index: usize,
+    pub(crate) rule: String,
+    pub(crate) application_index: Option<usize>,
     paths: Arc<RuleGlobFilter>,
     application: Arc<RulePathFilter>,
     typed_executor_types: Arc<Vec<crate::config::v2::schema::EffectTargetConfig>>,
@@ -23,6 +25,11 @@ impl SqlIdentifierScan {
     ) -> Result<Self> {
         Ok(Self {
             index,
+            rule: application.rule.clone(),
+            application_index: config
+                .rule_applications(&application.rule)
+                .iter()
+                .position(|rule| std::ptr::eq(*rule, application)),
             paths: Arc::new(RuleGlobFilter::new(&application.rule, include, exclude)?),
             application: Arc::new(RulePathFilter::new(root, config, application)?),
             typed_executor_types: Arc::new(Vec::new()),
