@@ -6,6 +6,7 @@ function valid(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { read(
 function validTemplate(xs) { let q = `/* named */ SELECT 1`; for (const x of xs) { read(q); q = `SELECT 2`; } }
 function validTag(xs) { let q = sql`/* named */ SELECT 1`; for (const x of xs) { read(q); q = sql`SELECT 2`; } }
 function validNamespace(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { read(q); q = namespace`SELECT 2`; } }
+function validTwoArgs(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { read(q, 1); q = "SELECT 2"; } }
 // Unsupported forms deliberately retain their old outcome instead of guessing a backedge.
 async function awaited(xs) { let q = "/* named */ SELECT 1"; for await (const x of xs) { read(q); q = "SELECT 2"; } }
 function iterableCall(xs) { let q = "/* named */ SELECT 1"; for (const x of xs()) { read(q); q = "SELECT 2"; } }
@@ -16,7 +17,6 @@ function tooLong(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { rea
 function wrongFirst(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { q; q = "SELECT 2"; } }
 function optional(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { read?.(q); q = "SELECT 2"; } }
 function propertyExecutor(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { db.read(q); q = "SELECT 2"; } }
-function twoArgs(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { read(q, 1); q = "SELECT 2"; } }
 function spreadArg(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { read(...q); q = "SELECT 2"; } }
 function literalArg(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { read("/* named */ SELECT 1"); q = "SELECT 2"; } }
 function wrongSecond(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { read(q); q; } }
@@ -41,3 +41,5 @@ function unboundWrite(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) 
 function unboundTag(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { read(q); q = unbound`SELECT 2`; } }
 
 async function validAwait(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { await read(q); q = "SELECT 2"; } }
+function noArguments(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { read(); q = "SELECT 2"; } }
+function unsafeArgumentReference(xs) { let q = sql`/* named */ SELECT 1`; for (const x of xs) { read(q, [q]); q = sql`SELECT 2`; } }

@@ -99,3 +99,27 @@ export async function awaitedMemberIteration(xs: readonly unknown[], client: Dat
     q = sql`SELECT 2`;
   }
 }
+
+export function parameterValues(xs: readonly unknown[], client: Database, id: unknown) {
+  let q = "/* named */ SELECT $1";
+  for (const x of xs) {
+    client.query(q, [id]); // missing: independent parameter values preserve the SQL argument.
+    q = "SELECT $1";
+  }
+}
+
+export async function awaitedParameterValues(xs: readonly unknown[], client: Database, id: unknown) {
+  let q = "/* named */ SELECT $1";
+  for (const x of xs) {
+    await client.query(q, [id]); // missing: awaiting preserves parameterized SQL backedges.
+    q = "SELECT $1";
+  }
+}
+
+export function unsafeAdditionalBuilderReference(xs: readonly unknown[], client: Database) {
+  let q = sql`/* named */ SELECT 1`;
+  for (const x of xs) {
+    client.query(q, [q]); // A second builder reference defeats the strict direct-use proof.
+    q = sql`SELECT 2`;
+  }
+}

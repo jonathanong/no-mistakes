@@ -43,10 +43,11 @@ pub(super) fn candidate(value: &ForOfStatement<'_>) -> Option<Candidate> {
         return None;
     };
     // Canonical executor facts decide callee ownership, including member calls.
-    if call.optional || call.arguments.len() != 1 {
+    if call.optional {
         return None;
     }
-    let Expression::Identifier(reference) = unwrap_ts_wrappers(call.arguments[0].as_expression()?)
+    let Expression::Identifier(reference) =
+        unwrap_ts_wrappers(call.arguments.first()?.as_expression()?)
     else {
         return None;
     };
