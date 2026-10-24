@@ -156,6 +156,7 @@ function safeSymbol(symbol, object, property, checker, state) {
 }
 
 function tsOptionBody(fn, index, property, checker, facts) {
+  if (!fn?.body) return false;
   const state = referenceFacts(fn, checker, facts);
   const key = `${index}:${property}`;
   if (state.verdicts.has(key)) return state.verdicts.get(key);

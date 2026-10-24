@@ -5,7 +5,12 @@ import { Linter } from "eslint";
 import { describe, it } from "vitest";
 import { __dirname, fixture, plugin } from "./helpers.mjs";
 
-function findings(typed, rule = "postgres-no-executor-adapter", name = "options-escapes.ts") {
+function findings(
+  typed,
+  rule = "postgres-no-executor-adapter",
+  name = "options-escapes.ts",
+  parser = tsParser,
+) {
   const filename = resolve(
     __dirname,
     `../../../test-cases/eslint-snippets/fixture/executor-target/${name}`,
@@ -16,7 +21,7 @@ function findings(typed, rule = "postgres-no-executor-adapter", name = "options-
       {
         files: ["**/*.ts"],
         languageOptions: {
-          parser: tsParser,
+          parser,
           parserOptions: typed ? { project: resolve(dirname(filename), "tsconfig.json") } : {},
         },
         plugins: { "no-mistakes": plugin },
@@ -33,6 +38,23 @@ function findings(typed, rule = "postgres-no-executor-adapter", name = "options-
 }
 
 describe("executor option helper escapes", () => {
+  it("keeps reporting when the parser cannot map the implementation body", () => {
+    const parser = {
+      ...tsParser,
+      parseForESLint(...args) {
+        const parsed = tsParser.parseForESLint(...args);
+        const map = parsed.services.esTreeNodeToTSNodeMap;
+        parsed.services.esTreeNodeToTSNodeMap = {
+          get(node) {
+            return node.type === "FunctionDeclaration" ? undefined : map.get(node);
+          },
+        };
+        return parsed;
+      },
+    };
+    assert.deepEqual(findings(true, undefined, "options-missing-body.ts", parser), ["5:passed"]);
+  });
+
   it("retains incoming diagnostics when a local helper exposes its executor", () => {
     assert.deepEqual(
       findings(true),
