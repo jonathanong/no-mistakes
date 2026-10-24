@@ -1,0 +1,23 @@
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: report
+      sets:
+        - name: yaml-values
+          file: data.yml
+          kind: yaml-sequence
+          key: values
+        - name: route-names
+          kind: path-regex-capture
+          pattern: '^routes/(?<value>[^/]+)\.ts$'
+        - name: suppressed-array
+          file: suppressed.ts
+          kind: ts-array-literal
+          target: Hidden
+      comparisons:
+        - left: yaml-values
+          right: route-names
+        - left: suppressed-array
+          right: route-names

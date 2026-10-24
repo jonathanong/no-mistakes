@@ -1,0 +1,12 @@
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: ignore
+      sets:
+        - name: empty-call-set
+          file: empty.ts
+          kind: ts-call-first-string-argument
+          target: ai_agents.upsertJobScheduler
+          minSize: 1

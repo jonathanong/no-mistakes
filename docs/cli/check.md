@@ -105,6 +105,13 @@ The opt-in [query-reached-per-item](../rules/query-reached-per-item.md) rule
 uses configured effect families and canonical call paths to identify repeated
 single-item round trips through helpers.
 
+`finite-set-consistency` supports `--effort low` for YAML sequences, YAML
+string selectors, and path-regex captures. Other extractor kinds follow the
+selected `unanalyzable` policy, and comparisons involving them are skipped;
+definite comparisons between supported sets still run. Use the default or
+`--effort max` to retain TypeScript, SQL-enum, and Markdown extraction. See
+[finite-set-consistency](../rules/finite-set-consistency.md#effort).
+
 Opt-in [postgres-no-mutable-sql-registry](../rules/postgres-no-mutable-sql-registry.md)
 and [postgres-no-unbounded-sql-identifier](../rules/postgres-no-unbounded-sql-identifier.md)
 use prepared import, value-flow, and embedded-SQL facts with the canonical graph

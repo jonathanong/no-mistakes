@@ -114,6 +114,14 @@ const, without evaluating helpers or builders. Other SQL inputs follow shared
 `unanalyzableSql: fail` means `report`. Selected `.sql` files keep their existing
 analysis. No companion rule is required.
 
+[`finite-set-consistency`](../rules/finite-set-consistency.md#effort) supports
+`low` for `yaml-sequence`, `yaml-string-selector`, and `path-regex-capture`.
+Every TypeScript, SQL-enum, and Markdown extractor kind is reported through the
+shared `options.unanalyzable` policy. Comparisons involving an unsupported set
+do not run, including when its residual is ignored or suppressed; `minSize` is
+not applied to an unsupported extraction. Supported-set mismatches remain
+findings. Use `effort: max` (the default) to preserve all extractor kinds.
+
 [`version-pin-consistency`](../rules/version-pin-consistency.md) also uses
 `options.unanalyzable` when a selected anchor's declared comparison source is
 outside the selected file set and cannot be read or parsed, or when a selected

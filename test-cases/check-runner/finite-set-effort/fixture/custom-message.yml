@@ -1,0 +1,36 @@
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    message: "Finite inventory:"
+    options:
+      effort: low
+      unanalyzable: advise
+      sets:
+        - name: yaml-values
+          file: data.yml
+          kind: yaml-sequence
+          key: values
+        - name: route-names
+          kind: path-regex-capture
+          pattern: '^routes/(?<value>[^/]+)\.ts$'
+        - name: compatible-type
+          file: types.ts
+          kind: ts-string-union
+          target: Route
+        - name: mismatching-type
+          file: types.ts
+          kind: ts-string-union
+          target: Other
+        - name: runtime-id
+          file: runtime.ts
+          kind: ts-call-first-string-argument
+          target: ai_agents.upsertJobScheduler
+      comparisons:
+        - left: yaml-values
+          right: route-names
+        - left: compatible-type
+          right: route-names
+        - left: mismatching-type
+          right: route-names
+        - left: runtime-id
+          right: route-names
