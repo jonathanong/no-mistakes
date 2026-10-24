@@ -80,7 +80,7 @@ fn copy_on_write_mutation_keeps_candidate_joins_and_original_snapshot() {
         after.remove("unknown");
         assert!(!before.same_bindings(&after));
         let (result, visits) = compare(&before, &after, &before, whole_sql);
-        assert_eq!(visits, before.len());
+        assert_eq!(visits, before.len(), "tiny scopes retain the borrowed scan");
         assert!(
             result["argument"]
                 == Value::Joined(vec![Value::Arguments(9), Value::Arguments(11)].into())
@@ -88,5 +88,30 @@ fn copy_on_write_mutation_keeps_candidate_joins_and_original_snapshot() {
         assert!(result["unknown"] == Value::Unknown);
         assert!(before["argument"] == Value::Arguments(9));
         assert!(before.contains_key("unknown"));
+    }
+}
+
+#[test]
+fn dense_sparse_writes_compare_only_the_written_key_and_bulk_writes_fall_back() {
+    for whole_sql in [false, true] {
+        let mut before = scope();
+        for index in 0..61 {
+            before.insert(format!("stable{index}"), Value::Primitive);
+        }
+        let mut after = before.clone();
+        after.insert("argument".into(), Value::Arguments(11));
+        let (result, visits) = compare(&before, &after, &before, whole_sql);
+        assert_eq!(visits, 1);
+        assert!(result["argument"] != before["argument"]);
+        assert!(result["builder"] == before["builder"]);
+        let (_, visits) = compare(&after, &before, &before, whole_sql);
+        assert_eq!(
+            visits, 1,
+            "the changed first arm also supplies a sparse key set"
+        );
+        // Bulk mutation has no proven key set; retain the borrowed legacy scan.
+        after.entry("argument".into()).or_insert(Value::Unknown);
+        let (_, visits) = compare(&before, &after, &before, whole_sql);
+        assert_eq!(visits, before.len());
     }
 }

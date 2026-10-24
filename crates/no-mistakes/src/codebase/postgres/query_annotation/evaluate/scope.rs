@@ -24,6 +24,14 @@ impl Clone for Bindings {
         }
     }
 }
+impl Bindings {
+    fn invalidate(&mut self) {
+        self.builders.take();
+        self.contains_reference.take();
+        self.references.take();
+        self.reference_binding_names.take();
+    }
+}
 impl PartialEq for Bindings {
     fn eq(&self, other: &Self) -> bool {
         self.values == other.values
@@ -33,8 +41,8 @@ impl Eq for Bindings {}
 
 /// Request-local snapshots share immutable bindings and their builder index.
 /// Any write detaches the bindings and invalidates the index before mutation.
-#[derive(Clone, Default, Eq, PartialEq)]
-pub(in crate::codebase::postgres::query_annotation) struct Scope(Arc<Bindings>);
+#[derive(Clone, Default)]
+pub(in crate::codebase::postgres::query_annotation) struct Scope(Arc<Bindings>, changes::Changes);
 
 #[cfg(not(test))]
 #[macro_use]
@@ -43,6 +51,17 @@ mod binding_scan_count;
 #[path = "scope/binding_scan_count/tests.rs"]
 #[macro_use]
 mod binding_scan_count;
+
+impl PartialEq for Scope {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+impl Eq for Scope {}
+
+mod builders;
+mod changes;
+mod mutation;
 
 impl Scope {
     /// Preserve map iteration order while scanning each immutable snapshot once.
@@ -90,55 +109,19 @@ impl Scope {
             Edges::collect(self.values())
         })
     }
-
-    pub(super) fn contains_builders(&self, ids: &FxHashSet<u64>) -> bool {
-        let builders = self.0.builders.get_or_init(|| {
-            fn collect(
-                value: &Value,
-                ids: &mut FxHashSet<u64>,
-                visited: &mut FxHashSet<*const ()>,
-            ) {
-                match value {
-                    Value::Prefix(_, _, Some(id)) => {
-                        ids.insert(*id);
-                    }
-                    Value::Promise(value) | Value::Evaluated(value, _) => {
-                        collect(value, ids, visited)
-                    }
-                    Value::Aggregate(values)
-                    | Value::References(values)
-                    | Value::Object(values)
-                    | Value::Record(values, _)
-                    | Value::Joined(values)
-                    | Value::Possible(values)
-                        if values.contains_reference() && visited.insert(values.identity()) =>
-                    {
-                        for value in values {
-                            collect(value, ids, visited);
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            let mut builders = FxHashSet::default();
-            let mut visited = FxHashSet::default();
-            for value in self.values() {
-                collect(value, &mut builders, &mut visited);
-            }
-            builders
-        });
-        !builders.is_disjoint(ids)
-    }
 }
 impl From<FxHashMap<String, Value>> for Scope {
     fn from(values: FxHashMap<String, Value>) -> Self {
-        Self(Arc::new(Bindings {
-            values,
-            builders: OnceLock::new(),
-            contains_reference: OnceLock::new(),
-            references: OnceLock::new(),
-            reference_binding_names: OnceLock::new(),
-        }))
+        Self(
+            Arc::new(Bindings {
+                values,
+                builders: OnceLock::new(),
+                contains_reference: OnceLock::new(),
+                references: OnceLock::new(),
+                reference_binding_names: OnceLock::new(),
+            }),
+            Default::default(),
+        )
     }
 }
 impl Deref for Scope {
@@ -149,11 +132,9 @@ impl Deref for Scope {
 }
 impl DerefMut for Scope {
     fn deref_mut(&mut self) -> &mut Self::Target {
+        self.1.clear();
         let bindings = Arc::make_mut(&mut self.0);
-        bindings.builders.take();
-        bindings.contains_reference.take();
-        bindings.references.take();
-        bindings.reference_binding_names.take();
+        bindings.invalidate();
         &mut bindings.values
     }
 }
