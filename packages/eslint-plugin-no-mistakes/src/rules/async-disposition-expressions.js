@@ -68,7 +68,7 @@ function expressionReturnedFromCallback(node, fn) {
   return Boolean(returnStatement);
 }
 
-function canReachPromiseAll(node, promiseAll) {
+function canReachPromiseAll(node, promiseAll, collectionRole) {
   let current = node;
   // The caller supplies an ancestor aggregate; every path reaches it or rejects.
   for (;;) {
@@ -80,11 +80,12 @@ function canReachPromiseAll(node, promiseAll) {
         return false;
       }
       current = parent.parent;
+      collectionRole = true;
       continue;
     }
     if (parent?.type === "ArrayExpression") {
-      // An aggregate over [mappedArray] never visits that array's promises.
-      if (isMapCall(unwrapExpression(current))) return false;
+      // A mapper collection differs from a configured async target named map.
+      if (collectionRole && isMapCall(unwrapExpression(current))) return false;
       if (parent.parent !== promiseAll || promiseAll.arguments[0] !== parent) return false;
       current = parent;
       continue;
@@ -131,10 +132,10 @@ function observedExpression(node, context) {
   return current;
 }
 
-function promiseAllDisposed(node, context, consumers) {
+function promiseAllDisposed(node, context, consumers, collectionRole = false) {
   let current = node.parent;
   while (current) {
-    if (isPromiseAllCall(current, context) && canReachPromiseAll(node, current)) {
+    if (isPromiseAllCall(current, context) && canReachPromiseAll(node, current, collectionRole)) {
       return (
         directlyDisposed(current, context, consumers) ||
         directlyDisposed(observedExpression(current, context), context, consumers) ||
@@ -148,7 +149,7 @@ function promiseAllDisposed(node, context, consumers) {
 
 function mappedCollectionDisposed(call, context, consumers, disposed) {
   return (
-    promiseAllDisposed(call, context, consumers) ||
+    promiseAllDisposed(call, context, consumers, true) ||
     retainedCollection(call, context, (value) => isPromiseAllCall(value, context), disposed)
   );
 }

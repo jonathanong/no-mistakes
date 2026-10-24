@@ -109,6 +109,34 @@ it("rejects a mutated global Promise aggregate for a named mapper", () => {
   );
 });
 
+it("keeps configured map-named target promises distinct from mapped collections", () => {
+  const mapped = readFileSync(
+    resolve(
+      __dirname,
+      "../../../test-cases/eslint-plugin/async-call-disposition/fixture/map-named-targets.ts",
+    ),
+    "utf8",
+  );
+  const result = lint(
+    mapped,
+    {
+      "no-mistakes/async-call-disposition": [
+        "error",
+        {
+          targets: [
+            { sourceSpecifierPatterns: ["@app/jobs"], calleeNamePatterns: ["map", "flatMap"] },
+          ],
+        },
+      ],
+    },
+    "map-named-targets.ts",
+  );
+  assert.deepEqual(
+    result.map(({ line, messageId }) => [line, messageId]),
+    [],
+  );
+});
+
 it("preserves a CommonJS top-level return as an ordinary return", () => {
   const commonjs = readFileSync(
     resolve(

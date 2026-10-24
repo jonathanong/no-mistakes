@@ -106,3 +106,4 @@ const mappedKnown = (item) => enqueueEmail(item);
 await Promise.all(items.map(mappedKnown));
 function flatMappedKnown(item) { return enqueueEmail(item); }
 await Promise.all(items.flatMap(flatMappedKnown));
+await Promise.all(items.map(flatMappedKnown));
