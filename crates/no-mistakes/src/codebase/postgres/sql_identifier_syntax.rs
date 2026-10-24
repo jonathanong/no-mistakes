@@ -18,6 +18,8 @@ pub(crate) enum Input {
         text: String,
         source_span: Span,
         holes: Vec<(String, Option<String>)>,
+        parameterized: Option<usize>,
+        positions: Vec<super::EmbeddedSqlSourcePosition>,
     },
     Reference(Span),
     Unknown,
@@ -45,6 +47,8 @@ struct Call {
 }
 #[derive(Default)]
 struct Syntax {
+    template_binds: template_binds::TemplateBinds,
+    safe_parameterized: FxHashSet<Span>,
     targets: FxHashSet<Span>,
     namespace_targets: FxHashMap<Span, FxHashSet<String>>,
     typed_targets: FxHashSet<Span>,
@@ -75,9 +79,31 @@ fn chain(expression: &Expression<'_>) -> Option<(Span, Vec<String>)> {
         _ => None,
     }
 }
+mod constants;
 mod input;
+mod template_binds;
 use input::input;
 impl<'a> Visit<'a> for Syntax {
+    fn visit_program(&mut self, program: &Program<'a>) {
+        walk::walk_program(self, program);
+        for call in &mut self.calls {
+            self.template_binds.validate(&mut call.input);
+        }
+    }
+    fn visit_simple_assignment_target(
+        &mut self,
+        target: &oxc_ast::ast::SimpleAssignmentTarget<'a>,
+    ) {
+        self.template_binds.write(target);
+        walk::walk_simple_assignment_target(self, target);
+    }
+    fn visit_assignment_target_property_identifier(
+        &mut self,
+        target: &oxc_ast::ast::AssignmentTargetPropertyIdentifier<'a>,
+    ) {
+        self.template_binds.write_span(span(target.binding.span));
+        walk::walk_assignment_target_property_identifier(self, target);
+    }
     fn visit_static_member_expression(&mut self, value: &oxc_ast::ast::StaticMemberExpression<'a>) {
         if let Some((root, parts)) = chain(&value.object) {
             if parts.len() == 1 && self.namespace_targets.contains_key(&root) {
@@ -127,7 +153,7 @@ impl<'a> Visit<'a> for Syntax {
                         .first()
                         .and_then(|arg| arg.as_expression())
                         .map_or(Input::Unknown, |value| {
-                            input(value, &mut self.env_references)
+                            input(value, &mut self.env_references, &self.template_binds)
                         })
                 } else {
                     Input::Unknown
@@ -142,26 +168,7 @@ struct Constants<'s> {
     wanted: &'s FxHashSet<Span>,
     syntax: &'s mut Syntax,
 }
-impl<'a> Visit<'a> for Constants<'_> {
-    fn visit_variable_declaration(&mut self, value: &VariableDeclaration<'a>) {
-        if value.kind.is_const() {
-            for declaration in &value.declarations {
-                if let BindingPattern::BindingIdentifier(binding) = &declaration.id {
-                    if !self.wanted.contains(&span(binding.span)) {
-                        continue;
-                    }
-                    let value = declaration.init.as_ref().map_or(Input::Unknown, |value| {
-                        input(value, &mut self.syntax.env_references)
-                    });
-                    if matches!(value, Input::Sql { .. }) {
-                        self.syntax.constants.insert(span(binding.span), value);
-                    }
-                }
-            }
-        }
-        walk::walk_variable_declaration(self, value);
-    }
-}
+
 mod selection;
 mod typed;
 use selection::Selection;
@@ -175,3 +182,6 @@ pub(crate) mod plan;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod template_bind_tests;

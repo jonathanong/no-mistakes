@@ -22,6 +22,7 @@ pub(crate) fn collect(
         })
         .collect::<Vec<_>>();
     let mut syntax = Syntax {
+        template_binds: template_binds::TemplateBinds::new(module, source),
         loose_query: profiles.iter().any(|profile| {
             profile.import_specifier.is_empty()
                 && profile.executor_names.iter().any(|name| name == "query")
@@ -53,6 +54,7 @@ pub(crate) fn collect(
     }
     aliases::collect(program, module, &selections, &mut syntax);
     syntax.visit_program(program);
+    syntax.safe_parameterized = template_binds::safe_constants(module, &syntax.calls);
     let mut owners = FxHashMap::default();
     for binding in &module.bindings {
         for usage in &binding.references {

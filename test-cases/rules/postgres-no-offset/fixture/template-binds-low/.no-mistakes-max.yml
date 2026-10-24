@@ -1,0 +1,18 @@
+effort: max
+unanalyzable: advise
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      include: ["src/**/*.mts"]
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      include: ["src/**/*.mts"]
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      include: ["src/**/*.mts"]

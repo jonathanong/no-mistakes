@@ -22,6 +22,7 @@ pub(super) fn literals<'a>(
                 if statement.parse_failed { Err(()) } else { Ok(statement.transformed_column_uses) }
             },
             rebase: |fact, base| fact.line += base - 1,
+            position: |fact| (fact.line, fact.column_position),
             parse_metric: "postgres.no_transformed_uuid_predicates.low.literal_parses",
         },
     ))
