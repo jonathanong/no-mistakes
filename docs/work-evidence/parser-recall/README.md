@@ -1,17 +1,17 @@
 <!-- cspell:ignore Clippy -->
 # PostgreSQL recovery diagnostics and unknown calls
 
-Baseline: `00d788489`, Rust 1.99.1. Final candidate rebased onto `ba08f7a21`. The baseline CLI was built and frozen before
+Baseline: `00d788489`, Rust 1.99.1. Final candidate rebased onto `944d88d30`. The baseline CLI was built and frozen before
 implementation. Baseline and candidate ran `check --root <saved fixture>
 --config <name> --format json` against identical saved inputs. The frozen
 executables have distinct SHA-256 hashes:
 
 - Baseline: `a39870ab344c278df4effb20448429837277cdea284411c00bb9849ced3daee5`
-- Candidate: `c4cabdf268ce6c18f19b91982fc88edee9b1aefc0cdb99a9eb199f8d3bcd2d63`
+- Candidate: `7cc9ee03f562076901cff088d65dc53d2ee57872f5a657290501e1152015efc2`
 
-All 104 configurations were compared by stdout, stderr and exit status.
-89 are byte-identical; 15 change intentionally. Repeating the comparison after
-the rebase retained all 104 prior candidate reports, stderr and statuses.
+All 107 configurations were compared by stdout, stderr and exit status.
+89 are byte-identical; 18 change intentionally. Repeating the comparison after
+the rebase retained all 107 prior candidate reports, stderr and statuses.
 [The comparison](check-comparison.json) retains counts, statuses and hashes.
 
 | Saved configuration | Before | After |
@@ -21,6 +21,8 @@ the rebase retained all 104 prior candidate reports, stderr and statuses.
 | DDL `ignore.yml` | No diagnostics | No diagnostics |
 | DDL `low.yml` | No diagnostics | 22 findings; the same 11 fallback warnings |
 | DDL `narrow.yml` | No diagnostics | Two findings only in the selected rule |
+| Valid unsupported PostgreSQL statements | No diagnostics | Three findings with policy/suppression guidance |
+| COPY positive control | No diagnostics | One following unsupported SQL finding |
 | Unknown calls, omitted policy | No findings | One finding at the dynamic call |
 | Unknown calls, explicit `finding` | One finding | One finding |
 | Unknown calls, explicit `ignore` | No findings | No findings |
@@ -40,27 +42,37 @@ An explicit `ignore` policy still omits only unanalyzable findings. Standalone
 idempotent-insert source read errors remain errors; its prepared aggregate scan
 and generated-write scan retain their existing recorded-read-error tolerance.
 
+The PR review's COPY controls compare frozen pre-review head `b4d4006e5` with
+the corrected parser: 12 findings become 6. Five COPY terminator findings and
+one valid static `EXECUTE` wrapper disappear. Unsupported COPY headers, later
+unsupported SQL, procedural false ownership and a standalone backslash-dot still
+report. Saved cases cover empty/nonempty SQL-like payloads and CRLF. The static
+`EXECUTE` test also checks its table facts survive. Valid unsupported PostgreSQL
+fixtures cover `ALTER DEFAULT PRIVILEGES`, `CREATE PUBLICATION` and
+`REFRESH MATERIALIZED VIEW`; their diagnostics name next-line suppression and
+`options.unanalyzable` without suggesting PostgreSQL rejects the statements.
+
 Validation:
 
-- The complete locked all-features workspace CI test script passes: 13,237
-  library tests, 438 binary tests and 1,387 integration tests. Three existing
+- The complete locked all-features workspace CI test script passes: 13,270
+  library tests, 444 binary tests and 1,387 integration tests. Three existing
   library tests remain ignored. This includes all 86 contract tests and the
   executable rule-documentation examples.
 - The full local run uses ShellCheck 0.11.0 and a clean task-owned temporary
   root: unrelated ancestor Git metadata at the normal temporary root otherwise
   violates the ad hoc discovery fixture's assumption. No tests were excluded.
-- At head `2ce29a055`, all 574 compiled Node API tests across the same 21 files
-  as Linux CI pass,
-  including the new CJS/ESM/project policy cases and corrected invalid-neighbor
-  assertion. The definite expression-arbiter violation still reports separately.
-  The only later PR code change is the resolved documentation example; the Rust
-  and Node implementation patches are unchanged by the later rebase.
-- Coverage was measured at original head `749f16152` before the rebase:
-  3,754 tests pass with LLVM coverage. The PR's Rust patches are unchanged by
-  the rebase; final combined-source checks above were repeated. Marker extraction, prepared
-  projection and dynamic merge have 100% line coverage; shared routing has 98.21%.
-  [The focused report](focused-coverage.json) includes existing file totals too.
-  No filenames were excluded.
+- All 574 compiled Node API tests across Linux CI's same 21 files pass on the
+  final rebased source, including CJS/ESM/project parity for the review fixtures.
+- Original-head `749f16152` coverage ran 3,754 tests before the review fixes:
+  marker extraction, prepared projection and dynamic merge reached 100% line
+  coverage; shared routing reached 98.21%.
+  [The original focused report](focused-coverage.json) records that provenance.
+- Review-source `f769f4d56` coverage ran 222 focused parser, migration, prepared
+  and schema-policy tests before the final rebase. The review Rust patch is
+  unchanged by that rebase. New terminator ownership and the extracted marker
+  helper have 100% line coverage; SQL text normalization also has 100%.
+  [The review report](review-coverage.json) retains all seven affected file
+  totals. No filenames were excluded from either coverage run.
 - Complete standalone and aggregate Node check reports match across the default,
   explicit finding/ignore, DDL report/advise/ignore, low fallback, narrowed scope,
   nested location and suppression cases.
@@ -70,4 +82,4 @@ Validation:
 
 No public report fields are added. The asynchronous Node check API and CLI share
 the corrected request-owned facts. No `query_annotation` or `relative_scope`
-files are edited. All task worker worktrees have been removed.
+files are edited. All five task worker worktrees have been removed.

@@ -23,7 +23,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 22,
     "beforeStdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "afterStdoutSha256": "ed247400719c7d49e42e52d5cf9d83df9472a9fe8217f1455d089e12a3f49010",
+    "afterStdoutSha256": "8262c7173895bd762368e715b639ac9498efe0b100527c1681b11754bcafcf6f",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -51,7 +51,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 0,
     "beforeStdoutSha256": "18d66292a6a25d2dd7cfb8a6a6e665658975d56c2d50bc86b98a81b8a8a2a5b1",
-    "afterStdoutSha256": "515796309ae007c140ff433ee473119f2d8cee18969f073c60a2e85307e5e821",
+    "afterStdoutSha256": "526513076e1a5d898bdc4e913d4e62b493989a1dd15b2ee4c1b66c66639a4b9e",
     "beforeStderrSha256": "2360d4108c540039aedcf06fb5516687c1854251ec86a4a0843c2868204c1056",
     "afterStderrSha256": "2360d4108c540039aedcf06fb5516687c1854251ec86a4a0843c2868204c1056"
   },
@@ -65,7 +65,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 0,
     "beforeStdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "afterStdoutSha256": "41a6f2ff053e197ef511d7317f392493d8b8c85b9463b832633903cc33b230ae",
+    "afterStdoutSha256": "304eb989c5576c77f4ef67c7a161c3b316deaa7ea403ff54ea19bde24a20ee2c",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -79,7 +79,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 0,
     "beforeStdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "afterStdoutSha256": "fe38d5578bebdf7f80436220f1a4ec87b92ca2c8159ad2454f664c23407fb7e2",
+    "afterStdoutSha256": "067a02d9cba0fb4eaa35aa35b2461daaf9f21488e85b374484ef54d889fbb551",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -93,7 +93,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 0,
     "beforeStdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "afterStdoutSha256": "2277bd8c81a6a8ccd18f9aac62a1ab74c609a24f751982840e28661753aa25d8",
+    "afterStdoutSha256": "94ff322d386b56b23242052ffaa02be92833dbfb36469c1ac55cc6ce76adefe9",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -107,7 +107,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 0,
     "beforeStdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "afterStdoutSha256": "9ae4f514276e7ded9f0529aa15cf25cded9298574d8ada0e4d8a0fbfec8e88b3",
+    "afterStdoutSha256": "20ffbd2315815664598c51fd5e1cacb723944c40def44503a6e6e8a89f9b049d",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -121,7 +121,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 1,
     "beforeStdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "afterStdoutSha256": "43f2b1fc311f9e4c3ef01abd197a331ecaf228c1f09f0a333bb8c4f81bf0135b",
+    "afterStdoutSha256": "a9e6e875e245d112b8a6f792140e5bd9a4e214185250e95f730519227418e2ae",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -135,7 +135,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 0,
     "beforeStdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "afterStdoutSha256": "a09471f19cbfbd3194060d765396c77c1f06a97a188bb4e7e7fdddf631a13935",
+    "afterStdoutSha256": "b1361ec3f6996d4589bbbe48940a9cfb3c80ed01e8137c41f7cd5c5e62f8ae41",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -443,7 +443,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 0,
     "beforeStdoutSha256": "3685d9a82041efd561170e42d15406f12065d965352dcb3570c14cddd7323323",
-    "afterStdoutSha256": "ca11b1e36fd510e46e7c35c6977c320c17910239e8a5a821a67a03ce799997d1",
+    "afterStdoutSha256": "5b5a00f24c1c80e76abac4f6a7e217958369c8bf1aff7c26fdd2f037fb70bcfe",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -513,7 +513,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 0,
     "beforeStdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "afterStdoutSha256": "e1a3616cf3d5ac075930d80cf5e587f4a52427da4ee51ed6e7d7e4990632e598",
+    "afterStdoutSha256": "023d292ce0456a1bc493f73b76444472101d6f0bde1b65b74bedb014af807076",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -695,7 +695,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 0,
     "beforeStdoutSha256": "fe70736ff2e14d2b43b30102d61f434413504942f1eec783f40f8429b7b25226",
-    "afterStdoutSha256": "3818e0d2aef87e3759eb030fee230a498a15a2d18fb7a582c646014f405dbf06",
+    "afterStdoutSha256": "790f53541e3ec2e8338f5f2cb090b165e02756e9954e73791a05548b3388c03f",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -737,7 +737,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 0,
     "beforeStdoutSha256": "334f13576b7639fc2b8eb28697b3064ab4405c33a9542cbeef458ddaf9a4f973",
-    "afterStdoutSha256": "9f19fc726687758ee3b1e8c79e8e800d1959161f937905fccf35090ee898f7cd",
+    "afterStdoutSha256": "eb096a84c4f0ce5d4ef112bb1a23aea3e1808041da1b80a443c1e27a043e53ee",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -849,7 +849,7 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 0,
     "beforeStdoutSha256": "bfad9ed49fe276a4da089a1a5e6d246b1631b68330f7fdcbd3a71709b60367f7",
-    "afterStdoutSha256": "9c9812fffc462c490ca6666094a9a7547b64c669b2d9785f742a0a23882a6624",
+    "afterStdoutSha256": "44660176b2fe5d7b663b571c2b11096004a2a1b8c854180c4e72863863846002",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
@@ -1451,7 +1451,49 @@
     "beforeAdvisories": 0,
     "afterAdvisories": 0,
     "beforeStdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
-    "afterStdoutSha256": "23203a8cea25bf960699c149e988b5de9dc2ca8ebb1a71b7f96b4340ea5760bf",
+    "afterStdoutSha256": "31261bc590697287ea40c5f5134d6cc9313426e4ef1eaa11c8226b74df6b87af",
+    "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/copy",
+    "config": "report.yml",
+    "beforeExit": 0,
+    "afterExit": 1,
+    "beforeFindings": 0,
+    "afterFindings": 6,
+    "beforeAdvisories": 0,
+    "afterAdvisories": 0,
+    "beforeStdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "afterStdoutSha256": "4ade0b685d2fadf13b5f9b2062935375f9e732fa822dd3b8235a0d2db4d96ec3",
+    "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/copy",
+    "config": "positive.yml",
+    "beforeExit": 0,
+    "afterExit": 1,
+    "beforeFindings": 0,
+    "afterFindings": 1,
+    "beforeAdvisories": 0,
+    "afterAdvisories": 0,
+    "beforeStdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "afterStdoutSha256": "16cb12757507c32012739336d80b8ffe9f7512705b46f739d204acc771576993",
+    "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/unsupported-valid",
+    "config": "report.yml",
+    "beforeExit": 0,
+    "afterExit": 1,
+    "beforeFindings": 0,
+    "afterFindings": 3,
+    "beforeAdvisories": 0,
+    "afterAdvisories": 0,
+    "beforeStdoutSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+    "afterStdoutSha256": "2d16c31d0a581511eae800b766f6ce2a27154aa5c3657e262151ba3c5216e51d",
     "beforeStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "afterStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   }
