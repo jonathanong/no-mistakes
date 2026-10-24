@@ -38,6 +38,8 @@ fn generator_creation_and_unsupported_consumption_abstain_under_every_policy() {
     }
 }
 
+// The graph JSON test facade is exported only with instrumentation.
+#[cfg(feature = "test-instrumentation")]
 #[test]
 fn generator_contracts_do_not_emit_executable_ownership_edges() {
     let root = fixture();
