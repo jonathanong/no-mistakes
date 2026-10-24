@@ -25,14 +25,6 @@ pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
     extract_from_parsed_with_failures(sql, &statements, &functions, &unanalyzable_statements)
 }
 
-pub(crate) fn extract_from_parsed(
-    sql: &str,
-    statements: &[Statement],
-    functions: &[super::SqlFunctionCallFact],
-) -> SqlSchemaFileFacts {
-    extract_from_parsed_with_failures(sql, statements, functions, &[])
-}
-
 pub(crate) fn extract_from_parsed_with_failures(
     sql: &str,
     statements: &[Statement],
