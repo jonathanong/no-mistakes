@@ -112,6 +112,7 @@ fn an_allow_entry_that_suppresses_nothing_is_stale() {
 
 #[test]
 fn only_valid_ready_immediate_whole_key_indexes_prove_one_row() {
+    // The unchanged fixture's lower(slug) lookup now matches its expression key.
     expect(
         "keys.yml",
         "sql/keys.sql",
@@ -120,7 +121,6 @@ fn only_valid_ready_immediate_whole_key_indexes_prove_one_row() {
             (8, "table:partial_keys"),
             (9, "table:invalid_keys"),
             (10, "table:deferred_keys"),
-            (11, "table:expr_keys"),
             (13, "table:orders"),
             (14, "table:orders"),
         ],
@@ -231,4 +231,17 @@ fn embedded_wrapped_statement_directives_keep_recovery_fixtures_isolated() {
         "src/wrapped-statement-suppression.mts",
         &[(9, "table:accounts"), (11, "table:accounts")],
     );
+}
+
+#[test]
+fn unique_index_shape_guards_survive_cli_preparation() {
+    let root = fixture().join("unique-index-shapes");
+    let actual = findings_of(check_in(&root, ".no-mistakes.yml"));
+    assert_eq!(actual.len(), 24, "{actual:?}");
+    assert!(actual
+        .iter()
+        .any(|(file, line, _)| file == "partial-unique.sql" && *line == 3));
+    assert!(!actual
+        .iter()
+        .any(|(file, line, _)| file == "partial-unique.sql" && *line == 2));
 }
