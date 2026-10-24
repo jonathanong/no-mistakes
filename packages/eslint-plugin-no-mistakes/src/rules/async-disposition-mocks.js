@@ -9,9 +9,34 @@ const {
 const { mockInitializer } = require("./async-disposition-mock-bindings");
 const { memberPropertyName } = require("./async-targets");
 
+// Destructuring and loop targets also replace a consumer method's identity.
+function propertyTargetWritten(value) {
+  if (value.type !== "MemberExpression") return false;
+  let target = value;
+  while (
+    ["ObjectPattern", "ArrayPattern", "RestElement"].includes(target.parent.type) ||
+    (target.parent.type === "Property" && target.parent.value === target) ||
+    (target.parent.type === "AssignmentPattern" && target.parent.left === target)
+  )
+    target = target.parent;
+  const parent = target.parent;
+  return (
+    (["AssignmentExpression", "ForOfStatement", "ForInStatement"].includes(parent.type) &&
+      parent.left === target) ||
+    parent.type === "UpdateExpression" ||
+    (parent.type === "UnaryExpression" && parent.operator === "delete")
+  );
+}
+
 // Property writes invalidate provenance, including writes through stable local aliases.
 // This follows syntax in this file, not arbitrary callees' side effects.
-function propertiesWritten(node, context, seen = new Set(), initialization = null) {
+function propertiesWritten(
+  node,
+  context,
+  seen = new Set(),
+  initialization = null,
+  propertiesOnly = false,
+) {
   const variable = resolveVariable(node, context);
   const key = variable || node.name;
   if (seen.has(key)) return false;
@@ -40,9 +65,11 @@ function propertiesWritten(node, context, seen = new Set(), initialization = nul
     const parent = value.parent;
     if (parent === initialization && parent.left === value) return false;
     if (
-      (parent.type === "AssignmentExpression" && parent.left === value) ||
-      parent.type === "UpdateExpression" ||
-      (parent.type === "UnaryExpression" && parent.operator === "delete")
+      propertiesOnly
+        ? propertyTargetWritten(value)
+        : (parent.type === "AssignmentExpression" && parent.left === value) ||
+          parent.type === "UpdateExpression" ||
+          (parent.type === "UnaryExpression" && parent.operator === "delete")
     )
       return true;
     if (
@@ -51,13 +78,13 @@ function propertiesWritten(node, context, seen = new Set(), initialization = nul
       parent.id.type === "Identifier" &&
       ["const", "let"].includes(parent.parent.kind)
     )
-      return propertiesWritten(parent.id, context, seen, initialization);
+      return propertiesWritten(parent.id, context, seen, initialization, propertiesOnly);
     if (
       parent.type === "AssignmentExpression" &&
       parent.right === value &&
       parent.left.type === "Identifier"
     )
-      return propertiesWritten(parent.left, context, seen, parent);
+      return propertiesWritten(parent.left, context, seen, parent, propertiesOnly);
     return false;
   });
 }

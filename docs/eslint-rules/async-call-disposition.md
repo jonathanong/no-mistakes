@@ -203,3 +203,41 @@ enqueueEmail(user.id);
   promises inside protected error boundaries.
 - [`require-options-on-imported-call`](require-options-on-imported-call.md) for
   required options on imported, global, or receiver-shaped calls.
+
+## Awaiting callback consumers
+
+`awaitingConsumers` explicitly trusts an imported API to await or otherwise adopt
+its callback's returned promise. Each entry uses `sourceSpecifierPatterns` and
+`calleeNamePatterns` like `targets`, and requires `callbackArgumentIndexes`: a
+nonempty array of distinct, nonnegative, zero-based argument positions. Omit this
+option to retain the default callback behavior.
+
+```js
+{
+  targets: [{ sourceSpecifierPatterns: ["@app/jobs"], calleeNamePatterns: ["/^enqueue/"] }],
+  awaitingConsumers: [{
+    sourceSpecifierPatterns: ["@app/admission"],
+    calleeNamePatterns: ["awaitReportedEnqueueAdmission"],
+    callbackArgumentIndexes: [0],
+  }],
+}
+```
+
+```typescript
+import { awaitReportedEnqueueAdmission } from "@app/admission";
+await awaitReportedEnqueueAdmission(() => {
+  return enqueueOnTopicCreated(data); // accepted: configured consumer adopts this return
+});
+unknownConsumer(() => enqueueOnTopicCreated(data)); // reported: no configured contract
+awaitReportedEnqueueAdmission(null, () => enqueueOnTopicCreated(data)); // reported: wrong slot
+awaitReportedEnqueueAdmission(() => { enqueueOnTopicCreated(data); }); // reported: not returned
+```
+
+Return the target promise (or an already supported retained, chained, or aggregate
+promise) from the configured callback. Matching follows import identity, including
+stable aliases and logical `.call` argument positions; shadowed or reassigned callees do not qualify. A spread
+argument before the callback prevents proving its position. The option does not
+inspect consumer bodies or infer contracts from names. As with ordinary function
+and mock callback returns, it does not prove that a caller invokes or awaits the
+consumer. Configure only APIs that honor this contract. Existing literal-array
+`.apply` callback return behavior remains unchanged.

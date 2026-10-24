@@ -14,18 +14,19 @@ const {
   promiseAllDisposed,
   mappedPromise,
 } = require("./async-disposition-expressions");
-const { targetOptionsSchema } = require("./async-schema");
+const { dispositionOptionsSchema } = require("./async-schema");
 const { createTargetMatcher } = require("./async-targets");
+const { createAwaitingConsumers } = require("./async-disposition-consumers");
 
-function isDisposed(node, context, seen = new Set()) {
+function isDisposed(node, context, returnsThroughConsumer, seen = new Set()) {
   if (seen.has(node)) return false;
   seen.add(node);
   const observed = observedExpression(node, context);
-  const disposed = (value) => isDisposed(value, context, seen);
+  const disposed = (value) => isDisposed(value, context, returnsThroughConsumer, seen);
   return (
-    directlyDisposed(node, context) ||
-    directlyDisposed(observed, context) ||
-    promiseAllDisposed(observed, context) ||
+    directlyDisposed(node, context, returnsThroughConsumer) ||
+    directlyDisposed(observed, context, returnsThroughConsumer) ||
+    promiseAllDisposed(observed, context, returnsThroughConsumer) ||
     retainedPromise(observed, context, disposed) ||
     mappedPromise(observed, (value) =>
       retainedCollection(
@@ -53,7 +54,7 @@ module.exports = rule(
       recommended: false,
     },
     hasSuggestions: true,
-    schema: targetOptionsSchema,
+    schema: dispositionOptionsSchema,
     messages: {
       disposition:
         "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
@@ -62,13 +63,27 @@ module.exports = rule(
   },
   (context) => {
     const matcher = createTargetMatcher(context);
+    const consumers = createAwaitingConsumers(context);
     const suppressed = ruleSuppression(context, "async-call-disposition");
     if (!matcher.hasTargets) return {};
 
     return {
-      ...matcher.visitors,
+      ...Object.fromEntries(
+        Object.keys(matcher.visitors).map((key) => [
+          key,
+          (node) => {
+            matcher.visitors[key](node);
+            consumers.visitors[key](node);
+          },
+        ]),
+      ),
       CallExpression(node) {
-        if (!matcher.isTargetCall(node) || suppressed(node) || isDisposed(node, context)) return;
+        if (
+          !matcher.isTargetCall(node) ||
+          suppressed(node) ||
+          isDisposed(node, context, consumers.returnsThroughConsumer)
+        )
+          return;
         context.report({
           node,
           messageId: "disposition",

@@ -406,6 +406,8 @@ later expression shares the same statement as `Promise.all`. The
 [`no-mistakes/async-call-disposition`](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-rules/async-call-disposition.md)
 eslint rule enforces disposition going forward on configured enqueue APIs, but
 it is not a discovery graph — existing callers still need this manual pass.
+For imported APIs that adopt callback returns, configure `awaitingConsumers`
+with explicit `callbackArgumentIndexes`; unknown callback APIs remain reported.
 
 For file-local API prevention policies, configure the opt-in
 [`restricted-api-usage`](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-rules/restricted-api-usage.md)
