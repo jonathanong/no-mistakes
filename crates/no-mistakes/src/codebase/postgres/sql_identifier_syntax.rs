@@ -112,3 +112,6 @@ mod template_bind_tests;
 
 #[cfg(test)]
 mod metadata_tests;
+
+#[cfg(test)]
+mod runtime_span_tests;

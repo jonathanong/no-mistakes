@@ -20,6 +20,7 @@ pub(super) fn project(
     );
     append_escapes(module, selection, syntax, &direct, source, &mut calls);
     append_loads(module, profile, source, &mut calls);
+    append_runtime(selection, syntax, &direct, source, &mut calls);
     calls.sort_by_key(|call| call.span);
     calls.dedup_by_key(|call| call.span);
     calls
@@ -188,3 +189,5 @@ fn append_escapes(
 }
 
 include!("calls/loads.rs");
+
+include!("calls/runtime.rs");

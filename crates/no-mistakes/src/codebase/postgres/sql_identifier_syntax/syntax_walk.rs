@@ -27,6 +27,7 @@ impl<'a> Visit<'a> for Syntax {
         walk::walk_assignment_target_property_identifier(self, target);
     }
     fn visit_static_member_expression(&mut self, value: &oxc_ast::ast::StaticMemberExpression<'a>) {
+        self.metadata.reference(span(value.span));
         if let Some((root, parts)) = chain(&value.object) {
             if parts.len() == 1 && self.namespace_targets.contains_key(&root) {
                 self.namespace_members
@@ -39,6 +40,7 @@ impl<'a> Visit<'a> for Syntax {
         &mut self,
         value: &oxc_ast::ast::ComputedMemberExpression<'a>,
     ) {
+        self.metadata.reference(span(value.span));
         if let Some((root, parts)) = chain(&value.object) {
             if parts.len() == 1 && self.namespace_targets.contains_key(&root) {
                 if let Expression::StringLiteral(key) = unwrap_ts_wrappers(&value.expression) {
@@ -47,6 +49,10 @@ impl<'a> Visit<'a> for Syntax {
             }
         }
         walk::walk_computed_member_expression(self, value);
+    }
+    fn visit_private_field_expression(&mut self, value: &oxc_ast::ast::PrivateFieldExpression<'a>) {
+        self.metadata.reference(span(value.span));
+        walk::walk_private_field_expression(self, value);
     }
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
         let callee = chain(&value.callee);
