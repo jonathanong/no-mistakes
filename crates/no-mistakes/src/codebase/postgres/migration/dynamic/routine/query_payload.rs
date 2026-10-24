@@ -13,17 +13,16 @@ pub(super) fn push_query_payload(
         .filter(|token| !matches!(token.token, Token::Whitespace(_)))
         .collect();
     let Some(at) = code.windows(2).position(|pair| {
-        (word(pair[0], "FOR") || word(pair[0], "IN") || word(pair[0], "IS"))
-            && (word(pair[1], "SELECT") || word(pair[1], "WITH"))
+        (keyword(pair[0], "FOR") || keyword(pair[0], "IN") || keyword(pair[0], "IS"))
+            && (keyword(pair[1], "SELECT") || keyword(pair[1], "WITH"))
     }) else {
         return;
     };
     let query = code[at + 1];
     let start = location_offset(&body.sql, query.span.start.line, query.span.start.column);
-    let loop_start = code[at + 2..]
-        .iter()
-        .rev()
-        .find(|token| word(token, "LOOP"))
+    let loop_start = keyword(code[at], "IN")
+        .then(|| loop_boundary(&code[at + 2..]))
+        .flatten()
         .and_then(|token| {
             location_offset(&body.sql, token.span.start.line, token.span.start.column)
         });
@@ -37,6 +36,27 @@ pub(super) fn push_query_payload(
     if let Some(payload) = result.last_mut() {
         payload.query_payload = true;
         // A declared cursor's query is parsed now but runs only when opened later.
-        payload.executed &= !code.iter().any(|token| word(token, "CURSOR"));
+        payload.executed &= !code.iter().any(|token| keyword(token, "CURSOR"));
     }
+}
+
+fn loop_boundary<'a>(code: &[&'a TokenWithSpan]) -> Option<&'a TokenWithSpan> {
+    let mut depth = 0usize;
+    let mut cases = 0usize;
+    for token in code {
+        match &token.token {
+            Token::LParen | Token::LBracket => depth += 1,
+            Token::RParen | Token::RBracket => depth = depth.saturating_sub(1),
+            _ if keyword(token, "CASE") => cases += 1,
+            _ if keyword(token, "END") => cases = cases.saturating_sub(1),
+            _ if depth == 0 && cases == 0 && keyword(token, "LOOP") => return Some(token),
+            _ => {}
+        }
+    }
+    None
+}
+
+fn keyword(token: &TokenWithSpan, expected: &str) -> bool {
+    matches!(&token.token, Token::Word(word)
+        if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(expected))
 }
