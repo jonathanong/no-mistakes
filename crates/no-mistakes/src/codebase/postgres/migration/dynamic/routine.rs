@@ -102,6 +102,7 @@ fn schema_statements(body: &RoutineBody) -> Vec<DynamicSql> {
     let mut start_token = 0usize;
     let mut ordinal = 0usize;
     let mut scope = execution::Scope::default();
+    let mut procedural = super::super::super::parse::ProceduralBodyState::default();
     for (at, token) in tokens.iter().enumerate() {
         if !matches!(token.token, Token::SemiColon) {
             continue;
@@ -110,13 +111,13 @@ fn schema_statements(body: &RoutineBody) -> Vec<DynamicSql> {
             .map_or(body.sql.len(), |offset| offset + 1);
         let chunk = &tokens[start_token..at];
         let executed = scope.advance(&significant(chunk)) && body.executed;
-        let control = super::super::super::parse::procedural_control_chunk(chunk);
+        let control = procedural.control_chunk(chunk);
         push_schema_statement(body, start, end, ordinal, executed, control, &mut result);
         start_token = at + 1;
         start = end;
         ordinal += 1;
     }
-    let control = super::super::super::parse::procedural_control_chunk(&tokens[start_token..]);
+    let control = procedural.control_chunk(&tokens[start_token..]);
     push_schema_statement(
         body,
         start,

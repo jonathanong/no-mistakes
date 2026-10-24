@@ -95,10 +95,9 @@ fn select(
         let span = located.first()?.span;
         located.insert(0, TokenWithSpan::new(token, span));
     }
-    Parser::new(&dialect)
-        .with_tokens_with_locations(located)
-        .parse_statement()
-        .ok()
+    let mut parser = Parser::new(&dialect).with_tokens_with_locations(located);
+    let statement = parser.parse_statement().ok()?;
+    matches!(parser.peek_token().token, Token::EOF).then_some(statement)
 }
 
 fn next(tokens: &[Token], at: usize) -> usize {

@@ -11,7 +11,7 @@ mod recover;
 pub(super) mod rewrite;
 mod source;
 pub(super) use chr::{expand_chr_encoded_sql, rewrite_chr_tokens};
-pub(crate) use recover::control_chunk as procedural_control_chunk;
+pub(crate) use recover::BodyState as ProceduralBodyState;
 pub(crate) use source::LocatedStatement;
 
 use rewrite::{rewrite_drop_index_concurrently, rewrite_referential_set_column_lists};

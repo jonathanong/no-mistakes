@@ -1,0 +1,48 @@
+use sqlparser::dialect::PostgreSqlDialect;
+use sqlparser::parser::Parser;
+use sqlparser::tokenizer::Token;
+
+pub(super) fn matches(code: &[&Token]) -> bool {
+    let Some(at) = operator(code) else {
+        return false;
+    };
+    target(&code[..at]) && expression(&code[at + 1..])
+}
+
+pub(super) fn target(code: &[&Token]) -> bool {
+    parsed(code).is_some_and(|target| lvalue(&target))
+}
+
+pub(super) fn expression(code: &[&Token]) -> bool {
+    parsed(code).is_some()
+}
+
+fn parsed(code: &[&Token]) -> Option<Expr> {
+    (!code.is_empty()).then_some(())?;
+    let tokens = code.iter().map(|token| (**token).clone()).collect();
+    let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens(tokens);
+    let expression = parser.parse_expr().ok()?;
+    (parser.peek_token().token == Token::EOF).then_some(expression)
+}
+
+fn lvalue(expr: &Expr) -> bool {
+    match expr {
+        Expr::Identifier(_) | Expr::CompoundIdentifier(_) => true,
+        Expr::CompoundFieldAccess { root, .. } => lvalue(root),
+        _ => false,
+    }
+}
+
+pub(super) fn operator(code: &[&Token]) -> Option<usize> {
+    let mut nested = 0usize;
+    for (at, token) in code.iter().enumerate() {
+        match token {
+            Token::LParen | Token::LBracket => nested += 1,
+            Token::RParen | Token::RBracket => nested = nested.saturating_sub(1),
+            Token::Assignment | Token::Eq if nested == 0 => return Some(at),
+            _ => {}
+        }
+    }
+    None
+}
+use sqlparser::ast::Expr;

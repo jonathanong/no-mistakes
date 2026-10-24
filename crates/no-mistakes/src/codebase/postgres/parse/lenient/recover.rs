@@ -10,7 +10,7 @@ mod schema;
 pub(super) use bodies::concatenated_strings;
 use bodies::{peel_do_body, recover_chr_encoded};
 use partition::recover_partition_change;
-pub(crate) use procedural::control_chunk;
+pub(crate) use procedural::BodyState;
 use schema::start as schema_ddl_start;
 use sqlparser::ast::{DiscardObject, Statement};
 use sqlparser::dialect::PostgreSqlDialect;
@@ -47,13 +47,18 @@ pub(super) fn parse_chunks_with_function_calls(
         // Own the chunk text even when recovery emits no statement. A later
         // sibling must not inherit this chunk's ON CONFLICT target.
         let tokens = original.map(Arc::<[TokenWithSpan]>::from);
+        let mut handled_procedural = false;
         let produced = parse_chunk(
             chunk,
             aligned.as_deref(),
             allow_concurrent_detach && !transaction_open,
+            &mut handled_procedural,
         );
         copy_data_pending = original.is_some_and(copy::owns_terminator);
         if produced.is_empty() {
+            if handled_procedural {
+                continue;
+            }
             if let Some(tokens) = tokens {
                 let mut marker = LocatedStatement::functions(
                     Statement::Discard {
@@ -93,17 +98,12 @@ fn parse_chunk(
     chunk: Vec<Token>,
     original: Option<&[TokenWithSpan]>,
     allow_concurrent_detach: bool,
+    handled_procedural: &mut bool,
 ) -> Vec<LocatedStatement> {
     if let Some(body) = peel_do_body(&chunk) {
+        *handled_procedural = true;
         let body = locations::align_do_body(&body, original);
-        return super::parse_with_sources(&body, true, false)
-            .into_iter()
-            .filter(|located| {
-                !is_begin_or_end(&located.statement)
-                    && !(located.recovery_failure.is_some()
-                        && located.chunk_tokens.as_deref().is_some_and(control_chunk))
-            })
-            .collect();
+        return procedural::filter_body(super::parse_with_sources(&body, true, false));
     }
     let dialect = PostgreSqlDialect {};
     let mut parser = match original {

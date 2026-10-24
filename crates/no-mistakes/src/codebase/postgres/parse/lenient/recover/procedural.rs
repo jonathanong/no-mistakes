@@ -1,14 +1,73 @@
 //! Recognize procedural-only chunks inside an already identified PL/pgSQL body.
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
+use std::sync::Arc;
+mod assignment;
+mod commands;
+mod declaration;
 
-pub(crate) fn control_chunk(tokens: &[TokenWithSpan]) -> bool {
-    let code: Vec<_> = tokens
-        .iter()
-        .map(|token| &token.token)
-        .filter(|token| !matches!(token, Token::Whitespace(_) | Token::SemiColon))
-        .collect();
-    control(&code)
+/// Declaration sections last across semicolon chunks, including in nested blocks.
+#[derive(Default)]
+pub(crate) struct BodyState {
+    declarations: bool,
+}
+
+pub(super) fn filter_body(
+    statements: Vec<super::LocatedStatement>,
+) -> Vec<super::LocatedStatement> {
+    let mut procedural = BodyState::default();
+    let mut previous: Option<Arc<[TokenWithSpan]>> = None;
+    let mut control = false;
+    statements
+        .into_iter()
+        .filter(|located| {
+            if let Some(tokens) = &located.chunk_tokens {
+                if previous
+                    .as_ref()
+                    .is_none_or(|previous| !Arc::ptr_eq(previous, tokens))
+                {
+                    control = procedural.control_chunk(tokens);
+                    previous = Some(Arc::clone(tokens));
+                }
+            }
+            !super::is_begin_or_end(&located.statement)
+                && !(located.recovery_failure.is_some() && control)
+        })
+        .collect()
+}
+
+impl BodyState {
+    pub(crate) fn control_chunk(&mut self, tokens: &[TokenWithSpan]) -> bool {
+        let code: Vec<_> = tokens
+            .iter()
+            .map(|token| &token.token)
+            .filter(|token| !matches!(token, Token::Whitespace(_) | Token::SemiColon))
+            .collect();
+        let code = unlabeled(&code);
+        if code.first().is_some_and(|token| word(token, "DECLARE")) {
+            self.declarations = true;
+            return code.len() == 1 || declaration::matches(&code[1..]);
+        }
+        if code.first().is_some_and(|token| word(token, "BEGIN")) {
+            self.declarations = false;
+        }
+        if code.first().is_some_and(|token| word(token, "END")) {
+            self.declarations = false;
+        }
+        if self.declarations && declaration::matches(code) {
+            return true;
+        }
+        control(code)
+    }
+}
+
+fn unlabeled(code: &[&Token]) -> &[&Token] {
+    if let [Token::ShiftLeft, label_token, Token::ShiftRight, rest @ ..] = code {
+        if label(label_token) {
+            return rest;
+        }
+    }
+    code
 }
 
 fn control(code: &[&Token]) -> bool {
@@ -31,15 +90,24 @@ fn control(code: &[&Token]) -> bool {
         .iter()
         .any(|kind| word(first, kind))
     {
-        return boundary(code, "THEN")
-            .is_some_and(|at| at + 1 == code.len() || control(&code[at + 1..]));
+        return boundary(code, "THEN").is_some_and(|at| {
+            (!word(first, "IF") && !word(first, "ELSIF") || assignment::expression(&code[1..at]))
+                && (at + 1 == code.len() || control(&code[at + 1..]))
+        });
     }
     if ["FOR", "WHILE", "FOREACH"]
         .iter()
         .any(|kind| word(first, kind))
     {
-        return boundary(code, "LOOP")
-            .is_some_and(|at| at + 1 == code.len() || control(&code[at + 1..]));
+        return boundary(code, "LOOP").is_some_and(|at| {
+            (if word(first, "FOR") {
+                commands::for_header(&code[..at])
+            } else if word(first, "WHILE") {
+                assignment::expression(&code[1..at])
+            } else {
+                commands::foreach_header(&code[..at])
+            }) && (at + 1 == code.len() || control(&code[at + 1..]))
+        });
     }
     if word(first, "LOOP") || word(first, "EXCEPTION") {
         return code.len() == 1 || control(&code[1..]);
@@ -60,23 +128,7 @@ fn control(code: &[&Token]) -> bool {
     {
         return true;
     }
-    if word(first, "DECLARE") {
-        return !code
-            .iter()
-            .any(|token| word(token, "CURSOR") || word(token, "FOR"));
-    }
-    if word(first, "OPEN") {
-        return code.len() == 2 && label(code[1]);
-    }
-    if word(first, "GET") {
-        return code.get(1).is_some_and(|token| word(token, "DIAGNOSTICS"))
-            || code.get(1).is_some_and(|token| word(token, "STACKED"))
-                && code.get(2).is_some_and(|token| word(token, "DIAGNOSTICS"));
-    }
-    if word(first, "CLOSE") {
-        return code.len() == 2 && label(code[1]);
-    }
-    false
+    assignment::matches(code) || commands::matches(code)
 }
 
 fn ending(code: &[&Token]) -> bool {
