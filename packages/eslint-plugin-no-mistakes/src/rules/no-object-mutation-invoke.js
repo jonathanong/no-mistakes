@@ -1,13 +1,16 @@
 "use strict";
 
 const api = require("./no-object-mutation-runtime");
+const { callFunction } = require("./no-object-mutation-fn");
+const { reducerCallback } = require("./no-object-mutation-reduce");
 const { iteratedContents } = require("./no-object-mutation-read");
-const { methodName, unwrap } = require("./no-object-mutation-syntax");
+const { methodName, staticKey, unwrap } = require("./no-object-mutation-syntax");
 const {
   callable,
   createFresh,
   joinValues,
   lookup,
+  readMember,
   remember,
   unknown,
 } = require("./no-object-mutation-values");
@@ -21,6 +24,38 @@ function memberCall(node, name) {
 }
 
 function visitKnownCall(state, node, scope, role) {
+  const reducer = reducerCallback(node);
+  if (reducer) {
+    const callee = unwrap(node.callee);
+    const receiver = api.visit(state, callee.object, scope, "read");
+    const method = readMember(receiver, methodName(callee));
+    if (
+      callable(method) ||
+      (receiver.type === "fresh" &&
+        (receiver.fields.has(methodName(callee)) ||
+          receiver.items.some(
+            (item) =>
+              item.node?.parent?.key && staticKey(item.node.parent.key) === methodName(callee),
+          )))
+    ) {
+      // Reuse the evaluated receiver in the ordinary call path. A custom
+      // method may supply a shared accumulator or retain its callback.
+      return { fallbackCalleeTag: method };
+    }
+    const seed = api.visit(state, node.arguments[1], scope, "read");
+    const callback = api.visit(state, reducer, scope, "read");
+    callback.reduceSeed = seed;
+    const escapeEpoch = state.escapeEpoch;
+    callFunction(state, callback);
+    if (state.escapeEpoch !== escapeEpoch) {
+      // A leak at the end of one iteration is visible at the next entry.
+      callback.walked = false;
+      callFunction(state, callback);
+    }
+    seed.ownerEnv = scope.ownerEnv;
+    if (role === "escape") api.releaseEscaping(state, seed);
+    return seed;
+  }
   const values = memberCall(node, "values");
   if (values && isGlobalObject(values.object, scope)) {
     const target = node.arguments[0];

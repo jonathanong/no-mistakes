@@ -76,8 +76,13 @@ function walkFunctionBody(state, node, scope, tag) {
   fnEnv.inClass = arrow ? Boolean(scope.inClass) : classMethod;
   fnEnv.hasArguments = arrow ? Boolean(scope.hasArguments) : true;
   fnEnv.receiver = arrow ? scope.receiver || null : tag.receiver || null;
-  for (const param of node.params) {
-    bindPattern(state, param, shared("parameter"), fnEnv, "param");
+  if (tag.reduceSeed) tag.reduceSeed.ownerEnv = fnEnv;
+  for (const [index, param] of node.params.entries()) {
+    if (index === 0 && tag.reduceSeed) {
+      bindName(param.name, tag.reduceSeed, fnEnv, "param");
+    } else {
+      bindPattern(state, param, shared("parameter"), fnEnv, "param");
+    }
   }
   const body = functionStatements(node);
   if (Array.isArray(body)) {
