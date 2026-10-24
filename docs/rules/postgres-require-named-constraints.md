@@ -87,7 +87,7 @@ Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`,
 
 ### Unanalyzable inputs
 
-Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. It judges only SQL files it has parsed. A failure to collect facts aborts the rule with an error instead of being routed through `options.unanalyzable`. The repository-level `unanalyzable` default does not affect it.
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. Known gap: statements the lenient SQL parser cannot parse become `DISCARD ALL` markers and produce no finding, so they are silently unchecked rather than routed through `options.unanalyzable` ([#2661](https://github.com/jonathanong/no-mistakes/issues/2661)). A failure to collect facts aborts the rule with an error. The repository-level `unanalyzable` default does not affect it.
 
 ## Suppression
 
