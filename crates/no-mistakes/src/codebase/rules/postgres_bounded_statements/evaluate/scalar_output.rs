@@ -2,7 +2,7 @@
 use crate::codebase::postgres::{SchemaCatalog, SqlBoundItemKind, SqlBoundQuery};
 
 pub(super) fn single(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> bool {
-    query.outputs.len() == 1 && scalar(query, 0, catalog)
+    !query.has_opaque_row_inputs() && query.outputs.len() == 1 && scalar(query, 0, catalog)
 }
 
 fn scalar(query: &SqlBoundQuery, ordinal: usize, catalog: &SchemaCatalog) -> bool {

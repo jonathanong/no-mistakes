@@ -45,3 +45,26 @@ SELECT a.id FROM orders accounts CROSS JOIN LATERAL (SELECT id FROM public.accou
 SELECT a.id FROM orders o CROSS JOIN LATERAL (SELECT id FROM unknown_local WHERE id = o.account_id LIMIT 1) latest JOIN accounts a ON a.id = latest.id WHERE o.id = $1;
 -- A quoted dot remains part of one driver alias, not a schema separator.
 SELECT a.id FROM orders "o.Key" CROSS JOIN LATERAL (SELECT id FROM accounts WHERE id = "o.Key".account_id LIMIT 1) latest JOIN accounts a ON a.id = latest.id WHERE "o.Key".id = $1;
+-- A cast/wrapper never hides data-backed set expansion behind a query result LIMIT.
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT regexp_split_to_table(name, ',')::uuid FROM accounts LIMIT 1));
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT (regexp_split_to_table(name, ','))::uuid FROM accounts LIMIT 1));
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT CAST(regexp_split_to_table(name, ',') AS uuid) FROM accounts LIMIT 1));
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT lower(regexp_split_to_table(name, ','))::uuid FROM accounts LIMIT 1));
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT COALESCE(regexp_split_to_table(name, ','), 'x')::uuid FROM accounts LIMIT 1));
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT unnest(string_to_array(name, ','))::uuid FROM accounts LIMIT 1));
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT jsonb_array_elements_text(to_jsonb(name))::uuid FROM accounts LIMIT 1));
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT x::uuid FROM accounts a, LATERAL regexp_split_to_table(a.name, ',') AS x LIMIT 1));
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT x.id::uuid FROM accounts a, LATERAL regexp_split_to_table(a.name, ',') AS x(id) LIMIT 1));
+-- Derived aliases cannot launder expansion, including a wrapper that hides an opaque projection.
+WITH tokens AS (SELECT regexp_split_to_table(name, ',')::uuid AS id FROM accounts LIMIT 1) SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT id::uuid FROM tokens LIMIT 1));
+WITH tokens AS (SELECT COALESCE(regexp_split_to_table(name, ','), 'x') AS id FROM accounts LIMIT 1) SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT id::uuid FROM tokens LIMIT 1));
+-- Existing caller-sized SRFs remain finite; scalar casts do not validate UUID value syntax.
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT generate_series(1, $2)::text::uuid));
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT unnest($1::uuid[])::uuid));
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT x.id::uuid FROM unnest($1::uuid[]) AS x(id)));
+WITH ids AS (SELECT $1 AS id) SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT id::uuid FROM ids));
+WITH ids AS (SELECT $1::uuid AS id) SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT id::uuid FROM ids));
+-- Direct limited physical-column lineage survives aliases; wildcard and scalar-subquery lineage remain conservative.
+WITH ids AS (SELECT id FROM accounts LIMIT 1) SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT id::uuid FROM ids));
+WITH ids AS (SELECT * FROM accounts LIMIT 1) SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT id::uuid FROM ids));
+SELECT id FROM accounts WHERE id = ANY(ARRAY(SELECT (SELECT id FROM accounts LIMIT 1)::uuid));

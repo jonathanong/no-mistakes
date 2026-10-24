@@ -1,3 +1,5 @@
+mod finite;
+
 use super::super::super::value::{is_placeholder_ident_at, PlaceholderPositions};
 use crate::codebase::postgres::idents::ident_key;
 use crate::codebase::postgres::statements::SqlBoundOutput;
@@ -17,7 +19,7 @@ pub(super) fn select(
             SelectItem::ExprWithAlias { expr, alias } => Some(SqlBoundOutput {
                 name: Some(ident_key(alias)),
                 caller_sized: caller_value(expr, positions),
-                scalar: scalar(expr),
+                scalar: scalar(expr, items, &resolver, positions),
                 source_column: resolver.column(expr),
                 array_aggregate_column: array_element(expr, select, &resolver),
             }),
@@ -28,7 +30,7 @@ pub(super) fn select(
                     None
                 },
                 caller_sized: caller_value(expr, positions),
-                scalar: scalar(expr),
+                scalar: scalar(expr, items, &resolver, positions),
                 source_column: resolver.column(expr),
                 array_aggregate_column: array_element(expr, select, &resolver),
             }),
@@ -81,9 +83,14 @@ pub(super) fn common(left: &[SqlBoundOutput], right: &[SqlBoundOutput]) -> Vec<S
         .collect()
 }
 
-fn scalar(expr: &Expr) -> bool {
+fn scalar(
+    expr: &Expr,
+    items: &[crate::codebase::postgres::SqlBoundItem],
+    resolver: &super::super::pins::Resolver,
+    positions: PlaceholderPositions<'_>,
+) -> bool {
     match expr {
-        Expr::Nested(expr) => scalar(expr),
+        Expr::Nested(expr) => scalar(expr, items, resolver, positions),
         Expr::Value(value) => !matches!(value.value, Value::Placeholder(_)),
         Expr::Cast {
             data_type:
@@ -98,7 +105,7 @@ fn scalar(expr: &Expr) -> bool {
                 | DataType::Numeric(_)
                 | DataType::Decimal(_),
             ..
-        } => true,
+        } => finite::expression(expr, items, resolver, positions),
         _ => false,
     }
 }

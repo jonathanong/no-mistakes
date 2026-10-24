@@ -240,3 +240,14 @@ projections, without row-removing predicates, set operations, or expanding
 projections. Empty and NULL scalar results mean unlimited; physical data-derived
 counts retain no caller-cap credit. See the [rationale](postgres-bounded-statements-rationale.md)
 for the uncapped recursive-key-walk policy and examples.
+
+For array-query candidates, a scalar cast also requires proven row/caller-sized
+value lineage. Casts, parentheses, and nested scalar wrappers cannot hide a
+data-backed SRF; opaque FROM/LATERAL inputs remain unproven through CTE or
+derived aliases even when the result query writes a LIMIT. Caller-sized SRFs
+such as `generate_series(1, $n)` or `unnest($ids)` retain the existing finite
+caller-input policy, including a supported scalar cast of their results.
+
+PostgreSQL rejects `TABLESAMPLE` on a caller-count CTE: sampling applies only to
+tables and materialized views. Such invalid SQL is outside this rule's count
+proof contract. A sampled physical-table value still has no caller-count proof.

@@ -162,3 +162,8 @@ projected `array_agg` alias. Its `ArrayQuery` projection removes the aggregate's
 output cap and verifies the same prepared input rows and scalar column; a stored
 array alias has no such metadata. Aggregate grouping, HAVING, filters, and
 argument-order clauses retain conservative treatment.
+Scalar output evidence also excludes hidden data-backed row expansion through
+casts, nested expressions, and function arguments. Derived column evidence
+follows existing output lineage; opaque row sources invalidate array-query
+candidate proof independently of a result LIMIT. This reuses prepared facts and
+the existing caller-input SRF policy without widening ordinary LIMIT semantics.
