@@ -34,15 +34,6 @@ pub struct SqlBoundQuery {
     pub outputs: Vec<SqlBoundOutput>,
 }
 
-/// Whether set-operation inputs stream, must complete before output, or cannot execute.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum SqlBoundInputMode {
-    #[default]
-    Streaming,
-    Blocking,
-    Skipped,
-}
-
 /// Syntactic value provenance for one projected column, independent of query row cardinality.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlBoundOutput {
@@ -50,7 +41,7 @@ pub struct SqlBoundOutput {
     pub caller_sized: bool,
 }
 
-/// One FROM item and the columns the statement pins on it.
+/// One FROM item and the columns or index expressions the statement pins on it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlBoundItem {
     pub kind: SqlBoundItemKind,
@@ -65,6 +56,10 @@ pub struct SqlBoundItem {
     pub line: usize,
     pub column: usize,
     pub pins: Vec<SqlBoundPin>,
+    /// Catalog-independent, table-local conjuncts from WHERE and restricting JOIN ON arms.
+    pub predicate_conjuncts: Vec<Expr>,
+    /// Plain columns made non-NULL by strict equality in those same conjuncts.
+    pub nonnull_columns: Vec<String>,
     /// A `LATERAL` source that reads the FROM items before it: it is sized per row of those, so
     /// it bounds nothing pinned to it, but the relations inside it are still judged.
     pub lateral: bool,
@@ -132,6 +127,8 @@ impl SqlBoundItem {
             line,
             column,
             pins: Vec::new(),
+            predicate_conjuncts: Vec::new(),
+            nonnull_columns: Vec::new(),
             lateral: false,
             lateral_reads: Vec::new(),
             lateral_qualified_reads: Vec::new(),
@@ -153,12 +150,14 @@ pub enum SqlBoundItemKind {
     Opaque,
 }
 
-/// A conjunct that equates one column of an item with a value.
+/// A conjunct that equates one column or index expression of an item with a value.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlBoundPin {
     pub column: String,
+    /// The canonical table-local expression fixed by this equality, when it is not a column.
+    pub expression: Option<Expr>,
     pub source: SqlPinSource,
-    /// `IS NOT DISTINCT FROM` also matches NULL, so it picks out one row only on a NOT NULL column.
+    /// `IS NOT DISTINCT FROM` also matches NULL; a nullable key needs NULLS NOT DISTINCT.
     pub null_safe: bool,
     /// Bare columns that subqueries in the value read: when one resolves to the enclosing query
     /// the value depends on the row checked, and the pin fixes nothing.
@@ -193,32 +192,7 @@ pub enum SqlPinSource {
     ReadQuery(SqlBoundQuery),
 }
 
-impl SqlBoundFact {
-    /// Map every position through `map(line, column)`, for SQL embedded in a host file: the
-    /// column decides which physical operand of a recovered string owns the line.
-    pub fn map_lines(&mut self, map: &impl Fn(usize, usize) -> usize) {
-        self.line = map(self.line, self.column);
-        if let Some((line, column)) = &mut self.statement_start {
-            *line = map(*line, *column);
-        }
-        self.query.map_lines(map);
-    }
-}
-
-impl SqlBoundQuery {
-    // Borrow one callback through the recursive tree instead of specializing each traversal.
-    fn map_lines(&mut self, map: &dyn Fn(usize, usize) -> usize) {
-        for item in &mut self.items {
-            item.line = map(item.line, item.column);
-            if let SqlBoundItemKind::Query(query) = &mut item.kind {
-                query.map_lines(map);
-            }
-            for pin in &mut item.pins {
-                if let SqlPinSource::Query(query) | SqlPinSource::ReadQuery(query) = &mut pin.source
-                {
-                    query.map_lines(map);
-                }
-            }
-        }
-    }
-}
+mod input_mode;
+mod lines;
+pub use input_mode::SqlBoundInputMode;
+use sqlparser::ast::Expr;

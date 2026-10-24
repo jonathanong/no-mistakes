@@ -129,6 +129,13 @@ impl SchemaCatalog {
             })
             .collect()
     }
+    /// Preparsed unique index evidence for bounded-row proofs, including partial and expression
+    /// indexes. Ordinary `unique_keys` intentionally retains its unconditional column contract.
+    pub(crate) fn bounded_unique_indexes(&self, table: &str) -> &[super::BoundedUniqueIndex] {
+        self.relation(table)
+            .and_then(|relation| self.arbiter_table(&relation.name))
+            .map_or(&[], |table| table.bounded_indexes.as_slice())
+    }
     /// Whether equality on `columns` holds `table` to at most one row: some unique key of
     /// [`Self::unique_keys`] lies wholly among them.
     pub fn columns_pin_one_row(&self, table: &str, columns: &[String]) -> bool {
