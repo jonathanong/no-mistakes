@@ -35,7 +35,9 @@ that their conditions are evaluated. Unknown or malformed SQL nested inside thei
 cursor, loop-query, `SELECT`, or `EXECUTE` payloads still reports, as does unknown
 SQL after an `IF ... THEN` or loop prefix. Top-level assignment/declaration-shaped statements,
 `END IF`, and unsupported SQL statements after a body still report at their own
-lines.
+lines. Diagnostic heads retain the original statement spelling, including radix
+literals such as `0x1F` and `0b101`, through compatibility rewrites. Rejected SQL
+actions in procedural branches are reported at the action's line.
 
 The rule's configured roots, path filters, and `sqlInclude` determine which
 files are checked. Set `options.unanalyzable` on a rule application to `report`

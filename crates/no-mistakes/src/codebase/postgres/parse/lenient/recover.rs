@@ -12,7 +12,6 @@ pub(super) use bodies::concatenated_strings;
 use bodies::{peel_do_body, recover_chr_encoded};
 use partition::recover_partition_change;
 pub(crate) use procedural::BodyState;
-use schema::start as schema_ddl_start;
 use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
@@ -57,7 +56,13 @@ pub(super) fn parse_chunks_with_function_calls(
             &mut handled_procedural,
         );
         // Rejected compatibility ASTs need the same leaf failure marker as parse errors.
+        let rejected = produced
+            .iter()
+            .any(|item| recursive_views.validate(&item.statement).is_err());
         produced.retain(|item| recursive_views.validate(&item.statement).is_ok());
+        if rejected {
+            produced.extend(original.and_then(failure::rejected_schema));
+        }
         if handled_procedural.is_none() {
             failure::partial_chunk(original, &mut produced);
         }
@@ -155,7 +160,7 @@ fn parse_chunk(
                     .into_iter()
                     .map(|(statement, synthetic)| LocatedStatement::functions(statement, synthetic))
                     .collect();
-                let schema = recover_schema_ddl(&chunk, original, allow_concurrent_detach);
+                let schema = schema::recover(&chunk, original, allow_concurrent_detach);
                 let has_schema = schema.is_some();
                 projected.extend(schema.map(LocatedStatement::plain));
                 if !has_schema && !action_projected {
@@ -167,29 +172,6 @@ fn parse_chunk(
             }
         }
     }
-}
-
-fn recover_schema_ddl(
-    tokens: &[Token],
-    original: Option<&[TokenWithSpan]>,
-    allow_concurrent_detach: bool,
-) -> Option<Statement> {
-    let start = schema_ddl_start(tokens)?;
-    // PL/pgSQL wrappers can precede a complete partition transition. Apply the
-    // same narrow recovery to the DDL suffix before using the PostgreSQL parser.
-    if let Some(change) = recover_partition_change(
-        &tokens[start..],
-        original.map(|tokens| &tokens[start..]),
-        allow_concurrent_detach,
-    ) {
-        return Some(change);
-    }
-    let dialect = PostgreSqlDialect {};
-    let mut parser = match original {
-        Some(tokens) => Parser::new(&dialect).with_tokens_with_locations(tokens[start..].to_vec()),
-        None => Parser::new(&dialect).with_tokens(tokens[start..].to_vec()),
-    };
-    parser.parse_statement().ok()
 }
 
 #[cfg(test)]

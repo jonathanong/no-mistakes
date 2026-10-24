@@ -18,6 +18,7 @@ fn recursive_view_heads_match_canonical_facts_messages_and_targets() {
         (19, 1, "CREATE RECURSIVE VIEW"),
         (20, 1, "CREATE RECURSIVE VIEW table_body AS TABLE accounts"),
         (23, 16, "CREATE RECURSIVE VIEW"),
+        (25, 16, "CREATE RECURSIVE VIEW guarded_columns AS SELECT 1"),
     ];
     assert_eq!(
         direct
@@ -35,18 +36,15 @@ fn recursive_view_heads_match_canonical_facts_messages_and_targets() {
             .collect::<Vec<_>>(),
         direct.iter().collect::<Vec<_>>()
     );
-    // A surviving IF condition keeps its partial failure in the statement projection only.
-    let partial = statements
+    // Rejected guarded actions are schema failures at CREATE, not partial IF wrappers.
+    let guarded = statements
         .parse_failures
         .iter()
-        .find(|failure| failure.line == 25)
-        .unwrap();
-    assert_eq!(partial.column, 3);
-    assert_eq!(
-        partial.head,
-        "IF TRUE THEN CREATE RECURSIVE VIEW guarded_columns AS"
-    );
-    assert!(!partial.schema_unanalyzable);
+        .filter(|failure| failure.line == 25)
+        .collect::<Vec<_>>();
+    assert_eq!(guarded.len(), 1);
+    assert!(guarded[0].schema_unanalyzable);
+    assert_eq!(guarded[0].column, 16);
     for config_name in ["report.yml", "low.yml"] {
         let (config, files, facts) = prepared(&root, config_name);
         assert_eq!(

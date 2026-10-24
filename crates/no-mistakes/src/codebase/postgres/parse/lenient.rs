@@ -58,11 +58,11 @@ fn parse_with_normalized_sources(
     fragment: bool,
     allow_concurrent_detach: bool,
 ) -> Vec<LocatedStatement> {
-    let separated = super::distinct_group::separate_distinct_grouping(normalized);
+    let (separated, head_map) = super::distinct_group::separate_with_head_map(normalized);
     let mut located = super::unicode::tokenize_with_location(&separated, false);
+    let original_heads = super::original_head::OriginalHeads::capture(&located);
     // Capture recursive headers before other compatibility rewrites can change their heads.
-    let mut original_heads = std::collections::BTreeMap::new();
-    let recursive_views = super::recursive_view::prepare(&mut located, Some(&mut original_heads));
+    let recursive_views = super::recursive_view::prepare(&mut located);
     let mut located = super::radix_numbers::repair(&located).unwrap_or(located);
     super::normalize_table_queries(&mut located);
     let fetch = super::fetch_expression::prepare(&mut located);
@@ -79,7 +79,8 @@ fn parse_with_normalized_sources(
         allow_concurrent_detach,
         &recursive_views,
     );
-    recursive_views.restore_statements(&mut statements, &original_heads);
+    recursive_views.restore_statements(&mut statements);
+    original_heads.restore(sql, normalized, &separated, &head_map, &mut statements);
     for statement in &mut statements {
         super::fetch_expression::restore(&mut statement.statement, &fetch);
     }
