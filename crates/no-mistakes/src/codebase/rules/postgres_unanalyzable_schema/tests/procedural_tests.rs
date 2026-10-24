@@ -29,6 +29,18 @@ fn procedural_bodies_filter_commands_but_retain_unknown_sql_markers() {
             "return-query.sql",
             &[(3, "RETURN QUERY FROBULATE accounts")][..],
         ),
+        (
+            "malformed-routine-headers.sql",
+            &[(2, "CREATE FUNCTION"), (8, "CREATE PROCEDURE")][..],
+        ),
+        (
+            "unknown-procedural-commands.sql",
+            &[
+                (4, "PERFORM FROBULATE"),
+                (10, "OPEN missing_cursor"),
+                (15, "DECLARE bad_cursor"),
+            ][..],
+        ),
     ] {
         let path = root.join("migrations").join(name);
         let sql = std::fs::read_to_string(&path).unwrap();

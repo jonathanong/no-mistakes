@@ -15,6 +15,9 @@ BEGIN
   ELSE
     PERFORM 3;
   END IF;
+  IF CASE WHEN true THEN true ELSE false END THEN
+    RAISE NOTICE 'case condition';
+  END IF;
   LOOP
     EXIT WHEN true;
     CONTINUE;
@@ -23,6 +26,17 @@ BEGIN
     WHEN 0 THEN PERFORM 4;
     ELSE RAISE NOTICE 'other';
   END CASE;
+  <<outer_loop>>
+  LOOP
+    <<inner_block>>
+    BEGIN
+      EXIT outer_loop;
+    END inner_block;
+  END LOOP outer_loop;
+  <<labeled_block>>
+  BEGIN
+    PERFORM 8;
+  END labeled_block;
   RETURN;
 END
 $$;
