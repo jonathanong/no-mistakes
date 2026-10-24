@@ -25,7 +25,6 @@ use sources::StatementSources;
 use sqlparser::ast::{Spanned, Statement};
 use std::collections::HashMap;
 use std::sync::Arc;
-
 mod prepared;
 use prepared::PreparedStatements;
 
@@ -198,5 +197,4 @@ fn extract_from_parsed_and_sources(
     });
     facts
 }
-
 pub use super::not_exists::has_top_level_not_exists_in;
