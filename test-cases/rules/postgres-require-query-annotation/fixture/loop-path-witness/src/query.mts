@@ -4,6 +4,13 @@ import rogue from "rogue-sql";
 export function conditionalReset(xs: readonly unknown[], c: boolean) {
   let q = "/* named */ SELECT 1";
   for (const x of xs) {
+    // Calls cannot supply a pure condition key; these empty arms leave q untouched.
+    if (namedSql()) {}
+    if (typeof namedSql()) {}
+    if (namedSql() === "x") {}
+    if ("x" === namedSql()) {}
+    if (namedSql() && x) {}
+    if (x && namedSql()) {}
     read(q); // missing: the false branch retains the literal.
     q = "SELECT 2";
     if (c) q = "/* reset */ SELECT 3";
@@ -260,5 +267,44 @@ export function nestedRepeatedReset(xs: readonly unknown[], c: boolean) {
     if (c) {
       if (c) q = "/* reset */ SELECT 3";
     } else q = "/* reset */ SELECT 4";
+  }
+}
+
+// Opposite tests of the same pure comparison reset every real path.
+export function complementaryComparisonResets(xs: readonly unknown[], count: number) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q);
+    q = "SELECT 2";
+    if (count > 0) q = "/* reset */ SELECT 3";
+    if (!(count > 0)) q = "/* reset */ SELECT 4";
+  }
+}
+
+// Pure logical tests with primitive operands are correlated as a whole.
+export function pureLogicalResets(
+  xs: readonly unknown[], count: number, active: boolean, big: bigint, maybe: unknown,
+) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q);
+    q = "SELECT 2";
+    if (count > 0 && active === true && typeof count === "number" && maybe !== null && big === 1n)
+      q = "/* reset */ SELECT 3";
+    if (!(count > 0 && active === true && typeof count === "number" && maybe !== null && big === 1n))
+      q = "/* reset */ SELECT 4";
+  }
+}
+
+// A long pure test must retain its key; a size cutoff would invent a path.
+export function longComparisonResets(xs: readonly unknown[], count: number) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q);
+    q = "SELECT 2";
+    if (count + 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 + 11 + 12 + 13 + 14 + 15 + 16 + 17 > 0)
+      q = "/* reset */ SELECT 3";
+    if (!(count + 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10 + 11 + 12 + 13 + 14 + 15 + 16 + 17 > 0))
+      q = "/* reset */ SELECT 4";
   }
 }

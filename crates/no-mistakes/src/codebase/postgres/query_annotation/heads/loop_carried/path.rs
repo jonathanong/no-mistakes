@@ -1,4 +1,5 @@
 //! Finite may-reach proof for one unconditional call/literal pair.
+use super::condition_key::{key, Key};
 use super::Span;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::*;
@@ -7,7 +8,7 @@ use oxc_span::GetSpan;
 pub(super) enum Node {
     Scan(Span),
     Sequence(Vec<Self>),
-    Branch(Option<String>, Box<Self>, Box<Self>),
+    Branch(Option<Key>, Box<Self>, Box<Self>),
     Backedge,
     Exit,
 }
@@ -44,11 +45,7 @@ impl Node {
                 let branch = match unwrap_ts_wrappers(&value.test) {
                     Expression::BooleanLiteral(test) if test.value => consequent,
                     Expression::BooleanLiteral(_) => alternate,
-                    _ => Self::Branch(
-                        condition_name(&value.test),
-                        Box::new(consequent),
-                        Box::new(alternate),
-                    ),
+                    _ => Self::Branch(key(&value.test), Box::new(consequent), Box::new(alternate)),
                 };
                 Self::Sequence(vec![Self::Scan(span(value.test.span())), branch])
             }
@@ -76,18 +73,18 @@ impl Node {
             && self.walk(2, writes, read, Mode::BackedgeToRead).hit
     }
 
-    // Repeated tests of one identifier can be correlated. Joining states
+    // Repeated pure tests can be correlated. Joining states
     // independently could invent a path when both tests change the witness.
     fn correlated_change<'a>(
         &'a self,
         writes: &[Span],
-        seen: &mut crate::fx::FxHashMap<&'a str, bool>,
+        seen: &mut crate::fx::FxHashMap<&'a Key, bool>,
     ) -> bool {
         match self {
             Self::Branch(name, left, right) => {
                 if let Some(name) = name {
                     let changes = left.changes(writes) || right.changes(writes);
-                    if let Some(previous) = seen.get_mut(name.as_str()) {
+                    if let Some(previous) = seen.get_mut(name) {
                         if *previous && changes {
                             return true;
                         }
@@ -173,21 +170,6 @@ impl Node {
             },
             Self::Exit => Result::default(),
         }
-    }
-}
-
-fn condition_name(value: &Expression<'_>) -> Option<String> {
-    match unwrap_ts_wrappers(value) {
-        Expression::Identifier(value) => Some(value.name.to_string()),
-        Expression::UnaryExpression(value)
-            if value.operator == oxc_syntax::operator::UnaryOperator::LogicalNot =>
-        {
-            match unwrap_ts_wrappers(&value.argument) {
-                Expression::Identifier(value) => Some(value.name.to_string()),
-                _ => None,
-            }
-        }
-        _ => None,
     }
 }
 

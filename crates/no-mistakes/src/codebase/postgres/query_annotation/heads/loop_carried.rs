@@ -4,6 +4,7 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::*;
 use std::collections::BTreeMap;
 use std::sync::Arc;
+mod condition_key;
 mod grammar;
 mod path;
 pub(super) use grammar::{iteration, test, update};
