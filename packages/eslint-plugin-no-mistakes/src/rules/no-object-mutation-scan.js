@@ -113,7 +113,7 @@ function visit(state, node, scope, role) {
       return unknown();
     case "ReturnStatement":
       if (node.argument) {
-        visit(state, node.argument, scope, "escape");
+        visit(state, node.argument, scope, scope.fnTag?.reduceSeed ? "read" : "escape");
       }
       return unknown();
     case "LabeledStatement":

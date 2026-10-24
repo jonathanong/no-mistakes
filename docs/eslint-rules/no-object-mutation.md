@@ -98,6 +98,38 @@ only when it is falsy, and a falsy value is not the mutated object.
 
 ## Allowed
 
+An inline synchronous `reduce` or `reduceRight` callback may build its first
+parameter when the initial value is an object or array literal and every
+callback return is that parameter. Only direct container writes and array mutator
+calls on that parameter are exempt; the block must end with `return acc`.
+TypeScript assertions around the literal are supported:
+
+```ts
+const byId = rows.reduce((acc, row) => {
+  acc[row.id] = row;
+  return acc;
+}, {} as Record<string, Row>);
+
+const reversed = rows.reduceRight((acc, row) => {
+  acc.push(row);
+  return acc;
+}, []);
+```
+
+Identifier seeds, omitted seeds, async callbacks, accumulator rebinding, aliases,
+member reads, nested writes, and callbacks returning another value retain ordinary
+parameter reporting. Build a complete nested value locally, then assign it through
+a direct root write such as `acc[key] = value`. Other callback parameters and
+shared values nested inside a literal remain shared.
+Passing the accumulator to an unknown call or publishing a closure that captures
+it escapes it; subsequent writes, including writes in later iterations, are
+reported. Publishing a nested member also escapes that member. The result keeps
+this provenance after the reduction. Construct the complete local value before
+publishing it, and avoid mutating a member after publishing that member.
+The exemption assumes the native array callback contract for unknown receivers.
+Known local custom object or class methods named `reduce` keep ordinary callback
+parameter reporting.
+
 ```ts
 function build(extra) {
   const box = {};
@@ -191,8 +223,11 @@ function indexed(xs) {
 }
 ```
 
-`xs.reduce((acc, x) => { acc[x] = 1; return acc }, {})` is reported because
-`acc` is a parameter. `indexed` builds the object in one expression instead.
+`xs.reduce((acc, x) => { acc[x] = 1; return acc }, {})` is allowed because
+its literal seed is locally owned. With an identifier seed such as `shared`,
+`xs.reduce((acc, x) => { acc[x] = 1; return acc }, shared)` is still reported.
+Build a fresh literal accumulator instead. `indexed` is another option that
+builds the object in one expression.
 
 `literal-rewrite.mts` declares `tables` once, so the query resolves
 `app.users`, and `replicaClient` returns a known object. `rows-rewrite.mts`

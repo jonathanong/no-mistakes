@@ -79,13 +79,15 @@ function visitCall(state, node, scope, role) {
     return unknown();
   }
   const known = visitKnownCall(state, node, scope, role);
-  if (known !== undefined) {
+  if (known !== undefined && !known.fallbackCalleeTag) {
     return known;
   }
   const callee = unwrap(node.callee);
   const forward = callee.type === "MemberExpression" ? memberKey(callee) : null;
   const forwarded = forward === "call" || forward === "apply";
-  const calleeTag = api.visit(state, forwarded ? callee.object : node.callee, scope, "read");
+  const calleeTag =
+    known?.fallbackCalleeTag ||
+    api.visit(state, forwarded ? callee.object : node.callee, scope, "read");
   if (calleeTag.mutator) {
     return visitAliasedMutation(state, node, scope, calleeTag.mutator, forwarded ? forward : null);
   }
