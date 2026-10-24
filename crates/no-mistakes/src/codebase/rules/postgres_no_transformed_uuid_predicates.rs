@@ -14,6 +14,8 @@ mod effort_tests;
 mod evaluate;
 mod low;
 #[cfg(test)]
+mod operand_boundaries_tests;
+#[cfg(test)]
 mod policy_tests;
 mod scan;
 #[cfg(test)]

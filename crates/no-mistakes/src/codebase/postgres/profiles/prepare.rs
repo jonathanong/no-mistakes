@@ -50,9 +50,9 @@ pub(crate) fn prepare_rule_sql_facts(
     let mut low_plan = crate::codebase::check_facts::CheckFactPlan::default();
     if low_sql {
         let mut scoped = config.clone();
-        scoped
-            .rules
-            .retain(|rule| low_ids.contains(&rule.rule.as_str()));
+        scoped.rules.retain(|rule| {
+            low_ids.contains(&rule.rule.as_str()) && rule_ids.contains(&rule.rule.as_str())
+        });
         super::plan::configure_prepared_postgres_plan(root, &scoped, &mut low_plan)?;
     }
     Ok(

@@ -4,7 +4,7 @@ use crate::codebase::postgres::idents::{
 };
 use crate::codebase::postgres::statements::select::uses::{columns::bare, scope::BaseRel};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
-use sqlparser::ast::{Expr, FunctionArguments, Spanned};
+use sqlparser::ast::{BinaryOperator as Op, Expr, FunctionArguments, Spanned, UnaryOperator};
 
 pub(super) fn collect(
     expression: &Expr,
@@ -29,7 +29,30 @@ struct Inputs<'a, 'b, 'c> {
 }
 impl Inputs<'_, '_, '_> {
     fn walk(&mut self, expr: &Expr, transformation: Option<&str>) {
+        // A surrounding transformation consumes the boolean result, not its UUID operands.
+        let transformation = if boolean_result(expr) {
+            None
+        } else {
+            transformation
+        };
         match expr {
+            Expr::Case {
+                operand,
+                conditions,
+                else_result,
+                ..
+            } => {
+                if let Some(operand) = operand {
+                    self.walk(operand, None);
+                }
+                for branch in conditions {
+                    self.walk(&branch.condition, None);
+                    self.walk(&branch.result, transformation);
+                }
+                if let Some(result) = else_result {
+                    self.walk(result, transformation);
+                }
+            }
             Expr::Function(function) => {
                 let name = function.name.to_string();
                 let transform = transformation.unwrap_or(&name);
@@ -92,5 +115,68 @@ fn owner(relations: &[BaseRel], qualifier: Option<&str>) -> (String, Option<Vec<
             (relation.table.clone(), Some(vec![relation.table.clone()]))
         }
         _ => (String::new(), None),
+    }
+}
+
+fn boolean_result(expr: &Expr) -> bool {
+    match expr {
+        Expr::BinaryOp { op, .. } => matches!(
+            op,
+            Op::Eq
+                | Op::NotEq
+                | Op::Gt
+                | Op::Lt
+                | Op::GtEq
+                | Op::LtEq
+                | Op::Spaceship
+                | Op::And
+                | Op::Or
+                | Op::Xor
+                | Op::PGOverlap
+                | Op::PGRegexMatch
+                | Op::PGRegexIMatch
+                | Op::PGRegexNotMatch
+                | Op::PGRegexNotIMatch
+                | Op::PGLikeMatch
+                | Op::PGILikeMatch
+                | Op::PGNotLikeMatch
+                | Op::PGNotILikeMatch
+                | Op::PGStartsWith
+                | Op::AtAt
+                | Op::AtArrow
+                | Op::ArrowAt
+                | Op::AtQuestion
+                | Op::Question
+                | Op::QuestionAnd
+                | Op::QuestionPipe
+                | Op::Overlaps
+        ),
+        Expr::UnaryOp { op, .. } => matches!(op, UnaryOperator::Not | UnaryOperator::BangNot),
+        _ => matches!(
+            expr,
+            Expr::IsFalse(_)
+                | Expr::IsNotFalse(_)
+                | Expr::IsTrue(_)
+                | Expr::IsNotTrue(_)
+                | Expr::IsNull(_)
+                | Expr::IsNotNull(_)
+                | Expr::IsUnknown(_)
+                | Expr::IsNotUnknown(_)
+                | Expr::IsDistinctFrom(..)
+                | Expr::IsNotDistinctFrom(..)
+                | Expr::IsJson { .. }
+                | Expr::IsNormalized { .. }
+                | Expr::InList { .. }
+                | Expr::InSubquery { .. }
+                | Expr::InUnnest { .. }
+                | Expr::Between { .. }
+                | Expr::Like { .. }
+                | Expr::ILike { .. }
+                | Expr::SimilarTo { .. }
+                | Expr::RLike { .. }
+                | Expr::AnyOp { .. }
+                | Expr::AllOp { .. }
+                | Expr::Exists { .. }
+        ),
     }
 }
