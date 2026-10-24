@@ -93,3 +93,15 @@ export function memberContext(context: MemberContext, sql: string) {
   context.executor(sql); // UNSUPPORTED_TYPE
 }
 function consume(value: unknown) {}
+// Generic constraints/defaults preserve uncertainty, not literal proofs.
+export function constrained<T extends QueryExecutor>(executor: T, sql: string) {
+  executor("/* generic */ SELECT 1 OFFSET 1"); // UNSUPPORTED_TYPE
+}
+type DefaultExecutor<T = QueryExecutor> = T;
+export function genericDefault(executor: DefaultExecutor, sql: string) {
+  executor(sql); // UNSUPPORTED_TYPE
+}
+interface DefaultContext<T = QueryExecutor> { executor: T }
+export function interfaceDefault(context: DefaultContext, sql: string) {
+  context.executor(sql); // UNSUPPORTED_TYPE
+}

@@ -1,5 +1,7 @@
 use super::*;
-use oxc_ast::ast::{IdentifierReference, TSInterfaceDeclaration, TSTypeAliasDeclaration};
+use oxc_ast::ast::{
+    IdentifierReference, TSInterfaceDeclaration, TSTypeAliasDeclaration, TSTypeParameter,
+};
 
 // Alias reachability is only a negative proof: it retains runtime unknowns,
 // never promotes an indirect annotation into a literal executor proof.
@@ -49,6 +51,19 @@ struct Aliases<'a> {
     readers: FxHashMap<usize, Vec<usize>>,
 }
 impl<'a> Visit<'a> for Aliases<'_> {
+    fn visit_ts_type_parameter(&mut self, parameter: &TSTypeParameter<'a>) {
+        if let Some(id) = self.bindings.get(&span(parameter.name.span)) {
+            let mut uses = Uses {
+                owners: self.owners,
+                found: FxHashSet::default(),
+            };
+            uses.visit_ts_type_parameter(parameter);
+            for used in uses.found {
+                self.readers.entry(used).or_default().push(*id);
+            }
+        }
+        walk::walk_ts_type_parameter(self, parameter);
+    }
     fn visit_ts_interface_declaration(&mut self, interface: &TSInterfaceDeclaration<'a>) {
         if let Some(id) = self.bindings.get(&span(interface.id.span)) {
             let mut uses = Uses {

@@ -27,9 +27,9 @@ type aliases, and `typeof` type queries are erased uses and never create SQL
 findings. Dynamic or unsupported SQL is reported at its executor call; passing
 a configured executor as a runtime value remains an unknown escape at that use.
 For the SQL-structure low rules, indirect annotations (such as local type aliases
-or interfaces derived from a configured type, intersections, and array/rest or
-nested binding patterns) retain unknown runtime uses;
-they do not prove a literal call safe. The annotation rule retains its existing
+or interfaces derived from a configured type, generic constraints/defaults,
+intersections, and array/rest or nested binding patterns) retain unknown runtime
+uses; they do not prove a literal call safe. The annotation rule retains its existing
 receiver scope and independently checks the visible leading comment at each
 execution call. See [low-effort annotation](../postgres-query-annotation/low-effort.md).
 
