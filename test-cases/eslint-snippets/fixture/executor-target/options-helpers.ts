@@ -17,6 +17,19 @@ export type UnionOptions = NamedOptions | WrongOptions;
 export type MappedOptions = { [K in "query"]: QueryExecutor };
 // Partial keeps the source declaration but makes the resolved property optional.
 export type PartialOptions = Partial<NamedOptions>;
+type LocalExecutor = QueryExecutor;
+type AliasLayer = LocalExecutor;
+export type AliasChainOptions = { query: AliasLayer };
+type StructuralAlias = (statement: string) => unknown;
+export type StructuralAliasOptions = { query: StructuralAlias };
+type UnrelatedAlias = OtherExecutor;
+export type UnrelatedAliasOptions = { query: UnrelatedAlias };
+type CycleA = CycleB;
+type CycleB = CycleA;
+export type CycleOptions = { query: CycleA };
+export type IntersectionOptions = { query: QueryExecutor } & { label?: string };
+// Two declarations for query make the intersection's contract ambiguous.
+export type AmbiguousOptions = { query: QueryExecutor } & { query: OtherExecutor };
 
 export function named(options: NamedOptions) { options.query("SELECT 1"); }
 export function alias(options: AliasOptions) { options.query("SELECT 1"); }
@@ -31,6 +44,12 @@ export function plain(options) {}
 export function union(options: UnionOptions) {}
 export function mapped(options: MappedOptions) {}
 export function partial(options: PartialOptions) {}
+export function aliasChain(options: AliasChainOptions) { options.query("SELECT 1"); }
+export function structuralAlias(options: StructuralAliasOptions) { options.query("SELECT 1"); }
+export function unrelatedAlias(options: UnrelatedAliasOptions) { options.query("SELECT 1"); }
+export function cycle(options: CycleOptions) {}
+export function intersection(options: IntersectionOptions) { options.query("SELECT 1"); }
+export function ambiguous(options: AmbiguousOptions) {}
 export function destructuredNamed({ query }: NamedOptions) { query("SELECT 1"); }
 export const destructuredAlias = ({ query: execute }: AliasOptions) => execute("SELECT 1");
 export function destructuredDefault({ query = read }: NamedOptions) {}
