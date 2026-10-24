@@ -48,7 +48,7 @@ pub(crate) fn collect_check_fact_batch_with_session(
             {
                 // OXC programs cannot cross threads. Project every demanded variant
                 // while the preparing thread still owns its config/helper AST.
-                collected.extend(collect_demand(session, &requests, path, demands));
+                collected.extend(collect_demand(session, &requests, path, demands, false));
                 None
             } else {
                 Some((path, demands))
@@ -61,7 +61,7 @@ pub(crate) fn collect_check_fact_batch_with_session(
             .into_par_iter()
             .map(|(path, demands)| {
                 crate::diagnostics::with_observer(observer.clone(), || {
-                    collect_demand(session, &requests, path, demands)
+                    collect_demand(session, &requests, path, demands, true)
                 })
             })
             .while_some()
@@ -106,24 +106,29 @@ fn collect_demand(
     requests: &[BatchCheckFactRequest],
     path: PathBuf,
     demands: Vec<FactDemand>,
+    worker_owns_cache: bool,
 ) -> Option<CollectedDemand> {
-    crate::invocation::check_timeout().ok().map(|()| {
-        crate::ast::with_request_parse_cache(|| {
-            let variants = demands
-                .iter()
-                .map(|demand| {
-                    let request = &requests[demand.request];
-                    super::file::CheckFactVariant {
-                        root: &request.root,
-                        plan: &demand.plan,
-                        playwright: request.playwright.as_ref(),
-                    }
-                })
-                .collect::<Vec<_>>();
-            let facts =
-                super::file::collect_file_fact_variants_with_session(session, &path, &variants);
-            (path, demands, facts)
-        })
+    crate::invocation::check_timeout().ok()?;
+    let collect = || {
+        let variants = demands
+            .iter()
+            .map(|demand| {
+                let request = &requests[demand.request];
+                super::file::CheckFactVariant {
+                    root: &request.root,
+                    plan: &demand.plan,
+                    playwright: request.playwright.as_ref(),
+                }
+            })
+            .collect::<Vec<_>>();
+        let facts = super::file::collect_file_fact_variants_with_session(session, &path, &variants);
+        (path, demands, facts)
+    };
+    Some(if worker_owns_cache {
+        // Coordinator reuses prepared ASTs; worker ownership retires after projection.
+        crate::ast::with_owned_request_parse_cache(collect)
+    } else {
+        crate::ast::with_request_parse_cache(collect)
     })
 }
 
@@ -207,3 +212,6 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
 fn normalize(path: &std::path::Path) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(path)
 }
+
+#[cfg(test)]
+mod tests;
