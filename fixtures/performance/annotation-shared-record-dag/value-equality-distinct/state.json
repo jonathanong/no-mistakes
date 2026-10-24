@@ -1,0 +1,182 @@
+{
+  "nodes": [
+    {
+      "name": "left0",
+      "sql": "/* same */ SELECT 1"
+    },
+    {
+      "name": "left1",
+      "children": [
+        "left0",
+        "left0"
+      ]
+    },
+    {
+      "name": "left2",
+      "children": [
+        "left1",
+        "left1"
+      ]
+    },
+    {
+      "name": "left3",
+      "children": [
+        "left2",
+        "left2"
+      ]
+    },
+    {
+      "name": "left4",
+      "children": [
+        "left3",
+        "left3"
+      ]
+    },
+    {
+      "name": "left5",
+      "children": [
+        "left4",
+        "left4"
+      ]
+    },
+    {
+      "name": "left6",
+      "children": [
+        "left5",
+        "left5"
+      ]
+    },
+    {
+      "name": "left7",
+      "children": [
+        "left6",
+        "left6"
+      ]
+    },
+    {
+      "name": "left8",
+      "children": [
+        "left7",
+        "left7"
+      ]
+    },
+    {
+      "name": "left9",
+      "children": [
+        "left8",
+        "left8"
+      ]
+    },
+    {
+      "name": "left10",
+      "children": [
+        "left9",
+        "left9"
+      ]
+    },
+    {
+      "name": "left11",
+      "children": [
+        "left10",
+        "left10"
+      ]
+    },
+    {
+      "name": "left12",
+      "children": [
+        "left11",
+        "left11"
+      ]
+    },
+    {
+      "name": "right0",
+      "sql": "/* same */ SELECT 1"
+    },
+    {
+      "name": "right1",
+      "children": [
+        "right0",
+        "right0"
+      ]
+    },
+    {
+      "name": "right2",
+      "children": [
+        "right1",
+        "right1"
+      ]
+    },
+    {
+      "name": "right3",
+      "children": [
+        "right2",
+        "right2"
+      ]
+    },
+    {
+      "name": "right4",
+      "children": [
+        "right3",
+        "right3"
+      ]
+    },
+    {
+      "name": "right5",
+      "children": [
+        "right4",
+        "right4"
+      ]
+    },
+    {
+      "name": "right6",
+      "children": [
+        "right5",
+        "right5"
+      ]
+    },
+    {
+      "name": "right7",
+      "children": [
+        "right6",
+        "right6"
+      ]
+    },
+    {
+      "name": "right8",
+      "children": [
+        "right7",
+        "right7"
+      ]
+    },
+    {
+      "name": "right9",
+      "children": [
+        "right8",
+        "right8"
+      ]
+    },
+    {
+      "name": "right10",
+      "children": [
+        "right9",
+        "right9"
+      ]
+    },
+    {
+      "name": "right11",
+      "children": [
+        "right10",
+        "right10"
+      ]
+    },
+    {
+      "name": "right12",
+      "children": [
+        "right11",
+        "right11"
+      ]
+    }
+  ],
+  "left": "left12",
+  "right": "right12"
+}

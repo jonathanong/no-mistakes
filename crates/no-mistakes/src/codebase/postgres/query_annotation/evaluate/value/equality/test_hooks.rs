@@ -59,3 +59,7 @@ macro_rules! fallback {
     };
 }
 pub(super) use {fallback, identity, prefix, sql_component};
+
+pub(super) fn memoize() -> bool {
+    !LEGACY.get()
+}
