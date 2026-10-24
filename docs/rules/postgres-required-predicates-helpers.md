@@ -31,11 +31,12 @@ For `import * as names from "./tables.mts"`, `names.TABLE` splices an exported
 literal into an untagged template or `.append` when no local binding shadows
 `names`.
 `names.default` also selects a default-exported literal. Computed, optional,
-method, type-only, and non-const reads stay unanalyzable. Namespace recovery
-accepts only string constants: a tagged builder fragment such as `names.FRAGMENT`
-stays unanalyzable even in `.append`, because the exported object can mutate
-after its declaration. Named fragment imports keep their established append
-behavior.
+method, type-only, and non-const reads stay unanalyzable. Named and namespace
+constant recovery accepts only string constants. A tagged builder fragment imported as `FRAGMENT`
+or `names.FRAGMENT` stays unanalyzable even in `.append`: `const` fixes the
+binding, but the exporting module or another importer can mutate the shared
+object after its declaration. The configured unanalyzable policy applies. Export
+an immutable string or a function that returns a fresh fragment instead.
 
 Helpers with control flow are checked too. A helper that returns early, branches
 on its arguments, calls other helpers (up to 8 deep), appends to a

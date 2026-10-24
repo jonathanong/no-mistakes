@@ -11,7 +11,6 @@ pub(super) fn recovered<R: FnMut(&str, &Path) -> Option<PathBuf>>(
     options: &EmbeddedSqlOptions,
     from: &Path,
     site: &ImportedSite,
-    allow_fragment: bool,
 ) -> Option<RecoveredSql> {
     let (origin, local) = shared.find(from, &site.local, site.member.as_deref())?;
     // The name was not an import of another module. A same-file const is
@@ -26,9 +25,9 @@ pub(super) fn recovered<R: FnMut(&str, &Path) -> Option<PathBuf>>(
         .iter()
         .find(|(known, _)| known == options)?;
     let constant = embedded.exported_constants.get(&local)?;
-    // Untagged `${frag}` stringifies a statement object. Namespace fragment
-    // objects can mutate after their export snapshot, even through a const binding.
-    if constant.fragment && (!allow_fragment || site.member.is_some()) {
+    // A const binding does not freeze the exported statement object. Any importer
+    // can mutate it after this snapshot, regardless of named or namespace access.
+    if constant.fragment {
         return None;
     }
     let sql = constant.sql.clone();

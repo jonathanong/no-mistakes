@@ -1,7 +1,7 @@
 //! An exported `const` whose initializer is already SQL text.
 //!
-//! Importers splice it through the same hole as a helper. A tagged fragment is
-//! only safe for `.append`; an untagged template would stringify the object.
+//! Importers splice strings through the same hole as a helper. Tagged statement
+//! objects remain unknown across imports because any importer can mutate them.
 
 use crate::codebase::postgres::embedded::walk::resolve::functions::provenance::RecoveredSql;
 

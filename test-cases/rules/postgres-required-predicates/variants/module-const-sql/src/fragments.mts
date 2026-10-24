@@ -1,5 +1,5 @@
 import sql from "sql-template-strings";
 
-// Tagged fragment constant. A same-file append already copies this; only the
-// imported constant form used to stay unanalyzable.
+// Const fixes this binding, not the statement object. Imported append must stay
+// unknown because another importer can mutate the same object.
 export const FRAG = sql` AND account_id = $1`;

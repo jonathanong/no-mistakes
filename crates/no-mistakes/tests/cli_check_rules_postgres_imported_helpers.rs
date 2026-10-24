@@ -214,8 +214,9 @@ fn caller_directives_still_suppress_sql_reported_in_the_helper() {
 
 #[test]
 fn module_level_string_constants_are_judged_and_computed_forms_stay_unanalyzable() {
+    // Imported tagged const objects can mutate; primitive strings still recover.
     let unknown = [
-        86, 92, 100, 106, 112, 118, 124, 129, 133, 137, 141, 146, 151,
+        69, 86, 92, 100, 106, 112, 118, 124, 129, 133, 137, 141, 146, 151,
     ];
     let mut rows = vec![("src/caller.mts", 74, "orders")];
     rows.extend(
@@ -486,3 +487,6 @@ fn namespace_constants_report_precise_findings_at_both_efforts() {
 
 #[path = "cli_check_rules_postgres_imported_helpers/namespace_fragments.rs"]
 mod namespace_fragments;
+
+#[path = "cli_check_rules_postgres_imported_helpers/named_fragments.rs"]
+mod named_fragments;
