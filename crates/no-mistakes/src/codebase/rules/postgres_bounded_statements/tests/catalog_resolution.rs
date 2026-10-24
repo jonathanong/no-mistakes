@@ -1,10 +1,10 @@
-use super::{check_with_files, fixture_root, offenders, RULE_ID};
+use super::{check_with_files, offenders, RULE_ID};
 use crate::codebase::postgres::{extract_sql_statement_facts, SchemaCatalog, SqlVerdictStatus};
 use crate::config::v2::NoMistakesConfig;
 use std::path::PathBuf;
 
 fn root() -> PathBuf {
-    fixture_root().join("catalog-resolution")
+    crate::test_support::rule_fixture_root("postgres-bounded-statements").join("catalog-resolution")
 }
 
 fn config(name: &str) -> NoMistakesConfig {

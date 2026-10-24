@@ -1,6 +1,6 @@
 //! An explicit, request-scoped cardinality contract for catalog views.
 use super::RULE_ID;
-use crate::codebase::postgres::{normalize_table_name, CatalogView, SchemaCatalog};
+use crate::codebase::postgres::{CatalogView, SchemaCatalog};
 use anyhow::{bail, Result};
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -25,10 +25,7 @@ impl ViewBounds {
             let Some(view) = catalog.view_relation(name) else {
                 bail!("{RULE_ID} option viewBounds: {name} does not resolve to one catalog view");
             };
-            if resolved
-                .insert(normalize_table_name(&view.name), *mode)
-                .is_some()
-            {
+            if resolved.insert(view.name.clone(), *mode).is_some() {
                 bail!("{RULE_ID} option viewBounds: {name} resolves to a duplicate catalog view");
             }
         }
@@ -41,7 +38,7 @@ impl ViewBounds {
         catalog: &'a SchemaCatalog,
     ) -> Option<(&'a CatalogView, ViewBoundMode)> {
         let view = catalog.view_relation(name)?;
-        let mode = self.0.get(&normalize_table_name(&view.name))?;
+        let mode = self.0.get(&view.name)?;
         Some((view, *mode))
     }
 }

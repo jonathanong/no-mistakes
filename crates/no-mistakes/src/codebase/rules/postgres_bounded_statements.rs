@@ -12,7 +12,7 @@ mod evaluate;
 mod scan;
 mod view_bounds;
 use std::collections::BTreeMap;
-use view_bounds::{ViewBoundMode, ViewBounds};
+use view_bounds::ViewBoundMode;
 
 pub const RULE_ID: &str = "postgres-bounded-statements";
 

@@ -4,12 +4,12 @@ use crate::codebase::postgres::statements::{
     SqlBareRead, SqlBoundFact, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
 use crate::codebase::postgres::{CatalogObjectRef, SchemaCatalog};
-mod possible_temporary;
-mod reads;
 mod keys;
 mod ownership;
+mod possible_temporary;
 mod propagation;
 mod qualified;
+mod reads;
 use reads::relation_offender;
 
 /// A catalog relation that a statement can read or change in unbounded numbers.
