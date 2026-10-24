@@ -252,6 +252,33 @@ describe("postgres-no-executor-adapter collection keys", () => {
     ]);
   });
 
+  it("marks collections stored as Map and Set values as exposed", () => {
+    assert.deepEqual(reports("stored-collection-values.ts"), [
+      [9, "passed"],
+      [14, "passed"],
+      [19, "passed"],
+      [25, "passed"],
+      [30, "passed"],
+      [35, "passed"],
+      [40, "passed"],
+      [50, "passed"],
+      [56, "passed"],
+      [62, "passed"],
+    ]);
+  });
+
+  it("tracks collections assigned into opaque-typed aliases", () => {
+    assert.deepEqual(reports("collection-assignment-escape.ts"), [[7, "passed"]]);
+  });
+
+  it("tracks reflective mutations of builtin collection prototypes", () => {
+    assert.deepEqual(reports("reflect-prototype-mutations.ts"), [
+      [5, "passed"],
+      [9, "passed"],
+      [13, "passed"],
+    ]);
+  });
+
   it("keeps reporting collections exposed through value containers and returns", () => {
     assert.deepEqual(reports("receiver-boundaries.ts"), [
       [7, "passed"],

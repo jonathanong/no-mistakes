@@ -15,6 +15,41 @@ function createCollectionEscape(checker, program, result) {
       ? name
       : null;
   }
+  function builtinOwner(node, name, member) {
+    const symbol = node?.expression?.escapedText === name && node.name?.text === member
+      ? checker.getSymbolAtLocation(node.expression)
+      : null;
+    return Boolean(symbol?.declarations?.length && symbol.declarations.every((declaration) =>
+      program.isSourceFileDefaultLibrary(declaration.getSourceFile()) && declaration.name?.text === name,
+    ));
+  }
+  function collectionPrototype(node) {
+    const name = node?.expression?.escapedText;
+    const owner = ["Map", "WeakMap", "Set", "WeakSet"].includes(name)
+      ? checker.getSymbolAtLocation(node.expression) : null;
+    return node?.name?.text === "prototype" && owner?.declarations?.length &&
+      owner.declarations.every((declaration) =>
+        program.isSourceFileDefaultLibrary(declaration.getSourceFile()) && declaration.name?.text === name,
+      ) ? name : null;
+  }
+  function reflectPrototypeMutation(node) {
+    const callee = node.expression;
+    const api = ["defineProperty", "deleteProperty", "setPrototypeOf"].find((name) => builtinOwner(callee, "Reflect", name));
+    if (!api || !collectionPrototype(node.arguments[0])) return;
+    if (api === "setPrototypeOf") { result.uncertainMutation = true; return; }
+    const property = node.arguments[1];
+    const text = property?.getText?.();
+    const name = typeof property?.text === "string" &&
+      ((text?.startsWith('"') && text.endsWith('"')) || (text?.startsWith("'") && text.endsWith("'")))
+      ? property.text : null;
+    const type = checker.getTypeAtLocation(node.arguments[0]);
+    const symbols = name ? [checker.getPropertyOfType(type, name)].filter(Boolean) : checker.getPropertiesOfType(type);
+    if (!name) result.uncertainMutation = true;
+    for (const symbol of symbols) {
+      result.symbols.add(symbol);
+      for (const declaration of symbol.declarations ?? []) result.declarations.add(declaration);
+    }
+  }
   function escapeValue(node, seenSymbols = new Set()) {
     if (!node || escapedValueNodes.has(node)) return;
     escapedValueNodes.add(node);
@@ -64,24 +99,27 @@ function createCollectionEscape(checker, program, result) {
       escapeValue(node.whenFalse, seenSymbols);
     }
   }
-  function knownCollectionMethod(node) {
+  function collectionMethod(node) {
     const callee = node.expression;
-    if (
-      callee?.name &&
-      callee.expression &&
-      builtinCollection(checker.getTypeAtLocation(callee.expression))
-    )
-      return ["get", "set", "has", "delete", "add"].includes(callee.name.text);
-    const method = callee?.expression;
-    return Boolean(
-      ["call", "apply"].includes(callee?.name?.text) &&
-      method?.name &&
-      method.expression &&
-      builtinCollection(checker.getTypeAtLocation(method.expression)) &&
-      ["get", "set", "has", "delete", "add"].includes(method.name.text),
-    );
+    const wrapper = ["call", "apply"].includes(callee?.name?.text) ? callee.name.text : null;
+    const method = wrapper ? callee.expression : callee;
+    const collection = method?.name && method.expression &&
+      builtinCollection(checker.getTypeAtLocation(method.expression));
+    if (!collection) return null;
+    const name = method.name.text;
+    const valid = collection === "Map" || collection === "WeakMap"
+      ? ["get", "set", "has", "delete"].includes(name)
+      : ["has", "delete", "add"].includes(name);
+    return valid ? { collection, name, wrapper } : null;
   }
   function visit(node) {
+    if (node.arguments?.length) reflectPrototypeMutation(node);
+    if (node.operatorToken?.getText() === "=" && node.right) {
+      const targetType = checker.getTypeAtLocation(node.left);
+      const sourceCollection = builtinCollection(checker.getTypeAtLocation(node.right));
+      if (sourceCollection && sourceCollection !== builtinCollection(targetType)) escapeValue(node.right);
+      else if (["any", "unknown"].includes(checker.typeToString(targetType))) escapeValue(node.right);
+    }
     if (node.initializer && node.name) {
       const initializer = node.initializer;
       const sourceType = builtinCollection(checker.getTypeAtLocation(initializer));
@@ -116,7 +154,22 @@ function createCollectionEscape(checker, program, result) {
       collectionAliases.push([source, alias]);
   }
   function unknownCall(node) {
-    if (knownCollectionMethod(node)) return;
+    const method = collectionMethod(node);
+    if (method) {
+      const valueIndexes = method.name === "set" ? [0, 1] : method.name === "add" ? [0] : [];
+      if (!valueIndexes.length) return;
+      if (method.wrapper === "call") {
+        for (const index of valueIndexes) escapeValue(node.arguments[index + 1]);
+      } else if (method.wrapper === "apply") {
+        const args = node.arguments[1];
+        const elements = args?.elements;
+        if (Array.isArray(elements) && !elements.some((element) => element.dotDotDotToken)) {
+          for (const index of valueIndexes) escapeValue(elements[index]);
+        }
+        else escapeValue(args);
+      } else for (const index of valueIndexes) escapeValue(node.arguments[index]);
+      return;
+    }
     for (const argument of node.arguments)
       escapeValue(argument.dotDotDotToken ? argument.expression : argument);
   }
