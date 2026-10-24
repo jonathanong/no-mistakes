@@ -85,7 +85,8 @@ export function changedConst(options: Options) {
 }
 
 export function parameter({ label }: Options) {
-  // Parameter origins are outside the const-declaration proof.
+  // Writes invalidate a parameter source even if its annotation admits null.
+  label = "known";
   const alias = label;
   return alias ?? "Untitled";
 }
@@ -94,3 +95,25 @@ export function unbound() {
   const alias = missing;
   return alias ?? "Untitled";
 }
+
+export function laterParameterWrite({ label }: Options) {
+  const alias = label;
+  label = "known";
+  return alias ?? "Untitled";
+}
+
+export function shadowedParameter({ label }: Options) {
+  return (label: string) => {
+    const alias = label;
+    return alias ?? "Untitled";
+  };
+}
+
+// Defaults execute before later parameters are initialized: do not follow them.
+export function parameterDefault(
+  unused = (() => {
+    const alias = label;
+    return alias ?? "Untitled";
+  })(),
+  { label }: Options,
+) {}

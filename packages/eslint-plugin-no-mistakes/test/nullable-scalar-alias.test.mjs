@@ -7,7 +7,7 @@ import { __dirname, fixture, lint } from "./helpers.mjs";
 const rule = "ts-preserve-null-option-defaults";
 const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", rule);
 const cases = [
-  ["invalid", [7, 7, 13, 20]],
+  ["invalid", [7, 7, 13, 20, 27, 33]],
   ["controls", []],
   ["rewrite", []],
   ["suppressed", [8, 20]],

@@ -20,3 +20,15 @@ export function nested(options: Options) {
     return alias || "Untitled";
   }
 }
+
+export function parameter({ label }: Options) {
+  // A typed destructured parameter is already a known nullable option value.
+  const alias = label;
+  return alias ?? "Untitled";
+}
+
+export function renamedParameter({ label: text }: Options) {
+  const alias = text;
+  const chained = alias;
+  return chained || "Untitled";
+}
