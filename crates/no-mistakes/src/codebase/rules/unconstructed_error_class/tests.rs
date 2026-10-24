@@ -497,3 +497,6 @@ mod declaration_proof_guards;
 
 #[path = "tests/workspace_export_targets.rs"]
 mod workspace_export_targets;
+
+#[path = "tests/dynamic_bases.rs"]
+mod dynamic_bases;

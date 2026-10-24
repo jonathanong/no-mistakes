@@ -1,16 +1,28 @@
+/// Preserve declared ancestry, including a dynamic base with unknown identity.
 /// Constructing a derived class also constructs its statically named base.
-/// Keep this as a synthetic reachability transition: it is not a source call
-/// site and must not be reported by call-based checks.
+/// This synthetic transition is never a source call for call-based checks.
 fn record_class_base_construction(
     collector: &mut ImportCollector,
     class_name: &str,
     class_id: CallableId,
     class: &Class<'_>,
 ) {
-    let Some(base) = class.heritage_expression().and_then(simple_callee_name) else {
+    let Some(expression) = class.heritage_expression() else {
         return;
     };
-    collector.record_class_local_base(class_id, base.clone());
+    // A dynamic base still declares ancestry. Do not infer that a factory
+    // preserves an Error argument, or pretend its result is a global root.
+    let (base, target_identity) = match simple_callee_name(expression) {
+        Some(base) => {
+            collector.record_class_local_base(class_id, base.clone());
+            let identity = collector.call_target_identity(&base);
+            (base, identity)
+        }
+        // Preserve the existing class-expression boundary; this fallback is
+        // for declarations whose dynamic ancestry used to disappear entirely.
+        None if class.r#type == ClassType::ClassExpression => return,
+        None => ("<unknown>".to_string(), CallTargetIdentity::Unknown),
+    };
     collector
         .class_declaration_lines
         .push((class_id, import_line_at(&collector.line_starts, class.span.start as usize)));
@@ -20,7 +32,7 @@ fn record_class_base_construction(
         caller_id: Some(class_id),
         syntactic_caller: collector.current_syntactic_caller(),
         callee_binding_scope: collector.callee_binding_scope(&base),
-        target_identity: collector.call_target_identity(&base),
+        target_identity,
         callee: base,
         line: 0,
         offset: 0,
