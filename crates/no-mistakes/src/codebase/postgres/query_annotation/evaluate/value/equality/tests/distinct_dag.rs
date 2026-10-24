@@ -117,3 +117,36 @@ fn memo_is_local_and_copy_on_write_changes_remain_visible() {
     values.pop();
     assert_oracle(&left, &right, false);
 }
+
+#[test]
+fn scalar_prefix_is_not_restarted_and_unique_parents_share_one_context() {
+    let (left, right) = pair();
+    let wrap = |child| Value::Record(vec![child].into(), vec!["child".into()]);
+    let outer = |dag: Value| {
+        let mut values = vec![Value::Number(7); 64];
+        // Each parent owns a different container; only their descendants share.
+        values.extend([wrap(dag.clone()), wrap(dag)]);
+        Value::Aggregate(values.into())
+    };
+    let (left, right) = (outer(left), outer(right));
+    let (equal, old_work) = hooks::measure(true, || left == right);
+    assert!(equal);
+    let (equal, work) = hooks::measure(false, || left == right);
+    assert!(equal);
+    eprintln!("prefix and unique-parent comparisons: {old_work} -> {work}");
+    assert!(old_work > 16_000);
+    assert!(
+        work <= 96,
+        "never restart the scalar prefix or discard the memo between siblings"
+    );
+    assert_oracle(&left, &right, true);
+}
+
+#[test]
+fn unequal_scalar_prefix_stops_before_the_complex_suffix() {
+    let (left, right) = pair();
+    let left = Value::Aggregate(vec![Value::Number(1), left].into());
+    let right = Value::Aggregate(vec![Value::Number(2), right].into());
+    assert_eq!(hooks::measure(false, || left == right), (false, 2));
+    assert_oracle(&left, &right, false);
+}

@@ -1,10 +1,12 @@
 use super::{Value, Values};
+mod direct;
 #[cfg(not(test))]
 mod hooks;
 #[cfg(test)]
 #[path = "equality/test_hooks.rs"]
 mod hooks;
 mod pair_memo;
+use direct::atomic;
 mod prefix_order;
 
 #[derive(Default)]
@@ -12,8 +14,63 @@ struct Comparison {
     completed: pair_memo::Memo,
 }
 
+// Compare a cheap prefix once. The first unresolved nested pair owns one memo
+// for every remaining sibling, including descendants of distinct unique parents.
 pub(super) fn values(a: &Values, b: &Values) -> bool {
-    Comparison::default().values(a, b)
+    if a.len() != b.len() {
+        return false;
+    }
+    let mut pairs = a.iter().zip(b.iter());
+    while let Some((left, right)) = pairs.next() {
+        if let Some(equal) = atomic(left, right) {
+            hooks::fallback!();
+            if !equal {
+                return false;
+            }
+        } else if let Some(equal) = fast(left, right) {
+            if !equal {
+                return false;
+            }
+        } else {
+            let mut context = Comparison::default();
+            return context.value(left, right) && pairs.all(|(a, b)| context.value(a, b));
+        }
+    }
+    true
+}
+
+// This small admission helper must not add an out-of-line call to scalar paths.
+#[inline(always)]
+fn fast(a: &Value, b: &Value) -> Option<bool> {
+    let equal = if let Some(equal) = atomic(a, b) {
+        equal
+    } else {
+        match (a, b) {
+            (Value::Promise(a), Value::Promise(b)) => fast(a, b)?,
+            (Value::Evaluated(a, done), Value::Evaluated(b, other_done)) => {
+                fast(a, b)? && done == other_done
+            }
+            (Value::Record(a, labels), Value::Record(b, other_labels)) => {
+                if a.identity() != b.identity() {
+                    return None;
+                }
+                labels == other_labels
+            }
+            (Value::Aggregate(a), Value::Aggregate(b))
+            | (Value::References(a), Value::References(b))
+            | (Value::Object(a), Value::Object(b))
+            | (Value::Joined(a), Value::Joined(b))
+            | (Value::Possible(a), Value::Possible(b)) => {
+                if a.identity() != b.identity() {
+                    return None;
+                }
+                true
+            }
+            _ => false,
+        }
+    };
+    hooks::fallback!();
+    Some(equal)
 }
 
 // A comparison owns its memo: immutable container addresses remain live through
@@ -63,49 +120,5 @@ impl Comparison {
     }
 }
 
-// Shared Scope snapshots still avoid string/record work before initializing a memo.
-impl PartialEq for Value {
-    fn eq(&self, other: &Self) -> bool {
-        if hooks::identity!(self, other) {
-            return true;
-        }
-        hooks::fallback!();
-        if let Some(equal) = atomic(self, other) {
-            return equal;
-        }
-        Comparison::default().nested(self, other)
-    }
-}
-
-fn atomic(a: &Value, b: &Value) -> Option<bool> {
-    Some(match a {
-        Value::Prefix(text, complete, id) => match b {
-            Value::Prefix(other, done, other_id) => {
-                hooks::prefix!(text, complete, id, other, done, other_id)
-            }
-            _ => false,
-        },
-        Value::Function(function, path, env) => {
-            matches!(b, Value::Function(other, other_path, other_env) if function == other && path == other_path && env == other_env)
-        }
-        Value::Arguments(a) => matches!(b, Value::Arguments(other) if a == other),
-        Value::Array(a) => matches!(b, Value::Array(other) if a == other),
-        Value::Number(a) => matches!(b, Value::Number(other) if a == other),
-        Value::Boolean(a) => matches!(b, Value::Boolean(other) if a == other),
-        Value::Failure(a) => matches!(b, Value::Failure(other) if a == other),
-        Value::Unknown => matches!(b, Value::Unknown),
-        Value::Primitive => matches!(b, Value::Primitive),
-        Value::Unsupported => matches!(b, Value::Unsupported),
-        Value::SlotDeletion => matches!(b, Value::SlotDeletion),
-        Value::Evaluated(..)
-        | Value::Record(..)
-        | Value::Promise(..)
-        | Value::Aggregate(..)
-        | Value::References(..)
-        | Value::Object(..)
-        | Value::Joined(..)
-        | Value::Possible(..) => return None,
-    })
-}
 #[cfg(test)]
 mod tests;
