@@ -65,22 +65,24 @@ impl TemplateBinds {
             *input = Input::Unknown;
         }
     }
-    pub fn input(&self, tagged: &TaggedTemplateExpression<'_>) -> Input {
-        let Some((root, parts)) = chain(&tagged.tag) else {
-            return Input::Unknown;
-        };
-        let Some(&(id, namespace)) = self.references.get(&root) else {
-            return Input::Unknown;
-        };
-        if self.invalid.contains(&id)
-            || !(if namespace {
+    pub fn tag_owner(&self, tag: &Expression<'_>) -> Option<usize> {
+        let (root, parts) = chain(tag)?;
+        let &(id, namespace) = self.references.get(&root)?;
+        (self.is_valid(id)
+            && (if namespace {
                 parts.len() == 2 && matches!(parts[1].as_str(), "default" | "SQL")
             } else {
                 parts.len() == 1
-            })
-        {
+            }))
+        .then_some(id)
+    }
+    pub fn is_valid(&self, id: usize) -> bool {
+        !self.invalid.contains(&id)
+    }
+    pub fn input(&self, tagged: &TaggedTemplateExpression<'_>) -> Input {
+        let Some(id) = self.tag_owner(&tagged.tag) else {
             return Input::Unknown;
-        }
+        };
         let mut text = String::new();
         let mut positions = Vec::new();
         let (mut sql_line, mut sql_column) = (1, 1);

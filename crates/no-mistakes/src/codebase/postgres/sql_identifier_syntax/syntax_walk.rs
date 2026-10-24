@@ -1,6 +1,7 @@
 use super::*;
 use oxc_ast::ast::{
     Argument, ArrowFunctionExpression, Function, NewExpression, TaggedTemplateExpression,
+    TemplateLiteral,
 };
 use oxc_syntax::scope::ScopeFlags;
 
@@ -109,6 +110,19 @@ impl<'a> Visit<'a> for Syntax {
         self.opaque_metadata(|this| walk::walk_new_expression(this, value));
     }
     fn visit_tagged_template_expression(&mut self, value: &TaggedTemplateExpression<'a>) {
-        self.opaque_metadata(|this| walk::walk_tagged_template_expression(this, value));
+        let owner = self.template_binds.tag_owner(&value.tag);
+        let previous = self.metadata.enter_tag(owner);
+        walk::walk_tagged_template_expression(self, value);
+        self.metadata.restore(previous);
+    }
+    fn visit_template_literal(&mut self, value: &TemplateLiteral<'a>) {
+        for quasi in &value.quasis {
+            self.visit_template_element(quasi);
+        }
+        for expression in &value.expressions {
+            let previous = self.metadata.bind_expression();
+            self.visit_expression(expression);
+            self.metadata.restore(previous);
+        }
     }
 }

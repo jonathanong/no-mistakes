@@ -39,3 +39,27 @@ fn executor_metadata_exemptions_do_not_cross_profiles() {
     assert_eq!(rows[0]["file"], "src/mixed.mts");
     assert_eq!(rows[0]["line"], 5);
 }
+
+#[test]
+fn library_bind_values_are_data_but_opaque_nested_uses_remain_unknown() {
+    let rows = advisories(".no-mistakes-low.yml");
+    for name in ["binds.mts", "bind-writes.mts"] {
+        let file = format!("src/{name}");
+        let source = std::fs::read_to_string(fixture().join(&file)).unwrap();
+        for (index, line) in source.lines().enumerate() {
+            let count = rows
+                .iter()
+                .filter(|row| row["file"] == file && row["line"] == index + 1)
+                .count();
+            if line.contains("// BIND_CLEAR") {
+                assert_eq!(count, 0, "{rows:#?}");
+            }
+            if line.contains("// BIND_ESCAPE") {
+                assert_eq!(count, 1, "{rows:#?}");
+            }
+            if line.contains("// BIND_UNKNOWN") {
+                assert!(count > 0, "{rows:#?}");
+            }
+        }
+    }
+}
