@@ -97,8 +97,7 @@ pub(super) fn prepare(
         item,
         item_index,
         owners,
-        table,
-        name,
+        (name, table),
         &sources,
         catalog,
     );

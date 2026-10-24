@@ -10,8 +10,7 @@ pub(super) fn append(
     item: &SqlBoundItem,
     item_index: usize,
     owners: &BTreeMap<String, usize>,
-    table: &CatalogTable,
-    name: &str,
+    (name, table): (&str, &CatalogTable),
     sources: &[Option<Vec<usize>>],
     catalog: &SchemaCatalog,
 ) {

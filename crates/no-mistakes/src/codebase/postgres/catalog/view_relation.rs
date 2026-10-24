@@ -52,7 +52,7 @@ impl SchemaCatalog {
                     let (schema, table) = names::split_key(key);
                     schema.is_none() && table == bare
                 });
-            return (self.model_tables.get(&normalized).is_none() && !bare_table_in_schema)
+            return (!self.model_tables.contains_key(&normalized) && !bare_table_in_schema)
                 .then_some(view);
         }
         if qualifier.is_some() && qualifier.as_ref() != self.schema.as_ref() {
