@@ -11,6 +11,7 @@ struct Checkout {
     job: String,
     step: usize,
     verdict: Verdict,
+    declared_maximum: bool,
 }
 
 pub(super) fn analyze(
@@ -46,11 +47,14 @@ pub(super) fn analyze(
         let line = located_line(&locations, &checkout.job, checkout.step);
         match checkout.verdict {
             Verdict::Safe => {}
-            Verdict::Write(reason) => {
-                diagnostics
-                    .findings
-                    .push(finding(rel, line, &checkout.job, checkout.step, &reason))
-            }
+            Verdict::Write(reason) => diagnostics.findings.push(finding(
+                rel,
+                line,
+                &checkout.job,
+                checkout.step,
+                &reason,
+                checkout.declared_maximum,
+            )),
             Verdict::Unknown(reason) => diagnostics.unanalyzable(
                 policy,
                 uncertain(rel, line, &checkout.job, &checkout.step.to_string(), reason),
@@ -100,13 +104,20 @@ fn workflow_checkouts(value: &Value, assume_unspecified: bool) -> Vec<Checkout> 
             continue;
         };
         let job_name = scalar_name(job_id);
-        let proof = job_proof(job, workflow_permissions, callable, assume_unspecified);
-        collect_steps(job, &job_name, &proof, &mut checkouts);
+        let (proof, declared) = job_proof(job, workflow_permissions, assume_unspecified);
+        // This labels a permitted maximum, not the caller's actual runtime grant.
+        collect_steps(job, &job_name, &proof, callable && declared, &mut checkouts);
     }
     checkouts
 }
 
-fn collect_steps(job: &Mapping, job_name: &str, proof: &Proof, checkouts: &mut Vec<Checkout>) {
+fn collect_steps(
+    job: &Mapping,
+    job_name: &str,
+    proof: &Proof,
+    declared_maximum: bool,
+    checkouts: &mut Vec<Checkout>,
+) {
     let Some(steps) = mapping_get(job, "steps").and_then(Value::as_sequence) else {
         return;
     };
@@ -125,6 +136,7 @@ fn collect_steps(job: &Mapping, job_name: &str, proof: &Proof, checkouts: &mut V
             job: job_name.to_string(),
             step: index + 1,
             verdict,
+            declared_maximum,
         });
     }
 }
@@ -142,14 +154,26 @@ fn mapping_get<'a>(map: &'a Mapping, key: &str) -> Option<&'a Value> {
     map.get(Value::String(key.to_owned()))
 }
 
-fn finding(rel: &str, line: usize, job: &str, step: usize, reason: &str) -> RuleFinding {
+fn finding(
+    rel: &str,
+    line: usize,
+    job: &str,
+    step: usize,
+    reason: &str,
+    declared_maximum: bool,
+) -> RuleFinding {
+    let access = if declared_maximum {
+        "the reusable workflow's declared permissions may allow GITHUB_TOKEN write access"
+    } else {
+        "the GITHUB_TOKEN can write"
+    };
     RuleFinding {
         rule: RULE_ID.to_string(),
         file: rel.to_string(),
         line,
         message: format!(
-            "{rel}:{line}: job `{job}` step {step} uses actions/checkout while the GITHUB_TOKEN \
-             can write ({reason}), but persist-credentials is not false. actions/checkout writes \
+            "{rel}:{line}: job `{job}` step {step} uses actions/checkout while {access} \
+             ({reason}), but persist-credentials is not false. actions/checkout writes \
              that token into the git credential store unless with.persist-credentials is false."
         ),
         import: None,

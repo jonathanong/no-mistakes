@@ -8,7 +8,8 @@ The action persists the job `GITHUB_TOKEN` in the git credential store unless
 call the GitHub API with that token. The default is to persist credentials, so
 an omitted input is not safe when the token can write.
 
-The rule reports proven persisted write tokens and inputs it cannot analyze.
+The rule reports persisted credentials under declared write-capable bounds,
+and inputs it cannot analyze.
 Action files that cannot grant a token are skipped.
 
 ## What it catches
@@ -20,17 +21,20 @@ is ignored. Composite and other action files under
 have no job permissions of their own, and a pasted `permissions` or
 `workflow_call` key is not applied by GitHub.
 
-It flags an `actions/checkout` step when both of these are true:
+Only actual `actions/checkout` steps are judged: a valid `pull_request_target`
+workflow without a checkout produces no finding. It flags a checkout when both are true:
 
 - `with.persist-credentials` is omitted or a literal true (`true` or the
   string `true` in any letter case). A null value is unanalyzable. YAML treats
   `true` and `false` (any letter case) as booleans. The strings `yes`, `no`,
   `on`, and `off` are not booleans here, so they are not proof of false.
-- The job `GITHUB_TOKEN` is proven to be able to write.
+- The selected declared permission bound may allow `GITHUB_TOKEN` writes.
 
-Write access is the job `permissions` block when that key is present. A job
+The bound is the job `permissions` block when that key is present. A job
 block replaces the workflow block; it does not merge with it. Otherwise the
-workflow `permissions` block is used. `write-all` counts as write. A scope
+workflow `permissions` block is used. A missing workflow-level block is not
+unknown when the checkout job declares its own permissions, including in a
+reusable workflow. `write-all` counts as write. A scope
 counts when its value is the string `write` (surrounding spaces ignored). The
 write scopes are `actions`, `artifact-metadata`, `attestations`, `checks`,
 `code-quality`, `contents`, `copilot-requests`, `deployments`, `discussions`,
@@ -42,14 +46,16 @@ does not count. `vulnerability-alerts: write` is not a valid grant.
 Unrecognized scope names are not proof, and they do not hide a known write
 next to them. The finding names the first proven write scope in source order.
 
-A file whose `on` includes `workflow_call`, alone or with other events,
-cannot prove a write token. The caller can only pass the same or a more
-restrictive `GITHUB_TOKEN`, and this rule does not read the caller. A write
-grant in that file is unanalyzable. Empty permissions are not write. A null
-`permissions` value stays unknown. `assumeWriteWhenUnspecified` does not
-change any of those cases.
+For the default `GITHUB_TOKEN`, a reusable workflow's literal job or workflow
+permissions are a known declared maximum. A caller can lower the token's actual access, but that does not make
+the maximum unknown. A write-capable maximum with omitted or literal true
+persistence is an ordinary unsafe finding under every policy. A read-only or
+empty maximum is safe with literal or omitted persistence and the default
+token. Findings describe the declared maximum, not proof of the caller's
+actual runtime grant. A null or unsupported permissions value remains unknown.
 
-If `permissions` is absent, the rule does not guess GitHub's default token,
+If `permissions` is absent at both job and workflow levels, the rule does not
+guess GitHub's default token,
 including for `pull_request_target` and for `workflow_call`, unless
 `assumeWriteWhenUnspecified` is true. Without that assumption the permissions
 are unanalyzable. Expression-valued or otherwise unknown permissions and
@@ -67,9 +73,10 @@ checkout name is `actions/checkout` with an optional ref and trailing slash.
 
 `assumeWriteWhenUnspecified` defaults to `false`. Set it only for a repository
 or organization whose default `GITHUB_TOKEN` can write. When it is true, a
-missing `permissions` key, including on `workflow_call`, is judged as write.
-An explicit permissions value is unchanged, and a `workflow_call` file that
-sets `contents: write` remains unanalyzable. A null `permissions:` value
+missing `permissions` key at both levels, including on `workflow_call`, is
+judged as write. Literal declared bounds are checked independently of this
+option; a `workflow_call` write bound with persistence remains an ordinary
+unsafe finding. A null `permissions:` value
 stays unknown when the option is on. Unknown option keys are rejected.
 Listing the rule is what turns it on. Product defaults do not enable it.
 
@@ -89,9 +96,12 @@ credentials used to be silently skipped; `options.unanalyzable` now defaults
 to `report`, which emits failing findings. For checkouts that might persist
 credentials, review these previously silent cases:
 
-- No `permissions` key: repository or organization defaults are unknown, and
+- No `permissions` key at either job or workflow level: repository or
+  organization defaults are unknown, and
   `pull_request_target` alone does not prove the actual token grant.
-- A `workflow_call` workflow with a write grant; its caller can restrict the token.
+- A `workflow_call` write declaration: its maximum is known even when the
+  caller restricts runtime access. Persistence under that maximum is an ordinary
+  unsafe finding; `advise` and `ignore` do not hide it.
 - A custom `with.token`, such as a PAT or `${{ secrets.GITHUB_TOKEN }}`:
   job `GITHUB_TOKEN` permissions do not establish a custom token's permissions.
 - Expression-valued `persist-credentials`: its runtime value cannot be
@@ -102,8 +112,9 @@ credentials, review these previously silent cases:
 The [reviewed unchanged old `abstain` snapshot][reviewed-abstain] went from
 exit 0 with no findings on the base to exit 1 with 36 findings on the head.
 That count describes that snapshot, not a fixed count for other repositories.
-The current matcher fixture explicitly uses `ignore`; it does not demonstrate
-that the default policy stayed unchanged.
+The current matcher fixture explicitly uses `ignore` to omit uncertainties.
+Its declared reusable write bounds still produce ordinary findings; that
+policy does not preserve the earlier default results.
 
 Set `options.unanalyzable: ignore` to skip unknown inputs as before, or use
 `advise` to list them as non-failing advisories in CLI and Node check reports.
@@ -111,6 +122,9 @@ The standalone Rust findings-only API omits advisories. Definite persisted-write
 violations remain failures under every policy. In particular,
 `assumeWriteWhenUnspecified: true` makes missing permissions a definite write
 assumption, including on `workflow_call`; `advise` and `ignore` do not hide it.
+When a job declares its own read-only bound, an absent workflow-level block
+does not trigger this assumption. Valid workflows without checkout steps are not
+permission findings, including on `pull_request_target`.
 For a single accepted case, use a [line suppression](#suppression) on the
 checkout `uses` line instead of changing the policy for the whole rule.
 
@@ -180,8 +194,9 @@ Set the input to false:
 The same fix applies to `permissions: write-all` and to a job block that grants
 any write scope above. Narrowing the token to `contents: read` is the other fix
 when the job does not need to write. For reusable workflows, use literal
-read-only permissions or disable persistence; write grants cannot establish
-what token the caller passes. With `assumeWriteWhenUnspecified`, missing
+read-only permissions or disable persistence; a declared write maximum remains
+unsafe with persistence even when the caller can lower runtime access.
+With `assumeWriteWhenUnspecified`, missing
 permissions are a definite violation when credentials persist. A null
 `persist-credentials` value remains unanalyzable.
 
@@ -200,7 +215,10 @@ Definite violations remain failing under every policy.
 
 Expressions or unsupported values in `persist-credentials`, non-null
 non-mapping `with`, custom `with.token`, unknown permission scopes/access values,
-unspecified permissions, and caller-limited write grants are unanalyzable.
+and permissions absent at both job and workflow levels are unanalyzable.
+For the default `GITHUB_TOKEN`, literal reusable write bounds with omitted or
+literal true persistence are ordinary findings. Custom tokens and unknown
+persistence still follow their independent unanalyzable handling.
 Known write grants still establish a violation even beside unknown scopes.
 Literal `persist-credentials: false` is safe regardless of token or permissions.
 Read-only or empty permissions without a custom token remain safe when

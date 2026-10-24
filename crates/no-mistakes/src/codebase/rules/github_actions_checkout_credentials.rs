@@ -65,3 +65,7 @@ mod tests;
 #[cfg(test)]
 #[path = "github_actions_checkout_credentials/tests/policy.rs"]
 mod policy_tests;
+
+#[cfg(test)]
+#[path = "github_actions_checkout_credentials/tests/permission_bounds.rs"]
+mod permission_bounds_tests;

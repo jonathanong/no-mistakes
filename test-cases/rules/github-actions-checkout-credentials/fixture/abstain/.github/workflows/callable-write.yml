@@ -1,4 +1,4 @@
-# workflow_call can only keep or lower the caller token, so this write is not proof.
+# A caller may lower runtime access, but the declared write maximum is still unsafe.
 name: callable
 on: workflow_call
 permissions:

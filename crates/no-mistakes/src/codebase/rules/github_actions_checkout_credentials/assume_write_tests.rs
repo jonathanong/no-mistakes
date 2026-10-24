@@ -59,7 +59,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 ";
-    assert!(findings(callable_write, true).is_empty());
+    for assume in [false, true] {
+        let bound = findings(callable_write, assume);
+        assert_eq!(bound.len(), 1, "{bound:?}");
+        assert!(bound[0].message.contains("declared permissions may allow"));
+    }
 
     let read = "\
 on: push

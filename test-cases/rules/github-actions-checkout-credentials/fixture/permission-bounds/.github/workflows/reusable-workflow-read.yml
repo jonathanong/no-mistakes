@@ -1,0 +1,9 @@
+on: workflow_call
+permissions: { contents: read }
+jobs:
+  inherited:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { persist-credentials: true }

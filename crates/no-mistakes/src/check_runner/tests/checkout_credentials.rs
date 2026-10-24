@@ -6,8 +6,8 @@ fn checkout_unknowns_reach_aggregate_findings_and_advisories_once() {
         .join("../../test-cases/rules/github-actions-checkout-credentials/fixture/unanalyzable");
     for (name, failures, advisory_count) in [
         (".no-mistakes.yml", 20, 0),
-        (".no-mistakes.advise.yml", 1, 19),
-        (".no-mistakes.ignore.yml", 1, 0),
+        (".no-mistakes.advise.yml", 2, 18),
+        (".no-mistakes.ignore.yml", 2, 0),
     ] {
         let results = run_all(root.clone(), Some(root.join(name)), None).unwrap();
         assert_eq!(results.rules.len(), failures, "{:?}", results.rules);

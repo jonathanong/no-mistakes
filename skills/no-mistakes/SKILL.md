@@ -73,7 +73,10 @@ For `github-actions-checkout-credentials`, uncertain persistence, permissions,
 custom tokens (including `secrets.GITHUB_TOKEN`), and invalid workflow YAML
 follow `unanalyzable: report | advise | ignore` (default `report`). Set
 `with.persist-credentials: false` or use the default token with literal
-read-only permissions. Inspect advisories before treating a run as clean.
+read-only permissions. Reusable declarations are known upper bounds; unsafe
+write bounds stay failing under every policy. Job permissions override workflow
+defaults, and valid workflows without checkout have no finding. Inspect advisories before
+treating a run as clean.
 
 Repository and rule settings use `effort` and `unanalyzable`; the older
 SQL-specific `unanalyzableSql` setting remains an alias.

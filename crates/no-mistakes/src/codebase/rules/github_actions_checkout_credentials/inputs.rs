@@ -33,9 +33,7 @@ pub(super) fn verdict(proof: &Proof, step: &Mapping) -> Verdict {
     match proof {
         Proof::Write(reason) => Verdict::Write(reason.clone()),
         Proof::NotWrite => Verdict::Safe,
-        Proof::Unknown => Verdict::Unknown(
-            "permissions are unknown, unspecified, or limited by a reusable workflow caller",
-        ),
+        Proof::Unknown => Verdict::Unknown("permissions are unknown or unspecified"),
     }
 }
 

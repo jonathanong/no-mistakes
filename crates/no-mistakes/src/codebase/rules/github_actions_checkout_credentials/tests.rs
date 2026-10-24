@@ -269,7 +269,7 @@ fn ignore_policy_preserves_definite_persisted_write_findings() {
 
     let (root, config, files) = load_fixture("abstain");
     let findings = super::check_with_files(&root, &config, &files).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
+    super::permission_bounds_tests::assert_legacy_abstain(&findings);
 
     let (root, config, files) = load_fixture("fail");
     let findings = super::check_with_files(&root, &config, &files).unwrap();

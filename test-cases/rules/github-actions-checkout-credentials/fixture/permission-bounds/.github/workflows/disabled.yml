@@ -1,0 +1,8 @@
+# no-mistakes-disable-file github-actions-checkout-credentials
+on: workflow_call
+jobs:
+  write:
+    permissions: { contents: write }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

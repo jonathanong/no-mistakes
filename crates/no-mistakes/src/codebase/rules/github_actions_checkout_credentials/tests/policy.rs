@@ -34,14 +34,14 @@ fn saved_unknown_shapes_obey_each_policy_and_effort_with_suppressions() {
                     .unwrap();
             assert_eq!(
                 output.findings.len(),
-                1 + 19 * usize::from(policy == Unanalyzable::Report),
+                2 + 18 * usize::from(policy == Unanalyzable::Report),
                 "{:?} {:?}",
                 output.findings,
                 output.advisories
             );
             assert_eq!(
                 output.advisories.len(),
-                19 * usize::from(policy == Unanalyzable::Advise),
+                18 * usize::from(policy == Unanalyzable::Advise),
                 "{:?} {:?}",
                 output.findings,
                 output.advisories
@@ -51,7 +51,10 @@ fn saved_unknown_shapes_obey_each_policy_and_effort_with_suppressions() {
                     .findings
                     .iter()
                     .chain(&output.advisories)
-                    .filter(|finding| !finding.file.ends_with("violation.yml"))
+                    .filter(|finding| {
+                        !finding.file.ends_with("violation.yml")
+                            && !finding.file.ends_with("permissions-caller.yml")
+                    })
                     .map(|finding| {
                         Path::new(&finding.file)
                             .file_stem()
@@ -64,7 +67,6 @@ fn saved_unknown_shapes_obey_each_policy_and_effort_with_suppressions() {
                 actual.sort();
                 let expected = [
                     "invalid",
-                    "permissions-caller",
                     "permissions-expression",
                     "permissions-invalid-scope",
                     "permissions-missing",
@@ -93,11 +95,19 @@ fn saved_unknown_shapes_obey_each_policy_and_effort_with_suppressions() {
             assert!(known
                 .message
                 .contains("workflow permissions grant contents: write"));
+            assert!(output
+                .findings
+                .iter()
+                .any(|finding| finding.file.ends_with("permissions-caller.yml")
+                    && finding.message.contains("declared permissions may allow")));
             for finding in output
                 .findings
                 .iter()
                 .chain(&output.advisories)
-                .filter(|finding| !finding.file.ends_with("violation.yml"))
+                .filter(|finding| {
+                    !finding.file.ends_with("violation.yml")
+                        && !finding.file.ends_with("permissions-caller.yml")
+                })
             {
                 assert!(finding.message.contains(&finding.file));
                 assert!(finding.message.contains("literal false"));
@@ -148,8 +158,8 @@ fn default_policy_reports_and_deferred_suppression_preserves_both_channels() {
     config.rules[0].options = serde_yaml::from_str("unanalyzable: advise").unwrap();
     let output =
         diagnostics_with_files_and_sources(&root, &config, &files, &sources, true).unwrap();
-    assert_eq!(output.findings.len(), 1);
-    assert_eq!(output.advisories.len(), 25);
+    assert_eq!(output.findings.len(), 2);
+    assert_eq!(output.advisories.len(), 24);
 }
 
 #[test]
@@ -225,8 +235,8 @@ fn standalone_check_filters_suppressions_without_changing_raw_dispatch() {
     let known_root = super::tests::fixture_root("suppression");
     for (name, visible, raw) in [
         (".no-mistakes.yml", 20, 26),
-        (".no-mistakes.advise.yml", 1, 1),
-        (".no-mistakes.ignore.yml", 1, 1),
+        (".no-mistakes.advise.yml", 2, 2),
+        (".no-mistakes.ignore.yml", 2, 2),
     ] {
         let config =
             serde_yaml::from_str(&std::fs::read_to_string(root.join(name)).unwrap()).unwrap();

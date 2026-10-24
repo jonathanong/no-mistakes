@@ -1,0 +1,17 @@
+on: workflow_call
+permissions: { contents: write }
+# A caller can lower this maximum; that does not make the declared bound unknown.
+jobs:
+  inherited:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { persist-credentials: true }
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+  read-override:
+    permissions: { contents: read }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

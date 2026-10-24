@@ -1,0 +1,8 @@
+on: pull_request_target
+# Unknown default permissions alone are not a checkout occurrence.
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo inspect
+      - uses: actions/setup-node@v4

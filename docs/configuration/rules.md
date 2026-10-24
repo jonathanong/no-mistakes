@@ -200,9 +200,11 @@ until a configuration lists it.
 For [`github-actions-checkout-credentials`](../rules/github-actions-checkout-credentials.md),
 `options.assumeWriteWhenUnspecified` defaults to `false`. Leave it off unless
 the repository or organization default `GITHUB_TOKEN` can write. When it is
-true, a missing `permissions` key is judged as write, including on
-`workflow_call`. An explicit permissions value is unchanged, so a callable
-workflow that sets `contents: write` remains unanalyzable.
+true, permissions absent at both job and workflow levels are judged as write,
+including on `workflow_call`. A job declaration replaces the workflow default.
+Literal reusable permissions are known upper bounds: a declared write bound
+with omitted or literal true persistence stays an ordinary unsafe finding
+under every policy, even when the caller can lower actual token access.
 `options.unanalyzable: report | advise | ignore` controls unknown persistence,
 permissions, custom tokens (including `secrets.GITHUB_TOKEN`), and invalid YAML;
 `report` is the default. Definite violations remain failing under every policy.

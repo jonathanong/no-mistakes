@@ -8,10 +8,13 @@ The rule remains opt-in.
 
 When credentials might persist, review these previously silent cases:
 
-- Missing `permissions`: repository or organization defaults are unknown.
+- `permissions` missing at both job and workflow levels: repository or
+  organization defaults are unknown.
   `pull_request_target` alone does not prove the actual token grant either.
-- An explicit write grant in a `workflow_call` workflow: the caller can
-  restrict the token, so this file does not establish its effective grant.
+- An explicit write declaration in a `workflow_call` workflow: it is a known
+  upper bound, even when the caller restricts the actual token. Persistence
+  under that write-capable bound is an ordinary unsafe finding under all
+  policies, including `advise` and `ignore`.
 - A custom `with.token`, such as a PAT or `${{ secrets.GITHUB_TOKEN }}`:
   job permissions describe the default `GITHUB_TOKEN`, not a PAT's permissions,
   and a custom token expression does not establish its identity or permissions.
@@ -27,8 +30,9 @@ values are unknown.
 The [reviewed unchanged old `abstain` fixture/configuration snapshot][reviewed-abstain]
 exited 0 with no findings on the base and exited 1 with 36 findings on the head.
 This is evidence for that snapshot, not an expected finding count for every
-repository. The current `abstain` matcher fixture explicitly opts into `ignore`,
-so its passing result does not preserve or demonstrate the old default policy.
+repository. The current `abstain` matcher fixture explicitly opts into `ignore`
+to omit uncertainties. Declared reusable write bounds still produce ordinary
+findings under that policy; it does not preserve the old default results.
 
 ## Migrate an existing configuration
 
@@ -61,11 +65,19 @@ Advisory output does not reproduce the old output byte for byte. Both policies
 continue to report definite persisted-write violations. Neither policy
 guarantees complete report parity with an older version.
 
-With `assumeWriteWhenUnspecified: true`, missing permissions are a definite
-write assumption, including in a `workflow_call` workflow. These remain
-failures under `advise` and `ignore`. An explicit write grant in a
-`workflow_call` file instead remains unknown because its caller can restrict
-it. Job permissions replace workflow permissions.
+Job permissions replace workflow permissions. If every job declares its own
+permissions, a missing workflow-level block does not make those bounds unknown,
+including on `workflow_call`. A literal read-only job bound is safe with the
+default token and literal or omitted persistence; a declared write bound with
+omitted or literal true persistence remains an ordinary unsafe finding. The
+caller can lower actual access, but that does not make the declared maximum
+unknown.
+
+With `assumeWriteWhenUnspecified: true`, permissions missing at both levels are
+a definite write assumption, including in a `workflow_call` workflow. These
+remain failures under `advise` and `ignore`. This assumption does not replace
+a job's explicit read-only bound. Only actual checkout steps are judged:
+a valid `pull_request_target` workflow without checkout produces no finding.
 
 ## Accept one checkout without changing the whole rule
 

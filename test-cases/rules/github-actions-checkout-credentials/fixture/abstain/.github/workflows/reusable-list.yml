@@ -1,4 +1,4 @@
-# A workflow_call entry in the trigger list blocks a write finding.
+# A workflow_call trigger does not supply the missing permission declaration.
 name: reusable
 on: [push, workflow_call]
 jobs:

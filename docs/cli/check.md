@@ -172,5 +172,7 @@ See [the rule's analysis contract](../rules/postgres-no-transformed-uuid-predica
 `github-actions-checkout-credentials` routes unknown persistence or permissions,
 custom tokens, and malformed workflow YAML through `options.unanalyzable`
 (`report` by default, `advise` for non-failing advice, `ignore` to omit).
-Definite persisted write tokens remain failures under every policy. See
+Definite persisted-write violations, including unsafe declared reusable bounds,
+remain failures under every policy. Job permissions override workflow defaults,
+and a valid workflow without a checkout step is not a finding. See
 [checkout credential analysis](../rules/github-actions-checkout-credentials.md#analysis).
