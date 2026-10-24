@@ -1,7 +1,9 @@
 mod comments;
 mod comparison;
+mod effort;
 mod extract;
 mod extraction_completeness;
+use effort::diagnostics_with_lookup;
 mod literals;
 mod low;
 mod markdown;
@@ -15,8 +17,6 @@ use super::RuleFinding;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use rayon::prelude::*;
-use scan::{scan, ScanInput};
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -101,57 +101,6 @@ pub fn diagnostics_with_files_sources_and_facts(
         facts.map(|facts| facts as &dyn TsFactLookup),
         defer_suppression,
     )
-}
-
-fn diagnostics_with_lookup(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-    facts: Option<&dyn TsFactLookup>,
-    defer_suppression: bool,
-) -> Result<super::analysis_policy::AnalysisDiagnostics> {
-    let observer = crate::diagnostics::current();
-    let all: Result<Vec<_>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| {
-            crate::diagnostics::with_observer(observer.clone(), || {
-                let opts: Options = rule.try_rule_options()?;
-                let target_roots = super::target_roots(root, config, rule);
-                let skip = super::skip_dir_set(config);
-                let files: Vec<PathBuf> = all_files
-                    .iter()
-                    .filter(|p| {
-                        super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots)
-                    })
-                    .cloned()
-                    .collect();
-                let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-                scan(ScanInput {
-                    root,
-                    config,
-                    rule,
-                    opts: &opts,
-                    files: &files,
-                    target_roots: &target_roots,
-                    sources,
-                    facts,
-                })
-            })
-        })
-        .collect();
-    let mut output = super::analysis_policy::AnalysisDiagnostics::default();
-    for chunk in all? {
-        output.append(chunk);
-    }
-    if !defer_suppression {
-        super::suppress_rule_findings_with_sources(root, &mut output.findings, sources);
-        super::suppress_rule_findings_with_sources(root, &mut output.advisories, sources);
-    }
-    super::sort_findings(&mut output.findings);
-    super::sort_findings(&mut output.advisories);
-    Ok(output)
 }
 
 /// TypeScript files that must have function-call facts prepared for this rule.
