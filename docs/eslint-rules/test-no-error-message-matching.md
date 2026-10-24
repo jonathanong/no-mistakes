@@ -76,8 +76,11 @@ The added value analysis keeps the existing assertion and test-body boundaries;
 it does not turn arbitrary string operations outside tests into findings.
 Captured `err.body.message` values keep the existing body-message exemption.
 For captured values, `as string`, `<string>`, non-null, optional-chain, and
-comma-last wrappers preserve provenance. Other asserted types and `satisfies`
-are outside the added proof; the released direct-member behavior is unchanged.
+comma-last wrappers preserve provenance. Erased `satisfies` wrappers preserve
+both the captured value and the expectation identity, including
+`const text = error.message satisfies string`. Keep that type check when
+rewriting the capture to `error.code`. Other asserted types are outside the
+captured-value proof.
 References that cross a function-declaration scope are also skipped because a
 hoisted function can run before the capture is initialized. Expression callbacks
 created after their captured values can still be checked.

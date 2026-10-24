@@ -5,7 +5,9 @@ const { resolveVariable } = require("./test-no-shared-state-aliases");
 function unwrapCapturedValue(node) {
   let current = node;
   while (current) {
-    if (["ChainExpression", "TSNonNullExpression"].includes(current.type)) {
+    if (
+      ["ChainExpression", "TSNonNullExpression", "TSSatisfiesExpression"].includes(current.type)
+    ) {
       current = current.expression;
     } else if (current.type === "SequenceExpression") {
       current = current.expressions.at(-1);

@@ -36,3 +36,8 @@ test("controls", () => {
   text === other;
 });
 expect().toBe("no captured value");
+// Erased wrappers do not make mutable or exempt body captures eligible.
+let checked = error.message satisfies string;
+expect(checked).toBe("unknown");
+const checkedBody = response.body.message satisfies string;
+expect(checkedBody).toBe("allowed");

@@ -26,7 +26,8 @@ function unwrap(node) {
     current?.type === "ChainExpression" ||
     current?.type === "TSAsExpression" ||
     current?.type === "TSTypeAssertion" ||
-    current?.type === "TSNonNullExpression"
+    current?.type === "TSNonNullExpression" ||
+    current?.type === "TSSatisfiesExpression"
   ) {
     current = current.expression;
   }

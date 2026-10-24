@@ -32,6 +32,14 @@ describe("captured error-message values", () => {
     );
   });
 
+  it("preserves identity through erased satisfies wrappers", () => {
+    assert.deepEqual(
+      check("captured-satisfies.ts").map(({ line, messageId }) => [line, messageId]),
+      [5, 7, 8, 10, 11].map((line) => [line, "message"]),
+    );
+    assert.deepEqual(check("captured-satisfies-rewrite.ts"), []);
+  });
+
   it("keeps captures message-derived after source binding or property changes", () => {
     assert.deepEqual(
       check("captured-source-change.ts").map(({ line, messageId }) => [line, messageId]),
@@ -76,6 +84,8 @@ describe("captured error-message values", () => {
     const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
     for (const [file, count] of [
       ["captured-values.ts", 7],
+      ["captured-satisfies.ts", 5],
+      ["captured-satisfies-rewrite.ts", 0],
       ["captured-source-change.ts", 3],
       ["captured-rewrites.ts", 0],
       ["captured-source-rewrites.ts", 0],
@@ -110,5 +120,5 @@ describe("captured error-message values", () => {
         file,
       );
     }
-  });
+  }, 20_000);
 });

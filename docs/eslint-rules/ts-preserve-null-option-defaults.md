@@ -54,7 +54,12 @@ function render(options: { label?: string | null }) {
 ```
 
 The new scalar path requires a plain identifier initializer and an already
-completed, unwritten `const` source binding. It uses the actual lexical binding,
+completed, unwritten `const` source binding, or an unwritten typed destructured
+parameter read from its function body. For example,
+`function render({ label }: { label?: string | null }) { const alias = label; return alias ?? "Untitled"; }`
+reports the same nullable default; rewrite the return as
+`alias === undefined ? "Untitled" : alias`. Parameter-initializer reads are not
+followed because another parameter may still be uninitialized. It uses the actual lexical binding,
 so a nearer hoisted variable or later declaration does not borrow an outer
 nullable fact. `let`/`var` sources or aliases, assignment aliases, TypeScript
 wrappers around scalar aliases, imported values and forward reads are outside
