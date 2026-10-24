@@ -65,3 +65,18 @@ nonzero exits. Final repository `check --format json` has no findings, warnings
 or advisories. Both Clippy feature configurations, formatting, spelling,
 ast-grep, duplication and workspace complexity pass. Complexity retains two
 existing parser warnings and reports zero functions above 30.
+
+The parent #2698 merged externally while final validation completed. Only the
+#2666 commits were replayed onto `4c1bc0e04`. A tree comparison confirms the
+PostgreSQL evaluator, catalog, extracted facts and native API changes are
+unchanged by this rebase. Main also gained unrelated Rust resolver changes, so
+the full Rust and native scopes are repeated on the rebased branch.
+The duplicate-alias policy fixture is corrected after the measured coverage
+run to exercise duplicate identity instead of an earlier name-collision error;
+its focused regression passes.
+
+Post-rebase validation at `fc16b360d` passes 13,267 library tests (three existing
+ignored), 444 binary tests, 1,388 integration tests and all 575 compiled native
+API tests. The default CLI has a clean repository check, and all 40 fixture
+outputs match the pre-rebase candidate byte for byte. The comparison artifact
+records the new executable hash separately from the original measured build.

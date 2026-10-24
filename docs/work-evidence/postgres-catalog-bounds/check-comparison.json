@@ -769,5 +769,11 @@
         "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
       }
     }
-  ]
+  ],
+  "postRebaseCandidate": {
+    "revision": "fc16b360d06d605de457f7ca1603921c3fa3c4c3",
+    "base": "4c1bc0e04b70b677a2b15a04394363f5eff1df8a",
+    "sha256": "149174828f48dda79d727283c99bf20344ba828c67f58bc832c5589facb8eb74",
+    "outputComparison": "All 40 saved configuration outputs match the pre-rebase candidate."
+  }
 }
