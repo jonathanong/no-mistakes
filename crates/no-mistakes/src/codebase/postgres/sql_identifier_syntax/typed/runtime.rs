@@ -1,6 +1,8 @@
 use super::*;
 use oxc_ast::ast::{Class, ClassElement, Function, MethodDefinitionKind, StaticMemberExpression};
 
+mod parameters;
+
 // A field annotation is only a possible executor. Keep runtime receiver reads,
 // scoped to its owning class, without promoting any SQL argument to a literal.
 pub(super) fn collect(program: &Program<'_>, possible: &FxHashSet<Span>) -> FxHashSet<Span> {
@@ -81,24 +83,7 @@ impl<'a> Visit<'a> for Runtime<'_> {
                     self.methods
                         .insert(method.value.span.start, method.r#static);
                     if method.kind == MethodDefinitionKind::Constructor {
-                        for parameter in &method.value.params.items {
-                            if parameter.accessibility.is_none()
-                                && !parameter.readonly
-                                && !parameter.r#override
-                            {
-                                continue;
-                            }
-                            if let (BindingPattern::BindingIdentifier(binding), Some(annotation)) =
-                                (&parameter.pattern, &parameter.type_annotation)
-                            {
-                                if possible::contains(self.possible, &annotation.type_annotation) {
-                                    self.fields
-                                        .entry((false, false))
-                                        .or_default()
-                                        .insert(binding.name.to_string());
-                                }
-                            }
-                        }
+                        self.parameter_properties(&method.value.params);
                     }
                 }
                 _ => {}

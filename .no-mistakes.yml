@@ -16,6 +16,16 @@ checks:
         - .no-mistakes.yml
       command: [cargo, test, --locked, --workspace, --all-features, --lib, --bins, --tests]
       fileArgs: none
+    # Match CI's fast complexity gate before collecting instrumented coverage.
+    - name: rust-complexity
+      include:
+        - "crates/**/*.rs"
+        - "crates/**/Cargo.toml"
+        - Cargo.toml
+        - Cargo.lock
+        - .no-mistakes.yml
+      command: [cargo, crap, --workspace, --missing, optimistic, --fail-above, --threshold, "30", --summary]
+      fileArgs: none
     - name: jscpd
       include:
         - "crates/**/*.rs"
