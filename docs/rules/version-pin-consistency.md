@@ -42,6 +42,10 @@ compare the anchor. A valid source outside the selected set still supplies the
 comparison pin; a definite anchor mismatch remains a failure under every
 unanalyzable policy.
 
+If a selected anchor itself cannot be read as UTF-8, the rule reports the read
+error at line 1 of that anchor through the same `unanalyzable` policy. Restore
+the anchor as readable UTF-8 text to resume the comparison.
+
 Each `pattern` must contain exactly one capturing group. The captured text
 must equal the string pin at `sourceKey`. Missing keys, non-string pins,
 missing captures, and mismatches are findings with file and line when
@@ -79,8 +83,9 @@ capture group must equal it. Missing keys, stale captures, malformed patterns,
 and stale paths are findings. If a selected anchor depends on a missing,
 unreadable, or malformed source that is outside the selected file set, that
 uncertainty follows `options.unanalyzable` (`report` by default, `advise`, or
-`ignore`). A valid source outside the selected file set still supplies the comparison pin,
-and definite mismatches always fail.
+`ignore`). A selected anchor that cannot be read as UTF-8 follows the same
+policy. A valid source outside the selected file set still supplies the
+comparison pin, and definite mismatches always fail.
 
 ## Options and defaults
 
@@ -90,7 +95,8 @@ include/exclude filters apply; there are no implicit source or anchor files.
 
 `options.unanalyzable` inherits the repository policy, which defaults to
 `report`. It accepts `report`, `advise`, or `ignore` for incomplete comparisons
-caused by an unreadable or malformed source outside the selected file set.
+caused by an unreadable or malformed source outside the selected file set or
+an unreadable selected anchor.
 Definite mismatches and validation of a selected source remain findings.
 
 ## Valid example
@@ -126,16 +132,17 @@ EXAMPLE_TOOL_VERSION: 0.24.1
 
 Update every anchor in the same change, or change the source ownership and
 patterns together so one canonical pin remains. For an unanalyzable finding,
-restore the source file or correct `sourceFile`/its format so the selected
-anchor can be compared.
+restore the source file or correct `sourceFile`/its format, or restore an
+unreadable anchor as UTF-8 text, so the selected anchor can be compared.
 
 ## Suppression
 
 Use `no-mistakes-disable-file version-pin-consistency` in the anchor file for
-an exception that covers findings and advisories. Incomplete-source diagnostics
-point to line 1, so `no-mistakes-disable-line` must be on that line. Definite
-mismatches retain the captured version's line and support `no-mistakes-disable-next-line`
-immediately before that line.
+an exception that covers findings and advisories when the anchor is readable.
+Incomplete-comparison diagnostics point to line 1, so
+`no-mistakes-disable-line` must be on that line. Definite mismatches retain the
+captured version's line and support `no-mistakes-disable-next-line` immediately
+before that line.
 
 ## Related rules
 

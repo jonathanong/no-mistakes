@@ -32,10 +32,13 @@ const { analyzeProject } = require("no-mistakes");
 warnings.
 
 For `shellcheck-runner`, both APIs apply the same repository or
-rule-application `unanalyzable` policy when selected shell scripts cannot be
-checked because the ShellCheck executable is missing. The default is `report`;
-`advise` returns a non-failing advisory and `ignore` skips that uncertainty.
-See [the rule contract](rules/shellcheck-runner.md#what-it-catchesrequires).
+rule-application `unanalyzable` policy when the ShellCheck executable is
+missing or a failed invocation yields no recognized diagnostics. If an
+abnormal exit has some recognized diagnostics, those findings are preserved
+and the policy applies to selected scripts without recognized diagnostics.
+Other launcher errors, such as permission denied, are hard errors. The default
+is `report`; `advise` returns a non-failing advisory and `ignore` skips that
+uncertainty. See [the rule contract](rules/shellcheck-runner.md#what-it-catchesrequires).
 
 For `postgres-require-query-annotation`, `low` uses the same
 [literal-head proofs](rules/postgres-require-query-annotation.md#effort) and
@@ -75,10 +78,12 @@ the CLI. Raw SQL files retain their existing analysis.
 
 For `version-pin-consistency`, CLI `check`, `check(options)`, and check reports
 in `analyzeProject()` apply the same `unanalyzable` policy when a selected
-anchor's source outside the selected file set is missing, unreadable, or malformed: `report`
-fails by default, `advise` emits non-failing advice, and `ignore` suppresses the
-uncertainty. A valid source outside the selected file set still supplies the comparison pin,
-and definite mismatches remain failures.
+anchor's declared comparison source is outside the selected file set and is
+missing, unreadable, or malformed, or when a selected anchor itself cannot be
+read as UTF-8. Actual read failures on the selected anchor use this policy too.
+`report` fails by default, `advise` emits non-failing advice, and `ignore`
+suppresses the uncertainty. A valid source outside the selected file set still
+supplies the comparison pin, and definite mismatches remain failures.
 
 For `github-actions-job-timeouts`, `check({ effort: "low" })` and a check report
 in `analyzeProject()` use the same covering `github-actions-step-timeouts`
