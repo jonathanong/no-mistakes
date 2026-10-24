@@ -28,7 +28,7 @@ Validation passed:
   CommonJS, ESM and project parity.
 - LLVM: regions 98.54%, functions 99.34%, lines 99.32%. No filename exclusions.
   The full PR diff measures 1,177/1,196 executable lines (98.4114%), above 98%.
-- `cargo clippy` with warnings denied, Rust formatting, duplicate and spelling checks,
+- Rust lint with warnings denied, Rust formatting, duplicate and spelling checks,
   JavaScript lint/format, import resolution and repository check.
 - Complexity: 15,410 functions analyzed; none exceed CRAP 30.
 
