@@ -51,6 +51,12 @@ pub(super) fn scan(
         let source = sources.read_path(path)?;
         let literals = cache::literals(file, facts, path, &source);
         for call in calls {
+            let suppressed_call = crate::codebase::ts_source::matching_disable_directive(
+                &source,
+                Some(call.line),
+                RULE_ID,
+            )
+            .is_some();
             let result = match &call.input {
                 Input::Sql { source_span, .. } => {
                     literals.get(source_span).cloned().unwrap_or(Ok(None))
@@ -66,13 +72,7 @@ pub(super) fn scan(
                             Ok((table, true)) => {
                                 status = SqlVerdictStatus::Violation;
                                 let mut finding = super::scan::finding(&rel, table, use_);
-                                if crate::codebase::ts_source::matching_disable_directive(
-                                    &source,
-                                    Some(call.line),
-                                    RULE_ID,
-                                )
-                                .is_some()
-                                {
+                                if suppressed_call {
                                     finding.line = call.line as usize;
                                 }
                                 findings.push(finding);
@@ -83,7 +83,12 @@ pub(super) fn scan(
                                 }
                                 reasons.push(reason.into());
                                 if opts.fail_unanalyzable {
-                                    findings.push(super::scan::unknown(&rel, use_.line));
+                                    let line = if suppressed_call {
+                                        call.line as usize
+                                    } else {
+                                        use_.line
+                                    };
+                                    findings.push(super::scan::unknown(&rel, line));
                                 }
                             }
                             _ => {}

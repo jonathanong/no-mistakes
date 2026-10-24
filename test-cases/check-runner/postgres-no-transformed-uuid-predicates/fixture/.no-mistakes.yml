@@ -3,6 +3,7 @@ rules:
     scope: repository
     options:
       schemaCatalogPath: schema.json
+      exclude: [unknown-suppression.ts]
       sqlInclude: [queries.sql]
       importSpecifier: '@db'
       executorNames: [query]

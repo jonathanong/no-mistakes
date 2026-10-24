@@ -93,6 +93,20 @@ fn transformed_uuid_predicates_sql_and_executor_suppressions_preserve_unsuppress
 }
 
 #[test]
+fn transformed_uuid_predicates_low_suppresses_unknown_owners_at_each_executor_call() {
+    let report = run(".no-mistakes.unknown-suppression.yml", None, false);
+    assert_eq!(report.rules.len(), 2, "{:?}", report.rules);
+    assert!(report.rules.iter().all(|row| {
+        row.file == "unknown-suppression.ts" && row.target.as_deref() == Some("unanalyzable")
+    }));
+    assert_eq!(
+        report.rules.iter().map(|row| row.line).collect::<Vec<_>>(),
+        [9, 10]
+    );
+    assert!(report.advisories.is_empty());
+}
+
+#[test]
 fn transformed_uuid_predicates_raw_sql_uncertainty_remains_advisory_at_both_efforts() {
     for effort in [Effort::Low, Effort::Max] {
         let report = run(".no-mistakes.raw-advice.yml", Some(effort), false);
