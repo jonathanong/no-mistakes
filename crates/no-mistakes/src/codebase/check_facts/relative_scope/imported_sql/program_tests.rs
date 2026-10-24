@@ -110,7 +110,7 @@ fn missing_modules_and_void_programs_fail_closed() {
     });
     let mut shared = Shared::new(&files, locator);
     assert!(shared
-        .find(std::path::Path::new("/missing.mts"), "h")
+        .find(std::path::Path::new("/missing.mts"), "h", None)
         .is_none());
     assert!(helper_program(&shared, &options, std::path::Path::new("/missing.mts"), "h").is_none());
     assert!(helper_program(&shared, &options, &path, "h").is_none());
@@ -123,6 +123,7 @@ fn missing_modules_and_void_programs_fail_closed() {
     );
     let site = ImportedSite {
         local: "h".to_string(),
+        member: None,
         args: Vec::new(),
         value_used: true,
         line: 1,
@@ -184,6 +185,7 @@ fn a_located_helper_without_matching_sql_facts_is_not_a_summary() {
     let mut shared = Shared::new(&files, locator);
     let site = ImportedSite {
         local: "h".to_string(),
+        member: None,
         args: Vec::new(),
         value_used: true,
         line: 1,

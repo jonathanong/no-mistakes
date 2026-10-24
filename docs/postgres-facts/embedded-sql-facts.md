@@ -42,8 +42,11 @@ exported from another file is spliced when it is interpolated into an untagged
 template or passed to `.append`, including `as const`. A default export of a
 string or a no-substitution template is that literal, including one wrapped in
 parentheses or a type assertion. `export default QUERY` follows the const it
-names. A namespace member such as `ns.CONST` stays unknown. An imported tagged
-fragment constant is spliced only by `.append`; an untagged template would
+names. A static namespace read such as `ns.CONST`, without optional chaining,
+follows that export through the same prepared module resolver, including named
+re-exports and star barrels. The namespace must be a runtime import with no
+local shadow; methods, computed or nested members, type-only imports, unresolved
+modules, and non-const exports stay unknown. An imported tagged fragment constant is spliced only by `.append`; an untagged template would
 stringify the statement object. `let`, reassigned bindings, computed
 initializers, spreads, computed keys or writes, nested members, numeric keys,
 getters, and methods stay unknown. `no-object-mutation` (#2219) keeps object

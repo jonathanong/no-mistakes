@@ -22,6 +22,7 @@ pub(crate) fn collect_calls<'a>(
         super::super::namespace_imports::configured_namespaces(program, options);
     let imported_value_origins =
         super::super::namespace_imports::configured_values(program, options, bindings);
+    let (imported_names, constant_namespaces) = imported::value_import_names(program);
     let mut visitor = ScopeVisitor {
         head_calls_only,
         source,
@@ -50,7 +51,8 @@ pub(crate) fn collect_calls<'a>(
         statement_calls: Default::default(),
         calls: Vec::new(),
         call_spans: Vec::new(),
-        imported_names: imported::value_import_names(program),
+        imported_names,
+        constant_namespaces,
         iife: None,
         imported_sites: Default::default(),
         pending_spans: BTreeMap::new(),

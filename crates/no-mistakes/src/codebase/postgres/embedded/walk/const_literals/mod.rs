@@ -120,7 +120,10 @@ impl ScopeVisitor<'_> {
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => unpublished_sql_text(expr),
             Expression::TemplateLiteral(template) => self.spliced_template(template, depth - 1),
             Expression::Identifier(ident) => super::imported::constants::identifier_piece(self, ident),
-            Expression::StaticMemberExpression(member) => self.spliced_member(member, placeholder),
+            Expression::StaticMemberExpression(member) => {
+                super::imported::constants::namespace::piece(self, member, false)
+                    .or_else(|| self.spliced_member(member, placeholder))
+            },
             _ => None,
         }
     }

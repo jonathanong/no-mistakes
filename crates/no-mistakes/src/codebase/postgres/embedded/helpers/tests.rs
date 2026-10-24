@@ -148,6 +148,7 @@ fn site_arguments_decide_which_summary_shapes_may_fill_a_hole() {
     let owner = Path::new("/helpers.ts");
     let site = |args: Vec<SiteArg>| ImportedSite {
         local: "helper".into(),
+        member: None,
         args,
         value_used: false,
         line: 1,

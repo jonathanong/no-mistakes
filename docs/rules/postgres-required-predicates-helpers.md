@@ -26,6 +26,15 @@ resolve through relative specifiers with explicit extensions, `tsconfig`
 `paths` aliases, pnpm workspace package names and barrel re-exports (up to 8
 hops).
 
+Exported string constants are recovered through the same imports and barrels.
+For `import * as names from "./tables.mts"`, `names.TABLE` splices an exported
+literal into an untagged template or `.append` when no local binding shadows
+`names`.
+`names.default` also selects a default-exported literal. Computed, optional,
+method, type-only, and non-const reads stay unanalyzable. A tagged fragment
+constant is copied by `.append(names.FRAGMENT)`; interpolating it in an
+untagged template stays unanalyzable because that stringifies the object.
+
 Helpers with control flow are checked too. A helper that returns early, branches
 on its arguments, calls other helpers (up to 8 deep), appends to a
 `SQLStatement` parameter, builds identifiers from literal object properties or

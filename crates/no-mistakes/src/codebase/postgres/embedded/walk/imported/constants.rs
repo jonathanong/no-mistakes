@@ -15,6 +15,8 @@ use oxc_ast::ast::{
 mod default_export;
 #[path = "names.rs"]
 mod names;
+#[path = "namespace_constants.rs"]
+pub(in crate::codebase::postgres::embedded::walk) mod namespace;
 
 use names::{binding_name, local_name};
 
@@ -169,6 +171,7 @@ fn imported_hole(
         start,
         ImportedSite {
             local: name.to_string(),
+            member: None,
             args: Vec::new(),
             value_used: true,
             line,
