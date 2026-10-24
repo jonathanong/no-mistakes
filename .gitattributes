@@ -3,3 +3,4 @@ fixtures/postgres-facts/source/operator-line-comment-boundaries.sql -text -white
 test-cases/rules/doc-consistency/fixture/patterns/docs/crlf.md -text -whitespace
 test-cases/rules/postgres-no-offset/fixture/effort/src/crlf.ts -text -whitespace
 fixtures/postgres/prepared-projection-low/src/low.ts -text -whitespace
+test-cases/rules/postgres-no-transformed-uuid-predicates/fixture/crlf.ts -text -whitespace
