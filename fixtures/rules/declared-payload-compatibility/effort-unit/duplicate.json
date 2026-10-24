@@ -1,1 +1,1 @@
-{"type":"string","type":"number"}
+{"$comment":"Intentional duplicate key; integrity validation must reject this document.","type":"string","type":"number"}

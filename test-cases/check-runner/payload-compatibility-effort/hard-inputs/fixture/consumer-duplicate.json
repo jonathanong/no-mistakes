@@ -1,4 +1,5 @@
 {
+  "$comment": "The duplicate wrapper key is intentional and must fail integrity checks even outside the selected pointer.",
   "wrapper": {"marker": 1, "marker": 2},
   "payload": {
     "type": "object",

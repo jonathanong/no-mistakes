@@ -1,4 +1,5 @@
 {
+  "$comment": "The raw wrapper number intentionally loses precision and must fail integrity checks even outside the selected pointer.",
   "wrapper": {"raw": 1.0000000000000001},
   "payload": {
     "type": "object",
