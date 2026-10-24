@@ -14,10 +14,10 @@
                                 let interner = interner.clone();
                                 let mut ids_by_scope: FxHashMap<&str, Vec<_>> = fx_map();
                                 for (id, scope) in &file.callable_scope_ids {
-                                    ids_by_scope.entry(scope.as_str()).or_default().push(*id);
+                                    ids_by_scope.entry(scope.as_ref()).or_default().push(*id);
                                 }
                                 file.callable_scopes.iter().flat_map(move |scope| {
-                                    match ids_by_scope.get(scope.as_str()).map(Vec::as_slice) {
+                                    match ids_by_scope.get(scope.as_ref()).map(Vec::as_slice) {
                                         None | Some([]) => {
                                             vec![NodeId::symbol_in(&interner, path, scope)]
                                         }

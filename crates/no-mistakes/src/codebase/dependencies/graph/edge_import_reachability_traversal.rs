@@ -154,7 +154,7 @@ fn callable_id_for_scope(
     let mut ids = facts
         .callable_scope_ids
         .iter()
-        .filter_map(|(id, display)| (display == scope).then_some(*id));
+        .filter_map(|(id, display)| (display.as_ref() == scope).then_some(*id));
     let first = ids.next()?;
     ids.next().is_none().then_some(first)
 }

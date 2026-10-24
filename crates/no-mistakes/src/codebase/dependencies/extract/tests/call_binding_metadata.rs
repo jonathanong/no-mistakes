@@ -87,5 +87,5 @@ fn typed_default_callable_expression_keeps_default_scope() {
 
     assert_eq!(facts.imports.len(), 1);
     assert_eq!(facts.imports[0].function_scope.as_deref(), Some("default"));
-    assert!(facts.callable_scopes.contains(&"default".to_string()));
+    assert!(facts.callable_scopes.contains(&"default".into()));
 }

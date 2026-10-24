@@ -316,7 +316,7 @@ fn recovered_parse_error_facts_retain_callable_aliases() {
     assert!(facts
         .callable_scope_ids
         .iter()
-        .any(|(_, scope)| scope == "outer/inner"));
+        .any(|(_, scope)| scope.as_ref() == "outer/inner"));
     assert!(facts
         .callable_bindings
         .iter()

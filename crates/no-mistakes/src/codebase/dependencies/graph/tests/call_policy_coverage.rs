@@ -44,7 +44,7 @@ fn callable_alias_resolution_uses_the_callee_binding_scope() {
         type_imported: fx_map(),
         values: Default::default(),
         callable_assignments: fx_map(),
-        known_scopes: ["target".to_string()].into_iter().collect(),
+        known_scopes: ["target".into()].into_iter().collect(),
         exported_scopes: fx_set(),
         class_scopes: fx_set(),
         callable_bindings: fx_map(),
@@ -138,15 +138,15 @@ fn callable_alias_resolution_reaches_module_scope_from_outermost_function() {
                 static_cwd: None,
             },
         ],
-        callable_scopes: vec!["run".to_string(), "target".to_string()],
+        callable_scopes: vec!["run".into(), "target".into()],
         callable_scope_ids: vec![
             (
                 crate::codebase::dependencies::extract::CallableId(1),
-                "run".to_string(),
+                "run".into(),
             ),
             (
                 crate::codebase::dependencies::extract::CallableId(2),
-                "target".to_string(),
+                "target".into(),
             ),
         ],
         callable_bindings: vec![],
@@ -206,15 +206,15 @@ fn callable_alias_lookup_does_not_cross_a_shadowed_parameter() {
                 static_cwd: None,
             },
         ],
-        callable_scopes: vec!["run".to_string(), "target".to_string()],
+        callable_scopes: vec!["run".into(), "target".into()],
         callable_scope_ids: vec![
             (
                 crate::codebase::dependencies::extract::CallableId(1),
-                "run".to_string(),
+                "run".into(),
             ),
             (
                 crate::codebase::dependencies::extract::CallableId(2),
-                "target".to_string(),
+                "target".into(),
             ),
         ],
         callable_bindings: vec![],
@@ -264,22 +264,22 @@ fn constructor_membership_is_reachable_but_other_member_membership_is_not() {
             membership("unused"),
         ],
         callable_scopes: vec![
-            "Service".to_string(),
-            "Service/constructor".to_string(),
-            "Service/unused".to_string(),
+            "Service".into(),
+            "Service/constructor".into(),
+            "Service/unused".into(),
         ],
         callable_scope_ids: vec![
             (
                 crate::codebase::dependencies::extract::CallableId(1),
-                "Service".to_string(),
+                "Service".into(),
             ),
             (
                 crate::codebase::dependencies::extract::CallableId(2),
-                "Service/constructor".to_string(),
+                "Service/constructor".into(),
             ),
             (
                 crate::codebase::dependencies::extract::CallableId(3),
-                "Service/unused".to_string(),
+                "Service/unused".into(),
             ),
         ],
         callable_bindings: vec![],

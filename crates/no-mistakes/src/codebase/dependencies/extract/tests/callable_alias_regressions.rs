@@ -165,7 +165,7 @@ fn materialized_aliases_keep_their_declaring_callable_owner() {
     let outer_id = facts
         .callable_scope_ids
         .iter()
-        .find_map(|(id, scope)| (scope == "outer").then_some(*id))
+        .find_map(|(id, scope)| (scope.as_ref() == "outer").then_some(*id))
         .expect("outer callable identity");
 
     assert!(facts.callable_aliases.iter().any(|alias| {

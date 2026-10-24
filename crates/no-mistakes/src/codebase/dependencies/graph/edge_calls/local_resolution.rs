@@ -32,7 +32,7 @@ fn resolve_local_call_scope<'a>(
     caller: Option<&str>,
     _binding_scope: Option<usize>,
     callee: &str,
-    known: &'a FxHashSet<String>,
+    known: &'a FxHashSet<Arc<str>>,
     class_scopes: &FxHashSet<String>,
 ) -> Option<&'a str> {
     let binding = callee
@@ -45,19 +45,19 @@ fn resolve_local_call_scope<'a>(
     while let Some(current) = scope {
         let candidate = format!("{current}/{callee}");
         if known.contains(candidate.as_str()) {
-            return known.get(candidate.as_str()).map(String::as_str);
+            return known.get(candidate.as_str()).map(AsRef::as_ref);
         }
         let member = callee.replace('.', "/");
         let candidate = format!("{current}/{member}");
         if known.contains(candidate.as_str()) {
-            return known.get(candidate.as_str()).map(String::as_str);
+            return known.get(candidate.as_str()).map(AsRef::as_ref);
         }
         scope = current.rsplit_once('/').map(|(parent, _)| parent);
     }
-    known.get(callee).map(String::as_str)
+    known.get(callee).map(AsRef::as_ref)
         .or_else(|| {
         known
             .get(callee.replace('.', "/").as_str())
-            .map(String::as_str)
+            .map(AsRef::as_ref)
         })
 }

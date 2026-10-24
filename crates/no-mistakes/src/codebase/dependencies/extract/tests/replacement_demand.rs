@@ -187,7 +187,7 @@ fn typed_invalidations_preserve_owner_semantics_and_ordinary_unary_walks() {
         let (owner, _) = values
             .callable_scope_ids
             .iter()
-            .find(|(_, scope)| scope == name)
+            .find(|(_, scope)| scope.as_ref() == name)
             .unwrap();
         let write = capsule.writes.iter().find(|write| write.owner == Some(*owner)).unwrap();
         assert_eq!(write.unconditional, !invalidated, "{name}");

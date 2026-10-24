@@ -20,7 +20,7 @@ fn exact_writes_keep_mixed_and_single_writer_contexts_distinct() {
         facts
             .callable_scope_ids
             .iter()
-            .find(|(_, scope)| scope == name)
+            .find(|(_, scope)| scope.as_ref() == name)
             .unwrap()
             .0
     };

@@ -15,7 +15,7 @@ use crate::codebase::dependencies::extract::InvocationKind;
 #[derive(Clone)]
 struct CallableFileIndex {
     values: FlowFileIndex,
-    known_scopes: FxHashSet<String>,
+    known_scopes: FxHashSet<Arc<str>>,
     exported_scopes: FxHashSet<String>,
     class_scopes: FxHashSet<String>,
     callable_bindings: ScopedNameMap<crate::codebase::dependencies::extract::CallableId>,
@@ -31,7 +31,7 @@ struct CallableFileIndex {
     class_bindings: ScopedNameMap<ClassBindingTarget>,
     lexical_scope_parents: FxHashMap<usize, Option<usize>>,
     scope_ids_by_display:
-        FxHashMap<String, Vec<crate::codebase::dependencies::extract::CallableId>>,
+        FxHashMap<Arc<str>, Vec<crate::codebase::dependencies::extract::CallableId>>,
     stars: Vec<String>,
     namespaces: NamespaceTable,
 }
@@ -66,8 +66,8 @@ impl CallableFileIndex {
         let class_scope_by_id = file
             .callable_scope_ids
             .iter()
-            .filter(|(_, scope)| class_scopes.contains(scope))
-            .map(|(id, scope)| (*id, scope.clone()))
+            .filter(|(_, scope)| class_scopes.contains(scope.as_ref()))
+            .map(|(id, scope)| (*id, scope.to_string()))
             .collect::<FxHashMap<_, _>>();
         let members_by_class = index_class_members_by_id(&file.class_member_callable_ids);
         let getters_by_class = index_class_members_by_id(&file.static_getter_callable_ids);

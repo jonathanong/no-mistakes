@@ -316,7 +316,7 @@ fn ambient_classes_are_the_ones_outside_a_tracked_namespace() {
             facts
                 .callable_scope_ids
                 .iter()
-                .find_map(|(id, scope)| (id == class_id).then_some(scope.as_str()))
+                .find_map(|(id, scope)| (id == class_id).then_some(scope.as_ref()))
                 .expect("class scope")
         })
         .collect();

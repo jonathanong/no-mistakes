@@ -151,6 +151,8 @@ fn extract_import_facts_with_rhs_probe(
         })
         .collect();
     exported_functions.sort();
+    let (known_function_scopes, callable_scopes, callable_scope_ids) =
+        scope_strings::intern_scope_names(known_function_scopes, callable_scopes, callable_scope_ids);
     ImportFacts {
         value_flow: collector.value_flow,
         imports: collector.imports,
@@ -199,3 +201,10 @@ mod value_flow_once;
 mod no_object_mutation_literal;
 
 include!("extract_import_lines.rs");
+
+#[cfg(test)]
+#[path = "extract/tests/scope_string_sharing.rs"]
+mod scope_string_sharing;
+
+#[path = "extract_scope_strings.rs"]
+mod scope_strings;

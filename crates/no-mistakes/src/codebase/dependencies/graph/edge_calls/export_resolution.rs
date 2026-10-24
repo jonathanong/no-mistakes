@@ -78,7 +78,7 @@ fn resolve_exported_callable(
                 .as_ref()
                 .map(|resolved| resolved.callee.clone())
                 .unwrap_or_else(|| binding.local.clone());
-            (resolved_alias.is_some() && file.known_scopes.contains(&local)
+            (resolved_alias.is_some() && file.known_scopes.contains(local.as_str())
                 || file.exported_scopes.contains(&local))
                 .then(|| {
                     exported_local_callable(file.as_ref(), path, local.clone(), resolved_alias.as_ref())

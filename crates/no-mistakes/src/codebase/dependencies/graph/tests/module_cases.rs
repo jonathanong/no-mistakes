@@ -510,7 +510,7 @@ fn immutable_local_alias_calls_keep_target_function_imports_reachable() {
     assert!(file_facts
         .callable_scopes
         .iter()
-        .any(|scope| scope == "target"));
+        .any(|scope| scope.as_ref() == "target"));
     assert!(file_facts
         .function_calls
         .iter()
@@ -519,7 +519,7 @@ fn immutable_local_alias_calls_keep_target_function_imports_reachable() {
     assert!(file_facts
         .callable_scope_ids
         .iter()
-        .any(|(id, scope)| scope == "target" && reachable.contains(id)));
+        .any(|(id, scope)| scope.as_ref() == "target" && reachable.contains(id)));
     let deps = graph.deps_of(
         &[NodeId::file(source)],
         None,

@@ -102,7 +102,10 @@ fn extract_walks_class_heritage_dynamic_callees_and_resource_scopes() {
         .any(|call| call.callee.contains("constructor")));
     assert!(!facts.unknown_calls.is_empty());
     let jsx = tsx_facts("export function Icon() { return <ns:tag />; }");
-    assert!(jsx.callable_scopes.iter().any(|scope| scope == "Icon"));
+    assert!(jsx
+        .callable_scopes
+        .iter()
+        .any(|scope| scope.as_ref() == "Icon"));
 }
 
 #[test]
@@ -208,7 +211,10 @@ fn extract_walks_type_only_imports_exports_defaults_and_process_cwd() {
     let jsx = tsx_facts(
         "export function Icon(props: { n: typeof this }) { return <this.span><ns:item /></this.span>; }",
     );
-    assert!(jsx.callable_scopes.iter().any(|scope| scope == "Icon"));
+    assert!(jsx
+        .callable_scopes
+        .iter()
+        .any(|scope| scope.as_ref() == "Icon"));
 }
 
 #[test]

@@ -25,7 +25,7 @@ fn call_site_membership_uses_the_sorted_file_index() {
 fn callable_nodes_group_scope_ids_once_per_file() {
     let finish = include_str!("../builder_core/finish.rs");
     assert!(
-        finish.contains("ids_by_scope.entry(scope.as_str()).or_default().push(*id)"),
+        finish.contains("ids_by_scope.entry(scope.as_ref()).or_default().push(*id)"),
         "callable_scope_ids must be grouped once per file"
     );
     assert!(
@@ -64,9 +64,9 @@ fn unique_scope_id_is_none_when_display_names_collide() {
 
     let facts = crate::codebase::ts_source::facts::TsFileFacts {
         callable_scope_ids: vec![
-            (CallableId(1), "run".to_string()),
-            (CallableId(2), "run".to_string()),
-            (CallableId(3), "other".to_string()),
+            (CallableId(1), "run".into()),
+            (CallableId(2), "run".into()),
+            (CallableId(3), "other".into()),
         ],
         ..Default::default()
     };
@@ -141,4 +141,28 @@ fn criterion_adapters_exercise_indexed_construction() {
     };
     assert!(benchmark_construct_callable_file_index(&facts) >= 2);
     assert_eq!(benchmark_probe_call_site_files(8), 8);
+}
+
+#[test]
+fn callable_indexes_retain_the_finalized_scope_allocations() {
+    use crate::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/shared-scope-names.mts");
+    let facts = collect_ts_facts(std::slice::from_ref(&path), TsFactPlan::imports());
+    let file = &facts[&path];
+    let index = CallableFileIndex::from_facts(file);
+    assert!(!file.callable_scopes.is_empty());
+    for scope in &file.callable_scopes {
+        assert!(Arc::ptr_eq(
+            scope,
+            index.known_scopes.get(scope.as_ref()).unwrap()
+        ));
+    }
+    for (_, scope) in &file.callable_scope_ids {
+        let (key, _) = index
+            .scope_ids_by_display
+            .get_key_value(scope.as_ref())
+            .unwrap();
+        assert!(Arc::ptr_eq(scope, key));
+    }
 }

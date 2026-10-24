@@ -68,7 +68,7 @@ fn duplicate_display_exports_select_the_module_binding_identity() {
     let target_ids_in_file = file_facts
         .callable_scope_ids
         .iter()
-        .filter(|(_, scope)| *scope == "target")
+        .filter(|(_, scope)| scope.as_ref() == "target")
         .map(|(id, _)| *id)
         .collect::<Vec<_>>();
     assert_eq!(

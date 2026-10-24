@@ -21,10 +21,10 @@ fn construct_base(caller: &str, caller_id: u32, base: &str, scope: usize) -> Fun
 fn inherited_static_members_walk_parent_lexical_scopes_and_cycles() {
     let facts = crate::codebase::ts_source::facts::TsFileFacts {
         callable_scopes: vec![
-            "Base".to_string(),
-            "Child".to_string(),
-            "A".to_string(),
-            "B".to_string(),
+            "Base".into(),
+            "Child".into(),
+            "A".into(),
+            "B".into(),
         ],
         class_scopes: vec![
             "Base".to_string(),
@@ -33,10 +33,10 @@ fn inherited_static_members_walk_parent_lexical_scopes_and_cycles() {
             "B".to_string(),
         ],
         callable_scope_ids: vec![
-            (CallableId(1), "Base".to_string()),
-            (CallableId(2), "Child".to_string()),
-            (CallableId(3), "A".to_string()),
-            (CallableId(4), "B".to_string()),
+            (CallableId(1), "Base".into()),
+            (CallableId(2), "Child".into()),
+            (CallableId(3), "A".into()),
+            (CallableId(4), "B".into()),
         ],
         callable_bindings: vec![
             (0, "Base".to_string(), CallableId(1)),
@@ -76,7 +76,7 @@ fn alias_resolution_walks_parent_scopes_and_stops_on_cycles() {
         type_imported: fx_map(),
         values: Default::default(),
         callable_assignments: fx_map(),
-        known_scopes: ["target".to_string()].into_iter().collect(),
+        known_scopes: ["target".into()].into_iter().collect(),
         exported_scopes: fx_set(),
         class_scopes: fx_set(),
         callable_bindings: fx_map(),
@@ -225,11 +225,11 @@ fn non_dotted_alias_resolution_exhausts_parents_and_stops_on_cycles() {
 fn this_member_resolution_stops_on_duplicate_class_ids_and_instance_ids() {
     let facts = crate::codebase::ts_source::facts::TsFileFacts {
         callable_scopes: vec![
-            "Service".to_string(),
-            "Service/method".to_string(),
-            "Cycle".to_string(),
-            "Cycle/method".to_string(),
-            "Twin".to_string(),
+            "Service".into(),
+            "Service/method".into(),
+            "Cycle".into(),
+            "Cycle/method".into(),
+            "Twin".into(),
         ],
         class_scopes: vec![
             "Service".to_string(),
@@ -237,13 +237,13 @@ fn this_member_resolution_stops_on_duplicate_class_ids_and_instance_ids() {
             "Twin".to_string(),
         ],
         callable_scope_ids: vec![
-            (CallableId(1), "Service".to_string()),
-            (CallableId(11), "Service/method".to_string()),
-            (CallableId(12), "Service/method".to_string()),
-            (CallableId(2), "Cycle".to_string()),
-            (CallableId(21), "Cycle/method".to_string()),
-            (CallableId(3), "Twin".to_string()),
-            (CallableId(4), "Twin".to_string()),
+            (CallableId(1), "Service".into()),
+            (CallableId(11), "Service/method".into()),
+            (CallableId(12), "Service/method".into()),
+            (CallableId(2), "Cycle".into()),
+            (CallableId(21), "Cycle/method".into()),
+            (CallableId(3), "Twin".into()),
+            (CallableId(4), "Twin".into()),
         ],
         callable_bindings: vec![
             (0, "Service".to_string(), CallableId(1)),

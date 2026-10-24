@@ -95,7 +95,7 @@ fn index_closed_callable_assignments(
                 .any(|region| region.start == start && region.owner.is_none() && region.may_repeat))
         { return None; }
         Some(((scope, name), IndexedCallableAssignment {
-            scope: scopes.get(&id)?.clone(), id, completed_at: write.completed_at,
+            scope: scopes.get(&id)?.to_string(), id, completed_at: write.completed_at,
         }))
     }))
 }
@@ -109,12 +109,12 @@ fn index_binding_declared_at(offsets: &[(usize, String, u32)]) -> ScopedNameMap<
 }
 
 fn index_scope_ids_by_display(
-    ids: &[(crate::codebase::dependencies::extract::CallableId, String)],
-) -> FxHashMap<String, Vec<crate::codebase::dependencies::extract::CallableId>> {
-    let mut by_display: FxHashMap<String, Vec<crate::codebase::dependencies::extract::CallableId>> =
+    ids: &[(crate::codebase::dependencies::extract::CallableId, std::sync::Arc<str>)],
+) -> FxHashMap<Arc<str>, Vec<crate::codebase::dependencies::extract::CallableId>> {
+    let mut by_display: FxHashMap<Arc<str>, Vec<crate::codebase::dependencies::extract::CallableId>> =
         fx_map();
     for (id, scope) in ids {
-        by_display.entry(scope.clone()).or_default().push(*id);
+        by_display.entry(Arc::clone(scope)).or_default().push(*id);
     }
     by_display
 }

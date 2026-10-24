@@ -141,6 +141,16 @@ spawns, and future extractors should be visitors/fact producers or graph edge
 producers. They should not be independent full-codebase scanners when their
 input can come from the shared fact pass.
 
+Finalized callable catalogs share repeated display strings within each source
+file. The Rust `ImportFacts` and `TsFileFacts` fields `known_function_scopes`,
+`callable_scopes`, and the string member of `callable_scope_ids` use `Arc<str>`.
+Their values, ordering, and callable identities remain unchanged. The string table
+is local to finalization and is dropped before the facts return. Derived callable
+indexes retain shared scope strings through borrowed-text lookups instead of
+copying their buffers. Output vectors use compact new allocations
+instead of reusing the wider temporary `String` buffers. CLI and Node report
+shapes are unchanged.
+
 All production OXC parsing goes through the observable parser entrypoint in
 `ast`. Check-only analyses may store compact owned fields in `CheckFileFacts`;
 for example, the server-route client-boundary rule derives its route-shape bit

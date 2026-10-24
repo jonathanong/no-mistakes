@@ -4,9 +4,9 @@ fn own_static_accessor_descriptor_blocks_inherited_kind() {
 
     let facts = crate::codebase::ts_source::facts::TsFileFacts {
         callable_scopes: vec![
-            "Base".to_string(),
-            "Derived".to_string(),
-            "GetterOnly".to_string(),
+            "Base".into(),
+            "Derived".into(),
+            "GetterOnly".into(),
         ],
         class_scopes: vec![
             "Base".to_string(),
@@ -14,9 +14,9 @@ fn own_static_accessor_descriptor_blocks_inherited_kind() {
             "GetterOnly".to_string(),
         ],
         callable_scope_ids: vec![
-            (CallableId(1), "Base".to_string()),
-            (CallableId(2), "Derived".to_string()),
-            (CallableId(3), "GetterOnly".to_string()),
+            (CallableId(1), "Base".into()),
+            (CallableId(2), "Derived".into()),
+            (CallableId(3), "GetterOnly".into()),
         ],
         callable_bindings: vec![
             (0, "Base".to_string(), CallableId(1)),

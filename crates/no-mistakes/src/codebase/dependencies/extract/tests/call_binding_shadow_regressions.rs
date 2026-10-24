@@ -75,11 +75,14 @@ fn reassignment_invalidates_calls_without_erasing_callable_identities() {
         "function target() {} const saved = target; target = injected; target(); saved(); class Registry { reload() {} } Registry.reload = injected; Registry.reload();",
     );
 
-    assert!(facts.callable_scopes.iter().any(|scope| scope == "target"));
     assert!(facts
         .callable_scopes
         .iter()
-        .any(|scope| scope == "Registry/reload"));
+        .any(|scope| scope.as_ref() == "target"));
+    assert!(facts
+        .callable_scopes
+        .iter()
+        .any(|scope| scope.as_ref() == "Registry/reload"));
     assert!(facts.function_calls.iter().all(|call| {
         !matches!(call.callee.as_str(), "target" | "Registry.reload")
             || call.target_identity != CallTargetIdentity::RepositoryFunction
@@ -410,7 +413,7 @@ fn computed_class_keys_retain_class_symbol_ownership() {
     let class_id = facts
         .callable_scope_ids
         .iter()
-        .find_map(|(id, scope)| (scope == "Client").then_some(*id))
+        .find_map(|(id, scope)| (scope.as_ref() == "Client").then_some(*id))
         .expect("class callable identity");
     assert!(facts.symbol_references.iter().any(|reference| {
         reference.caller.as_deref() == Some("Client")
@@ -473,13 +476,14 @@ fn sibling_block_callables_share_display_names_but_have_distinct_ids() {
         .callable_scopes
         .iter()
         .filter(|scope| scope.ends_with("/f"))
+        .map(|scope| scope.as_ref())
         .collect();
 
     assert_eq!(scopes, ["outer/f"]);
     let ids: Vec<_> = facts
         .callable_scope_ids
         .iter()
-        .filter_map(|(id, scope)| (scope == "outer/f").then_some(*id))
+        .filter_map(|(id, scope)| (scope.as_ref() == "outer/f").then_some(*id))
         .collect();
     assert_eq!(ids.len(), 2);
     assert_ne!(ids[0], ids[1]);
