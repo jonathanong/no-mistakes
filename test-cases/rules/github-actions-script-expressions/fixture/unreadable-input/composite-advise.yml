@@ -2,6 +2,6 @@ version: 2
 rules:
   - rule: github-actions-script-expressions
     scope: repository
-    include: [".github/actions/build/action.yml"]
+    include: [".github/actions/local/action.yml"]
     options:
       unanalyzable: advise

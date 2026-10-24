@@ -14,7 +14,7 @@ fn unreadable_selected_sources_route_policy_without_reclassifying_expressions() 
     let files: Vec<_> = [
         ".github/workflows/bad.yml",
         ".github/workflows/collision.yml",
-        ".github/actions/build/action.yml",
+        ".github/actions/local/action.yml",
         "unrelated.yml",
         ".github/workflows/suppressed-file.yml",
         ".github/workflows/suppressed-line.yml",
