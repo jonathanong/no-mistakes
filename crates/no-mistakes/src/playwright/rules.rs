@@ -179,6 +179,7 @@ fn check_selection_with_facts(
             selectors: selection.cover_selectors,
         },
         crate::playwright::rule_findings::LowEffortFindings {
+            configured_html_id_selector: config::has_configured_html_id_selector(settings),
             unique_test_ids: unique_ids.low.then_some(unique_ids.unanalyzable),
             unique_html_ids: html_ids.low.then_some(html_ids.unanalyzable),
             coverage: coverage_effort.low.then_some(coverage_effort.unanalyzable),

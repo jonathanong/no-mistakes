@@ -1,0 +1,22 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      htmlIds: true
+      testIds: [data-testid]
+
+rules:
+  - rule: playwright-unique-test-ids
+    projects: [web]
+    options:
+      effort: low
+  - rule: playwright-unique-html-ids
+    projects: [web]
+    options:
+      effort: low
+

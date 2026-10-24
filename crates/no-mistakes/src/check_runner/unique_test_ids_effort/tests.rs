@@ -4,6 +4,9 @@ use std::path::{Path, PathBuf};
 
 const RULE: &str = "playwright-unique-test-ids";
 
+#[path = "tests/html_ownership.rs"]
+mod html_ownership;
+
 fn effort_root() -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

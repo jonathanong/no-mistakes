@@ -18,6 +18,8 @@ use std::path::Path;
 /// constructs `config` in-memory for rule purposes can still rely on
 /// on-disk Playwright settings. Not used by the aggregate `no-mistakes check`
 /// pipeline — see `check_with_facts`/`check_with_prepared_facts` for that.
+/// This compatibility adapter returns findings only; use aggregate check
+/// diagnostics (including the Node check API) to receive non-failing advisories.
 pub fn check(
     root: &Path,
     config_path: Option<&Path>,
@@ -83,6 +85,7 @@ pub fn check(
                 selectors: selection.cover_selectors,
             },
             crate::playwright::rule_findings::LowEffortFindings {
+                configured_html_id_selector: config::has_configured_html_id_selector(&settings),
                 unique_test_ids: unique_ids.low.then_some(unique_ids.unanalyzable),
                 unique_html_ids: html_ids.low.then_some(html_ids.unanalyzable),
                 coverage: coverage_effort.low.then_some(coverage_effort.unanalyzable),

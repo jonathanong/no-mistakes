@@ -63,6 +63,7 @@ fn low_coverage_skips_recovered_uncovered_selectors() {
             unique_html_ids: None,
             unique_test_ids: None,
             coverage: Some(Unanalyzable::Report),
+            ..LowEffortFindings::default()
         },
     );
     assert!(outcome.advisories.is_empty());
@@ -126,6 +127,7 @@ fn low_coverage_skips_unanalyzable_when_selector_coverage_is_disabled() {
             unique_html_ids: None,
             unique_test_ids: None,
             coverage: Some(Unanalyzable::Report),
+            ..LowEffortFindings::default()
         },
     );
     assert!(outcome.findings.is_empty());

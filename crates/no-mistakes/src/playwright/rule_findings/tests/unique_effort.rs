@@ -60,6 +60,7 @@ fn low_effort_emits_unanalyzable_for_non_literal_exact_selectors() {
             unique_html_ids: None,
             unique_test_ids: Some(Unanalyzable::Report),
             coverage: None,
+            ..LowEffortFindings::default()
         },
     );
     assert!(outcome.advisories.is_empty());
@@ -112,6 +113,7 @@ fn low_effort_skips_html_ids_when_the_html_rule_is_enabled() {
             unique_html_ids: None,
             unique_test_ids: Some(Unanalyzable::Report),
             coverage: None,
+            ..LowEffortFindings::default()
         },
     );
     assert!(outcome.findings.is_empty());

@@ -75,6 +75,17 @@ The shared `unanalyzable` policy controls that diagnostic: `report` fails,
 `advise` emits a non-failing advisory, and `ignore` skips it. Rejected shapes
 are never uniqueness evidence under any of those policies.
 
+HTML IDs requested only with `tests.playwright.selectors.htmlIds: true` for
+coverage do not produce this rule's low-effort uncertainty diagnostics. Use
+`playwright-unique-html-ids` to check them. If `id` is explicitly configured in
+`selectors.testIds` or as a `componentTestIds` mapping value, it remains a test-ID
+hook and follows this rule's `unanalyzable` policy. Enabling the HTML-ID rule
+routes HTML-ID uncertainty to that rule without duplicate test-ID diagnostics.
+
+The lower-level Rust `playwright::rules::check` adapter returns findings only.
+Use aggregate `check` or the async Node check API to receive non-failing
+`advise` diagnostics as well.
+
 These syntax proofs do not require a companion rule. The rule checks each
 selector once, so if any enabled application of this rule is not `low`, the
 invocation stays at `max` and does not rewrite the other application's
