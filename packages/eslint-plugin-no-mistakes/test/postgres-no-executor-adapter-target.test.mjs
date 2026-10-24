@@ -47,6 +47,9 @@ describe("typed executor argument targets", () => {
   it("keeps reporting unproven, overloaded, rest and spread targets", () => {
     assert.deepEqual(check("unsafe.ts"), Array(20).fill("passed"));
   });
+  it("rejects imported helpers with writes or direct eval, preserving shadowed bindings", () => {
+    assert.deepEqual(check("stability.ts", true), Array(11).fill("passed"));
+  });
   it("requires parser type information for imported targets", () => {
     assert.deepEqual(check("imported.ts"), Array(26).fill("passed"));
     assert.deepEqual(check("imported.ts", true), Array(19).fill("passed"));

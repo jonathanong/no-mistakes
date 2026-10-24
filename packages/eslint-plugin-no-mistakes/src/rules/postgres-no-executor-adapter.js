@@ -45,6 +45,7 @@ module.exports = rule(
     const options = executorOptionDefaults(context.options?.[0] ?? {});
     const suppressed = ruleSuppression(context, RULE_ID);
     const source = context.sourceCode;
+    const targetFacts = new WeakMap();
     let bindings = { scoped: [], queryMembers: false };
 
     function quotedExecutor(quoteNode, name) {
@@ -108,7 +109,8 @@ module.exports = rule(
         // Every branch is an executor, so the conditional callee itself is judged.
         // A partial conditional falls through and names only the proven branches.
         if (leaves) {
-          if (!nested && acceptsExecutor(call, index, quoteNode, context, options)) return;
+          if (!nested && acceptsExecutor(call, index, quoteNode, context, options, targetFacts))
+            return;
           reportAdapter(
             argument,
             {
@@ -138,7 +140,7 @@ module.exports = rule(
         reportAdapter(argument, passed.adapter, call, index, quoteNode);
         return;
       }
-      if (nested || !acceptsExecutor(call, index, quoteNode, context, options)) {
+      if (nested || !acceptsExecutor(call, index, quoteNode, context, options, targetFacts)) {
         reportPassed(argument, passed);
       }
     }

@@ -44,7 +44,10 @@ Imported helpers require typed linting: configure `@typescript-eslint/parser`
 with `parserOptions.project` or `projectService` so `parserServices.program`
 is available. The declared parameter must reference a configured type imported
 from the configured database module, and its signature must belong to the imported
-function declaration or `const` function initializer. Without that information, the call reports.
+function declaration or `const` function initializer. The exporting source must have
+no direct `eval` call, and no assignments, destructuring writes, updates, or loop
+assignments to that helper binding. Writes to a shadowed local binding do not
+invalidate the exported helper. Without that information, the call reports.
 Contextual function types such as `const run: Helper = query => query(sql)`
 do not annotate the implementation parameter and still report.
 Structural compatibility, inference, unknown callees, mutable helpers, overloads,

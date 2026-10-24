@@ -1,5 +1,6 @@
 "use strict";
 
+const { sourceWrites } = require("./postgres-no-executor-adapter-source");
 const { matchesConfiguredModule } = require("./postgres-scoped-executors");
 const { resolveVariable } = require("./postgres-query-text");
 const { constInitializer, stableFunction } = require("./postgres-no-executor-adapter-binding");
@@ -58,7 +59,7 @@ function localTarget(fn, index, property, context, options) {
   return Boolean(bound && configuredType(member?.typeAnnotation?.typeAnnotation, context, options));
 }
 
-function importedTarget(call, index, property, context, options) {
+function importedTarget(call, index, property, context, options, facts) {
   const services = context.sourceCode.parserServices;
   if (!services.program || !services.esTreeNodeToTSNodeMap) return false;
   const checker = services.program.getTypeChecker();
@@ -101,7 +102,7 @@ function importedTarget(call, index, property, context, options) {
   // Structural compatibility and inference do not prove an executor contract.
   if (!type?.typeName) return false;
   const symbol = checker.getSymbolAtLocation(type.typeName);
-  return Boolean(
+  const configured = Boolean(
     symbol?.declarations?.some((declaration) => {
       const source = declaration.parent?.parent?.parent?.moduleSpecifier?.text;
       const name = declaration.propertyName?.text ?? declaration.name?.text;
@@ -112,9 +113,12 @@ function importedTarget(call, index, property, context, options) {
       );
     }),
   );
+  if (!configured) return false;
+  const writes = sourceWrites(declaration.getSourceFile(), checker, facts);
+  return !writes.eval && !writes.symbols.has(target);
 }
 
-function acceptsExecutor(call, index, quoteNode, context, options) {
+function acceptsExecutor(call, index, quoteNode, context, options, facts) {
   if (
     call.type !== "CallExpression" ||
     call.callee.type !== "Identifier" ||
@@ -131,7 +135,7 @@ function acceptsExecutor(call, index, quoteNode, context, options) {
   if (fn) return localTarget(fn, index, property, context, options);
   const variable = resolveVariable(call.callee, context);
   if (!variable?.defs.some((def) => def.type === "ImportBinding")) return false;
-  return importedTarget(call, index, property, context, options);
+  return importedTarget(call, index, property, context, options, facts);
 }
 
 module.exports = { acceptsExecutor };
