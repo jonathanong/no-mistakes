@@ -140,13 +140,6 @@ fails closed. Plain string-returning helpers remain bind values, as do calls to
 async functions or generators: their Promise or iterator results are not SQL
 fragments.
 
-Fragment detection follows file-wide aliases to convergence, including cycles,
-default parameter values and synchronous helpers that can return trusted
-fragments. This projection deliberately ignores lexical scope collisions so it
-fails closed. Plain string-returning helpers remain bind values, as do calls to
-async functions or generators: their Promise or iterator results are not SQL
-fragments.
-
 [PostgreSQL fact sources](../postgres-facts.md)
 
 Configured types alone do not prove every receiver shape. Calls through class
