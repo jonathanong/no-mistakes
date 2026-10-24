@@ -1,4 +1,4 @@
-use super::super::checkout::check_source;
+use super::super::checkout::analyze;
 use crate::codebase::rules::RuleFinding;
 
 #[path = "assume_write_fixture_tests.rs"]
@@ -6,8 +6,15 @@ mod assume_write_fixture_tests;
 
 const WORKFLOW: &str = ".github/workflows/ci.yml";
 
+// Match definite violations here; policy_tests exercises the default report boundary.
 fn findings(source: &str, assume: bool) -> Vec<RuleFinding> {
-    check_source(WORKFLOW, source, assume)
+    analyze(
+        WORKFLOW,
+        source,
+        assume,
+        crate::config::v2::Unanalyzable::Ignore,
+    )
+    .findings
 }
 
 #[test]

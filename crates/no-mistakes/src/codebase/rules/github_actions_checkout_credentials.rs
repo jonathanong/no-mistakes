@@ -6,6 +6,8 @@ use std::path::{Path, PathBuf};
 pub(super) use super::github_actions_workflow_files::gha_kind;
 
 mod checkout;
+mod diagnostics;
+mod inputs;
 mod permissions;
 mod uses;
 
@@ -18,19 +20,37 @@ struct Options {
     assume_write_when_unspecified: bool,
 }
 
-super::sourced_file_rule_entrypoints!();
-
-fn scan(
+pub fn check(
     root: &Path,
-    opts: &Options,
+    config: &crate::config::v2::NoMistakesConfig,
+) -> Result<Vec<RuleFinding>> {
+    super::check_sourced_standalone(root, config, check_with_files)
+}
+
+pub(crate) fn check_with_files(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    files: &[PathBuf],
+) -> Result<Vec<RuleFinding>> {
+    super::check_with_borrowed_source_store(root, config, files, check_with_files_and_sources)
+}
+
+pub(crate) fn check_with_files_and_sources(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let assume = opts.assume_write_when_unspecified;
-    super::github_actions_workflow_files::scan_files(root, files, sources, &|rel, content| {
-        checkout::check_source(rel, content, assume)
-    })
+    // Preserve the file-rule boundary: its caller owns suppression.
+    diagnostics_with_files_and_sources(root, config, files, sources, true)
+        .map(|output| output.findings)
 }
+
+#[doc(hidden)]
+pub use diagnostics::run as diagnostics_with_files_and_sources;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod policy_tests;

@@ -53,30 +53,18 @@ fn check_file(
     match sources.read_path(path) {
         Ok(content) => diagnostics.findings = analyze::check_source(&rel, &content, patterns),
         Err(error) => {
-            let invalid_utf8 = error
-                .get_ref()
-                .and_then(|error| error.downcast_ref::<std::string::FromUtf8Error>());
-            let line = invalid_utf8.map_or(1, |error| {
-                error.as_bytes()[..error.utf8_error().valid_up_to()]
-                    .iter()
-                    .filter(|&&byte| byte == b'\n')
-                    .count()
-                    + 1
-            });
-            let finding = RuleFinding {
+            let finding = rules::github_actions_workflow_files::unreadable_finding(
+                &error,
+                defer_suppression,
+                |line| {
+                    RuleFinding {
                 rule: RULE_ID.to_string(), file: rel.clone(), line,
                 message: format!("{rel}: cannot read GitHub Actions source as UTF-8 ({error}); script expressions could not be checked. Restore a readable UTF-8 file so interpolated input cannot bypass script-injection checks."),
                 import: None, target: Some("unanalyzable".to_string()),
-            };
-            let mut findings = vec![finding];
-            // Only inspect retained bytes for directives; never analyze lossy YAML or re-read.
-            if let Some(error) = invalid_utf8.filter(|_| !defer_suppression) {
-                rules::suppress_rule_findings_with_source(
-                    &mut findings,
-                    &String::from_utf8_lossy(error.as_bytes()),
-                );
             }
-            for finding in findings {
+                },
+            );
+            if let Some(finding) = finding {
                 diagnostics.unanalyzable(policy, finding);
             }
         }

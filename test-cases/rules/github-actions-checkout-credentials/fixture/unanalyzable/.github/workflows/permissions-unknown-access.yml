@@ -1,0 +1,6 @@
+on: push
+permissions: { contents: "${{ inputs.access }}" }
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4

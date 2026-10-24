@@ -8,8 +8,8 @@ The action persists the job `GITHUB_TOKEN` in the git credential store unless
 call the GitHub API with that token. The default is to persist credentials, so
 an omitted input is not safe when the token can write.
 
-The rule reports only what it can prove. Unknown permissions, unknown inputs,
-and action files that cannot grant a token are not findings.
+The rule reports proven persisted write tokens and inputs it cannot analyze.
+Action files that cannot grant a token are skipped.
 
 ## What it catches
 
@@ -23,9 +23,8 @@ have no job permissions of their own, and a pasted `permissions` or
 It flags an `actions/checkout` step when both of these are true:
 
 - `with.persist-credentials` is omitted or a literal true (`true` or the
-  string `true` in any letter case). A null value is not judged, so it is
-  not a finding. YAML treats `true` and `false` (any letter case) as
-  booleans. The strings `yes`, `no`, `on`, and `off` are not booleans here,
+  string `true` in any letter case). A null value is unanalyzable. YAML treats
+  `true` and `false` (any letter case) as booleans. The strings `yes`, `no`, `on`, and `off` are not booleans here,
   so they are not proof of false.
 - The job `GITHUB_TOKEN` is proven to be able to write.
 
@@ -46,18 +45,18 @@ next to them. The finding names the first proven write scope in source order.
 A file whose `on` includes `workflow_call`, alone or with other events,
 cannot prove a write token. The caller can only pass the same or a more
 restrictive `GITHUB_TOKEN`, and this rule does not read the caller. A write
-grant in that file is not a finding. Empty permissions are not write. A null
+grant in that file is unanalyzable. Empty permissions are not write. A null
 `permissions` value stays unknown. `assumeWriteWhenUnspecified` does not
 change any of those cases.
 
 If `permissions` is absent, the rule does not guess GitHub's default token,
 including for `pull_request_target` and for `workflow_call`, unless
-`assumeWriteWhenUnspecified` is true. The default is false, so a missing key
-is not a finding. Expressions and other values that are not literal true
-or false for `persist-credentials`, and permission values that are not literal
-`read`, `none`, or `write`, are not findings. An explicit `with.token` is not
-judged, because it is not proven to be the job `GITHUB_TOKEN`. Invalid YAML is
-not a finding.
+`assumeWriteWhenUnspecified` is true. Without that assumption the permissions
+are unanalyzable. Expression-valued or otherwise unknown permissions and
+persist inputs, non-mapping `with`, and every explicit `with.token` use the
+shared unanalyzable policy. This includes `${{ secrets.GITHUB_TOKEN }}`:
+the custom-token exemption cannot establish that a credential is safe.
+Invalid YAML also uses that policy and includes the parser error and location.
 
 `persist-credentials: false` is allowed even when the token can write. The
 checkout name is `actions/checkout` with an optional ref and trailing slash.
@@ -69,7 +68,7 @@ checkout name is `actions/checkout` with an optional ref and trailing slash.
 or organization whose default `GITHUB_TOKEN` can write. When it is true, a
 missing `permissions` key, including on `workflow_call`, is judged as write.
 An explicit permissions value is unchanged, and a `workflow_call` file that
-sets `contents: write` is still not a finding. A null `permissions:` value
+sets `contents: write` remains unanalyzable. A null `permissions:` value
 stays unknown when the option is on. Unknown option keys are rejected.
 Listing the rule is what turns it on. Product defaults do not enable it.
 
@@ -79,6 +78,7 @@ rules:
     scope: repository
     options:
       assumeWriteWhenUnspecified: true
+      unanalyzable: report
 ```
 
 ## Valid example
@@ -138,12 +138,11 @@ Set the input to false:
 
 The same fix applies to `permissions: write-all` and to a job block that grants
 any write scope above. Narrowing the token to `contents: read` is the other fix
-when the job does not need to write. A `workflow_call` workflow is not a
-finding when it sets `contents: write`: the caller can only pass the same or
-a more restrictive token, and this rule does not read the caller. With
-`assumeWriteWhenUnspecified`, a `workflow_call` file that omits `permissions`
-is a finding, because the option treats that missing key as write. A null
-`persist-credentials` value is not a finding either.
+when the job does not need to write. For reusable workflows, use literal
+read-only permissions or disable persistence; write grants cannot establish
+what token the caller passes. With `assumeWriteWhenUnspecified`, missing
+permissions are a definite violation when credentials persist. A null
+`persist-credentials` value remains unanalyzable.
 
 ## Analysis
 
@@ -153,9 +152,26 @@ is a finding, because the option treats that missing key as write. A null
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), inputs a rule can't prove should never be treated as clean, and this rule does not yet meet that bar.
+`options.unanalyzable` uses the shared policy: `report` (default) emits a
+failing finding, `advise` emits a non-failing advisory, and `ignore` omits
+uncertain results. Repository `unanalyzable` supplies the default.
+Definite violations remain failing under every policy.
 
-- Known gap: expression-valued `persist-credentials`, unknown or expression `permissions`, and a custom `with.token` are cleared without a finding, and invalid YAML yields no result. The rule skips these silently instead of routing them through `options.unanalyzable` (tracked in [#2658](https://github.com/jonathanong/no-mistakes/issues/2658)), so a passing run does not prove they are clean.
+Expressions or unsupported values in `persist-credentials`, non-mapping
+`with`, custom `with.token`, unknown permission scopes/access values,
+unspecified permissions, and caller-limited write grants are unanalyzable.
+Known write grants still establish a violation even beside unknown scopes.
+Literal `persist-credentials: false` is safe regardless of token or permissions.
+Read-only or empty permissions without a custom token remain safe when
+persistence is literal or omitted.
+
+Diagnostics name the file, job, step, and a static rewrite: set
+`with.persist-credentials: false`, or use the default token with literal
+read-only permissions. Invalid YAML reports its parser error and line;
+job and step are `unknown` because the document could not be parsed.
+Repair the YAML before relying on a clean result. Suppression comments apply
+to both findings and advisories; malformed YAML supports file suppression
+and line suppression at the reported parser-error location.
 
 
 ## Suppression

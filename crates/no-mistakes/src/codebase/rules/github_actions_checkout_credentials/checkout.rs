@@ -1,51 +1,71 @@
+use super::inputs::{verdict, Verdict};
 use super::permissions::{job_proof, triggers_workflow_call, Proof};
 use super::uses::is_checkout_uses;
 use super::{gha_kind, RuleFinding, RULE_ID};
+use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::github_actions_script_expressions::{step_uses_lines, StepUse};
+use crate::config::v2::Unanalyzable;
 use serde_yaml::{Mapping, Value};
 
 struct Checkout {
     job: String,
     step: usize,
-    reason: Option<String>,
+    verdict: Verdict,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum Persist {
-    IsFalse,
-    NotFalse,
-    Unknown,
-}
-
-pub(super) fn check_source(rel: &str, source: &str, assume_unspecified: bool) -> Vec<RuleFinding> {
-    let Some(action) = gha_kind(rel) else {
-        return Vec::new();
-    };
+pub(super) fn analyze(
+    rel: &str,
+    source: &str,
+    assume_unspecified: bool,
+    policy: Unanalyzable,
+) -> AnalysisDiagnostics {
+    let mut diagnostics = AnalysisDiagnostics::default();
+    if gha_kind(rel) != Some(false) {
+        return diagnostics;
+    }
     let source = source.trim_start_matches('\u{feff}');
-    // Composite and other action files do not grant GITHUB_TOKEN. A permissions
-    // or workflow_call key in an action file is not applied by GitHub.
-    if action {
-        return Vec::new();
-    }
-    // Unparseable YAML is not proof that a write token is persisted.
-    let Ok(value) = serde_yaml::from_str::<Value>(source) else {
-        return Vec::new();
+    let value = match serde_yaml::from_str::<Value>(source) {
+        Ok(value) => value,
+        Err(error) => {
+            let line = error.location().map_or(1, |location| location.line());
+            diagnostics.unanalyzable(
+                policy,
+                uncertain(
+                    rel,
+                    line,
+                    "unknown",
+                    "unknown",
+                    &format!("invalid YAML: {error}"),
+                ),
+            );
+            return diagnostics;
+        }
     };
-    let checkouts = workflow_checkouts(&value, assume_unspecified);
-    if checkouts.iter().all(|checkout| checkout.reason.is_none()) {
-        return Vec::new();
-    }
-    // The shared step locator keeps compact sequences and block scalars. Flow
-    // style has no `uses` line to name, so those findings stay on line 1.
     let locations = step_uses_lines(source);
-    checkouts
-        .into_iter()
-        .filter_map(|checkout| {
-            let reason = checkout.reason?;
-            let line = located_line(&locations, &checkout.job, checkout.step);
-            Some(finding(rel, line, &checkout.job, checkout.step, &reason))
-        })
-        .collect()
+    for checkout in workflow_checkouts(&value, assume_unspecified) {
+        let line = located_line(&locations, &checkout.job, checkout.step);
+        match checkout.verdict {
+            Verdict::Safe => {}
+            Verdict::Write(reason) => {
+                diagnostics
+                    .findings
+                    .push(finding(rel, line, &checkout.job, checkout.step, &reason))
+            }
+            Verdict::Unknown(reason) => diagnostics.unanalyzable(
+                policy,
+                uncertain(rel, line, &checkout.job, &checkout.step.to_string(), reason),
+            ),
+        }
+    }
+    diagnostics
+}
+
+fn uncertain(rel: &str, line: usize, job: &str, step: &str, reason: &str) -> RuleFinding {
+    RuleFinding {
+        rule: RULE_ID.to_string(), file: rel.to_string(), line,
+        message: format!("{rel}:{line}: job `{job}` step {step}: cannot analyze checkout credentials ({reason}). Set with.persist-credentials to literal false, or use the default GITHUB_TOKEN with literal read-only permissions; persisted write credentials let later steps modify GitHub state."),
+        import: None, target: Some(job.to_string()),
+    }
 }
 
 fn located_line(locations: &[StepUse], job: &str, step: usize) -> usize {
@@ -91,61 +111,12 @@ fn collect_steps(job: &Mapping, job_name: &str, proof: &Proof, checkouts: &mut V
         if !is_checkout_uses(uses) {
             continue;
         }
-        let reason = flagged(proof, step).map(str::to_string);
+        let verdict = verdict(proof, step);
         checkouts.push(Checkout {
             job: job_name.to_string(),
             step: index + 1,
-            reason,
+            verdict,
         });
-    }
-}
-
-fn flagged<'a>(proof: &'a Proof, step: &Mapping) -> Option<&'a str> {
-    let Proof::Write(reason) = proof else {
-        return None;
-    };
-    if persist(step) != Persist::NotFalse || token_set(step) {
-        return None;
-    }
-    Some(reason)
-}
-
-/// An explicit `token` is not the job `GITHUB_TOKEN`. Do not prove it can write.
-fn token_set(step: &Mapping) -> bool {
-    let Some(Value::Mapping(map)) = mapping_get(step, "with") else {
-        return false;
-    };
-    mapping_get(map, "token").is_some()
-}
-
-fn persist(step: &Mapping) -> Persist {
-    let Some(with) = mapping_get(step, "with") else {
-        return Persist::NotFalse;
-    };
-    match with {
-        Value::Null => Persist::NotFalse,
-        Value::Mapping(map) => match mapping_get(map, "persist-credentials") {
-            None => Persist::NotFalse,
-            Some(value) => classify_persist(value),
-        },
-        _ => Persist::Unknown,
-    }
-}
-
-fn classify_persist(value: &Value) -> Persist {
-    match value {
-        Value::Bool(false) => Persist::IsFalse,
-        Value::Bool(true) => Persist::NotFalse,
-        Value::String(text) => classify_persist_str(text),
-        _ => Persist::Unknown,
-    }
-}
-
-fn classify_persist_str(text: &str) -> Persist {
-    match text.trim().to_ascii_lowercase().as_str() {
-        "true" => Persist::NotFalse,
-        "false" => Persist::IsFalse,
-        _ => Persist::Unknown,
     }
 }
 

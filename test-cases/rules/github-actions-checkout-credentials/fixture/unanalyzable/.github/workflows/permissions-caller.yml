@@ -1,0 +1,6 @@
+on: workflow_call
+permissions: { contents: write }
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4

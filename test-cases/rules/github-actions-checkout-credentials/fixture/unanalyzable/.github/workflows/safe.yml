@@ -1,0 +1,19 @@
+on: push
+permissions: { contents: write }
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false, token: "${{ inputs.token }}" }
+  read:
+    permissions: read-all
+    steps:
+      - uses: actions/checkout@v4
+  empty:
+    permissions: {}
+    steps:
+      - uses: actions/checkout@v4
+  oidc:
+    permissions: { id-token: write }
+    steps:
+      - uses: actions/checkout@v4

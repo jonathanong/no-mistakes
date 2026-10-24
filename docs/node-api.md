@@ -3,6 +3,13 @@
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
+`check()` and check reports in `analyzeProject()` apply the shared
+`unanalyzable` policy to `github-actions-checkout-credentials`: unknown
+persistence or permissions, custom tokens, and malformed YAML report by
+default, advise without failing, or are ignored. Both APIs share suppression
+and source locations with the CLI. See the [rule contract](rules/github-actions-checkout-credentials.md#analysis).
+
+
 ```js
 const { analyzeProject } = require("no-mistakes");
 (async () => {
