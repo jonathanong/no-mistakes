@@ -201,3 +201,6 @@ mod malformed_prepared;
 mod malformed_selected;
 
 mod effort;
+
+mod malformed_stories;
+mod malformed_story_facts;

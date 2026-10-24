@@ -1,3 +1,5 @@
+pub(super) use super::diagnostics::check_with_resolver;
+use super::diagnostics::RuleCheck;
 use super::suppression::unsuppressed_component_keys;
 use super::{
     all_react_component_keys, colocated_test_covered_components, component_disabled,
@@ -10,25 +12,10 @@ use crate::codebase::rules::{
     analysis_policy::AnalysisDiagnostics, path_filter::RulePathFilter, sort_findings,
 };
 use crate::codebase::ts_resolver::{normalize_path, ImportResolution};
-use crate::config::v2::schema::{NoMistakesConfig, RuleDef};
+use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::{bail, Result};
 use std::collections::HashSet;
 use std::path::Path;
-
-struct RuleCheck<'a> {
-    root: &'a Path,
-    project_root: &'a Path,
-    config: &'a NoMistakesConfig,
-    rule: &'a RuleDef,
-    shared: &'a CheckFactMap,
-    resolver: &'a dyn ImportResolution,
-    inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
-    defer_suppression: bool,
-    sources: &'a crate::codebase::ts_source::SourceStore,
-}
-
-pub(super) use super::diagnostics::check_with_resolver;
-
 pub(super) fn check_diagnostics_with_resolver(
     root: &Path,
     config: &NoMistakesConfig,
@@ -69,7 +56,6 @@ pub(super) fn check_diagnostics_with_resolver(
     sort_findings(&mut diagnostics.advisories);
     Ok(diagnostics)
 }
-
 fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
     let RuleCheck {
         root,
@@ -93,7 +79,6 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
     let stories = GlobMatcher::new(&story_patterns)?;
     let allow_files = GlobMatcher::new(opts.allow_files.keys())?;
     let test_filter = crate::codebase::test_filter::TestFileFilter::new(root, config);
-
     let (components, mut unanalyzable) = selected_components(
         root,
         project_root,
@@ -121,6 +106,17 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
         resolver,
         &all_component_keys,
     );
+    let (incomplete, mut story_errors) =
+        super::diagnostics::malformed_stories(root, shared, &story_files, defer_suppression);
+    let visible_error = super::diagnostics::visible_story_error(
+        root,
+        project_root,
+        shared,
+        &story_errors,
+        &rule_filter,
+        &allow_files,
+    );
+    unanalyzable.append(&mut story_errors);
     let mut namespace_findings =
         namespace_import_findings(root, project_root, shared, &story_files, resolver);
     let direct = directly_covered_components(
@@ -145,7 +141,6 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
     } else {
         dynamic_or_mock_boundary_files(project_root, shared, resolver)
     };
-
     let mut findings = Vec::new();
     findings.append(&mut namespace_findings);
     findings.extend(stale_or_blank_allow_findings(
@@ -156,7 +151,6 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
         &allow_files,
         shared,
     ));
-
     for component in components {
         if covered.contains(&component.key) || test_covered.contains(&component.key) {
             continue;
@@ -175,15 +169,19 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
         {
             continue;
         }
-        // With no covered story seeds, an explicit component cannot acquire
-        // transitive coverage; implicit components may still be boundary-exempt.
+        if incomplete {
+            unanalyzable.extend(
+                (!visible_error).then(|| super::diagnostics::incomplete_component(component)),
+            );
+            continue;
+        }
+        // Without story seeds, only implicit components need boundary analysis.
         if low && (!direct.is_empty() || !component.explicit) {
             unanalyzable.push(super::effort::unanalyzable(component));
             continue;
         }
         findings.push(super::effort::missing(component));
     }
-
     findings.retain(|finding| rule_filter.is_match(&root.join(&finding.file)));
     let mut diagnostics = AnalysisDiagnostics {
         findings,
