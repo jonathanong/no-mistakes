@@ -66,6 +66,10 @@ function importedTarget(call, index, property, context, options) {
   const signatures = checker.getTypeAtLocation(node).getCallSignatures();
   if (signatures.length !== 1) return false;
   const declaration = signatures[0].getDeclaration();
+  // Contextual function types describe a contract, not the implementation
+  // parameter that SQL analysis judges. TypeScript function declarations own
+  // asteriskToken even when undefined; method signatures do not.
+  if (!declaration?.body && !(declaration?.name && "asteriskToken" in declaration)) return false;
   const functionSymbol = declaration?.name && checker.getSymbolAtLocation(declaration.name);
   if (functionSymbol?.declarations.length > 1) return false;
   const params = declaration?.parameters;

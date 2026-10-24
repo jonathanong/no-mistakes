@@ -16,3 +16,11 @@ renamed({ query: read });
 nested({ query: read });
 array({ query: read });
 computed({ query: read });
+
+import { contextual, explicitArrow, explicitExpression, ambient } from "./helpers";
+contextual(read);
+explicitArrow(read);
+explicitExpression(read);
+ambient(read);
+import { fromMethod } from "./helpers";
+fromMethod(read);

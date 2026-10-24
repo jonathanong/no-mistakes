@@ -44,6 +44,8 @@ Imported helpers require typed linting: configure `@typescript-eslint/parser`
 with `parserOptions.project` or `projectService` so `parserServices.program`
 is available. The declared parameter must reference a configured type imported
 from the configured database module. Without that information, the call reports.
+Contextual function types such as `const run: Helper = query => query(sql)`
+do not annotate the implementation parameter and still report.
 Structural compatibility, inference, unknown callees, mutable helpers, overloads,
 rest parameters, and calls containing spread arguments do not establish proof.
 An object parameter such as `options: { query: QueryExecutor }` does not establish

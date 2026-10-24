@@ -18,3 +18,14 @@ export function renamed({ query: execute }: { query: QueryExecutor }) {}
 export function nested({ query: { exec } }: { query: QueryExecutor }) {}
 export function array([query]: { query: QueryExecutor }) {}
 export function computed({ ["query"]: query }: { query: QueryExecutor }) {}
+
+// Contextual signatures do not annotate the actual executor parameter.
+type Helper = (query: QueryExecutor) => void;
+export const contextual: Helper = query => { query("SELECT 1"); };
+export const explicitArrow = (query: QueryExecutor) => { query("SELECT 1"); };
+export const explicitExpression = function(query: QueryExecutor) { query("SELECT 1"); };
+export declare function ambient(query: QueryExecutor): void;
+
+// A named interface method signature still provides only contextual typing.
+interface Helpers { run(query: QueryExecutor): void }
+export const fromMethod: Helpers["run"] = query => { query("SELECT 1"); };

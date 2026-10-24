@@ -48,7 +48,7 @@ describe("typed executor argument targets", () => {
     assert.deepEqual(check("unsafe.ts"), Array(20).fill("passed"));
   });
   it("requires parser type information for imported targets", () => {
-    assert.deepEqual(check("imported.ts"), Array(17).fill("passed"));
-    assert.deepEqual(check("imported.ts", true), Array(13).fill("passed"));
+    assert.deepEqual(check("imported.ts"), Array(22).fill("passed"));
+    assert.deepEqual(check("imported.ts", true), Array(15).fill("passed"));
   });
 });
