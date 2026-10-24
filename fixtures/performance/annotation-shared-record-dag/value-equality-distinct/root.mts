@@ -26,9 +26,10 @@ const right9 = { a: right8, b: right8 }
 const right10 = { a: right9, b: right9 }
 const right11 = { a: right10, b: right10 }
 const right12 = { a: right11, b: right11 }
-let chosen = left12
-if (flag) chosen = right12
+const chosen = flag ? left12 : right12
 export function probe() {
   read("/* clean */ SELECT 1")
+  // An Unknown join must fail the exact SQL-event assertion, not pass the control.
+  read(chosen.a.a.a.a.a.a.a.a.a.a.a.a)
   return chosen
 }

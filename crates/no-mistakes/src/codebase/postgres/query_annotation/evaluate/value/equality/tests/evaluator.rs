@@ -6,7 +6,9 @@ use crate::codebase::postgres::query_annotation::{
     modules::Module,
 };
 use crate::codebase::postgres::{extract_embedded_sql_from_program, EmbeddedSqlOptions};
-use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::codebase::ts_source::facts::{
+    collect_file_facts_from_program, TsFactContext, TsFactPlan, TsFileFacts,
+};
 use crate::fx::FxHashMap;
 use std::{path::PathBuf, sync::Arc};
 fn scope_state(scopes: &[Scope]) -> Vec<std::collections::BTreeMap<String, String>> {
@@ -23,6 +25,7 @@ fn scope_state(scopes: &[Scope]) -> Vec<std::collections::BTreeMap<String, Strin
 type Resolve = fn(&str, &std::path::Path) -> Option<PathBuf>;
 fn with_fixture<T>(
     name: &str,
+    precise_records: bool,
     inspect: impl FnOnce(&mut Evaluator<'_, Resolve>, &std::path::Path, &str) -> T,
 ) -> T {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
@@ -30,10 +33,25 @@ fn with_fixture<T>(
     ));
     let source = std::fs::read_to_string(&path).unwrap();
     let options = EmbeddedSqlOptions::configured("@bench/db", &[]);
-    let (facts, embedded) = crate::ast::with_program(&path, &source, |program, _| {
+    let (facts, embedded, ts) = crate::ast::with_program(&path, &source, |program, _| {
+        let mut facts = query_annotation::collect(program, &source, &options);
+        facts.precise_records = precise_records;
         (
-            query_annotation::collect(program, &source, &options),
+            facts,
             extract_embedded_sql_from_program(&path, program, &source, &options),
+            if precise_records {
+                collect_file_facts_from_program(
+                    &path,
+                    TsFactPlan::imports(),
+                    &TsFactContext::default(),
+                    &source,
+                    program,
+                    None,
+                    None,
+                )
+            } else {
+                TsFileFacts::default()
+            },
         )
     })
     .unwrap();
@@ -41,7 +59,7 @@ fn with_fixture<T>(
         path.clone(),
         File {
             facts: &facts,
-            module: Arc::new(Module::new(TsFileFacts::default().into())),
+            module: Arc::new(Module::new(ts.into())),
             executors: embedded.call_spans.iter().copied().collect(),
         },
     )]);
@@ -77,7 +95,7 @@ fn with_fixture<T>(
     inspect(&mut evaluator, &path, &source)
 }
 fn run() -> (Vec<String>, usize) {
-    with_fixture("value-equality", |evaluator, path, source| {
+    with_fixture("value-equality", false, |evaluator, path, source| {
         for (sql, annotation) in [("/* clean */ SELECT 1", false), ("SELECT 2", true)] {
             let call = format!("read(\"{sql}\")");
             let start = source.find(&call).unwrap() as u32;
@@ -153,16 +171,30 @@ fn saved_evaluator_fixture_matches_legacy_with_real_identity_work() {
 
 #[test]
 fn saved_distinct_dag_fixture_preserves_events_and_reduces_real_comparisons() {
+    // Matches executed_source/imports.rs: supplied-source whole-SQL evaluation
+    // declares precise records. Ordinary annotation projection stays unchanged.
     let run = || {
-        with_fixture("value-equality-distinct", |evaluator, _, _| {
+        with_fixture("value-equality-distinct", true, |evaluator, path, _| {
+            let env = evaluator.module_environment(path);
+            let chosen = &evaluator.scopes[env]["chosen"];
+            assert!(matches!(chosen, Value::Record(_, _)));
+            assert!(legacy::equal(chosen, &evaluator.scopes[env]["left12"]));
+            let state = scope_state(&evaluator.scopes);
             let mut events = evaluator
                 .events
                 .values()
                 .flat_map(|events| events.iter().map(|(_, value)| legacy::describe(value)))
                 .collect::<Vec<_>>();
             events.sort();
-            assert_eq!(events, vec!["Prefix(\"/* clean */ SELECT 1\", true, None)"]);
-            events
+            assert_eq!(
+                events,
+                vec![
+                    "Prefix(\"/* clean */ SELECT 1\", true, None)",
+                    "Prefix(\"/* same */ SELECT 1\", true, None)",
+                ],
+                "the joined record must still expose its exact annotated SQL leaf"
+            );
+            (events, state)
         })
     };
     let (expected, before) = hooks::measure(true, run);
@@ -172,5 +204,23 @@ fn saved_distinct_dag_fixture_preserves_events_and_reduces_real_comparisons() {
     assert!(
         before > after * 10,
         "real branch joins must reuse completed pairs"
+    );
+}
+
+#[test]
+fn ordinary_annotation_keeps_conservative_deep_member_projection() {
+    with_fixture(
+        "value-equality-distinct",
+        false,
+        |evaluator, path, source| {
+            let call = "read(chosen.a.a.a.a.a.a.a.a.a.a.a.a)";
+            let start = source.find(call).unwrap() as u32;
+            let events =
+                &evaluator.events[&(path.to_path_buf(), (start, start + call.len() as u32))];
+            assert!(!events.is_empty());
+            assert!(events
+                .iter()
+                .all(|(_, value)| matches!(value, Value::Aggregate(_))));
+        },
     );
 }

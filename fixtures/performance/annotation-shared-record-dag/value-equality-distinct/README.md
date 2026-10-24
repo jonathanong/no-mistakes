@@ -1,9 +1,20 @@
 # Equal records with distinct identities
 
 `root.mts` builds two separately allocated but structurally equal record DAGs.
-Each level repeats its own preceding node. The conditional assignment forces a
+Each level repeats its own preceding node. The conditional expression forces a
 join between the two roots, so pointer identity alone cannot avoid repeating
-structural comparisons. The annotated query remains a known safe SQL event.
+structural comparisons. The probe reads through all 12 joined record levels and
+must retain the exact annotated SQL leaf alongside the independent static query.
+Returning an unknown or dropping the joined binding cannot satisfy that assertion.
+
+The AST regression declares the production supplied-source whole-SQL profile:
+`executed_source/imports.rs` sets `annotation.precise_records = true`. That
+profile resolves static record members and deduplicates structurally equal
+alternative results. The existing annotation-only regression keeps its original
+`precise_records = false` setting. Ordinary annotation checks conservatively
+retain aggregate member candidates; the CLI config here retains that historical
+`unanalyzableSql: ignore` policy. Its clean report is a parity control, not proof
+that the ordinary profile resolves the deep leaf.
 
 `state.json` saves the same 12-level record topology with an explicit SQL leaf
 for the equality work-count regression. The test constructs immutable evaluator
