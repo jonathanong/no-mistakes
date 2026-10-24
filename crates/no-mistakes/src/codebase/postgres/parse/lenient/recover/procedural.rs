@@ -12,6 +12,9 @@ pub(crate) fn control_chunk(tokens: &[TokenWithSpan]) -> bool {
 }
 
 fn control(code: &[&Token]) -> bool {
+    if let [Token::ShiftLeft, label_token, Token::ShiftRight, rest @ ..] = code {
+        return label(label_token) && control(rest);
+    }
     let Some(first) = code.first() else {
         return false;
     };
