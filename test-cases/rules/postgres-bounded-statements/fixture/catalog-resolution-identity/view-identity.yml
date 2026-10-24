@@ -1,0 +1,12 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorNames: [query]
+      include: [src/unqualified-collision.ts]
+      schemaCatalogPath: catalog-public-collision.json
+      sqlInclude: [sql/qualified-relations.sql]
+      viewBounds:
+        "archive.active_accounts": unbounded
+      unanalyzableSql: advise

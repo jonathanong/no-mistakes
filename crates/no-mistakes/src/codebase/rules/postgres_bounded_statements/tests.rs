@@ -1,6 +1,7 @@
 mod blocking_query_wrappers;
 mod caller_array_provenance;
 mod cardinality_basics;
+mod catalog_identity_edges;
 mod catalog_resolution;
 mod current_database;
 mod ddl_search_path;
