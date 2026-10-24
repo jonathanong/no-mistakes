@@ -247,11 +247,11 @@ extractors are evaluated: `yaml-sequence`, `yaml-string-selector`, and
 `path-regex-capture`. Their values are still transformed, checked against
 `minSize`, and compared with the configured comparison mode.
 
-Every other known extractor kind is unanalyzable at low: `ts-string-union`,
+The other documented extractor kinds are unanalyzable at low: `ts-string-union`,
 `ts-const-object-keys`, `ts-const-object-property`, `ts-array-literal`,
 `ts-const-array-property`, `ts-call-first-string-argument`,
 `markdown-table-code-cells`, and `sql-enum`. Low emits one residual diagnostic
-for each named unsupported set, following `options.unanalyzable` (`report`,
+for each named unsupported set (including unrecognized kinds), following `options.unanalyzable` (`report`,
 `advise`, or `ignore`). It does not evaluate that extractor or apply `minSize`
 to the unavailable values. An unsupported empty set therefore cannot create a
 misleading `minSize` violation.
@@ -269,3 +269,9 @@ TypeScript union in the same rule application. To analyze the union or any
 other unsupported kind, keep the default or select `effort: max`. Alternatively,
 rewrite the finite set as one of the supported declarative forms. No partner
 check is required.
+
+Low's definite findings are a subset of max's definite findings for the same
+application. Total diagnostic counts can be higher at low under
+`unanalyzable: report`: a compatible TypeScript union passes at max but reports
+one uncertainty at low. `advise` keeps that uncertainty non-failing; `ignore`
+omits it. Neither policy turns the unsupported extraction into a proven set.

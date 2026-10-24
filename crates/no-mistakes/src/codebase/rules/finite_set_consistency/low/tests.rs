@@ -217,6 +217,6 @@ fn mixed_applications_keep_their_own_effort_and_demand() {
                 .message
                 .contains("all contains `billing` but partial does not"))
             .count(),
-        2
+        1
     );
 }

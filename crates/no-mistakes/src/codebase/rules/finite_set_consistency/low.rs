@@ -40,9 +40,13 @@ pub(super) fn record_unsupported(
     }
     // Effort narrows extraction, not the requirement that declared inputs exist.
     for path in &paths {
-        sources
-            .read_path(path)
-            .map_err(|error| anyhow::anyhow!(error.to_string()))?;
+        sources.read_path(path).map_err(|error| {
+            anyhow::anyhow!(
+                "finite set '{}': could not read {}: {error}; restore a readable configured source",
+                spec.name,
+                relative_slash_path(root, path)
+            )
+        })?;
     }
     let file = relative_slash_path(root, &paths[0]);
     output.unanalyzable(policy.unanalyzable, RuleFinding {

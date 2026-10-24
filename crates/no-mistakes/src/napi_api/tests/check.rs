@@ -386,3 +386,5 @@ mod check_payload_effort;
 
 #[path = "check_transformed_uuid_predicates.rs"]
 mod check_transformed_uuid_predicates;
+#[path = "check_finite_set_effort.rs"]
+mod check_finite_set_effort;

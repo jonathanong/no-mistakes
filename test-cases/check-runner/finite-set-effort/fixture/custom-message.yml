@@ -1,7 +1,6 @@
 rules:
   - rule: finite-set-consistency
     scope: repository
-    message: "Finite inventory:"
     options:
       effort: low
       unanalyzable: advise
@@ -28,6 +27,7 @@ rules:
       comparisons:
         - left: yaml-values
           right: route-names
+          message: "Inventory policy: missing route name"
         - left: compatible-type
           right: route-names
         - left: mismatching-type

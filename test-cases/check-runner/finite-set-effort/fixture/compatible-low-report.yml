@@ -1,0 +1,17 @@
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: report
+      sets:
+        - name: compatible-type
+          file: types.ts
+          kind: ts-string-union
+          target: Route
+        - name: route-names
+          kind: path-regex-capture
+          pattern: '^routes/(?<value>[^/]+)\.ts$'
+      comparisons:
+        - left: compatible-type
+          right: route-names
