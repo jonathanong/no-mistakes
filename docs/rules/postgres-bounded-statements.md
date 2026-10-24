@@ -67,8 +67,10 @@ the rule does not infer a bound from a view's definition.
 
 Each key must resolve to one catalog view. Missing names, ambiguous bare names,
 table/view collisions and duplicate aliases for one view are configuration
-errors. A qualified name can use a bare catalog entry only when the catalog's
-`schema` proves that qualification. Quote names exactly, for example
+errors. A qualified view name can use a bare catalog entry only when the catalog's
+`schema` proves that qualification. Qualified table references retain table lookup
+behavior, including bare table keys in catalogs without a declared `schema`.
+Quote names exactly, for example
 `'public."Mixed Name"': bounded`. A bare SQL name shared by a table and a view
 remains unknown; use the qualified relation name.
 

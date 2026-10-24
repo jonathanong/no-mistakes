@@ -110,13 +110,14 @@ fn prepared_postgres_unique_index_shapes_match_standalone() {
 fn prepared_postgres_catalog_bounds_match_standalone() {
     let fixture = category_fixture("rules", "postgres-bounded-statements");
     for (directory, config, expected) in [
-        ("catalog-resolution", "key-resolution.yml", 5),
+        ("catalog-resolution", "key-resolution.yml", 6),
         ("catalog-resolution", "key-operators.yml", 4),
         ("catalog-resolution", "key-booleans.yml", 1),
         ("catalog-resolution", "view-bounds.yml", 1),
         ("catalog-resolution", "view-allow.yml", 0),
         ("catalog-resolution", "view-suppression.yml", 0),
         ("catalog-resolution-identity", "view-identity.yml", 1),
+        ("schemaless-key-resolution", "qualified-bare-tables.yml", 4),
     ] {
         let root = fixture.join(directory);
         let standalone = parse_json(

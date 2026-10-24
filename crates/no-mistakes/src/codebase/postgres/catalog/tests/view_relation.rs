@@ -41,3 +41,27 @@ fn catalogs_without_views_skip_table_collision_indexing() {
     assert_eq!(names::key_work::count(), before);
     assert!(catalog.relation_fallback.get().is_none());
 }
+
+#[test]
+fn schemaless_table_fallback_preserves_explicit_view_and_table_identities() {
+    let path = crate::test_support::rule_fixture_root("postgres-bounded-statements")
+        .join("schemaless-key-resolution/catalog-view-collisions.json");
+    let catalog = SchemaCatalog::from_json(&std::fs::read_to_string(path).unwrap()).unwrap();
+    assert!(catalog.bounded_relation("public.clash").is_none());
+    assert!(catalog.bounded_relation("public.exact_view").is_none());
+    assert!(catalog.view_relation("public.exact_view").is_some());
+    assert!(catalog.bounded_relation("public.exact_table").is_some());
+    assert!(catalog.view_relation("public.exact_table").is_none());
+    for name in ["public.big", "other.big"] {
+        assert!(catalog.bounded_relation(name).is_some(), "{name}");
+        assert!(catalog.view_relation(name).is_none(), "{name}");
+    }
+    assert!(catalog.bounded_relation("archive.big").is_none());
+    assert!(catalog.view_relation("archive.big").is_some());
+    let path = crate::test_support::rule_fixture_root("postgres-bounded-statements")
+        .join("catalog-resolution/catalog.json");
+    let declared = SchemaCatalog::from_json(&std::fs::read_to_string(path).unwrap()).unwrap();
+    assert!(declared
+        .bounded_relation("archive.customer_accounts")
+        .is_none());
+}

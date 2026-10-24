@@ -10,13 +10,14 @@ test(
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
     for (const [directory, config, expected] of [
-      ["catalog-resolution", "key-resolution.yml", 5],
+      ["catalog-resolution", "key-resolution.yml", 6],
       ["catalog-resolution", "key-operators.yml", 4],
       ["catalog-resolution", "key-booleans.yml", 1],
       ["catalog-resolution", "view-bounds.yml", 1],
       ["catalog-resolution", "view-allow.yml", 0],
       ["catalog-resolution", "view-suppression.yml", 0],
       ["catalog-resolution-identity", "view-identity.yml", 1],
+      ["schemaless-key-resolution", "qualified-bare-tables.yml", 4],
     ]) {
       const root = join(
         __dirname,

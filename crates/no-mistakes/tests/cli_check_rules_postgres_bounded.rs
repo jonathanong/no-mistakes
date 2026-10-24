@@ -283,6 +283,11 @@ fn schemaless_bare_catalog_keys_still_judge_qualified_tables() {
             (
                 "sql/qualified-bare-tables.sql".to_string(),
                 3,
+                "table:a".to_string(),
+            ),
+            (
+                "sql/qualified-bare-tables.sql".to_string(),
+                3,
                 "table:b".to_string(),
             ),
         ]
