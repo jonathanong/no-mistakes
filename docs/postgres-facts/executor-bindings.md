@@ -135,3 +135,11 @@ parameters (`ctx.db.query`), and typed array elements (`clients[0].query`) remai
 unanalyzable when executor ownership is unresolved. They follow the selected
 `unanalyzable` policy, including at low effort. Use a supported explicitly typed
 parameter to make the receiver eligible for SQL analysis.
+
+The low-effort SQL syntax projection also proves simple parameters annotated
+with a configured named imported executor type, including renamed bindings in
+inline object parameter types. It checks literal SQL at `executor(sql)` and
+`executor.query(sql)` with the same rules as direct named imports. Type identity
+is lexical: shadowed names, unions, qualified types, and unrelated imports do
+not provide this low-effort syntax proof. This projection is shared by low SQL
+checks; query annotations retain their separate annotation-head analysis.

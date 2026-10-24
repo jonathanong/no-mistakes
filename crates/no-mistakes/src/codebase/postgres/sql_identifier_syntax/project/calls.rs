@@ -38,6 +38,7 @@ fn direct_calls(
         selected,
         namespaces,
         unsupported,
+        typed,
     } = selection;
     let mut calls = Vec::new();
     let mut direct = FxHashSet::default();
@@ -55,18 +56,20 @@ fn direct_calls(
         let namespace = owner.is_some_and(|binding| namespaces.contains(&binding.id))
             && parts.len() == 2
             && parts[1] == "query";
+        let typed = owner.is_some_and(|binding| typed.contains(&binding.id))
+            && (parts.len() == 1 || (parts.len() == 2 && parts[1] == "query"));
         // Broad member selection has no positive receiver ownership proof.
         let loose = profile.import_specifier.is_empty()
             && parts.len() > 1
             && parts.last().is_some_and(|name| name == "query")
             && profile.executor_names.iter().any(|name| name == "query");
-        if !(named || alias || namespace || loose) {
+        if !(named || alias || namespace || loose || typed) {
             continue;
         }
         direct.insert(*root);
         let mut value = if gaps
             || alias
-            || namespace
+            || (namespace && !typed)
             || loose
             || unsupported
                 .iter()
@@ -121,13 +124,15 @@ fn append_escapes(
         selected,
         namespaces,
         unsupported,
+        typed,
     } = selection;
     // Reporting the imported reference catches aliases and factories without
     // interpreting their result or silently losing their downstream sinks.
     for binding in &module.bindings {
         if !(selected.contains(&binding.id)
             || unsupported.contains(&binding.id)
-            || namespaces.contains(&binding.id))
+            || namespaces.contains(&binding.id)
+            || typed.contains(&binding.id))
         {
             continue;
         }

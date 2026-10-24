@@ -17,7 +17,8 @@ statements remain checked; comments and prose are not clauses.
 
 `max` is the default and preserves helper, builder, alias, and finite-alternative
 analysis. `low` checks SQL visible as a literal string or interpolation-free
-template at a directly imported executor, or through one immutable local const:
+template at a directly imported executor or a parameter with a configured imported
+executor type, or through one immutable local const:
 
 ```ts
 import { query } from '@example/db';
@@ -25,6 +26,11 @@ query('SELECT id FROM posts OFFSET 10');
 const sql = `SELECT id FROM posts OFFSET 0`;
 query(sql);
 ```
+
+Typed parameters support direct calls and `.query` calls, including renamed
+bindings destructured from an inline object parameter type. The type must be a
+reference to the configured named import; a same-named local type is insufficient.
+These literal calls remain definite findings with `unanalyzable: ignore`.
 
 Both efforts report those OFFSET clauses at their physical SQL locations.
 Low does not evaluate JavaScript helpers or builders. Interpolation, SQL tags,
