@@ -7,9 +7,12 @@ fn loop_carried_literal_missing_heads_reach_both_efforts() {
         crate::config::v2::Effort::Low,
         crate::config::v2::Effort::Max,
     ] {
-        for mode in ["ignore", "advise", "report"] {
+        for (mode, name) in ["ignore", "advise", "report"]
+            .into_iter()
+            .flat_map(|mode| ["query", "while-only"].map(|name| (mode, name)))
+        {
             let root = super::tests::fixture("loop-carried-reassignment");
-            let file = root.join("src/query.mts");
+            let file = root.join(format!("src/{name}.mts"));
             let source = std::fs::read_to_string(&file).unwrap();
             let expected = source
                 .lines()
@@ -22,12 +25,28 @@ fn loop_carried_literal_missing_heads_reach_both_efforts() {
             config.effort = Some(effort);
             let files = [file];
             let sources = super::super::source_store_for_files(&files);
+            super::super::analysis_policy::prepare_rule_analysis(
+                &root,
+                &mut config,
+                &files,
+                &sources,
+            )
+            .unwrap();
+            assert_eq!(
+                config
+                    .effective_rule_analysis(&config.rules[0])
+                    .unwrap()
+                    .effort,
+                effort
+            );
             let observer = crate::diagnostics::InvocationObserver::new(true);
             let mut facts = crate::diagnostics::with_observer(Some(observer.clone()), || {
                 super::super::prepare_sql_rule_facts(&root, &config, &files, &sources, RULE_ID)
                     .unwrap()
             });
             let work = observer.snapshot().work;
+            let roots = work.get("postgres.annotation.roots").copied().unwrap_or(0);
+            assert_eq!(roots == 0, effort == crate::config::v2::Effort::Low);
             assert_eq!(work.get("postgres.annotation.head_syntax_visits"), Some(&1));
             assert_eq!(
                 work.get("postgres.annotation.head_binding_indexes"),

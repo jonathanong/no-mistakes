@@ -1,7 +1,7 @@
 rules:
   - rule: postgres-require-query-annotation
     scope: repository
-    include: ['src/query.mts']
+    include: ['src/query.mts', 'src/while-only.mts']
     options:
       effort: low
       importSpecifier: '@example/db'

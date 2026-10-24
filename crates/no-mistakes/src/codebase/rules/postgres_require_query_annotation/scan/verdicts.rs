@@ -5,8 +5,6 @@ use crate::codebase::postgres::{
     SqlObligationVerdict, SqlVerdictStatus,
 };
 use std::path::Path;
-mod text;
-use text::{composed_prefix, judge_sql, TextProof};
 
 mod classify;
 use classify::{annotation_status, judge_sql, TextProof};
@@ -143,35 +141,6 @@ fn composed_prefix(call: &crate::codebase::postgres::EmbeddedSqlCall) -> Option<
     (call.is_unanalyzable() || call.kind == EmbeddedSqlKind::Composed)
         .then(|| call.sql_text.clone())
         .flatten()
-}
-
-/// A known prefix can prove a leading annotation or rule out both an
-/// annotation and a transaction command. An incomplete comment or command
-/// name keeps the implicit unknown branch alive.
-pub(super) fn prefix_status(prefix: &str) -> SqlVerdictStatus {
-    if leading_query_annotation(prefix).is_some() {
-        return SqlVerdictStatus::ProvenClear;
-    }
-    let leading = prefix.trim_start();
-    if leading.is_empty() || leading.starts_with('/') {
-        return SqlVerdictStatus::Abstain;
-    }
-    let upper = leading.to_ascii_uppercase();
-    if ["BEGIN", "COMMIT", "ROLLBACK"]
-        .iter()
-        .any(|command| command.starts_with(&upper) || upper.starts_with(command))
-    {
-        return SqlVerdictStatus::Abstain;
-    }
-    SqlVerdictStatus::Violation
-}
-
-fn annotation_status(sql: &str) -> SqlVerdictStatus {
-    if sql_requires_query_annotation(sql) {
-        SqlVerdictStatus::Violation
-    } else {
-        SqlVerdictStatus::ProvenClear
-    }
 }
 
 #[cfg(test)]

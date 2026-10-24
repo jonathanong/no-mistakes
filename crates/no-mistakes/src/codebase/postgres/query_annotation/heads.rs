@@ -59,7 +59,7 @@ pub(crate) fn prepare_loop_heads(
     append: bool,
     helpers: bool,
 ) -> Option<PreparedLoopHeads> {
-    if !source.contains("for") {
+    if !source.contains("for") && !source.contains("while") {
         return None;
     }
     let syntax = syntax::collect_with_helpers(program, append, helpers);

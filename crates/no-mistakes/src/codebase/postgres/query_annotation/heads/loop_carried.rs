@@ -3,6 +3,9 @@ use super::{bindings::Bindings, syntax::Syntax, HeadProof, Span};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::*;
 use std::collections::BTreeMap;
+mod grammar;
+pub(super) use grammar::{iteration, test, update};
+use grammar::{sequence, Flow};
 
 pub(super) struct Candidate {
     call: Span,
@@ -10,57 +13,75 @@ pub(super) struct Candidate {
     pub(super) assignment: Span,
     pub(super) tag: Option<Span>,
     loop_start: u32,
+    loop_end: u32,
 }
 
-/// The two-statement body has no reset, exit, or effect that can kill its backedge.
-/// Other loop forms keep their existing conservative annotation behavior.
-pub(super) fn candidate(value: &ForOfStatement<'_>) -> Option<Candidate> {
-    if value.r#await || !matches!(&value.right, Expression::Identifier(_)) {
-        return None;
+/// Straight-line statements preserve a backedge. Harmless branches can remain
+/// between witnesses; binding checks below reject all intervening resets.
+pub(super) fn candidates(body: &Statement<'_>, loop_span: oxc_span::Span) -> Vec<Candidate> {
+    let mut expressions = Vec::new();
+    let mut loop_span = loop_span;
+    match sequence(body, &mut expressions) {
+        Flow::Unsupported => return Vec::new(),
+        // Dead statements after an unconditional continue cannot reset the head.
+        Flow::Backedge(end) => loop_span.end = end,
+        Flow::Next => {}
     }
-    let ForStatementLeft::VariableDeclaration(left) = &value.left else {
-        return None;
-    };
-    // Successful for-of syntax always has exactly one declaration.
-    let binding = &left.declarations[0];
-    if !matches!(binding.id, BindingPattern::BindingIdentifier(_)) {
-        return None;
+    let mut calls = crate::fx::FxHashMap::<
+        &str,
+        Vec<(&CallExpression<'_>, &IdentifierReference<'_>)>,
+    >::default();
+    let mut assignments = crate::fx::FxHashMap::default();
+    for expression in expressions {
+        let value = unwrap_ts_wrappers(expression);
+        let value = match value {
+            Expression::AwaitExpression(value) => unwrap_ts_wrappers(&value.argument),
+            value => value,
+        };
+        if let Expression::CallExpression(call) = value {
+            if let Some(Expression::Identifier(reference)) = call
+                .arguments
+                .first()
+                .and_then(|value| value.as_expression())
+                .map(unwrap_ts_wrappers)
+            {
+                calls
+                    .entry(reference.name.as_str())
+                    .or_default()
+                    .push((call, reference));
+            }
+        }
+        if let Expression::AssignmentExpression(assignment) = value {
+            if let AssignmentTarget::AssignmentTargetIdentifier(target) = &assignment.left {
+                assignments.insert(target.name.as_str(), (assignment, target));
+            }
+        }
     }
-    let Statement::BlockStatement(body) = &value.body else {
-        return None;
-    };
-    let [Statement::ExpressionStatement(first), Statement::ExpressionStatement(second)] =
-        body.body.as_slice()
-    else {
-        return None;
-    };
-    let first = unwrap_ts_wrappers(&first.expression);
-    let first = match first {
-        Expression::AwaitExpression(value) => unwrap_ts_wrappers(&value.argument),
-        value => value,
-    };
-    let Expression::CallExpression(call) = first else {
-        return None;
-    };
+    let mut candidates = Vec::new();
+    for (name, (assignment, target)) in assignments {
+        if let Some(prior) = calls.get(name) {
+            candidates.extend(prior.iter().filter_map(|(call, reference)| {
+                pair(call, reference, assignment, target, loop_span)
+            }));
+        }
+    }
+    candidates
+}
+
+fn pair(
+    call: &CallExpression<'_>,
+    reference: &IdentifierReference<'_>,
+    assignment: &AssignmentExpression<'_>,
+    target: &IdentifierReference<'_>,
+    loop_span: oxc_span::Span,
+) -> Option<Candidate> {
     // Canonical executor facts decide callee ownership, including member calls.
-    if call.optional {
+    if call.optional
+        || call.span.end >= assignment.span.start
+        || assignment.operator != oxc_syntax::operator::AssignmentOperator::Assign
+    {
         return None;
     }
-    let Expression::Identifier(reference) =
-        unwrap_ts_wrappers(call.arguments.first()?.as_expression()?)
-    else {
-        return None;
-    };
-    let Expression::AssignmentExpression(assignment) = unwrap_ts_wrappers(&second.expression)
-    else {
-        return None;
-    };
-    if assignment.operator != oxc_syntax::operator::AssignmentOperator::Assign {
-        return None;
-    }
-    let AssignmentTarget::AssignmentTargetIdentifier(target) = &assignment.left else {
-        return None;
-    };
     let expression = unwrap_ts_wrappers(&assignment.right);
     let tag = match expression {
         Expression::StringLiteral(_) => None,
@@ -81,7 +102,8 @@ pub(super) fn candidate(value: &ForOfStatement<'_>) -> Option<Candidate> {
         reference: (reference.span.start, reference.span.end),
         assignment: (target.span.start, target.span.end),
         tag,
-        loop_start: value.span.start,
+        loop_start: loop_span.start,
+        loop_end: loop_span.end,
     })
 }
 
@@ -102,6 +124,23 @@ pub(super) fn proofs(syntax: &Syntax, bindings: &Bindings<'_>) -> BTreeMap<Span,
                 .assignments
                 .declarations
                 .contains_key(&(owner.span.start, owner.span.end))
+            {
+                return None;
+            }
+            // Earlier writes after the call are overwritten by the final literal.
+            // A reset after that literal or before the next read kills this proof.
+            if owner
+                .references
+                .iter()
+                .filter(|usage| usage.runtime)
+                .any(|usage| {
+                    let span = (usage.span.start, usage.span.end);
+                    (span.0 < candidate.reference.0 || span.0 > candidate.assignment.0)
+                        && span.0 >= candidate.loop_start
+                        && span.1 <= candidate.loop_end
+                        && (syntax.assignments.writes.contains_key(&span)
+                            || syntax.assignments.unsupported_writes.contains(&span))
+                })
             {
                 return None;
             }

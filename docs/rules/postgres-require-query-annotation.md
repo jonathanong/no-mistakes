@@ -166,13 +166,19 @@ see [SQL verdicts](../postgres-sql-verdicts.md).
 
 ### Effort
 
-Maximum effort also recognizes a direct loop-carried literal reassignment in a
-`for...of` body containing an executor call followed by a missing-annotation literal assignment: the later
-assignment can reach the executor on the next iteration. This proof requires a
-trusted SQL tag (or a literal string), a local mutable binding, and a direct
-identifier iterable. Awaited calls and member calls with proven executor
-ownership retain the same obligation. Bodies with resets, exits, or additional effects retain
-the existing unanalyzable policy.
+Maximum effort also recognizes a direct loop-carried literal reassignment in
+`for...of`, `for...in`, `while`, `do...while`, and simple `for` loops: an
+unconditional executor call followed by a missing-annotation literal assignment
+can reach that executor on the next iteration. Ordinary declarations, logging,
+plain blocks, and harmless conditional statements may appear before, between,
+or after the call and assignment. This proof requires a trusted SQL tag (or a
+literal string) and a local mutable binding. Iterable loops require a direct
+identifier iterable and a declared identifier iteration variable; repeating
+tests and updates must not call code or reset the SQL binding. Awaited calls and member
+calls with proven executor ownership retain the same obligation. This extra
+witness does not model resets before the read or after the final assignment,
+exits, conditional witnesses, unsupported loop headers, or literal-false loop
+tests; those shapes use the existing maximum-effort analysis.
 
 `effort: max` is the default and preserves helper, branch, builder, and imported
 value inference. At `effort: low`, a leading named literal at the executor call
