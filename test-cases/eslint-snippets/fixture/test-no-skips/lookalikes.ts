@@ -9,7 +9,7 @@ function local(test) { test.only(); }
 const context = { skip() {} };
 context.skip();
 describe('suite', ctx => { ctx.skip(); });
-check('named data', ({ skip }) => { skip(); });
+check.each([{ skip() {} }])('named data', ({ skip }) => { skip(); });
 check('unknown member', () => {});
 check.data.skip();
 check[dynamic].only();

@@ -154,23 +154,33 @@ function testBinding(node, context, visited = new Set()) {
   if (name === "each" || name === "for") return { ...binding, table: name };
   return name === "describe" ? { ...binding, name } : binding;
 }
-function isContextSkip(node, context) {
-  const object = unwrapExpression(node.object);
-  if (object.type !== "Identifier") return false;
-  const variable = resolveVariable(object, context);
-  for (const def of variable?.defs || []) {
-    const callback = def.node;
-    if (def.type !== "Parameter" || !isFunction(callback)) continue;
-    const call = callback.parent;
-    if (call.type !== "CallExpression" || !call.arguments.includes(callback)) continue;
-    const binding = testBinding(call.callee, context);
-    if (binding?.framework !== "vitest" || binding.name === "describe" || binding.table === "each")
-      continue;
-    // each supplies table values; for preserves its second parameter as TestContext.
-    const parameter = callback.params[binding.table === "for" ? 1 : 0];
-    if (parameter?.type === "Identifier" && resolveVariable(parameter, context) === variable)
-      return true;
-  }
-  return false;
+function contextParameter(callback, context) {
+  const call = isFunction(callback) ? callback.parent : null;
+  if (call?.type !== "CallExpression" || !call.arguments.includes(callback)) return null;
+  const binding = testBinding(call.callee, context);
+  if (binding?.framework !== "vitest" || binding.name === "describe" || binding.table === "each")
+    return null;
+  // each supplies table values; for preserves its second parameter as TestContext.
+  return callback.params[binding.table === "for" ? 1 : 0];
 }
-module.exports = { memberName, testBinding, isContextSkip };
+function hasNonInitializingWrite(variable) {
+  return variable.references.some((reference) => reference.isWrite() && !reference.init);
+}
+function isContextObject(node, context) {
+  node = unwrapExpression(node);
+  if (node?.type !== "Identifier") return false;
+  const variable = resolveVariable(node, context);
+  if (!variable || hasNonInitializingWrite(variable)) return false;
+  return variable.defs.some((def) => {
+    if (def.type !== "Parameter") return false;
+    const parameter = contextParameter(def.node, context);
+    return parameter?.type === "Identifier" && resolveVariable(parameter, context) === variable;
+  });
+}
+module.exports = {
+  memberName,
+  testBinding,
+  contextParameter,
+  hasNonInitializingWrite,
+  isContextObject,
+};
