@@ -55,6 +55,7 @@ struct GraphConfigOptions {
     trpc_routers: Vec<String>,
     terraform: crate::config::v2::schema::TerraformConfig,
     ci: crate::config::v2::schema::CiConfig,
+    assertion_owners: Vec<crate::config::v2::schema::RuleDef>,
 }
 
 fn graph_config_options(root: &Path) -> Option<GraphConfigOptions> {
@@ -141,6 +142,7 @@ fn graph_config_options_from_loaded_with_test_filter(
         trpc_routers: flatten_trpc_routers(v2_config),
         terraform: v2_config.infra.terraform.clone(),
         ci: v2_config.ci.clone(),
+        assertion_owners: v2_config.rule_applications(crate::codebase::rules::coverage_producer_assertion_owner::RULE_ID).into_iter().cloned().collect(),
     }
 }
 

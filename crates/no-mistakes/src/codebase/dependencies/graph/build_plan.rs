@@ -4,6 +4,8 @@ pub struct GraphBuildPlan {
     /// Build opt-in lexical call edges. This is excluded from `all()` so
     /// existing dependency output remains stable.
     pub calls: bool,
+    /// Explicit assertion ownership contracts, excluded from default graphs.
+    pub assertion_owners: bool,
     /// Retain import-selector mappings for effects consumers of call records.
     pub effect_selectors: bool,
     /// Build opt-in class `extends` edges and class declaration records.
@@ -42,6 +44,7 @@ pub struct GraphBuildPlan {
 impl GraphBuildPlan {
     pub fn all() -> Self {
         Self {
+            assertion_owners: false,
             calls: false,
             effect_selectors: false,
             extends: false,
@@ -100,7 +103,8 @@ impl GraphBuildPlan {
             return Self::all();
         };
         Self {
-            calls: allowed.contains(&EdgeKind::Call),
+            assertion_owners: allowed.contains(&EdgeKind::AssertionOwner),
+            calls: allowed.contains(&EdgeKind::Call) || allowed.contains(&EdgeKind::AssertionOwner),
             effect_selectors: false,
             extends: allowed.contains(&EdgeKind::Extends),
             // Resolved call and extends edges use the prepared import projection
@@ -158,6 +162,7 @@ impl GraphBuildPlan {
     }
 
     pub(crate) fn include(&mut self, other: Self) {
+        self.assertion_owners |= other.assertion_owners;
         self.calls |= other.calls;
         self.effect_selectors |= other.effect_selectors;
         self.extends |= other.extends;
@@ -185,45 +190,6 @@ impl GraphBuildPlan {
         self.language_frontends |= other.language_frontends;
         self.trpc |= other.trpc;
     }
-
-    pub fn with_symbols(mut self, symbols: bool) -> Self {
-        self.symbols = symbols;
-        self
-    }
-
-    /// Import-only plans can walk reachable files lazily. Any other domain flag
-    /// requires eager facts for the whole visible universe.
-    pub fn is_lazy_import_plan(self) -> bool {
-        let mut domains = self;
-        domains.imports = false;
-        domains.route_imports = false;
-        self.imports && domains == Self::default()
-    }
-
-    pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
-        TsFactPlan {
-            imports: self.imports || self.route_imports || self.workspace || self.assets,
-            function_calls: self.calls
-                || self.extends
-                || self.imports
-                || self.workspace
-                || self.assets
-                || self.symbols
-                || self.resources,
-            value_flow: self.calls,
-            resources: self.resources,
-            symbols: self.symbols || self.queues,
-            react: self.react,
-            route_refs: self.routes,
-            backend_routes: self.routes || self.http,
-            queue_usage: self.queues,
-            queue_factory: self.queues,
-            queue_project: self.queues,
-            http_calls: self.http,
-            process_spawns: self.process,
-            trpc_router: self.trpc,
-            trpc_calls: self.trpc,
-            ..TsFactPlan::default()
-        }
-    }
 }
+
+include!("build_plan_queries.rs");

@@ -339,3 +339,5 @@ matcher uncertainty in their existing `warnings` field; see
 `playwrightCheck()` includes an optional `warnings` array for the same uncertainty;
 the field is omitted when all configured matchers can be analyzed. Import
 `PlaywrightCoverageReport` to name the warning-bearing result.
+
+`check()` also runs configured [coverage-producer-assertion-owner](rules/coverage-producer-assertion-owner.md) applications, returning ordinary `rules` findings or `advisories`. Its exported option types are `CoverageProducerAssertionOwnerOptions`, `CoverageProducerFunction`, `CoverageAssertionImport`, and `CoverageAssertionOwnership`. The existing asynchronous `check` → `checkJson` binding remains the runtime entrypoint.

@@ -43,6 +43,8 @@ struct ImportCollector {
     /// binding target still runs only when the right-hand side has a key.
     annex_b_for_in_initializer: Option<(oxc_span::Span, bool, bool, usize)>,
     function_calls: Vec<FunctionCall>,
+    collect_call_eligibility: bool,
+    unreachable_call_ranges: Vec<UnreachableCallRange>,
     value_flow: ValueFlowFacts,
     callable_assignment_state: Option<Box<CallableAssignmentState>>,
     /// Cutoff for the current callable's body when its suffix is unreachable.

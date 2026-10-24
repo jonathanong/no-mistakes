@@ -306,3 +306,7 @@ For `postgres-require-query-annotation`, `options.sqlLiteralHelpers` accepts exa
 requires `schemaCatalogPath` and explicit executor selection (`importSpecifier`
 or `executorNames`; use `executorNames: []` for SQL files only).
 It supports `effort: low` for literal SQL and the common `unanalyzable` policy.
+
+### Coverage producer assertion ownership
+
+The opt-in [`coverage-producer-assertion-owner`](../rules/coverage-producer-assertion-owner.md) rule requires non-empty `producers` (exact `{file, symbol}` callables) and `assertions` (`{module, export}` bindings). Optional `ownership` entries tie an actual `via` dispatch to an explicit assertion-bearing owner. `maxDepth` defaults to 64 and `maxNodes` to 10000; both are positive, and truncation follows shared `unanalyzable` policy. No locations, assertion libraries, or process contracts are inferred from repository conventions.

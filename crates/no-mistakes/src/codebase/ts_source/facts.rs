@@ -1,6 +1,7 @@
 use crate::codebase::check_facts::PlaywrightSettingsKey;
 use crate::codebase::dependencies::extract::{
     ExportedBinding, ExtractedImport, FunctionCall, ImportedBinding, UnknownCall,
+    UnreachableCallRange,
 };
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
@@ -58,6 +59,8 @@ pub struct TsFactPlan {
     pub module_bindings: bool,
     /// Opt-in finite literal argument summaries for call-policy predicates.
     pub call_arguments: bool,
+    /// Opt-in lexical call-execution exclusions for assertion ownership.
+    pub call_eligibility: bool,
     pub imports: bool,
     pub function_calls: bool,
     /// Value provenance needed by canonical call and effect consumers.
@@ -107,6 +110,8 @@ pub struct TsFileFacts {
     pub star_reexport_specifiers: Vec<String>,
     pub per_item_calls: Vec<crate::codebase::dependencies::extract::PerItemCall>,
     pub function_calls: Vec<FunctionCall>,
+    /// Sorted, disjoint dead ranges per exact callable; syntactic graph output stays unchanged.
+    pub unreachable_call_ranges: Vec<UnreachableCallRange>,
     pub unknown_calls: Vec<UnknownCall>,
     pub call_sites: Vec<CallSiteFact>,
     pub resource_calls: Vec<ResourceCall>,

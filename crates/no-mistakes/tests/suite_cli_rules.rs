@@ -112,3 +112,6 @@ mod cli_check_playwright_runner_warnings;
 
 #[path = "cli_manifest_unanalyzable.rs"]
 mod cli_manifest_unanalyzable;
+
+#[path = "cli_coverage_assertion_owners.rs"]
+mod cli_coverage_assertion_owners;

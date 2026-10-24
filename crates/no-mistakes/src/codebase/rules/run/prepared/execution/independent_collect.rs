@@ -146,5 +146,24 @@ pub(super) fn graph_rules(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk>
     })?;
     let mut chunk = RuleChunk::from_findings(diagnostics.findings);
     chunk.advisories = diagnostics.advisories;
+    if req
+        .config
+        .rule_configured(crate::codebase::rules::coverage_producer_assertion_owner::RULE_ID)
+    {
+        let diagnostics = crate::codebase::rules::coverage_producer_assertion_owner::check(
+            req.root,
+            req.config,
+            req.dependency_graph
+                .expect("coverage ownership requires canonical graph"),
+            req.shared,
+            req.sources,
+        )?;
+        chunk
+            .suppression_sources
+            .extend(std::iter::repeat_n(None, diagnostics.findings.len()));
+        chunk.findings.extend(diagnostics.findings);
+        chunk.advisories.extend(diagnostics.advisories);
+    }
+
     Ok(chunk)
 }

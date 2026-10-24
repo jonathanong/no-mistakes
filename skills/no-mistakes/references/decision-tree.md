@@ -222,3 +222,5 @@ literal forms, and artifacts connect upload/download steps in the same run.
 Remote `uses`, `workflow_run`, dynamic shell syntax, and targets outside the
 tracked graph require a fallback such as `rg`. `ci` remains the separate
 legacy workflow-file-to-Rust-binary Cargo relationship.
+
+For configured coverage producers, enable `coverage-producer-assertion-owner` with exact function roots, assertion module/export identities, and genuine callback/process contracts; run `check --root <root> --format json`. Dynamic dispatch and traversal bounds follow `unanalyzable`, never assertion proof.

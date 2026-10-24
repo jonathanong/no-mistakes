@@ -110,3 +110,5 @@ position use line 1 rather than an inferred line.
 - [Workflow topology concurrency](workflow-topology-policy-concurrency.md)
 - [Changed-file checks](checks.md)
 - [Infrastructure (Terraform/OpenTofu)](infra.md)
+
+Configure opt-in [coverage producer assertion ownership](../rules/coverage-producer-assertion-owner.md) through rule options: exact producer functions, binding-aware assertion imports, explicit ownership contracts, and traversal bounds.

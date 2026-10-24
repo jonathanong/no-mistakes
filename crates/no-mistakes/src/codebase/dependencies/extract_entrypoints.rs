@@ -24,17 +24,25 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
 pub(crate) fn extract_import_facts_from_program_with_source_and_demands(
     program: &Program<'_>, source: &str, collect_resource_roots: bool, collect_per_item_calls: bool, collect_value_flow: bool,
 ) -> ImportFacts {
-    extract_import_facts_with_rhs_probe(program, source, collect_resource_roots, collect_per_item_calls, collect_value_flow,
+    extract_import_facts_with_rhs_probe(program, source, collect_resource_roots, collect_per_item_calls, collect_value_flow, false,
+        #[cfg(feature = "test-instrumentation")] None)
+}
+
+pub(crate) fn extract_import_facts_with_eligibility(
+    program: &Program<'_>, source: &str, collect_resource_roots: bool, collect_per_item_calls: bool, collect_value_flow: bool, collect_call_eligibility: bool,
+) -> ImportFacts {
+    extract_import_facts_with_rhs_probe(program, source, collect_resource_roots, collect_per_item_calls, collect_value_flow, collect_call_eligibility,
         #[cfg(feature = "test-instrumentation")] None)
 }
 
 fn extract_import_facts_with_rhs_probe(
-    program: &Program<'_>, source: &str, collect_resource_roots: bool, collect_per_item_calls: bool, collect_value_flow: bool,
+    program: &Program<'_>, source: &str, collect_resource_roots: bool, collect_per_item_calls: bool, collect_value_flow: bool, collect_call_eligibility: bool,
     #[cfg(feature = "test-instrumentation")] probe: Option<std::rc::Rc<std::cell::RefCell<extract_value_flow::inert_receiver_rhs::tests_support::Probe>>>,
 ) -> ImportFacts {
     let mut collector = ImportCollector {
         collect_per_item_calls,
         collect_value_flow,
+        collect_call_eligibility,
         line_starts: import_line_starts(source),
         collect_resource_roots,
         sloppy_script: program.source_type.is_javascript()
@@ -161,6 +169,7 @@ fn extract_import_facts_with_rhs_probe(
         star_reexport_specifiers: collector.star_reexport_specifiers,
         per_item_calls: collector.per_item_calls,
         function_calls: collector.function_calls,
+        unreachable_call_ranges: normalize_unreachable_call_ranges(collector.unreachable_call_ranges),
         unknown_calls: collector.unknown_calls,
         symbol_references: collector.symbol_references,
         exported_functions,
@@ -182,20 +191,4 @@ fn extract_import_facts_with_rhs_probe(
     }
 }
 
-#[cfg(test)]
-#[path = "extract_entrypoints_import_line_tests.rs"]
-mod import_line_tests;
-
-#[cfg(test)]
-#[path = "extract/tests/value_flow_sharing.rs"]
-mod value_flow_sharing;
-
-#[cfg(test)]
-#[path = "extract/tests/value_flow_once.rs"]
-mod value_flow_once;
-
-#[cfg(test)]
-#[path = "extract/tests/no_object_mutation_literal.rs"]
-mod no_object_mutation_literal;
-
-include!("extract_import_lines.rs");
+include!("extract_entrypoints_test_modules.rs");

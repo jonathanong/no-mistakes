@@ -25,7 +25,8 @@ fn allowed_requests_language_frontends(allowed: &HashSet<EdgeKind>) -> bool {
 }
 
 fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
-    plan.ci
+    plan.assertion_owners
+        || plan.ci
         || plan.workflow_topology
         || plan.routes
         || plan.queues
