@@ -11,7 +11,7 @@ function nullOperand(i) { let q = "/* named */ SELECT 1"; while (i !== null) { r
 function pureUpdate(i) { let q = "/* named */ SELECT 1"; for (; i; i + 1) { read(q); q = "SELECT 2"; } } // witness
 function harmlessBranch(xs, flag) { let q = "/* named */ SELECT 1"; for (const x of xs) { ; debugger; const label = x; if (flag) { console.log(label); } else console.log(x); read(q); q = "SELECT 2"; } } // witness
 function callsTwice(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { read(q); read(q); q = "SELECT 2"; } } // two witnesses
-// Unsupported headers and non-backedge statements must never create a witness.
+// Unsupported headers and bodies without a surviving backedge stay silent.
 function falseTest() { let q = "/* named */ SELECT 1"; while (false) { read(q); q = "SELECT 2"; } }
 function falseDo() { let q = "/* named */ SELECT 1"; do { read(q); q = "SELECT 2"; } while (false); }
 function literalTest() { let q = "/* named */ SELECT 1"; while ("yes") { read(q); q = "SELECT 2"; } }
@@ -24,7 +24,7 @@ function constantUnary() { let q = "/* named */ SELECT 1"; while (!true) { read(
 function badUpdate(i) { let q = "/* named */ SELECT 1"; for (; i; again()) { read(q); q = "SELECT 2"; } }
 function propertyUpdate(i) { let q = "/* named */ SELECT 1"; for (; i; object.i++) { read(q); q = "SELECT 2"; } }
 function assignmentBeforeRead(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { q = "SELECT 2"; read(q); } }
-function branchReturn(xs, flag) { let q = "/* named */ SELECT 1"; for (const x of xs) { if (flag) console.log(x); else return; read(q); q = "SELECT 2"; } }
+function branchReturn(xs, flag) { let q = "/* named */ SELECT 1"; for (const x of xs) { if (flag) console.log(x); else return; read(q); q = "SELECT 2"; } } // witness
 function conditionalAssignment(xs, flag) { let q = "/* named */ SELECT 1"; for (const x of xs) { read(q); if (flag) q = "SELECT 2"; } }
 function continueBackedge(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { read(q); q = "SELECT 2"; continue; q = "/* dead */ SELECT 3"; } } // witness
 function initializer(xs) { let q = "/* named */ SELECT 1"; for (const x of xs) { const rows = read(q); q = "SELECT 2"; console.log(rows); } } // witness

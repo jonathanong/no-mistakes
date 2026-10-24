@@ -3,7 +3,8 @@ use oxc_ast::ast::*;
 
 pub(super) enum Flow {
     Next,
-    Backedge(u32),
+    Backedge,
+    Exit,
     Unsupported,
 }
 
@@ -34,23 +35,15 @@ pub(super) fn sequence<'b, 'a>(
             );
             Flow::Next
         }
-        Statement::IfStatement(value) => {
-            // Conditional calls/assignments are not unconditional witnesses.
-            let mut ignored = Vec::new();
-            if matches!(sequence(&value.consequent, &mut ignored), Flow::Next)
-                && value
-                    .alternate
-                    .as_ref()
-                    .is_none_or(|value| matches!(sequence(value, &mut ignored), Flow::Next))
-            {
-                Flow::Next
-            } else {
-                Flow::Unsupported
-            }
+        Statement::IfStatement(_) => {
+            // Calls and literals in branches are not unconditional candidates.
+            // The path proof handles branch resets and exits independently.
+            Flow::Next
         }
-        Statement::ContinueStatement(value) if value.label.is_none() => {
-            Flow::Backedge(value.span.end)
-        }
+        Statement::ContinueStatement(value) if value.label.is_none() => Flow::Backedge,
+        Statement::BreakStatement(_)
+        | Statement::ReturnStatement(_)
+        | Statement::ThrowStatement(_) => Flow::Exit,
         Statement::EmptyStatement(_) | Statement::DebuggerStatement(_) => Flow::Next,
         _ => Flow::Unsupported,
     }

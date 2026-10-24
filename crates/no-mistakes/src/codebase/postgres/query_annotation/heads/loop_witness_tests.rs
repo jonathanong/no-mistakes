@@ -8,7 +8,7 @@ fn saved_loop_grammar_rejects_non_witnesses() {
         heads
             .loop_carried_missing
             .values()
-            .filter(|tag| tag.is_none())
+            .filter(|tags| tags.iter().any(Option::is_none))
             .count(),
         4
     );
