@@ -403,3 +403,6 @@ fn scan_covers_invalid_json_and_non_npm_dependabot() {
 }
 
 mod policy_checks;
+
+#[path = "tests/input_shapes.rs"]
+mod input_shapes;

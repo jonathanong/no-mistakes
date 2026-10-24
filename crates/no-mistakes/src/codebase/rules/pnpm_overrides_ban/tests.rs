@@ -242,3 +242,6 @@ fn key_line_helpers_cover_fallbacks_and_quoted_yaml() {
     );
     assert_eq!(json_quoted_key_after("{}", "\"x\"", 99), None);
 }
+
+#[path = "tests/include_inputs.rs"]
+mod include_inputs;

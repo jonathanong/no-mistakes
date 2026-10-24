@@ -3,3 +3,8 @@ include:
   ./pnpm/invalid-utf8.yaml: [overrides]
   ./pnpm/excluded.yaml: [overrides]
   ./pnpm/other.yaml: invalid-grant
+  # A selected non-mapping document and absent source are independent failures.
+  ./pnpm/non-mapping.yaml: [overrides]
+  ./pnpm/missing.yaml: [overrides]
+  ./pnpm/valid.yaml: [overrides]
+overrides: {}

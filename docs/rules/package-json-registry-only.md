@@ -20,7 +20,16 @@ A pnpm lockfile check reads `packages` in every YAML document, so a non-registry
 config dependency in the env document is reported along with project packages.
 A lockfile that cannot be parsed, or whose leading document is not an env
 lockfile, is reported instead of passing with no findings. A configured lockfile
-path that does not exist produces an `unanalyzable` diagnostic.
+path that does not exist produces an `unanalyzable` diagnostic. This deliberately
+changes the former silent-skip behavior: the default `report` policy now fails
+that check; use `unanalyzable: advise` or `ignore` to keep an absent configured
+lockfile from becoming a finding.
+
+A relative `lockfile` path is required under every selected project root.
+`options.scopes` narrows package manifests, while rule `projects`, `include`, and
+`exclude` determine which lockfile paths are selected. For one shared repository
+lockfile, use a repository-scoped rule; otherwise select only the projects that
+must provide that lockfile, or exclude intentional exceptions.
 
 ```yaml
 rules:

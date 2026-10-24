@@ -306,3 +306,6 @@ fn registry_explicit_lockfile_failures_use_the_same_policy() {
 }
 
 mod collision;
+
+#[path = "tests/included_inputs.rs"]
+mod included_inputs;

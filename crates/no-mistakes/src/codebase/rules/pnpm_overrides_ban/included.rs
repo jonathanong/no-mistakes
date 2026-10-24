@@ -68,18 +68,11 @@ pub(super) fn included_override_findings(
         if !allowed {
             continue;
         }
-        let text = match sources.read_path(&included) {
-            Ok(text) => text,
-            Err(error) => {
-                findings.push(super::super::manifest_analysis::unavailable(
-                    root,
-                    &included,
-                    super::RULE_ID,
-                    error,
-                ));
-                continue;
-            }
-        };
+        // The resolver emitted this exact Doc.path only after reading it through
+        // this SourceStore, whose request-owned OnceLock retains that success.
+        let text = sources
+            .read_path(&included)
+            .expect("resolved pnpm include retains its successful source read");
         findings.push(ClassifiedFinding::Definite(finding(
             root,
             &included,
