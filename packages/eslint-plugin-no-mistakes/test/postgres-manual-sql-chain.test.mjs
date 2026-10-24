@@ -40,6 +40,7 @@ describe("manual transaction primitive const SQL chains", () => {
   it("keeps uncertain values and cross-scope/dynamic reads unknown", () => {
     assert.deepEqual(check("controls.ts"), []);
     assert.deepEqual(check("dynamic.cjs"), []);
+    assert.deepEqual(check("rewrites.ts"), []);
   });
   it("preserves released one-hop behavior", () => {
     assert.deepEqual(
@@ -64,6 +65,7 @@ describe("manual transaction primitive const SQL chains", () => {
       "suppressed.ts",
       "file.ts",
       "dynamic.cjs",
+      "rewrites.ts",
     ]) {
       const result = spawnSync(
         process.execPath,
