@@ -129,23 +129,23 @@
         "percent": 0.0
       },
       "functions": {
-        "count": 4,
-        "covered": 4,
+        "count": 6,
+        "covered": 6,
         "percent": 100.0
       },
       "instantiations": {
-        "count": 4,
-        "covered": 4,
+        "count": 9,
+        "covered": 9,
         "percent": 100.0
       },
       "lines": {
-        "count": 56,
-        "covered": 56,
+        "count": 68,
+        "covered": 68,
         "percent": 100.0
       },
       "regions": {
-        "count": 110,
-        "covered": 110,
+        "count": 123,
+        "covered": 123,
         "notcovered": 0,
         "percent": 100.0
       }

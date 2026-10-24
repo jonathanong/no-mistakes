@@ -73,3 +73,23 @@ fn unbounded_returning_and_nonkey_joins_do_not_gain_a_row_cap() {
         [vec![], vec!["accounts".to_string()]]
     );
 }
+
+#[test]
+fn modifying_ctes_cannot_borrow_a_later_siblings_bounded_projection() {
+    let sql = fixture("declaration-time-scope.sql");
+    let facts = extract_sql_statement_facts(&sql);
+    assert!(!facts.parse_failed);
+    assert_eq!(facts.bounds.len(), 3);
+    let catalog = catalog();
+    let found: Vec<_> = facts
+        .bounds
+        .iter()
+        .map(|fact| {
+            super::super::offenders(fact, &catalog)
+                .into_iter()
+                .map(|offender| offender.table)
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    assert_eq!(found, [vec!["accounts".to_owned()], vec![], vec![]]);
+}

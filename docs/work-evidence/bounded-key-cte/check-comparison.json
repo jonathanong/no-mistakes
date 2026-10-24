@@ -30,6 +30,16 @@
     "afterSha256": "8fc64c2a02a6ecfc62640c01f673105bd1d7ae1cf4c82f3f0cbe127e1540b908"
   },
   {
+    "config": "cte-declaration-scope.yml",
+    "beforeExit": 1,
+    "afterExit": 1,
+    "beforeFindings": 1,
+    "afterFindings": 1,
+    "changed": false,
+    "beforeSha256": "a1c711bc064748748034891d49122ccfb152b98796ba0795a3ded11376308fd4",
+    "afterSha256": "a1c711bc064748748034891d49122ccfb152b98796ba0795a3ded11376308fd4"
+  },
+  {
     "config": "cte-returning-negative.yml",
     "beforeExit": 1,
     "afterExit": 1,

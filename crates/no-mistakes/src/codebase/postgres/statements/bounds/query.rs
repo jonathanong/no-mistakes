@@ -9,7 +9,7 @@ mod outputs;
 mod recursive_order;
 mod set;
 mod with_scope;
-pub(super) use with_scope::with_scope;
+pub(super) use with_scope::{with_scope, with_scope_visiting_writes};
 #[cfg(test)]
 mod tests;
 use blocking::BlockingStatuses;

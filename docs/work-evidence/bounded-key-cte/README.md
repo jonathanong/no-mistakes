@@ -30,19 +30,25 @@ unbounded. The fixture selects varying `source_id` values and returns varying
 physical target IDs, so a fixed comparison on the CTE's separate `id` label
 cannot accidentally make the control one distinct key.
 
-All other 17 saved rule configurations retain byte-identical stdout and stderr
+All other 18 saved rule configurations retain byte-identical stdout and stderr
 and the same exit status. [The comparison](check-comparison.json) records output
-hashes and statuses for all 21 configurations.
+hashes and statuses for all 22 configurations.
+
+Review regression: a later sibling named `orders` must not replace the physical
+`orders` source used by an earlier modifying CTE. The saved declaration-time
+scope case reports the unbounded `accounts` write, matching the original
+baseline; the first PR implementation incorrectly reported no findings. Native
+fact, rule, and standalone/aggregate Node tests protect that boundary.
 
 Validation:
 
 - Locked all-features workspace build includes libraries, binaries and integration
   suites through `.github/scripts/rust-validation.sh build`.
-- 3,617 PostgreSQL, rule, prepared-check and N-API project tests pass; two existing
+- 3,619 PostgreSQL, rule, prepared-check and N-API project tests pass; two existing
   ignored tests remain ignored. All 431 PostgreSQL CLI suite tests pass.
 - N-API standalone and aggregate checks have identical complete reports for all
-  four configurations above. The new TypeScript fixture passes `resolve-check`.
-- Focused LLVM coverage runs 399 bound-fact and rule tests, including all 224
+  five new configurations, including the declaration-time scope regression. The new TypeScript fixture passes `resolve-check`.
+- Focused LLVM coverage runs 401 bound-fact and rule tests, including all 225
   bounded-statements rule tests. Modified DML
   and CTE scope code and the extracted source-merge helper have 100% line coverage;
   the pin extractor has 98.53%. [The focused report](focused-coverage.json) retains

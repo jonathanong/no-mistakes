@@ -130,6 +130,9 @@ its output is used by a later statement.
 
 Nested `WITH` bindings inside the modifying CTE keep their lexical scope; a
 physical catalog relation with the same name cannot supply its key proof.
+Writes outside recursive WITH see only earlier sibling CTEs at their declaration point;
+a later sibling cannot replace a physical source with its bounded projection.
+Recursive bindings retain visibility of all siblings.
 
 The returned-row proof keeps only target pins independent of auxiliary
 `FROM`/`USING` items: caller-sized values and independent subquery pins.

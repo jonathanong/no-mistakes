@@ -13,6 +13,16 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope<'a>(
     outer: &'a Scope,
     positions: super::super::super::value::PlaceholderPositions<'_>,
 ) -> Cow<'a, Scope> {
+    with_scope_visiting_writes(query, outer, positions, |_, _| {})
+}
+
+/// Visit each ordinary modifying CTE while only its declaration-time bindings are visible.
+pub(in crate::codebase::postgres::statements::bounds) fn with_scope_visiting_writes<'a>(
+    query: &Query,
+    outer: &'a Scope,
+    positions: super::super::super::value::PlaceholderPositions<'_>,
+    mut visit: impl FnMut(&Query, &Scope),
+) -> Cow<'a, Scope> {
     let Some(with) = &query.with else {
         return Cow::Borrowed(outer);
     };
@@ -31,6 +41,9 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope<'a>(
     };
     for index in order {
         let cte = &with.cte_tables[index];
+        if !with.recursive && modifying_statement(&cte.query).is_some() {
+            visit(&cte.query, &scope);
+        }
         let name = ident_key(&cte.alias.name);
         let mut bound = if let Some(statement) = modifying_statement(&cte.query) {
             // A recursive result may grow independently of a bounded anchor. The ordinary DML

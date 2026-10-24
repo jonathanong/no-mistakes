@@ -64,6 +64,7 @@ fn prepared_postgres_boolean_keys_and_returning_ctes_match_standalone() {
         ("boolean-cte-embedded.yml", 1),
         ("cte-returning-positive.yml", 0),
         ("cte-returning-negative.yml", 8),
+        ("cte-declaration-scope.yml", 1),
     ] {
         let standalone = parse_json(
             crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(

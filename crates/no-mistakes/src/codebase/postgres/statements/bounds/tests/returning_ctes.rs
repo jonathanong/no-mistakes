@@ -117,3 +117,14 @@ fn repeated_returning_ctes_keep_the_shared_expansion_cap() {
     // Without compaction this two-reference chain expands exponentially, with no opaque marker.
     assert!(contains_opaque(&found.last().unwrap().query));
 }
+
+#[test]
+fn earlier_modifying_cte_facts_keep_the_physical_relation_before_a_later_alias() {
+    let found = super::super::facts(&fixture("declaration-time-scope.sql"));
+    assert_eq!(found.len(), 3);
+    let SqlPinSource::Query(source) = &found[0].query.items[0].pins[0].source else {
+        panic!("expected the earlier write's independent IN query");
+    };
+    assert!(matches!(&source.items[0].kind,
+        SqlBoundItemKind::Table(name) if name == "orders"));
+}
