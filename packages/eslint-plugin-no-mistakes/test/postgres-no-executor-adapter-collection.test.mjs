@@ -112,6 +112,39 @@ describe("postgres-no-executor-adapter collection keys", () => {
     assert.deepEqual(helperReports("helper-api.ts", partialParserServices), []);
   });
 
+  it("fails closed when a typed method has no declaration proof", () => {
+    const partialParserServices = {
+      meta: tsParser.meta,
+      parseForESLint(code, options) {
+        const parsed = tsParser.parseForESLint(code, options);
+        const program = parsed.services.program;
+        return {
+          ...parsed,
+          services: {
+            ...parsed.services,
+            program: {
+              ...program,
+              getTypeChecker() {
+                const checker = program.getTypeChecker();
+                return new Proxy(checker, {
+                  get(target, key) {
+                    if (key === "getSymbolAtLocation") return (node) => {
+                      const symbol = target.getSymbolAtLocation(node);
+                      return node.getText?.() === "get" && symbol ? { ...symbol, declarations: undefined } : symbol;
+                    };
+                    const value = target[key];
+                    return typeof value === "function" ? value.bind(target) : value;
+                  },
+                });
+              },
+            },
+          },
+        };
+      },
+    };
+    assert.deepEqual(helperReports("helper-api.ts", partialParserServices), []);
+  });
+
   it("allows only direct executor arguments in typed collection key slots", () => {
     assert.deepEqual(reports("executor-calls.ts"), [
       [8, "passed"],
@@ -131,6 +164,7 @@ describe("postgres-no-executor-adapter collection keys", () => {
       [71, "passed"],
       [74, "passed"],
       [75, "forward"],
+      [78, "passed"],
       [82, "passed"],
       [83, "passed"],
       [88, "passed"],
@@ -159,6 +193,9 @@ describe("postgres-no-executor-adapter collection keys", () => {
     assert.deepEqual(reports("mutated-define.ts"), [[5, "passed"]]);
     assert.deepEqual(reports("mutated-reflect.ts"), [[5, "passed"]]);
     assert.deepEqual(reports("mutated-prototype.ts"), [[7, "passed"]]);
+    assert.deepEqual(reports("mutated-define-properties.ts"), [[6, "passed"]]);
+    assert.deepEqual(reports("mutated-set-prototype.ts"), [[5, "passed"]]);
+    assert.deepEqual(reports("mutated-global-map-binding.ts"), [[5, "passed"]]);
   });
 
   it("rejects collection keys after opaque property mutation", () => {
@@ -174,6 +211,23 @@ describe("postgres-no-executor-adapter collection keys", () => {
   it("treats opaque mutation targets conservatively", () => {
     assert.deepEqual(reports("uncertain-target.ts"), [[8, "passed"]]);
     assert.deepEqual(reports("plain-property.ts"), []);
+  });
+
+  it("tracks collections passed directly or nested to opaque member calls", () => {
+    assert.deepEqual(reports("opaque-escapes.ts"), [
+      [7, "passed"],
+      [11, "passed"],
+      [21, "passed"],
+      [25, "passed"],
+      [29, "passed"],
+      [33, "passed"],
+      [37, "passed"],
+    ]);
+  });
+
+  it("invalidates collection proof after global constructor and delete mutations", () => {
+    assert.deepEqual(reports("mutated-global-ctor.ts"), [[6, "passed"]]);
+    assert.deepEqual(reports("deleted-prototype-method.ts"), [[5, "passed"]]);
   });
 
   it("requires typed builtin identity before allowing a key", () => {

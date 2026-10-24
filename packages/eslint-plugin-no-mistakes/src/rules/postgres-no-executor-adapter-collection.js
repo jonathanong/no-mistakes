@@ -2,6 +2,7 @@
 
 const { resolveVariable } = require("./postgres-query-text");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
+const ts = require("typescript");
 
 const COLLECTION_METHODS = new Map([
   ["Map", new Set(["get", "set", "has", "delete"])],
@@ -42,7 +43,7 @@ function builtinCollection(type, program) {
 function stableCollectionValue(receiver, collection, context, checker, services, seen) {
   const def = stableReceiverBinding(receiver, context);
   if (!def) return false;
-  if (def.type === "Parameter") return true;
+  if (def.type === "Parameter") return false;
   if (seen.has(def.node) || !def.node.init) return false;
   seen.add(def.node);
   if (def.node.init.type === "Identifier") {
@@ -99,11 +100,28 @@ function allowsCollectionKey(call, index, context, facts) {
     return false;
   const methodSymbol = checker.getSymbolAtLocation(tsMethod);
   const writes = sourceWrites(tsReceiver.getSourceFile(), checker, facts, services.program);
+  const receiverSymbol = checker.getSymbolAtLocation(tsReceiver);
+  const constructor = checker
+    .getSymbolsInScope(tsReceiver, ts.SymbolFlags.Value)
+    .find((symbol) =>
+      symbol.getName() === collection &&
+      symbol.declarations?.length &&
+      symbol.declarations.every((declaration) =>
+        builtinTypeDeclaration(declaration, collection, services.program),
+      ),
+    );
+  const constructorMutated = constructor && (
+    writes.symbols.has(constructor) ||
+    constructor.declarations.some((declaration) => writes.declarations.has(declaration))
+  );
   return (
     !writes.uncertainMutation &&
     !writes.eval &&
+    !constructorMutated &&
+    !writes.escapedSymbols.has(receiverSymbol) &&
+    methodSymbol?.declarations?.length &&
     !writes.symbols.has(methodSymbol) &&
-    !methodSymbol?.declarations?.some((declaration) => writes.declarations.has(declaration))
+    !methodSymbol.declarations.some((declaration) => writes.declarations.has(declaration))
   );
 }
 
