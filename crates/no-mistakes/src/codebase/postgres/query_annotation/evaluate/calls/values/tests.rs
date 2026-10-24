@@ -7,8 +7,11 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::fx::FxHashMap;
 use std::path::PathBuf;
 
-#[test]
-fn earlier_arguments_follow_later_builder_mutations_through_result_wrappers() {
+mod legacy;
+mod refresh;
+type Resolve = fn(&str, &std::path::Path) -> Option<PathBuf>;
+
+fn with_evaluator<T>(inspect: impl FnOnce(&mut Evaluator<'_, Resolve>) -> T) -> T {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
         "../../test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-call-argument-order/src/query.mts",
     );
@@ -32,7 +35,7 @@ fn earlier_arguments_follow_later_builder_mutations_through_result_wrappers() {
     )]);
     let mut evaluator = Evaluator {
         files: &files,
-        resolve: |_: &str, _: &std::path::Path| -> Option<PathBuf> { None },
+        resolve: (|_: &str, _: &std::path::Path| -> Option<PathBuf> { None }) as Resolve,
         events: Default::default(),
         scopes: Vec::new(),
         modules: Default::default(),
@@ -58,28 +61,36 @@ fn earlier_arguments_follow_later_builder_mutations_through_result_wrappers() {
         recreated_argument_slots: Default::default(),
         disconnected_argument_slots: Default::default(),
     };
-    let root = evaluator.module_environment(&path);
-    let values = &evaluator.scopes[root];
-    for name in ["directResult", "wrappedResult"] {
+    inspect(&mut evaluator)
+}
+
+#[test]
+fn earlier_arguments_follow_later_builder_mutations_through_result_wrappers() {
+    with_evaluator(|evaluator| {
+        let path = evaluator.files.keys().next().unwrap().clone();
+        let root = evaluator.module_environment(&path);
+        let values = &evaluator.scopes[root];
+        for name in ["directResult", "wrappedResult"] {
+            assert!(
+                matches!(values.get(name), Some(Value::Prefix(text, true, _)) if text == "SELECT 1"),
+                "{name}"
+            );
+        }
         assert!(
-            matches!(values.get(name), Some(Value::Prefix(text, true, _)) if text == "SELECT 1"),
-            "{name}"
+            matches!(values.get("promiseResult"), Some(Value::Promise(inner)) if matches!(inner.as_ref(), Value::Prefix(text, true, _) if text == "SELECT 1"))
         );
-    }
-    assert!(
-        matches!(values.get("promiseResult"), Some(Value::Promise(inner)) if matches!(inner.as_ref(), Value::Prefix(text, true, _) if text == "SELECT 1"))
-    );
-    assert!(
-        matches!(values.get("nestedResult"), Some(Value::Aggregate(parts)) if matches!(parts.first(), Some(Value::Prefix(text, true, _)) if text == "SELECT 1"))
-    );
-    assert!(
-        matches!(values.get("annotatedResult"), Some(Value::Prefix(text, true, _)) if text == "/* later annotation */ SELECT 1")
-    );
-    assert!(
-        matches!(values.get("immutableResult"), Some(Value::Prefix(text, true, None)) if text == "/* literal copy */ SELECT 1")
-    );
-    assert!(matches!(values.get("escapedResult"), Some(Value::Unknown)));
-    assert!(
-        matches!(values.get("nestedEscapedResult"), Some(Value::Aggregate(parts)) if matches!(parts.first(), Some(Value::Unknown)))
-    );
+        assert!(
+            matches!(values.get("nestedResult"), Some(Value::Aggregate(parts)) if matches!(parts.first(), Some(Value::Prefix(text, true, _)) if text == "SELECT 1"))
+        );
+        assert!(
+            matches!(values.get("annotatedResult"), Some(Value::Prefix(text, true, _)) if text == "/* later annotation */ SELECT 1")
+        );
+        assert!(
+            matches!(values.get("immutableResult"), Some(Value::Prefix(text, true, None)) if text == "/* literal copy */ SELECT 1")
+        );
+        assert!(matches!(values.get("escapedResult"), Some(Value::Unknown)));
+        assert!(
+            matches!(values.get("nestedEscapedResult"), Some(Value::Aggregate(parts)) if matches!(parts.first(), Some(Value::Unknown)))
+        );
+    });
 }

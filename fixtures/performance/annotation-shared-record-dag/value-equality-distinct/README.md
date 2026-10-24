@@ -36,6 +36,17 @@ copy-on-write snapshots, and check the actual saved source's query events and
 comparison counts. Mutable argument arrays are not followed by equality: their
 IDs retain the existing semantics.
 
+The production AST case also requires no-op argument refresh to preserve shared
+records. The frozen refresher takes mutable container views even without any
+builder updates or invalidations, expanding the saved 12-node DAG into 4,095
+distinct record containers. The guarded refresher keeps all 12 original node
+identities. When unrelated builder history exists, a borrowed reference summary
+also skips containers that cannot hold a builder identity. Updates and
+invalidations still match the frozen refresher's semantics, including through
+wrappers. With sharing preserved, the actual whole-SQL AST regression performs
+8,191 comparisons with legacy equality and 25 with paired equality; its exact
+joined state and annotated SQL events match.
+
 This fixture isolates repeated equality work. A work-count reduction and local
 microbenchmark do not establish a completed hosted check or a consumer speedup.
 Production measurements must use matched binaries, compiler flags, source trees,
