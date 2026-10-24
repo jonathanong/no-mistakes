@@ -61,6 +61,24 @@ pattern, or use a reasoned `allowFiles` entry.
 
 ## Options and defaults
 
+Each rule application requires exactly one project target. To check multiple
+projects, repeat the application with the same generic include and a different
+project; a single `projects: [web, admin]` application is a configuration error:
+
+```yaml
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    include: ["components/**/*.tsx"]
+    options:
+      includeAllReactNamedExports: true
+  - rule: require-storybook-stories
+    projects: [admin]
+    include: ["components/**/*.tsx"]
+    options:
+      includeAllReactNamedExports: true
+```
+
 `stories` selects candidate story files; an empty list matches no stories.
 `include` and `exclude` are rule-local component path globs and both default to
 empty lists. `includeAllReactNamedExports` and
