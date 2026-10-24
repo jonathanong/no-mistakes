@@ -75,3 +75,32 @@ fn required_source_config_errors_fail_before_reading_the_selected_files() {
     );
     assert_eq!(sources.physical_read_count(), 0);
 }
+
+#[test]
+fn boundary_parse_error_messages_use_repository_relative_paths() {
+    let root = saved();
+    let config = config(&root, "server-route-client-boundary");
+    let files = files(&root, &config);
+    let sources = super::super::super::source_store_for_files(&files);
+    let prepared = evaluate(&root, &config, &files, &sources, false).findings;
+    let standalone =
+        super::super::super::server_route_client_boundary::check(&root, &config).unwrap();
+    assert!(standalone
+        .iter()
+        .find(|finding| finding.file == "boundary/api/malformed.ts")
+        .unwrap()
+        .message
+        .contains("boundary/api/malformed.ts"));
+    for findings in [prepared, standalone] {
+        let finding = findings
+            .iter()
+            .find(|finding| finding.file == "boundary/api/malformed.ts")
+            .unwrap();
+        assert_eq!(finding.target.as_deref(), Some("unanalyzable"));
+        assert!(
+            !finding.message.contains(root.to_str().unwrap()),
+            "{}",
+            finding.message
+        );
+    }
+}

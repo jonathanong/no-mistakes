@@ -75,9 +75,13 @@ where
                             RULE_ID,
                             &read_error,
                         ),
-                        Ok(_) => super::super::source_access::unanalyzable_source(
-                            root, path, RULE_ID, error,
-                        ),
+                        Ok(_) => {
+                            let relative = relative_slash_path(root, path);
+                            let error = error.replace(path.to_string_lossy().as_ref(), &relative);
+                            super::super::source_access::unanalyzable_source(
+                                root, path, RULE_ID, error,
+                            )
+                        }
                     };
                     findings.push(finding);
                 }

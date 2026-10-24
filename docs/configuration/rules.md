@@ -159,6 +159,15 @@ boundary analysis also route their parse failures through that policy;
 structured-config parse errors remain definite findings. See each rule's
 Analysis section for its input scope and parsing requirements.
 
+Upgrade note: these nine file rules now fail `check` by default for in-scope
+unreadable inputs and required parse failures (`unanalyzable: report`).
+Previously, those inputs could silently pass. Fix or exclude the inputs, or
+set `options.unanalyzable: advise` or `ignore` to restore the previous successful
+exit status for uncertainty alone. Independent definite findings remain
+blocking under every policy. Rust syntax failures are reported only when
+`rust-no-inline-allows` sees the substring `allow`, or `rust-no-inline-tests`
+sees both substrings `cfg` and `test`; otherwise those AST checks skip parsing.
+
 Some rules, including [`forbidden-calls`](../rules/forbidden-calls.md), may be
 applied repeatedly. Give overlapping applications names so findings identify the
 policy boundary that produced them.

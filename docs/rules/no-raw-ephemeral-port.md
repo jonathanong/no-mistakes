@@ -79,6 +79,12 @@ Put the binder implementation itself in `allow`.
 
 ### Unanalyzable inputs
 
+Upgrade note: in-scope files that cannot be read as UTF-8 now fail `check`
+under the default `unanalyzable: report` instead of silently passing. Fix or exclude those inputs, or set
+`options.unanalyzable: advise` or `ignore` to restore the previous successful
+exit status for uncertainty alone. Independent definite findings still fail
+under every policy.
+
 Selected files that cannot be read as UTF-8 produce an `unanalyzable`
 diagnostic instead of silently passing. Restore read access or repair the
 encoding so the rule can verify the file. The shared `options.unanalyzable`
