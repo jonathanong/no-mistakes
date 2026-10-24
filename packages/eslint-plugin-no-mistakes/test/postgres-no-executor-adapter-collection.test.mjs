@@ -196,7 +196,12 @@ describe("postgres-no-executor-adapter collection keys", () => {
     assert.deepEqual(reports("mutated-define.ts"), [[5, "passed"]]);
     assert.deepEqual(reports("mutated-reflect.ts"), [[5, "passed"]]);
     assert.deepEqual(reports("mutated-prototype.ts"), [[7, "passed"]]);
-    assert.deepEqual(reports("mutated-define-properties.ts"), [[6, "passed"]]);
+    assert.deepEqual(reports("mutated-define-properties.ts"), [
+      [6, "passed"],
+      [12, "passed"],
+      [17, "passed"],
+      [21, "passed"],
+    ]);
     assert.deepEqual(reports("mutated-set-prototype.ts"), [[5, "passed"]]);
     assert.deepEqual(reports("mutated-global-map-binding.ts"), [[5, "passed"]]);
   });
@@ -225,6 +230,7 @@ describe("postgres-no-executor-adapter collection keys", () => {
       [29, "passed"],
       [33, "passed"],
       [37, "passed"],
+      [43, "passed"],
     ]);
   });
 

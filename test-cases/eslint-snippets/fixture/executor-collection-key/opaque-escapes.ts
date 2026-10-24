@@ -35,3 +35,9 @@ spread.get(query);
 const conditional = new Map<QueryExecutor, unknown>();
 mutator.touch(true ? conditional : conditional);
 conditional.get(query);
+
+// Escaping the alias also exposes its initializer and original binding.
+const escapedOriginal = new Map<QueryExecutor, unknown>();
+const escapedAlias = escapedOriginal;
+mutator.touch(escapedAlias);
+escapedOriginal.get(query);
