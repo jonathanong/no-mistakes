@@ -59,3 +59,91 @@ test(
     }
   },
 );
+
+test(
+  "compiled checks account for suppressions on unreadable script inputs when requested",
+  { skip: !addon?.endsWith(".node") },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/github-actions-script-expressions/fixture/unreadable-input",
+    );
+    const cli =
+      process.env.NO_MISTAKES_TEST_CLI_PATH ||
+      join(dirname(addon), process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes");
+    const expectedDirectives = [
+      { file: ".github/workflows/suppressed-file.yml", kind: "file", line: 1 },
+      { file: ".github/workflows/suppressed-line.yml", kind: "line", line: 1 },
+      { file: ".github/workflows/suppressed-next.yml", kind: "nextLine", line: 1 },
+    ];
+
+    for (const [policy, domain] of [
+      ["report", "filesystem"],
+      ["advise", "advisories"],
+      ["ignore", undefined],
+    ]) {
+      const options = { root, config: join(root, `suppressed-${policy}.yml`) };
+      const baseline = await cjs.check(options);
+      assert.deepEqual(baseline.suppressed ?? [], []);
+      assert.deepEqual(baseline.rules, []);
+      assert.deepEqual(
+        baseline.advisories.filter((row) => row.rule === "github-actions-script-expressions"),
+        [],
+      );
+
+      const requested = { ...options, includeSuppressed: true };
+      const pending = cjs.check(requested);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.check(requested), report);
+      assert.deepEqual(report.rules, []);
+      assert.deepEqual(
+        report.advisories.filter((row) => row.rule === "github-actions-script-expressions"),
+        [],
+      );
+      assert.deepEqual(
+        report.suppressed.map(({ domain: actualDomain, rule, file, sourceFile, directive }) => ({
+          domain: actualDomain,
+          rule,
+          file,
+          sourceFile,
+          directive,
+        })),
+        domain
+          ? expectedDirectives.map(({ file, kind, line }) => ({
+              domain,
+              rule: "github-actions-script-expressions",
+              file,
+              sourceFile: file,
+              directive: { kind, line },
+            }))
+          : [],
+      );
+
+      const request = { ...options, reports: [{ type: "check", includeSuppressed: true }] };
+      const batch = await cjs.analyzeProject(request);
+      assert.deepEqual(batch.reports[0].result, report);
+      assert.deepEqual(await esm.analyzeProject(request), batch);
+
+      const child = spawnSync(
+        cli,
+        [
+          "check",
+          "--root",
+          root,
+          "--config",
+          options.config,
+          "--format",
+          "json",
+          "--include-suppressed",
+        ],
+        { encoding: "utf8" },
+      );
+      assert.equal(child.error, undefined);
+      assert.equal(child.status, 0, child.stderr);
+      assert.deepEqual(JSON.parse(child.stdout), report);
+    }
+  },
+);
