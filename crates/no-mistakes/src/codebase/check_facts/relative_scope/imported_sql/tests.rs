@@ -109,16 +109,19 @@ fn module_const_sql_inlines_literals_and_leaves_computed_dynamic() {
         assert!(sql.contains("orders"), "{call:?}");
         analyzed.push(sql);
     }
-    assert_eq!(unknown, 13, "{calls:#?}");
+    assert_eq!(unknown, 14, "{calls:#?}");
     assert!(analyzed
         .iter()
         .any(|sql| sql == "SELECT id FROM orders WHERE account_id = $1"));
     assert!(analyzed
         .iter()
         .any(|sql| sql == "SELECT id, account_id FROM orders WHERE account_id = $1"));
-    assert!(analyzed
-        .iter()
-        .any(|sql| sql == "SELECT id FROM orders WHERE true AND account_id = $1"));
+    assert!(
+        calls
+            .iter()
+            .any(|call| call.line == 69 && call.is_unanalyzable()),
+        "an exported const builder is still a mutable object"
+    );
     assert!(analyzed
         .iter()
         .any(|sql| sql == "SELECT id FROM orders WHERE true"));

@@ -95,9 +95,8 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
         from: &Path,
         site: &ImportedSite,
     ) -> Option<Vec<RecoveredSql>> {
-        if let Some(allow_fragment) = site.constant {
-            return super::constants::recovered(self, options, from, site, allow_fragment)
-                .map(|text| vec![text]);
+        if site.constant.is_some() {
+            return super::constants::recovered(self, options, from, site).map(|text| vec![text]);
         }
         if let Some(text) = self.summary_text(options, from, site) {
             return Some(vec![text]);
