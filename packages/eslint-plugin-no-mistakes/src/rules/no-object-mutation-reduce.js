@@ -1,6 +1,7 @@
 "use strict";
 
 const { methodName, unwrap } = require("./no-object-mutation-syntax");
+const { ARRAY_METHODS } = require("./no-object-mutation-ast");
 
 // Limit the exemption to an inline, synchronous accumulator builder. Every
 // callback exit must preserve the same accumulator for the next iteration.
@@ -48,6 +49,7 @@ function preservesAccumulator(node, name, nested = false) {
     const target = node.left || node.argument || node.id;
     if (target.type !== "MemberExpression" && mentions(target, name)) return false;
   }
+  if (node.type === "Identifier" && node.name === name && !directAccumulatorUse(node)) return false;
   if (node.type === "CatchClause" && mentions(node.param, name)) return false;
   for (const [key, value] of Object.entries(node)) {
     if (["parent", "loc", "range", "tokens"].includes(key)) continue;
@@ -57,6 +59,23 @@ function preservesAccumulator(node, name, nested = false) {
       return false;
   }
   return true;
+}
+
+// Only direct container writes are exempt. Member reads and aliases can carry
+// shared nested provenance across arbitrarily many iterations, so abstain.
+function directAccumulatorUse(node) {
+  const parent = node.parent;
+  if (parent.type === "ReturnStatement") return true;
+  if (parent.type === "CallExpression") return parent.arguments.includes(node);
+  if (parent.type !== "MemberExpression") return false;
+  if (parent.property === node && !parent.computed) return true;
+  if (parent.object !== node) return false;
+  const use = parent.parent;
+  if (use.type === "AssignmentExpression" && use.left === parent) return true;
+  if (use.type === "UpdateExpression" && use.argument === parent) return true;
+  return (
+    use.type === "CallExpression" && use.callee === parent && ARRAY_METHODS.has(methodName(parent))
+  );
 }
 
 function mentions(node, name) {

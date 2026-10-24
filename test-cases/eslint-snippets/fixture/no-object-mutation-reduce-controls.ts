@@ -84,4 +84,30 @@ export function controls(rows: any[], shared: any, publish: any) {
   class Rows { reduce(callback, seed) { return callback(shared); } }
   const customRows = new Rows();
   customRows.reduce((acc) => { acc.value = 1; return acc; }, {}); // report: class method
+  // A member can become shared after one iteration without an escape.
+  rows.reduce((acc) => {
+    acc.child.value = 1; // report: prior iteration replaced child with shared
+    acc.child = shared; // report: nested callback is not exempt
+    return acc;
+  }, { child: {} });
+  rows.reduce((acc) => {
+    acc.child.nested = shared; // report: nested field updates retain ordinary reporting
+    acc.child.nested.value = 1; // report: nested shared value
+    return acc;
+  }, { child: {} });
+  rows.reduce((acc) => {
+    acc.a.value = 1; // report: shared provenance reaches a on the third iteration
+    acc.a = acc.b; // report: accumulator member reads are not exempt
+    acc.b = shared; // report: nested callback is not exempt
+    return acc;
+  }, { a: {}, b: {} });
+  rows.reduce((acc) => {
+    publish(() => acc);
+    acc.value = 1; // report: a returned captured accumulator escapes
+    return acc;
+  }, {});
+  rows.reduce((acc) => {
+    acc[acc] = 1; // report: accumulator member reads used as keys stay conservative
+    return acc;
+  }, {});
 }

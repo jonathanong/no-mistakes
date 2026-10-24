@@ -9,7 +9,7 @@ export function builders(rows: any[], shared: any, publish: any) {
   }, []);
   rows.reduce((acc, row) => {
     const alias = acc;
-    alias[row.key] = row;
+    alias[row.key] = row; // report: aliases keep ordinary parameter reporting
     if (row.skip) return acc;
     return acc;
   }, {} as Record<string, any>);
@@ -41,10 +41,25 @@ export function builders(rows: any[], shared: any, publish: any) {
   }, { child: {} });
   rows.reduce((acc) => {
     acc.child.value = 1; // report: child created inside the callback escaped earlier
-    acc.child = {};
+    acc.child = {}; // report: nested reads keep the callback conservative
     publish(acc.child);
     return acc;
   }, { child: {} });
+  rows.reduce((acc, row) => {
+    acc[row.acc] = row;
+    if (row.skip) return acc;
+    return acc;
+  }, {} as Record<string, any>);
+  rows.reduce((acc) => {
+    acc.count++;
+    return acc;
+  }, { count: 0 });
+  rows.reduce((acc) => {
+    let other;
+    [other] = [shared];
+    acc.value = other;
+    return acc;
+  }, {});
   const localRows = [1];
   localRows.reduce((acc, value) => {
     acc.push(value);

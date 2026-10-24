@@ -100,7 +100,8 @@ only when it is falsy, and a falsy value is not the mutated object.
 
 An inline synchronous `reduce` or `reduceRight` callback may build its first
 parameter when the initial value is an object or array literal and every
-callback return is that parameter. The block must end with `return acc`.
+callback return is that parameter. Only direct container writes and array mutator
+calls on that parameter are exempt; the block must end with `return acc`.
 TypeScript assertions around the literal are supported:
 
 ```ts
@@ -115,9 +116,11 @@ const reversed = rows.reduceRight((acc, row) => {
 }, []);
 ```
 
-Identifier seeds, omitted seeds, async callbacks, accumulator rebinding, and
-callbacks returning another value retain ordinary parameter reporting. Other
-callback parameters and shared values nested inside a literal remain shared.
+Identifier seeds, omitted seeds, async callbacks, accumulator rebinding, aliases,
+member reads, nested writes, and callbacks returning another value retain ordinary
+parameter reporting. Build a complete nested value locally, then assign it through
+a direct root write such as `acc[key] = value`. Other callback parameters and
+shared values nested inside a literal remain shared.
 Passing the accumulator to an unknown call or publishing a closure that captures
 it escapes it; subsequent writes, including writes in later iterations, are
 reported. Publishing a nested member also escapes that member. The result keeps
