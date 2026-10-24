@@ -115,3 +115,6 @@ mod metadata_tests;
 
 #[cfg(test)]
 mod runtime_span_tests;
+
+#[cfg(test)]
+mod escape_site_tests;

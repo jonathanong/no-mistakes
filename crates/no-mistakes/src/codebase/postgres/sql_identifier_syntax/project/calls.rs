@@ -167,7 +167,7 @@ fn append_escapes(
             }
             calls.push(SqlCall {
                 span: at,
-                line: crate::codebase::ts_source::byte_offset_to_line(source, at.0 as usize),
+                line: syntax.metadata.line(at, source),
                 input: Input::Unknown,
             });
         }
@@ -181,7 +181,7 @@ fn append_escapes(
         {
             calls.push(SqlCall {
                 span: *at,
-                line: crate::codebase::ts_source::byte_offset_to_line(source, at.0 as usize),
+                line: syntax.metadata.line(at, source),
                 input: Input::Unknown,
             });
         }

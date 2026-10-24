@@ -9,7 +9,7 @@ fn append_runtime(
         .filter(|at| !syntax.metadata.belongs_to(at, direct, &syntax.template_binds))
         .map(|at| SqlCall {
             span: *at,
-            line: crate::codebase::ts_source::byte_offset_to_line(source, at.0 as usize),
+            line: syntax.metadata.line(at, source),
             input: Input::Unknown,
         }));
 }
