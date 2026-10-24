@@ -2,6 +2,7 @@ fn load_tsconfig_inner(
     path: &Path,
     visited: &mut std::collections::HashSet<PathBuf>,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
+    locate_paths: bool,
 ) -> Result<TsConfigFound> {
     let canonical = path
         .canonicalize()
@@ -37,36 +38,7 @@ fn load_tsconfig_inner(
         .and_then(jsonc_parser::ast::Value::as_object)
         .and_then(|root| last_object_property(root, "compilerOptions"))
         .and_then(|compiler_options| last_object_property(compiler_options, "paths"))
-        .map(|paths| {
-            let mut mappings: Vec<(String, Vec<String>)> = Vec::new();
-            let mut positions: std::collections::HashMap<String, usize> =
-                std::collections::HashMap::new();
-            for property in &paths.properties {
-                let replacements = property
-                    .value
-                    .as_array()
-                    .map(|array| {
-                        array
-                            .elements
-                            .iter()
-                            .filter_map(|value| {
-                                value
-                                    .as_string_lit()
-                                    .map(|literal| literal.value.to_string())
-                            })
-                            .collect()
-                    })
-                    .unwrap_or_default();
-                let pattern = property.name.as_str().to_string();
-                if let Some(index) = positions.get(&pattern).copied() {
-                    mappings[index].1 = replacements;
-                } else {
-                    positions.insert(pattern.clone(), mappings.len());
-                    mappings.push((pattern, replacements));
-                }
-            }
-            mappings
-        });
+        .map(|paths| collect_path_mappings(paths, &content, path, locate_paths));
     let v = parsed
         .value
         .map(serde_json::Value::from)
@@ -132,7 +104,7 @@ fn load_tsconfig_inner(
             } else {
                 base_path
             };
-            let base = load_tsconfig_inner(&base_path, visited, sources)
+            let base = load_tsconfig_inner(&base_path, visited, sources, locate_paths)
                 .context(format!("loading extended tsconfig {}", base_path.display()))?;
             if let Some(base_url) = &base.inner.base_url {
                 inherited_base_url = Some(base_url.clone());
@@ -147,7 +119,7 @@ fn load_tsconfig_inner(
 
     // Child defines its own paths (even if empty). An explicit `paths: {}`
     // overrides any paths from the extends chain, but not an inherited baseUrl.
-    if let Some(paths) = own_paths {
+    if let Some((paths, locations)) = own_paths {
         let paths_dir = dir.clone();
         visited.remove(&canonical);
         return Ok(TsConfigFound {
@@ -158,6 +130,7 @@ fn load_tsconfig_inner(
                 base_url,
             },
             paths_found: true,
+            locations,
         });
     }
 
@@ -171,6 +144,7 @@ fn load_tsconfig_inner(
                 base_url,
             },
             paths_found: true,
+            locations: base.locations,
         });
     }
 
@@ -183,5 +157,6 @@ fn load_tsconfig_inner(
             base_url,
         },
         paths_found: false,
+        locations: None,
     })
 }

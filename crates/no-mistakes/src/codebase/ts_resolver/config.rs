@@ -32,7 +32,7 @@ fn load_tsconfig_with_sources(
     path: &Path,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<TsConfig> {
-    Ok(load_tsconfig_inner(path, &mut std::collections::HashSet::new(), sources)?.inner)
+    Ok(load_tsconfig_inner(path, &mut std::collections::HashSet::new(), sources, false)?.inner)
 }
 
 /// Internal result that carries whether `paths` was *explicitly defined* (even if empty)
@@ -44,6 +44,20 @@ struct TsConfigFound {
     /// `true` when `compilerOptions.paths` was present in the JSON of this config
     /// or of some config it inherited from. `false` means "not defined anywhere".
     paths_found: bool,
+    locations: Option<TsConfigPathLocations>,
 }
 
 include!("config_load.rs");
+
+/// Diagnostic metadata is opt-in so ordinary resolver loads retain no locations.
+pub(crate) struct TsConfigPathLocations {
+    pub(crate) file: PathBuf,
+    pub(crate) lines: std::collections::BTreeMap<String, usize>,
+}
+
+pub(crate) fn load_tsconfig_with_path_locations(
+    path: &Path,
+) -> Result<(TsConfig, Option<TsConfigPathLocations>)> {
+    let found = load_tsconfig_inner(path, &mut HashSet::new(), None, true)?;
+    Ok((found.inner, found.locations))
+}

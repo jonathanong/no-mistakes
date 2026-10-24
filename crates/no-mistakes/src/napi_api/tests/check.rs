@@ -1,6 +1,9 @@
 use super::*;
 use serde_json::json;
 
+#[path = "check_tsconfig_alias_locations.rs"]
+mod check_tsconfig_alias_locations;
+
 #[path = "check_suppression.rs"]
 mod check_suppression;
 #[path = "check_suppression_audit.rs"]

@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@agents/email": [
+        "backend/modules/email/index.ts"
+      ],
+      "@agents/sms": [
+        "backend/agents/sms-other.ts"
+      ],
+      "@agents/nested": [
+        "backend/agents/nested/other.ts"
+      ],
+      "@agents/empty": [
+        "backend/agents/empty."
+      ],
+      "@agents/jobs/*": [
+        "backend/agents/jobs/index.ts",
+        "backend/agents/jobs/*/index.ts",
+        "backend/agents/jobs/*.ts/child"
+      ],
+      "@wrong/item": [
+        "backend/agents/item.ts"
+      ],
+      "@agents/slash": [
+        "backend/agents/slash.\\\\ts"
+      ]
+    }
+  }
+}
