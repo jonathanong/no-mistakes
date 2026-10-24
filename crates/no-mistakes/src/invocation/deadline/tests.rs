@@ -3,6 +3,8 @@ use rayon::prelude::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 
+mod worker_process;
+
 struct ReleasePhase<'a>(&'a AtomicUsize);
 
 impl Drop for ReleasePhase<'_> {
@@ -175,6 +177,16 @@ fn expired_command_keeps_its_phase_when_the_invocation_limit_is_live() {
 
 #[test]
 fn parallel_workers_observe_expiry_and_not_a_stale_deadline() {
+    // The process-wide owner=None deadline otherwise reaches unrelated tests running in parallel.
+    worker_process::run_isolated(
+        module_path!(),
+        "parallel_workers_observe_expiry_and_not_a_stale_deadline",
+        "NO_MISTAKES_DEADLINE_PARALLEL_WORKERS_SUBPROCESS",
+        parallel_workers_observe_expiry_and_not_a_stale_deadline_body,
+    );
+}
+
+fn parallel_workers_observe_expiry_and_not_a_stale_deadline_body() {
     let _serial = super::super::deadline_test_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
