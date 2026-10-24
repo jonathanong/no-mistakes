@@ -46,6 +46,9 @@ pub(super) fn extract_set_with_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: Option<&dyn TsFactLookup>,
 ) -> Result<ExtractedSet> {
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("finite_set.extractions", 1);
+    }
     let mut extracted = if spec.kind == path::PATH_REGEX_CAPTURE {
         extract_path_regex_set(root, spec, files, target_roots)?
     } else {
