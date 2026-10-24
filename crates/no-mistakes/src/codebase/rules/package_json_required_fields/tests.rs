@@ -113,12 +113,49 @@ fn include_filter_still_sees_companion_files() {
 }
 
 #[test]
-fn invalid_json_is_skipped() {
-    let dir = tempfile::tempdir().unwrap();
-    let pkg = dir.path().join("package.json");
-    std::fs::write(&pkg, "{").unwrap();
-    let findings = check_with_files(dir.path(), &config(), &[pkg]).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
+fn malformed_and_unreadable_manifests_are_reported() {
+    let root = fixture("unanalyzable");
+    let files = [
+        root.join("packages/broken/package.json"),
+        root.join("packages/invalid-utf8/package.json"),
+        root.join("packages/missing/package.json"),
+    ];
+    let findings = check_with_files(&root, &config(), &files).unwrap();
+    assert_eq!(findings.len(), 3, "{findings:?}");
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.target.as_deref() == Some("unanalyzable")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn empty_options_do_not_request_manifest_analysis() {
+    let root = fixture("unanalyzable");
+    let mut config = config();
+    config.rules[0].options = serde_yaml::Value::Null;
+    let files = [root.join("packages/broken/package.json")];
+    assert!(check_with_files(&root, &config, &files).unwrap().is_empty());
+}
+
+#[test]
+fn include_excludes_unselected_unanalyzable_manifests() {
+    let root = fixture("unanalyzable");
+    let mut config = config();
+    config.rules[0].include = vec!["packages/valid/package.json".into()];
+    let files = [
+        root.join("packages/broken/package.json"),
+        root.join("packages/valid/package.json"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert!(!findings.is_empty(), "{findings:?}");
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.target.as_deref() != Some("unanalyzable")),
+        "{findings:?}"
+    );
 }
 
 #[test]

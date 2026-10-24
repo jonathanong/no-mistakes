@@ -22,6 +22,18 @@ pub(crate) fn selected_rule_files_with_roots(
     rule: &RuleDef,
     all_files: &[PathBuf],
 ) -> Result<(Vec<PathBuf>, Vec<PathBuf>)> {
+    let (files, target_roots) = rule_scope_files_with_roots(root, config, rule, all_files);
+    let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+    Ok((files, target_roots))
+}
+
+/// Preserve companion-file visibility before an application's include/exclude filter.
+pub(crate) fn rule_scope_files_with_roots(
+    root: &Path,
+    config: &NoMistakesConfig,
+    rule: &RuleDef,
+    all_files: &[PathBuf],
+) -> (Vec<PathBuf>, Vec<PathBuf>) {
     let target_roots = super::target_roots(root, config, rule);
     let skip = super::skip_dir_set(config);
     let files: Vec<PathBuf> = all_files
@@ -29,8 +41,7 @@ pub(crate) fn selected_rule_files_with_roots(
         .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
         .cloned()
         .collect();
-    let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-    Ok((files, target_roots))
+    (files, target_roots)
 }
 
 pub(crate) fn selected_rule_files_matching(

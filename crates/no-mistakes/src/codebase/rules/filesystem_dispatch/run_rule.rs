@@ -77,7 +77,13 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
             root, config, files, sources, snapshot,
         ),
         PACKAGE_JSON_REQUIRED_FIELDS => {
-            package_json_required_fields::check_with_files_and_sources(root, config, files, sources)
+            package_json_required_fields::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
         }
         PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE => {
             package_json_nested_workspace_coverage::check_with_files_and_sources(

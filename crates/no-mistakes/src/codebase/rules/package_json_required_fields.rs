@@ -21,36 +21,49 @@ pub(crate) struct Options {
     pub(crate) main_when_file_exists: Option<String>,
 }
 
-pub(crate) fn check_with_files(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
-    let sources = super::source_store_for_files(all_files);
-    check_with_files_and_sources(root, config, all_files, &sources)
-}
+super::borrowed_source_rule_entrypoints!();
 
-pub(crate) fn check_with_files_and_sources(
+pub(crate) fn check_with_files_sources_and_deferred_suppression(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+    diagnostics_with_files_and_sources(root, config, all_files, sources, defer_suppression)
+        .map(|diagnostics| diagnostics.findings)
+}
+
+#[doc(hidden)]
+pub fn diagnostics_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+    let mut diagnostics = super::analysis_policy::AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
-        let target_roots = super::target_roots(root, config, rule);
-        let skip = super::skip_dir_set(config);
-        let in_scope: Vec<PathBuf> = all_files
-            .iter()
-            .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
-            .cloned()
-            .collect();
+        let (in_scope, _) =
+            super::selected_files::rule_scope_files_with_roots(root, config, rule, all_files);
         let manifests = super::path_filter::filter_rule_files(root, config, rule, &in_scope)?;
-        findings.extend(scan::scan(root, &opts, &manifests, &in_scope, sources));
+        let policy = config.effective_rule_analysis(rule)?.unanalyzable;
+        let mut findings = scan::scan(root, &opts, &manifests, &in_scope, sources);
+        if !defer_suppression {
+            super::suppress_rule_findings_with_sources(root, &mut findings, sources);
+        }
+        for finding in findings {
+            if finding.target.as_deref() == Some("unanalyzable") {
+                diagnostics.unanalyzable(policy, finding);
+            } else {
+                diagnostics.findings.push(finding);
+            }
+        }
     }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::sort_findings(&mut diagnostics.findings);
+    super::sort_findings(&mut diagnostics.advisories);
+    Ok(diagnostics)
 }
 
 fn pkg_rel(root: &Path, path: &Path) -> String {

@@ -11,14 +11,30 @@ pub(super) fn scan(
     sources: &SourceStore,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
+    if opts.private.is_none()
+        && opts.type_value.is_none()
+        && opts.license.is_none()
+        && !opts.require_scoped_name
+        && opts.main_when_file_exists.is_none()
+    {
+        return findings;
+    }
     for path in manifests {
         if path.file_name().and_then(|name| name.to_str()) != Some("package.json") {
             continue;
         }
-        let Ok(json) = sources.parse_json_path(path) else {
-            continue;
-        };
         let rel = pkg_rel(root, path);
+        let json = match sources.parse_json_path(path) {
+            Ok(json) => json,
+            Err(error) => {
+                findings.push(finding(
+                    &rel,
+                    format!("{rel}: cannot verify required package fields because the manifest could not be read or parsed: {error}. Repair the JSON or restore read access."),
+                    "unanalyzable",
+                ));
+                continue;
+            }
+        };
         findings.extend(check_package(rel, path, all_files, opts, &json));
     }
     findings
