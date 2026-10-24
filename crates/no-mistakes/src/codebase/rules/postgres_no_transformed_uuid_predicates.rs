@@ -57,12 +57,17 @@ pub(crate) fn check_with_files_sources_and_facts(
         .map(|(index, rule)| {
             let opts = compile_options(&rule.try_rule_options()?)?;
             let files = super::selected_rule_files(root, config, rule, all_files)?;
+            let sql_paths =
+                crate::codebase::postgres::postgres_sql_paths(root, &files, &opts.schema)?;
+            let sql_files = crate::codebase::check_facts::PathMembership::new(&sql_paths);
             let files = files
                 .into_iter()
                 .filter(|path| {
                     let rel = crate::codebase::ts_source::relative_slash_path(root, path);
-                    (opts.include.is_empty() || opts.include.is_match(&rel))
-                        && (opts.exclude.is_empty() || !opts.exclude.is_match(&rel))
+                    (opts.exclude.is_empty() || !opts.exclude.is_match(&rel))
+                        && (sql_files.contains(path)
+                            || (crate::codebase::dependencies::extract::is_indexable(path)
+                                && (opts.include.is_empty() || opts.include.is_match(&rel))))
                 })
                 .collect::<Vec<_>>();
             let mut findings =

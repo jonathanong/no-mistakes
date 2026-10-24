@@ -154,3 +154,31 @@ fn custom_messages_prefix_the_explanation_and_static_rewrite() {
             && finding.message.contains("Cast the parameter")));
     }
 }
+
+#[test]
+fn sql_include_stays_independent_of_the_embedded_source_include() {
+    let root = fixture();
+    let files = [
+        root.join("fail.sql"),
+        root.join("embedded.ts"),
+        root.join("schema.json"),
+    ];
+    let cfg = config("include: [embedded.ts]\n");
+    let findings = check_with_files(&root, &cfg, &files).unwrap();
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "fail.sql")
+            .count(),
+        9,
+        "{findings:#?}"
+    );
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "embedded.ts")
+            .count(),
+        3,
+        "{findings:#?}"
+    );
+}
