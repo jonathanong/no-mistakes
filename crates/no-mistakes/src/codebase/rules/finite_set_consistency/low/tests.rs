@@ -55,6 +55,12 @@ fn low_routes_only_unsupported_extractions_through_the_policy() {
         let output = run(&config, &files, &sources, false);
         assert_eq!(output.findings.len(), failures);
         assert_eq!(output.advisories.len(), advisories);
+        // The legacy Vec contract must not promote non-failing advice to failures.
+        // Both-channel consumers use the diagnostics entry point exercised above.
+        assert_eq!(
+            check_with_files_sources_and_facts(&root(), &config, &files, &sources, None).unwrap(),
+            output.findings
+        );
         assert!(output.findings.iter().any(|row| row
             .message
             .contains("all contains `billing` but partial does not")));

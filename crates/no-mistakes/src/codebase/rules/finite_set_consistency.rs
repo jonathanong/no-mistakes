@@ -72,6 +72,8 @@ pub(crate) fn check_with_files_and_sources(
     check_with_files_sources_and_facts(root, config, all_files, sources, None)
 }
 
+// Legacy filesystem APIs return findings only. Check reports use the public
+// diagnostics entry point below to retain non-failing advisories separately.
 pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
@@ -84,6 +86,7 @@ pub(crate) fn check_with_files_sources_and_facts(
 }
 
 /// Evaluate finite sets with each application's independent effort and residual policy.
+/// Returns findings and advisories; legacy filesystem Vec adapters return findings only.
 #[doc(hidden)]
 pub fn diagnostics_with_files_sources_and_facts(
     root: &Path,
