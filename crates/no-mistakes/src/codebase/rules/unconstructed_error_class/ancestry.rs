@@ -32,17 +32,17 @@ fn builtin_error(name: &str) -> bool {
     BUILTIN_ERRORS.contains(&name)
 }
 
-/// A repository class an `Extends` edge names: its file and display scope, and
+/// A resolved class an `Extends` edge names: its file and display scope, and
 /// its parser id when the edge carries one.
 pub(super) struct Base<'a> {
     pub(super) key: ClassKey<'a>,
     id: Option<CallableId>,
 }
 
-/// The repository classes `class` extends, read from its `Extends` edges. A
-/// global or external-package base has no edge. Targets are compared by file
-/// and scope rather than whole `NodeId`, which also carries a parser id that
-/// two declarations sharing a display scope do not share.
+/// The resolved classes `class` extends, read from its `Extends` edges.
+/// Globals and unresolved external bases have no edge. Targets are compared by
+/// file and scope rather than whole `NodeId`, which also carries a parser id
+/// that two declarations sharing a display scope do not share.
 pub(super) fn bases<'a>(
     graph: &'a DepGraph,
     class: &ClassDeclaration,
@@ -65,7 +65,7 @@ pub(super) fn bases<'a>(
         })
 }
 
-/// An external or unresolved base leaves error ancestry unknown. Repository
+/// An unresolved base leaves error ancestry unknown. Resolved class
 /// edges retain exact parser identities so same-named namespace classes do not mix.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(super) enum ErrorKind {

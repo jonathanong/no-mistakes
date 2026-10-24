@@ -339,9 +339,10 @@ rule. Review these inputs when upgrading:
 Use statically named constructors and analyzable class bases where possible.
 Set `options.unanalyzable: advise` while reviewing these cases, or `ignore` to
 omit their uncertainty. Repository `unanalyzable` supplies the default when no
-rule override is set. Unrelated definite unconstructed classes still fail under
-every policy. For intentional dynamic boundaries, use a reasoned file, line, or
-next-line suppression at each reported class or construction site.
+rule override is set. Usable declarations can remove a proven non-Error finding
+or establish a definite unused-Error finding even under `advise`/`ignore`. For
+intentional cases, use a reasoned file, line, or next-line suppression at each
+reported class or construction site.
 
 ## Suppression
 

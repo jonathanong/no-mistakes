@@ -9,8 +9,8 @@ pub struct DepGraph {
     callable_export_resolutions: FxHashMap<(PathBuf, String), ExportedCallableResolution>,
     module_files: FxHashMap<String, FxHashSet<PathBuf>>,
     resolved_call_sites: Vec<ResolvedCallSite>,
-    /// Classes with a statically named `extends` base, in file order. Empty
-    /// unless the graph was built with [`GraphBuildPlan::extends`].
+    /// Class ancestry records in deterministic preparation order. Empty unless
+    /// the graph was built with [`GraphBuildPlan::extends`].
     class_declarations: Vec<ClassDeclaration>,
     class_ancestry:
         std::sync::Arc<crate::codebase::analysis_session::class_ancestry::ClassAncestry>,
