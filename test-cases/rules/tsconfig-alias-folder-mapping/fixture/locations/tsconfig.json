@@ -1,0 +1,3 @@
+{
+  "extends": ["./config/earlier.json", "./config/policy.base.json", "./config/base-url-only.json"]
+}

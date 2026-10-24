@@ -22,18 +22,14 @@ pub(crate) struct Options {
     pub(crate) tsconfig: PathBuf,
     pub(crate) base_dir: String,
     pub(crate) mappings: Vec<AliasMapping>,
-    /// When true, also verify that each expected target directory exists on disk.
+    /// When true, verify literal targets and wildcard parent directories exist.
     pub(crate) check_exists: bool,
 }
 
-fn build_path(parts: &[&str]) -> String {
-    parts
-        .iter()
-        .filter(|&&s| !s.is_empty())
-        .copied()
-        .collect::<Vec<_>>()
-        .join("/")
-}
+mod mapping;
+mod targets;
+use mapping::check_alias;
+use targets::{build_path, target_exists, target_matches};
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
@@ -51,7 +47,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
             let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
             let mut filtered = Vec::new();
             for finding in findings {
-                if filter.is_match(&root.join(&finding.file)) {
+                if filter.is_match(&root.join(&opts.tsconfig)) {
                     filtered.push(finding);
                 }
             }
@@ -79,26 +75,40 @@ fn check_tsconfig(root: &Path, opts: &Options) -> Result<Vec<RuleFinding>> {
     if !tsconfig_path.is_file() {
         return Ok(Vec::new());
     }
-    let ts_config = match crate::codebase::ts_resolver::load_tsconfig(&tsconfig_path) {
-        Ok(config) => config,
-        Err(err) => {
-            let file = relative_slash_path(root, &tsconfig_path);
-            let message = format!(
+    let (ts_config, locations) =
+        match crate::codebase::ts_resolver::load_tsconfig_with_path_locations(&tsconfig_path) {
+            Ok(config) => config,
+            Err(err) => {
+                let file = relative_slash_path(root, &tsconfig_path);
+                let message = format!(
                 "{file}: tsconfig could not be loaded and alias mappings were not checked: {err}"
             );
-            return Ok(vec![make_finding(&file, &message)]);
-        }
-    };
+                return Ok(vec![make_finding(&file, 1, &message)]);
+            }
+        };
     if ts_config.paths.is_empty() {
         return Ok(Vec::new());
     }
-    let tsconfig_str = relative_slash_path(root, &tsconfig_path);
+    // Extends paths are normalized by the loader; callers may supply roots
+    // containing `..`. Compare both lexical forms before rendering a relative path.
+    let source_path = locations
+        .as_ref()
+        .map_or(tsconfig_path.as_path(), |locations| &locations.file);
+    let tsconfig_str = relative_slash_path(
+        &crate::codebase::ts_resolver::normalize_path(root),
+        &crate::codebase::ts_resolver::normalize_path(source_path),
+    );
     let all_paths: BTreeMap<String, Vec<String>> = ts_config.paths.into_iter().collect();
     let mut findings = Vec::new();
     for (alias, targets) in &all_paths {
         findings.extend(check_alias(
             root,
             &tsconfig_str,
+            locations
+                .as_ref()
+                .and_then(|locations| locations.lines.get(alias))
+                .copied()
+                .unwrap_or(1),
             alias,
             targets,
             opts,
@@ -108,91 +118,11 @@ fn check_tsconfig(root: &Path, opts: &Options) -> Result<Vec<RuleFinding>> {
     Ok(findings)
 }
 
-fn check_alias(
-    root: &Path,
-    tsconfig_str: &str,
-    alias: &str,
-    targets: &[String],
-    opts: &Options,
-    all_paths: &BTreeMap<String, Vec<String>>,
-) -> Vec<RuleFinding> {
-    let mut findings = Vec::new();
-
-    // Check alias → target direction
-    for mapping in &opts.mappings {
-        let alias_prefix = format!("{}/", mapping.prefix);
-        if alias.starts_with(&alias_prefix) {
-            let suffix = &alias[alias_prefix.len()..];
-            let expected = build_path(&[&opts.base_dir, &mapping.root, suffix]);
-            for target in targets {
-                if target != &expected {
-                    findings.push(make_finding(
-                        tsconfig_str,
-                        &format!("{tsconfig_str}: {alias} must target {expected}, not {target}"),
-                    ));
-                } else if opts.check_exists {
-                    let dir_path = expected.trim_end_matches("/*").trim_end_matches('*');
-                    let abs_dir = root.join(dir_path.trim_start_matches("./"));
-                    if !abs_dir.is_dir() {
-                        findings.push(make_finding(
-                            tsconfig_str,
-                            &format!("{tsconfig_str}: {alias} targets {dir_path}, which does not exist on disk"),
-                        ));
-                    }
-                }
-            }
-        }
-    }
-
-    // Check target → alias direction
-    for mapping in &opts.mappings {
-        let target_prefix = format!("{}/", build_path(&[&opts.base_dir, &mapping.root]));
-        let required_alias_prefix = format!("{}/", mapping.prefix);
-        for target in targets {
-            if target.starts_with(&target_prefix) {
-                // This target belongs to this mapping; the alias must use the right prefix
-                if !alias.starts_with(&required_alias_prefix) {
-                    // Avoid double-reporting: only flag if not already caught from a different mapping
-                    let already_flagged = findings.iter().any(|f: &RuleFinding| {
-                        f.message.contains(alias) && f.message.contains(target)
-                    });
-                    if !already_flagged {
-                        // Check the alias isn't valid for any mapping by looking at all known targets
-                        let all_targets =
-                            all_paths.get(alias).map(Vec::as_slice).unwrap_or(targets);
-                        let valid = opts.mappings.iter().any(|m| {
-                            let ap = format!("{}/", m.prefix);
-                            if alias.starts_with(&ap) {
-                                let suffix = &alias[ap.len()..];
-                                let expected = build_path(&[&opts.base_dir, &m.root, suffix]);
-                                all_targets.contains(&expected)
-                            } else {
-                                false
-                            }
-                        });
-                        if !valid {
-                            findings.push(make_finding(
-                                tsconfig_str,
-                                &format!(
-                                    "{tsconfig_str}: {alias} must use prefix {}, not target {target} directly",
-                                    mapping.prefix
-                                ),
-                            ));
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    findings
-}
-
-fn make_finding(file: &str, message: &str) -> RuleFinding {
+fn make_finding(file: &str, line: usize, message: &str) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),
         file: file.to_string(),
-        line: 1,
+        line,
         message: message.to_string(),
         import: None,
         target: None,

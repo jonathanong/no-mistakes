@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "paths": {
+      // no-mistakes-disable-next-line tsconfig-alias-folder-mapping: approved legacy target
+      "@agents/email": ["backend/legacy/email"],
+      "@agents/sms": ["backend/legacy/sms"]
+    }
+  }
+}

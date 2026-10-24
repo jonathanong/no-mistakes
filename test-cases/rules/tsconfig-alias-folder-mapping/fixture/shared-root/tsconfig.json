@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@a/sub": [
+        "backend/shared/sub"
+      ]
+    }
+  }
+}

@@ -1,0 +1,1 @@
+A dotted directory remains a directory target, including as a wildcard parent.
