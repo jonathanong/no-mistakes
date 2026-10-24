@@ -25,6 +25,7 @@ mod source_escape;
 mod source_unicode;
 mod sql_text;
 mod standalone_table;
+mod statement_head;
 mod table_boundary;
 mod table_only;
 use sql_text::located_statements;
@@ -114,7 +115,7 @@ fn prepare_postgres_tokens_inner(
         Vec::new()
     };
     normalize_table_queries(&mut tokens);
-    let recursive_views = recursive_view::prepare(&mut tokens);
+    let recursive_views = recursive_view::prepare(&mut tokens, None);
     PreparedPostgresTokens {
         tokens,
         occurrence_tokens,
