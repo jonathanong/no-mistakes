@@ -52,6 +52,50 @@ fn a_unique_unqualified_key_owner_bounds_joined_known_tables() {
 }
 
 #[test]
+fn unqualified_unique_key_operators_need_independent_caller_values() {
+    let findings = check("key-operators.yml", "key-operators.sql").unwrap();
+    let reported: std::collections::BTreeSet<_> = findings
+        .iter()
+        .map(|finding| (finding.line, finding.target.as_deref().unwrap()))
+        .collect();
+    assert_eq!(
+        reported,
+        [
+            (6, "table:public.customer_accounts"),
+            (6, "table:public.owner_jobs"),
+            (8, "table:public.customer_accounts"),
+            (8, "table:public.owner_jobs"),
+        ]
+        .into_iter()
+        .collect()
+    );
+
+    let root = root();
+    let sql = std::fs::read_to_string(root.join("sql/key-operators.sql")).unwrap();
+    let facts = extract_sql_statement_facts(&sql);
+    assert!(!facts.parse_failed, "{facts:#?}");
+    let ambiguous = SchemaCatalog::from_json(
+        &std::fs::read_to_string(root.join("catalog-ambiguous-owner.json")).unwrap(),
+    )
+    .unwrap();
+    for index in [1, 2] {
+        let fact = &facts.bounds[index];
+        assert!(fact.query.items.iter().any(|item| {
+            item.pins
+                .iter()
+                .any(|pin| pin.column == "email_intake_id" && pin.unqualified_candidate)
+        }));
+        let ambiguous_names = names(fact, &ambiguous);
+        assert!(ambiguous_names
+            .iter()
+            .any(|name| name == "public.customer_accounts"));
+        assert!(ambiguous_names
+            .iter()
+            .any(|name| name == "public.owner_jobs"));
+    }
+}
+
+#[test]
 fn unqualified_candidate_evidence_is_reused_with_catalog_specific_ownership() {
     let root = root();
     let sql = std::fs::read_to_string(root.join("sql/key-resolution.sql")).unwrap();
