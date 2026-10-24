@@ -1,8 +1,8 @@
 use super::{Clause, SqlTransformedColumnUseFact};
+use crate::codebase::postgres::idents::{visit_child_exprs, visit_function_args};
 use crate::codebase::postgres::statements::select::uses::{columns::bare, scope::BaseRel};
 use crate::codebase::postgres::statements::value::PlaceholderPositions;
-use sqlparser::ast::{Expr, Query, Spanned, Visit, Visitor};
-use std::ops::ControlFlow;
+use sqlparser::ast::{Expr, FunctionArguments, Spanned};
 
 pub(super) fn collect(
     expression: &Expr,
@@ -11,45 +11,38 @@ pub(super) fn collect(
     positions: PlaceholderPositions<'_>,
     out: &mut Vec<SqlTransformedColumnUseFact>,
 ) {
-    let _: ControlFlow<()> = expression.visit(&mut Inputs {
+    Inputs {
         clause,
         relations,
         positions,
         out,
-        query_depth: 0,
-        transforms: Vec::new(),
-    });
+    }
+    .walk(expression, None);
 }
 struct Inputs<'a, 'b, 'c> {
     clause: Clause,
     relations: &'a [BaseRel],
     positions: PlaceholderPositions<'b>,
     out: &'c mut Vec<SqlTransformedColumnUseFact>,
-    query_depth: usize,
-    transforms: Vec<String>,
 }
-impl Visitor for Inputs<'_, '_, '_> {
-    type Break = ();
-    fn pre_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-        self.query_depth += 1;
-        ControlFlow::Continue(())
-    }
-    fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-        self.query_depth -= 1;
-        ControlFlow::Continue(())
-    }
-    fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-        if self.query_depth != 0 {
-            return ControlFlow::Continue(());
-        }
+impl Inputs<'_, '_, '_> {
+    fn walk(&mut self, expr: &Expr, transformation: Option<&str>) {
         match expr {
-            Expr::Cast { .. } => self.transforms.push("cast".into()),
-            Expr::Function(function) => self.transforms.push(function.name.to_string()),
-            _ => {}
-        }
-        if let Some(transformation) = self.transforms.first() {
-            // Nested wrappers are visited separately; record only the identifier token.
-            if matches!(expr, Expr::Identifier(_) | Expr::CompoundIdentifier(_)) {
+            Expr::Function(function) => {
+                let name = function.name.to_string();
+                let transform = transformation.unwrap_or(&name);
+                for args in [&function.parameters, &function.args] {
+                    if let FunctionArguments::List(list) = args {
+                        // Argument labels and aggregate ordering are syntax, not transformed inputs.
+                        visit_function_args(&list.args, &mut |arg| self.walk(arg, Some(transform)));
+                    }
+                }
+                if let Some(filter) = &function.filter {
+                    self.walk(filter, None);
+                }
+            }
+            Expr::Cast { expr, .. } => self.walk(expr, Some(transformation.unwrap_or("cast"))),
+            Expr::Identifier(_) | Expr::CompoundIdentifier(_) if transformation.is_some() => {
                 if let Some((qualifier, column)) = bare(expr, self.positions) {
                     let (table, candidate_tables) = owner(self.relations, qualifier.as_deref());
                     self.out.push(SqlTransformedColumnUseFact {
@@ -59,18 +52,13 @@ impl Visitor for Inputs<'_, '_, '_> {
                         clause: self.clause,
                         line: expr.span().start.line.max(1) as usize,
                         column_position: expr.span().start.column.max(1) as usize,
-                        transformation: transformation.clone(),
+                        transformation: transformation.unwrap().into(),
                     });
                 }
             }
+            // The shared walker skips scalar subquery columns. Their predicates get their own scope.
+            _ => visit_child_exprs(expr, &mut |child| self.walk(child, transformation)),
         }
-        ControlFlow::Continue(())
-    }
-    fn post_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-        if self.query_depth == 0 && matches!(expr, Expr::Cast { .. } | Expr::Function(_)) {
-            self.transforms.pop();
-        }
-        ControlFlow::Continue(())
     }
 }
 fn owner(relations: &[BaseRel], qualifier: Option<&str>) -> (String, Option<Vec<String>>) {
