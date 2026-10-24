@@ -6,4 +6,3 @@ rules:
       sqlInclude: [queries.sql]
       importSpecifier: '@db'
       executorNames: [query]
-      unanalyzableSql: ignore

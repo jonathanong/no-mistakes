@@ -18,10 +18,10 @@ rules:
 
 ## Why and when
 
-An index on a UUID key stores UUID values. Casting the column to text or
-applying a function to it can prevent PostgreSQL from using that index for the
-predicate. For UUIDv7 timestamps, compute a UUID range bound before the query
-and compare the indexed key directly.
+An index on a UUID column stores UUID values. Casting the column or applying a
+function changes the predicate operand, so it no longer matches the ordinary
+UUID index expression. For UUIDv7 timestamps, compute a UUID range bound
+before the query and compare the indexed column directly.
 
 Enable this rule on application SQL when key lookups and range scans should use
 their UUID indexes.
@@ -41,18 +41,25 @@ not constrain the scan.
 
 ## Analysis
 
-Analysis uses schema facts from the required `schemaCatalogPath` together with
-parsed SQL statement facts. Relation and column ownership must resolve to a
-catalog column before its type can be checked. Qualified references are
-resolved against the visible relations, and ambiguous references are left
-unreported. It evaluates the expression's use in the predicate rather than
-flagging every function or cast that mentions a UUID column.
+Analysis requires a complete schema catalog at `schemaCatalogPath` and uses
+its column types with parsed SQL statement facts. Relation and column
+ownership must resolve to a catalog column before its type can be checked.
+Qualified references resolve against the relations visible at that clause;
+ambiguous names and references whose ownership or type is unknown are left
+unreported. The rule is catalog-aware rather than a syntax-only check: a cast
+or function call is reported only when its operand resolves to a UUID column
+and participates in a checked predicate.
 
-The rule does not prove whether a transformed expression has a matching
-expression index. When such an index is intentional, keep the query and schema
-design explicit and suppress the finding with a reason. SQL syntax or dynamic
-query text that cannot be analyzed follows the configured `unanalyzableSql`
-policy.
+At `effort: low`, the rule analyzes supported literal SQL directly in SQL files
+and executor calls. At `effort: max`, it also analyzes supported prepared SQL
+builders and helper-returned statements. Unanalyzable or dynamic query text
+follows the configured `unanalyzableSql` policy.
+
+The rule does not inspect expression indexes or model PostgreSQL's plan
+selection. It enforces the bare-UUID-operand policy even if an expression
+index may support a transformed predicate; it does not claim that every
+finding causes a sequential scan. SQL syntax or dynamic query text that cannot
+be analyzed follows the configured `unanalyzableSql` policy.
 
 ## Valid example
 
@@ -102,4 +109,5 @@ justifies transforming a key column.
 
 `postgres-generated-column-predicates` checks generated timestamp columns
 that derive from UUID primary keys. This rule checks transformations of
-catalog-resolved UUID columns directly in predicates.
+catalog-resolved UUID columns directly in predicates, without predicting the
+chosen query plan.
