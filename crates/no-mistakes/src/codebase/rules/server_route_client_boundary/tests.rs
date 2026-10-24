@@ -490,3 +490,5 @@ fn repository_scoped_rule_uses_all_server_projects() {
 
     assert_eq!(findings.len(), 1);
 }
+
+mod non_source_files;

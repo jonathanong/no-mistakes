@@ -1,0 +1,13 @@
+projects:
+  backend:
+    type: server
+    root: backend
+    routes: [api/**]
+rules:
+  - rule: server-route-client-boundary
+    projects: [backend]
+  # This rule deliberately prepares import placeholders for project metadata.
+  - rule: production-dependency-declarations
+    scope: repository
+    options:
+      workspaceRoots: [backend]

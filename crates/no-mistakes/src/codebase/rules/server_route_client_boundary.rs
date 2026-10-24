@@ -64,6 +64,9 @@ fn check_with_optional_inferred(
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut facts = Vec::new();
     for path in shared.files() {
+        if !crate::codebase::dependencies::extract::is_indexable(path) {
+            continue;
+        }
         let Some(file) = shared.ts.get(path) else {
             continue;
         };
