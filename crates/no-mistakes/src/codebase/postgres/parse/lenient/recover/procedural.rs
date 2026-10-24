@@ -61,7 +61,7 @@ impl BodyState {
     }
 }
 
-fn unlabeled(code: &[&Token]) -> &[&Token] {
+fn unlabeled<'a>(code: &'a [&'a Token]) -> &'a [&'a Token] {
     if let [Token::ShiftLeft, label_token, Token::ShiftRight, rest @ ..] = code {
         if label(label_token) {
             return rest;
