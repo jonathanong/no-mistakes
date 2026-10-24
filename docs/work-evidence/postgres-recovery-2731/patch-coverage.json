@@ -1,0 +1,19 @@
+{
+  "base": "c94f1b7939d5c234c2f3409440cd3f199a08bcc2",
+  "measuredChangedLines": 309,
+  "coveredChangedLines": 308,
+  "coveragePercent": 99.6764,
+  "requiredPercent": 98.0,
+  "uncoveredChangedLines": {
+    "crates/no-mistakes/src/codebase/postgres/parse/original_head.rs": [
+      137
+    ]
+  },
+  "changedFilesWithoutLineRecords": [
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/tests.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_unanalyzable_schema/tests.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_unanalyzable_schema/tests/original_heads.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_unanalyzable_schema/tests/recursive_heads.rs",
+    "crates/no-mistakes/tests/cli_check_rules_postgres_ddl_unanalyzable.rs"
+  ]
+}

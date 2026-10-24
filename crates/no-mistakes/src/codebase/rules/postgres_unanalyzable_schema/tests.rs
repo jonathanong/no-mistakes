@@ -4,6 +4,7 @@ use crate::codebase::rules::{source_store_for_files, suppress_rule_findings_with
 use crate::config::v2::load_v2_config;
 
 mod copy_tests;
+mod original_heads;
 mod procedural_tests;
 mod recursive_heads;
 

@@ -1,4 +1,5 @@
-use super::{peel_do_body, recover_schema_ddl, schema_ddl_start};
+use super::peel_do_body;
+use super::schema::{recover as recover_schema_ddl, start as schema_ddl_start};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::{Token, Tokenizer};
 

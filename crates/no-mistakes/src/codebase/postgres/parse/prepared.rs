@@ -55,7 +55,7 @@ impl<'a> PreparedSql<'a> {
         let located = self.located().map_err(Clone::clone)?;
         let mut tokens = super::radix_numbers::repair(located).unwrap_or_else(|| located.clone());
         normalize_table_queries(&mut tokens);
-        let recursive_views = super::recursive_view::prepare(&mut tokens, None);
+        let recursive_views = super::recursive_view::prepare(&mut tokens);
         let fetch = super::fetch_expression::prepare(&mut tokens);
         let (mut statements, functions, arbiters) = if policy {
             super::super::source::parse_conflict_program(tokens)

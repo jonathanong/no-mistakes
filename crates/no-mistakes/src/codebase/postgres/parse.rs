@@ -12,6 +12,7 @@ mod lenient;
 mod lock_of_list;
 mod lock_strength;
 pub(super) mod operator_boundary;
+mod original_head;
 mod prepared;
 pub(crate) use lenient::parse_postgres_sql_with_function_sources;
 pub(crate) use lenient::rewrite::rewrite_referential_set_column_lists_located;
@@ -115,7 +116,7 @@ fn prepare_postgres_tokens_inner(
         Vec::new()
     };
     normalize_table_queries(&mut tokens);
-    let recursive_views = recursive_view::prepare(&mut tokens, None);
+    let recursive_views = recursive_view::prepare(&mut tokens);
     PreparedPostgresTokens {
         tokens,
         occurrence_tokens,
