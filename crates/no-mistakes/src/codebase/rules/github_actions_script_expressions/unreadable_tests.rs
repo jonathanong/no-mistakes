@@ -4,8 +4,11 @@ use crate::config::v2::NoMistakesConfig;
 use std::path::PathBuf;
 
 fn root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/github-actions-script-expressions/fixture/unreadable-input")
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../test-cases/rules/github-actions-script-expressions/fixture/unreadable-input",
+        ),
+    )
 }
 
 #[test]
@@ -56,6 +59,12 @@ fn unreadable_selected_sources_route_policy_without_reclassifying_expressions() 
             assert_eq!(
                 check_with_files(&root, &config, &files).unwrap().len(),
                 expected.0
+            );
+            // Standalone discovery must agree with the prepared-inventory entry point.
+            assert_eq!(
+                super::super::check(&root, &config).unwrap().len(),
+                expected.0,
+                "standalone {prefix}{policy}",
             );
             // Repeated diagnostics reuse failures as well as successful source reads.
             assert_eq!(
