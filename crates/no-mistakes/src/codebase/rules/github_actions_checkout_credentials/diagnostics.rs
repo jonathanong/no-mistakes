@@ -64,11 +64,20 @@ fn check_file(
                 &error,
                 defer_suppression,
                 |line| {
+                    let message = format!(
+                        "{rel}:{line}: job `unknown` step unknown: cannot read GitHub Actions \
+                         source as UTF-8 ({error}); checkout credentials could not be checked. \
+                         Restore readable UTF-8 YAML and set with.persist-credentials to literal \
+                         false so later steps cannot reuse write credentials."
+                    );
                     RuleFinding {
-                rule: RULE_ID.to_string(), file: rel.clone(), line,
-                message: format!("{rel}:{line}: job `unknown` step unknown: cannot read GitHub Actions source as UTF-8 ({error}); checkout credentials could not be checked. Restore readable UTF-8 YAML and set with.persist-credentials to literal false so later steps cannot reuse write credentials."),
-                import: None, target: Some("unanalyzable".to_string()),
-            }
+                        rule: RULE_ID.to_string(),
+                        file: rel.clone(),
+                        line,
+                        message,
+                        import: None,
+                        target: Some("unanalyzable".to_string()),
+                    }
                 },
             );
             if let Some(finding) = finding {

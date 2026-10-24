@@ -24,8 +24,8 @@ It flags an `actions/checkout` step when both of these are true:
 
 - `with.persist-credentials` is omitted or a literal true (`true` or the
   string `true` in any letter case). A null value is unanalyzable. YAML treats
-  `true` and `false` (any letter case) as booleans. The strings `yes`, `no`, `on`, and `off` are not booleans here,
-  so they are not proof of false.
+  `true` and `false` (any letter case) as booleans. The strings `yes`, `no`,
+  `on`, and `off` are not booleans here, so they are not proof of false.
 - The job `GITHUB_TOKEN` is proven to be able to write.
 
 Write access is the job `permissions` block when that key is present. A job
@@ -53,9 +53,10 @@ If `permissions` is absent, the rule does not guess GitHub's default token,
 including for `pull_request_target` and for `workflow_call`, unless
 `assumeWriteWhenUnspecified` is true. Without that assumption the permissions
 are unanalyzable. Expression-valued or otherwise unknown permissions and
-persist inputs, non-mapping `with`, and every explicit `with.token` use the
-shared unanalyzable policy. This includes `${{ secrets.GITHUB_TOKEN }}`:
-the custom-token exemption cannot establish that a credential is safe.
+persist inputs, non-null non-mapping `with`, and custom `with.token` use the
+shared unanalyzable policy unless persistence is literal false. This includes
+`${{ secrets.GITHUB_TOKEN }}`: a custom token cannot establish that a
+credential is safe. A null `with` is treated like an omitted `with`.
 Invalid YAML also uses that policy and includes the parser error and location.
 
 `persist-credentials: false` is allowed even when the token can write. The
@@ -80,6 +81,46 @@ rules:
       assumeWriteWhenUnspecified: true
       unanalyzable: report
 ```
+
+## Upgrading
+
+This changes the default result of an already enabled rule. Unknown checkout
+credentials used to be silently skipped; `options.unanalyzable` now defaults
+to `report`, which emits failing findings. For checkouts that might persist
+credentials, review these previously silent cases:
+
+- No `permissions` key: repository or organization defaults are unknown, and
+  `pull_request_target` alone does not prove the actual token grant.
+- A `workflow_call` workflow with a write grant; its caller can restrict the token.
+- A custom `with.token`, such as a PAT or `${{ secrets.GITHUB_TOKEN }}`:
+  job `GITHUB_TOKEN` permissions do not establish a custom token's permissions.
+- Expression-valued `persist-credentials`: its runtime value cannot be
+  established statically. Other unsupported input values are also unknown.
+- Invalid workflow YAML: the parser cannot establish the checkout inputs
+  and permissions.
+
+The [reviewed unchanged old `abstain` snapshot][reviewed-abstain] went from
+exit 0 with no findings on the base to exit 1 with 36 findings on the head.
+That count describes that snapshot, not a fixed count for other repositories.
+The current matcher fixture explicitly uses `ignore`; it does not demonstrate
+that the default policy stayed unchanged.
+
+Set `options.unanalyzable: ignore` to skip unknown inputs as before, or use
+`advise` to list them as non-failing advisories in CLI and Node check reports.
+The standalone Rust findings-only API omits advisories. Definite persisted-write
+violations remain failures under every policy. In particular,
+`assumeWriteWhenUnspecified: true` makes missing permissions a definite write
+assumption, including on `workflow_call`; `advise` and `ignore` do not hide it.
+For a single accepted case, use a [line suppression](#suppression) on the
+checkout `uses` line instead of changing the policy for the whole rule.
+
+Prefer a static rewrite such as `with.persist-credentials: false`. An unknown
+persistence input remains unanalyzable even with literal read-only permissions;
+this conservative choice is intentional. See the
+[migration note](../migrations/github-actions-checkout-credentials-unanalyzable.md)
+for configuration and suppression examples.
+
+[reviewed-abstain]: https://github.com/jonathanong/no-mistakes/pull/2697#issuecomment-6383196957
 
 ## Valid example
 
@@ -157,13 +198,15 @@ failing finding, `advise` emits a non-failing advisory, and `ignore` omits
 uncertain results. Repository `unanalyzable` supplies the default.
 Definite violations remain failing under every policy.
 
-Expressions or unsupported values in `persist-credentials`, non-mapping
-`with`, custom `with.token`, unknown permission scopes/access values,
+Expressions or unsupported values in `persist-credentials`, non-null
+non-mapping `with`, custom `with.token`, unknown permission scopes/access values,
 unspecified permissions, and caller-limited write grants are unanalyzable.
 Known write grants still establish a violation even beside unknown scopes.
 Literal `persist-credentials: false` is safe regardless of token or permissions.
 Read-only or empty permissions without a custom token remain safe when
-persistence is literal or omitted.
+persistence is literal or omitted. An unknown persistence input still follows
+the unanalyzable policy even with literal read-only permissions. A null `with`
+is treated like omitted `with`.
 
 Diagnostics name the file, job, step, and a static rewrite: set
 `with.persist-credentials: false`, or use the default token with literal
@@ -172,7 +215,6 @@ job and step are `unknown` because the document could not be parsed.
 Repair the YAML before relying on a clean result. Suppression comments apply
 to both findings and advisories; malformed YAML supports file suppression
 and line suppression at the reported parser-error location.
-
 
 ## Suppression
 

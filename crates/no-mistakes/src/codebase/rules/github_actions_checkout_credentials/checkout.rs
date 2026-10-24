@@ -61,10 +61,19 @@ pub(super) fn analyze(
 }
 
 fn uncertain(rel: &str, line: usize, job: &str, step: &str, reason: &str) -> RuleFinding {
+    let message = format!(
+        "{rel}:{line}: job `{job}` step {step}: cannot analyze checkout credentials ({reason}). \
+         Set with.persist-credentials to literal false, or use the default GITHUB_TOKEN with \
+         literal read-only permissions; persisted write credentials let later steps modify \
+         GitHub state."
+    );
     RuleFinding {
-        rule: RULE_ID.to_string(), file: rel.to_string(), line,
-        message: format!("{rel}:{line}: job `{job}` step {step}: cannot analyze checkout credentials ({reason}). Set with.persist-credentials to literal false, or use the default GITHUB_TOKEN with literal read-only permissions; persisted write credentials let later steps modify GitHub state."),
-        import: None, target: Some(job.to_string()),
+        rule: RULE_ID.to_string(),
+        file: rel.to_string(),
+        line,
+        message,
+        import: None,
+        target: Some(job.to_string()),
     }
 }
 

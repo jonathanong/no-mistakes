@@ -9,7 +9,6 @@ persistence or permissions, custom tokens, and malformed YAML report by
 default, advise without failing, or are ignored. Both APIs share suppression
 and source locations with the CLI. See the [rule contract](rules/github-actions-checkout-credentials.md#analysis).
 
-
 ```js
 const { analyzeProject } = require("no-mistakes");
 (async () => {
