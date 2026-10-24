@@ -1,7 +1,7 @@
 "use strict";
 
 const { unwrapTransparentParent } = require("./async-ast");
-const { provenAwaitingConsumer } = require("./async-consumer-proof");
+const { createConsumerProof } = require("./async-consumer-proof");
 const { namedCallbackDisposition } = require("./async-disposition-callbacks");
 const { propertiesWritten, returnsThroughMock } = require("./async-disposition-mocks");
 const { compileTargets, targetMatches } = require("./async-patterns");
@@ -20,6 +20,7 @@ function createAwaitingConsumers(context, mappedArgumentDisposed) {
     properties: consumer.callbackArgumentProperties || [],
   }));
   const namedResults = new WeakMap();
+  const provenAwaitingConsumer = createConsumerProof(context);
 
   function returnsThroughConsumer(fn) {
     const callback = unwrapTransparentParent(fn);
