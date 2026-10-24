@@ -147,13 +147,15 @@ graph without changing what `forbidden-calls` reports.
 
 ## Valid example
 
-A selected file that does not invoke a forbidden timer API passes. Inject a
-clock or import an approved wrapper instead of calling `setTimeout` directly.
+A selected file with statically resolved calls and no forbidden timer API
+passes. This test clock advances without scheduling a real timer.
 
 ```ts
-export function wait(clock: { sleep(ms: number): void }) {
-  clock.sleep(1);
+let now = 0;
+function advanceClock(ms: number) {
+  now += ms;
 }
+advanceClock(1);
 ```
 
 The consumer acceptance matrix in
@@ -212,11 +214,12 @@ setTimeout(() => {}, 0);
 
 ## Fix
 
-Inject the behavior, use the repository's approved wrapper, or narrow the rule
+Use a statically resolved approved wrapper, or narrow the rule
 application to the layer where the call is forbidden. For an `unknown call`,
 rewrite dynamic invocation to a statically resolved call when possible; set
 `unknownCalls: ignore` only if the application intentionally permits unmatched
-dynamic calls. Do not add a textual allowlist for aliases or namespace imports:
+dynamic calls, including calls through an injected clock or callback. Do not add
+a textual allowlist for aliases or namespace imports:
 configure the canonical target.
 
 ## Related rules
