@@ -33,7 +33,12 @@ function requireSource(node, context) {
   return source;
 }
 
-function createTargetMatcher(context, optionKey = "targets") {
+function createTargetMatcher(
+  context,
+  optionKey = "targets",
+  bindingIsStable = null,
+  strictLogicalCalls = false,
+) {
   const targets = compileTargets(context.options?.[0] || {}, optionKey);
   const sourceSpecifierPatterns = targets.flatMap((target) => target.sourceSpecifierPatterns);
   const directBindings = new Map();
@@ -43,6 +48,7 @@ function createTargetMatcher(context, optionKey = "targets") {
     if (
       id?.type !== "Identifier" ||
       isReassigned(id, context) ||
+      (bindingIsStable && !bindingIsStable(id)) ||
       !targetMatches(targets, source, calleeName)
     ) {
       return;
@@ -55,6 +61,7 @@ function createTargetMatcher(context, optionKey = "targets") {
     if (
       id.type !== "Identifier" ||
       isReassigned(id, context) ||
+      (bindingIsStable && !bindingIsStable(id)) ||
       !matchesAny(source, sourceSpecifierPatterns)
     ) {
       return;
@@ -153,6 +160,7 @@ function createTargetMatcher(context, optionKey = "targets") {
     if (!name) return null;
     let object = unwrapExpression(node.object);
     for (;;) {
+      if (object?.type === "Identifier" && bindingIsStable && !bindingIsStable(object)) return null;
       const source =
         requireSource(object, context) ||
         (object?.type === "Identifier"
@@ -181,7 +189,7 @@ function createTargetMatcher(context, optionKey = "targets") {
     if (node?.type !== "CallExpression") return null;
     const direct = resolveCallee(node.callee);
     if (direct) return { ...direct, arguments: node.arguments };
-    const invoked = logicalCall(node);
+    const invoked = logicalCall(node, strictLogicalCalls ? resolveCallee : undefined);
     if (!invoked) return null;
     const forwarded = resolveCallee(invoked.callee);
     return forwarded ? { ...forwarded, arguments: invoked.arguments } : null;

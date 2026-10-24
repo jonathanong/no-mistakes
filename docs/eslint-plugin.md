@@ -51,6 +51,11 @@ and point to related rules.
 `targets` is an array whose objects may set `sourceSpecifierPatterns?: string[]`
 and `calleeNamePatterns?: string[]`.
 
+`awaitingConsumers` optionally declares imported APIs that adopt returned callback
+promises. Entries require `sourceSpecifierPatterns`, `calleeNamePatterns`, and
+`callbackArgumentIndexes` (distinct nonnegative zero-based integers). Only those
+callback slots gain the trusted return disposition.
+
 ### `async-try-catch-return-await`
 
 `handlers` is an array whose objects may set `sourceSpecifierPatterns?: string[]`
