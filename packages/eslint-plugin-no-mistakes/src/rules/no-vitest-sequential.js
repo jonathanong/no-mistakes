@@ -2,6 +2,7 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { unwrapExpression, unwrapSequence: unwrap } = require("./async-ast");
 const { literalString } = require("./module-mock-helpers");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
@@ -13,18 +14,11 @@ function isTestFile(filename) {
 }
 
 function staticName(node, computed) {
+  node = unwrapExpression(node);
   if (!node) return null;
   if (computed && node.type === "Identifier") return null;
   if (!computed && typeof node.name === "string" && node.type !== "Literal") return node.name;
   return literalString(node);
-}
-
-function unwrap(node) {
-  while (node?.type === "ChainExpression") node = node.expression;
-  if (node?.type === "SequenceExpression" && node.expressions?.length) {
-    return unwrap(node.expressions.at(-1));
-  }
-  return node;
 }
 
 function constInit(node, context, seen) {
@@ -72,14 +66,9 @@ function hasSequentialOption(node) {
       value?.type === "ObjectExpression" &&
       value.properties.some((property) => {
         if (property.type !== "Property") return false;
-        const key = property.computed
-          ? literalString(property.key)
-          : staticName(property.key, false);
-        return (
-          key === "sequential" &&
-          property.value?.type === "Literal" &&
-          property.value.value === true
-        );
+        const key = staticName(property.key, property.computed);
+        const option = unwrapExpression(property.value);
+        return key === "sequential" && option?.type === "Literal" && option.value === true;
       })
     );
   });
