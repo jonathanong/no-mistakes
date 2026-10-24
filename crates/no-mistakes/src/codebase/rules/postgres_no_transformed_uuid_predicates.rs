@@ -8,6 +8,8 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
+#[cfg(test)]
+mod effort_tests;
 mod evaluate;
 mod low;
 mod scan;
@@ -63,18 +65,26 @@ pub(crate) fn check_with_files_sources_and_facts(
                         && (opts.exclude.is_empty() || !opts.exclude.is_match(&rel))
                 })
                 .collect::<Vec<_>>();
-            if config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low {
-                return low::scan(root, &opts, &files, sources, facts, index, rule);
+            let mut findings =
+                if config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low {
+                    low::scan(root, &opts, &files, sources, facts, index, rule)?
+                } else {
+                    let view = facts.for_sql_application(index, rule.name.as_deref());
+                    scan::scan(
+                        root,
+                        &opts,
+                        &files,
+                        sources,
+                        view.as_ref()
+                            .map_or(facts as &dyn SqlFactContext, |view| view),
+                    )?
+                };
+            if let Some(message) = &rule.message {
+                for located in &mut findings.0 {
+                    located.finding.message = format!("{message}: {}", located.finding.message);
+                }
             }
-            let view = facts.for_sql_application(index, rule.name.as_deref());
-            scan::scan(
-                root,
-                &opts,
-                &files,
-                sources,
-                view.as_ref()
-                    .map_or(facts as &dyn SqlFactContext, |view| view),
-            )
+            Ok(findings)
         })
         .collect();
     Ok(all?

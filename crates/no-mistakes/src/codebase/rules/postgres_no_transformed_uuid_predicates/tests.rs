@@ -3,13 +3,13 @@ use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
-fn fixture() -> PathBuf {
+pub(super) fn fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/postgres-no-transformed-uuid-predicates/fixture"),
     )
 }
-fn config(extra: &str) -> NoMistakesConfig {
+pub(super) fn config(extra: &str) -> NoMistakesConfig {
     NoMistakesConfig { rules: vec![RuleDef {
         rule: RULE_ID.into(), scope: Some(RuleScope::Repository),
         options: crate::codebase::postgres::tests::fixture_rule_options(&format!(
@@ -132,5 +132,25 @@ fn directives_suppress_the_configured_executor_call() {
         let mut findings = check_with_files(&root, &cfg, &files).unwrap();
         super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
         assert!(findings.is_empty(), "{findings:#?}");
+    }
+}
+
+#[test]
+fn custom_messages_prefix_the_explanation_and_static_rewrite() {
+    let root = fixture();
+    let files = [root.join("embedded.ts"), root.join("schema.json")];
+    for effort in [
+        crate::config::v2::Effort::Low,
+        crate::config::v2::Effort::Max,
+    ] {
+        let mut cfg = config("");
+        cfg.effort = Some(effort);
+        cfg.rules[0].message = Some("Keep identity lookups indexable".into());
+        let findings = check_with_files(&root, &cfg, &files).unwrap();
+        assert!(findings.iter().all(|finding| finding
+            .message
+            .starts_with("Keep identity lookups indexable:")
+            && finding.message.contains("UUID column")
+            && finding.message.contains("Cast the parameter")));
     }
 }
