@@ -6,6 +6,7 @@ mod keywords;
 mod unsupported;
 use crate::codebase::postgres::types::SqlUnanalyzableStatement;
 use sqlparser::ast::{visit_statements, DiscardObject, Statement};
+use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 use std::ops::ControlFlow;
 use std::sync::Arc;
@@ -23,6 +24,24 @@ pub(super) fn guarded_action(
         false,
     );
     marker.recovery_failure = unrecoverable_chunk(suffix, 0);
+    marker.recovery_failure.as_mut()?.source_order.clear();
+    Some(marker)
+}
+
+/// A compatibility AST rejected by validation is a failed schema action,
+/// even when a preceding IF condition was recovered for function calls.
+pub(super) fn rejected_schema(tokens: &[TokenWithSpan]) -> Option<LocatedStatement> {
+    let start = tokens.iter().position(|token| {
+        matches!(&token.token, Token::Word(word)
+            if word.quote_style.is_none() && word.keyword == Keyword::CREATE)
+    })?;
+    let mut marker = LocatedStatement::functions(
+        Statement::Discard {
+            object_type: DiscardObject::ALL,
+        },
+        false,
+    );
+    marker.recovery_failure = unrecoverable_chunk(&tokens[start..], 0);
     marker.recovery_failure.as_mut()?.source_order.clear();
     Some(marker)
 }

@@ -2,10 +2,7 @@ use super::PostgresParseError;
 use sqlparser::ast::{CreateView, Spanned, Statement, Visit, VisitMut, Visitor, VisitorMut};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Location, Token, TokenWithSpan, Whitespace};
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    ops::ControlFlow,
-};
+use std::{collections::BTreeSet, ops::ControlFlow};
 
 mod query;
 
@@ -27,18 +24,8 @@ impl RecursiveViews {
         }
     }
 
-    pub(super) fn restore_statements(
-        &self,
-        statements: &mut [super::LocatedStatement],
-        original_heads: &BTreeMap<Location, String>,
-    ) {
+    pub(super) fn restore_statements(&self, statements: &mut [super::LocatedStatement]) {
         for located in statements {
-            if let Some(failure) = &mut located.recovery_failure {
-                let location = Location::new(failure.line as u64, failure.column as u64);
-                if let Some(head) = original_heads.get(&location) {
-                    failure.head.clone_from(head);
-                }
-            }
             self.restore(&mut located.statement);
         }
     }
@@ -89,28 +76,17 @@ impl RecursiveViews {
 
 /// sqlparser 0.63 has no recursive-view modifier. Normalize only declaration
 /// headers, retaining their name locations and every original source span.
-pub(super) fn prepare(
-    tokens: &mut [TokenWithSpan],
-    mut original_heads: Option<&mut BTreeMap<Location, String>>,
-) -> RecursiveViews {
+pub(super) fn prepare(tokens: &mut [TokenWithSpan]) -> RecursiveViews {
     let mut result = RecursiveViews::default();
     let mut preceding = [Keyword::NoKeyword; 5];
     let mut previous_index = 0;
     let mut name_next = false;
-    let mut chunk_start = 0;
-    let mut create_start = 0;
     for index in 0..tokens.len() {
-        if tokens[index].token == Token::SemiColon {
-            chunk_start = index + 1;
-        }
         let keyword = match &tokens[index].token {
             Token::Whitespace(_) => continue,
             Token::Word(word) if word.quote_style.is_none() => word.keyword,
             _ => Keyword::NoKeyword,
         };
-        if keyword == Keyword::CREATE {
-            create_start = index;
-        }
         if name_next {
             result.names.insert(tokens[index].span.start);
             name_next = false;
@@ -142,15 +118,6 @@ pub(super) fn prepare(
                     ]
             )
         {
-            // Recovery can anchor either the procedural chunk or its guarded CREATE action.
-            // Save both original heads before RECURSIVE disappears from the parser tokens.
-            if let Some(heads) = original_heads.as_deref_mut() {
-                for start in [chunk_start, create_start] {
-                    if let Some((location, head)) = super::statement_head::head(&tokens[start..]) {
-                        heads.entry(location).or_insert(head);
-                    }
-                }
-            }
             tokens[previous_index].token = Token::Whitespace(Whitespace::Space);
             name_next = true;
         }

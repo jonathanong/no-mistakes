@@ -145,6 +145,7 @@ test(
 
 // Each scenario independently checks its CJS, ESM, and prepared-report contract.
 for (const [scenario, config, findings, advisories, subdirectory = ""] of [
+  ["postgres-ddl-unanalyzable", "report.yml", 387, 0, "issue-2731"],
   ["forbidden-calls/consumer-matrix", "configs/unknown-calls-default.yml", 1, 0],
   ["forbidden-calls/consumer-matrix", "configs/unknown-calls-finding.yml", 1, 0],
   ["forbidden-calls/consumer-matrix", "configs/unknown-calls-ignore.yml", 0, 0],

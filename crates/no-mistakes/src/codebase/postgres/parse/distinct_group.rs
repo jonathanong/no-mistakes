@@ -4,7 +4,9 @@
 
 use std::borrow::Cow;
 
+mod head_map;
 pub(super) mod opaque;
+pub(super) use head_map::HeadSourceMap;
 #[cfg(test)]
 mod tests;
 
@@ -24,6 +26,17 @@ pub(super) fn separate_distinct_grouping(sql: &str) -> Cow<'_, str> {
         Cow::Borrowed(sql)
     } else {
         Cow::Owned(apply_edits(sql, &edits))
+    }
+}
+
+/// Share the same edit inventory with diagnostics that render original source.
+pub(super) fn separate_with_head_map(sql: &str) -> (Cow<'_, str>, HeadSourceMap) {
+    let edits = distinct_grouping_edits(sql);
+    let map = HeadSourceMap::new(sql, &edits);
+    if edits.is_empty() {
+        (Cow::Borrowed(sql), map)
+    } else {
+        (Cow::Owned(apply_edits(sql, &edits)), map)
     }
 }
 

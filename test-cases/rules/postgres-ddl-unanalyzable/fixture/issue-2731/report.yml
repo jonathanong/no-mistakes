@@ -1,0 +1,34 @@
+rules:
+  - rule: postgres-constraint-validate
+    scope: repository
+    options: {sqlInclude: ['migrations/**/*.sql']}
+  - rule: postgres-fk-index
+    scope: repository
+    options: {sqlInclude: ['migrations/**/*.sql']}
+  - rule: postgres-generated-column-predicates
+    scope: repository
+    options: {executorNames: [], sqlInclude: ['migrations/**/*.sql']}
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options: {executorNames: [], sqlInclude: ['migrations/**/*.sql']}
+  - rule: postgres-identifier-length
+    scope: repository
+    options: {sqlInclude: ['migrations/**/*.sql']}
+  - rule: postgres-no-add-column
+    scope: repository
+    options: {sqlInclude: ['migrations/**/*.sql']}
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    options: {executorNames: [], sqlInclude: ['migrations/**/*.sql']}
+  - rule: postgres-redundant-index
+    scope: repository
+    options: {sqlInclude: ['migrations/**/*.sql']}
+  - rule: postgres-require-fk-on-delete
+    scope: repository
+    options: {sqlInclude: ['migrations/**/*.sql']}
+  - rule: postgres-require-named-constraints
+    scope: repository
+    options: {sqlInclude: ['migrations/**/*.sql']}
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options: {executorNames: [], sqlInclude: ['migrations/**/*.sql'], bannedStatements: []}
