@@ -1,6 +1,7 @@
+use super::chunks::{has_non_ws, split_statement_tokens};
 use super::{
-    apply_stored_generated_mode, has_non_ws, keyword_of, skip_balanced_parens,
-    skip_generated_always_as_expr, split_statement_tokens, stored_token,
+    apply_stored_generated_mode, keyword_of, skip_balanced_parens, skip_generated_always_as_expr,
+    stored_token,
 };
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, Word};

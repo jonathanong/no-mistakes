@@ -4,6 +4,9 @@ use sqlparser::tokenizer::{Token, TokenWithSpan, Word};
 use std::sync::Arc;
 
 mod chr;
+mod chunks;
+use chunks::split_statement_tokens;
+pub(super) use chunks::{next_non_ws, skip_ws};
 mod recover;
 pub(super) mod rewrite;
 mod source;
@@ -161,44 +164,6 @@ fn skip_balanced_parens(tokens: &[Token], open_at: usize) -> Option<usize> {
         index += 1;
     }
     None
-}
-
-fn split_statement_tokens(tokens: Vec<Token>) -> Vec<Vec<Token>> {
-    let mut statements = Vec::new();
-    let mut current = Vec::new();
-    for token in tokens {
-        if matches!(token, Token::SemiColon) {
-            if has_non_ws(&current) {
-                statements.push(std::mem::take(&mut current));
-            } else {
-                current.clear();
-            }
-        } else {
-            current.push(token);
-        }
-    }
-    if has_non_ws(&current) {
-        statements.push(current);
-    }
-    statements
-}
-
-pub(super) fn skip_ws(tokens: &[Token], mut index: usize) -> usize {
-    while index < tokens.len() && matches!(tokens[index], Token::Whitespace(_)) {
-        index += 1;
-    }
-    index
-}
-
-pub(super) fn next_non_ws(tokens: &[Token], start: usize) -> Option<usize> {
-    let index = skip_ws(tokens, start);
-    (index < tokens.len()).then_some(index)
-}
-
-fn has_non_ws(tokens: &[Token]) -> bool {
-    tokens
-        .iter()
-        .any(|token| !matches!(token, Token::Whitespace(_)))
 }
 
 pub(super) fn keyword_of(token: &Token) -> Option<Keyword> {

@@ -1,19 +1,25 @@
 use super::{dynamic, extract_migration_facts};
 use crate::codebase::postgres::types::SqlSchemaFileFacts;
+use std::collections::BTreeSet;
 
 /// Merge the already discovered routine body SQL and static EXECUTE SQL.
 pub(super) fn append(sql: &str, facts: &mut SqlSchemaFileFacts) {
-    for source in dynamic::schema_bodies(sql) {
-        if source.clear_outer_wrapper {
-            let outer = source.source_order.first().copied();
-            facts.unanalyzable_statements.retain(|marker| {
-                marker.source_order.first().copied() != outer
-                    || marker.source_order.len() != 1
-                    || !marker.head.split_whitespace().next().is_some_and(|head| {
-                        head.eq_ignore_ascii_case("DO") || head.eq_ignore_ascii_case("CREATE")
-                    })
-            });
-        }
+    let bodies = dynamic::schema_bodies(sql);
+    // Each routine contributes many chunks. Clear owned wrappers in one pass,
+    // rather than scanning every existing marker once per chunk.
+    let wrappers: BTreeSet<_> = bodies
+        .iter()
+        .filter(|source| source.clear_outer_wrapper)
+        .filter_map(|source| source.source_order.first().copied())
+        .collect();
+    facts.unanalyzable_statements.retain(|marker| {
+        marker.source_order.len() != 1
+            || !wrappers.contains(&marker.source_order[0])
+            || !marker.head.split_whitespace().next().is_some_and(|head| {
+                head.eq_ignore_ascii_case("DO") || head.eq_ignore_ascii_case("CREATE")
+            })
+    });
+    for source in bodies {
         append_one(facts, source, true);
     }
     for source in dynamic::extract(sql) {
