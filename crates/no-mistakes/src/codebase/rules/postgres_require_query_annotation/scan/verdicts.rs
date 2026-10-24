@@ -7,8 +7,6 @@ use crate::codebase::postgres::{
 use std::path::Path;
 
 mod classify;
-#[cfg(test)]
-use classify::prefix_status;
 use classify::{annotation_status, judge_sql, TextProof};
 
 pub(super) fn record(

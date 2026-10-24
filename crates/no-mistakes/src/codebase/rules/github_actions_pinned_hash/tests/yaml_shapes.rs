@@ -1,16 +1,5 @@
 use super::*;
 
-fn check_yaml_shape(name: &str) -> Vec<RuleFinding> {
-    let root = fixture("yaml-shapes");
-    let config = config_with_options("{}");
-    let files = vec![root.join(".github").join("workflows").join(name)];
-    check_with_files(&root, &config, &files).unwrap()
-}
-
-fn lines_of(findings: &[RuleFinding]) -> Vec<usize> {
-    findings.iter().map(|finding| finding.line).collect()
-}
-
 #[test]
 fn yaml_flow_quoted_and_next_line_uses_are_checked() {
     // The tag on the last line of flow-pass proves the document parsed, so the

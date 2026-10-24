@@ -386,4 +386,15 @@ fn uses_line_not_matching_regex_skipped() {
     assert!(findings.is_empty(), "{findings:?}");
 }
 
+fn check_yaml_shape(name: &str) -> Vec<RuleFinding> {
+    let root = fixture("yaml-shapes");
+    let config = config_with_options("{}");
+    let files = vec![root.join(".github").join("workflows").join(name)];
+    check_with_files(&root, &config, &files).unwrap()
+}
+
+fn lines_of(findings: &[RuleFinding]) -> Vec<usize> {
+    findings.iter().map(|finding| finding.line).collect()
+}
+
 mod yaml_shapes;
