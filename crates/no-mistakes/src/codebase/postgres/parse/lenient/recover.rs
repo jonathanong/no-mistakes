@@ -1,5 +1,7 @@
 use super::LocatedStatement;
 mod bodies;
+mod copy;
+mod failure;
 mod locations;
 mod partition;
 mod queries;
@@ -28,8 +30,17 @@ pub(super) fn parse_chunks_with_function_calls(
         });
     let mut statements = Vec::new();
     let mut transaction_open = false;
-    for (ordinal, chunk) in chunks.into_iter().enumerate() {
+    let mut copy_data_pending = false;
+    let mut ordinal = 0;
+    for chunk in chunks {
         let original = located.next();
+        // Normalization blanks COPY rows but leaves sqlparser's `\.` terminator.
+        if copy_data_pending && original.is_some_and(copy::is_terminator) {
+            copy_data_pending = false;
+            continue;
+        }
+        let chunk_ordinal = ordinal;
+        ordinal += 1;
         let aligned = original.map(|source| locations::align(&chunk, source));
         // Own the chunk text even when recovery emits no statement. A later
         // sibling must not inherit this chunk's ON CONFLICT target.
@@ -39,6 +50,7 @@ pub(super) fn parse_chunks_with_function_calls(
             aligned.as_deref(),
             allow_concurrent_detach && !transaction_open,
         );
+        copy_data_pending = original.is_some_and(copy::owns_terminator);
         if produced.is_empty() {
             if let Some(tokens) = tokens {
                 let mut marker = LocatedStatement::functions(
@@ -47,7 +59,7 @@ pub(super) fn parse_chunks_with_function_calls(
                     },
                     false,
                 );
-                marker.recovery_failure = unrecoverable_chunk(&tokens, ordinal);
+                marker.recovery_failure = failure::unrecoverable_chunk(&tokens, chunk_ordinal);
                 marker.chunk_tokens = Some(tokens);
                 statements.push(marker);
             }
@@ -55,7 +67,7 @@ pub(super) fn parse_chunks_with_function_calls(
         }
         for mut statement in produced {
             if let Some(failure) = &mut statement.recovery_failure {
-                failure.source_order.insert(0, ordinal);
+                failure.source_order.insert(0, chunk_ordinal);
             }
             match &statement.statement {
                 Statement::StartTransaction { .. } => transaction_open = true,
@@ -73,34 +85,6 @@ pub(super) fn parse_chunks_with_function_calls(
         }
     }
     statements
-}
-
-fn unrecoverable_chunk(
-    tokens: &[TokenWithSpan],
-    ordinal: usize,
-) -> Option<super::super::super::types::SqlUnanalyzableStatement> {
-    let significant = tokens
-        .iter()
-        .filter(|token| !matches!(token.token, Token::Whitespace(_)))
-        .collect::<Vec<_>>();
-    // Peeled DO bodies can place procedural BEGIN before the first SQL action
-    // in the same semicolon chunk. Anchor the failure to that action.
-    let start = usize::from(significant.first().is_some_and(|token| {
-        matches!(&token.token, Token::Word(word) if word.quote_style.is_none() && word.value.eq_ignore_ascii_case("BEGIN"))
-    }));
-    let statement = significant.get(start..)?;
-    let line = statement.first()?.span.start.line as usize;
-    let head = statement
-        .iter()
-        .take(8)
-        .map(|token| token.token.to_string())
-        .collect::<Vec<_>>()
-        .join(" ");
-    Some(super::super::super::types::SqlUnanalyzableStatement {
-        line,
-        head,
-        source_order: vec![ordinal],
-    })
 }
 
 fn parse_chunk(

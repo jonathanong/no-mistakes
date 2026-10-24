@@ -95,3 +95,27 @@ fn postgres_ddl_nested_locations_and_suppressions_match_standalone() {
     assert_eq!(findings.len(), 1, "{dynamic:#?}");
     assert_eq!(findings[0]["line"], 2);
 }
+
+#[test]
+fn valid_unsupported_sql_diagnostics_preserve_node_policy_guidance() {
+    let root = category_fixture("rules", "postgres-ddl-unanalyzable").join("unsupported-valid");
+    let report = recall_check_report(&root, "report.yml");
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 3, "{report:#?}");
+    for finding in findings {
+        let message = finding["message"].as_str().unwrap();
+        assert!(message.contains("no-mistakes-disable-next-line postgres-fk-index"));
+        assert!(message.contains("options.unanalyzable"));
+    }
+}
+
+#[test]
+fn copy_stdin_data_and_terminators_do_not_add_node_findings() {
+    let root = category_fixture("rules", "postgres-ddl-unanalyzable").join("copy");
+    let report = recall_check_report(&root, "positive.yml");
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 1, "{report:#?}");
+    assert_eq!(findings[0]["file"], "migrations/001.sql");
+    assert_eq!(findings[0]["line"], 8);
+    assert_eq!(findings[0]["target"], "FROBULATE accounts");
+}

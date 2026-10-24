@@ -147,7 +147,7 @@ fn append_rule(
                     file: rel.clone(),
                     line,
                     message: format!(
-                        "{rel}:{line}: SQL statement `{}` could not be analyzed for {rule_id}; rewrite it as supported static PostgreSQL SQL",
+                        "{rel}:{line}: SQL statement `{}` could not be analyzed for {rule_id} (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line {rule_id}: reason`, or set options.unanalyzable to advise or ignore",
                         statement.head
                     ),
                     import: None,

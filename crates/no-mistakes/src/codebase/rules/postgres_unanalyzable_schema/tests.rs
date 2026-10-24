@@ -3,8 +3,30 @@ use crate::codebase::postgres::extract_migration_facts;
 use crate::codebase::rules::{source_store_for_files, suppress_rule_findings_with_sources};
 use crate::config::v2::load_v2_config;
 
+mod copy_tests;
+
 fn fixture() -> PathBuf {
     crate::test_support::rule_fixture_root("postgres-ddl-unanalyzable")
+}
+
+#[test]
+fn valid_postgres_parser_gaps_name_suppression_and_policy() {
+    let root = fixture().join("unsupported-valid");
+    let (config, files, facts) = prepared(&root, "report.yml");
+    let output = diagnostics(&root, &config, &files, &facts).unwrap();
+    assert_eq!(output.findings.len(), 3, "{:?}", output.findings);
+    for (index, finding) in output.findings.iter().enumerate() {
+        assert_eq!(finding.line, index + 1);
+        assert!(finding
+            .message
+            .contains("could not be analyzed for postgres-fk-index"));
+        assert!(finding
+            .message
+            .contains("no-mistakes-disable-next-line postgres-fk-index"));
+        assert!(finding.message.contains("options.unanalyzable"));
+        assert!(finding.message.contains("advise or ignore"));
+        assert!(!finding.message.contains("rewrite it as supported static"));
+    }
 }
 
 #[test]

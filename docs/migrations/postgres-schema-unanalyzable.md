@@ -49,3 +49,6 @@ CREATE PUBLICATION app_changes FOR TABLE accounts;
 
 Run a local `no-mistakes check --root . --format json` in your configured project
 and validate the changed findings and advisories before adopting the release.
+
+See the [forbidden-calls unknown-call default](forbidden-calls-unknown-calls.md)
+for the companion behavior change.

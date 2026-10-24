@@ -32,3 +32,6 @@ The saved configurations in
 show the default, explicit `finding`, and explicit `ignore` results on the same
 dynamic call. Downstream consumers should validate the changed default with a
 local `no-mistakes` binary before adopting the next release.
+
+The [PostgreSQL schema diagnostic default](postgres-schema-unanalyzable.md)
+changes in the same release.

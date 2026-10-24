@@ -26,8 +26,8 @@ mod sql_text;
 mod standalone_table;
 mod table_boundary;
 mod table_only;
-pub(super) use sql_text::normalize_copy_data;
 pub(crate) use sql_text::top_level_statements;
+pub(super) use sql_text::{normalize_copy_data, normalize_copy_data_for_tokens};
 pub(super) mod unicode;
 mod unicode_decode;
 

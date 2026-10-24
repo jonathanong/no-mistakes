@@ -14,7 +14,8 @@ pub(super) struct RoutineBody {
 /// Executable PL/pgSQL DO/function/procedure bodies, including dollar, plain,
 /// E, U&, and PostgreSQL newline-concatenated string literals.
 pub(super) fn bodies(sql: &str) -> Vec<RoutineBody> {
-    let all = tokenize(sql);
+    let normalized = super::super::super::parse::normalize_copy_data_for_tokens(sql);
+    let all = tokenize(&normalized);
     statements(&all)
         .into_iter()
         .enumerate()

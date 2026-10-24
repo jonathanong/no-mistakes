@@ -81,7 +81,7 @@ test(
     const cjs = require("../index.js");
     const esm = await import("../index.mjs");
     const fixtures = join(__dirname, "../../../test-cases/rules");
-    for (const [scenario, config, findings, advisories] of [
+    for (const [scenario, config, findings, advisories, subdirectory = ""] of [
       ["forbidden-calls/consumer-matrix", "configs/unknown-calls-default.yml", 1, 0],
       ["forbidden-calls/consumer-matrix", "configs/unknown-calls-finding.yml", 1, 0],
       ["forbidden-calls/consumer-matrix", "configs/unknown-calls-ignore.yml", 0, 0],
@@ -89,8 +89,10 @@ test(
       ["postgres-ddl-unanalyzable", "advise.yml", 0, 22],
       ["postgres-ddl-unanalyzable", "ignore.yml", 0, 0],
       ["postgres-ddl-unanalyzable", "narrow.yml", 2, 0],
+      ["postgres-ddl-unanalyzable", "report.yml", 3, 0, "unsupported-valid"],
+      ["postgres-ddl-unanalyzable", "positive.yml", 1, 0, "copy"],
     ]) {
-      const options = { root: join(fixtures, scenario, "fixture"), config };
+      const options = { root: join(fixtures, scenario, "fixture", subdirectory), config };
       const report = await cjs.check(options);
       assert.deepEqual(await esm.check(options), report);
       const prepared = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });

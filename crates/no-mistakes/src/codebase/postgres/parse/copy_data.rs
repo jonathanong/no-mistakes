@@ -1,12 +1,16 @@
 use sqlparser::keywords::Keyword;
-use sqlparser::tokenizer::Token;
+use sqlparser::tokenizer::{Token, TokenWithSpan};
 
 pub(super) fn is_copy_stdin(sql: &str) -> bool {
     let tokens = super::unicode::tokenize_raw_unicode(sql);
+    is_copy_stdin_tokens(&tokens)
+}
+
+pub(super) fn is_copy_stdin_tokens(tokens: &[TokenWithSpan]) -> bool {
     let mut tokens = tokens
         .iter()
         .filter(|t| !matches!(t.token, Token::Whitespace(_)));
-    if !matches!(tokens.next().map(|t| &t.token), Some(Token::Word(word)) if word.keyword == Keyword::COPY)
+    if !matches!(tokens.next().map(|t| &t.token), Some(Token::Word(word)) if word.quote_style.is_none() && word.keyword == Keyword::COPY)
     {
         return false;
     }
