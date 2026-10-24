@@ -43,7 +43,7 @@ no-mistakes check --format json
 `no-mistakes check --effort low --format json` selects low effort only for
 rules that implement it (`postgres-require-query-annotation`,
 `nextjs-redirect-destinations`, `test-no-unmocked-dynamic-imports`,
-`playwright-unique-test-ids`, `playwright-coverage`, `nextjs-no-caching`,
+`playwright-unique-test-ids`, `playwright-unique-html-ids`, `playwright-coverage`, `nextjs-no-caching`,
 `require-storybook-stories`, and `postgres-no-offset`);
 `max` is the default and preserves current analysis.
 `test-no-unmocked-dynamic-imports` at `low` accepts only a top-level static
@@ -52,6 +52,9 @@ files; other setup-reachability shapes follow `unanalyzable`.
 `playwright-unique-test-ids` and `playwright-coverage` at `low` accept a
 string literal test id, including JSX `data-testid={"save"}`, or a prop with a
 literal default; other selector shapes follow `unanalyzable`.
+`playwright-unique-html-ids` at `low` accepts a string literal HTML id,
+including JSX `id={"save"}`, or a prop with a literal default; other id
+expressions follow `unanalyzable`.
 `nextjs-no-caching` at `low` checks literal fetch options, route segment exports,
 and direct configuration objects; indirect settings follow `unanalyzable`.
 `require-storybook-stories` at `low` keeps direct story and configured colocated

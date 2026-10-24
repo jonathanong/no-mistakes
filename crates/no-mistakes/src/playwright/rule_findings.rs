@@ -18,6 +18,8 @@ pub(crate) struct LowEffortFindings {
     pub unique_test_ids: Option<Unanalyzable>,
     pub unique_html_ids: Option<Unanalyzable>,
     pub coverage: Option<Unanalyzable>,
+    /// HTML IDs collected only for coverage are not configured test-ID hooks.
+    pub configured_html_id_selector: bool,
 }
 
 pub(crate) struct ReportOutcome {
@@ -52,7 +54,7 @@ pub(crate) fn findings_from_report_with_effort(
             report,
             PLAYWRIGHT_UNIQUE_TEST_IDS,
             low.unique_test_ids,
-            unique_html_ids,
+            unique_html_ids || !low.configured_html_id_selector,
         );
     }
     if unique_html_ids {
