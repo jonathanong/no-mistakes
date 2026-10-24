@@ -7,7 +7,7 @@ use std::path::Path;
 #[derive(Debug)]
 pub(super) enum Outcome {
     Proven,
-    Unanalyzable(String),
+    Unanalyzable { file: String, reason: String },
 }
 
 pub(super) fn check(
@@ -38,11 +38,18 @@ pub(super) fn check(
         .map_err(|reason| error(&contract.consumer.file, "consumer", reason))?;
     // Inspect immediate schema children only, before recursive normalization or
     // compatibility proof. This is a grammar boundary, not a validity claim.
-    for (side, value) in [("producer", producer), ("consumer", consumer)] {
+    for (side, reference, value) in [
+        ("producer", &contract.producer, producer),
+        ("consumer", &contract.consumer, consumer),
+    ] {
         if let Some(path) = nested_child(value) {
-            return Ok(Outcome::Unanalyzable(format!(
-                "unproven: {side} schema at {path} is unanalyzable at effort low; low supports scalar roots, flat objects with scalar properties, and root arrays with scalar items. Use effort max, or flatten both declarations and their actual payloads; selecting leaf pointers alone does not preserve parent constraints"
-            )));
+            return Ok(Outcome::Unanalyzable {
+                file: reference.file.clone(),
+                reason: format!(
+                "unproven: {side} schema `{}{}` at {path} is unanalyzable at effort low; low supports scalar roots, flat objects with scalar properties, and root arrays with scalar items. Use effort max, or flatten both declarations and their actual payloads; selecting leaf pointers alone does not preserve parent constraints",
+                reference.file, reference.pointer,
+            ),
+            });
         }
     }
     let producer = schema::parse(producer, "$", 0)

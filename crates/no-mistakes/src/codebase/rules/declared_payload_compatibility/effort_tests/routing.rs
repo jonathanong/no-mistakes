@@ -64,14 +64,38 @@ fn mixed_applications_keep_policies_and_custom_messages_separate() {
 }
 
 #[test]
-fn a_nested_consumer_is_not_silently_accepted() {
-    let result = run(vec![rule(
-        Effort::Low,
-        Unanalyzable::Report,
-        vec![contract("flat", "nested")],
-    )]);
-    assert_eq!(result.findings.len(), 1);
-    assert!(result.findings[0].message.contains("consumer schema"));
+fn consumer_only_nested_shape_anchors_both_channels_to_the_consumer_file() {
+    let files = [
+        root().join("schemas.json"),
+        root().join("consumer-nested.json"),
+    ];
+    let sources = super::super::super::source_store_for_files(&files);
+    for policy in [Unanalyzable::Report, Unanalyzable::Advise] {
+        let mut pair = contract("flat", "nested");
+        pair.consumer.file = "consumer-nested.json".into();
+        pair.consumer.pointer = "/payload".into();
+        let config = NoMistakesConfig {
+            rules: vec![rule(Effort::Low, policy, vec![pair])],
+            ..NoMistakesConfig::default()
+        };
+        let output =
+            diagnostics_with_files_and_sources(&root(), &config, &files, &sources, false).unwrap();
+        let expected = usize::from(policy == Unanalyzable::Report);
+        assert_eq!(output.findings.len(), expected);
+        assert_eq!(output.advisories.len(), 1 - expected);
+        let finding = output
+            .findings
+            .iter()
+            .chain(&output.advisories)
+            .next()
+            .unwrap();
+        assert_eq!(finding.file, "consumer-nested.json");
+        assert_eq!(finding.line, 1);
+        assert!(finding.message.contains("consumer schema"));
+        assert!(finding.message.contains("consumer-nested.json/payload"));
+        assert!(finding.message.contains("$[\"profile\"]"));
+    }
+    assert_eq!(sources.physical_read_count(), 2);
 }
 
 #[test]

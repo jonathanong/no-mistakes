@@ -31,18 +31,10 @@ pub fn diagnostics_with_files_and_sources(
                     let result = if policy.effort == Effort::Low {
                         match low::check(root, contract, &allowed, sources, &documents) {
                             Ok(low::Outcome::Proven) => Ok(()),
-                            Ok(low::Outcome::Unanalyzable(reason)) => {
+                            Ok(low::Outcome::Unanalyzable { file, reason }) => {
                                 output.unanalyzable(
                                     policy.unanalyzable,
-                                    finding(
-                                        root,
-                                        rule,
-                                        contract,
-                                        &contract.producer.file,
-                                        reason,
-                                        &allowed,
-                                        sources,
-                                    ),
+                                    finding(root, rule, contract, &file, reason, &allowed, sources),
                                 );
                                 Ok(())
                             }

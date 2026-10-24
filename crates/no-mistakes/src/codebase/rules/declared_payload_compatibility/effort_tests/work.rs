@@ -13,7 +13,7 @@ fn low_nested_grammar_does_no_recursive_schema_or_comparison_work() {
         let before = probe::counts();
         assert!(matches!(
             low::check(&root(), &contract, &allowed, &sources, &documents).unwrap(),
-            low::Outcome::Unanalyzable(_)
+            low::Outcome::Unanalyzable { .. }
         ));
         assert_eq!(probe::counts(), before);
         check_contract(&root(), &contract, &allowed, &sources, &documents).unwrap();
