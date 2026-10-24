@@ -1968,5 +1968,11 @@
         "stderr": "19e8c3cd128a95cff5637e3d2df19d5d3b5f09ce6b6af2bb78caf6d1df74b769"
       }
     }
-  ]
+  ],
+  "rebasedCandidate": {
+    "head": "a36e23002073ae6a1b7bb36d189c89534c694919",
+    "base": "17139a03be47301db3164557d609fd2a7d376a68",
+    "sha256": "0a5d6e3f5bec00ae7b2cb93e7d41ccabd7eb07ba2b3873bf2a17b08c56aaee7d",
+    "comparison": "All 109 outputs match the pre-rebase candidate."
+  }
 }

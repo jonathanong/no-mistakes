@@ -51,3 +51,11 @@ sources meet 200 physical lines and tests meet 500. Body wrapper markers are
 removed in one grouped pass rather than scanning diagnostics per fragment.
 No query_annotation or relative_scope paths are edited. Both worker worktrees
 and the focused coverage target are removed.
+
+The final branch is rebased onto `17139a03b` as `a36e23002`. Parser, migration
+and native parity helper trees are unchanged by that rebase. Main includes an
+unrelated Rust annotation change, so the canonical scope is repeated: 13,287
+library tests (three existing ignored), 449 binary tests and 1,389 integration
+tests pass. All 575 rebuilt native tests pass again. All 109 CLI outputs match
+the pre-rebase candidate, and the repository check remains clean. The comparison
+artifact records the rebased executable hash separately.
