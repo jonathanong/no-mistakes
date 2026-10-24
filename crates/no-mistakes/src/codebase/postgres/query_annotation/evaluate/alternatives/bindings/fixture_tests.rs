@@ -195,8 +195,6 @@ fn saved_dirty_branches_match_legacy_state_and_bound_binding_visits() {
         equal!(
             events,
             modules,
-            active_module_initials,
-            transient_roots,
             active_callback_functions,
             active_callback_executions,
             next_builder,
@@ -216,12 +214,34 @@ fn saved_dirty_branches_match_legacy_state_and_bound_binding_visits() {
             recreated_argument_slots,
             disconnected_argument_slots
         );
+        assert!(old.active_module_initials.is_empty() && new.active_module_initials.is_empty());
+        assert!(old.transient_roots.is_empty() && new.transient_roots.is_empty());
         assert!(
             new.scopes[new_env]["retained"]
                 == Value::Prefix("/* stable00 */ SELECT 0".into(), true, None)
         );
+        assert_eq!(
+            new.events.len(),
+            2,
+            "both saved executor spans must execute"
+        );
+        for (call, expected) in [
+            ("query(retained)", "/* stable00 */ SELECT 0"),
+            ("query(\"SELECT 2\")", "SELECT 2"),
+        ] {
+            let start = source.find(call).expect("saved executor call");
+            let span = (start as u32, (start + call.len()) as u32);
+            assert!(executors.contains(&span));
+            let values = &new.events[&(path.clone(), span)];
+            assert_eq!(values.len(), 1, "each saved executor runs once");
+            assert!(values[0].1 == Value::Prefix(expected.into(), true, None));
+        }
         println!("dirty whole_sql={whole_sql}: legacy binding visits={old_visits}, optimized={new_visits}");
         assert!(old_visits >= 64 * 32);
+        assert!(
+            new_visits >= 32,
+            "every saved branch must inspect its dirty binding"
+        );
         assert!(
             new_visits < old_visits / 2,
             "single-key branch writes must avoid scanning the unchanged SQL bindings"
