@@ -2,6 +2,7 @@ rules:
   - rule: postgres-bounded-statements
     scope: repository
     options:
+      executorNames: []
       schemaCatalogPath: catalog-no-schema.json
       sqlInclude: [sql/bare-view.sql]
       viewBounds:

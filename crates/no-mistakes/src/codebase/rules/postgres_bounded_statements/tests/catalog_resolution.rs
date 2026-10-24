@@ -212,3 +212,21 @@ fn view_allow_entries_and_line_suppressions_cover_unbounded_view_findings() {
             .unwrap();
     assert!(findings.is_empty(), "{findings:#?}");
 }
+
+#[test]
+fn boolean_key_ownership_and_incomplete_catalogs_remain_distinct() {
+    let found = check("key-booleans.yml", "key-booleans.sql").unwrap();
+    assert_eq!(found.len(), 1, "{found:#?}");
+    assert_eq!(
+        found[0].target.as_deref(),
+        Some("table:public.customer_accounts")
+    );
+    let root = root();
+    let sql = std::fs::read_to_string(root.join("sql/key-resolution.sql")).unwrap();
+    let facts = extract_sql_statement_facts(&sql);
+    let partial = SchemaCatalog::from_json(
+        &std::fs::read_to_string(root.join("catalog-partial.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(names(&facts.bounds[0], &partial).len(), 2);
+}

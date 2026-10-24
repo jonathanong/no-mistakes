@@ -245,3 +245,19 @@ fn unique_index_shape_guards_survive_cli_preparation() {
         .iter()
         .any(|(file, line, _)| file == "partial-unique.sql" && *line == 2));
 }
+
+#[test]
+fn catalog_key_ownership_and_view_policies_survive_cli_preparation() {
+    for (directory, config, expected) in [
+        ("catalog-resolution", "key-resolution.yml", 5),
+        ("catalog-resolution", "key-operators.yml", 4),
+        ("catalog-resolution", "key-booleans.yml", 1),
+        ("catalog-resolution", "view-bounds.yml", 1),
+        ("catalog-resolution", "view-allow.yml", 0),
+        ("catalog-resolution", "view-suppression.yml", 0),
+        ("catalog-resolution-identity", "view-identity.yml", 1),
+    ] {
+        let actual = findings_of(check_in(&fixture().join(directory), config));
+        assert_eq!(actual.len(), expected, "{config}: {actual:?}");
+    }
+}

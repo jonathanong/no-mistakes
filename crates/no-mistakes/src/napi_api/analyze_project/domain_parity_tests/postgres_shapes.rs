@@ -105,3 +105,32 @@ fn prepared_postgres_unique_index_shapes_match_standalone() {
     assert_eq!(standalone["warnings"], json!([]));
     assert_eq!(aggregate["reports"][0]["result"], standalone);
 }
+
+#[test]
+fn prepared_postgres_catalog_bounds_match_standalone() {
+    let fixture = category_fixture("rules", "postgres-bounded-statements");
+    for (directory, config, expected) in [
+        ("catalog-resolution", "key-resolution.yml", 5),
+        ("catalog-resolution", "key-operators.yml", 4),
+        ("catalog-resolution", "key-booleans.yml", 1),
+        ("catalog-resolution", "view-bounds.yml", 1),
+        ("catalog-resolution", "view-allow.yml", 0),
+        ("catalog-resolution", "view-suppression.yml", 0),
+        ("catalog-resolution-identity", "view-identity.yml", 1),
+    ] {
+        let root = fixture.join(directory);
+        let standalone = parse_json(
+            crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+                json!({"root": root, "config": config, "includeSqlVerdicts": true}),
+            )).unwrap(),
+        );
+        let aggregate = parse_json(
+            analyze_project_json_impl(crate::napi_api::options::test_json_arg(json!({
+                "root": root, "config": config,
+                "reports": [{"type": "check", "includeSqlVerdicts": true}]
+            }))).unwrap(),
+        );
+        assert_eq!(standalone["rules"].as_array().unwrap().len(), expected, "{config}");
+        assert_eq!(aggregate["reports"][0]["result"], standalone, "{config}");
+    }
+}

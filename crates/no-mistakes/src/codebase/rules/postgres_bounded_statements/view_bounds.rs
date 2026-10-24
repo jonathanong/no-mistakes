@@ -22,7 +22,7 @@ impl ViewBounds {
     ) -> Result<Self> {
         let mut resolved = BTreeMap::new();
         for (name, mode) in configured {
-            let Some(view) = catalog.view_relation(name) else {
+            let Some(view) = catalog.bounded_view_relation(name) else {
                 bail!("{RULE_ID} option viewBounds: {name} does not resolve to one catalog view");
             };
             if resolved.insert(view.name.clone(), *mode).is_some() {
@@ -37,7 +37,7 @@ impl ViewBounds {
         name: &str,
         catalog: &'a SchemaCatalog,
     ) -> Option<(&'a CatalogView, ViewBoundMode)> {
-        let view = catalog.view_relation(name)?;
+        let view = catalog.bounded_view_relation(name)?;
         let mode = self.0.get(&view.name)?;
         Some((view, *mode))
     }

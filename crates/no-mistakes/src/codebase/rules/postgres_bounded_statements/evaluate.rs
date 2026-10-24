@@ -33,12 +33,9 @@ struct Evaluation {
 
 /// The relations that make `fact` unbounded. A relation the catalog does not know is not
 /// judged, and it bounds nothing either: it can supply every value of a column pinned to it.
+#[cfg(any(test, feature = "test-instrumentation"))]
 pub(super) fn offenders(fact: &SqlBoundFact, catalog: &SchemaCatalog) -> Vec<Offender> {
     offenders_with_columns(fact, catalog, &ViewBounds::default(), false)
-}
-
-pub(super) fn variant_offenders(fact: &SqlBoundFact, catalog: &SchemaCatalog) -> Vec<Offender> {
-    offenders_with_columns(fact, catalog, &ViewBounds::default(), true)
 }
 
 pub(super) fn offenders_with_views(
