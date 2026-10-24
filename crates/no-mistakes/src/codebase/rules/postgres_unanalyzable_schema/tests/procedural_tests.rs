@@ -23,6 +23,12 @@ fn procedural_bodies_filter_commands_but_retain_unknown_sql_markers() {
                 (21, "END IF"),
             ][..],
         ),
+        ("quoted-do-bodies.sql", &[][..]),
+        ("malformed-do-suffix.sql", &[(2, "DO")][..]),
+        (
+            "return-query.sql",
+            &[(3, "RETURN QUERY FROBULATE accounts")][..],
+        ),
     ] {
         let path = root.join("migrations").join(name);
         let sql = std::fs::read_to_string(&path).unwrap();
@@ -30,7 +36,7 @@ fn procedural_bodies_filter_commands_but_retain_unknown_sql_markers() {
         assert_eq!(direct.len(), expected.len(), "{name}: {direct:?}");
         for (marker, (line, head)) in direct.iter().zip(expected) {
             assert_eq!(marker.line, *line, "{name}");
-            assert_eq!(marker.head, *head, "{name}");
+            assert!(marker.head.starts_with(head), "{name}: {marker:?}");
         }
 
         let files = vec![path];

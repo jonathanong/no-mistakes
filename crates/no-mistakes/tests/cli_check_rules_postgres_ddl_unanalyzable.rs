@@ -15,7 +15,7 @@ fn procedural_bodies_are_skipped_but_unknown_sql_and_top_level_siblings_report()
     assert!(!output.status.success());
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
     let findings = report["rules"].as_array().unwrap();
-    let actual = findings
+    let mut actual = findings
         .iter()
         .map(|finding| {
             (
@@ -25,9 +25,12 @@ fn procedural_bodies_are_skipped_but_unknown_sql_and_top_level_siblings_report()
             )
         })
         .collect::<Vec<_>>();
+    actual.sort_unstable();
     assert_eq!(
         actual,
         [
+            ("migrations/malformed-do-suffix.sql", 2, "unanalyzable"),
+            ("migrations/return-query.sql", 3, "unanalyzable"),
             ("migrations/top-level.sql", 7, "unanalyzable"),
             ("migrations/top-level.sql", 13, "unanalyzable"),
             ("migrations/top-level.sql", 19, "unanalyzable"),
