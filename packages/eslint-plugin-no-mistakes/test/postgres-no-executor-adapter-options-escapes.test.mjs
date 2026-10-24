@@ -135,4 +135,17 @@ describe("executor option helper escapes", () => {
       "8:passed",
     ]);
   });
+
+  it("keeps await and yield callees unproven when their operand is non-null asserted", () => {
+    assert.deepEqual(findings(true, undefined, "options-await-assertions.ts"), [
+      "8:passed",
+      "9:passed",
+      "10:passed",
+      "11:passed",
+    ]);
+    assert.deepEqual(
+      findings(true, "postgres-no-manual-transaction", "options-await-assertions.ts"),
+      [],
+    );
+  });
 });

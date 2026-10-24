@@ -77,7 +77,8 @@ function followedExpression(node) {
     (parent.type ||
       parent.typeArguments ||
       parent.getFirstToken()?.getText() === "(" ||
-      parent.getLastToken()?.getText() === "!")
+      (parent.getLastToken()?.getText() === "!" &&
+        !["await", "yield"].includes(parent.getFirstToken()?.getText())))
   ) {
     expression = parent;
     parent = expression.parent;
