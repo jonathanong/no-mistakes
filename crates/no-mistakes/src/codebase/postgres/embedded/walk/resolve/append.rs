@@ -112,5 +112,12 @@ fn first_static_arg(call: &CallExpression<'_>, visitor: &ScopeVisitor<'_>) -> Op
     if let Expression::Identifier(ident) = unwrap_ts_wrappers(expression) {
         return super::super::imported::constants::appended_identifier(visitor, ident);
     }
+    if let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(expression) {
+        if let Some(hole) =
+            super::super::imported::constants::namespace::piece(visitor, member, true)
+        {
+            return Some(hole);
+        }
+    }
     static_fragment(expression, visitor)
 }

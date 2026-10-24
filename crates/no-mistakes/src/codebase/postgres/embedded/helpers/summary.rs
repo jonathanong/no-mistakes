@@ -72,6 +72,8 @@ pub(crate) enum SiteArg {
 pub(crate) struct ImportedSite {
     /// The callee's local name; the projection looks up its import binding.
     pub(crate) local: String,
+    /// Static export selected from a runtime namespace import, for constants only.
+    pub(crate) member: Option<String>,
     pub(crate) args: Vec<SiteArg>,
     /// The call's result feeds an expression (not just a statement), so a
     /// builder helper must hand back the builder it was given.

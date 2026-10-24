@@ -24,10 +24,10 @@ mod clause_args_test_counter;
 pub(super) mod constants;
 use args::classify;
 
-/// Local names of named and default value imports. Namespace imports are
-/// excluded: `ns.helper()` is a member call, which stays unrecovered.
-pub(super) fn value_import_names(program: &Program<'_>) -> FxHashSet<String> {
+/// Local value imports, split into callable names and namespace constant owners.
+pub(super) fn value_import_names(program: &Program<'_>) -> (FxHashSet<String>, FxHashSet<String>) {
     let mut names = FxHashSet::default();
+    let mut namespaces = FxHashSet::default();
     for statement in &program.body {
         let Statement::ImportDeclaration(import) = statement else {
             continue;
@@ -45,11 +45,14 @@ pub(super) fn value_import_names(program: &Program<'_>) -> FxHashSet<String> {
                 ImportDeclarationSpecifier::ImportDefaultSpecifier(default) => {
                     names.insert(default.local.name.to_string());
                 }
+                ImportDeclarationSpecifier::ImportNamespaceSpecifier(namespace) => {
+                    namespaces.insert(namespace.local.name.to_string());
+                }
                 _ => {}
             }
         }
     }
-    names
+    (names, namespaces)
 }
 
 impl ScopeVisitor<'_> {
@@ -167,6 +170,7 @@ fn site_hole(
         call.span.start,
         ImportedSite {
             local: name.to_string(),
+            member: None,
             args,
             value_used,
             line,

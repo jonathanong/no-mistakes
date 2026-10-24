@@ -127,6 +127,11 @@ Static SQL returned by imported helpers (relative, `tsconfig` `paths` and barrel
 imports, with string-literal arguments spliced into literal-identifier
 templates) is recovered for every embedded-SQL rule and mapped to the helper's
 original file and line, including assigned results and appended fragments.
+Static runtime namespace reads such as `names.TABLE` and `names.default` also
+recover exported string constants through prepared imports and re-exports;
+computed, optional, method, type-only, and non-const reads remain unknown.
+Tagged builder fragments accessed through namespaces stay unknown because the
+exported object can mutate.
 Named imports, factory handles, and typed executor parameters honor configured
 scope; SQL-file selection retains `sqlInclude` semantics. The `ddl` group covers
 23 documented statement kinds, including routines and database utility commands.

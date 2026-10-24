@@ -57,6 +57,8 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) call_spans: Vec<(u32, u32)>,
     /// Local names bound by value imports; a call to one is an imported helper.
     pub(crate) imported_names: crate::fx::FxHashSet<String>,
+    /// Runtime namespace imports, independent of configured executor modules.
+    pub(super) constant_namespaces: crate::fx::FxHashSet<String>,
     /// The `const` initializer being walked, when it is a recognized IIFE.
     pub(super) iife: Option<super::iife::Iife>,
     pub(crate) imported_sites: std::cell::RefCell<helpers::Sites>,

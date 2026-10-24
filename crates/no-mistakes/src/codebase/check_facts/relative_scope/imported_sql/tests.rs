@@ -412,3 +412,6 @@ fn a_file_without_pending_helpers_is_not_a_candidate() {
     let files = prepared("same-file-literal-identifiers");
     assert!(!has_candidates(&files));
 }
+
+#[path = "namespace_tests.rs"]
+mod namespace_tests;
