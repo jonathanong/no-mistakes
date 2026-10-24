@@ -24,6 +24,11 @@ bundle.
 Files selected as client/helper code must not live beneath configured server
 route directories. The project configuration supplies the route scope.
 
+The rule checks `.ts`, `.mts`, `.tsx`, `.cts`, `.js`, `.mjs`, `.jsx`, and `.cjs`
+source files. Files outside this set, including Markdown, JSON, and MDX, do not
+establish route boundaries or client violations, even when another configured
+rule prepares import facts for those files.
+
 ## Options and defaults
 
 `excludes` is an optional list of route folders or files to leave outside the
