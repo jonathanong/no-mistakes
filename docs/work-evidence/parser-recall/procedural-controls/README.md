@@ -59,3 +59,25 @@ library tests (three existing ignored), 449 binary tests and 1,389 integration
 tests pass. All 575 rebuilt native tests pass again. All 109 CLI outputs match
 the pre-rebase candidate, and the repository check remains clean. The comparison
 artifact records the rebased executable hash separately.
+
+The required Codecov Rust patch status at `b62a815d5` measured 97.84%, below its
+98% target. Local checks had validated focused/global coverage without measuring
+the full PR diff. Redundant pre-parser header guards were removed: the complete
+CREATE FUNCTION parser result and EOF check already reject malformed headers.
+The existing negative fixtures remain passing.
+
+Full workspace LLVM coverage now passes all unchanged 98% line/function/region
+floors. [Local measured diff coverage](patch-coverage.json) is 679/692 lines,
+98.1214%, against the same 98% patch target. No filenames are excluded. The
+coverage target exceeded 10 GB and was removed immediately after export.
+
+Before another push, export full LCOV and run the saved checker after staging
+new Rust files:
+
+```sh
+python3 docs/work-evidence/parser-recall/procedural-controls/check-patch-coverage.py /path/to/full-coverage.lcov --base origin/main --minimum 98
+```
+
+The checker reports measured changed lines, misses, and files without executable
+line records. It reads the working tree relative to the PR merge base and adds
+no analyzer state or runtime cache.

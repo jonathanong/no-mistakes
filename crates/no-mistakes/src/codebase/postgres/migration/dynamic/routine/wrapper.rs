@@ -14,22 +14,18 @@ pub(super) fn complete_routine(code: &[&TokenWithSpan]) -> bool {
     } else {
         1
     };
-    let Some(token) = code.get(kind) else {
-        return false;
-    };
-    if !word(token, "FUNCTION") && !word(token, "PROCEDURE") {
-        return false;
-    }
-    // sqlparser's PostgreSQL FUNCTION grammar validates the full header/body and EOF.
-    // Its PROCEDURE grammar expects procedural statements after AS, so normalize only
-    // that keyword for this validation pass; retained facts use the original tokens.
+    // The parser below validates CREATE, the complete header/body, and EOF.
+    // Only the unsupported PROCEDURE keyword is normalized for this proof.
     let mut tokens: Vec<_> = code.iter().map(|token| (*token).clone()).collect();
-    if word(token, "PROCEDURE") {
-        let Token::Word(procedure) = &mut tokens[kind].token else {
-            return false;
-        };
-        procedure.value = "FUNCTION".to_owned();
-        procedure.keyword = Keyword::FUNCTION;
+    if let Some(TokenWithSpan {
+        token: Token::Word(procedure),
+        ..
+    }) = tokens.get_mut(kind)
+    {
+        if procedure.quote_style.is_none() && procedure.value.eq_ignore_ascii_case("PROCEDURE") {
+            procedure.value = "FUNCTION".to_owned();
+            procedure.keyword = Keyword::FUNCTION;
+        }
     }
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(tokens);
     matches!(parser.parse_statement(), Ok(Statement::CreateFunction(_)))
