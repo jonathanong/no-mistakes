@@ -34,6 +34,12 @@ are checked; the rule does not discover tests or infer repository-wide scope.
 This remains a plugin capability and adds no `no-mistakes` CLI or N-API
 command. See [test-no-skips](eslint-rules/test-no-skips.md).
 
+The file-local `playwright-require-interactive-test-id` plugin rule recognizes
+Radix-style single-child slots on configured interactive components. `slotProps`
+defaults to `["asChild"]`; literal parent selectors cover the direct child,
+while ambiguous props or children remain checked. See
+[interactive test IDs](eslint-rules/playwright-require-interactive-test-id.md).
+
 The opt-in ESLint/Oxlint `vitest-timeout-cap` rule checks effective Vitest
 configuration and test/hook timeout overrides in files selected by ESLint
 `files` globs. Its defaults cap configuration timeouts at 5,000 ms and

@@ -120,6 +120,7 @@ module.exports = {
   isInteractiveElement,
   jsxCandidateNames,
   mappedImport,
+  matchesAny,
   rememberAlias,
   rememberImport,
 };

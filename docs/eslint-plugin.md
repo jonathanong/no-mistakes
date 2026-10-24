@@ -162,7 +162,9 @@ when set).
 
 `selectorAttributes?: string[]` (default `["data-testid", "data-pw"]`) and
 `interactiveComponents?: string[]`; component entries may be exact names or
-`/regex/` strings.
+`/regex/` strings. `slotProps?: string[]` defaults to `["asChild"]`; `[]` disables
+slot recognition. A configured slot component's literal selector covers one
+direct JSX child. Missing or nonliteral slot selectors are reported on the parent.
 
 ### `postgres-cursor-call-contract`
 
