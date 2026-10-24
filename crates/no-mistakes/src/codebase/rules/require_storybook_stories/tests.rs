@@ -201,3 +201,5 @@ mod malformed_prepared;
 mod malformed_selected;
 
 mod effort;
+
+mod project_scope;
