@@ -1,0 +1,10 @@
+# Saved bounded shapes and conservative controls for issue 2665.
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      schemaCatalogPath: schema.json
+      executorNames: [query, read, write]
+      exclude: ['src/**']
+      sqlInclude: ['sql/issue-2665-adversarial.sql']

@@ -4,10 +4,13 @@ pub(super) fn item(item: &SqlBoundItem) -> String {
     let pins: Vec<String> = item
         .pins
         .iter()
-        // These syntax-only snapshots describe legacy column pins; expression-key evidence and
-        // catalog-resolved qualified reads are exercised by their own focused tests.
+        // These syntax-only snapshots describe plain column pins; expression and
+        // candidate ownership evidence has focused tests.
         .filter(|pin| {
-            pin.qualified_reads.is_empty() && pin.expression.is_none() && !pin.unqualified_candidate
+            pin.qualified_reads.is_empty()
+                && pin.expression.is_none()
+                && pin.alternative.is_none()
+                && !pin.unqualified_candidate
         })
         .map(|pin| {
             // `~=` is the null-safe `IS NOT DISTINCT FROM`.
@@ -29,7 +32,7 @@ pub(super) fn item(item: &SqlBoundItem) -> String {
                 } => {
                     format!("{}{operator}array#{items:?}:{scalar_columns:?}", pin.column)
                 }
-                SqlPinSource::Query(bound) => {
+                SqlPinSource::Query(bound) | SqlPinSource::ArrayQuery(bound) => {
                     format!("{}{operator}({})", pin.column, query(bound))
                 }
                 // This formatter describes key-credit proof; raw fixtures test read metadata.

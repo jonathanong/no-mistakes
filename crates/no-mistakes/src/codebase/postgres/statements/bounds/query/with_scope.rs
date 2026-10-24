@@ -83,7 +83,12 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope_visiting_wri
             )
         };
         scope.set_columns(name.clone(), columns);
-        scope.insert(name, bound);
+        let counts =
+            super::super::scalar_limit::outputs(&cte.query, &scope, positions, &cte.alias.columns);
+        scope.insert(name.clone(), bound);
+        if let Some(counts) = counts {
+            scope.insert_counts(name, counts);
+        }
     }
     Cow::Owned(scope)
 }

@@ -5,10 +5,13 @@ mod correlated;
 mod equality;
 mod evidence;
 mod expression;
+mod query_array;
+mod subquery;
+use subquery::subquery_source;
 mod resolver;
 mod source_merge;
 
-use super::{query, Scope};
+use super::Scope;
 use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundPin, SqlPinSource};
 use resolver::Sourced;
@@ -42,6 +45,7 @@ pub(super) fn extract(
                 out.push((
                     item,
                     SqlBoundPin {
+                        alternative: None,
                         column,
                         unqualified_candidate: false,
                         expression: None,
@@ -102,7 +106,13 @@ pub(super) fn extract(
             negated: false,
         } => {
             let source = subquery_source(subquery, resolver, scope, positions);
-            pin(expr, Some(source.clone()), false);
+            if let Expr::Tuple(columns) = unwrap_expr(expr) {
+                for column in columns {
+                    pin(column, Some(source.clone()), false);
+                }
+            } else {
+                pin(expr, Some(source.clone()), false);
+            }
             candidate::pin(expr, false, resolver, restricted, out, |_| {
                 Some(source.clone())
             });
@@ -117,7 +127,10 @@ pub(super) fn extract(
             if resolved.is_none() && resolver.candidate_column(left).is_none() {
                 return;
             }
-            let shared = any_source::query(right, resolver, scope, positions);
+            let shared = resolver
+                .projected_array(right)
+                .or_else(|| query_array::source(right, resolver, scope, positions))
+                .or_else(|| any_source::query(right, resolver, scope, positions));
             let source_for = |item| {
                 shared
                     .clone()
@@ -153,26 +166,4 @@ pub(super) fn reads_items(
     positions: super::super::value::PlaceholderPositions<'_>,
 ) -> Reads {
     Resolver::new(items, scope.names(), positions).reads(subquery)
-}
-
-/// A subquery sizes the values it yields, unless it reads the row being checked: then every
-/// row can find itself among them, whatever the subquery's own bound. A bare column that only
-/// the catalog can place is kept with the pin.
-fn subquery_source(
-    subquery: &Query,
-    resolver: &Resolver,
-    scope: &Scope,
-    positions: super::super::value::PlaceholderPositions<'_>,
-) -> Sourced {
-    let reads = resolver.reads(subquery);
-    let query = query::bound_query(subquery, scope, positions);
-    Sourced {
-        source: if reads.certain {
-            SqlPinSource::ReadQuery(query)
-        } else {
-            SqlPinSource::Query(query)
-        },
-        reads: reads.bare,
-        qualified_reads: reads.qualified,
-    }
 }

@@ -171,10 +171,10 @@ fn a_query_inside_copy_is_judged_like_a_select() {
 }
 
 #[test]
-fn array_from_a_query_is_not_a_value() {
+fn array_from_a_query_preserves_its_input_instead_of_becoming_a_value() {
     assert_eq!(
         shape("DELETE FROM t WHERE id = ANY(ARRAY(SELECT id FROM t))"),
-        ["delete: t"]
+        ["delete: t[id=(t)]"]
     );
     assert_eq!(
         shape("DELETE FROM t WHERE id = ANY(ARRAY[$1, $2])"),

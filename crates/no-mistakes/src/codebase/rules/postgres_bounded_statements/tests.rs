@@ -174,33 +174,7 @@ fn offenders_carry_the_line_of_each_relation() {
     );
 }
 
-#[test]
-fn quoted_key_columns_match_quoted_sql_columns() {
-    let catalog = SchemaCatalog::from_json(
-        r#"{
-          "formatVersion": 2, "coverage": "complete",
-          "tables": { "mixed": {
-            "columns": { "Order Id": { "dataType": "uuid" } },
-            "indexes": { "mixed_pkey": {
-              "accessMethod": "btree",
-              "unique": true, "primary": true, "valid": true, "ready": true,
-              "keys": [ { "column": "Order Id", "expression": "\"Order Id\"" } ]
-            } }
-          } }
-        }"#,
-    )
-    .unwrap();
-    assert_eq!(catalog.unique_keys("mixed"), [vec!["Order Id".to_string()]]);
-    let judge = |sql: &str| {
-        extract_sql_statement_facts(sql)
-            .bounds
-            .iter()
-            .flat_map(|fact| offenders(fact, &catalog))
-            .count()
-    };
-    assert_eq!(judge("SELECT 1 FROM mixed WHERE \"Order Id\" = $1"), 0);
-    assert_eq!(judge("SELECT 1 FROM mixed WHERE order_id = $1"), 1);
-}
+mod catalog_keys;
 
 #[test]
 fn an_unknown_relation_is_not_judged_and_bounds_nothing() {
@@ -423,46 +397,7 @@ fn config(yaml: &str) -> NoMistakesConfig {
     }
 }
 
-#[test]
-fn the_standalone_entry_points_prepare_their_own_facts() {
-    let root = fixture_root();
-    let files = [root.join("sql/invalid.sql"), root.join("schema.json")];
-    let yaml =
-        "schemaCatalogPath: schema.json\nsqlInclude: ['sql/invalid.sql']\nexclude: ['src/**']";
-    let direct = check_with_files(&root, &config(yaml), &files).unwrap();
-    assert_eq!(direct.len(), 3, "{direct:#?}");
-    let sources = crate::codebase::rules::source_store_for_files(&files);
-    let shared = check_with_files_and_sources(&root, &config(yaml), &files, &sources).unwrap();
-    assert_eq!(direct, shared);
-}
-
-#[test]
-fn sql_that_cannot_be_analyzed_fails_closed_unless_ignored() {
-    let root = fixture_root();
-    let files = [
-        root.join("sql/broken.sql"),
-        root.join("src/dynamic.ts"),
-        root.join("schema.json"),
-    ];
-    let base = "schemaCatalogPath: schema.json\nimportSpecifier: '@example/db'\nexecutorNames: [query, read, write]\nsqlInclude: ['sql/broken.sql']\n";
-    let found: Vec<_> = check_with_files(&root, &config(base), &files)
-        .unwrap()
-        .into_iter()
-        .map(|finding| (finding.file, finding.message, finding.target.unwrap()))
-        .collect();
-    assert_eq!(found.len(), 2, "{found:#?}");
-    assert!(found.iter().all(|(_, _, target)| target == "unanalyzable"));
-    assert!(found[0]
-        .1
-        .contains("SQL could not be analyzed for bounded statements"));
-    assert!(found[1]
-        .1
-        .contains("not statically recoverable for bounded statements"));
-    let ignored = format!("{base}unanalyzableSql: ignore\n");
-    assert!(check_with_files(&root, &config(&ignored), &files)
-        .unwrap()
-        .is_empty());
-}
+mod entrypoints;
 
 mod set_operation_limits;
 
@@ -495,3 +430,5 @@ mod conditional_table_function_inputs;
 mod wrapped_scalar_reducer_arrays;
 
 mod table_source_association;
+
+mod issue_2665;

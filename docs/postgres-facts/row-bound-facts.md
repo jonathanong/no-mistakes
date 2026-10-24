@@ -31,10 +31,13 @@ relation name syntactically. Each read keeps its quoted SQL qualifier and the ba
 in each inner scope. The rule uses the selected schema catalog to determine whether a
 local bare table is the same relation; absent or ambiguous catalog identity stays conservative.
 The corresponding `lateral_qualified_reads` field preserves the same evidence for `LATERAL`
-sources.
+sources. Complete known local scopes permit resolving a qualified read to one
+preceding driver; a bounded per-call result can size a join only after every such
+driver is independently bounded. Unknown scopes, bare correlations, and cycles
+retain conservative behavior.
 A `SqlBoundQuery` is `capped` when it has a `LIMIT` / `FETCH FIRST n ROWS ONLY` with a
 fixed count (a literal, a bind or an expression of them; `LIMIT NULL`, `LIMIT ALL`, a count
-taken from a subquery or a column, `FETCH … WITH TIES` and `FETCH … PERCENT` do not cap) or
+taken from physical data or an unproven scalar subquery, `FETCH … WITH TIES` and `FETCH … PERCENT` do not cap) or
 is a pure aggregate (a built-in aggregate call, bare or `pg_catalog.`-qualified, not
 windowed, in the select list or `HAVING`, with no `GROUP BY` and no set-returning function
 in the select list), and lists its FROM `items`. Bare, unquoted `COALESCE`, `LEAST`,
@@ -74,9 +77,10 @@ from a template literal), `Items` (columns of other items; a column
 compared with its own item is never a pin), `Array` (finite constructor dependencies plus scalar column requirements), `StoredArray` (an array with unproven caller cardinality, including stored rows and unknown function results), or a subquery. `StoredArray` retains source-item indexes and bare-read metadata; it never proves a finite key set, even when the array owner is uniquely pinned. An `Array` source keeps source-item indexes and column names; the evaluator proves those columns scalar against the prepared catalog before crediting their row bounds. `cast_types` records custom cast targets that require catalog scalar or enum proof; interval literals are already scalar. `indexed_columns` records columns accessed exclusively by scalar subscripts: the evaluator requires a catalog array with a proven scalar element type. Slices, unknown/domain element types, and unresolved aliases supply no indexed proof. Array columns without a scalar subscript supply no scalar proof. Scalar column requirements describe final constructor leaves, not the arguments of a trusted scalar builtin. A reducer such as `pg_catalog.array_to_string` can consume a stored-array column while its `Array.items` dependency still requires that column's owning row to be bounded. Casts, domains and slices inside those scalar reducer arguments preserve their owner and slice-bound row dependencies without adding final-leaf shape requirements. Direct constructor leaves retain those requirements. Unknown and unqualified calls retain conservative treatment. `WHERE` restricts every item.
 Unknown array-valued function calls retain a non-crediting `StoredArray` pin even
 when they reference only binds. Proven caller arrays and supported explicit catalog
-array operations retain `Value` credit. A cast scalar-array subquery uses
-`ReadQuery` to preserve its internal reads without confusing its row count with
-its array's element count; row-valued `ANY` keeps the normal `Query` proof.
+array operations retain `Value` credit. Supported scalar-array subqueries use
+`ArrayQuery` and require bounded input rows plus scalar element lineage; unsupported
+scalar-array subqueries use `ReadQuery` without key credit. Row-valued `ANY`
+keeps the normal `Query` proof.
 
 Stored-array `ANY` facts retain self-owned column dependencies through casts and
 conditional expressions. These dependencies remain `StoredArray` sources and
@@ -142,3 +146,19 @@ immediate, non-partial unique or primary indexes whose keys are all plain column
 `postgres-bounded-statements` consumes all three.
 
 [PostgreSQL fact sources](../postgres-facts.md)
+
+Disjunctive bound evidence keeps `SqlBoundItem.pin_alternatives` and each
+`SqlBoundPin.alternative`: an absent alternative is an unconditional conjunct;
+every numbered alternative must independently complete a catalog unique key.
+Expansion above 32 branches falls back to unconditional evidence.
+`SqlPinSource::ArrayQuery` retains an executed array input query independently
+of whether its elements are scalar. `SqlBoundOutput.scalar` records syntactically scalar
+outputs and `source_column` records an ordinal FROM-item/column lineage for
+catalog verification through named derived outputs. Unknown and wildcard
+projections do not supply scalar element proof. These are Rust fact fields;
+CLI and async Node rule entrypoints consume the same prepared facts.
+`array_aggregate_column` retains the element lineage for a simple non-correlated
+projected `array_agg` alias. Its `ArrayQuery` projection removes the aggregate's
+output cap and verifies the same prepared input rows and scalar column; a stored
+array alias has no such metadata. Aggregate grouping, HAVING, filters, and
+argument-order clauses retain conservative treatment.

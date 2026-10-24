@@ -52,6 +52,7 @@ impl<'a> Using<'a> {
                 out.push((
                     pinned,
                     SqlBoundPin {
+                        alternative: None,
                         column: object_name_key(column),
                         unqualified_candidate: false,
                         expression: None,

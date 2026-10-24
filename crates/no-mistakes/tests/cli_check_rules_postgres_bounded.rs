@@ -112,7 +112,7 @@ fn an_allow_entry_that_suppresses_nothing_is_stale() {
 
 #[test]
 fn only_valid_ready_immediate_whole_key_indexes_prove_one_row() {
-    // The unchanged fixture's lower(slug) lookup now matches its expression key.
+    // The fixture now proves lower(slug) and completes the key in both OR branches.
     expect(
         "keys.yml",
         "sql/keys.sql",
@@ -122,7 +122,6 @@ fn only_valid_ready_immediate_whole_key_indexes_prove_one_row() {
             (9, "table:invalid_keys"),
             (10, "table:deferred_keys"),
             (13, "table:orders"),
-            (14, "table:orders"),
         ],
     );
 }
@@ -292,4 +291,31 @@ fn schemaless_bare_catalog_keys_still_judge_qualified_tables() {
             ),
         ]
     );
+}
+#[test]
+fn issue_2665_shapes_preserve_bounded_inputs_and_conservative_negatives() {
+    let expected = [
+        (4, "table:order_lines"),
+        (8, "table:accounts"),
+        (11, "table:accounts"),
+        (11, "table:orders"),
+        (14, "table:accounts"),
+        (15, "table:accounts"),
+        (16, "table:accounts"),
+        (19, "table:accounts"),
+        (20, "table:order_lines"),
+        (22, "table:orders"),
+    ]
+    .map(|(line, target)| ("sql/issue-2665.sql".to_string(), line, target.to_string()));
+    for effort in ["low", "max"] {
+        let root = fixture();
+        let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["check", "--format", "json", "--effort", effort, "--root"])
+            .arg(&root)
+            .arg("--config")
+            .arg(root.join("issue-2665.yml"))
+            .output()
+            .unwrap();
+        assert_eq!(findings_of(output), expected, "effort {effort}");
+    }
 }

@@ -5,7 +5,10 @@ use sqlparser::ast::{Expr, FunctionArg, FunctionArgExpr, FunctionArguments, Valu
 /// A count the statement text or its caller decides: a literal, a bind (`$1`, or an
 /// interpolation recovered from a template literal) or an expression of them. NULL means no
 /// limit, and a subquery or a column can return any number.
-pub(super) fn is_fixed_at(expr: &Expr, positions: value::PlaceholderPositions<'_>) -> bool {
+pub(in crate::codebase::postgres::statements) fn is_fixed_at(
+    expr: &Expr,
+    positions: value::PlaceholderPositions<'_>,
+) -> bool {
     matches!(
         fixed_count_at(expr, positions),
         Some(FixedCount::Caller | FixedCount::NonNull)

@@ -65,8 +65,10 @@ set operation). A statement is bounded when any of these holds:
   the catalog does not describe. A derived-table column alias list renames only the leading
   projected columns: `(SELECT status, id FROM orders) q(kind)` still exposes `id` locally.
   A `LATERAL` source that reads
-  earlier FROM items is sized per row of them, so it bounds nothing pinned to it; the
-  relations inside it are still judged. A derived query cannot resolve its own reads against
+  earlier FROM items is sized per row of them. A capped result can size a keyed join
+  only after qualified references resolve to independently bounded preceding drivers.
+  Unknown local scopes and bare correlations stay conservative; cycles supply no seed.
+  The relations inside it are still judged. Independent lateral queries retain their global bound. A derived query cannot resolve its own reads against
   the columns it later exposes. For example, `id IN (SELECT id FROM LATERAL (SELECT id) d
 LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` query sees
   only preceding FROM sources; a later source with the same column name cannot hide that
@@ -114,8 +116,7 @@ A data-backed select-list set-returning function is opaque even when its
 SELECT has no FROM items; it cannot bound another relation joined to its output.
 Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one
 whose arguments read a column, query or function result (`unnest(ARRAY[a.id])`,
-`unnest(get_all_account_ids())`), an array taken from a query
-(`ANY(ARRAY(SELECT …))`) and the recursive reference of a `WITH RECURSIVE` are opaque: never
+`unnest(get_all_account_ids())`), and the recursive reference of a `WITH RECURSIVE` are opaque: never
 reported themselves, and they bound nothing pinned to them. `EXCEPT` and `INTERSECT` read
 both arms in full like `UNION`, so every arm must be bounded: the rule bounds the work, not
 only the result. An outer LIMIT does not suppress the input-arm findings for EXCEPT,
@@ -177,7 +178,11 @@ These do not prove one row:
 - An index whose operator class or collation is not the column's default (the
   catalog's `orderingSupported` is false), because its equality may differ.
 - Only part of a composite key.
-- Equality alternatives (`id = $1 OR id = $2`), ranges and `LIKE`.
+- Ranges and `LIKE`.
+
+Each `OR` alternative must independently pin a complete unique key, using shared
+`AND` conjuncts where present. The keys may differ between branches. More than
+32 expanded alternatives retain only unconditional pins.
 
 ### Unqualified key columns
 
@@ -221,3 +226,17 @@ not be analyzed`, or `executed SQL is not statically recoverable`) fails closed.
 Nested fragments are spliced SQL, so an opaque fragment is never accepted as a bind.
 `unanalyzableSql: ignore` skips those statements instead, as it does for the sibling
 rules; every statement that can be analyzed is still judged.
+
+`(a, b) IN (SELECT ... LIMIT $n)` and caller-sized tuple `unnest` inputs pin
+both components of a composite catalog key. A LIMIT-less input supplies no cap.
+`ANY(ARRAY(SELECT ...))` and `ANY((SELECT array_agg(id) FROM batch)::uuid[])`
+prove finite candidate sets when the input query is bounded and its elements
+are proven scalar. An aggregate's one output row or outer LIMIT alone is
+insufficient; stored arrays, unknown projections, and correlated self reads
+retain conservative behavior.
+
+A scalar CTE LIMIT is accepted only through guaranteed single-row fixed caller
+projections, without row-removing predicates, set operations, or expanding
+projections. Empty and NULL scalar results mean unlimited; physical data-derived
+counts retain no caller-cap credit. See the [rationale](postgres-bounded-statements-rationale.md)
+for the uncapped recursive-key-walk policy and examples.

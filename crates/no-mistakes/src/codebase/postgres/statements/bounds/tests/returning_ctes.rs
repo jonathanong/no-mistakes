@@ -107,7 +107,7 @@ fn repeated_returning_ctes_keep_the_shared_expansion_cap() {
             matches!(item.kind, SqlBoundItemKind::Opaque)
                 || matches!(&item.kind, SqlBoundItemKind::Query(inner) if contains_opaque(inner))
                 || item.pins.iter().any(|pin| {
-                    matches!(&pin.source, SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner)
+                    matches!(&pin.source, SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) | SqlPinSource::ArrayQuery(inner)
                         if contains_opaque(inner))
                 })
         })

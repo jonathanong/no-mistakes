@@ -1,0 +1,80 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "decisions": {
+      "relationKind": "table",
+      "columns": {
+        "tenant_id": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 1
+        },
+        "scope": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 2
+        },
+        "decision_id": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 3
+        },
+        "idempotency_key": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 4
+        },
+        "status": {
+          "dataType": "text",
+          "nullable": false,
+          "ordinalPosition": 5
+        }
+      },
+      "indexes": {
+        "decision_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "immediate": true,
+          "keys": [
+            {
+              "column": "tenant_id",
+              "expression": "tenant_id"
+            },
+            {
+              "column": "scope",
+              "expression": "scope"
+            },
+            {
+              "column": "decision_id",
+              "expression": "decision_id"
+            }
+          ]
+        },
+        "idempotency_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "immediate": true,
+          "keys": [
+            {
+              "column": "tenant_id",
+              "expression": "tenant_id"
+            },
+            {
+              "column": "scope",
+              "expression": "scope"
+            },
+            {
+              "column": "idempotency_key",
+              "expression": "idempotency_key"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

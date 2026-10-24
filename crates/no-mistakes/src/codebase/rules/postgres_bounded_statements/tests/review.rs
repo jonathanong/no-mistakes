@@ -214,8 +214,8 @@ fn a_lateral_source_that_reads_the_row_through_a_bare_column_bounds_nothing() {
              orders o WHERE a.id = $1 AND o.id = c.id"
         )
     };
-    // The same as naming the account's column.
-    assert_eq!(names(&sql("a.id AS id")), ["orders"]);
+    // Qualified references retain the independently pinned driver identity; bare reads do not.
+    assert!(names(&sql("a.id AS id")).is_empty());
     assert_eq!(names(&sql("id")), ["orders"]);
     // `code` is the source's own column, so it is bounded by its limit.
     assert!(names(&sql("code AS id")).is_empty());

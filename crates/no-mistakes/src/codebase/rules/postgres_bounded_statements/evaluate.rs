@@ -5,11 +5,13 @@ use crate::codebase::postgres::statements::{
 };
 use crate::codebase::postgres::{CatalogObjectRef, SchemaCatalog};
 mod keys;
+mod lateral;
 mod ownership;
 mod possible_temporary;
 mod propagation;
 mod qualified;
 mod reads;
+mod scalar_output;
 use reads::relation_offender;
 
 /// A catalog relation that a statement can read or change in unbounded numbers.
@@ -111,7 +113,9 @@ fn evaluate(
             item.pins
                 .iter()
                 .map(|pin| match &pin.source {
-                    SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) => {
+                    SqlPinSource::Query(inner)
+                    | SqlPinSource::ReadQuery(inner)
+                    | SqlPinSource::ArrayQuery(inner) => {
                         Some(evaluate(inner, catalog, views, precise_columns))
                     }
                     _ => None,
@@ -149,6 +153,11 @@ fn evaluate(
         .iter()
         .enumerate()
         .map(|(index, item)| {
+            if nested[index].as_ref().is_some_and(|inner| inner.bounded) {
+                if let Some(drivers) = lateral::dependencies(item, &query.items[..index], catalog) {
+                    return keys::dependent_on(drivers);
+                }
+            }
             keys::prepare(
                 item,
                 index,

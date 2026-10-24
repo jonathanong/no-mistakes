@@ -5,7 +5,7 @@ use std::collections::VecDeque;
 pub(super) fn bound(keys: &[Keys], bounded: &mut [bool]) {
     let mut dependents = vec![Vec::new(); keys.len()];
     for (index, keys) in keys.iter().enumerate() {
-        for dependency in keys.iter().flatten().flatten().flatten() {
+        for dependency in keys.iter().flatten().flatten().flatten().flatten() {
             dependents[*dependency].push(index);
         }
     }
@@ -18,11 +18,14 @@ pub(super) fn bound(keys: &[Keys], bounded: &mut [bool]) {
     while let Some(index) = queue.pop_front() {
         queued[index] = false;
         if bounded[index]
-            || !keys[index].iter().any(|key| {
-                key.iter().all(|column| {
-                    column
-                        .iter()
-                        .any(|source| source.iter().all(|other| bounded[*other]))
+            || keys[index].is_empty()
+            || !keys[index].iter().all(|alternative| {
+                alternative.iter().any(|key| {
+                    key.iter().all(|column| {
+                        column
+                            .iter()
+                            .any(|source| source.iter().all(|other| bounded[*other]))
+                    })
                 })
             })
         {

@@ -55,7 +55,9 @@ fn bound_body_observed(
     if is_zero_limited(query) {
         bound.capped = true;
         bound.input_mode = SqlBoundInputMode::Skipped;
-    } else if super::super::limit::is_limited_at(query, positions) {
+    } else if super::super::limit::is_limited_at(query, positions)
+        || super::scalar_limit::is_limited(query, scope, positions)
+    {
         if let Some(mut blocking) = blocking_statuses(&query.body) {
             cap_streaming_arms(&query.body, &mut bound, &mut blocking);
             observe(&blocking);

@@ -134,6 +134,17 @@ impl<'a> Builder<'a> {
                 self.items[item].nonnull_columns.push(column);
             }
         }
+        if let Some(selection) = selection {
+            super::alternatives::collect(
+                selection,
+                &resolver,
+                self.scope,
+                self.positions,
+                &mut self.items,
+            );
+        }
         self.items
     }
 }
+
+mod factors;
