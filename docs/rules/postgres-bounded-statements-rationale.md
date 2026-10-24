@@ -107,3 +107,46 @@ temporary namesake becomes visible to later reads, including after `RESET search
 Complete evidence that earlier schemas lack the name instead makes the drop reach
 the temporary relation. With incomplete evidence, the rule does not use catalog
 unique keys from a possibly temporary source to bound a joined table.
+
+Composite-key row membership retains a pin for each tuple component when the
+independent subquery is bounded, including caller-sized `unnest` inputs. Every
+component of a real catalog unique key is still required. Disjunctive predicates
+preserve their alternatives: each branch must independently complete a unique
+key, which may differ between branches. Shared conjuncts apply to every branch;
+columns from separate branches never combine into one key. Expressions exceeding
+32 expanded alternatives retain only unconditional conjunctive evidence.
+
+`ARRAY(SELECT ...)` and scalar `array_agg` inputs can size key candidates only
+when their input rows are bounded and each projected element is proven scalar.
+An aggregate's one output row, its own `LIMIT`, or a stored array's owning row
+cannot bound the number of array elements. Scalar proof follows direct projected
+columns through CTE and derived aliases to the catalog; wildcard and unknown
+projections retain conservative behavior.
+
+A correlated `LATERAL ... LIMIT 1` can size a keyed join when its qualified
+references resolve to preceding drivers that are independently bounded. Unknown
+local scopes and unresolved bare correlations remain conservative. A per-driver
+cap cannot bound its own driver or establish a circular key proof. Independent
+lateral queries retain their ordinary global bound.
+
+A scalar CTE `LIMIT (SELECT page_size FROM cursor_cte)` must preserve a guaranteed
+single caller-owned count, such as `WITH cursor_cte AS (SELECT $1::int AS
+page_size)`. A physical data value is not a caller-owned cap. A potentially empty
+CTE or a `NULL` count cannot supply this proof: a missing scalar row becomes
+`NULL`, and PostgreSQL interprets `LIMIT NULL` as unlimited.
+
+PostgreSQL accepts `TABLESAMPLE` only on tables and materialized views, so
+`FROM cursor_cte TABLESAMPLE SYSTEM (0)` is invalid SQL. Boundedness findings
+for parser-accepted statements that PostgreSQL rejects are outside this rule's
+contract.
+
+Recursive key walks remain reported without a proven total-depth bound. A
+single-row seed and one key lookup per step bound branching, but do not bound
+the number of steps; `UNION ALL` may also revisit a cycle forever. Use an
+explicit bounded batch or a separate statically provable total-row contract.
+A `DISTINCT ON` key can also erase that caller row if a set-returning function
+yields no values. The guaranteed-row proof uses the existing projection-expansion
+classifier for those keys; fixed keys and ordinary `DISTINCT` retain their row.
+Named `WINDOW` keys can erase the row in the same way, even when no projected
+window function uses them. Caller-count CTEs with named windows remain
+conservative; remove the unused `WINDOW` clause to preserve the count proof.

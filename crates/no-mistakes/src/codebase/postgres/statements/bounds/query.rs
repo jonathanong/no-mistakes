@@ -55,7 +55,10 @@ fn bound_body_observed(
     if is_zero_limited(query) {
         bound.capped = true;
         bound.input_mode = SqlBoundInputMode::Skipped;
-    } else if super::super::limit::is_limited_at(query, positions) {
+    } else if (super::super::limit::is_limited_at(query, positions)
+        || super::scalar_limit::is_limited(query, scope, positions))
+        && limit_bounds_input(query)
+    {
         if let Some(mut blocking) = blocking_statuses(&query.body) {
             cap_streaming_arms(&query.body, &mut bound, &mut blocking);
             observe(&blocking);
@@ -70,6 +73,30 @@ fn bound_body_observed(
         bound.input_mode = SqlBoundInputMode::Streaming;
     }
     bound
+}
+
+fn limit_bounds_input(query: &Query) -> bool {
+    // WHERE has already removed the input, or grouping has reduced it to the rule's
+    // established one-group case before the projected set function runs.
+    if let SetExpr::Select(select) = &*query.body {
+        if super::predicate::rejects_all(select.selection.as_ref())
+            || super::aggregate::has_implicit_group(query, select)
+        {
+            return true;
+        }
+    }
+    !projection_may_erase_input(&query.body) && !super::aggregate::order_may_erase_input(query)
+}
+
+fn projection_may_erase_input(set: &SetExpr) -> bool {
+    match set {
+        SetExpr::Select(select) => super::aggregate::projection_may_erase_input(select),
+        SetExpr::Query(query) => projection_may_erase_input(&query.body),
+        SetExpr::SetOperation { left, right, .. } => {
+            projection_may_erase_input(left) || projection_may_erase_input(right)
+        }
+        _ => false,
+    }
 }
 
 // A fully streaming query needs only its root cap and no status storage. Once a blocking

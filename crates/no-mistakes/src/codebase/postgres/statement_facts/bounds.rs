@@ -39,6 +39,11 @@ pub struct SqlBoundQuery {
 pub struct SqlBoundOutput {
     pub name: Option<String>,
     pub caller_sized: bool,
+    /// A syntactically scalar value, or a column whose scalarity the catalog must prove.
+    pub scalar: bool,
+    pub source_column: Option<(usize, String)>,
+    /// A simple array_agg element column; its input rows need an independent bound.
+    pub array_aggregate_column: Option<(usize, String)>,
 }
 
 /// One FROM item and the columns or index expressions the statement pins on it.
@@ -60,8 +65,10 @@ pub struct SqlBoundItem {
     pub predicate_conjuncts: Vec<Expr>,
     /// Plain columns made non-NULL by strict equality in those same conjuncts.
     pub nonnull_columns: Vec<String>,
-    /// A `LATERAL` source that reads the FROM items before it: it is sized per row of those, so
-    /// it bounds nothing pinned to it, but the relations inside it are still judged.
+    /// Number of disjunctive alternatives; every alternative must complete a unique key.
+    pub pin_alternatives: usize,
+    /// A certain bare outer read in a `LATERAL` source; its driver ownership is unproven.
+    /// Qualified outer reads retain separate scope evidence for driver-dependent bounds.
     pub lateral: bool,
     /// Bare columns of a `LATERAL` source that none of its own relations is known to own: it
     /// reads the items before it when the catalog shows that none of their tables has them.
@@ -112,29 +119,7 @@ pub struct SqlQualifiedScope {
     pub unknown: bool,
 }
 
-impl SqlBoundItem {
-    pub fn new(
-        kind: SqlBoundItemKind,
-        alias: Option<String>,
-        (line, column): (usize, usize),
-    ) -> Self {
-        Self {
-            kind,
-            possible_temporary: None,
-            alias,
-            alias_explicit: false,
-            column_aliases: Vec::new(),
-            line,
-            column,
-            pins: Vec::new(),
-            predicate_conjuncts: Vec::new(),
-            nonnull_columns: Vec::new(),
-            lateral: false,
-            lateral_reads: Vec::new(),
-            lateral_qualified_reads: Vec::new(),
-        }
-    }
-}
+mod item;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SqlBoundItemKind {
@@ -153,6 +138,8 @@ pub enum SqlBoundItemKind {
 /// A conjunct that equates one column or index expression of an item with a value.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlBoundPin {
+    /// Disjunctive alternative owning this pin; None means an unconditional conjunct.
+    pub alternative: Option<usize>,
     pub column: String,
     /// Bare column with multiple possible FROM owners; only catalog projection may credit it.
     pub unqualified_candidate: bool,
@@ -190,6 +177,8 @@ pub enum SqlPinSource {
     },
     /// `IN (SELECT …)` or `= ANY (SELECT …)`: sized by the subquery.
     Query(SqlBoundQuery),
+    /// ARRAY(SELECT ...) or a scalar array_agg: input rows and scalar elements need proof.
+    ArrayQuery(SqlBoundQuery),
     /// An executed correlated IN/ANY subquery: retain its reads, never grant key credit.
     ReadQuery(SqlBoundQuery),
 }
@@ -198,3 +187,4 @@ mod input_mode;
 mod lines;
 pub use input_mode::SqlBoundInputMode;
 use sqlparser::ast::Expr;
+mod row_inputs;

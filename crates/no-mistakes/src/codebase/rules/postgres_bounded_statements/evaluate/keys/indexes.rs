@@ -27,51 +27,58 @@ pub(super) fn append(
         {
             continue;
         }
-        let key: Option<Vec<_>> = index
-            .keys
-            .iter()
-            .map(|expression| {
-                let expression = unwrap_expr(expression);
-                let physical = match expression {
-                    Expr::Identifier(ident) => Some(ident_key(ident)),
-                    _ if item.column_aliases.is_empty() => None,
-                    _ => return None,
-                };
-                let visible = physical.as_deref().map(|physical| {
-                    super::super::super::arrays::key_visible(table, &item.column_aliases, physical)
-                });
-                let visible = match visible {
-                    Some(value) => Some(value?),
-                    None => None,
-                };
-                let not_null = physical.as_deref().is_some_and(|physical| {
-                    table
-                        .columns
+        for (alternative, branch) in prepared.iter_mut().enumerate() {
+            let key: Option<Vec<_>> = index
+                .keys
+                .iter()
+                .map(|expression| {
+                    let expression = unwrap_expr(expression);
+                    let physical = match expression {
+                        Expr::Identifier(ident) => Some(ident_key(ident)),
+                        _ if item.column_aliases.is_empty() => None,
+                        _ => return None,
+                    };
+                    let visible = physical.as_deref().map(|physical| {
+                        super::super::super::arrays::key_visible(
+                            table,
+                            &item.column_aliases,
+                            physical,
+                        )
+                    });
+                    let visible = match visible {
+                        Some(value) => Some(value?),
+                        None => None,
+                    };
+                    let not_null = physical.as_deref().is_some_and(|physical| {
+                        table
+                            .columns
+                            .iter()
+                            .any(|column| column.name == physical && !column.nullable)
+                    });
+                    let matching = item
+                        .pins
                         .iter()
-                        .any(|column| column.name == physical && !column.nullable)
-                });
-                let matching = item
-                    .pins
-                    .iter()
-                    .zip(sources)
-                    .filter_map(|(pin, source)| {
-                        let matches = match &visible {
-                            Some(visible) => pin.expression.is_none() && pin.column == *visible,
-                            None => pin.expression.as_ref() == Some(expression),
-                        };
-                        (matches
-                            && (!pin.unqualified_candidate
-                                || owners.get(&pin.column) == Some(&item_index))
-                            && (!pin.null_safe || not_null || index.nulls_not_distinct))
-                            .then(|| source.clone())
-                            .flatten()
-                    })
-                    .collect();
-                Some(matching)
-            })
-            .collect();
-        if let Some(key) = key {
-            prepared.push(key);
+                        .zip(sources)
+                        .filter_map(|(pin, source)| {
+                            let matches = match &visible {
+                                Some(visible) => pin.expression.is_none() && pin.column == *visible,
+                                None => pin.expression.as_ref() == Some(expression),
+                            };
+                            (matches
+                                && (!pin.unqualified_candidate
+                                    || owners.get(&pin.column) == Some(&item_index))
+                                && pin.alternative.is_none_or(|owner| owner == alternative)
+                                && (!pin.null_safe || not_null || index.nulls_not_distinct))
+                                .then(|| source.clone())
+                                .flatten()
+                        })
+                        .collect();
+                    Some(matching)
+                })
+                .collect();
+            if let Some(key) = key {
+                branch.push(key);
+            }
         }
     }
 }

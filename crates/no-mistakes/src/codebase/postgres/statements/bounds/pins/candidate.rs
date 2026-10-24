@@ -39,6 +39,7 @@ pub(super) fn pin(
         out.push((
             item,
             SqlBoundPin {
+                alternative: None,
                 column: column.clone(),
                 unqualified_candidate: true,
                 expression: None,

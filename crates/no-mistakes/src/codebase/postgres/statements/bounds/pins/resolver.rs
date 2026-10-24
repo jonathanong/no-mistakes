@@ -19,6 +19,7 @@ pub(in super::super) struct Resolver {
     tables: Vec<bool>,
     /// Independently caller-sized projected values, keyed by the item's visible column names.
     caller_outputs: Vec<BTreeSet<String>>,
+    array_outputs: Vec<BTreeMap<String, crate::codebase::postgres::SqlBoundQuery>>,
     /// What each item answers to (its alias, else its table name): the qualifiers a subquery
     /// would use to read the row being checked.
     outer: BTreeSet<Vec<String>>,
@@ -70,6 +71,7 @@ impl Resolver {
         }
         Self {
             caller_outputs: items.iter().map(caller_outputs).collect(),
+            array_outputs: items.iter().map(outputs::array_outputs).collect(),
             names,
             tables,
             outer,
@@ -88,7 +90,7 @@ impl Resolver {
     }
 
     /// The item and column when `expr` is a bare column of one FROM item.
-    pub(super) fn column(&self, expr: &Expr) -> Option<(usize, String)> {
+    pub(in super::super) fn column(&self, expr: &Expr) -> Option<(usize, String)> {
         match unwrap_expr(expr) {
             // A recovered `${…}` interpolation is a bind, never a column.
             Expr::Identifier(ident)
@@ -115,6 +117,15 @@ impl Resolver {
             }
             _ => None,
         }
+    }
+
+    pub(super) fn projected_array(&self, expr: &Expr) -> Option<Sourced> {
+        let (item, column) = self.column(expr)?;
+        Some(Sourced {
+            source: SqlPinSource::ArrayQuery(self.array_outputs[item].get(&column)?.clone()),
+            reads: Vec::new(),
+            qualified_reads: Vec::new(),
+        })
     }
 
     fn item_named(&self, qualifier: &str) -> Option<usize> {

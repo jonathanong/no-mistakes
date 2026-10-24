@@ -1,6 +1,8 @@
 //! Temporary relation identity follows SQL source order, never crossing source boundaries.
 mod bare_reads;
+mod helpers;
 mod identity;
+use helpers::{first_select, temporary_name};
 mod lifecycle;
 mod state;
 pub(super) mod view_relations;
@@ -10,7 +12,7 @@ use crate::codebase::postgres::statements::{
     SqlBoundFact, SqlBoundItemKind, SqlBoundQuery, SqlPinSource,
 };
 use crate::codebase::postgres::{SchemaCatalog, SqlViewReads};
-use sqlparser::ast::{AlterTableOperation, Expr, ObjectName, ObjectNamePart, SetExpr, Statement};
+use sqlparser::ast::{AlterTableOperation, Expr, ObjectName, ObjectNamePart, Statement};
 use state::{Dependency, State};
 use std::collections::BTreeSet;
 
@@ -173,7 +175,9 @@ impl TemporaryRelations {
                     item.pins.retain(|pin| {
                         matches!(
                             pin.source,
-                            SqlPinSource::Query(_) | SqlPinSource::ReadQuery(_)
+                            SqlPinSource::Query(_)
+                                | SqlPinSource::ReadQuery(_)
+                                | SqlPinSource::ArrayQuery(_)
                         )
                     });
                 }
@@ -184,27 +188,13 @@ impl TemporaryRelations {
                 _ => {}
             }
             for pin in &mut item.pins {
-                if let SqlPinSource::Query(query) | SqlPinSource::ReadQuery(query) = &mut pin.source
+                if let SqlPinSource::Query(query)
+                | SqlPinSource::ReadQuery(query)
+                | SqlPinSource::ArrayQuery(query) = &mut pin.source
                 {
                     self.query(query);
                 }
             }
         }
     }
-}
-
-// INTO belongs to the first SELECT in a set operation, including parenthesized queries.
-fn first_select(expr: &SetExpr) -> Option<&sqlparser::ast::Select> {
-    match expr {
-        SetExpr::Select(select) => Some(select),
-        SetExpr::SetOperation { left, .. } => first_select(left),
-        SetExpr::Query(query) => first_select(&query.body),
-        _ => None,
-    }
-}
-
-fn temporary_name(name: &ObjectName) -> bool {
-    let parts = crate::codebase::postgres::decoded_parts(&sql_name(name));
-    matches!(parts.as_slice(), [schema, _] if schema == "pg_temp")
-        || identity::database(&sql_name(name)).is_some()
 }

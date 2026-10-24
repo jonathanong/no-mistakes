@@ -20,7 +20,9 @@ pub(super) fn size(query: &SqlBoundQuery) -> usize {
                 .pins
                 .iter()
                 .map(|pin| match &pin.source {
-                    SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) => size(inner),
+                    SqlPinSource::Query(inner)
+                    | SqlPinSource::ReadQuery(inner)
+                    | SqlPinSource::ArrayQuery(inner) => size(inner),
                     _ => 0,
                 })
                 .sum();
@@ -51,7 +53,10 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
         for item in &query.items {
             // Discard pin eligibility separately from reads the pin expression executes.
             for pin in &item.pins {
-                if let SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) = &pin.source {
+                if let SqlPinSource::Query(inner)
+                | SqlPinSource::ReadQuery(inner)
+                | SqlPinSource::ArrayQuery(inner) = &pin.source
+                {
                     tables(inner, mandatory, blocking_only, found);
                 }
             }
@@ -65,6 +70,7 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
                         .iter()
                         .filter(|pin| {
                             item.column_aliases.is_empty()
+                                && pin.alternative.is_none()
                                 && super::super::compact_pins::independent(&pin.source)
                         })
                         .cloned()
@@ -111,7 +117,17 @@ pub(super) fn compact(bound: &SqlBoundQuery, at: (usize, usize)) -> SqlBoundQuer
     items.push(items::opaque(at));
     SqlBoundQuery {
         input_mode: bound.input_mode,
-        outputs: bound.outputs.clone(),
+        outputs: bound
+            .outputs
+            .iter()
+            .cloned()
+            .map(|mut output| {
+                // Compaction changes FROM ordinals; syntactic scalar values survive, column lineage does not.
+                output.source_column = None;
+                output.array_aggregate_column = None;
+                output
+            })
+            .collect(),
         capped: bound.capped,
         items,
     }

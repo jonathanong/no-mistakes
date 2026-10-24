@@ -21,7 +21,9 @@ impl SqlBoundQuery {
                 query.map_lines(map);
             }
             for pin in &mut item.pins {
-                if let SqlPinSource::Query(query) | SqlPinSource::ReadQuery(query) = &mut pin.source
+                if let SqlPinSource::Query(query)
+                | SqlPinSource::ReadQuery(query)
+                | SqlPinSource::ArrayQuery(query) = &mut pin.source
                 {
                     query.map_lines(map);
                 }

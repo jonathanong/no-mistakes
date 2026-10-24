@@ -20,7 +20,7 @@ fn has_possible_temporary(query: &SqlBoundQuery) -> bool {
         item.possible_temporary.is_some()
             || matches!(&item.kind, SqlBoundItemKind::Query(inner) if has_possible_temporary(inner))
             || item.pins.iter().any(|pin| {
-                matches!(&pin.source, SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) if has_possible_temporary(inner))
+                matches!(&pin.source, SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) | SqlPinSource::ArrayQuery(inner) if has_possible_temporary(inner))
             })
     })
 }
@@ -52,7 +52,9 @@ fn resolve(query: &mut SqlBoundQuery, catalog: &SchemaCatalog) {
             item.pins.retain(|pin| {
                 matches!(
                     &pin.source,
-                    SqlPinSource::Query(_) | SqlPinSource::ReadQuery(_)
+                    SqlPinSource::Query(_)
+                        | SqlPinSource::ReadQuery(_)
+                        | SqlPinSource::ArrayQuery(_)
                 )
             });
         }
@@ -60,7 +62,10 @@ fn resolve(query: &mut SqlBoundQuery, catalog: &SchemaCatalog) {
             resolve(inner, catalog);
         }
         for pin in &mut item.pins {
-            if let SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) = &mut pin.source {
+            if let SqlPinSource::Query(inner)
+            | SqlPinSource::ReadQuery(inner)
+            | SqlPinSource::ArrayQuery(inner) = &mut pin.source
+            {
                 resolve(inner, catalog);
             }
         }

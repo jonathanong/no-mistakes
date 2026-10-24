@@ -53,7 +53,10 @@ fn physical_ids(
             _ => {}
         }
         for pin in &item.pins {
-            if let SqlPinSource::Query(query) | SqlPinSource::ReadQuery(query) = &pin.source {
+            if let SqlPinSource::Query(query)
+            | SqlPinSource::ReadQuery(query)
+            | SqlPinSource::ArrayQuery(query) = &pin.source
+            {
                 physical_ids(query, lines);
             }
         }
@@ -79,7 +82,9 @@ fn physical_table_arms_belong_to_their_original_derived_join_sources() {
             .pins
             .iter()
             .find_map(|pin| match &pin.source {
-                SqlPinSource::Query(query) | SqlPinSource::ReadQuery(query) => Some(query),
+                SqlPinSource::Query(query)
+                | SqlPinSource::ReadQuery(query)
+                | SqlPinSource::ArrayQuery(query) => Some(query),
                 _ => None,
             })
             .expect("saved DELETE keeps its IN subquery");
