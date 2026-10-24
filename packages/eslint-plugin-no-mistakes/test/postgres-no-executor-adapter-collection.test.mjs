@@ -281,6 +281,15 @@ describe("postgres-no-executor-adapter collection keys", () => {
     ]);
   });
 
+  it("tracks spread containers, opaque methods, and sibling aliases", () => {
+    assert.deepEqual(reports("escape-boundaries.ts"), [
+      [7, "passed"],
+      [11, "passed"],
+      [17, "passed"],
+      [24, "passed"],
+    ]);
+  });
+
   it("tracks reflective mutations of builtin collection prototypes", () => {
     assert.deepEqual(reports("reflect-prototype-mutations.ts"), [
       [5, "passed"],

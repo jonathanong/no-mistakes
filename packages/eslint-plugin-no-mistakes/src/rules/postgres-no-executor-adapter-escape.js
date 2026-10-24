@@ -41,6 +41,7 @@ function createCollectionEscape(checker, program, result) {
       escapeValue(node.body, seenSymbols);
       return;
     }
+    // Compiler expression wrappers include assertions, parentheses and spreads.
     if (
       node.expression &&
       !node.name &&
@@ -51,8 +52,7 @@ function createCollectionEscape(checker, program, result) {
     ) {
       escapeValue(node.expression, seenSymbols);
     } else if (Array.isArray(node.elements)) {
-      for (const element of node.elements)
-        escapeValue(element.dotDotDotToken ? element.expression : element, seenSymbols);
+      for (const element of node.elements) escapeValue(element, seenSymbols);
     } else if (Array.isArray(node.properties)) {
       for (const property of node.properties) {
         if (property.initializer) escapeValue(property.initializer, seenSymbols);
@@ -132,8 +132,7 @@ function createCollectionEscape(checker, program, result) {
       } else for (const index of valueIndexes) escapeValue(node.arguments[index]);
       return;
     }
-    for (const argument of node.arguments)
-      escapeValue(argument.dotDotDotToken ? argument.expression : argument);
+    for (const argument of node.arguments) escapeValue(argument);
   }
   function finish() {
     const aliases = new Map();
