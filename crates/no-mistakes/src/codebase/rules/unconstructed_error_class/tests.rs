@@ -432,3 +432,6 @@ fn a_broken_test_file_is_a_rule_error_when_a_namespace_member_would_be_reported(
 
 #[path = "tests/uncertainty.rs"]
 mod uncertainty;
+
+#[path = "tests/ancestry_compatibility.rs"]
+mod ancestry_compatibility;
