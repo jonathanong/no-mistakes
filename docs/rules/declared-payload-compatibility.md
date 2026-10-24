@@ -180,7 +180,7 @@ Following recall over precision, inputs this rule cannot prove are never treated
 - `advise`: a non-failing advisory.
 - `ignore`: omitted.
 
-Definite incompatibilities remain findings under every policy. Duplicate JSON keys, numeric-token precision loss, malformed documents, missing or unreadable files, scope violations, invalid pointers, and configuration errors remain failing diagnostics regardless of policy: both referenced documents are resolved and validated before the shape policy applies, and `ignore` does not hide invalid JSON or bad references. At `max`, unsupported schema keywords (`$ref`, type unions, combinators, bounds, and so on) are `unproven` findings that always fail.
+Definite incompatibilities remain findings under every policy. Duplicate JSON keys, numeric-token precision loss, malformed documents, missing or unreadable files, scope violations, invalid pointers, and configuration errors remain failing diagnostics regardless of policy: both referenced documents are resolved and validated before the shape policy applies, and `ignore` does not hide invalid JSON or bad references. At `max`, unsupported schema keywords (`$ref`, type unions, combination keywords, bounds, and so on) are `unproven` findings that always fail.
 
 ## CLI and Node API
 
