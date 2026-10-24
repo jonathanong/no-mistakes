@@ -74,6 +74,12 @@ The rule is catalog-aware rather than a syntax-only check: a cast
 or function call is reported only when its operand resolves to a UUID column
 and participates in a checked predicate.
 
+Unsupported syntax, such as `id::text COLLATE "C" = $1`, can prevent SQL parsing
+and follows the unanalyzable policy instead of producing a definite violation.
+Raw SQL parse failures currently have a file-level location at line 1, so a
+directive immediately above a later failing statement cannot suppress that
+uncertainty; use a file directive when deliberately suppressing that case.
+
 At `effort: low`, the rule analyzes supported literal SQL directly in SQL files
 and executor calls. Direct strings, interpolation-free templates, and one local
 constant are supported; JavaScript escapes and other construction follow the
