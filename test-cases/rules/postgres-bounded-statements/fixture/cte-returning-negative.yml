@@ -9,5 +9,6 @@ rules:
       sqlInclude:
         - 'sql/cte-returning/unbounded-update.sql'
         - 'sql/cte-returning/auxiliary-unbounded.sql'
+        - 'sql/cte-returning/nested-with-namesake.sql'
         - 'sql/cte-returning/non-pk-join.sql'
         - 'sql/cte-returning/recursive-opaque.sql'

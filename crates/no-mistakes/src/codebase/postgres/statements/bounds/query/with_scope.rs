@@ -38,7 +38,7 @@ pub(in crate::codebase::postgres::statements::bounds) fn with_scope<'a>(
             if with.recursive {
                 opaque(start(cte.query.span()))
             } else {
-                super::super::dml::returning_bound(statement, &scope, positions)
+                super::super::dml::returning_bound(&cte.query, statement, &scope, positions)
                     .unwrap_or_else(|| opaque(start(cte.query.span())))
             }
         } else {

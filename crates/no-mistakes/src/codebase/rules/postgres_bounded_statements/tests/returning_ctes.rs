@@ -42,6 +42,9 @@ fn key_bounded_returning_and_select_ctes_bound_outer_primary_key_joins() {
         "delete-pk.sql",
         "select-pk.sql",
         "nested-projection.sql",
+        "nested-with-bounded.sql",
+        "auxiliary-independent.sql",
+        "no-returning-unused.sql",
     ] {
         assert!(offenders(name).iter().all(Vec::is_empty), "{name}");
     }
@@ -55,6 +58,10 @@ fn unbounded_returning_and_nonkey_joins_do_not_gain_a_row_cap() {
     );
     assert_eq!(
         offenders("auxiliary-unbounded.sql"),
+        [vec!["orders".to_string()], vec!["accounts".to_string()]]
+    );
+    assert_eq!(
+        offenders("nested-with-namesake.sql"),
         [vec!["orders".to_string()], vec!["accounts".to_string()]]
     );
     assert_eq!(

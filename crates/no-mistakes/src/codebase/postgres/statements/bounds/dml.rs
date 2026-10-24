@@ -1,7 +1,7 @@
 use super::items::Builder;
 use super::{Scope, SqlBoundFact, SqlBoundKind, SqlBoundQuery};
 use crate::codebase::postgres::statements::SqlPinSource;
-use sqlparser::ast::{Delete, FromTable, Statement, Update, UpdateTableFromKind};
+use sqlparser::ast::{Delete, FromTable, Query, Statement, Update, UpdateTableFromKind};
 
 /// An `UPDATE` is bounded when the relation it changes is: other FROM items only feed it values.
 pub(super) fn update(
@@ -72,6 +72,7 @@ fn push(
 /// RETURNING emits one row per changed target row. Keep only pins independent of
 /// auxiliary FROM/USING items when projecting that cardinality into a CTE.
 pub(super) fn returning_bound(
+    query: &Query,
     statement: &Statement,
     scope: &Scope,
     positions: super::super::value::PlaceholderPositions<'_>,
@@ -81,6 +82,7 @@ pub(super) fn returning_bound(
     // shared source-token cursor while inspecting auxiliary subqueries.
     let mut projection_scope = scope.clone();
     projection_scope.table_tokens = None;
+    let projection_scope = super::query::with_scope(query, &projection_scope, positions);
     match statement {
         Statement::Update(update)
             if update

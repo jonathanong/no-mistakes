@@ -60,3 +60,44 @@ fn unbounded_and_recursive_returning_ctes_keep_the_outer_target_unproved() {
         }
     }
 }
+
+#[test]
+fn nested_with_names_shadow_catalog_tables_in_returning_projections() {
+    for name in ["nested-with-bounded.sql", "nested-with-namesake.sql"] {
+        let found = super::super::facts(&fixture(name));
+        assert_eq!(found.len(), 2, "{name}");
+        let SqlBoundItemKind::Query(cte) = &found[1].query.items[1].kind else {
+            panic!("{name}: outer query must read the modifying CTE");
+        };
+        let pin = cte.items[0]
+            .pins
+            .iter()
+            .find(|pin| pin.column == "id")
+            .expect("target key pin");
+        let SqlPinSource::Query(pin_query) = &pin.source else {
+            panic!("{name}: target pin must retain its inner query");
+        };
+        // The inner name is a lexical CTE, even when the catalog has a table by that name.
+        assert!(matches!(
+            &pin_query.items[0].kind,
+            SqlBoundItemKind::Query(_)
+        ));
+    }
+}
+
+#[test]
+fn unused_modifying_cte_without_returning_stays_opaque() {
+    use sqlparser::{ast::Statement, dialect::PostgreSqlDialect, parser::Parser};
+    let mut statements =
+        Parser::parse_sql(&PostgreSqlDialect {}, &fixture("no-returning-unused.sql")).unwrap();
+    let Statement::Query(query) = statements.remove(0) else {
+        panic!("expected WITH query");
+    };
+    let scope = super::super::super::query::with_scope(
+        &query,
+        &super::super::super::Scope::default(),
+        None,
+    );
+    let changed = scope.get("changed").expect("CTE in scope");
+    assert!(matches!(&changed.items[0].kind, SqlBoundItemKind::Opaque));
+}
