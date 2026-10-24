@@ -135,3 +135,23 @@ fn prepared_postgres_catalog_bounds_match_standalone() {
         assert_eq!(aggregate["reports"][0]["result"], standalone, "{config}");
     }
 }
+
+#[test]
+fn prepared_postgres_joined_dml_and_catalog_guards_match_standalone() {
+    let root = category_fixture("rules", "postgres-bounded-statements").join("joined-dml");
+    let standalone = parse_json(
+        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(json!({
+            "root": root, "config": ".no-mistakes.yml"
+        })))
+        .unwrap(),
+    );
+    let aggregate = parse_json(
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(json!({
+            "root": root, "config": ".no-mistakes.yml", "reports": [{"type": "check"}]
+        })))
+        .unwrap(),
+    );
+    assert_eq!(standalone["rules"].as_array().unwrap().len(), 6);
+    assert_eq!(standalone["warnings"], json!([]));
+    assert_eq!(aggregate["reports"][0]["result"], standalone);
+}

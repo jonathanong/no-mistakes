@@ -32,7 +32,9 @@ set operation). A statement is bounded when any of these holds:
   source. A relation is pinned when top-level `AND` conjuncts of `WHERE` and of the `ON`
   that restricts it equate **every** column of one unique key with a value:
   `col = $1`, `col IS NOT DISTINCT FROM $1` (on a `NOT NULL` column or a
-  `NULLS NOT DISTINCT` unique key; ordinary nullable unique keys can repeat NULL), `col = ANY($1::uuid[])` (bounded by the
+  `NULLS NOT DISTINCT` unique key; ordinary nullable unique keys can repeat NULL),
+  `col IS NULL` (a `NULLS NOT DISTINCT` key has at most one NULL entry),
+  `col = ANY($1::uuid[])` (bounded by the
   caller's array; finite constructors (including array casts) over catalog-proven scalar columns of bounded rows also qualify. Signed numeric literals, builtin XML literals, and typed scalar literals such as `DATE '2026-01-01'` and interval literals preserve finite cardinality. Fixed scalar boolean expressions such as `ARRAY[NULL IS NULL]` are also one caller-sized element; expressions that read columns or call functions remain opaque. Catalog-declared enum casts also qualify; unknown or array-bearing domains do not. A cast that decodes stored scalar text into an array supplies no finite bound; caller-provided arrays and casts of finite constructors retain their bounds. Builtin scalar types, including `pg_catalog` network types such as `inet`, and catalog-declared enums prove scalar leaves; positional aliases map through known visible column order. Unchanged key names retain credit, and PostgreSQL system columns also prove scalar leaves when aliases do not replace them. Scalar indexes into catalog-proven arrays of scalar elements, such as `ARRAY[o.account_ids[1]]`, preserve the bounded source-row dependency; slices and unknown/domain element types do not. Stored arrays, including `ARRAY[stored_array]`, supply no key bound), `col IN (1, 2, 3)`, or `col IN (SELECT … LIMIT n)`. A value is a literal,
   a bind, or an interpolation recovered from a template literal (`${id}`, `${image.id}`,
   `${id}::uuid`), which is a bind like `$1`. A call to a built-in function that returns a
@@ -88,8 +90,8 @@ LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` 
   catalog does not describe, which may be one. The relations joined to the target only
   feed it values: each target row changes once. A bound on a joined source can also bound
   the target when it pins the target's whole unique key, and that proof can pass through
-  several unique-key joins. A source joined through a non-unique target column does not
-  bound the target, and one bounded source cannot lend its bound to an unrelated unbounded
+  several unique-key joins. An unbounded source cannot pin the target through an equality,
+  and one bounded source cannot lend its bound to an unrelated unbounded
   sibling. A direct target-key predicate still bounds the target even when another source
   is unbounded. The target is always the physical relation, even when a CTE of the same
   name exists.
@@ -170,12 +172,18 @@ Every key element must have a finite pin. Supported index shapes include:
   the preserved side, does not establish the scan's predicate. Positional column
   alias lists keep expression/partial-index proofs conservative.
 - `UNIQUE ... NULLS NOT DISTINCT` keys also accept `IS NOT DISTINCT FROM`,
-  including nullable columns and matching expression keys. The catalog's index
+  including nullable columns and matching expression keys. `col IS NULL` also pins
+  a nullable column of such a key; every other key element still needs a pin.
+  Ordinary nullable unique keys can contain repeated NULLs and remain unbounded.
+  The catalog's index
   definition supplies this flag. See [PostgreSQL unique indexes](https://www.postgresql.org/docs/18/indexes-unique.html).
 
 These do not prove one row:
 
 - A partial unique index whose predicate is absent or only partly established.
+- A catalog index with a placeholder anywhere in its parsed key or predicate.
+  PostgreSQL index definitions cannot depend on query parameters; matching malformed
+  catalog text to a query does not establish uniqueness.
 - An invalid or not-ready index (a failed concurrent build), or a deferrable
   constraint, which may hold duplicates inside a transaction.
 - Column equality used in place of an expression key.
