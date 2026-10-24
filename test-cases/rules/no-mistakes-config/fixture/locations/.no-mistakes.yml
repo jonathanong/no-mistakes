@@ -1,0 +1,19 @@
+# Repeated globs and filtered option values must retain their authored lines.
+projects:
+  "web.with[brackets]":
+    root: missing-app
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+  - rule: unique-exports
+    enabled: false
+    exclude:
+      - "gone/**/*.ts"
+      - "gone/**/*.ts"
+  - rule: forbidden-dependencies
+    enabled: false
+    options:
+      roots:
+        - missing-first.ts
+        - 42
+        - missing-last.ts

@@ -1,0 +1,26 @@
+shared: &missing missing-alias
+projects:
+  alias:
+    root: *missing
+  "flow.name[0]": {root: "missing-flow"} # quotes and comments are syntax
+  folded:
+    root: >-
+      missing-folded
+  duplicate: {root: ignored-first}
+  duplicate: {root: missing-last}
+tests:
+  vitest:
+    configs: missing.config.ts
+test_plan:
+  vitest:
+    fullSuiteTriggers:
+      - name: legacy
+        paths:
+          - missing-trigger.ts
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+  - rule: unique-exports
+    enabled: false
+    exclude: ["gone/**/*.ts",
+      "gone/**/*.ts"]

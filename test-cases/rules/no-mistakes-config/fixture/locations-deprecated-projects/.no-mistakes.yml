@@ -1,0 +1,12 @@
+# Deprecated dependency maps retain canonical diagnostic field names.
+projects:
+  app: {root: .}
+testPlan:
+  vitest:
+    dependencies:
+      projects:
+        app:
+          - missing-deprecated-project.ts
+rules:
+  - rule: no-mistakes-config
+    scope: repository

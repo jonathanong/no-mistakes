@@ -1,0 +1,3 @@
+# Quoted keys are decoded; flow collections retain their own item locations.
+projects: {web: {root: apps/web, include: [src, tests]}}
+"quoted.key": {"with[brackets]": value}

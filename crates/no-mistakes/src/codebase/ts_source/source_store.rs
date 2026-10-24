@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, OnceLock};
 
+mod config_locations;
 mod json;
 pub use json::{JsonLoadError, JsonParseOutcome};
 mod optional;
@@ -35,6 +36,7 @@ pub struct SourceStore {
     reads: Vec<OnceLock<SourceReadOutcome>>,
     json_parses: JsonParseSlots,
     yaml_documents: OnceLock<YamlDocumentSlots>,
+    config_locations: config_locations::LocationCache,
     supplemental_reads: SupplementalReadSlots,
     validated_regular_paths: ValidatedPathCache,
     trusted_regular_paths: DashSet<PathBuf>,
@@ -61,6 +63,7 @@ impl SourceStore {
             reads,
             json_parses: DashMap::new(),
             yaml_documents: OnceLock::new(),
+            config_locations: OnceLock::new(),
             supplemental_reads: DashMap::new(),
             validated_regular_paths: DashMap::new(),
             trusted_regular_paths: DashSet::new(),

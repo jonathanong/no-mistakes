@@ -1,0 +1,9 @@
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+  - rule: unique-exports
+    enabled: false
+    exclude:
+      # no-mistakes-disable-next-line no-mistakes-config: first deprecated exclusion retained temporarily
+      - "gone/first/**/*.ts"
+      - "gone/second/**/*.ts"

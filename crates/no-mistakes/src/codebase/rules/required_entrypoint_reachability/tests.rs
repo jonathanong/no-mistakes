@@ -334,7 +334,9 @@ fn aggregate_runner_propagates_invalid_common_filters() {
     .unwrap_err();
 
     assert!(
-        error.to_string().contains("include contains invalid glob"),
+        error.to_string().contains(
+            ":4: rules[0] (required-entrypoint-reachability).include[0]: contains invalid glob"
+        ),
         "unexpected error: {error:#}"
     );
 }

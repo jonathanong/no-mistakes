@@ -57,6 +57,36 @@ legacy compatibility settings for the standalone `react` command. Prefer
 project-scoped roots and `tests.playwright` settings for new configurations;
 the legacy fields do not change shared frontend-app resolution.
 
+## Configuration diagnostics
+
+Invalid-glob configuration errors and `no-mistakes-config` findings include
+the selected configuration filename and source line when the parsed value has
+an authoritative position. This works for `.yaml`, `.yml`, `.json`, and
+`.jsonc` configuration files, including a custom filename selected with
+`--config`. An invalid glob remains a fatal configuration error, now
+attributed to its entry:
+
+```yaml
+# .no-mistakes.yml
+rules:
+  - rule: some-rule
+    exclude: ["src/**", "[bad"]
+```
+
+The fatal diagnostic includes the source file, line, rule application, field,
+and parser detail:
+
+```text
+.no-mistakes.yml:4: rules[0] (some-rule).exclude[1]: contains invalid glob `[bad`: error parsing glob '[bad': unclosed character class; missing ']'
+```
+
+A valid glob that matches no files and a missing configured path are rule
+findings, with the line of each offending entry; see
+[`no-mistakes-config`](../rules/no-mistakes-config.md).
+
+Values supplied programmatically or derived without an authoritative source
+position use line 1 rather than an inferred line.
+
 ## Topics
 
 - [Discovery](discovery.md)

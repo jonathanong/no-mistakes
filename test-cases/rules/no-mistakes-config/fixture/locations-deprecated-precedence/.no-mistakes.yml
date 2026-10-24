@@ -1,0 +1,15 @@
+# The loader chooses fullSuiteTriggers when both names are present.
+projects:
+  app: {root: .}
+testPlan:
+  vitest:
+    dependencies:
+      projects:
+        app: [ignored-deprecated.ts]
+    fullSuiteTriggers:
+      projects:
+        app:
+          - missing-canonical.ts
+rules:
+  - rule: no-mistakes-config
+    scope: repository

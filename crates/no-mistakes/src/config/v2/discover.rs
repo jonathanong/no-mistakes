@@ -23,6 +23,8 @@ mod check_commands;
 mod deprecations;
 use deprecations::emit_v2_deprecation_warnings;
 mod path_globs;
+mod validation;
+use validation::validate_v2_config;
 mod swift_commands;
 mod targeted_triggers;
 
@@ -141,7 +143,7 @@ fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {
 /// warning for a revision that is not its active configuration.
 pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMistakesConfig> {
     let mut config = parse_config::<NoMistakesConfig>(source, path)?;
-    validate_v2_config(&config, path)?;
+    validate_v2_config(&config, path).map_err(|error| path_globs::annotate(error, source, path))?;
     super::postgres_project_scope::materialize(&mut config)?;
     config.materialize_analysis_defaults()?;
     for policy in config.tests.vitest.projects.values_mut() {
@@ -152,28 +154,6 @@ pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMista
     config.loaded_config_path =
         super::schema::loaded_path::LoadedConfigPath(Some(path.to_path_buf()));
     Ok(config)
-}
-
-fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Result<()> {
-    for (name, project) in &config.projects {
-        path_globs::validate_globs(&project.include, &format!("projects.{name}.include"))?;
-        path_globs::validate_globs(&project.exclude, &format!("projects.{name}.exclude"))?;
-    }
-    for (index, rule) in config.rules.iter().enumerate() {
-        if rule.rule.trim().is_empty() {
-            anyhow::bail!("rules[{index}].rule is required");
-        }
-        path_globs::validate_globs(&rule.include, &format!("rules[{index}].include"))?;
-        path_globs::validate_globs(&rule.exclude, &format!("rules[{index}].exclude"))?;
-    }
-    check_commands::validate(config)?;
-    swift_commands::validate(&config.tests.swift)?;
-    for (name, project) in &config.tests.vitest.projects {
-        project.validate_vitest_setup_files(name)?;
-    }
-    targeted_triggers::validate(config, path)?;
-    path_globs::validate_playwright_selector_wrappers(&config.tests.playwright.selectors.wrappers)?;
-    Ok(())
 }
 
 /// Return the directory that contains the effective config for `root`.

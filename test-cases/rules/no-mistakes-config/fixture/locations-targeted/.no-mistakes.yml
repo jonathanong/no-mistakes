@@ -1,0 +1,12 @@
+projects:
+  app: {root: .}
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        app:
+          paths: [missing-target.ts]
+          targets: [web]
+rules:
+  - rule: no-mistakes-config
+    scope: repository

@@ -1,0 +1,17 @@
+{
+  "projects": {
+    "web": {
+      "root": "apps/web",
+      "include": [
+        "src",
+        "tests"
+      ]
+    }
+  },
+  "quoted.key": {"with[brackets]": "value"},
+  "\u00e9": {"it's": "value"},
+  "scalar":
+    "one",
+  "duplicate": 1,
+  "duplicate": 2
+}

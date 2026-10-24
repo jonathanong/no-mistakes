@@ -12,6 +12,9 @@ pub(super) fn run(
     defer_suppression: bool,
 ) -> Option<Result<Vec<RuleFinding>>> {
     Some(match rule_id {
+        NO_MISTAKES_CONFIG => {
+            no_mistakes_config::check_with_files_and_sources(root, config, files, sources)
+        }
         INTEGRATION_TEST_NO_MOCKS => {
             integration_test_no_mocks::check_with_files_and_sources(root, config, files, sources)
         }

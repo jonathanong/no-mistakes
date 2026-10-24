@@ -1,0 +1,16 @@
+{
+  // Repeated values and fake source text must not replace structural locations: ☃
+  // "exclude": ["gone/**/*.ts"]
+  "rules": [
+    {"rule": "no-mistakes-config", "scope": "repository"},
+    {
+      "rule": "unique-exports",
+      "enabled": false,
+      "exclude": [
+        "gone/**/*.ts",
+        // The second authored element has the same decoded value.
+        "gone/**/*.ts",
+      ],
+    },
+  ],
+}

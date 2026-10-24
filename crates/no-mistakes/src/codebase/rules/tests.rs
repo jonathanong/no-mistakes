@@ -395,7 +395,9 @@ fn run_check_propagates_forbidden_dependencies_filter_error() {
     let config = root.join("invalid-include.no-mistakes.yml");
     let error = run_check(&root, Some(&config), Some(&root.join("tsconfig.json"))).unwrap_err();
     assert!(
-        error.to_string().contains("include contains invalid glob"),
+        error
+            .to_string()
+            .contains(":4: rules[0] (forbidden-dependencies).include[0]: contains invalid glob"),
         "unexpected error: {error:#}"
     );
 }
