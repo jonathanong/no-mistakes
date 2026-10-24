@@ -187,7 +187,7 @@ Definite matches of a configured selector remain findings under either value. Se
 ## Unknown calls and suppression
 
 `unknownCalls: ignore` omits unresolved dynamic calls that do not match an
-`exact` or `terminal` selector. Omission uses `finding` and reports remaining
+`exact` or `terminal` selector. The default, `finding`, reports remaining
 unknown calls as explicit policy findings. Configuration errors, such as an
 invalid root, selector, or a requested root that fails to parse, are never
 suppressible.

@@ -196,6 +196,14 @@ Following recall over precision ([how analysis works](../../README.md#how-analys
 
   Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
 
+SQL schema statements selected by `sqlInclude` also retain diagnostics when the
+lenient parser cannot parse or recover them. Each diagnostic identifies the file,
+statement line, and statement head, and follows the same `options.unanalyzable`
+policy. Valid sibling statements remain available to the catalog. A real
+`DISCARD ALL` statement does not trigger this recovery diagnostic. Existing file
+and line suppressions apply; rewrite unsupported syntax into a supported static
+statement or suppress the specific diagnostic with a reason.
+
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-sql-statement-policy` or

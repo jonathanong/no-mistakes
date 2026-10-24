@@ -102,8 +102,10 @@ fn column_specific_set_null_still_flags_an_unmatched_validate() {
 #[test]
 fn flags_not_valid_inside_do_block_without_validate() {
     let findings = run(&fixture("fail-do-missing"));
-    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings.len(), 2, "{findings:?}");
     assert!(findings[0].message.contains("VALIDATE CONSTRAINT"));
+    assert_eq!(findings[1].target.as_deref(), Some("END IF"));
+    assert_eq!(findings[1].line, 7);
 }
 
 #[test]

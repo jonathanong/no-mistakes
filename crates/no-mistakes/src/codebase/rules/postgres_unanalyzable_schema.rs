@@ -1,7 +1,7 @@
 //! Diagnostics for migration chunks dropped by lenient PostgreSQL parsing.
 use super::{analysis_policy::AnalysisDiagnostics, selected_rule_files, RuleFinding};
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::postgres::{postgres_sql_paths, PostgresSchemaOptions};
+use crate::codebase::postgres::postgres_sql_paths;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
@@ -39,7 +39,7 @@ pub fn diagnostics(
     files: &[PathBuf],
     facts: &CheckFactMap,
 ) -> Result<AnalysisDiagnostics> {
-    diagnostics_for_ids(root, config, files, facts, RULE_IDS)
+    diagnostics_for_ids(root, config, files, facts, RULE_IDS, false)
 }
 
 pub(crate) fn diagnostics_for_rule(
@@ -52,7 +52,16 @@ pub(crate) fn diagnostics_for_rule(
     if !RULE_IDS.contains(&rule_id) {
         return Ok(AnalysisDiagnostics::default());
     }
-    diagnostics_for_ids(root, config, files, facts, &[rule_id])
+    // This standalone entrypoint historically fails on unreadable SQL; its
+    // prepared aggregate scanner deliberately tolerates recorded read errors.
+    diagnostics_for_ids(
+        root,
+        config,
+        files,
+        facts,
+        &[rule_id],
+        rule_id == "postgres-idempotent-insert",
+    )
 }
 
 fn diagnostics_for_ids(
@@ -61,12 +70,13 @@ fn diagnostics_for_ids(
     files: &[PathBuf],
     facts: &CheckFactMap,
     rule_ids: &[&str],
+    strict_read_errors: bool,
 ) -> Result<AnalysisDiagnostics> {
     let mut output = AnalysisDiagnostics::default();
     for rule_id in rule_ids {
         for rule in config.rule_applications(rule_id) {
             let policy = config.effective_rule_analysis(rule)?.unanalyzable;
-            if policy == Unanalyzable::Ignore {
+            if policy == Unanalyzable::Ignore && !strict_read_errors {
                 continue;
             }
             let options: ScopeOptions = rule.try_rule_options()?;
@@ -87,14 +97,15 @@ fn diagnostics_for_ids(
                 });
             }
             let schema = super::schema_options(&options.sql_include, options.sql_include_locked);
+            let paths = postgres_sql_paths(root, &selected, &schema)?;
             append_rule(
                 root,
                 rule_id,
                 policy,
-                &selected,
-                &schema,
+                &paths,
                 facts,
                 &mut output,
+                strict_read_errors,
             )?;
         }
     }
@@ -107,25 +118,26 @@ fn append_rule(
     root: &Path,
     rule_id: &str,
     policy: Unanalyzable,
-    files: &[PathBuf],
-    schema: &PostgresSchemaOptions,
+    paths: &[PathBuf],
     facts: &CheckFactMap,
     output: &mut AnalysisDiagnostics,
+    strict_read_errors: bool,
 ) -> Result<()> {
-    for path in postgres_sql_paths(root, files, schema)? {
-        let file = if matches!(
-            rule_id,
-            "postgres-idempotent-insert" | "postgres-no-generated-column-writes"
-        ) {
+    for path in paths {
+        let file = if !strict_read_errors
+            && matches!(
+                rule_id,
+                "postgres-idempotent-insert" | "postgres-no-generated-column-writes"
+            ) {
             // These scans tolerate recorded source failures but still reject missing fact demand.
-            let Some(file) = facts.postgres_readable_schema(&path)? else {
+            let Some(file) = facts.postgres_readable_schema(path)? else {
                 continue;
             };
             file
         } else {
-            facts.postgres_schema_file(&path)?
+            facts.postgres_schema_file(path)?
         };
-        let rel = relative_slash_path(root, &path);
+        let rel = relative_slash_path(root, path);
         for statement in &file.unanalyzable_statements {
             let line = statement.line.max(1);
             output.unanalyzable(

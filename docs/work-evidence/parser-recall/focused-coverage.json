@@ -1,0 +1,268 @@
+[
+  {
+    "file": "src/codebase/postgres/migration/dynamic_merge.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 5,
+        "covered": 5,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 5,
+        "covered": 5,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 50,
+        "covered": 50,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 87,
+        "covered": 86,
+        "notcovered": 1,
+        "percent": 98.85057471264368
+      }
+    }
+  },
+  {
+    "file": "src/codebase/postgres/migration/recovery.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 2,
+        "covered": 2,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 2,
+        "covered": 2,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 9,
+        "covered": 9,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 8,
+        "covered": 8,
+        "notcovered": 0,
+        "percent": 100.0
+      }
+    }
+  },
+  {
+    "file": "src/codebase/postgres/parse/lenient/recover.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 15,
+        "covered": 15,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 15,
+        "covered": 15,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 156,
+        "covered": 156,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 258,
+        "covered": 255,
+        "notcovered": 3,
+        "percent": 98.83720930232556
+      }
+    }
+  },
+  {
+    "file": "src/codebase/postgres/parse/lenient/source.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 2,
+        "covered": 2,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 2,
+        "covered": 2,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 20,
+        "covered": 20,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 11,
+        "covered": 11,
+        "notcovered": 0,
+        "percent": 100.0
+      }
+    }
+  },
+  {
+    "file": "src/codebase/postgres/prepared/sql.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 11,
+        "covered": 11,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 11,
+        "covered": 11,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 98,
+        "covered": 98,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 177,
+        "covered": 177,
+        "notcovered": 0,
+        "percent": 100.0
+      }
+    }
+  },
+  {
+    "file": "src/codebase/rules/forbidden_calls/config.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 3,
+        "covered": 2,
+        "percent": 66.66666666666666
+      },
+      "instantiations": {
+        "count": 3,
+        "covered": 2,
+        "percent": 66.66666666666666
+      },
+      "lines": {
+        "count": 45,
+        "covered": 40,
+        "percent": 88.88888888888889
+      },
+      "regions": {
+        "count": 81,
+        "covered": 69,
+        "notcovered": 12,
+        "percent": 85.18518518518519
+      }
+    }
+  },
+  {
+    "file": "src/codebase/rules/postgres_unanalyzable_schema.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 5,
+        "covered": 5,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 5,
+        "covered": 5,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 112,
+        "covered": 110,
+        "percent": 98.21428571428571
+      },
+      "regions": {
+        "count": 145,
+        "covered": 138,
+        "notcovered": 7,
+        "percent": 95.17241379310344
+      }
+    }
+  }
+]

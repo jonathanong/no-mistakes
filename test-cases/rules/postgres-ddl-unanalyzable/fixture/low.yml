@@ -8,10 +8,10 @@ rules:
     options: {sqlInclude: ['migrations/**/*.sql']}
   - rule: postgres-generated-column-predicates
     scope: repository
-    options: {sqlInclude: ['migrations/**/*.sql']}
+    options: {executorNames: [], sqlInclude: ['migrations/**/*.sql']}
   - rule: postgres-idempotent-insert
     scope: repository
-    options: {sqlInclude: ['migrations/**/*.sql']}
+    options: {executorNames: [], sqlInclude: ['migrations/**/*.sql']}
   - rule: postgres-identifier-length
     scope: repository
     options: {sqlInclude: ['migrations/**/*.sql']}
@@ -20,7 +20,7 @@ rules:
     options: {sqlInclude: ['migrations/**/*.sql']}
   - rule: postgres-no-generated-column-writes
     scope: repository
-    options: {sqlInclude: ['migrations/**/*.sql']}
+    options: {executorNames: [], sqlInclude: ['migrations/**/*.sql']}
   - rule: postgres-redundant-index
     scope: repository
     options: {sqlInclude: ['migrations/**/*.sql']}
@@ -32,4 +32,4 @@ rules:
     options: {sqlInclude: ['migrations/**/*.sql']}
   - rule: postgres-sql-statement-policy
     scope: repository
-    options: {sqlInclude: ['migrations/**/*.sql'], bannedStatements: []}
+    options: {executorNames: [], sqlInclude: ['migrations/**/*.sql'], bannedStatements: []}

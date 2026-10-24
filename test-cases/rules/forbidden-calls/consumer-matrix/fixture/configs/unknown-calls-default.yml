@@ -9,3 +9,5 @@ rules:
       roots:
         - file: src/unit/dynamic.test.mts
       traversal: file
+      targets:
+        - global: setTimeout

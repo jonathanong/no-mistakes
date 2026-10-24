@@ -34,20 +34,20 @@ fn every_new_category_survives_do_function_and_static_execute_recovery() {
     assert_eq!(
         unanalyzable,
         vec![
-            (2, "BEGIN CREATE DATABASE scratch TEMPLATE template0"),
+            (3, "CREATE DATABASE scratch TEMPLATE template0"),
             (5, "ALTER DATABASE app SET statement_timeout = '1s'"),
             (6, "ALTER SYSTEM SET statement_timeout = '2s'"),
             (13, "CREATE OR REPLACE PROCEDURE empty_proc ( ) LANGUAGE"),
-            (20, "BEGIN CREATE DATABASE scratch TEMPLATE template0"),
+            (21, "CREATE DATABASE scratch TEMPLATE template0"),
             (23, "ALTER DATABASE app SET statement_timeout = '1s'"),
             (24, "ALTER SYSTEM SET statement_timeout = '2s'"),
-            (31, "BEGIN NULL"),
             (31, "CREATE OR REPLACE PROCEDURE empty_proc ( ) LANGUAGE"),
+            (31, "NULL"),
             (39, "CREATE DATABASE scratch TEMPLATE template0"),
             (41, "ALTER DATABASE app SET statement_timeout = '1s'"),
             (42, "ALTER SYSTEM SET statement_timeout = '2s'"),
-            (49, "BEGIN NULL"),
             (49, "CREATE OR REPLACE PROCEDURE empty_proc ( ) LANGUAGE"),
+            (49, "NULL"),
         ]
     );
     let findings: Vec<_> = findings

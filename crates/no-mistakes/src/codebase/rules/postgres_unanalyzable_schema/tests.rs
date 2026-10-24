@@ -7,6 +7,22 @@ fn fixture() -> PathBuf {
     crate::test_support::rule_fixture_root("postgres-ddl-unanalyzable")
 }
 
+#[test]
+fn query_only_rules_do_not_request_schema_diagnostics() {
+    let root = fixture();
+    let config = load_v2_config(&root, Some(&root.join("report.yml"))).unwrap();
+    let output = diagnostics_for_rule(
+        &root,
+        &config,
+        &[root.join("migrations/001.sql")],
+        &CheckFactMap::default(),
+        "postgres-no-offset",
+    )
+    .unwrap();
+    assert!(output.findings.is_empty());
+    assert!(output.advisories.is_empty());
+}
+
 fn prepared(root: &Path, config_name: &str) -> (NoMistakesConfig, Vec<PathBuf>, CheckFactMap) {
     let config = load_v2_config(root, Some(&root.join(config_name))).unwrap();
     let files = vec![root.join("migrations/001.sql")];

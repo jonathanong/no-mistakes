@@ -1,7 +1,7 @@
 rules:
   - rule: postgres-idempotent-insert
     scope: repository
-    options: {sqlInclude: ['migrations/**/*.sql']}
+    options: {executorNames: [], sqlInclude: ['migrations/**/*.sql']}
   - rule: postgres-no-generated-column-writes
     scope: repository
-    options: {sqlInclude: ['migrations/**/*.sql']}
+    options: {executorNames: [], sqlInclude: ['migrations/**/*.sql']}

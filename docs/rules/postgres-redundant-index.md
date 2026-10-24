@@ -106,7 +106,17 @@ Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`,
 
 ### Unanalyzable inputs
 
-Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. Known gap: statements the lenient SQL parser cannot parse become `DISCARD ALL` markers and produce no finding, so they are silently unchecked rather than routed through `options.unanalyzable` ([#2661](https://github.com/jonathanong/no-mistakes/issues/2661)). A failure to collect facts aborts the rule with an error. The repository-level `unanalyzable` default does not affect it.
+SQL statements selected by `sqlInclude` that the lenient parser cannot parse or
+recover follow `options.unanalyzable`: `report` (default) emits a finding,
+`advise` emits a non-failing advisory, and `ignore` omits the diagnostic. The
+repository-level default applies when the rule does not override it. Diagnostics
+name the source file, statement line, and statement head so the unsupported SQL
+can be rewritten or given a reasoned suppression.
+
+Valid sibling statements still contribute schema facts. A real `DISCARD ALL`
+statement is parsed normally; the parser's internal recovery marker supplies
+no schema proof. File and line suppression directives apply to these diagnostics.
+A failure to collect facts still aborts the rule with an error.
 
 ## Suppression
 
