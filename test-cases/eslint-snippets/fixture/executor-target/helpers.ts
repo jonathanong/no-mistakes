@@ -34,3 +34,10 @@ export const fromMethod: Helpers["run"] = query => { query("SELECT 1"); };
 export function defaultObject({ query = read }: { query: QueryExecutor }) {
   query("SELECT id FROM orders OFFSET 1");
 }
+
+// Method signatures belong to another implementation, not these arrow bodies.
+abstract class AbstractHelper { abstract run(query: QueryExecutor): void; }
+class ConcreteHelper { run(query: QueryExecutor) { query("SELECT 1"); } }
+export const abstractContext: AbstractHelper["run"] = query => query("SELECT 2");
+export const concreteContext: ConcreteHelper["run"] = query => query("SELECT 2");
+export let mutable = (query: QueryExecutor) => query("SELECT 1");

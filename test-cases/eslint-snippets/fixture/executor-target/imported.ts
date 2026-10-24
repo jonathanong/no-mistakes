@@ -26,3 +26,8 @@ import { fromMethod } from "./helpers";
 fromMethod(read);
 import { defaultObject } from "./helpers";
 defaultObject({ query: read });
+import { abstractContext, concreteContext } from "./helpers";
+abstractContext(read);
+concreteContext(read);
+import { mutable } from "./helpers";
+mutable(read);
