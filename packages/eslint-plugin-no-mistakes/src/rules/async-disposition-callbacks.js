@@ -56,7 +56,11 @@ function argumentUse(id, result) {
   let value = result;
   while (value.parent) {
     const parent = value.parent;
+    if (parent.type.startsWith("TS") && parent.expression !== value) return null;
     if (parent.type === "MemberExpression") return null;
+    if (parent.computed && parent.key === value) return null;
+    if (parent.type === "TaggedTemplateExpression") return null;
+    if (parent.type === "NewExpression" && parent.callee === value) return null;
     if (
       parent.type === "UnaryExpression" ||
       parent.type === "BinaryExpression" ||

@@ -248,7 +248,9 @@ arguments still dispose a promise by returning it. A reference used only in a
 `typeof`, comparison, update, untagged template literal, conditional test, or
 earlier comma operand does not pass the callback. Callback-valued conditional
 and logical branches, final comma operands, assignment results, and tagged
-template interpolations remain unproven argument uses. Matching follows import
+template interpolations remain unproven argument uses. Computed property keys,
+erased type arguments, and invocations as a tag or constructor do not pass the
+function as a callback. Matching follows import
 identity, including stable aliases and logical `.call` argument positions;
 shadowed or reassigned callees do not qualify. A spread argument before the
 callback prevents proving its position. A `.bind` result passed to a consumer

@@ -61,7 +61,7 @@ it("distinguishes callback values from expressions built from callbacks", () => 
   );
   assert.deepEqual(
     result.map(({ line, messageId }) => [line, messageId]),
-    [24, 26, 28, 30, 32, 35].map((line) => [line, "disposition"]),
+    [24, 26, 28, 30, 32, 35, 55, 57, 59].map((line) => [line, "disposition"]),
   );
 });
 

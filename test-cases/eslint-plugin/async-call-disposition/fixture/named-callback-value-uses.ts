@@ -39,3 +39,22 @@ consume(directKnown);
 let total = 0;
 const compoundOnly = () => enqueueEmail(17);
 unknownConsumer((total += compoundOnly));
+// Calling a function as a tag or constructor does not pass the function itself.
+const calledTag = () => enqueueEmail(18);
+unknownConsumer(calledTag`text`);
+function calledConstructor() { return enqueueEmail(19); }
+unknownConsumer(new calledConstructor());
+// Computed property and method keys coerce the function to a property key.
+const objectKey = () => enqueueEmail(20);
+unknownConsumer({ [objectKey]: 1, [objectKey]() {} });
+const classKey = () => enqueueEmail(21);
+unknownConsumer(class { [classKey]() {} });
+// An erased type argument never passes the runtime function as a callback.
+const erasedReference = () => enqueueEmail(22);
+unknownConsumer<typeof erasedReference>();
+const constructedArgument = () => enqueueEmail(23);
+unknownConsumer(new Holder(constructedArgument));
+const computedValue = () => enqueueEmail(24);
+unknownConsumer({ [flag]: computedValue });
+const assertedBranch = () => enqueueEmail(25);
+consume((flag ? assertedBranch : fallback) as unknown);
