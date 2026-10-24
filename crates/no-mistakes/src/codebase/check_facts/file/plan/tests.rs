@@ -5,6 +5,37 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 #[test]
+fn raw_source_scope_preserves_graph_and_generic_source_demand() {
+    use crate::codebase::check_facts::FamilyPathScope;
+    let root = Path::new("/repo");
+    let selected = Path::new("/repo/app/api/route.ts");
+    let other = Path::new("/repo/app/page.ts");
+    let mut plan = CheckFactPlan {
+        raw_source: true,
+        raw_source_paths: FamilyPathScope::Only(Arc::new(
+            [selected.to_path_buf()].into_iter().collect(),
+        )),
+        ..Default::default()
+    };
+    assert!(ts_extract_plan(root, &plan, selected, None).source);
+    assert!(!ts_extract_plan(root, &plan, other, None).source);
+    assert!(!plan.collected_ts_plan().source);
+    plan.graph.source = true;
+    assert!(ts_extract_plan(root, &plan, other, None).source);
+    plan.graph.source = false;
+    plan.source = true;
+    assert!(ts_extract_plan(root, &plan, other, None).source);
+    assert!(
+        CheckFactPlan {
+            raw_source: true,
+            ..Default::default()
+        }
+        .collected_ts_plan()
+        .source
+    );
+}
+
+#[test]
 fn ts_source_reuses_the_same_arc_pointer() {
     let source: Arc<str> = Arc::from("export const value = 1;\n");
     let first = ts_source(Some(Arc::clone(&source)));

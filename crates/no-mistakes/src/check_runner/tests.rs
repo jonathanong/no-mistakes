@@ -15,6 +15,7 @@ mod consumers;
 mod domain_tasks;
 mod graph_scope;
 mod integration_gitignore;
+mod nextjs_raw_source_scope;
 mod parse_cache;
 mod playwright_discovery;
 mod postgres_projection_scope;

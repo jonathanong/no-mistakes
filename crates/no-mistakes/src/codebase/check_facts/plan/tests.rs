@@ -2,6 +2,37 @@ use super::CheckFactPlan;
 use crate::codebase::postgres::EmbeddedSqlOptions;
 
 #[test]
+fn raw_source_scope_merges_only_active_requests() {
+    use crate::codebase::check_facts::FamilyPathScope;
+    use std::sync::Arc;
+    let first = std::path::PathBuf::from("/repo/first.ts");
+    let second = std::path::PathBuf::from("/repo/second.ts");
+    let scoped = |path| CheckFactPlan {
+        raw_source: true,
+        raw_source_paths: FamilyPathScope::Only(Arc::new([path].into_iter().collect())),
+        ..Default::default()
+    };
+    let mut plan = scoped(first.clone());
+    plan.include(CheckFactPlan::default());
+    assert!(!plan.collected_ts_plan().source);
+    plan.include(scoped(second.clone()));
+    assert!(crate::codebase::check_facts::family_scope::applies(
+        &plan.raw_source_paths,
+        &first
+    ));
+    assert!(crate::codebase::check_facts::family_scope::applies(
+        &plan.raw_source_paths,
+        &second
+    ));
+    plan.include(CheckFactPlan {
+        raw_source: true,
+        ..Default::default()
+    });
+    assert_eq!(plan.raw_source_paths, FamilyPathScope::All);
+    assert!(plan.collected_ts_plan().source);
+}
+
+#[test]
 fn production_path_demand_is_shared_across_plan_clones_and_combined_once() {
     use std::sync::Arc;
     let paths = Arc::new(
