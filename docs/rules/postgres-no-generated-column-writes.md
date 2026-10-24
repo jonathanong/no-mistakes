@@ -113,7 +113,7 @@ executed SQL statically recoverable or set `unanalyzableSql: ignore`.
 
 ### Effort
 
-Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files selected by `sqlInclude`.
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files whose writes are checked. Two scopes apply: `sqlInclude` (default `**/*.sql`) selects the schema inputs (table, column and trigger definitions) that establish which columns are generated, while `options.include` selects the query inputs whose writes are checked (when empty, the default DML paths apply).
 
 ### Unanalyzable inputs
 
