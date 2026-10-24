@@ -83,3 +83,73 @@ fn package_json_required_fields_filesystem_runner_discovers_files() {
         "{body}"
     );
 }
+
+// A broken sibling must remain visible without hiding definite field violations.
+#[test]
+fn malformed_manifest_policy_preserves_definite_findings_and_suppression() {
+    let root = fixture("unanalyzable");
+    for prefix in ["", "only-"] {
+        let ordinary = usize::from(prefix.is_empty());
+        for (policy, uncertain, advisories) in
+            [("report", 2, 0), ("advise", 0, 2), ("ignore", 0, 0)]
+        {
+            let out = Command::new(bin())
+                .args(["check", "--root"])
+                .arg(&root)
+                .arg("--config")
+                .arg(root.join(format!("{prefix}{policy}.yml")))
+                .args(["--format", "json"])
+                .output()
+                .unwrap();
+            let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
+            let findings = report["rules"].as_array().unwrap();
+            let advice = report["advisories"].as_array().unwrap();
+            assert_eq!(findings.len(), uncertain + ordinary, "{policy}: {report}");
+            assert_eq!(advice.len(), advisories, "{policy}: {report}");
+            let has_definite = findings.iter().any(|finding| {
+                finding["file"] == "packages/valid/package.json" && finding["target"] == "private"
+            });
+            assert_eq!(has_definite, ordinary > 0, "{report}");
+            for finding in findings.iter().chain(advice) {
+                assert_ne!(
+                    finding["file"], "packages/suppressed/package.json",
+                    "{report}"
+                );
+                if finding["target"] == "unanalyzable" {
+                    assert!(
+                        [
+                            "packages/broken/package.json",
+                            "packages/invalid-utf8/package.json"
+                        ]
+                        .iter()
+                        .any(|file| finding["file"] == *file),
+                        "{report}"
+                    );
+                }
+            }
+            assert_eq!(out.status.code(), Some(i32::from(uncertain + ordinary > 0)));
+        }
+    }
+}
+
+#[test]
+fn malformed_manifest_suppression_is_accounted_by_audit() {
+    let root = fixture("unanalyzable");
+    let output = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join("report.yml"))
+        .args(["--include-suppressed", "--format", "json"])
+        .output()
+        .unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["rules"].as_array().unwrap().len(), 3, "{report}");
+    assert!(
+        report["suppressed"]
+            .to_string()
+            .contains("packages/suppressed/package.json"),
+        "{report}"
+    );
+    assert_eq!(output.status.code(), Some(1));
+}

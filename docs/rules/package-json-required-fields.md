@@ -31,7 +31,8 @@ are `private`, `type`, `license`, `requireScopedName`,
   when a file with that exact name exists beside `package.json`. It defaults to
   unset.
 
-Empty options report nothing. Each check is opt-in. `unscopedNameExceptions`
+Empty options report nothing, including for unreadable or malformed manifests.
+Each check is opt-in. `unscopedNameExceptions`
 applies only when `requireScopedName` is enabled; `web` below is an allowed
 unscoped name, not a free pass on the other fields.
 
@@ -47,6 +48,19 @@ rules:
       unscopedNameExceptions: [web]
       mainWhenFileExists: index.mts
 ```
+
+## Unanalyzable manifests
+
+When any field check is enabled, a selected manifest that cannot be read as
+UTF-8 or parsed as JSON produces an `unanalyzable` diagnostic. Repair the file
+or restore read access so the required fields can be verified. This prevents
+broken inputs from silently passing the manifest policy.
+
+The shared `options.unanalyzable` setting inherits the repository policy and
+defaults to `report`. `report` fails the check, `advise` emits a non-failing
+advisory, and `ignore` omits this diagnostic. Definite violations in other
+manifests remain failures under every policy. Rule-level `include`, `exclude`,
+and suppressions apply before diagnostics reach the report.
 
 ## Valid example
 

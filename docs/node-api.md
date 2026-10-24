@@ -94,6 +94,14 @@ unsupported expression shapes retain definite findings under every policy.
 Both findings and advice honor suppression. Invalid UTF-8 points to its first
 invalid byte's line; other read failures use line 1.
 
+For `package-json-required-fields`, CLI `check`, `check(options)`, and check
+reports in `analyzeProject()` apply the same `unanalyzable` policy to selected
+manifests that cannot be read or parsed when a field check is enabled.
+`report` fails by default, `advise` returns a non-failing advisory, and `ignore`
+omits the uncertainty. Definite field violations remain failures, and empty
+options request no checks. Both diagnostic channels honor suppression. See
+[the rule contract](rules/package-json-required-fields.md#unanalyzable-manifests).
+
 For `github-actions-job-timeouts`, `check({ effort: "low" })` and a check report
 in `analyzeProject()` use the same covering `github-actions-step-timeouts`
 partner as CLI `--effort low`. With a certified step cap, the job rule skips
