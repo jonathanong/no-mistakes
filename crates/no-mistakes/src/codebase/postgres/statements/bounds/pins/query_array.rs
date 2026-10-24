@@ -74,11 +74,11 @@ fn aggregate(
     let [FunctionArg::Unnamed(FunctionArgExpr::Expr(element))] = arguments.args.as_slice() else {
         return None;
     };
+    // The SELECT was established above; retain that invariant without rematching a clone.
+    let mut input_select = select.clone();
+    input_select.projection = vec![SelectItem::UnnamedExpr(element.clone())];
     let mut input = query.clone();
-    let SetExpr::Select(select) = input.body.as_mut() else {
-        unreachable!()
-    };
-    select.projection = vec![SelectItem::UnnamedExpr(element.clone())];
+    *input.body = SetExpr::Select(input_select);
     // LIMIT on an aggregate sizes output groups, not the rows accumulated into each array.
     input.limit_clause = None;
     input.fetch = None;

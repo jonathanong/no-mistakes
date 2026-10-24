@@ -109,7 +109,7 @@ fn one_group(select: &Select) -> bool {
 
 /// DISTINCT ON evaluates its expressions against the grouped rows, including implicit groups.
 /// A set-returning call there can expand the single aggregate row just like a projected call.
-fn distinct_on_expands(select: &Select) -> bool {
+pub(super) fn distinct_on_expands(select: &Select) -> bool {
     matches!(
         &select.distinct,
         Some(Distinct::On(expressions))

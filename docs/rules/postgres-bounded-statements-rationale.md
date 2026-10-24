@@ -139,3 +139,9 @@ Recursive key walks remain reported without a proven total-depth bound. A
 single-row seed and one key lookup per step bound branching, but do not bound
 the number of steps; `UNION ALL` may also revisit a cycle forever. Use an
 explicit bounded batch or a separate statically provable total-row contract.
+A `DISTINCT ON` key can also erase that caller row if a set-returning function
+yields no values. The guaranteed-row proof uses the existing projection-expansion
+classifier for those keys; fixed keys and ordinary `DISTINCT` retain their row.
+Named `WINDOW` keys can erase the row in the same way, even when no projected
+window function uses them. Caller-count CTEs with named windows remain
+conservative; remove the unused `WINDOW` clause to preserve the count proof.

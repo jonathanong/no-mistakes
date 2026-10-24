@@ -98,3 +98,23 @@ fn shared_conjuncts_complete_different_composite_unique_keys_per_branch() {
         .collect();
     assert_eq!(lines, [4, 5]);
 }
+
+#[test]
+fn review_controls_preserve_guaranteed_rows_and_executed_input_evidence() {
+    let facts = extract_sql_statement_facts(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/issue-2665-review.sql"
+    )));
+    assert!(!facts.parse_failed);
+    let lines: Vec<_> = facts
+        .bounds
+        .iter()
+        .flat_map(|fact| offenders(fact, &catalog()))
+        .map(|offender| (offender.table, offender.line))
+        .collect();
+    assert_eq!(
+        lines,
+        [2, 3, 10, 11, 12, 14, 16, 17, 19, 20, 22, 24, 29, 31, 32]
+            .map(|line| ("accounts".to_owned(), line))
+    );
+}

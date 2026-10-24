@@ -94,7 +94,9 @@ fn single_output(
 }
 
 fn source<'a>(select: &Select, scope: &'a Scope) -> Option<Option<(String, &'a BTreeSet<String>)>> {
-    if select.selection.is_some()
+    if !select.named_window.is_empty()
+        || super::aggregate::distinct_on_expands(select)
+        || select.selection.is_some()
         || select.having.is_some()
         || select.qualify.is_some()
         || !matches!(&select.group_by, sqlparser::ast::GroupByExpr::Expressions(expressions, _) if expressions.is_empty())
