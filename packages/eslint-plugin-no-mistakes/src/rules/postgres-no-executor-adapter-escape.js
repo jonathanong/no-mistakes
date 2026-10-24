@@ -18,11 +18,11 @@ function createCollectionEscape(checker, program, result) {
   function escapeValue(node, seenSymbols = new Set()) {
     if (!node || escapedValueNodes.has(node)) return;
     escapedValueNodes.add(node);
+    if (node.getFirstToken?.()?.getText() === "typeof") return;
     if (node.escapedText !== undefined) {
+      const symbol =
+        checker.getShorthandAssignmentValueSymbol(node.parent) ?? checker.getSymbolAtLocation(node);
       if (builtinCollection(checker.getTypeAtLocation(node))) {
-        const symbol =
-          checker.getShorthandAssignmentValueSymbol(node.parent) ??
-          checker.getSymbolAtLocation(node);
         if (symbol && !seenSymbols.has(symbol)) {
           seenSymbols.add(symbol);
           result.escapedSymbols.add(symbol);
@@ -30,7 +30,15 @@ function createCollectionEscape(checker, program, result) {
           if (declaration?.initializer?.escapedText !== undefined)
             escapeValue(declaration.initializer, seenSymbols);
         }
+      } else if (symbol && !seenSymbols.has(symbol)) {
+        seenSymbols.add(symbol);
+        const initializer = symbol.valueDeclaration?.initializer;
+        if (initializer) escapeValue(initializer, seenSymbols);
       }
+      return;
+    }
+    if (node.equalsGreaterThanToken && node.body && !node.body.statements) {
+      escapeValue(node.body, seenSymbols);
       return;
     }
     if (
@@ -74,6 +82,32 @@ function createCollectionEscape(checker, program, result) {
     );
   }
   function visit(node) {
+    if (node.initializer && node.name) {
+      const initializer = node.initializer;
+      const sourceType = builtinCollection(checker.getTypeAtLocation(initializer));
+      const boundType = builtinCollection(checker.getTypeAtLocation(node.name));
+      if (
+        (sourceType && sourceType !== boundType) ||
+        Array.isArray(initializer.properties) ||
+        Array.isArray(initializer.elements) ||
+        initializer.equalsGreaterThanToken
+      )
+        escapeValue(initializer);
+    }
+    if (node.expression && node.getFirstToken?.()?.getText() === "return")
+      escapeValue(node.expression);
+    if (node.equalsGreaterThanToken && node.body && !node.body.statements) escapeValue(node.body);
+    if (node.expression && node.getFirstToken?.()?.getText() === "export")
+      escapeValue(node.expression);
+    if (node.parent && node.parent.parent?.exportClause === node.parent) {
+      const exported = checker.getExportSpecifierLocalTargetSymbol?.(node);
+      if (exported?.valueDeclaration) result.escapedSymbols.add(exported);
+    }
+    if (node.declarationList && node.modifiers?.some((modifier) => modifier.getText() === "export"))
+      for (const declaration of node.declarationList.declarations) {
+        const symbol = checker.getSymbolAtLocation(declaration.name);
+        if (symbol) result.escapedSymbols.add(symbol);
+      }
     if (node.initializer?.escapedText === undefined || node.name?.escapedText === undefined) return;
     const source = checker.getSymbolAtLocation(node.initializer),
       alias = checker.getSymbolAtLocation(node.name);

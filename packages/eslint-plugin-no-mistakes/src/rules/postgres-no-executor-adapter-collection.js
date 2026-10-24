@@ -2,7 +2,6 @@
 
 const { resolveVariable } = require("./postgres-query-text");
 const { sourceWrites } = require("./postgres-no-executor-adapter-source");
-const ts = require("typescript");
 
 const COLLECTION_METHODS = new Map([
   ["Map", new Set(["get", "set", "has", "delete"])],
@@ -42,9 +41,8 @@ function builtinCollection(type, program) {
 
 function stableCollectionValue(receiver, collection, context, checker, services, seen) {
   const def = stableReceiverBinding(receiver, context);
-  if (!def) return false;
-  if (def.type === "Parameter") return false;
-  if (seen.has(def.node) || !def.node.init) return false;
+  if (!def || def.type === "Parameter") return null;
+  if (seen.has(def.node) || !def.node.init) return null;
   seen.add(def.node);
   if (def.node.init.type === "Identifier") {
     return stableCollectionValue(def.node.init, collection, context, checker, services, seen);
@@ -54,19 +52,19 @@ function stableCollectionValue(receiver, collection, context, checker, services,
     def.node.init.callee.type !== "Identifier" ||
     def.node.init.callee.name !== collection
   )
-    return false;
+    return null;
   const tsInit = services.esTreeNodeToTSNodeMap.get(def.node.init);
   const tsCallee = services.esTreeNodeToTSNodeMap.get(def.node.init.callee);
+  if (!tsInit || !tsCallee) return null;
   const constructor = checker.getSymbolAtLocation(tsCallee);
-  return Boolean(
-    tsInit &&
-    constructor?.getName() === collection &&
+  return constructor?.getName() === collection &&
     constructor.declarations?.length &&
     constructor.declarations.every((declaration) =>
       services.program.isSourceFileDefaultLibrary(declaration.getSourceFile()),
     ) &&
-    builtinCollection(checker.getTypeAtLocation(tsInit), services.program) === collection,
-  );
+    builtinCollection(checker.getTypeAtLocation(tsInit), services.program) === collection
+    ? constructor
+    : null;
 }
 
 function allowsCollectionKey(call, index, context, facts) {
@@ -96,25 +94,21 @@ function allowsCollectionKey(call, index, context, facts) {
   const receiverType = checker.getTypeAtLocation(tsReceiver);
   const collection = builtinCollection(receiverType, services.program);
   if (!collection || !COLLECTION_METHODS.get(collection).has(method)) return false;
-  if (!stableCollectionValue(callee.object, collection, context, checker, services, new Set()))
-    return false;
+  const constructor = stableCollectionValue(
+    callee.object,
+    collection,
+    context,
+    checker,
+    services,
+    new Set(),
+  );
+  if (!constructor) return false;
   const methodSymbol = checker.getSymbolAtLocation(tsMethod);
   const writes = sourceWrites(tsReceiver.getSourceFile(), checker, facts, services.program);
   const receiverSymbol = checker.getSymbolAtLocation(tsReceiver);
-  const constructor = checker
-    .getSymbolsInScope(tsReceiver, ts.SymbolFlags.Value)
-    .find(
-      (symbol) =>
-        symbol.getName() === collection &&
-        symbol.declarations?.length &&
-        symbol.declarations.every((declaration) =>
-          builtinTypeDeclaration(declaration, collection, services.program),
-        ),
-    );
   const constructorMutated =
-    constructor &&
-    (writes.symbols.has(constructor) ||
-      constructor.declarations.some((declaration) => writes.declarations.has(declaration)));
+    writes.symbols.has(constructor) ||
+    constructor.declarations.some((declaration) => writes.declarations.has(declaration));
   return (
     !writes.uncertainMutation &&
     !writes.eval &&

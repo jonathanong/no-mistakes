@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { resolve, dirname } from "node:path";
 import { describe, it } from "vitest";
 import { createRequire } from "node:module";
+import { execFileSync } from "node:child_process";
 import tsParser from "@typescript-eslint/parser";
 import { Linter } from "eslint";
 import { fixture, __dirname, plugin } from "./helpers.mjs";
@@ -71,6 +72,23 @@ function helperReports(name, parser = tsParser) {
 }
 
 describe("postgres-no-executor-adapter collection keys", () => {
+  it("loads without TypeScript as a runtime dependency", () => {
+    const modulePath = resolve(
+      __dirname,
+      "../src/rules/postgres-no-executor-adapter-collection.js",
+    );
+    const code = `
+      const Module = require("node:module");
+      const load = Module._load;
+      Module._load = function (name, ...args) {
+        if (name === "typescript") throw new Error("runtime TypeScript import");
+        return load.call(this, name, ...args);
+      };
+      require(process.argv[1]);
+    `;
+    assert.doesNotThrow(() => execFileSync(process.execPath, ["-e", code, modulePath]));
+  });
+
   it("uses the supplied per-run source facts", () => {
     assert.deepEqual(helperReports("helper-api.ts"), [[5, "allowed-key"]]);
   });
@@ -231,6 +249,28 @@ describe("postgres-no-executor-adapter collection keys", () => {
       [33, "passed"],
       [37, "passed"],
       [43, "passed"],
+    ]);
+  });
+
+  it("keeps reporting collections exposed through value containers and returns", () => {
+    assert.deepEqual(reports("receiver-boundaries.ts"), [
+      [7, "passed"],
+      [12, "passed"],
+      [17, "passed"],
+      [21, "passed"],
+      [25, "passed"],
+      [29, "passed"],
+      [53, "passed"],
+      [56, "passed"],
+    ]);
+  });
+
+  it("keeps reporting exported collection receivers", () => {
+    assert.deepEqual(reports("exported-receivers.ts"), [
+      [4, "passed"],
+      [8, "passed"],
+      [13, "passed"],
+      [17, "passed"],
     ]);
   });
 
