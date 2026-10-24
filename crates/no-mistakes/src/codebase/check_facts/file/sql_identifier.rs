@@ -4,6 +4,9 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use oxc_ast::ast::Program;
 use std::path::Path;
 
+#[cfg(test)]
+mod tests;
+
 pub(super) fn selected(root: &Path, path: &Path, plan: &CheckFactPlan) -> bool {
     plan.sql_identifier_profiles
         .values()
@@ -14,6 +17,36 @@ fn profiles(root: &Path, path: &Path, plan: &CheckFactPlan) -> Vec<EmbeddedSqlOp
         .iter()
         .filter(|(_, scans)| scans.iter().any(|scan| scan.includes(root, path)))
         .map(|(profile, _)| profile.clone())
+        .collect()
+}
+/// Return only the configured typed-executor identities whose low-effort scan
+/// selects this file, grouped by the exact embedded-SQL profile they support.
+pub(super) fn typed_executor_types_by_profile(
+    root: &Path,
+    path: &Path,
+    plan: &CheckFactPlan,
+) -> Vec<(
+    EmbeddedSqlOptions,
+    Vec<crate::config::v2::schema::EffectTargetConfig>,
+)> {
+    plan.sql_identifier_profiles
+        .iter()
+        .filter_map(|(profile, scans)| {
+            let mut types = scans
+                .iter()
+                .filter(|scan| scan.includes(root, path))
+                .flat_map(|scan| scan.typed_executor_types().iter().cloned())
+                .collect::<Vec<_>>();
+            if types.is_empty() {
+                return None;
+            }
+            types.sort_by(|left, right| {
+                (&left.module, &left.export).cmp(&(&right.module, &right.export))
+            });
+            types
+                .dedup_by(|left, right| left.module == right.module && left.export == right.export);
+            Some((profile.clone(), types))
+        })
         .collect()
 }
 pub(super) fn collect(

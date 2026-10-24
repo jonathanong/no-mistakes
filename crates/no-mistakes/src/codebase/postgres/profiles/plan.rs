@@ -65,6 +65,11 @@ pub fn configure_prepared_postgres_plan(
                 &options.executor_type_names,
             )
             .with_trusted_sql_tags(&options.trusted_sql_tags);
+            let typed_executor_types = config
+                .effects
+                .get("postgres")
+                .map(|effects| effects.typed_executors.as_slice())
+                .unwrap_or_default();
             let scan =
                 crate::codebase::postgres::sql_identifier_syntax::plan::SqlIdentifierScan::new(
                     root,
@@ -73,7 +78,8 @@ pub fn configure_prepared_postgres_plan(
                     index,
                     &options.include,
                     &options.exclude,
-                )?;
+                )?
+                .with_typed_executor_types(typed_executor_types);
             plan.sql_identifier_profiles
                 .entry(profile)
                 .or_default()
