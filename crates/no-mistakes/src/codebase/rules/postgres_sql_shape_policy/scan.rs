@@ -136,22 +136,14 @@ pub(super) fn scan(
                     &mut dedup,
                 );
             }
-            if opts.fail_unanalyzable && file.parse_failed {
-                fragment_findings.push_complete(
-                    &mut findings,
-                    file,
-                    crate::codebase::postgres::statements::SqlFactSite::Origin,
-                    source.as_deref(),
-                    finding(
-                        &rel,
-                        file.origin_line.max(1),
-                        "SQL could not be analyzed for shape policy",
-                        opts.shapes.unanalyzable_target(),
-                    ),
-                    &mut dedup,
-                );
-                continue;
-            }
+            fragment_findings.push_parse_failures(
+                &rel,
+                &mut findings,
+                file,
+                source.as_deref(),
+                opts,
+                &mut dedup,
+            );
             for (select_index, select) in file.selects.iter().enumerate() {
                 for (site, finding) in super::select_findings::located_findings(
                     &rel,

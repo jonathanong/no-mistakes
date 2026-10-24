@@ -107,7 +107,19 @@ fn final_ordinary_definition_replaces_generated_state_and_column_order() {
 
 #[test]
 fn dollar_sign_identifiers_do_not_absorb_later_writes_or_suppressions() {
-    let (root, paths, mut findings) = scan("dollar-identifiers", &["schema.sql", "writes.sql"]);
+    let (root, paths, findings) = scan("dollar-identifiers", &["schema.sql", "writes.sql"]);
+    // The malformed placeholder remains a schema gap without absorbing later writes.
+    let source = std::fs::read_to_string(root.join("writes.sql")).unwrap();
+    let invalid = source.lines().nth(4).unwrap().trim_end_matches(';');
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.target.as_deref() != Some("updated_at"))
+            .map(|finding| (finding.line, finding.target.as_deref()))
+            .collect::<Vec<_>>(),
+        [(5, Some(invalid))],
+    );
+    let mut findings = verified_schema_markers(&root, "writes.sql", findings);
     assert_eq!(
         findings
             .iter()

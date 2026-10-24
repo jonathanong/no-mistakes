@@ -161,6 +161,13 @@ pub(super) fn finish(
     recovery: Option<&crate::codebase::postgres::conflict::ConflictChunks<'_>>,
 ) -> SqlVariantLocations {
     let mut projected = locations.project(facts, tokens);
+    for (index, failure) in facts.parse_failures.iter().enumerate() {
+        projected.insert(
+            super::SqlFactSite::ParseFailure(index),
+            failure.line,
+            failure.column,
+        );
+    }
     match crate::codebase::postgres::conflict::analyze_parsed(sql, statements, binds) {
         Ok(conflicts) => projected.conflicts = conflicts,
         Err(error) => projected.conflict_error = Some(error.to_string()),

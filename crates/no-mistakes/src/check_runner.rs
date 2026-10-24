@@ -85,3 +85,6 @@ mod finite_set_effort;
 #[cfg(test)]
 #[path = "check_runner/transformed_uuid_predicates/tests.rs"]
 mod transformed_uuid_predicates;
+
+#[cfg(test)]
+mod parse_failure_locations_tests;

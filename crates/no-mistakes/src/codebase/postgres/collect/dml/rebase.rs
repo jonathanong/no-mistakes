@@ -53,6 +53,13 @@ pub(super) fn rebase_embedded_lines(
                 |position| position.source_line,
             )
     };
+    for (index, failure) in facts.parse_failures.iter_mut().enumerate() {
+        failure.line = physical_line(
+            SqlFactSite::ParseFailure(index),
+            failure.line,
+            failure.column,
+        );
+    }
     for (i, setting) in facts.setting_uses.iter_mut().enumerate() {
         setting.line = physical_line(SqlFactSite::Setting(i), setting.line, 1);
     }

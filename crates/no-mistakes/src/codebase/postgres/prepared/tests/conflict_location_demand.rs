@@ -53,10 +53,10 @@ fn conflict_only_boundary_omits_unrequested_exact_location_families() {
         locations.locking.is_empty(),
         "conflict-only demand collected locking metadata"
     );
-    assert!(locations
-        .positions
-        .keys()
-        .all(|site| matches!(site, SqlFactSite::Origin | SqlFactSite::Conflict(_))));
+    assert!(locations.positions.keys().all(|site| matches!(
+        site,
+        SqlFactSite::Origin | SqlFactSite::Conflict(_) | SqlFactSite::ParseFailure(_)
+    )));
     assert_eq!(
         statements[0]
             .variant_locations

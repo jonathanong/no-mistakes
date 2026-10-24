@@ -116,6 +116,11 @@ fn extract_sql_statement_facts_with_placeholder_positions(
         ),
         Err(_) => {
             let parsed = parse_postgres_sql_lenient_with_sources(sql, prepared.normalized());
+            let parse_failures: Vec<_> =
+                crate::codebase::postgres::migration::recovery_failures(&parsed)
+                    .into_iter()
+                    .filter(|failure| failure.statement_unanalyzable)
+                    .collect();
             let orphans = orphan_chunk_tokens(&parsed);
             let (mut located, functions) = partition_function_sources(parsed);
             prepared.adopt_recovered_arbiters(&mut located);
@@ -140,6 +145,7 @@ fn extract_sql_statement_facts_with_placeholder_positions(
                 super::StatementSources {
                     projection,
                     locations,
+                    parse_failures: &parse_failures,
                     tokens: Some(&sources),
                     recovery: Some(&recovery),
                     policy: super::StatementPolicySources {

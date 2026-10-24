@@ -1,4 +1,5 @@
 //! Recognize procedural-only chunks inside an already identified PL/pgSQL body.
+use sqlparser::ast::Statement;
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 use std::sync::Arc;
@@ -14,13 +15,14 @@ pub(crate) struct BodyState {
 
 pub(super) fn filter_body(
     statements: Vec<super::LocatedStatement>,
+    schema_wrapper: bool,
 ) -> Vec<super::LocatedStatement> {
     let mut procedural = BodyState::default();
     let mut previous: Option<Arc<[TokenWithSpan]>> = None;
     let mut control = false;
     statements
         .into_iter()
-        .filter(|located| {
+        .filter_map(|mut located| {
             if let Some(tokens) = &located.chunk_tokens {
                 if previous
                     .as_ref()
@@ -29,9 +31,28 @@ pub(super) fn filter_body(
                     control = procedural.control_chunk(tokens);
                     previous = Some(Arc::clone(tokens));
                 }
+            } else {
+                // A lexical failure owns no tokens and cannot inherit a preceding control chunk.
+                control = false;
+                if schema_wrapper {
+                    if let Some(failure) = &mut located.recovery_failure {
+                        failure.schema_unanalyzable = false;
+                    }
+                }
             }
-            !super::is_begin_or_end(&located.statement)
-                && !(located.recovery_failure.is_some() && control)
+            if is_begin_or_end(&located.statement)
+                || control
+                    && located
+                        .recovery_failure
+                        .as_ref()
+                        .is_some_and(|failure| failure.schema_unanalyzable)
+            {
+                return None;
+            }
+            if control {
+                located.recovery_failure = None;
+            }
+            Some(located)
         })
         .collect()
 }
@@ -160,4 +181,11 @@ fn boundary(code: &[&Token], expected: &str) -> Option<usize> {
 
 fn word(token: &Token, expected: &str) -> bool {
     matches!(token, Token::Word(word) if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(expected))
+}
+
+fn is_begin_or_end(statement: &Statement) -> bool {
+    matches!(
+        statement,
+        Statement::StartTransaction { .. } | Statement::Commit { .. }
+    )
 }

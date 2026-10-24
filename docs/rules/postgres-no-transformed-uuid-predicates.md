@@ -93,9 +93,10 @@ and participates in a checked predicate.
 
 Unsupported syntax, such as `id::text COLLATE "C" = $1`, can prevent SQL parsing
 and follows the unanalyzable policy instead of producing a definite violation.
-Raw SQL parse failures currently have a file-level location at line 1, so a
-directive immediately above a later failing statement cannot suppress that
-uncertainty; use a file directive when deliberately suppressing that case.
+Each raw SQL parse failure points to the first code token of its failing
+statement. Multiple failures keep separate locations, so a `disable-next-line`
+directive immediately above a statement suppresses only that statement's
+uncertainty. Independently parsed sibling statements remain analyzable.
 
 At `effort: low`, the rule analyzes supported literal SQL directly in SQL files
 and executor calls. Direct strings, interpolation-free templates, and one local

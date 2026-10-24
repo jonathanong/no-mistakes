@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      sqlInclude: [schema.sql, failures.sql]
+      executorNames: []
+      schemaCatalogPath: schema.json
+unanalyzable: advise

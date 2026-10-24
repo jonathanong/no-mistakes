@@ -181,6 +181,11 @@ Replace `NOT IN (SELECT …)` and a `COUNT(*)` compared with 0 or 1 with
 
 ## Analysis
 
+Raw SQL parse failures retain each failing statement's first code token. Separate
+statements produce separate findings, and a `no-mistakes-disable-next-line`
+directive immediately above one statement suppresses that failure independently.
+Successfully parsed sibling statements remain analyzable.
+
 ### Effort
 
 Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files selected by `sqlInclude`.

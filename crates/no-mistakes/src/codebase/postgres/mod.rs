@@ -154,7 +154,7 @@ pub(crate) mod tests;
 
 pub(crate) use collect::collect_prepared_schema_facts;
 
-pub(crate) use on_conflict::judge_file_with_insert_indices;
+pub(crate) use on_conflict::judge_file_with_sites;
 pub(crate) use on_conflict::judge_subcheck as judge_idempotent_subcheck;
 
 pub use embedded::undeclared::summarize_unresolved_executor_receivers;

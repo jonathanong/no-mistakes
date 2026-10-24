@@ -5,9 +5,12 @@ use crate::codebase::postgres::statements::{SqlFactSite, SqlVariantLocations};
 fn conflict_sites(mut locations: SqlVariantLocations) -> SqlVariantLocations {
     locations.locking.clear();
     locations.bound_tables.clear();
-    locations
-        .positions
-        .retain(|site, _| matches!(site, SqlFactSite::Origin | SqlFactSite::Conflict(_)));
+    locations.positions.retain(|site, _| {
+        matches!(
+            site,
+            SqlFactSite::Origin | SqlFactSite::Conflict(_) | SqlFactSite::ParseFailure(_)
+        )
+    });
     locations
 }
 
@@ -16,6 +19,7 @@ pub(super) fn policy_only(full: SqlStatementFileFacts) -> SqlStatementFileFacts 
         path: full.path,
         origin_line: full.origin_line,
         parse_failed: full.parse_failed,
+        parse_failures: full.parse_failures,
         variant_locations: full.variant_locations.map(conflict_sites),
         ..Default::default()
     }

@@ -349,22 +349,23 @@ fn each_clause_uses_its_branch_token_and_checks_the_other_alternative() {
 
 #[test]
 fn a_complete_but_invalid_alternative_keeps_each_rules_parse_failure_policy() {
-    for (rule, target) in [
-        ("postgres-bounded-statements", "unanalyzable"),
-        ("postgres-explicit-columns", "unanalyzable"),
-        ("postgres-required-predicates", "unanalyzable"),
-        ("postgres-generated-column-predicates", "unanalyzable"),
-        ("postgres-sql-shape-policy", "banned-function-call"),
-        ("postgres-sql-statement-policy", "unanalyzable-sql"),
-        ("postgres-idempotent-insert", "insert"),
-        ("postgres-lock-ordering", "unparseable"),
-        ("postgres-conflict-ordering", "unanalyzable-sql"),
+    // Statement facts point at the SQL; other policies retain executor locations.
+    for (rule, target, line) in [
+        ("postgres-bounded-statements", "unanalyzable", 3),
+        ("postgres-explicit-columns", "unanalyzable", 3),
+        ("postgres-required-predicates", "unanalyzable", 3),
+        ("postgres-generated-column-predicates", "unanalyzable", 3),
+        ("postgres-sql-shape-policy", "banned-function-call", 3),
+        ("postgres-sql-statement-policy", "unanalyzable-sql", 3),
+        ("postgres-idempotent-insert", "insert", 3),
+        ("postgres-lock-ordering", "unparseable", 2),
+        ("postgres-conflict-ordering", "unanalyzable-sql", 2),
     ] {
         let report = check(rule, "invalid-static");
         let findings = report["rules"].as_array().unwrap();
         assert_eq!(findings.len(), 1, "{rule}: {report}");
         assert_eq!(findings[0]["target"], target, "{rule}: {report}");
-        assert_eq!(findings[0]["line"], 2, "{rule}: {report}");
+        assert_eq!(findings[0]["line"], line, "{rule}: {report}");
     }
 }
 

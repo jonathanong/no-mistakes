@@ -174,3 +174,6 @@ mod expanded_tests;
 
 #[cfg(test)]
 mod context_tests;
+
+#[cfg(test)]
+mod parse_failure_tests;

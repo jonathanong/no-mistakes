@@ -44,7 +44,11 @@ fn extract_parsed_migration_facts(
     failures: &[super::types::SqlUnanalyzableStatement],
 ) -> SqlSchemaFileFacts {
     let mut facts = SqlSchemaFileFacts {
-        unanalyzable_statements: failures.to_vec(),
+        unanalyzable_statements: failures
+            .iter()
+            .filter(|failure| failure.schema_unanalyzable)
+            .cloned()
+            .collect(),
         table_events_collected: true,
         tables: statements
             .iter()

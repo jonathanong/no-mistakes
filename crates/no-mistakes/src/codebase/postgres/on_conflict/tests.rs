@@ -33,6 +33,13 @@ fn messages(sql: &str) -> Vec<String> {
         .collect()
 }
 
+fn fixture_facts(name: &str) -> crate::codebase::postgres::SqlStatementFileFacts {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/check-runner/postgres-parse-failure-locations/fixture")
+        .join(name);
+    extract_sql_statement_facts(&std::fs::read_to_string(path).unwrap())
+}
+
 #[test]
 fn patch_gap_unknown_enabled_subcheck_abstains() {
     let file = extract_sql_statement_facts(
@@ -123,13 +130,16 @@ fn placeholder_assignment_is_not_convergent() {
 
 #[test]
 fn recovered_insert_plus_unparseable_insert_fails_closed() {
-    let found =
-        messages("INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING; INSERT INTO");
-    assert!(
-        found
-            .iter()
-            .any(|message| message.contains("more than one INSERT")),
-        "{found:?}"
+    let catalog = catalog(&[], &[], &[], &[]);
+    let message = "INSERT could not be proven replay-safe".to_string();
+    // A valid sibling cannot alter the malformed statement's diagnostic.
+    assert_eq!(
+        judge_file(&fixture_facts("failed-insert.sql"), &catalog),
+        [(2, message.clone())]
+    );
+    assert_eq!(
+        judge_file(&fixture_facts("safe-and-failed-insert.sql"), &catalog),
+        [(3, message)]
     );
 }
 
@@ -173,13 +183,48 @@ fn coalesce_self_then_now_is_safe() {
 
 #[test]
 fn unparseable_multi_insert_fails_closed() {
-    let found = messages("not sql INSERT INTO a; INSERT INTO b;");
-    assert!(
-        found
-            .iter()
-            .any(|message| message.contains("more than one INSERT")),
-        "{found:?}"
+    let found = judge_file(
+        &fixture_facts("two-failed-inserts.sql"),
+        &catalog(&[], &[], &[], &[]),
     );
+    assert_eq!(
+        found,
+        [
+            (2, "INSERT could not be proven replay-safe".to_string()),
+            (4, "INSERT could not be proven replay-safe".to_string())
+        ]
+    );
+}
+
+#[test]
+fn one_unparseable_multi_insert_fragment_still_requires_hoisting() {
+    let found = judge_file(
+        &fixture_facts("multi-insert-fragment.sql"),
+        &catalog(&[], &[], &[], &[]),
+    );
+    assert_eq!(found.len(), 1);
+    assert_eq!(found[0].0, 2);
+    assert!(found[0].1.contains("more than one INSERT"));
+}
+
+#[test]
+fn older_statement_projections_keep_the_legacy_insert_fallback() {
+    let catalog = catalog(&[], &[], &[], &[]);
+    for (name, expected) in [
+        ("multi-insert-fragment.sql", 1),
+        ("failed-insert.sql", 1),
+        ("guarded-failed-insert.sql", 0),
+    ] {
+        let mut facts = fixture_facts(name);
+        assert!(facts.parse_failed, "{name}");
+        // Simulate a caller supplying facts without the new occurrence field.
+        facts.parse_failures.clear();
+        let findings = judge_file(&facts, &catalog);
+        assert_eq!(findings.len(), expected, "{name}: {findings:?}");
+        if name == "multi-insert-fragment.sql" {
+            assert!(findings[0].1.contains("more than one INSERT"));
+        }
+    }
 }
 
 #[test]

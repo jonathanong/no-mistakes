@@ -7,6 +7,7 @@ mod chr;
 mod chunks;
 use chunks::split_statement_tokens;
 pub(super) use chunks::{next_non_ws, skip_ws};
+mod fallback;
 mod recover;
 pub(super) mod rewrite;
 mod source;
@@ -64,25 +65,7 @@ fn parse_with_normalized_sources(
     let recursive_views = super::recursive_view::prepare(&mut located);
     let fetch = super::fetch_expression::prepare(&mut located);
     if located.is_empty() {
-        let chunks = super::top_level_statements(sql);
-        if chunks.len() <= 1 {
-            return Vec::new();
-        }
-        return chunks
-            .into_iter()
-            .scan((0usize, 1usize), |(offset, line), (_, text)| {
-                let start = *offset + sql[*offset..].find(&text).unwrap();
-                *line += sql[*offset..start]
-                    .bytes()
-                    .filter(|byte| *byte == b'\n')
-                    .count();
-                let chunk = format!("{}{}", "\n".repeat(line.saturating_sub(1)), text);
-                *line += text.bytes().filter(|byte| *byte == b'\n').count();
-                *offset = start + text.len();
-                Some(parse_with_sources(&chunk, true, allow_concurrent_detach))
-            })
-            .flatten()
-            .collect();
+        return fallback::statements(sql, allow_concurrent_detach);
     }
     let mut tokens = located.iter().map(|token| token.token.clone()).collect();
     rewrite_virtual_generated_columns(&mut tokens);
@@ -92,8 +75,9 @@ fn parse_with_normalized_sources(
         split_statement_tokens(tokens),
         &located,
         allow_concurrent_detach,
+        &recursive_views,
     );
-    recursive_views.restore_valid(&mut statements);
+    recursive_views.restore_statements(&mut statements);
     for statement in &mut statements {
         super::fetch_expression::restore(&mut statement.statement, &fetch);
     }

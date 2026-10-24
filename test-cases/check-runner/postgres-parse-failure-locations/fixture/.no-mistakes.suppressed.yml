@@ -1,0 +1,43 @@
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      sqlInclude: [schema.sql, suppressed.sql]
+      executorNames: []
+      schemaCatalogPath: schema.json
+  - rule: postgres-generated-column-predicates
+    scope: repository
+    options:
+      sqlInclude: [schema.sql, suppressed-generated-column-predicates.sql]
+      executorNames: []
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      sqlInclude: [schema.sql, suppressed-bounded-statements.sql]
+      executorNames: []
+      schemaCatalogPath: schema.json
+  - rule: postgres-explicit-columns
+    scope: repository
+    options:
+      sqlInclude: [schema.sql, suppressed-explicit-columns.sql]
+      executorNames: []
+      schemaCatalogPath: schema.json
+      maxColumns: 0
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      sqlInclude: [schema.sql, suppressed-required-predicates.sql]
+      executorNames: []
+      relations: [{table: orders, requireColumns: [tenant_id]}]
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      sqlInclude: [schema.sql, suppressed-sql-shape-policy.sql]
+      executorNames: []
+      bannedShapes: [literal-limit]
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      sqlInclude: [schema.sql, suppressed-idempotent-insert.sql]
+      executorNames: []
+      scanEmbedded: false

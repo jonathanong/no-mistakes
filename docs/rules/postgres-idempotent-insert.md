@@ -142,6 +142,13 @@ Use `DO NOTHING`, `WHERE NOT EXISTS`, `SET col = EXCLUDED.col`, or
 
 ## Analysis
 
+Raw SQL parse failures retain each failing statement's first code token. Separate
+statements produce separate findings, and a `no-mistakes-disable-next-line`
+directive immediately above one statement suppresses that failure independently.
+Successfully parsed sibling statements remain analyzable.
+Only failed statements containing an `INSERT` produce replay-safety uncertainty;
+a malformed non-INSERT sibling does not make a valid INSERT unsafe.
+
 ### Effort
 
 Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (up to 16 finite SQL alternatives per call) unless `scanEmbedded: false`, and SQL files selected by `sqlInclude`.
