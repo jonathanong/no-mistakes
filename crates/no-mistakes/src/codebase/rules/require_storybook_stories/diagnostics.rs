@@ -84,9 +84,7 @@ pub(super) fn malformed_stories(
         };
         // A suppressed diagnostic cannot restore facts hidden by a parse/read error.
         incomplete = true;
-        if !defer_suppression
-            && (super::file_disabled(shared, path) || super::component_disabled(shared, path, 1))
-        {
+        if !defer_suppression && story_suppressed(shared, path) {
             continue;
         }
         findings.push(malformed_finding(
@@ -114,8 +112,7 @@ pub(super) fn visible_story_error(
                 project_root,
                 &path,
             ))
-            && !super::file_disabled(shared, &path)
-            && !super::component_disabled(shared, &path, 1)
+            && !story_suppressed(shared, &path)
     })
 }
 
@@ -140,4 +137,15 @@ pub(super) struct RuleCheck<'a> {
     pub(super) inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
     pub(super) defer_suppression: bool,
     pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
+}
+
+fn story_suppressed(shared: &CheckFactMap, path: &Path) -> bool {
+    shared
+        .ts
+        .get(path)
+        .and_then(|facts| facts.source.as_deref())
+        .is_some_and(|source| {
+            crate::codebase::ts_source::has_disable_file_comment(source, super::RULE_ID)
+                || crate::codebase::ts_source::has_disable_line_comment(source, 1, super::RULE_ID)
+        })
 }
