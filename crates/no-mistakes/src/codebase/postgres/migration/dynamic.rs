@@ -21,6 +21,8 @@ pub(super) struct DynamicSql {
     source_lines: Vec<usize>,
     pub(super) source_order: Vec<usize>,
     pub(super) executed: bool,
+    pub(super) procedural_control: bool,
+    pub(super) clear_outer_wrapper: bool,
 }
 
 impl DynamicSql {
@@ -33,6 +35,8 @@ impl DynamicSql {
             source_order: Vec::new(),
             // A literal is certain until its assignment/execution scope narrows it.
             executed: true,
+            procedural_control: false,
+            clear_outer_wrapper: false,
         }
     }
 

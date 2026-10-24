@@ -56,6 +56,26 @@ pub(super) fn recover(
     result
 }
 
+/// The action following a procedural IF/ELSIF guard, if it shares this semicolon chunk.
+pub(super) fn guarded_action_start(tokens: &[Token]) -> Option<usize> {
+    let mut at = next(tokens, 0);
+    if tokens
+        .get(at)
+        .is_some_and(|token| word(token, "BEGIN") || word(token, "ELSE"))
+    {
+        at = next(tokens, at + 1);
+    }
+    if !tokens
+        .get(at)
+        .is_some_and(|token| word(token, "IF") || word(token, "ELSIF"))
+    {
+        return None;
+    }
+    let then = condition_end(tokens, at + 1)?;
+    let action = next(tokens, then + 1);
+    (action < tokens.len()).then_some(action)
+}
+
 fn select(
     tokens: &[Token],
     original: Option<&[TokenWithSpan]>,

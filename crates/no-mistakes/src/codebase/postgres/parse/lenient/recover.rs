@@ -4,11 +4,13 @@ mod copy;
 mod failure;
 mod locations;
 mod partition;
+mod procedural;
 mod queries;
 mod schema;
 pub(super) use bodies::concatenated_strings;
 use bodies::{peel_do_body, recover_chr_encoded};
 use partition::recover_partition_change;
+pub(crate) use procedural::control_chunk;
 use schema::start as schema_ddl_start;
 use sqlparser::ast::{DiscardObject, Statement};
 use sqlparser::dialect::PostgreSqlDialect;
@@ -97,7 +99,9 @@ fn parse_chunk(
         return super::parse_with_sources(&body, true, false)
             .into_iter()
             .filter(|located| {
-                !is_begin_or_end(&located.statement) && !is_procedural_end_if_marker(located)
+                !is_begin_or_end(&located.statement)
+                    && !(located.recovery_failure.is_some()
+                        && located.chunk_tokens.as_deref().is_some_and(control_chunk))
             })
             .collect();
     }
@@ -131,16 +135,19 @@ fn parse_chunk(
             let recovered = recover_chr_encoded(&chunk, original, allow_concurrent_detach);
             if recovered.is_empty() {
                 let expressions = queries::recover(&chunk, original);
+                let action_projected = expressions.iter().any(|(_, synthetic)| !synthetic);
                 // Keep the established guarded DML/DDL recovery alongside any
                 // newly recovered condition expression, without replacing it.
                 let mut projected: Vec<_> = expressions
                     .into_iter()
                     .map(|(statement, synthetic)| LocatedStatement::functions(statement, synthetic))
                     .collect();
-                projected.extend(
-                    recover_schema_ddl(&chunk, original, allow_concurrent_detach)
-                        .map(LocatedStatement::plain),
-                );
+                let schema = recover_schema_ddl(&chunk, original, allow_concurrent_detach);
+                let has_schema = schema.is_some();
+                projected.extend(schema.map(LocatedStatement::plain));
+                if !has_schema && !action_projected {
+                    projected.extend(failure::guarded_action(&chunk, original));
+                }
                 projected
             } else {
                 recovered
@@ -154,14 +161,6 @@ fn is_begin_or_end(statement: &Statement) -> bool {
         statement,
         Statement::StartTransaction { .. } | Statement::Commit { .. }
     )
-}
-
-fn is_procedural_end_if_marker(located: &LocatedStatement) -> bool {
-    // Only a peeled DO body gives END IF procedural meaning.
-    located
-        .recovery_failure
-        .as_ref()
-        .is_some_and(|failure| failure.head.eq_ignore_ascii_case("END IF"))
 }
 
 fn recover_schema_ddl(

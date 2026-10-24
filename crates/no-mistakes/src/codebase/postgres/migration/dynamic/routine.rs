@@ -1,4 +1,4 @@
-use super::literal::leading_string_expression;
+use super::literal::{leading_string_expression, string_expression};
 use super::*;
 
 #[derive(Clone, Debug)]
@@ -9,6 +9,7 @@ pub(super) struct RoutineBody {
     direct_facts_already_recovered: bool,
     pub(super) source_order: Vec<usize>,
     pub(super) executed: bool,
+    clear_outer_wrapper: bool,
 }
 
 /// Executable PL/pgSQL DO/function/procedure bodies, including dollar, plain,
@@ -51,9 +52,36 @@ pub(super) fn bodies(sql: &str) -> Vec<RoutineBody> {
                 direct_facts_already_recovered: do_block && decoded.dollar_quoted,
                 source_order: vec![ordinal],
                 executed: do_block,
+                clear_outer_wrapper: (routine && routine_head(&code)
+                    || do_block && !decoded.dollar_quoted)
+                    && complete_body_suffix(&code, start, sql),
             })
         })
         .collect()
+}
+
+fn routine_head(code: &[&TokenWithSpan]) -> bool {
+    let at = if code.get(1).is_some_and(|token| word(token, "OR"))
+        && code.get(2).is_some_and(|token| word(token, "REPLACE"))
+    {
+        3
+    } else {
+        1
+    };
+    code.get(at)
+        .is_some_and(|token| word(token, "FUNCTION") || word(token, "PROCEDURE"))
+}
+
+fn complete_body_suffix(code: &[&TokenWithSpan], start: usize, sql: &str) -> bool {
+    let end = if code.len() >= start + 3
+        && word(code[code.len() - 2], "LANGUAGE")
+        && crate::codebase::postgres::parse::is_plpgsql_language(&code[code.len() - 1].token)
+    {
+        code.len() - 2
+    } else {
+        code.len()
+    };
+    string_expression(&code[start..end], Some(sql)).is_some()
 }
 
 /// Routine bodies whose direct schema statements are not already peeled by
@@ -89,18 +117,22 @@ fn schema_statements(body: &RoutineBody) -> Vec<DynamicSql> {
         }
         let end = location_offset(&body.sql, token.span.start.line, token.span.start.column)
             .map_or(body.sql.len(), |offset| offset + 1);
-        let executed = scope.advance(&significant(&tokens[start_token..at])) && body.executed;
-        push_schema_statement(body, start, end, ordinal, executed, &mut result);
+        let chunk = &tokens[start_token..at];
+        let executed = scope.advance(&significant(chunk)) && body.executed;
+        let control = super::super::super::parse::procedural_control_chunk(chunk);
+        push_schema_statement(body, start, end, ordinal, executed, control, &mut result);
         start_token = at + 1;
         start = end;
         ordinal += 1;
     }
+    let control = super::super::super::parse::procedural_control_chunk(&tokens[start_token..]);
     push_schema_statement(
         body,
         start,
         body.sql.len(),
         ordinal,
         scope.advance(&significant(&tokens[start_token..])) && body.executed,
+        control,
         &mut result,
     );
     result
@@ -112,6 +144,7 @@ fn push_schema_statement(
     end: usize,
     ordinal: usize,
     executed: bool,
+    procedural_control: bool,
     result: &mut Vec<DynamicSql>,
 ) {
     let Some(sql) = body.sql.get(start..end) else {
@@ -124,6 +157,8 @@ fn push_schema_statement(
     let source_lines = source_lines(sql, source_bytes, body.line);
     result.push(DynamicSql {
         executed,
+        procedural_control,
+        clear_outer_wrapper: body.clear_outer_wrapper,
         sql: sql.to_owned(),
         line: source_lines.first().copied().unwrap_or(body.line),
         source_lines,

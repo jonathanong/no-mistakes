@@ -4,7 +4,17 @@ use crate::codebase::postgres::types::SqlSchemaFileFacts;
 /// Merge the already discovered routine body SQL and static EXECUTE SQL.
 pub(super) fn append(sql: &str, facts: &mut SqlSchemaFileFacts) {
     for source in dynamic::schema_bodies(sql) {
-        append_one(facts, source);
+        if source.clear_outer_wrapper {
+            let outer = source.source_order.first().copied();
+            facts.unanalyzable_statements.retain(|marker| {
+                marker.source_order.first().copied() != outer
+                    || marker.source_order.len() != 1
+                    || !marker.head.split_whitespace().next().is_some_and(|head| {
+                        head.eq_ignore_ascii_case("DO") || head.eq_ignore_ascii_case("CREATE")
+                    })
+            });
+        }
+        append_one(facts, source, true);
     }
     for source in dynamic::extract(sql) {
         // A peeled DO body can leave an opaque PL/pgSQL EXECUTE wrapper marker.
@@ -12,7 +22,7 @@ pub(super) fn append(sql: &str, facts: &mut SqlSchemaFileFacts) {
         facts.unanalyzable_statements.retain(|marker| {
             marker.source_order != source.source_order || !execute_wrapper(&marker.head)
         });
-        append_one(facts, source);
+        append_one(facts, source, false);
     }
 }
 
@@ -21,8 +31,14 @@ fn execute_wrapper(head: &str) -> bool {
     upper.starts_with("EXECUTE ") || upper.starts_with("BEGIN EXECUTE ")
 }
 
-fn append_one(facts: &mut SqlSchemaFileFacts, source: dynamic::DynamicSql) {
+fn append_one(facts: &mut SqlSchemaFileFacts, source: dynamic::DynamicSql, body: bool) {
     let mut nested = extract_migration_facts(&source.sql);
+    if body && source.procedural_control {
+        // The source is a recognized body-control chunk. Keep any nested SQL failure.
+        nested
+            .unanalyzable_statements
+            .retain(|marker| marker.source_order.len() != 1);
+    }
     if !source.executed {
         nested.table_events.clear();
     }
