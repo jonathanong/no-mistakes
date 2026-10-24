@@ -38,6 +38,12 @@ impl<'a> Bindings<'a> {
                 }))
                 .chain(
                     syntax
+                        .loop_candidates
+                        .iter()
+                        .flat_map(|candidate| candidate.condition_references.iter().copied()),
+                )
+                .chain(
+                    syntax
                         .literal_helpers
                         .iter()
                         .flatten()
@@ -92,6 +98,35 @@ impl<'a> Bindings<'a> {
     pub(super) fn valid_mutable_call(&self, reference: Span) -> bool {
         self.mutable.calls.contains_key(&reference)
     }
+    pub(super) fn stable_condition(
+        &self,
+        condition: &super::loop_carried::condition_key::Condition,
+        loop_span: Span,
+        syntax: &Syntax,
+    ) -> Option<Vec<usize>> {
+        condition
+            .references
+            .iter()
+            .map(|&reference| {
+                let owner = self.owner(reference)?;
+                let declaration = (owner.span.start, owner.span.end);
+                if owner.imported
+                    || inside(loop_span, declaration)
+                    || owner.references.iter().any(|usage| {
+                        let span = (usage.span.start, usage.span.end);
+                        usage.runtime
+                            && inside(loop_span, span)
+                            && (syntax.assignments.writes.contains_key(&span)
+                                || syntax.assignments.unsupported_writes.contains(&span))
+                    })
+                {
+                    None
+                } else {
+                    Some(owner.id)
+                }
+            })
+            .collect()
+    }
     pub fn proof(&self, head: Head, call: Span) -> HeadProof {
         match head {
             Head::Reference(span) | Head::AppendReference(span) => {
@@ -132,4 +167,7 @@ impl<'a> Bindings<'a> {
             value => value.proof(false),
         }
     }
+}
+fn inside(outer: Span, inner: Span) -> bool {
+    outer.0 <= inner.0 && inner.1 <= outer.1
 }

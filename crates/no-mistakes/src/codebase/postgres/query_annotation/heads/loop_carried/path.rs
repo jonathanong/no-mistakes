@@ -1,14 +1,15 @@
 //! Finite may-reach proof for one unconditional call/literal pair.
-use super::condition_key::{key, Key};
+use super::condition_key::{key, Condition, Key};
 use super::Span;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::*;
 use oxc_span::GetSpan;
+mod correlation;
 
 pub(super) enum Node {
     Scan(Span),
     Sequence(Vec<Self>),
-    Branch(Option<Key>, Box<Self>, Box<Self>),
+    Branch(Option<Condition>, Box<Self>, Box<Self>),
     Backedge,
     Exit,
 }
@@ -19,11 +20,31 @@ enum Mode {
     BackedgeToRead,
 }
 
+#[derive(Clone, Copy)]
+struct WalkInput<'a> {
+    writes: &'a [Span],
+    anchor: Span,
+    mode: Mode,
+}
+
 #[derive(Default)]
 struct Result {
     // Bit 0: dead value; bit 1: live value. Branches join by union.
     next: u8,
     hit: bool,
+}
+
+#[derive(Clone, Copy)]
+struct Fixed<'a> {
+    key: &'a Key,
+    owners: &'a [usize],
+    value: bool,
+}
+
+struct Fact<'a> {
+    key: &'a Key,
+    owners: Vec<usize>,
+    value: bool,
 }
 
 impl Node {
@@ -59,79 +80,36 @@ impl Node {
         }
     }
 
-    pub(super) fn witness(&self, writes: &[Span], assignment: Span, read: Span) -> bool {
-        let sensitive = writes
-            .iter()
-            .copied()
-            .filter(|span| span.0 < read.0 || span.0 > assignment.0)
-            .collect::<Vec<_>>();
-        if self.correlated_change(&sensitive, &mut crate::fx::FxHashMap::default()) {
-            return false;
-        }
-        let assigned = self.walk(1, writes, assignment, Mode::LiteralToBackedge);
-        (assigned.hit || assigned.next & 2 != 0)
-            && self.walk(2, writes, read, Mode::BackedgeToRead).hit
-    }
-
-    // Repeated pure tests can be correlated. Joining states
-    // independently could invent a path when both tests change the witness.
-    fn correlated_change<'a>(
+    fn walk<'a, F>(
         &'a self,
-        writes: &[Span],
-        seen: &mut crate::fx::FxHashMap<&'a Key, bool>,
-    ) -> bool {
-        match self {
-            Self::Branch(name, left, right) => {
-                if let Some(name) = name {
-                    let changes = left.changes(writes) || right.changes(writes);
-                    if let Some(previous) = seen.get_mut(name) {
-                        if *previous && changes {
-                            return true;
-                        }
-                        *previous |= changes;
-                    } else {
-                        seen.insert(name, changes);
-                    }
-                }
-                left.correlated_change(writes, seen) || right.correlated_change(writes, seen)
-            }
-            Self::Sequence(nodes) => nodes
-                .iter()
-                .any(|node| node.correlated_change(writes, seen)),
-            _ => false,
-        }
-    }
-
-    fn changes(&self, writes: &[Span]) -> bool {
-        match self {
-            Self::Scan(region) => writes
-                .iter()
-                .any(|span| region.0 <= span.0 && span.1 <= region.1),
-            Self::Sequence(nodes) => nodes.iter().any(|node| node.changes(writes)),
-            Self::Branch(_, left, right) => left.changes(writes) || right.changes(writes),
-            Self::Backedge | Self::Exit => true,
-        }
-    }
-
-    fn walk(&self, incoming: u8, writes: &[Span], anchor: Span, mode: Mode) -> Result {
+        incoming: u8,
+        input: WalkInput<'_>,
+        stable: &F,
+        fixed: Option<Fixed<'_>>,
+        known: &mut Vec<Fact<'a>>,
+    ) -> Result
+    where
+        F: Fn(&Condition) -> Option<Vec<usize>>,
+    {
         match self {
             Self::Scan(region) => {
-                let mut events = writes
+                let mut events = input
+                    .writes
                     .iter()
                     .copied()
                     .filter(|span| region.0 <= span.0 && span.1 <= region.1)
-                    .filter(|span| *span != anchor)
+                    .filter(|span| *span != input.anchor)
                     .map(|span| (span, false))
                     .collect::<Vec<_>>();
-                if region.0 <= anchor.0 && anchor.1 <= region.1 {
-                    events.push((anchor, true));
+                if region.0 <= input.anchor.0 && input.anchor.1 <= region.1 {
+                    events.push((input.anchor, true));
                 }
                 events.sort_unstable_by_key(|(span, _)| *span);
                 let mut state = incoming;
                 let mut hit = false;
                 for (_, is_anchor) in events {
                     if is_anchor {
-                        match mode {
+                        match input.mode {
                             Mode::LiteralToBackedge => state = 2,
                             Mode::BackedgeToRead => hit |= state & 2 != 0,
                         }
@@ -150,15 +128,54 @@ impl Node {
                     if result.next == 0 {
                         break;
                     }
-                    let step = node.walk(result.next, writes, anchor, mode);
+                    let step = node.walk(result.next, input, stable, fixed, known);
                     result.next = step.next;
                     result.hit |= step.hit;
                 }
                 result
             }
-            Self::Branch(_, left, right) => {
-                let left = left.walk(incoming, writes, anchor, mode);
-                let right = right.walk(incoming, writes, anchor, mode);
+            Self::Branch(condition, left, right) => {
+                let identity = condition.as_ref().and_then(stable);
+                if let (Some(condition), Some(owners)) = (condition, identity.as_ref()) {
+                    let truth = fixed
+                        .filter(|fixed| fixed.key == &condition.key && fixed.owners == owners)
+                        .map(|fixed| fixed.value)
+                        .or_else(|| {
+                            known
+                                .iter()
+                                .rev()
+                                .find(|fact| fact.key == &condition.key && &fact.owners == owners)
+                                .map(|fact| fact.value)
+                        });
+                    if let Some(truth) = truth {
+                        let arm = if truth ^ condition.negative {
+                            left
+                        } else {
+                            right
+                        };
+                        return arm.walk(incoming, input, stable, fixed, known);
+                    }
+                    known.push(Fact {
+                        key: &condition.key,
+                        owners: owners.clone(),
+                        value: !condition.negative,
+                    });
+                    let left = left.walk(incoming, input, stable, fixed, known);
+                    known.pop();
+                    known.push(Fact {
+                        key: &condition.key,
+                        owners: owners.clone(),
+                        value: condition.negative,
+                    });
+                    let right = right.walk(incoming, input, stable, fixed, known);
+                    known.pop();
+                    return Result {
+                        next: left.next | right.next,
+                        hit: left.hit || right.hit,
+                    };
+                }
+                let left = left.walk(incoming, input, stable, fixed, known);
+                let right = right.walk(incoming, input, stable, fixed, known);
                 Result {
                     next: left.next | right.next,
                     hit: left.hit || right.hit,
@@ -166,7 +183,7 @@ impl Node {
             }
             Self::Backedge => Result {
                 next: 0,
-                hit: matches!(mode, Mode::LiteralToBackedge) && incoming & 2 != 0,
+                hit: matches!(input.mode, Mode::LiteralToBackedge) && incoming & 2 != 0,
             },
             Self::Exit => Result::default(),
         }

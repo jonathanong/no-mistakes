@@ -4,7 +4,7 @@ use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::*;
 use std::collections::BTreeMap;
 use std::sync::Arc;
-mod condition_key;
+pub(super) mod condition_key;
 mod grammar;
 mod path;
 pub(super) use grammar::{iteration, test, update};
@@ -15,8 +15,9 @@ pub(super) struct Candidate {
     reference: Span,
     pub(super) assignment: Span,
     pub(super) tag: Option<Span>,
-    loop_start: u32,
+    loop_span: Span,
     path: Arc<path::Node>,
+    pub(super) condition_references: Arc<Vec<Span>>,
 }
 
 /// Unconditional calls and literals form candidates; path checks below decide
@@ -28,6 +29,9 @@ pub(super) fn candidates(body: &Statement<'_>, loop_span: oxc_span::Span) -> Vec
         Flow::Backedge | Flow::Exit | Flow::Next => {}
     }
     let path = Arc::new(path::Node::from_statement(body));
+    let mut condition_references = Vec::new();
+    path.condition_references(&mut condition_references);
+    let condition_references = Arc::new(condition_references);
     let mut calls = crate::fx::FxHashMap::<
         &str,
         Vec<(&CallExpression<'_>, &IdentifierReference<'_>)>,
@@ -62,7 +66,15 @@ pub(super) fn candidates(body: &Statement<'_>, loop_span: oxc_span::Span) -> Vec
     for (name, assignment, target) in assignments {
         if let Some(prior) = calls.get(name) {
             candidates.extend(prior.iter().filter_map(|(call, reference)| {
-                pair(call, reference, assignment, target, loop_span.start, &path)
+                pair(
+                    call,
+                    reference,
+                    assignment,
+                    target,
+                    loop_span,
+                    &path,
+                    &condition_references,
+                )
             }));
         }
     }
@@ -74,8 +86,9 @@ fn pair(
     reference: &IdentifierReference<'_>,
     assignment: &AssignmentExpression<'_>,
     target: &IdentifierReference<'_>,
-    loop_start: u32,
+    loop_span: oxc_span::Span,
     path: &Arc<path::Node>,
+    condition_references: &Arc<Vec<Span>>,
 ) -> Option<Candidate> {
     // Canonical executor facts decide callee ownership, including member calls.
     if call.optional
@@ -104,8 +117,9 @@ fn pair(
         reference: (reference.span.start, reference.span.end),
         assignment: (target.span.start, target.span.end),
         tag,
-        loop_start,
+        loop_span: (loop_span.start, loop_span.end),
         path: Arc::clone(path),
+        condition_references: Arc::clone(condition_references),
     })
 }
 
@@ -119,7 +133,7 @@ pub(super) fn proofs(
         let target = bindings.owner(candidate.assignment)?;
         if (owner.span.start, owner.span.end) != (target.span.start, target.span.end)
             || owner.imported
-            || owner.span.start >= candidate.loop_start
+            || owner.span.start >= candidate.loop_span.0
         {
             return None;
         }
@@ -141,10 +155,12 @@ pub(super) fn proofs(
                 .then_some(span)
             })
             .collect::<Vec<_>>();
-        if !candidate
-            .path
-            .witness(&writes, candidate.assignment, candidate.reference)
-        {
+        if !candidate.path.witness(
+            &writes,
+            candidate.assignment,
+            candidate.reference,
+            |condition| bindings.stable_condition(condition, candidate.loop_span, syntax),
+        ) {
             return None;
         }
         // Keep the mutable call's function, executor, alias, and gap guards.

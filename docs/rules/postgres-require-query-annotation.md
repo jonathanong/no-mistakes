@@ -181,8 +181,10 @@ witness does not model conditional executor calls or literal assignments,
 nested loops in the witnessed body, unsupported loop headers, or literal-false
 loop tests; those shapes use the existing maximum-effort analysis. If every
 reachable path resets the literal or exits before the next iteration, this
-witness stays silent. Repeated state-changing tests of the same condition are left
-unproven when their correlated branches cannot be joined safely.
+witness stays silent. Stable complementary tests can suppress an apparent path only
+when neither fixed truth value has a witness. Same-polarity tests and tests whose
+inputs change in the loop keep possible paths; tests with member access or calls
+may over-report because their branches join independently.
 
 `effort: max` is the default and preserves helper, branch, builder, and imported
 value inference. At `effort: low`, a leading named literal at the executor call

@@ -308,3 +308,146 @@ export function longComparisonResets(xs: readonly unknown[], count: number) {
       q = "/* reset */ SELECT 4";
   }
 }
+
+// Same-polarity comparisons leave a live path even when the input changes.
+export function repeatedIncrementGuard(xs: readonly unknown[], i: number) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q); // missing: both tests can be false after i increments.
+    q = "SELECT 2";
+    if (i > 0) q = "/* reset */ SELECT 3";
+    i++;
+    if (i > 0) q = "/* reset */ SELECT 4";
+  }
+}
+
+export function repeatedLogicalGuard(xs: readonly unknown[], a: boolean, b: boolean) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q); // missing: the same false logical guard leaves the literal live.
+    q = "SELECT 2";
+    if (a && b) q = "/* reset */ SELECT 3";
+    if (a && b) q = "/* reset */ SELECT 4";
+  }
+}
+
+export function repeatedComparisonGuard(xs: readonly unknown[], n: number) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q); // missing: n <= 0 makes both same-polarity tests false.
+    q = "SELECT 2";
+    if (n > 0) q = "/* reset */ SELECT 3";
+    if (n > 0) q = "/* reset */ SELECT 4";
+  }
+}
+
+export function repeatedEqualityAfterWrite(xs: readonly unknown[], n: number) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q); // missing: n can miss zero before and after the write.
+    q = "SELECT 2";
+    if (n === 0) q = "/* reset */ SELECT 3";
+    n = n + 1;
+    if (n === 0) q = "/* reset */ SELECT 4";
+  }
+}
+
+export function changedInsideFirstBranch(xs: readonly unknown[], c: boolean) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q); // missing: c=false skips both same-polarity resets.
+    q = "SELECT 2";
+    if (c) { c = false; q = "/* reset */ SELECT 3"; }
+    if (c) q = "/* reset */ SELECT 4";
+  }
+}
+
+export function changedBetweenGuards(xs: readonly unknown[], c: boolean) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q); // missing: c=false skips both resets.
+    q = "SELECT 2";
+    if (c) q = "/* reset */ SELECT 3";
+    c = false;
+    if (c) q = "/* reset */ SELECT 4";
+  }
+}
+
+export function sameGuardContinueBreak(xs: readonly unknown[], c: boolean) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q); // missing: c=false reaches the backedge; c=true continues.
+    q = "SELECT 2";
+    if (c) continue;
+    if (c) break;
+  }
+}
+
+// Opposite tests alone do not cover a partial reset inside the first arm.
+export function partialComplementReset(xs: readonly unknown[], c: boolean, d: boolean) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q); // missing: c=true and d=false retains the literal.
+    q = "SELECT 2";
+    if (c) { if (d) q = "/* reset */ SELECT 3"; }
+    if (!c) q = "/* reset */ SELECT 4";
+  }
+}
+
+export function complementContinueBreak(xs: readonly unknown[], c: boolean) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q); // missing: c=true continues with the literal.
+    q = "SELECT 2";
+    if (c) continue;
+    if (!c) break;
+  }
+}
+
+// A write between opposite tests makes their outcomes independent.
+export function changedBetweenComplements(xs: readonly unknown[], c: boolean) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q); // missing: initial c=false skips both resets after c becomes true.
+    q = "SELECT 2";
+    if (c) q = "/* reset */ SELECT 3";
+    c = true;
+    if (!c) q = "/* reset */ SELECT 4";
+  }
+}
+
+// The else arm changes c before the opposite test without resetting q.
+export function changedInsideComplementArm(xs: readonly unknown[], c: boolean) {
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q); // missing: initial c=false writes true, then skips the second reset.
+    q = "SELECT 2";
+    if (c) q = "/* reset */ SELECT 3";
+    else c = true;
+    if (!c) q = "/* reset */ SELECT 4";
+  }
+}
+
+// A var redeclaration writes the same binding without a reference node.
+export function redeclaredComplement(xs: readonly unknown[]) {
+  var c = false;
+  let q = "/* named */ SELECT 1";
+  for (const x of xs) {
+    read(q); // missing: the redeclaration makes both opposite tests false.
+    q = "SELECT 2";
+    if (c) q = "/* reset */ SELECT 3";
+    var c = true;
+    if (!c) q = "/* reset */ SELECT 4";
+  }
+}
+
+// The header update prevents a fixed i projection across iterations.
+export function updatedHeaderCondition(start: number) {
+  let q = "/* named */ SELECT 1";
+  for (let i = start; i >= 0; i--) {
+    read(q); // missing: deliberate conservative over-report; header writes i.
+    q = "SELECT 2";
+    if (i > 0) q = "/* reset */ SELECT 3";
+    if (!(i > 0)) q = "/* reset */ SELECT 4";
+  }
+}
