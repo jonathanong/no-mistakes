@@ -136,7 +136,7 @@ Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`,
 
 ### Unanalyzable inputs
 
-Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. It reads catalog entries only, so it has no unanalyzable policy. Known gap: the catalog is built from SQL by the lenient parser, which drops statements it cannot parse, so those never reach the catalog and are unchecked ([#2661](https://github.com/jonathanong/no-mistakes/issues/2661)). A missing or unreadable catalog is a configuration error. The repository-level `unanalyzable` default does not affect it.
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. This rule has no unanalyzable inputs: it judges the configured schema catalog, a JSONC file read directly from `schemaCatalogPath` (no SQL is parsed by the rule), so every entry is either present or absent. A catalog that cannot be read, is not valid JSONC, is empty, or is not a valid snapshot is a hard error, not an unanalyzable input. The repository-level `unanalyzable` default does not affect it.
 
 ## Suppression
 
