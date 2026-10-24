@@ -49,14 +49,10 @@ impl Builder<'_> {
         }
         let mut candidates = Vec::new();
         for specifier in &file.star_reexport_specifiers {
-            if let Some(target) = self
+            let target = self
                 .module(path, specifier)
-                .and_then(|target| self.exported(&target, name))
-            {
-                candidates.push(target);
-            } else {
-                return None;
-            }
+                .and_then(|target| self.exported(&target, name))?;
+            candidates.push(target);
         }
         candidates.sort();
         candidates.dedup();
