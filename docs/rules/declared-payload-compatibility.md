@@ -190,9 +190,9 @@ rules:
       effort: low
       unanalyzable: report
       contracts:
-        - name: queue status
-          producer: {file: api/payloads.json, pointer: /status}
-          consumer: {file: worker/payloads.json, pointer: /status}
+        - name: queue user-notifications
+          producer: {file: api/payloads.json, pointer: /notification}
+          consumer: {file: worker/payloads.json, pointer: /notification}
 ```
 
 ## CLI and Node API
