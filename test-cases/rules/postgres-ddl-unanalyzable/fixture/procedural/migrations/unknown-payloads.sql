@@ -6,7 +6,7 @@ DECLARE
 BEGIN
   OPEN cursor_value FOR FROBULATE accounts;
   EXECUTE 'FROBULATE accounts' INTO selected_id;
-  SELECT FROM FROBULATE INTO selected_id;
+  SELECT 1 + ) INTO selected_id;
   GET DIAGNOSTICS selected_id = ROW_COUNT FROBULATE accounts;
   SELECT 1 INTO selected_id FROBULATE accounts;
 END

@@ -44,7 +44,7 @@ fn procedural_bodies_filter_commands_but_retain_unknown_sql_markers() {
         (
             "unknown-payloads.sql",
             &[
-                (7, "FROBULATE"),
+                (7, "OPEN"),
                 (8, "FROBULATE"),
                 (9, "SELECT"),
                 (10, "GET DIAGNOSTICS"),
@@ -56,6 +56,9 @@ fn procedural_bodies_filter_commands_but_retain_unknown_sql_markers() {
             &[(2, "DECLARE"), (3, "local_count")][..],
         ),
         ("unknown-loop-query.sql", &[(6, "FOR")][..]),
+        ("declaration-cursor-variants.sql", &[][..]),
+        ("cursor-sql-facts.sql", &[][..]),
+        ("malformed-command-tail.sql", &[(7, "OPEN")][..]),
         (
             "command-followups.sql",
             &[
