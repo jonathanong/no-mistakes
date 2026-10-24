@@ -125,7 +125,7 @@ explicit plan to restore ShellCheck coverage.
 Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
 
 - Inputs this rule cannot prove (a missing `shellcheck` executable, or a nonzero ShellCheck run with no recognized diagnostics) follow `options.unanalyzable`:
-  - `report` (default): fails as a finding, e.g. `scripts/run.sh: shellcheck is not installed; script not analyzed`.
+  - `report` (default): fails as a finding, e.g. `scripts/run.sh: shellcheck analysis is incomplete: ShellCheck executable was not found; install shellcheck and make it available on PATH. This check requires ShellCheck to validate selected shell scripts.`.
   - `advise`: a non-failing advisory.
   - `ignore`: omitted.
 

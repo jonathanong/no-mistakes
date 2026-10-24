@@ -163,7 +163,13 @@ For a shell script the same shape is `env: VALUE: ${{ <expr> }}`, then
 
 Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean.
 
-- Anchors, aliases, flow-style steps, and split expressions that the line scan cannot align with the parsed script are reported as one failing `unanalyzable` finding per file. This rule does not route them through `options.unanalyzable`; rewrite them as block-style `run` or `with.script` bodies.
+- Unreadable or non-UTF-8 workflow and action files follow `options.unanalyzable`:
+  - `report` (default): fails as a finding ("cannot read GitHub Actions source as UTF-8 ... script expressions could not be checked").
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
+- Anchors, aliases, flow-style steps, and split expressions that the line scan cannot align with the parsed script are reported as one failing `unanalyzable` finding per file. This case is not routed through `options.unanalyzable`; rewrite them as block-style `run` or `with.script` bodies.
 
 ## Suppression
 

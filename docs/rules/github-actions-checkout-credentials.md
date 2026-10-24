@@ -153,9 +153,10 @@ is a finding, because the option treats that missing key as write. A null
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+Following [recall over precision](../../README.md#how-analysis-works), inputs a rule can't prove should never be treated as clean, and this rule does not yet meet that bar.
 
-- This rule has no unanalyzable inputs: it judges the literal `persist-credentials` setting of parsed `actions/checkout` steps. Nothing is routed through `options.unanalyzable`.
+- Known gap: expression-valued `persist-credentials`, unknown or expression `permissions`, and a custom `with.token` are cleared without a finding, and invalid YAML yields no result. The rule skips these silently instead of routing them through `options.unanalyzable` (tracked in [#2658](https://github.com/jonathanong/no-mistakes/issues/2658)), so a passing run does not prove they are clean.
+
 
 ## Suppression
 

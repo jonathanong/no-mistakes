@@ -106,9 +106,10 @@ route project if this directory is not actually a server route boundary.
 
 ### Unanalyzable inputs
 
-Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+Following [recall over precision](../../README.md#how-analysis-works), inputs a rule can't prove should never be treated as clean, and this rule does not yet meet that bar.
 
-- This rule has no unanalyzable inputs: it compares literal client calls with server route declarations. Nothing is routed through `options.unanalyzable`.
+- Known gap: unreadable or unparseable files are skipped. The rule skips these silently instead of routing them through `options.unanalyzable` (tracked in [#2660](https://github.com/jonathanong/no-mistakes/issues/2660)), so a passing run does not prove they are clean.
+
 
 ## Suppression
 
