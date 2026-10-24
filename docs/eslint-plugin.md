@@ -53,10 +53,15 @@ and `calleeNamePatterns?: string[]`.
 
 `awaitingConsumers` optionally declares imported APIs that adopt returned callback
 promises. Entries require `sourceSpecifierPatterns`, `calleeNamePatterns`, and
-`callbackArgumentIndexes` (distinct nonnegative zero-based integers). Only those
-callback slots gain the trusted return disposition. Inline callbacks, unchanged
+at least one callback contract: `callbackArgumentIndexes` (distinct nonnegative
+zero-based integers), or `callbackArgumentProperties` (objects with an
+`argumentIndex` and distinct `propertyNames` for fresh dependency objects). Only
+those callback slots or properties gain the trusted return disposition. Inline callbacks, unchanged
 `const` callback bindings, and function declarations with no reassignment qualify;
 every call argument use of a named callback must adopt its returned promise.
+Stable same-file consumers can also prove adoption by awaiting every invocation
+of their callback parameter. Imported bodies require parser-provided type
+information; unknown consumers keep reporting.
 
 ### `async-try-catch-return-await`
 

@@ -38,8 +38,30 @@ dispositionOptionsSchema[0].properties.awaitingConsumers = {
         uniqueItems: true,
         items: { type: "integer", minimum: 0 },
       },
+      callbackArgumentProperties: {
+        type: "array",
+        minItems: 1,
+        items: {
+          type: "object",
+          properties: {
+            argumentIndex: { type: "integer", minimum: 0 },
+            propertyNames: {
+              type: "array",
+              minItems: 1,
+              uniqueItems: true,
+              items: { type: "string", minLength: 1 },
+            },
+          },
+          required: ["argumentIndex", "propertyNames"],
+          additionalProperties: false,
+        },
+      },
     },
-    required: ["sourceSpecifierPatterns", "calleeNamePatterns", "callbackArgumentIndexes"],
+    required: ["sourceSpecifierPatterns", "calleeNamePatterns"],
+    anyOf: [
+      { required: ["callbackArgumentIndexes"] },
+      { required: ["callbackArgumentProperties"] },
+    ],
   },
 };
 
