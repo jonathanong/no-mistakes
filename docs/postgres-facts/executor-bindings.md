@@ -45,7 +45,7 @@ create another SQL obligation. An ordinary aggregate or property read of an
 executor-bearing options value is not an escape by itself. Passing an executor,
 or an aggregate that contains it, to an opaque or unproven helper retains
 uncertainty at that invocation. A global-looking intrinsic call is still opaque
-until the analysis proves it is unshadowed and unmodified. Configured callback
+until the analysis proves no local binding or mutation overrides it. Configured callback
 and factory wrappers transport executor values; their callback parameter
 headers do not create extra SQL obligations.
 
