@@ -9,7 +9,6 @@ mod cursor;
 mod data_type;
 mod definitions;
 mod event;
-mod reserved;
 use cursor::Cursor;
 
 pub(super) fn valid(tokens: &[TokenWithSpan]) -> bool {

@@ -2,7 +2,7 @@ use super::cursor::Cursor;
 use sqlparser::tokenizer::Token;
 
 pub(super) fn drop_names(c: &mut Cursor<'_>) -> bool {
-    if c.words(&["IF", "EXISTS"]) {}
+    c.words(&["IF", "EXISTS"]);
     if !c.names() {
         return false;
     }
@@ -13,7 +13,7 @@ pub(super) fn drop_names(c: &mut Cursor<'_>) -> bool {
 }
 
 pub(super) fn drop_unqualified_names(c: &mut Cursor<'_>) -> bool {
-    if c.words(&["IF", "EXISTS"]) {}
+    c.words(&["IF", "EXISTS"]);
     if !c.simple_names() {
         return false;
     }
@@ -24,7 +24,7 @@ pub(super) fn drop_unqualified_names(c: &mut Cursor<'_>) -> bool {
 }
 
 pub(super) fn drop_mapping(c: &mut Cursor<'_>) -> bool {
-    if c.words(&["IF", "EXISTS"]) {}
+    c.words(&["IF", "EXISTS"]);
     c.word("FOR") && c.mapping_role() && c.word("SERVER") && c.identifier()
 }
 
@@ -59,7 +59,7 @@ pub(super) fn alter_mapping(c: &mut Cursor<'_>) -> bool {
 }
 
 pub(super) fn alter_foreign_table(c: &mut Cursor<'_>) -> bool {
-    if c.words(&["IF", "EXISTS"]) {}
+    c.words(&["IF", "EXISTS"]);
     let _only = c.word("ONLY");
     if !c.name() {
         return false;
@@ -78,7 +78,7 @@ pub(super) fn alter_foreign_table(c: &mut Cursor<'_>) -> bool {
 }
 
 pub(super) fn create_foreign_table(c: &mut Cursor<'_>) -> bool {
-    if c.words(&["IF", "NOT", "EXISTS"]) {}
+    c.words(&["IF", "NOT", "EXISTS"]);
     if !c.name() {
         return false;
     }
@@ -91,7 +91,7 @@ pub(super) fn create_foreign_table(c: &mut Cursor<'_>) -> bool {
                 if c.word("NOT") && !c.word("NULL") {
                     return false;
                 }
-                if c.word("NULL") {}
+                c.word("NULL");
                 if c.right_paren() {
                     break;
                 }

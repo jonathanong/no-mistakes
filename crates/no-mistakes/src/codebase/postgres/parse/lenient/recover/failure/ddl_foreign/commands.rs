@@ -7,14 +7,14 @@ pub(super) fn create_fdw(c: &mut Cursor<'_>) -> bool {
         return false;
     }
     if c.word("HANDLER") {
-        if !c.name() {
+        if !c.function_name() {
             return false;
         }
     } else {
         c.words(&["NO", "HANDLER"]);
     }
     if c.word("VALIDATOR") {
-        if !c.name() {
+        if !c.function_name() {
             return false;
         }
     } else {
@@ -38,7 +38,7 @@ pub(super) fn alter_fdw(c: &mut Cursor<'_>) -> bool {
     }
     let mut any = false;
     if c.word("HANDLER") {
-        if !c.name() {
+        if !c.function_name() {
             return false;
         }
         any = true;
@@ -46,7 +46,7 @@ pub(super) fn alter_fdw(c: &mut Cursor<'_>) -> bool {
         any = true;
     }
     if c.word("VALIDATOR") {
-        if !c.name() {
+        if !c.function_name() {
             return false;
         }
         any = true;
@@ -63,7 +63,7 @@ pub(super) fn alter_fdw(c: &mut Cursor<'_>) -> bool {
 }
 
 pub(super) fn create_mapping(c: &mut Cursor<'_>) -> bool {
-    if c.words(&["IF", "NOT", "EXISTS"]) {}
+    c.words(&["IF", "NOT", "EXISTS"]);
     if !c.word("FOR") || !c.mapping_role() || !c.word("SERVER") || !c.identifier() {
         return false;
     }
@@ -153,7 +153,7 @@ pub(super) fn security_label(c: &mut Cursor<'_>) -> bool {
         || object == "ROUTINE"
         || object == "AGGREGATE"
     {
-        if !c.name() || !signatures::signature(c, object == "AGGREGATE") {
+        if !c.function_name() || !signatures::signature(c, object == "AGGREGATE") {
             return false;
         }
     } else if matches!(

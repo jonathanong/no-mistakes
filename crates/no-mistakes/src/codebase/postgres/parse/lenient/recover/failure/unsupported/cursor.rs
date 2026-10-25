@@ -1,3 +1,4 @@
+use super::super::keywords::reserved;
 use sqlparser::tokenizer::Token;
 
 pub(super) struct Cursor<'a> {
@@ -28,8 +29,7 @@ impl Cursor<'_> {
         // Reserved keywords must not masquerade as missing names or clauses.
         if matches!(self.tokens.get(self.at), Some(Token::Word(word))
             if !word.value.is_empty() && (word.quote_style == Some('"')
-                || (word.quote_style.is_none() && (word.keyword == sqlparser::keywords::Keyword::NoKeyword
-                    || word.value.eq_ignore_ascii_case("public")))))
+                || (word.quote_style.is_none() && !reserved(&word.value))))
         {
             self.at += 1;
             true
@@ -38,7 +38,17 @@ impl Cursor<'_> {
         }
     }
     pub(super) fn name(&mut self) -> bool {
-        self.identifier() && (!self.period() || self.identifier())
+        self.identifier() && (!self.period() || self.attribute())
+    }
+    fn attribute(&mut self) -> bool {
+        if matches!(self.tokens.get(self.at), Some(Token::Word(word))
+            if !word.value.is_empty() && (word.quote_style.is_none() || word.quote_style == Some('"')))
+        {
+            self.at += 1;
+            true
+        } else {
+            false
+        }
     }
     pub(super) fn identifiers(&mut self) -> bool {
         if !self.identifier() {

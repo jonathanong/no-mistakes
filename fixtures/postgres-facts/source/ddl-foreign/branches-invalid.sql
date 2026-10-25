@@ -30,4 +30,4 @@ SECURITY LABEL ON FUNCTION public.lookup(integer,) IS 'bad signature';
 SECURITY LABEL ON FUNCTION public.lookup(integer IS 'missing close paren';
 SECURITY LABEL ON AGGREGATE public.total() IS 'empty aggregate signature';
 SECURITY LABEL ON AGGREGATE public.total(integer,) IS 'dangling type';
-SECURITY LABEL ON COLUMN public.foreign_rows IS 'missing column';
+SECURITY LABEL ON COLUMN public IS 'missing column';

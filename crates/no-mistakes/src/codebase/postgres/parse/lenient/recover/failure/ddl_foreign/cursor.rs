@@ -1,8 +1,6 @@
 use sqlparser::tokenizer::Token;
 #[path = "identifiers.rs"]
 mod identifiers;
-#[path = "reserved.rs"]
-mod reserved;
 #[path = "roles.rs"]
 mod roles;
 
@@ -16,7 +14,7 @@ impl Cursor<'_> {
         self.option_name() && (!required || self.string())
     }
     pub(super) fn option_name(&mut self) -> bool {
-        self.word("USER") || self.identifier()
+        self.attribute()
     }
 
     pub(super) fn options(&mut self, alter: bool) -> bool {
@@ -91,7 +89,7 @@ impl Cursor<'_> {
         true
     }
     pub(super) fn name(&mut self) -> bool {
-        self.identifier() && (!self.period() || self.identifier())
+        self.identifier() && (!self.period() || self.attribute())
     }
     pub(super) fn words(&mut self, words: &[&str]) -> bool {
         let start = self.at;

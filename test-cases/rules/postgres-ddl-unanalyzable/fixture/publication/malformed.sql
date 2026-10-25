@@ -13,3 +13,6 @@ CREATE OPERATOR = = = (LEFTARG=integer,RIGHTARG=integer,FUNCTION=int4eq);
 CREATE PROCEDURE ""() LANGUAGE SQL AS 'SELECT 1';
 CREATE OPERATOR ===+ (LEFTARG=integer,RIGHTARG=integer,FUNCTION=int4eq);
 CREATE OPERATOR SELECT.=== (LEFTARG=integer,RIGHTARG=integer,FUNCTION=int4eq);
+CREATE PUBLICATION missing_value WITH (publish);
+CREATE PUBLICATION missing_equals WITH (publish 'insert');
+CREATE PUBLICATION missing_boolean WITH (publish_via_partition_root =);

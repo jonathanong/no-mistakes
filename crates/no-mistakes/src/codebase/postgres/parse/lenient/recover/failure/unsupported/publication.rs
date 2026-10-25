@@ -61,7 +61,16 @@ fn options(cursor: &mut Cursor<'_>) -> bool {
         return false;
     }
     loop {
-        if !cursor.identifier() || !take(cursor, &Token::Eq) || !value(cursor) {
+        let boolean = matches!(cursor.tokens.get(cursor.at), Some(Token::Word(word))
+            if word.value.eq_ignore_ascii_case("publish_via_partition_root"));
+        if !cursor.identifier() {
+            return false;
+        }
+        if take(cursor, &Token::Eq) {
+            if !value(cursor) {
+                return false;
+            }
+        } else if !boolean {
             return false;
         }
         if !cursor.comma() {
@@ -74,7 +83,13 @@ fn value(cursor: &mut Cursor<'_>) -> bool {
     // PostgreSQL publication parameters use scalar option values, never expressions.
     if matches!(
         cursor.tokens.get(cursor.at),
-        Some(Token::SingleQuotedString(_) | Token::Number(_, _))
+        Some(
+            Token::SingleQuotedString(_)
+                | Token::EscapedStringLiteral(_)
+                | Token::UnicodeStringLiteral(_)
+                | Token::DollarQuotedString(_)
+                | Token::Number(_, _)
+        )
     ) {
         cursor.at += 1;
         true

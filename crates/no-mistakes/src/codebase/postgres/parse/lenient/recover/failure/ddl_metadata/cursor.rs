@@ -1,4 +1,4 @@
-use super::reserved::{function_reserved, reserved, type_reserved};
+use super::super::keywords::{function_reserved, reserved, type_reserved};
 use sqlparser::{parser::Parser, tokenizer::Token};
 pub(super) struct Cursor<'a>(pub Parser<'a>);
 impl Cursor<'_> {

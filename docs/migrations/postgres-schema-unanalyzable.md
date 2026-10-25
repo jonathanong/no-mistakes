@@ -1,5 +1,7 @@
 # PostgreSQL schema statements that cannot be analyzed
 
+<!-- cspell:ignore tablespace -->
+
 The 11 rules below diagnose each selected SQL statement that the lenient
 PostgreSQL parser cannot parse or recover. By default, complete recognized
 unsupported PostgreSQL forms produce non-failing advisories. Any statement that
@@ -23,22 +25,23 @@ required explicit column list, which could previously disappear from analysis.
 - [`postgres-sql-statement-policy`](../rules/postgres-sql-statement-policy.md)
 
 A diagnostic means the analyzer could not establish schema facts for that
-statement. It does not decide whether PostgreSQL accepts the SQL. By default,
-only these complete top-level forms advise:
+statement. It does not decide whether PostgreSQL accepts the SQL. Valid but
+unsupported statements are advised when their complete syntax matches the
+conservative recognizer. That recognizer includes:
 
 - `REFRESH MATERIALIZED VIEW [CONCURRENTLY] view [WITH [NO] DATA]`
-- `CREATE PUBLICATION name FOR ALL TABLES`
-- `CREATE PUBLICATION name FOR TABLE table [, table ...]`
-- `ALTER DEFAULT PRIVILEGES [FOR {ROLE | USER} role [, role ...]] [IN SCHEMA schema [, schema ...]] GRANT {ALL [PRIVILEGES] | privilege [, privilege ...]} ON {TABLES | SEQUENCES | FUNCTIONS | ROUTINES | TYPES | SCHEMAS} TO grantee [, grantee ...] [WITH GRANT OPTION]`
+- `CREATE PUBLICATION name [FOR ALL TABLES | FOR TABLE table [, table ...]] [WITH (option [= value] [, ...])]`, including an empty publication with no `FOR` clause
+- `ALTER DEFAULT PRIVILEGES [FOR {ROLE | USER} role [, role ...]] [IN SCHEMA schema [, schema ...]] {GRANT | REVOKE [GRANT OPTION FOR]} {ALL [PRIVILEGES] | privilege [, privilege ...]} ON {TABLES | SEQUENCES | FUNCTIONS | ROUTINES | TYPES | SCHEMAS} {TO | FROM} grantee [, grantee ...]`. `GRANT` may end with `WITH GRANT OPTION`. `REVOKE` may end with `CASCADE` or `RESTRICT`.
 
-Keywords are case-insensitive. A name is a double-quoted identifier, an unquoted
-non-keyword, or unquoted `public`. `view` and each `table` may be one
-schema-qualified name; `name`, `role`, `schema`, and `grantee` may not.
-`CONCURRENTLY` comes before the view name. `WITH` requires `DATA`, and `NO` is
-optional. Privileges are `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`,
+Keywords are case-insensitive. A name is a double-quoted identifier or an
+unquoted non-keyword. `view` and each `table` may be one schema-qualified name;
+`name`, `role`, `schema`, and `grantee` may not. `CONCURRENTLY` comes before
+the view name. `WITH` on a refresh requires `DATA`, and `NO` is optional.
+Privileges are `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`,
 `REFERENCES`, `TRIGGER`, `USAGE`, `CREATE`, `EXECUTE`, and `MAINTAIN`. `FOR`
-requires `ROLE` or `USER` and comes before `IN SCHEMA`. `REVOKE`, publication
-`WHERE` clauses, column lists, and publication options are not recognized.
+requires `ROLE` or `USER` and comes before `IN SCHEMA`. Publication `WITH`
+options are scalar. Publication `WHERE` clauses and column lists are not
+recognized.
 These forms advise only when neither the repository nor the rule sets
 `unanalyzable` or `unanalyzableSql`. An explicit value applies that policy:
 `report` makes them findings, `advise` still advises, and `ignore` omits them.
@@ -47,6 +50,20 @@ proves valid syntax. Recognition checks syntax, not database permissions, object
 existence, or privilege/object compatibility. This is not a full PostgreSQL
 validator. Parsed sibling statements in the same file still contribute their
 schema facts.
+
+The PostgreSQL 17 command-family sweep also recognizes complete selected
+metadata forms for access methods, aggregates, casts, conversions, event
+triggers, transforms, foreign-data wrappers/tables/servers and user mappings,
+foreign-schema imports, ownership changes, security labels, and large objects.
+Selected CREATE/ALTER/DROP forms for groups, languages, routines, publications,
+rules, statistics, subscriptions, tablespace objects, and text-search objects follow
+the same policy. This covers the saved
+[command-family survey](../../fixtures/postgres-facts/source/ddl-docs-survey/families.sql)
+and its regression fixtures, rather than every variant of each command's
+grammar. Complete metadata recognition produces an advisory without fabricating
+schema facts. Missing required clauses and unexpected trailing tokens still
+report by default. The grammar reference is the
+[PostgreSQL 17 statement list](https://www.postgresql.org/docs/17/sql-commands.html).
 
 Enum types, triggers, comments on functions/tables/triggers, indexes on `ONLY`
 tables, index partition attachments, and text search configurations now parse
@@ -70,6 +87,7 @@ that their conditions are evaluated. Statements recovered from body cursor,
 loop-query, `SELECT`, and `EXECUTE`
 payloads retain their query, function, and schema facts. Recovery supports
 `SELECT ... INTO STRICT`, query loops ending in `FOR NO KEY UPDATE`, and
+`FOR ... IN EXECUTE 'literal SQL' LOOP` directly in function bodies as well as
 `FOR ... IN EXECUTE format(...) LOOP` with escaped single quotes. Comments accept
 newline-continued single-quoted text and dollar-quoted text, including tagged
 quotes.

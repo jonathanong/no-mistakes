@@ -16,21 +16,18 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
             return false;
         }
         if c.word("WHEN") {
-            loop {
-                if !c.words(&["TAG", "IN"]) || !c.token(Token::LParen) || !c.string() {
+            // PostgreSQL 17 has one supported filter variable (TAG), and
+            // rejects a second TAG filter even when joined with AND.
+            if !c.words(&["TAG", "IN"]) || !c.token(Token::LParen) || !c.string() {
+                return false;
+            }
+            while c.token(Token::Comma) {
+                if !c.string() {
                     return false;
                 }
-                while c.token(Token::Comma) {
-                    if !c.string() {
-                        return false;
-                    }
-                }
-                if !c.token(Token::RParen) {
-                    return false;
-                }
-                if !c.word("AND") {
-                    break;
-                }
+            }
+            if !c.token(Token::RParen) {
+                return false;
             }
         }
         c.word("EXECUTE")

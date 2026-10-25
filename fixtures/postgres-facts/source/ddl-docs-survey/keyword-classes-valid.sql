@@ -6,3 +6,6 @@ CREATE AGGREGATE full(integer) (SFUNC = int4pl, STYPE = integer);
 CREATE CAST (text AS full) WITH INOUT;
 DROP AGGREGATE IF EXISTS my_count(*);
 DROP AGGREGATE full(integer) RESTRICT;
+CREATE ACCESS METHOD function_keyword TYPE INDEX HANDLER full;
+CREATE CONVERSION function_keyword FOR 'UTF8' TO 'LATIN1' FROM public.select;
+CREATE LANGUAGE example HANDLER full INLINE public.select VALIDATOR full;

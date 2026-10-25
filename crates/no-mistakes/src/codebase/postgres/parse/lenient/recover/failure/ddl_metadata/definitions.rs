@@ -17,7 +17,7 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
             && c.word("TYPE")
             && (c.word("TABLE") || c.word("INDEX"))
             && c.word("HANDLER")
-            && c.name();
+            && c.function_name();
     }
     let replace = c.words(&["OR", "REPLACE"]);
     if c.word("TRANSFORM") {
@@ -40,7 +40,7 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
         && c.word("TO")
         && c.string()
         && c.word("FROM")
-        && c.name()
+        && c.function_name()
 }
 fn cast(c: &mut Cursor<'_>) -> bool {
     if !c.token(Token::LParen)
@@ -102,6 +102,8 @@ fn aggregate(c: &mut Cursor<'_>) -> bool {
             "INITCOND"
         } else if c.word("FINALFUNC") {
             "FINALFUNC"
+        } else if c.identifier() {
+            "OTHER"
         } else {
             return false;
         };
@@ -112,7 +114,9 @@ fn aggregate(c: &mut Cursor<'_>) -> bool {
         let value = match key {
             "STYPE" => c.data_type(),
             "INITCOND" => c.string(),
-            _ => c.name(),
+            // PostgreSQL warns about unknown attributes but accepts them.
+            "OTHER" => c.string() || c.name(),
+            _ => c.function_name(),
         };
         if !value {
             return false;

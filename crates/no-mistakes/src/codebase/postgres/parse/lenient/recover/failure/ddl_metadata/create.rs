@@ -58,7 +58,8 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
     if c.word("RULE") {
         return c.identifier()
             && c.words(&["AS", "ON"])
-            && (c.word("SELECT") || c.word("INSERT") || c.word("UPDATE") || c.word("DELETE"))
+            // SELECT rules require a SELECT action, so cannot use DO NOTHING.
+            && (c.word("INSERT") || c.word("UPDATE") || c.word("DELETE"))
             && c.word("TO")
             && c.name()
             && c.word("DO")
@@ -75,13 +76,13 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
         return false;
     }
     if c.word("HANDLER") {
-        if !c.name() {
+        if !c.function_name() {
             return false;
         }
-        if c.word("INLINE") && !c.name() {
+        if c.word("INLINE") && !c.function_name() {
             return false;
         }
-        if c.word("VALIDATOR") && !c.name() {
+        if c.word("VALIDATOR") && !c.function_name() {
             return false;
         }
     }

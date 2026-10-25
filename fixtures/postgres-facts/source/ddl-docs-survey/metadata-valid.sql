@@ -27,3 +27,5 @@ CREATE TRANSFORM FOR hstore LANGUAGE plpython3u (TO SQL WITH FUNCTION to_sql);
 DROP TRANSFORM FOR hstore LANGUAGE plpython3u RESTRICT;
 CREATE AGGREGATE my_sum(integer) (SFUNC = int4pl, STYPE = integer, SFUNC = int4pl);
 CREATE TRANSFORM FOR hstore LANGUAGE plpython3u (FROM SQL WITH FUNCTION from_sql());
+-- Unknown aggregate attributes warn in PostgreSQL and must remain recognized.
+CREATE AGGREGATE my_sum(integer) (SFUNC = int4pl, STYPE = integer, WRONG = 'x');

@@ -9,7 +9,7 @@ const INVALID: &str = include_str!(concat!(
 ));
 #[test]
 fn documented_metadata_remains_explicitly_unsupported_without_schema_false_alarms() {
-    for sql in VALID.lines() {
+    for sql in VALID.lines().filter(|sql| !sql.starts_with("--")) {
         let facts = extract_migration_facts(sql);
         assert_eq!(facts.unanalyzable_statements.len(), 1, "{sql}");
         assert!(facts.unanalyzable_statements[0].valid_unsupported, "{sql}");
@@ -138,5 +138,32 @@ fn numeric_modifiers_follow_postgres_grammar() {
                 .any(|f| !f.valid_unsupported),
             "{sql}"
         );
+    }
+}
+
+#[test]
+fn metadata_clause_boundaries_follow_postgres() {
+    let valid = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-docs-survey/branches-valid.sql"
+    ));
+    let invalid = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-docs-survey/branches-invalid.sql"
+    ));
+    for (sql, valid) in valid
+        .lines()
+        .map(|sql| (sql, true))
+        .chain(invalid.lines().map(|sql| (sql, false)))
+    {
+        let failures = extract_migration_facts(sql).unanalyzable_statements;
+        assert_eq!(
+            failures.iter().all(|failure| failure.valid_unsupported),
+            valid,
+            "{sql}: {failures:?}"
+        );
+        if !valid {
+            assert!(!failures.is_empty(), "{sql}");
+        }
     }
 }
