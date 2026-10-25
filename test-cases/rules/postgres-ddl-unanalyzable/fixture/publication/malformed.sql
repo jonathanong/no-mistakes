@@ -16,3 +16,8 @@ CREATE OPERATOR SELECT.=== (LEFTARG=integer,RIGHTARG=integer,FUNCTION=int4eq);
 CREATE PUBLICATION missing_value WITH (publish);
 CREATE PUBLICATION missing_equals WITH (publish 'insert');
 CREATE PUBLICATION missing_boolean WITH (publish_via_partition_root =);
+DROP OPERATOR IF === (integer, integer);
+DROP OPERATOR ===;
+ALTER PUBLICATION;
+ALTER PUBLICATION publication_name UNKNOWN;
+CREATE PUBLICATION publication_name WITH;

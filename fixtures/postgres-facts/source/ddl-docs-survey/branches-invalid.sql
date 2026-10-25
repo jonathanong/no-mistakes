@@ -62,3 +62,6 @@ CREATE TRANSFORM FOR integer LANGUAGE plpython3u (TO SQL WITH FUNCTION "");
 CREATE AGGREGATE branch_sum(integer) (SFUNC = public., STYPE = integer);
 CREATE AGGREGATE branch_sum(integer) (SFUNC = int4pl, STYPE = "");
 CREATE RULE branch_rule AS ON SELECT TO items DO INSTEAD NOTHING;
+CREATE TABLESPACE LOCATION '/tmp/example';
+CREATE CAST (integer AS text) WITH;
+ALTER EVENT TRIGGER;

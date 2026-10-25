@@ -21,3 +21,7 @@ SECURITY LABEL ON EVENT TRIGGER audit_ddl IS 'audit';
 SECURITY LABEL ON FUNCTION public.lookup() IS 'function';
 SECURITY LABEL ON AGGREGATE public.total(*) IS 'aggregate';
 SECURITY LABEL ON AGGREGATE public.total(integer, text[]) IS NULL;
+ALTER FOREIGN DATA WRAPPER wrapper_name NO HANDLER NO VALIDATOR;
+CREATE FOREIGN TABLE no_columns () SERVER server_name;
+CREATE FOREIGN TABLE builtin_types (n double precision, opened time, closed timestamp) SERVER server_name;
+SECURITY LABEL ON FUNCTION public.lookup IS 'label';
