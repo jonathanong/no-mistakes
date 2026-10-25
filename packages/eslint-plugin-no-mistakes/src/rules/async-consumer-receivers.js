@@ -31,30 +31,48 @@ function createReceiverProof(state) {
     if (!["ArrowFunctionExpression", "FunctionExpression", "FunctionDeclaration"].includes(fn.type))
       return false;
     if (!facts.has(fn)) {
-      let valid = true;
-      const functions = new Set();
-      const variables = new Set();
-      function visit(node) {
-        if (!node || !valid) return;
-        if (
-          node.type === "ThisExpression" ||
-          (node.type === "Identifier" && ["eval", "arguments"].includes(node.name))
-        )
-          valid = false;
-        if (node.type === "Identifier") {
-          variables.add(resolveVariable(node, context));
-          const referenced = localFunction(node, context);
-          if (referenced) functions.add(referenced);
+      const proof = { valid: true, functions: new Set(), variables: new Set() };
+      const scanned = new Set();
+      function inspect(current, currentContext) {
+        if (scanned.has(current)) return;
+        if (scanned.size >= 32) {
+          proof.valid = false;
+          return;
         }
-        for (const key of context.sourceCode.visitorKeys[node.type]) {
-          const child = node[key];
-          if (Array.isArray(child)) child.forEach(visit);
-          else if (child) visit(child);
+        scanned.add(current);
+        function visit(node) {
+          if (!node || !proof.valid) return;
+          if (
+            node.type === "ThisExpression" ||
+            (node.type === "Identifier" && ["eval", "arguments"].includes(node.name))
+          )
+            proof.valid = false;
+          if (["CallExpression", "NewExpression", "TaggedTemplateExpression"].includes(node.type)) {
+            const callee = unwrapExpression(node.callee || node.tag);
+            // Unknown callees and holders can hide another invocation of a supplied callback.
+            if (node.type !== "CallExpression" || !localFunction(callee, currentContext))
+              proof.valid = false;
+          }
+          if (node.type === "Identifier") {
+            proof.variables.add(resolveVariable(node, currentContext));
+            const referenced = localFunction(node, currentContext);
+            if (referenced && referenced !== current) {
+              proof.functions.add(referenced);
+              inspect(referenced, currentContext);
+            }
+          }
+          for (const key of currentContext.sourceCode.visitorKeys[node.type] || []) {
+            const child = node[key];
+            if (Array.isArray(child)) child.forEach(visit);
+            else if (child) visit(child);
+          }
         }
+        current.params.forEach(visit);
+        visit(current.body);
       }
-      fn.params.forEach(visit);
-      visit(fn.body);
-      facts.set(fn, { valid, functions, variables });
+      inspect(fn, context);
+      proof.functions.delete(fn);
+      facts.set(fn, proof);
     }
     const proof = facts.get(fn);
     return (
