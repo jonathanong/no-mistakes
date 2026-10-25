@@ -56,7 +56,9 @@ metadata forms for access methods, aggregates, casts, conversions, event
 triggers, transforms, foreign-data wrappers/tables/servers and user mappings,
 foreign-schema imports, ownership changes, security labels, large objects, and
 ALTER SYSTEM configuration statements, plus selected CREATE DATABASE options
-and ALTER DATABASE SET/RESET forms.
+and ALTER DATABASE SET/RESET forms. Their numeric setting values accept an
+optional sign, decimals, and exponents; malformed signs or numeric suffixes
+still report.
 Selected CREATE/ALTER/DROP forms for groups, languages, routines, publications,
 rules, statistics, subscriptions, tablespace objects, and text-search objects follow
 the same policy. This covers the saved

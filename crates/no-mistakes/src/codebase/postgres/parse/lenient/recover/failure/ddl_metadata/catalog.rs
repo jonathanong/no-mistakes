@@ -122,7 +122,7 @@ fn setting(c: &mut Cursor<'_>) -> bool {
             || c.word("FALSE")
             || c.word("ON")
             || c.word("OFF")
-            || number(c)
+            || numeric_setting(c)
             || c.identifier())
         {
             return false;
@@ -131,4 +131,21 @@ fn setting(c: &mut Cursor<'_>) -> bool {
             return true;
         }
     }
+}
+
+fn numeric_setting(c: &mut Cursor<'_>) -> bool {
+    let signed = matches!(c.0.peek_token().token, Token::Plus | Token::Minus);
+    // Keep failed probes intact so a sign cannot turn a following word/string
+    // into an accepted setting value. Tokenization validates numeric lexemes.
+    if !matches!(
+        c.0.peek_nth_token(usize::from(signed)).token,
+        Token::Number(_, false)
+    ) {
+        return false;
+    }
+    if signed {
+        c.0.next_token();
+    }
+    c.0.next_token();
+    true
 }
