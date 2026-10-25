@@ -1,0 +1,10 @@
+import { test as check } from "vitest";
+import * as v from "vitest";
+import * as p from "@playwright/test";
+import pw from "@playwright/test";
+const run = check;
+p.expect(err.message).toBe("namespace");
+pw.expect(err.message).toBe("default");
+check("renamed", () => { const matched = err.message === "x"; });
+run("alias", () => { err.message.includes("x"); });
+v.test("namespace", () => { const matched = err.message === "x"; });

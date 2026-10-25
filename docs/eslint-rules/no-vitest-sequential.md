@@ -53,6 +53,11 @@ boolean variables do not make their runtime values statically known.
 
 ## Limits
 
+A literal-array `.apply` forwards sequential options just like `.call`, including
+`test["apply"](null, ["name", { sequential: true }, callback])` and a `const`
+runner alias. An opaque argument array does not expose its options. Rewrite
+sequential registrations as parallel tests rather than hiding their options in a wrapper.
+
 A renamed import, a namespace member, a string or expression-free template key, optional chaining, a comma callee, `Function.prototype` forwarding, and one `const` alias are the same `.sequential` call. Vitest's default import is not a runner. A computed identifier key is not a static name. A module-scope binding named `test`, `it`, or `describe` is still a runner, including `const test = base.extend({})`, `import { baseTest as test } from "./fixtures"`, `import test from "./fx"`, `const { describe } = require("vitest")`, and a module-scope `function`, `let`, or `var`. A parameter or other nested-scope shadow, such as `function helper(suite)`, is not. `const test = createTest(); test("x", { sequential: true })` still uses the local name. `test.sequential.each(rows)(name, fn)` reports once. `const suite = v.describe; suite.sequential(...)` and `const t = test; t.sequential(...)` follow that one `const` alias.
 
 Another file's re-export is not visible here.

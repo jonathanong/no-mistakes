@@ -1,0 +1,14 @@
+import * as v from "vitest";
+import pw from "@playwright/test";
+import { it as scenario } from "@jest/globals";
+const ns = v;
+const other = ns;
+const { test: check } = other;
+const { [`it`]: example } = other;
+other.test("namespace aliases", () => { err.message.includes("x"); });
+check("destructure", () => { const match = err.message === "x"; });
+example("template destructure", () => { const match = err.message === "x"; });
+scenario("jest alias", () => { const match = err.message === "x"; });
+pw("default runner", () => { const match = err.message === "x"; });
+const namespace = pw;
+namespace.test("default namespace alias", () => { const match = err.message === "x"; });

@@ -2,6 +2,7 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { isTestRunner } = require("./test-message-runner");
 const { capturedMessageOrigin } = require("./test-message-captured-value");
 const {
   expectArguments,
@@ -30,7 +31,6 @@ const MATCHERS = new Set([
 const MODIFIERS = new Set(
   "and at be been deep has have is not of rejects resolves same that to which with".split(" "),
 );
-const TEST_CALLEES = new Set(["it", "test"]);
 
 function isMessageMember(node) {
   const current = unwrap(node);
@@ -61,18 +61,6 @@ function isGeneratedTestPath(filename) {
   return filename.replace(/\\/g, "/").includes(".generated.");
 }
 
-function calleeName(node) {
-  while (node?.type === "ChainExpression") node = node.expression;
-  if (node?.type === "SequenceExpression") return calleeName(node.expressions.at(-1));
-  if (node?.type === "Identifier") return node.name;
-  if (node?.type === "MemberExpression") {
-    if (node.computed && node.property?.type === "Identifier") return null;
-    if (memberName(node)) return calleeName(node.object);
-  }
-  if (node?.type === "CallExpression") return calleeName(node.callee);
-  return null;
-}
-
 function unwrapMatcherObject(node) {
   let current = unwrap(node);
   while (current?.type === "MemberExpression") {
@@ -96,7 +84,7 @@ module.exports = rule(
     let testDepth = 0;
     return {
       CallExpression(node) {
-        if (TEST_CALLEES.has(calleeName(node.callee))) {
+        if (isTestRunner(node.callee, context)) {
           testDepth += 1;
         }
         let callee = unwrap(node.callee);
@@ -129,7 +117,7 @@ module.exports = rule(
         }
       },
       "CallExpression:exit"(node) {
-        if (TEST_CALLEES.has(calleeName(node.callee))) testDepth -= 1;
+        if (isTestRunner(node.callee, context)) testDepth -= 1;
       },
       BinaryExpression(node) {
         if (testDepth <= 0) return;

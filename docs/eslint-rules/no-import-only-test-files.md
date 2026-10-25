@@ -33,6 +33,12 @@ file rather than using it as an import-only manifest.
 
 ## Limits
 
+Immutable same-file `require` aliases, including `const load = require`, are
+loader declarations rather than test work. A file containing only those aliases
+and imports of test files is still an aggregate. Shadowed or mutable loaders,
+computed identifier members, and opaque `.apply` argument lists remain unknown.
+Remove the aggregate and let the runner discover the test files directly.
+
 An optional `require?.()` call and a static `require["call"]` or `require["apply"]` key name the same test file as `require.call`. A template with an expression, or a computed identifier key, does not.
 
 A test file reached through another module's re-export is not visible here.

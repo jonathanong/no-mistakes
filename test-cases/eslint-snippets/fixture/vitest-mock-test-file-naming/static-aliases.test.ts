@@ -1,0 +1,12 @@
+import { vi } from "vitest";
+import * as runner from "vitest";
+const v = vi;
+v.mock("./a");
+vi.mock["call"](vi, "./b");
+vi.doMock[`apply`](vi, ["./c"]);
+const { vi: api } = runner;
+api.unmock("./d");
+const ns = runner;
+ns.vi.doUnmock("./e");
+const { [`vi`]: templated } = ns;
+templated.mock?.("./f");

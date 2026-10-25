@@ -62,6 +62,13 @@ and the code from that object. Do not call the receiver expression a second time
 
 ## Limits
 
+Playwright namespace and default-runner `.expect` members retain assertion
+identity, including immutable namespace aliases. Vitest, Jest, and Playwright
+runner imports and immutable same-file aliases establish the test body for
+message equality and `.includes` checks. Nested parameters and mutable aliases
+do not establish runner identity. Assert the error type or code instead of its
+message, regardless of runner or assertion spelling.
+
 A renamed `expect`, a namespace member, a string or expression-free template key, optional chaining, a comma callee, and one `const` alias are the same assertion. `err.body.message` stays allowed. A computed identifier key is not a static name. A module-scope call named `expect` is checked whatever its source is, including `@playwright/test`, `./setup`, `bun:test`, `chai`, `const { expect } = require("vitest")`, and a local `const`, `let`, or `function` named `expect`. A parameter or other nested-scope binding named `expect` is not. A string key `["call"]` forwards like `.call`, including `expect(err.message).toMatch["call"](null, "x")`. A CommonJS program wrapper is still module scope.
 
 `expect` brought in through another file is not visible here.

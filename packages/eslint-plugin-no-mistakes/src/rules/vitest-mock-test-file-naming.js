@@ -35,13 +35,46 @@ function unwrap(node) {
   return node;
 }
 
-function isFrameworkBinding(node, context) {
+function isFrameworkBinding(node, context, seen = new Set()) {
+  node = unwrap(node);
+  if (
+    node?.type === "MemberExpression" &&
+    ["vi", "jest"].includes(propertyName(node.property, node.computed))
+  )
+    return isFrameworkBinding(node.object, context, seen);
+  if (node?.type !== "Identifier" || seen.has(node.name)) return false;
+  seen.add(node.name);
   let scope = context.sourceCode.getScope(node);
   while (scope) {
     const variable = scope.variables.find((candidate) => candidate.name === node.name);
     if (!variable) {
       scope = scope.upper;
       continue;
+    }
+    const def = variable.defs.length === 1 ? variable.defs[0] : null;
+    if (
+      def?.type === "Variable" &&
+      def.node?.parent?.kind === "const" &&
+      def.node.init &&
+      !variable.references.some((ref) => ref.isWrite() && !ref.init)
+    ) {
+      if (
+        def.node.id.type === "Identifier" &&
+        ["Identifier", "MemberExpression"].includes(unwrap(def.node.init)?.type)
+      )
+        return isFrameworkBinding(def.node.init, context, seen);
+      if (
+        def.node.id.type === "ObjectPattern" &&
+        def.node.init.type === "Identifier" &&
+        def.node.id.properties.some(
+          (property) =>
+            property.type === "Property" &&
+            property.value?.type === "Identifier" &&
+            property.value.name === node.name &&
+            ["vi", "jest"].includes(propertyName(property.key, property.computed)),
+        )
+      )
+        return isFrameworkBinding(def.node.init, context, seen);
     }
     return variable.defs.some(
       (def) =>
@@ -77,7 +110,7 @@ function mockMember(node, context, seen = new Set()) {
     if (def.node.id.type === "Identifier" && def.node.init) {
       return mockMember(def.node.init, context, seen);
     }
-    if (def.node.id?.type !== "ObjectPattern" || def.node.init?.type !== "Identifier") return false;
+    if (def.node.id?.type !== "ObjectPattern" || !def.node.init) return false;
     return def.node.id.properties.some((property) => {
       if (property.type !== "Property") return false;
       let value = property.value;
@@ -95,7 +128,7 @@ function mockMember(node, context, seen = new Set()) {
   }
   if (callee?.type !== "MemberExpression") return false;
   const method = propertyName(callee.property, callee.computed);
-  if (!callee.computed && (method === "call" || method === "apply")) {
+  if (method === "call" || method === "apply") {
     return mockMember(callee.object, context, seen);
   }
   if (!MOCK_METHODS.has(method)) return false;

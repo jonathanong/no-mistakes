@@ -4,6 +4,7 @@ const { literalString } = require("./module-mock-helpers");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const EXPECT_MODULES = new Set(["vitest", "@jest/globals"]);
+const MESSAGE_MODULES = new Set([...EXPECT_MODULES, "@playwright/test"]);
 
 function propertyName(node) {
   if (!node) return null;
@@ -54,14 +55,17 @@ function isNestedBinding(variable) {
   return !(scopeType === "function" && scope.block?.type === "Program");
 }
 
-function isNamespace(node, context, seen) {
+function isNamespace(node, context, seen, modules = null) {
   if (node?.type !== "Identifier" || seen.has(node.name)) return false;
   const variable = resolveVariable(node, context);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
   if (
     def?.type === "ImportBinding" &&
-    def.node.type === "ImportNamespaceSpecifier" &&
-    EXPECT_MODULES.has(def.parent?.source?.value)
+    ((def.node.type === "ImportNamespaceSpecifier" &&
+      (modules || MESSAGE_MODULES).has(def.parent?.source?.value)) ||
+      (!modules &&
+        def.node.type === "ImportDefaultSpecifier" &&
+        def.parent?.source?.value === "@playwright/test"))
   ) {
     return true;
   }
@@ -72,8 +76,9 @@ function isNamespace(node, context, seen) {
   ) {
     return false;
   }
+  if (variable.references.some((ref) => ref.isWrite() && !ref.init)) return false;
   seen.add(node.name);
-  return isNamespace(def.node.init, context, seen);
+  return isNamespace(def.node.init, context, seen, modules);
 }
 
 function isExpectCallee(node, context, seen = new Set(), modules = null, mode = {}) {
@@ -88,7 +93,7 @@ function isExpectCallee(node, context, seen = new Set(), modules = null, mode = 
     }
     if (name === "soft" || (name === "poll" && mode.allowPoll !== false))
       return isExpectCallee(callee.object, context, seen, modules, mode);
-    return name === "expect" && isNamespace(callee.object, context, seen);
+    return name === "expect" && isNamespace(callee.object, context, seen, modules);
   }
   if (callee?.type !== "Identifier" || seen.has(callee.name)) return false;
   const variable = resolveVariable(callee, context);
@@ -104,7 +109,8 @@ function isExpectCallee(node, context, seen = new Set(), modules = null, mode = 
     return isExpectCallee(def.node.init, context, seen, modules, mode);
   if (def.node.id.type !== "ObjectPattern") return false;
   const fromModule =
-    isNamespace(def.node.init, context, seen) || (!modules && requireExpectSource(def.node.init));
+    isNamespace(def.node.init, context, seen, modules) ||
+    (!modules && requireExpectSource(def.node.init));
   if (!fromModule) return false;
   return def.node.id.properties.some((property) => {
     let value = property.value;
