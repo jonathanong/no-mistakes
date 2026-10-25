@@ -185,3 +185,6 @@ fn low_typed_candidates_cannot_repair_missing_semantic_bindings() {
 
 #[path = "transport_shape_tests.rs"]
 mod transport_shape_tests;
+
+#[path = "producer_consumer_tests.rs"]
+mod producer_consumer_tests;

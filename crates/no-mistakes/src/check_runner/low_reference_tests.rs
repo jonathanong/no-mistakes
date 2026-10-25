@@ -57,6 +57,7 @@ fn typed_executor_low_adopters_ignore_erased_uses_and_keep_statement_locations()
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-no-offset/fixture/low-typed-executors");
     let source = std::fs::read_to_string(root.join("src/query.ts")).unwrap();
+    let non_sql = marked(&source, "// NON_SQL");
     let rules = [
         "postgres-no-offset",
         "postgres-require-query-annotation",
@@ -161,6 +162,10 @@ fn typed_executor_low_adopters_ignore_erased_uses_and_keep_statement_locations()
                     Vec::new()
                 },
                 "{mode} {rule}"
+            );
+            assert!(
+                advice.iter().all(|line| !non_sql.contains(line)),
+                "{mode} {rule}: non-SQL producer/read line advised: {advice:?}"
             );
         }
     }

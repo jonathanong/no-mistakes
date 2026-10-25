@@ -7,6 +7,8 @@ pub(super) struct Context {
     tag: Option<usize>,
     bind: Option<usize>,
     invocation: Option<Span>,
+    callee: Option<Span>,
+    escape_argument: Option<Span>,
 }
 enum Owner {
     Call(Span),
@@ -18,6 +20,8 @@ pub(super) struct Metadata {
     references: FxHashMap<Span, Owner>,
     wanted: FxHashSet<Span>,
     escapes: FxHashMap<Span, Span>,
+    escape_arguments: FxHashMap<Span, Span>,
+    callee_uses: FxHashMap<Span, Span>,
 }
 impl Metadata {
     pub fn new(
@@ -70,12 +74,18 @@ impl Metadata {
         self.context.argument = None;
         previous
     }
-    pub fn enter_call(&mut self, call: Option<Span>, invocation: Option<Span>) -> Context {
+    pub fn enter_call(
+        &mut self,
+        call: Option<Span>,
+        invocation: Option<Span>,
+        callee: Option<Span>,
+    ) -> Context {
         std::mem::replace(
             &mut self.context,
             Context {
                 call,
                 invocation,
+                callee,
                 ..Default::default()
             },
         )
@@ -100,18 +110,25 @@ impl Metadata {
     pub fn argument(&mut self, index: usize) -> Context {
         let previous = self.context;
         self.context.argument = (index > 0).then_some(self.context.call).flatten();
+        self.context.escape_argument = self.context.invocation;
         previous
     }
     pub fn restore(&mut self, previous: Context) {
         self.context = previous;
     }
     pub fn reference(&mut self, at: Span) {
-        if let Some(invocation) = self
-            .context
-            .invocation
-            .filter(|_| self.wanted.contains(&at))
-        {
+        if !self.wanted.contains(&at) {
+            return;
+        }
+        if let Some(invocation) = self.context.invocation {
             self.escapes.insert(at, invocation);
+            if self
+                .context
+                .callee
+                .is_some_and(|callee| callee.0 <= at.0 && at.1 <= callee.1)
+            {
+                self.callee_uses.insert(at, invocation);
+            }
         }
         let owner = self
             .context
@@ -120,6 +137,9 @@ impl Metadata {
             .or_else(|| self.context.bind.map(Owner::Bind));
         if let Some(owner) = owner {
             self.references.insert(at, owner);
+        }
+        if let Some(owner) = self.context.escape_argument {
+            self.escape_arguments.insert(at, owner);
         }
     }
     pub fn belongs_to(
@@ -135,12 +155,18 @@ impl Metadata {
             None => false,
         }
     }
+    pub fn runtime_callsite(&self, at: &Span) -> Option<Span> {
+        self.callee_uses
+            .get(at)
+            .copied()
+            .or_else(|| self.escape_arguments.get(at).copied())
+    }
 }
 impl Syntax {
     // Opaque invocations and deferred bodies own their uses independently of
     // the surrounding executor's data; those escapes remain unknown.
     pub(super) fn opaque_metadata(&mut self, visit: impl FnOnce(&mut Self)) {
-        let previous = self.metadata.enter_call(None, None);
+        let previous = self.metadata.enter_call(None, None, None);
         visit(self);
         self.metadata.restore(previous);
     }

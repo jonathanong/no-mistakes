@@ -1,126 +1,65 @@
 use super::*;
-use oxc_ast::ast::{Class, ClassElement, Function, MethodDefinitionKind, StaticMemberExpression};
+use oxc_ast::ast::{
+    CallExpression, Class, Function, ObjectExpression, StaticMemberExpression, VariableDeclarator,
+};
 
+mod classes;
+mod objects;
 mod parameters;
 mod producers;
 
 // A field annotation is only a possible executor. Keep runtime receiver reads,
 // scoped to its owning class, without promoting any SQL argument to a literal.
-pub(super) fn collect(program: &Program<'_>, possible: &FxHashSet<Span>) -> FxHashSet<Span> {
+pub(super) fn collect(
+    program: &Program<'_>,
+    possible: &FxHashSet<Span>,
+    bindings: &FxHashMap<Span, usize>,
+) -> (FxHashSet<Span>, FxHashSet<usize>, FxHashSet<Span>) {
     if possible.is_empty() {
-        return FxHashSet::default();
+        return (
+            FxHashSet::default(),
+            FxHashSet::default(),
+            FxHashSet::default(),
+        );
     }
     let mut visitor = Runtime {
         possible,
+        bindings,
         fields: FxHashMap::default(),
         methods: FxHashMap::default(),
         enabled: None,
+        object_fields: FxHashMap::default(),
+        this_fields: None,
+        reads: Vec::new(),
         uses: FxHashSet::default(),
     };
     visitor.visit_program(program);
-    visitor.uses.extend(producers::collect(program, possible));
-    visitor.uses
+    let (producer_uses, produced, transports) = producers::collect(program, possible, bindings);
+    visitor.uses.extend(producer_uses);
+    (visitor.uses, produced, transports)
 }
 struct Runtime<'s> {
     possible: &'s FxHashSet<Span>,
+    bindings: &'s FxHashMap<Span, usize>,
     fields: FxHashMap<(bool, bool), FxHashSet<String>>,
     methods: FxHashMap<u32, bool>,
     enabled: Option<bool>,
+    object_fields: FxHashMap<usize, FxHashSet<String>>,
+    this_fields: Option<FxHashSet<String>>,
+    reads: Vec<Span>,
     uses: FxHashSet<Span>,
 }
 impl<'a> Visit<'a> for Runtime<'_> {
     fn visit_class(&mut self, class: &Class<'a>) {
-        // Heritage, decorators, and computed keys evaluate with enclosing this.
-        self.visit_decorators(&class.decorators);
-        if let Some(heritage) = &class.heritage {
-            self.visit_expression(&heritage.expression);
-        }
-        for element in &class.body.body {
-            match element {
-                ClassElement::MethodDefinition(method) => {
-                    self.visit_decorators(&method.decorators);
-                    self.visit_property_key(&method.key);
-                }
-                ClassElement::PropertyDefinition(property) => {
-                    self.visit_decorators(&property.decorators);
-                    self.visit_property_key(&property.key);
-                }
-                ClassElement::AccessorProperty(property) => {
-                    self.visit_decorators(&property.decorators);
-                    self.visit_property_key(&property.key);
-                }
-                _ => {}
-            }
-        }
-        let fields = std::mem::take(&mut self.fields);
-        let methods = std::mem::take(&mut self.methods);
-        let enabled = self.enabled;
-        for element in &class.body.body {
-            match element {
-                ClassElement::PropertyDefinition(property) => {
-                    if let (Some(name), Some(annotation)) =
-                        (field_name(&property.key), &property.type_annotation)
-                    {
-                        if possible::contains(self.possible, &annotation.type_annotation) {
-                            self.fields
-                                .entry((property.r#static, name.0))
-                                .or_default()
-                                .insert(name.1);
-                        }
-                    }
-                }
-                ClassElement::AccessorProperty(property) => {
-                    if let (Some(name), Some(annotation)) =
-                        (field_name(&property.key), &property.type_annotation)
-                    {
-                        if possible::contains(self.possible, &annotation.type_annotation) {
-                            self.fields
-                                .entry((property.r#static, name.0))
-                                .or_default()
-                                .insert(name.1);
-                        }
-                    }
-                }
-                ClassElement::MethodDefinition(method) => {
-                    self.methods
-                        .insert(method.value.span.start, method.r#static);
-                    if method.kind == MethodDefinitionKind::Constructor {
-                        self.parameter_properties(&method.value.params);
-                    }
-                }
-                _ => {}
-            }
-        }
-        for element in &class.body.body {
-            match element {
-                ClassElement::MethodDefinition(method) => {
-                    self.visit_function(&method.value, oxc_syntax::scope::ScopeFlags::Function);
-                }
-                ClassElement::PropertyDefinition(property) => {
-                    self.enabled = Some(property.r#static);
-                    if let Some(value) = &property.value {
-                        self.visit_expression(value);
-                    }
-                }
-                ClassElement::AccessorProperty(property) => {
-                    self.enabled = Some(property.r#static);
-                    if let Some(value) = &property.value {
-                        self.visit_expression(value);
-                    }
-                }
-                ClassElement::StaticBlock(block) => self.visit_static_block(block),
-                _ => {}
-            }
-        }
-        self.fields = fields;
-        self.methods = methods;
-        self.enabled = enabled;
+        classes::visit(self, class);
     }
     fn visit_function(&mut self, function: &Function<'a>, flags: oxc_syntax::scope::ScopeFlags) {
         let enabled = self.enabled;
+        let this_fields = self.this_fields.take();
         self.enabled = self.methods.get(&function.span.start).copied();
         walk::walk_function(self, function, flags);
         self.enabled = enabled;
+        self.this_fields = this_fields;
     }
     fn visit_static_block(&mut self, block: &oxc_ast::ast::StaticBlock<'a>) {
         let enabled = self.enabled;
@@ -129,6 +68,15 @@ impl<'a> Visit<'a> for Runtime<'_> {
         self.enabled = enabled;
     }
     fn visit_ts_type(&mut self, _: &TSType<'a>) {}
+    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        objects::call(self, call);
+    }
+    fn visit_variable_declarator(&mut self, variable: &VariableDeclarator<'a>) {
+        objects::variable(self, variable);
+    }
+    fn visit_object_expression(&mut self, object: &ObjectExpression<'a>) {
+        objects::visit(self, object);
+    }
     fn visit_static_member_expression(&mut self, member: &StaticMemberExpression<'a>) {
         self.record(
             &member.object,
@@ -169,15 +117,27 @@ fn field_name(key: &oxc_ast::ast::PropertyKey<'_>) -> Option<(bool, String)> {
 }
 impl Runtime<'_> {
     fn record(&mut self, object: &Expression<'_>, private: bool, name: &str, at: oxc_span::Span) {
-        if let Some(mode) = self.enabled {
-            if matches!(unwrap_ts_wrappers(object), Expression::ThisExpression(_))
-                && self
-                    .fields
-                    .get(&(mode, private))
-                    .is_some_and(|names| names.contains(name))
-            {
-                self.uses.insert(span(at));
-            }
+        let object = unwrap_ts_wrappers(object);
+        let this_field = matches!(object, Expression::ThisExpression(_))
+            && (self
+                .this_fields
+                .as_ref()
+                .is_some_and(|fields| fields.contains(name))
+                || self.enabled.is_some_and(|mode| {
+                    self.fields
+                        .get(&(mode, private))
+                        .is_some_and(|names| names.contains(name))
+                }));
+        let object_field = if let Expression::Identifier(id) = object {
+            self.bindings
+                .get(&span(id.span))
+                .and_then(|id| self.object_fields.get(id))
+                .is_some_and(|fields| fields.contains(name))
+        } else {
+            false
+        };
+        if this_field || object_field {
+            self.reads.push(span(at));
         }
     }
 }

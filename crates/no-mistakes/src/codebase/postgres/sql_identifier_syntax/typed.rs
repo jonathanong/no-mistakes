@@ -80,8 +80,12 @@ pub(super) fn collect(
         immutable: false,
     };
     visitor.visit_program(program);
+    let (runtime, produced, transports) =
+        runtime::collect(program, &visitor.possible, &visitor.bindings);
+    visitor.transports.extend(transports);
+    visitor.selected.extend(produced.iter().copied());
+    visitor.unsupported.extend(produced);
     visitor.finish_transports();
-    let runtime = runtime::collect(program, &visitor.possible);
     (
         visitor.selected,
         visitor.unsupported,

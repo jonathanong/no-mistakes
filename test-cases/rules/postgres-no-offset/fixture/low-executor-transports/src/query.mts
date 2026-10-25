@@ -110,6 +110,55 @@ export function unrelatedMembers(query: QueryExecutor, options: QueryOptions) { 
   query.name.toString(); // NON_SQL
   query('SELECT 1'); // CLEAR
 }
+
+declare const requestQueries: { getStore(): QueryOptions | undefined };
+declare function opaque(value: unknown): void;
+declare function registerPostCommitAction(
+  query: QueryExecutor,
+  callback: () => Promise<void>,
+): void;
+
+// This global-looking method stays opaque until the low pass proves the intrinsic is unshadowed.
+export function frozenOptions(options: QueryOptions) {
+  return Object.freeze({ ...options }); // ADVISE
+}
+
+// Opaque consumers can execute an executor nested in an object or array.
+export function opaqueAggregates(query: QueryExecutor) {
+  consume({ query }); // ADVISE
+  consume([query]); // ADVISE
+  consume(query, async () => {}); // ADVISE
+}
+export function shadowedFreeze(query: QueryExecutor) {
+  const Object = { freeze: consume };
+  Object.freeze({ query }); // ADVISE
+}
+
+export function storedOptions(): QueryOptions {
+  return requestQueries.getStore() ?? {}; // NON_SQL
+}
+const storedOptionsValue = storedOptions(); // NON_SQL
+storedOptionsValue.query(dynamicSql); // ADVISE
+const inferredStoredOptions = requestQueries.getStore(); // NON_SQL
+inferredStoredOptions?.query(dynamicSql); // ADVISE_INFERRED_STORE
+requestQueries.getStore()?.query(dynamicSql); // ADVISE_INLINE_STORE
+const storedHostname = requestQueries.getStore()?.hostnameId; // NON_SQL
+function unannotatedStoredOptions() {
+  return requestQueries.getStore(); // NON_SQL
+}
+unannotatedStoredOptions()?.query(dynamicSql); // ADVISE_UNANNOTATED_STORE
+function localStoredOptions() {
+  const value = requestQueries.getStore(); // NON_SQL
+  return value; // NON_SQL
+}
+localStoredOptions()?.query(dynamicSql); // ADVISE_LOCAL_RETURN
+opaque(localStoredOptions); // ADVISE_LOCAL_RETURN_ESCAPE
+opaque({ producer: localStoredOptions }); // ADVISE_LOCAL_RETURN_AGGREGATE_ESCAPE
+export function registeredCallback(options: QueryOptions) {
+  // An unconfigured helper may execute the passed executor, so this escape stays unknown.
+  return registerPostCommitAction(options.query, async () => {}); // ADVISE
+}
+
 export function memberDefault({ query = read }: QueryOptions) { // NON_SQL
   query('SELECT 1'); // CLEAR
 }

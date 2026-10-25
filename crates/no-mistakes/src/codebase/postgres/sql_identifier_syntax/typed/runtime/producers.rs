@@ -4,23 +4,35 @@ use oxc_ast::ast::{
     TSTypeAssertion,
 };
 use oxc_span::GetSpan;
+mod bindings;
+mod methods;
 
-// A type at a runtime producer preserves uncertainty at the value expression.
-// Erased declarations and return headers alone are never runtime obligations.
-// Transparent wrappers share one value span, including typed asserted returns.
-pub(super) fn collect(program: &Program<'_>, possible: &FxHashSet<Span>) -> FxHashSet<Span> {
+// Producer types supply negative receiver provenance, never literal SQL proof.
+// Candidate spans are projected only at actual calls or opaque invocations.
+// Transparent assertions share the underlying value span.
+pub(super) fn collect(
+    program: &Program<'_>,
+    possible: &FxHashSet<Span>,
+    ids: &FxHashMap<Span, usize>,
+) -> (FxHashSet<Span>, FxHashSet<usize>, FxHashSet<Span>) {
     let mut visitor = Producers {
         possible,
+        bindings: bindings::Bindings::new(possible, ids),
         returns_executor: false,
+        return_owner: None,
         uses: FxHashSet::default(),
     };
     visitor.visit_program(program);
-    visitor.uses
+    let (bindings, calls, transports) = visitor.bindings.finish();
+    visitor.uses.extend(calls);
+    (visitor.uses, bindings, transports)
 }
 
 struct Producers<'s> {
     possible: &'s FxHashSet<Span>,
+    bindings: bindings::Bindings<'s>,
     returns_executor: bool,
+    return_owner: Option<usize>,
     uses: FxHashSet<Span>,
 }
 
@@ -34,6 +46,20 @@ impl Producers<'_> {
 }
 
 impl<'a> Visit<'a> for Producers<'_> {
+    fn visit_identifier_reference(&mut self, value: &oxc_ast::ast::IdentifierReference<'a>) {
+        self.bindings.reference(span(value.span));
+    }
+
+    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        self.bindings.call(call);
+        walk::walk_call_expression(self, call);
+    }
+
+    fn visit_variable_declarator(&mut self, variable: &oxc_ast::ast::VariableDeclarator<'a>) {
+        self.bindings.variable(variable);
+        walk::walk_variable_declarator(self, variable);
+    }
+
     fn visit_ts_as_expression(&mut self, value: &TSAsExpression<'a>) {
         self.value(&value.expression, &value.type_annotation);
         walk::walk_ts_as_expression(self, value);
@@ -50,6 +76,8 @@ impl<'a> Visit<'a> for Producers<'_> {
     }
 
     fn visit_function(&mut self, function: &Function<'a>, flags: oxc_syntax::scope::ScopeFlags) {
+        let owner = self.return_owner;
+        self.return_owner = self.bindings.function(function);
         let previous = self.returns_executor;
         self.returns_executor = function.body.is_some()
             && function.return_type.as_ref().is_some_and(|annotation| {
@@ -57,28 +85,38 @@ impl<'a> Visit<'a> for Producers<'_> {
             });
         walk::walk_function(self, function, flags);
         self.returns_executor = previous;
+        self.return_owner = owner;
     }
 
     fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
+        let owner = self.return_owner;
+        self.return_owner = self.bindings.owner(span(arrow.span));
         let previous = self.returns_executor;
         self.returns_executor = arrow.return_type.as_ref().is_some_and(|annotation| {
             possible::contains(self.possible, &annotation.type_annotation)
         });
+        if let (Some(owner), Some(expression)) = (self.return_owner, arrow.body.as_expression()) {
+            self.bindings.returned(owner, expression);
+        }
         if self.returns_executor {
             if let Some(expression) = arrow.body.as_expression() {
-                self.uses
-                    .insert(span(expression.get_inner_expression().span()));
+                let at = span(expression.get_inner_expression().span());
+                self.uses.insert(at);
             }
         }
         walk::walk_arrow_function_expression(self, arrow);
         self.returns_executor = previous;
+        self.return_owner = owner;
     }
 
     fn visit_return_statement(&mut self, statement: &ReturnStatement<'a>) {
+        if let (Some(owner), Some(expression)) = (self.return_owner, statement.argument.as_ref()) {
+            self.bindings.returned(owner, expression);
+        }
         if self.returns_executor {
             if let Some(expression) = &statement.argument {
-                self.uses
-                    .insert(span(expression.get_inner_expression().span()));
+                let at = span(expression.get_inner_expression().span());
+                self.uses.insert(at);
             }
         }
         walk::walk_return_statement(self, statement);

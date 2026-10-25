@@ -41,17 +41,21 @@ from another module when explicitly declared in `effects.postgres.typedExecutors
 and selected by `executorTypeNames`; matching only a type's spelling is insufficient.
 
 Receiver values used as proven SQL bind data or direct executor metadata do not
-create another SQL obligation. Passing an executor into an opaque helper or as
-an executable callback still retains uncertainty. Such helper-argument diagnostics
-point to the nearest invocation; stored values and deferred bodies retain their
-own use location.
+create another SQL obligation. An ordinary aggregate or property read of an
+executor-bearing options value is not an escape by itself. Passing an executor,
+or an aggregate that contains it, to an opaque or unproven helper retains
+uncertainty at that invocation. A global-looking intrinsic call is still opaque
+until the analysis proves it is unshadowed and unmodified. Configured callback
+and factory wrappers transport executor values; their callback parameter
+headers do not create extra SQL obligations.
 
 An assertion (`as T` or `<T>value`) or `satisfies T` with a possible configured
-executor type retains an unknown at its runtime operand. A function, arrow, or
-method with such a return type retains an unknown at each returned value. The
-type header by itself is erased, and these unknowns do not prove SQL passed to
-a later call through the produced value. Nested functions use their own return
-type; ambient declarations have no returned value to report.
+executor type does not create a SQL obligation by itself. The low pass carries
+supported same-file returned and asserted values into a direct invocation when
+it can prove the binding. A function return header alone is erased, and neither
+the header nor a producer result proves SQL passed to a later call safe. Nested
+functions use their own return type; ambient declarations have no returned value
+to report. Arbitrary object mutation and cross-file value flow remain opaque.
 For the SQL-structure low rules, indirect annotations (such as local type aliases
 or interfaces derived from a configured type, generic constraints/defaults,
 intersections, and array/rest or nested binding patterns) retain unknown runtime
