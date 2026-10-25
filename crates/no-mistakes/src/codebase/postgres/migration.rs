@@ -16,6 +16,18 @@ pub(crate) use recovery::recovery_failures;
 
 pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
     let parsed = super::parse::parse_postgres_sql_with_function_sources(sql);
+    extract_located_migration_facts(sql, parsed)
+}
+
+pub(super) fn extract_migration_body_facts(sql: &str) -> SqlSchemaFileFacts {
+    let parsed = super::parse::parse_postgres_body_with_function_sources(sql);
+    extract_located_migration_facts(sql, parsed)
+}
+
+fn extract_located_migration_facts(
+    sql: &str,
+    parsed: Vec<super::parse::LocatedStatement>,
+) -> SqlSchemaFileFacts {
     let unanalyzable_statements = recovery_failures(&parsed);
     let (located, functions) = super::parse::partition_function_sources(parsed);
     let statements: Vec<_> = located

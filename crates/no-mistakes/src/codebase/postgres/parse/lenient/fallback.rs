@@ -1,6 +1,10 @@
 use super::{parse_with_sources, LocatedStatement};
 
-pub(super) fn statements(sql: &str, allow_concurrent_detach: bool) -> Vec<LocatedStatement> {
+pub(super) fn statements(
+    sql: &str,
+    allow_concurrent_detach: bool,
+    procedural_body: bool,
+) -> Vec<LocatedStatement> {
     let chunks = super::super::located_statements(sql);
     if chunks.len() <= 1 {
         return chunks
@@ -23,7 +27,8 @@ pub(super) fn statements(sql: &str, allow_concurrent_detach: bool) -> Vec<Locate
                 );
                 advance(&text, line, column);
                 *offset = start + text.len();
-                let mut parsed = parse_with_sources(&chunk, true, allow_concurrent_detach);
+                let mut parsed =
+                    parse_with_sources(&chunk, true, allow_concurrent_detach, procedural_body);
                 for failure in parsed
                     .iter_mut()
                     .filter_map(|item| item.recovery_failure.as_mut())

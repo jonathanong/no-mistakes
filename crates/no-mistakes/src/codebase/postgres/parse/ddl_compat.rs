@@ -7,6 +7,7 @@ use sqlparser::keywords::Keyword;
 use sqlparser::parser::{Parser, ParserError};
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
+mod comment;
 mod metadata;
 mod trigger;
 
@@ -55,6 +56,7 @@ pub(super) fn normalize(tokens: &mut Vec<TokenWithSpan>) {
         }
         let replacement = trigger::rewrite(&code)
             .or_else(|| rewrite(&code))
+            .or_else(|| comment::rewrite(&code))
             .or_else(|| {
                 metadata::validate(&code).then(|| {
                     ["DISCARD", "PLANS"]

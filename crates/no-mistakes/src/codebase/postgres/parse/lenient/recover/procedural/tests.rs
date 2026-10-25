@@ -138,7 +138,7 @@ fn perform_key_share_recovery_keeps_function_identity_and_source_span() {
         .unwrap();
     let tokens: Vec<_> = original.iter().map(|token| token.token.clone()).collect();
     for located in [true, false] {
-        let recovered = super::super::queries::recover(&tokens, located.then_some(original));
+        let recovered = super::super::queries::recover(&tokens, located.then_some(original), true);
         assert_eq!(recovered.len(), 1, "{recovered:#?}");
         let (statement, synthetic) = &recovered[0];
         let mut calls = Vec::new();
@@ -215,7 +215,7 @@ fn plain_locked_queries_keep_complete_asts_and_function_occurrences() {
             })
             .unwrap();
         // All wrappers share the same body parser; inspect its ordinary query projection.
-        let parsed = super::super::super::parse_with_sources(body, true, false);
+        let parsed = super::super::super::parse_with_sources(body, true, false, true);
         let queries: Vec<_> = parsed
             .iter()
             .filter(|item| matches!(item.statement, Statement::Query(_)))
@@ -237,3 +237,6 @@ fn plain_locked_queries_keep_complete_asts_and_function_occurrences() {
         }
     }
 }
+
+#[path = "body_recovery_tests.rs"]
+mod body_recovery_tests;

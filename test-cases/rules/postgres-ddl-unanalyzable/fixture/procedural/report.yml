@@ -1,3 +1,4 @@
+unanalyzable: report
 rules:
   - rule: postgres-fk-index
     scope: repository

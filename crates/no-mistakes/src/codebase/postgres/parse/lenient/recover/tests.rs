@@ -258,6 +258,7 @@ fn parse_chunks_with_sources(
         chunks,
         original,
         allow,
+        false,
         &crate::codebase::postgres::parse::RecursiveViews::default(),
     )
     .into_iter()
