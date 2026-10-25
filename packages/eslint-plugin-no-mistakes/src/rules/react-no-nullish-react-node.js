@@ -6,9 +6,7 @@ const { literalString } = require("./module-mock-helpers");
 const { resolveVariable } = require("./async-target-bindings");
 const { createReactNodeFacts, keyName, typeAnnotation, typeName } = require("../react-node-types");
 
-function isObjectPattern(node) {
-  return node && node.type === "ObjectPattern";
-}
+const isObjectPattern = (node) => node && node.type === "ObjectPattern";
 
 function isIdentifier(node) {
   return node && node.type === "Identifier";
@@ -45,19 +43,17 @@ module.exports = rule(
   (context) => {
     const suppressed = ruleSuppression(context, "react-no-nullish-react-node");
     const scopes = [];
+    // Loop shadows may share the sequential name scope; alias sources need binding identity.
+    const objectBindings = new Map();
     let facts = { aliases: new Map(), objectProps: new Map(), reactNodeNames: new Set() };
 
-    function currentScope() {
-      return scopes[scopes.length - 1];
-    }
+    const currentScope = () => scopes[scopes.length - 1];
 
     function pushScope(kind) {
       scopes.push({ bindings: new Set(), kind, objectTypes: new Map(), reactNodes: new Set() });
     }
 
-    function popScope() {
-      scopes.pop();
-    }
+    const popScope = () => scopes.pop();
 
     function isReactNodeType(type) {
       const name = typeName(type);
@@ -89,11 +85,12 @@ module.exports = rule(
       scope.bindings.add(name);
     }
 
-    function defineObjectType(name, type, scope = currentScope()) {
-      scope.bindings.add(name);
+    function defineObjectType(identifier, type, scope = currentScope()) {
+      scope.bindings.add(identifier.name);
       const props = propsForType(type);
       if (props && props.size > 0) {
-        scope.objectTypes.set(name, props);
+        scope.objectTypes.set(identifier.name, props);
+        objectBindings.set(resolveVariable(identifier, context), props);
       }
     }
 
@@ -139,16 +136,15 @@ module.exports = rule(
           : def.type === "Variable" &&
             def.parent.kind === "const" &&
             def.node.range[1] < node.init.range[0];
-      return initialized ? objectProps(node.init.name) : null;
+      return initialized ? objectBindings.get(source) : null;
     }
 
     function defineParam(param) {
       const target = param.type === "AssignmentPattern" ? param.left : param;
       const type = typeAnnotation(param) || typeAnnotation(target);
       if (isIdentifier(target)) {
-        currentScope().bindings.add(target.name);
         if (isReactNodeType(type)) defineReactNode(target.name);
-        defineObjectType(target.name, type);
+        defineObjectType(target, type);
       } else if (isObjectPattern(target)) {
         definePattern(target, propsForType(type), defineBinding, defineReactNode);
       }
@@ -162,10 +158,13 @@ module.exports = rule(
         if (isReactNodeType(type) || expressionIsReactNode(node.init)) {
           defineReactNode(node.id.name, scope);
         }
-        defineObjectType(node.id.name, type, scope);
+        defineObjectType(node.id, type, scope);
         if (!type) {
           const props = objectAliasProps(node);
-          if (props) scope.objectTypes.set(node.id.name, props);
+          if (props) {
+            scope.objectTypes.set(node.id.name, props);
+            objectBindings.set(resolveVariable(node.id, context), props);
+          }
         }
       } else if (isObjectPattern(node.id)) {
         const initType = isIdentifier(node.init) ? objectProps(node.init.name) : null;

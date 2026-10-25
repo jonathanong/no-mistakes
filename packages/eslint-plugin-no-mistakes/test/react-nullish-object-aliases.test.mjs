@@ -6,6 +6,7 @@ const rule = "react-no-nullish-react-node";
 describe("ReactNode prop object aliases and template destructuring", () => {
   for (const [name, lines] of [
     ["object-aliases", [7, 12, 18, 24, 30]],
+    ["object-alias-loop-bindings", [15, 27, 39]],
     ["object-alias-controls", []],
     ["object-alias-rewrite", []],
     ["object-alias-suppressed", []],

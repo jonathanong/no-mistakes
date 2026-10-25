@@ -60,6 +60,8 @@ const. Reassigned bindings, `let` and `var` aliases, parameter-default aliases,
 and runtime expressions do not establish that prop type. An alias with its own
 explicit type uses that contract instead. An alias in a parameter initializer is
 also left unknown.
+An alias source uses its lexical binding's prop type; a same-named loop local
+does not replace the source's type.
 
 ```tsx
 import type { ReactNode } from "react";
