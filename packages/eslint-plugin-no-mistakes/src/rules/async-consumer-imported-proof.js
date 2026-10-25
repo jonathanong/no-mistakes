@@ -8,8 +8,14 @@ const { localFunction } = require("./async-consumer-local-proof");
 // Oxlint's type-aware checker does not expose a TypeScript program to JS plugins.
 // Resolve only the imported implementation; memoize sources/failures for this rule context.
 function createImportedSources() {
-  const ts = require("typescript");
-  const parser = require("@typescript-eslint/parser");
+  let ts, parser;
+  try {
+    ts = require("typescript");
+    parser = require("@typescript-eslint/parser");
+  } catch {
+    // Optional tooling cannot establish a contract when unavailable or unloadable.
+    return null;
+  }
   const reads = new Map();
   const files = new Map();
   const configs = new Map();
@@ -165,7 +171,10 @@ function importedFunction(callee, context, state) {
     def.node.importKind === "type"
   )
     return false;
-  const sources = (state.sources ||= createImportedSources());
+  // Cache unavailable peers too; a new lint context retries without persisting state.
+  if (state.sources === null) state.sources = createImportedSources() || false;
+  const sources = state.sources;
+  if (!sources) return false;
   const filename = context.filename;
   const target = sources.resolve(def.parent.source.value, filename);
   const resolved =

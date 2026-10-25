@@ -294,10 +294,15 @@ parameter replacement, forwarding, or capture in a nested function keep the
 callback unproven. Executable parameter defaults are inspected too. Resolvable named imports use
 this proof on their actual implementation, including in Oxlint's `--type-aware`
 mode, which does not expose a parser-owned TypeScript program to JS plugins.
-Without that program, the rule resolves the import using the nearest tsconfig
-and parses only the implementation module. Sources, resolution results, and
-failures are cached in memory for this lint context. Missing bodies, unresolved
-imports, `noResolve`, writes, and escaping implementations remain unproven.
+That fallback requires the optional `typescript` and `@typescript-eslint/parser`
+peer dependencies. Install both in the project to enable it. If either is
+missing, the cross-file proof is unproven and calls that depend on it are
+reported; same-file proofs and explicitly configured `awaitingConsumers`
+contracts remain available. With both dependencies present and no typed
+program, the rule resolves the import using the nearest tsconfig and parses
+only the implementation module. Sources, resolution results, and failures are
+cached in memory for this lint context. Missing bodies, unresolved imports,
+`noResolve`, writes, and escaping implementations remain unproven.
 That resolution follows only `import { name }` to one `export function`, one
 `export const` function, or one `export { name }` declaration, including
 `export { name } from`. `export default`, `export *`, and `module.exports`

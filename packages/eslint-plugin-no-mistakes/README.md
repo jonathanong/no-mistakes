@@ -9,6 +9,21 @@ callers, fetches, or selectors behind aliases and dynamic values. See
 npm install --save-dev eslint-plugin-no-mistakes
 ```
 
+For `async-call-disposition` to inspect imported callback implementations when
+the linter does not provide a TypeScript program (including Oxlint's
+`--type-aware` mode), also install `typescript` and
+`@typescript-eslint/parser` in your project:
+
+```sh
+npm install --save-dev typescript @typescript-eslint/parser
+```
+
+These are optional peer dependencies. If either is unavailable, this
+cross-file proof is skipped and calls that rely on it are reported as
+unproven. Same-file proofs and explicitly configured awaiting-consumer
+contracts continue to work. When ESLint provides a typed TypeScript program,
+the rule continues to use that program for its typed proof.
+
 Configure the plugin in a flat config and scope rules with `files` globs. For
 example, this checks test files for skipped or exclusive tests while allowing
 `todo`:
