@@ -1,6 +1,6 @@
 /// A non-collapsing, statically resolved call occurrence. Graph edges dedupe
 /// adjacency; policy consumers use these records when each source line matters.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ResolvedCallSite {
     pub file: std::path::PathBuf,
     pub caller: Option<String>,
@@ -26,7 +26,7 @@ pub struct ResolvedCallSite {
     pub target_node: Option<NodeId>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ResolvedCallTarget {
     Global {
         name: String,

@@ -15,6 +15,12 @@ pub(crate) trait ImportResolverFacade: Sync {
 
     fn visible_files(&self) -> Option<&dyn VisiblePathLookup>;
 
+    /// Workspace fallback may use a narrower view than the inner resolver.
+    /// Supplemental projection caches must retain both identities.
+    fn workspace_visible_files(&self) -> Option<&dyn VisiblePathLookup> {
+        None
+    }
+
     fn classify_import(
         &self,
         specifier: &str,
@@ -131,6 +137,10 @@ impl ImportResolverFacade for WorkspaceFallbackResolver<'_> {
 
     fn visible_files(&self) -> Option<&dyn VisiblePathLookup> {
         self.inner.visible_files()
+    }
+
+    fn workspace_visible_files(&self) -> Option<&dyn VisiblePathLookup> {
+        Some(self.visible)
     }
 
     fn classify_import(

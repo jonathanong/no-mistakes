@@ -1,5 +1,5 @@
 /// A leaf callable identity. Alternative sets cannot contain nested sets.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum KnownCallTarget {
     Global {
         name: String,
@@ -17,14 +17,14 @@ pub enum KnownCallTarget {
 }
 
 /// A callable candidate and its existing canonical repository node, if any.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ResolvedCallCandidate {
     pub target: KnownCallTarget,
     pub node: Option<NodeId>,
 }
 
 /// Shared, deterministic possibilities for one physical call occurrence.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ResolvedCallAlternatives {
     known: Vec<ResolvedCallCandidate>,
     /// Other callable values could not be resolved; known candidates still count.

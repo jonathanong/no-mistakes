@@ -4,11 +4,15 @@ use crate::fx::FxHashSet;
 use oxc_ast::ast::*;
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::GetSpan;
+#[path = "ancestry_external.rs"]
+mod external;
 
 #[derive(Debug, Clone, Default)]
 #[doc(hidden)]
 pub struct AncestryFacts {
     pub classes: Vec<ClassShape>,
+    pub ambient_modules: Vec<(String, Vec<CallableId>)>,
+    pub declaration_aliases: Vec<(String, String)>,
     pub namespace_bodies: Vec<NamespaceBody>,
     pub export_assignment: Option<String>,
     pub constructor_expressions: Vec<(u32, String)>,
@@ -23,6 +27,7 @@ pub struct ClassShape {
     pub bodies: Vec<u32>,
     pub has_base: bool,
     pub module_level: bool,
+    pub module: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -55,6 +60,8 @@ pub(super) fn collect(
             .map(|call| call.offset)
             .collect(),
         namespace: Vec::new(),
+        external_module: None,
+        global_modules: external::is_script(program),
         bodies: Vec::new(),
         function_depth: 0,
         block_depth: 0,
@@ -70,6 +77,8 @@ struct Collector<'s> {
     ambient: bool,
     unknown: FxHashSet<u32>,
     namespace: Vec<String>,
+    external_module: Option<String>,
+    global_modules: bool,
     bodies: Vec<u32>,
     function_depth: usize,
     block_depth: usize,
@@ -78,6 +87,25 @@ struct Collector<'s> {
 }
 
 impl<'a> Visit<'a> for Collector<'_> {
+    fn visit_ts_external_module_declaration(&mut self, module: &TSExternalModuleDeclaration<'a>) {
+        external::visit(self, module);
+    }
+
+    fn visit_variable_declarator(&mut self, declaration: &VariableDeclarator<'a>) {
+        if self.ambient
+            && self.namespace.is_empty()
+            && self.external_module.is_none()
+            && self.function_depth == 0
+            && self.block_depth == 0
+            && declaration.init.is_none()
+        {
+            self.facts
+                .declaration_aliases
+                .extend(super::ancestry_declarations::aliases(declaration));
+        }
+        walk::walk_variable_declarator(self, declaration);
+    }
+
     fn visit_function(&mut self, function: &Function<'a>, flags: oxc_syntax::scope::ScopeFlags) {
         self.function_depth += 1;
         walk::walk_function(self, function, flags);
@@ -102,6 +130,7 @@ impl<'a> Visit<'a> for Collector<'_> {
                 id: CallableId(class.span.start),
                 name: name.name.to_string(),
                 namespace: self.namespace.clone(),
+                module: self.external_module.clone(),
                 bodies: self.bodies.clone(),
                 has_base: class.heritage.is_some(),
                 module_level: self.function_depth == 0

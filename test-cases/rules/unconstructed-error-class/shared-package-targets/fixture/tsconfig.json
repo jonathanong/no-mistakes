@@ -1,0 +1,1 @@
+{"compilerOptions":{"baseUrl":".","paths":{"@fixture/*":["src/*"],"cloudflare:workers":["types/workers.d.ts"],"@fixture-core/*":["src/core/*"]}}}

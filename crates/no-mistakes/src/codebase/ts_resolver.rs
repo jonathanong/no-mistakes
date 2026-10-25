@@ -27,6 +27,9 @@ include!("ts_resolver/scoped_selection.rs");
 include!("ts_resolver/scoped_setup.rs");
 include!("ts_resolver/project_resolver.rs");
 
+#[path = "ts_resolver/declarations.rs"]
+pub(crate) mod declarations;
+
 #[cfg(any(test, feature = "test-instrumentation"))]
 mod catalog_membership_work;
 

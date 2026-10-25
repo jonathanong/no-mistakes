@@ -1,0 +1,12 @@
+{
+  "name": "@fixture/cache-core",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./*": {
+      "types": "./*.mts",
+      "import": "./*.mts",
+      "default": "./*.mts"
+    }
+  }
+}

@@ -21,15 +21,46 @@ impl Builder<'_> {
                 .entry(path.to_path_buf())
                 .or_default()
                 .insert(call.offset);
-        } else if call.target_identity == CallTargetIdentity::ModuleExport {
-            // Import bindings retain the prepared resolver/catalog semantics.
-            // Only an actual class declaration supplies construction proof.
-            if let Some(target) = self.reference(path, &call.callee) {
+        } else {
+            if !super::constructor_aliases::unmutated_reference(
+                file,
+                &call.callee,
+                call.offset,
+                call.caller_id,
+            ) {
+                return;
+            }
+            let target = if call.target_identity == CallTargetIdentity::ModuleExport {
+                self.reference(path, &call.callee)
+                    .map(|target| (target, false))
+            } else {
+                self.aliased_constructor(path, file, call)
+            };
+            if let Some((target, nonnullish)) = target {
                 self.output
                     .constructors
                     .entry(path.to_path_buf())
                     .or_default()
-                    .insert(call.offset, target);
+                    .insert(call.offset, target.clone());
+                if let Some(site) = self
+                    .constructor_sites
+                    .get(path)
+                    .and_then(|sites| sites.get(&call.offset))
+                    .filter(|site| site.target_nodes().all(|node| node == &target))
+                    .filter(|site| {
+                        nonnullish
+                            || matches!(
+                                site.target,
+                                crate::codebase::dependencies::graph::ResolvedCallTarget::Unknown
+                            )
+                    })
+                {
+                    self.output
+                        .constructor_provenance
+                        .entry(path.to_path_buf())
+                        .or_default()
+                        .insert(call.offset, (*site).clone());
+                }
             }
         }
     }
