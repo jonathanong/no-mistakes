@@ -4,6 +4,8 @@ mod evaluate;
 mod index;
 use index::Index;
 mod project;
+mod propagate;
+mod seeds;
 use evaluate::evaluate;
 const WORK_LIMIT: usize = 100_000;
 impl Tracker {
@@ -33,20 +35,7 @@ impl Tracker {
             .filter(|id| !sources.producers.contains(id))
             .map(|id| (*id, Taint::executor()))
             .collect::<FxHashMap<_, _>>();
-        let mut functions = sources
-            .producers
-            .iter()
-            .map(|id| (*id, Taint::executor()))
-            .collect::<FxHashMap<_, _>>();
-        let mut initial_functions: VecDeque<_> = sources.producers.iter().copied().collect();
-        while let Some(id) = initial_functions.pop_front() {
-            for alias in index.aliases.get(&id).into_iter().flatten() {
-                let value = functions[&id].clone();
-                if functions.entry(*alias).or_default().join(value) {
-                    initial_functions.push_back(*alias);
-                }
-            }
-        }
+        let mut functions = seeds::producer_functions(sources, &index);
         let mut facts = FxHashMap::<Span, Taint>::default();
         let mut queue: VecDeque<_> = self.order.iter().copied().collect();
         let mut work = 0;
@@ -56,45 +45,12 @@ impl Tracker {
                 return None;
             }
             let mut value = evaluate(self.nodes.get(&at)?, &facts, &values, &functions);
-            if sources.data.contains(&at) || sources.candidates.contains(&at) {
-                if let Some(Node::Ref(id, _)) = self.nodes.get(&at).filter(
-                    |node| matches!(node, Node::Ref(id, _) if sources.producers.contains(id)),
-                ) {
-                    value.join(Taint::producer(*id));
-                } else {
-                    value.join(Taint::executor());
-                }
-            }
-            if matches!(self.nodes.get(&at), Some(Node::Object(_))) {
-                value.objects.insert((Vec::new(), at));
-            }
+            seeds::apply_node_seeds(&mut value, at, &self.nodes, sources);
             if !facts.entry(at).or_default().join(value) {
                 continue;
             }
             queue.extend(index.parents.get(&at).into_iter().flatten().copied());
-            for (id, path) in index.outputs.get(&at).into_iter().flatten() {
-                let mut value = facts[&at].clone();
-                for key in path {
-                    value = value.read(key.as_deref());
-                }
-                if value.derived && writes.contains(id) {
-                    value.broad = true;
-                    value.paths.clear();
-                }
-                if values.entry(*id).or_default().join(value) {
-                    queue.extend(index.bindings.get(id).into_iter().flatten().copied());
-                }
-            }
-            for id in index.stores.get(&at).into_iter().flatten() {
-                let mut value = facts[&at].clone();
-                if value.present() {
-                    value.broad = true;
-                    value.paths.clear();
-                }
-                if values.entry(*id).or_default().join(value) {
-                    queue.extend(index.bindings.get(id).into_iter().flatten().copied());
-                }
-            }
+            propagate::bindings(at, &facts, &index, writes, &mut values, &mut queue);
             let mut pending = VecDeque::new();
             for id in index.returns.get(&at).into_iter().flatten() {
                 if functions.entry(*id).or_default().join(facts[&at].clone()) {
