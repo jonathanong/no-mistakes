@@ -114,3 +114,7 @@ fn extends_list(value: &Value) -> Vec<String> {
         _ => Vec::new(),
     }
 }
+
+#[cfg(test)]
+#[path = "type_config_tests.rs"]
+mod type_config_tests;

@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {
+    "types": 1,
+    "typeRoots": false
+  }
+}

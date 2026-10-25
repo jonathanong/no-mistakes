@@ -114,9 +114,9 @@ impl AmbientModules {
         };
         match exports.get(exported).map(Vec::as_slice) {
             Some([(path, id)]) => ClassLookup::Unique(path.clone(), *id),
-            Some([]) => ClassLookup::Missing,
             // Several classes for one export, or a module that already names
             // more than one class, is not proof. Do not consult another index.
+            // An empty candidate list is never stored.
             Some(_) => ClassLookup::Ambiguous,
             None if module_is_ambiguous(exports) => ClassLookup::Ambiguous,
             None => ClassLookup::Missing,
@@ -134,17 +134,10 @@ fn assigned_export(class: &ClassShape, namespace: &str) -> Option<String> {
         return Some(class.name.clone());
     }
     let rest = path.strip_prefix(&format!("{namespace}."))?;
-    if rest.is_empty() {
-        Some(class.name.clone())
-    } else {
-        Some(format!("{rest}.{}", class.name))
-    }
+    Some(format!("{rest}.{}", class.name))
 }
 
 fn namespace_exported(file: &TsFileFacts, class: &ClassShape) -> bool {
-    if class.namespace.is_empty() {
-        return true;
-    }
     let bodies = &file.ancestry.namespace_bodies;
     let exported = bodies
         .iter()
@@ -160,3 +153,7 @@ fn namespace_exported(file: &TsFileFacts, class: &ClassShape) -> bool {
                 .any(|value| value.name == class.namespace[depth] && value.exported)
         })
 }
+
+#[cfg(test)]
+#[path = "ambient_shapes_tests.rs"]
+mod ambient_shapes_tests;

@@ -1,0 +1,6 @@
+{
+  "extends": ["./parent-roots.json", 1, "./package-extends.json"],
+  "compilerOptions": {
+    "types": ["from-child"]
+  }
+}

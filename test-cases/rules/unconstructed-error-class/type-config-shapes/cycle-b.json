@@ -1,0 +1,6 @@
+{
+  "extends": "./cycle-a.json",
+  "compilerOptions": {
+    "types": ["from-b"]
+  }
+}
