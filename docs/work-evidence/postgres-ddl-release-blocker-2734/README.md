@@ -10,6 +10,11 @@ DDL were not recognized consistently after a body was opened. Saved fixtures
 cover DO, function, and procedure commands, utility DDL after BEGIN and IF, and
 malformed siblings at their own source lines.
 
+Plain SELECT/WITH chunks with FOR KEY SHARE retain complete ordinary query ASTs,
+including INTO, locking clauses, and original spans. The regression checks exact
+function locations inside all three wrappers and retained function-policy
+findings through CLI, CommonJS, ESM, and prepared reports.
+
 The parser has no unsupported-versus-malformed error category. Complete selected
 unsupported grammars therefore carry an explicit classification from full
 tokens. These forms advise by default; unrecognized or malformed forms report.
@@ -19,28 +24,28 @@ recognizer scope and compatibility AST limitations.
 
 ## Validation
 
-The full workspace scope passed 13,448 library tests, 458 binary tests, and
-1,402 integration tests, with three existing library ignores. After two
-mechanical Clippy cleanups, final validation passed 3,370 PostgreSQL library
-tests and 578 compiled native API tests in 21 files. The native cases compare
-CommonJS, ESM, and prepared project reports. All-target Clippy, formatting,
+The full workspace scope passed 13,453 library tests, 458 binary tests, and
+1,402 integration tests, with three existing library ignores. The added CLI
+regression also passed in a focused rerun of all three release-blocker CLI cases,
+bringing the distinct integration count to 1,403. All 578 compiled native API
+tests passed in 21 files. The native cases compare CommonJS, ESM, and prepared
+project reports. All-target Clippy, formatting,
 duplicate checks, AST guards, and the repository check passed.
 
 PostgreSQL 18 accepted the saved top-level and guarded DDL fixtures, plus all
 listed SQL-bearing commands inside DO/function/procedure bodies. The oracle
 uses fixture setup files and rolled-back transactions in a private cluster.
 
-Global coverage cleared the 98% floors. Final changed-line coverage is
-563/567 (99.29%); no filenames were excluded. Full-scope coverage precedes the
-mechanical cleanup; fresh final-source counters refresh the two edited files
-and augment unchanged sources. All 15,645 analyzed functions pass CRAP 30.
-The 15GB full-scope target was removed immediately after exporting evidence.
+Fresh full-scope coverage for the review fix cleared the 98% floors. Final
+changed-line coverage is 555/556 (99.82%); no filenames were excluded, and no
+stale-source coverage was merged. All 15,645 analyzed functions pass CRAP 30.
+Full-scope targets over 10GB were removed immediately after exporting evidence.
 
 ## Matched fixture comparison
 
 The baseline is `c94f1b7939d5c234c2f3409440cd3f199a08bcc2`. The same final fixture
 inputs were checked by distinct frozen baseline and production candidate CLIs.
-Of 1,074 configuration/root pairs, 1,069 have identical stdout, stderr, and exit
+Of 1,075 configuration/root pairs, 1,070 have identical stdout, stderr, and exit
 status. The five changes are the new positive DDL, guarded DDL, default policy,
 and advisory suppression configurations. There are 35 identical pre-existing
 configuration failures; those comparisons do not prove successful analysis.

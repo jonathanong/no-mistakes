@@ -1,0 +1,12 @@
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      # Isolate function recall from the source profile's existing wrapper uncertainty.
+      unanalyzable: ignore
+      sqlInclude: ['plain-query-policy.sql']
+      executorNames: []
+      bannedShapes: [banned-function-call]
+      shapeOptions:
+        bannedFunctionCall:
+          functions: [abs]

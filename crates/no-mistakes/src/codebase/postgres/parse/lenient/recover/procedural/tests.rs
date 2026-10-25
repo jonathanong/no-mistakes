@@ -152,3 +152,88 @@ fn perform_key_share_recovery_keeps_function_identity_and_source_span() {
         }
     }
 }
+
+#[test]
+fn plain_locked_queries_keep_complete_asts_and_function_occurrences() {
+    for wrapper in ["do", "function", "procedure"] {
+        let sql = std::fs::read_to_string(
+            crate::test_support::rule_fixture_root(
+                "../check-runner/postgres-parse-failure-locations",
+            )
+            .join(format!("procedural-plain-query-{wrapper}.sql")),
+        )
+        .unwrap();
+        let facts = crate::codebase::postgres::migration::extract_migration_facts(&sql);
+        let expected: Vec<_> = sql
+            .lines()
+            .enumerate()
+            .filter_map(|(line, source)| {
+                if source.starts_with("    SELECT") || source.starts_with("    WITH") {
+                    Some(("abs", line + 1, source.find("abs").unwrap() + 1))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        for (name, line, column) in &expected {
+            assert!(
+                facts
+                    .function_calls
+                    .iter()
+                    .any(|call| call.name_parts == [*name]
+                        && call.line == *line
+                        && call.column == *column),
+                "{wrapper}: missing {name} at {line}:{column}: {facts:#?}"
+            );
+        }
+        let malformed = sql
+            .lines()
+            .position(|line| line.contains("FROBULATE"))
+            .unwrap()
+            + 1;
+        assert_eq!(
+            facts
+                .unanalyzable_statements
+                .iter()
+                .map(|failure| failure.line)
+                .collect::<Vec<_>>(),
+            [malformed],
+            "{wrapper}: {facts:#?}"
+        );
+        assert!(facts
+            .tables
+            .iter()
+            .any(|table| table.table_name == "following_locked_query"));
+        let tokens = Tokenizer::new(&PostgreSqlDialect {}, &sql)
+            .tokenize_with_location()
+            .unwrap();
+        let body = tokens
+            .iter()
+            .find_map(|token| match &token.token {
+                Token::DollarQuotedString(body) => Some(&body.value),
+                _ => None,
+            })
+            .unwrap();
+        // All wrappers share the same body parser; inspect its ordinary query projection.
+        let parsed = super::super::super::parse_with_sources(body, true, false);
+        let queries: Vec<_> = parsed
+            .iter()
+            .filter(|item| matches!(item.statement, Statement::Query(_)))
+            .collect();
+        assert_eq!(queries.len(), 2, "{wrapper}: {parsed:#?}");
+        for query in queries {
+            assert!(
+                query.complete && !query.function_projection && query.recovery_failure.is_none(),
+                "{query:#?}"
+            );
+            let Statement::Query(query) = &query.statement else {
+                unreachable!()
+            };
+            let sqlparser::ast::SetExpr::Select(select) = query.body.as_ref() else {
+                panic!("expected SELECT: {query:#?}")
+            };
+            assert!(select.into.is_some());
+            assert_eq!(query.locks.len(), 1);
+        }
+    }
+}

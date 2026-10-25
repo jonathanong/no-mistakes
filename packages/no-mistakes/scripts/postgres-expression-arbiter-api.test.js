@@ -19,6 +19,21 @@ test(
       assert.deepEqual(report.rules, []);
       assert.deepEqual(report.advisories, []);
     }
+    const options = { root, config: "plain-query-policy.yml" };
+    const report = await cjs.check(options);
+    assert.deepEqual(await esm.check(options), report);
+    const prepared = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+    assert.deepEqual(prepared.reports[0].result, report);
+    assert.deepEqual(
+      report.rules.map(({ line }) => line),
+      [7, 8],
+    );
+    assert.ok(
+      report.rules.every(
+        ({ rule, target }) =>
+          rule === "postgres-sql-shape-policy" && target === "banned-function-call",
+      ),
+    );
   },
 );
 

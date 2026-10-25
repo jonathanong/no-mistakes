@@ -120,10 +120,23 @@ fn parse_chunk(
         );
     }
     let dialect = PostgreSqlDialect {};
-    let mut parser = match original {
-        Some(tokens) => Parser::new(&dialect).with_tokens_with_locations(tokens.to_vec()),
-        None => Parser::new(&dialect).with_tokens(chunk.clone()),
-    };
+    let mut parse_tokens = original.map_or_else(
+        || chunk.iter().cloned().map(TokenWithSpan::wrap).collect(),
+        |tokens| tokens.to_vec(),
+    );
+    if chunk
+        .iter()
+        .find(|token| !matches!(token, Token::Whitespace(_)))
+        .is_some_and(|token| {
+            matches!(token, Token::Word(word)
+            if word.quote_style.is_none() && (word.value.eq_ignore_ascii_case("SELECT")
+                || word.value.eq_ignore_ascii_case("WITH")))
+        })
+    {
+        // Retain a complete query AST, including INTO and its original spans.
+        query_locks::rewrite_located(&mut parse_tokens);
+    }
+    let mut parser = Parser::new(&dialect).with_tokens_with_locations(parse_tokens);
     match parser.parse_statement() {
         Ok(statement) if matches!(parser.peek_token().token, Token::EOF) => {
             let mut located = LocatedStatement::plain(statement);

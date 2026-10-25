@@ -23,6 +23,7 @@ fixtures/performance/postgres-projection-scope	no-postgres.yml
 fixtures/postgres-facts/source/ddl-compat	.no-mistakes.yml
 fixtures/postgres-facts/source/ddl-compat	guarded-do.yml
 fixtures/postgres-facts/source/ddl-compat	guarded-function.yml
+fixtures/postgres-facts/source/ddl-compat	plain-query-policy.yml
 fixtures/postgres/catalog-generation	parity.yml
 fixtures/postgres/catalog-generation/all-rules	.no-mistakes.yml
 fixtures/postgres/catalog-generation/bounded	.no-mistakes.yml

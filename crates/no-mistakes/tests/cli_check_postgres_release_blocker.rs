@@ -3,6 +3,33 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[test]
+fn plain_locked_queries_retain_function_policy_findings() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/source/ddl-compat");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .args(["--config", "plain-query-policy.yml"])
+        .output()
+        .unwrap();
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(!output.status.success(), "{report}");
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 2, "{report}");
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding["line"].as_u64().unwrap())
+            .collect::<Vec<_>>(),
+        [7, 8]
+    );
+    assert!(findings
+        .iter()
+        .all(|finding| finding["rule"] == "postgres-sql-shape-policy"
+            && finding["target"] == "banned-function-call"));
+}
+
+#[test]
 fn supported_postgres_ddl_has_no_schema_diagnostics_even_with_report_policy() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/source/ddl-compat");
