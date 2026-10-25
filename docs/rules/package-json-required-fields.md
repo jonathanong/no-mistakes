@@ -125,8 +125,10 @@ its read/parse diagnostic. A custom rule `message` prefixes these diagnostics.
 
 ## Suppression
 
-JSON cannot contain directives, so narrow the configuration for exceptional
-manifests. Exclude an intentional exception with a rule-level `exclude` glob.
+A malformed manifest can carry a leading
+`// no-mistakes-disable-file package-json-required-fields` directive. That
+suppresses its read/parse diagnostic. Exclude a stable exception with a
+rule-level `exclude` glob.
 
 ```yaml
 rules:
