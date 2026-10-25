@@ -63,15 +63,43 @@ fn dynamic_bases_follow_policy_without_guessing_error_ancestry() {
                 .find(|finding| finding["file"] == "src/type-only.ts")
                 .unwrap();
             assert_eq!(type_only["line"], 1);
+            for (name, line) in [("MixedError", 4), ("StaticChild", 9)] {
+                let finding = uncertain
+                    .iter()
+                    .find(|row| {
+                        row["message"]
+                            .as_str()
+                            .unwrap()
+                            .contains(&format!("`{name}`"))
+                    })
+                    .unwrap();
+                assert_eq!(finding["line"], line, "{result}");
+            }
+            // Static type-only bases retain the unresolved-target advisory policy.
+            assert!(advisories.contains(type_only));
+            for finding in uncertain
+                .iter()
+                .filter(|row| row["file"] != "src/type-only.ts")
+            {
+                assert_eq!(rules.contains(finding), policy == "report", "{result}");
+                let message = finding["message"].as_str().unwrap();
+                assert!(message.contains("base ancestry contains a dynamic extends expression"));
+                assert!(message.contains("statically named class or analyzable import"));
+                assert!(message.contains("An Error argument does not prove"));
+            }
         }
         assert_eq!(
             rules.len(),
-            if policy == "report" { 10 } else { 2 },
+            if policy == "report" { 9 } else { 2 },
             "{result}"
         );
         assert_eq!(
             advisories.len(),
-            if policy == "advise" { 8 } else { 0 },
+            match policy {
+                "report" => 1,
+                "advise" => 8,
+                _ => 0,
+            },
             "{result}"
         );
         assert_eq!(
@@ -121,6 +149,13 @@ fn dynamic_ancestry_is_additive_without_synthetic_source_calls() {
     assert_eq!(mixed.line, 4);
     assert!(mixed.exported);
     assert_eq!(mixed.global_base, None);
+    assert!(mixed.dynamic_base);
+    let static_child = with
+        .class_declarations()
+        .iter()
+        .find(|class| class.scope == "StaticChild")
+        .unwrap();
+    assert!(!static_child.dynamic_base);
     assert!(with
         .dependencies_of_node(&mixed.node())
         .into_iter()

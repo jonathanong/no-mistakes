@@ -443,7 +443,11 @@ class.
   ignored. Prefer a direct class import when the package exposes one.
 - Mixin and expression bases (`extends withCode(Error)`, `extends mixin(Base)`,
   or a computed/conditional base) have unknown ancestry and follow
-  `options.unanalyzable`. An Error argument does not prove a factory returns an
+  `options.unanalyzable`: `report` fails, `advise` emits an advisory, and
+  `ignore` omits them. This also applies to statically named descendants of
+  these dynamic bases. Statically named unresolved bases, including type-only
+  imports, remain advisory under `report` and `advise`. An Error argument does
+  not prove a factory returns an
   Error constructor. Rewrite the base as a statically named class or analyzable
   import. Known construction or subclassing still satisfies such a class.
   Class expressions are not tracked.

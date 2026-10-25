@@ -67,6 +67,7 @@ impl Builder<'_> {
             namespace: None,
             namespace_escaped: false,
             global_base,
+            dynamic_base: base.is_some_and(|base| base.callee == "<unknown>"),
         });
         node
     }

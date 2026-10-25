@@ -14,9 +14,12 @@ pub(super) fn uncertain_class(
     application: &RuleDef,
     unknown_base: bool,
     unknown_constructor: bool,
+    dynamic_ancestry: bool,
 ) -> RuleFinding {
     let name = finding.target.as_deref().unwrap_or("default");
-    let detail = if unknown_base {
+    let detail = if dynamic_ancestry {
+        format!("Cannot determine whether exported class `{name}` is an error class because its base ancestry contains a dynamic extends expression. Replace the mixin or call-expression base with a statically named class or analyzable import, then rerun the check. An Error argument does not prove the returned constructor extends Error.")
+    } else if unknown_base {
         format!("Cannot determine whether exported class `{name}` is an error class because its base is outside the analyzed graph. Use an analyzable local error base or include the base's repository source, then rerun the check.")
     } else if unknown_constructor {
         format!("Cannot prove whether exported error class `{name}` is constructed because an unresolved constructor occurs in its lexical class body. Replace the dynamic constructor with a statically named class to establish construction, then rerun the check.")

@@ -92,13 +92,16 @@ fn declaration_export_boundaries_remain_unknown_without_positive_class_proof() {
         .join("declaration-exports/fixture");
     assert_channels(
         &root,
-        &["src/classes.ts:7 StarError"],
+        // Dynamic ancestry in a package declaration follows the explicit report policy.
+        &[
+            "src/classes.ts:7 StarError",
+            "src/classes.ts:13 unanalyzable",
+        ],
         &[
             "src/classes.ts:9 unanalyzable",
             "src/classes.ts:10 unanalyzable",
             "src/classes.ts:11 unanalyzable",
             "src/classes.ts:12 unanalyzable",
-            "src/classes.ts:13 unanalyzable",
             "src/classes.ts:14 unanalyzable",
             "src/classes.ts:15 unanalyzable",
             "src/classes.ts:17 unanalyzable",

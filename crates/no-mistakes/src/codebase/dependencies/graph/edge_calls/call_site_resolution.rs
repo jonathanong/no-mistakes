@@ -184,6 +184,7 @@ impl CallSiteResolution<'_, '_> {
                     .and_then(|member| member.path.rsplit_once('.'))
                     .map(|(namespace, _)| namespace.to_string()),
                 namespace_escaped: false,
+                dynamic_base: call.callee == "<unknown>",
                 global_base: match site.target {
                     ResolvedCallTarget::Global { name } => Some(name),
                     _ => None,
@@ -192,16 +193,4 @@ impl CallSiteResolution<'_, '_> {
         }
         (edges, classes)
     }
-}
-
-/// A class's base is recorded as a callback-flavoured construct whose caller
-/// is the class itself; nothing else produces that combination. Returns the
-/// derived class's identity and scope.
-fn class_base_owner(
-    call: &FunctionCall,
-) -> Option<(crate::codebase::dependencies::extract::CallableId, &str)> {
-    if !call.is_callback || call.invocation != InvocationKind::Construct {
-        return None;
-    }
-    Some((call.caller_id?, call.caller.as_deref()?))
 }
