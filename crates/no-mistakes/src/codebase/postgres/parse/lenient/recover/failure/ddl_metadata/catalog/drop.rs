@@ -11,7 +11,17 @@ pub(super) fn parse<'a>(c: &mut Cursor<'a>) -> bool {
         c.words(&["IF", "EXISTS"]);
         return c.identifier();
     }
-    if c.words(&["ACCESS", "METHOD"]) || c.word("LANGUAGE") || c.word("SUBSCRIPTION") {
+    // PG17 gram.y uses name_list here despite singular command-page synopses.
+    if c.words(&["ACCESS", "METHOD"]) || c.word("LANGUAGE") || c.words(&["PROCEDURAL", "LANGUAGE"])
+    {
+        c.words(&["IF", "EXISTS"]);
+        if !list(c, Cursor::identifier) {
+            return false;
+        }
+        c.drop_behavior();
+        return true;
+    }
+    if c.word("SUBSCRIPTION") {
         c.words(&["IF", "EXISTS"]);
         if !c.identifier() {
             return false;
@@ -62,7 +72,7 @@ pub(super) fn parse<'a>(c: &mut Cursor<'a>) -> bool {
             return false;
         }
         c.words(&["IF", "EXISTS"]);
-        if !c.name() {
+        if !list(c, Cursor::name) {
             return false;
         }
     }
