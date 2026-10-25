@@ -135,3 +135,7 @@ fn package_entry(dir: &Path, sources: &SourceStore) -> Option<PathBuf> {
     }
     None
 }
+
+#[cfg(test)]
+#[path = "type_entries_tests.rs"]
+mod type_entries_tests;
