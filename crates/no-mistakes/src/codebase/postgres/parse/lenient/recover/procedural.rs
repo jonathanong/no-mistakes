@@ -4,6 +4,7 @@ use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 use std::sync::Arc;
 mod assignment;
+pub(super) use assignment::target as assignment_target;
 mod commands;
 mod declaration;
 mod sql;
@@ -52,6 +53,9 @@ pub(super) fn filter_body(
             }
             if control {
                 located.recovery_failure = None;
+            }
+            if let Some(failure) = &mut located.recovery_failure {
+                failure.procedural_body = true;
             }
             Some(located)
         })

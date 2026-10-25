@@ -72,7 +72,16 @@ fn append_one(
     body: bool,
     owned_calls: Option<dynamic::CallRange>,
 ) {
-    let mut nested = extract_migration_facts(&source.sql);
+    let mut nested = if body {
+        super::extract_migration_body_facts(&source.sql)
+    } else {
+        extract_migration_facts(&source.sql)
+    };
+    // Both routine fragments and statically recovered EXECUTE originate inside a body.
+    // Mark only their children; a malformed enclosing wrapper retains its own severity.
+    for failure in &mut nested.unanalyzable_statements {
+        failure.procedural_body = true;
+    }
     if let (Some(range), Some(body_start)) = (owned_calls, source.body_start) {
         nested.function_calls.retain(|call| {
             dynamic::location_offset(&source.sql, call.line as u64, call.column as u64).is_none_or(

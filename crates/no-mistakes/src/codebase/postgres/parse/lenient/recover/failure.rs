@@ -63,6 +63,7 @@ pub(in super::super) fn failed_source(
             .collect::<Vec<_>>()
             .join(" "),
         valid_unsupported: false,
+        procedural_body: false,
         source_order: vec![ordinal],
         insert_keyword_count: crate::codebase::postgres::statements::insert_keyword_count(&masked),
         recovered_insert_count: 0,
@@ -88,6 +89,9 @@ pub(super) fn marker(
         false,
     );
     marker.recovery_failure = unrecoverable_chunk(tokens, ordinal);
+    if let Some(failure) = &mut marker.recovery_failure {
+        failure.procedural_body = lexical_wrapper;
+    }
     if lexical_wrapper
         && produced
             .iter()

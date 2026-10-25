@@ -51,6 +51,7 @@ pub(super) fn recover_chr_encoded(
                 &locations::align_chr_sql(&sql, original),
                 true,
                 allow_concurrent_detach,
+                false,
             )
         })
         .unwrap_or_default()

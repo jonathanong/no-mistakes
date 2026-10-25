@@ -18,7 +18,7 @@ fn procedural_recovery_handles_malformed_prefixes_with_or_without_locations() {
             .take(11)
         {
             let tokens: Vec<_> = chunk.iter().map(|token| token.token.clone()).collect();
-            let recovered = recover(&tokens, with_locations.then_some(chunk));
+            let recovered = recover(&tokens, with_locations.then_some(chunk), true);
             counts.push(recovered.len());
             for (statement, synthetic) in &recovered {
                 crate::codebase::postgres::function_calls::collect_projected(

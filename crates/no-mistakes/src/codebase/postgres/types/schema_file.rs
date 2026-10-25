@@ -40,6 +40,8 @@ pub struct SqlUnanalyzableStatement {
     pub head: String,
     /// A complete, narrowly recognized PostgreSQL grammar unsupported by the AST parser.
     pub valid_unsupported: bool,
+    /// Uncertainty inside an identified procedural body, including malformed body SQL.
+    pub procedural_body: bool,
     /// Lexical statement ordinals, including enclosing routine bodies.
     pub source_order: Vec<usize>,
     /// INSERT relevance belongs to this failed chunk, never a valid sibling.

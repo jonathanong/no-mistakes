@@ -73,12 +73,13 @@ fn postgres_ddl_recovery_policies_match_standalone_checks() {
 fn postgres_ddl_nested_locations_and_suppressions_match_standalone() {
     let root = category_fixture("rules", "postgres-ddl-unanalyzable");
     let nested = recall_check_report(&root.join("nested"), "report.yml");
-    let findings = nested["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 2, "{nested:#?}");
-    assert_eq!(findings[0]["line"], 4);
-    assert_eq!(findings[1]["line"], 5);
-    assert!(findings[0]["target"].as_str().unwrap().contains("alpha"));
-    assert!(findings[1]["target"].as_str().unwrap().contains("beta"));
+    assert_eq!(nested["rules"], json!([]));
+    let advisories = nested["advisories"].as_array().unwrap();
+    assert_eq!(advisories.len(), 2, "{nested:#?}");
+    assert_eq!(advisories[0]["line"], 4);
+    assert_eq!(advisories[1]["line"], 5);
+    assert!(advisories[0]["target"].as_str().unwrap().contains("alpha"));
+    assert!(advisories[1]["target"].as_str().unwrap().contains("beta"));
     let suppressed = recall_check_report(&root.join("suppress"), "report.yml");
     let findings = suppressed["rules"].as_array().unwrap();
     assert_eq!(findings.len(), 1, "{suppressed:#?}");
@@ -90,10 +91,12 @@ fn postgres_ddl_nested_locations_and_suppressions_match_standalone() {
     assert_eq!(advisories[0]["line"], 4);
     let disabled = recall_check_report(&root.join("suppress-file"), "report.yml");
     assert_eq!(disabled["rules"], json!([]));
+    assert_eq!(disabled["advisories"], json!([]));
     let dynamic = recall_check_report(&root.join("dynamic"), "report.yml");
-    let findings = dynamic["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 1, "{dynamic:#?}");
-    assert_eq!(findings[0]["line"], 2);
+    assert_eq!(dynamic["rules"], json!([]));
+    let advisories = dynamic["advisories"].as_array().unwrap();
+    assert_eq!(advisories.len(), 1, "{dynamic:#?}");
+    assert_eq!(advisories[0]["line"], 2);
 }
 
 #[test]
@@ -130,8 +133,10 @@ fn procedural_control_noise_keeps_node_reports_and_real_statement_lines_in_sync(
         !["migrations/valid.sql", "migrations/quoted-do-bodies.sql"]
             .contains(&finding["file"].as_str().unwrap())
     }));
-    let lines: Vec<_> = findings.iter()
+    let lines: Vec<_> = findings
+        .iter()
         .filter(|finding| finding["file"] == "migrations/top-level.sql")
-        .map(|finding| finding["line"].as_u64().unwrap()).collect();
+        .map(|finding| finding["line"].as_u64().unwrap())
+        .collect();
     assert_eq!(lines, vec![7, 13, 19, 21]);
 }

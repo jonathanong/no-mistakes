@@ -145,11 +145,12 @@ fn append_rule(
         let rel = relative_slash_path(root, path);
         for statement in &file.unanalyzable_statements {
             let line = statement.line.max(1);
-            let policy = if statement.valid_unsupported && !explicit_policy {
-                Unanalyzable::Advise
-            } else {
-                policy
-            };
+            let policy =
+                if (statement.valid_unsupported || statement.procedural_body) && !explicit_policy {
+                    Unanalyzable::Advise
+                } else {
+                    policy
+                };
             output.unanalyzable(
                 policy,
                 RuleFinding {

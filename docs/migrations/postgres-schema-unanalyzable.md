@@ -2,9 +2,11 @@
 
 The 11 rules below diagnose each selected SQL statement that the lenient
 PostgreSQL parser cannot parse or recover. By default, complete recognized
-unsupported PostgreSQL forms produce non-failing advisories; malformed or
-unrecognized forms produce findings at their source lines. Explicit
-`options.unanalyzable: report` produces findings for both classes.
+unsupported PostgreSQL forms produce non-failing advisories. Any statement that
+cannot be analyzed inside a recognized `DO`, PL/pgSQL function, or procedure body
+also advises by default. Malformed or unrecognized top-level statements still
+produce findings at their source lines. Explicit `options.unanalyzable: report`
+produces findings for all of these cases.
 This includes rejected syntax such as `CREATE RECURSIVE VIEW` without its
 required explicit column list, which could previously disappear from analysis.
 
@@ -28,8 +30,8 @@ complete syntax matches the conservative recognizer.
 Recognition covers selected GRANT forms of ALTER DEFAULT PRIVILEGES,
 CREATE PUBLICATION with FOR ALL TABLES or plain table lists, and REFRESH
 MATERIALIZED VIEW with optional CONCURRENTLY and WITH [NO] DATA.
-Other rejected forms remain findings: a recognized prefix alone never proves
-valid syntax. Recognition checks syntax, not database permissions, object
+Other rejected top-level forms remain findings: a recognized prefix alone never
+proves valid syntax. Recognition checks syntax, not database permissions, object
 existence, or privilege/object compatibility. This is not a full PostgreSQL
 validator. Parsed sibling statements in the same file still contribute their
 schema facts.
@@ -52,15 +54,36 @@ PL/pgSQL function and procedure bodies, procedural declarations and assignments,
 `CASE`, loops, `EXIT`, `CONTINUE`, `RETURN`, `RAISE`, `PERFORM`, cursor operations,
 `SELECT INTO`, `EXECUTE INTO`, diagnostics, and exception handlers are not reported
 as failed SQL statements. This does not imply that those commands are executed or
-that their conditions are evaluated. Unknown or malformed SQL nested inside their
-cursor, loop-query, `SELECT`, or `EXECUTE` payloads still reports, as does unknown
-SQL after an `IF ... THEN` or loop prefix. Top-level assignment/declaration-shaped statements,
-`END IF`, and unsupported SQL statements after a body retain diagnostics at their own
-lines, using the same default classification.
+that their conditions are evaluated. Statements recovered from body cursor,
+loop-query, `SELECT`, and `EXECUTE`
+payloads retain their query, function, and schema facts. Recovery supports
+`SELECT ... INTO STRICT`, query loops ending in `FOR NO KEY UPDATE`, and
+`FOR ... IN EXECUTE format(...) LOOP` with escaped single quotes. Comments accept
+newline-continued single-quoted text and dollar-quoted text, including tagged
+quotes.
+
+For body `SELECT INTO`, the analyzer validates and retains the full variable
+target list, then removes the unsupported `STRICT` modifier in a parser clone.
+Unsupported row-lock spellings use the corresponding `UPDATE` or `SHARE` AST
+form. Query and function facts remain available; original SQL tokens and source
+locations are retained for diagnostics.
+
+If a statement inside a recognized body still cannot be analyzed, the default is
+a non-failing advisory, including for unknown or malformed body syntax. This
+fallback preserves the diagnostic and its source line without claiming the SQL
+is valid. It does not suppress rule findings from successfully recovered sibling
+statements. Top-level assignment/declaration-shaped statements, `END IF`, broken
+routine wrappers, and malformed SQL before or after a body still produce findings.
+An explicit rule or repository policy takes precedence over the body default.
+
+Rust consumers constructing `SqlUnanalyzableStatement` facts must now provide
+`procedural_body`: use `false` for top-level statements and `true` for statements
+identified inside a routine body. Node options and JSON report shapes are unchanged.
 
 The rule's configured roots, path filters, and `sqlInclude` determine which
 files are checked. Set `options.unanalyzable` on a rule application to `report`
-(explicitly for both classes), `advise` for a non-failing advisory, or `ignore`
+(explicitly including body statements), `advise` for a non-failing advisory, or
+`ignore`
 to omit these diagnostics. For example:
 
 ```yaml

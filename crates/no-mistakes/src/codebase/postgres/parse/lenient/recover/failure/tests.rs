@@ -33,6 +33,7 @@ fn canonical_capture_ignores_chunks_without_code_or_source_tokens() {
         vec![tokens],
         &[],
         true,
+        false,
         &crate::codebase::postgres::parse::RecursiveViews::default(),
     );
     assert!(crate::codebase::postgres::migration::recovery_failures(&parsed).is_empty());

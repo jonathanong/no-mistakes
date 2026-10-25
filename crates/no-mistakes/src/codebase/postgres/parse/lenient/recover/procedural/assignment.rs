@@ -9,7 +9,7 @@ pub(super) fn matches(code: &[&Token]) -> bool {
     target(&code[..at]) && expression(&code[at + 1..])
 }
 
-pub(super) fn target(code: &[&Token]) -> bool {
+pub(in super::super) fn target(code: &[&Token]) -> bool {
     parsed(code).is_some_and(|target| lvalue(&target))
 }
 
