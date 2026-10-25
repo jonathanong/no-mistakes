@@ -220,7 +220,14 @@ unresolved or conflicting exports retain uncertainty.
 The importer selects its own tsconfig resolver scope. Immutable constructor
 aliases and destructured facades reuse prepared binding facts; package members
 declared as `typeof NamedClass` can identify that class. Included ambient module
-declarations can prove a non-Error base without a path mapping. A nullish constructor
+declarations can prove a non-Error base without a path mapping. A `types` entry
+visible to the importing file's tsconfig, including one inherited from a relative
+extended config, does the same for ambient modules outside the analyzed file set.
+`declare module` bodies of the form `export = Namespace` supply that namespace's
+exported classes. A declared non-Error base is silent, a declared Error base still
+reports, and a specifier with no visible declaration stays advisory. Unset `types`
+does not scan installed packages, and no module name is special-cased.
+A nullish constructor
 choice is narrowed only when its selected class value is provably non-nullish.
 An annotated constant such as `export const Config: new (...) => Raw = Raw`
 follows its immutable runtime initializer through re-exports and `export *`;
@@ -462,7 +469,13 @@ Reflection and some alias forms can still hide a dead class.
   remain supported. Distinct symlink spellings retain separate logical identities.
   An immutable constructor obtained by destructuring a default-imported object
   can resolve when its declaration member names a concrete class with `typeof`.
-  A bare construct signature does not identify class ancestry. A choice between
+  A bare construct signature does not identify class ancestry. Ambient module
+  specifiers are proved only from a declaration visible to the importing file:
+  an included project file, or a `types` entry on its tsconfig, including a
+  value inherited from a relative extended config. `export = Namespace` supplies
+  the namespace's exported classes. Unset `types` does not scan installed
+  packages. A declared non-Error base is silent, a declared Error base still
+  reports, and a missing declaration stays advisory. A choice between
   a module's default export and its namespace can resolve when the default is a
   proven non-nullish class; genuinely unknown alternatives remain uncertain.
   Shadowed, reassigned, or otherwise unproven targets remain advisory unless

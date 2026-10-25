@@ -26,6 +26,26 @@ pub(super) fn visit<'a>(collector: &mut Collector<'_>, module: &TSExternalModule
     collector.external_module = prior;
 }
 
+pub(super) fn record_assignment(
+    collector: &mut Collector<'_>,
+    assignment: &TSExportAssignment<'_>,
+) {
+    let Expression::Identifier(identifier) = &assignment.expression else {
+        return;
+    };
+    let name = identifier.name.to_string();
+    // Inside `declare module`, this exports that module's namespace. It is not
+    // the file's CommonJS `export =`, which class export resolution still uses.
+    if let Some(module) = &collector.external_module {
+        collector
+            .facts
+            .ambient_module_assignments
+            .push((module.clone(), name));
+        return;
+    }
+    collector.facts.export_assignment = Some(name);
+}
+
 pub(super) fn is_script(program: &Program<'_>) -> bool {
     !program.body.iter().any(|statement| match statement {
         // Only external import-equals creates a module boundary. An internal

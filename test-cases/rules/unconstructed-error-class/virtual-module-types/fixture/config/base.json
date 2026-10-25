@@ -1,0 +1,7 @@
+{
+  // Relative names resolve beside this file, not the extending tsconfig.
+  // `dist/` is never discovered, so that declaration is visible only through `types`.
+  "compilerOptions": {
+    "types": ["../dist/worker-configuration.d.ts", "@fixture/runtime-types"]
+  }
+}

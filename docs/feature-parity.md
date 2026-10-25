@@ -17,7 +17,8 @@ resolver while retaining spelling-based string configuration. CLI, async Node,
 and batched `analyzeProject` queries share this behavior.
 
 TS/JS `unconstructed-error-class` uses canonical class ancestry for imported
-bases, including conservatively resolved package type declarations. Positive
+bases, including conservatively resolved package type declarations and
+tsconfig-visible ambient modules, including export-equals namespaces. Positive
 non-Error class ancestry is skipped; unresolved or opaque ancestry follows the
 shared unanalyzable policy. CLI `check`, async `check()` and `analyzeProject()`
 check reports share this behavior without widening ordinary import/call queries.

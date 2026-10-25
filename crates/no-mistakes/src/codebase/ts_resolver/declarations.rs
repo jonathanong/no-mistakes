@@ -10,6 +10,8 @@ use std::sync::{Arc, OnceLock};
 mod ambient;
 #[path = "declarations/package.rs"]
 mod package;
+#[path = "declarations/type_entries.rs"]
+mod type_entries;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub(crate) struct ProjectionKey {
@@ -28,6 +30,7 @@ pub(crate) struct DeclarationResolver<'a> {
     sources: &'a SourceStore,
     results: Arc<DeclarationResults>,
     ambient: ambient::AmbientModules,
+    type_ambient: OnceLock<ambient::AmbientModules>,
     catalog: Option<&'a TsConfigCatalog>,
     workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
 }
@@ -70,6 +73,7 @@ impl<'a> DeclarationResolver<'a> {
             sources,
             results,
             ambient: Default::default(),
+            type_ambient: OnceLock::new(),
             catalog,
             workspace,
         }
@@ -91,8 +95,34 @@ impl<'a> DeclarationResolver<'a> {
         importer: &Path,
         exported: &str,
     ) -> Option<(PathBuf, crate::codebase::dependencies::extract::CallableId)> {
-        self.ambient
+        match self
+            .ambient
             .class(specifier, importer, exported, self.catalog)
+        {
+            ambient::ClassLookup::Unique(path, id) => return Some((path, id)),
+            // An ambiguous in-graph module is not proved by a unique type entry.
+            ambient::ClassLookup::Ambiguous => return None,
+            ambient::ClassLookup::Missing => {}
+        }
+        match self
+            .type_modules()
+            .class(specifier, importer, exported, self.catalog)
+        {
+            ambient::ClassLookup::Unique(path, id) => Some((path, id)),
+            ambient::ClassLookup::Ambiguous | ambient::ClassLookup::Missing => None,
+        }
+    }
+
+    fn type_modules(&self) -> &ambient::AmbientModules {
+        if self.type_ambient.get().is_some() {
+            return self
+                .type_ambient
+                .get()
+                .expect("type-visible ambient modules were just initialized");
+        }
+        let modules =
+            type_entries::visible_modules(self.session, self.root, self.sources, self.catalog);
+        self.type_ambient.get_or_init(|| modules)
     }
 
     pub fn resolve(&self, specifier: &str, importer: &Path) -> Option<PathBuf> {

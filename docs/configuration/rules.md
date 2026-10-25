@@ -148,8 +148,8 @@ escape is the class's only uncertainty.
 Namespace-escape-only uncertainty keeps the shared policy: `report` fails,
 `advise` advises, and `ignore` omits it. Definite unused Error classes remain
 failures under every policy. Known constructor targets reuse the prepared
-resolver, including path aliases and usable package declarations, and credit
-the actual class.
+resolver, including path aliases, usable package declarations, and
+tsconfig-visible ambient modules, and credit the actual class.
 Known non-Error globals are quiet; shadowed names resolve independently.
 Ordinary import/call query results remain unchanged. Suppressions apply at the
 construction or class line in both report channels. The rule remains `max`
