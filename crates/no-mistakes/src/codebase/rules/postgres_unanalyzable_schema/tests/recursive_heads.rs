@@ -56,7 +56,8 @@ fn recursive_view_heads_match_canonical_facts_messages_and_targets() {
         );
         let output = diagnostics(&root, &config, &files, &facts).unwrap();
         for rule_id in RULE_IDS {
-            // Only nested body failures advise; malformed top-level recursive heads still fail.
+            // Body failures, including rejected guarded actions, advise by default.
+            // Malformed top-level recursive heads still fail.
             for (items, body) in [(&output.findings, false), (&output.advisories, true)] {
                 let findings = items
                     .iter()
@@ -64,7 +65,7 @@ fn recursive_view_heads_match_canonical_facts_messages_and_targets() {
                     .collect::<Vec<_>>();
                 let expected = expected
                     .iter()
-                    .filter(|(line, _, _)| [9, 23].contains(line) == body)
+                    .filter(|(line, _, _)| [9, 23, 25].contains(line) == body)
                     .collect::<Vec<_>>();
                 assert_eq!(
                     findings.len(),
@@ -85,8 +86,8 @@ fn recursive_view_heads_match_canonical_facts_messages_and_targets() {
         }
         let mut findings = output.findings;
         suppress_rule_findings_with_sources(&root, &mut findings, &source_store_for_files(&files));
-        assert_eq!(findings.len(), RULE_IDS.len() * (expected.len() - 2) - 1);
-        assert_eq!(output.advisories.len(), RULE_IDS.len() * 2);
+        assert_eq!(findings.len(), RULE_IDS.len() * (expected.len() - 3) - 1);
+        assert_eq!(output.advisories.len(), RULE_IDS.len() * 3);
         assert!(!findings
             .iter()
             .any(|finding| finding.rule == "postgres-fk-index" && finding.line == 18));

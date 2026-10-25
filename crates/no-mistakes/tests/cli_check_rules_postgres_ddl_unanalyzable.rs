@@ -231,8 +231,9 @@ fn original_heads_and_rejected_branch_locations_survive_cli_preparation() {
 
         assert_eq!(report["advisories"], serde_json::json!([]));
         let findings = report["rules"].as_array().unwrap();
-        // Two existing CREATE VIEW policy violations accompany the 35 failures per schema rule.
-        assert_eq!(findings.len(), 387, "{report}");
+        // Two CREATE VIEW violations accompany the 35 failures per schema rule;
+        // the saved branch-local directive suppresses one postgres-fk-index finding.
+        assert_eq!(findings.len(), 386, "{report}");
         let mut by_rule = std::collections::BTreeMap::<String, Vec<_>>::new();
         for finding in findings
             .iter()
@@ -255,7 +256,16 @@ fn original_heads_and_rejected_branch_locations_survive_cli_preparation() {
         assert_eq!(by_rule.len(), 11);
         for (rule, mut findings) in by_rule {
             findings.sort_unstable();
-            assert_eq!(findings, expected, "{config}: {rule}");
+            let expected_for_rule = expected
+                .iter()
+                .filter(|(file, line, _)| {
+                    rule != "postgres-fk-index"
+                        || file != "migrations/branch-bodies.sql"
+                        || *line != 7
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            assert_eq!(findings, expected_for_rule, "{config}: {rule}");
         }
     }
 }

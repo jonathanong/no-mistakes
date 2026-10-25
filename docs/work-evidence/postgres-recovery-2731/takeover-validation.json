@@ -1,0 +1,101 @@
+{
+  "baselineSource": "7ed299fee6bd373c44ec1ab7a43fabba07a122ae",
+  "candidateCodeCommit": "78cff2c588b5199f61d39565d0b7649d0c4afcab",
+  "rust": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "buildProfile": "Cargo dev, --locked, CARGO_INCREMENTAL=0",
+  "baselineBinarySha256": "9535c7ec4b1ccc77f688d3cfcec0601ac13cc4e1f80b9dc4c6a4d4f32e6debac",
+  "candidateBinarySha256": "1e92f858beb9c997dd2d4e78e12e3292e1611dcacfe058f6ee39a84b2f0e5ab3",
+  "configManifest": "docs/work-evidence/postgres-recovery-2731/configs-current-main.tsv",
+  "configManifestSha256": "dad69f216c3369d6c4f9947499082790e790523c318fe7c1e33445e66da9ce7d",
+  "configurations": 1089,
+  "byteIdentical": 1084,
+  "intendedChanges": [
+    {
+      "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/issue-2731",
+      "config": "default.yml",
+      "beforeStatus": 1,
+      "afterStatus": 1,
+      "beforeRules": 1,
+      "afterRules": 1,
+      "beforeAdvisories": 10,
+      "afterAdvisories": 15,
+      "beforeWarnings": 0,
+      "afterWarnings": 0
+    },
+    {
+      "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/issue-2731",
+      "config": "low.yml",
+      "beforeStatus": 1,
+      "afterStatus": 1,
+      "beforeRules": 321,
+      "afterRules": 386,
+      "beforeAdvisories": 0,
+      "afterAdvisories": 0,
+      "beforeWarnings": 11,
+      "afterWarnings": 11
+    },
+    {
+      "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/issue-2731",
+      "config": "report.yml",
+      "beforeStatus": 1,
+      "afterStatus": 1,
+      "beforeRules": 321,
+      "afterRules": 386,
+      "beforeAdvisories": 0,
+      "afterAdvisories": 0,
+      "beforeWarnings": 0,
+      "afterWarnings": 0
+    },
+    {
+      "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/recursive-heads",
+      "config": "low.yml",
+      "beforeStatus": 1,
+      "afterStatus": 1,
+      "beforeRules": 66,
+      "afterRules": 66,
+      "beforeAdvisories": 22,
+      "afterAdvisories": 33,
+      "beforeWarnings": 11,
+      "afterWarnings": 11
+    },
+    {
+      "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/recursive-heads",
+      "config": "report.yml",
+      "beforeStatus": 1,
+      "afterStatus": 1,
+      "beforeRules": 66,
+      "afterRules": 66,
+      "beforeAdvisories": 22,
+      "afterAdvisories": 33,
+      "beforeWarnings": 0,
+      "afterWarnings": 0
+    }
+  ],
+  "comparisonPasses": [
+    {
+      "kind": "all-parallel",
+      "rows": 1089,
+      "exact": 318,
+      "summarySha256": "977c2aba9e58581111288e532a9ab0a08a91933d371a2a36d5bf0360a109ad9d"
+    },
+    {
+      "kind": "contaminated-serial",
+      "rows": 771,
+      "exact": 764,
+      "summarySha256": "4a735c7dbc68a1356edf164ad8d60bf90834eecd62a3a3d44d92dc7118985748"
+    },
+    {
+      "kind": "remaining-lock-serial",
+      "rows": 2,
+      "exact": 2,
+      "summarySha256": "988b81ed909c2cdd516733046bf853325fc24a91f0653c229823000083166839"
+    },
+    {
+      "kind": "intended-serial",
+      "rows": 5,
+      "exact": 0,
+      "summarySha256": "f0dcbafe97bfd7c9677c7824c2aea6dd19429e81bb6ee0d7c8c95801ee9f506b"
+    }
+  ],
+  "note": "Initial four-worker comparison had lock-wait stderr and six no-offset timeout artifacts; reran every nonidentical row serially under normal CLI guards. Two remaining stderr-only lock notices were rerun serially and matched. No stderr was stripped or normalized. Exactly five saved PostgreSQL configs differ in JSON; all five retain exit status and stderr."
+}

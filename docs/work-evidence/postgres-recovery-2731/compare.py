@@ -11,9 +11,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('baseline')
 parser.add_argument('candidate')
 parser.add_argument('--out', type=Path, required=True)
+parser.add_argument('--configs', type=Path, default=Path(__file__).with_name('configs.tsv'))
+parser.add_argument('--jobs', type=int, default=4)
 args = parser.parse_args()
 args.out.mkdir(parents=True, exist_ok=True)
-rows = [line.split('\t') for line in Path(__file__).with_name('configs.tsv').read_text().splitlines()]
+rows = [line.split('\t') for line in args.configs.read_text().splitlines()]
 
 def compare(row):
     root, config = row
@@ -30,9 +32,12 @@ def compare(row):
         (args.out / (phase + '-' + key + '.stdout')).write_bytes(result.stdout)
         (args.out / (phase + '-' + key + '.stderr')).write_bytes(result.stderr)
         results.append((result.returncode, result.stdout, result.stderr))
-    return dict(root=root, config=config, identical=results[0] == results[1])
+    return dict(root=root, config=config, identical=results[0] == results[1],
+                beforeStatus=results[0][0], afterStatus=results[1][0],
+                stdoutIdentical=results[0][1] == results[1][1],
+                stderrIdentical=results[0][2] == results[1][2])
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as pool:
     results = list(pool.map(compare, rows))
 (args.out / 'summary.json').write_text(json.dumps(results, indent=2) + '\n')
 print(json.dumps(dict(total=len(results), unchanged=sum(row['identical'] for row in results),

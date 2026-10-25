@@ -1,8 +1,45 @@
 # PostgreSQL recovery heads: issue 2731
 
-Validated source commit and exact binary/source hashes are in `validation.json`
-and `source-fingerprints.json`. The baseline is fresh main
-`c94f1b7939d5c234c2f3409440cd3f199a08bcc2`.
+The original, pre-takeover validation is recorded in `validation.json` and
+`source-fingerprints.json`. Its baseline was main
+`c94f1b7939d5c234c2f3409440cd3f199a08bcc2`; those full-suite, coverage,
+complexity, and native counts are historical evidence for the old PR head.
+
+## Current-main takeover validation
+
+`takeover-validation.json` records the rebase onto main
+`7ed299fee6bd373c44ec1ab7a43fabba07a122ae`, the exact baseline and
+candidate binary hashes, source commit, saved manifest hash, per-case counts,
+and comparison-pass hashes. Both binaries were built with stable Rust 1.99.1,
+`--locked`, the default Cargo dev profile, and `CARGO_INCREMENTAL=0`. Both
+received the same fixture roots, configuration names and source bytes.
+
+`configs-current-main.tsv` contains 1,089 configurations: the historical
+1,063 plus 24 current PostgreSQL fixture configurations (including the new
+default-policy case) and two additional configs mentioning PostgreSQL outside
+the named PostgreSQL rule trees. Of these, 1,084 have byte-identical JSON,
+stderr and exit status against current main after controlled serial reruns.
+The first four-worker pass exposed lock-wait stderr and six lock-timeout output
+artifacts; every affected row was rerun with one worker under the normal CLI
+deadline. Two residual stderr-only notices were rerun once more and matched.
+No output or error text was stripped or normalized.
+
+Exactly five configurations change: `issue-2731` default/report/low and
+`recursive-heads` report/low. Explicit report/low add the recovered rejected
+branch actions at their own lines while keeping radix spelling; the saved
+branch-local suppression removes one rule's finding. The new default case
+adds five body advisories while its top-level finding remains a finding.
+The recursive-heads cases each gain 11 advisories for one previously lost
+guarded action across the 11 schema rules; their finding count stays 66.
+All five exit statuses and stderr outputs are unchanged. The other 1,084
+configurations, including the merged #2737 and #2741 cases, are unchanged.
+
+Reproduce this comparison from the repository root with baseline and candidate
+executables built at the revisions in `takeover-validation.json`:
+`python3 docs/work-evidence/postgres-recovery-2731/compare.py BASELINE CANDIDATE --configs docs/work-evidence/postgres-recovery-2731/configs-current-main.tsv --jobs 1 --out /tmp/check2731-current`.
+The earlier 1,063-row comparison remains reproducible with the default
+`configs.tsv` manifest. Current full-suite, native and coverage claims require
+new-head CI evidence; the numbers below belong to the old head.
 
 The comparison runs both binaries against the same saved fixture tree. Of 1,063
 configuration invocations in `configs.tsv`, 1,059 have byte-identical stdout,
