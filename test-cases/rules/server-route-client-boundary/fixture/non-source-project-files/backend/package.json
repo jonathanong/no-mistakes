@@ -2,7 +2,7 @@
   "name": "boundary-metadata-fixture",
   "private": true,
   "dependencies": {
-    "axios": "1.0.0",
+    "axios": "1.20.0",
     "express": "1.0.0"
   }
 }
