@@ -87,7 +87,8 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
         Default::default()
     };
     let ancestry = if plan.function_calls
-        && (!import_facts.class_scopes.is_empty()
+        && (program.source_type.is_typescript_definition()
+            || !import_facts.class_scopes.is_empty()
             || import_facts.unknown_calls.iter().any(|call| {
                 call.invocation == crate::codebase::dependencies::extract::InvocationKind::Construct
             })) {

@@ -71,7 +71,7 @@ fn resolved_constructors_and_intrinsics_preserve_definite_error_findings() {
 }
 
 #[test]
-fn consumer_pg_object_facade_and_nullish_ajv_remain_nonfailing_uncertainty() {
+fn consumer_pg_object_facade_and_nullish_ajv_are_silent_with_complete_declarations() {
     let root = fixture().parent().unwrap().join("real-imports/fixture");
     let report = diagnostic_report(&root);
     assert_eq!(
@@ -80,16 +80,8 @@ fn consumer_pg_object_facade_and_nullish_ajv_remain_nonfailing_uncertainty() {
     );
     assert_eq!(
         reported_channel(&report, "advisories"),
-        [
-            "src/data-stores/psql/runtime.mts:4 unanalyzable",
-            "src/main.mts:5 unanalyzable",
-            "src/main.mts:7 unanalyzable",
-        ]
+        Vec::<String>::new()
     );
-    assert!(report["advisories"].as_array().unwrap().iter().all(|row| {
-        let message = row["message"].as_str().unwrap();
-        message.contains("`Pool`") || message.contains("`AjvCtor`")
-    }));
 }
 
 #[test]
@@ -161,6 +153,14 @@ fn prepared_unknown_alternatives_are_not_erased_by_constructor_metadata() {
     );
     assert!(super::super::analysis::unresolved_constructor(
         &graph, &site
+    ));
+    let mut changed_class_site = constructor.clone();
+    changed_class_site.target = site.target;
+    // A class proof belongs to the exact prepared occurrence, not an arbitrary
+    // alternative set installed later at the same source offset.
+    assert!(super::super::analysis::unresolved_constructor(
+        &graph,
+        &changed_class_site
     ));
 }
 

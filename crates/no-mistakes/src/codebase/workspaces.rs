@@ -8,6 +8,7 @@ use crate::codebase::ts_resolver::VisiblePathLookup;
 use crate::codebase::{glob_normalize, ts_resolver::normalize_path};
 include!("workspaces/models.rs");
 include!("workspaces/indexed.rs");
+include!("workspaces/projection_key.rs");
 include!("workspaces/package_model.rs");
 include!("workspaces/types.rs");
 include!("workspaces/globs.rs");

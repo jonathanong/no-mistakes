@@ -45,6 +45,14 @@ impl DepGraph {
         self.class_ancestry.constructors.get(file)?.get(&offset)
     }
 
+    pub(crate) fn constructor_proves_site(&self, site: &ResolvedCallSite) -> bool {
+        self.class_ancestry
+            .constructor_provenance
+            .get(&site.file)
+            .and_then(|sites| sites.get(&site.offset))
+            .is_some_and(|prepared| prepared == site)
+    }
+
     pub(crate) fn constructor_is_resolved(&self, file: &std::path::Path, offset: u32) -> bool {
         self.constructor_class(file, offset).is_some()
             || self

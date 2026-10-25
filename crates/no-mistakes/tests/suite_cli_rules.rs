@@ -100,3 +100,6 @@ mod cli_check_workflow_unreadable_policy;
 
 #[path = "cli_check_file_input_analysis.rs"]
 mod cli_check_file_input_analysis;
+
+#[path = "cli_check_constructor_resolution.rs"]
+mod cli_check_constructor_resolution;

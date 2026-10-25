@@ -6,7 +6,6 @@ use crate::codebase::ts_resolver::{ImportResolution, TsConfigCatalog};
 use crate::codebase::ts_source::facts::{TsFactContext, TsFactPlan, TsFileFacts};
 use crate::fx::{FxHashMap, FxHashSet};
 mod namespaces;
-mod package;
 mod resolution;
 
 #[derive(Clone, Debug, Default)]
@@ -16,6 +15,8 @@ pub(crate) struct ClassAncestry {
     pub classes: Vec<ClassDeclaration>,
     pub expressions: FxHashMap<(PathBuf, u32), String>,
     pub constructors: FxHashMap<PathBuf, FxHashMap<u32, NodeId>>,
+    pub constructor_provenance:
+        FxHashMap<PathBuf, FxHashMap<u32, crate::codebase::dependencies::graph::ResolvedCallSite>>,
     pub global_constructors: FxHashMap<PathBuf, FxHashSet<u32>>,
 }
 
@@ -28,6 +29,9 @@ pub(super) struct ProjectionKey {
     visible: ResolverCacheScopeKey,
     resolve_bases: bool,
     catalog: Option<crate::codebase::ts_resolver::CatalogProjectionKey>,
+    constructors: Vec<crate::codebase::dependencies::graph::ResolvedCallSite>,
+    workspace: crate::codebase::workspaces::WorkspaceProjectionKey,
+    workspace_visible: Option<ResolverCacheScopeKey>,
 }
 
 pub(crate) struct AncestryRequest<'a> {
@@ -38,6 +42,8 @@ pub(crate) struct AncestryRequest<'a> {
     pub resolver: &'a dyn ImportResolution,
     pub tsconfig: &'a TsConfig,
     pub catalog: Option<&'a TsConfigCatalog>,
+    pub constructors: &'a [crate::codebase::dependencies::graph::ResolvedCallSite],
+    pub workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
 }
 
 impl AnalysisSession {
@@ -63,12 +69,26 @@ impl AnalysisSession {
             });
             owners.push(index);
         }
+        let mut constructors: Vec<_> = request
+            .constructors
+            .iter()
+            .filter(|site| {
+                site.invocation == crate::codebase::dependencies::extract::InvocationKind::Construct
+            })
+            .cloned()
+            .collect();
+        constructors.sort_by(|a, b| (&a.file, a.offset).cmp(&(&b.file, b.offset)));
         let key = ProjectionKey {
             root: request.root.to_path_buf(),
             paths: request.paths.to_vec(),
             owners,
             scopes,
             resolve_bases: request.resolve_bases,
+            constructors,
+            workspace: request.workspace.projection_key(),
+            workspace_visible: request.resolver.workspace_visible_files().map(|visible| {
+                ResolverCacheScopeKey::for_lookup(request.tsconfig, Some(visible), None, &[])
+            }),
             catalog: request.catalog.map(TsConfigCatalog::projection_key),
             // Snapshot legacy visibility once, never once per source file.
             visible: ResolverCacheScopeKey::for_lookup(

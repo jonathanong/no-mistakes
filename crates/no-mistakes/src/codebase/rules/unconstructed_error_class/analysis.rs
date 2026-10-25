@@ -17,6 +17,7 @@ pub(super) fn is_declaration_file(path: &Path) -> bool {
 
 pub(super) fn unresolved_constructor(graph: &DepGraph, site: &ResolvedCallSite) -> bool {
     site.has_unknown_target()
+        && !graph.constructor_proves_site(site)
         && (!matches!(site.target, ResolvedCallTarget::Unknown)
             || !graph.constructor_is_resolved(&site.file, site.offset))
 }
@@ -104,7 +105,8 @@ pub(super) fn unconstructed<'a>(
             },
         ) = graph.constructor_class(&site.file, site.offset)
         {
-            let proven = matches!(site.target, ResolvedCallTarget::Unknown)
+            let proven = graph.constructor_proves_site(site)
+                || matches!(site.target, ResolvedCallTarget::Unknown)
                 || (!site.has_unknown_target() && site.target_nodes().any(|node| node == target));
             if proven {
                 if let Some(classes) = unused.get_mut(&(file.as_ref(), symbol.as_ref())) {

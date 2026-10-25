@@ -1,6 +1,8 @@
 use super::*;
 #[path = "classes.rs"]
 mod classes;
+#[path = "constructor_aliases.rs"]
+mod constructor_aliases;
 #[path = "constructors.rs"]
 mod constructors;
 #[path = "exports.rs"]
@@ -13,9 +15,38 @@ use crate::codebase::dependencies::extract::{
 use crate::codebase::ts_source::facts::ancestry::ClassShape;
 
 pub(super) fn prepare(session: &AnalysisSession, request: AncestryRequest<'_>) -> ClassAncestry {
+    let mut constructor_sites: FxHashMap<
+        &Path,
+        FxHashMap<u32, &crate::codebase::dependencies::graph::ResolvedCallSite>,
+    > = FxHashMap::default();
+    for site in request
+        .constructors
+        .iter()
+        .filter(|site| site.has_unknown_target())
+    {
+        constructor_sites
+            .entry(site.file.as_path())
+            .or_default()
+            .insert(site.offset, site);
+    }
+    let sources = session
+        .existing_sources_for(request.root)
+        .unwrap_or_else(|| session.supplemental_sources.clone());
+    let declarations = crate::codebase::ts_resolver::declarations::DeclarationResolver::new(
+        session,
+        request.root,
+        request.resolver,
+        request.tsconfig,
+        request.catalog,
+        &sources,
+        Some(request.workspace),
+    )
+    .with_ambient_modules(request.paths, request.facts, request.catalog);
     let mut builder = Builder {
         session,
         request,
+        constructor_sites,
+        declarations,
         output: Default::default(),
         active: Default::default(),
         visited: Default::default(),
@@ -82,10 +113,15 @@ pub(super) fn prepare(session: &AnalysisSession, request: AncestryRequest<'_>) -
 
 struct Builder<'a> {
     session: &'a AnalysisSession,
+    declarations: crate::codebase::ts_resolver::declarations::DeclarationResolver<'a>,
     request: AncestryRequest<'a>,
     output: ClassAncestry,
     active: FxHashSet<(PathBuf, String)>,
     visited: FxHashSet<(PathBuf, CallableId)>,
+    constructor_sites: FxHashMap<
+        &'a Path,
+        FxHashMap<u32, &'a crate::codebase::dependencies::graph::ResolvedCallSite>,
+    >,
 }
 
 enum Facts<'a> {
@@ -114,47 +150,12 @@ impl<'a> Builder<'a> {
     }
 
     fn module(&self, importer: &Path, specifier: &str) -> Option<PathBuf> {
-        let sources = self
-            .session
-            .existing_sources_for(self.request.root)
-            .unwrap_or_else(|| self.session.supplemental_sources.clone());
-        if let Some(path) = self.request.resolver.resolve(specifier, importer) {
-            // Supplied facts retain their canonical resolver/catalog authority.
-            if self.request.facts.get_ts_facts(&path).is_some() {
-                return Some(path);
-            }
-            if ![".d.ts", ".d.mts", ".d.cts"]
+        let path = self.declarations.resolve(specifier, importer)?;
+        (self.request.facts.get_ts_facts(&path).is_some()
+            || [".d.ts", ".d.mts", ".d.cts"]
                 .iter()
-                .any(|suffix| path.to_string_lossy().ends_with(suffix))
-            {
-                return None;
-            }
-            let context = package::lookup_context(specifier, importer, self.request.root)?;
-            if context == importer {
-                return Some(path);
-            }
-            // A remapped relative request must use its actual helper context.
-            // Bare aliases without supplied proof remain uncertain instead of
-            // retaining a lexical dependency choice from another package scope.
-            return (specifier.starts_with("./") || specifier.starts_with("../"))
-                .then(|| {
-                    package::resolve_in_context(specifier, importer, self.request.root, &sources)
-                })
-                .flatten();
-        }
-        // A real local candidate hidden by the graph's scope still owns this
-        // specifier; do not reinterpret it as a same-named external package.
-        if !specifier.starts_with('.')
-            && self
-                .request
-                .resolver
-                .resolution_candidates(specifier, importer)
-                .iter()
-                .any(|path| path.is_file())
-        {
-            return None;
-        }
-        package::resolve_in_context(specifier, importer, self.request.root, &sources)
+                .any(|suffix| path.to_string_lossy().ends_with(suffix)))
+        .then_some(path)
     }
 }
 
