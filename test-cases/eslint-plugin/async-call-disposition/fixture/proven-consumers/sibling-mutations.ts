@@ -1,0 +1,23 @@
+import { enqueueEmail } from "@app/jobs";
+import { useAssignment, useUpdate, useDelete, useArray, useObject, useDefault, useRest, useForOf, useForIn, usePure } from "./sibling-mutation-consumers";
+// Mutations invalidate the original receiver shape; a pure read preserves it.
+const assignmentJob = () => enqueueEmail(0);
+await useAssignment({ job: assignmentJob, other: () => 1 });
+const updateJob = () => enqueueEmail(1);
+await useUpdate({ job: updateJob, other: () => 1 });
+const deleteJob = () => enqueueEmail(2);
+await useDelete({ job: deleteJob, other: () => 1 });
+const arrayJob = () => enqueueEmail(3);
+await useArray({ job: arrayJob, other: () => 1 });
+const objectJob = () => enqueueEmail(4);
+await useObject({ job: objectJob, other: () => 1 });
+const defaultJob = () => enqueueEmail(5);
+await useDefault({ job: defaultJob, other: () => 1 });
+const restJob = () => enqueueEmail(6);
+await useRest({ job: restJob, other: () => 1 });
+const forOfJob = () => enqueueEmail(7);
+await useForOf({ job: forOfJob, other: () => 1 });
+const forInJob = () => enqueueEmail(8);
+await useForIn({ job: forInJob, other: () => 1 });
+const pureJob = () => enqueueEmail(9);
+await usePure({ job: pureJob, other: () => 1 });

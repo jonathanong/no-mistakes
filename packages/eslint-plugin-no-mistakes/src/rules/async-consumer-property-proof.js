@@ -28,7 +28,9 @@ function propertyBodyAwaited(fn, index, context, property, proveCall, receiverSh
           ["__proto__", "constructor", "prototype"].includes(name)
         )
           return false;
-        // Other statically named fields do not change this callback's disposition.
+        // Runtime writes invalidate the supplied receiver shape, even for siblings.
+        if (propertyWritten(member)) return false;
+        // Pure reads of other static fields preserve this callback's disposition.
         if (name !== property) {
           const parent = unwrapTransparentParent(member).parent;
           return (
@@ -57,6 +59,24 @@ function propertyBodyAwaited(fn, index, context, property, proveCall, receiverSh
       return forwarded(value, property, context, proveCall, receiverShape, variable, shape);
     });
   return safe && count > 0;
+}
+
+// Walk assignment patterns only along their writable target, never through reads.
+function propertyWritten(member) {
+  let target = unwrapTransparentParent(member);
+  while (
+    ["ObjectPattern", "ArrayPattern", "RestElement"].includes(target.parent.type) ||
+    (target.parent.type === "Property" && target.parent.value === target) ||
+    (target.parent.type === "AssignmentPattern" && target.parent.left === target)
+  )
+    target = unwrapTransparentParent(target.parent);
+  const parent = target.parent;
+  return (
+    (["AssignmentExpression", "ForOfStatement", "ForInStatement"].includes(parent.type) &&
+      parent.left === target) ||
+    parent.type === "UpdateExpression" ||
+    (parent.type === "UnaryExpression" && parent.operator === "delete")
+  );
 }
 
 // Inspect lexical callback bodies passed directly to a call. A stored or returned
