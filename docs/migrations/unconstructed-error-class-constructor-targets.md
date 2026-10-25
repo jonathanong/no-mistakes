@@ -36,9 +36,12 @@ inherited from the repository. This includes unavailable package or host-module
 declarations; an unresolved base alone does not prove that a class extends Error.
 
 `unanalyzable: advise` also advises. `unanalyzable: ignore` omits these
-diagnostics. Namespace-escape-only uncertainty keeps the shared policy: `report`
-fails, `advise` advises, and `ignore` omits it. Definite unused Error classes
-still fail under every policy.
+diagnostics. No option turns unresolved constructor or base uncertainty into a
+failure. `report` and `advise` differ only when namespace escape is the class's
+only uncertainty.
+Namespace-escape-only uncertainty keeps the shared policy: `report` fails,
+`advise` advises, and `ignore` omits it. Definite unused Error classes still
+fail under every policy.
 
 CLI `check`, Node `check()`, and check reports in `analyzeProject()` list these
 advisories in `advisories`, separate from failing `rules`. The standalone Rust

@@ -298,6 +298,12 @@ Without that program, the rule resolves the import using the nearest tsconfig
 and parses only the implementation module. Sources, resolution results, and
 failures are cached in memory for this lint context. Missing bodies, unresolved
 imports, `noResolve`, writes, and escaping implementations remain unproven.
+That resolution follows only `import { name }` to one `export function`, one
+`export const` function, or one `export { name }` declaration, including
+`export { name } from`. `export default`, `export *`, and `module.exports`
+stay unproven without a program. A `require()` consumer stays unproven in
+either mode, because both proofs accept only one ES import binding. Configure
+`awaitingConsumers` when the imported body cannot be proven.
 
 A fresh object argument can also prove a dependency callback contract when every
 use of the selected property reaches an immediately awaited invocation, such as

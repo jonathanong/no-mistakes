@@ -190,10 +190,19 @@ For schema parse failures, the implicit default advises for any statement that
 cannot be analyzed inside a recognized `DO`, PL/pgSQL function, or procedure body.
 This includes malformed body statements: an advisory means analysis is incomplete,
 not that PostgreSQL accepts the SQL. Successfully parsed body statements still
-contribute facts and rule findings. At the top level, complete recognized unsupported
-forms advise; malformed and unrecognized statements retain findings. Recognition
-covers selected `ALTER DEFAULT PRIVILEGES ... GRANT`, `CREATE PUBLICATION ... FOR`,
-and `REFRESH MATERIALIZED VIEW` forms, not all PostgreSQL grammar. Explicit rule or
+contribute facts and rule findings. At the top level, only these complete forms
+advise. Malformed and unrecognized statements retain findings.
+
+- `REFRESH MATERIALIZED VIEW [CONCURRENTLY] view [WITH [NO] DATA]`
+- `CREATE PUBLICATION name FOR ALL TABLES`
+- `CREATE PUBLICATION name FOR TABLE table [, table ...]`
+- `ALTER DEFAULT PRIVILEGES [FOR {ROLE | USER} role [, role ...]] [IN SCHEMA schema [, schema ...]] GRANT {ALL [PRIVILEGES] | privilege [, privilege ...]} ON {TABLES | SEQUENCES | FUNCTIONS | ROUTINES | TYPES | SCHEMAS} TO grantee [, grantee ...] [WITH GRANT OPTION]`
+
+Privileges are `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`,
+`TRIGGER`, `USAGE`, `CREATE`, `EXECUTE`, and `MAINTAIN`. `view` and each `table`
+may be schema-qualified; `name`, `role`, `schema`, and `grantee` may not.
+`CONCURRENTLY` precedes the view name, and `WITH` requires `DATA`. A matching
+prefix with extra tokens is not recognized. Explicit rule or
 repository `unanalyzable` policies override these defaults. See the
 [schema diagnostic migration](../migrations/postgres-schema-unanalyzable.md).
 

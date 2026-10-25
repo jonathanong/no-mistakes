@@ -131,11 +131,15 @@ findings. Use `effort: max` (the default) to preserve all extractor kinds.
 For `unconstructed-error-class`, unresolved constructor targets and otherwise-unused
 classes with unresolved constructors or base ancestry produce non-failing
 advisories even with `options.unanalyzable: report` (the default).
-`advise` also advises; `ignore` omits these diagnostics. Namespace-escape-only
-uncertainty keeps the shared policy: `report` fails, `advise` advises, and
-`ignore` omits it. Definite unused Error classes remain failures under every
-policy. Known constructor targets reuse the prepared resolver, including
-path aliases and usable package declarations, and credit the actual class.
+`advise` also advises; `ignore` omits these diagnostics. No `unanalyzable`
+value turns unresolved constructor or base uncertainty into a failure.
+`report` and `advise` differ only when namespace escape is the class's only
+uncertainty.
+Namespace-escape-only uncertainty keeps the shared policy: `report` fails,
+`advise` advises, and `ignore` omits it. Definite unused Error classes remain
+failures under every policy. Known constructor targets reuse the prepared
+resolver, including path aliases and usable package declarations, and credit
+the actual class.
 Known non-Error globals are quiet; shadowed names resolve independently.
 Ordinary import/call query results remain unchanged. Suppressions apply at the
 construction or class line in both report channels. The rule remains `max`

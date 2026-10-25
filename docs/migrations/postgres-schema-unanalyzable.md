@@ -23,13 +23,25 @@ required explicit column list, which could previously disappear from analysis.
 - [`postgres-sql-statement-policy`](../rules/postgres-sql-statement-policy.md)
 
 A diagnostic means the analyzer could not establish schema facts for that
-statement. It does not decide whether PostgreSQL accepts the SQL: valid but
-unsupported statements, including `ALTER DEFAULT PRIVILEGES`,
-`CREATE PUBLICATION`, and `REFRESH MATERIALIZED VIEW`, are advised when their
-complete syntax matches the conservative recognizer.
-Recognition covers selected GRANT forms of ALTER DEFAULT PRIVILEGES,
-CREATE PUBLICATION with FOR ALL TABLES or plain table lists, and REFRESH
-MATERIALIZED VIEW with optional CONCURRENTLY and WITH [NO] DATA.
+statement. It does not decide whether PostgreSQL accepts the SQL. By default,
+only these complete top-level forms advise:
+
+- `REFRESH MATERIALIZED VIEW [CONCURRENTLY] view [WITH [NO] DATA]`
+- `CREATE PUBLICATION name FOR ALL TABLES`
+- `CREATE PUBLICATION name FOR TABLE table [, table ...]`
+- `ALTER DEFAULT PRIVILEGES [FOR {ROLE | USER} role [, role ...]] [IN SCHEMA schema [, schema ...]] GRANT {ALL [PRIVILEGES] | privilege [, privilege ...]} ON {TABLES | SEQUENCES | FUNCTIONS | ROUTINES | TYPES | SCHEMAS} TO grantee [, grantee ...] [WITH GRANT OPTION]`
+
+Keywords are case-insensitive. A name is a double-quoted identifier, an unquoted
+non-keyword, or unquoted `public`. `view` and each `table` may be one
+schema-qualified name; `name`, `role`, `schema`, and `grantee` may not.
+`CONCURRENTLY` comes before the view name. `WITH` requires `DATA`, and `NO` is
+optional. Privileges are `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`,
+`REFERENCES`, `TRIGGER`, `USAGE`, `CREATE`, `EXECUTE`, and `MAINTAIN`. `FOR`
+requires `ROLE` or `USER` and comes before `IN SCHEMA`. `REVOKE`, publication
+`WHERE` clauses, column lists, and publication options are not recognized.
+These forms advise only when neither the repository nor the rule sets
+`unanalyzable` or `unanalyzableSql`. An explicit value applies that policy:
+`report` makes them findings, `advise` still advises, and `ignore` omits them.
 Other rejected top-level forms remain findings: a recognized prefix alone never
 proves valid syntax. Recognition checks syntax, not database permissions, object
 existence, or privilege/object compatibility. This is not a full PostgreSQL

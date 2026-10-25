@@ -67,7 +67,14 @@ impl Builder<'_> {
 }
 
 fn global_constructor(file: &TsFileFacts, call: &FunctionCall) -> bool {
-    // Standard intrinsic constructors, never package/product name exceptions.
+    // Bare constructors such as `Map`, `Date`, and `URL` are already
+    // `CallTargetIdentity::Global` and resolve on the ordinary global path.
+    // A dotted callee stays `Unknown`: the extractor marks only a bare name,
+    // or a `globalThis` / `window` / `self` / `global` prefix, as `Global`.
+    // `Intl` and `WebAssembly` are the standard globals whose constructors
+    // are properties rather than bare identifiers, and none of them is an
+    // `Error` root. Other dotted names can be packages or user objects, so
+    // they stay unresolved. Do not add package or product names here.
     let name = ["globalThis.", "window.", "self.", "global."]
         .iter()
         .find_map(|prefix| call.callee.strip_prefix(prefix))

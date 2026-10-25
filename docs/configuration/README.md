@@ -35,10 +35,15 @@ it defaults to `max`, which preserves their current analysis. A rule's
 `options.effort` overrides the repository value, and a check invocation's
 `effort` overrides both. `unanalyzable` sets the repository policy for inputs a
 rule cannot analyze (`report`, `advise`, or `ignore`); a rule's
-`options.unanalyzable` overrides it. The explicit `report` in this example also
-makes unanalyzable PostgreSQL body statements fail. Omitting the key preserves
-the [schema defaults](../migrations/postgres-schema-unanalyzable.md): body failures
-and recognized unsupported top-level forms advise. The top-level and per-rule
+`options.unanalyzable` overrides it. Any explicit `unanalyzable` or
+`unanalyzableSql` value, on the repository or on a rule, replaces the schema
+default with that policy. The explicit `report` in this example therefore makes
+unanalyzable PostgreSQL body statements fail, and it turns complete
+recognized-unsupported top-level forms into findings. An explicit `advise`
+still advises those statements, and `ignore` omits them. Omitting both keys
+preserves the [schema defaults](../migrations/postgres-schema-unanalyzable.md):
+those body statements and recognized-unsupported forms advise, while malformed
+or unrecognized top-level statements still fail. The top-level and per-rule
 `unanalyzableSql` keys are aliases; legacy PostgreSQL rule parsers may retain
 their `fail` spelling, which maps to the shared `report` policy. The shared
 `report` value is translated to each legacy parser's expected spelling. At a
