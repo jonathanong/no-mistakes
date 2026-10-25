@@ -108,3 +108,35 @@ fn postgres_identifier_classes_and_aggregate_signatures_remain_distinct() {
         );
     }
 }
+
+#[test]
+fn numeric_modifiers_follow_postgres_grammar() {
+    let valid = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-docs-survey/numeric-modifiers-valid.sql"
+    ));
+    let invalid = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-docs-survey/numeric-modifiers-invalid.sql"
+    ));
+    for sql in valid.lines() {
+        let facts = extract_migration_facts(sql);
+        assert!(
+            facts
+                .unanalyzable_statements
+                .iter()
+                .all(|f| f.valid_unsupported),
+            "{sql}"
+        );
+    }
+    for sql in invalid.lines() {
+        let facts = extract_migration_facts(sql);
+        assert!(
+            facts
+                .unanalyzable_statements
+                .iter()
+                .any(|f| !f.valid_unsupported),
+            "{sql}"
+        );
+    }
+}

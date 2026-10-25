@@ -87,7 +87,10 @@ impl Cursor<'_> {
         matches!(self.0.peek_token().token, Token::Word(ref w)
             if !w.value.is_empty() && (w.quote_style == Some('"') ||
                 (w.quote_style.is_none() && !type_reserved(&w.value))))
-            && self.0.parse_data_type().is_ok()
+            && self
+                .0
+                .parse_data_type()
+                .is_ok_and(|ty| super::data_type::valid(&ty))
     }
     pub fn signature(&mut self) -> bool {
         if !self.function_name() {

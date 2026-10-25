@@ -6,6 +6,7 @@ use sqlparser::tokenizer::{Token, TokenWithSpan};
 mod catalog;
 mod create;
 mod cursor;
+mod data_type;
 mod definitions;
 mod event;
 mod reserved;
