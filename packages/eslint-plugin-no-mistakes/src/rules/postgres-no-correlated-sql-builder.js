@@ -4,7 +4,7 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
 
-const { findAppend } = require("./postgres-no-correlated-sql-builder-append");
+const { findAppends } = require("./postgres-no-correlated-sql-builder-append");
 const { completeGuards } = require("./postgres-correlated-completion");
 
 const RULE_ID = "postgres-no-correlated-sql-builder";
@@ -36,14 +36,19 @@ function selectorOf(test) {
   return null;
 }
 
-function readGuard(statement, methods, tags, context) {
+function readGuards(statement, methods, tags, context) {
   const selector = selectorOf(unwrapTs(statement.test));
-  if (!selector) return null;
-  const builder = findAppend(statement.consequent, methods, tags, context);
-  if (!builder) return null;
+  if (!selector) return [];
+  const builders = findAppends(statement.consequent, methods, tags, context);
   const test = unwrapTs(statement.test);
   const value = stringText(test.left) ?? stringText(test.right);
-  return { node: statement, selector, builder: builder.object, call: builder.call, value };
+  return builders.map((builder) => ({
+    node: statement,
+    selector,
+    builder: builder.object,
+    call: builder.call,
+    value,
+  }));
 }
 
 function guardsOf(func, methods, tags, context) {
@@ -51,8 +56,7 @@ function guardsOf(func, methods, tags, context) {
   const visit = (node) => {
     if (!node || typeof node !== "object" || isFunction(node)) return;
     if (node.type === "IfStatement") {
-      const guard = readGuard(node, methods, tags, context);
-      if (guard) found.push(guard);
+      found.push(...readGuards(node, methods, tags, context));
     }
     for (const child of childNodes(node)) visit(child);
   };

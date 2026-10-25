@@ -19,6 +19,17 @@ describe("correlated SQL explicit receiver forwarding", () => {
     );
     expect(findings.at(-1).message).toContain("appends on other");
   });
+  it("keeps every builder per guard without counting one guard twice", () => {
+    const findings = check("forwarded-method-multiple-builders");
+    expect(findings.map(({ line }) => line)).toEqual([3, 11, 18, 18]);
+    expect(findings.slice(0, 2).every(({ message }) => message.includes("appends on q"))).toBe(
+      true,
+    );
+    expect(findings.slice(2).map(({ message }) => message.includes("appends on other"))).toEqual([
+      true,
+      false,
+    ]);
+  });
   it("keeps unknown arguments, mutable bindings and split receivers silent", () => {
     expect(check("forwarded-method-controls")).toEqual([]);
   });

@@ -101,7 +101,9 @@ unknown. A detached invocation (`const append = query.append; append(text)`)
 does not prove a builder receiver. Rewrite these to a direct configured append
 with an explicit builder; replace repeated guards with the complete statement
 `switch` and throwing default described below. Guards that forward to different
-receivers do not establish one correlated builder.
+receivers do not establish one correlated builder. Each guard retains every
+distinct builder it appends to; repeated appends to that builder in one guard
+count only once.
 
 `tagNames` is the tag names that produce SQL text, such as `["sql"]`. An
 identifier tag and a member tag (`db.sql`, `db["sql"]`, ``db[`sql`]``) both
