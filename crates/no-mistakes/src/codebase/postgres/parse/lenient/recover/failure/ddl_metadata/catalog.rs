@@ -14,19 +14,7 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
         return c.identifier() && c.word("UPDATE");
     }
     if c.word("GROUP") {
-        if !c.identifier()
-            || !(c.word("ADD") || c.word("DROP"))
-            || !c.word("USER")
-            || !c.identifier()
-        {
-            return false;
-        }
-        while c.token(Token::Comma) {
-            if !c.identifier() {
-                return false;
-            }
-        }
-        return true;
+        return group(c);
     }
     if c.words(&["MATERIALIZED", "VIEW"]) {
         return c.name() && c.words(&["OWNER", "TO"]) && c.identifier();
@@ -41,26 +29,9 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
             && c.words(&["RENAME", "TO"])
             && c.identifier();
     }
-    if c.word("SEQUENCE") {
-        return c.name() && c.word("INCREMENT") && {
-            c.word("BY");
-            number(c)
-        };
-    }
-    if c.word("STATISTICS") {
-        return c.name() && c.words(&["SET", "STATISTICS"]) && number(c);
-    }
-    if c.word("SUBSCRIPTION") {
-        return c.identifier() && (c.word("ENABLE") || c.word("DISABLE"));
-    }
-    if c.word("DATABASE") || c.word("LANGUAGE") || c.word("TABLESPACE") {
-        return c.identifier() && c.words(&["RENAME", "TO"]) && c.identifier();
-    }
-    if c.word("CONVERSION") || c.word("VIEW") {
-        return c.name() && c.words(&["RENAME", "TO"]) && c.identifier();
-    }
-    false
+    relation(c)
 }
+
 fn number(c: &mut Cursor<'_>) -> bool {
     if matches!(c.0.peek_token().token, Token::Number(ref n, false) if n.chars().all(|x| x.is_ascii_digit()))
     {
@@ -133,4 +104,38 @@ fn drop(c: &mut Cursor<'_>) -> bool {
     }
     c.drop_behavior();
     true
+}
+
+fn group(c: &mut Cursor<'_>) -> bool {
+    if !c.identifier() || !(c.word("ADD") || c.word("DROP")) || !c.word("USER") || !c.identifier() {
+        return false;
+    }
+    while c.token(Token::Comma) {
+        if !c.identifier() {
+            return false;
+        }
+    }
+    true
+}
+
+fn relation(c: &mut Cursor<'_>) -> bool {
+    if c.word("SEQUENCE") {
+        return c.name() && c.word("INCREMENT") && {
+            c.word("BY");
+            number(c)
+        };
+    }
+    if c.word("STATISTICS") {
+        return c.name() && c.words(&["SET", "STATISTICS"]) && number(c);
+    }
+    if c.word("SUBSCRIPTION") {
+        return c.identifier() && (c.word("ENABLE") || c.word("DISABLE"));
+    }
+    if c.word("DATABASE") || c.word("LANGUAGE") || c.word("TABLESPACE") {
+        return c.identifier() && c.words(&["RENAME", "TO"]) && c.identifier();
+    }
+    if c.word("CONVERSION") || c.word("VIEW") {
+        return c.name() && c.words(&["RENAME", "TO"]) && c.identifier();
+    }
+    false
 }

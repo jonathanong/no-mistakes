@@ -124,6 +124,10 @@ pub(super) fn security_label(c: &mut Cursor<'_>) -> bool {
     let Some(object) = object else {
         return false;
     };
+    object_name(c, object) && c.word("IS") && (c.string() || c.word("NULL"))
+}
+
+fn object_name(c: &mut Cursor<'_>, object: &str) -> bool {
     if object == "LARGE" {
         if !c.word("OBJECT") || !c.number() {
             return false;
@@ -166,5 +170,5 @@ pub(super) fn security_label(c: &mut Cursor<'_>) -> bool {
     } else if !c.name() {
         return false;
     }
-    c.word("IS") && (c.string() || c.word("NULL"))
+    true
 }
