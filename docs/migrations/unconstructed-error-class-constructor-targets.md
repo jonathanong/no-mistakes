@@ -30,15 +30,17 @@ results. Genuine unused Error subclasses still report, and a construction
 credits its exact class rather than another class with the same name.
 
 Still-unresolvable constructors, their otherwise-unused enclosing classes, and
-otherwise-unused classes whose bases remain unresolved now produce non-failing
-advisories, including when `unanalyzable: report` is selected explicitly or
-inherited from the repository. This includes unavailable package or host-module
-declarations; an unresolved base alone does not prove that a class extends Error.
+otherwise-unused classes whose statically named bases remain unresolved now
+produce non-failing advisories, including when `unanalyzable: report` is
+selected explicitly or inherited from the repository. This includes unavailable
+package or host-module declarations; an unresolved base alone does not prove
+that a class extends Error. Dynamic base ancestry follows the shared policy
+and fails under `report`.
 
 `unanalyzable: advise` also advises. `unanalyzable: ignore` omits these
-diagnostics. No option turns unresolved constructor or base uncertainty into a
-failure. `report` and `advise` differ only when namespace escape is the class's
-only uncertainty.
+diagnostics. No option turns an unresolved constructor or a statically named
+unresolved base into a failure. `report` and `advise` differ for dynamic base
+ancestry and when namespace escape is the class's only uncertainty.
 Namespace-escape-only uncertainty keeps the shared policy: `report` fails,
 `advise` advises, and `ignore` omits it. Definite unused Error classes still
 fail under every policy.
