@@ -7,7 +7,8 @@ describe("ReactNode prop object aliases and template destructuring", () => {
   for (const [name, lines] of [
     ["object-aliases", [7, 12, 18, 24, 30]],
     ["object-alias-loop-bindings", [15, 27, 39]],
-    ["object-alias-controls", []],
+    ["object-alias-target-shadows", [13, 23, 29, 31, 33, 43, 50, 50]],
+    ["object-alias-controls", [7]],
     ["object-alias-rewrite", []],
     ["object-alias-suppressed", []],
     ["object-alias-file-suppressed", []],
