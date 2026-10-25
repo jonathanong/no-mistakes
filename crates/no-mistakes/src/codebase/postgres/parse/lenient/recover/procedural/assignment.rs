@@ -46,7 +46,7 @@ pub(super) fn operator(code: &[&Token]) -> Option<usize> {
     None
 }
 
-pub(super) fn comma_parts<'a>(code: &'a [&'a Token]) -> Option<Vec<&'a [&'a Token]>> {
+pub(in super::super) fn comma_parts<'a>(code: &'a [&'a Token]) -> Option<Vec<&'a [&'a Token]>> {
     let mut parts = Vec::new();
     let mut start = 0;
     let mut depth = 0usize;

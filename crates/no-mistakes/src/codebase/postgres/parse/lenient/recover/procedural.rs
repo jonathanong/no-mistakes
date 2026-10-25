@@ -4,7 +4,7 @@ use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 use std::sync::Arc;
 mod assignment;
-pub(super) use assignment::target as assignment_target;
+pub(super) use assignment::{comma_parts as assignment_parts, target as assignment_target};
 mod commands;
 mod declaration;
 mod sql;

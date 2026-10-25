@@ -40,36 +40,45 @@ pub(super) fn normalize(tokens: &mut Vec<TokenWithSpan>) -> bool {
     {
         start += 1;
     }
+    let mut depth = 0usize;
     let end = code
         .iter()
         .enumerate()
         .skip(start)
         .find_map(|(index, (_, token))| {
-            [
-                "FROM",
-                "WHERE",
-                "GROUP",
-                "HAVING",
-                "WINDOW",
-                "ORDER",
-                "LIMIT",
-                "OFFSET",
-                "FETCH",
-                "FOR",
-                "UNION",
-                "INTERSECT",
-                "EXCEPT",
-            ]
-            .iter()
-            .any(|name| word(&token.token, name))
+            match token.token {
+                Token::LParen | Token::LBracket => depth += 1,
+                Token::RParen | Token::RBracket => depth = depth.saturating_sub(1),
+                _ => {}
+            }
+            (depth == 0
+                && [
+                    "FROM",
+                    "WHERE",
+                    "GROUP",
+                    "HAVING",
+                    "WINDOW",
+                    "ORDER",
+                    "LIMIT",
+                    "OFFSET",
+                    "FETCH",
+                    "FOR",
+                    "UNION",
+                    "INTERSECT",
+                    "EXCEPT",
+                ]
+                .iter()
+                .any(|name| word(&token.token, name)))
             .then_some(index)
         })
         .unwrap_or(code.len());
-    let targets = &code[start..end];
-    let parts: Vec<_> = targets
-        .split(|(_, token)| token.token == Token::Comma)
+    let targets: Vec<_> = code[start..end]
+        .iter()
+        .map(|(_, token)| &token.token)
         .collect();
-    if parts.iter().any(|part| !target(part)) {
+    if !super::procedural::assignment_parts(&targets)
+        .is_some_and(|parts| parts.into_iter().all(super::procedural::assignment_target))
+    {
         return false;
     }
     // Native SelectInto retains every target but has no STRICT field. Only
@@ -78,11 +87,6 @@ pub(super) fn normalize(tokens: &mut Vec<TokenWithSpan>) -> bool {
         tokens.remove(code[at + 1].0);
     }
     true
-}
-
-fn target(code: &[(usize, &TokenWithSpan)]) -> bool {
-    let tokens: Vec<_> = code.iter().map(|(_, token)| &token.token).collect();
-    super::procedural::assignment_target(&tokens)
 }
 
 fn word(token: &Token, name: &str) -> bool {

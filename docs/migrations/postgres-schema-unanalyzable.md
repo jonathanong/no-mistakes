@@ -64,6 +64,8 @@ quotes.
 
 For body `SELECT INTO`, the analyzer validates and retains the full variable
 target list, then removes the unsupported `STRICT` modifier in a parser clone.
+Targets may include subscripts with nested calls and array literals; commas
+inside those expressions do not split the target list.
 Unsupported row-lock spellings use the corresponding `UPDATE` or `SHARE` AST
 form. Query and function facts remain available; original SQL tokens and source
 locations are retained for diagnostics.
