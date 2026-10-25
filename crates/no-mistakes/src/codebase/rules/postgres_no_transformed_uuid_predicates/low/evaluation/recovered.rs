@@ -1,49 +1,29 @@
-use super::super::{cache, CompiledOptions};
-use super::{add_unknown, mark_reason, Outcome};
+use super::super::cache;
+use super::{add_unknown, mark_reason, EvaluationContext, Outcome};
 use crate::codebase::postgres::{
-    sql_identifier_syntax::{
-        helper_recovery::{ApplicationKey, Recovered},
-        literal_projection::ProjectedLiteral,
-        SqlCall,
-    },
+    sql_identifier_syntax::{helper_recovery::Recovered, literal_projection::ProjectedLiteral},
     RecoveredSql, SqlVerdictStatus,
 };
-use crate::codebase::rules::postgres_no_transformed_uuid_predicates::evaluate::Columns;
 use crate::codebase::rules::RuleFinding;
-use std::{collections::BTreeMap, path::Path};
-
-type Literals = BTreeMap<(Option<ApplicationKey>, (u32, u32)), super::TransformedLiteral>;
 
 pub(super) fn recovered(
-    root: &Path,
-    caller: &Path,
-    relative: &str,
-    application: &ApplicationKey,
-    call: &SqlCall,
+    context: &EvaluationContext<'_>,
     proof: &Recovered,
-    literals: &Literals,
-    columns: &Columns,
-    options: &CompiledOptions,
-    suppressed: bool,
     outcome: &mut Outcome,
     findings: &mut Vec<RuleFinding>,
 ) {
+    let EvaluationContext {
+        application,
+        call,
+        literals,
+        relative,
+        options,
+        ..
+    } = context;
     let mut invalid = false;
-    let key = (Some(application.clone()), call.span);
+    let key = (Some((*application).clone()), call.span);
     if let Some(ProjectedLiteral::Recovered { alternatives }) = literals.get(&key) {
-        project_alternatives(
-            root,
-            caller,
-            relative,
-            call,
-            alternatives,
-            columns,
-            options,
-            suppressed,
-            outcome,
-            findings,
-            &mut invalid,
-        );
+        project_alternatives(context, alternatives, outcome, findings, &mut invalid);
     } else {
         invalid = true;
     }
@@ -55,21 +35,25 @@ pub(super) fn recovered(
 }
 
 fn project_alternatives(
-    root: &Path,
-    caller: &Path,
-    relative: &str,
-    call: &SqlCall,
+    context: &EvaluationContext<'_>,
     alternatives: &[(
         RecoveredSql,
         Result<Vec<crate::codebase::postgres::statements::SqlTransformedColumnUseFact>, ()>,
     )],
-    columns: &Columns,
-    options: &CompiledOptions,
-    suppressed: bool,
     outcome: &mut Outcome,
     findings: &mut Vec<RuleFinding>,
     invalid: &mut bool,
 ) {
+    let EvaluationContext {
+        root,
+        caller,
+        relative,
+        call,
+        columns,
+        options,
+        suppressed,
+        ..
+    } = context;
     for (sql, facts) in alternatives {
         match facts {
             Ok(uses) => {
@@ -79,7 +63,7 @@ fn project_alternatives(
                             outcome.status = SqlVerdictStatus::Violation;
                             let mut finding =
                                 cache::recovered_finding(root, caller, sql, use_, table);
-                            if suppressed {
+                            if *suppressed {
                                 finding.file = relative.to_string();
                                 finding.line = call.line as usize;
                             }

@@ -51,12 +51,7 @@ pub(crate) struct FileFacts {
         std::collections::BTreeMap<(Option<helper_recovery::ApplicationKey>, Span), OffsetLiteral>,
     >,
     /// One SQL parse per recovered alternative, shared by low policy projections.
-    pub recovered_statements: std::sync::OnceLock<
-        std::collections::BTreeMap<
-            (helper_recovery::ApplicationKey, Span),
-            Vec<Result<std::sync::Arc<super::SqlStatementFileFacts>, ()>>,
-        >,
-    >,
+    pub recovered_statements: std::sync::OnceLock<literal_projection::RecoveredStatements>,
 }
 struct Call {
     span: Span,

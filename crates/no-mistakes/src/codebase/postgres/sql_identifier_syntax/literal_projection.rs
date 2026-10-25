@@ -5,7 +5,7 @@ use crate::codebase::postgres::SqlStatementFileFacts;
 use std::{collections::BTreeMap, path::Path};
 
 mod recovered;
-pub(crate) use recovered::recovered_statements;
+pub(crate) use recovered::{recovered_statements, RecoveredStatements};
 
 type Literal<T> = Result<Option<Vec<T>>, ()>;
 #[derive(Clone)]

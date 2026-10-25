@@ -56,17 +56,18 @@ pub(super) fn scan(
                 RULE_ID,
             )
             .is_some();
-            let (evaluation, call_findings) = evaluation::evaluate(
-                root,
-                path,
-                &rel,
-                &application,
-                call,
-                literals,
-                &columns,
-                opts,
-                suppressed_call,
-            );
+            let (evaluation, call_findings) =
+                evaluation::evaluate(&evaluation::EvaluationContext {
+                    root,
+                    caller: path,
+                    relative: &rel,
+                    application: &application,
+                    call,
+                    literals,
+                    columns: &columns,
+                    options: opts,
+                    suppressed: suppressed_call,
+                });
             findings.extend(call_findings);
             if !context.wants_sql_verdicts() && !(evaluation.uncertain && opts.advise_unanalyzable)
             {

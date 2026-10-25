@@ -46,8 +46,7 @@ pub(super) fn recovered_finding(
     let origin_rel = crate::codebase::ts_source::relative_slash_path(root, origin);
     let mut relocated = use_.clone();
     relocated.line = line;
-    let finding = super::super::scan::finding(&origin_rel, table, &relocated);
-    finding
+    super::super::scan::finding(&origin_rel, table, &relocated)
 }
 
 pub(super) fn mark_uncertain(

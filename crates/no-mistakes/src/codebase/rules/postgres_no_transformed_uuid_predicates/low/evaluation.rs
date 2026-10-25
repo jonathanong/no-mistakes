@@ -28,45 +28,34 @@ impl Default for Outcome {
     }
 }
 
-pub(super) fn evaluate(
-    root: &Path,
-    caller: &Path,
-    relative: &str,
-    application: &ApplicationKey,
-    call: &SqlCall,
-    literals: &Literals,
-    columns: &Columns,
-    options: &CompiledOptions,
-    suppressed: bool,
-) -> (Outcome, Vec<RuleFinding>) {
+pub(super) struct EvaluationContext<'a> {
+    pub root: &'a Path,
+    pub caller: &'a Path,
+    pub relative: &'a str,
+    pub application: &'a ApplicationKey,
+    pub call: &'a SqlCall,
+    pub literals: &'a Literals,
+    pub columns: &'a Columns<'a>,
+    pub options: &'a CompiledOptions,
+    pub suppressed: bool,
+}
+
+pub(super) fn evaluate(context: &EvaluationContext<'_>) -> (Outcome, Vec<RuleFinding>) {
+    let EvaluationContext {
+        relative,
+        call,
+        options,
+        ..
+    } = context;
     let mut outcome = Outcome::default();
     let mut findings = Vec::new();
     match &call.input {
-        Input::Sql { source_span, .. } => direct(
-            relative,
-            call.line as usize,
-            *source_span,
-            literals,
-            columns,
-            options,
-            suppressed,
-            &mut outcome,
-            &mut findings,
-        ),
-        Input::Recovered(proof) => recovered::recovered(
-            root,
-            caller,
-            relative,
-            application,
-            call,
-            proof,
-            literals,
-            columns,
-            options,
-            suppressed,
-            &mut outcome,
-            &mut findings,
-        ),
+        Input::Sql { source_span, .. } => {
+            direct(context, *source_span, &mut outcome, &mut findings)
+        }
+        Input::Recovered(proof) => {
+            recovered::recovered(context, proof, &mut outcome, &mut findings)
+        }
         _ => {
             cache::mark_input_unknown(
                 &mut outcome.status,
@@ -80,16 +69,21 @@ pub(super) fn evaluate(
 }
 
 fn direct(
-    relative: &str,
-    call_line: usize,
+    context: &EvaluationContext<'_>,
     source_span: (u32, u32),
-    literals: &Literals,
-    columns: &Columns,
-    options: &CompiledOptions,
-    suppressed: bool,
     outcome: &mut Outcome,
     findings: &mut Vec<RuleFinding>,
 ) {
+    let EvaluationContext {
+        relative,
+        literals,
+        columns,
+        options,
+        suppressed,
+        call,
+        ..
+    } = context;
+    let call_line = call.line as usize;
     match literals.get(&(None, source_span)) {
         Some(ProjectedLiteral::Direct(Ok(Some(uses)))) => {
             for use_ in uses {
@@ -97,7 +91,7 @@ fn direct(
                     Ok((table, true)) => {
                         outcome.status = SqlVerdictStatus::Violation;
                         let mut finding = super::super::scan::finding(relative, table, use_);
-                        if suppressed {
+                        if *suppressed {
                             finding.line = call_line;
                         }
                         findings.push(finding);
@@ -105,7 +99,7 @@ fn direct(
                     Err(reason) => {
                         mark_reason(outcome, reason);
                         if options.fail_unanalyzable {
-                            let line = if suppressed { call_line } else { use_.line };
+                            let line = if *suppressed { call_line } else { use_.line };
                             findings.push(super::super::scan::unknown(relative, line));
                         }
                     }
