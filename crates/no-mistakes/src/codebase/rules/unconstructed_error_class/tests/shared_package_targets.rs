@@ -66,3 +66,50 @@ fn package_constructor_proof_preserves_policy_effort_and_error_recall() {
         }
     }
 }
+
+#[test]
+fn aliases_captured_after_package_member_mutation_keep_constructor_and_base_uncertainty() {
+    let root = fixture()
+        .parent()
+        .unwrap()
+        .join("post-mutation-aliases/fixture");
+    let report = diagnostic_report(&root);
+    assert_eq!(
+        reported_channel(&report, "rules"),
+        ["app/consumer.ts:3 UnusedError"],
+        "{report}"
+    );
+    // Symbolic module targets retain their existing quiet reporting policy;
+    // their actual class proof must still reject the replaced constructor.
+    assert_eq!(
+        reported_channel(&report, "advisories"),
+        ["app/consumer.ts:2 unanalyzable"],
+        "{report}"
+    );
+    let graph = crate::codebase::dependencies::graph::DepGraph::build_with_plan(
+        &root,
+        &crate::codebase::ts_resolver::TsConfig {
+            dir: root.clone(),
+            paths_dir: root.clone(),
+            ..Default::default()
+        },
+        crate::codebase::dependencies::graph::GraphBuildPlan {
+            calls: true,
+            extends: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    for callee in ["Snapshot", "pg.Pool"] {
+        let site = graph
+            .resolved_call_sites()
+            .iter()
+            .find(|site| site.file.ends_with("app/facade.ts") && site.source_callee == callee)
+            .unwrap();
+        assert_eq!(
+            graph.constructor_class(&site.file, site.offset),
+            None,
+            "{callee}"
+        );
+    }
+}
