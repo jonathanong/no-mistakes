@@ -63,7 +63,11 @@ function hasSequentialMember(node) {
 }
 
 function hasSequentialOption(node) {
-  const args = node.type === "CallExpression" ? logicalCall(node)?.arguments : node.arguments;
+  // Opaque forwarding must not erase options already visible to the legacy check.
+  const args =
+    node.type === "CallExpression"
+      ? (logicalCall(node)?.arguments ?? node.arguments)
+      : node.arguments;
   return (args || []).slice(1).some((argument) => {
     const value = unwrap(argument);
     return (
