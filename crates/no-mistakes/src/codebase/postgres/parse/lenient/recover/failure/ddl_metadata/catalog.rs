@@ -1,8 +1,9 @@
 use super::Cursor;
+mod drop;
 use sqlparser::tokenizer::Token;
 pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
     if c.word("DROP") {
-        return drop(c);
+        return drop::parse(c);
     }
     if !c.word("ALTER") {
         return false;
@@ -52,70 +53,6 @@ fn number(c: &mut Cursor<'_>) -> bool {
     } else {
         false
     }
-}
-fn drop(c: &mut Cursor<'_>) -> bool {
-    // These objects live outside schemas. Roles/tablespaces also have no
-    // CASCADE/RESTRICT suffix, unlike the schema-scoped DROP forms below.
-    if c.word("GROUP") || c.word("TABLESPACE") {
-        c.words(&["IF", "EXISTS"]);
-        return c.identifier();
-    }
-    if c.words(&["ACCESS", "METHOD"]) || c.word("LANGUAGE") || c.word("SUBSCRIPTION") {
-        c.words(&["IF", "EXISTS"]);
-        if !c.identifier() {
-            return false;
-        }
-        c.drop_behavior();
-        return true;
-    }
-    if c.word("AGGREGATE") {
-        c.words(&["IF", "EXISTS"]);
-        if !c.aggregate_signature() {
-            return false;
-        }
-        c.drop_behavior();
-        return true;
-    }
-    let signature = if c.word("ROUTINE") {
-        true
-    } else if c.word("CAST") {
-        c.words(&["IF", "EXISTS"]);
-        if !c.token(Token::LParen)
-            || !c.data_type()
-            || !c.word("AS")
-            || !c.data_type()
-            || !c.token(Token::RParen)
-        {
-            return false;
-        }
-        c.drop_behavior();
-        return true;
-    } else if c.word("RULE") {
-        c.words(&["IF", "EXISTS"]);
-        if !c.identifier() || !c.word("ON") || !c.name() {
-            return false;
-        }
-        c.drop_behavior();
-        return true;
-    } else {
-        let known = c.word("CONVERSION")
-            || c.word("STATISTICS")
-            || (c.words(&["TEXT", "SEARCH"])
-                && (c.word("CONFIGURATION")
-                    || c.word("DICTIONARY")
-                    || c.word("PARSER")
-                    || c.word("TEMPLATE")));
-        if !known {
-            return false;
-        }
-        false
-    };
-    c.words(&["IF", "EXISTS"]);
-    if !(if signature { c.signature() } else { c.name() }) {
-        return false;
-    }
-    c.drop_behavior();
-    true
 }
 
 fn group(c: &mut Cursor<'_>) -> bool {
