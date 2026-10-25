@@ -37,7 +37,7 @@ impl Tracker {
                     .get(&span(id.span))
                     .copied()
                     .map_or(Node::Scalar, Node::Invoke),
-                _ => Node::Scalar,
+                _ => Node::InvokeValue(span(call.callee.span())),
             }
         }
     }

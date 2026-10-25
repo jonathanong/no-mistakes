@@ -19,6 +19,7 @@ pub(super) fn bindings(
         }
         if values.entry(*id).or_default().join(value) {
             queue.extend(index.bindings.get(id).into_iter().flatten().copied());
+            queue.extend(index.invokes.get(id).into_iter().flatten().copied());
         }
     }
     for id in index.stores.get(&at).into_iter().flatten() {
@@ -29,6 +30,7 @@ pub(super) fn bindings(
         }
         if values.entry(*id).or_default().join(value) {
             queue.extend(index.bindings.get(id).into_iter().flatten().copied());
+            queue.extend(index.invokes.get(id).into_iter().flatten().copied());
         }
     }
 }

@@ -21,6 +21,8 @@ impl Index {
             match node {
                 Node::Ref(id, _) => index.bindings.entry(*id).or_default().push(*at),
                 Node::Invoke(id) => index.invokes.entry(*id).or_default().push(*at),
+                // Call dependencies must not become transport-traversal children.
+                Node::InvokeValue(callee) => index.parents.entry(*callee).or_default().push(*at),
                 _ => {}
             }
         }

@@ -1,7 +1,7 @@
 use super::*;
 use oxc_ast::ast::{
-    Argument, ArrowFunctionExpression, Function, NewExpression, TaggedTemplateExpression,
-    TemplateLiteral,
+    Argument, ArrowFunctionExpression, Function, NewExpression, SimpleAssignmentTarget,
+    TaggedTemplateExpression, TemplateLiteral,
 };
 use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
@@ -27,6 +27,15 @@ impl<'a> Visit<'a> for Syntax {
         target: &oxc_ast::ast::SimpleAssignmentTarget<'a>,
     ) {
         self.template_binds.write(target);
+        // Only the receiver is a write; computed keys and RHS expressions keep their uses.
+        let receiver = match target {
+            SimpleAssignmentTarget::StaticMemberExpression(member) => Some(&member.object),
+            SimpleAssignmentTarget::ComputedMemberExpression(member) => Some(&member.object),
+            _ => None,
+        };
+        if let Some(Expression::Identifier(receiver)) = receiver.map(unwrap_ts_wrappers) {
+            self.metadata.assignment_receiver(span(receiver.span));
+        }
         walk::walk_simple_assignment_target(self, target);
     }
     fn visit_assignment_target_property_identifier(

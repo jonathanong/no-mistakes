@@ -19,7 +19,33 @@ pub(super) fn evaluate(
             }
             value
         }
-        Node::Invoke(id) => functions.get(id).cloned().unwrap_or_default(),
+        Node::Invoke(id) => {
+            let mut value = functions.get(id).cloned().unwrap_or_default();
+            // Preserve precise summaries while retaining uncertain producer returns.
+            if values
+                .get(id)
+                .is_some_and(|callee| callee.broad || (callee.factory_value() && !value.present()))
+            {
+                value.join(Taint {
+                    broad: true,
+                    derived: true,
+                    ..Taint::default()
+                });
+            }
+            value
+        }
+        Node::InvokeValue(at) => {
+            let callee = source(*at);
+            if callee.broad || callee.factory_value() {
+                Taint {
+                    broad: true,
+                    derived: true,
+                    ..Taint::default()
+                }
+            } else {
+                Taint::default()
+            }
+        }
         Node::Copy(at) => source(*at),
         Node::Read(at, key) => source(*at).read(key.as_deref()),
         Node::Freeze(at) => {

@@ -81,6 +81,7 @@ pub(super) enum Node {
     Ref(usize, Span),
     Copy(Span),
     Invoke(usize),
+    InvokeValue(Span),
     Object(Vec<(Field, Span)>),
     Read(Span, Option<String>),
     Freeze(Span),

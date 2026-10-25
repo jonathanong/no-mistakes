@@ -13,6 +13,7 @@ pub(super) struct Context {
 enum Owner {
     Call(Span),
     Bind(usize),
+    AssignmentReceiver,
 }
 #[derive(Default)]
 pub(super) struct Metadata {
@@ -61,6 +62,9 @@ impl Metadata {
             wanted,
             ..Default::default()
         }
+    }
+    pub fn assignment_receiver(&mut self, at: Span) {
+        self.references.insert(at, Owner::AssignmentReceiver);
     }
     pub fn track_alias(&mut self, at: Span) {
         self.wanted.insert(at);
@@ -152,6 +156,7 @@ impl Metadata {
             Some(Owner::Call(call)) => direct.contains(call),
             // A later tag write invalidates bind classification request-wide.
             Some(Owner::Bind(id)) => tags.is_valid(*id),
+            Some(Owner::AssignmentReceiver) => true,
             None => false,
         }
     }

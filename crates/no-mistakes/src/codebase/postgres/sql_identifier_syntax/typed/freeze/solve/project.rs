@@ -25,7 +25,7 @@ impl Tracker {
         for (at, node) in &self.nodes {
             match node {
                 Node::Freeze(argument) => roots.push(*argument),
-                Node::Invoke(_) => {}
+                Node::Invoke(_) | Node::InvokeValue(_) => {}
                 Node::Ref(id, _)
                     if functions.get(id).is_some_and(Taint::present)
                         || sources.producers.contains(id) =>
