@@ -13,7 +13,7 @@ export function callableObject({ query }: { (): void; query: QueryExecutor }) {
 // A computed property is unsupported; keep its known default executor escape.
 // ADVISE_NEXT
 export function computed({ [key]: query = read }: QueryOptions) {
-  query("SELECT 1");
+  query("SELECT 1"); // ADVISE: the unresolved computed key retains this bound call.
 }
 export function unrelatedRest(...values) {
   // CLEAR
