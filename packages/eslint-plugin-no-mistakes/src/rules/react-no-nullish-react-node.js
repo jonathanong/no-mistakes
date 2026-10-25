@@ -3,6 +3,7 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { literalString } = require("./module-mock-helpers");
+const { resolveVariable } = require("./async-target-bindings");
 const { createReactNodeFacts, keyName, typeAnnotation, typeName } = require("../react-node-types");
 
 function isObjectPattern(node) {
@@ -17,7 +18,7 @@ function definePattern(pattern, props, defineBinding, defineReactNode) {
   if (!isObjectPattern(pattern)) return;
   for (const property of pattern.properties) {
     if (property.type !== "Property") continue;
-    const name = keyName(property.key);
+    const name = property.computed ? literalString(property.key) : keyName(property.key);
     if (isIdentifier(property.value)) {
       defineBinding(property.value.name);
       if (name && props && props.has(name)) defineReactNode(property.value.name);
@@ -122,6 +123,25 @@ module.exports = rule(
       return null;
     }
 
+    function objectAliasProps(node) {
+      if (node.parent.kind !== "const" || node.init?.type !== "Identifier") return null;
+      const source = resolveVariable(node.init, context);
+      const target = resolveVariable(node.id, context);
+      const reassigned = (variable) =>
+        variable.references.some((reference) => reference.isWrite() && !reference.init);
+      if (!source || source.defs.length !== 1 || reassigned(source) || reassigned(target))
+        return null;
+      const def = source.defs[0];
+      // Sequential name facts must not cross a TDZ shadow or a parameter initializer.
+      const initialized =
+        def.type === "Parameter"
+          ? def.node.body.range[0] < node.init.range[0]
+          : def.type === "Variable" &&
+            def.parent.kind === "const" &&
+            def.node.range[1] < node.init.range[0];
+      return initialized ? objectProps(node.init.name) : null;
+    }
+
     function defineParam(param) {
       const target = param.type === "AssignmentPattern" ? param.left : param;
       const type = typeAnnotation(param) || typeAnnotation(target);
@@ -143,6 +163,10 @@ module.exports = rule(
           defineReactNode(node.id.name, scope);
         }
         defineObjectType(node.id.name, type, scope);
+        if (!type) {
+          const props = objectAliasProps(node);
+          if (props) scope.objectTypes.set(node.id.name, props);
+        }
       } else if (isObjectPattern(node.id)) {
         const initType = isIdentifier(node.init) ? objectProps(node.init.name) : null;
         definePattern(
