@@ -123,14 +123,14 @@ Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`,
 
 Valid PostgreSQL can still be unsupported by this analyzer. When it cannot
 recover statements such as `ALTER DEFAULT PRIVILEGES`, `CREATE PUBLICATION`,
-or `REFRESH MATERIALIZED VIEW`, it reports them under
+or `REFRESH MATERIALIZED VIEW`, it diagnoses them under
 [`options.unanalyzable`](../migrations/postgres-schema-unanalyzable.md). The
 same diagnostic also catches rejected syntax such as `CREATE RECURSIVE VIEW`
 without its required explicit column list; it reports missing analyzer facts,
 not a PostgreSQL validity verdict.
 
 SQL statements selected by `sqlInclude` that the lenient parser cannot parse or
-recover follow `options.unanalyzable`: `report` (default) emits a finding,
+recover follow `options.unanalyzable`: explicit `report` emits a finding,
 `advise` emits a non-failing advisory, and `ignore` omits the diagnostic. The
 repository-level default applies when the rule does not override it. Diagnostics
 name the source file, statement line, and statement head so the unsupported SQL
@@ -140,6 +140,13 @@ Valid sibling statements still contribute schema facts. A real `DISCARD ALL`
 statement is parsed normally; the parser's internal recovery marker supplies
 no schema proof. File and line suppression directives apply to these diagnostics.
 A failure to collect facts still aborts the rule with an error.
+
+For schema parse failures, the implicit default advises for complete, recognized
+unsupported PostgreSQL forms; malformed and unrecognized forms retain findings.
+Recognition is conservative: it covers selected `ALTER DEFAULT PRIVILEGES ... GRANT`,
+`CREATE PUBLICATION ... FOR`, and `REFRESH MATERIALIZED VIEW` forms, not all
+PostgreSQL grammar. Explicit rule or repository `unanalyzable` policies override
+both classes. See the [schema diagnostic migration](../migrations/postgres-schema-unanalyzable.md).
 
 ## Suppression
 

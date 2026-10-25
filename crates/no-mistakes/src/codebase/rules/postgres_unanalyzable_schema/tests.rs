@@ -6,6 +6,7 @@ use crate::config::v2::load_v2_config;
 mod copy_tests;
 mod procedural_tests;
 mod recursive_heads;
+mod unsupported_policy;
 
 fn fixture() -> PathBuf {
     crate::test_support::rule_fixture_root("postgres-ddl-unanalyzable")

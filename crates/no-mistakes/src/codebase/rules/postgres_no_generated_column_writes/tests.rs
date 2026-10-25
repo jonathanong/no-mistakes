@@ -282,7 +282,8 @@ fn empty_catalog_dynamic_sql_and_invalid_schema() {
         &[mixed.join("schema.sql"), mixed.join("write.ts")],
     )
     .expect("mixed schema");
-    let definite = verified_schema_markers(&mixed, "schema.sql", findings);
+    // The valid enum declaration in DO now parses; only the real write remains.
+    let definite = findings;
     assert_eq!(definite.len(), 1, "{definite:#?}");
     assert_eq!(definite[0].import.as_deref(), Some("items.created_at"));
 }

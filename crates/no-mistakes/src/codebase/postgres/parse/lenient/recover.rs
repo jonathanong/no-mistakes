@@ -7,12 +7,13 @@ mod locations;
 mod partition;
 mod procedural;
 mod queries;
+mod query_locks;
 mod schema;
 pub(super) use bodies::concatenated_strings;
 use bodies::{peel_do_body, recover_chr_encoded};
 use partition::recover_partition_change;
 pub(crate) use procedural::BodyState;
-use schema::start as schema_ddl_start;
+
 use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
@@ -119,10 +120,23 @@ fn parse_chunk(
         );
     }
     let dialect = PostgreSqlDialect {};
-    let mut parser = match original {
-        Some(tokens) => Parser::new(&dialect).with_tokens_with_locations(tokens.to_vec()),
-        None => Parser::new(&dialect).with_tokens(chunk.clone()),
-    };
+    let mut parse_tokens = original.map_or_else(
+        || chunk.iter().cloned().map(TokenWithSpan::wrap).collect(),
+        |tokens| tokens.to_vec(),
+    );
+    if chunk
+        .iter()
+        .find(|token| !matches!(token, Token::Whitespace(_)))
+        .is_some_and(|token| {
+            matches!(token, Token::Word(word)
+            if word.quote_style.is_none() && (word.value.eq_ignore_ascii_case("SELECT")
+                || word.value.eq_ignore_ascii_case("WITH")))
+        })
+    {
+        // Retain a complete query AST, including INTO and its original spans.
+        query_locks::rewrite_located(&mut parse_tokens);
+    }
+    let mut parser = Parser::new(&dialect).with_tokens_with_locations(parse_tokens);
     match parser.parse_statement() {
         Ok(statement) if matches!(parser.peek_token().token, Token::EOF) => {
             let mut located = LocatedStatement::plain(statement);
@@ -155,9 +169,16 @@ fn parse_chunk(
                     .into_iter()
                     .map(|(statement, synthetic)| LocatedStatement::functions(statement, synthetic))
                     .collect();
-                let schema = recover_schema_ddl(&chunk, original, allow_concurrent_detach);
+                let schema = schema::recover(&chunk, original, allow_concurrent_detach);
                 let has_schema = schema.is_some();
-                projected.extend(schema.map(LocatedStatement::plain));
+                if schema.as_ref().is_some_and(|item| item.complete) {
+                    // The complete utility also validated its IF/ELSIF guard;
+                    // its synthetic condition is not partial statement recovery.
+                    for item in &mut projected {
+                        item.complete = true;
+                    }
+                }
+                projected.extend(schema);
                 if !has_schema && !action_projected {
                     projected.extend(failure::guarded_action(&chunk, original));
                 }
@@ -167,29 +188,6 @@ fn parse_chunk(
             }
         }
     }
-}
-
-fn recover_schema_ddl(
-    tokens: &[Token],
-    original: Option<&[TokenWithSpan]>,
-    allow_concurrent_detach: bool,
-) -> Option<Statement> {
-    let start = schema_ddl_start(tokens)?;
-    // PL/pgSQL wrappers can precede a complete partition transition. Apply the
-    // same narrow recovery to the DDL suffix before using the PostgreSQL parser.
-    if let Some(change) = recover_partition_change(
-        &tokens[start..],
-        original.map(|tokens| &tokens[start..]),
-        allow_concurrent_detach,
-    ) {
-        return Some(change);
-    }
-    let dialect = PostgreSqlDialect {};
-    let mut parser = match original {
-        Some(tokens) => Parser::new(&dialect).with_tokens_with_locations(tokens[start..].to_vec()),
-        None => Parser::new(&dialect).with_tokens(tokens[start..].to_vec()),
-    };
-    parser.parse_statement().ok()
 }
 
 #[cfg(test)]

@@ -5,6 +5,39 @@ const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
 test(
+  "compiled schema rules accept release-blocker DDL with explicit report policy",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(__dirname, "../../../fixtures/postgres-facts/source/ddl-compat");
+    for (const config of [".no-mistakes.yml", "guarded-do.yml", "guarded-function.yml"]) {
+      const report = await cjs.check({ root, config });
+      assert.deepEqual(await esm.check({ root, config }), report);
+      const prepared = await cjs.analyzeProject({ root, config, reports: [{ type: "check" }] });
+      assert.deepEqual(prepared.reports[0].result, report);
+      assert.deepEqual(report.rules, []);
+      assert.deepEqual(report.advisories, []);
+    }
+    const options = { root, config: "plain-query-policy.yml" };
+    const report = await cjs.check(options);
+    assert.deepEqual(await esm.check(options), report);
+    const prepared = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+    assert.deepEqual(prepared.reports[0].result, report);
+    assert.deepEqual(
+      report.rules.map(({ line }) => line),
+      [7, 8],
+    );
+    assert.ok(
+      report.rules.every(
+        ({ rule, target }) =>
+          rule === "postgres-sql-shape-policy" && target === "banned-function-call",
+      ),
+    );
+  },
+);
+
+test(
   "compiled checks enforce expression arbiter dependencies without changing source facts",
   { skip: !compiled },
   async () => {
@@ -92,6 +125,11 @@ test(
       ["postgres-ddl-unanalyzable", "report.yml", 3, 0, "unsupported-valid"],
       ["postgres-ddl-unanalyzable", "positive.yml", 1, 0, "copy"],
       ["postgres-ddl-unanalyzable", "report.yml", 69, 0, "procedural"],
+      ["postgres-ddl-unanalyzable", "default.yml", 44, 33, "unsupported-policy"],
+      ["postgres-ddl-unanalyzable", "report.yml", 77, 0, "unsupported-policy"],
+      ["postgres-ddl-unanalyzable", "advise.yml", 0, 77, "unsupported-policy"],
+      ["postgres-ddl-unanalyzable", "ignore.yml", 0, 0, "unsupported-policy"],
+      ["postgres-ddl-unanalyzable", "override.yml", 77, 0, "unsupported-policy"],
     ]) {
       const options = { root: join(fixtures, scenario, "fixture", subdirectory), config };
       const report = await cjs.check(options);

@@ -3,6 +3,7 @@ use sqlparser::parser::ParserError;
 use std::fmt;
 
 mod copy_data;
+mod ddl_compat;
 mod derived_table;
 mod distinct_group;
 pub(super) mod fetch_expression;

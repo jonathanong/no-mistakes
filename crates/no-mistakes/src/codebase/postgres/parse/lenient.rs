@@ -65,6 +65,7 @@ fn parse_with_normalized_sources(
     let recursive_views = super::recursive_view::prepare(&mut located, Some(&mut original_heads));
     let mut located = super::radix_numbers::repair(&located).unwrap_or(located);
     super::normalize_table_queries(&mut located);
+    super::ddl_compat::normalize(&mut located);
     let fetch = super::fetch_expression::prepare(&mut located);
     if located.is_empty() {
         return fallback::statements(sql, allow_concurrent_detach);

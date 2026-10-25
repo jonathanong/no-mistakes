@@ -98,10 +98,14 @@ fn diagnostics_for_ids(
             }
             let schema = super::schema_options(&options.sql_include, options.sql_include_locked);
             let paths = postgres_sql_paths(root, &selected, &schema)?;
+            let explicit_policy = rule.options.get("unanalyzable").is_some()
+                || rule.options.get("unanalyzableSql").is_some()
+                || config.unanalyzable.is_some()
+                || config.unanalyzable_sql.is_some();
             append_rule(
                 root,
                 rule_id,
-                policy,
+                (policy, explicit_policy),
                 &paths,
                 facts,
                 &mut output,
@@ -117,12 +121,13 @@ fn diagnostics_for_ids(
 fn append_rule(
     root: &Path,
     rule_id: &str,
-    policy: Unanalyzable,
+    policy: (Unanalyzable, bool),
     paths: &[PathBuf],
     facts: &CheckFactMap,
     output: &mut AnalysisDiagnostics,
     strict_read_errors: bool,
 ) -> Result<()> {
+    let (policy, explicit_policy) = policy;
     for path in paths {
         let file = if !strict_read_errors
             && matches!(
@@ -140,6 +145,11 @@ fn append_rule(
         let rel = relative_slash_path(root, path);
         for statement in &file.unanalyzable_statements {
             let line = statement.line.max(1);
+            let policy = if statement.valid_unsupported && !explicit_policy {
+                Unanalyzable::Advise
+            } else {
+                policy
+            };
             output.unanalyzable(
                 policy,
                 RuleFinding {

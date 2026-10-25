@@ -1,4 +1,5 @@
-use super::{peel_do_body, recover_schema_ddl, schema_ddl_start};
+use super::peel_do_body;
+use super::schema::{recover as recover_schema_ddl, start as schema_ddl_start};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::{Token, Tokenizer};
 
@@ -121,9 +122,9 @@ fn schema_ddl_start_finds_alter_create_and_unique_index() {
 }
 
 #[test]
-fn schema_ddl_start_skips_non_schema_ddl() {
-    assert!(schema_ddl_start(&tokens("ALTER INDEX t_id RENAME TO t_id2")).is_none());
-    assert!(schema_ddl_start(&tokens("CREATE TYPE t AS ENUM ('a')")).is_none());
+fn schema_ddl_start_accepts_utilities_but_skips_unrelated_or_incomplete_sql() {
+    assert!(schema_ddl_start(&tokens("ALTER INDEX t_id RENAME TO t_id2")).is_some());
+    assert!(schema_ddl_start(&tokens("CREATE TYPE t AS ENUM ('a')")).is_some());
     assert!(schema_ddl_start(&tokens("CREATE UNIQUE")).is_none());
     assert!(schema_ddl_start(&tokens("CREATE")).is_none());
     assert!(schema_ddl_start(&tokens("ALTER")).is_none());
@@ -140,7 +141,10 @@ fn recover_schema_ddl_parses_or_skips_trailing_junk() {
         true,
     )
     .expect("alter");
-    assert!(matches!(parsed, sqlparser::ast::Statement::AlterTable(_)));
+    assert!(matches!(
+        parsed.statement,
+        sqlparser::ast::Statement::AlterTable(_)
+    ));
     assert!(recover_schema_ddl(&tokens("IF THEN ALTER TABLE"), None, true).is_none());
     assert!(matches!(
         recover_schema_ddl(
@@ -148,7 +152,8 @@ fn recover_schema_ddl_parses_or_skips_trailing_junk() {
             None,
             true
         )
-        .expect("index"),
+        .expect("index")
+        .statement,
         sqlparser::ast::Statement::CreateIndex(_)
     ));
 }

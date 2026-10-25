@@ -1,5 +1,8 @@
 //! Cli postgres integration tests, linked in one harness.
 
+#[path = "cli_check_postgres_release_blocker.rs"]
+mod cli_check_postgres_release_blocker;
+
 #[path = "cli_check_rules_postgres.rs"]
 mod cli_check_rules_postgres;
 #[path = "cli_check_rules_postgres_add_column.rs"]

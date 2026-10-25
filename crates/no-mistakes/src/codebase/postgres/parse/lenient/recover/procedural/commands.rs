@@ -55,7 +55,7 @@ fn parsed_statement(code: &[&Token]) -> Option<Statement> {
     if code.is_empty() {
         return None;
     }
-    let tokens = code.iter().map(|token| (**token).clone()).collect();
+    let tokens = super::super::query_locks::compatible_tokens(code);
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens(tokens);
     let statement = parser.parse_statement().ok()?;
     (parser.peek_token().token == Token::EOF).then_some(statement)

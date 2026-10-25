@@ -95,6 +95,7 @@ fn select(
         let span = located.first()?.span;
         located.insert(0, TokenWithSpan::new(token, span));
     }
+    super::query_locks::rewrite_located(&mut located);
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(located);
     let statement = parser.parse_statement().ok()?;
     matches!(parser.peek_token().token, Token::EOF).then_some(statement)
