@@ -28,15 +28,15 @@ function namespace(node, context, seen) {
   );
 }
 
-function isTestRunner(node, context, seen = new Set()) {
+function bindingRunner(node, context, seen = new Set()) {
   node = unwrap(node);
-  if (node?.type === "CallExpression") return isTestRunner(node.callee, context, seen);
+  if (node?.type === "CallExpression") return bindingRunner(node.callee, context, seen);
   if (node?.type === "MemberExpression") {
     const name = memberName(node);
     if (!name) return false;
     return (
       (RUNNERS.has(name) && namespace(node.object, context, new Set())) ||
-      isTestRunner(node.object, context, seen)
+      bindingRunner(node.object, context, seen)
     );
   }
   if (node?.type !== "Identifier") return false;
@@ -70,7 +70,7 @@ function isTestRunner(node, context, seen = new Set()) {
     variable.references.some((ref) => ref.isWrite() && !ref.init)
   )
     return false;
-  if (def.node.id.type === "Identifier") return isTestRunner(def.node.init, context, seen);
+  if (def.node.id.type === "Identifier") return bindingRunner(def.node.init, context, seen);
   if (def.node.id.type !== "ObjectPattern" || !namespace(def.node.init, context, new Set()))
     return false;
   return def.node.id.properties.some(
@@ -86,6 +86,21 @@ function isTestRunner(node, context, seen = new Set()) {
         }),
       ),
   );
+}
+
+// Preserve the released conservative checks for calls rooted at test/it,
+// even when the local binding cannot be proven to be a framework runner.
+function legacyRunner(node) {
+  node = unwrap(node);
+  if (node?.type === "Identifier") return RUNNERS.has(node.name);
+  if (node?.type === "MemberExpression")
+    return Boolean(memberName(node)) && legacyRunner(node.object);
+  if (node?.type === "CallExpression") return legacyRunner(node.callee);
+  return false;
+}
+
+function isTestRunner(node, context) {
+  return legacyRunner(node) || bindingRunner(node, context);
 }
 
 module.exports = { isTestRunner };

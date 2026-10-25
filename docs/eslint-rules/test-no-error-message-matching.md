@@ -134,6 +134,15 @@ check(error.message).toMatch("missing");
 
 `barrel` may be `export { expect as check } from "vitest"` or `export * from "vitest"`.
 
+Calls rooted at `test` or `it` retain the existing conservative test-body
+reporting, including parameters and nested local bindings with those names.
+Those names alone do not prove framework identity, but they do not exempt a
+message comparison that the rule already checked. For example,
+`function run(test) { test("case", () => error.message === "expected"); }`
+still reports. Use an error type or code comparison instead. Binding-aware
+runner aliases add supported forms; a renamed parameter such as `check`
+without a proven runner initializer stays unknown.
+
 ## Suppression
 
 ```ts

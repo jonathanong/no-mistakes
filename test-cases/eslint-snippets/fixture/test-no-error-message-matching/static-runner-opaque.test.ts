@@ -16,4 +16,3 @@ ns.test("mutable namespace", () => { const match = err.message === "x"; });
 const { [key]: opaque } = v;
 opaque("computed", () => { const match = err.message === "x"; });
 v[key]("computed member", () => { const match = err.message === "x"; });
-function nested() { const test = unknown; test("nested", () => { const match = err.message === "x"; }); }
