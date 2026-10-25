@@ -16,7 +16,7 @@ pub(in super::super) fn for_header(code: &[&Token]) -> bool {
         source = &source[1..];
     }
     if source.first().is_some_and(|token| word(token, "EXECUTE"))
-        && super::super::sql::matches(source)
+        && (static_execute(source) || super::super::sql::matches(source))
     {
         return !reverse;
     }

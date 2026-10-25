@@ -1,6 +1,9 @@
 //! Conservative recognition of complete PostgreSQL grammar absent from sqlparser.
 //! Unknown shapes remain failures; a statement prefix alone is never proof.
 use sqlparser::tokenizer::{Token, TokenWithSpan};
+mod cursor;
+mod publication;
+use cursor::Cursor;
 
 pub(super) fn valid(tokens: &[TokenWithSpan]) -> bool {
     let tokens = tokens
@@ -22,9 +25,7 @@ pub(super) fn valid(tokens: &[TokenWithSpan]) -> bool {
     } else {
         cursor.at = 0;
         if cursor.words(&["CREATE", "PUBLICATION"]) {
-            cursor.identifier()
-                && cursor.word("FOR")
-                && (cursor.words(&["ALL", "TABLES"]) || (cursor.word("TABLE") && cursor.names()))
+            publication::valid(&mut cursor)
         } else {
             cursor.at = 0;
             default_privileges(&mut cursor)
@@ -45,7 +46,12 @@ fn default_privileges(cursor: &mut Cursor<'_>) -> bool {
     if cursor.words(&["IN", "SCHEMA"]) && !cursor.identifiers() {
         return false;
     }
-    if !cursor.word("GRANT") {
+    let revoke = cursor.word("REVOKE");
+    if revoke {
+        if cursor.word("GRANT") && !cursor.words(&["OPTION", "FOR"]) {
+            return false;
+        }
+    } else if !cursor.word("GRANT") {
         return false;
     }
     if cursor.word("ALL") {
@@ -89,87 +95,14 @@ fn default_privileges(cursor: &mut Cursor<'_>) -> bool {
     {
         return false;
     }
-    cursor.word("TO")
+    cursor.word(if revoke { "FROM" } else { "TO" })
         && cursor.identifiers()
-        && (!cursor.word("WITH") || cursor.words(&["GRANT", "OPTION"]))
-}
-
-struct Cursor<'a> {
-    tokens: &'a [&'a Token],
-    at: usize,
-}
-impl Cursor<'_> {
-    fn word(&mut self, value: &str) -> bool {
-        if matches!(self.tokens.get(self.at), Some(Token::Word(word))
-            if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(value))
-        {
-            self.at += 1;
-            true
-        } else {
-            false
-        }
-    }
-    fn words(&mut self, values: &[&str]) -> bool {
-        let start = self.at;
-        if values.iter().all(|value| self.word(value)) {
-            true
-        } else {
-            self.at = start;
-            false
-        }
-    }
-    fn identifier(&mut self) -> bool {
-        // Reserved keywords must not masquerade as missing names or clauses.
-        if matches!(self.tokens.get(self.at), Some(Token::Word(word))
-            if !word.value.is_empty() && (word.quote_style == Some('"')
-                || (word.quote_style.is_none() && (word.keyword == sqlparser::keywords::Keyword::NoKeyword
-                    || word.value.eq_ignore_ascii_case("public")))))
-        {
-            self.at += 1;
-            true
-        } else {
-            false
-        }
-    }
-    fn name(&mut self) -> bool {
-        self.identifier() && (!self.period() || self.identifier())
-    }
-    fn identifiers(&mut self) -> bool {
-        if !self.identifier() {
-            return false;
-        }
-        while self.comma() {
-            if !self.identifier() {
-                return false;
+        && if revoke {
+            if !cursor.word("CASCADE") {
+                cursor.word("RESTRICT");
             }
-        }
-        true
-    }
-    fn names(&mut self) -> bool {
-        if !self.name() {
-            return false;
-        }
-        while self.comma() {
-            if !self.name() {
-                return false;
-            }
-        }
-        true
-    }
-    fn comma(&mut self) -> bool {
-        if matches!(self.tokens.get(self.at), Some(Token::Comma)) {
-            self.at += 1;
             true
         } else {
-            false
+            !cursor.word("WITH") || cursor.words(&["GRANT", "OPTION"])
         }
-    }
-    fn period(&mut self) -> bool {
-        if matches!(self.tokens.get(self.at), Some(Token::Period)) {
-            self.at += 1;
-            true
-        } else {
-            false
-        }
-    }
 }
