@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@consumer": [
+        "../cross-file-consumers.ts"
+      ],
+      "@chain": [
+        "../cross-file-chain-consumers.ts"
+      ]
+    }
+  }
+}

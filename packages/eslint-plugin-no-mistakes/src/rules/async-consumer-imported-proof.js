@@ -1,18 +1,153 @@
 "use strict";
+const { dirname } = require("node:path");
 const { unwrapExpression } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { propertiesWritten } = require("./async-disposition-mocks");
+const { localFunction } = require("./async-consumer-local-proof");
 
-function importedAwaited(call, index, context, sourceFacts) {
-  const services = context.sourceCode.parserServices;
+// Oxlint's type-aware checker does not expose a TypeScript program to JS plugins.
+// Resolve only the imported implementation; memoize sources/failures for this rule context.
+function createImportedSources() {
+  const ts = require("typescript");
+  const parser = require("@typescript-eslint/parser");
+  const reads = new Map();
+  const files = new Map();
+  const configs = new Map();
+  const host = {
+    ...ts.sys,
+    readFile(path) {
+      if (!reads.has(path)) reads.set(path, ts.sys.readFile(path));
+      return reads.get(path);
+    },
+  };
+  const resolutions = ts.createModuleResolutionCache(process.cwd(), (path) => path);
+  function options(filename) {
+    const directory = dirname(filename);
+    if (!configs.has(directory)) {
+      const path = ts.findConfigFile(directory, host.fileExists);
+      const config = path && ts.readConfigFile(path, host.readFile);
+      configs.set(
+        directory,
+        config?.error
+          ? null
+          : config
+            ? compilerOptions(config.config, path)
+            : { moduleResolution: ts.ModuleResolutionKind.Bundler },
+      );
+    }
+    return configs.get(directory);
+  }
+  function compilerOptions(config, path) {
+    const parsed = ts.parseJsonConfigFileContent(
+      config,
+      { ...host, readDirectory: () => [] },
+      dirname(path),
+      undefined,
+      path,
+    );
+    return parsed.errors.some((error) => error.code !== 18003) ? null : parsed.options;
+  }
+  function resolve(source, filename) {
+    const config = options(filename);
+    if (!config || config.noResolve) return null;
+    return ts.resolveModuleName(source, filename, config, host, resolutions).resolvedModule
+      ?.resolvedFileName;
+  }
+  function load(filename) {
+    if (!files.has(filename)) {
+      files.set(filename, null);
+      const text = host.readFile(filename);
+      try {
+        const parsed = parser.parseForESLint(text, { filePath: filename, range: true, loc: true });
+        function parents(node, parent) {
+          node.parent = parent;
+          for (const key of parsed.visitorKeys[node.type] || []) {
+            const child = node[key];
+            if (Array.isArray(child)) child.forEach((item) => item && parents(item, node));
+            else if (child) parents(child, node);
+          }
+        }
+        parents(parsed.ast, null);
+        const sourceCode = {
+          ...parsed,
+          getScope(node) {
+            // Every parsed node has a Program ancestor with a global scope.
+            for (let owner = node; ; owner = owner.parent) {
+              const scope = parsed.scopeManager.acquire(owner, true);
+              if (scope) return scope;
+            }
+          },
+        };
+        files.set(filename, { ast: parsed.ast, context: { sourceCode, filename } });
+      } catch {
+        // Missing, ambient, or unsupported source never establishes an awaiting contract.
+      }
+    }
+    return files.get(filename);
+  }
+  return { resolve, load };
+}
+
+function exportedFunction(filename, name, sources, seen = new Set()) {
+  if (seen.size >= 32 || seen.has(filename)) return null;
+  seen.add(filename);
+  const source = sources.load(filename);
+  if (!source) return null;
+  const matches = [];
+  for (const statement of source.ast.body) {
+    if (statement.type !== "ExportNamedDeclaration" || statement.exportKind === "type") continue;
+    const declaration = statement.declaration;
+    const ids =
+      declaration?.type === "FunctionDeclaration"
+        ? [declaration.id]
+        : declaration?.type === "VariableDeclaration"
+          ? declaration.declarations.map((item) => item.id)
+          : [];
+    for (const id of ids) if (id?.name === name) matches.push({ local: id });
+    for (const item of statement.specifiers)
+      if (item.exportKind !== "type" && (item.exported.name ?? item.exported.value) === name)
+        matches.push({ local: item.local, source: statement.source });
+  }
+  if (matches.length !== 1) return null;
+  const { local, source: reexport } = matches[0];
+  if (reexport) {
+    const target = sources.resolve(reexport.value, filename);
+    return target ? exportedFunction(target, local.name, sources, seen) : null;
+  }
+  const fn = localFunction(local, source.context);
+  const variable = resolveVariable(local, source.context);
+  // Exporting preserves live binding identity; any other non-call use may mutate it.
   if (
-    !services?.program ||
-    services.program.getCompilerOptions().noResolve ||
-    !services.esTreeNodeToTSNodeMap
+    !fn ||
+    variable.references.some((ref) => {
+      if (ref.init) return false;
+      const parent = ref.identifier.parent;
+      return (
+        parent.type !== "ExportSpecifier" &&
+        !(parent.type === "CallExpression" && parent.callee === ref.identifier)
+      );
+    })
   )
-    return false;
-  const callee = unwrapExpression(call.callee);
-  if (callee?.type !== "Identifier") return false;
+    return null;
+  return { fn, context: source.context };
+}
+
+function importedAwaited(call, index, context, state, property, proveBody) {
+  const program = context.sourceCode.parserServices?.program;
+  if (program?.getCompilerOptions().noResolve) return false;
+  if (program && property === null)
+    return require("./async-consumer-typed-proof").importedAwaited(
+      call,
+      index,
+      context,
+      state.typed,
+    );
+
+  const resolved = importedFunction(unwrapExpression(call.callee), context, state);
+  return Boolean(resolved && proveBody(resolved.fn, index, resolved.context, property));
+}
+
+function importedFunction(callee, context, state) {
   const binding = resolveVariable(callee, context);
   if (
     binding?.defs.length !== 1 ||
@@ -21,81 +156,19 @@ function importedAwaited(call, index, context, sourceFacts) {
     propertiesWritten(callee, context, new Set(), null, true)
   )
     return false;
-  const checker = services.program.getTypeChecker();
-  const node = services.esTreeNodeToTSNodeMap.get(callee);
-  const imported = node && checker.getSymbolAtLocation(node);
-  if (!imported) return false;
-  // The ESLint binding above is an import, so its checker symbol is an alias.
-  const symbol = checker.getAliasedSymbol(imported);
-  if (symbol?.declarations?.length !== 1) return false;
-  const owner = symbol.declarations[0];
-  const fn = owner.body ? owner : owner.initializer;
+  const def = binding.defs[0];
   if (
-    !fn?.body ||
-    (owner.initializer && owner.parent.getFirstToken().getText() !== "const") ||
-    fn.parameters.some((param) => param.dotDotDotToken)
+    def.node.type !== "ImportSpecifier" ||
+    def.parent.importKind === "type" ||
+    def.node.importKind === "type"
   )
     return false;
-  const parameter = fn.parameters[index];
-  if (!parameter || typeof parameter.name.escapedText !== "string") return false;
-  const target = checker.getSymbolAtLocation(parameter.name);
-  let count = 0;
-  let safe = true;
-  // Reuse the parser-owned program, including symbol identity for shadowed names.
-  function visit(current) {
-    if (!safe) return;
-    if (
-      current.escapedText === "arguments" ||
-      (current.escapedText === "eval" &&
-        current.parent.expression === current &&
-        Array.isArray(current.parent.arguments))
-    )
-      safe = false;
-    if (
-      current !== parameter.name &&
-      typeof current.escapedText === "string" &&
-      checker.getSymbolAtLocation(current) === target
-    ) {
-      count++;
-      for (let owner = current.parent; owner && owner !== fn; owner = owner.parent)
-        if (owner.parameters && owner.body) safe = false;
-      const invocation = current.parent;
-      if (
-        !Array.isArray(invocation.arguments) ||
-        invocation.expression !== current ||
-        invocation.questionDotToken ||
-        invocation.parent?.expression !== invocation ||
-        invocation.parent.getFirstToken().getText() !== "await"
-      )
-        safe = false;
-    }
-    current.forEachChild(visit);
-  }
-  for (const parameter of fn.parameters) visit(parameter);
-  visit(fn.body);
-  if (!safe || !count) return false;
-  // An ES import cannot replace its exporter's binding. Only inspect that
-  // implementation module, once per lint context, for local writes or escapes.
-  const source = owner.getSourceFile();
-  if (!sourceFacts.has(source)) {
-    const unsafe = new Set();
-    function inspect(current) {
-      if (typeof current.escapedText === "string") {
-        const referenced = checker.getSymbolAtLocation(current);
-        const parent = current.parent;
-        if (
-          referenced &&
-          referenced.valueDeclaration?.name !== current &&
-          (parent.expression !== current || !Array.isArray(parent.arguments))
-        )
-          unsafe.add(referenced);
-      }
-      current.forEachChild(inspect);
-    }
-    inspect(source);
-    sourceFacts.set(source, unsafe);
-  }
-  return !sourceFacts.get(source).has(symbol);
+  const sources = (state.sources ||= createImportedSources());
+  const filename = context.filename;
+  const target = sources.resolve(def.parent.source.value, filename);
+  const resolved =
+    target && exportedFunction(target, def.node.imported.name ?? def.node.imported.value, sources);
+  return resolved;
 }
 
-module.exports = { importedAwaited };
+module.exports = { importedAwaited, importedFunction };

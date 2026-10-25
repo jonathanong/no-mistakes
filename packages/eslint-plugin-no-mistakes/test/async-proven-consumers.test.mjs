@@ -68,10 +68,10 @@ it("does not enumerate the parser program outside the resolved implementation", 
   };
   assert.deepEqual(reports("imported.ts", true, undefined, parser), reports("imported.ts", true));
 });
-it("keeps imported bodies unproven without parser type information", () => {
+it("proves imported bodies without parser type information", () => {
   assert.deepEqual(
     reports("imported.ts"),
-    [3, 5, 7, 9, 11, 13, 17, 19, 21, 23, 25, 28, 30, 32].map((line) => [line, "disposition"]),
+    [7, 9, 11, 13, 17, 19, 21, 23, 25, 28, 30, 32].map((line) => [line, "disposition"]),
   );
 });
 it("accepts only configured fresh dependency properties", () => {
@@ -125,3 +125,152 @@ it("matches real Oxlint for local proofs and configured imported or DI consumers
     );
   }
 });
+
+it.each([false, true])(
+  "proves automatic imported callbacks and DI properties (typed=%s)",
+  (typed) => {
+    assert.deepEqual(reports("cross-file.ts", typed), [[7, "disposition"]]);
+  },
+);
+it("proves cross-file consumers in real type-aware Oxlint without configured contracts", () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+      "--type-aware",
+      "--deny-warnings",
+      "--config",
+      resolve(root, ".oxlintrc-proven.json"),
+      "--format",
+      "json",
+      resolve(root, "cross-file.ts"),
+      resolve(root, "cross-file-chain.ts"),
+    ],
+    { encoding: "utf8" },
+  );
+  assert.equal(result.status, 1, result.stderr);
+  assert.deepEqual(
+    JSON.parse(result.stdout)
+      .diagnostics.map((item) => [
+        item.filename.replaceAll("\\", "/").split("/").at(-1),
+        item.labels[0].span.line,
+        item.code,
+      ])
+      .sort(),
+    [
+      ["cross-file.ts", 7],
+      ...[5, 7, 9, 11, 13, 15, 17].map((line) => ["cross-file-chain.ts", line]),
+    ]
+      .map(([name, line]) => [name, line, "no-mistakes(async-call-disposition)"])
+      .sort(),
+  );
+});
+
+it.each([false, true])(
+  "rejects unsafe imported dependency contracts and resolves reexports (typed=%s)",
+  (typed) => {
+    assert.deepEqual(
+      reports("cross-file-hostile.ts", typed),
+      [
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19,
+        21,
+        23,
+        25,
+        27,
+        29,
+        31,
+        33,
+        35,
+        37,
+        39,
+        41,
+        ...(typed ? [] : [44]),
+        47,
+        50,
+        53,
+        56,
+        ...(typed ? [62] : []),
+      ].map((line) => [line, "disposition"]),
+    );
+  },
+);
+
+it("resolves tsconfig paths and inherited compiler options without broad file discovery", () => {
+  assert.deepEqual(reports("alias/caller.ts"), []);
+});
+it.each(["no-resolve", "invalid-config", "missing-extends", "invalid-options"])(
+  "fails closed with %s compiler configuration",
+  (directory) => {
+    assert.deepEqual(reports(`${directory}/caller.ts`), [[3, "disposition"]]);
+  },
+);
+
+it.each([false, true])(
+  "follows bounded property-sensitive wrapper and handler forwarding (typed=%s)",
+  (typed) => {
+    assert.deepEqual(
+      reports("cross-file-chain.ts", typed),
+      [5, 7, 9, 11, 13, 15, 17].map((line) => [line, "disposition"]),
+    );
+  },
+);
+
+it("keeps forwarding syntax narrow and rejects ambiguous implementations", () => {
+  assert.deepEqual(
+    reports("cross-file-forwarding.ts"),
+    [6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 18, 20, 21, 22, 24].map((line) => [line, "disposition"]),
+  );
+});
+
+it("does not let sibling callbacks inspect the dependency receiver and caches by supplied shape", () => {
+  assert.deepEqual(
+    reports("cross-file-receivers.ts"),
+    [5, 7, 11, 13, 17, 22, 24, 30, 33].map((line) => [line, "disposition"]),
+  );
+});
+it.each(["noResolve", "missingMap"])(
+  "preserves parser-owned %s refusal without syntactic fallback",
+  (mode) => {
+    const parser = {
+      ...tsParser,
+      parseForESLint(...args) {
+        const parsed = tsParser.parseForESLint(...args);
+        if (mode === "missingMap") parsed.services.esTreeNodeToTSNodeMap = undefined;
+        else {
+          const original = parsed.services.program;
+          parsed.services.program = new Proxy(original, {
+            get(target, key) {
+              if (key === "getCompilerOptions")
+                return () => ({ ...target.getCompilerOptions(), noResolve: true });
+              const value = Reflect.get(target, key);
+              return typeof value === "function" ? value.bind(target) : value;
+            },
+          });
+        }
+        return parsed;
+      },
+    };
+    assert.deepEqual(
+      reports("imported.ts", true, undefined, parser),
+      [3, 5, 7, 9, 11, 13, 17, 19, 21, 23, 25, 28, 30, 32].map((line) => [line, "disposition"]),
+    );
+  },
+);
+
+it.each([false, true])(
+  "rejects initial and forwarded custom dependency prototypes (typed=%s)",
+  (typed) => {
+    assert.deepEqual(reports("cross-file-prototypes.ts", typed), [
+      [3, "disposition"],
+      [5, "disposition"],
+      [7, "disposition"],
+    ]);
+  },
+);
