@@ -62,13 +62,7 @@ pub(super) fn parse<'a>(c: &mut Cursor<'a>) -> bool {
             return false;
         }
     } else {
-        let known = c.word("CONVERSION")
-            || (c.words(&["TEXT", "SEARCH"])
-                && (c.word("CONFIGURATION")
-                    || c.word("DICTIONARY")
-                    || c.word("PARSER")
-                    || c.word("TEMPLATE")));
-        if !known {
+        if !named_kind(c) {
             return false;
         }
         c.words(&["IF", "EXISTS"]);
@@ -90,4 +84,13 @@ fn list<'a>(c: &mut Cursor<'a>, item: fn(&mut Cursor<'a>) -> bool) -> bool {
         }
     }
     true
+}
+
+fn named_kind(c: &mut Cursor<'_>) -> bool {
+    c.word("CONVERSION")
+        || (c.words(&["TEXT", "SEARCH"])
+            && (c.word("CONFIGURATION")
+                || c.word("DICTIONARY")
+                || c.word("PARSER")
+                || c.word("TEMPLATE")))
 }

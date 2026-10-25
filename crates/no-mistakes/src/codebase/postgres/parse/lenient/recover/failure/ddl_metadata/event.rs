@@ -56,18 +56,22 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
                     || c.identifier())
         }
     } else if c.words(&["DROP", "EVENT", "TRIGGER"]) {
-        c.words(&["IF", "EXISTS"]);
-        if !c.identifier() {
-            return false;
-        }
-        while c.token(Token::Comma) {
-            if !c.identifier() {
-                return false;
-            }
-        }
-        c.drop_behavior();
-        true
+        drop(c)
     } else {
         false
     }
+}
+
+fn drop(c: &mut Cursor<'_>) -> bool {
+    c.words(&["IF", "EXISTS"]);
+    if !c.identifier() {
+        return false;
+    }
+    while c.token(Token::Comma) {
+        if !c.identifier() {
+            return false;
+        }
+    }
+    c.drop_behavior();
+    true
 }
