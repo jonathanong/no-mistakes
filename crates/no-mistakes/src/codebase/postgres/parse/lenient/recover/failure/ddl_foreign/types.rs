@@ -1,11 +1,15 @@
 use super::cursor::Cursor;
+use sqlparser::tokenizer::Token;
 
 impl Cursor<'_> {
     pub(super) fn type_name(&mut self) -> bool {
-        let start = self.at;
-        let temporal = self.word("TIMESTAMP") || self.word("TIME");
-        if temporal {
-            if !self.type_precision(false) {
+        // Qualified names use PostgreSQL's function/type identifier class.
+        let qualified = self
+            .tokens
+            .get(self.at + 1)
+            .is_some_and(|t| **t == Token::Period);
+        if !qualified && (self.word("TIMESTAMP") || self.word("TIME")) {
+            if !self.type_precision(1) {
                 return false;
             }
             if (self.word("WITH") || self.word("WITHOUT"))
@@ -14,11 +18,17 @@ impl Cursor<'_> {
                 return false;
             }
         } else {
-            // A failed built-in must not let a later token masquerade as its type.
-            if !self.type_keyword() && (self.at != start || !self.name()) {
-                return false;
-            }
-            if !self.type_precision(true) {
+            let width = if qualified {
+                None
+            } else {
+                self.builtin_width()
+            };
+            let width = match width {
+                Some(width) => width,
+                None if self.function_name() => 2,
+                None => return false,
+            };
+            if !self.type_precision(width) {
                 return false;
             }
         }
@@ -31,29 +41,37 @@ impl Cursor<'_> {
         true
     }
 
-    fn type_precision(&mut self, scale: bool) -> bool {
+    fn type_precision(&mut self, width: usize) -> bool {
         if !self.left_paren() {
             return true;
         }
-        self.number() && (!scale || !self.comma() || self.number()) && self.right_paren()
+        width > 0
+            && self.number()
+            && (width < 2 || !self.comma() || self.number())
+            && self.right_paren()
     }
 
-    pub(super) fn type_keyword(&mut self) -> bool {
+    fn builtin_width(&mut self) -> Option<usize> {
         if self.word("DOUBLE") {
-            return self.word("PRECISION");
+            // Bare double is a valid custom type name, not an incomplete builtin.
+            return Some(if self.word("PRECISION") { 0 } else { 2 });
         }
         if self.word("CHARACTER") || self.word("CHAR") {
             self.word("VARYING");
-            return true;
+            return Some(1);
         }
-        if self.word("VARCHAR") {
-            return true;
+        if self.word("VARCHAR") || self.word("FLOAT") || self.word("INTERVAL") {
+            return Some(1);
+        }
+        if self.word("NUMERIC") || self.word("DECIMAL") || self.word("DEC") {
+            return Some(2);
         }
         [
-            "INT", "INTEGER", "TEXT", "BOOLEAN", "DATE", "INTERVAL", "NUMERIC", "DECIMAL", "REAL",
-            "SMALLINT", "BIGINT",
+            "INT", "INTEGER", "TEXT", "BOOLEAN", "DATE", "REAL", "SMALLINT", "BIGINT", "INT2",
+            "INT4", "INT8", "BOOL", "FLOAT4", "FLOAT8", "BYTEA",
         ]
         .iter()
         .any(|value| self.word(value))
+        .then_some(0)
     }
 }
