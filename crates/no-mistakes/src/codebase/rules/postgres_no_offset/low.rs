@@ -1,10 +1,10 @@
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::{
-    SqlObligationVerdict, SqlVerdictStatus, sql_identifier_syntax::SqlCall,
+    sql_identifier_syntax::SqlCall, SqlObligationVerdict, SqlVerdictStatus,
 };
 use crate::codebase::rules::{PostgresFindings, RuleFinding};
-use crate::codebase::ts_source::{SourceStore, relative_slash_path};
+use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::schema::RuleDef;
 use anyhow::Result;
 use std::path::{Path, PathBuf};

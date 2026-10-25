@@ -1,15 +1,15 @@
-use super::super::{CompiledOptions, cache};
-use super::{Outcome, add_unknown, mark_reason};
+use super::super::{cache, CompiledOptions};
+use super::{add_unknown, mark_reason, Outcome};
 use crate::codebase::postgres::{
-    RecoveredSql, SqlVerdictStatus,
     sql_identifier_syntax::{
-        SqlCall,
         helper_recovery::{ApplicationKey, Recovered},
         literal_projection::ProjectedLiteral,
+        SqlCall,
     },
+    RecoveredSql, SqlVerdictStatus,
 };
-use crate::codebase::rules::RuleFinding;
 use crate::codebase::rules::postgres_no_transformed_uuid_predicates::evaluate::Columns;
+use crate::codebase::rules::RuleFinding;
 use std::{collections::BTreeMap, path::Path};
 
 type Literals = BTreeMap<(Option<ApplicationKey>, (u32, u32)), super::TransformedLiteral>;

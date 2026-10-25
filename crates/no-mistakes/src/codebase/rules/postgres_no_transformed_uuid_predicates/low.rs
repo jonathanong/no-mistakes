@@ -3,7 +3,7 @@ use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::SqlObligationVerdict;
 use crate::codebase::rules::PostgresFindings;
-use crate::codebase::ts_source::{SourceStore, relative_slash_path};
+use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::schema::RuleDef;
 use std::path::{Path, PathBuf};
 mod cache;

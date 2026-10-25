@@ -28,11 +28,9 @@ fn saved_effort_configs_keep_max_default_and_definite_subset() {
     assert!(max.len() >= low.len(), "low={low:#?}, max={max:#?}");
     // The same-file helper now has a complete literal SQL proof at low effort.
     assert_eq!(ignore.len(), 6, "{ignore:#?}");
-    assert!(
-        ignore
-            .iter()
-            .any(|finding| finding.file == "src/query.ts" && finding.line == 8)
-    );
+    assert!(ignore
+        .iter()
+        .any(|finding| finding.file == "src/query.ts" && finding.line == 8));
 }
 
 #[test]
@@ -63,11 +61,9 @@ fn namespace_non_query_methods_remain_out_of_scope() {
     let max = check_with_files(&root(), &cfg, std::slice::from_ref(&file)).unwrap();
     assert!(max.is_empty());
     cfg.effort = Some(crate::config::v2::Effort::Low);
-    assert!(
-        check_with_files(&root(), &cfg, std::slice::from_ref(&file))
-            .unwrap()
-            .is_empty()
-    );
+    assert!(check_with_files(&root(), &cfg, std::slice::from_ref(&file))
+        .unwrap()
+        .is_empty());
 }
 
 fn prepared(
@@ -107,12 +103,10 @@ fn low_skips_evaluator_and_reuses_literal_parse_across_calls_and_applications() 
     cfg.rules.push(second);
     let (cfg, files, sources, facts) = prepared(cfg);
     assert!(facts.ts.values().all(|file| file.embedded_sql.is_empty()));
-    assert!(
-        facts
-            .ts
-            .values()
-            .any(|file| !file.sql_identifier_syntax.profiles.is_empty())
-    );
+    assert!(facts
+        .ts
+        .values()
+        .any(|file| !file.sql_identifier_syntax.profiles.is_empty()));
     let observer = crate::diagnostics::InvocationObserver::new(true);
     crate::diagnostics::with_observer(Some(observer.clone()), || {
         check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap();

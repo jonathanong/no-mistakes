@@ -58,6 +58,11 @@ computed object keys, unknown await behavior, or unresolved/ambiguous exports. I
 helpers must already have facts in the selected low-effort scope; analysis does
 not broaden the file selection or parse excluded files as a fallback.
 
+Helpers that receive a SQL object, directly or nested inside an argument, keep
+returned SQL read-only because it may alias that input. Such results can be
+executed or appended as fragment text, but only calls without incoming SQL objects
+can create a fresh builder for further mutation.
+
 For example, `query(buildSqlFromUnknownSource())` remains unanalyzable when that
 callee cannot be resolved. Expose a literal at the executor, move the helper into
 the supported subset, or select maximum effort. The existing `unanalyzable`

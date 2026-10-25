@@ -1,9 +1,9 @@
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
-use crate::codebase::postgres::sql_identifier_syntax::TransformedLiteral;
 use crate::codebase::postgres::sql_identifier_syntax::helper_recovery::ApplicationKey;
 use crate::codebase::postgres::sql_identifier_syntax::literal_projection::{
-    LiteralProjection, project_literals,
+    project_literals, LiteralProjection,
 };
+use crate::codebase::postgres::sql_identifier_syntax::TransformedLiteral;
 use std::collections::BTreeMap;
 use std::path::Path;
 

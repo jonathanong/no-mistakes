@@ -6,10 +6,10 @@ use super::super::super::{
 };
 use crate::codebase::{
     check_facts::CheckFileFacts,
-    postgres::{EmbeddedSqlOptions, sql_identifier_syntax::collect},
+    postgres::{sql_identifier_syntax::collect, EmbeddedSqlOptions},
     ts_source::{
+        facts::{collect_file_facts_from_program, TsFactContext, TsFactPlan},
         FileIdMap,
-        facts::{TsFactContext, TsFactPlan, collect_file_facts_from_program},
     },
 };
 use std::{path::PathBuf, sync::Arc};

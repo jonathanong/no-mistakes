@@ -25,11 +25,9 @@ fn missing_prepared_inputs_fail_while_cached_parser_errors_remain_authoritative(
         // The prepared parser failure overrides the valid file still on disk.
         let findings =
             check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap();
-        assert!(
-            findings
-                .iter()
-                .all(|finding| finding.file != "src/query.ts")
-        );
+        assert!(findings
+            .iter()
+            .all(|finding| finding.file != "src/query.ts"));
     }
 }
 

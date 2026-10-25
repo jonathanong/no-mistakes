@@ -1,14 +1,14 @@
-use super::{CompiledOptions, cache};
+use super::{cache, CompiledOptions};
 mod recovered;
 use crate::codebase::postgres::{
-    SqlVerdictStatus,
     sql_identifier_syntax::{
-        Input, SqlCall, TransformedLiteral, helper_recovery::ApplicationKey,
-        literal_projection::ProjectedLiteral,
+        helper_recovery::ApplicationKey, literal_projection::ProjectedLiteral, Input, SqlCall,
+        TransformedLiteral,
     },
+    SqlVerdictStatus,
 };
-use crate::codebase::rules::RuleFinding;
 use crate::codebase::rules::postgres_no_transformed_uuid_predicates::evaluate::Columns;
+use crate::codebase::rules::RuleFinding;
 use std::{collections::BTreeMap, path::Path};
 
 type Literals = BTreeMap<(Option<ApplicationKey>, (u32, u32)), TransformedLiteral>;

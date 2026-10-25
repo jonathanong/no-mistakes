@@ -1,4 +1,4 @@
-use super::{AnalysisOptions, run_all_with_options};
+use super::{run_all_with_options, AnalysisOptions};
 use no_mistakes::config::v2::Effort;
 use std::path::PathBuf;
 
@@ -120,12 +120,10 @@ fn transformed_uuid_predicates_raw_sql_uncertainty_remains_advisory_at_both_effo
         let report = run(".no-mistakes.raw-advice.yml", Some(effort), false);
         assert!(report.rules.is_empty(), "{:?}", report.rules);
         assert_eq!(report.advisories.len(), 2, "{:?}", report.advisories);
-        assert!(
-            report
-                .advisories
-                .iter()
-                .all(|row| row.rule == "postgres-no-transformed-uuid-predicates")
-        );
+        assert!(report
+            .advisories
+            .iter()
+            .all(|row| row.rule == "postgres-no-transformed-uuid-predicates"));
         let detailed = run(".no-mistakes.raw-advice.yml", Some(effort), true);
         assert_eq!(detailed.rules, report.rules);
         assert_eq!(detailed.advisories, report.advisories);

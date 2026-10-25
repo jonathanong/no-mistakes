@@ -129,11 +129,9 @@ fn escaped_interpolation_stays_unknown_while_literal_helper_sql_is_recovered() {
         2,
         "{findings:#?}"
     );
-    assert!(
-        findings.iter().any(|finding| {
-            finding.line == 5 && finding.target.as_deref() == Some("accounts.id")
-        })
-    );
+    assert!(findings
+        .iter()
+        .any(|finding| { finding.line == 5 && finding.target.as_deref() == Some("accounts.id") }));
 }
 #[test]
 fn physical_crlf_templates_match_cooked_text_and_keep_physical_finding_lines() {

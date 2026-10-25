@@ -1,12 +1,12 @@
 //! Input projection keeps parsing uncertainty independent of definite findings.
 use super::*;
 use crate::codebase::postgres::{
-    SqlOffsetFact,
     sql_identifier_syntax::{
-        Input, OffsetLiteral,
         helper_recovery::{ApplicationKey, Recovered},
         literal_projection::ProjectedLiteral,
+        Input, OffsetLiteral,
     },
+    SqlOffsetFact,
 };
 use std::collections::BTreeMap;
 
