@@ -25,19 +25,16 @@ impl Cursor<'_> {
         if self.word("DOUBLE") {
             return self.word("PRECISION");
         }
-        if self.word("CHARACTER") || self.word("CHAR") || self.word("VARCHAR") {
-            if self.word("VARYING") {
-                return true;
-            }
+        if self.word("CHARACTER") || self.word("CHAR") {
+            self.word("VARYING");
+            return true;
+        }
+        if self.word("VARCHAR") {
             return true;
         }
         if self.word("TIMESTAMP") || self.word("TIME") {
-            self.word("WITH");
-            if self.word("WITHOUT") {
-                self.word("TIME");
-                self.word("ZONE");
-            } else if self.word("TIME") {
-                self.word("ZONE");
+            if self.word("WITH") || self.word("WITHOUT") {
+                return self.word("TIME") && self.word("ZONE");
             }
             return true;
         }

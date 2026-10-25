@@ -139,6 +139,7 @@ impl Cursor<'_> {
                 "precision",
                 "local",
                 "user",
+                "public",
             ]
             .iter()
             .any(|value| word.value.eq_ignore_ascii_case(value));
@@ -193,8 +194,5 @@ impl Cursor<'_> {
     }
     pub(super) fn right_bracket(&mut self) -> bool {
         self.punctuation(Token::RBracket)
-    }
-    pub(super) fn star(&mut self) -> bool {
-        self.punctuation(Token::Mul)
     }
 }

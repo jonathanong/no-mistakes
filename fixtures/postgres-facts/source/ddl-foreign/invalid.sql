@@ -17,6 +17,8 @@ DROP USER MAPPING FOR bob SERVER;
 CREATE FOREIGN TABLE missing_columns SERVER s;
 CREATE FOREIGN TABLE broken (id) SERVER s;
 CREATE FOREIGN TABLE broken (id integer,) SERVER s;
+CREATE FOREIGN TABLE broken (id timestamp without time) SERVER s;
+CREATE FOREIGN TABLE broken (id varchar varying) SERVER s;
 ALTER FOREIGN TABLE myforeign OPTIONS ();
 ALTER FOREIGN TABLE myforeign;
 ALTER SERVER myserver;

@@ -179,7 +179,10 @@ fn signature(c: &mut Cursor<'_>, required: bool) -> bool {
     if !c.left_paren() {
         return !required;
     }
-    if c.star() {
+    if c.right_paren() {
+        return !required;
+    }
+    if c.punctuation(Token::Mul) {
         return c.right_paren();
     }
     if !c.type_name() {
