@@ -5,10 +5,12 @@ use crate::codebase::ts_resolver::TsConfigCatalog;
 use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 
+type ClassExports = FxHashMap<String, Vec<(PathBuf, CallableId)>>;
+type DeclaredModules = FxHashMap<String, ClassExports>;
+
 #[derive(Default)]
 pub(super) struct AmbientModules {
-    classes:
-        FxHashMap<Option<usize>, FxHashMap<String, FxHashMap<String, Vec<(PathBuf, CallableId)>>>>,
+    classes: FxHashMap<Option<usize>, DeclaredModules>,
 }
 impl AmbientModules {
     pub fn new(
