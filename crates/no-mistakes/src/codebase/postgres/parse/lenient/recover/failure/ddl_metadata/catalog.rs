@@ -85,7 +85,15 @@ fn drop(c: &mut Cursor<'_>) -> bool {
         c.drop_behavior();
         return true;
     }
-    let signature = if c.word("AGGREGATE") || c.word("ROUTINE") {
+    if c.word("AGGREGATE") {
+        c.words(&["IF", "EXISTS"]);
+        if !c.aggregate_signature() {
+            return false;
+        }
+        c.drop_behavior();
+        return true;
+    }
+    let signature = if c.word("ROUTINE") {
         true
     } else if c.word("CAST") {
         c.words(&["IF", "EXISTS"]);

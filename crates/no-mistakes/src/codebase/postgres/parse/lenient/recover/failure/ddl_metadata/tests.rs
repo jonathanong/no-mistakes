@@ -75,3 +75,36 @@ fn catalog_family_examples_are_explicitly_recognized() {
         );
     }
 }
+
+#[test]
+fn postgres_identifier_classes_and_aggregate_signatures_remain_distinct() {
+    let valid = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-docs-survey/keyword-classes-valid.sql"
+    ));
+    for sql in valid.lines() {
+        let facts = extract_migration_facts(sql);
+        assert!(!facts.unanalyzable_statements.is_empty(), "{sql}");
+        assert!(
+            facts
+                .unanalyzable_statements
+                .iter()
+                .all(|f| f.valid_unsupported),
+            "{sql}"
+        );
+    }
+    let invalid = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-docs-survey/keyword-classes-invalid.sql"
+    ));
+    for sql in invalid.lines() {
+        let facts = extract_migration_facts(sql);
+        assert!(
+            facts
+                .unanalyzable_statements
+                .iter()
+                .any(|f| !f.valid_unsupported),
+            "{sql}"
+        );
+    }
+}

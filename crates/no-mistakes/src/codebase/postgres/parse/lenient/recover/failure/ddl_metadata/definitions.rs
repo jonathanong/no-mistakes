@@ -84,7 +84,7 @@ fn transform(c: &mut Cursor<'_>) -> bool {
 fn aggregate(c: &mut Cursor<'_>) -> bool {
     // Validate the basic required-parameter grammar; ordered-set and moving
     // aggregates remain unsupported until their distinct grammars are modeled.
-    if !c.name()
+    if !c.function_name()
         || !c.token(Token::LParen)
         || !(c.token(Token::Mul) || c.types())
         || !c.token(Token::RParen)

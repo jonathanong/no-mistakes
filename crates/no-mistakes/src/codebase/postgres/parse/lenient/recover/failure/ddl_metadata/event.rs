@@ -35,7 +35,7 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
         }
         c.word("EXECUTE")
             && (c.word("FUNCTION") || c.word("PROCEDURE"))
-            && c.name()
+            && c.function_name()
             && c.token(Token::LParen)
             && c.token(Token::RParen)
     } else if c.words(&["ALTER", "EVENT", "TRIGGER"]) {
