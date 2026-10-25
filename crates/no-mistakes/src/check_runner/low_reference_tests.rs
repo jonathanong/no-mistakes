@@ -176,3 +176,6 @@ mod low_executor_transport_tests;
 
 #[path = "low_helper_recovery_tests.rs"]
 mod low_helper_recovery_tests;
+
+#[path = "low_helper_acceptance_tests.rs"]
+mod low_helper_acceptance_tests;
