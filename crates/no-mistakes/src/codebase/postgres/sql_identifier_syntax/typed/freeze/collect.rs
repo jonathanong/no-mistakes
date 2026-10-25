@@ -130,7 +130,7 @@ fn static_key(expression: &Expression<'_>) -> Option<String> {
 }
 
 fn numeric_key(value: f64) -> Option<String> {
-    (value.is_finite() && value >= 0.0 && value <= 9_007_199_254_740_991.0 && value.fract() == 0.0)
+    (value.is_finite() && (0.0..=9_007_199_254_740_991.0).contains(&value) && value.fract() == 0.0)
         .then(|| format!("{value:.0}"))
 }
 fn property_key(key: &oxc_ast::ast::PropertyKey<'_>) -> Option<String> {

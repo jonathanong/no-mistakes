@@ -1,10 +1,12 @@
 use super::*;
+
+type BindingProjection = (usize, Vec<Option<String>>);
 #[derive(Default)]
 pub(super) struct Index {
     pub parents: FxHashMap<Span, Vec<Span>>,
     pub bindings: FxHashMap<usize, Vec<Span>>,
     pub invokes: FxHashMap<usize, Vec<Span>>,
-    pub outputs: FxHashMap<Span, Vec<(usize, Vec<Option<String>>)>>,
+    pub outputs: FxHashMap<Span, Vec<BindingProjection>>,
     pub returns: FxHashMap<Span, Vec<usize>>,
     pub aliases: FxHashMap<usize, Vec<usize>>,
     pub stores: FxHashMap<Span, Vec<usize>>,
