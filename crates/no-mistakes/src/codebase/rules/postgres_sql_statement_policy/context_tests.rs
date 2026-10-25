@@ -24,8 +24,11 @@ fn procedural_prefixes_stop_before_case_expression_branches() {
 #[test]
 fn every_new_category_survives_do_function_and_static_execute_recovery() {
     let root = fixture("expanded");
-    let findings =
-        check_with_files(&root, &config(false), &[root.join("all-contexts.sql")]).unwrap();
+    let mut cfg = config(false);
+    // This recovery contract includes opaque body commands; request findings
+    // explicitly while the default advisory policy has its own regression.
+    cfg.rules[0].options["unanalyzable"] = "report".into();
+    let findings = check_with_files(&root, &cfg, &[root.join("all-contexts.sql")]).unwrap();
     let unanalyzable: Vec<_> = findings
         .iter()
         .filter(|finding| finding.message.contains("could not be analyzed"))

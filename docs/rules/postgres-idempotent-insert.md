@@ -186,12 +186,16 @@ policy. Valid sibling statements remain available to the catalog. A real
 and line suppressions apply; rewrite unsupported syntax into a supported static
 statement or suppress the specific diagnostic with a reason.
 
-For schema parse failures, the implicit default advises for complete, recognized
-unsupported PostgreSQL forms; malformed and unrecognized forms retain findings.
-Recognition is conservative: it covers selected `ALTER DEFAULT PRIVILEGES ... GRANT`,
-`CREATE PUBLICATION ... FOR`, and `REFRESH MATERIALIZED VIEW` forms, not all
-PostgreSQL grammar. Explicit rule or repository `unanalyzable` policies override
-both classes. See the [schema diagnostic migration](../migrations/postgres-schema-unanalyzable.md).
+For schema parse failures, the implicit default advises for any statement that
+cannot be analyzed inside a recognized `DO`, PL/pgSQL function, or procedure body.
+This includes malformed body statements: an advisory means analysis is incomplete,
+not that PostgreSQL accepts the SQL. Successfully parsed body statements still
+contribute facts and rule findings. At the top level, complete recognized unsupported
+forms advise; malformed and unrecognized statements retain findings. Recognition
+covers selected `ALTER DEFAULT PRIVILEGES ... GRANT`, `CREATE PUBLICATION ... FOR`,
+and `REFRESH MATERIALIZED VIEW` forms, not all PostgreSQL grammar. Explicit rule or
+repository `unanalyzable` policies override these defaults. See the
+[schema diagnostic migration](../migrations/postgres-schema-unanalyzable.md).
 
 ## Suppression
 

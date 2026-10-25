@@ -25,31 +25,42 @@ use rewrite::{rewrite_drop_index_concurrently, rewrite_referential_set_column_li
 /// the body can still parse. Remaining unparseable chunks recover `ALTER TABLE`,
 /// `CREATE TABLE`, `CREATE [UNIQUE] INDEX`, and DML after PL/pgSQL wrappers.
 pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
-    parse_with_sources(sql, false, true)
+    parse_with_sources(sql, false, true, false)
         .into_iter()
         .filter(|located| !located.function_projection)
         .map(|located| located.statement)
         .collect()
 }
 
+pub(crate) fn parse_postgres_body_with_function_sources(sql: &str) -> Vec<LocatedStatement> {
+    parse_with_sources(sql, true, false, true)
+}
+
 pub(crate) fn parse_postgres_sql_with_function_sources(sql: &str) -> Vec<LocatedStatement> {
-    parse_with_sources(sql, false, true)
+    parse_with_sources(sql, false, true, false)
 }
 
 pub(super) fn parse_postgres_sql_lenient_with_sources(
     sql: &str,
     normalized: &str,
 ) -> Vec<LocatedStatement> {
-    parse_with_normalized_sources(sql, normalized, false, true)
+    parse_with_normalized_sources(sql, normalized, false, true, false)
 }
 
 fn parse_with_sources(
     sql: &str,
     fragment: bool,
     allow_concurrent_detach: bool,
+    procedural_body: bool,
 ) -> Vec<LocatedStatement> {
     let normalized = super::normalize_copy_data(sql);
-    parse_with_normalized_sources(sql, &normalized, fragment, allow_concurrent_detach)
+    parse_with_normalized_sources(
+        sql,
+        &normalized,
+        fragment,
+        allow_concurrent_detach,
+        procedural_body,
+    )
 }
 
 fn parse_with_normalized_sources(
@@ -57,6 +68,7 @@ fn parse_with_normalized_sources(
     normalized: &str,
     fragment: bool,
     allow_concurrent_detach: bool,
+    procedural_body: bool,
 ) -> Vec<LocatedStatement> {
     let separated = super::distinct_group::separate_distinct_grouping(normalized);
     let mut located = super::unicode::tokenize_with_location(&separated, false);
@@ -68,7 +80,7 @@ fn parse_with_normalized_sources(
     super::ddl_compat::normalize(&mut located);
     let fetch = super::fetch_expression::prepare(&mut located);
     if located.is_empty() {
-        return fallback::statements(sql, allow_concurrent_detach);
+        return fallback::statements(sql, allow_concurrent_detach, procedural_body);
     }
     let mut tokens = located.iter().map(|token| token.token.clone()).collect();
     rewrite_virtual_generated_columns(&mut tokens);
@@ -78,6 +90,7 @@ fn parse_with_normalized_sources(
         split_statement_tokens(tokens),
         &located,
         allow_concurrent_detach,
+        procedural_body,
         &recursive_views,
     );
     recursive_views.restore_statements(&mut statements, &original_heads);

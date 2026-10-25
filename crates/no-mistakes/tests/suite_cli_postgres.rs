@@ -1,5 +1,8 @@
 //! Cli postgres integration tests, linked in one harness.
 
+#[path = "cli_check_postgres_body_recovery.rs"]
+mod cli_check_postgres_body_recovery;
+
 #[path = "cli_check_postgres_release_blocker.rs"]
 mod cli_check_postgres_release_blocker;
 

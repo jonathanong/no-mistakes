@@ -56,7 +56,14 @@ fn parsed_statement(code: &[&Token]) -> Option<Statement> {
         return None;
     }
     let tokens = super::super::query_locks::compatible_tokens(code);
-    let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens(tokens);
+    let mut tokens = tokens
+        .into_iter()
+        .map(sqlparser::tokenizer::TokenWithSpan::wrap)
+        .collect();
+    if !super::super::select_into::normalize(&mut tokens) {
+        return None;
+    }
+    let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(tokens);
     let statement = parser.parse_statement().ok()?;
     (parser.peek_token().token == Token::EOF).then_some(statement)
 }

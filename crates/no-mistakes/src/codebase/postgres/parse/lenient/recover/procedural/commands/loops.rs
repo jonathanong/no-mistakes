@@ -15,6 +15,11 @@ pub(in super::super) fn for_header(code: &[&Token]) -> bool {
     if reverse {
         source = &source[1..];
     }
+    if source.first().is_some_and(|token| word(token, "EXECUTE"))
+        && super::super::sql::matches(source)
+    {
+        return !reverse;
+    }
     if row_query(source) {
         return !reverse;
     }

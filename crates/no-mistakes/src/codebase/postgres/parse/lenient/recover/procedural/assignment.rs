@@ -9,7 +9,7 @@ pub(super) fn matches(code: &[&Token]) -> bool {
     target(&code[..at]) && expression(&code[at + 1..])
 }
 
-pub(super) fn target(code: &[&Token]) -> bool {
+pub(in super::super) fn target(code: &[&Token]) -> bool {
     parsed(code).is_some_and(|target| lvalue(&target))
 }
 
@@ -46,7 +46,7 @@ pub(super) fn operator(code: &[&Token]) -> Option<usize> {
     None
 }
 
-pub(super) fn comma_parts<'a>(code: &'a [&'a Token]) -> Option<Vec<&'a [&'a Token]>> {
+pub(in super::super) fn comma_parts<'a>(code: &'a [&'a Token]) -> Option<Vec<&'a [&'a Token]>> {
     let mut parts = Vec::new();
     let mut start = 0;
     let mut depth = 0usize;

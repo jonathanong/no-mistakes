@@ -9,11 +9,11 @@ mod procedural;
 mod queries;
 mod query_locks;
 mod schema;
+mod select_into;
 pub(super) use bodies::concatenated_strings;
 use bodies::{peel_do_body, recover_chr_encoded};
 use partition::recover_partition_change;
 pub(crate) use procedural::BodyState;
-
 use sqlparser::ast::Statement;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::parser::Parser;
@@ -24,6 +24,7 @@ pub(super) fn parse_chunks_with_function_calls(
     chunks: Vec<Vec<Token>>,
     original: &[TokenWithSpan],
     allow_concurrent_detach: bool,
+    procedural_body: bool,
     recursive_views: &super::super::RecursiveViews,
 ) -> Vec<LocatedStatement> {
     let mut located = original
@@ -56,6 +57,7 @@ pub(super) fn parse_chunks_with_function_calls(
             aligned.as_deref(),
             allow_concurrent_detach && !transaction_open,
             &mut handled_procedural,
+            procedural_body,
         );
         // Rejected compatibility ASTs need the same leaf failure marker as parse errors.
         produced.retain(|item| recursive_views.validate(&item.statement).is_ok());
@@ -100,12 +102,12 @@ pub(super) fn parse_chunks_with_function_calls(
     }
     statements
 }
-
 fn parse_chunk(
     chunk: Vec<Token>,
     original: Option<&[TokenWithSpan]>,
     allow_concurrent_detach: bool,
     handled_procedural: &mut Option<bool>,
+    procedural_body: bool,
 ) -> Vec<LocatedStatement> {
     if let Some(body) = peel_do_body(&chunk) {
         let body = locations::align_do_body(&body, original);
@@ -115,7 +117,7 @@ fn parse_chunk(
                 && !super::super::unicode::tokenize_with_location(&body, false).is_empty(),
         );
         return procedural::filter_body(
-            super::parse_with_sources(&body, true, false),
+            super::parse_with_sources(&body, true, false, true),
             *handled_procedural == Some(false),
         );
     }
@@ -124,6 +126,7 @@ fn parse_chunk(
         || chunk.iter().cloned().map(TokenWithSpan::wrap).collect(),
         |tokens| tokens.to_vec(),
     );
+    let mut targets_valid = true;
     if chunk
         .iter()
         .find(|token| !matches!(token, Token::Whitespace(_)))
@@ -135,10 +138,13 @@ fn parse_chunk(
     {
         // Retain a complete query AST, including INTO and its original spans.
         query_locks::rewrite_located(&mut parse_tokens);
+        if procedural_body {
+            targets_valid = select_into::normalize(&mut parse_tokens);
+        }
     }
     let mut parser = Parser::new(&dialect).with_tokens_with_locations(parse_tokens);
     match parser.parse_statement() {
-        Ok(statement) if matches!(parser.peek_token().token, Token::EOF) => {
+        Ok(statement) if targets_valid && matches!(parser.peek_token().token, Token::EOF) => {
             let mut located = LocatedStatement::plain(statement);
             located.complete = true;
             vec![located]
@@ -161,7 +167,7 @@ fn parse_chunk(
             }
             let recovered = recover_chr_encoded(&chunk, original, allow_concurrent_detach);
             if recovered.is_empty() {
-                let expressions = queries::recover(&chunk, original);
+                let expressions = queries::recover(&chunk, original, procedural_body);
                 let action_projected = expressions.iter().any(|(_, synthetic)| !synthetic);
                 // Keep the established guarded DML/DDL recovery alongside any
                 // newly recovered condition expression, without replacing it.
@@ -189,6 +195,5 @@ fn parse_chunk(
         }
     }
 }
-
 #[cfg(test)]
 mod tests;

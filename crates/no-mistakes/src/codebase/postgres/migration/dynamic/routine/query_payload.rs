@@ -39,6 +39,16 @@ pub(super) fn push_query_payload(
     push_schema_statement(body, start, end, ordinal, executed, false, result);
     let payload = result.last_mut().expect("query payload was just added");
     payload.query_payload = true;
+    // Slicing at SELECT must not move first-line calls to column one. Keep the
+    // source column without reintroducing the procedural FOR/cursor prefix.
+    let column = body
+        .peeled_column_offset
+        .map_or(query.span.start.column as usize, |offset| {
+            physical_position(body, offset, start).1
+        });
+    payload
+        .sql
+        .insert_str(0, &" ".repeat(column.saturating_sub(1)));
     payload.call_range = Some(CallRange {
         start,
         end,

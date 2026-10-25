@@ -3,6 +3,7 @@ use crate::codebase::postgres::extract_migration_facts;
 use crate::codebase::rules::{source_store_for_files, suppress_rule_findings_with_sources};
 use crate::config::v2::load_v2_config;
 
+mod body_policy;
 mod copy_tests;
 mod procedural_tests;
 mod recursive_heads;
@@ -119,13 +120,19 @@ fn nested_do_markers_keep_individual_heads_and_lines() {
     assert!(markers[0].head.contains("alpha"));
     assert!(markers[1].head.contains("beta"));
     let (config, files, facts) = prepared(&root, "report.yml");
+    let output = diagnostics(&root, &config, &files, &facts).unwrap();
+    assert!(output.findings.is_empty());
     assert_eq!(
-        diagnostics(&root, &config, &files, &facts)
-            .unwrap()
-            .findings
-            .len(),
-        2
+        output
+            .advisories
+            .iter()
+            .map(|item| item.line)
+            .collect::<Vec<_>>(),
+        [4, 5]
     );
+    for (advisory, marker) in output.advisories.iter().zip(&markers) {
+        assert_eq!(advisory.target.as_deref(), Some(marker.head.as_str()));
+    }
 }
 
 #[test]
