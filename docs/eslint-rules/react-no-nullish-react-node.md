@@ -63,7 +63,7 @@ also left unknown.
 An alias source and reads of that alias use its lexical binding's prop type; a
 same-named loop or catch local does not inherit the alias's type. Declared-type
 name facts keep their existing conservative reporting. Computed identifier
-destructures also retain conservative reporting by the identifier's spelling;
+destructuring also retains conservative reporting by the identifier's spelling;
 that spelling does not prove the runtime key.
 
 ```tsx
