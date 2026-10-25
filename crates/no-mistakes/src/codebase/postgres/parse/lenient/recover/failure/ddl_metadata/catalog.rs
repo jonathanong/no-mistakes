@@ -53,12 +53,10 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
     if c.word("SUBSCRIPTION") {
         return c.identifier() && (c.word("ENABLE") || c.word("DISABLE"));
     }
-    if c.word("DATABASE")
-        || c.word("CONVERSION")
-        || c.word("LANGUAGE")
-        || c.word("TABLESPACE")
-        || c.word("VIEW")
-    {
+    if c.word("DATABASE") || c.word("LANGUAGE") || c.word("TABLESPACE") {
+        return c.identifier() && c.words(&["RENAME", "TO"]) && c.identifier();
+    }
+    if c.word("CONVERSION") || c.word("VIEW") {
         return c.name() && c.words(&["RENAME", "TO"]) && c.identifier();
     }
     false
@@ -73,6 +71,20 @@ fn number(c: &mut Cursor<'_>) -> bool {
     }
 }
 fn drop(c: &mut Cursor<'_>) -> bool {
+    // These objects live outside schemas. Roles/tablespaces also have no
+    // CASCADE/RESTRICT suffix, unlike the schema-scoped DROP forms below.
+    if c.word("GROUP") || c.word("TABLESPACE") {
+        c.words(&["IF", "EXISTS"]);
+        return c.identifier();
+    }
+    if c.words(&["ACCESS", "METHOD"]) || c.word("LANGUAGE") || c.word("SUBSCRIPTION") {
+        c.words(&["IF", "EXISTS"]);
+        if !c.identifier() {
+            return false;
+        }
+        c.drop_behavior();
+        return true;
+    }
     let signature = if c.word("AGGREGATE") || c.word("ROUTINE") {
         true
     } else if c.word("CAST") {
@@ -95,13 +107,8 @@ fn drop(c: &mut Cursor<'_>) -> bool {
         c.drop_behavior();
         return true;
     } else {
-        let known = c.words(&["ACCESS", "METHOD"])
-            || c.word("CONVERSION")
-            || c.word("GROUP")
-            || c.word("LANGUAGE")
+        let known = c.word("CONVERSION")
             || c.word("STATISTICS")
-            || c.word("SUBSCRIPTION")
-            || c.word("TABLESPACE")
             || (c.words(&["TEXT", "SEARCH"])
                 && (c.word("CONFIGURATION")
                     || c.word("DICTIONARY")
