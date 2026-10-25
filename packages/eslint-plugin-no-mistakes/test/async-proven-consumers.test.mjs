@@ -232,7 +232,7 @@ it("keeps forwarding syntax narrow and rejects ambiguous implementations", () =>
 it("does not let sibling callbacks inspect the dependency receiver and caches by supplied shape", () => {
   assert.deepEqual(
     reports("cross-file-receivers.ts"),
-    [5, 7, 11, 13, 17, 22, 24, 30, 33].map((line) => [line, "disposition"]),
+    [5, 7, 11, 13, 17, 22, 24, 30, 33, 39].map((line) => [line, "disposition"]),
   );
 });
 it.each(["noResolve", "missingMap"])(

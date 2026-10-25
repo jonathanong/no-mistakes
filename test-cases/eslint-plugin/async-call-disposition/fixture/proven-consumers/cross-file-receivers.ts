@@ -37,5 +37,6 @@ await consume({ job: aliasedJob, other: aliasClosingSibling });
 const noCapture = () => enqueueEmail(15);
 await consume({ job: noCapture, other: aliased });
 const reusedSiblingJob = () => enqueueEmail(16);
+// The sibling reaches an opaque async API through a helper, so receiver safety is unproven.
 await consume({ job: reusedSiblingJob, other: closingSibling });
 await consume({ job: closedOver, other: closingSibling });

@@ -305,11 +305,16 @@ use of the selected property reaches an immediately awaited invocation, such as
 same-file and imported helper calls, a defaulted dependency parameter, and
 `{ ...dependencies, otherField }` forwarding that preserves the selected property.
 It also follows a selected property through `??` into another fresh object.
-Unrelated static property reads do not change this callback's disposition. An
+Pure static property reads do not change this callback's disposition. Sibling
+assignments, updates, deletes, nested writes, and assignment-pattern or loop
+targets invalidate the supplied shape; runtime mutation cannot prove adoption. An
 unrelated dependency method receives the same object as `this`, so its supplied
 function must be statically free of `this`, `eval`, and `arguments`. It also must
-not close over another supplied callback, including through a stable alias:
-that closure could invoke the callback without handling its promise. An absent
+not close over another supplied callback, including through stable aliases or
+transitive local helper calls:
+that closure could invoke the callback without handling its promise. Unknown
+helper calls, non-function holders, or helper chains beyond the proof bound
+remain unproven. An absent
 optional method cannot escape that receiver. Custom `__proto__` properties are
 rejected because they can supply an apparently absent optional method. Accesses
 to `__proto__`, `constructor`, or `prototype` on the dependency parameter also
