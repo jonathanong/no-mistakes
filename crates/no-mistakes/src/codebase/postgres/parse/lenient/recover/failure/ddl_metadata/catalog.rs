@@ -55,6 +55,23 @@ fn number(c: &mut Cursor<'_>) -> bool {
     }
 }
 
+// Statistics permits the obsolete default target -1, but no smaller target.
+// Sequence increments instead permit descending (negative) integers.
+fn signed_number(c: &mut Cursor<'_>, statistics: bool) -> bool {
+    let negative = c.token(Token::Minus);
+    if !negative {
+        c.token(Token::Plus);
+    }
+    if negative
+        && statistics
+        && !matches!(c.0.peek_token().token,
+        Token::Number(ref n, false) if n.parse::<u64>().is_ok_and(|value| value <= 1))
+    {
+        return false;
+    }
+    number(c)
+}
+
 fn group(c: &mut Cursor<'_>) -> bool {
     if !c.identifier() || !(c.word("ADD") || c.word("DROP")) || !c.word("USER") || !c.identifier() {
         return false;
@@ -71,11 +88,13 @@ fn relation(c: &mut Cursor<'_>) -> bool {
     if c.word("SEQUENCE") {
         return c.name() && c.word("INCREMENT") && {
             c.word("BY");
-            number(c)
+            signed_number(c, false)
         };
     }
     if c.word("STATISTICS") {
-        return c.name() && c.words(&["SET", "STATISTICS"]) && number(c);
+        return c.name()
+            && c.words(&["SET", "STATISTICS"])
+            && (c.word("DEFAULT") || signed_number(c, true));
     }
     if c.word("SUBSCRIPTION") {
         return c.identifier() && (c.word("ENABLE") || c.word("DISABLE"));
