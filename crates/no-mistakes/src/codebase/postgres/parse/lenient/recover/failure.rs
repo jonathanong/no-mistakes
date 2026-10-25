@@ -11,6 +11,22 @@ use sqlparser::tokenizer::{Token, TokenWithSpan};
 use std::ops::ControlFlow;
 use std::sync::Arc;
 
+/// Replace rejected compatibility ASTs with the same leaf marker as parse errors.
+pub(super) fn reject_incompatible(
+    produced: &mut Vec<LocatedStatement>,
+    original: Option<&[TokenWithSpan]>,
+    procedural_body: bool,
+    recursive_views: &super::super::super::RecursiveViews,
+) {
+    let rejected = produced
+        .iter()
+        .any(|item| recursive_views.validate(&item.statement).is_err());
+    produced.retain(|item| recursive_views.validate(&item.statement).is_ok());
+    if rejected {
+        produced.extend(original.and_then(|tokens| rejected_schema(tokens, procedural_body)));
+    }
+}
+
 pub(super) fn guarded_action(
     tokens: &[Token],
     original: Option<&[TokenWithSpan]>,
