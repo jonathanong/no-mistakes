@@ -39,9 +39,11 @@ pub(super) fn valid(tokens: &[TokenWithSpan]) -> bool {
     } else if c.words(&["DROP", "USER", "MAPPING"]) {
         extended::drop_mapping(&mut c)
     } else if c.words(&["DROP", "FOREIGN", "DATA", "WRAPPER"]) {
+        extended::drop_unqualified_names(&mut c)
+    } else if c.words(&["DROP", "FOREIGN", "TABLE"]) {
         extended::drop_names(&mut c)
-    } else if c.words(&["DROP", "FOREIGN", "TABLE"]) || c.words(&["DROP", "SERVER"]) {
-        extended::drop_names(&mut c)
+    } else if c.words(&["DROP", "SERVER"]) {
+        extended::drop_unqualified_names(&mut c)
     } else if c.words(&["SECURITY", "LABEL"]) {
         commands::security_label(&mut c)
     } else if c.words(&["ALTER", "LARGE", "OBJECT"]) {

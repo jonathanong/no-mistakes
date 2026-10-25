@@ -1,4 +1,10 @@
 use sqlparser::tokenizer::Token;
+#[path = "identifiers.rs"]
+mod identifiers;
+#[path = "reserved.rs"]
+mod reserved;
+#[path = "roles.rs"]
+mod roles;
 
 pub(super) struct Cursor<'a> {
     pub(super) tokens: &'a [&'a Token],
@@ -7,7 +13,10 @@ pub(super) struct Cursor<'a> {
 
 impl Cursor<'_> {
     pub(super) fn option_value(&mut self, required: bool) -> bool {
-        self.identifier() && (!required || self.string())
+        self.option_name() && (!required || self.string())
+    }
+    pub(super) fn option_name(&mut self) -> bool {
+        self.word("USER") || self.identifier()
     }
 
     pub(super) fn options(&mut self, alter: bool) -> bool {
@@ -70,29 +79,16 @@ impl Cursor<'_> {
         }
         true
     }
-    pub(super) fn role(&mut self) -> bool {
-        ["CURRENT_ROLE", "CURRENT_USER", "SESSION_USER"]
-            .iter()
-            .any(|word| self.word(word))
-            || self.identifier()
-    }
-    pub(super) fn mapping_role(&mut self) -> bool {
-        [
-            "CURRENT_ROLE",
-            "CURRENT_USER",
-            "SESSION_USER",
-            "USER",
-            "PUBLIC",
-        ]
-        .iter()
-        .any(|word| self.word(word))
-            || self.identifier()
-    }
-    fn owned_role(&mut self) -> bool {
-        ["CURRENT_ROLE", "CURRENT_USER", "SESSION_USER"]
-            .iter()
-            .any(|word| self.word(word))
-            || self.identifier()
+    pub(super) fn simple_names(&mut self) -> bool {
+        if !self.identifier() {
+            return false;
+        }
+        while self.comma() {
+            if !self.identifier() {
+                return false;
+            }
+        }
+        true
     }
     pub(super) fn name(&mut self) -> bool {
         self.identifier() && (!self.period() || self.identifier())
@@ -115,43 +111,6 @@ impl Cursor<'_> {
             false
         }
     }
-    pub(super) fn identifier(&mut self) -> bool {
-        let Some(Token::Word(word)) = self.tokens.get(self.at) else {
-            return false;
-        };
-        let keyword_identifier = word.keyword == sqlparser::keywords::Keyword::NoKeyword
-            || [
-                "int",
-                "integer",
-                "text",
-                "boolean",
-                "varchar",
-                "char",
-                "date",
-                "timestamp",
-                "interval",
-                "numeric",
-                "decimal",
-                "real",
-                "smallint",
-                "bigint",
-                "double",
-                "precision",
-                "local",
-                "user",
-                "public",
-            ]
-            .iter()
-            .any(|value| word.value.eq_ignore_ascii_case(value));
-        if word.value.is_empty()
-            || !(word.quote_style == Some('"')
-                || (word.quote_style.is_none() && keyword_identifier))
-        {
-            return false;
-        }
-        self.at += 1;
-        true
-    }
     pub(super) fn number(&mut self) -> bool {
         if matches!(self.tokens.get(self.at), Some(Token::Number(n, _)) if !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()))
         {
@@ -162,7 +121,15 @@ impl Cursor<'_> {
         }
     }
     pub(super) fn string(&mut self) -> bool {
-        if matches!(self.tokens.get(self.at), Some(Token::SingleQuotedString(_))) {
+        if matches!(
+            self.tokens.get(self.at),
+            Some(
+                Token::SingleQuotedString(_)
+                    | Token::EscapedStringLiteral(_)
+                    | Token::UnicodeStringLiteral(_)
+                    | Token::DollarQuotedString(_)
+            )
+        ) {
             self.at += 1;
             true
         } else {

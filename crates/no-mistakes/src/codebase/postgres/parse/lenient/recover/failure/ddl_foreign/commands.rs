@@ -1,5 +1,6 @@
 use super::cursor::Cursor;
-use sqlparser::tokenizer::Token;
+#[path = "signatures.rs"]
+mod signatures;
 
 pub(super) fn create_fdw(c: &mut Cursor<'_>) -> bool {
     if !c.identifier() {
@@ -128,7 +129,7 @@ pub(super) fn security_label(c: &mut Cursor<'_>) -> bool {
             return false;
         }
     } else if object == "EVENT" {
-        if !c.word("TRIGGER") || !c.name() {
+        if !c.word("TRIGGER") || !c.identifier() {
             return false;
         }
     } else if object == "FOREIGN" {
@@ -140,11 +141,11 @@ pub(super) fn security_label(c: &mut Cursor<'_>) -> bool {
             return false;
         }
     } else if object == "PROCEDURAL" {
-        if !c.word("LANGUAGE") || !c.name() {
+        if !c.word("LANGUAGE") || !c.identifier() {
             return false;
         }
     } else if object == "COLUMN" {
-        if !qualified_column(c) {
+        if !signatures::qualified_column(c) {
             return false;
         }
     } else if object == "FUNCTION"
@@ -152,46 +153,18 @@ pub(super) fn security_label(c: &mut Cursor<'_>) -> bool {
         || object == "ROUTINE"
         || object == "AGGREGATE"
     {
-        if !c.name() || !signature(c, object == "AGGREGATE") {
+        if !c.name() || !signatures::signature(c, object == "AGGREGATE") {
+            return false;
+        }
+    } else if matches!(
+        object,
+        "DATABASE" | "PUBLICATION" | "ROLE" | "SCHEMA" | "SUBSCRIPTION" | "TABLESPACE"
+    ) {
+        if !c.identifier() {
             return false;
         }
     } else if !c.name() {
         return false;
     }
     c.word("IS") && (c.string() || c.word("NULL"))
-}
-
-fn qualified_column(c: &mut Cursor<'_>) -> bool {
-    if !c.identifier() {
-        return false;
-    }
-    let mut separators = 0;
-    while c.period() {
-        if !c.identifier() {
-            return false;
-        }
-        separators += 1;
-    }
-    (1..=2).contains(&separators)
-}
-
-fn signature(c: &mut Cursor<'_>, required: bool) -> bool {
-    if !c.left_paren() {
-        return !required;
-    }
-    if c.right_paren() {
-        return !required;
-    }
-    if c.punctuation(Token::Mul) {
-        return c.right_paren();
-    }
-    if !c.type_name() {
-        return false;
-    }
-    while c.comma() {
-        if !c.type_name() {
-            return false;
-        }
-    }
-    c.right_paren()
 }

@@ -1,4 +1,5 @@
 use super::cursor::Cursor;
+use sqlparser::tokenizer::Token;
 
 pub(super) fn drop_names(c: &mut Cursor<'_>) -> bool {
     if c.words(&["IF", "EXISTS"]) {}
@@ -11,18 +12,20 @@ pub(super) fn drop_names(c: &mut Cursor<'_>) -> bool {
     true
 }
 
+pub(super) fn drop_unqualified_names(c: &mut Cursor<'_>) -> bool {
+    if c.words(&["IF", "EXISTS"]) {}
+    if !c.simple_names() {
+        return false;
+    }
+    if !c.word("CASCADE") {
+        c.word("RESTRICT");
+    }
+    true
+}
+
 pub(super) fn drop_mapping(c: &mut Cursor<'_>) -> bool {
     if c.words(&["IF", "EXISTS"]) {}
     c.word("FOR") && c.mapping_role() && c.word("SERVER") && c.identifier()
-}
-
-pub(super) fn alter_mapping(c: &mut Cursor<'_>) -> bool {
-    c.word("FOR")
-        && c.mapping_role()
-        && c.word("SERVER")
-        && c.identifier()
-        && c.word("OPTIONS")
-        && c.options(true)
 }
 
 pub(super) fn alter_server(c: &mut Cursor<'_>) -> bool {
@@ -46,13 +49,22 @@ pub(super) fn alter_server(c: &mut Cursor<'_>) -> bool {
     version || options
 }
 
+pub(super) fn alter_mapping(c: &mut Cursor<'_>) -> bool {
+    c.word("FOR")
+        && c.mapping_role()
+        && c.word("SERVER")
+        && c.identifier()
+        && c.word("OPTIONS")
+        && c.options(true)
+}
+
 pub(super) fn alter_foreign_table(c: &mut Cursor<'_>) -> bool {
     if c.words(&["IF", "EXISTS"]) {}
     let _only = c.word("ONLY");
     if !c.name() {
         return false;
     }
-    c.star();
+    c.punctuation(Token::Mul);
     if c.word("OPTIONS") {
         return c.options(true);
     }
