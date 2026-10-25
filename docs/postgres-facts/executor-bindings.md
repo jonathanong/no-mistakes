@@ -26,6 +26,8 @@ same literal/one-local-constant contract as named executors. Type annotations,
 type aliases, and `typeof` type queries are erased uses and never create SQL
 findings. Dynamic or unsupported SQL is reported at its executor call; passing
 a configured executor through an unmodeled runtime use remains an unknown escape.
+An unresolved computed parameter key preserves unknown uses of its bound names;
+literal SQL at those calls does not establish executor ownership.
 
 For low SQL-structure checks, a typed parameter may default to a configured
 executor export. Typed callback parameters keep the same literal-SQL contract.

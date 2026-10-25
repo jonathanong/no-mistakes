@@ -122,3 +122,6 @@ mod escape_site_tests;
 
 #[cfg(test)]
 mod low_max_bind_parity_tests;
+
+#[cfg(test)]
+mod typed_computed_parameter_tests;
