@@ -27,6 +27,10 @@ pub(crate) fn check_with_graph(
     let mut diagnostics = AnalysisDiagnostics::default();
     for application in config.rule_applications(RULE_ID) {
         let policy = config.effective_rule_analysis(application)?.unanalyzable;
+        let target_policy = match policy {
+            crate::config::v2::Unanalyzable::Report => crate::config::v2::Unanalyzable::Advise,
+            other => other,
+        };
         let options: Options = application.try_rule_options()?;
         let extra_tests =
             GlobMatcher::new(&options.test_files, &format!("{RULE_ID} options.testFiles"))?;
@@ -51,7 +55,11 @@ pub(crate) fn check_with_graph(
             let finding = finding(&root, application, result.class);
             if result.unknown_base || result.unknown_constructor || result.class.namespace_escaped {
                 diagnostics.unanalyzable(
-                    policy,
+                    if result.unknown_base || result.unknown_constructor {
+                        target_policy
+                    } else {
+                        policy
+                    },
                     super::diagnostics::uncertain_class(
                         finding,
                         application,
@@ -68,7 +76,7 @@ pub(crate) fn check_with_graph(
                 path_filter.is_match(file)
             })
         {
-            diagnostics.unanalyzable(policy, finding);
+            diagnostics.unanalyzable(target_policy, finding);
         }
     }
     Ok(diagnostics)

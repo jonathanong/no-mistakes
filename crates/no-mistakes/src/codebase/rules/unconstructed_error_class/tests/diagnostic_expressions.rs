@@ -3,21 +3,32 @@ use super::*;
 #[test]
 fn computed_and_conditional_constructors_have_meaningful_diagnostic_labels() {
     let root = fixture().parent().unwrap().join("diagnostics/fixture");
-    let findings = run_check(&root, None, None).unwrap();
+    let report = diagnostic_report(&root);
+    assert_eq!(report["rules"], serde_json::json!([]));
+    let findings = report["advisories"].as_array().unwrap();
     assert_eq!(findings.len(), 2, "{findings:#?}");
     assert_eq!(
         findings
             .iter()
-            .map(|finding| finding.line)
+            .map(|finding| finding["line"].as_u64().unwrap())
             .collect::<Vec<_>>(),
         [2, 2]
     );
-    assert!(findings[0].message.contains("flag ? T1 : T2"));
-    assert!(findings[1].message.contains("reg[name]"));
+    assert!(findings[0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("flag ? T1 : T2"));
+    assert!(findings[1]["message"]
+        .as_str()
+        .unwrap()
+        .contains("reg[name]"));
     for finding in findings {
-        assert_eq!(finding.target.as_deref(), Some("unanalyzable"));
-        assert!(!finding.message.contains("<unknown>"));
-        assert!(finding.message.contains("constructor expression `"));
+        assert_eq!(finding["target"], "unanalyzable");
+        assert!(!finding["message"].as_str().unwrap().contains("<unknown>"));
+        assert!(finding["message"]
+            .as_str()
+            .unwrap()
+            .contains("constructor expression `"));
     }
 }
 

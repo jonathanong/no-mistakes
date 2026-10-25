@@ -1,4 +1,4 @@
-//! Request-owned declaration facts used exclusively by canonical class ancestry.
+//! Request-owned facts for canonical class ancestry and constructor resolution.
 use super::*;
 use crate::codebase::dependencies::extract::CallableId;
 use crate::codebase::dependencies::graph::{ClassDeclaration, NodeId, TsFactLookup};
@@ -15,6 +15,8 @@ pub(crate) struct ClassAncestry {
     pub targets: FxHashMap<(PathBuf, CallableId), NodeId>,
     pub classes: Vec<ClassDeclaration>,
     pub expressions: FxHashMap<(PathBuf, u32), String>,
+    pub constructors: FxHashMap<PathBuf, FxHashMap<u32, NodeId>>,
+    pub global_constructors: FxHashMap<PathBuf, FxHashSet<u32>>,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]

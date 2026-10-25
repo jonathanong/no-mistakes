@@ -7,7 +7,7 @@ fn pnpm_declaration_context_cannot_prove_a_hoisted_non_error_base() {
         .unwrap()
         .join("package-resolution/pnpm-symlink-probe");
     for (config, failures, advisories, suppressed) in [
-        (".no-mistakes.yml", 3, 0, 1),
+        (".no-mistakes.yml", 1, 2, 1),
         ("advise.yml", 1, 2, 1),
         ("ignore.yml", 1, 0, 0),
     ] {

@@ -1,0 +1,4 @@
+version: 2
+rules:
+  - rule: unconstructed-error-class
+    scope: repository

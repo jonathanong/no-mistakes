@@ -308,8 +308,8 @@ fn uncertain_inputs_obey_shared_policy_in_cli_check_reports() {
     let root = fixture().parent().unwrap().join("uncertain/fixture");
     let mut baseline = None;
     for (config, findings, advisories) in [
-        (".no-mistakes.yml", 8, 0),
-        ("max.yml", 8, 0),
+        (".no-mistakes.yml", 2, 6),
+        ("max.yml", 2, 6),
         ("advise.yml", 1, 7),
         ("ignore.yml", 1, 0),
     ] {
@@ -332,6 +332,45 @@ fn uncertain_inputs_obey_shared_policy_in_cli_check_reports() {
         }
         if config == "max.yml" {
             assert_eq!(Some(value["rules"].clone()), baseline);
+        }
+    }
+}
+
+#[test]
+fn unresolved_constructor_and_base_only_reports_exit_successfully() {
+    let root = fixture()
+        .parent()
+        .unwrap()
+        .join("construction-targets/fixture");
+    for (config, advisories) in [
+        ("advisory-only-report.yml", 2),
+        ("advisory-only-advise.yml", 2),
+        ("advisory-only-ignore.yml", 0),
+    ] {
+        for effort in ["low", "max"] {
+            let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+                .args(["check", "--format", "json", "--root"])
+                .arg(&root)
+                .arg("--config")
+                .arg(root.join(config))
+                .args(["--effort", effort])
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(0), "{}", text(&output));
+            let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+            assert_eq!(value["rules"], serde_json::json!([]), "{value}");
+            let rows = value["advisories"].as_array().unwrap();
+            assert_eq!(rows.len(), advisories, "{config}/{effort}: {value}");
+            if advisories > 0 {
+                // Uncertainty is visible even with explicit report, rather than
+                // being discarded to make the CLI succeed.
+                assert!(rows
+                    .iter()
+                    .any(|row| row["message"].as_str().unwrap().contains("Worker")));
+                assert!(rows
+                    .iter()
+                    .any(|row| row["message"].as_str().unwrap().contains("Constructor")));
+            }
         }
     }
 }

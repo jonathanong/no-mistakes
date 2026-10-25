@@ -36,8 +36,8 @@ a test builds is reported. Test files are `__tests__` directories and
 
 An unresolved `new`, including `new this()` or `new this.ctor()`, does not prove
 that its lexically enclosing class is constructed or unconstructed. Both the
-construction site and its otherwise-unconstructed enclosing class follow
-`options.unanalyzable`; use a named constructor such as
+construction site and its otherwise-unconstructed enclosing class are advisory
+unless `options.unanalyzable: ignore` omits them; use a named constructor such as
 `static create() { return new AppError(); }` to make the construction explicit.
 
 Declaration files (`.d.ts`, `.d.mts`, `.d.cts`) are skipped: they describe code
@@ -211,6 +211,14 @@ call, so it never shows up in `forbidden-calls` and never counts as a
 construction. The rule follows `extends` edges to a built-in error, and treats a
 subclass in non-test source as a use of its base.
 
+Constructor lookup also reuses the prepared class-ancestry facts and resolver,
+including tsconfig path aliases, re-exports, and usable package declarations.
+Resolving the constructed class credits that exact class even when its own base
+ancestry remains unknown. This does not widen ordinary import or call query
+results. Known non-Error global constructors, including `Intl.DateTimeFormat`
+and `Intl.NumberFormat`, do not produce unresolved-target diagnostics. A local
+binding that shadows a global name must resolve independently.
+
 A class inside a `namespace` is resolved the same way, through the namespace's
 member path: the extractor records each namespace member, and each namespace
 used as a value, in the one parse it already does per file. The graph then looks
@@ -283,8 +291,9 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Inputs whose construction or error ancestry cannot be proved follow the shared
-`options.unanalyzable` policy ([how analysis works](../../README.md#how-analysis-works)):
+Inputs whose construction or error ancestry cannot be proved use
+`options.unanalyzable` with the constructor/base exception below
+([how analysis works](../../README.md#how-analysis-works)):
 
 - A selected non-test construction whose target is unresolved, including an
   unknown constructor inside a class member. It is reported at the construction
@@ -300,9 +309,15 @@ Inputs whose construction or error ancestry cannot be proved follow the shared
   construction or inheritance already proves it used. It is reported at the
   class line because the graph cannot determine whether it is an error class.
 
-`report` (default) produces failing findings with `target: unanalyzable`;
-`advise` produces non-failing advisories; `ignore` omits them. The setting inherits
-from repository `unanalyzable` and can be overridden per rule application.
+Unresolved constructor targets, their otherwise-unused enclosing classes, and
+otherwise-unused classes with unresolved base ancestry produce **non-failing
+advisories**, even under
+`report` (the default). An unresolved constructor or base does not establish
+that an Error class exists and is unused. `advise` also produces advisories;
+`ignore` omits these diagnostics. Namespace-escape-only uncertainty retains the
+shared policy: `report` fails, `advise` advises, and `ignore` omits it. All these
+uncertainties have `target: unanalyzable`. The setting inherits from repository
+`unanalyzable` and can be overridden per rule application.
 Unrelated definite unconstructed error classes remain findings under every
 policy. An unknown constructor does not turn its enclosing class into a definite
 unused finding: `FactoryError.make(FactoryError)` can really construct it when
@@ -327,22 +342,32 @@ rules:
 
 ## Upgrading
 
-This change adds default-report diagnostics to repositories already running the
-rule. Review these inputs when upgrading:
+The constructor-target fix for [#2734 section 2](https://github.com/jonathanong/no-mistakes/issues/2734)
+removes false failures introduced by #2699:
 
-- unresolved `new` targets, including `new this()`, `new someParam()`, and
-  computed or conditional constructors;
-- class bases whose ancestry remains unresolved, including package bases with
-  unavailable or unsupported type declarations;
-- otherwise-unconstructed error classes in escaping namespaces.
+- Resolvable alias and package constructors reuse the existing resolver and
+  available class declarations. Known non-Error globals no longer produce
+  unresolved-target diagnostics.
+- Still-unresolved `new` targets, including `new this()`, `new someParam()`, and
+  computed or conditional constructors, are advisory even under `report`.
+  Otherwise-unused enclosing classes with those constructors are advisory too.
+- Unresolved class bases, including unavailable host-module or package type
+  declarations, are advisory even under `report`.
+- Otherwise-unconstructed error classes in escaping namespaces still follow the
+  shared policy, including failing under `report` when that is their only
+  uncertainty. Definite unused Error classes remain failures under every policy.
 
 Use statically named constructors and analyzable class bases where possible.
-Set `options.unanalyzable: advise` while reviewing these cases, or `ignore` to
-omit their uncertainty. Repository `unanalyzable` supplies the default when no
-rule override is set. Usable declarations can remove a proven non-Error finding
+Set `options.unanalyzable: advise` to make namespace uncertainty advisory too,
+or `ignore` to omit uncertainty diagnostics. Repository `unanalyzable` supplies
+the default when no rule override is set. Usable declarations can remove a
+proven non-Error finding
 or establish a definite unused-Error finding even under `advise`/`ignore`. For
 intentional cases, use a reasoned file, line, or next-line suppression at each
 reported class or construction site.
+
+See the [migration note](../migrations/unconstructed-error-class-constructor-targets.md)
+for CLI and Node report behavior.
 
 ## Suppression
 
@@ -367,11 +392,11 @@ Its class can still receive a definite finding, even when `unanalyzable` is
 
 ## Limitations
 
-The rule reads static code only. Most limitations below hide a dead class; the
-first reports a class that is not really dead, which a suppression comment
-resolves.
+The rule reads static code only. Unsupported constructor and base shapes are
+advisory unless ignored; reflection and some alias forms can still hide a dead
+class.
 
-- A dynamic `new` (`new (registry[name])()`) follows the unanalyzable policy
+- A dynamic `new` (`new (registry[name])()`) produces an advisory unless ignored,
   without proving which class is constructed. Reflection such as
   `Reflect.construct` is not recognized as construction; suppress a class built
   only through reflection.
@@ -386,13 +411,19 @@ resolves.
   targets remain uncertain. `typesVersions` is ignored when `exports` owns
   resolution; legacy version maps, export patterns, missing compiler versions
   needed by conditions, opaque aliases/functions and unsupported conditions stay
-  unknown and follow `options.unanalyzable`. Anonymous default classes without a
-  stable class identity also remain unknown. This is a conservative ancestry
+  unknown and advisory unless `options.unanalyzable: ignore` omits them.
+  Anonymous default classes without a stable class identity also remain unknown.
+  This is a conservative ancestry
   projection, not full TypeScript compiler resolution; ordinary import and call
   targets retain their existing semantics. Transitive bare or parent-relative
   imports from internally symlinked declarations remain uncertain when their
   package dependency context cannot be proved; safe same-directory reexports
   remain supported. Distinct symlink spellings retain separate logical identities.
+  A constructor obtained by destructuring a default-imported object, or by
+  choosing between a module's default export and its namespace, can remain
+  unresolved. These sites are advisory unless ignored; an object's declaration
+  type alone is not proof of the runtime constructor. Prefer a direct class
+  import when the package exposes one.
 - Mixin and expression bases (`extends withCode(Error)`) and class expressions
   are not tracked.
 - A dead subclass still satisfies its base. The check converges over repeated
@@ -407,8 +438,8 @@ resolves.
   `export { PublicError };`, `InternalError` is skipped.
 - An alias of a built-in error used as a base is not a recognized error root.
   With `const E2 = Error; export class Al extends E2 {}`, the class follows
-  `options.unanalyzable` because the base cannot be proved.
-- An unresolved `new`, such as `new this()`, follows the unanalyzable policy;
+  the unresolved-base advisory policy because the base cannot be proved.
+- An unresolved `new`, such as `new this()`, is advisory unless ignored;
   it does not credit an enclosing class.
 
 ## Related rules

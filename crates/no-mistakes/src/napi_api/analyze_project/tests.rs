@@ -444,3 +444,6 @@ fn analyze_project_server_views_share_one_report_with_standalone_parity() {
 include!("tests/serialize_once.rs");
 
 mod nextjs_scope;
+
+#[path = "tests/constructor_policy.rs"]
+mod constructor_policy;
