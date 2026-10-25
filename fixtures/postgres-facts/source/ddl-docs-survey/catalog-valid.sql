@@ -55,3 +55,5 @@ DROP TEXT SEARCH CONFIGURATION IF EXISTS public.first_config, accounting.second_
 DROP TEXT SEARCH DICTIONARY IF EXISTS first_dictionary, accounting.second_dictionary;
 DROP TEXT SEARCH PARSER IF EXISTS first_parser, accounting.second_parser RESTRICT;
 DROP TEXT SEARCH TEMPLATE IF EXISTS first_template, accounting.second_template CASCADE;
+DROP EVENT TRIGGER first_event, second_event CASCADE; -- PG17 gram.y permits a name list.
+DROP EVENT TRIGGER IF EXISTS first_event, second_event RESTRICT;

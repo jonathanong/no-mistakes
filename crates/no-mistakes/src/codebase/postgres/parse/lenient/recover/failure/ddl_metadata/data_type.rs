@@ -24,7 +24,6 @@ pub(super) fn valid(data_type: &DataType) -> bool {
         | DataType::Integer(Some(_))
         | DataType::SmallInt(Some(_))
         | DataType::BigInt(Some(_))
-        | DataType::Double(_)
         | DataType::Float(ExactNumberInfo::PrecisionAndScale(_, _)) => false,
         DataType::Array(array) => match array {
             ArrayElemTypeDef::SquareBracket(element, _)

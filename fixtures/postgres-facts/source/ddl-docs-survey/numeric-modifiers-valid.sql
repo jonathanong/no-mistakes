@@ -8,3 +8,4 @@ CREATE CAST (zerofill AS text) WITH INOUT;
 CREATE CAST (public.unsigned AS text) WITH INOUT;
 CREATE CAST ("integer" AS text) WITH INOUT;
 CREATE CAST ("double" AS text) WITH INOUT;
+CREATE CAST (double AS text) WITH INOUT; -- Bare double is a valid custom type name.

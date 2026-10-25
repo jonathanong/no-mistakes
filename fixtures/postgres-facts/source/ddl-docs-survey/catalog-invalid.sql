@@ -83,3 +83,5 @@ DROP TEXT SEARCH CONFIGURATION first_config CASCADE, second_config;
 DROP TEXT SEARCH DICTIONARY first_dictionary,;
 DROP TEXT SEARCH PARSER first_parser,;
 DROP TEXT SEARCH TEMPLATE first_template,;
+DROP EVENT TRIGGER first_event,;
+DROP EVENT TRIGGER , second_event;

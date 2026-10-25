@@ -87,7 +87,7 @@ Each row locates one audited example, not every grammar variant. The raw sqlpars
 | CREATE TRANSFORM | survey.sql:8 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-createtransform.html) |
 | CREATE TRIGGER | families.sql:107 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-createtrigger.html) |
 | CREATE TYPE | families.sql:64 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-createtype.html) |
-| CREATE USER | survey.sql:16 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-createuser.html) |
+| CREATE USER | families.sql:65 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-createuser.html) |
 | CREATE USER MAPPING | survey.sql:16 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-createusermapping.html) |
 | CREATE VIEW | families.sql:66 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-createview.html) |
 | DROP ACCESS METHOD | families.sql:67 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-drop-access-method.html) |

@@ -60,6 +60,11 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
         if !c.identifier() {
             return false;
         }
+        while c.token(Token::Comma) {
+            if !c.identifier() {
+                return false;
+            }
+        }
         c.drop_behavior();
         true
     } else {
