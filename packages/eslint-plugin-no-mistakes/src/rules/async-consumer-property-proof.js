@@ -33,6 +33,8 @@ function propertyBodyAwaited(fn, index, context, property, proveCall, receiverSh
         // Pure reads of other static fields preserve this callback's disposition.
         if (name !== property) {
           const parent = unwrapTransparentParent(member).parent;
+          // A chained access can invoke or mutate an unproven sibling method.
+          if (parent?.type === "MemberExpression") return false;
           return (
             !(
               parent?.type === "CallExpression" && parent.callee === unwrapTransparentParent(member)
@@ -61,11 +63,12 @@ function propertyBodyAwaited(fn, index, context, property, proveCall, receiverSh
   return safe && count > 0;
 }
 
-// Walk assignment patterns only along their writable target, never through reads.
+// Follow member objects and assignment patterns only along their writable target.
 function propertyWritten(member) {
   let target = unwrapTransparentParent(member);
   while (
     ["ObjectPattern", "ArrayPattern", "RestElement"].includes(target.parent.type) ||
+    (target.parent.type === "MemberExpression" && target.parent.object === target) ||
     (target.parent.type === "Property" && target.parent.value === target) ||
     (target.parent.type === "AssignmentPattern" && target.parent.left === target)
   )

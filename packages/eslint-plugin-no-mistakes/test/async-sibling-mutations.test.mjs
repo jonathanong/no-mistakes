@@ -12,7 +12,7 @@ const root = resolve(
   "../../../test-cases/eslint-plugin/async-call-disposition/fixture/proven-consumers",
 );
 const filename = resolve(root, "sibling-mutations.ts");
-const expected = [4, 6, 8, 10, 12, 14, 16, 18, 20];
+const expected = [4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 26, 28];
 it.each([false, true])("rejects sibling mutation but preserves pure reads (typed=%s)", (typed) => {
   const findings = new Linter({ cwd: dirname(filename) }).verify(
     readFileSync(filename, "utf8"),

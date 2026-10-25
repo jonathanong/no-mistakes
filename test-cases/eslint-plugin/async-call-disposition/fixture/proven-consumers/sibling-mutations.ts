@@ -1,5 +1,5 @@
 import { enqueueEmail } from "@app/jobs";
-import { useAssignment, useUpdate, useDelete, useArray, useObject, useDefault, useRest, useForOf, useForIn, usePure } from "./sibling-mutation-consumers";
+import { useAssignment, useUpdate, useDelete, useArray, useObject, useDefault, useRest, useForOf, useForIn, usePure, useNestedWrite, useMemberChain, useNestedUpdate } from "./sibling-mutation-consumers";
 // Mutations invalidate the original receiver shape; a pure read preserves it.
 const assignmentJob = () => enqueueEmail(0);
 await useAssignment({ job: assignmentJob, other: () => 1 });
@@ -21,3 +21,9 @@ const forInJob = () => enqueueEmail(8);
 await useForIn({ job: forInJob, other: () => 1 });
 const pureJob = () => enqueueEmail(9);
 await usePure({ job: pureJob, other: () => 1 });
+const nestedWriteJob = () => enqueueEmail(10);
+await useNestedWrite({ job: nestedWriteJob, other: () => 1 });
+const memberChainJob = () => enqueueEmail(11);
+await useMemberChain({ job: memberChainJob, other: function () { this.job(); } });
+const nestedUpdateJob = () => enqueueEmail(12);
+await useNestedUpdate({ job: nestedUpdateJob, other: () => 1 });
