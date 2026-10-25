@@ -313,7 +313,7 @@ function must be statically free of `this`, `eval`, and `arguments`. It also mus
 not close over another supplied callback, including through stable aliases or
 transitive local helper calls:
 that closure could invoke the callback without handling its promise. Unknown
-helper calls, non-function holders, or helper chains beyond the proof bound
+helper calls, opaque property getters or non-function holders, or helper chains beyond the proof bound
 remain unproven. An absent
 optional method cannot escape that receiver. Custom `__proto__` properties are
 rejected because they can supply an apparently absent optional method. Accesses

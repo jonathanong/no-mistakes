@@ -11,7 +11,7 @@ const root = resolve(
   __dirname,
   "../../../test-cases/eslint-plugin/async-call-disposition/fixture/proven-consumers",
 );
-const expected = [4, 19, 22, 26, 30, 34, 38, 42, 81];
+const expected = [4, 19, 22, 26, 30, 34, 38, 42, 81, 84, 90];
 it.each([false, true])(
   "follows bounded helper chains and fails closed for holders (typed=%s)",
   (typed) => {

@@ -80,3 +80,22 @@ const deep32 = () => deep33();
 const deep33 = () => 1;
 const boundedJob = () => enqueueEmail(10);
 await consume({ job: boundedJob, other: deep0 });
+
+const getterJob = () => enqueueEmail(11);
+const getterHolder = { get run() { getterJob(); return 1; } };
+await consume({ job: getterJob, other: () => getterHolder.run });
+const stringJob = () => enqueueEmail(12);
+const text = "safe";
+await consume({ job: stringJob, other: () => text.length });
+const spreadGetterJob = () => enqueueEmail(13);
+const spreadGetterHolder = { get value() { spreadGetterJob(); return 1; } };
+await consume({ job: spreadGetterJob, other: () => ({ ...spreadGetterHolder }) });
+const primitiveJob = () => enqueueEmail(14);
+const empty = null;
+await consume({ job: primitiveJob, other: () => empty });
+type Count = number;
+const typedJob = () => enqueueEmail(15);
+await consume({ job: typedJob, other: (count: Count = 0) => count });
+const erasedJob = () => enqueueEmail(16);
+// Erased types do not close over the callback at runtime.
+await consume({ job: erasedJob, other: () => { type Local = typeof erasedJob; return 1; } });

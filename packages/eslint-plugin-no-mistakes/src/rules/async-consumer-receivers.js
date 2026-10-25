@@ -1,6 +1,10 @@
 "use strict";
 const { unwrapExpression } = require("./async-ast");
-const { resolveVariable, memberPropertyName } = require("./async-target-bindings");
+const {
+  resolveVariable,
+  memberPropertyName,
+  stableConstInitializer,
+} = require("./async-target-bindings");
 const { localFunction } = require("./async-consumer-local-proof");
 const { importedFunction } = require("./async-consumer-imported-proof");
 
@@ -43,6 +47,12 @@ function createReceiverProof(state) {
         function visit(node) {
           if (!node || !proof.valid) return;
           if (
+            ["TSTypeAnnotation", "TSTypeAliasDeclaration", "TSInterfaceDeclaration"].includes(
+              node.type,
+            )
+          )
+            return;
+          if (
             node.type === "ThisExpression" ||
             (node.type === "Identifier" && ["eval", "arguments"].includes(node.name))
           )
@@ -53,12 +63,40 @@ function createReceiverProof(state) {
             if (node.type !== "CallExpression" || !localFunction(callee, currentContext))
               proof.valid = false;
           }
+          if (node.type === "MemberExpression") {
+            const object = unwrapExpression(node.object);
+            const init =
+              object.type === "Identifier"
+                ? unwrapExpression(stableConstInitializer(object, currentContext, new Set()))
+                : object;
+            // An opaque property read may invoke a getter that calls another callback.
+            if (
+              memberPropertyName(node) !== "length" ||
+              !(
+                init?.type === "ArrayExpression" ||
+                (init?.type === "Literal" && typeof init.value === "string")
+              )
+            )
+              proof.valid = false;
+          }
           if (node.type === "Identifier") {
-            proof.variables.add(resolveVariable(node, currentContext));
+            const variable = resolveVariable(node, currentContext);
+            proof.variables.add(variable);
             const referenced = localFunction(node, currentContext);
             if (referenced && referenced !== current) {
               proof.functions.add(referenced);
               inspect(referenced, currentContext);
+            }
+            if (!referenced && variable?.defs.length) {
+              let owner = variable.defs[0].node;
+              while (owner && owner !== current) owner = owner.parent;
+              const init = unwrapExpression(
+                stableConstInitializer(node, currentContext, new Set()),
+              );
+              const primitive =
+                init?.type === "Literal" && (init.value === null || typeof init.value !== "object");
+              // Captured holders can invoke getters through spreads as well as members.
+              if (!owner && !primitive) proof.valid = false;
             }
           }
           for (const key of currentContext.sourceCode.visitorKeys[node.type] || []) {
