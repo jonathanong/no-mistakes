@@ -12,8 +12,6 @@ use std::path::{Path, PathBuf};
 
 mod imported_sql;
 mod setup;
-#[cfg(test)]
-use setup::{or_empty_tsconfig, workspace_or_empty};
 use setup::{tsconfig_for, workspace_for};
 mod unproven;
 pub(super) use unproven::count_unproven_member_queries;
