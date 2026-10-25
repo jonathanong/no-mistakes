@@ -22,6 +22,8 @@ rules:
   - rule: postgres-no-transformed-uuid-predicates
     scope: repository
     options:
+      schemaCatalogPath: schema.json
+      executorNames: [read]
       importSpecifier: "@example/db"
       executorTypeNames: [QueryExecutor, QueryOptions]
       include: ["src/**/*.mts"]

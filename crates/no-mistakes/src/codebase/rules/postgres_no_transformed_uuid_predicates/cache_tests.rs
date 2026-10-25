@@ -71,14 +71,17 @@ fn mixed_max_application_initializes_low_cache_without_parsing_literals_again() 
     );
 }
 #[test]
-fn escapes_interpolations_and_builder_calls_abstain_at_low_effort() {
+fn escaped_interpolation_stays_unknown_while_literal_helper_sql_is_recovered() {
     let mut cfg = config("unanalyzableSql: advise\n");
     cfg.effort = Some(crate::config::v2::Effort::Low);
     let (cfg, files, sources, mut facts) = prepare("low-inputs.ts", cfg);
     facts.enable_sql_verdicts();
     let findings =
         check_with_files_sources_and_facts(&fixture(), &cfg, &files, &sources, &facts).unwrap();
-    assert!(findings.is_empty(), "{findings:#?}");
+    // The local helper returns literal SQL, so its physical line is now provable.
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 5, "{findings:#?}");
+    assert_eq!(findings[0].target.as_deref(), Some("accounts.id"));
     let verdicts = facts.sql_verdicts();
     assert_eq!(verdicts.len(), 4, "{verdicts:#?}");
     assert_eq!(
@@ -86,7 +89,14 @@ fn escapes_interpolations_and_builder_calls_abstain_at_low_effort() {
             .iter()
             .filter(|verdict| verdict.status == SqlVerdictStatus::Abstain && verdict.advisory)
             .count(),
-        3
+        2
+    );
+    assert_eq!(
+        verdicts
+            .iter()
+            .filter(|verdict| verdict.status == SqlVerdictStatus::Violation)
+            .count(),
+        1
     );
     assert_eq!(
         verdicts
@@ -108,12 +118,22 @@ fn escapes_interpolations_and_builder_calls_abstain_at_low_effort() {
             .iter()
             .map(|finding| finding.line)
             .collect::<Vec<_>>(),
-        [2, 4, 6],
+        [2, 4, 5],
         "{findings:#?}"
     );
-    assert!(findings
-        .iter()
-        .all(|finding| finding.target.as_deref() == Some("unanalyzable")));
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.target.as_deref() == Some("unanalyzable"))
+            .count(),
+        2,
+        "{findings:#?}"
+    );
+    assert!(
+        findings.iter().any(|finding| {
+            finding.line == 5 && finding.target.as_deref() == Some("accounts.id")
+        })
+    );
 }
 #[test]
 fn physical_crlf_templates_match_cooked_text_and_keep_physical_finding_lines() {
@@ -170,10 +190,24 @@ fn low_owner_uncertainty_produces_advice_without_enabling_all_verdicts() {
     assert!(!facts.wants_sql_verdicts());
     check_with_files_sources_and_facts(&fixture(), &cfg, &files, &sources, &facts).unwrap();
     let records = facts.sql_verdicts();
-    assert_eq!(records.len(), 2, "{records:#?}");
-    assert!(records
-        .iter()
-        .all(|record| record.advisory && record.status == SqlVerdictStatus::Abstain));
+    assert_eq!(records.len(), 4, "{records:#?}");
+    assert!(records.iter().all(|record| record.advisory));
+    assert_eq!(
+        records
+            .iter()
+            .filter(|record| record.status == SqlVerdictStatus::Abstain)
+            .count(),
+        2,
+        "{records:#?}"
+    );
+    assert_eq!(
+        records
+            .iter()
+            .filter(|record| record.status == SqlVerdictStatus::Violation)
+            .count(),
+        2,
+        "known UUID violations must retain advice for unresolved siblings: {records:#?}"
+    );
 }
 #[test]
 fn recovered_parameters_inside_casts_and_functions_are_not_columns() {

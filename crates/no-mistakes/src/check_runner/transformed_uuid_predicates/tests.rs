@@ -1,4 +1,4 @@
-use super::{run_all_with_options, AnalysisOptions};
+use super::{AnalysisOptions, run_all_with_options};
 use no_mistakes::config::v2::Effort;
 use std::path::PathBuf;
 
@@ -52,8 +52,8 @@ fn transformed_uuid_predicates_low_routes_uncertainty_without_losing_definite_fi
     let max = run(".no-mistakes.max.yml", None, false);
     for (config, findings, advisories) in [
         (".no-mistakes.low-report.yml", 11, 0),
-        (".no-mistakes.low-advise.yml", 10, 1),
-        (".no-mistakes.low-ignore.yml", 10, 0),
+        (".no-mistakes.low-advise.yml", 11, 0),
+        (".no-mistakes.low-ignore.yml", 11, 0),
     ] {
         let report = run(config, None, false);
         assert_eq!(report.rules.len(), findings, "{config}: {:?}", report.rules);
@@ -70,7 +70,15 @@ fn transformed_uuid_predicates_low_routes_uncertainty_without_losing_definite_fi
             .iter()
             .filter(|row| row.target.as_deref() != Some("unanalyzable"))
             .collect();
-        assert_eq!(definite.len(), 10);
+        assert_eq!(definite.len(), 11);
+        assert!(
+            definite.iter().any(|row| {
+                row.file == "helper-query.ts"
+                    && row.line == 4
+                    && row.target.as_deref() == Some("users.id")
+            }),
+            "helper SQL finding should retain its physical origin: {definite:#?}"
+        );
         for row in definite {
             assert!(max.rules.contains(row), "{row:?}");
         }
@@ -112,10 +120,12 @@ fn transformed_uuid_predicates_raw_sql_uncertainty_remains_advisory_at_both_effo
         let report = run(".no-mistakes.raw-advice.yml", Some(effort), false);
         assert!(report.rules.is_empty(), "{:?}", report.rules);
         assert_eq!(report.advisories.len(), 2, "{:?}", report.advisories);
-        assert!(report
-            .advisories
-            .iter()
-            .all(|row| row.rule == "postgres-no-transformed-uuid-predicates"));
+        assert!(
+            report
+                .advisories
+                .iter()
+                .all(|row| row.rule == "postgres-no-transformed-uuid-predicates")
+        );
         let detailed = run(".no-mistakes.raw-advice.yml", Some(effort), true);
         assert_eq!(detailed.rules, report.rules);
         assert_eq!(detailed.advisories, report.advisories);

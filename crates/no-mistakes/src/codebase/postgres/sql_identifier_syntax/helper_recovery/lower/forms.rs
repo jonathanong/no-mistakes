@@ -7,44 +7,10 @@ use oxc_ast::ast::{
 
 pub(super) fn lower(scope: &mut Scope<'_>, node: &Expression<'_>) -> Expr {
     match node {
-        Expression::ObjectExpression(object) => {
-            let mut props = Vec::new();
-            for item in &object.properties {
-                let ObjectPropertyKind::ObjectProperty(prop) = item else {
-                    return Expr::Opaque;
-                };
-                if prop.method || prop.computed || prop.kind != oxc_ast::ast::PropertyKind::Init {
-                    return Expr::Opaque;
-                }
-                let key = match &prop.key {
-                    PropertyKey::StaticIdentifier(key) => key.name.to_string(),
-                    PropertyKey::StringLiteral(key) => key.value.to_string(),
-                    _ => return Expr::Opaque,
-                };
-                // Special prototype setters do not form plain own data properties.
-                if key == "__proto__" {
-                    return Expr::Opaque;
-                }
-                props.push(Entry::Prop(key, scope.expression(&prop.value)));
-            }
-            Expr::Object(props)
-        }
-        Expression::ArrayExpression(array) => {
-            let mut items = Vec::new();
-            for item in &array.elements {
-                if matches!(
-                    item,
-                    ArrayExpressionElement::SpreadElement(_) | ArrayExpressionElement::Elision(_)
-                ) {
-                    return Expr::Opaque;
-                }
-                let Some(item) = item.as_expression() else {
-                    return Expr::Opaque;
-                };
-                items.push(scope.expression(item));
-            }
-            Expr::Array(items)
-        }
+        Expression::ObjectExpression(object) => lower_object(scope, object),
+
+        Expression::ArrayExpression(array) => lower_array(scope, array),
+
         Expression::ConditionalExpression(value) => Expr::Cond(
             Box::new(scope.expression(&value.test)),
             Box::new(scope.expression(&value.consequent)),
@@ -73,4 +39,43 @@ pub(super) fn lower(scope: &mut Scope<'_>, node: &Expression<'_>) -> Expr {
         }
         _ => Expr::Opaque,
     }
+}
+
+fn lower_object(scope: &mut Scope<'_>, object: &oxc_ast::ast::ObjectExpression<'_>) -> Expr {
+    let mut props = Vec::new();
+    for item in &object.properties {
+        let ObjectPropertyKind::ObjectProperty(prop) = item else {
+            return Expr::Opaque;
+        };
+        if prop.method || prop.computed || prop.kind != oxc_ast::ast::PropertyKind::Init {
+            return Expr::Opaque;
+        }
+        let key = match &prop.key {
+            PropertyKey::StaticIdentifier(key) => key.name.to_string(),
+            PropertyKey::StringLiteral(key) => key.value.to_string(),
+            _ => return Expr::Opaque,
+        };
+        // Special prototype setters do not form plain own data properties.
+        if key == "__proto__" {
+            return Expr::Opaque;
+        }
+        props.push(Entry::Prop(key, scope.expression(&prop.value)));
+    }
+    Expr::Object(props)
+}
+fn lower_array(scope: &mut Scope<'_>, array: &oxc_ast::ast::ArrayExpression<'_>) -> Expr {
+    let mut items = Vec::new();
+    for item in &array.elements {
+        if matches!(
+            item,
+            ArrayExpressionElement::SpreadElement(_) | ArrayExpressionElement::Elision(_)
+        ) {
+            return Expr::Opaque;
+        }
+        let Some(item) = item.as_expression() else {
+            return Expr::Opaque;
+        };
+        items.push(scope.expression(item));
+    }
+    Expr::Array(items)
 }

@@ -131,3 +131,6 @@ mod replay_tests;
 
 #[cfg(test)]
 mod precision_tests;
+
+#[cfg(test)]
+mod coverage_tests;

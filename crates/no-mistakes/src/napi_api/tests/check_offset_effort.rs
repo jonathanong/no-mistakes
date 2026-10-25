@@ -29,10 +29,26 @@ fn public_offset_effort_preserves_max_default_and_routes_low_residuals() {
     assert_eq!(ignore["rules"], advise["rules"]);
     assert_eq!(
         advise["advisories"].as_array().unwrap().len(),
-        3,
+        2,
         "{advise}"
     );
     assert_eq!(ignore["advisories"], json!([]));
+    assert!(
+        ignore["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|finding| finding["file"] == "src/query.ts" && finding["line"] == 8)
+    );
+    assert_eq!(
+        advise["advisories"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|finding| finding["line"].as_u64().unwrap())
+            .collect::<Vec<_>>(),
+        [11, 12]
+    );
     assert!(
         ignore["rules"]
             .as_array()
@@ -47,11 +63,13 @@ fn public_offset_effort_preserves_max_default_and_routes_low_residuals() {
     );
     assert_eq!(detailed["rules"], advise["rules"]);
     assert_eq!(detailed["advisories"], advise["advisories"]);
-    assert!(detailed["sqlVerdicts"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|verdict| verdict["status"] == "abstain" && verdict["advisory"] == true));
+    assert!(
+        detailed["sqlVerdicts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|verdict| verdict["status"] == "abstain" && verdict["advisory"] == true)
+    );
 }
 
 #[test]
@@ -88,7 +106,7 @@ fn public_offset_low_suppression_is_auditable() {
     );
     assert_eq!(
         report["advisories"].as_array().unwrap().len(),
-        3,
+        2,
         "{report}"
     );
 }

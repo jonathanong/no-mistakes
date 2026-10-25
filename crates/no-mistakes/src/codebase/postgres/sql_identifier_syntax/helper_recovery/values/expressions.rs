@@ -39,34 +39,8 @@ impl Engine<'_> {
             }
             Expr::Member(object, name) => self.member(object, name, state)?,
 
-            Expr::Object(entries) => {
-                let expressions = entries
-                    .iter()
-                    .map(|entry| match entry {
-                        Entry::Prop(_, value) => Some(value),
-                        _ => None,
-                    })
-                    .collect::<Option<Vec<_>>>()?;
-                self.all(&expressions, state)?
-                    .into_iter()
-                    .map(|(state, values)| {
-                        let props = entries
-                            .iter()
-                            .zip(values)
-                            .filter_map(|(entry, value)| match entry {
-                                Entry::Prop(key, _) => Some((key.clone(), value)),
-                                _ => None,
-                            })
-                            .collect();
-                        (state, Value::Object(props))
-                    })
-                    .collect()
-            }
-            Expr::Array(items) => self
-                .all(&items.iter().collect::<Vec<_>>(), state)?
-                .into_iter()
-                .map(|(state, items)| (state, Value::Array(items)))
-                .collect(),
+            Expr::Object(entries) => self.object_values(entries, state)?,
+            Expr::Array(items) => self.array_values(items, state)?,
             Expr::Call(name, args) => self.call(name, args, state)?,
             Expr::Template(pieces, holes) => self.template(pieces, holes, state, false)?,
             Expr::Sql(pieces, holes, true) => self.template(pieces, holes, state, true)?,
@@ -108,3 +82,5 @@ impl Engine<'_> {
         Some(states)
     }
 }
+
+include!("expressions/aggregates.rs");

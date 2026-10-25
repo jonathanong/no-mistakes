@@ -81,22 +81,7 @@ impl Engine<'_> {
         state: State,
     ) -> Option<Vec<(State, Value)>> {
         if name == "operation:await" {
-            let [argument] = args else {
-                return None;
-            };
-            let mut out = Vec::new();
-            for (state, value) in self.expression(argument, state)? {
-                let value = match value {
-                    Value::Promise(value) => *value,
-                    Value::Text(_) | Value::Bool(_) | Value::Null | Value::Undefined => value,
-                    _ => {
-                        self.failures += 1;
-                        continue;
-                    }
-                };
-                out.push((state, value));
-            }
-            return Some(out);
+            return self.await_result(args, state);
         }
         let (name, site) = name.rsplit_once('@')?;
         let site = site.parse().ok()?;
@@ -110,42 +95,13 @@ impl Engine<'_> {
             None => self.catalog.sink(self.file()?, id),
         };
         if sink && self.effects && (member.is_none() || member == Some("query")) {
-            let mut out = Vec::new();
-            for (state, args) in self.all(&args.iter().collect::<Vec<_>>(), state)? {
-                match args.first().and_then(|arg| state.text(arg)) {
-                    Some(text) => self.executed.push(Execution {
-                        file: self.file()?.to_path_buf(),
-                        start: site,
-                        sql: text,
-                    }),
-                    None => self.failures += 1,
-                }
-                out.push((state, Value::Promise(Box::new(Value::Scalar))));
-            }
-            return Some(out);
+            return self.execute_sql(args, state, site);
         }
         if sink || member.is_some() {
             return None;
         }
-        let key = self.catalog.callee(self.file()?, id)?;
-        let mut out = Vec::new();
-        for (state, args) in self.all(&args.iter().collect::<Vec<_>>(), state)? {
-            let Some(values) = self.run(&key, &args) else {
-                self.failures += 1;
-                continue;
-            };
-            for value in values {
-                let Some(mut state) = self.copy_state(&state) else {
-                    self.failures += 1;
-                    continue;
-                };
-                let value = match value {
-                    Value::Sql(text) => state.allocate(text),
-                    other => other,
-                };
-                out.push((state, value));
-            }
-        }
-        Some(out)
+        self.invoke_helper(id, args, state)
     }
 }
+
+include!("effects/calls.rs");

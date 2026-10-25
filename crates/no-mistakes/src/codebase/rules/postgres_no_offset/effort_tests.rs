@@ -26,7 +26,13 @@ fn saved_effort_configs_keep_max_default_and_definite_subset() {
         "low={ignore:#?}, max={max:#?}"
     );
     assert!(max.len() >= low.len(), "low={low:#?}, max={max:#?}");
-    assert_eq!(ignore.len(), 5, "{ignore:#?}");
+    // The same-file helper now has a complete literal SQL proof at low effort.
+    assert_eq!(ignore.len(), 6, "{ignore:#?}");
+    assert!(
+        ignore
+            .iter()
+            .any(|finding| finding.file == "src/query.ts" && finding.line == 8)
+    );
 }
 
 #[test]
@@ -57,9 +63,11 @@ fn namespace_non_query_methods_remain_out_of_scope() {
     let max = check_with_files(&root(), &cfg, std::slice::from_ref(&file)).unwrap();
     assert!(max.is_empty());
     cfg.effort = Some(crate::config::v2::Effort::Low);
-    assert!(check_with_files(&root(), &cfg, std::slice::from_ref(&file))
-        .unwrap()
-        .is_empty());
+    assert!(
+        check_with_files(&root(), &cfg, std::slice::from_ref(&file))
+            .unwrap()
+            .is_empty()
+    );
 }
 
 fn prepared(
@@ -99,10 +107,12 @@ fn low_skips_evaluator_and_reuses_literal_parse_across_calls_and_applications() 
     cfg.rules.push(second);
     let (cfg, files, sources, facts) = prepared(cfg);
     assert!(facts.ts.values().all(|file| file.embedded_sql.is_empty()));
-    assert!(facts
-        .ts
-        .values()
-        .any(|file| !file.sql_identifier_syntax.profiles.is_empty()));
+    assert!(
+        facts
+            .ts
+            .values()
+            .any(|file| !file.sql_identifier_syntax.profiles.is_empty())
+    );
     let observer = crate::diagnostics::InvocationObserver::new(true);
     crate::diagnostics::with_observer(Some(observer.clone()), || {
         check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap();
@@ -130,13 +140,26 @@ fn verdicts_and_advisories_preserve_low_demand_and_call_spans() {
             .iter()
             .filter(|record| record.advisory)
             .collect::<Vec<_>>();
-        assert_eq!(residuals.len(), 3, "{records:#?}");
+        assert_eq!(residuals.len(), 2, "{records:#?}");
+        let source = sources.read_path(&root().join("src/query.ts")).unwrap();
+        let residual_sql = residuals
+            .iter()
+            .map(|record| &source[record.span.0 as usize..record.span.1 as usize])
+            .collect::<Vec<_>>();
+        assert_eq!(
+            residual_sql,
+            ["query(`SELECT 1 ${tail}`)", r"query('SELECT 1\nOFFSET 9')"]
+        );
         assert!(residuals.iter().all(|record| record.span.1 > record.span.0));
         assert!(residuals
             .iter()
             .all(|record| record.status == crate::codebase::postgres::SqlVerdictStatus::Abstain));
         if verdicts {
             assert_eq!(records.len(), 10);
+            assert!(records.iter().any(|record| record.file == "src/query.ts"
+                && &source[record.span.0 as usize..record.span.1 as usize] == "query(build())"
+                && record.status == crate::codebase::postgres::SqlVerdictStatus::Violation
+                && !record.advisory));
         }
     }
 }

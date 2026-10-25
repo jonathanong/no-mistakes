@@ -1,16 +1,16 @@
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::{
-    sql_identifier_syntax::{Input, SqlCall},
-    SqlObligationVerdict, SqlVerdictStatus,
+    SqlObligationVerdict, SqlVerdictStatus, sql_identifier_syntax::SqlCall,
 };
 use crate::codebase::rules::{PostgresFindings, RuleFinding};
-use crate::codebase::ts_source::{relative_slash_path, SourceStore};
+use crate::codebase::ts_source::{SourceStore, relative_slash_path};
 use crate::config::v2::schema::RuleDef;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 mod cache;
+mod inputs;
 
 const REWRITE: &str = "pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL";
 
@@ -61,67 +61,18 @@ pub(super) fn scan(
             if let Some(observer) = &observer {
                 observer.increment("postgres.no_offset.low.calls", 1);
             }
-            let is_unknown;
-            let mut invalid = false;
-            let mut has_violation = false;
-            match &call.input {
-                Input::Sql { source_span, .. } => {
-                    let result = literals
-                        .get(&(None, *source_span))
-                        .map(|value| match value {
-                            crate::codebase::postgres::sql_identifier_syntax::literal_projection::ProjectedLiteral::Direct(result) => result.clone(),
-                            _ => Ok(None),
-                        })
-                        .unwrap_or(Ok(None));
-                    is_unknown = !matches!(&result, Ok(Some(_)));
-                    invalid = result.is_err();
-                    if let Ok(Some(offsets)) = result {
-                        has_violation = !offsets.is_empty();
-                        for mut offset in offsets {
-                            ordinal += 1;
-                            if crate::codebase::ts_source::matching_disable_directive(
-                                &source,
-                                Some(call.line),
-                                RULE_ID,
-                            )
-                            .is_some()
-                            {
-                                offset.line = call.line as usize;
-                            }
-                            findings.push(super::scan::finding(&rel, &offset, ordinal));
-                        }
-                    }
-                }
-                Input::Recovered(proof) => {
-                    match literals.get(&(Some(application.clone()), call.span)) {
-                        Some(crate::codebase::postgres::sql_identifier_syntax::literal_projection::ProjectedLiteral::Recovered { alternatives, .. }) => {
-                            for (sql, facts) in alternatives {
-                                match facts {
-                                    Ok(offsets) => {
-                                        has_violation |= !offsets.is_empty();
-                                        for offset in offsets {
-                                            ordinal += 1;
-                                            let (origin, line) = crate::codebase::postgres::sql_identifier_syntax::helper_recovery::Recovered::position(sql, offset.line, offset.column, path);
-                                            let mut offset = *offset;
-                                            offset.line = line;
-                                            let mut origin_rel = relative_slash_path(root, origin);
-                                            if crate::codebase::ts_source::matching_disable_directive(&source, Some(call.line), RULE_ID).is_some() {
-                                                origin_rel = rel.clone();
-                                                offset.line = call.line as usize;
-                                            }
-                                            findings.push(super::scan::finding(&origin_rel, &offset, ordinal));
-                                        }
-                                    }
-                                    Err(()) => invalid = true,
-                                }
-                            }
-                        },
-                        _ => invalid = true,
-                    }
-                    is_unknown = !proof.complete() || invalid;
-                }
-                _ => is_unknown = true,
+            let inputs::Outcome {
+                unknown: is_unknown,
+                invalid,
+                violation: has_violation,
+            } = inputs::Inputs {
+                root,
+                path,
+                rel: &rel,
+                source: &source,
+                literals,
             }
+            .evaluate(call, &application, &mut ordinal, &mut findings);
             if is_unknown && opts.fail_unanalyzable {
                 findings.push(unknown(&rel, call));
             }

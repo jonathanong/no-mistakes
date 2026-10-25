@@ -29,14 +29,18 @@ impl FileFacts {
         })
     }
     pub fn calls_for(&self, key: &ApplicationKey) -> Option<&[SqlCall]> {
-        self.application_calls
-            .get(key)
-            .map(Vec::as_slice)
-            .or_else(|| {
-                self.profiles
-                    .iter()
-                    .find(|(profile, _)| profile == &key.profile)
-                    .map(|(_, calls)| calls.as_slice())
-            })
+        // Application projections refine a prepared canonical profile; they do
+        // not replace missing base facts or revive an unregistered owner.
+        let base = self
+            .profiles
+            .iter()
+            .find(|(profile, _)| profile == &key.profile)?
+            .1
+            .as_slice();
+        Some(if self.includes_application(key) {
+            self.application_calls.get(key).map_or(base, Vec::as_slice)
+        } else {
+            base
+        })
     }
 }

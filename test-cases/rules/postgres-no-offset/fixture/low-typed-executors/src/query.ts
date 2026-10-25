@@ -16,7 +16,7 @@ export function direct(executor: QueryExecutor, sql: string) {
   const dynamic = sql;
   executor(dynamic); // UNKNOWN
   executor("/* missing */ SELECT 1" + sql); // OUTSIDE annotation can prove the head
-  consume(executor); // ESCAPE
+  consume(executor); // CLEAR: the resolved empty local helper executes no SQL.
 }
 export function member(client: TypeExecutor, sql: string) {
   client.query("/* member */ SELECT 1"); // CLEAR

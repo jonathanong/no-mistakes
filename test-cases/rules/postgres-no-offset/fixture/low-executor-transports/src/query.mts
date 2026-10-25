@@ -92,7 +92,7 @@ export function typedCallApply(query: QueryExecutor) { // NON_SQL
   query.apply(null, [dynamicSql]); // ADVISE
 }
 export function opaqueHelper(query: QueryExecutor) { // NON_SQL
-  consume(query); // ADVISE
+  consume(query); // NON_SQL: the resolved empty local helper executes no SQL.
 }
 function consume(value: unknown) {}
 

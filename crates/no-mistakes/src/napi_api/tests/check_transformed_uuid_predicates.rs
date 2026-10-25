@@ -17,8 +17,8 @@ fn transformed_uuid_predicates_public_check_routes_both_channels() {
         (".no-mistakes.yml", 11, 0),
         (".no-mistakes.max.yml", 11, 0),
         (".no-mistakes.low-report.yml", 11, 0),
-        (".no-mistakes.low-advise.yml", 10, 1),
-        (".no-mistakes.low-ignore.yml", 10, 0),
+        (".no-mistakes.low-advise.yml", 11, 0),
+        (".no-mistakes.low-ignore.yml", 11, 0),
     ] {
         let report: serde_json::Value = serde_json::from_str(
             &check_json_impl(crate::napi_api::options::test_json_arg(
@@ -38,6 +38,16 @@ fn transformed_uuid_predicates_public_check_routes_both_channels() {
             "{config}: {report}"
         );
         assert_eq!(report["warnings"], json!([]));
+        if config.starts_with(".no-mistakes.low-") {
+            assert!(
+                report["rules"].as_array().unwrap().iter().any(|finding| {
+                    finding["file"] == "helper-query.ts"
+                        && finding["line"] == 4
+                        && finding["target"] == "users.id"
+                }),
+                "helper SQL finding should retain its physical origin: {config}: {report}"
+            );
+        }
     }
 }
 

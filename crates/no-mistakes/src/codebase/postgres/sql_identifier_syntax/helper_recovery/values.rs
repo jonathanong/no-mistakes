@@ -30,9 +30,7 @@ pub(super) struct Key {
 pub(super) trait Catalog {
     fn function(&self, key: &Key) -> Option<&Lowered>;
     fn callee(&self, from: &Path, binding: usize) -> Option<Key>;
-    fn sink(&self, _from: &Path, _binding: usize) -> bool {
-        false
-    }
+    fn sink(&self, from: &Path, binding: usize) -> bool;
 }
 #[derive(Clone)]
 struct Execution {
