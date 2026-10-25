@@ -13,6 +13,50 @@ pub(super) fn valid(cursor: &mut Cursor<'_>) -> bool {
     if !cursor.word("WITH") {
         return true;
     }
+    options(cursor)
+}
+
+pub(super) fn alter(cursor: &mut Cursor<'_>) -> bool {
+    if !cursor.identifier() {
+        return false;
+    }
+    if cursor.word("RENAME") {
+        return cursor.word("TO") && cursor.identifier();
+    }
+    if cursor.word("OWNER") {
+        return cursor.word("TO")
+            && (cursor.word("CURRENT_ROLE")
+                || cursor.word("CURRENT_USER")
+                || cursor.word("SESSION_USER")
+                || cursor.identifier());
+    }
+    if cursor.word("SET") {
+        if cursor
+            .tokens
+            .get(cursor.at)
+            .is_some_and(|token| **token == Token::LParen)
+        {
+            return options(cursor);
+        }
+    } else if !(cursor.word("ADD") || cursor.word("DROP")) {
+        return false;
+    }
+    cursor.word("TABLE") && cursor.names()
+}
+
+pub(super) fn drop(cursor: &mut Cursor<'_>) -> bool {
+    if cursor.word("IF") && !cursor.word("EXISTS") {
+        return false;
+    }
+    cursor.identifiers() && {
+        if !cursor.word("CASCADE") {
+            cursor.word("RESTRICT");
+        }
+        true
+    }
+}
+
+fn options(cursor: &mut Cursor<'_>) -> bool {
     if !take(cursor, &Token::LParen) {
         return false;
     }

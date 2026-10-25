@@ -13,12 +13,8 @@ fn default_distinguishes_complete_unsupported_grammar_from_malformed_sql() {
                 .map(|item| item.line)
                 .collect::<Vec<_>>()
         };
-        assert_eq!(
-            lines(&output.findings),
-            [4, 5, 6, 7, 6, 7, 8, 9, 10, 11, 12],
-            "{rule}"
-        );
-        assert_eq!(lines(&output.advisories), [1, 2, 3, 2, 3, 4, 5], "{rule}");
+        assert_eq!(lines(&output.findings), [4, 5, 6, 7], "{rule}");
+        assert_eq!(lines(&output.advisories), [1, 2, 3], "{rule}");
     }
 }
 
@@ -26,12 +22,12 @@ fn default_distinguishes_complete_unsupported_grammar_from_malformed_sql() {
 fn explicit_policies_override_both_classes_in_all_schema_rules() {
     let root = fixture().join("unsupported-policy");
     for (name, findings, advisories) in [
-        ("report.yml", 18, 0),
-        ("advise.yml", 0, 18),
+        ("report.yml", 7, 0),
+        ("advise.yml", 0, 7),
         ("ignore.yml", 0, 0),
-        ("override.yml", 18, 0),
-        ("global-alias-report.yml", 18, 0),
-        ("rule-advise.yml", 0, 18),
+        ("override.yml", 7, 0),
+        ("global-alias-report.yml", 7, 0),
+        ("rule-advise.yml", 0, 7),
         ("rule-ignore.yml", 0, 0),
     ] {
         let (config, files, facts) = prepared(&root, name);

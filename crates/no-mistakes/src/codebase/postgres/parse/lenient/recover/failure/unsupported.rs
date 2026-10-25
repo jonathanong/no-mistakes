@@ -2,10 +2,14 @@
 //! Unknown shapes remain failures; a statement prefix alone is never proof.
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 mod cursor;
+mod native;
 mod publication;
 use cursor::Cursor;
 
 pub(super) fn valid(tokens: &[TokenWithSpan]) -> bool {
+    if native::valid(tokens) {
+        return true;
+    }
     let tokens = tokens
         .iter()
         .map(|item| &item.token)
@@ -26,6 +30,10 @@ pub(super) fn valid(tokens: &[TokenWithSpan]) -> bool {
         cursor.at = 0;
         if cursor.words(&["CREATE", "PUBLICATION"]) {
             publication::valid(&mut cursor)
+        } else if cursor.words(&["ALTER", "PUBLICATION"]) {
+            publication::alter(&mut cursor)
+        } else if cursor.words(&["DROP", "PUBLICATION"]) {
+            publication::drop(&mut cursor)
         } else {
             cursor.at = 0;
             default_privileges(&mut cursor)
