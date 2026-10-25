@@ -123,7 +123,13 @@ function namedCallbackDisposition(fn, context, acceptsArgument) {
       const use = argumentUse(id, value);
       if (!use) continue;
       passed = true;
-      if (!stable || !use.direct || !acceptsArgument(use.value)) accepted = false;
+      if (
+        !stable ||
+        bound ||
+        (!use.direct && value.parent?.type !== "Property") ||
+        !acceptsArgument(value)
+      )
+        accepted = false;
     }
   }
 
