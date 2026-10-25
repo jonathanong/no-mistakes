@@ -1,33 +1,6 @@
 //! Locate the existing guarded schema/DML suffix without changing recovery semantics.
 use super::super::{keyword_of, next_non_ws};
-use super::partition::recover_partition_change;
-use sqlparser::ast::Statement;
-use sqlparser::dialect::PostgreSqlDialect;
-use sqlparser::parser::Parser;
-use sqlparser::tokenizer::TokenWithSpan;
 use sqlparser::{keywords::Keyword, tokenizer::Token};
-
-pub(super) fn recover(
-    tokens: &[Token],
-    original: Option<&[TokenWithSpan]>,
-    allow_concurrent_detach: bool,
-) -> Option<Statement> {
-    let at = start(tokens)?;
-    // PL/pgSQL wrappers can precede a complete partition transition.
-    if let Some(change) = recover_partition_change(
-        &tokens[at..],
-        original.map(|tokens| &tokens[at..]),
-        allow_concurrent_detach,
-    ) {
-        return Some(change);
-    }
-    let dialect = PostgreSqlDialect {};
-    let mut parser = match original {
-        Some(tokens) => Parser::new(&dialect).with_tokens_with_locations(tokens[at..].to_vec()),
-        None => Parser::new(&dialect).with_tokens(tokens[at..].to_vec()),
-    };
-    parser.parse_statement().ok()
-}
 
 pub(super) fn start(tokens: &[Token]) -> Option<usize> {
     let mut index = 0;

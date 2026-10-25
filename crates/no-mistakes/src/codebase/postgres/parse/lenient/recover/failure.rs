@@ -30,7 +30,10 @@ pub(super) fn guarded_action(
 
 /// A compatibility AST rejected by validation is a failed schema action,
 /// even when a preceding IF condition was recovered for function calls.
-pub(super) fn rejected_schema(tokens: &[TokenWithSpan]) -> Option<LocatedStatement> {
+pub(super) fn rejected_schema(
+    tokens: &[TokenWithSpan],
+    procedural_body: bool,
+) -> Option<LocatedStatement> {
     let start = tokens.iter().position(|token| {
         matches!(&token.token, Token::Word(word)
             if word.quote_style.is_none() && word.keyword == Keyword::CREATE)
@@ -42,7 +45,9 @@ pub(super) fn rejected_schema(tokens: &[TokenWithSpan]) -> Option<LocatedStateme
         false,
     );
     marker.recovery_failure = unrecoverable_chunk(&tokens[start..], 0);
-    marker.recovery_failure.as_mut()?.source_order.clear();
+    let failure = marker.recovery_failure.as_mut()?;
+    failure.procedural_body = procedural_body;
+    failure.source_order.clear();
     Some(marker)
 }
 

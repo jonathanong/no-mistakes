@@ -1,87 +1,87 @@
 {
   "branch-bodies.sql": [
     [
-      6,
+      7,
       5,
       "CREATE RECURSIVE VIEW do_if_head AS SELECT 1"
     ],
     [
-      8,
+      9,
       5,
       "CREATE RECURSIVE VIEW do_elsif_head AS SELECT 1"
     ],
     [
-      10,
+      11,
       5,
       "CREATE RECURSIVE VIEW do_else_head AS SELECT 1"
     ],
     [
-      15,
+      16,
       5,
       "CREATE RECURSIVE VIEW do_loop_head AS SELECT 1"
     ],
     [
-      17,
+      18,
       7,
       "CREATE RECURSIVE VIEW do_nested_loop_if_head AS SELECT 1"
     ],
     [
-      24,
+      25,
       7,
       "CREATE RECURSIVE VIEW do_case_when_head AS SELECT 1"
     ],
     [
-      26,
+      27,
       7,
       "CREATE RECURSIVE VIEW do_case_else_head AS SELECT 1"
     ],
     [
-      30,
+      31,
       3,
       "FROBULATE 0b101"
     ],
     [
-      39,
+      40,
       5,
       "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
     ],
     [
-      41,
+      42,
       5,
       "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
     ],
     [
-      43,
+      44,
       5,
       "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
     ],
     [
-      48,
+      49,
       5,
       "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
     ],
     [
-      50,
+      51,
       7,
       "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
     ],
     [
-      57,
+      58,
       7,
       "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
     ],
     [
-      59,
+      60,
       7,
       "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
     ],
     [
-      63,
+      64,
       3,
       "FROBULATE 0x1F"
     ],
     [
-      68,
+      69,
       1,
       "CREATE RECURSIVE VIEW top_level_after_body AS SELECT 0x1F"
     ]

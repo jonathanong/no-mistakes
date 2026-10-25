@@ -1,4 +1,5 @@
 effort: low
+unanalyzable: report
 rules:
   - rule: postgres-constraint-validate
     scope: repository

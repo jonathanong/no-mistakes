@@ -3,6 +3,7 @@ BEGIN
   IF
     abs(-1) > 0 AND (CASE WHEN TRUE THEN TRUE ELSE FALSE END)
   THEN
+    -- no-mistakes-disable-next-line postgres-fk-index: branch action is intentionally uncertain
     CREATE RECURSIVE VIEW do_if_head AS SELECT 1;
   ELSIF FALSE THEN
     CREATE RECURSIVE VIEW do_elsif_head AS SELECT 1;

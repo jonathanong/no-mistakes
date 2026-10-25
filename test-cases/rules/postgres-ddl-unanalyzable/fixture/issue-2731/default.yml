@@ -1,0 +1,5 @@
+# This config exercises the body default separately from explicit-report fixtures.
+rules:
+  - rule: postgres-fk-index
+    scope: repository
+    options: {sqlInclude: ['migrations/branch-bodies.sql']}

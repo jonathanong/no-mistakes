@@ -65,7 +65,9 @@ pub(super) fn parse_chunks_with_function_calls(
             .any(|item| recursive_views.validate(&item.statement).is_err());
         produced.retain(|item| recursive_views.validate(&item.statement).is_ok());
         if rejected {
-            produced.extend(original.and_then(failure::rejected_schema));
+            produced.extend(
+                original.and_then(|tokens| failure::rejected_schema(tokens, procedural_body)),
+            );
         }
         if handled_procedural.is_none() {
             failure::partial_chunk(original, &mut produced);
