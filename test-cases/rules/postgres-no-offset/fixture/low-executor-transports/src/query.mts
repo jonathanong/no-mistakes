@@ -93,6 +93,8 @@ export function typedCallApply(query: QueryExecutor) { // NON_SQL
 }
 export function opaqueHelper(query: QueryExecutor) { // NON_SQL
   consume(query); // NON_SQL: the resolved empty local helper executes no SQL.
+  consume({ query }); // NON_SQL: the same empty body ignores an object carrier.
+  consume([query]); // NON_SQL: the same empty body ignores an array carrier.
 }
 function consume(value: unknown) {}
 
@@ -125,8 +127,8 @@ export function frozenOptions(options: QueryOptions) {
 
 // Opaque consumers can execute an executor nested in an object or array.
 export function opaqueAggregates(query: QueryExecutor) {
-  consume({ query }); // ADVISE
-  consume([query]); // ADVISE
+  opaque({ query }); // ADVISE
+  opaque([query]); // ADVISE
   consume(query, async () => {}); // ADVISE
 }
 export function shadowedFreeze(query: QueryExecutor) {
