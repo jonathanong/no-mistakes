@@ -35,11 +35,8 @@ pub(super) fn inherited(
         if !extend.starts_with('.') && !Path::new(&extend).is_absolute() {
             continue;
         }
-        let parent = if Path::new(&extend).is_absolute() {
-            PathBuf::from(&extend)
-        } else {
-            dir.join(&extend)
-        };
+        // Same suffix and directory rules as catalog `extends`, not a raw join.
+        let parent = crate::codebase::ts_resolver::resolve_extended_config(&dir, &extend);
         if let Some(parent) = inherited(sources, &parent, stack) {
             acc = merge(acc, parent);
         }

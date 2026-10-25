@@ -27,7 +27,9 @@ within the importing project.
 The [#2753 follow-up](https://github.com/jonathanong/no-mistakes/issues/2753)
 resolves ambient modules that a project's tsconfig `types` list makes visible,
 including relative declaration files and packages, and values inherited from a
-relative extended config. A `declare module` that uses `export = Namespace`
+relative extended config. That path resolves like the catalog, including a
+path that omits its json suffix. A `types` entry already in the analyzed set reuses its
+prepared facts. A `declare module` that uses `export = Namespace`
 supplies that namespace's exported classes. A declared non-Error base is silent.
 A declared Error base still reports. A specifier with no visible declaration
 stays advisory. No module name is special-cased. Unset `types` does not scan

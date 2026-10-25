@@ -31,6 +31,7 @@ pub(crate) struct DeclarationResolver<'a> {
     results: Arc<DeclarationResults>,
     ambient: ambient::AmbientModules,
     type_ambient: OnceLock<ambient::AmbientModules>,
+    facts: Option<&'a dyn crate::codebase::dependencies::graph::TsFactLookup>,
     catalog: Option<&'a TsConfigCatalog>,
     workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
 }
@@ -74,6 +75,7 @@ impl<'a> DeclarationResolver<'a> {
             results,
             ambient: Default::default(),
             type_ambient: OnceLock::new(),
+            facts: None,
             catalog,
             workspace,
         }
@@ -82,9 +84,10 @@ impl<'a> DeclarationResolver<'a> {
     pub fn with_ambient_modules(
         mut self,
         paths: &[PathBuf],
-        facts: &dyn crate::codebase::dependencies::graph::TsFactLookup,
+        facts: &'a dyn crate::codebase::dependencies::graph::TsFactLookup,
         catalog: Option<&TsConfigCatalog>,
     ) -> Self {
+        self.facts = Some(facts);
         self.ambient = ambient::AmbientModules::new(paths, facts, catalog);
         self
     }
@@ -120,8 +123,13 @@ impl<'a> DeclarationResolver<'a> {
                 .get()
                 .expect("type-visible ambient modules were just initialized");
         }
-        let modules =
-            type_entries::visible_modules(self.session, self.root, self.sources, self.catalog);
+        let modules = type_entries::visible_modules(
+            self.session,
+            self.root,
+            self.sources,
+            self.catalog,
+            self.facts,
+        );
         self.type_ambient.get_or_init(|| modules)
     }
 

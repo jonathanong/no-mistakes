@@ -223,6 +223,9 @@ declared as `typeof NamedClass` can identify that class. Included ambient module
 declarations can prove a non-Error base without a path mapping. A `types` entry
 visible to the importing file's tsconfig, including one inherited from a relative
 extended config, does the same for ambient modules outside the analyzed file set.
+That extended path is resolved the same way as the catalog, so a relative path
+that omits its json suffix, and a directory config, both load. A `types` entry that is already
+an analyzed file reuses that file's prepared facts.
 `declare module` bodies of the form `export = Namespace` supply that namespace's
 exported classes. A declared non-Error base is silent, a declared Error base still
 reports, and a specifier with no visible declaration stays advisory. Unset `types`
@@ -472,7 +475,9 @@ Reflection and some alias forms can still hide a dead class.
   A bare construct signature does not identify class ancestry. Ambient module
   specifiers are proved only from a declaration visible to the importing file:
   an included project file, or a `types` entry on its tsconfig, including a
-  value inherited from a relative extended config. `export = Namespace` supplies
+  value inherited from a relative extended config. Relative `extends` paths
+  that omit a json suffix, and directory configs, resolve the same way as the catalog.
+  `export = Namespace` supplies
   the namespace's exported classes. Unset `types` does not scan installed
   packages. A declared non-Error base is silent, a declared Error base still
   reports, and a missing declaration stays advisory. A choice between

@@ -3,7 +3,9 @@
 use super::ambient::AmbientModules;
 use super::package;
 use crate::codebase::analysis_session::AnalysisSession;
+use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_resolver::{normalize_path, TsConfigCatalog};
+use crate::codebase::ts_source::facts::{TsFactPlan, TsFileFacts};
 use crate::codebase::ts_source::SourceStore;
 use std::path::{Path, PathBuf};
 #[path = "type_config.rs"]
@@ -14,6 +16,7 @@ pub(super) fn visible_modules(
     root: &Path,
     sources: &SourceStore,
     catalog: Option<&TsConfigCatalog>,
+    prepared: Option<&dyn TsFactLookup>,
 ) -> AmbientModules {
     let Some(catalog) = catalog else {
         return AmbientModules::default();
@@ -42,11 +45,30 @@ pub(super) fn visible_modules(
             if !seen.insert((index, file.clone())) {
                 continue;
             }
+            if let Some(facts) = reusable_facts(prepared, &file) {
+                modules.index_file(Some(index), &file, facts);
+                continue;
+            }
             let facts = session.declaration_facts(root, &file);
             modules.index_file(Some(index), &file, &facts);
         }
     }
     modules
+}
+
+/// Prepared facts already walked this file. A second collection would parse it again.
+fn reusable_facts<'a>(
+    prepared: Option<&'a dyn TsFactLookup>,
+    file: &Path,
+) -> Option<&'a TsFileFacts> {
+    let prepared = prepared?;
+    if !prepared.covers_ts_fact_plan(TsFactPlan {
+        function_calls: true,
+        ..TsFactPlan::default()
+    }) {
+        return None;
+    }
+    prepared.get_ts_facts(file)
 }
 
 fn resolve_name(

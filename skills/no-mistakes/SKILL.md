@@ -105,7 +105,8 @@ Immutable constructor aliases and declaration members typed `typeof NamedClass`
 retain the concrete class identity. Included ambient module declarations and
 tsconfig-visible ambient modules, including `export =` namespaces, can prove a
 non-Error base; a bare constructor signature cannot. Unset `types` does not
-scan installed packages. Known non-Error
+scan installed packages. A relative `extends` path, including one that omits
+its json suffix, resolves the same way as the catalog. Known non-Error
 globals are quiet; shadowed names resolve independently.
 Typed constant facades follow the immutable initializer through export barrels.
 Declarations use the re-exporting package's dependency context. Static imports
