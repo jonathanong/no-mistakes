@@ -11,6 +11,24 @@ credited as constructed even when its own ancestry is unresolved. Known non-Erro
 globals such as `Intl.DateTimeFormat` and `Intl.NumberFormat` no longer produce
 unresolved-target diagnostics. Shadowed global names need independent proof.
 
+The [#2742 follow-up](https://github.com/jonathanong/no-mistakes/issues/2742)
+resolves constructor facades and immutable aliases through the same session's
+prepared binding facts, canonical graph, and declaration resolver projection.
+Each importer keeps its own tsconfig scope. Workspace package root and wildcard
+subpath exports follow the canonical workspace resolver through star and named
+re-exports, including definitions outside the rule include. Resolved unrelated
+star exports are skipped; unresolved or conflicting exports remain uncertain.
+Package members declared as
+`typeof NamedClass` can supply concrete class identity, including a base chain
+that proves a class is not an Error. A construct signature alone does not prove
+that ancestry. Included ambient module declarations also supply base-class proof
+within the importing project. Nullish constructor choices narrow only when the selected class
+value is provably non-nullish; unknown alternatives remain uncertain.
+
+Declaration proof does not add package files to ordinary import/call query
+results. Genuine unused Error subclasses still report, and a construction
+credits its exact class rather than another class with the same name.
+
 Still-unresolvable constructors, their otherwise-unused enclosing classes, and
 otherwise-unused classes whose bases remain unresolved now produce non-failing
 advisories, including when `unanalyzable: report` is selected explicitly or

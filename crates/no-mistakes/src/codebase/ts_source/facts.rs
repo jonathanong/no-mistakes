@@ -31,6 +31,7 @@ type RouteReachableFilesCache = Arc<
 
 #[doc(hidden)]
 pub mod ancestry;
+mod ancestry_declarations;
 mod ancestry_namespaces;
 pub(crate) mod call_sites;
 mod collect;

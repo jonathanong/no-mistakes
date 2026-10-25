@@ -81,3 +81,5 @@ include!("domain_parity_tests/lang_frontend_shared_session.rs");
 include!("domain_parity_tests/resolver_projection_parity.rs");
 
 include!("domain_parity_tests/resolver_projection_reentry.rs");
+
+include!("domain_parity_tests/constructor_resolution.rs");

@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: unconstructed-error-class
+    scope: repository
+    include:
+      - src/packages.ts
+      - src/pg-facade.ts
+      - src/snapshot-before.ts
+      - src/workers.ts
+      - src/typed-alias-use.ts
+      - src/core/config.ts
+      - src/core/filter.ts

@@ -1,0 +1,147 @@
+//! Supplemental declaration projection of the request's selected resolver.
+//! Ordinary import resolution keeps its original file universe and outputs.
+use super::{ImportResolution, ResolverCacheScopeKey, TsConfig, TsConfigCatalog};
+use crate::codebase::analysis_session::AnalysisSession;
+use crate::codebase::ts_source::SourceStore;
+use dashmap::DashMap;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, OnceLock};
+#[path = "declarations/ambient.rs"]
+mod ambient;
+#[path = "declarations/package.rs"]
+mod package;
+
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub(crate) struct ProjectionKey {
+    root: PathBuf,
+    visible: ResolverCacheScopeKey,
+    catalog: Option<super::CatalogProjectionKey>,
+    workspace: Option<crate::codebase::workspaces::WorkspaceProjectionKey>,
+    workspace_visible: Option<ResolverCacheScopeKey>,
+}
+pub(crate) type DeclarationResults = DashMap<(PathBuf, String), Arc<OnceLock<Option<PathBuf>>>>;
+
+pub(crate) struct DeclarationResolver<'a> {
+    session: &'a AnalysisSession,
+    root: &'a Path,
+    resolver: &'a dyn ImportResolution,
+    sources: &'a SourceStore,
+    results: Arc<DeclarationResults>,
+    ambient: ambient::AmbientModules,
+    catalog: Option<&'a TsConfigCatalog>,
+    workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
+}
+
+impl<'a> DeclarationResolver<'a> {
+    pub fn new(
+        session: &'a AnalysisSession,
+        root: &'a Path,
+        resolver: &'a dyn ImportResolution,
+        tsconfig: &TsConfig,
+        catalog: Option<&'a TsConfigCatalog>,
+        sources: &'a SourceStore,
+        workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
+    ) -> Self {
+        // Select the complete catalog/visibility projection once, before any
+        // importer or class traversal. Individual lookups reuse this result map.
+        let key = ProjectionKey {
+            root: root.to_path_buf(),
+            visible: ResolverCacheScopeKey::for_lookup(
+                tsconfig,
+                resolver.visible_files(),
+                None,
+                &[],
+            ),
+            catalog: catalog.map(TsConfigCatalog::projection_key),
+            workspace: workspace.map(|workspace| workspace.projection_key()),
+            workspace_visible: resolver.workspace_visible_files().map(|visible| {
+                ResolverCacheScopeKey::for_lookup(tsconfig, Some(visible), None, &[])
+            }),
+        };
+        let results = session
+            .declaration_resolutions
+            .entry(key)
+            .or_default()
+            .clone();
+        Self {
+            session,
+            root,
+            resolver,
+            sources,
+            results,
+            ambient: Default::default(),
+            catalog,
+            workspace,
+        }
+    }
+
+    pub fn with_ambient_modules(
+        mut self,
+        paths: &[PathBuf],
+        facts: &dyn crate::codebase::dependencies::graph::TsFactLookup,
+        catalog: Option<&TsConfigCatalog>,
+    ) -> Self {
+        self.ambient = ambient::AmbientModules::new(paths, facts, catalog);
+        self
+    }
+
+    pub fn ambient_class(
+        &self,
+        specifier: &str,
+        importer: &Path,
+        exported: &str,
+    ) -> Option<(PathBuf, crate::codebase::dependencies::extract::CallableId)> {
+        self.ambient
+            .class(specifier, importer, exported, self.catalog)
+    }
+
+    pub fn resolve(&self, specifier: &str, importer: &Path) -> Option<PathBuf> {
+        let cell = self
+            .results
+            .entry((importer.to_path_buf(), specifier.into()))
+            .or_default()
+            .clone();
+        cell.get_or_init(|| {
+            self.session
+                .record_work("resolver.declaration_resolutions", 1);
+            self.resolve_uncached(specifier, importer)
+        })
+        .clone()
+    }
+
+    fn resolve_uncached(&self, specifier: &str, importer: &Path) -> Option<PathBuf> {
+        if let Some(path) = self.resolver.resolve(specifier, importer) {
+            let declaration = [".d.ts", ".d.mts", ".d.cts"]
+                .iter()
+                .any(|suffix| path.to_string_lossy().ends_with(suffix));
+            if !declaration {
+                return Some(path);
+            }
+            let context = package::lookup_context(specifier, importer, self.root)?;
+            if context == importer {
+                return Some(path);
+            }
+            return (specifier.starts_with("./") || specifier.starts_with("../"))
+                .then(|| package::resolve_in_context(specifier, importer, self.root, self.sources))
+                .flatten();
+        }
+        if self
+            .workspace
+            .is_some_and(|workspace| workspace.recognizes_specifier_from(specifier, importer))
+        {
+            return None;
+        }
+        // A real local candidate outside the selected graph still shadows an
+        // external namesake; declaration fallback must not change ownership.
+        if !specifier.starts_with('.')
+            && self
+                .resolver
+                .resolution_candidates(specifier, importer)
+                .iter()
+                .any(|path| path.is_file())
+        {
+            return None;
+        }
+        package::resolve_in_context(specifier, importer, self.root, self.sources)
+    }
+}

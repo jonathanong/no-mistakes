@@ -107,6 +107,9 @@ uncertainty keeps the shared policy: `report` fails, `advise` advises, and
 `ignore` omits it. Definite unused Error classes remain failures under every
 policy. Known constructor targets reuse the prepared resolver, including
 path aliases and usable package declarations, and credit the actual class.
+Immutable aliases and package constructor facades can resolve through shared
+binding facts and concrete `typeof` class declarations. Unknown alternatives
+remain uncertain; declaration proof does not broaden ordinary query scope.
 Known non-Error globals are quiet; shadowed names resolve independently.
 Ordinary import/call query results remain unchanged. Suppressions apply at the
 construction or class line in both report channels. The rule remains `max`

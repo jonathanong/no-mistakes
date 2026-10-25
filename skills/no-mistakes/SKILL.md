@@ -99,8 +99,12 @@ advisories even with `options.unanalyzable: report` (the default).
 uncertainty keeps the shared policy: `report` fails, `advise` advises, and
 `ignore` omits it. Definite unused Error classes remain failures under every
 policy. Known constructor targets reuse the prepared resolver, including
-path aliases and usable package declarations, and credit the actual class.
-Known non-Error globals are quiet; shadowed names resolve independently.
+path aliases, workspace root/wildcard exports and re-exports, and usable package
+declarations, and credit the actual class even outside the rule include.
+Immutable constructor aliases and declaration members typed `typeof NamedClass`
+retain the concrete class identity. Included ambient module declarations can
+prove a non-Error base; a bare constructor signature cannot. Known non-Error
+globals are quiet; shadowed names resolve independently.
 Ordinary import/call query results remain unchanged. Suppressions apply at the
 construction or class line in both report channels. The rule remains `max`
 only; a requested `low` warns and runs `max`.

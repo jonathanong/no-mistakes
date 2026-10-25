@@ -212,7 +212,16 @@ construction. The rule follows `extends` edges to a built-in error, and treats a
 subclass in non-test source as a use of its base.
 
 Constructor lookup also reuses the prepared class-ancestry facts and resolver,
-including tsconfig path aliases, re-exports, and usable package declarations.
+including tsconfig path aliases, workspace package exports, re-exports, and
+usable package declarations. Workspace `.` and wildcard subpath exports can
+lead through several `export *` and named re-export hops, including source
+outside this rule's include. Unrelated, resolved star exports do not hide a class;
+unresolved or conflicting exports retain uncertainty.
+The importer selects its own tsconfig resolver scope. Immutable constructor
+aliases and destructured facades reuse prepared binding facts; package members
+declared as `typeof NamedClass` can identify that class. Included ambient module
+declarations can prove a non-Error base without a path mapping. A nullish constructor
+choice is narrowed only when its selected class value is provably non-nullish.
 Resolving the constructed class credits that exact class even when its own base
 ancestry remains unknown. This does not widen ordinary import or call query
 results. Known non-Error global constructors, including `Intl.DateTimeFormat`
@@ -419,11 +428,13 @@ class.
   imports from internally symlinked declarations remain uncertain when their
   package dependency context cannot be proved; safe same-directory reexports
   remain supported. Distinct symlink spellings retain separate logical identities.
-  A constructor obtained by destructuring a default-imported object, or by
-  choosing between a module's default export and its namespace, can remain
-  unresolved. These sites are advisory unless ignored; an object's declaration
-  type alone is not proof of the runtime constructor. Prefer a direct class
-  import when the package exposes one.
+  An immutable constructor obtained by destructuring a default-imported object
+  can resolve when its declaration member names a concrete class with `typeof`.
+  A bare construct signature does not identify class ancestry. A choice between
+  a module's default export and its namespace can resolve when the default is a
+  proven non-nullish class; genuinely unknown alternatives remain uncertain.
+  Shadowed, reassigned, or otherwise unproven targets remain advisory unless
+  ignored. Prefer a direct class import when the package exposes one.
 - Mixin and expression bases (`extends withCode(Error)`) and class expressions
   are not tracked.
 - A dead subclass still satisfies its base. The check converges over repeated

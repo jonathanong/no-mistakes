@@ -15,6 +15,13 @@ non-Error ancestry; missing, opaque or unsupported declaration resolution remain
 uncertain. See
 [error-class ancestry](rules/unconstructed-error-class.md#limitations).
 
+Constructor proof consumes canonical call-site provenance and prepared binding
+facts. Declaration lookups use a session-owned resolver projection with the
+importer's selected tsconfig/catalog scope and shared source/fact stores.
+Resolving a facade does not build a second graph or widen ordinary import/call
+queries. Uncertain alternatives cannot be discarded merely because one candidate
+has a known class declaration.
+
 The canonical in-memory edge index is also used by `queues edges|related` and
 `server edges|related`. Those commands retain their existing public edge DTOs:
 queue edges are file -> virtual job -> processor/worker relationships, while
