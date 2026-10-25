@@ -1,0 +1,28 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - { file: src/switches.mts, symbol: impossibleCase }
+        - { file: src/switches.mts, symbol: matchingCase }
+        - { file: src/switches.mts, symbol: defaultCase }
+        - { file: src/switches.mts, symbol: fallthroughCase }
+        - { file: src/switches.mts, symbol: stoppedFallthrough }
+        - { file: src/switches.mts, symbol: defaultBeforeMatch }
+        - { file: src/switches.mts, symbol: defaultFallsThrough }
+        - { file: src/switches.mts, symbol: typedCaseMismatch }
+        - { file: src/switches.mts, symbol: returnedCase }
+        - { file: src/switches.mts, symbol: thrownCase }
+        - { file: src/switches.mts, symbol: unknownDiscriminant }
+        - { file: src/switches.mts, symbol: unknownCase }
+        - { file: src/switches.mts, symbol: emptySwitch }
+        - { file: src/switches.mts, symbol: loneSurrogateDefault }
+        - { file: src/switches.mts, symbol: loneSurrogateMatch }
+        - { file: src/switches.mts, symbol: loneSurrogateWrongCase }
+        - { file: src/switches.mts, symbol: blockBreak }
+        - { file: src/switches.mts, symbol: blockReturn }
+        - { file: src/switches.mts, symbol: blockFallthrough }
+        - { file: src/switches.mts, symbol: innerLoopBreak }
+      assertions:
+        - { module: 'node:assert', export: strictEqual }

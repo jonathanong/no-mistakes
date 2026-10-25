@@ -182,4 +182,3 @@ in rule YAML for literal default-branch names. Separate credential and ref risks
 can produce separate rows on one checkout.
 
 The opt-in [coverage-producer-assertion-owner](../rules/coverage-producer-assertion-owner.md) rule checks configured coverage producers for reachable assertions; uncertain dispatch follows `unanalyzable`.
-

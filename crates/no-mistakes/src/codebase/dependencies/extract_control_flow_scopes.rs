@@ -16,6 +16,7 @@ fn visit_switch_statement_with_scope<'a>(
 ) {
     // Case consequents share one lexical environment, while the discriminant
     // is evaluated outside it.
+    record_dead_switch_cases(collector, switch);
     collector.visit_expression(&switch.discriminant);
     let pushed = collector.push_lexical_scope();
     for case in &switch.cases {

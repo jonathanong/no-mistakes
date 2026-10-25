@@ -164,6 +164,5 @@ pub(super) fn graph_rules(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk>
         chunk.findings.extend(diagnostics.findings);
         chunk.advisories.extend(diagnostics.advisories);
     }
-
     Ok(chunk)
 }

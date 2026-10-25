@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      unanalyzable: advise
+      producers:
+        - { file: src/import-forms.mts, symbol: namedAssertion }
+        - { file: src/import-forms.mts, symbol: namespaceAssertion }
+        - { file: src/import-forms.mts, symbol: defaultMemberAssertion }
+        - { file: src/import-forms.mts, symbol: externalAndAssertion }
+      assertions:
+        - { module: 'node:assert', export: strictEqual }

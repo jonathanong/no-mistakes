@@ -42,3 +42,18 @@ fn execution_eligibility_is_explicit_fact_demand() {
         on.get(&file).unwrap().function_calls
     );
 }
+
+#[test]
+fn switch_eligibility_preserves_ordinary_call_facts() {
+    use crate::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
+    let file = fixture().join("src/switches.mts");
+    let plan = TsFactPlan { function_calls: true, value_flow: true, ..Default::default() };
+    let off = collect_ts_facts(std::slice::from_ref(&file), plan);
+    let on = collect_ts_facts(std::slice::from_ref(&file), TsFactPlan { call_eligibility: true, ..plan });
+    let off = off.get(&file).unwrap();
+    let on = on.get(&file).unwrap();
+    assert!(off.unreachable_call_ranges.is_empty());
+    assert!(!on.unreachable_call_ranges.is_empty());
+    assert_eq!(off.function_calls, on.function_calls);
+    assert_eq!(off.call_sites, on.call_sites);
+}

@@ -24,7 +24,9 @@ rules:
 `producers` and `assertions` must be non-empty. Producers select exactly one
 prepared callable by file and symbol; missing or ambiguous selectors are errors.
 There are no framework, test-location, or assertion-name defaults. Assertion
-imports match resolved module/export identities, including imported aliases;
+imports match resolved module/export identities, including named and namespace
+imports and imported aliases. Default-import member calls such as
+`import assert from 'node:assert'; assert.strictEqual(...)` remain unanalyzable;
 a locally shadowed identifier or a string containing an assertion name does not
 qualify. Helpers need no local assertion when their actual call descendants own
 one. Actual resolved callback invocations use the canonical call graph. Storing,
@@ -61,6 +63,10 @@ path, literal dead conditional/logical arms and loop bodies, and calls after a s
 satisfy the producer. A helper which merely calls the producer is not reachable
 in the producer's forward call direction. Branch feasibility beyond these
 syntactic exclusions and semantic assertion adequacy remain outside this rule.
+When the switch discriminant and every case value are supported literals, only
+the matching case (or default) and its fallthrough can supply evidence; direct
+or plain-block abrupt exits stop that fallthrough. Unknown switch identities retain the
+canonical graph's syntactic treatment.
 
 ## Ownership contracts
 
@@ -97,6 +103,9 @@ unmodeled external module calls also follow shared `unanalyzable` policy:
 that uncertain result. Uncertainty never supplies assertion evidence, and is
 reported even when another reachable call owns an assertion. Known globals
 retain the call graph's classification; external process calls need contracts.
+An unmodeled external call such as `node:fs` keeps the producer unanalyzable even
+when an assertion is also reached. Tip: set `unanalyzable: advise` while rolling
+out the rule to inspect these uncertain results without failing the check.
 
 ## Suppression
 
