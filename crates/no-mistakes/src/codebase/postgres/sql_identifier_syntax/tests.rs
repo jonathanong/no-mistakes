@@ -188,3 +188,6 @@ mod transport_shape_tests;
 
 #[path = "producer_consumer_tests.rs"]
 mod producer_consumer_tests;
+
+#[path = "freeze_phase2_tests.rs"]
+mod freeze_phase2_tests;

@@ -8,19 +8,23 @@ mod objects;
 mod parameters;
 mod producers;
 
+#[derive(Default)]
+pub(super) struct Facts {
+    pub uses: FxHashSet<Span>,
+    pub data: FxHashSet<Span>,
+    pub values: FxHashSet<usize>,
+    pub transports: FxHashSet<Span>,
+    pub functions: FxHashSet<usize>,
+}
 // A field annotation is only a possible executor. Keep runtime receiver reads,
 // scoped to its owning class, without promoting any SQL argument to a literal.
 pub(super) fn collect(
     program: &Program<'_>,
     possible: &FxHashSet<Span>,
     bindings: &FxHashMap<Span, usize>,
-) -> (FxHashSet<Span>, FxHashSet<usize>, FxHashSet<Span>) {
+) -> Facts {
     if possible.is_empty() {
-        return (
-            FxHashSet::default(),
-            FxHashSet::default(),
-            FxHashSet::default(),
-        );
+        return Facts::default();
     }
     let mut visitor = Runtime {
         possible,
@@ -32,11 +36,19 @@ pub(super) fn collect(
         this_fields: None,
         reads: Vec::new(),
         uses: FxHashSet::default(),
+        data: FxHashSet::default(),
     };
     visitor.visit_program(program);
-    let (producer_uses, produced, transports) = producers::collect(program, possible, bindings);
-    visitor.uses.extend(producer_uses);
-    (visitor.uses, produced, transports)
+    let produced = producers::collect(program, possible, bindings);
+    visitor.uses.extend(produced.uses.iter().copied());
+    visitor.data.extend(produced.uses);
+    Facts {
+        uses: visitor.uses,
+        data: visitor.data,
+        values: produced.values,
+        transports: produced.transports,
+        functions: produced.functions,
+    }
 }
 struct Runtime<'s> {
     possible: &'s FxHashSet<Span>,
@@ -48,6 +60,7 @@ struct Runtime<'s> {
     this_fields: Option<FxHashSet<String>>,
     reads: Vec<Span>,
     uses: FxHashSet<Span>,
+    data: FxHashSet<Span>,
 }
 impl<'a> Visit<'a> for Runtime<'_> {
     fn visit_class(&mut self, class: &Class<'a>) {
@@ -137,6 +150,7 @@ impl Runtime<'_> {
             false
         };
         if this_field || object_field {
+            self.data.insert(span(at));
             self.reads.push(span(at));
         }
     }

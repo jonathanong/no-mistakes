@@ -118,9 +118,9 @@ declare function registerPostCommitAction(
   callback: () => Promise<void>,
 ): void;
 
-// This global-looking method stays opaque until the low pass proves the intrinsic is unshadowed.
+// No local binding or mutation overrides the global pure freeze intrinsic at this call.
 export function frozenOptions(options: QueryOptions) {
-  return Object.freeze({ ...options }); // ADVISE
+  return Object.freeze({ ...options }); // NON_SQL
 }
 
 // Opaque consumers can execute an executor nested in an object or array.
@@ -191,8 +191,8 @@ export function longerReceiver(query: QueryExecutor, key: string) { // NON_SQL
 
 // Unsupported factory-result shapes retain the factory escape as a fallback.
 export function unsupportedFactoryDestructure() {
-  const { query } = beginTransaction(); // ADVISE
-  query(dynamicSql);
+  const { query } = beginTransaction(); // NON_SQL: destructuring leaves the receiver unresolved.
+  query(dynamicSql); // ADVISE: uncertainty belongs to the actual call, not the factory proxy.
 }
 export function opaqueFactoryResult() {
   consume(beginTransaction()); // ADVISE

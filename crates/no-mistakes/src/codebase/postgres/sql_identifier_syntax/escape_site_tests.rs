@@ -6,7 +6,8 @@ fn fixture() -> std::path::PathBuf {
 fn opaque_escapes_anchor_to_calls_without_losing_reference_identity() {
     let root = fixture();
     let options = crate::napi_api::options::test_json_arg(serde_json::json!({
-        "root": root, "config": root.join(".no-mistakes-low.yml")
+        "root": root, "config": root.join(".no-mistakes-low.yml"),
+        "includeSqlVerdicts": true
     }));
     let report: serde_json::Value =
         serde_json::from_str(&crate::napi_api::check_json_impl(options).unwrap()).unwrap();
@@ -27,6 +28,36 @@ fn opaque_escapes_anchor_to_calls_without_losing_reference_identity() {
         assert_eq!(count, wanted, "line {}: {report}", index + 1);
     }
     assert_eq!(rows.len(), expected);
+
+    // Displayed call lines may coincide; the two saved reference identities may not.
+    let invocation = source.find("helper( // TWO:").unwrap();
+    let reference_span = |name: &str| {
+        let needle = format!("\n    {name},");
+        let start = invocation + source[invocation..].find(&needle).unwrap() + 5;
+        (start as u32, (start + name.len()) as u32)
+    };
+    let expected_spans = [reference_span("query"), reference_span("options")]
+        .into_iter()
+        .collect::<std::collections::BTreeSet<_>>();
+    let last_operand = expected_spans.iter().map(|(_, end)| *end).max().unwrap();
+    let actual_spans = report["sqlVerdicts"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|row| {
+            row["file"] == "src/query.mts"
+                && row["rule"] == "postgres-no-offset"
+                && row["status"] == "abstain"
+        })
+        .map(|row| {
+            (
+                row["span"][0].as_u64().unwrap() as u32,
+                row["span"][1].as_u64().unwrap() as u32,
+            )
+        })
+        .filter(|(start, _)| *start >= invocation as u32 && *start <= last_operand)
+        .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(actual_spans, expected_spans, "{report}");
 
     // Reporting lines may coincide, but each unknown retains its original span.
     let path = root.join("src/query.mts");
@@ -60,6 +91,13 @@ fn opaque_escapes_anchor_to_calls_without_losing_reference_identity() {
             .filter(|call| call.line == call_line && matches!(call.input, Input::Unknown))
             .collect::<Vec<_>>();
         assert_eq!(unknown.len(), 2);
+        assert_eq!(
+            unknown
+                .iter()
+                .map(|call| call.span)
+                .collect::<std::collections::BTreeSet<_>>(),
+            expected_spans
+        );
         assert_ne!(unknown[0].span, unknown[1].span);
         assert!(unknown
             .iter()

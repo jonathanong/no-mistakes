@@ -24,8 +24,8 @@ export function unsupportedReceiverBind(options: QueryOptions | undefined) {
 }
 export function assignedBind(query: QueryExecutor, statement: string) {
   let alias: any;
-  read(SQL`SELECT ${alias = query} AS value`); // BIND_ESCAPE: assignment creates an executor escape.
-  alias(statement);
+  read(SQL`SELECT ${alias = query} AS value`); // BIND_CLEAR: the assignment value is bound data.
+  alias(statement); // BIND_ESCAPE: the transferred receiver still executes unknown SQL.
 }
 export function* yieldedBind(query: QueryExecutor) {
   read(SQL`SELECT ${yield query} AS value`); // BIND_ESCAPE: generator suspension can expose the executor.

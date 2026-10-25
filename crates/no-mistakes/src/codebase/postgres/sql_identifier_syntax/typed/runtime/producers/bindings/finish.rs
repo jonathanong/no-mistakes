@@ -2,7 +2,7 @@ use super::*;
 use std::collections::VecDeque;
 
 impl Bindings<'_> {
-    pub fn finish(mut self) -> (FxHashSet<usize>, FxHashSet<Span>, FxHashSet<Span>) {
+    pub fn finish(mut self) -> super::super::Produced {
         let (values, method_uses, mut transports) = self.methods.finish(&mut self.factories);
         self.values.extend(values);
         let mut queue: VecDeque<_> = self
@@ -51,6 +51,11 @@ impl Bindings<'_> {
                 .filter_map(|(id, at)| self.factories.contains(&id).then_some(at)),
         );
         uses.extend(method_uses);
-        (self.values, uses, transports)
+        super::super::Produced {
+            values: self.values,
+            uses,
+            transports,
+            functions: self.factories,
+        }
     }
 }

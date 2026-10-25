@@ -70,6 +70,14 @@ impl Typed {
                 self.selected.insert(*id);
                 self.factory_bindings.insert(*id, self.immutable);
             }
+        } else if let BindingPattern::ObjectPattern(object) = &variable.id {
+            if object.properties.len() == 1
+                && object.rest.is_none()
+                && object.properties[0].key.static_name().as_deref() == Some("query")
+            {
+                self.unknown_bindings(&object.properties[0].value);
+                self.transports.insert(at);
+            }
         }
     }
     pub(super) fn write(&mut self, at: Span) {
@@ -88,6 +96,18 @@ impl Typed {
         }
         self.unsupported
             .extend(self.writes.intersection(&self.selected).copied());
+    }
+    pub(super) fn finish_factory_arguments(&mut self) {
+        for at in &self.factory_arguments {
+            let known = self.sources.contains_key(at)
+                || self
+                    .bindings
+                    .get(at)
+                    .is_some_and(|id| self.selected.contains(id));
+            if known {
+                self.transports.insert(*at);
+            }
+        }
     }
     pub(super) fn wrapper(&mut self, call: &CallExpression<'_>) {
         let factory = match unwrap_ts_wrappers(&call.callee) {
@@ -123,22 +143,15 @@ impl Typed {
             if let Some((root, _)) = chain(&call.callee) {
                 self.transports.insert(root);
             }
-            for argument in &call.arguments {
-                let Some(expression) = argument.as_expression() else {
-                    continue;
-                };
-                let Some((root, _)) = chain(expression) else {
-                    continue;
-                };
-                let known = self.sources.contains_key(&root)
-                    || self
-                        .bindings
-                        .get(&root)
-                        .is_some_and(|id| self.selected.contains(id));
-                if known {
-                    self.transports.insert(root);
-                }
-            }
+        }
+        if factory.is_some() {
+            self.factory_arguments
+                .extend(call.arguments.iter().filter_map(|argument| {
+                    argument
+                        .as_expression()
+                        .and_then(chain)
+                        .map(|(root, _)| root)
+                }));
         }
     }
     fn callback(&mut self, parameters: &FormalParameters<'_>) {

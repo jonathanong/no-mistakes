@@ -65,6 +65,14 @@ export class CallbackCarrier {
   }
 }
 
+export class FieldAliasConsumer {
+  db!: QueryExecutor;
+  run() {
+    const local = this.db; // NON_SQL
+    local(dynamicSql); // UNKNOWN_FIELD_ALIAS
+  }
+}
+
 (null as unknown as QueryExecutor)('SELECT 1'); // UNKNOWN_NULL_CAST
 ({ query: unconfigured() } as QueryExecutor).query('SELECT 1'); // UNKNOWN_OBJECT_CAST
 [unconfigured()] satisfies QueryExecutor; // NON_SQL: an unconsumed aggregate assertion.

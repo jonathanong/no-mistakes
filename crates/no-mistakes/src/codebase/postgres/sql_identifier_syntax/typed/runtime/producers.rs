@@ -7,6 +7,13 @@ use oxc_span::GetSpan;
 mod bindings;
 mod methods;
 
+#[derive(Default)]
+pub(super) struct Produced {
+    pub uses: FxHashSet<Span>,
+    pub values: FxHashSet<usize>,
+    pub transports: FxHashSet<Span>,
+    pub functions: FxHashSet<usize>,
+}
 // Producer types supply negative receiver provenance, never literal SQL proof.
 // Candidate spans are projected only at actual calls or opaque invocations.
 // Transparent assertions share the underlying value span.
@@ -14,7 +21,7 @@ pub(super) fn collect(
     program: &Program<'_>,
     possible: &FxHashSet<Span>,
     ids: &FxHashMap<Span, usize>,
-) -> (FxHashSet<Span>, FxHashSet<usize>, FxHashSet<Span>) {
+) -> Produced {
     let mut visitor = Producers {
         possible,
         bindings: bindings::Bindings::new(possible, ids),
@@ -23,9 +30,9 @@ pub(super) fn collect(
         uses: FxHashSet::default(),
     };
     visitor.visit_program(program);
-    let (bindings, calls, transports) = visitor.bindings.finish();
-    visitor.uses.extend(calls);
-    (visitor.uses, bindings, transports)
+    let mut produced = visitor.bindings.finish();
+    produced.uses.extend(visitor.uses);
+    produced
 }
 
 struct Producers<'s> {

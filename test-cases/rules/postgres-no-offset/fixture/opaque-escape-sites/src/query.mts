@@ -21,8 +21,8 @@ export function escapes(query: QueryExecutor, options: QueryOptions, statement: 
     ),
   );
   let alias: any;
-  helper(
-    alias = query, // ONE: assignment creates an independent escape.
+  helper( // ONE: the opaque invocation owns the transferred executor uncertainty.
+    alias = query, // CLEAR: the transfer itself does not execute SQL.
   );
   helper(
     class { field = query }, // ONE: class body creates an independent escape.

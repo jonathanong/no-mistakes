@@ -29,8 +29,8 @@ declare const Opaque: new (value: unknown) => unknown;
 declare const opaqueTag: (strings: TemplateStringsArray, ...args: unknown[]) => unknown;
 export function assignedMetadata(query: QueryExecutor, statement: string) {
   let alias: any;
-  read('SELECT 1', alias = query); // ADVISE: assignment creates an executor escape.
-  alias(statement);
+  read('SELECT 1', alias = query); // INITIALIZER_CLEAR: transfer is metadata, not SQL execution.
+  alias(statement); // ADVISE: the transferred receiver still executes unknown SQL.
 }
 export function renamedDestructure(options: QueryOptions, statement: string) {
   const { query: alias } = options; // INITIALIZER_CLEAR
@@ -41,8 +41,8 @@ export function literalDestructure(options: QueryOptions) {
   alias('SELECT 1'); // ADVISE: destructuring is negative tracking, never a literal proof.
 }
 export function unsupportedDestructure(options: QueryOptions) {
-  const { query: alias, ...rest } = options; // FALLBACK: unsupported pattern retains the source use.
-  alias('SELECT 1');
+  const { query: alias, ...rest } = options; // INITIALIZER_CLEAR: destructuring only transfers data.
+  alias('SELECT 1'); // ADVISE: the unsupported projection retains an unknown actual call.
   return rest;
 }
 export function shadowedDestructure(options: QueryOptions, statement: string) {

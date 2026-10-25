@@ -1,13 +1,13 @@
 import type { QueryOptions } from "@example/executor-types";
 declare const statement: string;
-// Unsupported projections retain the original receiver escape, not a false proof.
+// Data/receiver transfers do not execute SQL; unsupported projected calls stay unknown.
 export function nonQuery(options: QueryOptions) {
-  const { other } = options; // ADVISE
+  const { other } = options; // NON_SQL
   return other;
 }
 export function nested(options: QueryOptions) {
   const {
     query: { run },
-  } = options; // ADVISE
-  run(statement);
+  } = options; // NON_SQL
+  run(statement); // ADVISE
 }

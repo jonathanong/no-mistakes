@@ -155,6 +155,9 @@ impl Metadata {
             None => false,
         }
     }
+    pub fn runtime_callee(&self, at: &Span) -> Option<Span> {
+        self.callee_uses.get(at).copied()
+    }
     pub fn runtime_callsite(&self, at: &Span) -> Option<Span> {
         self.callee_uses
             .get(at)
