@@ -87,8 +87,21 @@ expression-free template is that method (`query["append"]` and
 second argument, and the builder is the receiver in the first argument. A
 receiver that is not an identifier, a spread argument, or a different object
 on each guard does not count as one builder. A configured method whose name
-is `call` stays that method. A call or tag that is not a member, such as
-`helper.call` or `` factory()`...` ``, stays silent.
+is `call` or `apply` stays that method. Literal-array forwarding
+`query.append.apply(query, [text])` uses the same explicit receiver. Immutable
+same-file method aliases (`const append = query.append; append.call(query,
+text)`) and comma method references (`(0, query.append).call(query, text)`)
+retain that receiver; optional calls and TypeScript assertions are transparent.
+A tag that is not a member or identifier, such as `` factory()`...` ``, stays silent.
+
+Forwarding requires one SQL piece and an identifier receiver. Unknown argument
+arrays, holes, spreads, extra arguments, reassigned or `let`/`var` aliases,
+computed identifier method keys, and unresolved or shadowed method bindings stay
+unknown. A detached invocation (`const append = query.append; append(text)`)
+does not prove a builder receiver. Rewrite these to a direct configured append
+with an explicit builder; replace repeated guards with the complete statement
+`switch` and throwing default described below. Guards that forward to different
+receivers do not establish one correlated builder.
 
 `tagNames` is the tag names that produce SQL text, such as `["sql"]`. An
 identifier tag and a member tag (`db.sql`, `db["sql"]`, ``db[`sql`]``) both

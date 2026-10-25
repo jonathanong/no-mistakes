@@ -2,6 +2,7 @@
 
 const { literalString } = require("./module-mock-helpers");
 const { childNodes, resolveVariable, unwrapTs } = require("./postgres-query-text");
+const { appendInvocation } = require("./postgres-no-correlated-sql-builder-invocation");
 
 function isFunction(node) {
   return (
@@ -30,62 +31,13 @@ function sqlPiece(node, tags) {
   return Boolean(name && tags.has(name));
 }
 
-// A configured method named `call` is that method. Otherwise `.call` forwards
-// and the SQL text is the second argument.
-function invocation(callee, methods) {
-  const node = unwrapTs(callee);
-  if (!node || node.type !== "MemberExpression") {
-    return null;
-  }
-  const name = staticMemberName(node);
-  if (!name) {
-    return null;
-  }
-  if (methods.has(name)) {
-    const object = unwrapTs(node.object);
-    if (object?.type !== "Identifier") {
-      return null;
-    }
-    return { object, argument: 0 };
-  }
-  if (name !== "call") {
-    return null;
-  }
-  const inner = unwrapTs(node.object);
-  const method = staticMemberName(inner);
-  if (!method) {
-    return null;
-  }
-  if (!methods.has(method)) {
-    return null;
-  }
-  const object = unwrapTs(inner.object);
-  if (object?.type !== "Identifier") {
-    return null;
-  }
-  return { object, argument: 1 };
-}
-
-function pieceMatches(call, invoked, tags, parameterName) {
-  if (call.arguments.length !== invoked.argument + 1) return false;
-  if (call.arguments.some((argument) => argument.type === "SpreadElement")) return false;
-  const piece = unwrapTs(call.arguments[invoked.argument]);
-  if (parameterName) return piece?.type === "Identifier" && piece.name === parameterName;
-  return sqlPiece(piece, tags);
-}
-
-function directAppend(call, methods, tags, parameterName) {
-  const invoked = invocation(call.callee, methods);
-  if (!invoked || !pieceMatches(call, invoked, tags, parameterName)) return null;
-  // `.call(receiver, text)` mutates the receiver, not the object the method was read from.
-  if (invoked.argument === 1) {
-    const receiver = unwrapTs(call.arguments[0]);
-    if (receiver?.type !== "Identifier") {
-      return null;
-    }
-    return receiver;
-  }
-  return invoked.object;
+function directAppend(call, methods, tags, parameterName, context) {
+  const invoked = appendInvocation(call, methods, context);
+  if (!invoked) return null;
+  const piece = unwrapTs(invoked.piece);
+  if (parameterName)
+    return piece?.type === "Identifier" && piece.name === parameterName ? invoked.object : null;
+  return sqlPiece(piece, tags) ? invoked.object : null;
 }
 
 function returnedCall(func) {
@@ -131,7 +83,7 @@ function forwarderAppend(call, methods, tags, context) {
       ? returnedCall(func)
       : null;
   if (inner?.type === "CallExpression") {
-    return directAppend(inner, methods, tags, func.params[0].name);
+    return directAppend(inner, methods, tags, func.params[0].name, context);
   }
   return null;
 }
@@ -144,7 +96,7 @@ function findAppend(node, methods, tags, context) {
     }
     if (!builder && current.type === "CallExpression") {
       const object =
-        directAppend(current, methods, tags, null) ||
+        directAppend(current, methods, tags, null, context) ||
         forwarderAppend(current, methods, tags, context);
       if (object) {
         builder = { object, call: current };
