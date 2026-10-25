@@ -110,6 +110,37 @@ fn resolve_name_reads_absolute_files_and_explicit_type_roots() {
 }
 
 #[test]
+fn custom_type_roots_do_not_fall_back_to_node_modules() {
+    let root = normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/unconstructed-error-class/virtual-module-types/fixture"),
+    );
+    let sources = sources();
+    let importer = root.join("src/runtime.ts");
+    let roots = vec![root.join("types")];
+    assert_eq!(
+        super::resolve_name(
+            "@fixture/runtime-types",
+            &root,
+            Some(&roots),
+            &importer,
+            &root,
+            &sources,
+        ),
+        None
+    );
+    assert!(super::resolve_name(
+        "@fixture/runtime-types",
+        &root,
+        None,
+        &importer,
+        &root,
+        &sources,
+    )
+    .is_some());
+}
+
+#[test]
 fn reusable_facts_skip_lookups_that_omit_calls() {
     let lookup = BareLookup;
     assert!(super::reusable_facts(Some(&lookup), Path::new("missing.d.ts")).is_none());

@@ -101,6 +101,11 @@ fn resolve_name(
             return Some(path);
         }
     }
+    // The automatic `types` list does not search `node_modules` once `typeRoots`
+    // is set. That fallback stays for the default `@types` roots.
+    if type_roots.is_some() {
+        return None;
+    }
     package::resolve_in_context(name, importer, consumer_root, sources)
 }
 
