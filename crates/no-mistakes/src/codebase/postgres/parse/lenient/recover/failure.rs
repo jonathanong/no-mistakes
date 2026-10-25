@@ -1,5 +1,6 @@
 use super::super::LocatedStatement;
 use super::queries;
+mod ddl_metadata;
 mod unsupported;
 use crate::codebase::postgres::types::SqlUnanalyzableStatement;
 use sqlparser::ast::{visit_statements, DiscardObject, Statement};
@@ -37,7 +38,7 @@ pub(super) fn unrecoverable_chunk(
         .collect::<String>();
     Some(SqlUnanalyzableStatement {
         head,
-        valid_unsupported: unsupported::valid(tokens),
+        valid_unsupported: unsupported::valid(tokens) || ddl_metadata::valid(tokens),
         ..failed_source(&sql, line, column, ordinal)
     })
 }
