@@ -83,6 +83,16 @@ impl Cursor<'_> {
             false
         }
     }
+    pub fn integer(&mut self) -> bool {
+        if matches!(self.0.peek_token().token, Token::Number(ref n, false)
+            if !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()))
+        {
+            self.0.next_token();
+            true
+        } else {
+            false
+        }
+    }
     pub fn data_type(&mut self) -> bool {
         matches!(self.0.peek_token().token, Token::Word(ref w)
             if !w.value.is_empty() && (w.quote_style == Some('"') ||

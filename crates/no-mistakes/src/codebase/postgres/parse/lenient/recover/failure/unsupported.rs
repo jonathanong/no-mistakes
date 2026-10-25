@@ -47,7 +47,7 @@ fn default_privileges(cursor: &mut Cursor<'_>) -> bool {
         return false;
     }
     if cursor.word("FOR")
-        && (!(cursor.word("ROLE") || cursor.word("USER")) || !cursor.identifiers())
+        && (!(cursor.word("ROLE") || cursor.word("USER")) || !roles(cursor, false))
     {
         return false;
     }
@@ -104,7 +104,7 @@ fn default_privileges(cursor: &mut Cursor<'_>) -> bool {
         return false;
     }
     cursor.word(if revoke { "FROM" } else { "TO" })
-        && cursor.identifiers()
+        && roles(cursor, true)
         && if revoke {
             if !cursor.word("CASCADE") {
                 cursor.word("RESTRICT");
@@ -113,4 +113,22 @@ fn default_privileges(cursor: &mut Cursor<'_>) -> bool {
         } else {
             !cursor.word("WITH") || cursor.words(&["GRANT", "OPTION"])
         }
+}
+
+fn roles(cursor: &mut Cursor<'_>, grantees: bool) -> bool {
+    loop {
+        if grantees {
+            cursor.word("GROUP");
+        }
+        if !(cursor.word("CURRENT_ROLE")
+            || cursor.word("CURRENT_USER")
+            || cursor.word("SESSION_USER")
+            || cursor.identifier())
+        {
+            return false;
+        }
+        if !cursor.comma() {
+            return true;
+        }
+    }
 }

@@ -53,3 +53,4 @@ SECURITY LABEL ON COLUMN .column_name IS 'label';
 SECURITY LABEL ON COLUMN public..column_name IS 'label';
 SECURITY LABEL ON FUNCTION lookup(,) IS 'label';
 CREATE FOREIGN TABLE missing_type_close (id varchar(10 junk)) SERVER server_name;
+ALTER FOREIGN TABLE IF EXISTS ONLY public.foreign_rows* OPTIONS (SET fetch_size '100');

@@ -7,6 +7,18 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
     if !c.word("ALTER") {
         return false;
     }
+    if c.word("SYSTEM") {
+        return setting(c);
+    }
+    if c.word("DATABASE") {
+        if !c.identifier() {
+            return false;
+        }
+        if c.words(&["RENAME", "TO"]) {
+            return c.identifier();
+        }
+        return setting(c);
+    }
     if c.word("DOMAIN") {
         return c.name() && c.words(&["SET", "NOT", "NULL"]);
     }
@@ -131,11 +143,36 @@ fn relation(c: &mut Cursor<'_>) -> bool {
     if c.word("SUBSCRIPTION") {
         return c.identifier() && (c.word("ENABLE") || c.word("DISABLE"));
     }
-    if c.word("DATABASE") || c.word("LANGUAGE") || c.word("TABLESPACE") {
+    if c.word("LANGUAGE") || c.word("TABLESPACE") {
         return c.identifier() && c.words(&["RENAME", "TO"]) && c.identifier();
     }
     if c.word("CONVERSION") || c.word("VIEW") {
         return c.name() && c.words(&["RENAME", "TO"]) && c.identifier();
     }
     false
+}
+
+fn setting(c: &mut Cursor<'_>) -> bool {
+    if c.word("RESET") {
+        return c.word("ALL") || c.name();
+    }
+    if !c.word("SET") || !c.name() || !(c.word("TO") || c.token(Token::Eq)) {
+        return false;
+    }
+    loop {
+        if !(c.string()
+            || c.word("DEFAULT")
+            || c.word("TRUE")
+            || c.word("FALSE")
+            || c.word("ON")
+            || c.word("OFF")
+            || number(c)
+            || c.identifier())
+        {
+            return false;
+        }
+        if !c.token(Token::Comma) {
+            return true;
+        }
+    }
 }

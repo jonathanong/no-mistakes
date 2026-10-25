@@ -15,3 +15,4 @@ CREATE PUBLICATION unicode_string WITH (publish = U&'insert');
 CREATE PUBLICATION implicit_boolean WITH (publish_via_partition_root);
 CREATE PUBLICATION other FOR TABLE public.select;
 CREATE OPERATOR public.=== (LEFTARG = integer, RIGHTARG = integer, FUNCTION = int4eq);
+CREATE OPERATOR other.=== (LEFTARG = integer, RIGHTARG = integer, FUNCTION = int4eq);

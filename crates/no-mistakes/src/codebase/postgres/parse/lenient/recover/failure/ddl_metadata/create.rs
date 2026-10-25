@@ -4,6 +4,9 @@ pub(super) fn parse(c: &mut Cursor<'_>) -> bool {
     if !c.word("CREATE") {
         return false;
     }
+    if c.word("DATABASE") {
+        return database(c);
+    }
     if c.word("GROUP") {
         return c.identifier();
     }
@@ -98,4 +101,41 @@ fn language(c: &mut Cursor<'_>) -> bool {
         }
     }
     true
+}
+
+fn database(c: &mut Cursor<'_>) -> bool {
+    if !c.identifier() {
+        return false;
+    }
+    let with = c.word("WITH");
+    let mut seen = std::collections::BTreeSet::new();
+    loop {
+        let option = if c.word("OWNER") {
+            "OWNER"
+        } else if c.word("TEMPLATE") {
+            "TEMPLATE"
+        } else if c.word("ENCODING") {
+            "ENCODING"
+        } else if c.words(&["CONNECTION", "LIMIT"]) {
+            "LIMIT"
+        } else {
+            break;
+        };
+        if !seen.insert(option) {
+            return false;
+        }
+        c.token(Token::Eq);
+        let valid = match option {
+            "ENCODING" => c.word("DEFAULT") || c.string() || c.integer(),
+            "LIMIT" => {
+                c.token(Token::Minus);
+                c.integer()
+            }
+            _ => c.word("DEFAULT") || c.identifier(),
+        };
+        if !valid {
+            return false;
+        }
+    }
+    !with || !seen.is_empty()
 }

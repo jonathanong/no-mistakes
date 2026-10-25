@@ -60,11 +60,13 @@ pub(super) fn alter_mapping(c: &mut Cursor<'_>) -> bool {
 
 pub(super) fn alter_foreign_table(c: &mut Cursor<'_>) -> bool {
     c.words(&["IF", "EXISTS"]);
-    let _only = c.word("ONLY");
+    let only = c.word("ONLY");
     if !c.name() {
         return false;
     }
-    c.punctuation(Token::Mul);
+    if c.punctuation(Token::Mul) && only {
+        return false;
+    }
     if c.word("OPTIONS") {
         return c.options(true);
     }

@@ -10,7 +10,7 @@ CREATE FOREIGN TABLE public.foreign_rows (id integer NOT NULL) SERVER server_nam
 CREATE FOREIGN TABLE typed_rows (n numeric(12, 2), label character varying(24), at timestamp without time zone, tags text[]) SERVER server_name;
 ALTER FOREIGN TABLE public.foreign_rows RENAME TO archived_rows;
 ALTER FOREIGN TABLE public.foreign_rows SET SCHEMA archive;
-ALTER FOREIGN TABLE IF EXISTS ONLY public.foreign_rows* OPTIONS (SET fetch_size '100');
+ALTER FOREIGN TABLE IF EXISTS ONLY public.foreign_rows OPTIONS (SET fetch_size '100');
 IMPORT FOREIGN SCHEMA remote_schema FROM SERVER server_name INTO local_schema;
 IMPORT FOREIGN SCHEMA remote_schema LIMIT TO (actors, directors) FROM SERVER server_name INTO local_schema;
 IMPORT FOREIGN SCHEMA remote_schema EXCEPT (private_table) FROM SERVER server_name INTO local_schema OPTIONS (readonly 'true');
@@ -25,3 +25,4 @@ ALTER FOREIGN DATA WRAPPER wrapper_name NO HANDLER NO VALIDATOR;
 CREATE FOREIGN TABLE no_columns () SERVER server_name;
 CREATE FOREIGN TABLE builtin_types (n double precision, opened time, closed timestamp) SERVER server_name;
 SECURITY LABEL ON FUNCTION public.lookup IS 'label';
+ALTER FOREIGN TABLE public.foreign_rows* OPTIONS (SET fetch_size '100');

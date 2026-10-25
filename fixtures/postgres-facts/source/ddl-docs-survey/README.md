@@ -36,7 +36,7 @@ Each row locates one audited example, not every grammar variant. The raw sqlpars
 | ALTER SERVER | families.sql:24 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-alterserver.html) |
 | ALTER STATISTICS | families.sql:25 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-alterstatistics.html) |
 | ALTER SUBSCRIPTION | families.sql:26 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-altersubscription.html) |
-| ALTER SYSTEM | Excluded: server configuration utility | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-altersystem.html) |
+| ALTER SYSTEM | branches-valid.sql:27 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-altersystem.html) |
 | ALTER TABLE | families.sql:27 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-altertable.html) |
 | ALTER TABLESPACE | families.sql:28 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-altertablespace.html) |
 | ALTER TEXT SEARCH CONFIGURATION | families.sql:29 | [PostgreSQL 17](https://www.postgresql.org/docs/17/sql-altertsconfig.html) |

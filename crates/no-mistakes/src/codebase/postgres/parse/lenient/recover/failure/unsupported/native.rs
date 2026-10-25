@@ -1,4 +1,5 @@
 //! Validate missing native DDL forms through a narrowly normalized parser clone.
+use super::super::keywords::reserved;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 use sqlparser::{ast::Statement, dialect::PostgreSqlDialect, parser::Parser};
 
@@ -68,7 +69,7 @@ fn operator(mut tokens: Vec<TokenWithSpan>, mut at: usize) -> bool {
         .is_some_and(|token| token.token == Token::Period)
     {
         if !matches!(&tokens[at].token, Token::Word(word) if word.quote_style == Some('"')
-            || word.keyword == sqlparser::keywords::Keyword::NoKeyword || word.value.eq_ignore_ascii_case("public"))
+            || (word.quote_style.is_none() && !reserved(&word.value)))
         {
             return false;
         }
