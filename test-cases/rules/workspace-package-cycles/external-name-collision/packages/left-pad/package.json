@@ -1,0 +1,6 @@
+{
+  "name": "left-pad",
+  "dependencies": {
+    "left-pad": "file:../../node_modules/left-pad"
+  }
+}

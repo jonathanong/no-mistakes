@@ -168,7 +168,7 @@ fn package_dependency_helpers_tolerate_missing_and_invalid_files() {
     assert!(
         package_dependencies(&root.join("packages/api/package.json"), &["dependencies"]).is_empty()
     );
-    assert_eq!(canonical_cycle(""), "");
+    assert_eq!(scc::canonical_cycle(""), "");
 }
 
 #[test]
@@ -180,8 +180,8 @@ fn empty_workspace_and_wrapped_cycle_helpers() {
         check_with_files_and_sources(&root, &config("{}"), &files, sources.as_ref()).unwrap();
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 
-    assert_eq!(canonical_cycle("b -> a -> b"), "a -> b");
-    assert_eq!(canonical_cycle("a -> "), "");
+    assert_eq!(scc::canonical_cycle("b -> a -> b"), "a -> b");
+    assert_eq!(scc::canonical_cycle("a -> "), "");
 
     let mut invalid = NoMistakesConfig::default();
     invalid.rules.push(RuleDef {
@@ -191,4 +191,182 @@ fn empty_workspace_and_wrapped_cycle_helpers() {
         ..Default::default()
     });
     assert!(check_with_files(&root, &invalid, &files).is_err());
+}
+
+// `catalog:`, a registry range the workspace version does not satisfy, and a
+// `file:` path into `node_modules` share a workspace package's name without
+// resolving to it. See issue 2761.
+#[test]
+fn external_same_name_dependencies_are_not_workspace_edges() {
+    let root = fixture_root("external-name-collision");
+    let files = vec![
+        root.join("pnpm-workspace.yaml"),
+        root.join("package.json"),
+        root.join("apps/storybook/package.json"),
+        root.join("packages/react/package.json"),
+        root.join("packages/left-pad/package.json"),
+        root.join("packages/alias/package.json"),
+    ];
+    let findings = check_with_files(&root, &config("{}"), &files).unwrap();
+
+    assert!(
+        findings.is_empty(),
+        "external same-name dependencies are not workspace edges: {findings:?}"
+    );
+}
+
+#[test]
+fn workspace_protocol_self_dependency_still_reports() {
+    let root = fixture_root("workspace-self-cycle");
+    let files = vec![
+        root.join("package.json"),
+        root.join("packages/storybook/package.json"),
+    ];
+    let findings = check_with_files(&root, &config("{}"), &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/storybook/package.json");
+    assert!(findings[0].message.contains("storybook -> storybook"));
+}
+
+fn npm_workspace_files(root: &std::path::Path) -> Vec<PathBuf> {
+    vec![
+        root.join("package.json"),
+        root.join("packages/a/package.json"),
+        root.join("packages/b/package.json"),
+    ]
+}
+
+fn assert_workspace_cycle(name: &str, cycle: &str) {
+    let root = fixture_root(name);
+    let findings = check_with_files(&root, &config("{}"), &npm_workspace_files(&root)).unwrap();
+    assert_eq!(findings.len(), 1, "{name}: {findings:?}");
+    assert!(
+        findings[0].message.contains(cycle),
+        "{name}: {}",
+        findings[0].message
+    );
+}
+
+fn assert_no_workspace_cycle(name: &str) {
+    let root = fixture_root(name);
+    let findings = check_with_files(&root, &config("{}"), &npm_workspace_files(&root)).unwrap();
+    assert!(findings.is_empty(), "{name}: {findings:?}");
+}
+
+#[test]
+fn star_specifier_cycle_between_workspace_packages_reports() {
+    assert_workspace_cycle("star-cycle", "a -> b -> a");
+}
+
+#[test]
+fn caret_range_cycle_between_workspace_packages_reports() {
+    assert_workspace_cycle("range-cycle", "a -> b -> a");
+}
+
+#[test]
+fn file_path_cycle_between_workspace_packages_reports() {
+    assert_workspace_cycle("file-cycle", "a -> b -> a");
+}
+
+#[test]
+fn link_path_cycle_between_workspace_packages_reports() {
+    assert_workspace_cycle("link-cycle", "a -> b -> a");
+}
+
+#[test]
+fn portal_path_cycle_between_workspace_packages_reports() {
+    assert_workspace_cycle("portal-cycle", "a -> b -> a");
+}
+
+#[test]
+fn unsatisfied_range_is_not_a_workspace_edge() {
+    assert_no_workspace_cycle("unsatisfied-range");
+}
+
+#[test]
+fn version_range_match_follows_workspace_linking_rules() {
+    assert!(super::range::version_satisfies("*", "1.2.0"));
+    assert!(super::range::version_satisfies("^1.0.0", "1.2.0"));
+    assert!(!super::range::version_satisfies("^1.0.0", "2.0.0"));
+    assert!(!super::range::version_satisfies("^2.0.0", "1.0.0"));
+    assert!(super::range::version_satisfies("~1.2.0", "1.2.9"));
+    assert!(!super::range::version_satisfies("~1.2.0", "1.3.0"));
+    assert!(super::range::version_satisfies(">=1.2.0 <2.0.0", "1.4.0"));
+    assert!(!super::range::version_satisfies(">=1.2.0 <2.0.0", "2.0.0"));
+    assert!(super::range::version_satisfies(">1.2.0", "1.2.1"));
+    assert!(!super::range::version_satisfies(">1.2.0", "1.2.0"));
+    assert!(super::range::version_satisfies("<=1.2.0", "1.2.0"));
+    assert!(!super::range::version_satisfies("<1.2.0", "1.2.0"));
+    assert!(super::range::version_satisfies("^0.2.3", "0.2.9"));
+    assert!(!super::range::version_satisfies("^0.2.3", "0.3.0"));
+    assert!(super::range::version_satisfies("^0.0.3", "0.0.3"));
+    assert!(!super::range::version_satisfies("^0.0.3", "0.0.4"));
+    assert!(!super::range::version_satisfies("^1.0.0", "1.0.0-rc.1"));
+    assert!(!super::range::version_satisfies("latest", "1.0.0"));
+    assert!(super::range::version_satisfies("1.2.3 || ^2.0.0", "2.1.0"));
+    assert!(super::range::version_satisfies("x", "1.2.0"));
+    assert!(super::range::version_satisfies("X", "9.0.0"));
+    assert!(super::range::version_satisfies(">=1.0.0 *", "1.2.0"));
+    assert!(super::range::version_satisfies("=1.2.3", "1.2.3"));
+    assert!(super::range::version_satisfies("=1.2.3", "1.2.3+build.1"));
+    assert!(!super::range::version_satisfies("=1.2.3", "1.2.4"));
+    assert!(!super::range::version_satisfies("=1.2.3", "1.2.3-rc.1"));
+    assert!(super::range::version_satisfies("1", "1.9.0"));
+    assert!(!super::range::version_satisfies("1", "2.0.0"));
+    assert!(super::range::version_satisfies("1.2", "1.2.9"));
+    assert!(!super::range::version_satisfies("1.2", "1.3.0"));
+    assert!(super::range::version_satisfies("1.2.3", "1.2.3"));
+    assert!(!super::range::version_satisfies("1.2.3", "1.2.4"));
+    assert!(!super::range::version_satisfies("2", "1.0.0"));
+    assert!(super::range::version_satisfies("~1", "1.9.0"));
+    assert!(!super::range::version_satisfies("~1.2.0", "1.1.0"));
+    assert!(!super::range::version_satisfies("~1.2.0", "1.2.0-rc.1"));
+    assert!(super::range::version_satisfies("1.2.x", "1.2.9"));
+    assert!(super::range::version_satisfies("1.X", "1.9.0"));
+    assert!(!super::range::version_satisfies("1.2.x", "1.2.0-rc.1"));
+    assert!(!super::range::version_satisfies("1.x.foo", "1.0.0"));
+    assert!(!super::range::version_satisfies("2.x", "1.0.0"));
+    assert!(!super::range::version_satisfies(">=nope", "1.0.0"));
+    assert!(!super::range::version_satisfies("1.0.0", "nope"));
+    assert!(!super::range::version_satisfies("1.2.3.4", "1.2.3"));
+    assert!(!super::range::version_satisfies("1.0.0", "1.2.3.4"));
+}
+
+#[test]
+fn workspace_protocol_path_cycle_between_workspace_packages_reports() {
+    assert_workspace_cycle("workspace-path-cycle", "a -> b -> a");
+}
+
+#[test]
+fn non_string_versions_are_not_workspace_edges() {
+    let root = fixture_root("non-string-version");
+    assert_no_workspace_cycle("non-string-version");
+    let sources = super::super::source_store_for_files(&npm_workspace_files(&root));
+    assert!(super::edges::package_version(&root.join("packages/missing"), &sources).is_none());
+}
+
+#[test]
+fn local_paths_count_only_when_they_are_the_package_directory() {
+    let root = fixture_root("file-cycle");
+    let package_a = root.join("packages/a");
+    let package_b = root.join("packages/b");
+    let absolute = package_b.to_str().expect("fixture path is unicode");
+    assert!(super::edges::path_is_package_dir(
+        absolute, &package_a, &package_b
+    ));
+    assert!(!super::edges::path_is_package_dir(
+        "", &package_a, &package_b
+    ));
+    assert!(!super::edges::path_is_package_dir(
+        package_a.to_str().expect("fixture path is unicode"),
+        &package_a,
+        &package_b
+    ));
+    let manifest = package_b.join("package.json");
+    assert!(super::edges::path_is_package_dir(
+        manifest.to_str().expect("fixture path is unicode"),
+        &package_a,
+        &package_b
+    ));
 }

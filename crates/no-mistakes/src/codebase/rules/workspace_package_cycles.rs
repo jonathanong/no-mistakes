@@ -1,3 +1,5 @@
+mod edges;
+mod range;
 mod scc;
 
 use super::RuleFinding;
@@ -7,7 +9,7 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
 use serde::Deserialize;
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "workspace-package-cycles";
@@ -78,26 +80,20 @@ fn scan_with_sources(
         .iter()
         .map(|pkg| (pkg.name.clone(), pkg.dir.clone()))
         .collect();
-    let package_names: HashSet<&str> = workspace
-        .packages
-        .iter()
-        .map(|pkg| pkg.name.as_str())
-        .collect();
     let dependency_types = dependency_types(opts);
     let allowlist: BTreeSet<String> = opts
         .allowlist
         .iter()
-        .map(|cycle| canonical_cycle(cycle))
+        .map(|cycle| scc::canonical_cycle(cycle))
         .collect();
-    let graph =
-        workspace_graph_with_sources(&workspace, &package_names, &dependency_types, sources);
+    let graph = workspace_graph_with_sources(&workspace, &dependency_types, sources);
 
     let mut findings = Vec::new();
     for key in scc::cycle_keys(&graph) {
         if allowlist.contains(&key) {
             continue;
         }
-        let cycle = display_cycle(&key);
+        let cycle = scc::display_cycle(&key);
         let first = cycle
             .first()
             .expect("collected cycle keys always contain at least one package");
@@ -131,74 +127,16 @@ fn dependency_types(opts: &Options) -> Vec<&str> {
 
 fn workspace_graph_with_sources(
     workspace: &workspaces::WorkspaceMap,
-    package_names: &HashSet<&str>,
     dependency_types: &[&str],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> BTreeMap<String, BTreeSet<String>> {
     let mut graph = BTreeMap::new();
     for package in &workspace.packages {
-        let deps = package_dependencies_with_sources(
-            &package.dir.join("package.json"),
-            dependency_types,
-            sources,
-        )
-        .into_iter()
-        .filter(|dep| package_names.contains(dep.as_str()))
-        .collect();
+        let deps =
+            edges::workspace_dependency_names(&package.dir, dependency_types, workspace, sources);
         graph.insert(package.name.clone(), deps);
     }
     graph
-}
-
-fn package_dependencies_with_sources(
-    path: &Path,
-    dependency_types: &[&str],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> BTreeSet<String> {
-    crate::codebase::package_deps::dependency_entries_from_source_store(
-        path,
-        dependency_types,
-        sources,
-    )
-    .into_iter()
-    .map(|entry| entry.name)
-    .collect()
-}
-
-pub(super) fn canonical_cycle(cycle: &str) -> String {
-    let mut nodes: Vec<String> = cycle
-        .split("->")
-        .map(str::trim)
-        .filter(|part| !part.is_empty())
-        .map(str::to_string)
-        .collect();
-    if nodes.first() == nodes.last() {
-        nodes.pop();
-    }
-    if nodes.is_empty() {
-        return String::new();
-    }
-    let min_idx = nodes
-        .iter()
-        .enumerate()
-        .min_by(|(_, a), (_, b)| a.cmp(b))
-        .map(|(idx, _)| idx)
-        .unwrap_or(0);
-    nodes.rotate_left(min_idx);
-    nodes.join(" -> ")
-}
-
-fn display_cycle(canonical: &str) -> Vec<String> {
-    let mut nodes: Vec<String> = canonical
-        .split("->")
-        .map(str::trim)
-        .filter(|part| !part.is_empty())
-        .map(str::to_string)
-        .collect();
-    if let Some(first) = nodes.first().cloned() {
-        nodes.push(first);
-    }
-    nodes
 }
 
 #[cfg(test)]

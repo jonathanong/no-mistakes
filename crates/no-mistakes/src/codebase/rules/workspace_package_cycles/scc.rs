@@ -1,5 +1,40 @@
-use super::canonical_cycle;
 use std::collections::{BTreeMap, BTreeSet};
+
+pub(super) fn canonical_cycle(cycle: &str) -> String {
+    let mut nodes: Vec<String> = cycle
+        .split("->")
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+        .map(str::to_string)
+        .collect();
+    if nodes.first() == nodes.last() {
+        nodes.pop();
+    }
+    if nodes.is_empty() {
+        return String::new();
+    }
+    let min_idx = nodes
+        .iter()
+        .enumerate()
+        .min_by(|(_, a), (_, b)| a.cmp(b))
+        .map(|(idx, _)| idx)
+        .unwrap_or(0);
+    nodes.rotate_left(min_idx);
+    nodes.join(" -> ")
+}
+
+pub(super) fn display_cycle(canonical: &str) -> Vec<String> {
+    let mut nodes: Vec<String> = canonical
+        .split("->")
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+        .map(str::to_string)
+        .collect();
+    if let Some(first) = nodes.first().cloned() {
+        nodes.push(first);
+    }
+    nodes
+}
 
 pub(super) fn cycle_keys(graph: &BTreeMap<String, BTreeSet<String>>) -> BTreeSet<String> {
     let reachable = reachability(graph);
