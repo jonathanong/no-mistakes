@@ -28,10 +28,14 @@ pub fn required_files(
     config: &NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Arc<BTreeSet<PathBuf>>> {
+    let applications = config.rule_applications(RULE_ID);
+    if applications.is_empty() {
+        return Ok(Arc::new(BTreeSet::new()));
+    }
     let (root, files) = normalized_inputs(root, files);
     let root = root.as_path();
     let mut selected = BTreeSet::new();
-    for rule in config.rule_applications(RULE_ID) {
+    for rule in applications {
         let options: options::Options = rule.try_rule_options()?;
         let matcher = options.validate()?;
         let filter = RulePathFilter::new(root, config, rule)?;
