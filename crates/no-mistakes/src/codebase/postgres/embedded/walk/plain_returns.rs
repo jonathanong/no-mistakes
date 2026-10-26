@@ -172,6 +172,8 @@ impl ScopeVisitor<'_> {
 
     fn note_returned_calls(&mut self, argument: &Expression<'_>) {
         let Some(owner) = self.current_plain_name() else {
+            // Unknown owners retain their lexical helper dependencies as well.
+            self.note_sql_expression(argument);
             return;
         };
         let mut calls = Vec::new();

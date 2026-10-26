@@ -77,6 +77,7 @@ fn unkeyable_member_returns_keep_conservative_recall() {
         "property-function",
         "named-property-function",
         "unused-method",
+        "method-forwarding",
     ] {
         let path = root.join(format!("src/{name}.ts"));
         let source = std::fs::read_to_string(&path).unwrap();
