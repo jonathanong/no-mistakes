@@ -105,6 +105,12 @@ fn blanket_and_typescript_are_explicit_opt_ins() {
         .iter()
         .all(|f| f.message.ends_with("Keep compiler checks enabled.")));
 }
+
+#[test]
+fn explicit_lint_directive_selection_preserves_default_forms() {
+    assert_eq!(run("explicit.yml"), run("default.yml"));
+}
+
 #[test]
 fn invalid_options_fail_before_reading_sources() {
     for config in [
