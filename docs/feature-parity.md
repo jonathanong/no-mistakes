@@ -909,3 +909,5 @@ language-neutral: explicit JSON Schema document pairs work for independently
 compiled HTTP request/response or queue producers/consumers through Rust, CLI,
 and asynchronous Node checks. Runtime endpoint adoption and inferred payload
 values are outside this declaration-only boundary.
+
+TS/JS coverage producers can opt into [assertion-owner checks](rules/coverage-producer-assertion-owner.md) through CLI and async Node `check()`, sharing prepared calls and explicit cross-process ownership.

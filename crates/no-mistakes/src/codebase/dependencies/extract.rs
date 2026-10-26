@@ -69,6 +69,8 @@ include!("extract_control_flow_scopes.rs");
 include!("extract_loop_assignment_scopes.rs");
 include!("extract_receiver_regions.rs");
 include!("extract_execution.rs");
+include!("extract_call_eligibility.rs");
+include!("extract_switch_eligibility.rs");
 include!("extract_receiver_assignment_helpers.rs");
 include!("extract_default_helpers.rs");
 include!("extract_object_scope_helpers.rs");

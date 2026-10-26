@@ -1,6 +1,6 @@
-use crate::codebase::check_facts::PlaywrightSettingsKey;
 use crate::codebase::dependencies::extract::{
     ExportedBinding, ExtractedImport, FunctionCall, ImportedBinding, UnknownCall,
+    UnreachableCallRange,
 };
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
@@ -8,31 +8,21 @@ use crate::codebase::ts_queues::usage::QueueUsage;
 use crate::codebase::ts_resources::{ResourceCall, ResourceDiagnostic};
 use crate::codebase::ts_routes::refs::{RouteHelper, RouteHelperImport, RouteHelperRef, RouteRef};
 use crate::codebase::ts_symbols::FileSymbols;
-use crate::playwright::analysis::text_types::AppTextTarget;
-use crate::playwright::selectors::AppSelector;
 use crate::queue::extract::FileFacts as QueueProjectFacts;
 use crate::react_traits::report::types::ComponentFacts;
 use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
-use dashmap::DashMap;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
-
-type PlaywrightScanKey = (u64, PlaywrightSettingsKey);
-type AppSelectorOccurrencesCache =
-    Arc<DashMap<(PlaywrightScanKey, bool), Result<Arc<Vec<AppSelector>>, String>>>;
-type PlaywrightRoutesCache = Arc<DashMap<PlaywrightScanKey, Arc<Vec<crate::routes::Route>>>>;
-type AppTextTargetsCache = Arc<DashMap<PlaywrightScanKey, Result<Arc<Vec<AppTextTarget>>, String>>>;
-type RouteReachableFilesCache = Arc<
-    DashMap<
-        PlaywrightScanKey,
-        Result<Arc<crate::codebase::dependencies::graph::RouteReachableFiles>, String>,
-    >,
->;
 
 #[doc(hidden)]
 pub mod ancestry;
 mod ancestry_declarations;
 mod ancestry_namespaces;
+mod cache_types;
+use cache_types::{
+    AppSelectorOccurrencesCache, AppTextTargetsCache, PlaywrightRoutesCache,
+    RouteReachableFilesCache,
+};
 pub(crate) mod call_sites;
 mod collect;
 pub(crate) mod domain;
@@ -58,6 +48,8 @@ pub struct TsFactPlan {
     pub module_bindings: bool,
     /// Opt-in finite literal argument summaries for call-policy predicates.
     pub call_arguments: bool,
+    /// Opt-in lexical call-execution exclusions for assertion ownership.
+    pub call_eligibility: bool,
     pub imports: bool,
     pub function_calls: bool,
     /// Value provenance needed by canonical call and effect consumers.
@@ -107,6 +99,8 @@ pub struct TsFileFacts {
     pub star_reexport_specifiers: Vec<String>,
     pub per_item_calls: Vec<crate::codebase::dependencies::extract::PerItemCall>,
     pub function_calls: Vec<FunctionCall>,
+    /// Sorted, disjoint dead ranges per exact callable; syntactic graph output stays unchanged.
+    pub unreachable_call_ranges: Vec<UnreachableCallRange>,
     pub unknown_calls: Vec<UnknownCall>,
     pub call_sites: Vec<CallSiteFact>,
     pub resource_calls: Vec<ResourceCall>,

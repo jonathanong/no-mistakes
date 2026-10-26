@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers: [{ file: src/producers.mts, symbol: direct }]

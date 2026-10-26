@@ -64,6 +64,11 @@ fn graph_plan_with_forbidden(
 ) -> Option<GraphBuildPlan> {
     let mut plan = GraphBuildPlan::default();
     let mut needed = false;
+    if config.rule_configured(super::super::coverage_producer_assertion_owner::RULE_ID) {
+        plan.calls = true;
+        plan.assertion_owners = true;
+        needed = true;
+    }
     if rule_enabled(config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
         plan.include(GraphBuildPlan::imports_and_workspace());
         needed = true;
@@ -100,7 +105,8 @@ fn graph_plan_with_forbidden(
 pub fn canonical_graph_requires_full_file_universe(
     config: &crate::config::v2::NoMistakesConfig,
 ) -> bool {
-    config.rule_configured(query_reached_per_item::RULE_ID)
+    config.rule_configured(super::super::coverage_producer_assertion_owner::RULE_ID)
+        || config.rule_configured(query_reached_per_item::RULE_ID)
         || postgres_sql_cross_file::needs_deep_analysis(config)
         || required_entrypoint_reachability::graph_plan(config).is_some()
         || config.rule_configured(FORBIDDEN_DEPENDENCIES)

@@ -26,7 +26,7 @@ fn collect_uncached_entries(
     let root = shared.root.clone();
     let entries = match direction {
         Direction::Deps if import_only => import_only_deps(args, roots, allowed, shared)?,
-        Direction::Deps if has_call_relationship(allowed) => {
+        Direction::Deps if has_callable_relationship(allowed) => {
             let graph = shared.graph_shared()?;
             let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
             let roots = roots_with_call_roots(roots, call_roots, entrypoints, allowed);
@@ -36,7 +36,7 @@ fn collect_uncached_entries(
             .request_graph_without_symbols_shared(allowed)?
             .deps_of(roots, args.depth, allowed),
         Direction::Deps => shared.graph_shared()?.deps_of(roots, args.depth, allowed),
-        Direction::Dependents if has_call_relationship(allowed) => {
+        Direction::Dependents if has_callable_relationship(allowed) => {
             let graph = shared.graph_shared()?;
             let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
             let roots = roots_with_call_roots(roots, call_roots, entrypoints, allowed);
@@ -132,8 +132,10 @@ fn import_only_deps(
     Ok(entries)
 }
 
-fn has_call_relationship(allowed: Option<&std::collections::HashSet<EdgeKind>>) -> bool {
-    allowed.is_some_and(|allowed| allowed.contains(&EdgeKind::Call))
+fn has_callable_relationship(allowed: Option<&std::collections::HashSet<EdgeKind>>) -> bool {
+    allowed.is_some_and(|allowed| {
+        allowed.contains(&EdgeKind::Call) || allowed.contains(&EdgeKind::AssertionOwner)
+    })
 }
 
 fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {
@@ -153,7 +155,7 @@ fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {
 }
 
 /// Mixed relationship traversals retain file roots for file-level edges and
-/// expanded callable roots for call edges. Call-only symbol queries omit the
+/// expanded roots for callable edges. Callable-only symbol queries omit the
 /// file node so projection does not also walk unrelated top-level calls.
 fn roots_with_call_roots(
     roots: &[NodeId],
@@ -161,13 +163,17 @@ fn roots_with_call_roots(
     entrypoints: &[Entrypoint],
     allowed: Option<&std::collections::HashSet<EdgeKind>>,
 ) -> Vec<NodeId> {
-    let call_only =
-        allowed.is_some_and(|kinds| kinds.len() == 1 && kinds.contains(&EdgeKind::Call));
+    let callable_only = allowed.is_some_and(|kinds| {
+        !kinds.is_empty()
+            && kinds
+                .iter()
+                .all(|kind| matches!(kind, EdgeKind::Call | EdgeKind::AssertionOwner))
+    });
     let mut combined = Vec::with_capacity(roots.len() + call_roots.len());
     combined.extend(
         roots
             .iter()
-            .filter(|root| keep_call_projection_file_root(root, entrypoints, call_only))
+            .filter(|root| keep_callable_projection_file_root(root, entrypoints, callable_only))
             .cloned(),
     );
     combined.extend(call_roots);
@@ -176,12 +182,12 @@ fn roots_with_call_roots(
     combined
 }
 
-fn keep_call_projection_file_root(
+fn keep_callable_projection_file_root(
     root: &NodeId,
     entrypoints: &[Entrypoint],
-    call_only: bool,
+    callable_only: bool,
 ) -> bool {
-    if !call_only {
+    if !callable_only {
         return true;
     }
     let NodeId::File(file) = root else {

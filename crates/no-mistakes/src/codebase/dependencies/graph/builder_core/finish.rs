@@ -80,6 +80,11 @@
             resource_edge_details,
             resource_diagnostics,
         };
+        if plan.assertion_owners {
+            let applications = config_options.map(|options| options.assertion_owners.as_slice()).unwrap_or(&[]);
+            let edges = crate::codebase::rules::coverage_producer_assertion_owner::ownership_edges(root, applications, &graph, facts.expect("ownership plan requires TS facts"))?;
+            graph.append_canonical_edges(edges);
+        }
         if plan.playwright_selectors {
             let snapshot = playwright_snapshot
                 .as_ref()

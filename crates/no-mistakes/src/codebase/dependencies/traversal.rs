@@ -16,7 +16,7 @@ pub(super) fn deps_entries(
     entrypoints: &[Entrypoint],
     ctx: &TraversalCtx<'_>,
 ) -> Result<Vec<graph::NodeEntry>> {
-    if has_call_relationship(ctx.allowed) {
+    if has_callable_relationship(ctx.allowed) {
         let graph = graph::DepGraph::build_with_plan_and_files(
             ctx.root,
             ctx.tsconfig,
@@ -67,7 +67,7 @@ pub(super) fn dependents_entries(
     depth: Option<usize>,
     ctx: &TraversalCtx<'_>,
 ) -> Result<Vec<graph::NodeEntry>> {
-    if has_call_relationship(ctx.allowed) {
+    if has_callable_relationship(ctx.allowed) {
         let graph = graph::DepGraph::build_with_plan_and_files(
             ctx.root,
             ctx.tsconfig,
@@ -126,8 +126,12 @@ pub(super) fn dependents_entries(
     }
 }
 
-pub(super) fn has_call_relationship(allowed: Option<&std::collections::HashSet<EdgeKind>>) -> bool {
-    allowed.is_some_and(|allowed| allowed.contains(&EdgeKind::Call))
+pub(super) fn has_callable_relationship(
+    allowed: Option<&std::collections::HashSet<EdgeKind>>,
+) -> bool {
+    allowed.is_some_and(|allowed| {
+        allowed.contains(&EdgeKind::Call) || allowed.contains(&EdgeKind::AssertionOwner)
+    })
 }
 
 pub(super) fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {

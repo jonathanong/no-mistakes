@@ -1,0 +1,24 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      unanalyzable: advise
+      producers:
+        - { file: src/producers.mts, symbol: unconsumedGenerator }
+        - { file: src/producers.mts, symbol: consumedGenerator }
+        - { file: src/producers.mts, symbol: asyncGenerator }
+        - { file: src/producers.mts, symbol: selectedGenerator }
+        - { file: src/producers.mts, symbol: generatorContract }
+        - { file: src/producers.mts, symbol: generatorRoot }
+        - { file: src/producers.mts, symbol: generatorContractOwner }
+      assertions:
+        - { module: 'node:assert', export: strictEqual }
+        - { module: './assertions.mjs', export: generatorAssertion }
+      ownership:
+        - producer: { file: src/producers.mts, symbol: generatorContract }
+          owner: { file: src/assertions.mts, symbol: assertResult }
+          via: { module: './assertions.mjs', export: generatorAssertion }
+        - producer: { file: src/producers.mts, symbol: generatorContractOwner }
+          owner: { file: src/producers.mts, symbol: generatorRoot }
+          via: { module: 'node:child_process', export: spawn }

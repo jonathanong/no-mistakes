@@ -27,3 +27,32 @@ test("Playwright coverage exposes named optional matcher warnings", () => {
   const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
   assert.match(index, /playwrightCheck\([\s\S]*?Promise<PlaywrightCoverageReport>/);
 });
+
+test("coverage assertion owner options are public and bounded", () => {
+  const declaration = readFileSync(
+    join(packageRoot, "coverage-assertion-owner-types.d.ts"),
+    "utf8",
+  );
+  for (const name of [
+    "CoverageProducerFunction",
+    "CoverageAssertionImport",
+    "CoverageAssertionOwnership",
+    "CoverageProducerAssertionOwnerOptions",
+  ]) {
+    assert.match(declaration, new RegExp("export interface " + name));
+  }
+  for (const field of [
+    "producers:",
+    "assertions:",
+    "ownership?:",
+    "maxDepth?:",
+    "maxNodes?:",
+    "unanalyzable?:",
+  ])
+    assert.ok(declaration.includes(field));
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      "./coverage-assertion-owner-types",
+    ),
+  );
+});

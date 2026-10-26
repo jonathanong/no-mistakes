@@ -3,6 +3,7 @@ pub mod analysis_policy;
 pub mod banned_paths;
 pub mod banned_renamed_files;
 pub mod config_path_references;
+pub mod coverage_producer_assertion_owner;
 pub mod csharp_max_lines_per_file;
 pub mod csharp_no_async_void_delegate;
 pub mod declared_payload_compatibility;

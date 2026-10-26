@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers: [{ file: src/producers.mts, symbol: callback }]
+      assertions: [{ module: "node:assert", export: strictEqual }]
+      maxNodes: 1

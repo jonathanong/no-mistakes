@@ -1,5 +1,5 @@
 use super::super::{domain, TsFactContext, TsFactPlan, TsFileFacts};
-use crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source_and_demands;
+use crate::codebase::dependencies::extract::extract_import_facts_with_eligibility;
 use crate::codebase::ts_source::module_facts;
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::{path::Path, sync::Arc};
@@ -35,12 +35,13 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
 ) -> TsFileFacts {
     let (parse_error, stored_source) = source_state;
     let import_facts = if plan.needs_import_facts() {
-        extract_import_facts_from_program_with_source_and_demands(
+        extract_import_facts_with_eligibility(
             program,
             source,
             plan.resources,
             plan.per_item_calls,
             plan.needs_value_flow(),
+            plan.call_eligibility,
         )
     } else {
         Default::default()
@@ -124,6 +125,7 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
         star_reexport_specifiers: import_facts.star_reexport_specifiers,
         per_item_calls: import_facts.per_item_calls,
         function_calls: import_facts.function_calls,
+        unreachable_call_ranges: import_facts.unreachable_call_ranges,
         unknown_calls: import_facts.unknown_calls,
         call_sites,
         resource_calls: resources.calls,

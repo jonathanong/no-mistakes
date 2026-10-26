@@ -811,3 +811,13 @@ Rust fact consumers can inspect `ValueExpression::Derived` for these input
 expressions and `ValueFlowFacts::iteration_bindings` for iterable-source
 provenance. `ValueBinding::immutable` records an immutable lexical binding;
 it does not mean the referenced object is frozen or its members cannot change.
+
+### `assertion-owner`
+
+Opt-in explicit configured coverage dispatch → assertion-owner callable. Produced only from a matching resolved dispatch in the exact configured originating callable. Separate from `call`; ordinary call traversal is unchanged. Request with `--relationship assertion-owner` / Node `relationships: ["assertion-owner"]`. Excluded from default and `all` relationship sets. Rule options are described in [coverage-producer-assertion-owner](rules/coverage-producer-assertion-owner.md).
+
+```sh
+no-mistakes dependencies 'tests/coverage.mts#produceCoverage' --root . --relationship assertion-owner --symbols --format json
+```
+
+Node uses `await dependencies({ root: '.', files: ['tests/coverage.mts#produceCoverage'], relationships: ['assertion-owner'], includeSymbols: true })`. Owner-only queries follow only the modeled owner edge kind; `call` queries retain ordinary call-only semantics.

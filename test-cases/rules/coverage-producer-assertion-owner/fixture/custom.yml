@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    message: Assert the worker result
+    options:
+      producers: [{ file: src/producers.mts, symbol: unrelatedDispatch }]
+      assertions: [{ module: "node:assert", export: strictEqual }]
+      ownership:
+        - producer: { file: src/producers.mts, symbol: unrelatedDispatch }
+          owner: { file: src/assertions.mts, symbol: assertResult }
+          via: { module: "node:child_process", export: spawn }
