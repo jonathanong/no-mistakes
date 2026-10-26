@@ -26,6 +26,16 @@ valid, missing roots are skipped, and overlapping roots select each source once.
 Each finding names its source file and includes a query for that file.
 Reachability may follow dependencies outside the origin directory.
 
+```yaml
+rules:
+  - rule: forbidden-dependencies
+    projects: [web]
+    options:
+      roots: ["web/app"]
+      forbiddenModules: ["fs", "node:*"]
+      relationships: [import, workspace]
+```
+
 ### Glob semantics
 
 File globs match paths relative to the invocation root, using `/` separators.
@@ -129,16 +139,6 @@ Following recall over precision, nothing is silently treated as clean ([how anal
 [`forbidden-workspace-closure`](forbidden-workspace-closure.md) checks package
 manifest closure rather than source graph edges; [`server-route-client-boundary`](server-route-client-boundary.md)
 is a narrower server-route policy.
-
-```yaml
-rules:
-  - rule: forbidden-dependencies
-    projects: [web]
-    options:
-      roots: ["web/app"]
-      forbiddenModules: ["fs", "node:*"]
-      relationships: [import, workspace]
-```
 
 Counterexample: client code importing a server-only package.
 
