@@ -60,6 +60,7 @@ describe("PostgreSQL same-file executor calls", () => {
     ).toEqual([
       [4, "manualTransaction"],
       [6, "manualTransaction"],
+      [8, "manualTransaction"],
       [11, "manualTransaction"],
       [12, "manualTransaction"],
       [15, "manualTransaction"],

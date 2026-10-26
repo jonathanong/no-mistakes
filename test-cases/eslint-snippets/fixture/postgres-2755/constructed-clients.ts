@@ -1,6 +1,6 @@
 import { Pool, Client } from "pg";
 
-// Imported constructors do not prove query identity on their instances.
+// Manual transactions report even when query-analysis rules cannot prove these receivers.
 const pool = new Pool();
 const connected = await pool.connect();
 const client = new Client();

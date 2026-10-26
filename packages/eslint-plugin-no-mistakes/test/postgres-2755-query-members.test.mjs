@@ -16,11 +16,12 @@ function findings(name, rule, option = options, filename = "app.ts") {
 }
 
 describe("PostgreSQL query member receiver proof", () => {
-  it("keeps proven namespace and named imports while ignoring this.query", () => {
+  it("reports unproven manual transactions while other rules retain receiver proof", () => {
     assert.deepEqual(findings("query-members.ts", "postgres-no-manual-transaction"), [
       [6, "manualTransaction", "no-mistakes/postgres-no-manual-transaction"],
       [7, "manualTransaction", "no-mistakes/postgres-no-manual-transaction"],
       [9, "manualTransaction", "no-mistakes/postgres-no-manual-transaction"],
+      [18, "manualTransaction", "no-mistakes/postgres-no-manual-transaction"],
     ]);
     assert.deepEqual(findings("query-members.ts", "postgres-no-unbounded-query-fanout"), [
       [11, "unboundedFanout", "no-mistakes/postgres-no-unbounded-query-fanout"],
@@ -85,6 +86,7 @@ describe("PostgreSQL query member receiver proof", () => {
       ["query-members.js", 3, "no-mistakes(postgres-no-manual-transaction)"],
       ["query-members.js", 4, "no-mistakes(postgres-no-manual-transaction)"],
       ["query-members.js", 7, "no-mistakes(postgres-no-unbounded-query-fanout)"],
+      ["query-members.js", 11, "no-mistakes(postgres-no-manual-transaction)"],
       ["scoped-query-members.ts", 7, "no-mistakes(postgres-no-manual-transaction)"],
       ["scoped-query-members.ts", 8, "no-mistakes(postgres-no-unbounded-query-fanout)"],
       ["scoped-query-members.ts", 9, "no-mistakes(postgres-no-nonliteral-sql-registry-key)"],

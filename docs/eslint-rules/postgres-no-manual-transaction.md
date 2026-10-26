@@ -190,24 +190,46 @@ Executor import matching has no module default. Set `importSpecifier` explicitly
 to your database module to enable default `query`, `read`, and `write` names.
 Without a module, only explicit `executorNames` select named imports; explicit
 `query` also enables broad `.query` member matching. With a configured module,
-the receiver must be proven by a configured import, scoped factory or imported
-executor type, or a stable alias of one. An unrelated `this.query` method remains
-outside the rule, even if another function imports `pg`. Custom executor names
-do not remove that receiver-proof requirement. See the
+this rule uses a recall-oriented member-query policy: when `query` is selected,
+statically named `.query(...)` calls in the configured lint scope are checked
+even if the receiver cannot be proven to be a database executor. This can report
+an unrelated `this.query` or HTTP client's `.query`; it avoids silently missing
+transaction control on clients returned through indirect pool connections.
+Custom executor names do not change which member name is selected. The other
+PostgreSQL rules retain their proven-receiver policy. See the
 [migration notes](../migrations/explicit-postgres-executors.md).
 
 Omitting both `importSpecifier` and `executorNames` is a configuration error.
 Set `executorNames: []` explicitly to select no executor calls.
 
-With `importSpecifier: "pg"`, receiver identity must still be proven. Queries on
-instances created by `new Pool()` or `new Client()`, and clients obtained from
-`pool.connect()`, are not recognized from the constructor import alone and do
-not report. Use an explicitly configured executor factory or an imported
-executor type annotation to declare those receivers. Direct named `query`
-imports and `pg.query()` on an imported namespace remain recognized.
+For example, with `importSpecifier: "pg"`, calls on a pool and on a client
+obtained through `connect()` are checked even though the receiver is not typed
+or otherwise proven:
 
-For example, `const pool = new Pool(); pool.query(sql)` is outside this
-selection. Pass the pool to `function run(db: Pool) { db.query(sql); }` and
-configure `executorTypeNames: ["Pool", "Client"]` alongside
-`importSpecifier: "pg"` to restore reporting. For a client from
-`await pool.connect()`, use a parameter annotated `db: Client` instead.
+```ts
+import { Pool } from "pg";
+
+const pool = new Pool();
+const client = await pool.connect();
+await client.query("BEGIN"); // reported
+```
+
+The same policy covers clients returned by `writePool.connect()` when
+`importSpecifier` is `"@data-stores/psql"`:
+
+```ts
+import { writePool } from "@data-stores/psql";
+
+const client = await writePool.connect();
+await client.query("ROLLBACK"); // reported
+```
+
+Using `Reflect.apply(connect, pool, [])`, `.call`, `.apply`, or `.bind` to
+obtain the client does not hide its subsequent transaction commands.
+
+Static imported executor names,
+their immutable aliases, and supported `.call` / `.apply` forwarding forms
+continue to use the existing resolver. `executorNames: []` explicitly opts out
+of all executor calls; rule owners and the standard suppression comments also
+remain available. If an unrelated `.query` is reported, move the call outside
+this rule's configured lint scope or suppress that finding with a reason.
