@@ -171,6 +171,9 @@ const eslintCases = [
   ["properties.ts", "untyped"],
 ].sort((left, right) => left[0].localeCompare(right[0]) || left[1].localeCompare(right[1]));
 
+// One test lints every proven-consumer fixture, including type-aware programs
+// and Oxlint processes. That exceeds the 5s JavaScript testTimeout when CI
+// workers are saturated. 30s matches other process-spawning plugin tests.
 it("snapshots proven-consumer fixture diagnostics", async () => {
   const document = sortValue({
     eslint: eslintCases.map(([file, mode]) => ({
@@ -188,7 +191,7 @@ it("snapshots proven-consumer fixture diagnostics", async () => {
   await expect(`${JSON.stringify(document, null, 2)}\n`).toMatchFileSnapshot(
     "snapshots/async-call-disposition-proven-consumers.snap",
   );
-});
+}, 30_000);
 
 it("does not enumerate the parser program outside the resolved implementation", () => {
   const parser = {
