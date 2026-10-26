@@ -58,6 +58,64 @@ fn lookup_error<'a>(lookup: &'a FallbackTsFactLookup<'a>, path: &Path) -> Option
 }
 
 #[test]
+fn fallback_playwright_matcher_warnings_respect_inventory_and_project_scope() {
+    struct WarningFacts {
+        files: Vec<PathBuf>,
+        warnings: Vec<String>,
+    }
+    impl TsFactLookup for WarningFacts {
+        fn get_ts_facts(&self, _path: &Path) -> Option<&TsFileFacts> {
+            None
+        }
+        fn graph_files(&self) -> Option<&[PathBuf]> {
+            Some(&self.files)
+        }
+        fn playwright_matcher_warnings(&self, project: Option<&str>) -> &[String] {
+            if project == Some("web") {
+                &self.warnings
+            } else {
+                &[]
+            }
+        }
+    }
+
+    let root =
+        crate::playwright::test_support::fixture_path(&["playwright-configs", "unknown-match"]);
+    let config = crate::playwright::playwright_config::load_many(
+        &root,
+        &[root.join("playwright.config.ts")],
+        None,
+    )
+    .unwrap();
+    let warnings = config.matcher_warnings(&root);
+    assert_eq!(warnings.len(), 1);
+    let files = vec![root.join("tests/example.e2e.ts")];
+    let primary = WarningFacts {
+        files: files.clone(),
+        warnings: warnings.clone(),
+    };
+    let fallback = TsFactMap::new();
+    // Existing sparse lookups need no implementation of the additive metadata hook.
+    assert!(fallback.playwright_matcher_warnings(Some("web")).is_empty());
+    let visible: crate::fx::PathSet = files.iter().cloned().collect();
+    let lookup = FallbackTsFactLookup::new(&primary, &fallback, false, &files, &visible);
+    assert_eq!(
+        lookup.playwright_matcher_warnings(Some("web")),
+        warnings.as_slice()
+    );
+    assert!(
+        lookup
+            .playwright_matcher_warnings(Some("sibling"))
+            .is_empty()
+    );
+
+    let mismatched: crate::fx::PathSet =
+        [root.join("sibling/healthy.spec.ts")].into_iter().collect();
+    let lookup = FallbackTsFactLookup::new(&primary, &fallback, false, &files, &mismatched);
+    assert!(lookup.playwright_matcher_warnings(Some("web")).is_empty());
+}
+
+#[test]
 fn fallback_lookup_forwards_scan_helpers_through_primary_and_fallback() {
     struct Files(TsFactMap, Vec<PathBuf>);
     impl TsFactLookup for Files {

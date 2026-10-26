@@ -109,3 +109,6 @@ mod cli_check_playwright_patterns;
 
 #[path = "cli_check_playwright_runner_warnings.rs"]
 mod cli_check_playwright_runner_warnings;
+
+#[path = "cli_playwright_uncertain_coverage.rs"]
+mod cli_playwright_uncertain_coverage;

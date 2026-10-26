@@ -17,5 +17,10 @@ export default defineConfig({
     { name: 'dynamic-element', testMatch: [123] },
     { name: 'template', testMatch: `**/*.e2e.ts` },
     { name: 'parenthesized-element', testMatch: [('**/*.e2e.ts')] },
+    { name: 'unicode-class', testMatch: /[é]+\.e2e\.ts$/u },
+    { name: 'non-unicode-negated-class', testMatch: /[^a]+\.e2e\.ts$/ },
+    { name: 'non-unicode-dot', testMatch: /.\.e2e\.ts$/ },
+    { name: 'multiline-end', testMatch: /.*\.e2e\.ts$/m },
+    { name: 'non-unicode-literal', testMatch: /é\.e2e\.ts$/ },
   ],
 });

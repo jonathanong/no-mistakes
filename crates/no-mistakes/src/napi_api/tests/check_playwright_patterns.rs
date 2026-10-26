@@ -107,6 +107,7 @@ fn playwright_pattern_integration_policies_warn_only_for_selected_unknown_projec
     for (config, uncertain) in [
         ("integration-only.yml", true),
         ("known-integration.yml", false),
+        ("explicit-integration.yml", false),
     ] {
         let report: serde_json::Value = serde_json::from_str(
             &check_json_impl(crate::napi_api::options::test_json_arg(
@@ -151,4 +152,10 @@ fn standalone_integration_pattern_uncertainty_is_not_a_clean_report() {
         error.to_string().contains("playwright.config.ts:5"),
         "{error}"
     );
+    // An explicit policy owns its static scope even when the config matcher is unknown.
+    let explicit = crate::integration_tests::check(
+        fixture.path(),
+        Some(&fixture.path().join("explicit-integration.yml")),
+    );
+    assert!(explicit.is_ok(), "{explicit:?}");
 }

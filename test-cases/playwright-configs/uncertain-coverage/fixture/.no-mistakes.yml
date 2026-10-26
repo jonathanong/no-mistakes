@@ -1,0 +1,7 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+projects:
+  web:
+    type: nextjs
+    root: web

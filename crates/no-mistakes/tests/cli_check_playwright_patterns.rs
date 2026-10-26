@@ -83,6 +83,7 @@ fn runner_only_playwright_policies_keep_scoped_warnings_and_other_rules() {
     for (config, uncertain) in [
         ("integration-only.yml", true),
         ("known-integration.yml", false),
+        ("explicit-integration.yml", false),
     ] {
         let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
             .args(["check", "--format", "json", "--root"])

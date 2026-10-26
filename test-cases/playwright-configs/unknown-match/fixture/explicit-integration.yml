@@ -1,0 +1,15 @@
+tests:
+  playwright:
+    configs: [playwright.config.ts]
+    projects:
+      web:
+        include: [sibling/**/*.ts]
+        integration_suites:
+          isolated: [http]
+rules:
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes:
+        - path: .
+          bannedExtensions: [".txt"]
