@@ -67,15 +67,15 @@ impl<'a> Selectors<'a> {
         root: &'a Path,
         anchor: &ConfigAnchor,
         opts: &'a Options,
-    ) -> Result<Self, RuleFinding> {
+    ) -> Result<Self, Box<RuleFinding>> {
         let error = |key: &str, index: usize, error: anyhow::Error| {
-            anchor.emit(
+            Box::new(anchor.emit(
                 RULE_ID,
                 anchor.option_item_line(key, index),
                 format!("{RULE_ID}: invalid glob pattern in {key}: {error}"),
                 None,
                 None,
-            )
+            ))
         };
         let roots = opts
             .roots
@@ -96,7 +96,7 @@ impl<'a> Selectors<'a> {
         let mut exceptions = Vec::new();
         for (index, exception) in opts.exceptions.iter().enumerate() {
             let nested_error = |key: &str, item: usize, error: anyhow::Error| {
-                anchor.emit(
+                Box::new(anchor.emit(
                     RULE_ID,
                     anchor.nested_option_item_line("exceptions", index, key, item),
                     format!(
@@ -104,7 +104,7 @@ impl<'a> Selectors<'a> {
                     ),
                     None,
                     None,
-                )
+                ))
             };
             let roots = exception
                 .roots

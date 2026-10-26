@@ -112,7 +112,7 @@ fn check_rule_application(
     };
     let selectors = match selectors::Selectors::new(root, &anchor, opts) {
         Ok(selectors) => selectors,
-        Err(finding) => return Ok(vec![finding]),
+        Err(finding) => return Ok(vec![*finding]),
     };
     let allowed = relationship_filter(&opts.relationships);
     let mut inferred_roots = scope.inferred_roots.cloned().unwrap_or_default();
