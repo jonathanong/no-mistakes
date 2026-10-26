@@ -34,13 +34,14 @@ merman-analysis = { version = "=0.9.1", optional = true, features = ["all-diagra
 napi = { version = "3.9.0", features = ["napi8"] }
 napi-derive = "3.5.6"
 num_cpus = "1.16"
-oxc_allocator = "0.155.0"
-oxc_ast = "0.155.0"
-oxc_ast_visit = "0.155.0"
-oxc_diagnostics = "0.155.0"
-oxc_parser = "0.155.0"
-oxc_span = "0.155.0"
-oxc_syntax = "0.155.0"
+# Preserve literal identities until the JSStr migration: https://github.com/jonathanong/no-mistakes/issues/2802
+oxc_allocator = "=0.153.0"
+oxc_ast = "=0.153.0"
+oxc_ast_visit = "=0.153.0"
+oxc_diagnostics = "=0.153.0"
+oxc_parser = "=0.153.0"
+oxc_span = "=0.153.0"
+oxc_syntax = "=0.153.0"
 proc-macro2 = { version = "1", features = ["span-locations"] }
 percent-encoding = "2.3"
 url = "2.5"
@@ -60,7 +61,7 @@ toml = "1.1"
 unicode-id-start = "1.4.0"
 wait-timeout = "0.2"
 tempfile = "3"
-oxc_semantic = "0.155.0"
+oxc_semantic = "=0.153.0"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
