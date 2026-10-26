@@ -1,0 +1,6 @@
+rules:
+  - rule: agents-md-max-size
+    enabled: false
+    scope: repository
+    options:
+      maxLines: 2

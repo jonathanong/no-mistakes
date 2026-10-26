@@ -1,0 +1,6 @@
+rules:
+  - rule: agents-md-max-size
+    scope: repository
+    options:
+      maxLines: 5
+      maxChars: 1000

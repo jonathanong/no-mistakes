@@ -8,8 +8,19 @@ This repository is a huge token sink. Thus, contributions are welcomed.
    - A suite whose loader reads `fixtures/<category>/<name>/` (benchmarks, N-API, test-plan, and
      some per-rule cases) keeps its cases there. Both trees hold some `rules/`, `lockfile/`, and
      `check-runner/` cases, so find the suite's loader with `rg` and add to the tree it reads.
-2. Annotate which AI harness + model was used, `Co-Authored-By` is preferred
-3. Maintain 98% project and patch test coverage
+2. Rule output tests commit file snapshots. Review `.snap` and Vitest file-snapshot
+   diffs like code. Rust `check --format json` snapshots use
+   `crates/no-mistakes/tests/common/check_json_snapshot.rs`, which compares `--jobs 1`
+   with `--jobs 2` and rewrites absolute paths, temp directories, process ids, and
+   timings so the file is stable on Linux, macOS, and Windows. CI sets `INSTA_UPDATE=no`
+   and fails when a snapshot is missing or changed. Regenerate on purpose with
+   `INSTA_UPDATE=1 cargo test -p no-mistakes --test suite_cli_rules check_json_snapshot`
+   or `cargo insta review`. In `packages/eslint-plugin-no-mistakes`, fixture
+   diagnostics use Vitest `toMatchFileSnapshot` with relative paths and sorted
+   findings. CI does not pass `-u`. Update with `pnpm exec vitest run <test> -u`
+   only when that output change is intended.
+3. Annotate which AI harness + model was used, `Co-Authored-By` is preferred
+4. Maintain 98% project and patch test coverage
 
 <!-- cspell:ignore rustup Clippy -->
 Development, CI, release builds, and benchmarks use the latest stable Rust.
