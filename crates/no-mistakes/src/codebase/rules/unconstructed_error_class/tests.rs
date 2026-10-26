@@ -476,10 +476,8 @@ mod symlink_declarations;
 
 #[path = "tests/shared_package_targets.rs"]
 mod shared_package_targets;
-
 #[path = "tests/scoped_construction_targets.rs"]
 mod scoped_construction_targets;
-
 #[path = "tests/constructor_proof_ownership.rs"]
 mod constructor_proof_ownership;
 
