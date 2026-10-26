@@ -55,7 +55,18 @@ describe("PostgreSQL same-file executor calls", () => {
     ).toHaveLength(2);
   });
   it("follows namespace aliases, scoped query destructures, and awaited forwarders", () => {
-    expect(check("more-static", "manual-transaction")).toHaveLength(9);
+    expect(
+      check("more-static", "manual-transaction").map(({ line, messageId }) => [line, messageId]),
+    ).toEqual([
+      [4, "manualTransaction"],
+      [6, "manualTransaction"],
+      [11, "manualTransaction"],
+      [12, "manualTransaction"],
+      [15, "manualTransaction"],
+      [16, "manualTransaction"],
+      [17, "manualTransaction"],
+      [18, "manualTransaction"],
+    ]);
   });
   it("does not follow unknown, mutable, shadowed or second-hop calls", () => {
     expect(check("silent", "manual-transaction")).toEqual([]);
