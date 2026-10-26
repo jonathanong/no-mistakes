@@ -1,3 +1,4 @@
+use no_mistakes::codebase::rules::disable_directive_audit::ConsumedDisableDirective;
 use no_mistakes::codebase::rules::RuleFinding;
 use no_mistakes::codebase::rules::{
     suppress_domain_findings_with_source_locations, suppress_domain_findings_with_sources,
@@ -13,8 +14,31 @@ mod provenance;
 use provenance::suppress_rules_with_sources;
 mod react;
 pub(crate) use react::suppress_react;
+use react::suppress_react_with_consumed;
+
+pub(super) struct SuppressionAccounting {
+    pub(super) suppressed: Vec<SuppressedFinding>,
+    pub(super) consumed: Vec<ConsumedDisableDirective>,
+}
+
+pub(super) fn take_pre_suppressed(
+    completed: &mut super::CompletedDomainChecks,
+) -> Vec<SuppressedFinding> {
+    [
+        &mut completed.react.pre_suppressed,
+        &mut completed.queues.pre_suppressed,
+        &mut completed.rules.pre_suppressed,
+        &mut completed.filesystem_rules.pre_suppressed,
+        &mut completed.integration.pre_suppressed,
+        &mut completed.codebase.pre_suppressed,
+    ]
+    .into_iter()
+    .flat_map(std::mem::take)
+    .collect()
+}
 
 pub(super) struct Inputs<'a> {
+    pub(super) pre_suppressed: Vec<SuppressedFinding>,
     pub(super) root: &'a std::path::Path,
     pub(super) sources: &'a SourceStore,
     pub(super) react: &'a mut Vec<react_traits::Violation>,
@@ -33,20 +57,21 @@ pub(super) struct Inputs<'a> {
 pub(super) fn apply_if_requested(
     include_suppressed: bool,
     input: Inputs<'_>,
-) -> Vec<SuppressedFinding> {
+) -> SuppressionAccounting {
     // Directive filtering is part of the ordinary check contract. The flag
     // controls whether we retain the accounting records, not whether a
     // directive hides its matching finding.
-    let suppressed = apply(input);
-    if include_suppressed {
-        suppressed
-    } else {
-        Vec::new()
+    let mut accounting = apply(input);
+    if !include_suppressed {
+        accounting.suppressed.clear();
+        accounting.consumed.clear();
     }
+    accounting
 }
 
-pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
+fn apply(input: Inputs<'_>) -> SuppressionAccounting {
     let Inputs {
+        pre_suppressed,
         root,
         sources,
         react,
@@ -59,14 +84,16 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
         codebase,
         advisories,
     } = input;
-    let mut suppressed = Vec::new();
+    let mut suppressed = pre_suppressed;
+    let mut consumed = Vec::new();
     if let Some(react_suppression_targets) = react_suppression_targets {
-        suppress_react(
+        suppress_react_with_consumed(
             root,
             sources,
             react,
             react_suppression_targets,
             &mut suppressed,
+            &mut consumed,
         );
     }
     suppressed.extend(suppress_domain_findings_with_sources(
@@ -124,8 +151,14 @@ pub(super) fn apply(input: Inputs<'_>) -> Vec<SuppressedFinding> {
                 .map(|(file, line)| (file.as_str(), usize::try_from(*line).ok()))
         },
     ));
+    consumed.extend(suppressed.iter().map(ConsumedDisableDirective::from));
+    consumed.sort();
+    consumed.dedup();
     suppressed.sort();
-    suppressed
+    SuppressionAccounting {
+        suppressed,
+        consumed,
+    }
 }
 
 fn suppress_rules(

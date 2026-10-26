@@ -1,0 +1,8 @@
+reportUnusedDisableDirectives: report
+reactTraits:
+  frontendRoot: app
+  assertNoFetch: true
+rules:
+  - rule: assert-no-fetch
+    scope: repository
+    include: ['app/**/*.tsx']

@@ -1,11 +1,14 @@
 //! Aggregate-only suppression hygiene. Findings are appended after filtering.
 use super::suppression::{SuppressionDirective, SuppressionDirectiveKind};
 use super::{RuleFinding, SuppressedFinding};
+mod consumed;
 use crate::codebase::ts_source::{
     disable_directives, relative_slash_path, DisableDirective, SourceStore,
 };
 use crate::config::v2::{DisableDirectivePolicy, NoMistakesConfig};
 use anyhow::Result;
+#[doc(hidden)]
+pub use consumed::ConsumedDisableDirective;
 use rayon::prelude::*;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -109,13 +112,39 @@ impl PreparedDisableDirectives {
 
     /// Finalization only matches retained comments to consumed provenance.
     pub fn findings(&self, suppressed: &[SuppressedFinding]) -> Vec<RuleFinding> {
-        let used: BTreeSet<_> = suppressed
-            .iter()
-            .map(|item| {
+        self.findings_for_locations(suppressed.iter().map(|item| {
+            (
+                item.source_file.as_str(),
+                item.rule.as_str(),
+                &item.directive,
+            )
+        }))
+    }
+
+    /// Complete internal consumption, independent of deduplicated public findings.
+    pub fn findings_from_consumed(
+        &self,
+        consumed: &[ConsumedDisableDirective],
+    ) -> Vec<RuleFinding> {
+        self.findings_for_locations(consumed.iter().map(|item| {
+            (
+                item.source_file.as_str(),
+                item.rule.as_str(),
+                &item.directive,
+            )
+        }))
+    }
+
+    fn findings_for_locations<'a>(
+        &self,
+        consumed: impl Iterator<Item = (&'a str, &'a str, &'a SuppressionDirective)>,
+    ) -> Vec<RuleFinding> {
+        let used: BTreeSet<_> = consumed
+            .map(|(file, rule, directive)| {
                 (
-                    relative_slash_path(&self.root, Path::new(&item.source_file)),
-                    item.rule.as_str(),
-                    item.directive.clone(),
+                    relative_slash_path(&self.root, Path::new(file)),
+                    rule,
+                    directive.clone(),
                 )
             })
             .collect();

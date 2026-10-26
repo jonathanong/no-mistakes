@@ -16,6 +16,24 @@ pub(crate) fn suppress_react(
     suppression_targets: &[Vec<react_traits::ReactSuppressionTarget>],
     suppressed: &mut Vec<SuppressedFinding>,
 ) {
+    suppress_react_with_consumed(
+        root,
+        sources,
+        findings,
+        suppression_targets,
+        suppressed,
+        &mut Vec::new(),
+    );
+}
+
+pub(super) fn suppress_react_with_consumed(
+    root: &std::path::Path,
+    sources: &SourceStore,
+    findings: &mut Vec<react_traits::Violation>,
+    suppression_targets: &[Vec<react_traits::ReactSuppressionTarget>],
+    suppressed: &mut Vec<SuppressedFinding>,
+    consumed: &mut Vec<ConsumedDisableDirective>,
+) {
     let original_findings = findings.drain(..).enumerate().collect::<Vec<_>>();
     for (index, mut finding) in original_findings {
         let identity = format!("{}@{}", finding.component, finding.file);
@@ -73,6 +91,13 @@ pub(crate) fn suppress_react(
                     .as_ref()
                     .map(|(file, line)| (file.as_str(), Some(*line)))
             },
+        );
+        // Every hidden fetch contribution consumes its directive, even when
+        // another fetch keeps the component visible or the public ledger deduplicates it.
+        consumed.extend(
+            target_suppressions
+                .iter()
+                .map(ConsumedDisableDirective::from),
         );
         if locations.is_empty() {
             // A React violation is one component-level diagnostic even when

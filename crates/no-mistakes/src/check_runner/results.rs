@@ -94,12 +94,13 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         react_warning,
         discover_duration,
         facts_duration,
-        completed,
+        mut completed,
         include_suppressed,
         unproven_member_query_sql,
         sql_verdicts,
         include_sql_verdicts,
     } = input;
+    let pre_suppressed = suppression::take_pre_suppressed(&mut completed);
     let mut react = completed.react;
     let react_suppression_targets = react.react_suppression_targets.as_slice();
     let mut queues = completed.queues;
@@ -136,9 +137,10 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     .collect();
     let analysis_warning_count = config.analysis_warnings.len();
     warnings.extend(config.analysis_warnings.iter().cloned());
-    let suppressed = suppression::apply_if_requested(
+    let accounting = suppression::apply_if_requested(
         retain_suppression,
         suppression::Inputs {
+            pre_suppressed,
             root,
             sources,
             react: &mut react.findings,
@@ -152,7 +154,8 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
             advisories: &mut advisories,
         },
     );
-    let directive_findings = disable_directives.findings(&suppressed);
+    let directive_findings = disable_directives.findings_from_consumed(&accounting.consumed);
+    let suppressed = accounting.suppressed;
     if config.report_unused_disable_directives == DisableDirectivePolicy::Report {
         rules.findings.extend(directive_findings);
     } else {
@@ -189,11 +192,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         advisories,
         sql_verdicts,
         include_sql_verdicts,
-        suppressed: if include_suppressed {
-            suppressed
-        } else {
-            Vec::new()
-        },
+        suppressed: include_suppressed.then_some(suppressed).unwrap_or_default(),
         include_suppressed,
         unproven_member_query_sql,
     })

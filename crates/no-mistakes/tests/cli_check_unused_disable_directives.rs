@@ -43,3 +43,30 @@ fn cli_hygiene_modes_preserve_suppression_and_choose_exit_status() {
         );
     }
 }
+
+#[test]
+fn cli_react_consumed_comments_do_not_fail_strict_hygiene_or_expand_public_ledger() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/react-consumed-directives/all");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join("report.yml"))
+        .args(["--format", "json", "--include-suppressed"])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["rules"], serde_json::json!([]), "{report}");
+    assert_eq!(report["advisories"], serde_json::json!([]), "{report}");
+    assert_eq!(
+        report["suppressed"].as_array().unwrap().len(),
+        1,
+        "{report}"
+    );
+}
