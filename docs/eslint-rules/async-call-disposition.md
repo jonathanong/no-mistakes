@@ -295,7 +295,8 @@ callback unproven. Executable parameter defaults are inspected too. Resolvable n
 this proof on their actual implementation, including in Oxlint's `--type-aware`
 mode, which does not expose a parser-owned TypeScript program to JS plugins.
 That fallback requires the optional `typescript` and `@typescript-eslint/parser`
-peer dependencies. Install both in the project to enable it. If either is
+peer dependencies, with TypeScript 5 or later for Bundler module resolution.
+Install both in the project to enable it. With older TypeScript or if either is
 missing, the cross-file proof is unproven and calls that depend on it are
 reported; same-file proofs and explicitly configured `awaitingConsumers`
 contracts remain available. With both dependencies present and no typed

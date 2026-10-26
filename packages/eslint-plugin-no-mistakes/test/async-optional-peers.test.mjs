@@ -96,12 +96,17 @@ it("loads a packed plugin and conservatively lints consumers with optional proof
   }
 }, 30_000);
 
-it.each(["typescript", "@typescript-eslint/parser"])(
-  "reports unproven imported contracts when %s cannot load",
+it.each(["typescript", "@typescript-eslint/parser", "legacy TypeScript"])(
+  "reports unproven imported contracts with unavailable proof tooling (%s)",
   (missing) => {
     const load = Module._load;
     const peer = vi.spyOn(Module, "_load").mockImplementation(function (name, ...args) {
       if (name === missing) throw new Error("Optional peer failed to load");
+      if (name === "typescript" && missing === "legacy TypeScript") {
+        const ts = load.call(this, name, ...args);
+        // TypeScript 4.8 has no Bundler mode; its legacy resolver is not equivalent.
+        return { ...ts, ModuleResolutionKind: { ...ts.ModuleResolutionKind, Bundler: undefined } };
+      }
       return load.call(this, name, ...args);
     });
     try {

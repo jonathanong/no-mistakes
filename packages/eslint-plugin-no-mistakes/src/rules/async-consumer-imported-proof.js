@@ -16,6 +16,8 @@ function createImportedSources() {
     // Optional tooling cannot establish a contract when unavailable or unloadable.
     return null;
   }
+  // Legacy resolution may inspect `main` while runtime `exports` selects another body.
+  if (ts.ModuleResolutionKind.Bundler === undefined) return null;
   const reads = new Map();
   const files = new Map();
   const configs = new Map();
