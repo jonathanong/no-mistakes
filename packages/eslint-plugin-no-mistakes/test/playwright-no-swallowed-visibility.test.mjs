@@ -52,6 +52,11 @@ describe(RULE, () => {
     assert.deepEqual(ids("nested-try.mjs"), [SWALLOWED, SWALLOWED]);
   });
 
+  it("reports a numeric not and a returned state binding", () => {
+    assert.deepEqual(ids("bang-literal.mjs"), [SWALLOWED, SWALLOWED, SWALLOWED]);
+    assert.deepEqual(ids("bound-state.mjs"), [SWALLOWED, SWALLOWED]);
+  });
+
   it("replaces the default method list", () => {
     assert.deepEqual(ids("catch-false.mjs", { methods: ["isAttached"] }), []);
     assert.deepEqual(ids("catch-false.mjs", { methods: [] }), []);

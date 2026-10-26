@@ -66,3 +66,53 @@ export function bareReturn(locator) {
   }
   return locator;
 }
+
+await locator.isVisible().catch(() => !locator);
+await locator.isVisible().catch(() => !"");
+await locator.isVisible().catch(() => void 0);
+
+export async function reassigned(locator) {
+  try {
+    let visible = await locator.isVisible();
+    visible = false;
+    return visible;
+  } catch {
+    return false;
+  }
+}
+
+export async function returnsLocator(locator) {
+  try {
+    const visible = await locator.isVisible();
+    return locator;
+  } catch {
+    return false;
+  }
+}
+
+export async function clickBinding(locator) {
+  try {
+    const clicked = await locator.click();
+    return clicked;
+  } catch {
+    return false;
+  }
+}
+
+export async function notAwaitedBinding(locator) {
+  try {
+    const visible = locator.isVisible();
+    return visible;
+  } catch {
+    return false;
+  }
+}
+
+export async function destructured(locator) {
+  try {
+    const { visible } = await locator.isVisible();
+    return visible;
+  } catch {
+    return false;
+  }
+}

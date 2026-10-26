@@ -37,6 +37,20 @@ export async function finallyPropagates(locator) {
   }
 }
 
+// The binding's await sits in the inner try, so the outer boolean is not evidence.
+export async function boundInner(locator) {
+  try {
+    try {
+      const visible = await locator.isVisible();
+      return visible;
+    } catch {
+      return null;
+    }
+  } catch {
+    return false;
+  }
+}
+
 // An inner catch that rethrows is not proven to reach the outer boolean.
 export async function innerRethrow(locator) {
   try {

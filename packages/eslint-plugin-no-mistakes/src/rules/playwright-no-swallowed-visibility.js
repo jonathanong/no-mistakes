@@ -11,9 +11,11 @@ const DEFAULT_MESSAGE =
 
 // Named handlers are not resolved. A same-file function that returns false is
 // unproven, which keeps `.catch(handleError)` that rethrows silent. try/catch
-// counts only a returned await, so a rejection that leaves the try is not a swallow.
-// A nested try with its own catch owns that body. The outer catch is not proof
-// the inner rejection became the outer boolean, even when the inner catch rethrows.
+// counts a returned await, or a return of a name bound to one. A rejection that
+// leaves the try is not a swallow. A nested try with its own catch owns that
+// body. The outer catch is not proof the inner rejection became the outer
+// boolean, even when the inner catch rethrows. `!0` and `!1` are booleans;
+// other `!` expressions are not.
 const methodList = {
   type: "array",
   items: { type: "string", minLength: 1 },
@@ -28,7 +30,12 @@ function isStateCall(node, methods) {
 
 function isBooleanLiteral(node) {
   const current = unwrapSequence(node);
-  return current?.type === "Literal" && typeof current.value === "boolean";
+  if (current?.type === "Literal") return typeof current.value === "boolean";
+  const argument =
+    current?.type === "UnaryExpression" && current.operator === "!"
+      ? unwrapSequence(current.argument)
+      : null;
+  return argument?.type === "Literal" && typeof argument.value === "number";
 }
 
 function blockReturnsBoolean(context, block) {
@@ -68,13 +75,40 @@ function shieldedByNestedTry(node, outerBlock) {
   return false;
 }
 
+function stateNames(context, block, methods) {
+  const names = new Set();
+  traverse(context, block, (node) => {
+    if (node.type === "AssignmentExpression" && node.left.type === "Identifier") {
+      names.delete(node.left.name);
+      return;
+    }
+    if (
+      node.type !== "VariableDeclarator" ||
+      node.id.type !== "Identifier" ||
+      shieldedByNestedTry(node, block)
+    ) {
+      return;
+    }
+    const awaited = unwrapSequence(node.init);
+    if (awaited?.type === "AwaitExpression" && isStateCall(awaited.argument, methods)) {
+      names.add(node.id.name);
+    }
+  });
+  return names;
+}
+
+function returnsAwaitedState(node, methods, names) {
+  const returned = unwrapSequence(node.argument);
+  if (returned?.type === "AwaitExpression") return isStateCall(returned.argument, methods);
+  return returned?.type === "Identifier" && names.has(returned.name);
+}
+
 function tryReturnsAwaitedState(context, block, methods) {
+  const names = stateNames(context, block, methods);
   let found = false;
   traverse(context, block, (node) => {
     if (node.type !== "ReturnStatement" || shieldedByNestedTry(node, block)) return;
-    const awaited = unwrapSequence(node.argument);
-    if (awaited?.type !== "AwaitExpression") return;
-    if (isStateCall(awaited.argument, methods)) found = true;
+    if (returnsAwaitedState(node, methods, names)) found = true;
   });
   return found;
 }

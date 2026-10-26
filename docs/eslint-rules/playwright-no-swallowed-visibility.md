@@ -33,6 +33,21 @@ async function hidden(locator) {
 }
 ```
 
+```ts
+await locator.isHidden().catch(() => !1);
+```
+
+```ts
+async function stored(locator) {
+  try {
+    const visible = await locator.isVisible();
+    return visible;
+  } catch {
+    return false;
+  }
+}
+```
+
 ## Allowed
 
 ```ts
@@ -63,12 +78,15 @@ async function nested(locator) {
 
 A named handler is not inspected, including one in the same file. The rule
 only proves an inline function, or a `try`/`catch` whose `try` returns an
-await of a configured state method. A rejection that is not awaited inside
-that `try` is not caught, so it is not reported. A nested `try` with its own
-`catch` owns the await inside that nested body, so the outer boolean is not
-evidence. An inner `catch` that rethrows is not read. A nested `try`/`finally`
-with no `catch` still propagates. `expect(locator).toBeVisible()` is an
-assertion, not a state method.
+await of a configured state method or a name bound to that await. `!0` and
+`!1` count as booleans. A rejection that is not awaited inside that `try` is
+not caught, so it is not reported. A later assignment to the bound name is
+not the state check. A nested `try` with its own `catch` owns the await
+inside that nested body, so the outer boolean is not evidence. An inner
+`catch` that rethrows is not read. A nested `try`/`finally` with no `catch`
+still propagates. `expect(locator).toBeVisible()` is an assertion, not a
+state method. Other `!` expressions, including `!locator` and `!""`, are not
+booleans.
 
 ## Options
 
