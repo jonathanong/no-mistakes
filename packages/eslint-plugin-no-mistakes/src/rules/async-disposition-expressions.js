@@ -12,7 +12,6 @@ const {
   findContainingFunction,
   isFunction,
   isTransparentExpression,
-  unwrapExpression,
   unwrapTransparentParent,
 } = require("./async-ast");
 
@@ -41,20 +40,16 @@ function returnedFromFunction(fn, context, consumers) {
   const named = consumers.namedDisposition(fn);
   return named ?? true;
 }
-
 function isCallArgument(node) {
   node = node && unwrapTransparentParent(node);
   return Boolean(node?.parent?.type === "CallExpression" && node.parent.arguments.includes(node));
 }
-
 function isCallCallee(node) {
   return node?.parent?.type === "CallExpression" && node.parent.callee === node;
 }
-
 function isPromiseAllIterable(node, promiseAll) {
   return promiseAll.arguments[0] === node && (node.type === "ArrayExpression" || isMapCall(node));
 }
-
 function expressionReturnedFromCallback(node, fn) {
   let current = node;
   let returnStatement = null;
@@ -78,20 +73,26 @@ function canReachPromiseAll(node, promiseAll, collectionRole) {
     if (parent?.type === "MemberExpression") return false;
     if (parent === promiseAll) return isPromiseAllIterable(current, promiseAll);
     if (isFunction(parent)) {
-      if (!expressionReturnedFromCallback(node, parent) || !isMapCallback(parent)) {
+      if (collectionRole || !expressionReturnedFromCallback(node, parent) || !isMapCallback(parent))
         return false;
-      }
       current = parent.parent;
       collectionRole = true;
       continue;
     }
     if (parent?.type === "ArrayExpression") {
-      // A mapper collection differs from a configured async target named map.
-      if (collectionRole && isMapCall(unwrapExpression(current))) return false;
-      if (parent.parent !== promiseAll || promiseAll.arguments[0] !== parent) return false;
+      if (collectionRole) return false;
       current = parent;
+      collectionRole = true;
       continue;
     }
+    if (parent?.type === "SpreadElement") {
+      // Spreading consumes a collection; unspread collections stay nested.
+      if (!collectionRole || parent.parent?.type !== "ArrayExpression") return false;
+      current = parent;
+      collectionRole = false;
+      continue;
+    }
+    if (parent?.type === "ConditionalExpression" && parent.test === current) return false;
     if (parent?.type === "ObjectExpression") return false;
     if (
       parent?.type === "CallExpression" &&
