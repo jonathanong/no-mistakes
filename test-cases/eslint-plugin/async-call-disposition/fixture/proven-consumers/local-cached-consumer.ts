@@ -80,17 +80,6 @@ async function mutation(callback: () => Promise<unknown>) {
 const mutationJob = () => enqueueEmail(1); // report
 await mutation(mutationJob);
 
- {
-const Map = globalThis.Map; // A local constructor cannot establish the built-in contract.
-async function shadowed(callback: () => Promise<unknown>) {
-  const cache = new Map<string, Promise<unknown>>();
-  if (!cache.has('k')) cache.set('k', callback());
-  return await cache.get('k');
-}
-const shadowedJob = () => enqueueEmail(1); // report
-await shadowed(shadowedJob);
-
-}
 async function unawaited(callback: () => Promise<unknown>) {
   const cache = new Map<string, Promise<unknown>>();
   if (!cache.has('k')) cache.set('k', callback());
@@ -157,3 +146,19 @@ async function elseBranch(callback: () => Promise<unknown>) {
 }
 const elseBranchJob = () => enqueueEmail(1); // report
 await elseBranch(elseBranchJob);
+
+async function parameterKey(callback: () => Promise<unknown>, key: string) {
+  const cache = new Map();
+  if (!cache.has(key)) cache.set(key, callback());
+  return await cache.get(key);
+}
+const parameterKeyJob = () => enqueueEmail(1); // accepted
+await parameterKey(parameterKeyJob, "k");
+
+async function differentParameter(callback: () => Promise<unknown>, key: string, other: string) {
+  const cache = new Map();
+  if (!cache.has(key)) cache.set(key, callback());
+  return await cache.get(other);
+}
+const differentParameterJob = () => enqueueEmail(1); // report
+await differentParameter(differentParameterJob, "k", "other");

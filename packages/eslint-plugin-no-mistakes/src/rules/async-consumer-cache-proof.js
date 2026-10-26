@@ -1,6 +1,59 @@
 "use strict";
 
 const { resolveVariable } = require("./async-target-bindings");
+const { propertiesWritten } = require("./async-disposition-mocks");
+
+function sameKey(first, key, context) {
+  if (key?.type === "Literal")
+    return typeof key.value === "string" && first?.type === "Literal" && first.value === key.value;
+  return (
+    first?.type === "Identifier" &&
+    key?.type === "Identifier" &&
+    resolveVariable(first, context) === resolveVariable(key, context)
+  );
+}
+
+function stableKey(key, fn, param, context) {
+  if (key?.type === "Literal") return typeof key.value === "string";
+  if (key?.type !== "Identifier") return false;
+  const variable = resolveVariable(key, context);
+  return (
+    fn.params.some((item) => item !== param && resolveVariable(item, context) === variable) &&
+    !variable.references.some((ref) => ref.isWrite())
+  );
+}
+
+function builtinMap(node, context) {
+  if (resolveVariable(node, context)?.defs.length || propertiesWritten(node, context)) return false;
+  // Global-holder writes can replace Map without mentioning its bare identifier.
+  const references = context.sourceCode.scopeManager.scopes.flatMap((scope) => scope.references);
+  const binding = resolveVariable(node, context);
+  // Do not infer built-in semantics after the constructor/prototype escapes to
+  // reflective APIs or unknown consumers, whose effects are not modeled here.
+  if (
+    references.some(
+      (ref) =>
+        ref.identifier.name === "Map" &&
+        resolveVariable(ref.identifier, context) === binding &&
+        !(ref.isTypeReference && !ref.isValueReference) &&
+        !(
+          ref.identifier.parent.type === "NewExpression" &&
+          ref.identifier.parent.callee === ref.identifier
+        ),
+    )
+  )
+    return false;
+  const holders = ["globalThis", "global", "window", "self"];
+  return !references.some((ref) => {
+    if (!holders.includes(ref.identifier.name)) return false;
+    if (propertiesWritten(ref.identifier, context)) return true;
+    const member = ref.identifier.parent;
+    if (member.type !== "MemberExpression" || member.object !== ref.identifier) return true;
+    const name = member.computed ? member.property.value : member.property.name;
+    if (name !== "Map" && typeof name === "string") return false;
+    return member.parent.type !== "NewExpression" || member.parent.callee !== member;
+  });
+}
 
 function mapCall(node, method, cache, key, context, count) {
   const member = node?.callee;
@@ -15,9 +68,7 @@ function mapCall(node, method, cache, key, context, count) {
     member.property.name === method &&
     member.object.type === "Identifier" &&
     resolveVariable(member.object, context) === cache &&
-    first?.type === "Literal" &&
-    typeof first.value === "string" &&
-    first.value === key
+    sameKey(first, key, context)
   );
 }
 
@@ -40,7 +91,7 @@ function cachedBodyAwaited(fn, param, context) {
     init.callee.type !== "Identifier" ||
     init.callee.name !== "Map" ||
     init.arguments.length !== 0 ||
-    resolveVariable(init.callee, context)?.defs.length
+    !builtinMap(init.callee, context)
   )
     return false;
   const cache = resolveVariable(entry.id, context);
@@ -50,8 +101,9 @@ function cachedBodyAwaited(fn, param, context) {
       ? guard.consequent.body.length === 1 && guard.consequent.body[0]
       : guard.consequent;
   const set = inserted?.expression;
-  const key = set?.arguments?.[0]?.value;
+  const key = set?.arguments?.[0];
   if (
+    !stableKey(key, fn, param, context) ||
     guard.type !== "IfStatement" ||
     guard.alternate ||
     test?.type !== "UnaryExpression" ||
