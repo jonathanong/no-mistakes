@@ -17,7 +17,7 @@ fn computed_typed_parameters_keep_unknown_calls_without_value_import_fallback() 
         + 1;
     assert_eq!(unknown.len(), 5);
     for mode in ["report", "advise", "ignore"] {
-        let report: Value = crate::test_support::policy_advisory_json(
+        let report: Value = crate::test_support::without_hygiene_advisory_json(
             serde_json::from_str(
                 &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(json!({
                     "root": root, "config": root.join(format!(".no-mistakes-{mode}.yml")),
@@ -26,7 +26,6 @@ fn computed_typed_parameters_keep_unknown_calls_without_value_import_fallback() 
                 .unwrap(),
             )
             .unwrap(),
-            "postgres-",
         );
         assert!(
             report["warnings"].as_array().unwrap().is_empty(),

@@ -11,7 +11,7 @@ fn fixture() -> PathBuf {
 
 fn run(config: &str, effort: Option<Effort>, verdicts: bool) -> super::CheckResults {
     let root = fixture();
-    crate::test_support::policy_advisories(
+    crate::test_support::without_hygiene_advisories(
         run_all_with_options(
             root.clone(),
             Some(root.join(config)),
@@ -24,7 +24,6 @@ fn run(config: &str, effort: Option<Effort>, verdicts: bool) -> super::CheckResu
             },
         )
         .unwrap(),
-        "postgres-no-transformed-uuid-predicates",
     )
 }
 

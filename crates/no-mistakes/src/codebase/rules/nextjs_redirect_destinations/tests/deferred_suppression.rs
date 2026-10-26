@@ -21,8 +21,9 @@ fn deferred_diagnostics_keep_entry_and_delegated_file_findings() {
         );
         let raw = diagnostics_with_files_and_sources(&root, &config, &files, &sources, None, true)
             .unwrap();
-        assert!(
-            !raw.findings.is_empty() == has_raw,
+        assert_eq!(
+            !raw.findings.is_empty(),
+            has_raw,
             "{name}: unexpected raw findings: {:?}",
             raw.findings
         );

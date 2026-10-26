@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { policyAdvisories } = require("./check-policy-test-helpers");
 const { spawnSync } = require("node:child_process");
 const { dirname, join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
@@ -23,7 +24,7 @@ test(
       assert.ok(pending instanceof Promise);
       const low = await pending;
       assert.equal(low.rules.length, mode === "report" ? 2 : 0);
-      assert.equal(low.advisories.length, mode === "advise" ? 2 : 0);
+      assert.equal(policyAdvisories(low).length, mode === "advise" ? 2 : 0);
       assert.deepEqual(await esm.check(options), low);
       const child = spawnSync(
         cli,

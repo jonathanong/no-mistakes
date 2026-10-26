@@ -83,7 +83,7 @@ fn undeclared_executor_policies_and_suppressions_reach_public_check_reports() {
             ("ignore", 0, 0),
             ("declared", 0, 0),
         ] {
-            let report = crate::test_support::policy_advisories(
+            let report = crate::test_support::without_hygiene_advisories(
                 run_all_with_options(
                     root.clone(),
                     Some(format!("{policy}.yml").into()),
@@ -96,7 +96,6 @@ fn undeclared_executor_policies_and_suppressions_reach_public_check_reports() {
                     },
                 )
                 .unwrap(),
-                "postgres-",
             );
             assert_eq!(
                 report.rules.len(),
@@ -122,7 +121,7 @@ fn undeclared_executor_policies_and_suppressions_reach_public_check_reports() {
         }
     }
     for policy in ["report", "advise"] {
-        let report = crate::test_support::policy_advisories(
+        let report = crate::test_support::without_hygiene_advisories(
             run_all_with_options(
                 root.clone(),
                 Some(format!("{policy}.yml").into()),
@@ -132,7 +131,6 @@ fn undeclared_executor_policies_and_suppressions_reach_public_check_reports() {
                 AnalysisOptions::default(),
             )
             .unwrap(),
-            "postgres-",
         );
         assert_eq!(
             report
@@ -155,7 +153,7 @@ fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_m
     for effort in [Effort::Max, Effort::Low] {
         for (policy, failures, advisories) in [("report", 2, 0), ("advise", 0, 2), ("ignore", 0, 0)]
         {
-            let report = crate::test_support::policy_advisories(
+            let report = crate::test_support::without_hygiene_advisories(
                 run_all_with_options(
                     root.clone(),
                     Some(format!("{policy}.yml").into()),
@@ -168,7 +166,6 @@ fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_m
                     },
                 )
                 .unwrap(),
-                "postgres-",
             );
             assert_eq!(report.rules.len(), failures, "{effort:?}/{policy}");
             assert_eq!(report.advisories.len(), advisories, "{effort:?}/{policy}");
@@ -220,7 +217,7 @@ fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_m
         }
     }
 
-    let configured = crate::test_support::policy_advisories(
+    let configured = crate::test_support::without_hygiene_advisories(
         run_all_with_options(
             root.clone(),
             Some("configured-value.yml".into()),
@@ -233,7 +230,6 @@ fn imported_value_receivers_get_actionable_unknown_type_diagnostics_at_low_and_m
             },
         )
         .unwrap(),
-        "postgres-",
     );
     assert_eq!(configured.rules.len(), 2);
     for finding in &configured.rules {
@@ -266,7 +262,7 @@ fn typed_helper_parameters_check_imported_values_at_low_and_max() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-require-query-annotation/fixture/receiver-advice");
     for effort in [Effort::Low, Effort::Max] {
-        let report = crate::test_support::policy_advisories(
+        let report = crate::test_support::without_hygiene_advisories(
             run_all_with_options(
                 root.clone(),
                 Some("rewrite.yml".into()),
@@ -279,7 +275,6 @@ fn typed_helper_parameters_check_imported_values_at_low_and_max() {
                 },
             )
             .unwrap(),
-            "postgres-",
         );
         assert!(
             report.advisories.is_empty(),

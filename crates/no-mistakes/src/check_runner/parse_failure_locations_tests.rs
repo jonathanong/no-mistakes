@@ -17,7 +17,7 @@ fn fixture() -> PathBuf {
 }
 fn run(name: &str, effort: Effort) -> CheckResults {
     let root = fixture();
-    crate::test_support::policy_advisories(
+    crate::test_support::without_hygiene_advisories(
         run_all_with_options(
             root.clone(),
             Some(root.join(name)),
@@ -30,7 +30,6 @@ fn run(name: &str, effort: Effort) -> CheckResults {
             },
         )
         .unwrap(),
-        "postgres-",
     )
 }
 

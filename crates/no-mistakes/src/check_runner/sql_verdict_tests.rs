@@ -10,7 +10,7 @@ fn fixture() -> PathBuf {
 fn annotation_fail_ignore_and_advise_keep_proven_findings_and_residuals_distinct() {
     let root = fixture();
     let run = |config: &str, include| {
-        crate::test_support::policy_advisories(
+        crate::test_support::without_hygiene_advisories(
             run_all_with_sql_verdicts(
                 root.clone(),
                 Some(root.join(config)),
@@ -20,7 +20,6 @@ fn annotation_fail_ignore_and_advise_keep_proven_findings_and_residuals_distinct
                 include,
             )
             .unwrap(),
-            "postgres-",
         )
     };
     let fail = run(".no-mistakes-fail.yml", false);
@@ -69,7 +68,7 @@ fn annotation_fail_ignore_and_advise_keep_proven_findings_and_residuals_distinct
 fn explicit_sql_policy_exemption_clears_without_opaque_advice() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-sql-verdicts/fixture/policy-exempt");
-    let report = crate::test_support::policy_advisories(
+    let report = crate::test_support::without_hygiene_advisories(
         run_all_with_sql_verdicts(
             root.clone(),
             Some(root.join(".no-mistakes.yml")),
@@ -79,7 +78,6 @@ fn explicit_sql_policy_exemption_clears_without_opaque_advice() {
             true,
         )
         .unwrap(),
-        "postgres-",
     );
     assert!(report.rules.is_empty(), "{:?}", report.rules);
     assert!(report.advisories.is_empty(), "{:?}", report.advisories);
@@ -101,7 +99,7 @@ fn explicit_sql_policy_exemption_clears_without_opaque_advice() {
 fn unknown_join_peer_blocks_a_missing_predicate_proof() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-sql-verdicts/fixture/unknown-owner");
-    let report = crate::test_support::policy_advisories(
+    let report = crate::test_support::without_hygiene_advisories(
         run_all_with_sql_verdicts(
             root.clone(),
             Some(root.join(".no-mistakes.yml")),
@@ -111,7 +109,6 @@ fn unknown_join_peer_blocks_a_missing_predicate_proof() {
             true,
         )
         .unwrap(),
-        "postgres-",
     );
     let row = report
         .sql_verdicts
@@ -131,7 +128,7 @@ fn unknown_join_peer_blocks_a_missing_predicate_proof() {
 fn unknown_target_table_blocks_trigger_replay_clear_on_both_guards() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-sql-verdicts/fixture/unknown-trigger-table");
-    let report = crate::test_support::policy_advisories(
+    let report = crate::test_support::without_hygiene_advisories(
         run_all_with_sql_verdicts(
             root.clone(),
             Some(root.join(".no-mistakes.yml")),
@@ -141,7 +138,6 @@ fn unknown_target_table_blocks_trigger_replay_clear_on_both_guards() {
             true,
         )
         .unwrap(),
-        "postgres-",
     );
     let rows = report
         .sql_verdicts
@@ -165,7 +161,7 @@ fn overlapping_policy_applications_keep_distinct_deterministic_obligations() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-sql-verdicts/fixture/overlapping-applications");
     let run = || {
-        crate::test_support::policy_advisories(
+        crate::test_support::without_hygiene_advisories(
             run_all_with_sql_verdicts(
                 root.clone(),
                 Some(root.join(".no-mistakes.yml")),
@@ -175,7 +171,6 @@ fn overlapping_policy_applications_keep_distinct_deterministic_obligations() {
                 true,
             )
             .unwrap(),
-            "postgres-",
         )
     };
     let report = run();

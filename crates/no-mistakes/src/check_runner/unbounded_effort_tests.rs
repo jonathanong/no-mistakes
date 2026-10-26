@@ -7,7 +7,7 @@ fn root() -> PathBuf {
 }
 fn run(config: &str, evidence: bool) -> super::CheckResults {
     let root = root();
-    crate::test_support::policy_advisories(
+    crate::test_support::without_hygiene_advisories(
         run_all_with_sql_verdicts(
             root.clone(),
             Some(root.join(config)),
@@ -17,7 +17,6 @@ fn run(config: &str, evidence: bool) -> super::CheckResults {
             evidence,
         )
         .unwrap(),
-        "postgres-no-unbounded-sql-identifier",
     )
 }
 #[test]

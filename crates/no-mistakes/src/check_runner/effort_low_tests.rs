@@ -9,7 +9,7 @@ fn root() -> PathBuf {
 
 fn run(config: &str) -> crate::check_runner::CheckResults {
     let root = root();
-    crate::test_support::policy_advisories(
+    crate::test_support::without_hygiene_advisories(
         run_all_with_sql_verdicts(
             root.clone(),
             Some(root.join(config)),
@@ -19,7 +19,6 @@ fn run(config: &str) -> crate::check_runner::CheckResults {
             false,
         )
         .unwrap_or_else(|error| panic!("{config}: {error}")),
-        "postgres-require-query-annotation",
     )
 }
 
@@ -83,9 +82,8 @@ fn low_observer_is_optional_and_does_not_prepare_annotation_profiles() {
     let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
     let with = {
         let _guard = no_mistakes::diagnostics::InvocationGuard::install(Arc::clone(&observer));
-        crate::test_support::policy_advisories(
+        crate::test_support::without_hygiene_advisories(
             run_all_with_sql_verdicts(root, Some(path), None, false, false, false).unwrap(),
-            "postgres-require-query-annotation",
         )
     };
     assert_eq!(without.rules, with.rules);

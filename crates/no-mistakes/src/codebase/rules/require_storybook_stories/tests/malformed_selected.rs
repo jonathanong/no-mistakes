@@ -22,10 +22,7 @@ fn report(name: &str, audit: bool) -> serde_json::Value {
         .to_string(),
     ))
     .unwrap();
-    crate::test_support::policy_advisory_json(
-        serde_json::from_str(&result).unwrap(),
-        "require-storybook-stories",
-    )
+    crate::test_support::without_hygiene_advisory_json(serde_json::from_str(&result).unwrap())
 }
 
 #[test]

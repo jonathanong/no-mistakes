@@ -8,6 +8,8 @@ use anyhow::Result;
 use rayon::prelude::*;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+mod policy;
+pub(super) use policy::CollectPolicy;
 
 pub(super) fn collect(
     root: &Path,
@@ -15,8 +17,7 @@ pub(super) fn collect(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
-    require_tracked_snapshot: bool,
-    defer_suppression: bool,
+    policy: CollectPolicy,
     resolver: &super::PreparedConfigResolver<'_>,
 ) -> Result<AnalysisDiagnostics> {
     let all: Result<Vec<AnalysisDiagnostics>> = config
@@ -49,9 +50,9 @@ pub(super) fn collect(
                         target_roots: &target_roots,
                         skip: &skip,
                         resolver,
-                        defer_suppression,
+                        defer_suppression: policy.defer_suppression,
                     })
-                } else if require_tracked_snapshot {
+                } else if policy.require_tracked_snapshot {
                     Err(missing_tracked_inventory(root))
                 } else {
                     Ok(scan_diagnostics(
@@ -64,7 +65,7 @@ pub(super) fn collect(
                             sources,
                             analysis,
                             resolver,
-                            defer_suppression,
+                            defer_suppression: policy.defer_suppression,
                         },
                     ))
                 }
@@ -79,7 +80,7 @@ pub(super) fn collect(
                         sources,
                         analysis,
                         resolver,
-                        defer_suppression,
+                        defer_suppression: policy.defer_suppression,
                     },
                 ))
             }

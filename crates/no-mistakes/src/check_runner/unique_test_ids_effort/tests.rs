@@ -27,7 +27,7 @@ fn run(
     effort: Option<Effort>,
 ) -> crate::check_runner::CheckResults {
     let config_path = config.map(|name| root.join(name));
-    crate::test_support::policy_advisories(
+    crate::test_support::without_hygiene_advisories(
         run_all_with_options(
             root.to_path_buf(),
             config_path,
@@ -40,7 +40,6 @@ fn run(
             },
         )
         .unwrap_or_else(|error| panic!("{}: {error}", root.display())),
-        "playwright-",
     )
 }
 

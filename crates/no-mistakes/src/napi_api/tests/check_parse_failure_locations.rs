@@ -8,7 +8,7 @@ fn root() -> PathBuf {
 }
 
 fn check_report(root: &std::path::Path, config: &str, effort: &str) -> serde_json::Value {
-    crate::test_support::policy_advisory_json(
+    crate::test_support::without_hygiene_advisory_json(
         serde_json::from_str(
             &check_json_impl(crate::napi_api::options::test_json_arg(
                 json!({"root": root, "config": root.join(config), "effort": effort}).to_string(),
@@ -16,7 +16,6 @@ fn check_report(root: &std::path::Path, config: &str, effort: &str) -> serde_jso
             .unwrap(),
         )
         .unwrap(),
-        "postgres-",
     )
 }
 
@@ -147,13 +146,13 @@ fn parse_failure_locations_public_advice_matches_analyze_project() {
             );
             assert_eq!(check["rules"], json!([]));
             assert_eq!(check["warnings"], json!([]));
-            let project: serde_json::Value = crate::test_support::policy_advisory_json(serde_json::from_str(
+            let project: serde_json::Value = crate::test_support::without_hygiene_advisory_json(serde_json::from_str(
                 &crate::napi_api::analyze_project::analyze_project_json_impl(
                     crate::napi_api::options::test_json_arg(
                         json!({"root": root, "config": root.join(config), "reports": [{"type": "check", "effort": effort}]}).to_string(),
                     ),
                 ).unwrap(),
-            ).unwrap(), "postgres-");
+            ).unwrap());
             assert_eq!(project["reports"][0]["result"], check);
         }
     }

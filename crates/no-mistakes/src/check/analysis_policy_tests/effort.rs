@@ -26,7 +26,7 @@ fn low_default_tags_keep_literal_heads_and_apply_line_suppressions() {
 
 #[test]
 fn low_ignored_tag_warning_is_structured_and_non_failing() {
-    let low = report("sql-tags.yml", None);
+    let low = crate::test_support::without_hygiene_advisories(report("sql-tags.yml", None));
     assert!(low.rules.is_empty());
     assert!(low.advisories.is_empty());
     assert_eq!(low.warnings.len(), 1);
@@ -46,7 +46,8 @@ fn sql_explicit_max_is_byte_identical_to_default() {
             check_runner::json_value(&report(&config, Some(Effort::Max))),
             default
         );
-        let low = report(&config, Some(Effort::Low));
+        let low =
+            crate::test_support::without_hygiene_advisories(report(&config, Some(Effort::Low)));
         assert_eq!(low.rules.len(), usize::from(mode == "report"));
         assert_eq!(low.advisories.len(), usize::from(mode == "advise"));
         assert_eq!(has_failures(&low), mode == "report");

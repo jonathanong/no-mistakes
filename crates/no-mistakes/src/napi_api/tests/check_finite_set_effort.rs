@@ -18,7 +18,7 @@ fn public_finite_set_effort_routes_findings_and_advisories() {
         ("low-ignore.yml", 1, 0),
         ("mixed.yml", 3, 1),
     ] {
-        let report: serde_json::Value = crate::test_support::policy_advisory_json(
+        let report: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
             serde_json::from_str(
                 &check_json_impl(crate::napi_api::options::test_json_arg(
                     json!({"root": root, "config": root.join(config)}).to_string(),
@@ -26,7 +26,6 @@ fn public_finite_set_effort_routes_findings_and_advisories() {
                 .unwrap(),
             )
             .unwrap(),
-            "finite-set-consistency",
         );
         assert_eq!(
             report["rules"].as_array().unwrap().len(),
@@ -46,7 +45,7 @@ fn public_finite_set_effort_routes_findings_and_advisories() {
 fn analyze_project_finite_set_effort_matches_check() {
     let root = root();
     for (effort, findings, advisories) in [("low", 1, 3), ("max", 4, 0)] {
-        let check: serde_json::Value = crate::test_support::policy_advisory_json(
+        let check: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
             serde_json::from_str(
                 &check_json_impl(crate::napi_api::options::test_json_arg(
                     json!({"root": root, "config": root.join("low-advise.yml"), "effort": effort})
@@ -55,15 +54,14 @@ fn analyze_project_finite_set_effort_matches_check() {
                 .unwrap(),
             )
             .unwrap(),
-            "finite-set-consistency",
         );
-        let project: serde_json::Value = crate::test_support::policy_advisory_json(serde_json::from_str(
+        let project: serde_json::Value = crate::test_support::without_hygiene_advisory_json(serde_json::from_str(
             &crate::napi_api::analyze_project::analyze_project_json_impl(
                 crate::napi_api::options::test_json_arg(
                     json!({"root": root, "config": root.join("low-advise.yml"), "reports": [{"type": "check", "effort": effort}]}).to_string(),
                 ),
             ).unwrap(),
-        ).unwrap(), "finite-set-consistency");
+        ).unwrap());
         assert_eq!(check["rules"].as_array().unwrap().len(), findings);
         assert_eq!(check["advisories"].as_array().unwrap().len(), advisories);
         assert_eq!(project["reports"][0]["result"], check);

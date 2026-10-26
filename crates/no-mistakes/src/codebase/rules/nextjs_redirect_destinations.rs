@@ -66,7 +66,16 @@ pub fn advisories_with_files_sources_and_deferred_suppression(
     }
     prepared::with_standalone(root, config, all_files, sources, |resolver| {
         let diagnostics = dispatch::collect(
-            root, config, all_files, sources, None, false, true, resolver,
+            root,
+            config,
+            all_files,
+            sources,
+            None,
+            dispatch::CollectPolicy {
+                require_tracked_snapshot: false,
+                defer_suppression: true,
+            },
+            resolver,
         )?;
         Ok(dispatch::finish_advisories(diagnostics))
     })
@@ -145,8 +154,10 @@ pub fn diagnostics_prepared(
         all_files,
         sources,
         snapshot,
-        true,
-        defer_suppression,
+        dispatch::CollectPolicy {
+            require_tracked_snapshot: true,
+            defer_suppression,
+        },
         resolver,
     )?;
     if !defer_suppression {

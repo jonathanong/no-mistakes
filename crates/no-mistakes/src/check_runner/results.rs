@@ -189,7 +189,11 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         advisories,
         sql_verdicts,
         include_sql_verdicts,
-        suppressed: include_suppressed.then_some(suppressed).unwrap_or_default(),
+        suppressed: if include_suppressed {
+            suppressed
+        } else {
+            Vec::new()
+        },
         include_suppressed,
         unproven_member_query_sql,
     })

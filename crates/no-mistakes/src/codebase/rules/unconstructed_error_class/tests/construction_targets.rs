@@ -15,7 +15,7 @@ fn report(config: &str, effort: Option<&str>) -> serde_json::Value {
     if let Some(effort) = effort {
         options["effort"] = effort.into();
     }
-    crate::test_support::policy_advisory_json(
+    crate::test_support::without_hygiene_advisory_json(
         serde_json::from_str(
             &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
                 options.to_string(),
@@ -23,7 +23,6 @@ fn report(config: &str, effort: Option<&str>) -> serde_json::Value {
             .unwrap(),
         )
         .unwrap(),
-        "unconstructed-error-class",
     )
 }
 

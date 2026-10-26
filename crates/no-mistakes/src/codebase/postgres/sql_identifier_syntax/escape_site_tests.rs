@@ -9,9 +9,8 @@ fn opaque_escapes_anchor_to_calls_without_losing_reference_identity() {
         "root": root, "config": root.join(".no-mistakes-low.yml"),
         "includeSqlVerdicts": true
     }));
-    let report: serde_json::Value = crate::test_support::policy_advisory_json(
+    let report: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
         serde_json::from_str(&crate::napi_api::check_json_impl(options).unwrap()).unwrap(),
-        "postgres-",
     );
     assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
     let rows = report["advisories"].as_array().unwrap();
@@ -115,12 +114,11 @@ fn mixed_low_max_profiles_keep_application_specific_display_locations() {
         let options = crate::napi_api::options::test_json_arg(serde_json::json!({
             "root": root, "config": root.join(config)
         }));
-        crate::test_support::policy_advisory_json(
+        crate::test_support::without_hygiene_advisory_json(
             serde_json::from_str::<serde_json::Value>(
                 &crate::napi_api::check_json_impl(options).unwrap(),
             )
             .unwrap(),
-            "postgres-",
         )
     };
     let mixed = run(".no-mistakes-mixed.yml");

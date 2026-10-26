@@ -90,6 +90,53 @@ fn known_rule_catalog_includes_core_rules_without_public_id_aliases() {
 }
 
 #[test]
+fn invalid_utf8_retained_bytes_share_used_and_unused_directive_semantics() {
+    let root = root();
+    let files = vec![root.join("invalid-utf8.sql")];
+    let mut config: NoMistakesConfig = serde_yaml::from_str(include_str!(
+        "../../../../../../fixtures/rules/disable-directive-audit/disabled.yml"
+    ))
+    .unwrap();
+    config.rules[0].enabled = true;
+    config.rules[0].options = serde_yaml::Value::Null;
+    config.rules[0].include = vec!["invalid-utf8.sql".into()];
+    let sources = super::super::source_store_for_files(&files);
+    assert!(sources.read_path(&files[0]).is_err());
+    let prepared = PreparedDisableDirectives::prepare(&root, &config, &files, &sources).unwrap();
+    assert_eq!(prepared.findings(&[]).len(), 2);
+    // A required-source finding is hidden by the file directive, while the
+    // shadowed next-line directive still suppressed nothing.
+    let mut findings = vec![RuleFinding {
+        rule: "postgres-no-offset".into(),
+        file: "invalid-utf8.sql".into(),
+        line: 3,
+        message: "cannot read source as UTF-8".into(),
+        import: None,
+        target: None,
+    }];
+    let suppressed = super::super::suppress_domain_findings_with_sources(
+        &root,
+        &mut findings,
+        &sources,
+        |finding| super::super::SuppressionTarget {
+            domain: "rules",
+            rule: &finding.rule,
+            file: &finding.file,
+            line: Some(finding.line),
+            reason: &finding.message,
+            identity: None,
+        },
+    );
+    assert!(findings.is_empty());
+    assert_eq!(suppressed.len(), 1);
+    let stale = prepared.findings(&suppressed);
+    assert_eq!(stale.len(), 1);
+    assert_eq!(stale[0].line, 2);
+    assert_eq!(stale[0].rule, "unused-disable-directive");
+    assert_eq!(sources.physical_read_count(), 1);
+}
+
+#[test]
 fn prepared_comments_finalize_after_source_owner_is_dropped() {
     let root = root();
     let files = vec![root.join("source.sql")];

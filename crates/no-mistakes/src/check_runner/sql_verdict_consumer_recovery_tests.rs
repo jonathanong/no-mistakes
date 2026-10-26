@@ -8,7 +8,7 @@ fn targetless_enum_insert_is_a_proven_finding_in_every_sql_mode() {
         .join("../../test-cases/rules/postgres-sql-verdicts/fixture/consumer-conflict-recovery");
     for mode in ["fail", "ignore", "advise"] {
         let run = |include| {
-            crate::test_support::policy_advisories(
+            crate::test_support::without_hygiene_advisories(
                 run_all_with_sql_verdicts(
                     root.clone(),
                     Some(root.join(format!("{mode}.yml"))),
@@ -18,7 +18,6 @@ fn targetless_enum_insert_is_a_proven_finding_in_every_sql_mode() {
                     include,
                 )
                 .unwrap(),
-                "postgres-",
             )
         };
         let plain = run(false);
@@ -55,7 +54,7 @@ fn conflict_inside_executed_cte_emits_the_proven_finding() {
         .join("../../test-cases/rules/postgres-sql-verdicts/fixture/consumer-cte-conflict");
     for config in ["fail.yml", ".no-mistakes.yml", "advise.yml"] {
         let run = |include| {
-            crate::test_support::policy_advisories(
+            crate::test_support::without_hygiene_advisories(
                 run_all_with_sql_verdicts(
                     root.clone(),
                     Some(root.join(config)),
@@ -65,7 +64,6 @@ fn conflict_inside_executed_cte_emits_the_proven_finding() {
                     include,
                 )
                 .unwrap(),
-                "postgres-",
             )
         };
         let plain = run(false);
@@ -94,7 +92,7 @@ fn conflict_inside_executed_cte_emits_the_proven_finding() {
 fn cte_conflict_suppression_hides_the_finding_but_keeps_raw_proof() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-sql-verdicts/fixture/consumer-cte-conflict");
-    let report = crate::test_support::policy_advisories(
+    let report = crate::test_support::without_hygiene_advisories(
         run_all_with_sql_verdicts(
             root.clone(),
             Some(root.join("suppressed.yml")),
@@ -104,7 +102,6 @@ fn cte_conflict_suppression_hides_the_finding_but_keeps_raw_proof() {
             true,
         )
         .unwrap(),
-        "postgres-",
     );
     assert!(report.rules.is_empty(), "{:?}", report.rules);
     assert!(report.advisories.is_empty(), "{:?}", report.advisories);
@@ -123,7 +120,7 @@ fn incomplete_cte_alternative_cannot_prove_a_conflict_violation() {
         ("partial.yml", None),
         ("partial-fail.yml", Some("unanalyzable-sql")),
     ] {
-        let report = crate::test_support::policy_advisories(
+        let report = crate::test_support::without_hygiene_advisories(
             run_all_with_sql_verdicts(
                 root.clone(),
                 Some(root.join(config)),
@@ -133,7 +130,6 @@ fn incomplete_cte_alternative_cannot_prove_a_conflict_violation() {
                 true,
             )
             .unwrap(),
-            "postgres-",
         );
         assert_eq!(
             report.rules.len(),
