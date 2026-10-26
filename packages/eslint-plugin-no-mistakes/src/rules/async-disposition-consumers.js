@@ -7,7 +7,7 @@ const { propertiesWritten, returnsThroughMock } = require("./async-disposition-m
 const { compileTargets, targetMatches } = require("./async-patterns");
 const { createTargetMatcher } = require("./async-targets");
 
-function createAwaitingConsumers(context, mappedArgumentDisposed) {
+function createAwaitingConsumers(context, mappedArgumentDisposed, sourceFacts, promiseSlotHandoff) {
   const matcher = createTargetMatcher(
     context,
     "awaitingConsumers",
@@ -20,7 +20,7 @@ function createAwaitingConsumers(context, mappedArgumentDisposed) {
     properties: consumer.callbackArgumentProperties || [],
   }));
   const namedResults = new WeakMap();
-  const provenAwaitingConsumer = createConsumerProof(context);
+  const provenAwaitingConsumer = createConsumerProof(context, sourceFacts);
 
   function configuredConsumer(fn) {
     const callback = unwrapTransparentParent(fn);
@@ -91,6 +91,7 @@ function createAwaitingConsumers(context, mappedArgumentDisposed) {
             configuredConsumer(argument) ||
             propertyThroughConsumer(argument) ||
             provenAwaitingConsumer(argument, context) ||
+            promiseSlotHandoff(argument) ||
             mappedArgumentDisposed(fn, argument),
         ),
       );

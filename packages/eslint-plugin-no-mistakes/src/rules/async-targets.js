@@ -176,6 +176,7 @@ function createTargetMatcher(
   }
 
   return {
+    targets,
     hasTargets: targets.length > 0,
     resolveCallTarget,
     isTargetCall(node) {

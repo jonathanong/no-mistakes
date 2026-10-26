@@ -13,10 +13,9 @@ const {
 } = require("./async-consumer-property-proof");
 const { createReceiverProof } = require("./async-consumer-receivers");
 
-function createConsumerProof(context) {
+function createConsumerProof(context, sourceFacts) {
   const results = new WeakMap();
-  const sourceFacts = { typed: new WeakMap(), sources: null };
-  const receiverShape = createReceiverProof(sourceFacts);
+  const receiverShape = (sourceFacts.receiverShape ||= createReceiverProof(sourceFacts));
   const noParameter = Object.create(null);
   let depth = 0;
   return function provenAwaitingConsumer(argument) {

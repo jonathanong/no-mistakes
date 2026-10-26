@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "paths": {
+      "@app/jobs": ["./jobs.ts"],
+      "@app/declared-jobs": ["./declared-jobs.ts"],
+      "@app/ambient-jobs": ["./ambient-jobs.ts"],
+      "@app/non-promise-jobs": ["./non-promise-jobs.ts"],
+      "@app/shadowed-promise-jobs": ["./shadowed-promise-jobs.ts"]
+    }
+  },
+  "include": ["*.ts"]
+}
