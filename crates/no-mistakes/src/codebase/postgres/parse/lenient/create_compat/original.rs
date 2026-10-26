@@ -111,7 +111,7 @@ fn table_tail(tokens: &[Token], open: usize) -> bool {
     };
     let at = close + 1;
     (!tokens.get(at).is_some_and(|token| word(token, "USING"))
-        || tokens.get(at + 1).is_some_and(pg_ident::method))
+        || tokens.get(at + 1).is_some_and(pg_ident::col_id))
         && !(tokens.get(at).is_some_and(|token| word(token, "PARTITION"))
             && tokens.get(at + 1).is_some_and(|token| word(token, "BY"))
             && tokens.get(at + 3) == Some(&Token::LParen)

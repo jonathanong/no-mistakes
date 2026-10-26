@@ -127,7 +127,7 @@ pub(super) fn table_options(tokens: &mut [TokenWithSpan], code: &[usize]) -> boo
     let without_oids =
         word(&tokens[code[at]].token, "WITHOUT") && word(&tokens[code[at + 1]].token, "OIDS");
     let using_method =
-        word(&tokens[code[at]].token, "USING") && pg_ident::method(&tokens[code[at + 1]].token);
+        word(&tokens[code[at]].token, "USING") && pg_ident::col_id(&tokens[code[at + 1]].token);
     if without_oids || using_method {
         mask(tokens, code, at, at + 2);
         return true;
