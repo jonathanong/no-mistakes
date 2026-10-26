@@ -92,7 +92,7 @@ console.log("starting");
 const example = "eslint-disable react/purity";
 ```
 
-Counterexample:
+## Counterexample
 
 ```ts
 /* eslint-disable react/purity, react-hooks-js/refs -- temporary workaround */
