@@ -1,0 +1,3 @@
+INSERT INTO t (a[1:2:3]) VALUES (1);
+UPDATE t SET a[1:2:3] = 1;
+INSERT INTO t (a[1:2:3], b) VALUES (1, 2) ON CONFLICT (id) DO NOTHING;

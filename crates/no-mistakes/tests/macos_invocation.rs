@@ -11,6 +11,8 @@ pub use no_mistakes::diagnostics;
 // call its diagnostics bridge through the external-library re-export.
 const _: fn(Option<std::sync::Arc<diagnostics::InvocationObserver>>, String) =
     diagnostics::render_timeout_stderr;
+const _: fn(&diagnostics::InvocationObserver) =
+    diagnostics::InvocationObserver::render_progress_signal_stderr;
 
 #[cfg(target_os = "macos")]
 #[allow(dead_code, unused_imports)]

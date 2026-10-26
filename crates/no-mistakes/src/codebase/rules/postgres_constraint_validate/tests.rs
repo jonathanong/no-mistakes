@@ -39,6 +39,13 @@ fn flags_not_valid_without_validate() {
 }
 
 #[test]
+fn flags_unvalidated_implicit_check_name() {
+    let findings = run(&fixture("fail-generated-missing"));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("nv_child_2011_d_check"));
+}
+
+#[test]
 fn flags_validate_without_not_valid() {
     let findings = run(&fixture("fail-orphan"));
     assert_eq!(findings.len(), 1, "{findings:?}");
@@ -48,6 +55,7 @@ fn flags_validate_without_not_valid() {
 #[test]
 fn paired_not_valid_and_validate_pass() {
     assert!(run(&fixture("pass")).is_empty());
+    assert!(run(&fixture("pass-postgres-regress")).is_empty());
 }
 
 #[test]

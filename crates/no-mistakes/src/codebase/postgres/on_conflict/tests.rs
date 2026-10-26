@@ -58,6 +58,89 @@ fn insert_without_conflict_is_unsafe() {
 }
 
 #[test]
+fn array_target_conflicts_survive_surrounding_statements() {
+    let context = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/array-conflict-context.sql"
+    ));
+    // Earlier unrecovered inserts shift ordinal-based source locations in the complete file.
+    let full = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/arrays-regress-full.sql"
+    ));
+    for (sql, lines) in [(context, [19, 22]), (full, [427, 430])] {
+        let file = extract_sql_statement_facts(sql);
+        for line in lines {
+            let insert = file
+                .inserts
+                .iter()
+                .find(|insert| insert.line == line)
+                .unwrap_or_else(|| panic!("line {line}: {:?}", file.inserts));
+            assert!(insert.on_conflict.is_some(), "line {line}: {insert:?}");
+            assert!(file.writes.iter().any(|write| write.line == line));
+        }
+        let unguarded = if lines[0] == 427 { 426 } else { 18 };
+        assert!(file
+            .inserts
+            .iter()
+            .any(|insert| { insert.line == unguarded && insert.on_conflict.is_none() }));
+        let found = judge_file(&file, &catalog(&[], &[], &[], &[]));
+        assert!(found.iter().any(|(line, message)| {
+            *line == unguarded && message.contains("must include ON CONFLICT")
+        }));
+        assert!(!found.iter().any(|(line, message)| {
+            lines.contains(line) && message.contains("must include ON CONFLICT")
+        }));
+    }
+}
+
+#[test]
+fn unrecovered_insert_does_not_shift_later_conflicts_or_plain_insert() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/array-conflict-gap.sql"
+    ));
+    let file = extract_sql_statement_facts(sql);
+    assert!(file.parse_failed);
+    assert!(file.parse_failures.iter().any(|failure| failure.line == 2));
+    for line in [3, 4] {
+        let insert = file
+            .inserts
+            .iter()
+            .find(|insert| insert.line == line)
+            .unwrap();
+        assert!(insert.on_conflict.is_some(), "line {line}: {insert:?}");
+    }
+    let plain = file.inserts.iter().find(|insert| insert.line == 6).unwrap();
+    assert!(plain.on_conflict.is_none());
+    let override_insert = file.inserts.iter().find(|insert| insert.line == 7).unwrap();
+    assert!(override_insert.assignments.is_empty());
+    let found = judge_file(&file, &catalog(&[], &[], &[], &[]));
+    assert!(found
+        .iter()
+        .any(|(line, message)| *line == 6 && message.contains("ON CONFLICT")));
+    assert!(!found.iter().any(
+        |(line, message)| [3, 4].contains(line) && message.contains("must include ON CONFLICT")
+    ));
+}
+
+#[test]
+fn recovered_same_line_inserts_use_original_unicode_columns() {
+    let sql = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/array-conflict-same-line.sql"
+    ));
+    let file = extract_sql_statement_facts(sql);
+    let on_line = file
+        .inserts
+        .iter()
+        .filter(|insert| insert.line == 2)
+        .map(|insert| insert.on_conflict.is_some())
+        .collect::<Vec<_>>();
+    assert_eq!(on_line, [true, false]);
+}
+
+#[test]
 fn do_nothing_is_safe() {
     assert!(messages("INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING;").is_empty());
 }

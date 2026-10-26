@@ -59,6 +59,20 @@ fn flags_alter_table_add_column() {
 }
 
 #[test]
+fn non_column_adds_and_comments_are_not_column_findings() {
+    let findings = run(&fixture("pass-postgres-regress"));
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("ALTER TABLE ADD COLUMN")),
+        "{findings:?}"
+    );
+    let findings = run(&fixture("fail-comment-before-add"));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 3);
+}
+
+#[test]
 fn flags_add_column_inside_do_block() {
     let findings = run(&fixture("fail-do-block"));
     assert_eq!(findings.len(), 1, "{findings:?}");

@@ -45,6 +45,8 @@ when a whole file is an intentional exception.
 
 ## Why and when
 
+Named `ADD CONSTRAINT` statements and comment text do not trigger this rule.
+
 Use this rule for migrations that may need phased validation or future schema
 maintenance by name.
 

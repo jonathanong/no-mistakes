@@ -1,7 +1,7 @@
 use super::LocatedStatement;
 mod bodies;
 mod copy;
-mod failure;
+pub(crate) mod failure;
 pub(super) use failure::failed_source;
 mod locations;
 mod partition;
@@ -27,20 +27,13 @@ pub(super) fn parse_chunks_with_function_calls(
     procedural_body: bool,
     recursive_views: &super::super::RecursiveViews,
 ) -> Vec<LocatedStatement> {
-    let mut located = original
-        .split(|token| token.token == Token::SemiColon)
-        .filter(|chunk| {
-            chunk
-                .iter()
-                .any(|token| !matches!(token.token, Token::Whitespace(_)))
-        });
+    let mut located = super::chunks::located_chunks(original);
     let mut statements = Vec::new();
     let mut transaction_open = false;
     let mut copy_data_pending = false;
     let mut ordinal = 0;
     for chunk in chunks {
         let original = located.next();
-        // Normalization blanks COPY rows but leaves sqlparser's `\.` terminator.
         if copy_data_pending && original.is_some_and(copy::is_terminator) {
             copy_data_pending = false;
             continue;
@@ -48,8 +41,7 @@ pub(super) fn parse_chunks_with_function_calls(
         let chunk_ordinal = ordinal;
         ordinal += 1;
         let aligned = original.map(|source| locations::align(&chunk, source));
-        // Own the chunk text even when recovery emits no statement. A later
-        // sibling must not inherit this chunk's ON CONFLICT target.
+        // Keep each chunk's tokens with its own failure marker.
         let tokens = original.map(Arc::<[TokenWithSpan]>::from);
         let mut handled_procedural = None;
         let mut produced = parse_chunk(
@@ -125,7 +117,10 @@ fn parse_chunk(
         || chunk.iter().cloned().map(TokenWithSpan::wrap).collect(),
         |tokens| tokens.to_vec(),
     );
-    let mut targets_valid = true;
+    super::query_compat::rewrite(&mut parse_tokens);
+    let create_valid = super::create_compat::valid_original(original);
+    super::create_compat::rewrite(&mut parse_tokens);
+    let mut targets_valid = create_valid;
     if chunk
         .iter()
         .find(|token| !matches!(token, Token::Whitespace(_)))
@@ -148,6 +143,7 @@ fn parse_chunk(
             located.complete = true;
             vec![located]
         }
+        _ if !create_valid => Vec::new(),
         _ => {
             if let Some(tokens) = original {
                 if let Some((statement, functions, arbiter)) =
@@ -168,8 +164,7 @@ fn parse_chunk(
             if recovered.is_empty() {
                 let expressions = queries::recover(&chunk, original, procedural_body);
                 let action_projected = expressions.iter().any(|(_, synthetic)| !synthetic);
-                // Keep the established guarded DML/DDL recovery alongside any
-                // newly recovered condition expression, without replacing it.
+                // Preserve guarded DML/DDL recovery alongside the condition.
                 let mut projected: Vec<_> = expressions
                     .into_iter()
                     .map(|(statement, synthetic)| LocatedStatement::functions(statement, synthetic))

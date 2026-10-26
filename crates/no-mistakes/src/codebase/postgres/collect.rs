@@ -10,6 +10,7 @@ use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
 pub(super) mod dml;
+pub(super) mod encoding;
 
 /// Read `sql_paths` through `sources` and extract migration schema facts.
 pub fn extract_schema_facts(
@@ -129,7 +130,18 @@ fn schema_file_facts(
     path: &Path,
     sources: &SourceStore,
 ) -> Result<SqlSchemaFileFacts, PostgresFactError> {
-    let source = read_source(path, sources)?;
+    let source = match sources.read_path(path) {
+        Ok(source) => source,
+        Err(error) if error.kind() == std::io::ErrorKind::InvalidData => {
+            return Ok(encoding::failure(path));
+        }
+        Err(error) => {
+            return Err(PostgresFactError::for_path(
+                path,
+                format!("failed to read: {error}"),
+            ))
+        }
+    };
     let mut facts = extract_migration_facts(&source);
     facts.path = path.to_path_buf();
     Ok(facts)

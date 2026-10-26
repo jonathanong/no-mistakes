@@ -1,0 +1,13 @@
+CREATE INDEX wowidx1 ON test_tsvector USING gist (a tsvector_ops(siglen=));
+CREATE INDEX wowidx1 ON test_tsvector USING gist (a tsvector_ops(siglen=100,));
+CREATE INDEX wowidx1 ON test_tsvector USING gist (a tsvector_ops(siglen=100) missing);
+create view tt26v as select (x,y) <> ALL (values(1,)) from t;
+CREATE VIEW v AS SELECT (x,y) <> ALL (VALUES (1,2);
+SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW' PASSING COLUMNS id int);
+SELECT xmltable.* FROM xmldata, LATERAL xmltable('/ROWS/ROW' PASSING data COLUMNS id int PATH);
+SELECT id FROM test_tablesample TABLESAMPLE SYSTEM (50) REPEATABLE (NULL) junk;
+with recursive x(col) as (select 1) search depth first by col seq select * from x;
+WITH merge_source_cte AS MATERIALIZED (SELECT 15 a) MERGE INTO m USING (select * from merge_source_cte) o ON m.k=o.a WHEN MATCHED THEN UPDATE SET v = merge_source_cte.*::;
+SELECT (1) SEARCH DEPTH FIRST BY x SET y;
+WITH RECURSIVE c AS (SELECT 1) SELECT (1) SEARCH DEPTH FIRST BY x SET y;
+SELECT xmltable('/x' PASSING x COLUMNS id int);

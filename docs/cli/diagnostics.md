@@ -37,7 +37,9 @@ and best-effort: a full or unread stderr pipe can drop diagnostics, but cannot
 hold cleanup, a command timeout, or signal termination indefinitely. On Unix,
 the existing child process-group signal forwarder, installed before lock
 waiting, attempts a snapshot before preserving the default SIGINT/SIGTERM
-exit behavior, including with `--timeout 0`. SIGKILL
+exit behavior, including with `--timeout 0`. That signal snapshot uses the
+same writer as heartbeats and has one 250 ms budget to enter its queue and
+flush; ordinary progress output keeps its 25 ms wait. SIGKILL
 cannot be handled; previously flushed heartbeats remain available in job logs.
 
 Returned command errors stay authoritative and use the ordinary CLI stderr

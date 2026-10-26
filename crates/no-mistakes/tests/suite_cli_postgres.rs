@@ -53,6 +53,8 @@ mod cli_check_rules_postgres_named_constraints;
 mod cli_check_rules_postgres_object_naming;
 #[path = "cli_check_rules_postgres_offset.rs"]
 mod cli_check_rules_postgres_offset;
+#[path = "cli_check_rules_postgres_regress_sql.rs"]
+mod cli_check_rules_postgres_regress_sql;
 #[path = "cli_check_rules_postgres_required_comments.rs"]
 mod cli_check_rules_postgres_required_comments;
 #[path = "cli_check_rules_postgres_sql_cross_file.rs"]

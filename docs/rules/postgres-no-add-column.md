@@ -77,6 +77,9 @@ when a whole file is an intentional exception.
 
 ## Why and when
 
+`ADD FOREIGN KEY`, `ADD CHECK`, `ADD CONSTRAINT`, and identity generation on an
+existing column are not column additions. Comments containing `add` are ignored.
+
 Use this rule when schema shape must be established in the original table
 definition rather than widened by a later migration.
 

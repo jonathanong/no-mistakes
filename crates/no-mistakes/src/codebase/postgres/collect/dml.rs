@@ -1,4 +1,4 @@
-use super::{compile_sql_include, matches_sql_include, read_source};
+use super::{compile_sql_include, matches_sql_include};
 use crate::codebase::postgres::embedded::{EmbeddedSqlFileFacts, EmbeddedSqlKind};
 use crate::codebase::postgres::statement_facts::SqlLocationDemand;
 use crate::codebase::postgres::statement_facts::SqlStatementFileFacts;
@@ -24,7 +24,18 @@ pub(super) fn collect(
         .par_iter()
         .filter(|path| matches_sql_include(root, path, &globs))
         .map(|path| {
-            let source = read_source(path, sources)?;
+            let source = match sources.read_path(path) {
+                Ok(source) => source,
+                Err(error) if error.kind() == std::io::ErrorKind::InvalidData => {
+                    return Ok(super::encoding::statement_failure(path));
+                }
+                Err(error) => {
+                    return Err(PostgresFactError::for_path(
+                        path,
+                        format!("failed to read: {error}"),
+                    ))
+                }
+            };
             let mut file = extract_sql_statement_facts_with_bounds(&source, collect_bounds);
             file.path = path.clone();
             Ok(file)

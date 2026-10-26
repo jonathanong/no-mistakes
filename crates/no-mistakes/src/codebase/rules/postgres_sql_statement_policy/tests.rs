@@ -73,6 +73,14 @@ fn inserts_and_functions_are_clean() {
 }
 
 #[test]
+fn comments_and_other_create_kinds_do_not_inherit_table_policy() {
+    let findings = run(&fixture("pass-postgres-regress"));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 5);
+    assert_eq!(findings[0].target.as_deref(), Some("CREATE TABLE"));
+}
+
+#[test]
 fn custom_banned_statements_narrow_the_rule() {
     let root = fixture("fail-kinds");
     let config = NoMistakesConfig {

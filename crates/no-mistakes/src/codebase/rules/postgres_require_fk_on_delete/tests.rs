@@ -63,6 +63,10 @@ fn flags_omitted_on_delete_inside_do_block() {
 #[test]
 fn explicit_on_delete_is_clean() {
     assert!(run(&fixture("pass")).is_empty());
+    let findings = run(&fixture("pass-postgres-regress"));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].target.as_deref(), Some("FKTABLE_FAIL1.ftest1"));
+    assert_eq!(findings[0].line, 3);
 }
 
 #[test]

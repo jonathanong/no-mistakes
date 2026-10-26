@@ -44,6 +44,49 @@ fn malformed_ddl_survey_still_reports_in_all_eleven_schema_rules() {
 }
 
 #[test]
+fn invalid_array_slice_stride_reports_in_all_eleven_schema_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join("stride.yml"))
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(
+        report["advisories"].as_array().unwrap().is_empty(),
+        "{report}"
+    );
+    let mut by_line = std::collections::BTreeMap::<u64, Vec<&str>>::new();
+    for finding in report["rules"].as_array().unwrap() {
+        // The malformed INSERT can also yield a conservative policy finding from
+        // its recovered prefix; each rule must still report the syntax failure.
+        if !finding["message"]
+            .as_str()
+            .unwrap()
+            .contains("could not be analyzed")
+        {
+            continue;
+        }
+        assert_eq!(finding["file"], "stride/001.sql", "{report}");
+        by_line
+            .entry(finding["line"].as_u64().unwrap())
+            .or_default()
+            .push(finding["rule"].as_str().unwrap());
+    }
+    assert_eq!(by_line.len(), 3, "{report}");
+    for (line, rules) in &mut by_line {
+        assert!((1..=3).contains(line), "{report}");
+        rules.sort_unstable();
+        rules.dedup();
+        assert_eq!(rules.len(), 11, "line {line}: {report}");
+    }
+}
+
+#[test]
 fn postgres_17_ddl_family_survey_preserves_all_schema_rule_policies() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey");

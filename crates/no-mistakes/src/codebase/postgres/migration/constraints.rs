@@ -1,8 +1,11 @@
 use super::relation;
+mod names;
+use crate::codebase::postgres::idents::ident_key;
 use crate::codebase::postgres::types::{
     SqlAddColumnMetadata, SqlForeignKeyMetadata, SqlNamedConstraint, SqlSchemaFileFacts,
     SqlUnnamedConstraint,
 };
+pub(super) use names::constraint_name;
 use sqlparser::ast::{
     AlterTableOperation, ColumnOption, ForeignKeyConstraint, Spanned, TableConstraint,
 };
@@ -44,6 +47,7 @@ pub(super) fn collect_alter_table(
     facts: &mut SqlSchemaFileFacts,
 ) {
     let table_name = relation(&alter.name);
+    let constraint_table = names::table_key(&alter.name);
     let index_table = super::qualified_relation(&alter.name);
     for operation in &alter.operations {
         match operation {
@@ -83,9 +87,11 @@ pub(super) fn collect_alter_table(
                     });
                 }
                 if *not_valid {
-                    if let Some(name) = constraint_name(constraint) {
+                    if let Some(name) = constraint_name(constraint)
+                        .or_else(|| names::default_check_name(&constraint_table, constraint))
+                    {
                         facts.not_valid_constraints.push(SqlNamedConstraint {
-                            table_name: table_name.clone(),
+                            table_name: constraint_table.clone(),
                             name: name.clone(),
                             line,
                         });
@@ -94,8 +100,8 @@ pub(super) fn collect_alter_table(
             }
             AlterTableOperation::ValidateConstraint { name } => {
                 facts.validated_constraints.push(SqlNamedConstraint {
-                    table_name: table_name.clone(),
-                    name: name.value.clone(),
+                    table_name: constraint_table.clone(),
+                    name: ident_key(name),
                     line,
                 });
             }
@@ -169,18 +175,6 @@ fn unnamed_fk_or_check_kind(constraint: &TableConstraint) -> Option<&'static str
     match constraint {
         TableConstraint::ForeignKey(fk) if fk.name.is_none() => Some("FOREIGN KEY"),
         TableConstraint::Check(check) if check.name.is_none() => Some("CHECK"),
-        _ => None,
-    }
-}
-
-pub(super) fn constraint_name(constraint: &TableConstraint) -> Option<String> {
-    match constraint {
-        TableConstraint::ForeignKey(fk) => fk.name.as_ref().map(|ident| ident.value.clone()),
-        TableConstraint::Check(check) => check.name.as_ref().map(|ident| ident.value.clone()),
-        TableConstraint::Unique(unique) => unique.name.as_ref().map(|ident| ident.value.clone()),
-        TableConstraint::PrimaryKey(primary) => {
-            primary.name.as_ref().map(|ident| ident.value.clone())
-        }
         _ => None,
     }
 }

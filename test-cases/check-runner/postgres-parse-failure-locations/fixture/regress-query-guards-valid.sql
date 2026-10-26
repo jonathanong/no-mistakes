@@ -1,0 +1,7 @@
+SELECT JSON_OBJECT('x': COALESCE(1, 2), 'y': (ARRAY[1, 2])[1] WITH UNIQUE KEYS);
+SELECT JSON_QUERY(js, '$' RETURNING int DEFAULT (1 + 2) ON ERROR);
+UPDATE t SET (a, b) = (1, 2);
+INSERT INTO public.t AS x (a[1], b) VALUES (1, 2);
+UPDATE t SET a[b[1]] = 2;
+UPDATE t SET a[ARRAY[1]] = 2;
+UPDATE t SET a[ARRAY[[1, 2], [3, 4]]] = 2;

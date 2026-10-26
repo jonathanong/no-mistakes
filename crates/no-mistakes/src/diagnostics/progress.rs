@@ -103,14 +103,7 @@ impl InvocationObserver {
     /// disconnected writer remains handled. Deadline and warning callers must
     /// not fall back to potentially blocking stderr when diagnostics are dropped.
     pub fn emit_progress_output(&self, text: String) -> bool {
-        let output = self.progress.as_ref().and_then(|progress| {
-            progress
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner)
-                .output
-                .clone()
-        });
-        if let Some(output) = output {
+        if let Some(output) = self.progress_output() {
             output.emit(text);
             true
         } else {
@@ -123,6 +116,23 @@ impl InvocationObserver {
         if let Some(line) = self.render_progress_text() {
             self.emit_progress_output(line);
         }
+    }
+
+    #[doc(hidden)]
+    pub fn render_progress_signal_stderr(&self) {
+        if let (Some(line), Some(output)) = (self.render_progress_text(), self.progress_output()) {
+            output.emit_signal(line, || self.snapshot_clock().0);
+        }
+    }
+
+    fn progress_output(&self) -> Option<Arc<ProgressOutput>> {
+        self.progress.as_ref().and_then(|progress| {
+            progress
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .output
+                .clone()
+        })
     }
 
     /// One `[progress]` line, without touching the heartbeat stderr writer.

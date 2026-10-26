@@ -54,6 +54,24 @@ pub(super) fn valid(tokens: &[TokenWithSpan]) -> bool {
     matched && c.at == c.tokens.len()
 }
 
+pub(super) fn valid_type(tokens: &[Token]) -> bool {
+    let words: Vec<_> = tokens.iter().collect();
+    let mut cursor = Cursor {
+        tokens: &words,
+        at: 0,
+    };
+    cursor.type_name() && cursor.at == words.len()
+}
+
+pub(super) fn valid_identifier(token: &Token) -> bool {
+    let words = [token];
+    let mut cursor = Cursor {
+        tokens: &words,
+        at: 0,
+    };
+    cursor.identifier() && cursor.at == words.len()
+}
+
 #[cfg(test)]
 #[path = "ddl_foreign_tests.rs"]
 mod tests;

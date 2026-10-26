@@ -57,6 +57,7 @@ fn flags_unnamed_constraint_inside_do_block() {
 #[test]
 fn named_constraints_and_create_table_are_clean() {
     assert!(run(&fixture("pass")).is_empty());
+    assert!(run(&fixture("pass-postgres-regress")).is_empty());
 }
 
 #[test]
