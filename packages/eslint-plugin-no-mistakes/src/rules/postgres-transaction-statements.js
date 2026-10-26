@@ -102,4 +102,4 @@ function isManualTransactionText(text) {
   );
 }
 
-module.exports = { isManualTransactionText };
+module.exports = { isManualTransactionText, TRANSACTION_COMMAND };
