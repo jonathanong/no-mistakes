@@ -1,0 +1,1 @@
+This directory deliberately has a .sql suffix so prepared source reads fail.

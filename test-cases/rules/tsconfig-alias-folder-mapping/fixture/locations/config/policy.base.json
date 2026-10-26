@@ -1,0 +1,15 @@
+{
+  // Fake keys and Unicode must not affect the AST's byte-based locations: ☃
+  // "@agents/email": ["backend/wrong/comment"]
+  "compilerOptions": {"paths": {"@agents/old": ["backend/wrong/old"]}},
+  "compilerOptions": {
+    "paths": {"@agents/ignored": ["backend/wrong/ignored"]},
+    "paths": {
+      "@agents/email": ["backend/agents/email/index.ts"],
+      // The duplicate below wins, including its source line.
+      "@agents/email": ["backend/wrong/email"],
+      "@agents/\u0073ms": ["backend/wrong/sms"],
+      "@wrong/task": ["backend/agents/task.ts"]
+    }
+  }
+}

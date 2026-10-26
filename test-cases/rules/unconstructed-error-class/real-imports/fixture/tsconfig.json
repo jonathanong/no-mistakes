@@ -1,0 +1,1 @@
+{"compilerOptions":{"baseUrl":".","paths":{"@data-stores/*":["src/data-stores/*"]}}}

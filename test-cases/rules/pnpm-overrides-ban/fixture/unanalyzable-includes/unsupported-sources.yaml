@@ -1,0 +1,4 @@
+# These declarations cannot identify a concrete local overrides YAML source.
+include:
+  ./missing.json: [overrides]
+  ./missing-*.yaml: [overrides]

@@ -3,7 +3,7 @@ use crate::codebase::dependencies::extract::{CallableId, NamespaceRoot};
 /// The namespaces one file declares, indexed to resolve `new Errors.Inner.X()`
 /// and a bare `new X()` written in the namespace body that declares `X`.
 #[derive(Clone, Default)]
-struct NamespaceTable {
+pub(crate) struct NamespaceTable {
     /// Member path (`Errors.Inner.X`) to the class's flat scope and parser id.
     members: FxHashMap<String, (String, CallableId)>,
     /// Every non-ambient namespace path, nested and dotted ones included.
@@ -33,7 +33,7 @@ fn enclosing_path(path: &str) -> Option<&str> {
 }
 
 impl NamespaceTable {
-    fn from_facts(file: &crate::codebase::ts_source::facts::TsFileFacts) -> Self {
+    pub(crate) fn from_facts(file: &crate::codebase::ts_source::facts::TsFileFacts) -> Self {
         let facts = &file.namespaces;
         if facts.roots.is_empty() {
             return Self::default();
@@ -78,6 +78,16 @@ impl NamespaceTable {
         paths
             .filter_map(|path| self.locals.get(path))
             .any(|names| names.contains(head))
+    }
+
+    pub(crate) fn hides_constructor(
+        &self,
+        caller: Option<CallableId>,
+        offset: u32,
+        callee: &str,
+    ) -> bool {
+        self.context(caller, offset)
+            .is_some_and(|context| self.binds_head(context, callee))
     }
 
     fn is_empty(&self) -> bool {

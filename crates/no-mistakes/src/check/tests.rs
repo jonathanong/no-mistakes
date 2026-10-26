@@ -20,6 +20,7 @@ fn cli_check_surfaces_precise_invalid_rule_option_type() {
         root,
         config: None,
         tsconfig: None,
+        effort: None,
         format: Format::Human,
         json: false,
         include_suppressed: false,
@@ -37,4 +38,16 @@ fn cli_check_surfaces_precise_invalid_rule_option_type() {
     assert!(message.contains("options.sqlInclude"));
     assert!(message.contains("boolean"));
     assert!(message.contains("expected a sequence"));
+}
+
+#[test]
+fn effort_partner_warnings_are_non_failing_without_changing_old_warnings() {
+    let mut results = check_runner::empty_results([None]);
+    results
+        .warnings
+        .push("missing partner; falling back to max".into());
+    results.analysis_warning_count = 1;
+    assert!(!has_failures(&results));
+    results.warnings.push("existing domain warning".into());
+    assert!(has_failures(&results));
 }

@@ -1,0 +1,153 @@
+# Low-effort query annotations
+
+`effort: max` is the default and preserves helper, branch, builder, and imported
+value inference. At effective `effort: low`, this rule does not request or run
+the annotation evaluator. It checks literal heads directly, through one local
+const, or through mutable literal bindings as described below:
+
+```ts
+// The leading named comment is literal at the executor call.
+query(`/* posts/list */ SELECT id FROM posts WHERE id = ${id}`);
+query("/* posts/list */ " + body);
+
+// Or one local const has that literal head and is passed directly.
+const statement = `/* posts/list */ ${body}`;
+query(statement);
+```
+
+Any tagged template qualifies in either position when its first quasi starts
+with the complete named comment. Tag identity and import form do not matter;
+the tag can be a named, default, namespace, or renamed import, or another tag
+expression:
+
+```ts
+import sql from "@example/sql";
+import * as templates from "@example/templates";
+query(sql`/* posts/list */ SELECT id FROM posts WHERE id = ${id}`);
+const statement = templates.sql`/* posts/list */ SELECT id FROM posts WHERE id = ${id}`;
+query(statement); // A single local const passed directly also qualifies.
+```
+
+At `low`, `trustedSqlTags` is deprecated for this rule and ignored; configuring
+it produces a configuration warning. This does not change its behavior for
+`max` analysis or for other SQL rules that consume the option.
+
+A tagged template or string keeps its literal head through static `.append(...)`
+chains of any depth. Each append must have exactly one string literal or tagged
+template argument; a tagged interpolation is a bind placeholder, so its value
+does not need inference. The annotation fast path checks syntax and the original
+head without composing suffix text:
+
+```ts
+query(sql`/* posts/list */ SELECT id FROM posts`.append(sql` WHERE id = ${id}`));
+const statement = sql`/* posts/list */ SELECT id FROM posts`;
+statement.append(sql` WHERE id = ${id}`);
+query(statement);
+```
+
+These are deliberately narrow low-effort syntax proofs. Low does not run the
+helper/value evaluator, so a helper-produced head or nonliteral append argument
+can remain unresolved even when `effort: max` can recover it. The configured
+`unanalyzable` policy applies to that low-effort uncertainty.
+
+To follow appends through a const, its declaration and uses must stay in the
+same function. Before the executor call,
+its uses may only append supported literals or pass it directly to prepared
+executors. A nonliteral append argument makes later reads unanalyzable. Repeated
+executor reads qualify. Reassignment, property writes, other receiver methods,
+helper escapes, aliases, returns, stores, and exports make it unanalyzable
+because a const binding does not make its builder immutable. An escape after
+an executor call does not invalidate that earlier call.
+A const holding a plain literal string retains its head when passed elsewhere;
+passing an immutable string cannot change the original head.
+Captured builders and loop calls that might observe a previous iteration's
+escape stay unanalyzable.
+
+A tagged-template left operand of `+` also keeps its literal head, directly or
+through one local const. A tag on the right cannot repair an unknown left head.
+
+The first complete block comment must contain a nonempty name. Parentheses and
+TypeScript assertions do not add indirection. The const must resolve to the same
+file's lexical declaration; a second alias, import, or destructured binding
+does not qualify. Mutable bindings need the additional proof below.
+
+Decidable literal heads without an annotation are violations at `low`, including
+`query("SELECT 1")`, unnamed tagged templates, and one supported local const.
+They remain failing findings under `report`, `advise`, and `ignore`. Complete
+literal `BEGIN`, `COMMIT`, and `ROLLBACK` commands are exempt at both effort
+levels. A transaction keyword at the end of a head followed by an unknown
+suffix remains unresolved: the suffix could turn `BEGIN` into `BEGINNING`.
+
+Helper returns, conditional heads, escaped builders, and
+other unsupported shapes remain unanalyzable. Rewrite them as a leading named
+literal at the executor call or as one local const initialized with that head
+and passed directly.
+
+The shared `unanalyzable` policy controls unresolved calls: `report` fails,
+`advise` emits a non-failing advisory, and `ignore` skips them. `unanalyzableSql`
+remains an alias. For example, set `options.effort: low` and
+`options.unanalyzable: report` to require these forms. Shared configuration and
+CLI overrides also apply.
+
+Low-effort diagnostics use the executor call's line. Suppress at that call:
+
+```ts
+// no-mistakes-disable-next-line postgres-require-query-annotation
+query(buildSql());
+```
+
+File and same-line directives also work. A helper-line suppression does not
+suppress a low-effort call-site diagnostic. Other applications that remain at
+`max` can still request evaluator work in the same invocation.
+
+## Mutable literal bindings
+
+At `low`, a decidable literal head is checked before the unanalyzable policy.
+Unannotated string literals, no-substitution templates, tagged templates with a
+known unannotated head, and one local const initialized with those forms are
+findings even with `unanalyzable: advise` or `ignore`:
+
+```ts
+query("SELECT 1"); // Missing annotation: a failing finding, including with advise.
+const statement = "SELECT 1";
+query(statement); // The same definite violation.
+// Fix: query("/* health/check */ SELECT 1");
+```
+
+A complete literal transaction command keeps the transaction exemption. An
+incomplete head, such as ``query(`/* ${name} */ SELECT 1`)``, stays
+unanalyzable. Helper returns and conditional heads also remain unanalyzable. A same-function `let` or `var` used as the executor
+argument can be decided when every direct assignment that may reach that call
+is a literal string, no-substitution template, or tag without interpolations. Every such value
+must have a known head: if all are named, the call passes; if any is missing
+the annotation, the call is a finding. For example, an uninitialized or
+undefined path contributes no SQL, while a mix of named and unannotated
+literal assignments is still a finding:
+
+```ts
+function run(enabled: boolean) {
+  let statement: string | undefined;
+  if (enabled) statement = "/* health/check */ SELECT 1";
+  read(statement); // The undefined path contributes no SQL; the literal path is named.
+
+  let next = "/* health/check */ SELECT 1";
+  if (enabled) next = "SELECT 2";
+  read(next); // Definite missing annotation, including with unanalyzable: ignore.
+}
+```
+
+An assignment from a helper call, a parameter, a captured/closure write, or a
+mutation through an alias remains unanalyzable. Outside repeated control flow,
+a future write does not affect an earlier executor call. A later write in the
+same loop can reach the next iteration and is included. Initializers and
+iterable expressions run once per loop entry; an outer
+loop can still repeat that entry. The analysis conservatively considers direct
+same-function assignments that may reach the call; it does not infer values
+across calls or perform path-sensitive control-flow analysis.
+Scalar literal bindings retain their heads through ordinary reads such as
+logging. Tagged builders keep the direct-use restriction: a standalone
+assignment can update the binding, but an assignment whose result is passed
+elsewhere can expose the builder and remains unanalyzable. Rewrite
+unresolved shapes as a named literal at the call or as one local `const`
+initialized with that literal head and passed directly. Existing file and line
+suppressions apply to definite findings too.

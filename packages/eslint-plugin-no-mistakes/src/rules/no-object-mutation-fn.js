@@ -76,8 +76,13 @@ function walkFunctionBody(state, node, scope, tag) {
   fnEnv.inClass = arrow ? Boolean(scope.inClass) : classMethod;
   fnEnv.hasArguments = arrow ? Boolean(scope.hasArguments) : true;
   fnEnv.receiver = arrow ? scope.receiver || null : tag.receiver || null;
-  for (const param of node.params) {
-    bindPattern(state, param, shared("parameter"), fnEnv, "param");
+  if (tag.reduceSeed) tag.reduceSeed.ownerEnv = fnEnv;
+  for (const [index, param] of node.params.entries()) {
+    if (index === 0 && tag.reduceSeed) {
+      bindName(param.name, tag.reduceSeed, fnEnv, "param");
+    } else {
+      bindPattern(state, param, shared("parameter"), fnEnv, "param");
+    }
   }
   const body = functionStatements(node);
   if (Array.isArray(body)) {
@@ -144,6 +149,10 @@ function escapeNestedFunctions(state, tag, seen = new Set()) {
     return;
   }
   seen.add(tag);
+  if (tag.mutator) {
+    escapeNestedFunctions(state, tag.mutator.receiver, seen);
+    for (const value of tag.mutator.boundArgs || []) escapeNestedFunctions(state, value, seen);
+  }
   if (tag.type === "union") {
     for (const member of tag.members) {
       escapeNestedFunctions(state, member, seen);
@@ -169,6 +178,10 @@ function escapeNestedFunctions(state, tag, seen = new Set()) {
 function releaseEscaping(state, tag) {
   if (tag == null) {
     return;
+  }
+  if (tag.mutator) {
+    releaseEscaping(state, tag.mutator.receiver);
+    for (const value of tag.mutator.boundArgs || []) releaseEscaping(state, value);
   }
   if (tag.type === "union") {
     for (const member of tag.members) {

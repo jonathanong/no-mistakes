@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: ignore
+      importSpecifier: '@bench/db'
+      executorNames: [read]
+      include: ['low-missing.mts']

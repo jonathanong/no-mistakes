@@ -1,13 +1,15 @@
 "use strict";
 
-const { callMethodName, rule } = require("../helpers");
+const { literalString, rule } = require("../helpers");
+const { unwrapExpression } = require("./async-ast");
+const { logicalCall } = require("./module-mock-helpers");
 
 const BANNED_METHODS = new Set(["sort", "toSorted", "every", "findIndex", "slice", "toSpliced"]);
 
-function methodName(node) {
-  if (node.callee.type !== "MemberExpression") return callMethodName(node);
-  if (!node.callee.computed) return node.callee.property.name;
-  return node.callee.property.type === "Literal" ? String(node.callee.property.value) : null;
+function methodName(callee) {
+  if (!callee.computed) return callee.property.type === "Identifier" ? callee.property.name : null;
+  if (callee.property.type === "Literal") return String(callee.property.value);
+  return literalString(callee.property);
 }
 
 function unwrapChain(node) {
@@ -34,21 +36,19 @@ function isReassignedBeforeUse(variable, node) {
   );
 }
 
-function isKnownArrayReceiver(node, context) {
-  node = unwrapChain(node);
+function isKnownArrayReceiver(node, context, seen = new Set()) {
+  node = unwrapExpression(node);
+  if (!node) return false;
   if (node.type === "ArrayExpression") return true;
   if (node.type !== "Identifier") return false;
   const variable = findVariable(node, context);
-  return Boolean(
-    variable &&
-    variable.defs.some(
-      (def) =>
-        def.type === "Variable" &&
-        def.node?.id?.type === "Identifier" &&
-        def.node.init?.type === "ArrayExpression",
-    ) &&
-    !isReassignedBeforeUse(variable, node),
-  );
+  if (!variable || seen.has(variable) || isReassignedBeforeUse(variable, node)) return false;
+  seen.add(variable);
+  return variable.defs.some((def) => {
+    if (def.type !== "Variable" || def.node?.id?.type !== "Identifier") return false;
+    if (def.node.init?.type === "ArrayExpression") return true;
+    return def.parent?.kind === "const" && isKnownArrayReceiver(def.node.init, context, seen);
+  });
 }
 
 module.exports = rule(
@@ -69,14 +69,11 @@ module.exports = rule(
       AwaitExpression(node) {
         const argument = unwrapChain(node.argument);
         if (argument.type !== "CallExpression") return;
-        const method = methodName(argument);
+        const invoked = logicalCall(argument);
+        if (invoked?.callee?.type !== "MemberExpression") return;
+        const method = methodName(invoked.callee);
         if (!BANNED_METHODS.has(method)) return;
-        if (
-          argument.callee.type !== "MemberExpression" ||
-          !isKnownArrayReceiver(argument.callee.object, context)
-        ) {
-          return;
-        }
+        if (!isKnownArrayReceiver(invoked.callee.object, context)) return;
         context.report({ node, messageId: "awaited", data: { method } });
       },
     };

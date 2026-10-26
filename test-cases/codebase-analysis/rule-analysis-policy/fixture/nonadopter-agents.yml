@@ -1,0 +1,7 @@
+rules:
+  - rule: agents-md-max-size
+    scope: repository
+    options:
+      roots: [fallback-policy]
+      filenames: [POLICY.txt]
+      maxLines: 1

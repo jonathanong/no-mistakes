@@ -11,12 +11,14 @@ use crate::integration_tests::test_config::shared_project_arrays::object_calls::
     self as calls, ObjectCallOps,
 };
 mod exports;
+mod properties;
 use self::project_object_options as project_options;
 use crate::integration_tests::test_config::shared_project_arrays::object_members::{
     self as members, ObjectMemberOps,
 };
 use exports::imported_object_options;
 use exports::imported_object_options as imported_options;
+use properties::merge_property;
 
 fn object_call_ops() -> ObjectCallOps<Options> {
     ObjectCallOps {
@@ -64,7 +66,13 @@ pub(super) fn project_object_options(
                     }
                     continue;
                 }
-                merge_property(&mut options, name.as_deref(), &property.value, ctx)?;
+                merge_property(
+                    &mut options,
+                    name.as_deref(),
+                    &property.value,
+                    property.span().start,
+                    ctx,
+                )?;
             }
             ObjectPropertyKind::SpreadProperty(spread) => {
                 if let Some(imported) = spread_options(&spread.argument, ctx)? {
@@ -141,40 +149,6 @@ fn expression_object_options_inner(
         return Ok(None);
     };
     project_object_options(object, ctx).map(Some)
-}
-
-fn merge_property(
-    options: &mut Options,
-    name: Option<&str>,
-    value: &Expression<'_>,
-    ctx: &Ctx<'_, '_>,
-) -> Result<()> {
-    if name == Some("timeout") {
-        options.deadlines.case = Some(deadlines::declaration(value, ctx.path));
-    }
-    let value = shared::expression_value(value, &ctx.bindings);
-    match name {
-        Some("name") => options.name = shared::optional_string(value, ctx.source),
-        Some("testDir") => {
-            options.test_dir = Some(shared::required_string(value, ctx.source, "testDir")?);
-        }
-        Some("testMatch") => {
-            let test_match = shared::inferred_string_or_array(value, ctx.source, "testMatch")?;
-            if test_match.is_empty() {
-                anyhow::bail!("expected string literal or string array for testMatch");
-            }
-            options.test_match = Some(test_match);
-        }
-        Some("testIgnore") => {
-            options.test_ignore = Some(shared::inferred_string_or_array(
-                value,
-                ctx.source,
-                "testIgnore",
-            )?);
-        }
-        _ => {}
-    }
-    Ok(())
 }
 
 pub(super) fn expression_object<'a>(

@@ -5,24 +5,76 @@ pub fn assign_prepared_embedded_sql_options(
     config: &NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
-    let (options, _, rule_ids) = super::configured_embedded_sql_options_with_annotation(
+    let (options, annotation, rule_ids) = super::configured_embedded_sql_options_with_annotation(
         config,
         super::PREPARED_EMBEDDED_SQL_RULE_IDS,
     )?;
+    plan.embedded_sql = !options.is_empty();
+    plan.embedded_sql_head_calls_only = head_calls_only_profiles(&options, &annotation, &rule_ids);
     plan.embedded_sql_options = options;
     plan.embedded_sql_rule_ids = rule_ids;
     Ok(())
 }
 
+include!("plan/head_calls.rs");
+
 /// Declare SQL projections before the shared request fact pass.
 pub fn configure_prepared_postgres_plan(
+    root: &Path,
     config: &NoMistakesConfig,
     plan: &mut crate::codebase::check_facts::CheckFactPlan,
 ) -> Result<()> {
     plan.record_general_sql_locations();
-    let annotation_options =
-        configured_embedded_sql_options(config, &["postgres-require-query-annotation"])?;
-    if !annotation_options.is_empty() {
+    for (index, rule) in config.rules.iter().enumerate().filter(|(_, rule)| {
+        rule.enabled
+            && [
+                "postgres-no-unbounded-sql-identifier",
+                "postgres-no-mutable-sql-registry",
+                "postgres-no-offset",
+                "postgres-no-transformed-uuid-predicates",
+            ]
+            .contains(&rule.rule.as_str())
+            && config.rule_has_effective_target(rule)
+    }) {
+        if config.effective_rule_analysis(rule)?.effort == crate::config::v2::Effort::Low {
+            let options: EmbeddedSqlRuleOptions = rule.try_rule_options()?;
+            let profile = EmbeddedSqlOptions::configured(
+                options.import_specifier.as_deref().unwrap_or_default(),
+                &options.executor_names,
+            )
+            .with_scoped_executors(
+                &options.executor_factory_names,
+                &options.executor_type_names,
+            )
+            .with_trusted_sql_tags(&options.trusted_sql_tags);
+            let typed_executor_types = config
+                .effects
+                .get("postgres")
+                .map(|effects| effects.typed_executors.as_slice())
+                .unwrap_or_default();
+            let scan =
+                crate::codebase::postgres::sql_identifier_syntax::plan::SqlIdentifierScan::new(
+                    root,
+                    config,
+                    rule,
+                    index,
+                    &options.include,
+                    &options.exclude,
+                )?
+                .with_typed_executor_types(typed_executor_types);
+            plan.sql_identifier_profiles
+                .entry(profile)
+                .or_default()
+                .push(scan);
+        }
+    }
+    let (_, annotation_options, _) = super::configured_embedded_sql_options_with_annotation(
+        config,
+        &["postgres-require-query-annotation"],
+    )?;
+    plan.query_annotation_heads |= super::annotation_effort::low_requested(config)?;
+    let evaluated_annotation = !annotation_options.is_empty();
+    if evaluated_annotation {
         if plan.query_annotation {
             if let Some(existing) = &mut plan.query_annotation_options {
                 existing.extend(annotation_options);
@@ -34,13 +86,10 @@ pub fn configure_prepared_postgres_plan(
         }
         plan.query_annotation = true;
     }
-    plan.postgres_variants |= [
-        "postgres-lock-ordering",
-        "postgres-conflict-ordering",
-        "postgres-require-query-annotation",
-    ]
-    .iter()
-    .any(|id| !config.rule_applications(id).is_empty());
+    plan.postgres_variants |= evaluated_annotation
+        || ["postgres-lock-ordering", "postgres-conflict-ordering"]
+            .iter()
+            .any(|id| !config.rule_applications(id).is_empty());
     let ordering = ["postgres-lock-ordering", "postgres-conflict-ordering"]
         .iter()
         .any(|id| !config.rule_applications(id).is_empty());
@@ -58,6 +107,7 @@ pub fn configure_prepared_postgres_plan(
         "postgres-idempotent-insert",
         "postgres-required-predicates",
         "postgres-no-offset",
+        "postgres-no-transformed-uuid-predicates",
         "postgres-generated-column-predicates",
         "postgres-explicit-columns",
         "postgres-bounded-statements",
@@ -75,6 +125,7 @@ pub fn configure_prepared_postgres_plan(
         .rule_applications("postgres-sql-shape-policy")
         .is_empty();
     let schema_rules = [
+        "postgres-no-transformed-uuid-predicates",
         "postgres-idempotent-insert",
         "postgres-generated-column-predicates",
         "postgres-no-generated-column-writes",
@@ -105,7 +156,14 @@ pub fn configure_prepared_postgres_plan(
         "postgres-no-unbounded-sql-identifier",
     ]
     .iter()
-    .any(|id| !config.rule_applications(id).is_empty());
+    .any(|id| {
+        config.rule_applications(id).iter().any(|rule| {
+            config.effective_rule_analysis(rule).map_or(true, |policy| {
+                policy.effort != crate::config::v2::Effort::Low
+            })
+        })
+    });
+    plan.raw_source |= !plan.sql_identifier_profiles.is_empty();
     Ok(())
 }
 

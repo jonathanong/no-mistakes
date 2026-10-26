@@ -1,0 +1,17 @@
+# Alias paths report the authored reference rather than the anchor definition.
+base: &base
+  root: apps/base
+  include:
+    - src
+projects:
+  web: *base
+  api:
+    <<: *base
+    root: apps/api
+list: &list [one, two]
+other: *list
+recursive: &recursive
+  self: *recursive
+key: &key root
+byAliasKey:
+  *key : value

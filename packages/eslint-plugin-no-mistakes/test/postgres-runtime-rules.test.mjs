@@ -658,8 +658,77 @@ describe("postgres runtime helpers", () => {
     assert.equal(
       isPromiseAllCallee({
         type: "MemberExpression",
+        computed: false,
+        property: {},
+        object: { type: "Identifier", name: "Promise" },
+      }),
+      false,
+    );
+    assert.equal(
+      isPromiseAllCallee({
+        type: "MemberExpression",
         computed: true,
         property: { type: "Literal", value: "all" },
+        object: { type: "Identifier", name: "Promise" },
+      }),
+      true,
+    );
+    assert.equal(
+      isPromiseAllCallee({
+        type: "MemberExpression",
+        computed: true,
+        property: {
+          type: "TemplateLiteral",
+          expressions: [],
+          quasis: [{ value: { cooked: "all", raw: "all" } }],
+        },
+        object: { type: "Identifier", name: "Promise" },
+      }),
+      true,
+    );
+    assert.equal(
+      isPromiseAllCallee({
+        type: "MemberExpression",
+        computed: true,
+        property: { type: "Identifier", name: "all" },
+        object: { type: "Identifier", name: "Promise" },
+      }),
+      false,
+    );
+    assert.equal(
+      isPromiseAllCallee({
+        type: "MemberExpression",
+        computed: true,
+        property: {
+          type: "TaggedTemplateExpression",
+          quasi: {
+            type: "TemplateLiteral",
+            expressions: [],
+            quasis: [{ value: { cooked: "all", raw: "all" } }],
+          },
+        },
+        object: { type: "Identifier", name: "Promise" },
+      }),
+      false,
+    );
+    assert.equal(
+      isPromiseAllCallee({
+        type: "MemberExpression",
+        computed: true,
+        property: {
+          type: "TemplateLiteral",
+          expressions: [{ type: "Literal", value: "" }],
+          quasis: [{ value: { cooked: "al", raw: "al" } }, { value: { cooked: "l", raw: "l" } }],
+        },
+        object: { type: "Identifier", name: "Promise" },
+      }),
+      false,
+    );
+    assert.equal(
+      isPromiseAllCallee({
+        type: "MemberExpression",
+        computed: true,
+        property: { type: "Literal", value: 1 },
         object: { type: "Identifier", name: "Promise" },
       }),
       false,
@@ -1399,6 +1468,23 @@ describe("postgres-no-unbounded-query-fanout", () => {
         "postgres-no-unbounded-query-fanout",
       ),
       [],
+    );
+  });
+
+  it("reports static Promise.all keys and ignores a computed identifier", () => {
+    assert.deepEqual(
+      ids(
+        `${IMPORT}Promise["all"](ids.map((id) => query("SELECT 1")));
+         Promise[\`all\`](ids.map((id) => query("SELECT 1")));
+         const name = "all";
+         Promise[name](ids.map((id) => query("SELECT 1")));
+         function chooseMethod(text) {
+           return text;
+         }
+         Promise[chooseMethod\`all\`](ids.map((id) => query("SELECT 1")));`,
+        "postgres-no-unbounded-query-fanout",
+      ),
+      ["unboundedFanout", "unboundedFanout"],
     );
   });
 

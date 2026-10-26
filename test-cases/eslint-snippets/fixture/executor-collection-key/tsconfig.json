@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "baseUrl": ".",
+    "paths": { "@example/db": ["executor-types.ts"] }
+  },
+  "include": ["*.ts"]
+}

@@ -4,6 +4,12 @@ pub(in super::super) fn remap_fact_lines(
     facts: &mut SqlSchemaFileFacts,
     dynamic: &super::DynamicSql,
 ) {
+    for statement in &mut facts.unanalyzable_statements {
+        let mut order = dynamic.source_order.clone();
+        order.extend(&statement.source_order);
+        statement.source_order = order;
+        statement.line = dynamic.source_line(statement.line);
+    }
     for event in &mut facts.table_events {
         let mut order = dynamic.source_order.clone();
         order.extend(event.source_order());

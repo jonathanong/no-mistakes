@@ -74,8 +74,3 @@ enum WorkspacesField {
     Array(Vec<String>),
     Object { packages: Vec<String> },
 }
-
-#[derive(Deserialize, Default)]
-struct PnpmWorkspace {
-    packages: Option<Vec<String>>,
-}

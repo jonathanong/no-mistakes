@@ -1,0 +1,17 @@
+{
+  "numTotalTests": 3,
+  "numPassedTests": 2,
+  "numFailedTests": 0,
+  "numPendingTests": 1,
+  "testResults": [
+    {
+      "name": "/work/packages/no-mistakes/scripts/real-napi-api.test.js",
+      "status": "passed",
+      "assertionResults": [
+        { "fullName": "check reports parity", "status": "passed", "duration": 1200.5 },
+        { "fullName": "graph keeps edges", "status": "passed", "duration": 4999.9 },
+        { "fullName": "optional native case", "status": "pending" }
+      ]
+    }
+  ]
+}

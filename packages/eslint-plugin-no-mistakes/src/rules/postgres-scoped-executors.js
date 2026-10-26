@@ -3,6 +3,8 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { childNodes, unwrapTs } = require("./postgres-query-text");
+const { parameterExecutors } = require("./postgres-scoped-parameters");
+const { isScopedExecutor, isScopedMember } = require("./postgres-scoped-lookup");
 
 const RELATIVE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx"];
 
@@ -136,20 +138,6 @@ function scopedImports(program, options, filename) {
   return { factories, types };
 }
 
-function typeMatches(annotation, types) {
-  const node = annotation?.typeAnnotation ?? annotation;
-  if (node?.type === "TSTypeReference") {
-    return node.typeName?.type === "Identifier" && types.has(node.typeName.name);
-  }
-  if (node?.type === "TSUnionType") return node.types.some((member) => typeMatches(member, types));
-  return false;
-}
-
-function propertyKeyName(key) {
-  if (key?.type === "Identifier") return key.name;
-  return key?.type === "Literal" ? String(key.value) : null;
-}
-
 function isFactoryCall(init, factories) {
   let node = unwrapTs(init);
   if (node?.type === "AwaitExpression") node = unwrapTs(node.argument);
@@ -157,39 +145,21 @@ function isFactoryCall(init, factories) {
   return callee?.type === "Identifier" && factories.has(callee.name);
 }
 
-function parameterNames(param, types) {
-  const target = param.type === "AssignmentPattern" ? param.left : param;
-  if (target.type === "Identifier") {
-    return typeMatches(target.typeAnnotation, types) ? [target.name] : [];
-  }
-  const literal = target.typeAnnotation?.typeAnnotation;
-  if (target.type !== "ObjectPattern" || literal?.type !== "TSTypeLiteral") return [];
-  const names = [];
-  for (const property of target.properties) {
-    const value =
-      property.value?.type === "AssignmentPattern" ? property.value.left : property.value;
-    if (property.type !== "Property" || value?.type !== "Identifier") continue;
-    const key = propertyKeyName(property.key);
-    const typed = literal.members.some(
-      (member) =>
-        member.type === "TSPropertySignature" &&
-        propertyKeyName(member.key) === key &&
-        typeMatches(member.typeAnnotation, types),
-    );
-    if (typed) names.push(value.name);
-  }
-  return names;
-}
-
 /**
  * Executors that exist only inside a lexical scope: locals bound to a
  * configured factory call (the declaring block) and parameters typed with a
- * configured type (the declaring function). Returns `{ name, range }` entries.
+ * configured type (the declaring function). Property entries also carry the
+ * receiver's declared member name; the receiver itself is not an executor.
  */
-function collectScopedExecutors(program, options, filename) {
+function collectScopedExecutors(program, options, filename, context) {
   const found = [];
   const { factories, types } = scopedImports(program, options, filename);
-  if (factories.size === 0 && types.size === 0) return found;
+  if (
+    factories.size === 0 &&
+    types.size === 0 &&
+    (!context?.sourceCode?.parserServices?.program || options.executorTypeNames.length === 0)
+  )
+    return found;
   const walk = (node, scope) => {
     if (SCOPE_TYPES.has(node.type)) scope = node;
     if (node.type === "VariableDeclaration" && node.kind !== "var") {
@@ -205,9 +175,11 @@ function collectScopedExecutors(program, options, filename) {
     }
     if (FUNCTION_TYPES.has(node.type)) {
       for (const param of node.params) {
-        for (const name of parameterNames(param, types)) {
+        const entries = parameterExecutors(param, types, context, options);
+        for (const name of entries.names) {
           found.push({ name, range: node.range });
         }
+        for (const member of entries.members) found.push({ ...member, range: node.range });
       }
     }
     for (const child of childNodes(node)) walk(child, scope);
@@ -216,13 +188,9 @@ function collectScopedExecutors(program, options, filename) {
   return found;
 }
 
-function isScopedExecutor(scoped, name, node) {
-  const position = node?.range?.[0];
-  return Boolean(
-    scoped?.some(
-      (entry) => entry.name === name && entry.range[0] <= position && position < entry.range[1],
-    ),
-  );
-}
-
-module.exports = { collectScopedExecutors, isScopedExecutor };
+module.exports = {
+  collectScopedExecutors,
+  isScopedExecutor,
+  isScopedMember,
+  matchesConfiguredModule,
+};

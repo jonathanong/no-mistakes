@@ -1,3 +1,4 @@
+use super::tests_support::check_file;
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -165,11 +166,11 @@ fn intentionally_empty_path_is_exempt() {
 }
 
 #[test]
-fn unreadable_file_returns_empty() {
+fn unreadable_file_reports_unanalyzable_input() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("missing.ts");
     let findings = check_file(&path, tmp.path());
-    assert!(findings.is_empty());
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]

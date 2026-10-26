@@ -49,12 +49,16 @@ pub(super) fn recover(
                 enumerated: false,
                 choices: Vec::new(),
                 append_sites: vec![fragment.append_site],
+                append_decisions: Vec::new(),
+                decision_offs: Vec::new(),
+                variants_truncated: false,
             };
             // A prepared suffix has no branch choices, so appending it to
             // each already-capped SQL version cannot increase the count.
             for version in &mut versions {
                 version.append_sql(&suffix);
             }
+            visitor.mark_append(&mut versions, fragment.append_site);
         }
         Some(versions)
     })())

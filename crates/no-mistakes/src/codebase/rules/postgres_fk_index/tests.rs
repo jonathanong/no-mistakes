@@ -51,6 +51,16 @@ fn accepts_btree_leading_index() {
 }
 
 #[test]
+fn repeated_inline_foreign_keys_keep_their_own_directives() {
+    let findings = run(&fixture("repeated-inline"), "");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("first_comments.post_id")
+    );
+}
+
+#[test]
 fn same_line_directive_exempts_the_fk() {
     assert!(run(&fixture("directive"), "").is_empty());
 }

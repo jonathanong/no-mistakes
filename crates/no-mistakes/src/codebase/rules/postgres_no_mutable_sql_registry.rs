@@ -1,8 +1,7 @@
 //! Cross-file member writes that reach SQL identifier interpolations.
 use super::postgres_sql_cross_file::{
-    check_applications, count, finding, identifier_placeholder, interpolations, registry_route,
-    sql_calls, unique_export, unique_namespace_member, Bindings, Provenance, RegistryRoutes,
-    SqlCall,
+    count, finding, identifier_placeholder, interpolations, registry_route, sql_calls,
+    unique_export, unique_namespace_member, Bindings, Provenance, RegistryRoutes, SqlCall,
 };
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::DepGraph;
@@ -21,17 +20,38 @@ pub const RULE_ID: &str = "postgres-no-mutable-sql-registry";
 pub(crate) fn check_with_graph(
     root: &Path,
     config: &NoMistakesConfig,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    check_applications(
-        root,
-        config,
-        graph,
-        facts,
-        RULE_ID,
-        |root, opts, graph, facts| Ok(scan(root, opts, graph, facts)),
-    )
+    let root = crate::codebase::ts_resolver::normalize_path(root);
+    let mut findings = Vec::new();
+    for (index, application) in config.rules.iter().enumerate().filter(|(_, rule)| {
+        rule.enabled && rule.rule == RULE_ID && config.rule_has_effective_target(rule)
+    }) {
+        let policy = config.effective_rule_analysis(application)?;
+        if policy.effort == crate::config::v2::Effort::Low {
+            findings.extend(super::postgres_sql_cross_file::low::check(
+                &root,
+                config,
+                application,
+                index,
+                facts,
+                RULE_ID,
+            )?);
+        } else {
+            findings.extend(super::postgres_sql_cross_file::check_application(
+                &root,
+                config,
+                application,
+                graph.expect("postgres-no-mutable-sql-registry requires canonical graph"),
+                facts,
+                RULE_ID,
+                |root, opts, graph, facts| Ok(scan(root, opts, graph, facts)),
+            )?);
+        }
+    }
+    super::sort_findings(&mut findings);
+    Ok(findings)
 }
 
 fn scan(

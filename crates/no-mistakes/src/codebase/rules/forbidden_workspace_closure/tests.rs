@@ -3,7 +3,7 @@ use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 fn fixture_root(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -27,6 +27,9 @@ fn config(yaml: &str) -> NoMistakesConfig {
 fn package_files(root: &Path, files: &[&str]) -> Vec<PathBuf> {
     files.iter().map(|file| root.join(file)).collect()
 }
+
+#[path = "tests_scope.rs"]
+mod tests_scope;
 
 #[test]
 fn reports_direct_external_dependency() {
@@ -409,7 +412,7 @@ fn traversal_tolerates_duplicate_and_missing_workspace_nodes() {
         },
     );
     let workspace_names = BTreeSet::from(["@acme/app".to_string(), "@acme/missing".to_string()]);
-    let forbidden = build_globset(&["@acme/secret".to_string()]).unwrap();
+    let forbidden = scan::build_globset(&["@acme/secret".to_string()]).unwrap();
     let config = config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n");
     let source_filter =
         crate::codebase::rules::path_filter::RulePathFilter::new(&root, &config, &config.rules[0])
@@ -434,7 +437,7 @@ fn traversal_tolerates_missing_start_node() {
     let root = fixture_root("pass");
     let nodes = BTreeMap::new();
     let workspace_names = BTreeSet::from(["@acme/app".to_string()]);
-    let forbidden = build_globset(&["@acme/secret".to_string()]).unwrap();
+    let forbidden = scan::build_globset(&["@acme/secret".to_string()]).unwrap();
     let config = config("packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\n");
     let source_filter =
         crate::codebase::rules::path_filter::RulePathFilter::new(&root, &config, &config.rules[0])

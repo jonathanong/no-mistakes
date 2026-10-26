@@ -9,36 +9,21 @@ pub(super) fn scan(
     root: &Path,
     prepared: &PreparedRule,
     files: &[PathBuf],
-    sources: Option<&SourceStore>,
+    sources: &SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings: Vec<RuleFinding> = files
         .par_iter()
         .filter_map(|path| {
             let limit = prepared.limit_for(root, path);
-            match sources {
-                Some(sources) => {
-                    let content = crate::codebase::rules::read_source(sources, path)?;
-                    check_source(path, root, &content, limit, defer_suppression)
-                }
-                None => check_file(path, root, limit, defer_suppression),
+            match super::super::source_access::checked_source(sources, path, root, super::RULE_ID) {
+                Ok(content) => check_source(path, root, &content, limit, defer_suppression),
+                Err(finding) => Some(*finding),
             }
         })
         .collect();
     findings.sort_by(|a, b| a.file.cmp(&b.file));
     Ok(findings)
-}
-
-pub(super) fn check_file(
-    path: &Path,
-    root: &Path,
-    limit: usize,
-    defer_suppression: bool,
-) -> Option<RuleFinding> {
-    let Ok(content) = std::fs::read_to_string(path) else {
-        return None;
-    };
-    check_source(path, root, &content, limit, defer_suppression)
 }
 
 pub(super) fn check_source(

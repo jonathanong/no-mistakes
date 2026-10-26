@@ -24,9 +24,6 @@ rules:
       namePatterns: ['(^|_)(status|state|kind|type|source|category|mode|channel)$']
       skipGeneratedColumns: false
       ignoreTablePatterns: []
-      allow:
-        - object: 'column:webhook_deliveries.event_type'
-          reason: 'Values are defined by the webhook provider and change without a migration'
 ```
 
 ## Why and when
@@ -82,6 +79,24 @@ both pinned and name-matched gets only the literal finding.
     },
     "accounts": {
       "columns": { "display_name": { "dataType": "text" } }
+    },
+    "orders": {
+      "columns": { "status": { "dataType": "text" } },
+      "foreignKeys": {
+        "orders_status_fkey": {
+          "columns": ["status"],
+          "referencedTable": "order_statuses",
+          "referencedColumns": ["value"]
+        }
+      },
+      "checkConstraints": {
+        "orders_status_check": {
+          "definition": "CHECK (status IN ('draft', 'sent', 'paid'))"
+        }
+      }
+    },
+    "order_statuses": {
+      "columns": { "value": { "dataType": "text" } }
     }
   }
 }
@@ -90,6 +105,8 @@ both pinned and name-matched gets only the literal finding.
 An enum column is not text. `display_name` does not match the name pattern
 above. A column that is the only column of a foreign key is a lookup
 reference already, even when a check also lists its values.
+`orders.status` demonstrates that lookup exemption: it has both a CHECK list
+and a sole-column foreign key to `order_statuses.value`.
 
 ## Counterexample
 
@@ -125,7 +142,25 @@ Replace the text column with an enum type, or with a foreign key to a lookup
 table that holds the values. If the values are owned by an external system,
 add an `allow` entry with a reason instead of changing the column.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. It judges the generated schema catalog (`schemaCatalogPath`); executor calls in TS/JS are not evaluated.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. This rule has no unanalyzable inputs: it judges the configured schema catalog, a JSONC file read directly from `schemaCatalogPath` (no SQL is parsed by the rule), so every entry is either present or absent. A catalog that cannot be read, is not valid JSONC, is empty, or is not a valid snapshot is a hard error, not an unanalyzable input. The repository-level `unanalyzable` default does not affect it.
+
 ## Suppression
+
+For example, allow a provider-owned value set:
+
+```yaml
+allow:
+  - object: 'column:webhook_deliveries.event_type'
+    reason: 'Values are defined by the webhook provider and change without a migration'
+```
 
 Schema snapshots accept JSONC comments. A finding uses the line containing
 the column key in the snapshot, so the standard directives can suppress it:

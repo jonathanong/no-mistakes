@@ -7,3 +7,10 @@ pub(crate) use git::{git_add_all, git_init};
 pub(crate) use gitignore_fixture::materialize_gitignore_fixture;
 #[cfg(any(test, feature = "test-instrumentation"))]
 pub(crate) use gitignore_fixture::materialize_saved_fixture;
+
+pub(crate) fn rule_fixture_root(rule: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules")
+        .join(rule)
+        .join("fixture")
+}

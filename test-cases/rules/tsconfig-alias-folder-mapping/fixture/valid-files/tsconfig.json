@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@agents/email": [
+        "backend/agents/email/index.ts"
+      ],
+      "@agents/sms": [
+        "backend/agents/sms.ts"
+      ],
+      "@agents/view": [
+        "backend/agents/view.tsx"
+      ],
+      "@agents/types": [
+        "backend/agents/types.d.ts"
+      ],
+      "@agents/runtime": [
+        "backend/agents/runtime.mjs"
+      ],
+      "@agents/schema": [
+        "backend/agents/schema.json"
+      ],
+      "@agents/jobs/*": [
+        "backend/agents/jobs/*.mts"
+      ],
+      "@agents/*": [
+        "backend/agents/*.js"
+      ]
+    }
+  }
+}

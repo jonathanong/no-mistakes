@@ -1,4 +1,4 @@
-import sql, { SQLStatement } from "sql-template-strings";
+import { sql } from "@example/db"; import { SQLStatement } from "sql-template-strings"; /* Configured tags splice fragments; sql-template-strings binds them. */
 import { query } from "@example/db";
 
 function withOffset(input: SQLStatement): SQLStatement {

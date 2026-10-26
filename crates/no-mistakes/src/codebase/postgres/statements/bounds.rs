@@ -12,6 +12,7 @@ mod items;
 mod pins;
 mod predicate;
 mod query;
+mod scalar_limit;
 mod table;
 mod temporary;
 pub(in crate::codebase::postgres) use table::TableTokenCursor;
@@ -26,6 +27,11 @@ use sqlparser::ast::{CopySource, Query, Spanned, Statement};
 use std::collections::{BTreeMap, BTreeSet};
 use std::{cell::RefCell, rc::Rc};
 
+/// Share the canonical builtin aggregate identity with other statement projections.
+pub(super) fn is_aggregate(name: &sqlparser::ast::ObjectName) -> bool {
+    functions::is_aggregate(name)
+}
+
 /// CTE names in scope, with the bound of each.
 #[derive(Clone, Default)]
 pub(super) struct Scope {
@@ -39,84 +45,10 @@ struct ScopeFrame {
     parent: Option<Rc<ScopeFrame>>,
     ctes: BTreeMap<String, Rc<SqlBoundQuery>>,
     columns: BTreeMap<String, Option<BTreeSet<String>>>,
+    fixed_counts: BTreeMap<String, BTreeSet<String>>,
 }
 
-impl Scope {
-    pub(super) fn with_table_tokens(tokens: TableTokenCursor) -> Self {
-        Self {
-            frame: Rc::default(),
-            table_tokens: Some(Rc::new(RefCell::new(tokens))),
-        }
-    }
-
-    fn advance_table_tokens_to_right_arm(&self, left_start: sqlparser::tokenizer::Location) {
-        if let Some(tokens) = &self.table_tokens {
-            tokens.borrow_mut().advance_to_right_arm(left_start);
-        }
-    }
-
-    fn advance_table_tokens_to_from(&self, select_start: sqlparser::tokenizer::Location) {
-        if let Some(tokens) = &self.table_tokens {
-            tokens.borrow_mut().advance_to_from(select_start);
-        }
-    }
-
-    fn get(&self, name: &str) -> Option<&SqlBoundQuery> {
-        let mut frame = self.frame.as_ref();
-        loop {
-            if let Some(bound) = frame.ctes.get(name) {
-                return Some(bound.as_ref());
-            }
-            frame = frame.parent.as_deref()?;
-        }
-    }
-
-    fn names(&self) -> BTreeMap<String, Option<BTreeSet<String>>> {
-        let mut frames = Vec::new();
-        let mut frame = Some(self.frame.as_ref());
-        while let Some(current) = frame {
-            frames.push(current);
-            frame = current.parent.as_deref();
-        }
-        let mut names = BTreeMap::new();
-        for frame in frames.into_iter().rev() {
-            names.extend(frame.columns.clone());
-        }
-        names
-    }
-
-    fn child(&self) -> Self {
-        Self {
-            frame: Rc::new(ScopeFrame {
-                parent: Some(Rc::clone(&self.frame)),
-                ..ScopeFrame::default()
-            }),
-            table_tokens: self.table_tokens.clone(),
-        }
-    }
-
-    fn set_columns(&mut self, name: String, columns: Option<BTreeSet<String>>) {
-        Rc::make_mut(&mut self.frame).columns.insert(name, columns);
-    }
-
-    fn column_names(&self, name: &str) -> Option<&Option<BTreeSet<String>>> {
-        let mut frame = self.frame.as_ref();
-        loop {
-            if let Some(columns) = frame.columns.get(name) {
-                return Some(columns);
-            }
-            frame = frame.parent.as_deref()?;
-        }
-    }
-
-    fn insert(&mut self, name: String, bound: SqlBoundQuery) {
-        // Opaque recursive placeholders retain the metadata visible before replacement.
-        let columns = self.column_names(&name).cloned().unwrap_or_default();
-        let frame = Rc::make_mut(&mut self.frame);
-        frame.columns.entry(name.clone()).or_insert(columns);
-        frame.ctes.insert(name, Rc::new(bound));
-    }
-}
+mod scope;
 
 pub(super) fn collect(
     statement: &Statement,
@@ -152,11 +84,15 @@ fn collect_query(
     positions: super::value::PlaceholderPositions<'_>,
     out: &mut Vec<SqlBoundFact>,
 ) {
-    let scope = query::with_scope(query, scope, positions);
-    if let Some(with) = &query.with {
+    let scope = query::with_scope_visiting_writes(query, scope, positions, |cte, visible| {
+        collect_query(cte, visible, positions, out);
+    });
+    // RECURSIVE exposes every sibling; keep its completed scope and declaration-order facts.
+    if let Some(with) = query.with.as_ref().filter(|with| with.recursive) {
         for cte in &with.cte_tables {
-            if let Some(statement) = query::modifying_statement(&cte.query) {
-                collect_in(statement, &scope, positions, out);
+            if query::modifying_statement(&cte.query).is_some() {
+                // A modifying CTE can itself have WITH bindings visible to its target query.
+                collect_query(&cte.query, &scope, positions, out);
             }
         }
     }

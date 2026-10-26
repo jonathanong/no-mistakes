@@ -6,8 +6,8 @@ A callback that only forwards its arguments to a trusted SQL executor hides
 that call from static analysis. `run((statement) => read(statement), account)`
 builds the statement inside `run` and reaches `read` only through the lambda
 parameter, so the executor call is unanalyzable. Passing the function value,
-`run(read, account)`, is the same blind spot: analysis does not connect an
-executor argument to the statement inside the helper.
+`run(read, account)`, has the same blind spot when the helper has no configured
+executor parameter type.
 
 Name the executor on the SQL text inside the helper. That shape is judged:
 
@@ -16,6 +16,111 @@ function run(account: string) {
   return read(sql`SELECT id FROM orders WHERE account_id = ${account}`);
 }
 ```
+
+A helper with a proven configured executor parameter is also judged. With
+`executorTypeNames: ["QueryExecutor"]`, passing the executor directly is
+allowed:
+
+```ts
+import { read, type QueryExecutor } from "@example/db";
+function load(query: QueryExecutor) {
+  return query("SELECT id FROM orders");
+}
+load(read);
+const loadOptional = (query?: QueryExecutor) =>
+  query?.("SELECT id FROM orders");
+loadOptional(read);
+function loadObject({ query }: { query: QueryExecutor }) {
+  return query("SELECT id FROM orders");
+}
+loadObject({ query: read });
+```
+
+Same-file function declarations and `const` arrow/function expressions use the
+parameter's declared imported type. Optional and defaulted parameters and inline
+destructured properties without property defaults are supported. A shadowed type
+name cannot prove the configured type. Forwarding callbacks still report,
+including `load((statement) => read(statement))`.
+
+Imported helpers require typed linting: configure `@typescript-eslint/parser`
+with `parserOptions.project` or `projectService` so `parserServices.program`
+is available. The declared parameter must reference a configured type imported
+from the configured database module, and its signature must belong to the
+imported function declaration or `const` function initializer. The exporting
+source must have no direct `eval` call, and no assignments, destructuring writes,
+updates, or loop assignments to that helper binding. Writes to a shadowed local
+binding do not invalidate the exported helper. Without that information, the
+call reports.
+The implementation body must also be available in the TypeScript program.
+Ambient function declarations and ambient callable variables keep reporting:
+their signatures describe a contract but do not expose SQL for analysis.
+Contextual function types such as `const run: Helper = query => query(sql)`
+do not annotate the implementation parameter and still report.
+Structural compatibility, inference, unknown callees, mutable helpers,
+overloads, rest parameters, and calls containing spread arguments do not
+establish proof.
+For example, `load(...[read])` reports; use the explicit argument `load(read)`.
+With typed linting, a fresh options object can also target a declared object
+parameter. The type checker must resolve the named property to a required field
+declared with a configured imported executor type. Interfaces, type aliases,
+inherited fields, and named destructured options types are supported. A field
+may use a local alias of the configured type; an intersection must resolve to
+one unambiguous required field declaration:
+
+```ts
+interface QueryOptions { query: QueryExecutor; limit?: number }
+function dispatch(options: QueryOptions) {
+  return options.query("SELECT id FROM orders");
+}
+dispatch({ query: read });
+const query = read;
+dispatch({ query });
+```
+
+This proof requires typed linting for both local and imported options types.
+Parser fallback programs with module resolution disabled cannot prove named or
+imported options contracts, so those arguments keep reporting.
+The shared executor discovery also follows these declared properties inside
+the helper, including a destructured alias such as
+`function load({ query: execute }: QueryOptions)`. SQL checks inspect the
+executor calls there. A property may have another name, such as `execute`,
+when its declared type proves the same configured executor identity.
+Executor uses inside the helper must be direct calls or stable local `const`
+aliases that are called directly. Judged `.call`, literal-array `.apply`, and
+optional calls are also supported. Returning or storing the options object or
+executor value, forwarding it to opaque code, or replacing the property keeps
+the incoming call reported. Aliasing or destructuring the whole options object
+inside the body is also unproven; call the declared property directly instead.
+Optional fields, structural callable lookalikes, computed keys, and objects
+containing a spread still report. Nested containers such as
+`dispatch({ nested: { query: read } })` and forwarding callbacks remain
+unproven. Use an explicit required executor property or name the executor inside
+the helper.
+
+An executor can also be a key in a typed built-in collection. A stable receiver
+typed as the standard-library `Map` or `WeakMap` accepts argument zero of
+`.get`, `.set`, `.has`, and `.delete`; `Set` and `WeakSet` accept argument zero
+of `.has` and `.delete`. These operations do not invoke the key:
+
+```ts
+const locks = new WeakMap<QueryExecutor, object>();
+locks.set(read, {});
+locks.get(read);
+locks.delete(read);
+```
+
+This requires typed linting and an unchanged built-in method. The receiver must
+come from a proven built-in allocation or a stable alias of one. A parameter
+annotation alone cannot prove that a custom implementation was not supplied.
+The key type need not name an executor: native `new Map()` and
+`Map<any, any>` allocations can also prove a key operation.
+Unknown receivers, same-named custom collections, overridden methods, escaped
+receivers, and spread or computed calls still report. Storing an executor as a
+value, such as
+`locks.set(otherKey, read)` or `set.add(read)`, still reports because it can be
+retrieved and called later. Put data in the value slot instead.
+Assignments to aliases and storage inside another collection can expose a
+receiver to method replacement, so key uses of those receivers keep reporting.
 
 These call shapes are also judged:
 
@@ -26,6 +131,12 @@ exec(sql);
 (flag ? read : write)(sql);
 tx(sql);
 tx.query(sql);
+db.read(sql);
+const { query } = tx;
+query(sql);
+read?.(sql);
+read["call"](null, sql);
+read["apply"](null, [sql]);
 ```
 
 `const` is required for an imported-executor alias. A `let` binding and
@@ -75,11 +186,12 @@ export function list(account: string, flag: boolean, tx: Tx) {
 }
 ```
 
-Passing an executor value is reported and not rewritten. The message names the
-executor inside the helper (``read(sql`…`)``, or ``write(sql`…`)``) instead of
+Passing an executor value to an unproven helper is reported and not rewritten.
+The message names the executor inside the helper (``read(sql`…`)``, or ``write(sql`…`)``) instead of
 passing it. A `const` bound to a conditional of executors also names
 ``(flag ? read : write)(sql`…`)`` when every branch is an identifier executor.
-`run(read, account)` is not a judged rewrite. The same passed-value report
+`run(read, account)` is not a judged rewrite when `run` has no proven configured
+executor parameter. The same passed-value report
 covers a fresh object property or array element, a `new` argument, and
 `read.bind(null)`. The rejected quote keeps the property or element around
 that executor (`run({ exec: read }, account)`, `run([read], account)`).
@@ -144,8 +256,11 @@ export function list(account: string, flag: boolean, client: { query: (sql: stri
 Not followed, not safe: a missing report is not a judgment that the adapter is
 safe. The rule does not follow a stored object or array (properties can
 change), a property read, a spread element, a getter or setter, or a private
-method. It does not follow `read.bind` passed without calling it, optional
-`read?.bind(null)` / `read.bind?.(null)`, or `.bind` on a callback. `.bind`
+method. It does not follow `read.bind` passed without calling it, or `.bind`
+on a callback. `read?.bind(null)` and `read.bind?.(null)` are that bind when
+the chain runs. A string or expression-free template key is the same member
+(`db["read"]`, ``db[`read`]``, `read["call"]`, ``read[`apply`]``). A computed
+identifier key (`db[name]`, `read[name]`) is not a static name. `.bind`
 with arguments after `this` (`read.bind(null, account)`) is not followed:
 those arguments are prepended, and `read(sql`…`)` would drop them. A function
 declaration that is assigned, or that shares its scope with direct `eval`, is
@@ -214,7 +329,9 @@ run(0 ?? read, account);
   defaults to `[]`. `var` is not a scoped executor.
 - `executorTypeNames` lists imported type names whose annotated parameters
   (including optional and inline-destructured ones) are executors inside the
-  declaring function. It defaults to `[]`.
+  declaring function. It also proves supported helper argument slots described
+  above, including proven required options-object fields with typed linting.
+  It defaults to `[]`.
 - `trustedSqlTags` defaults to `[]`. Each entry has `module` and `name`.
   It is accepted so a shared executor configuration validates. This rule does
   not read SQL text.
@@ -226,15 +343,22 @@ run(0 ?? read, account);
   import, a scoped factory or typed parameter, or a `const` alias of one.
   An untyped `client.query` is not an executor. Without a module, `.query`
   matches every member only when `executorNames` includes `query`.
+  `import * as db` matches `db.read` when `read` is an executor name and the
+  module is `importSpecifier` (a subpath does not match). `const { read } = db`
+  is that export. `const { query } = tx` is `tx.query` when `tx` is a proven
+  receiver. A computed identifier key, a property default, `let` or `var`, and
+  a default import are not those executors. A member named `call` on the
+  namespace is that executor, not `Function.prototype.call`, when `call` is the
+  configured name.
 - Omitting both `importSpecifier` and `executorNames` is a configuration error.
   Set `executorNames: []` to select no executor calls.
 
 ## Fix
 
 This rule does not autofix and does not offer a suggestion. Replacing the
-adapter with `run(read, account)` is not a judged rewrite: analysis does not
-follow an executor passed as a value, so the statement inside `run` stays
-unchecked. Name the executor inside the helper instead:
+adapter with `run(read, account)` requires a proven configured executor
+parameter on `run`; otherwise the statement inside `run` stays unchecked. Name
+the executor inside the helper instead:
 
 ```ts
 function run(account: string) {

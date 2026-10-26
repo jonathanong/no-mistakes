@@ -1,0 +1,192 @@
+[
+  {
+    "file": "src/codebase/postgres/catalog/bounded.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 11,
+        "covered": 11,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 11,
+        "covered": 11,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 90,
+        "covered": 90,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 132,
+        "covered": 132,
+        "notcovered": 0,
+        "percent": 100.0
+      }
+    }
+  },
+  {
+    "file": "src/codebase/postgres/statements/bounds/pins/evidence.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 1,
+        "covered": 1,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 1,
+        "covered": 1,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 32,
+        "covered": 32,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 59,
+        "covered": 59,
+        "notcovered": 0,
+        "percent": 100.0
+      }
+    }
+  },
+  {
+    "file": "src/codebase/postgres/statements/bounds/pins/expression.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 1,
+        "covered": 1,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 1,
+        "covered": 1,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 32,
+        "covered": 32,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 36,
+        "covered": 36,
+        "notcovered": 0,
+        "percent": 100.0
+      }
+    }
+  },
+  {
+    "file": "src/codebase/postgres/statements/bounds/pins/resolver/canonical.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 3,
+        "covered": 3,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 3,
+        "covered": 3,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 26,
+        "covered": 26,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 37,
+        "covered": 37,
+        "notcovered": 0,
+        "percent": 100.0
+      }
+    }
+  },
+  {
+    "file": "src/codebase/rules/postgres_bounded_statements/evaluate/keys/indexes.rs",
+    "summary": {
+      "branches": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "mcdc": {
+        "count": 0,
+        "covered": 0,
+        "notcovered": 0,
+        "percent": 0.0
+      },
+      "functions": {
+        "count": 9,
+        "covered": 9,
+        "percent": 100.0
+      },
+      "instantiations": {
+        "count": 9,
+        "covered": 9,
+        "percent": 100.0
+      },
+      "lines": {
+        "count": 76,
+        "covered": 76,
+        "percent": 100.0
+      },
+      "regions": {
+        "count": 106,
+        "covered": 106,
+        "notcovered": 0,
+        "percent": 100.0
+      }
+    }
+  }
+]

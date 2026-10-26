@@ -1,20 +1,137 @@
 # no-mistakes
 
+<!-- cspell:ignore uuidv -->
+
 [![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/jonathanong/no-mistakes?utm_source=badge)
 
-`no-mistakes` tells coding agents and CI which files, tests, and routes a
-change can affect, then enforces the static shapes that keep those answers
-true. It parses the current checkout locally. It does not run the app, call a
-model, or keep a database.
+`no-mistakes` is about **deterministically not making mistakes**. It tells
+coding agents and CI which files, tests, and routes a change can affect, then
+enforces the static shapes that keep those answers true and the PostgreSQL
+patterns that are expensive to fix later. It parses the current checkout
+locally. It does not run the app, call a model, or keep a database.
 
-The jobs are:
+## Four pillars
 
-1. **Scope the change** — callers, routes, queues, and workflows through the
-   resolved graph, not a text search
-2. **Select the tests** — Vitest, Playwright, and configured native plans
-   instead of every suite
-3. **Keep the graph honest** — repository checks and ESLint/Oxlint rules that
-   stop agents from hiding relationships
+### 1. Scope the change
+
+Find what a change can reach by walking one canonical dependency graph (typed
+edges for imports, routes, queues, workflows, and more), not by text search.
+The traversal is deterministic and crosses apps in a workspace, so a backend
+edit surfaces the frontend pages and tests that depend on it.
+
+```sh
+no-mistakes dependents packages/api/src/posts.mts --format paths
+no-mistakes symbols packages/api/src/posts.mts --mode signature-impact --symbol getPost --format json
+no-mistakes impacted-checks packages/api/src/posts.mts --root . --format json
+```
+
+See [`dependents`](docs/cli/dependents.md), [`symbols`](docs/cli/symbols.md),
+[`impacted-checks`](docs/cli/impacted-checks.md), and
+[graph edges](docs/graph-edges.md).
+
+### 2. Select the tests
+
+Run the Playwright and Vitest tests that reach the change instead of every
+suite, including tests in other apps that exercise a changed backend route.
+
+```sh
+no-mistakes tests plan playwright --changed-file packages/api/src/posts.mts --format json
+no-mistakes tests plan vitest --from-git-diff origin/main...HEAD --format json
+```
+
+See [`tests plan`](docs/cli/tests-plan.md) and
+[`tests why`](docs/cli/tests-why.md).
+
+### 3. Keep the graph honest
+
+Dynamic imports, computed selectors, and ambiguous ids make the graph guess.
+Rules ban that code and name a static rewrite. `no-mistakes check` runs the
+global, cross-file rules; the ESLint/Oxlint plugin `eslint-plugin-no-mistakes`
+runs the per-file ones. For example,
+[`playwright-unique-test-ids`](docs/rules/playwright-unique-test-ids.md) fails
+when two components share `data-testid="save"`, and
+[`no-mistakes/playwright-literals`](docs/eslint-rules/playwright-literals.md)
+rejects ``data-pw={`save-${user.id}`}`` so selectors and test ids stay literal
+strings the graph can match to tests.
+
+See [rules](docs/rules/README.md), [ESLint rules](docs/eslint-rules/README.md),
+and [why](docs/why.md).
+
+### 4. PostgreSQL correctness
+
+Schema and query mistakes are hard to undo in production: the fix is a
+migration, a backfill, or a lock-heavy rewrite, and it may not be trivially
+fixable afterwards. So bad patterns are banned up front, in schema SQL and in
+the queries your code executes. For example,
+[`postgres-no-offset`](docs/rules/postgres-no-offset.md) bans `OFFSET`
+pagination (use cursor pagination), and
+[`postgres-sql-shape-policy`](docs/rules/postgres-sql-shape-policy-banned-functions.md)
+with `banned-function-call` can ban `uuidv7()` calls inside `WHERE`, `JOIN ON`,
+and `HAVING` predicates, so the key is compared against a stable bound computed
+once per statement.
+[`postgres-generated-column-predicates`](docs/rules/postgres-generated-column-predicates.md)
+also bans filtering or sorting on a generated column derived from the primary
+key (such as `uuid_extract_timestamp(id)`); compare the key column itself. UUIDv7
+cast and index-loss coverage is coming in #2652.
+
+See the [PostgreSQL rules](docs/rules/README.md) and
+[`postgres`](docs/cli/postgres.md).
+
+## How analysis works
+
+**Recall over precision** governs both `effort` and `unanalyzable`. A missed mistake is worse than a
+noisy report: an over-report costs a moment to dismiss or suppress, while a
+silent omission cannot be detected. So `no-mistakes` never treats an input it
+cannot prove as clean (see [why](docs/why.md#recall-over-precision)).
+
+- `effort` follows from it: `max` spends more analysis to prove more inputs
+  (helpers, aliases, builders), shrinking the uncertain set. `low` proves less
+  and is cheaper, but does not clear what it skips; skipped shapes become
+  unanalyzable instead of passing, which is why `low` can report more.
+- `unanalyzable` follows from it: uncertain inputs are always surfaced through
+  the policy. `report` (default) fails, `advise` notes them, and `ignore` is an
+  explicit, visible opt-out. Definite violations stay findings under every policy.
+- When you get an unanalyzable report: rewrite the code to a statically provable
+  shape (change the code, not the analyzer), raise `effort`, or suppress it with
+  a reason.
+
+Each rule application has two analysis dimensions. Both are described in
+[rule applications](docs/configuration/rules.md) and
+[configuration](docs/configuration/README.md).
+
+**`effort`** is `low` or `max`. `max` is the default and the most complete
+analysis. `low` is opt-in per rule application and only exists for rules that
+adopt it: `declared-payload-compatibility`, `github-actions-download-integrity`,
+`github-actions-job-timeouts`, `nextjs-no-caching`,
+`nextjs-redirect-destinations`, `playwright-coverage`,
+`playwright-unique-html-ids`, `playwright-unique-test-ids`,
+`postgres-no-mutable-sql-registry`, `postgres-no-offset`,
+`postgres-no-unbounded-sql-identifier`, `postgres-require-query-annotation`,
+`require-storybook-stories`, and `test-no-unmocked-dynamic-imports`. Resolution
+order, highest first: CLI `--effort` / N-API `effort`, then `options.effort`,
+then repo-level `effort`, then `max`. `--effort` overrides every rule, so use
+it deliberately. If a partner-backed low rule's partner check is missing or out
+of scope, it warns and falls back to `max`. A rule outside this list
+configured with `effort: low` warns "requested effort low; effective effort
+max because this rule has no low implementation" and runs at `max`.
+
+```yaml
+effort: max # repo default
+rules:
+  - rule: postgres-require-query-annotation
+    options:
+      effort: low # fast literal-only proof for this rule
+  - rule: playwright-unique-test-ids # stays at max
+```
+
+**`unanalyzable`** is `report`, `advise`, or `ignore`: what to do with inputs
+the analyzer cannot soundly resolve (dynamic or unproven shapes). `report`
+fails the run and is the default; `advise` emits a non-failing advisory;
+`ignore` omits it. Set it repo-wide or per rule with `options.unanalyzable`.
+The legacy `unanalyzableSql: fail` alias means `report`. `low` can report more uncertainty than `max` resolves, so compare definite
+findings separately.
+
+## How it works
 
 Grep has no resolver. Embeddings are probabilistic and cost a model call.
 Persistent indexes go stale across worktrees. ESLint cannot see cross-file
@@ -34,28 +151,7 @@ For example, consider this dependency chain:
 
 One graph query can expose the whole chain while planning. In CI, a change to
 `getPost()` can select the relevant Playwright tests instead of running every
-suite. The answer is derived locally from syntax and configuration—no
-embeddings or probabilistic inference.
-
-The same analysis powers repository-wide rules that ESLint and Oxlint cannot
-express one file at a time. One example is detecting duplicate exported
-function names that an agent may otherwise recreate after an incomplete text
-search:
-
-```ts
-// backend/controllers/users.mts
-export function getCurrentUser (ctx) {
-  return UserService.getUserById(ctx.params.id)
-}
-
-// backend/controllers/getCurrentUser.mts
-export function getCurrentUser (ctx) {
-  return UserService.getUserById(ctx.params.id)
-}
-```
-
-`no-mistakes check` reports both definitions so the agent can reuse or rename
-the existing API.
+suite. The answer is derived locally from syntax and configuration.
 
 ## Install and first queries
 
@@ -162,76 +258,7 @@ workflow can avoid subprocess overhead.
 
 ## Contributing
 
-This repository is a huge token sink. Thus, contributions are welcomed.
-
-1. Please add test cases as files on disk, never built inside a test:
-   - New scenarios go in `test-cases/<category>/<scenario>/fixture/`. Rule pass/fail pairs go in
-     `test-cases/rules/<rule>/fixture/{pass,fail}`.
-   - A suite whose loader reads `fixtures/<category>/<name>/` (benchmarks, N-API, test-plan, and
-     some per-rule cases) keeps its cases there. Both trees hold some `rules/`, `lockfile/`, and
-     `check-runner/` cases, so find the suite's loader with `rg` and add to the tree it reads.
-2. Annotate which AI harness + model was used, `Co-Authored-By` is preferred
-3. Maintain 98% project and patch test coverage
-
-<!-- cspell:ignore rustup Clippy -->
-Development, CI, release builds, and benchmarks use the latest stable Rust.
-Run `rustup update stable` before local validation; `rust-toolchain.toml` selects
-that channel and installs Clippy and rustfmt. Workflows select `toolchain: stable`
-while pinning the setup action code separately. Benchmark comparisons must use
-the same resolved compiler version for both runs and record that version.
-
-CI enforces per-function CRAP and cyclomatic complexity limits of 30. The
-complexity gate runs `cargo crap --workspace --missing optimistic --fail-above
---threshold 30 --summary` without LCOV: assuming full coverage makes CRAP equal
-cyclomatic complexity, including source omitted from the coverage report.
-
-Run `pnpm run lint:duplicates` to check for copied blocks of at least 30 lines
-and functions with at least 80% structural similarity. CI runs the same jscpd
-check and fails on any reported clone. See the [duplication guide](docs/development/code-duplication.md)
-for its scope and how to fix findings.
-
-Native CI builds and platform tests omit Rust debug metadata to keep compilation
-within their ten-minute step deadlines. Development and test profiles use the same
-setting so Windows can reuse the CLI's library build. Debug assertions stay enabled;
-Linux still runs the full suite and enforces the coverage gates. These defaults
-live in the workspace Cargo profiles, including release validation. For local
-debugging, use `CARGO_PROFILE_DEV_DEBUG=2` or `CARGO_PROFILE_TEST_DEBUG=2`.
-
-CI and release validation share `.github/scripts/rust-validation.sh`: `build` and
-`test` select the locked workspace, all features, libraries, binaries, and integration
-tests; `doc` runs documentation tests separately. Coverage instrumentation stays scoped to
-the coverage build and test steps. Run the shared script locally with Bash to
-reproduce either validation scope. Release resumes use validation tooling from
-the running workflow while retaining the tagged Rust source; see the
-[CI build guide](docs/development/ci-builds.md).
-
-Rust integration tests share five explicitly registered suites: `suite_cli_queries`,
-`suite_cli_rules`, `suite_cli_postgres`, `suite_cli_test_plans`, and
-`suite_contracts`. This links the analyzer once per suite instead of once per
-source file. Keep new root `crates/no-mistakes/tests/*.rs` modules registered in
-one suite; the registration test rejects omitted or duplicate sources. Original
-module and fixture paths stay unchanged. To run one former target, use, for example,
-`cargo test --locked -p no-mistakes --test suite_cli_queries cli_queries::`.
-Use the full module-qualified name with `-- --exact` for a single test.
-`windows_job_object` and `macos_invocation` remain separate platform harnesses
-for their process and crate-root requirements.
-
-For this repository, use `no-mistakes impacted-checks <changed-file> --root .
---format json` to obtain the configured Rust validation command. The Cargo test
-planner currently derives integration target names from source filenames; it
-cannot project a changed suite module onto an explicit `[[test]]` target.
-Run the returned workspace test command or the suite commands above.
-
-CI checks links to this repository's `main` documentation against the checked-out
-`docs/` files, including new pages in a pull request. Missing targets still fail;
-links outside that documentation prefix continue to be checked over the network.
-
-ARM macOS release builds use ThinLTO and 16 code generation units so LLVM can
-optimize the combined CLI and N-API build in parallel on a cold runner. The
-workflow sets these Cargo profile overrides before restoring its build cache.
-Other release targets and local builds retain full LTO and one code generation
-unit. Compile-time and runtime differences require measurements on the same
-platform; Linux benchmarks do not establish the macOS tradeoff.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Support
 

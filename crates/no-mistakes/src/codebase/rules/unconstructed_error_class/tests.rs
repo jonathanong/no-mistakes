@@ -12,7 +12,12 @@ fn fixture() -> PathBuf {
 
 fn findings(config: &str) -> anyhow::Result<Vec<RuleFinding>> {
     let root = fixture();
-    run_check(&root, Some(&root.join(config)), None)
+    // These legacy assertions describe definite dead classes; uncertainty has
+    // its own saved-fixture policy matrix in tests/uncertainty.rs.
+    run_check(&root, Some(&root.join(config)), None).map(|mut findings| {
+        findings.retain(|finding| finding.target.as_deref() != Some("unanalyzable"));
+        findings
+    })
 }
 
 /// `file:line name` for each finding, in report order.
@@ -25,6 +30,30 @@ fn reported(findings: &[RuleFinding]) -> Vec<String> {
                 finding.file,
                 finding.line,
                 finding.target.as_deref().unwrap_or("?")
+            )
+        })
+        .collect()
+}
+
+fn diagnostic_report(root: &std::path::Path) -> serde_json::Value {
+    let output = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({"root":root}).to_string(),
+    ))
+    .unwrap();
+    serde_json::from_str(&output).unwrap()
+}
+
+fn reported_channel(report: &serde_json::Value, channel: &str) -> Vec<String> {
+    report[channel]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| {
+            format!(
+                "{}:{} {}",
+                row["file"].as_str().unwrap(),
+                row["line"],
+                row["target"].as_str().unwrap()
             )
         })
         .collect()
@@ -131,8 +160,6 @@ fn constructions_through_aliases_barrels_namespaces_and_workspaces_count() {
         "StarError",
         "NamespaceError",
         "WorkspaceError",
-        "ThisFactoryError",
-        "NestedFactoryError",
         "NamedFactoryError",
     ] {
         assert!(!found.contains(constructed), "{constructed} was reported");
@@ -156,12 +183,10 @@ fn namespace_members_built_through_a_resolved_reference_are_not_reported() {
     let found = findings(".no-mistakes.yml").unwrap();
     let targets = targets(&found);
     for silent in [
-        // Same file: qualified, bare, nested, dotted, and `new this()`.
+        // Same file: qualified, bare, nested, and dotted known constructions.
         "Errors.Built",
         "Errors.Local",
-        "Errors.TopicError",
         "Errors.Inner.DeepBuilt",
-        "Errors.Inner.DeepError",
         "Dotted.Path.BuiltDotted",
         "Merged.First",
         "Mix.Inner.DottedPart",
@@ -215,7 +240,7 @@ fn a_subclass_of_a_namespace_member_credits_its_base() {
 /// a class, a module namespace used as a value, a dynamic import or `require`,
 /// and a construction of a member the graph cannot find.
 #[test]
-fn a_namespace_that_escapes_is_never_reported() {
+fn escaped_namespaces_are_not_claimed_definitely_unconstructed() {
     let found = findings(".no-mistakes.yml").unwrap();
     let targets = targets(&found);
     for silent in [
@@ -321,7 +346,7 @@ fn classes_declared_in_declaration_files_are_never_reported() {
 }
 
 #[test]
-fn unrelated_and_opaque_classes_are_ignored() {
+fn unrelated_and_opaque_classes_have_no_definite_findings() {
     let found = reported(&findings(".no-mistakes.yml").unwrap()).join("\n");
     for ignored in [
         "PrivateUnusedError",
@@ -428,3 +453,49 @@ fn a_broken_test_file_is_a_rule_error_when_a_namespace_member_would_be_reported(
         "{error}"
     );
 }
+
+#[path = "tests/uncertainty.rs"]
+mod uncertainty;
+
+#[path = "tests/ancestry_compatibility.rs"]
+mod ancestry_compatibility;
+
+#[path = "tests/construction_targets.rs"]
+mod construction_targets;
+#[path = "tests/declaration_fact_boundaries.rs"]
+mod declaration_fact_boundaries;
+#[path = "tests/declaration_ownership.rs"]
+mod declaration_ownership;
+#[path = "tests/diagnostic_expressions.rs"]
+mod diagnostic_expressions;
+#[path = "tests/external_declarations.rs"]
+mod external_declarations;
+#[cfg(unix)]
+#[path = "tests/symlink_declarations.rs"]
+mod symlink_declarations;
+
+#[path = "tests/constructor_proof_ownership.rs"]
+mod constructor_proof_ownership;
+#[path = "tests/scoped_construction_targets.rs"]
+mod scoped_construction_targets;
+#[path = "tests/shared_package_targets.rs"]
+mod shared_package_targets;
+
+#[path = "tests/ambient_module_targets.rs"]
+mod ambient_module_targets;
+
+#[path = "tests/constructor_identity.rs"]
+mod constructor_identity;
+
+#[path = "tests/ambient_import_equals.rs"]
+mod ambient_import_equals;
+
+#[path = "tests/constructor_target_gaps.rs"]
+mod constructor_target_gaps;
+#[path = "tests/declaration_proof_guards.rs"]
+mod declaration_proof_guards;
+#[path = "tests/workspace_export_targets.rs"]
+mod workspace_export_targets;
+
+#[path = "tests/dynamic_bases.rs"]
+mod dynamic_bases;

@@ -24,12 +24,31 @@ rules:
           forbiddenColumns: [updated_at, deleted_at]
           requiredTriggers:
             - { function: fn_reject_mutation, timing: before, events: [update, delete] }
+        - name: article-votes
+          tablePattern: '^article_votes$'
+          requiredColumns:
+            - { name: user_id, type: uuid, nullable: false, foreignKey: true, references: [users], onDelete: cascade }
+            - { name: score, type: smallint, nullable: false }
+        - name: comment-votes
+          tablePattern: '^comment_votes$'
+          requiredColumns:
+            - { name: user_id, type: uuid, nullable: false, foreignKey: true, references: [users], onDelete: cascade }
+            - { name: score, type: smallint, nullable: false }
+        - name: content-votes
+          tablePattern: '^content_votes$'
+          requiredColumns:
+            - { name: user_id, type: uuid, nullable: false, foreignKey: true, references: [users], onDelete: cascade }
+            - { name: score, type: smallint, nullable: false }
+          forbiddenColumns: [target_table]
+        - name: report-export-cursors
+          tablePattern: '^report_export_cursors$'
+          primaryKeyTypes: [enum]
+        - name: sync-cursors
+          tablePattern: '^sync_cursors$'
+          primaryKeyTypes: [uuid]
       bannedTablePatterns:
         - pattern: '_(history|change_logs|audit_logs)$'
           message: use a *_revisions table
-      allow:
-        - object: table:vendor_sync_history
-          reason: Mirror of a vendor table; shape owned by the vendor
 ```
 
 ## Why and when
@@ -93,25 +112,242 @@ an error. `allow` defaults to `[]`.
 `order_revisions` has `id`, an `_id` foreign key, `revised_by_id` with
 `ON DELETE SET NULL`, `changes jsonb NOT NULL`, and a
 `BEFORE UPDATE OR DELETE` trigger executing `fn_reject_mutation()`. `orders`
-matches no shape and no banned pattern. `article_votes` has
-`user_id uuid NOT NULL` referencing `users` `ON DELETE CASCADE` and
-`score smallint NOT NULL`. `report_export_cursors` is keyed by the
-`report_types` enum.
+matches no shape and no banned pattern. `article_votes` has `user_id uuid`
+`NOT NULL` referencing `users` with `ON DELETE CASCADE`, plus `score smallint`
+`NOT NULL`. `report_export_cursors` is keyed by the `report_types` enum.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY, created_at timestamptz NOT NULL);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false
+        }
+      }
+    },
+    "order_revisions": {
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "order_id": { "dataType": "uuid", "nullable": false },
+        "revised_by_id": { "dataType": "uuid", "nullable": true },
+        "changes": { "dataType": "jsonb", "nullable": false }
+      },
+      "foreignKeys": {
+        "order_revisions_order_id_fkey": {
+          "columns": ["order_id"], "referencedTable": "orders",
+          "referencedColumns": ["id"], "onDelete": "cascade"
+        },
+        "order_revisions_revised_by_id_fkey": {
+          "columns": ["revised_by_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "set null"
+        }
+      },
+      "triggers": {
+        "reject_revision_mutation": {
+          "definition": "CREATE TRIGGER reject_revision_mutation BEFORE UPDATE OR DELETE ON order_revisions FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
+      }
+    },
+    "article_votes": {
+      "columns": {
+        "user_id": { "dataType": "uuid", "nullable": false },
+        "score": { "dataType": "smallint", "nullable": false }
+      },
+      "foreignKeys": {
+        "article_votes_user_id_fkey": {
+          "columns": ["user_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "cascade"
+        }
+      }
+    },
+    "report_export_cursors": {
+      "columns": {
+        "report_type": { "dataType": "report_types", "nullable": false }
+      },
+      "primaryKey": { "columns": ["report_type"] }
+    }
+  },
+  "enums": { "report_types": { "values": ["daily", "monthly"] } }
+}
 ```
 
 
 ## Counterexample
 
-`bad_revisions.changes` is nullable `json` with no reject trigger.
-`comment_votes.user_id` is `ON DELETE SET NULL`. `content_votes` has
-`target_table`. `sync_cursors` is keyed by `cursor_name text`.
+`bad_revisions.changes` is nullable even though it uses `jsonb`; the other
+revision requirements are present.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "bad_revisions": {
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "order_id": { "dataType": "uuid", "nullable": false },
+        "revised_by_id": { "dataType": "uuid", "nullable": true },
+        "changes": { "dataType": "jsonb", "nullable": true }
+      },
+      "foreignKeys": {
+        "bad_revisions_order_id_fkey": {
+          "columns": ["order_id"], "referencedTable": "orders",
+          "referencedColumns": ["id"], "onDelete": "cascade"
+        },
+        "bad_revisions_revised_by_id_fkey": {
+          "columns": ["revised_by_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "set null"
+        }
+      },
+      "triggers": {
+        "reject_revision_mutation": {
+          "definition": "CREATE TRIGGER reject_revision_mutation BEFORE UPDATE OR DELETE ON bad_revisions FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
+      }
+    }
+  }
+}
+```
+
+`legacy_revisions.changes` uses `json` instead of `jsonb`; its nullability,
+foreign keys, and trigger meet the other requirements.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "legacy_revisions": {
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "order_id": { "dataType": "uuid", "nullable": false },
+        "revised_by_id": { "dataType": "uuid", "nullable": true },
+        "changes": { "dataType": "json", "nullable": false }
+      },
+      "foreignKeys": {
+        "legacy_revisions_order_id_fkey": {
+          "columns": ["order_id"], "referencedTable": "orders",
+          "referencedColumns": ["id"], "onDelete": "cascade"
+        },
+        "legacy_revisions_revised_by_id_fkey": {
+          "columns": ["revised_by_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "set null"
+        }
+      },
+      "triggers": {
+        "reject_revision_mutation": {
+          "definition": "CREATE TRIGGER reject_revision_mutation BEFORE UPDATE OR DELETE ON legacy_revisions FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
+      }
+    }
+  }
+}
+```
+
+`unprotected_revisions` has the required columns and foreign keys but no
+reject trigger.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "unprotected_revisions": {
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false },
+        "order_id": { "dataType": "uuid", "nullable": false },
+        "revised_by_id": { "dataType": "uuid", "nullable": true },
+        "changes": { "dataType": "jsonb", "nullable": false }
+      },
+      "foreignKeys": {
+        "unprotected_revisions_order_id_fkey": {
+          "columns": ["order_id"], "referencedTable": "orders",
+          "referencedColumns": ["id"], "onDelete": "cascade"
+        },
+        "unprotected_revisions_revised_by_id_fkey": {
+          "columns": ["revised_by_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "set null"
+        }
+      }
+    }
+  }
+}
+```
+
+`comment_votes.user_id` is `ON DELETE SET NULL`.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "comment_votes": {
+      "columns": {
+        "user_id": { "dataType": "uuid", "nullable": false },
+        "score": { "dataType": "smallint", "nullable": false }
+      },
+      "foreignKeys": {
+        "comment_votes_user_id_fkey": {
+          "columns": ["user_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "set null"
+        }
+      }
+    }
+  }
+}
+```
+
+`content_votes` has `target_table`.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "content_votes": {
+      "columns": {
+        "user_id": { "dataType": "uuid", "nullable": false },
+        "score": { "dataType": "smallint", "nullable": false },
+        "target_table": { "dataType": "text", "nullable": false }
+      },
+      "foreignKeys": {
+        "content_votes_user_id_fkey": {
+          "columns": ["user_id"], "referencedTable": "users",
+          "referencedColumns": ["id"], "onDelete": "cascade"
+        }
+      }
+    }
+  }
+}
+```
+
+`sync_cursors` is keyed by `cursor_name text` instead of a UUID.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "sync_cursors": {
+      "columns": { "cursor_name": { "dataType": "text", "nullable": false } },
+      "primaryKey": { "columns": ["cursor_name"] }
+    }
+  }
+}
+```
+
 `order_history` matches the banned history pattern.
 
-```sql
-CREATE TABLE orders (name text);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": { "order_history": { "columns": {} } }
+}
 ```
 
 
@@ -121,7 +357,25 @@ Add the missing column, foreign key, trigger, or primary-key type the shape
 names, or rename the table onto the pattern that matches how it is actually
 built. Drop forbidden columns such as `updated_at` on an append-only table.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. It judges the generated schema catalog (`schemaCatalogPath`); executor calls in TS/JS are not evaluated.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. This rule has no unanalyzable inputs: it judges the configured schema catalog, a JSONC file read directly from `schemaCatalogPath` (no SQL is parsed by the rule), so every entry is either present or absent. A catalog that cannot be read, is not valid JSONC, is empty, or is not a valid snapshot is a hard error, not an unanalyzable input. The repository-level `unanalyzable` default does not affect it.
+
 ## Suppression
+
+For an intentional exception, add an entry under the rule's `options.allow`:
+
+```yaml
+allow:
+  - object: table:vendor_sync_history
+    reason: Mirror of a vendor table; shape owned by the vendor
+```
 
 Snapshot JSON cannot carry `no-mistakes-disable` comments. Suppress every
 finding for a table with `allow: [{object, reason}]`, where `object` is

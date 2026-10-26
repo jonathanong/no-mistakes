@@ -1,0 +1,80 @@
+[
+  {
+    "root": "test-cases/check-runner/playwright-coverage/fixture/effort-low",
+    "command": [
+      "check",
+      "--config",
+      ".no-mistakes-advise.yml",
+      "--format",
+      "json"
+    ],
+    "exit": 1,
+    "sha256": "83e592d2100a6e78c2456e434eb7a9a2f176c6132135254b9e15ba2685ed371a",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/check-runner/playwright-coverage/fixture/effort-low",
+    "command": [
+      "check",
+      "--config",
+      ".no-mistakes-default-max.yml",
+      "--format",
+      "json"
+    ],
+    "exit": 1,
+    "sha256": "ae039e755837ca8a74f4187a99de77431debc0d437075697f4b3262ff8151542",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/check-runner/playwright-coverage/fixture/effort-low",
+    "command": [
+      "check",
+      "--config",
+      ".no-mistakes-explicit-max.yml",
+      "--format",
+      "json"
+    ],
+    "exit": 1,
+    "sha256": "ae039e755837ca8a74f4187a99de77431debc0d437075697f4b3262ff8151542",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/check-runner/playwright-coverage/fixture/effort-low",
+    "command": [
+      "check",
+      "--config",
+      ".no-mistakes-ignore.yml",
+      "--format",
+      "json"
+    ],
+    "exit": 1,
+    "sha256": "9cd92c9b3553c701175f568ff84096741131c04858e9e76bdbb5e7d33be305b7",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/check-runner/playwright-coverage/fixture/effort-low",
+    "command": [
+      "check",
+      "--config",
+      ".no-mistakes-report.yml",
+      "--format",
+      "json"
+    ],
+    "exit": 1,
+    "sha256": "e02cd10ad40d5f7727ff28b92d782d5c1ce77ac9f80062346779ad90c453568f",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "root": "test-cases/check-runner/playwright-coverage/fixture/effort-low",
+    "command": [
+      "playwright",
+      "check",
+      "--config",
+      ".no-mistakes-default-max.yml",
+      "--json"
+    ],
+    "exit": 1,
+    "sha256": "7db457931297dd90301dfb3417045b98d3fb859a9d725d04e4352dff549fb7c4",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

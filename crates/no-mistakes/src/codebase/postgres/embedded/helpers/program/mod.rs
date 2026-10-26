@@ -74,7 +74,7 @@ pub(crate) enum Expr {
     /// An untagged template: every interpolation must be a literal string.
     Template(Vec<RecoveredSql>, Vec<(Expr, Mark)>),
     /// A trusted-tag template: interpolations are binds or inlined fragments.
-    Sql(Vec<RecoveredSql>, Vec<(Expr, Mark)>),
+    Sql(Vec<RecoveredSql>, Vec<(Expr, Mark)>, bool),
     Member(Box<Expr>, String),
     Object(Vec<Entry>),
     Array(Vec<Expr>),

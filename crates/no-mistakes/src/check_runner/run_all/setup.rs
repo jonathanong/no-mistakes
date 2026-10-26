@@ -63,12 +63,37 @@ pub(super) fn build(
         unique_exports: unique_exports_enabled,
         embedded_sql: enabled.embedded_sql,
     });
+    no_mistakes::codebase::rules::nextjs_no_caching::configure_effort_plan(config, &mut plan)?;
+    no_mistakes::codebase::rules::require_storybook_stories::configure_effort_plan(
+        config, &mut plan,
+    )?;
     plan.query_annotation_catalog = Some(std::sync::Arc::clone(&prepared.tsconfig_catalog));
     plan.production_import_paths = no_mistakes::codebase::rules::production_dependency_declarations::required_import_fact_files(
         root, config, prepared.visible_paths.paths_for(root).as_ref(),
     )?;
     plan.graph.imports |= !plan.production_import_paths.is_empty();
-    no_mistakes::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
+    no_mistakes::codebase::check_facts::configure_family_path_scopes(
+        root,
+        prepared.visible_paths.paths_for(root).as_ref(),
+        config,
+        prepared.visible_paths.source_store_for(root).as_ref(),
+        &mut plan,
+    )?;
+    no_mistakes::codebase::check_facts::configure_nextjs_caching_scope(
+        root,
+        prepared.visible_paths.paths_for(root).as_ref(),
+        config,
+        &prepared.inferred_roots,
+        &mut plan,
+    )?;
+    no_mistakes::codebase::check_facts::configure_nextjs_api_route_source_scope(
+        root,
+        prepared.visible_paths.paths_for(root).as_ref(),
+        config,
+        &prepared.inferred_roots,
+        &mut plan,
+    );
+    no_mistakes::codebase::postgres::configure_prepared_postgres_plan(root, config, &mut plan)?;
     no_mistakes::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
     let schema_catalog_paths = no_mistakes::codebase::postgres::configured_schema_catalog_paths(
         config,

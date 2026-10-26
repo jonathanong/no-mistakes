@@ -1,7 +1,8 @@
 "use strict";
 const { options } = require("../helpers");
-const { resolveVariable } = require("./test-no-shared-state-aliases");
+const { resolveVariable, stableConstInitializer } = require("./async-target-bindings");
 const { importSpecifierName } = require("./test-no-shared-state-callees");
+const { literalString } = require("./module-mock-helpers");
 const { unwrapExpression, isFunction } = require("./async-ast");
 const NAMES = new Set(["it", "test", "describe"]);
 const MODULES = new Set(["vitest", "@playwright/test"]);
@@ -21,12 +22,19 @@ function admit(source, importedName, namespace, testModules) {
   if (!testModules.has(source) || importedName !== (namespace ? "*" : "test")) return null;
   return namespace ? CONFIGURED_NAMESPACE : { framework: "@playwright/test", name: "test" };
 }
-function memberName(node) {
-  return node.computed
-    ? node.property.type === "Literal" && typeof node.property.value === "string"
-      ? node.property.value
-      : null
-    : node.property.name;
+function immutableKey(node, context) {
+  const seen = new Set();
+  while (node) {
+    node = unwrapExpression(node);
+    const literal = literalString(node);
+    if (literal !== null) return literal;
+    node = stableConstInitializer(node, context, seen);
+  }
+  return null;
+}
+function memberName(node, context) {
+  if (!node.computed && node.property.type === "Identifier") return node.property.name;
+  return immutableKey(node.property, context);
 }
 function unwrapBinding(node) {
   let current = node;
@@ -34,9 +42,8 @@ function unwrapBinding(node) {
   return current;
 }
 function propertyKey(property) {
-  if (property.key.type === "Literal") return String(property.key.value);
   if (!property.computed && property.key.type === "Identifier") return property.key.name;
-  return null;
+  return literalString(property.key);
 }
 // The key that introduces the identifier, after defaults and nested objects.
 // `const { test: t = x } = require("vitest")` and
@@ -61,7 +68,9 @@ function testModulesFor(context) {
   return modules;
 }
 
-function imported(node, context, namespace = false) {
+function imported(node, context, namespace = false, seen = new Set()) {
+  if (!node || seen.has(node)) return null;
+  seen.add(node);
   const testModules = testModulesFor(context);
   const variable = resolveVariable(node, context);
   for (const def of variable?.defs || []) {
@@ -70,6 +79,8 @@ function imported(node, context, namespace = false) {
     if (def.type === "ImportBinding") {
       source = def.parent.source.value;
       if (def.node.type === "ImportNamespaceSpecifier") importedName = "*";
+      else if (def.node.type === "ImportDefaultSpecifier")
+        importedName = source === "@playwright/test" ? "test" : null;
       else importedName = importSpecifierName(def.node);
     } else if (def.type === "Variable") {
       const declaration = def.node;
@@ -92,6 +103,15 @@ function imported(node, context, namespace = false) {
         importedName = patternBindingName(declaration.id, node.name);
       } else if (declaration.id.type === "Identifier" && declaration.id.name === node.name) {
         importedName = "*";
+      }
+      if (!source && init.type === "Identifier" && declaration.id.type === "ObjectPattern") {
+        const namespaceSource = imported(init, context, true, seen);
+        if (
+          (namespaceSource === "vitest" || namespaceSource === "@playwright/test") &&
+          NAMES.has(importedName)
+        ) {
+          return { framework: namespaceSource, name: importedName };
+        }
       }
     }
     const admitted = admit(source, importedName, namespace, testModules);
@@ -119,7 +139,7 @@ function testBinding(node, context, visited = new Set()) {
   if (node.type === "CallExpression") return testBinding(node.callee, context, visited);
   if (node.type === "TaggedTemplateExpression") return testBinding(node.tag, context, visited);
   if (node.type !== "MemberExpression") return null;
-  const name = memberName(node);
+  const name = memberName(node, context);
   if (NAMES.has(name) && node.object.type === "Identifier") {
     const framework = imported(node.object, context, true);
     if (framework && (framework !== CONFIGURED_NAMESPACE || name === "test"))
@@ -134,23 +154,33 @@ function testBinding(node, context, visited = new Set()) {
   if (name === "each" || name === "for") return { ...binding, table: name };
   return name === "describe" ? { ...binding, name } : binding;
 }
-function isContextSkip(node, context) {
-  const object = unwrapExpression(node.object);
-  if (object.type !== "Identifier") return false;
-  const variable = resolveVariable(object, context);
-  for (const def of variable?.defs || []) {
-    const callback = def.node;
-    if (def.type !== "Parameter" || !isFunction(callback)) continue;
-    const call = callback.parent;
-    if (call.type !== "CallExpression" || !call.arguments.includes(callback)) continue;
-    const binding = testBinding(call.callee, context);
-    if (binding?.framework !== "vitest" || binding.name === "describe" || binding.table === "each")
-      continue;
-    // each supplies table values; for preserves its second parameter as TestContext.
-    const parameter = callback.params[binding.table === "for" ? 1 : 0];
-    if (parameter?.type === "Identifier" && resolveVariable(parameter, context) === variable)
-      return true;
-  }
-  return false;
+function contextParameter(callback, context) {
+  const call = isFunction(callback) ? callback.parent : null;
+  if (call?.type !== "CallExpression" || !call.arguments.includes(callback)) return null;
+  const binding = testBinding(call.callee, context);
+  if (binding?.framework !== "vitest" || binding.name === "describe" || binding.table === "each")
+    return null;
+  // each supplies table values; for preserves its second parameter as TestContext.
+  return callback.params[binding.table === "for" ? 1 : 0];
 }
-module.exports = { memberName, testBinding, isContextSkip };
+function hasNonInitializingWrite(variable) {
+  return variable.references.some((reference) => reference.isWrite() && !reference.init);
+}
+function isContextObject(node, context) {
+  node = unwrapExpression(node);
+  if (node?.type !== "Identifier") return false;
+  const variable = resolveVariable(node, context);
+  if (!variable || hasNonInitializingWrite(variable)) return false;
+  return variable.defs.some((def) => {
+    if (def.type !== "Parameter") return false;
+    const parameter = contextParameter(def.node, context);
+    return parameter?.type === "Identifier" && resolveVariable(parameter, context) === variable;
+  });
+}
+module.exports = {
+  memberName,
+  testBinding,
+  contextParameter,
+  hasNonInitializingWrite,
+  isContextObject,
+};

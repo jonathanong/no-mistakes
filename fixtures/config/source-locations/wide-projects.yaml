@@ -1,0 +1,269 @@
+# Many sibling projects protect decoded-key and duplicate-key source lookup.
+rootKey: &root root
+shared: &shared {root: missing-shared}
+projects:
+  p000:
+    root: missing-000
+  p001:
+    root: missing-001
+  p002:
+    root: missing-002
+  p003:
+    root: missing-003
+  p004:
+    root: missing-004
+  p005:
+    root: missing-005
+  p006:
+    root: missing-006
+  p007:
+    root: missing-007
+  p008:
+    root: missing-008
+  p009:
+    root: missing-009
+  p010:
+    root: missing-010
+  p011:
+    root: missing-011
+  p012:
+    root: missing-012
+  p013:
+    root: missing-013
+  p014:
+    root: missing-014
+  p015:
+    root: missing-015
+  p016:
+    root: missing-016
+  p017:
+    root: missing-017
+  p018:
+    root: missing-018
+  p019:
+    root: missing-019
+  p020:
+    root: missing-020
+  p021:
+    root: missing-021
+  p022:
+    root: missing-022
+  p023:
+    root: missing-023
+  p024:
+    root: missing-024
+  p025:
+    root: missing-025
+  p026:
+    root: missing-026
+  p027:
+    root: missing-027
+  p028:
+    root: missing-028
+  p029:
+    root: missing-029
+  p030:
+    root: missing-030
+  p031:
+    root: missing-031
+  p032:
+    root: missing-032
+  p033:
+    root: missing-033
+  p034:
+    root: missing-034
+  p035:
+    root: missing-035
+  p036:
+    root: missing-036
+  p037:
+    root: missing-037
+  p038:
+    root: missing-038
+  p039:
+    root: missing-039
+  p040:
+    root: missing-040
+  p041:
+    root: missing-041
+  p042:
+    root: missing-042
+  p043:
+    root: missing-043
+  p044:
+    root: missing-044
+  p045:
+    root: missing-045
+  p046:
+    root: missing-046
+  p047:
+    root: missing-047
+  p048:
+    root: missing-048
+  p049:
+    root: missing-049
+  p050:
+    root: missing-050
+  p051:
+    root: missing-051
+  p052:
+    root: missing-052
+  p053:
+    root: missing-053
+  p054:
+    root: missing-054
+  p055:
+    root: missing-055
+  p056:
+    root: missing-056
+  p057:
+    root: missing-057
+  p058:
+    root: missing-058
+  p059:
+    root: missing-059
+  p060:
+    root: missing-060
+  p061:
+    root: missing-061
+  p062:
+    root: missing-062
+  p063:
+    root: missing-063
+  p064:
+    root: missing-064
+  p065:
+    root: missing-065
+  p066:
+    root: missing-066
+  p067:
+    root: missing-067
+  p068:
+    root: missing-068
+  p069:
+    root: missing-069
+  p070:
+    root: missing-070
+  p071:
+    root: missing-071
+  p072:
+    root: missing-072
+  p073:
+    root: missing-073
+  p074:
+    root: missing-074
+  p075:
+    root: missing-075
+  p076:
+    root: missing-076
+  p077:
+    root: missing-077
+  p078:
+    root: missing-078
+  p079:
+    root: missing-079
+  p080:
+    root: missing-080
+  p081:
+    root: missing-081
+  p082:
+    root: missing-082
+  p083:
+    root: missing-083
+  p084:
+    root: missing-084
+  p085:
+    root: missing-085
+  p086:
+    root: missing-086
+  p087:
+    root: missing-087
+  p088:
+    root: missing-088
+  p089:
+    root: missing-089
+  p090:
+    root: missing-090
+  p091:
+    root: missing-091
+  p092:
+    root: missing-092
+  p093:
+    root: missing-093
+  p094:
+    root: missing-094
+  p095:
+    root: missing-095
+  p096:
+    root: missing-096
+  p097:
+    root: missing-097
+  p098:
+    root: missing-098
+  p099:
+    root: missing-099
+  p100:
+    root: missing-100
+  p101:
+    root: missing-101
+  p102:
+    root: missing-102
+  p103:
+    root: missing-103
+  p104:
+    root: missing-104
+  p105:
+    root: missing-105
+  p106:
+    root: missing-106
+  p107:
+    root: missing-107
+  p108:
+    root: missing-108
+  p109:
+    root: missing-109
+  p110:
+    root: missing-110
+  p111:
+    root: missing-111
+  p112:
+    root: missing-112
+  p113:
+    root: missing-113
+  p114:
+    root: missing-114
+  p115:
+    root: missing-115
+  p116:
+    root: missing-116
+  p117:
+    root: missing-117
+  p118:
+    root: missing-118
+  p119:
+    root: missing-119
+  p120:
+    root: missing-120
+  p121:
+    root: missing-121
+  p122:
+    root: missing-122
+  p123:
+    root: missing-123
+  p124:
+    root: missing-124
+  p125:
+    root: missing-125
+  p126:
+    root: missing-126
+  p127:
+    root: missing-127
+  p064: # The last duplicate owns the entire project mapping.
+    root: missing-last
+  byAliasKey:
+    *root : missing-alias-key
+  byAlias: *shared
+  "escaped\u002ekey[0]":
+    root: missing-decoded
+? [not, a, string]
+: ignored

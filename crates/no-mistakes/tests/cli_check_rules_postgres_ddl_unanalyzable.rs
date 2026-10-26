@@ -1,0 +1,197 @@
+use std::path::PathBuf;
+use std::process::Command;
+
+#[test]
+fn malformed_ddl_survey_still_reports_in_all_eleven_schema_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join("malformed.yml"))
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(
+        report["advisories"].as_array().unwrap().is_empty(),
+        "{report}"
+    );
+    let count = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey/malformed/001.sql"
+    ))
+    .lines()
+    .count();
+    let mut by_line = std::collections::BTreeMap::<u64, Vec<&str>>::new();
+    for finding in report["rules"].as_array().unwrap() {
+        assert!(finding["message"]
+            .as_str()
+            .unwrap()
+            .contains("could not be analyzed"));
+        by_line
+            .entry(finding["line"].as_u64().unwrap())
+            .or_default()
+            .push(finding["rule"].as_str().unwrap());
+    }
+    assert_eq!(by_line.len(), count, "{report}");
+    for rules in by_line.values_mut() {
+        rules.sort_unstable();
+        rules.dedup();
+        assert_eq!(rules.len(), 11, "{report}");
+    }
+}
+
+#[test]
+fn postgres_17_ddl_family_survey_preserves_all_schema_rule_policies() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey");
+    for policy in ["default", "report", "ignore"] {
+        let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["check", "--format", "json", "--root"])
+            .arg(&root)
+            .arg("--config")
+            .arg(root.join(format!("{policy}.yml")))
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        let unanalyzable = |field: &str| {
+            report[field]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|item| {
+                    item["message"]
+                        .as_str()
+                        .unwrap()
+                        .contains("could not be analyzed")
+                })
+                .collect::<Vec<_>>()
+        };
+        let findings = unanalyzable("rules");
+        let advisories = unanalyzable("advisories");
+        let expected = if policy == "report" {
+            assert!(advisories.is_empty(), "{report}");
+            findings
+        } else {
+            assert!(findings.is_empty(), "{report}");
+            advisories
+        };
+        if policy == "ignore" {
+            assert!(expected.is_empty(), "{report}");
+            continue;
+        }
+        // Each of the eleven rules must retain the unsupported ALTER DOMAIN
+        // diagnostic; accepting it by silently discarding the SQL is incorrect.
+        let mut rules = expected
+            .iter()
+            .filter(|item| item["file"] == "migrations/001.sql" && item["line"] == 5)
+            .map(|item| item["rule"].as_str().unwrap())
+            .collect::<Vec<_>>();
+        rules.sort_unstable();
+        rules.dedup();
+        assert_eq!(rules.len(), 11, "{policy}: {report}");
+    }
+}
+
+#[test]
+fn procedural_bodies_are_skipped_but_unknown_sql_and_top_level_siblings_report() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/procedural");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join("report.yml"))
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    let mut actual = findings
+        .iter()
+        .map(|finding| {
+            (
+                finding["file"].as_str().unwrap(),
+                finding["line"].as_u64().unwrap(),
+            )
+        })
+        .collect::<Vec<_>>();
+    actual.sort_unstable();
+    assert_eq!(
+        actual,
+        [
+            ("migrations/block-command-followups.sql", 11),
+            ("migrations/block-command-followups.sql", 15),
+            ("migrations/block-command-followups.sql", 19),
+            ("migrations/block-command-followups.sql", 25),
+            ("migrations/block-command-followups.sql", 28),
+            ("migrations/block-command-followups.sql", 39),
+            ("migrations/block-command-followups.sql", 43),
+            ("migrations/block-command-followups.sql", 47),
+            ("migrations/block-command-followups.sql", 53),
+            ("migrations/block-command-followups.sql", 56),
+            ("migrations/command-followups.sql", 11),
+            ("migrations/command-followups.sql", 20),
+            ("migrations/grammar-errors.sql", 4),
+            ("migrations/grammar-errors.sql", 6),
+            ("migrations/grammar-errors.sql", 7),
+            ("migrations/grammar-errors.sql", 8),
+            ("migrations/grammar-errors.sql", 9),
+            ("migrations/grammar-errors.sql", 14),
+            ("migrations/grammar-errors.sql", 15),
+            ("migrations/grammar-errors.sql", 16),
+            ("migrations/grammar-errors.sql", 17),
+            ("migrations/grammar-errors.sql", 18),
+            ("migrations/grammar-errors.sql", 19),
+            ("migrations/grammar-errors.sql", 20),
+            ("migrations/grammar-errors.sql", 21),
+            ("migrations/grammar-errors.sql", 24),
+            ("migrations/grammar-errors.sql", 27),
+            ("migrations/grammar-errors.sql", 30),
+            ("migrations/grammar-errors.sql", 33),
+            ("migrations/grammar-errors.sql", 36),
+            ("migrations/grammar-errors.sql", 44),
+            ("migrations/grammar-errors.sql", 46),
+            ("migrations/grammar-errors.sql", 47),
+            ("migrations/grammar-errors.sql", 49),
+            ("migrations/grammar-errors.sql", 50),
+            ("migrations/grammar-errors.sql", 51),
+            ("migrations/grammar-errors.sql", 52),
+            ("migrations/grammar-errors.sql", 53),
+            ("migrations/grammar-errors.sql", 54),
+            ("migrations/grammar-errors.sql", 55),
+            ("migrations/grammar-errors.sql", 57),
+            ("migrations/grammar-errors.sql", 58),
+            ("migrations/lexical-command-error.sql", 2),
+            ("migrations/lexical-command-error.sql", 10),
+            ("migrations/lexical-command-error.sql", 13),
+            ("migrations/lexical-command-error.sql", 19),
+            ("migrations/malformed-command-tail.sql", 7),
+            ("migrations/malformed-do-suffix.sql", 2),
+            ("migrations/malformed-routine-headers.sql", 2),
+            ("migrations/malformed-routine-headers.sql", 8),
+            ("migrations/return-query.sql", 3),
+            ("migrations/top-level-shapes.sql", 2),
+            ("migrations/top-level-shapes.sql", 3),
+            ("migrations/top-level.sql", 7),
+            ("migrations/top-level.sql", 13),
+            ("migrations/top-level.sql", 19),
+            ("migrations/top-level.sql", 21),
+            ("migrations/unknown-loop-query.sql", 6),
+            ("migrations/unknown-payloads.sql", 7),
+            ("migrations/unknown-payloads.sql", 8),
+            ("migrations/unknown-payloads.sql", 9),
+            ("migrations/unknown-payloads.sql", 10),
+            ("migrations/unknown-payloads.sql", 11),
+            ("migrations/unknown-procedural-commands.sql", 4),
+            ("migrations/unknown-procedural-commands.sql", 10),
+            ("migrations/unknown-procedural-commands.sql", 15),
+            ("migrations/unknown.sql", 6),
+            ("migrations/unknown.sql", 14),
+            ("migrations/unknown.sql", 22),
+        ],
+        "{report}"
+    );
+}

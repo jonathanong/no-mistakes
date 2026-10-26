@@ -14,6 +14,7 @@ use std::path::PathBuf;
 #[doc(hidden)]
 pub enum SqlFactSite {
     Origin,
+    ParseFailure(usize),
     Annotation,
     StatementKind(usize),
     Setting(usize),
@@ -31,6 +32,7 @@ pub enum SqlFactSite {
     UpdateRelation(usize, usize),
     DeleteRelation(usize, usize),
     MutationColumn(usize),
+    TransformedColumn(usize),
     ReturningStar(usize),
     Offset(usize),
     Limit(usize),

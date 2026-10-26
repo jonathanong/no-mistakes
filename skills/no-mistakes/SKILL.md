@@ -40,6 +40,95 @@ no-mistakes check --format json
 ```
 
 `no-mistakes check --include-sql-verdicts --format json` adds the opt-in SQL verdict ledger and does not change findings.
+`no-mistakes check --effort low --format json` selects low effort only for
+rules that implement it (`postgres-require-query-annotation`,
+`nextjs-redirect-destinations`, `test-no-unmocked-dynamic-imports`,
+`playwright-unique-test-ids`, `playwright-unique-html-ids`, `playwright-coverage`, `nextjs-no-caching`,
+`require-storybook-stories`, and `postgres-no-offset`);
+`max` is the default and preserves current analysis.
+`test-no-unmocked-dynamic-imports` at `low` accepts only a top-level static
+import, a `vi.mock` or `jest.mock` call, or a literal `require()` in setup
+files; other setup-reachability shapes follow `unanalyzable`.
+`playwright-unique-test-ids` and `playwright-coverage` at `low` accept a
+string literal test id, including JSX `data-testid={"save"}`, or a prop with a
+literal default; other selector shapes follow `unanalyzable`.
+`playwright-unique-html-ids` at `low` accepts a string literal HTML id,
+including JSX `id={"save"}`, or a prop with a literal default; other id
+expressions follow `unanalyzable`.
+`nextjs-no-caching` at `low` checks literal fetch options, route segment exports,
+and direct configuration objects; indirect settings follow `unanalyzable`.
+`require-storybook-stories` at `low` keeps direct story and configured colocated
+test coverage; coverage requiring render-chain or dynamic/mock boundary analysis
+follows `unanalyzable`.
+`postgres-no-offset` at `low` checks unescaped literal SQL directly or through
+one local const. Helpers, builders, interpolation, and unsupported executor
+forms follow `unanalyzable`; selected `.sql` files retain their existing checks.
+If a low-effort rule's required partner check is missing or outside its
+configured scope, the check warns and falls back to `max` for that rule.
+JSON reports include `analysisFallbacks` for these partner fallbacks and omit
+the field when none occurred. A rule without a low implementation emits a
+named, non-failing warning when low was requested and stays at `max`.
+
+For `github-actions-checkout-credentials`, uncertain persistence, permissions,
+custom tokens (including `secrets.GITHUB_TOKEN`), and invalid workflow YAML
+follow `unanalyzable: report | advise | ignore` (default `report`). Set
+`with.persist-credentials: false` or use the default token with literal
+read-only permissions. Reusable declarations are known upper bounds; unsafe
+write bounds stay failing under every policy. Job permissions override workflow
+defaults, and valid workflows without checkout have no finding. Inspect advisories before
+treating a run as clean. For `pull_request_target`, a PR-head ref is a definite
+risk even with false persistence; unresolved refs/repositories follow the policy.
+Use the base repository, a base-side ref, AND literal false. Declare YAML
+`options.defaultBranch` for a literal default-branch name; no name is guessed.
+Credential/ref risks can produce separate rows on the same checkout.
+
+Repository and rule settings use `effort` and `unanalyzable`; the older
+SQL-specific `unanalyzableSql` setting remains an alias.
+For `shellcheck-runner`, the shared policy handles a missing executable or a
+failed invocation with no recognized diagnostics. If an abnormal exit has
+some recognized diagnostics, those findings remain and the policy handles
+selected scripts without recognized diagnostics. Use `unanalyzable: report`
+(the default), `advise`, or `ignore` to choose whether incomplete analysis
+fails, advises, or is skipped; install ShellCheck and repair failed
+invocations. Other launcher errors, such as permission denied, are hard errors.
+
+For `unconstructed-error-class`, unresolved constructor targets and otherwise-unused
+classes with unresolved constructors or base ancestry produce non-failing
+advisories even with `options.unanalyzable: report` (the default).
+`advise` also advises; `ignore` omits these diagnostics. Namespace-escape-only
+uncertainty keeps the shared policy: `report` fails, `advise` advises, and
+`ignore` omits it. Definite unused Error classes remain failures under every
+policy. Known constructor targets reuse the prepared resolver, including
+path aliases, workspace root/wildcard exports and re-exports, and usable package
+declarations, and credit the actual class even outside the rule include.
+Immutable constructor aliases and declaration members typed `typeof NamedClass`
+retain the concrete class identity. Included ambient module declarations can
+prove a non-Error base; a bare constructor signature cannot. Known non-Error
+globals are quiet; shadowed names resolve independently.
+Typed constant facades follow the immutable initializer through export barrels.
+Declarations use the re-exporting package's dependency context. Static imports
+and re-exports in `.mts`/`.mjs` select conditional `import` declarations;
+`.cts`/`.cjs` select `require`. Ambiguous contexts retain branch-agreement checks.
+Non-Error targets are silent; otherwise-unused Error subclasses still fail under
+every policy.
+Ordinary import/call query results remain unchanged. Suppressions apply at the
+construction or class line in both report channels. The rule remains `max`
+only; a requested `low` warns and runs `max`.
+
+For `version-pin-consistency`, a missing, unreadable, or malformed declared
+comparison source outside the selected file set for a selected anchor, or a
+selected anchor that cannot be read as UTF-8, follows `unanalyzable` (`report`
+by default, `advise`, or `ignore`). This includes actual read failures on the
+selected anchor. A valid comparison source outside the selected file set still
+supplies the pin; definite mismatches remain failures.
+
+For `github-actions-script-expressions`, a selected workflow or composite
+action that cannot be read (including invalid UTF-8) follows `unanalyzable`:
+`report` by default, `advise`, or `ignore`. Invalid YAML and inputs whose
+source locations or expression shape cannot be analyzed remain definite
+findings under every policy. Invalid UTF-8 diagnostics point to the first
+invalid byte's line, and cached bytes preserve suppression directives. Other
+read failures use line 1; configure exclusions when the file is unavailable.
 
 Grouped residual advice, including a `target` that may list several checks, is described in
 [SQL verdicts](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).
@@ -188,6 +277,12 @@ nonempty `shapeOptions.bannedFunctionCall.functions` list. Calls in expressions,
 CTEs, subqueries, and recoverable PL/pgSQL bodies use the same prepared facts.
 Configure `trustedSqlTags` for custom named SQL tag imports. See
 [shape policy](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-shape-policy.md).
+
+To keep catalog-resolved UUID columns bare in WHERE, JOIN ON, and HAVING, use
+`postgres-no-transformed-uuid-predicates` with `schemaCatalogPath`. It rejects
+column-side casts and functions while allowing parameter casts and precomputed
+bounds. Literal SQL supports `effort: low`; see the rule's
+[analysis contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-transformed-uuid-predicates.md#analysis).
 
 For test files that must always run in CI, enable the ESLint/Oxlint
 `no-mistakes/test-no-skips` rule in explicit flat-config `files` globs.

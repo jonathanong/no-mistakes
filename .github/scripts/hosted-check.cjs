@@ -1,4 +1,3 @@
-const { spawnSync } = require("node:child_process");
 const {
   copyFileSync,
   readFileSync,
@@ -9,7 +8,6 @@ const {
 } = require("node:fs");
 const { createRequire } = require("node:module");
 const { join, resolve, dirname } = require("node:path");
-
 const {
   command,
   hashFile,
@@ -29,8 +27,8 @@ const {
   terminateLeftoverCheckProcesses,
 } = require("./hosted-check-runtime.cjs");
 const { artifactBuilds } = require("./hosted-check-provenance.cjs");
-
-function measure(fixture, artifact, output, sampleNumber, expectedTree) {
+const { savePostExitSnapshot, timedCommand } = require("./hosted-check-watchdog.cjs");
+async function measure(fixture, artifact, output, sampleNumber, expectedTree) {
   if (!Number.isInteger(sampleNumber) || sampleNumber < 1 || sampleNumber > 6)
     throw new Error("Expected sample number 1 through 6");
   mkdirSync(output, { recursive: true });
@@ -81,7 +79,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
       const stderr = openSync(`${prefix}.stderr`, "w");
       let result;
       try {
-        result = spawnSync(
+        result = await timedCommand(
           "/usr/bin/time",
           [
             "-o",
@@ -94,7 +92,13 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
             "pnpm",
             ...checkArgs,
           ],
-          { cwd: fixture, stdio: ["ignore", stdout, stderr] },
+          {
+            cwd: fixture,
+            stdio: ["ignore", stdout, stderr],
+            snapshotPath: `${prefix}.live-processes.txt`,
+            nativePath: native,
+            deadlineSeconds: COLLECTION_DEADLINE_SECONDS,
+          },
         );
       } finally {
         closeSync(stdout);
@@ -125,16 +129,7 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
         deadlineSeconds: COLLECTION_DEADLINE_SECONDS,
       });
       writeFileSync(`${prefix}.sample.json`, JSON.stringify(sample, null, 2));
-      if (!successful(sample)) {
-        try {
-          writeFileSync(
-            `${prefix}.processes.txt`,
-            command("ps", ["-eo", "pid,ppid,pgid,etime,pcpu,rss,comm"], fixture),
-          );
-        } catch (error) {
-          writeFileSync(`${prefix}.processes.txt`, String(error));
-        }
-      }
+      if (!successful(sample)) savePostExitSnapshot(prefix, fixture);
       try {
         terminateLeftoverCheckProcesses({
           psOutput: command("ps", ["-eo", "pid,comm,args"], fixture),
@@ -167,11 +162,10 @@ function measure(fixture, artifact, output, sampleNumber, expectedTree) {
       `Candidate check did not exit successfully within the ${COLLECTION_DEADLINE_SECONDS}-second collection cap`,
     );
 }
-
 if (require.main === module) {
-  try {
+  (async () => {
     if (process.argv[2] === "measure")
-      measure(
+      await measure(
         resolve(process.argv[3]),
         resolve(process.argv[4]),
         resolve(process.argv[5]),
@@ -183,12 +177,11 @@ if (require.main === module) {
       throw new Error(
         "Usage: hosted-check.cjs measure FIXTURE ARTIFACT OUTPUT SAMPLE TREE | summarize DIRECTORY",
       );
-  } catch (error) {
+  })().catch((error) => {
     console.error(error);
     process.exitCode = 1;
-  }
+  });
 }
-
 module.exports = {
   CHECK_ARGS,
   TIMEOUT_ARGS,

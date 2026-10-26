@@ -1,38 +1,10 @@
-use crate::codebase::dependencies::extract::{CallableId, InvocationKind};
+use super::ancestry::{bases, error_kinds, ClassKey, ErrorKind};
+use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{
-    ClassDeclaration, DepGraph, EdgeKind, KnownCallTargetRef, NodeId, ResolvedCallSite,
+    ClassDeclaration, DepGraph, KnownCallTargetRef, NodeId, ResolvedCallSite, ResolvedCallTarget,
 };
-use crate::fx::{fx_map, FxHashMap};
+use crate::fx::{fx_map, fx_set, FxHashMap};
 use std::path::Path;
-
-/// A class identified by declaration file and display scope. Namespaces add no
-/// scope component, so same-named classes in two namespaces of one file share a
-/// key. Crediting works by key, so a construction or subclass of one credits
-/// both: the rule stays quiet rather than guess. Ancestry is exact: an `Extends`
-/// edge carries the base's parser id (see [`Base`]), so a subclass of `B.Base`
-/// never becomes an error class through `A.Base`.
-type ClassKey<'a> = (&'a Path, &'a str);
-
-const BUILTIN_ERRORS: &[&str] = &[
-    "Error",
-    "EvalError",
-    "RangeError",
-    "ReferenceError",
-    "SyntaxError",
-    "TypeError",
-    "URIError",
-    "AggregateError",
-    "SuppressedError",
-];
-const GLOBAL_OBJECTS: &[&str] = &["globalThis.", "window.", "self.", "global."];
-
-fn builtin_error(name: &str) -> bool {
-    let name = GLOBAL_OBJECTS
-        .iter()
-        .find_map(|prefix| name.strip_prefix(prefix))
-        .unwrap_or(name);
-    BUILTIN_ERRORS.contains(&name)
-}
 
 /// Declaration files describe code that lives outside the analyzed source, so
 /// a class they declare is never a dead export of this project.
@@ -41,6 +13,13 @@ pub(super) fn is_declaration_file(path: &Path) -> bool {
     [".d.ts", ".d.mts", ".d.cts"]
         .iter()
         .any(|extension| name.ends_with(extension))
+}
+
+pub(super) fn unresolved_constructor(graph: &DepGraph, site: &ResolvedCallSite) -> bool {
+    site.has_unknown_target()
+        && !graph.constructor_proves_site(site)
+        && (!matches!(site.target, ResolvedCallTarget::Unknown)
+            || !graph.constructor_is_resolved(&site.file, site.offset))
 }
 
 /// Possible constructed classes, credited without duplicating source calls.
@@ -54,111 +33,36 @@ fn constructed_classes(site: &ResolvedCallSite) -> impl Iterator<Item = ClassKey
             } => Some((file, scope)),
             _ => None,
         })
-        .chain(
-            site.has_unknown_target()
-                .then(|| {
-                    site.caller
-                        .as_deref()
-                        .and_then(|caller| caller.split('/').next())
-                        .map(|scope| (site.file.as_path(), scope))
-                })
-                .flatten(),
-        )
-}
-
-/// A repository class an `Extends` edge names: its file and display scope, and
-/// its parser id when the edge carries one.
-struct Base<'a> {
-    key: ClassKey<'a>,
-    id: Option<CallableId>,
-}
-
-/// The repository classes `class` extends, read from its `Extends` edges. A
-/// global or external-package base has no edge. Targets are compared by file
-/// and scope rather than whole `NodeId`, which also carries a parser id that
-/// two declarations sharing a display scope do not share.
-fn bases<'a>(graph: &'a DepGraph, class: &ClassDeclaration) -> impl Iterator<Item = Base<'a>> {
-    graph
-        .dependencies_of_node(&class.node())
-        .into_iter()
-        .flatten()
-        .filter(|(_, kind)| *kind == EdgeKind::Extends)
-        .filter_map(|(target, _)| match target {
-            NodeId::Symbol {
-                file,
-                symbol,
-                callable_id,
-            } => Some(Base {
-                key: (file.as_ref(), &**symbol),
-                id: *callable_id,
-            }),
-            _ => None,
-        })
-}
-
-/// Marks every class whose `extends` chain reaches a built-in error. A base
-/// from an external package is not a root: its ancestry is unknown here.
-fn error_flags(graph: &DepGraph, classes: &[ClassDeclaration]) -> Vec<bool> {
-    let mut by_key: FxHashMap<ClassKey<'_>, Vec<usize>> = fx_map();
-    let mut by_id: FxHashMap<(&Path, CallableId), usize> = fx_map();
-    for (index, class) in classes.iter().enumerate() {
-        by_key
-            .entry((class.file.as_path(), class.scope.as_str()))
-            .or_default()
-            .push(index);
-        by_id.insert((class.file.as_path(), class.callable_id), index);
-    }
-    let mut flags = vec![false; classes.len()];
-    let mut changed = true;
-    while changed {
-        changed = false;
-        for (index, class) in classes.iter().enumerate() {
-            if flags[index] {
-                continue;
-            }
-            // A base's exact id picks one declaration out of those sharing its
-            // scope; a class with no `extends` has no declaration here, so an
-            // id with none is no error class. Without a known id, any
-            // declaration of the scope will do.
-            let error = class.global_base.as_deref().is_some_and(builtin_error)
-                || bases(graph, class).any(|base| match base.id {
-                    Some(id) => by_id
-                        .get(&(base.key.0, id))
-                        .is_some_and(|parent| flags[*parent]),
-                    None => by_key
-                        .get(&base.key)
-                        .is_some_and(|parents| parents.iter().any(|parent| flags[*parent])),
-                });
-            flags[index] = error;
-            changed |= error;
-        }
-    }
-    flags
 }
 
 /// Exported error classes with no construction or subclass in non-test source.
 ///
 /// A class declared with `declare` or in an ambient block is never reported. A
-/// namespace member is reported like any class, unless its namespace escapes:
+/// namespace member is uncertain when its namespace escapes:
 /// when some use of the namespace is not a reference the graph resolves to a
 /// class, whether the member is built is unknowable. Either kind still takes
-/// part in `error_flags` and crediting.
+/// part in ancestry analysis and known construction crediting.
 ///
 /// `is_test` classifies files whose uses do not count, and `is_reported`
 /// selects the declarations the caller wants findings for.
+pub(super) struct UnconstructedClass<'a> {
+    pub(super) class: &'a ClassDeclaration,
+    pub(super) unknown_base: bool,
+    pub(super) unknown_constructor: bool,
+    pub(super) dynamic_ancestry: bool,
+}
+
 pub(super) fn unconstructed<'a>(
     graph: &'a DepGraph,
     is_test: impl Fn(&Path) -> bool,
     is_reported: impl Fn(&Path) -> bool,
-) -> Vec<&'a ClassDeclaration> {
+) -> Vec<UnconstructedClass<'a>> {
     let classes = graph.class_declarations();
-    let mut unused: FxHashMap<ClassKey<'a>, Vec<&'a ClassDeclaration>> = fx_map();
-    for (class, _) in classes
+    let mut unused: FxHashMap<ClassKey<'a>, Vec<UnconstructedClass<'a>>> = fx_map();
+    for (class, kind) in classes
         .iter()
-        .zip(error_flags(graph, classes))
-        .filter(|(class, error)| {
-            *error && class.exported && !class.ambient && !class.namespace_escaped
-        })
+        .zip(error_kinds(graph, classes))
+        .filter(|(class, error)| *error != ErrorKind::Other && class.exported && !class.ambient)
         .filter(|(class, _)| {
             !is_test(&class.file) && is_reported(&class.file) && !is_declaration_file(&class.file)
         })
@@ -166,30 +70,72 @@ pub(super) fn unconstructed<'a>(
         unused
             .entry((class.file.as_path(), class.scope.as_str()))
             .or_default()
-            .push(class);
+            .push(UnconstructedClass {
+                class,
+                unknown_base: matches!(kind, ErrorKind::Unknown | ErrorKind::DynamicUnknown),
+                dynamic_ancestry: kind == ErrorKind::DynamicUnknown,
+                unknown_constructor: false,
+            });
     }
-    let mut credit = |key: ClassKey<'a>, file: &Path| {
-        if !is_test(file) {
-            unused.remove(&key);
-        }
-    };
+    let mut uncertain_constructors = fx_set();
     for site in graph
         .resolved_call_sites()
         .iter()
         .filter(|site| site.invocation == InvocationKind::Construct)
     {
+        if is_test(&site.file) {
+            continue;
+        }
+        // An unknown call is not proof of construction or non-construction.
+        // Retain its lexical association only as uncertainty, never credit.
+        if unresolved_constructor(graph, site) {
+            if let Some(scope) = site
+                .caller
+                .as_deref()
+                .and_then(|caller| caller.split('/').next())
+            {
+                uncertain_constructors.insert((site.file.as_path(), scope));
+            }
+        }
+        // Credit exact metadata before the legacy display-key fallback. A
+        // known graph target must agree; unknown alternatives remain unknown.
+        if let Some(
+            target @ NodeId::Symbol {
+                file,
+                symbol,
+                callable_id: Some(id),
+            },
+        ) = graph.constructor_class(&site.file, site.offset)
+        {
+            let proven = graph.constructor_proves_site(site)
+                || matches!(site.target, ResolvedCallTarget::Unknown)
+                || (!site.has_unknown_target() && site.target_nodes().any(|node| node == target));
+            if proven {
+                if let Some(classes) = unused.get_mut(&(file.as_ref(), symbol.as_ref())) {
+                    classes.retain(|result| result.class.callable_id != *id);
+                }
+            }
+        }
         for key in constructed_classes(site) {
-            credit(key, &site.file);
+            unused.remove(&key);
         }
     }
-    for class in classes {
+    for class in classes.iter().filter(|class| !is_test(&class.file)) {
         for base in bases(graph, class) {
-            credit(base.key, &class.file);
+            unused.remove(&base.key);
         }
     }
     let mut classes: Vec<_> = unused.into_values().flatten().collect();
+    for result in &mut classes {
+        result.unknown_constructor = uncertain_constructors
+            .contains(&(result.class.file.as_path(), result.class.scope.as_str()));
+    }
     classes.sort_by(|left, right| {
-        (&left.file, left.line, &left.scope).cmp(&(&right.file, right.line, &right.scope))
+        (&left.class.file, left.class.line, &left.class.scope).cmp(&(
+            &right.class.file,
+            right.class.line,
+            &right.class.scope,
+        ))
     });
     classes
 }

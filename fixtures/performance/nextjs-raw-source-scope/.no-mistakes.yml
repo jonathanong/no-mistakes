@@ -1,0 +1,19 @@
+version: 2
+projects:
+  inferred-store:
+    type: nextjs
+    # Root is inferred from the sole next.config file in the workspace.
+    rules: [nextjs-no-api-routes]
+  admin:
+    type: nextjs
+    root: apps/admin
+    rules: [nextjs-no-api-routes]
+  sibling:
+    type: nextjs
+    root: apps/sibling
+
+rules:
+  - rule: nextjs-no-api-routes
+    projects: [inferred-store, admin]
+    exclude:
+      - apps/admin/app/api/excluded/route.ts

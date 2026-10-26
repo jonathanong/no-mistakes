@@ -1,0 +1,2 @@
+# A unicode escape in the quoted key is still the action key.
+- { "us\u0065s": actions/checkout@v4 }

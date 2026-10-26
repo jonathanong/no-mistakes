@@ -1,6 +1,7 @@
+use super::super::view_bounds::{ViewBoundMode, ViewBounds};
 use super::{Evaluation, Offender};
 use crate::codebase::postgres::{
-    SchemaCatalog, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery,
+    CatalogObjectRef, SchemaCatalog, SqlBoundInputMode, SqlBoundItemKind, SqlBoundQuery,
 };
 use std::collections::HashMap;
 
@@ -11,6 +12,7 @@ pub(super) fn collect(
     pin_subqueries: &[Vec<Option<Evaluation>>],
     bounded: &[bool],
     catalog: &SchemaCatalog,
+    views: &ViewBounds,
     precise_columns: bool,
 ) -> Vec<Offender> {
     let mut found = Vec::new();
@@ -30,7 +32,13 @@ pub(super) fn collect(
         }
         if !query.capped && !bounded[index] && nested[index].is_none() {
             if let SqlBoundItemKind::Table(name) = &item.kind {
-                found.extend(table_offender(name, item.line, item.column, catalog));
+                found.extend(relation_offender(
+                    name,
+                    item.line,
+                    item.column,
+                    catalog,
+                    views,
+                ));
             }
         }
     }
@@ -54,14 +62,29 @@ pub(super) fn collect(
     out
 }
 
-pub(super) fn table_offender(
+pub(super) fn relation_offender(
     name: &str,
     line: usize,
     column: usize,
     catalog: &SchemaCatalog,
+    views: &ViewBounds,
 ) -> Option<Offender> {
+    if let Some((view, ViewBoundMode::Unbounded)) = views.get(name, catalog) {
+        return Some(Offender {
+            table: view.name.clone(),
+            object: CatalogObjectRef::View(view.name.clone()),
+            line,
+            column,
+            blocking_input: false,
+        });
+    }
+    if views.get(name, catalog).is_some() {
+        return None;
+    }
+    let table = catalog.bounded_relation(name)?;
     Some(Offender {
-        table: catalog.relation(name)?.name.clone(),
+        table: table.name.clone(),
+        object: CatalogObjectRef::Table(table.name.clone()),
         line,
         column,
         blocking_input: false,

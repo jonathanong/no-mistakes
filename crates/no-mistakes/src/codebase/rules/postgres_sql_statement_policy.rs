@@ -69,7 +69,16 @@ pub(crate) fn check_with_files_and_sources(
         config,
         &[RULE_ID],
     )?;
-    check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
+    let mut findings =
+        check_with_files_sources_and_facts(root, config, all_files, sources, &facts)?;
+    findings.extend(
+        super::postgres_unanalyzable_schema::diagnostics_for_rule(
+            root, config, all_files, &facts, RULE_ID,
+        )?
+        .findings,
+    );
+    super::sort_findings(&mut findings);
+    Ok(findings)
 }
 
 pub(crate) fn check_with_files_sources_and_facts(
@@ -165,3 +174,6 @@ mod expanded_tests;
 
 #[cfg(test)]
 mod context_tests;
+
+#[cfg(test)]
+mod parse_failure_tests;

@@ -1,8 +1,8 @@
 //! Cross-file env/config identifier interpolations without a finite validator.
 use super::postgres_sql_cross_file::{
-    check_applications, count, finding, identifier_placeholder, interpolations, is_process_env,
-    is_process_specifier, sql_calls, unique_export, unique_namespace_member, walk_expression,
-    Bindings, Provenance, RegistryRoutes, SqlCall,
+    count, finding, identifier_placeholder, interpolations, is_process_env, is_process_specifier,
+    sql_calls, unique_export, unique_namespace_member, walk_expression, Bindings, Provenance,
+    RegistryRoutes, SqlCall,
 };
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::ValueExpression;
@@ -18,17 +18,39 @@ pub const RULE_ID: &str = "postgres-no-unbounded-sql-identifier";
 pub(crate) fn check_with_graph(
     root: &Path,
     config: &NoMistakesConfig,
-    graph: &DepGraph,
+    graph: Option<&DepGraph>,
     facts: &CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    check_applications(
-        root,
-        config,
-        graph,
-        facts,
-        RULE_ID,
-        |root, opts, graph, facts| Ok(scan(root, opts, graph, facts)),
-    )
+    let normalized = crate::codebase::ts_resolver::normalize_path(root);
+    let root = normalized.as_path();
+    let mut findings = Vec::new();
+    for (index, application) in config.rules.iter().enumerate().filter(|(_, rule)| {
+        rule.enabled && rule.rule == RULE_ID && config.rule_has_effective_target(rule)
+    }) {
+        let policy = config.effective_rule_analysis(application)?;
+        if policy.effort == crate::config::v2::Effort::Low {
+            findings.extend(super::postgres_sql_cross_file::low::check(
+                root,
+                config,
+                application,
+                index,
+                facts,
+                RULE_ID,
+            )?);
+        } else {
+            findings.extend(super::postgres_sql_cross_file::check_application(
+                root,
+                config,
+                application,
+                graph.expect("postgres-no-unbounded-sql-identifier requires canonical graph"),
+                facts,
+                RULE_ID,
+                |root, opts, graph, facts| Ok(scan(root, opts, graph, facts)),
+            )?);
+        }
+    }
+    super::sort_findings(&mut findings);
+    Ok(findings)
 }
 
 fn scan(
@@ -52,11 +74,13 @@ fn scan(
                 name,
                 scope,
                 offset,
-                ..
+                members,
             } = &provenance
             {
                 if bindings.env_alias(&call.file, *scope, name, *offset)
-                    || bindings.query_projection(&call.file, *scope, name, *offset)
+                    || (!bindings.row_member_overwritten(
+                        &call.file, *scope, name, *offset, members, call.span,
+                    ) && bindings.query_projection(&call.file, *scope, name, *offset))
                 {
                     sinks += 1;
                     findings.push(message(root, call, name, Some(name.clone())));
@@ -148,12 +172,14 @@ fn message(root: &Path, call: &SqlCall<'_>, producer: &str, import: Option<Strin
         RULE_ID,
         &call.file,
         call.call.line,
-        format!(
-            "Unbounded identifier source `{producer}` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed."
-        ),
+        diagnostic_message(producer),
         import,
         Some(producer.to_string()),
     )
+}
+
+pub(super) fn diagnostic_message(producer: &str) -> String {
+    format!("Unbounded identifier source `{producer}` reaches SQL relation interpolation in this executor call without a runtime finite-domain validator. Map accepted values to literal schemas with a switch whose default throws; a type assertion is not validation. Bound values remain allowed.")
 }
 
 fn shadowed_process(facts: &CheckFactMap, file: &Path) -> bool {

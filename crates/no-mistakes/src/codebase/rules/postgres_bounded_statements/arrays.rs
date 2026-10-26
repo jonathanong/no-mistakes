@@ -33,7 +33,7 @@ pub(super) fn pin_sources(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Vec
                                 let SqlBoundItemKind::Table(name) = &source.kind else {
                                     return false;
                                 };
-                                let Some(table) = catalog.relation(name) else {
+                                let Some(table) = catalog.bounded_relation(name) else {
                                     return false;
                                 };
                                 if let Some(column) =
@@ -64,7 +64,7 @@ pub(super) fn pin_sources(query: &SqlBoundQuery, catalog: &SchemaCatalog) -> Vec
 }
 
 /// Unknown/domain types can hide an array; builtin scalar types and catalog-declared enums prove a leaf.
-fn scalar_type(raw: &str, catalog: &SchemaCatalog) -> bool {
+pub(super) fn scalar_type(raw: &str, catalog: &SchemaCatalog) -> bool {
     let Ok(mut parser) = Parser::new(&PostgreSqlDialect {}).try_with_sql(raw) else {
         return false;
     };
@@ -104,7 +104,7 @@ fn indexed_type(raw: &str, catalog: &SchemaCatalog) -> bool {
     }
 }
 
-fn column_type<'a>(
+pub(super) fn column_type<'a>(
     table: &'a crate::codebase::postgres::CatalogTable,
     aliases: &[String],
     requested: &str,

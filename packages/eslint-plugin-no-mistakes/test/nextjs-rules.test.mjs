@@ -127,7 +127,13 @@ describe("nextjs-static-fetch-url", () => {
         getScope: () => fakeScope,
       },
     };
-    assert.equal(isFetchCall({ callee: { type: "Identifier", name: "fetch" } }, context), false);
+    assert.equal(
+      isFetchCall(
+        { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } },
+        context,
+      ),
+      false,
+    );
   });
 });
 

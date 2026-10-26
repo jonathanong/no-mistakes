@@ -39,7 +39,7 @@ rules:
   - rule: postgres-sql-statement-policy
     scope: repository
     options:
-      sqlInclude: ["backend/data-stores/psql/config-driven/**/*.sql"]
+      sqlInclude: ["db/config-driven/**/*.sql"]
       bannedStatements:
         - CREATE TABLE
         - ALTER TABLE
@@ -161,6 +161,7 @@ and groups are configuration errors.
 ## Valid example
 
 ```sql
+-- db/config-driven/seed.sql
 INSERT INTO foo (id) VALUES ('00000000-0000-0000-0000-000000000001')
   ON CONFLICT (id) DO NOTHING;
 ```
@@ -168,6 +169,7 @@ INSERT INTO foo (id) VALUES ('00000000-0000-0000-0000-000000000001')
 ## Counterexample
 
 ```sql
+-- db/config-driven/seed.sql
 CREATE TABLE foo (id uuid PRIMARY KEY);
 SELECT pg_catalog.set_config('session_replication_role', 'replica', true);
 ```
@@ -176,6 +178,62 @@ SELECT pg_catalog.set_config('session_replication_role', 'replica', true);
 
 Move schema DDL to a migration directory, or narrow `sqlInclude` and the banned
 set to match the file's intentional role.
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files selected by `sqlInclude`.
+
+### Unanalyzable inputs
+
+Valid PostgreSQL can still be unsupported by this analyzer. When it cannot
+recover statements such as `ALTER DEFAULT PRIVILEGES`, `CREATE PUBLICATION`,
+or `REFRESH MATERIALIZED VIEW`, it diagnoses them under
+[`options.unanalyzable`](../migrations/postgres-schema-unanalyzable.md). The
+same diagnostic also catches rejected syntax such as `CREATE RECURSIVE VIEW`
+without its required explicit column list; it reports missing analyzer facts,
+not a PostgreSQL validity verdict.
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove: executor calls whose SQL has no complete recovered alternative or exceeds the 16-alternative cap (for example `query(buildSql(filters))` with an unrecoverable helper), and SQL, embedded or in a `sqlInclude` file, that fails to parse. They follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable for statement policy`.
+  - `advise`: a non-failing advisory with the same reason.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+
+Raw SQL parse failures are reported on the line of each failing statement's first
+code token. Separate statements produce separate findings, and a
+`no-mistakes-disable-next-line`
+directive immediately above one statement suppresses that failure independently.
+Successfully parsed sibling statements remain analyzable. Unsupported syntax,
+including expressions with `COLLATE`, still follows `options.unanalyzable`; this
+location behavior does not make that syntax parse successfully. A real `DISCARD
+ALL` statement does not trigger a recovery diagnostic. Rewrite unsupported syntax
+into a supported static statement or suppress the specific diagnostic with a
+reason.
+
+For schema parse failures, the implicit default advises for any statement that
+cannot be analyzed inside a recognized `DO`, PL/pgSQL function, or procedure body.
+This includes malformed body statements: an advisory means analysis is incomplete,
+not that PostgreSQL accepts the SQL. Successfully parsed body statements still
+contribute facts and rule findings. At the top level, only these complete forms
+advise. Malformed and unrecognized statements retain findings.
+
+- `REFRESH MATERIALIZED VIEW [CONCURRENTLY] view [WITH [NO] DATA]`
+- `CREATE PUBLICATION name FOR ALL TABLES`
+- `CREATE PUBLICATION name FOR TABLE table [, table ...]`
+- `ALTER DEFAULT PRIVILEGES [FOR {ROLE | USER} role [, role ...]] [IN SCHEMA schema [, schema ...]] GRANT {ALL [PRIVILEGES] | privilege [, privilege ...]} ON {TABLES | SEQUENCES | FUNCTIONS | ROUTINES | TYPES | SCHEMAS} TO grantee [, grantee ...] [WITH GRANT OPTION]`
+
+Privileges are `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`,
+`TRIGGER`, `USAGE`, `CREATE`, `EXECUTE`, and `MAINTAIN`. `view` and each `table`
+may be schema-qualified; `name`, `role`, `schema`, and `grantee` may not.
+`CONCURRENTLY` precedes the view name, and `WITH` requires `DATA`. A matching
+prefix with extra tokens is not recognized. Explicit rule or
+repository `unanalyzable` policies override these defaults. See the
+[schema diagnostic migration](../migrations/postgres-schema-unanalyzable.md).
 
 ## Suppression
 

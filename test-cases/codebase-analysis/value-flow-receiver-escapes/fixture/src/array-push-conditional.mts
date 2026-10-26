@@ -4,12 +4,13 @@ function replacement() {}
 let box = { client: primary };
 const other = { client: untouched };
 box = { client: replica };
-function mutate(first, second) {
+const spare = { client: { get: replacement } };
+function mutate(first, second = spare) {
   first.client.get = replacement;
   second.client.get = replacement;
 }
 const args = [other];
-// The pushed origin is live on the guarded path; the first origin always survives.
+// A missing optional push uses spare, so the original replica call remains reachable.
 if (flag) { args.push(box); }
 mutate(...args);
 replica.get('earlier array origin');

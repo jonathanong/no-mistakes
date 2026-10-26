@@ -1,0 +1,6 @@
+on: push
+permissions: unexpected
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4

@@ -1,6 +1,7 @@
 "use strict";
 
-const { propertyName } = require("./module-mock-helpers");
+const { unwrapExpression } = require("./async-ast");
+const { literalString, propertyName } = require("./module-mock-helpers");
 
 // `any`, `unknown`, and `object` are omitted. Each accepts a Promise, so a
 // parameter or return of those types is unknown rather than a non-Promise.
@@ -80,6 +81,7 @@ function combine(results) {
 }
 
 function walkAst(context, node, visit) {
+  if (!node?.type) return;
   visit(node);
   for (const key of context.sourceCode.visitorKeys[node.type]) {
     const value = node[key];
@@ -90,7 +92,7 @@ function walkAst(context, node, visit) {
 }
 
 function literalName(node) {
-  return node?.type === "Literal" ? String(node.value) : null;
+  return literalString(unwrapExpression(node));
 }
 
 function staticKeyName(node) {

@@ -59,11 +59,11 @@ function importedName(specifier) {
   return imported.type === "Literal" ? String(imported.value) : imported.name;
 }
 
-function executorBindings(program, options = {}, filename) {
+function executorBindings(program, options = {}, filename, context) {
   const bindings = new Set();
   const defaults = executorOptionDefaults(options);
   const { importSpecifier, executorNames } = defaults;
-  bindings.scoped = collectScopedExecutors(program, defaults, filename);
+  bindings.scoped = collectScopedExecutors(program, defaults, filename, context);
   bindings.queryMembers = Boolean(importSpecifier) || executorNames.includes(QUERY_PROPERTY);
   for (const statement of program?.body ?? []) {
     if (statement.type !== "ImportDeclaration") continue;
@@ -76,6 +76,20 @@ function executorBindings(program, options = {}, filename) {
       if (importSpecifier && TRANSACTION_IMPORTS.has(imported)) bindings.add(QUERY_PROPERTY);
       if (imported && executorNames.includes(imported)) bindings.add(specifier.local.name);
     }
+  }
+  if (context) {
+    const { executorCallResolver } = require("./postgres-executor-calls");
+    bindings.resolveCall = executorCallResolver(
+      bindings,
+      context,
+      defaults,
+      memberPropertyName,
+      (def, node) =>
+        bindings.scoped.some(
+          (entry) =>
+            !entry.property && entry.name === node.name && entry.range[0] === def.node.range[0],
+        ),
+    );
   }
   return bindings;
 }
@@ -98,6 +112,7 @@ function memberPropertyName(node) {
 }
 
 function calleeName(call, bindings) {
+  if (bindings?.resolveCall) return bindings.resolveCall(call)?.name ?? null;
   const callee = unwrapTs(call?.callee);
   if (!callee) return null;
   if (
@@ -120,8 +135,10 @@ function isDatabaseCall(call, bindings) {
   return call?.type === "CallExpression" && calleeName(call, bindings) != null;
 }
 
-function firstCallArgument(call) {
-  const argument = call?.arguments?.[0];
+function firstCallArgument(call, bindings) {
+  const argument = bindings?.resolveCall
+    ? bindings.resolveCall(call)?.arguments[0]
+    : call?.arguments?.[0];
   if (!argument || argument.type === "SpreadElement") return null;
   return argument;
 }

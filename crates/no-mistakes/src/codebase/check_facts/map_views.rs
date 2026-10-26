@@ -40,6 +40,44 @@ impl CheckFactMap {
                 ts.insert(path.clone(), Arc::clone(facts));
             }
         }
+        let mut call_site_paths = Arc::clone(&self.call_site_paths);
+        // Scoped coverage follows the winning entry, including overwrites that replace
+        // call summaries with an imports-only projection. Disjoint overlays share.
+        let loses_coverage = |path: &PathBuf| {
+            supplemental.ts.contains_key(path) && !supplemental.call_site_paths.contains(path)
+        };
+        if overwrite
+            && !supplemental.graph_plan.call_sites
+            && call_site_paths.iter().any(loses_coverage)
+        {
+            Arc::make_mut(&mut call_site_paths).retain(|path| !loses_coverage(path));
+        }
+        // A rejected sparse duplicate cannot add coverage to the richer winner.
+        let supplemental_wins = |path: &&PathBuf| overwrite || !self.ts.contains_key(path);
+        if !Arc::ptr_eq(&call_site_paths, &supplemental.call_site_paths)
+            && supplemental
+                .call_site_paths
+                .iter()
+                .filter(supplemental_wins)
+                .any(|path| !call_site_paths.contains(path))
+        {
+            if call_site_paths.is_empty()
+                && supplemental
+                    .call_site_paths
+                    .iter()
+                    .all(|path| overwrite || !self.ts.contains_key(path))
+            {
+                call_site_paths = Arc::clone(&supplemental.call_site_paths);
+            } else {
+                Arc::make_mut(&mut call_site_paths).extend(
+                    supplemental
+                        .call_site_paths
+                        .iter()
+                        .filter(supplemental_wins)
+                        .cloned(),
+                );
+            }
+        }
         let mut graph_plan = self.graph_plan;
         graph_plan.include(supplemental.graph_plan);
         let unproven_member_query_sql =
@@ -49,6 +87,7 @@ impl CheckFactMap {
         Self {
             sql_application: self.sql_application.clone(),
             sql_verdicts: self.sql_verdicts.clone(),
+            sql_advisories: Arc::clone(&self.sql_advisories),
             companion_import_plans: crate::codebase::rules::required_companion_imports::merge_plans(
                 &self.companion_import_plans,
                 &supplemental.companion_import_plans,
@@ -60,9 +99,11 @@ impl CheckFactMap {
             graph_files_complete: self.graph_files_complete,
             ts,
             graph_plan,
+            call_site_paths,
             integration_runner_configs: self.integration_runner_configs.clone(),
             playwright_source_files: Arc::clone(&self.playwright_source_files),
             playwright_test_files_by_project: Arc::clone(&self.playwright_test_files_by_project),
+            playwright_matcher_warnings: Arc::clone(&self.playwright_matcher_warnings),
             app_selector_occurrences_cache: Arc::clone(&self.app_selector_occurrences_cache),
             playwright_routes_cache: Arc::clone(&self.playwright_routes_cache),
             app_text_targets_cache: Arc::clone(&self.app_text_targets_cache),

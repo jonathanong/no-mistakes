@@ -35,6 +35,7 @@ fn call(sql_text: Option<&str>, variants: Vec<EmbeddedSqlVariant>) -> EmbeddedSq
 
 fn variant(sql: &str) -> EmbeddedSqlVariant {
     EmbeddedSqlVariant {
+        variants_truncated: false,
         sql_text: sql.to_string(),
         sql_source_offsets: Vec::new(),
         line: 1,
@@ -70,6 +71,7 @@ fn facts(path: &Path, profile: &EmbeddedSqlOptions, calls: Vec<EmbeddedSqlCall>)
             matched_factory_names: Vec::new(),
             matched_type_names: Vec::new(),
             pending_relative: Default::default(),
+            undeclared_executor_types: Vec::new(),
             unproven_member_query_spans: Vec::new(),
             postgres_rule_ids: Vec::new(),
             record_unproven_spans: true,

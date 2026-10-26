@@ -1,3 +1,25 @@
+fn configure_shared_family_scopes(
+    root: &Path,
+    prepared: &crate::check_runner::prepared::PreparedCheckInputs,
+    config: &crate::config::v2::NoMistakesConfig,
+    plan: &mut crate::codebase::check_facts::CheckFactPlan,
+) -> Result<()> {
+    crate::codebase::check_facts::configure_family_path_scopes(
+        root,
+        prepared.visible_paths.paths_for(root).as_ref(),
+        config,
+        prepared.visible_paths.source_store_for(root).as_ref(),
+        plan,
+    )?;
+    crate::codebase::check_facts::configure_nextjs_caching_scope(
+        root,
+        prepared.visible_paths.paths_for(root).as_ref(),
+        config,
+        &prepared.inferred_roots,
+        plan,
+    )
+}
+
 fn prepare_shared_graph(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,

@@ -95,15 +95,18 @@ fn collect_local_uses(value: &Value, uses: &mut Vec<String>) {
 
 fn local_use_relative(uses: &str) -> Option<String> {
     let uses = uses.trim().replace('\\', "/");
-    let rest = uses.strip_prefix("./")?.trim_matches('/');
-    if rest.split('/').any(|part| part == "..") {
+    let rest = uses.strip_prefix("./")?;
+    let normalized = crate::codebase::workflow_topology::posix_path::normalize(rest);
+    // In-repo `.`, empty, and `..` segments collapse. Only a remaining parent
+    // segment leaves the repository. `..actions` is a directory name.
+    if normalized == ".." || normalized.starts_with("../") {
         return None;
     }
     // `uses: ./` and `uses: ./.` are the repository-root action.
-    if rest.is_empty() || rest == "." {
+    if normalized == "." {
         return Some(String::new());
     }
-    Some(rest.to_owned())
+    Some(normalized)
 }
 
 fn descriptor_relatives(path: &str) -> Vec<String> {

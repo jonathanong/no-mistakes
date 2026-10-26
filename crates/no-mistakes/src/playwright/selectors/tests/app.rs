@@ -280,6 +280,8 @@ fn exact_and_operator_matchers_cover_static_values() {
         file: PathBuf::from("app/page.tsx"),
         attribute: "data-testid".to_string(),
         value: AppSelectorValue::Exact("save-button".to_string()),
+        line: 1,
+        recovered: false,
     };
     let source = fixture_source(&["ast-snippets", "selectors", "exact-operator-matchers.ts"]);
     let selectors = crate::playwright::selectors::extract_playwright_selectors(

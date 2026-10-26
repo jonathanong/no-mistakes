@@ -48,9 +48,14 @@ saveUser(input).catch(async function* () {});
 - `allowedPathPatterns` excludes matching files.
 - `allowedCalleeNamePatterns` skips a no-op catch when the originating call's
   identifier or member name matches, walking through `.then` / `.finally` /
-  `.catch` chains. Use this for named cleanup APIs such as `releaseLock()`.
+  `.catch` chains. A spelled `call` or `apply` member is that name before
+  forwarding, so `client.call().catch(() => {})` matches `call`. Forwarding
+  still sees `fetch` in `fetch.call(null, url).catch(() => {})`. Use this for
+  named cleanup APIs such as `releaseLock()`.
 
 Values are glob or `/regex/` strings. Invalid regex patterns are ignored.
+
+A string or expression-free template `catch` or `then`, an optional call, `.call`, a literal-array `.apply`, and a non-null or type assertion around that method are the same call.
 
 ## Fix
 
@@ -65,6 +70,10 @@ because their expressions or tag can have observable behavior. A locally
 shadowed `undefined` is treated as a fallback value. Generator callbacks are
 allowed because calling them produces an iterator rather than an ignored
 `undefined` result.
+
+## Limits
+
+`const { catch: fail } = work; fail(() => {})` is not the same call: destructuring a method drops the receiver. `.apply` with a non-literal argument list is not rewritten.
 
 ## Suppression
 

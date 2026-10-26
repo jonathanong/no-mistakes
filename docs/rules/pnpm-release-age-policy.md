@@ -61,7 +61,11 @@ temporary releases.
 
 The configured policy must agree across pnpm workspace settings, Dependabot
 cooldown exclusions, package manifests, and the active lockfile. Temporary
-exceptions must identify a package version, reason, and removal date.
+exceptions must identify a package version, reason, and removal date. A local
+`include` that owns `minimumReleaseAgeExclude` supplies that list. Patterns
+are not rebased; the entries are package selectors. When the root workspace
+file and the included file both claim the setting, the check reports the
+conflict and does not compare either list to the policy.
 
 ## Options and defaults
 
@@ -73,27 +77,103 @@ flat list; selectors must not repeat across it and `temporaryGroups`.
 
 ## Valid example
 
+Permanent packages, flattened temporary selectors, Dependabot cooldown
+exclusions, and lockfile keys agree.
+
 ```yaml
-temporaryGroups:
-  - selectors: ["acme-parser@2.4.1"]
-    reason: upstream security release
-    eligibleForRemovalAt: "2027-03-01T00:00:00Z"
+# pnpm-workspace.yaml
+minimumReleaseAgeExclude:
+  - acme-lib
+  - '@acme/core'
+  - demo-temporary-package@9.9.9
+```
+
+```yaml
+# .github/dependabot.yml
+updates:
+  - package-ecosystem: npm
+    directory: /
+    cooldown:
+      exclude:
+        - acme-lib
+        - '@acme/*'
+```
+
+```json
+// package.json
+{ "dependencies": { "acme-lib": "1.0.0", "@acme/core": "1.0.0" } }
+```
+
+```yaml
+# pnpm-lock.yaml
+lockfileVersion: '9.0'
+packages:
+  'acme-lib@1.0.0':
+    resolution: {}
+  '@acme/core@1.0.0':
+    resolution: {}
+  'demo-temporary-package@9.9.9':
+    resolution: {}
 ```
 
 ## Counterexample
 
 ```yaml
-minimumReleaseAgeExclude: [acme-parser]
+# pnpm-workspace.yaml
+minimumReleaseAgeExclude:
+  - acme-lib
 ```
 
-The package is excluded from pnpm aging but absent from the declared permanent
-or temporary policy.
+```yaml
+# .github/dependabot.yml
+updates:
+  - package-ecosystem: npm
+    directory: /
+    cooldown:
+      exclude:
+        - acme-lib
+        - '@acme/*'
+```
+
+```json
+// package.json
+{ "dependencies": { "acme-lib": "1.0.0", "@acme/core": "1.0.0" } }
+```
+
+```yaml
+# pnpm-lock.yaml
+lockfileVersion: '9.0'
+packages:
+  'acme-lib@1.0.0':
+    resolution: {}
+  '@acme/core@1.0.0':
+    resolution: {}
+  'demo-temporary-package@9.9.9':
+    resolution: {}
+```
+
+`@acme/core` and the temporary selector are missing from
+`minimumReleaseAgeExclude`.
 
 ## Fix
 
 Add the package to the appropriate permanent or temporary declaration, flatten
 the resulting selectors into pnpm settings, and mirror permanent names in
 Dependabot.
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+A single leading UTF-8 byte order mark in `package.json` is accepted.
+
+Selected package manifests, workspace YAML, and present or explicitly configured Dependabot and lockfile inputs that cannot be read or parsed produce an `unanalyzable` diagnostic containing the file and error. Repair malformed JSON/YAML or restore read access so dependency policy can be checked. Absent optional inputs are allowed unless explicitly configured.
+
+`options.unanalyzable` uses the shared analysis policy: `report` (default) emits a finding, `advise` emits an advisory, and `ignore` omits the uncertain result. Definite violations remain findings under every policy. Read/parse failures are file-level diagnostics at line 1; use a file suppression for these failures. File suppressions apply before policy routing; malformed JSON can carry a leading `// no-mistakes-disable-file pnpm-release-age-policy` directive, and YAML supports the corresponding `#` directive. Rule include/exclude and project scope still limit the selected files. A custom rule `message` prefixes these diagnostics.
 
 ## Suppression
 
@@ -106,3 +186,16 @@ in the suppression comment.
 [`pnpm-overrides-ban`](pnpm-overrides-ban.md) prevents version forcing, and
 [`version-pin-consistency`](version-pin-consistency.md) checks other structured
 version sources against their anchors.
+
+## Limitations
+
+Settings owned by a pnpm config dependency cannot be loaded without an install.
+This rule does not read `node_modules`. A source whose key does not start with
+`./` or `../` is ignored, so a `minimumReleaseAgeExclude` list that exists
+only there is not the list this rule compares.
+
+```yaml
+include:
+  "@acme/pnpm-policy":
+    - minimumReleaseAgeExclude
+```

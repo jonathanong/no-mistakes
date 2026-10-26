@@ -1,6 +1,16 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
+const { isTestRunner } = require("./test-message-runner");
+const { capturedMessageOrigin } = require("./test-message-captured-value");
+const {
+  expectArguments,
+  isExpectCall,
+  memberName,
+  propertyName,
+  unwrap,
+} = require("./test-message-expect");
 
 const MATCHERS = new Set([
   "contain",
@@ -21,38 +31,23 @@ const MATCHERS = new Set([
 const MODIFIERS = new Set(
   "and at be been deep has have is not of rejects resolves same that to which with".split(" "),
 );
-const TEST_CALLEES = new Set(["it", "test"]);
-
-function propertyName(node) {
-  if (node?.type === "Identifier") return node.name;
-  return node?.type === "Literal" ? String(node.value) : null;
-}
-
-function unwrap(node) {
-  let current = node;
-  while (
-    current?.type === "ChainExpression" ||
-    current?.type === "TSAsExpression" ||
-    current?.type === "TSTypeAssertion" ||
-    current?.type === "TSNonNullExpression"
-  ) {
-    current = current.expression;
-  }
-  return current;
-}
 
 function isMessageMember(node) {
   const current = unwrap(node);
   return (
     current?.type === "MemberExpression" &&
-    propertyName(current.property) === "message" &&
+    memberName(current) === "message" &&
     !isBodyMember(current.object)
   );
 }
 
+function isMessageValue(node, context) {
+  return isMessageMember(node) || isMessageMember(capturedMessageOrigin(node, context));
+}
+
 function isBodyMember(node) {
   const current = unwrap(node);
-  return current?.type === "MemberExpression" && propertyName(current.property) === "body";
+  return current?.type === "MemberExpression" && memberName(current) === "body";
 }
 
 function isStaticAnalysisPath(filename) {
@@ -66,29 +61,10 @@ function isGeneratedTestPath(filename) {
   return filename.replace(/\\/g, "/").includes(".generated.");
 }
 
-function isExpectCall(node) {
-  const current = unwrap(node);
-  if (current?.type !== "CallExpression") return false;
-  if (current.callee.type === "Identifier") return current.callee.name === "expect";
-  return (
-    current.callee.type === "MemberExpression" &&
-    ["soft", "poll"].includes(propertyName(current.callee.property)) &&
-    current.callee.object?.type === "Identifier" &&
-    current.callee.object.name === "expect"
-  );
-}
-
-function calleeName(node) {
-  if (node?.type === "Identifier") return node.name;
-  if (node?.type === "MemberExpression" && !node.computed) return calleeName(node.object);
-  if (node?.type === "CallExpression") return calleeName(node.callee);
-  return null;
-}
-
 function unwrapMatcherObject(node) {
   let current = unwrap(node);
   while (current?.type === "MemberExpression") {
-    const name = propertyName(current.property);
+    const name = memberName(current);
     if (!MODIFIERS.has(name)) return null;
     current = unwrap(current.object);
   }
@@ -104,43 +80,53 @@ module.exports = rule(
   },
   (context) => {
     if (isStaticAnalysisPath(context.filename) || isGeneratedTestPath(context.filename)) return {};
+    const suppressed = ruleSuppression(context, "test-no-error-message-matching");
     let testDepth = 0;
     return {
       CallExpression(node) {
-        if (TEST_CALLEES.has(calleeName(node.callee))) {
+        if (isTestRunner(node.callee, context)) {
           testDepth += 1;
         }
-        const matcherObject =
-          node.callee.type === "MemberExpression" ? unwrapMatcherObject(node.callee.object) : null;
+        let callee = unwrap(node.callee);
         if (
-          node.callee.type === "MemberExpression" &&
-          MATCHERS.has(propertyName(node.callee.property)) &&
-          isExpectCall(matcherObject) &&
-          isMessageMember(matcherObject.arguments?.[0])
+          callee?.type === "MemberExpression" &&
+          (memberName(callee) === "call" || memberName(callee) === "apply")
+        ) {
+          callee = unwrap(callee.object);
+        }
+        const matcherObject =
+          callee?.type === "MemberExpression" ? unwrapMatcherObject(callee.object) : null;
+        if (
+          callee?.type === "MemberExpression" &&
+          MATCHERS.has(memberName(callee)) &&
+          isExpectCall(matcherObject, context) &&
+          isMessageValue(expectArguments(matcherObject, context)?.[0], context) &&
+          !suppressed(node)
         ) {
           context.report({ node, messageId: "message" });
           return;
         }
         if (
-          node.callee.type === "MemberExpression" &&
-          propertyName(node.callee.property) === "includes" &&
+          callee?.type === "MemberExpression" &&
+          memberName(callee) === "includes" &&
           testDepth > 0 &&
-          isMessageMember(node.callee.object)
+          isMessageValue(callee.object, context) &&
+          !suppressed(node)
         ) {
           context.report({ node, messageId: "message" });
         }
       },
       "CallExpression:exit"(node) {
-        if (TEST_CALLEES.has(calleeName(node.callee))) testDepth -= 1;
+        if (isTestRunner(node.callee, context)) testDepth -= 1;
       },
       BinaryExpression(node) {
         if (testDepth <= 0) return;
         if (!["!=", "==", "===", "!=="].includes(node.operator)) return;
         if (
-          (isMessageMember(node.left) && node.right.type === "Literal") ||
-          (isMessageMember(node.right) && node.left.type === "Literal")
+          (isMessageValue(node.left, context) && node.right.type === "Literal") ||
+          (isMessageValue(node.right, context) && node.left.type === "Literal")
         ) {
-          context.report({ node, messageId: "message" });
+          if (!suppressed(node)) context.report({ node, messageId: "message" });
         }
       },
     };

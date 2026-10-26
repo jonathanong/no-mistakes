@@ -6,7 +6,6 @@ use super::finite_set_consistency;
 use crate::codebase::check_facts::{
     collect_check_facts_with_graph_files_playwright_and_sources, CheckFactMap, CheckFactPlan,
 };
-use crate::codebase::ts_source::facts::TsFactPlan;
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 
@@ -29,20 +28,17 @@ pub(super) fn prepare_call_site_facts(
                 config,
                 &sources.inventory().target_file_paths(),
             )?,
-        graph: TsFactPlan {
-            call_sites: needs_call_sites,
-            ..Default::default()
-        },
         postgres_schema_catalog_paths: catalog_paths,
         ..Default::default()
     };
+    plan.require_call_site_paths(&call_site_files);
     super::required_companion_imports::configure_fact_plan(
         root, config, files, sources, &mut plan,
     )?;
     if !plan.production_import_paths.is_empty() {
         plan.graph.imports = true;
     }
-    crate::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
+    crate::codebase::postgres::configure_prepared_postgres_plan(root, config, &mut plan)?;
     crate::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
     plan.embedded_sql = !plan.embedded_sql_options.is_empty();
     if !needs_call_sites

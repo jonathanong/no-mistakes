@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - name: no-argument-policy
+    rule: forbidden-calls
+    scope: repository
+    include:
+      - src/schedules/**
+    exclude:
+      - src/schedules/worker-b.ts
+    options:
+      roots:
+        - glob: ["src/**/*.ts", "src/**/*.tsx"]
+      traversal: file
+      targets:
+        - exact: scheduler.register

@@ -1,6 +1,8 @@
 "use strict";
 
+const { literalString } = require("./module-mock-helpers");
 const {
+  callbackCall,
   isKnownTestCallee,
   isTestCall,
   setupCallbackKind,
@@ -33,32 +35,61 @@ function resolveFunctionCallback(context, node, callback) {
 }
 
 function calleeHasProperty(callee, name) {
+  while (callee?.type === "ChainExpression") callee = callee.expression;
+  if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
+    return calleeHasProperty(callee.expressions.at(-1), name);
+  }
   if (!callee) return false;
   if (callee.type === "Identifier") return callee.name === name;
   if (callee.type === "CallExpression") return calleeHasProperty(callee.callee, name);
-  if (callee.type !== "MemberExpression" || callee.computed) return false;
-  return callee.property.name === name || calleeHasProperty(callee.object, name);
+  if (callee.type !== "MemberExpression") return false;
+  if (callee.computed && callee.property?.type === "Identifier") {
+    return calleeHasProperty(callee.object, name);
+  }
+  const prop = callee.computed ? literalString(callee.property) : callee.property?.name;
+  return prop === name || calleeHasProperty(callee.object, name);
 }
 
-function createRuleHelpers(context, testCalleeNames) {
+function createRuleHelpers(context, testCalleeNames, namespaces, testAliases) {
   return {
     calleeHasProperty,
     isDescribeCall(node) {
       return (
         (node.callee.type === "Identifier" && node.callee.name === "describe") ||
-        (isKnownTestCallee(node.callee, testCalleeNames) &&
+        (isKnownTestCallee(node.callee, testCalleeNames, namespaces) &&
           calleeHasProperty(node.callee, "describe"))
       );
     },
     isInlineCallback(node) {
-      const parent = node.parent;
+      const parent = callbackCall(node);
       return (
-        parent?.type === "CallExpression" &&
-        (setupCallbackKind(parent, testCalleeNames) || isTestCall(parent, testCalleeNames))
+        parent &&
+        !testAliases.isShadowed(parent.callee) &&
+        (setupCallbackKind(parent, testCalleeNames, namespaces) ||
+          isTestCall(parent, testCalleeNames, namespaces))
       );
     },
     resolveFunctionCallback(node, callback) {
       return resolveFunctionCallback(context, node, callback);
+    },
+    configureSerialMode(node) {
+      if (!calleeHasProperty(node.callee, "configure")) return false;
+      if (
+        node.callee.type !== "MemberExpression" ||
+        !isKnownTestCallee(node.callee.object, testCalleeNames, namespaces) ||
+        !calleeHasProperty(node.callee.object, "describe")
+      ) {
+        return false;
+      }
+      const options = node.arguments[0];
+      if (options?.type !== "ObjectExpression") return false;
+      return options.properties.some(
+        (property) =>
+          property.type === "Property" &&
+          (property.key?.name ?? property.key?.value) === "mode" &&
+          property.value?.type === "Literal" &&
+          property.value.value === "serial",
+      );
     },
   };
 }

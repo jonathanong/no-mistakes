@@ -1,0 +1,9 @@
+rules:
+  - rule: required-local-docs
+    scope: repository
+    options:
+      # `services/../agents` is `agents`. A literal join still contains `..`.
+      roots: ["services/../agents"]
+      requiredFile: README.md
+      codeExtensions: [mts, ts]
+      testExcludePatterns: ["*.test.*", __tests__]

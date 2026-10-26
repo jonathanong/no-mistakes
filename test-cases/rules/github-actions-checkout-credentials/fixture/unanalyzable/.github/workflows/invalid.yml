@@ -1,0 +1,3 @@
+# Malformed YAML must never silently clear the workflow.
+permissions: [
+jobs:

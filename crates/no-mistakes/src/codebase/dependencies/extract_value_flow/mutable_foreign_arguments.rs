@@ -39,17 +39,20 @@ impl MemberArguments {
             .cloned()
             .map(|(reference, owner, interval)| (reference, owner, interval, Vec::new(), false))
             .collect();
-        while let Some(((receiver, reads, _), owner, interval, mut active, uncertain)) =
+        while let Some(((receiver, reads, root_read), owner, interval, mut active, uncertain)) =
             pending.pop()
         {
-            let values = self.origins.values(&receiver.0);
-            let extra = self.origins.possible_values(&receiver.0);
-            if (values.is_none() && extra.is_none()) || active.contains(&receiver.0) {
+            let selected = self.origins.values_at(&receiver.0, root_read);
+            let uncertain = uncertain || selected.uncertain;
+            if (selected.values.is_none() && selected.possible.iter().all(Option::is_none))
+                || active.contains(&(receiver.0.clone(), root_read))
+            {
                 continue;
             }
             if !visited.insert((
                 receiver.clone(),
                 reads.clone(),
+                root_read,
                 owner,
                 interval,
                 active.clone(),
@@ -57,8 +60,13 @@ impl MemberArguments {
             )) {
                 continue;
             }
-            active.push(receiver.0.clone());
-            for (values, added) in [(values, false), (extra, true)] {
+            active.push((receiver.0.clone(), root_read));
+            for (values, added) in [
+                (selected.values, false),
+                (selected.possible[0], true),
+                (selected.possible[1], true),
+                (selected.possible[2], true),
+            ] {
                 for value in values.into_iter().flatten() {
                     let mut projected = Vec::new();
                     nested::write_receiver_references(value, &receiver.1, &reads, &mut projected);

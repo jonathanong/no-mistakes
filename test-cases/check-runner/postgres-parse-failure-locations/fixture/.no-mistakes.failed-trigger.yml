@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      sqlInclude: [schema.sql, failed-trigger.sql]
+      executorNames: []
+      scanEmbedded: false

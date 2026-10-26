@@ -1,12 +1,14 @@
-use super::{line_containing, relation};
+use super::relation;
 use crate::codebase::postgres::types::{
     SqlAddColumnMetadata, SqlForeignKeyMetadata, SqlNamedConstraint, SqlSchemaFileFacts,
     SqlUnnamedConstraint,
 };
-use sqlparser::ast::{AlterTableOperation, ColumnOption, ForeignKeyConstraint, TableConstraint};
+use sqlparser::ast::{
+    AlterTableOperation, ColumnOption, ForeignKeyConstraint, Spanned, TableConstraint,
+};
 
 pub(super) fn collect_create_table_fks(
-    sql: &str,
+    line: usize,
     table_name: &str,
     table: &sqlparser::ast::CreateTable,
     foreign_keys: &mut Vec<SqlForeignKeyMetadata>,
@@ -14,19 +16,30 @@ pub(super) fn collect_create_table_fks(
     for column in &table.columns {
         for option in &column.options {
             if let ColumnOption::ForeignKey(fk) = &option.option {
-                foreign_keys.push(fk_metadata(sql, table_name, Some(&column.name.value), fk));
+                // Inline FK directives belong to the declaration, not the CREATE head.
+                let declaration_line = fk.span().start.line as usize;
+                foreign_keys.push(fk_metadata(
+                    table_name,
+                    Some(&column.name.value),
+                    fk,
+                    if declaration_line == 0 {
+                        line
+                    } else {
+                        declaration_line
+                    },
+                ));
             }
         }
     }
     for constraint in &table.constraints {
         if let TableConstraint::ForeignKey(fk) = constraint {
-            foreign_keys.push(fk_metadata(sql, table_name, None, fk));
+            foreign_keys.push(fk_metadata(table_name, None, fk, line));
         }
     }
 }
 
 pub(super) fn collect_alter_table(
-    sql: &str,
+    line: usize,
     alter: &sqlparser::ast::AlterTable,
     facts: &mut SqlSchemaFileFacts,
 ) {
@@ -42,7 +55,7 @@ pub(super) fn collect_alter_table(
                     TableConstraint::ForeignKey(fk) => {
                         facts
                             .foreign_keys
-                            .push(fk_metadata(sql, &table_name, None, fk))
+                            .push(fk_metadata(&table_name, None, fk, line))
                     }
                     TableConstraint::Unique(unique) => {
                         facts
@@ -66,7 +79,7 @@ pub(super) fn collect_alter_table(
                     facts.unnamed_constraints.push(SqlUnnamedConstraint {
                         table_name: table_name.clone(),
                         kind: kind.to_string(),
-                        line: line_containing(sql, &["add", kind]),
+                        line,
                     });
                 }
                 if *not_valid {
@@ -74,7 +87,7 @@ pub(super) fn collect_alter_table(
                         facts.not_valid_constraints.push(SqlNamedConstraint {
                             table_name: table_name.clone(),
                             name: name.clone(),
-                            line: line_containing(sql, &["not valid", &name]),
+                            line,
                         });
                     }
                 }
@@ -83,7 +96,7 @@ pub(super) fn collect_alter_table(
                 facts.validated_constraints.push(SqlNamedConstraint {
                     table_name: table_name.clone(),
                     name: name.value.clone(),
-                    line: line_containing(sql, &["validate constraint", &name.value]),
+                    line,
                 });
             }
             AlterTableOperation::AddColumn { column_def, .. } => {
@@ -112,15 +125,15 @@ pub(super) fn collect_alter_table(
                             None
                         }
                     }),
-                    line: line_containing(sql, &["add", &column_def.name.value]),
+                    line,
                 });
                 for option in &column_def.options {
                     if let ColumnOption::ForeignKey(fk) = &option.option {
                         facts.foreign_keys.push(fk_metadata(
-                            sql,
                             &table_name,
                             Some(&column_def.name.value),
                             fk,
+                            line,
                         ));
                     }
                 }
@@ -131,10 +144,10 @@ pub(super) fn collect_alter_table(
 }
 
 fn fk_metadata(
-    sql: &str,
     table_name: &str,
     column_name: Option<&str>,
     fk: &ForeignKeyConstraint,
+    line: usize,
 ) -> SqlForeignKeyMetadata {
     let column_names = if fk.columns.is_empty() {
         column_name
@@ -143,16 +156,6 @@ fn fk_metadata(
     } else {
         fk.columns.iter().map(|ident| ident.value.clone()).collect()
     };
-    let line = line_containing(
-        sql,
-        &[
-            column_names
-                .first()
-                .map(String::as_str)
-                .unwrap_or("references"),
-            "references",
-        ],
-    );
     SqlForeignKeyMetadata {
         table_name: table_name.to_string(),
         column_names,

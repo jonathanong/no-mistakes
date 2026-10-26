@@ -6,6 +6,7 @@ function ruleSuppression(context, ruleId, suppressionOptions) {
   const lines = new Set();
   let file = false;
   const source = context.sourceCode;
+  if (!source?.ast?.tokens || !source.getAllComments) return () => false;
   const first = source.ast.tokens[0];
   const requireReason = suppressionOptions?.requireReason === true;
   for (const comment of source.getAllComments()) {

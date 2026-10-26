@@ -197,6 +197,7 @@ include!("edge_calls/namespace_imports.rs");
 include!("edge_calls/namespace_escapes.rs");
 include!("edge_calls/types.rs");
 include!("edge_calls/roots.rs");
+include!("edge_calls/source_nodes.rs");
 include!("edge_calls/import_resolution.rs");
 include!("edge_calls/export_resolution.rs");
 include!("edge_calls/local_resolution.rs");

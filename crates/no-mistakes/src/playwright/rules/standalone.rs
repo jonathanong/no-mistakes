@@ -1,3 +1,4 @@
+use super::effort;
 use super::filter::filter_rule_findings;
 use super::policy::unique_policy;
 use super::selection::rule_selections;
@@ -8,7 +9,6 @@ use crate::playwright::analysis::pipeline::{
 };
 use crate::playwright::config;
 use crate::playwright::playwright_tests;
-use crate::playwright::rule_findings::findings_from_report;
 use anyhow::Result;
 use std::path::Path;
 
@@ -18,6 +18,8 @@ use std::path::Path;
 /// constructs `config` in-memory for rule purposes can still rely on
 /// on-disk Playwright settings. Not used by the aggregate `no-mistakes check`
 /// pipeline — see `check_with_facts`/`check_with_prepared_facts` for that.
+/// This compatibility adapter returns findings only; use aggregate check
+/// diagnostics (including the Node check API) to receive non-failing advisories.
 pub fn check(
     root: &Path,
     config_path: Option<&Path>,
@@ -46,7 +48,15 @@ pub fn check(
             assert_conditional_tests: false,
             allow_skipped_tests: false,
         };
-        let unique_policy = unique_policy(selection.unique_test_ids, selection.unique_html_ids);
+        let unique_ids = effort::unique_test_ids_policy(config)?;
+        let html_ids = effort::unique_html_ids_policy(config)?;
+        let coverage_effort = effort::coverage_policy(config)?;
+        let unique_policy = unique_policy(
+            selection.unique_test_ids,
+            selection.unique_html_ids,
+            unique_ids.low,
+            html_ids.low,
+        );
         let analysis = if selection.coverage {
             analyze_with_policy_from_snapshot(
                 root,
@@ -64,7 +74,7 @@ pub fn check(
                 &snapshot,
             )
         }?;
-        let report_findings = findings_from_report(
+        let report = crate::playwright::rule_findings::findings_from_report_with_effort(
             &analysis,
             selection.unique_test_ids,
             selection.unique_html_ids,
@@ -74,8 +84,14 @@ pub fn check(
                 routes: selection.cover_routes,
                 selectors: selection.cover_selectors,
             },
+            crate::playwright::rule_findings::LowEffortFindings {
+                configured_html_id_selector: config::has_configured_html_id_selector(&settings),
+                unique_test_ids: unique_ids.low.then_some(unique_ids.unanalyzable),
+                unique_html_ids: html_ids.low.then_some(html_ids.unanalyzable),
+                coverage: coverage_effort.low.then_some(coverage_effort.unanalyzable),
+            },
         );
-        findings.extend(filter_rule_findings(root, config, report_findings)?);
+        findings.extend(filter_rule_findings(root, config, report.findings)?);
     }
     findings.sort();
     findings.dedup();

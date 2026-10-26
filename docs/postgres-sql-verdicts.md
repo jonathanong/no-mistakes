@@ -46,7 +46,8 @@ An existing contextual finding can coexist with whole-call `abstain` when
 another reachable invocation remains unknown; the row does not promote one
 observed context into proof for every execution.
 
-Each PostgreSQL rule application accepts `unanalyzableSql: advise` to place its
+Each PostgreSQL rule application accepts `unanalyzable: advise` (or the
+SQL-specific `unanalyzableSql: advise` alias) to place its
 residual uncertainty in the non-failing `advisories` list. Each executor call,
 rule, configured application, and executor profile produces at most one residual
 advisory. Its `target` lists unresolved checks in sorted, comma-separated
@@ -67,7 +68,8 @@ This avoids moving existing failures when a call also has unresolved SQL.
 
 Existing `fail` and `ignore` choices keep their behavior; query annotation's default name for `fail` is `report`.
 Proven violations continue to fail even when the same call has residual
-uncertainty. `no-mistakes` file and line suppression directives apply to
+uncertainty. This includes decidable unannotated literal heads at annotation
+`effort: low`: `advise` and `ignore` apply only to unknown heads. `no-mistakes` file and line suppression directives apply to
 advisories as they do to findings.
 
 Application identity borrows the request's prepared facts and report-local sink.

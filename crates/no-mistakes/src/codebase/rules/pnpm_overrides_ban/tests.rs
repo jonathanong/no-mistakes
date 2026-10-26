@@ -65,6 +65,83 @@ fn fail_package_json_overrides() {
 }
 
 #[test]
+fn fail_included_overrides_are_banned() {
+    let findings = findings_for("fail-included-overrides");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file == "pnpm/security.yaml"
+                && finding
+                    .message
+                    .contains("top-level \"overrides\" is banned")
+                && finding.line == 1
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.file != "pnpm-workspace.yaml"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn selected_included_override_is_reported_without_the_root_file() {
+    let findings = findings_for("fail-included-selected");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file == "pnpm/security.yaml"
+                && finding
+                    .message
+                    .contains("top-level \"overrides\" is banned")
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.file != "pnpm-workspace.yaml"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn excluded_included_override_file_is_not_reported() {
+    let findings = findings_for("fail-included-excluded");
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.file != "pnpm/security.yaml"),
+        "{findings:?}"
+    );
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn fail_duplicate_overrides_reports_every_definition() {
+    let findings = findings_for("fail-duplicate-overrides");
+    let body = findings
+        .iter()
+        .map(|finding| finding.message.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        body.contains("pnpm-workspace.yaml: top-level \"overrides\" is banned"),
+        "{body}"
+    );
+    assert!(
+        body.contains("pnpm/security.yaml: top-level \"overrides\" is banned"),
+        "{body}"
+    );
+    assert!(
+        body.contains(
+            "pnpm-workspace.yaml: setting \"overrides\" is claimed by more than one pnpm source"
+        ),
+        "{body}"
+    );
+}
+
+#[test]
 fn fail_package_json_pnpm_overrides() {
     let findings = findings_for("fail-pnpm-overrides");
     assert!(
@@ -106,15 +183,17 @@ fn skips_non_object_package_json() {
 }
 
 #[test]
-fn skips_unreadable_workspace_and_invalid_json() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let missing = root.join("pnpm-workspace.yaml");
-    let invalid = root.join("package.json");
-    std::fs::write(&invalid, "{not json").unwrap();
-    let files = vec![missing, invalid];
-    let findings = check_with_files(root, &config(), &files).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
+fn reports_unreadable_workspace_and_invalid_json() {
+    let root = fixture_root("unanalyzable");
+    let files = vec![
+        root.join("pnpm-workspace.yaml"),
+        root.join("packages/broken/package.json"),
+    ];
+    let findings = check_with_files(&root, &config(), &files).unwrap();
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(findings
+        .iter()
+        .all(|finding| finding.target.as_deref() == Some("unanalyzable")));
 }
 
 #[test]
@@ -163,3 +242,6 @@ fn key_line_helpers_cover_fallbacks_and_quoted_yaml() {
     );
     assert_eq!(json_quoted_key_after("{}", "\"x\"", 99), None);
 }
+
+#[path = "tests/include_inputs.rs"]
+mod include_inputs;

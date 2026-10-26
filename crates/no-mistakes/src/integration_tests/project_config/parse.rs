@@ -7,7 +7,7 @@ use oxc_ast::ast::Program;
 pub(in crate::integration_tests) fn load_config_projects_from_program(
     input: ConfigProjectInput<'_>,
     program: &Program<'_>,
-    _visible_files: Option<&crate::fx::PathSet>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<Vec<ConfigProject>> {
     let ConfigProjectInput {
         root,
@@ -24,7 +24,7 @@ pub(in crate::integration_tests) fn load_config_projects_from_program(
                 program, source, path, config_dir, resolver,
             );
             let parsed = parsed?;
-            Ok(parsed.into_projects(root, raw))
+            parsed.into_projects_from_visible(root, raw, visible_files)
         }
         Framework::Vitest => {
             let workspace = test_config::vitest::is_vitest_project_array_path(path);

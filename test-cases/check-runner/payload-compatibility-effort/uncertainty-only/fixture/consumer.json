@@ -1,0 +1,9 @@
+{
+  "$comment": "Identical selected schema; low still does not claim nested compatibility.",
+  "payload": {
+    "type": "object",
+    "properties": {"labels": {"type": "array", "items": {"type": "string"}}},
+    "required": ["labels"],
+    "additionalProperties": false
+  }
+}

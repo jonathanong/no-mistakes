@@ -112,6 +112,7 @@ fn absent(mut value: Recovered) -> Recovered {
     value.origins.clear();
     value.positions.clear();
     value.append_sites.clear();
+    value.append_decisions.clear();
     value.fragment = true;
     // The SQL fragment is absent, but && still returns its original falsy
     // scalar. Keep null distinct from false for a subsequent ?? fallback.

@@ -1,14 +1,27 @@
 "use strict";
 
+const { ruleSuppression } = require("../rule-suppression");
 const {
   attributeName,
-  INTERACTIVE_ELEMENTS,
   isSelectorAttribute,
   options,
   rule,
   selectorAttributes,
-  selectorLiteral,
 } = require("../helpers");
+const {
+  isInteractiveElement,
+  jsxCandidateNames,
+  mappedImport,
+  matchesAny,
+  rememberAlias,
+  rememberImport,
+} = require("./playwright-interactive-names");
+const {
+  childKeepsSelector,
+  hasSlotProp,
+  literalSelectors,
+  singleElementChild,
+} = require("./playwright-interactive-slots");
 
 module.exports = rule(
   {
@@ -20,26 +33,89 @@ module.exports = rule(
         properties: {
           selectorAttributes: { type: "array", items: { type: "string" } },
           interactiveComponents: { type: "array", items: { type: "string" } },
+          slotProps: { type: "array", items: { type: "string" } },
         },
         additionalProperties: false,
       },
     ],
-    messages: { missing: "Interactive elements should have a test ID." },
+    messages: {
+      missing: "Interactive elements should have a test ID.",
+      slot: "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+    },
   },
   (context) => {
     const opts = options(context);
     const attrs = selectorAttributes(opts);
     const interactiveComponents = compileMatchers(opts.interactiveComponents);
+    const slotProps = opts.slotProps ?? ["asChild"];
+    const importedNames = new Map();
+    const openings = new WeakMap();
+    const suppressed = ruleSuppression(context, "playwright-require-interactive-test-id");
+    function elementNames(node) {
+      return jsxCandidateNames(node.name).flatMap((name) => {
+        const imported = mappedImport(name, node, context, importedNames);
+        return imported && imported !== name ? [name, imported] : [name];
+      });
+    }
+    function openingInfo(node) {
+      if (!openings.has(node)) {
+        const names = elementNames(node);
+        // Intrinsic JSX tags cannot merge props onto a child, even if configured.
+        const component =
+          node.name.type === "JSXMemberExpression" ||
+          (node.name.type === "JSXIdentifier" && !/^[a-z]|-/.test(node.name.name));
+        const enabled =
+          component &&
+          hasSlotProp(node, slotProps) &&
+          names.some((name) => matchesAny(name, interactiveComponents));
+        // Reuse the parent's child/prop facts instead of rescanning wide sibling lists.
+        openings.set(node, {
+          names,
+          slot: enabled
+            ? {
+                selectors: literalSelectors(node, attrs),
+                child: singleElementChild(node.parent),
+              }
+            : null,
+        });
+      }
+      return openings.get(node);
+    }
+    function coveredByParent(node) {
+      const element = node.parent;
+      const parent = element.parent;
+      if (parent.type !== "JSXElement") return false;
+      const { slot } = openingInfo(parent.openingElement);
+      if (!slot || slot.child !== element) return false;
+      // A missing/invalid parent ID has one actionable finding, on that parent.
+      return slot.selectors.length === 0 || childKeepsSelector(node, slot.selectors);
+    }
     return {
+      ImportDeclaration(node) {
+        for (const specifier of node.specifiers) rememberImport(specifier, importedNames);
+      },
+      VariableDeclarator(node) {
+        rememberAlias(node, importedNames, context);
+      },
       JSXOpeningElement(node) {
-        const elementName = jsxElementName(node.name);
+        const { names, slot } = openingInfo(node);
+        if (slot) {
+          if (slot.selectors.length === 0 && !suppressed(node))
+            context.report({ node: node.name, messageId: "slot" });
+          return;
+        }
         const hasSelector = node.attributes.some((attr) =>
           isSelectorAttribute(attributeName(attr), attrs),
         );
         if (
           hasSelector ||
-          !isInteractiveElement(elementName, node.attributes, interactiveComponents)
+          !isInteractiveElement(names, node.attributes, interactiveComponents) ||
+          coveredByParent(node)
         ) {
+          return;
+        }
+        const hidden = suppressed(node);
+        if (hidden) {
           return;
         }
         context.report({ node: node.name, messageId: "missing" });
@@ -48,52 +124,8 @@ module.exports = rule(
   },
 );
 
-function isInteractiveElement(elementName, attributes, interactiveComponents) {
-  if (matchesAny(elementName, interactiveComponents)) {
-    return true;
-  }
-  if (INTERACTIVE_ELEMENTS.has(elementName)) {
-    return true;
-  }
-  if (elementName === "a" && attributes.some((attr) => attributeName(attr) === "href")) {
-    return true;
-  }
-  return attributes.some((attr) => {
-    if (attributeName(attr) === "onClick") {
-      return true;
-    }
-    if (attributeName(attr) !== "role") {
-      return false;
-    }
-    return [
-      "button",
-      "checkbox",
-      "link",
-      "menuitem",
-      "option",
-      "radio",
-      "switch",
-      "tab",
-      "textbox",
-    ].includes(selectorLiteral(attr));
-  });
-}
-
-function jsxElementName(name) {
-  if (name.type === "JSXIdentifier") {
-    return name.name;
-  }
-  if (name.type === "JSXMemberExpression") {
-    const object = jsxElementName(name.object);
-    const property = jsxElementName(name.property);
-    return object && property ? `${object}.${property}` : null;
-  }
-}
-
 function compileMatchers(values) {
-  if (!Array.isArray(values)) {
-    return [];
-  }
+  if (!Array.isArray(values)) return [];
   return values
     .filter((value) => typeof value === "string" && value.length > 0)
     .map((value) => {
@@ -103,28 +135,13 @@ function compileMatchers(values) {
 }
 
 function regexLiteral(value) {
-  if (!value.startsWith("/") || value.lastIndexOf("/") === 0) {
-    return null;
-  }
+  if (!value.startsWith("/") || value.lastIndexOf("/") === 0) return null;
   const lastSlash = value.lastIndexOf("/");
   try {
     return new RegExp(value.slice(1, lastSlash), value.slice(lastSlash + 1));
   } catch {
     return null;
   }
-}
-
-function matchesAny(name, matchers) {
-  return Boolean(
-    name &&
-    matchers.some((matcher) => {
-      if (!matcher.regex) {
-        return matcher.exact === name;
-      }
-      matcher.regex.lastIndex = 0;
-      return matcher.regex.test(name);
-    }),
-  );
 }
 
 module.exports.__test = { compileMatchers };

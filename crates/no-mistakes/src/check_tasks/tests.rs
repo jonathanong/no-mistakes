@@ -41,6 +41,7 @@ pub(crate) fn run_codebase_check(
         findings: findings?,
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
+        advisories: Vec::new(),
         warning: None,
         duration,
     })
@@ -103,6 +104,7 @@ fn enabled_filesystem_check_runs_both_suppression_modes() {
             &[],
             no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
                 snapshot: &snapshot,
+                next_config_resolver: None,
                 vitest_catalog: None,
                 sources: snapshot.source_store_for(&root),
                 workflow_documents: None,
@@ -116,3 +118,6 @@ fn enabled_filesystem_check_runs_both_suppression_modes() {
         assert!(task.findings.is_empty(), "{defer_suppression}");
     }
 }
+
+#[path = "redirect_tests.rs"]
+mod redirects;

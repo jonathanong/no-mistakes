@@ -1,0 +1,7 @@
+rules:
+  - rule: pnpm-overrides-ban
+    scope: repository
+    message: Repair dependency policy metadata.
+    options:
+      effort: max
+      unanalyzable: ignore

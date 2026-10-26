@@ -27,6 +27,20 @@ pub fn fail_unanalyzable_sql(rule: &str, value: &str) -> Result<bool> {
 /// The request needs a report-local proof sink when any effective SQL rule
 /// application asks for non-failing residual diagnostics.
 pub fn has_sql_advice(config: &crate::config::v2::NoMistakesConfig) -> bool {
+    if [
+        "postgres-no-unbounded-sql-identifier",
+        "postgres-no-mutable-sql-registry",
+    ]
+    .iter()
+    .flat_map(|id| config.rule_applications(id))
+    .any(|rule| {
+        config.effective_rule_analysis(rule).is_ok_and(|policy| {
+            policy.effort == crate::config::v2::Effort::Low
+                && policy.unanalyzable == crate::config::v2::Unanalyzable::Advise
+        })
+    }) {
+        return true;
+    }
     const RULES: &[&str] = &[
         "postgres-bounded-statements",
         "postgres-conflict-ordering",
@@ -36,10 +50,13 @@ pub fn has_sql_advice(config: &crate::config::v2::NoMistakesConfig) -> bool {
         "postgres-lock-ordering",
         "postgres-no-generated-column-writes",
         "postgres-no-offset",
+        "postgres-no-transformed-uuid-predicates",
         "postgres-require-query-annotation",
         "postgres-required-predicates",
         "postgres-sql-shape-policy",
         "postgres-sql-statement-policy",
+        "postgres-no-mutable-sql-registry",
+        "postgres-no-unbounded-sql-identifier",
     ];
     let key = serde_yaml::Value::String("unanalyzableSql".to_string());
     RULES.iter().any(|id| {

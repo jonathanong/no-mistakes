@@ -1,0 +1,15 @@
+# A successful low finite-set pass must retain errors from other rules.
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      effort: low
+      sets:
+        - name: names
+          file: data.yml
+          kind: yaml-sequence
+          key: values
+  - rule: banned-paths
+    scope: repository
+    options:
+      bannedPaths: false

@@ -20,15 +20,11 @@ impl SharedCheckContext {
         {
             return None;
         }
-        let (settings, fact_plan) = self
-            .prepared
-            .playwright
-            .as_ref()?
-            .report_view(
-                options.project.as_deref(),
-                options.app.as_deref(),
-                options.assert_unique_html_ids,
-            )?;
+        let (settings, fact_plan) = self.prepared.playwright.as_ref()?.report_view(
+            options.project.as_deref(),
+            options.app.as_deref(),
+            options.assert_unique_html_ids,
+        )?;
         Some(PreparedPlaywrightView {
             settings,
             fact_plan,
@@ -62,7 +58,12 @@ impl SharedCheckContext {
     ) -> Result<crate::check_runner::CheckResults> {
         use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
         let runner_config_deadlines = include_runner_config_deadlines
-            .then(|| self.plan.integration_runner_configs.as_ref().map(|plan| plan.deadline_evidence(facts)))
+            .then(|| {
+                self.plan
+                    .integration_runner_configs
+                    .as_ref()
+                    .map(|plan| plan.deadline_evidence(facts))
+            })
             .flatten();
         if self.fact_files.is_empty()
             && self.graph_files.is_empty()
@@ -71,6 +72,13 @@ impl SharedCheckContext {
             && !self.graph_rules_enabled
         {
             let mut results = crate::check_runner::empty_results([None]);
+            results
+                .warnings
+                .extend(self.prepared.config.analysis_warnings.iter().cloned());
+            results.analysis_warning_count = self.prepared.config.analysis_warnings.len();
+            results
+                .analysis_fallbacks
+                .clone_from(&self.prepared.config.analysis_fallbacks);
             results.include_suppressed = include_suppressed;
             results.include_sql_verdicts = include_sql_verdicts;
             results.runner_config_deadlines = runner_config_deadlines;
@@ -82,9 +90,15 @@ impl SharedCheckContext {
         let needs_sql_verdicts = include_sql_verdicts
             || crate::codebase::postgres::has_sql_advice(&self.prepared.config);
         let isolated_facts = needs_sql_verdicts.then(|| {
-            scoped_facts.as_ref().unwrap_or(facts).with_fresh_sql_verdicts()
+            scoped_facts
+                .as_ref()
+                .unwrap_or(facts)
+                .with_fresh_sql_verdicts()
         });
-        let facts = isolated_facts.as_ref().or(scoped_facts.as_ref()).unwrap_or(facts);
+        let facts = isolated_facts
+            .as_ref()
+            .or(scoped_facts.as_ref())
+            .unwrap_or(facts);
         let config = &self.prepared.config;
         let sources = self.prepared.visible_paths.source_store_for(&self.root);
         let (react, queues, rules, integration, codebase, filesystem_rules) =
@@ -114,10 +128,7 @@ impl SharedCheckContext {
                 vitest_projects: self.prepared.vitest_projects.as_ref(),
                 playwright_projects: self.prepared.playwright_projects.as_ref(),
                 workflow_documents: self.prepared.workflow_documents.as_deref(),
-                tsconfig_gate_project_inputs: self
-                    .prepared
-                    .tsconfig_gate_project_inputs
-                    .as_ref(),
+                tsconfig_gate_project_inputs: self.prepared.tsconfig_gate_project_inputs.as_ref(),
                 // Preserve ordinary check behavior; defer only when this
                 // additive report requests suppression accounting.
                 defer_suppression: include_suppressed,
@@ -133,6 +144,7 @@ impl SharedCheckContext {
         crate::check_runner::results::finalize_domain_checks(
             crate::check_runner::results::FinalizeInput {
                 root: &self.root,
+                facts,
                 runner_config_deadlines,
                 config,
                 filesystem_files: &self.fs_files,

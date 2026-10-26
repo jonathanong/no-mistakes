@@ -2,14 +2,19 @@ use super::*;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+mod next_config;
+mod parallel;
 mod special;
 mod timing;
+use parallel::run_enabled_rules;
+pub(super) use parallel::trace_rule;
 pub(super) type ResultAccumulator = Mutex<Vec<(&'static str, Result<Vec<RuleFinding>>)>>;
 
 pub(super) struct RuleRunInputs<'a> {
     root: &'a Path,
     config: &'a crate::config::v2::NoMistakesConfig,
     snapshot: &'a crate::codebase::ts_source::VisiblePathSnapshot,
+    next_config_resolver: Option<&'a nextjs_redirect_destinations::PreparedConfigResolver<'a>>,
     vitest_catalog: Option<&'a super::super::PreparedVitestProjectCatalog>,
     sources: &'a std::sync::Arc<crate::codebase::ts_source::SourceStore>,
     facts: Option<&'a crate::codebase::check_facts::CheckFactMap>,
@@ -25,6 +30,7 @@ pub(super) struct RuleRunInputs<'a> {
 /// Request-scoped inputs prepared once and shared by filesystem rules.
 #[doc(hidden)]
 pub struct PreparedFilesystemRuleInputs<'a> {
+    pub next_config_resolver: Option<&'a nextjs_redirect_destinations::PreparedConfigResolver<'a>>,
     pub snapshot: &'a crate::codebase::ts_source::VisiblePathSnapshot,
     pub vitest_catalog: Option<&'a super::super::PreparedVitestProjectCatalog>,
     pub sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
@@ -72,13 +78,16 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     // Lower rule layers only borrow it; a supplied sparse map is not repaired.
     let owned_facts = if facts.is_none()
         && (rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
-            || rule_enabled(config, REQUIRED_COMPANION_IMPORTS))
+            || rule_enabled(config, REQUIRED_COMPANION_IMPORTS)
+            || crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS
+                .iter()
+                .any(|rule_id| rule_enabled(config, rule_id)))
     {
         super::entrypoints::prepare_call_site_facts(root, config, files, &prepared.sources)?
     } else {
         None
     };
-    run_prepared_filesystem_rules(
+    next_config::run(
         root,
         config,
         files,
@@ -97,7 +106,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppr
     prepared: PreparedFilesystemRuleInputs<'_>,
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Vec<RuleFinding>> {
-    run_prepared_filesystem_rules(root, config, files, prepared, facts, true)
+    next_config::run(root, config, files, prepared, facts, true)
 }
 
 fn run_prepared_filesystem_rules(
@@ -110,6 +119,7 @@ fn run_prepared_filesystem_rules(
 ) -> Result<Vec<RuleFinding>> {
     let PreparedFilesystemRuleInputs {
         snapshot,
+        next_config_resolver,
         vitest_catalog,
         sources,
         workflow_documents,
@@ -134,6 +144,7 @@ fn run_prepared_filesystem_rules(
         root,
         config,
         snapshot,
+        next_config_resolver,
         vitest_catalog,
         sources: &sources,
         facts,
@@ -150,6 +161,12 @@ fn run_prepared_filesystem_rules(
     let mut findings = Vec::new();
     for (_, result) in results {
         findings.extend(result?);
+    }
+    if let Some(facts) = facts {
+        findings.extend(
+            super::super::postgres_unanalyzable_schema::diagnostics(root, config, files, facts)?
+                .findings,
+        );
     }
     if !defer_suppression {
         suppress_rule_findings_with_sources_except(
@@ -172,23 +189,6 @@ fn run_prepared_filesystem_rules(
                 .contains(&left.rule.as_str())
     });
     Ok(findings)
-}
-
-fn run_enabled_rules(inputs: &RuleRunInputs<'_>) {
-    macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let result = trace_rule(inputs.sources, $id, || run_rule::run_rule_with_sources(run_rule::RunRuleRequest { rule_id: $id, fallback: $call, root: inputs.root, config: inputs.config, files: inputs.candidates.candidates($id), snapshot: inputs.snapshot, sources: inputs.sources, facts: inputs.facts, defer_suppression: inputs.defer_suppression })); inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; special::spawn(scope, inputs); }); }; }
-    crate::filesystem_rules!(run_rules);
-}
-
-pub(super) fn trace_rule<T>(
-    sources: &crate::codebase::ts_source::SourceStore,
-    rule_id: &str,
-    run: impl FnOnce() -> T,
-) -> T {
-    timing::trace_rule(
-        sources.observer().map(|observer| observer.as_ref()),
-        || format!("rules.{rule_id}"),
-        run,
-    )
 }
 
 #[cfg(test)]

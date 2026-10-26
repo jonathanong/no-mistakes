@@ -17,11 +17,25 @@ export const publicCreateAccount = createUser;
 ```ts
 const createAccount = (input: Input) => createUser(input);
 const accountId = user.id;
+const settings: Config = incoming;
+const assertedSettings = incoming as Config;
+const checkedSettings = incoming satisfies Config;
 ```
 
 ## Options
 
 This rule has no options.
+
+## Limits
+
+This rule checks differently named identifier initializers in `const`
+declarations without explicit type intent. Type-annotated identifier bindings,
+`as` and angle-bracket assertions, and `satisfies` expressions are allowed,
+including through parentheses and non-null wrappers. Plain aliases wrapped only
+in parentheses or non-null assertions remain reported. Member reads,
+destructuring, calls, and their `.call` / `.apply` wrappers do not establish an
+identifier alias: `const property = db["read"]` stays allowed. It does not resolve
+another file's exports or infer whether a value is a function.
 
 ## Fix
 

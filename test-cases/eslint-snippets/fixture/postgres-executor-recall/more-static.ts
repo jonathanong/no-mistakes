@@ -1,0 +1,18 @@
+import { query } from "@example/db";
+import * as db from "@example/db";
+const namespace = db;
+namespace.read("BEGIN");
+const { ["read"]: read } = namespace;
+read("COMMIT");
+const { query: local } = connection;
+local("ROLLBACK");
+const expression = async (sql) => await query(sql);
+const block = async function(sql) { return await query(sql); };
+expression("BEGIN");
+block("COMMIT");
+const call = (sql) => query.call(null, sql);
+const apply = (sql) => query.apply(null, [sql]);
+call("ROLLBACK");
+apply("BEGIN");
+(query as any)!("COMMIT");
+query?.call?.(null, "BEGIN");

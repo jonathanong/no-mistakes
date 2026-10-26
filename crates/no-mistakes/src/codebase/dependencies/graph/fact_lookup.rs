@@ -32,6 +32,12 @@ pub(crate) trait TsFactLookup: Sync {
         false
     }
 
+    /// Whether one source has the required facts, including scoped check demand.
+    /// Generic lookups retain their existing all-files coverage contract.
+    fn covers_ts_fact_plan_for_path(&self, _path: &Path, required: TsFactPlan) -> bool {
+        self.covers_ts_fact_plan(required)
+    }
+
     /// Complete pre-discovered file universe associated with these facts.
     fn graph_files(&self) -> Option<&[PathBuf]> {
         None
@@ -59,6 +65,10 @@ pub(crate) trait TsFactLookup: Sync {
 
     fn playwright_source_files(&self) -> Option<&[PathBuf]> {
         None
+    }
+
+    fn playwright_matcher_warnings(&self, _project: Option<&str>) -> &[String] {
+        &[]
     }
 
     fn get_playwright_test_files(

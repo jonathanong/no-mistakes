@@ -8,34 +8,57 @@ production never uses. This rule limits those mocks to a declared boundary.
 ## Disallowed
 
 ```ts
+// test/payments.test.ts
+import { vi } from "vitest";
+
 vi.mock("@app/payments", () => ({ charge: vi.fn() }));
 ```
 
 ## Allowed
 
 ```ts
+// test/payments.test.ts
+import { vi } from "vitest";
+
 vi.mock("stripe", () => ({ Stripe: vi.fn() }));
-vi.mock("@app/payments", async () => ({
-  ...(await vi.importActual("@app/payments")),
-  charge: vi.fn(),
-}));
 ```
 
 ## Options
 
-The schema accepts an options object. `internalSpecifiers` identifies internal
-specifier prefixes; `includePathPatterns` and `excludePathPatterns` scope
-files; `requireLiteralSpecifiers` defaults to `true`; and `baseline` records
+The schema accepts an options object.
+
+```js
+{
+  rules: {
+    "no-mistakes/module-mock-boundary": ["error", {
+      internalSpecifiers: ["@app/**"],
+      includePathPatterns: ["test/**"]
+    }]
+  }
+}
+```
+
+`internalSpecifiers` identifies internal specifier patterns;
+`includePathPatterns` and `excludePathPatterns` scope files;
+`requireLiteralSpecifiers` defaults to `true`; and `baseline` records
 temporary `[file, specifier, count]` allowances. `integrationExports` permits
-tagged integration exports, with its `sourcePathTemplates` and
-`reexportExtensions` controls. See the exhaustive table in
+tagged integration exports, with its `specifiers`, `sourcePathTemplates`,
+`reexportExtensions`, and `markerRegex` controls. See the exhaustive table in
 [`eslint-plugin`](../eslint-plugin.md#rule-options).
+
+A default import of `vitest` or `@jest/globals`, a single `const` alias, a static `vi` or `jest` member including a string or expression-free template key, an optional call, and a comma callee are the same framework binding.
 
 ## Fix
 
 Use the real internal module, mock an external leaf, or make a narrowly tagged
 integration override that preserves the real module. Keep any baseline entry
 temporary; stale entries are reported.
+
+## Limits
+
+A computed identifier key, such as `const { [key]: mocked } = ns`, is not the export spelled by that identifier. A string or expression-free template key is. The same holds for a method taken from a framework alias: `const { [name]: clear } = vi` is not `vi.mock`, while `const { ["mock"]: clear } = vi` is. `const mock = vi.mock as typeof vi.mock` is still `vi.mock`. `const mocking = vi as typeof vi` is still `vi`. `(vi.mock as typeof vi.mock).call` is still `vi.mock.call`.
+
+Another file's re-export is not visible here. `import { mock } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { vi as mock } from "vitest"` or `export * from "vitest"`. `const { mock } = require("vitest")` is not a framework binding. A parameter default such as `function run({ vi } = vitest)` is not judged, because the caller can pass a different object. An `.apply` or `.call` whose argument list contains a spread is not rewritten. That includes a const alias of the method: `const mock = vi.mock; mock.apply(...[vi, ["react", factory]], ["./kept", factory])` is not a mock of `./kept`. A later write drops the alias: `let mock = vi.mock; mock = other; mock("./kept", factory)` is not `vi.mock`. `(0, mock)("./internal", factory)` is still that alias.
 
 ## Suppression
 

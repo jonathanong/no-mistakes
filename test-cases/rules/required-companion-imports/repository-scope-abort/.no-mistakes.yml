@@ -1,0 +1,16 @@
+version: 2
+rules:
+  - rule: required-companion-imports
+    scope: repository
+    options:
+      sourceDirs: [web/components/ui]
+      directChildOnly: true
+      sourceExtensions: [.tsx]
+      excludeBasenames: [Internal.tsx]
+      companionGlobs: ['{sourceDir}/{sourceStem}.stories.tsx']
+      specifierTemplate: '@/components/ui/{sourceStem}'
+  - rule: nextjs-redirect-destinations
+    scope: repository
+    options:
+      configPath: web/next.config.ts
+      appRoot: web/app

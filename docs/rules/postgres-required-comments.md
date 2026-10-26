@@ -18,9 +18,6 @@ rules:
       columnNamePatterns: []
       exemptColumnNamePatterns: ['^(id|created_at|updated_at)$', '^vendor_']
       minLength: 10
-      allow:
-        - object: table:schema_migrations
-          reason: Owned by the migration runner
 ```
 
 ## Why and when
@@ -64,21 +61,112 @@ reports nothing for it.
 ## Valid example
 
 `COMMENT ON TABLE orders IS 'One row per checkout; immutable after payment'`.
+The same snapshot also documents `orders.display_name`, a regular view, and a
+materialized view.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY);
-COMMENT ON TABLE orders IS 'One row per checkout; immutable after payment';
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "comment": "One row per checkout; immutable after payment",
+      "columns": {
+        "display_name": {
+          "dataType": "text",
+          "comment": "Customer visible display name"
+        }
+      }
+    }
+  },
+  "views": {
+    "active_orders": {
+      "definition": "SELECT id FROM orders WHERE active",
+      "comment": "Orders that can still be changed"
+    },
+    "daily_order_totals": {
+      "materialized": true,
+      "definition": "SELECT count(*) FROM orders",
+      "comment": "Daily count of all orders"
+    }
+  }
+}
 ```
 
 
 ## Counterexample
 
-`orders` has no comment, a comment made only of whitespace, or a comment
-shorter than `minLength`. The same applies to a selected column, view, or
-materialized view.
+`orders` has no comment. The other three independent examples omit a selected
+column, view, or materialized-view comment while keeping unrelated objects
+commented.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": { "id": { "dataType": "uuid" } }
+    }
+  }
+}
+```
+
+`orders.display_name` has no column comment.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "comment": "One row per checkout; immutable after payment",
+      "columns": {
+        "id": { "dataType": "uuid" },
+        "display_name": { "dataType": "text" }
+      }
+    }
+  }
+}
+```
+
+`active_orders` has no view comment.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "comment": "One row per checkout; immutable after payment",
+      "columns": { "id": { "dataType": "uuid" } }
+    }
+  },
+  "views": {
+    "active_orders": { "definition": "SELECT id FROM orders" }
+  }
+}
+```
+
+`daily_order_totals` has no materialized-view comment.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "comment": "One row per checkout; immutable after payment",
+      "columns": { "id": { "dataType": "uuid" } }
+    }
+  },
+  "views": {
+    "daily_order_totals": {
+      "materialized": true,
+      "definition": "SELECT count(*) FROM orders"
+    }
+  }
+}
 ```
 
 
@@ -89,7 +177,25 @@ Add `COMMENT ON TABLE`, `COMMENT ON COLUMN`, `COMMENT ON VIEW`, or
 Exempt mechanical column names with `exemptColumnNamePatterns` instead of
 writing filler comments.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. It judges the generated schema catalog (`schemaCatalogPath`); executor calls in TS/JS are not evaluated.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. This rule has no unanalyzable inputs: it judges the configured schema catalog, a JSONC file read directly from `schemaCatalogPath` (no SQL is parsed by the rule), so every entry is either present or absent. A catalog that cannot be read, is not valid JSONC, is empty, or is not a valid snapshot is a hard error, not an unanalyzable input. The repository-level `unanalyzable` default does not affect it.
+
 ## Suppression
+
+For an intentional exception, add an entry under the rule's `options.allow`:
+
+```yaml
+allow:
+  - object: table:schema_migrations
+    reason: Owned by the migration runner
+```
 
 Snapshot JSON cannot carry `no-mistakes-disable` comments. Suppress an object
 with `allow: [{object, reason}]`. `object` is `table:<name>`,

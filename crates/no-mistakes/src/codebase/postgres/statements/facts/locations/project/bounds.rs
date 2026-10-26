@@ -20,7 +20,10 @@ fn query(query: &SqlBoundQuery, bound: usize, index: &mut usize, out: &mut SqlVa
             _ => {}
         }
         for pin in &item.pins {
-            if let SqlPinSource::Query(inner) | SqlPinSource::ReadQuery(inner) = &pin.source {
+            if let SqlPinSource::Query(inner)
+            | SqlPinSource::ReadQuery(inner)
+            | SqlPinSource::ArrayQuery(inner) = &pin.source
+            {
                 self::query(inner, bound, index, out);
             }
         }

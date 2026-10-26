@@ -1,4 +1,5 @@
 use super::filter_source_files;
+use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::config::{Config, InferredRoots, RuleApplicationConfig};
 use crate::codebase::rules::path_filter::GlobMatcher;
 use crate::codebase::ts_resolver::normalize_path;
@@ -21,9 +22,19 @@ pub(super) fn relative(root: &Path, path: &Path) -> String {
 pub(super) fn shared_symbol_files(
     workspace_files: &[PathBuf],
     analysis_files: &[PathBuf],
+    shared: &CheckFactMap,
 ) -> Vec<PathBuf> {
-    let mut symbol_files = workspace_files.to_vec();
-    symbol_files.extend(analysis_files.iter().cloned());
+    let mut symbol_files = analysis_files.to_vec();
+    for path in workspace_files {
+        if shared
+            .ts
+            .get(path)
+            .and_then(|facts| facts.symbols.as_ref())
+            .is_some()
+        {
+            symbol_files.push(path.clone());
+        }
+    }
     symbol_files.sort();
     symbol_files.dedup();
     filter_source_files(&symbol_files)

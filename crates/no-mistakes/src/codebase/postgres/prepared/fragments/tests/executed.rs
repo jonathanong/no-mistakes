@@ -16,7 +16,7 @@ fn executed_fragment_filter_matches_contributors_and_physical_sql_origins() {
         ("executed-complete-helper-owned", vec![], "input.append"),
         (
             "executed-complete-helper-reuse",
-            vec![4, 9],
+            vec![9, 4],
             "unrelated.append",
         ),
     ] {

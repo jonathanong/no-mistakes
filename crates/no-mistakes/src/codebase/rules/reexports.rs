@@ -28,6 +28,7 @@ pub use super::vitest_project_catalog::{
 };
 
 pub(crate) use super::file_matching::matching_files;
+pub(crate) use super::selected_files::selected_rule_files;
 pub(crate) use super::source_access::{read_source, source_store_for_files};
 #[doc(hidden)]
 pub use super::suppression::{
@@ -43,8 +44,8 @@ pub(crate) use super::finding::rule_enabled;
 pub use super::finding::RuleFinding;
 
 pub(crate) use super::entrypoints::{
-    borrowed_source_rule_entrypoints, prepared_file_rule_facts, prepared_rule_entrypoints,
-    sourced_file_rule_entrypoints,
+    borrowed_source_rule_entrypoints, diagnostic_source_rule_entrypoints, prepared_file_rule_facts,
+    prepared_rule_entrypoints, sourced_file_rule_entrypoints,
 };
 pub(crate) use super::masked_source::{scan_masked_file, scan_masked_files, MaskedFileContext};
 pub(crate) use super::postgres_findings::{LocatedRuleFinding, PostgresFindings};

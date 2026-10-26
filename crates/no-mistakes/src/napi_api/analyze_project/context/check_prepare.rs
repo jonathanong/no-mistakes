@@ -19,17 +19,23 @@ impl SharedCheckContext {
             config_path,
             tsconfig_path,
             deadlines,
+            effort,
         } = options;
         // Borrow the aggregate root identity; canonicalizing here would split shared keys.
         let root = root.to_path_buf();
+        let mut config = config.clone();
+        config.effort_override = effort;
         let prepared = crate::check_runner::prepared::prepare_from_shared(
             &root,
             config_path,
             tsconfig_path,
             visible_paths,
-            config.clone(),
+            config,
             tsconfig.clone(),
-            Some(workspace),
+            crate::check_runner::prepared::SharedWorkspace {
+                map: Some(workspace),
+                deadlines,
+            },
         )?;
         let config = &prepared.config;
         let queues_enabled = queues_configured(config);
@@ -65,6 +71,8 @@ impl SharedCheckContext {
             unique_exports: unique_exports_enabled,
             embedded_sql: enabled.embedded_sql,
         });
+        crate::codebase::rules::nextjs_no_caching::configure_effort_plan(config, &mut plan)?;
+        crate::codebase::rules::require_storybook_stories::configure_effort_plan(config, &mut plan)?;
         crate::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
         plan.postgres_schema_catalog_paths =
             crate::codebase::postgres::configured_schema_catalog_paths(
@@ -79,7 +87,8 @@ impl SharedCheckContext {
                 prepared.visible_paths.paths_for(&root).as_ref(),
             )?;
         plan.graph.imports |= !plan.production_import_paths.is_empty();
-        crate::codebase::postgres::configure_prepared_postgres_plan(config, &mut plan)?;
+        configure_shared_family_scopes(&root, &prepared, config, &mut plan)?;
+        crate::codebase::postgres::configure_prepared_postgres_plan(&root, config, &mut plan)?;
         let prepare_runner_configs = if deadlines {
             crate::integration_tests::prepare_runner_configs_with_deadline_evidence
         } else {
@@ -124,8 +133,7 @@ impl SharedCheckContext {
         }
         plan.graph.per_item_calls |=
             config.rule_configured(crate::codebase::rules::QUERY_REACHED_PER_ITEM);
-        plan.graph.call_arguments |=
-            crate::codebase::rules::forbidden_calls::argument_facts_required(config);
+        crate::codebase::rules::forbidden_calls::configure_argument_facts(&root, config, &mut plan);
         let mut fact_demand = crate::check_runner::finite_set_plan::prepare(
             &root,
             config,

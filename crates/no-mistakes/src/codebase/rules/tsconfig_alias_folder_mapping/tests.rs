@@ -3,9 +3,8 @@ use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
-use std::path::Path;
 
-fn fixture(path: &str) -> std::path::PathBuf {
+fn fixture(path: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/tsconfig-alias-folder-mapping/fixture")
         .join(path)
@@ -26,280 +25,175 @@ fn agents_config() -> &'static str {
     "tsconfig: tsconfig.json\nbaseDir: backend\nmappings:\n  - prefix: \"@agents\"\n    root: agents\n"
 }
 
+fn findings(name: &str) -> Vec<RuleFinding> {
+    check(&fixture(name), &config_from_yaml(agents_config())).unwrap()
+}
+
 #[test]
-fn pass_fixture_produces_no_findings() {
-    let root = fixture("pass");
-    let config = config_from_yaml(agents_config());
-    let findings = check(&root, &config).unwrap();
-    assert!(findings.is_empty(), "expected no findings: {findings:?}");
+fn directory_and_extension_qualified_mappings_pass() {
+    for name in ["pass", "valid-files"] {
+        assert!(findings(name).is_empty(), "{name}: {:?}", findings(name));
+    }
+}
+
+#[test]
+fn genuine_mismatches_are_still_reported_at_each_entry() {
+    let findings = findings("wrong-files");
+    assert_eq!(findings.len(), 9, "{findings:?}");
+    assert!(findings.iter().all(|finding| finding.line > 1));
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|f| f.message.contains("must use prefix"))
+            .count(),
+        1
+    );
 }
 
 #[test]
 fn fail_fixture_produces_findings() {
-    let root = fixture("fail");
-    let config = config_from_yaml(agents_config());
-    let findings = check(&root, &config).unwrap();
-    assert!(!findings.is_empty(), "expected at least one finding");
-    assert!(
-        findings[0].message.contains("must target"),
-        "unexpected message: {}",
-        findings[0].message
-    );
+    let findings = findings("fail");
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("must target"));
+    assert_eq!(findings[0].line, 1);
+    assert_eq!(findings[0].file, "tsconfig.json");
 }
 
 #[test]
 fn no_options_is_noop() {
-    let root = fixture("fail");
-    let config = config_from_yaml("{}");
-    let findings = check(&root, &config).unwrap();
-    assert!(findings.is_empty());
+    assert!(check(&fixture("fail"), &config_from_yaml("{}"))
+        .unwrap()
+        .is_empty());
 }
 
 #[test]
 fn existing_unloadable_tsconfig_is_a_finding() {
-    let root = fixture("extends-missing");
-    let config = config_from_yaml(
-        "tsconfig: tsconfig.json\nbaseDir: src\nmappings:\n  - prefix: \"@api\"\n    root: api\n",
-    );
-    let findings = check(&root, &config).unwrap();
+    let findings = findings("extends-missing");
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].line, 1);
-    assert!(
-        findings[0].file.ends_with("tsconfig.json"),
-        "{}",
-        findings[0].file
-    );
-    assert!(
-        findings[0]
-            .message
-            .contains("tsconfig could not be loaded and alias mappings were not checked"),
-        "{}",
-        findings[0].message
-    );
-}
-
-#[test]
-fn missing_tsconfig_is_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let config = config_from_yaml(
-        "tsconfig: nonexistent.json\nbaseDir: backend\nmappings:\n  - prefix: \"@a\"\n    root: a\n",
-    );
-    let findings = check(tmp.path(), &config).unwrap();
-    assert!(findings.is_empty());
+    assert_eq!(findings[0].file, "tsconfig.json");
+    assert!(findings[0]
+        .message
+        .contains("tsconfig could not be loaded and alias mappings were not checked"));
 }
 
 #[test]
 fn missing_tsconfig_skips_invalid_rule_path_filters() {
-    let root = fixture("pass");
-    let mut config = config_from_yaml(
-        "tsconfig: nonexistent.json\nbaseDir: backend\nmappings:\n  - prefix: \"@a\"\n    root: a\n",
-    );
-    // `check_tsconfig` historically decides this rule is a no-op before path
-    // filters are compiled, so a malformed programmatic filter must not alter
-    // the missing-tsconfig result.
+    let mut config =
+        config_from_yaml(&agents_config().replace("tsconfig.json", "nonexistent.json"));
+    // Preserve the no-op before path filter compilation, including its error precedence.
     config.rules[0].include = vec!["[".to_string()];
-
-    let findings = check(&root, &config).unwrap();
-    assert!(findings.is_empty());
+    assert!(check(&fixture("pass"), &config).unwrap().is_empty());
 }
 
 #[test]
 fn check_with_files_delegates_to_tsconfig() {
-    let root = fixture("fail");
-    let config = config_from_yaml(agents_config());
-    // Pass an empty file list — rule reads tsconfig directly
-    let findings = check_with_files(&root, &config, &[]).unwrap();
-    assert!(!findings.is_empty());
-}
-
-#[test]
-fn finding_has_correct_line_and_file() {
-    let root = fixture("fail");
-    let config = config_from_yaml(agents_config());
-    let findings = check(&root, &config).unwrap();
-    assert_eq!(findings[0].line, 1);
-    assert!(findings[0].file.contains("tsconfig.json"));
+    let findings =
+        check_with_files(&fixture("fail"), &config_from_yaml(agents_config()), &[]).unwrap();
+    assert_eq!(findings.len(), 1);
 }
 
 #[test]
 fn multiple_targets_all_checked() {
-    let tmp = tempfile::tempdir().unwrap();
-    // Two targets, first wrong, second correct
-    let tsconfig = r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/modules/email", "backend/agents/email"]}}}"#;
-    std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
-    let config = config_from_yaml(agents_config());
-    let findings = check(tmp.path(), &config).unwrap();
-    // The wrong target should be flagged
-    assert!(
-        findings
-            .iter()
-            .any(|f| f.message.contains("backend/modules/email")),
-        "expected finding for wrong target"
-    );
+    let findings = findings("multiple-targets");
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("backend/modules/email"));
 }
 
 #[test]
 fn no_findings_when_no_compiler_options_paths() {
-    let tmp = tempfile::tempdir().unwrap();
-    std::fs::write(
-        tmp.path().join("tsconfig.json"),
-        r#"{"compilerOptions": {}}"#,
-    )
-    .unwrap();
-    let config = config_from_yaml(agents_config());
-    let findings = check(tmp.path(), &config).unwrap();
-    assert!(findings.is_empty());
+    assert!(findings("no-paths").is_empty());
 }
 
 #[test]
 fn wrong_prefix_for_target_is_flagged() {
-    let tmp = tempfile::tempdir().unwrap();
-    // The alias uses @wrong prefix but the target is in backend/agents/
-    let tsconfig = r#"{"compilerOptions": {"paths": {"@wrong/email": ["backend/agents/email"]}}}"#;
-    std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
-    let config = config_from_yaml(agents_config());
-    let findings = check(tmp.path(), &config).unwrap();
-    assert!(
-        !findings.is_empty(),
-        "expected finding for wrong prefix alias"
-    );
-}
-
-#[test]
-fn alias_with_correct_prefix_but_wrong_target_is_flagged_once() {
-    // Exercises lines 132-158: the alias @agents/email has the right prefix but
-    // targets the wrong folder.  The "direction 1" check fires first (alias→target)
-    // flagging it; the "direction 2" check then sees `already_flagged = true` via
-    // the f.message.contains() check and skips the duplicate.
-    let tmp = tempfile::tempdir().unwrap();
-    // @agents/email → backend/modules/email (wrong — should be backend/agents/email)
-    let tsconfig =
-        r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/modules/email"]}}}"#;
-    std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
-    let config = config_from_yaml(agents_config());
-    let findings = check(tmp.path(), &config).unwrap();
-    // Should produce exactly one finding (not duplicated by direction-2 check)
-    assert_eq!(findings.len(), 1, "expected exactly one finding");
-}
-
-#[test]
-fn alias_with_valid_mapping_is_not_double_flagged() {
-    // Exercises the `valid` check (lines 136-148) in direction-2:
-    // alias starts with @agents/ and the target matches — so `valid = true`
-    // and no direction-2 finding is emitted.
-    let tmp = tempfile::tempdir().unwrap();
-    // Correct mapping: @agents/email → backend/agents/email
-    let tsconfig = r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/agents/email"]}}}"#;
-    std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
-    let config = config_from_yaml(agents_config());
-    let findings = check(tmp.path(), &config).unwrap();
-    assert!(
-        findings.is_empty(),
-        "correct mapping should produce no findings"
-    );
+    let findings = findings("wrong-prefix");
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("must use prefix @agents"));
 }
 
 #[test]
 fn two_mappings_already_flagged_skip_prevents_duplicate() {
-    // Exercises lines 132-133 and 158: with two mappings (@agents → agents,
-    // @workers → workers), an alias @agents/email that targets backend/workers/email
-    // triggers direction-1 (wrong folder) AND direction-2 for the @workers mapping
-    // (correct folder but wrong prefix). The already_flagged check (lines 132-133)
-    // detects the direction-1 finding and skips the direction-2 duplicate (line 158).
-    let tmp = tempfile::tempdir().unwrap();
-    let config_yaml =
-        "tsconfig: tsconfig.json\nbaseDir: backend\nmappings:\n  - prefix: \"@agents\"\n    root: agents\n  - prefix: \"@workers\"\n    root: workers\n";
-    let tsconfig =
-        r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/workers/email"]}}}"#;
-    std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
-    let config = config_from_yaml(config_yaml);
-    let findings = check(tmp.path(), &config).unwrap();
-    // Direction-1 fires (wrong target for @agents); direction-2 also fires for
-    // @workers but already_flagged = true so we get exactly one finding.
-    assert_eq!(findings.len(), 1, "expected exactly one finding");
+    let config = config_from_yaml(&format!(
+        "{}  - prefix: \"@workers\"\n    root: workers\n",
+        agents_config()
+    ));
+    assert_eq!(check(&fixture("two-mappings"), &config).unwrap().len(), 1);
 }
 
 #[test]
-fn check_exists_flags_missing_directory() {
-    let tmp = tempfile::tempdir().unwrap();
-    let tsconfig = r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/agents/email"]}}}"#;
-    std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
-    let config = config_from_yaml(
-        "tsconfig: tsconfig.json\nbaseDir: backend\ncheckExists: true\nmappings:\n  - prefix: \"@agents\"\n    root: agents\n",
-    );
-    let findings = check(tmp.path(), &config).unwrap();
-    assert!(
-        findings
-            .iter()
-            .any(|f| f.message.contains("does not exist")),
-        "expected finding for missing directory: {findings:?}"
-    );
-}
-
-#[test]
-fn check_exists_passes_when_directory_present() {
-    let tmp = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(tmp.path().join("backend/agents/email")).unwrap();
-    let tsconfig = r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/agents/email"]}}}"#;
-    std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
-    let config = config_from_yaml(
-        "tsconfig: tsconfig.json\nbaseDir: backend\ncheckExists: true\nmappings:\n  - prefix: \"@agents\"\n    root: agents\n",
-    );
-    let findings = check(tmp.path(), &config).unwrap();
-    assert!(
-        findings.is_empty(),
-        "existing directory should produce no findings: {findings:?}"
-    );
-}
-
-#[test]
-fn check_exists_false_does_not_check_directories() {
-    let tmp = tempfile::tempdir().unwrap();
-    // No directory created — but checkExists: false (default), so no finding
-    let tsconfig = r#"{"compilerOptions": {"paths": {"@agents/email": ["backend/agents/email"]}}}"#;
-    std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
-    let config = config_from_yaml(agents_config()); // default checkExists: false
-    let findings = check(tmp.path(), &config).unwrap();
-    assert!(
-        findings.is_empty(),
-        "checkExists: false must not flag missing directories: {findings:?}"
-    );
+fn check_exists_uses_files_and_wildcard_parent_directories() {
+    let config = config_from_yaml(&format!("{}checkExists: true\n", agents_config()));
+    assert!(check(&fixture("exists-pass"), &config).unwrap().is_empty());
+    let findings = check(&fixture("exists-fail"), &config).unwrap();
+    assert_eq!(findings.len(), 4, "{findings:?}");
+    assert!(findings
+        .iter()
+        .all(|finding| finding.message.contains("does not exist")));
+    // The same absent targets are valid shapes when existence checks are disabled.
+    assert!(self::findings("exists-fail").is_empty());
 }
 
 #[test]
 fn empty_base_dir_no_leading_slash_on_correct_mapping() {
-    // When baseDir is empty, expected paths must NOT start with '/'
-    let tmp = tempfile::tempdir().unwrap();
-    let tsconfig = r#"{"compilerOptions": {"paths": {"@agents/email": ["agents/email"]}}}"#;
-    std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
-    let config = config_from_yaml(
-        "tsconfig: tsconfig.json\nmappings:\n  - prefix: \"@agents\"\n    root: agents\n",
-    );
-    let findings = check(tmp.path(), &config).unwrap();
-    assert!(
-        findings.is_empty(),
-        "empty baseDir with correct mapping should produce no findings: {findings:?}"
-    );
+    let config = config_from_yaml(&agents_config().replace("baseDir: backend\n", ""));
+    assert!(check(&fixture("empty-base"), &config).unwrap().is_empty());
 }
 
 #[test]
-fn two_mappings_same_root_valid_alias_not_flagged_by_direction_two() {
-    // Exercises lines 139-141 and 158: two mappings share the same root folder.
-    // @a/sub → backend/shared/sub is correct for the @a mapping. Direction-2 for
-    // the @b mapping fires (target starts with backend/shared/) but the valid check
-    // (lines 139-141) finds the alias is correct for the @a mapping, so no finding.
-    let tmp = tempfile::tempdir().unwrap();
-    let config_yaml =
-        "tsconfig: tsconfig.json\nbaseDir: backend\nmappings:\n  - prefix: \"@a\"\n    root: shared\n  - prefix: \"@b\"\n    root: shared\n";
-    // @a/sub correctly maps to backend/shared/sub per the @a mapping.
-    // Direction-2 for @b fires because the target starts with backend/shared/,
-    // but valid = true because the @a mapping is correct.
-    let tsconfig = r#"{"compilerOptions": {"paths": {"@a/sub": ["backend/shared/sub"]}}}"#;
-    std::fs::write(tmp.path().join("tsconfig.json"), tsconfig).unwrap();
-    let config = config_from_yaml(config_yaml);
-    let findings = check(tmp.path(), &config).unwrap();
-    assert!(
-        findings.is_empty(),
-        "valid alias should not be flagged by direction-2 via valid check: {findings:?}"
+fn two_mappings_same_root_accept_directory_and_file_targets() {
+    let config = config_from_yaml("tsconfig: tsconfig.json\nbaseDir: backend\nmappings:\n  - prefix: \"@a\"\n    root: shared\n  - prefix: \"@b\"\n    root: shared\n");
+    assert!(check(&fixture("shared-root"), &config).unwrap().is_empty());
+    let config = config_from_yaml(&format!(
+        "{}  - prefix: \"@other\"\n    root: agents\n",
+        agents_config()
+    ));
+    // Both directions must use the same extension-aware matching predicate.
+    assert!(check(&fixture("valid-files"), &config).unwrap().is_empty());
+}
+
+#[test]
+fn inherited_paths_report_winning_file_and_ast_key_lines() {
+    let findings = findings("locations");
+    let locations: Vec<_> = findings
+        .iter()
+        .map(|finding| (finding.file.as_str(), finding.line))
+        .collect();
+    assert_eq!(
+        locations,
+        vec![
+            ("config/policy.base.json", 10),
+            ("config/policy.base.json", 11),
+            ("config/policy.base.json", 12),
+        ]
     );
+    assert!(findings[0].message.contains("@agents/email"));
+    assert!(findings[1].message.contains("@agents/sms"));
+    assert!(findings[2].message.contains("must use prefix"));
+}
+
+#[test]
+fn child_paths_and_explicit_empty_paths_override_inherited_locations() {
+    for name in ["empty.json", "array-empty.json"] {
+        let config = config_from_yaml(&agents_config().replace("tsconfig.json", name));
+        assert!(check(&fixture("locations"), &config).unwrap().is_empty());
+    }
+    let config = config_from_yaml(&agents_config().replace("tsconfig.json", "child.json"));
+    let findings = check(&fixture("locations"), &config).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "child.json");
+    assert_eq!(findings[0].line, 5);
+}
+
+#[test]
+fn inherited_findings_filter_on_configured_tsconfig() {
+    let root = fixture("locations");
+    let mut config = config_from_yaml(agents_config());
+    config.rules[0].include = vec!["tsconfig.json".to_string()];
+    assert_eq!(check(&root, &config).unwrap().len(), 3);
+    config.rules[0].include = vec!["config/*.json".to_string()];
+    assert!(check(&root, &config).unwrap().is_empty());
+    config.rules[0].include.clear();
+    config.rules[0].exclude = vec!["tsconfig.json".to_string()];
+    assert!(check(&root, &config).unwrap().is_empty());
 }

@@ -2,12 +2,27 @@
 use super::{qualified, reads_outer, Evaluation};
 use crate::codebase::postgres::statements::{SqlBoundItem, SqlBoundItemKind, SqlPinSource};
 use crate::codebase::postgres::{RelationKind, SchemaCatalog};
+use std::collections::BTreeMap;
+mod indexes;
 
-/// Keys, their required columns, and alternative source-item dependencies for each column.
-pub(super) type Keys = Vec<Vec<Vec<Vec<usize>>>>;
+/// Each pin source requires all its referenced items to be bounded.
+type SourceItems = Vec<usize>;
+/// Any source can supply a column; every column must complete one catalog key.
+type ColumnSources = Vec<SourceItems>;
+type KeyColumns = Vec<ColumnSources>;
+/// Any complete unique key proves one predicate branch; every branch must be proven.
+type KeyChoices = Vec<KeyColumns>;
+pub(super) type Keys = Vec<KeyChoices>;
+
+/// One synthetic key whose source requires every proven preceding driver.
+pub(super) fn dependent_on(items: SourceItems) -> Keys {
+    vec![vec![vec![vec![items]]]]
+}
 
 pub(super) fn prepare(
     item: &SqlBoundItem,
+    item_index: usize,
+    owners: &BTreeMap<String, usize>,
     subqueries: &[Option<Evaluation>],
     arrays: &[bool],
     catalog: &SchemaCatalog,
@@ -15,7 +30,7 @@ pub(super) fn prepare(
     let SqlBoundItemKind::Table(name) = &item.kind else {
         return Vec::new();
     };
-    let Some(table) = catalog.relation(name) else {
+    let Some(table) = catalog.bounded_relation(name) else {
         return Vec::new();
     };
     let mut keys: Vec<Vec<(String, String)>> = catalog
@@ -58,30 +73,57 @@ pub(super) fn prepare(
                     .as_ref()
                     .filter(|query| query.bounded)
                     .map(|_| Vec::new()),
+                SqlPinSource::ArrayQuery(query) => subqueries[index]
+                    .as_ref()
+                    .filter(|evaluation| {
+                        evaluation.bounded && super::scalar_output::single(query, catalog)
+                    })
+                    .map(|_| Vec::new()),
                 SqlPinSource::StoredArray(_) | SqlPinSource::ReadQuery(_) => None,
             }
         })
         .collect();
-    keys.into_iter()
-        .map(|key| {
-            key.into_iter()
-                .map(|(visible, physical)| {
-                    let not_null = physical == "ctid"
-                        || table
-                            .columns
-                            .iter()
-                            .any(|column| column.name == physical && !column.nullable);
-                    item.pins
-                        .iter()
-                        .zip(&sources)
-                        .filter_map(|(pin, source)| {
-                            (pin.column == visible && (!pin.null_safe || not_null))
-                                .then(|| source.clone())
-                                .flatten()
+    let mut prepared: Keys = (0..item.pin_alternatives.max(1))
+        .map(|alternative| {
+            keys.iter()
+                .map(|key| {
+                    key.iter()
+                        .map(|(visible, physical)| {
+                            let not_null = physical == "ctid"
+                                || table
+                                    .columns
+                                    .iter()
+                                    .any(|column| column.name == *physical && !column.nullable);
+                            item.pins
+                                .iter()
+                                .zip(&sources)
+                                .filter_map(|(pin, source)| {
+                                    (pin.column == *visible
+                                        && pin
+                                            .alternative
+                                            .is_none_or(|branch| branch == alternative)
+                                        && pin.expression.is_none()
+                                        && (!pin.unqualified_candidate
+                                            || owners.get(&pin.column) == Some(&item_index))
+                                        && (!pin.null_safe || not_null))
+                                        .then(|| source.clone())
+                                        .flatten()
+                                })
+                                .collect()
                         })
                         .collect()
                 })
                 .collect()
         })
-        .collect()
+        .collect();
+    indexes::append(
+        &mut prepared,
+        item,
+        item_index,
+        owners,
+        (name, table),
+        &sources,
+        catalog,
+    );
+    prepared
 }

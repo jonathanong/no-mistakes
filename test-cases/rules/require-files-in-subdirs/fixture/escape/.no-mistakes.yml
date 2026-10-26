@@ -1,0 +1,8 @@
+rules:
+  - rule: require-files-in-subdirs
+    scope: repository
+    options:
+      packages:
+        # `..` leaves this repository. Report that once; do not scan the parent.
+        - root: ".."
+          requiredFiles: [README.md]

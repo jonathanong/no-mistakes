@@ -1,0 +1,11 @@
+CREATE FUNCTION bad_return_query() RETURNS SETOF integer LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY FROBULATE accounts;
+END
+$$;
+
+CREATE FUNCTION good_return_query() RETURNS SETOF integer LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY SELECT 1;
+END
+$$;

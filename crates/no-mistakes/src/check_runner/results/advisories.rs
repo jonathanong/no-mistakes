@@ -1,6 +1,8 @@
 use anyhow::Result;
 mod sql;
 pub(super) use sql::merge_sql;
+#[cfg(test)]
+mod tests;
 
 pub(super) fn collect(
     enabled: bool,
@@ -13,11 +15,14 @@ pub(super) fn collect(
     if !enabled {
         return Ok(Vec::new());
     }
-    if include_suppressed {
-        no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_sources_and_deferred_suppression(root, config, files, sources)
+    let mut advisories = if include_suppressed {
+        no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_sources_and_deferred_suppression(root, config, files, sources)?
     } else {
         no_mistakes::codebase::rules::agents_md_max_size::advisories_with_files_and_sources(
             root, config, files, sources,
-        )
-    }
+        )?
+    };
+    advisories.sort();
+    advisories.dedup();
+    Ok(advisories)
 }

@@ -1,1 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net9.0</TargetFramework><IsTestProject>true</IsTestProject><RootNamespace>Company.Core.Tests</RootNamespace></PropertyGroup><ItemGroup><ProjectReference Include="../Core.csproj" /></ItemGroup></Project>
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>Core.Tests</AssemblyName>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>Company.Core.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="CoreServiceTests.cs" />
+    <ProjectReference Include="../Core.csproj" />
+  </ItemGroup>
+</Project>

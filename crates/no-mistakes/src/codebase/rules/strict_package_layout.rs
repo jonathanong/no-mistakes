@@ -85,27 +85,30 @@ pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFi
     };
     let test_globs = build_test_globset(&patterns);
 
+    let repo = crate::codebase::ts_resolver::normalize_path(root);
+    let normalized_files: Vec<PathBuf> = files
+        .iter()
+        .map(|file| crate::codebase::ts_resolver::normalize_path(file))
+        .collect();
     let mut findings = Vec::new();
     for spec in &opts.packages {
-        let spec_root = if spec.root.is_absolute() {
-            spec.root.clone()
-        } else {
-            root.join(&spec.root)
+        let Some(spec_root) = contained_spec_root(&repo, &spec.root) else {
+            continue;
         };
-        let pkg_dirs: HashSet<PathBuf> = files
+        let pkg_dirs: HashSet<PathBuf> = normalized_files
             .iter()
-            .filter(|f| f.starts_with(&spec_root))
-            .filter_map(|f| f.strip_prefix(&spec_root).ok())
+            .filter(|file| file.starts_with(&spec_root))
+            .filter_map(|file| file.strip_prefix(&spec_root).ok())
             .filter_map(|rel| rel.components().next())
-            .filter_map(|c| c.as_os_str().to_str())
-            .map(|d| spec_root.join(d))
+            .filter_map(|component| component.as_os_str().to_str())
+            .map(|dir| spec_root.join(dir))
             .collect();
         for pkg_dir in &pkg_dirs {
-            for file in files {
+            for file in &normalized_files {
                 let Some(rel) = file.strip_prefix(pkg_dir).ok() else {
                     continue;
                 };
-                let full_path = relative_slash_path(root, file);
+                let full_path = relative_slash_path(&repo, file);
                 if let Some(msg) = check_relative(rel, spec, test_dir, &test_globs, &full_path) {
                     findings.push(RuleFinding {
                         rule: RULE_ID.to_string(),
@@ -120,6 +123,18 @@ pub(crate) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFi
         }
     }
     findings
+}
+
+fn contained_spec_root(repo: &Path, spec_root: &Path) -> Option<PathBuf> {
+    let joined = if spec_root.is_absolute() {
+        spec_root.to_path_buf()
+    } else {
+        repo.join(spec_root)
+    };
+    let spec = crate::codebase::ts_resolver::normalize_path(&joined);
+    // A root that lexically escapes the repository must not match every file
+    // under a parent prefix such as `/`.
+    spec.starts_with(repo).then_some(spec)
 }
 
 pub(crate) fn check_relative(

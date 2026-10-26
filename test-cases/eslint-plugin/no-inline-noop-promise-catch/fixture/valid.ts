@@ -20,7 +20,6 @@ export async function validCatches(
   work.catch(() => false);
   work.then(onFulfilled);
   work.finally(() => {});
-  work["catch"](() => {});
   work.catch(...handlers);
   work.catch((error) => error);
   work.catch(() => {

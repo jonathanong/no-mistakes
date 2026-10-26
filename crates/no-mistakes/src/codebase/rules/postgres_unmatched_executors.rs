@@ -27,14 +27,20 @@ struct Options {
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<crate::codebase::postgres::TrustedSqlTag>,
+    sql_literal_helpers: Vec<String>,
     report_unmatched_executor_names: bool,
 }
 
 impl Options {
-    fn profile(&self) -> EmbeddedSqlOptions {
+    fn profile(&self, rule_id: &str) -> EmbeddedSqlOptions {
         EmbeddedSqlOptions::configured(&self.import_specifier, &self.executor_names)
             .with_scoped_executors(&self.executor_factory_names, &self.executor_type_names)
             .with_trusted_sql_tags(&self.trusted_sql_tags)
+            .with_sql_literal_helpers(if rule_id == "postgres-require-query-annotation" {
+                &self.sql_literal_helpers
+            } else {
+                &[]
+            })
     }
 }
 
@@ -98,7 +104,7 @@ pub(crate) fn check(
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        let profile = opts.profile();
+        let profile = opts.profile(rule_id);
         let mut matched = (BTreeSet::new(), BTreeSet::new());
         let mut scanned = 0usize;
         for path in files.iter().filter(|path| {

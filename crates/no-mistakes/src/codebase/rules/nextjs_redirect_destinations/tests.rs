@@ -1,12 +1,16 @@
+mod delegated_effort;
+mod effort;
+mod entry_failure;
+mod extract;
+mod named_section;
 mod static_values;
 mod tracked_routes;
-use super::extract::{extract_named_destinations, ExtractedDestinations};
 use super::options::Options;
 use super::routes::{
     build_route_set, destination_matches, is_page_file, matches_route_segments,
     route_from_page_relative, should_skip_destination, strip_query_and_hash,
 };
-use super::scan::{check_named_section, contains_word, word_line};
+use super::scan::{contains_word, word_line};
 use super::*;
 use crate::config::v2::{
     schema::{Project, RuleDef, RuleScope},
@@ -15,7 +19,7 @@ use crate::config::v2::{
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-fn fixture(name: &str) -> PathBuf {
+pub(super) fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/nextjs-redirect-destinations/fixture")
@@ -23,7 +27,7 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
-fn config(options_yaml: &str) -> NoMistakesConfig {
+pub(super) fn config(options_yaml: &str) -> NoMistakesConfig {
     let mut config = NoMistakesConfig::default();
     config.rules.push(RuleDef {
         rule: RULE_ID.to_string(),
@@ -34,11 +38,11 @@ fn config(options_yaml: &str) -> NoMistakesConfig {
     config
 }
 
-fn fixture_files(root: &Path) -> Vec<PathBuf> {
+pub(super) fn fixture_files(root: &Path) -> Vec<PathBuf> {
     crate::codebase::ts_source::walk_files(root, &[])
 }
 
-fn run(name: &str, options_yaml: &str) -> Vec<RuleFinding> {
+pub(super) fn run(name: &str, options_yaml: &str) -> Vec<RuleFinding> {
     let root = fixture(name);
     check_with_files(&root, &config(options_yaml), &fixture_files(&root)).unwrap()
 }
@@ -190,12 +194,14 @@ fn unknown_config_path_is_silent() {
 }
 
 #[test]
-fn unreadable_config_path_is_silent() {
+fn unreadable_config_path_reports_residual() {
     let root = fixture("pass");
     let missing = root.join("nope.config.ts");
     let findings =
         check_with_files(&root, &config("{ configPath: nope.config.ts }"), &[missing]).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "nope.config.ts");
+    assert!(findings[0].message.contains("could not read config"));
 }
 
 #[test]
@@ -244,163 +250,6 @@ fn project_scope_uses_configured_root_not_web() {
     });
     let findings = check_with_files(&root, &config, &fixture_files(&root)).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
-fn substring_redirects_text_is_not_extractor_drift() {
-    let extracted = extract_named_destinations(
-        Path::new("next.config.ts"),
-        "export default { preredirects() { return []; } };\n",
-        "redirects",
-    );
-    assert!(!extracted.body_found);
-    let findings = check_named_section(
-        "next.config.ts",
-        "export default { preredirects() { return []; } };\n",
-        Path::new("next.config.ts"),
-        "redirects",
-        "redirect",
-        &BTreeSet::new(),
-        "app",
-    );
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
-fn extract_reads_object_methods_arrows_and_class_members() {
-    let object = extract_named_destinations(
-        Path::new("next.config.ts"),
-        r#"
-const nextConfig = {
-  other: { keep: true },
-  async redirects() {
-    return [{ source: "/old", destination: "/about", permanent: true }];
-  },
-};
-export default nextConfig;
-"#,
-        "redirects",
-    );
-    assert!(object.body_found);
-    assert_eq!(
-        object
-            .destinations
-            .iter()
-            .map(|destination| destination.value.as_str())
-            .collect::<Vec<_>>(),
-        ["/about"]
-    );
-
-    let arrow = extract_named_destinations(
-        Path::new("next.config.ts"),
-        r#"
-export default {
-  redirects: () => [{ destination: "/login" }],
-};
-"#,
-        "redirects",
-    );
-    assert!(arrow.body_found);
-    assert_eq!(arrow.destinations[0].value, "/login");
-
-    let function_expr = extract_named_destinations(
-        Path::new("next.config.ts"),
-        r#"
-export default {
-  redirects: function () {
-    return [{ destination: "/docs" }];
-  },
-};
-"#,
-        "redirects",
-    );
-    assert!(function_expr.body_found);
-    assert_eq!(function_expr.destinations[0].value, "/docs");
-
-    let class_source = r#"
-class Config {
-  other() {}
-  extra = 1;
-  async redirects() {
-    return [{ destination: "/about" }];
-  }
-  rewrites = async () => [{ destination: "/login" }];
-}
-"#;
-    let class_redirects =
-        extract_named_destinations(Path::new("next.config.ts"), class_source, "redirects");
-    let class_rewrites =
-        extract_named_destinations(Path::new("next.config.ts"), class_source, "rewrites");
-    assert!(class_redirects.body_found);
-    assert!(class_rewrites.body_found);
-    assert_eq!(class_redirects.destinations[0].value, "/about");
-    assert_eq!(class_rewrites.destinations[0].value, "/login");
-}
-
-#[test]
-fn extract_walks_nested_objects_and_ignores_spreads() {
-    let nested = extract_named_destinations(
-        Path::new("next.config.ts"),
-        r#"
-export default {
-  nested: {
-    async redirects() {
-      return [
-        { ...extra },
-        { destination: `/dynamic` },
-        { destination: "/about" as const },
-      ];
-    },
-  },
-};
-"#,
-        "redirects",
-    );
-    assert!(nested.body_found);
-    assert!(nested.saw_destination_property);
-    assert_eq!(
-        nested
-            .destinations
-            .iter()
-            .map(|destination| destination.value.as_str())
-            .collect::<Vec<_>>(),
-        ["/about", "/dynamic"]
-    );
-}
-
-#[test]
-fn extract_keeps_the_first_matching_body() {
-    let extracted = extract_named_destinations(
-        Path::new("next.config.ts"),
-        r#"
-export default {
-  async redirects() {
-    return [{ destination: "/first" }];
-  },
-  extra: {
-    async redirects() {
-      return [{ destination: "/second" }];
-    },
-  },
-};
-"#,
-        "redirects",
-    );
-    assert_eq!(
-        extracted
-            .destinations
-            .iter()
-            .map(|destination| destination.value.as_str())
-            .collect::<Vec<_>>(),
-        ["/first"]
-    );
-}
-
-#[test]
-fn extract_returns_default_on_parse_failure() {
-    let extracted =
-        extract_named_destinations(Path::new("next.config.ts"), "not { valid", "redirects");
-    assert_eq!(extracted, ExtractedDestinations::default());
 }
 
 #[test]

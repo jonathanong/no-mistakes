@@ -8,7 +8,10 @@ the same `null` or response behavior in every server handler.
 ## Disallowed
 
 ```ts
-export async function getUserRoute() {
+// backend/users.ts
+type MaybeUser = { id: string } | null;
+
+export async function getUserRoute(id: string): Promise<MaybeUser> {
   return getUserById(id);
 }
 ```
@@ -16,12 +19,30 @@ export async function getUserRoute() {
 ## Allowed
 
 ```ts
-export async function getUserRoute() {
+// backend/users.ts
+type MaybeUser = { id: string } | null;
+
+export async function getUserRoute(id: string): Promise<MaybeUser> {
   return nullableEntity(getUserById(id));
 }
 ```
 
 ## Options
+
+The schema accepts an options object.
+
+```js
+{
+  rules: {
+    "no-mistakes/server-require-nullable-fetch-wrapper": ["error", {
+      getterCalleePatterns: ["^getUserById$"],
+      requiredWrapperCallee: "nullableEntity",
+      nullableReturnTypeNames: ["MaybeUser"],
+      includePathPatterns: ["backend/**"]
+    }]
+  }
+}
+```
 
 - `getterCalleePatterns` and `requiredWrapperCallee` are required.
 - `includePathPatterns` and `excludePathPatterns` scope matching files.
@@ -31,10 +52,18 @@ export async function getUserRoute() {
 
 Optional lists default to empty and inference defaults to `false`.
 
+An import rename is spelled back to the imported name before the getter pattern is tested. An optional call, a comma callee, and `.call` or a literal-array `.apply` inside the wrapper are the same call.
+
 ## Fix
 
 Wrap the configured getter within the same function boundary using the required
 wrapper, or narrow the configured getter/path policy.
+
+## Limits
+
+A callee whose own name is `call` or `apply`, such as `rpc.call("/users/1")` or `rpc.call(...args)`, is matched as that callee before forwarding is considered. `requiredWrapperCallee` matches the local binding, so `import { nullableEntity as wrap }` with `requiredWrapperCallee: "wrap"` still accepts `wrap(getUser())`. The imported name `nullableEntity` matches as well. A getter pattern does the same: `import { lookup as getUser }` matches both `^getUser$` and `^lookup$`.
+
+Another file's re-export is not visible here. `import { get } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { serverApi as get } from "./server-api"` or `export * from "./server-api"`. A parameter default such as `function run({ get } = serverApi)` is not judged, because the caller can pass a different object. `.apply` with a non-literal argument list is not rewritten. `nullableEntity.call(serverApi.get("/users/1"))` and `nullableEntity.apply(serverApi.get("/users/1"), [])` use the getter only as `this`, so the fetch is still unwrapped. `nullableEntity.call(null, serverApi.get("/users/1"))` passes the getter through.
 
 ## Suppression
 

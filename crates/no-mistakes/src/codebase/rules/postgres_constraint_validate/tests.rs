@@ -56,6 +56,18 @@ fn paired_not_valid_inside_do_block_passes() {
 }
 
 #[test]
+fn paired_not_valid_inside_do_block_passes_when_recovery_is_ignored() {
+    let root = fixture("pass-do-block");
+    let mut config = config();
+    config.rules[0].options =
+        serde_yaml::from_str("sqlInclude: [\"migrations/**/*.sql\"]\nunanalyzable: ignore")
+            .unwrap();
+    let files = vec![root.join("migrations/001.sql")];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
 fn paired_column_specific_set_null_passes() {
     assert!(run(&fixture("pass-set-null-columns")).is_empty());
 }

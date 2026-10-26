@@ -44,7 +44,8 @@ fn assert_rule_a_parity(
     facts: &CheckFactMap,
 ) {
     let standalone = crate::playwright::rules::check(root, None, config).unwrap();
-    let cached = crate::playwright::rules::check_with_facts(root, None, config, facts).unwrap();
+    let cached =
+        crate::playwright::rules::test_api::check_with_facts(root, None, config, facts).unwrap();
     assert_eq!(cached, standalone);
 
     let settings = crate::playwright::config::test_support::load_settings(

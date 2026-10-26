@@ -43,18 +43,79 @@ There are no rule-local options. The rule uses the selected project or
 repository scope and scans the configured source universe; Playwright
 `selectors.htmlIds` only affects coverage, not this rule.
 
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: resolves identifier, helper, conditional, and imported `id` bindings. **Low**: accepts only string-literal IDs and props with literal defaults and routes other expressions to `unanalyzable`. No partner rule is required; if any application is not `low`, the invocation stays at `max`.
+
+`effort: max` is the default. It resolves supported identifier, helper,
+conditional, and imported bindings before judging HTML ID uniqueness.
+
+At effective `effort: low`, uniqueness accepts a string literal HTML ID,
+including a JSX expression such as `id={"profile-title"}`, or a prop with a
+literal default:
+
+```tsx
+<h1 id="profile-title">Profile</h1>
+<section id={"account-settings"} />
+```
+
+An ID expression that does not establish a literal value, such as an identifier
+or helper result, is unanalyzable at low. It does not count as uniqueness
+evidence. The diagnostic names the static rewrite: use a literal `id` value.
+The shared `unanalyzable` policy controls the result: `report` fails, `advise`
+emits a non-failing advisory, and `ignore` skips it.
+
+`selectors.htmlIds: false` only excludes HTML IDs from coverage analysis; it
+does not disable this uniqueness rule. These syntax checks require no companion
+rule. If any enabled application of this rule is not `low`, the invocation
+keeps `max` analysis for the rule. If another Playwright selector consumer is
+configured at `max`, its demand also keeps shared selector recovery enabled.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (at low effort, an `id` given by an identifier or helper result) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `web/app/page.tsx:12: selector [id="{id}"] is unanalyzable at effort low`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
+
 ## Valid example
 
 ```tsx
-<label htmlFor="email">Email</label>
-<input id="email" />
+// next.config.ts
+export default {};
+
+// app/page.tsx
+export default function Page() {
+  return (
+    <>
+      <label htmlFor="email">Email</label>
+      <input id="email" />
+    </>
+  );
+}
 ```
 
 ## Counterexample
 
 ```tsx
-<section id="results" />
-<aside id="results" />
+// next.config.ts
+export default {};
+
+// app/page.tsx
+export default function Page() {
+  return (
+    <>
+      <section id="results" />
+      <aside id="results" />
+    </>
+  );
+}
 ```
 
 ## Fix

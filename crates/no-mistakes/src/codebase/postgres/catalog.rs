@@ -3,6 +3,8 @@ use anyhow::{Context, Result};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+mod arbiter;
+mod bounded;
 mod build;
 mod enums;
 mod expressions;
@@ -31,7 +33,12 @@ mod table_scope;
 #[cfg(test)]
 mod tests;
 mod trigger;
+mod view_relation;
 
+use arbiter::ArbiterTable;
+pub use arbiter::{CanonicalIndex, CanonicalOrderKey, ResolvedArbiter};
+pub(crate) use bounded::canonical_bound_expr;
+pub(crate) use bounded::BoundedUniqueIndex;
 pub use expressions::{
     expression_matches, normalize_expression, order_prefix_matches, parse_postgres_expression,
 };
@@ -50,27 +57,6 @@ pub(crate) use paths::normalize_catalog_path;
 pub(crate) use search_path::SearchPathResolution;
 use snapshot::Snapshot;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CanonicalOrderKey {
-    pub expression: String,
-    pub ascending: bool,
-    pub nulls_first: bool,
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CanonicalIndex {
-    pub ordering_supported: bool,
-    pub immediate: bool,
-    pub name: String,
-    pub constraint_backed: bool,
-    pub keys: Vec<CanonicalOrderKey>,
-    pub predicate: Option<String>,
-}
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ResolvedArbiter {
-    Exact(CanonicalIndex),
-    Ambiguous,
-    Unresolved,
-}
 #[derive(Debug, Clone, Default)]
 pub struct SchemaCatalog {
     coverage: CatalogCoverage,
@@ -83,38 +69,11 @@ pub struct SchemaCatalog {
     functions: BTreeMap<String, CatalogFunction>,
     enums: BTreeMap<String, CatalogEnum>,
     views: BTreeMap<String, CatalogView>,
+    view_fallback: std::sync::OnceLock<fallback::RelationFallback>,
     column_lines: BTreeMap<(String, String), usize>,
 }
 
-#[derive(Debug, Clone, Default)]
-struct ArbiterTable {
-    indexes: Vec<CanonicalIndex>,
-    unique_constraints: BTreeMap<String, Vec<String>>,
-}
-
 impl SchemaCatalog {
-    /// Whether explicit evidence proves an earlier search-path entry or pg_temp hides the
-    /// selected catalog relation. Unknown entries preserve the conservative catalog check.
-    pub(crate) fn hides_selected_relation(&self, earlier: &[String], name: &str) -> bool {
-        let bare = super::decoded_parts(name)
-            .last()
-            .cloned()
-            .unwrap_or_default();
-        for schema in earlier {
-            if schema == "$user" {
-                return false;
-            }
-            let Some(relations) = self.search_path_evidence.get(schema) else {
-                return false;
-            };
-            if let Some(relations) = relations {
-                if relations.contains(&bare) {
-                    return self.schema.as_deref() != Some(schema) || self.relation(name).is_none();
-                }
-            }
-        }
-        true
-    }
     pub fn coverage(&self) -> CatalogCoverage {
         self.coverage
     }

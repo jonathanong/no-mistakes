@@ -42,13 +42,36 @@ fn laravel_resource_trailing_comma_still_expands() {
 }
 
 #[test]
-fn laravel_resource_only_api_and_computed_are_non_edges() {
+fn laravel_api_resource_expands_collection_and_member_paths() {
+    let source = r#"
+Route::apiResource('accounts', UserController::class);
+Route::apiResource('/posts', \App\Http\Controllers\PostController::class);
+"#;
+    let routes = extract_php_routes(source, true, false);
+    assert!(routes
+        .iter()
+        .any(|(path, handler)| { path == "/accounts" && handler.contains("UserController") }));
+    assert!(routes.iter().any(|(path, handler)| {
+        path == "/accounts/:account" && handler.contains("UserController")
+    }));
+    assert!(routes
+        .iter()
+        .any(|(path, handler)| { path == "/posts" && handler.contains("PostController") }));
+    assert!(routes
+        .iter()
+        .any(|(path, handler)| { path == "/posts/:post" && handler.contains("PostController") }));
+}
+
+#[test]
+fn laravel_resource_only_and_computed_are_non_edges() {
     let source = r#"
 Route::resource('hidden', UserController::class, ['only' => ['index']]);
 Route::resource('limited', UserController::class)->only(['index']);
 Route::resource('named', UserController::class)->names(['index' => 'users.index'])->only(['index']);
 Route::resource("$prefix/users", UserController::class);
-Route::apiResource('accounts', UserController::class);
+Route::apiResource('filtered', UserController::class)->only(['index']);
+Route::apiResource('excluded', UserController::class)->except(['index']);
+Route::apiResources(['bulk' => UserController::class]);
 Route::resource($name, UserController::class);
 Route::resource('photos.comments', PhotoCommentController::class);
 "#;

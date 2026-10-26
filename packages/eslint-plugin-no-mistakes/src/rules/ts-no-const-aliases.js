@@ -4,11 +4,8 @@ const { rule } = require("../helpers");
 
 const TRANSPARENT_EXPRESSION_TYPES = new Set([
   "ChainExpression",
-  "TSAsExpression",
   "TSInstantiationExpression",
   "TSNonNullExpression",
-  "TSSatisfiesExpression",
-  "TSTypeAssertion",
 ]);
 
 function unwrapExpression(expression) {
@@ -36,7 +33,8 @@ module.exports = rule(
     VariableDeclaration(node) {
       if (node.kind !== "const") return;
       for (const declarator of node.declarations) {
-        if (declarator.id.type !== "Identifier" || !declarator.init) continue;
+        if (declarator.id.type !== "Identifier" || declarator.id.typeAnnotation || !declarator.init)
+          continue;
         const initializer = unwrapExpression(declarator.init);
         if (initializer.type === "Identifier" && declarator.id.name !== initializer.name) {
           context.report({ node: declarator, messageId: "alias" });

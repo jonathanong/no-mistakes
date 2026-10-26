@@ -40,14 +40,17 @@ pub(super) fn run(
         return Ok(PreparedRuleFindings {
             findings: Vec::new(),
             suppression_sources: Vec::new(),
+            advisories: Vec::new(),
         });
     }
     if let Some(graph_plan) = try_canonical_graph_plan(config)? {
-        let (mut required_facts, _) =
+        let (required_facts, _) =
             required_graph_facts(root, graph_plan, config_path, prepared_graph, &session);
-        required_facts.call_arguments |=
-            crate::codebase::rules::forbidden_calls::argument_facts_required(config);
-        if !shared.graph_plan().covers(required_facts) {
+        if !shared.graph_plan().covers(required_facts)
+            || !crate::codebase::rules::forbidden_calls::argument_facts_covered(
+                root, config, shared,
+            )
+        {
             anyhow::bail!(
                 "shared check facts are missing graph facts required by configured codebase rules"
             );
@@ -92,25 +95,29 @@ pub(super) fn run(
     } else {
         None
     };
-    let (mut findings, suppression_sources) =
-        independent::collect(independent::IndependentRuleRequest {
-            session: &session,
-            root,
-            config_path,
-            shared,
-            prepared_playwright,
-            config,
-            prepared_graph,
-            prepared_tsconfig_catalog,
-            prepared_vitest_projects,
-            prepared_playwright_projects,
-            inferred_roots,
-            sources,
-            dependency_graph,
-            defer_suppression,
-        })?;
+    let independent::RuleChunk {
+        mut findings,
+        suppression_sources,
+        mut advisories,
+    } = independent::collect(independent::IndependentRuleRequest {
+        session: &session,
+        root,
+        config_path,
+        shared,
+        prepared_playwright,
+        config,
+        prepared_graph,
+        prepared_tsconfig_catalog,
+        prepared_vitest_projects,
+        prepared_playwright_projects,
+        inferred_roots,
+        sources,
+        dependency_graph,
+        defer_suppression,
+    })?;
     if !defer_suppression {
         suppress_findings(root, &mut findings, sources);
+        suppress_findings(root, &mut advisories, sources);
     }
-    Ok(finalize_findings(findings, suppression_sources))
+    Ok(finalize_findings(findings, suppression_sources, advisories))
 }

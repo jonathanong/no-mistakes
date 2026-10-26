@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: unconstructed-error-class
+    scope: repository
+    include: [app/**, packages/**]
+    options:
+      unanalyzable: ignore

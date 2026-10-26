@@ -4,7 +4,7 @@ pub(in super::super) fn absorb(
     collector: &ImportCollector,
     slots: &FxHashMap<CallableId, FxHashMap<usize, (usize, String)>>,
     values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>,
-) {
+) -> super::super::parameter_call_origins::CaptureOrigins {
     for call in &collector.value_flow.calls {
         if let (ValueExpression::Member(receiver, method), Some(callback)) =
             (&call.callee, call.arguments.first())
@@ -65,7 +65,14 @@ pub(in super::super) fn absorb(
             continue;
         }
         if let Some(parameters) = slots.get(method) {
+            let shifted = collector
+                .receiver_escapes
+                .uncertain_spreads
+                .get(&(*offset, *end));
             for (index, argument) in arguments.iter().enumerate() {
+                if shifted.is_some_and(|spread| spread.skips(index)) {
+                    continue;
+                }
                 if let Some(key) = parameters.get(&index) {
                     values
                         .entry(key.clone())
@@ -76,13 +83,30 @@ pub(in super::super) fn absorb(
             apply_escaped(values, parameters, collector, *offset, *end);
         }
     }
-    for (scope, name, value) in &collector.receiver_escapes.reassigned {
-        values
-            .entry((*scope, name.clone()))
-            .or_default()
-            .push(value.clone());
-    }
+    // Default callbacks are not call arguments. Recover their forwarded inputs
+    // before captures freeze the initial parameter generation.
     super::escaped_higher_order::forward(collector, slots, values);
+    let mut captures = super::super::parameter_call_origins::CaptureOrigins::new(collector, values);
+    let mut reassigned = false;
+    for event in collector
+        .receiver_escapes
+        .reassigned
+        .iter()
+        .filter(|event| !event.recovered)
+    {
+        reassigned = true;
+        values
+            .entry(event.key.clone())
+            .or_default()
+            .push(event.value.clone());
+    }
+    if reassigned {
+        // Preserve forwarding through callees recovered from reassignment facts.
+        captures.include_late_forwarded(collector, slots, values, |values| {
+            super::escaped_higher_order::forward(collector, slots, values);
+        });
+    }
+    captures
 }
 
 fn callback_array(
@@ -104,16 +128,24 @@ fn callback_array(
     Some(ValueExpression::Array(std::sync::Arc::new(fields)))
 }
 
-fn apply_escaped(
+pub(super) fn apply_escaped(
     values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>,
     parameters: &FxHashMap<usize, (usize, String)>,
     collector: &ImportCollector,
     offset: u32,
     end: u32,
 ) {
+    let shift = collector
+        .receiver_escapes
+        .uncertain_spreads
+        .get(&(offset, end))
+        .map_or(0, |spread| spread.shift);
     if let Some(extras) = collector.receiver_escapes.escaped.get(&(offset, end)) {
         for (index, extra) in extras {
-            if let Some(key) = parameters.get(index) {
+            if let Some(key) = index
+                .checked_sub(shift)
+                .and_then(|index| parameters.get(&index))
+            {
                 values
                     .entry(key.clone())
                     .or_default()
@@ -123,7 +155,7 @@ fn apply_escaped(
     }
     if let Some((start, extra)) = collector.receiver_escapes.open.get(&(offset, end)) {
         for (index, key) in parameters {
-            if *index >= *start {
+            if *index >= start.saturating_sub(shift) {
                 values
                     .entry(key.clone())
                     .or_default()

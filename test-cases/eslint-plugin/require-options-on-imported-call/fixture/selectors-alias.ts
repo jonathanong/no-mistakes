@@ -15,7 +15,7 @@ export function missing() {
   respond();
   make();
   typedMake();
-  defaulted();
+  defaulted(); // A property default can select the unrelated fallback.
   fromGlobal();
   createResponse?.();
   make?.();
@@ -37,6 +37,7 @@ export function present(signal: AbortSignal) {
 export function ignored() {
   const alias = createResponse;
   alias();
+  // These two immutable aliases are now the selected receiver method.
   const responses = client.responses;
   responses.create();
   const method = client.responses.create;

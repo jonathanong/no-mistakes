@@ -31,8 +31,10 @@ set operation). A statement is bounded when any of these holds:
 - Every base relation in its FROM list is **pinned** to a unique key, or comes from a bounded
   source. A relation is pinned when top-level `AND` conjuncts of `WHERE` and of the `ON`
   that restricts it equate **every** column of one unique key with a value:
-  `col = $1`, `col IS NOT DISTINCT FROM $1` (only on a `NOT NULL` column: it also matches
-  NULL, which a nullable unique column can repeat), `col = ANY($1::uuid[])` (bounded by the
+  `col = $1`, `col IS NOT DISTINCT FROM $1` (on a `NOT NULL` column or a
+  `NULLS NOT DISTINCT` unique key; ordinary nullable unique keys can repeat NULL),
+  `col IS NULL` (a `NULLS NOT DISTINCT` key has at most one NULL entry),
+  `col = ANY($1::uuid[])` (bounded by the
   caller's array; finite constructors (including array casts) over catalog-proven scalar columns of bounded rows also qualify. Signed numeric literals, builtin XML literals, and typed scalar literals such as `DATE '2026-01-01'` and interval literals preserve finite cardinality. Fixed scalar boolean expressions such as `ARRAY[NULL IS NULL]` are also one caller-sized element; expressions that read columns or call functions remain opaque. Catalog-declared enum casts also qualify; unknown or array-bearing domains do not. A cast that decodes stored scalar text into an array supplies no finite bound; caller-provided arrays and casts of finite constructors retain their bounds. Builtin scalar types, including `pg_catalog` network types such as `inet`, and catalog-declared enums prove scalar leaves; positional aliases map through known visible column order. Unchanged key names retain credit, and PostgreSQL system columns also prove scalar leaves when aliases do not replace them. Scalar indexes into catalog-proven arrays of scalar elements, such as `ARRAY[o.account_ids[1]]`, preserve the bounded source-row dependency; slices and unknown/domain element types do not. Stored arrays, including `ARRAY[stored_array]`, supply no key bound), `col IN (1, 2, 3)`, or `col IN (SELECT … LIMIT n)`. A value is a literal,
   a bind, or an interpolation recovered from a template literal (`${id}`, `${image.id}`,
   `${id}::uuid`), which is a bind like `$1`. A call to a built-in function that returns a
@@ -65,8 +67,10 @@ set operation). A statement is bounded when any of these holds:
   the catalog does not describe. A derived-table column alias list renames only the leading
   projected columns: `(SELECT status, id FROM orders) q(kind)` still exposes `id` locally.
   A `LATERAL` source that reads
-  earlier FROM items is sized per row of them, so it bounds nothing pinned to it; the
-  relations inside it are still judged. A derived query cannot resolve its own reads against
+  earlier FROM items is sized per row of them. A capped result can size a keyed join
+  only after qualified references resolve to independently bounded preceding drivers.
+  Unknown local scopes and bare correlations stay conservative; cycles supply no seed.
+  The relations inside it are still judged. Independent lateral queries retain their global bound. A derived query cannot resolve its own reads against
   the columns it later exposes. For example, `id IN (SELECT id FROM LATERAL (SELECT id) d
 LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` query sees
   only preceding FROM sources; a later source with the same column name cannot hide that
@@ -85,9 +89,14 @@ LIMIT 1)` still reads the target row and does not bound a mutation. A `LATERAL` 
   (`FROM c WHERE t.id = c.id`, or `WHERE t.id IN (SELECT id … LIMIT n)`). `ctid` identifies
   one row of a plain table, so `WHERE ctid IN (SELECT ctid … LIMIT n)` bounds a statement,
   except on a partitioned table, whose leaves repeat `ctid` values, and on a relation the
-  catalog does not describe, which may be one. The relations joined to the
-  target only feed it values: each target row changes once. The target is always the
-  physical relation, even when a CTE of the same name exists.
+  catalog does not describe, which may be one. The relations joined to the target only
+  feed it values: each target row changes once. A bound on a joined source can also bound
+  the target when it pins the target's whole unique key, and that proof can pass through
+  several unique-key joins. An unbounded source cannot pin the target through an equality,
+  and one bounded source cannot lend its bound to an unrelated unbounded
+  sibling. A direct target-key predicate still bounds the target even when another source
+  is unbounded. The target is always the physical relation, even when a CTE of the same
+  name exists.
 
 A set operation (`UNION`) is bounded only when every arm is (a `TABLE name` arm is an
 uncapped read of that relation, or of the CTE it names), a derived table or CTE is bounded when its own query is,
@@ -112,10 +121,15 @@ jsonb_array_elements_text($1::jsonb) AS item)` reads the local function output
 and can bound the target key; a function in another schema remains opaque.
 A data-backed select-list set-returning function is opaque even when its
 SELECT has no FROM items; it cannot bound another relation joined to its output.
+An `ARRAY(SELECT generate_series(1, $2))` input has no relation to scan and is
+caller-sized. With `FROM accounts LIMIT 1`, even a caller-sized projection such
+as `generate_series(1, 0)::text::uuid` can emit zero rows for every account.
+The result LIMIT then may read the whole table; an independent account key
+predicate still bounds that input. Casts and ordinary expression wrappers do
+not remove this scan requirement.
 Any other table function (`FROM get_all_accounts()`, `app.generate_series(…)`), one
 whose arguments read a column, query or function result (`unnest(ARRAY[a.id])`,
-`unnest(get_all_account_ids())`), an array taken from a query
-(`ANY(ARRAY(SELECT …))`) and the recursive reference of a `WITH RECURSIVE` are opaque: never
+`unnest(get_all_account_ids())`), and the recursive reference of a `WITH RECURSIVE` are opaque: never
 reported themselves, and they bound nothing pinned to them. `EXCEPT` and `INTERSECT` read
 both arms in full like `UNION`, so every arm must be bounded: the rule bounds the work, not
 only the result. An outer LIMIT does not suppress the input-arm findings for EXCEPT,
@@ -141,25 +155,63 @@ Nested CTE names remain visible only within their query scope. A nested `WITH`
 clause cannot hide a parent base relation when checking outer column references.
 Statement kinds are judged independently: a data-modifying CTE is its own `UPDATE` or
 `DELETE` (judged when `statements` includes it), and the `SELECT` that reads its
-`RETURNING` rows is not unbounded because of it. Those rows are opaque, though: one row per
-modified row is not sized by the statement text, so they bound nothing pinned to them
-(`DELETE FROM orders USING moved WHERE orders.id = moved.id` is reported when `moved` is a
-data-modifying CTE).
+`RETURNING` rows is not unbounded because of it. One returned row per
+modified row carries its bound only when the mutation target is itself bounded.
+A primary-key join against that bounded `RETURNING` source can bound a later
+mutation; an unbounded data-modifying CTE does not supply this proof.
 
-A **unique key** is a primary key, a unique constraint, or a unique index in the catalog
-that is valid, ready, live and immediate, has no predicate, and whose keys are all plain
-columns. These never prove one row:
+A **unique key** is a primary key, unique constraint, or unique index in the catalog
+that is valid, ready, live and immediate, using the default equality semantics.
+Every key element must have a finite pin. Supported index shapes include:
 
-- A partial unique index covers only some rows, and the rule does not try to prove that
-  the statement implies the predicate, so it is not a key.
-- An invalid or not-ready index (a failed concurrent build), and a deferrable constraint,
-  which may hold duplicates inside a transaction, are not keys.
-- An expression index is not matched by column equality.
-- An index whose operator class or collation is not the column's default (the catalog's
-  `orderingSupported` is false) may treat values as distinct that `=` on the column treats
-  as equal, so it is not a key.
-- A **part** of a composite key is not a key.
-- Equality alternatives (`id = $1 OR id = $2`), ranges and `LIKE` do not pin.
+- Plain columns, including all columns of a composite key.
+- Expression keys when the statement equates the same expression to a value or
+  a bounded relation's value: `lower(t.name) = $1` matches `UNIQUE (lower(name))`.
+  Relation aliases are resolved before matching; changed expressions or casts
+  do not inherit the original expression's uniqueness.
+- Partial indexes when every predicate conjunct is proven for that relation's
+  scan. For `UNIQUE (community_id, user_id) WHERE removed_at IS NULL`, both keys
+  and `removed_at IS NULL` must appear in applicable `AND` conjuncts. Reordered
+  conjuncts are accepted. Strict equality `col = $1` also implies `col IS NOT NULL`.
+  A function expression's equality does not prove its argument non-null, so
+  `UNIQUE (lower(username)) WHERE username IS NOT NULL` needs that explicit guard.
+  A predicate present only in an `OR` alternative, or an outer join's `ON` for
+  the preserved side, does not establish the scan's predicate. Positional column
+  alias lists keep expression/partial-index proofs conservative.
+- `UNIQUE ... NULLS NOT DISTINCT` keys also accept `IS NOT DISTINCT FROM`,
+  including nullable columns and matching expression keys. `col IS NULL` also pins
+  a nullable column of such a key; every other key element still needs a pin.
+  Ordinary nullable unique keys can contain repeated NULLs and remain unbounded.
+  The catalog's index
+  definition supplies this flag. See [PostgreSQL unique indexes](https://www.postgresql.org/docs/18/indexes-unique.html).
+
+These do not prove one row:
+
+- A partial unique index whose predicate is absent or only partly established.
+- A catalog index with a placeholder anywhere in its parsed key or predicate.
+  PostgreSQL index definitions cannot depend on query parameters; matching malformed
+  catalog text to a query does not establish uniqueness.
+- An invalid or not-ready index (a failed concurrent build), or a deferrable
+  constraint, which may hold duplicates inside a transaction.
+- Column equality used in place of an expression key.
+- An index whose operator class or collation is not the column's default (the
+  catalog's `orderingSupported` is false), because its equality may differ.
+- Only part of a composite key.
+- Ranges and `LIKE`.
+
+Each `OR` alternative must independently pin a complete unique key, using shared
+`AND` conjuncts where present. The keys may differ between branches. More than
+32 expanded alternatives retain only unconditional pins.
+
+### Unqualified key columns
+
+With a complete catalog and several known base tables, an unqualified key
+column is assigned when exactly one visible relation has it. The same ownership
+proof applies to equality, null-safe equality, finite `IN`/`ANY` pins and boolean
+key predicates. Ambiguous names, unknown or opaque competitors, derived sources,
+views and positional column aliases keep the proof conservative. Row-dependent
+values such as `key = key` do not become caller-supplied values. Qualify the key
+column to make an ambiguous reference explicit.
 
 The bound covers SELECT relation reads, including explicit subqueries, and the
 target-row selection of UPDATE and DELETE. DML source scans are not independently
@@ -193,3 +245,28 @@ not be analyzed`, or `executed SQL is not statically recoverable`) fails closed.
 Nested fragments are spliced SQL, so an opaque fragment is never accepted as a bind.
 `unanalyzableSql: ignore` skips those statements instead, as it does for the sibling
 rules; every statement that can be analyzed is still judged.
+
+`(a, b) IN (SELECT ... LIMIT $n)` and caller-sized tuple `unnest` inputs pin
+both components of a composite catalog key. A LIMIT-less input supplies no cap.
+`ANY(ARRAY(SELECT ...))` and `ANY((SELECT array_agg(id) FROM batch)::uuid[])`
+prove finite candidate sets when the input query is bounded and its elements
+are proven scalar. An aggregate's one output row or outer LIMIT alone is
+insufficient; stored arrays, unknown projections, and correlated self reads
+retain conservative behavior.
+
+A scalar CTE LIMIT is accepted only through guaranteed single-row fixed caller
+projections, without row-removing predicates, set operations, or expanding
+projections. Empty and NULL scalar results mean unlimited; physical data-derived
+counts retain no caller-cap credit. See the [rationale](postgres-bounded-statements-rationale.md)
+for the uncapped recursive-key-walk policy and examples.
+
+For array-query candidates, a scalar cast also requires proven row/caller-sized
+value lineage. Casts, parentheses, and nested scalar wrappers cannot hide a
+data-backed SRF; opaque FROM/LATERAL inputs remain unproven through CTE or
+derived aliases even when the result query writes a LIMIT. Caller-sized SRFs
+such as `generate_series(1, $n)` or `unnest($ids)` retain the existing finite
+caller-input policy, including a supported scalar cast of their results.
+
+PostgreSQL rejects `TABLESAMPLE` on a caller-count CTE: sampling applies only to
+tables and materialized views. Such invalid SQL is outside this rule's count
+proof contract. A sampled physical-table value still has no caller-count proof.

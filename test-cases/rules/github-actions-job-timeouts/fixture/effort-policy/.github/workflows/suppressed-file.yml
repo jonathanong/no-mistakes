@@ -1,0 +1,42 @@
+# no-mistakes-disable-file github-actions-step-timeouts: intentional
+name: effort
+on: push
+jobs:
+  capped:
+    timeout-minutes: 10
+    steps:
+      - run: echo accepted
+        timeout-minutes: 5
+      - name: over
+        run: echo over
+        timeout-minutes: 12
+      - name: dynamic
+        run: echo dynamic
+        timeout-minutes: ${{ inputs.timeout }}
+      # Non-executable mappings are not covered by the partner.
+      - name: metadata-only
+        timeout-minutes: 13
+  tighter-job:
+    timeout-minutes: 2
+    steps:
+      - name: tighter
+        run: echo tighter
+        timeout-minutes: 4
+  step-sum:
+    timeout-minutes: 20
+    steps:
+      - run: echo one
+        timeout-minutes: 2
+      - run: echo two
+        timeout-minutes: 3
+  missing:
+    steps:
+      - run: echo no job timeout
+        timeout-minutes: 2
+  dynamic-job:
+    timeout-minutes: ${{ inputs.timeout }}
+    steps:
+      - run: echo no known job timeout
+        timeout-minutes: 2
+  reusable:
+    uses: owner/repo/.github/workflows/reusable.yml@main

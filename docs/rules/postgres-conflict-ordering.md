@@ -97,7 +97,44 @@ still abstains. See [SQL verdicts](../postgres-sql-verdicts.md).
 
 ## Valid example
 
+```jsonc
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "rss_feed_item_categories": {
+      "indexes": {
+        "idx_rss_feed_item_categories__item_category_lower": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "rss_feed_item_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "lower(category_text)",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        }
+      }
+    }
+  }
+}
+```
+
 ```sql
+-- backend/queries/upsert.sql
 INSERT INTO rss_feed_item_categories (rss_feed_item_id, category_text)
 SELECT input.rss_feed_item_id, input.category_text
 FROM unnest($1::uuid[], $2::text[]) AS input(rss_feed_item_id, category_text)
@@ -113,7 +150,44 @@ the required key prefix.
 
 This target identifies the same unique-key set but reverses the lock order:
 
+```jsonc
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "edges": {
+      "indexes": {
+        "edges_unique": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "keys": [
+            {
+              "expression": "left_id",
+              "descending": false,
+              "nullsFirst": false
+            },
+            {
+              "expression": "right_id",
+              "descending": false,
+              "nullsFirst": false
+            }
+          ],
+          "includedColumns": [],
+          "predicate": null
+        }
+      }
+    }
+  }
+}
+```
+
 ```sql
+-- backend/queries/upsert.sql
 INSERT INTO edges (left_id, right_id)
 SELECT input.left_id, input.right_id
 FROM unnest($1::uuid[], $2::uuid[]) AS input(left_id, right_id)
@@ -129,14 +203,36 @@ Write both the target and source order in the catalog order:
 ON CONFLICT (left_id, right_id) DO NOTHING
 ```
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files selected by `sqlInclude`.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove: recovered dynamic SQL without complete alternatives whose static fragments identify an `INSERT`, an opaque executor argument such as `write(assembleWriter())`, `INSERT ... ON CONFLICT` SQL that fails to parse, and an exhausted exploration budget (retained complete alternatives are still checked, even under `ignore`). Dynamic SQL that is not an `INSERT` is outside the rule, not unanalyzable. They follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. target `unanalyzable-sql` with `keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked`.
+  - `advise`: a non-failing advisory with the same reason.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+
 ## Dynamic SQL and suppression
 
 Each complete [SQL alternative](../postgres-facts.md#finite-sql-alternatives)
-of a branching executor call is checked independently, up to 16 versions.
+of a branching executor call is checked independently within the exploration budget.
 An `ORDER BY` appended on only one path cannot establish conflict ordering on
 the path that omits it. Every version that is a full INSERT receives the
 ordinary catalog check; a non-INSERT version stays outside this rule.
 Findings retain branch-fragment source locations for suppressions.
+When append exploration reaches its budget or samples a loop, retained complete
+alternatives still receive the catalog check, including with
+`unanalyzableSql: ignore`. The unexplored residual remains unknown: the report policy (`unanalyzableSql: fail`)
+emits one unknown-SQL finding per executor call and `advise` retains an advisory,
+even when a retained alternative already proves an ordering violation.
 
 Recovered dynamic SQL without complete alternatives whose static fragments identify an `INSERT` fails closed
 by default because an interpolation can add or alter its conflict clause and

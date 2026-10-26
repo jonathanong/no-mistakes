@@ -4,8 +4,11 @@ use rayon::prelude::*;
 use std::path::PathBuf;
 
 mod file;
-pub(crate) use file::collect_file_facts_from_program;
+mod program;
 use file::collect_file_facts_with_sources_and_session;
+pub(crate) use program::{
+    collect_file_facts_from_program, collect_file_facts_from_program_with_semantic,
+};
 
 #[cfg(test)]
 mod parse_cache_tests;

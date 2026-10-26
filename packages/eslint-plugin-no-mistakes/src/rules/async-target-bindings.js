@@ -64,6 +64,29 @@ function recordObjectPatternBindings(pattern, source, recordDirect) {
   }
 }
 
+function stableConstInitializer(node, context, seen) {
+  if (node?.type !== "Identifier") return null;
+  const variable = resolveVariable(node, context);
+  if (
+    !variable ||
+    seen.has(variable) ||
+    variable.defs.length !== 1 ||
+    isReassigned(node, context)
+  ) {
+    return null;
+  }
+  const def = variable.defs[0];
+  if (
+    def.type !== "Variable" ||
+    def.parent?.kind !== "const" ||
+    def.node?.id?.type !== "Identifier"
+  ) {
+    return null;
+  }
+  seen.add(variable);
+  return def.node.init;
+}
+
 function namespaceSourceFromInit(init, context, namespaceBindings) {
   const expression = unwrapExpression(init);
   if (expression?.type !== "Identifier") return null;
@@ -77,4 +100,5 @@ module.exports = {
   namespaceSourceFromInit,
   recordObjectPatternBindings,
   resolveVariable,
+  stableConstInitializer,
 };

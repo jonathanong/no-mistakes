@@ -38,7 +38,12 @@ fn reports_each_dead_error_class_with_file_and_line() {
     let out = check(&fixture(), ".no-mistakes.yml", "human");
     let body = text(&out);
     assert_eq!(out.status.code(), Some(1), "{body}");
-    assert_eq!(body.lines().count(), 55, "{body}");
+    let definite = body
+        .lines()
+        .filter(|line| line.contains(" is never constructed or subclassed"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert_eq!(definite.lines().count(), 55, "{body}");
     assert!(
         body.contains(
             "unconstructed-error-class src/errors.ts:2 exported error class `UnusedError` \
@@ -73,7 +78,6 @@ fn reports_each_dead_error_class_with_file_and_line() {
     assert!(body.contains("exported error class `Kept.KeptDead`"));
     for silent in [
         // A namespace member built through a reference the graph resolves.
-        "Errors.TopicError",
         "Errors.Built",
         "Lib.Used",
         "Lib.Deep.DeepUsed",
@@ -85,8 +89,7 @@ fn reports_each_dead_error_class_with_file_and_line() {
         // A namespace subclass still credits its base.
         "NsBase",
         "Errors.Base",
-        // A namespace that escapes through an alias, a computed access, a
-        // default export, or a dynamic import is never reported.
+        // Escaped namespaces are uncertain, never claimed definitely dead.
         "AliasedDead",
         "ComputedDead",
         "DefaultedDead",
@@ -112,7 +115,7 @@ fn reports_each_dead_error_class_with_file_and_line() {
         "LineSuppressedError",
         "FileSuppressedError",
     ] {
-        assert!(!body.contains(silent), "{silent}: {body}");
+        assert!(!definite.contains(silent), "{silent}: {body}");
     }
 }
 
@@ -298,4 +301,128 @@ fn a_broken_test_file_stops_the_rule_before_it_reports_a_namespace_member() {
         lines_of(&body, "unconstructed-error-class").is_empty(),
         "{body}"
     );
+}
+
+#[test]
+fn uncertain_inputs_obey_shared_policy_in_cli_check_reports() {
+    let root = fixture().parent().unwrap().join("uncertain/fixture");
+    let mut baseline = None;
+    for (config, findings, advisories) in [
+        (".no-mistakes.yml", 2, 6),
+        ("max.yml", 2, 6),
+        ("advise.yml", 1, 7),
+        ("ignore.yml", 1, 0),
+    ] {
+        let output = check(&root, config, "json");
+        assert_eq!(output.status.code(), Some(1), "{}", text(&output));
+        let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(
+            value["rules"].as_array().unwrap().len(),
+            findings,
+            "{config}: {value}"
+        );
+        assert_eq!(
+            value["advisories"].as_array().unwrap().len(),
+            advisories,
+            "{config}: {value}"
+        );
+        assert_eq!(value["warnings"], serde_json::json!([]), "{value}");
+        if config == ".no-mistakes.yml" {
+            baseline = Some(value["rules"].clone());
+        }
+        if config == "max.yml" {
+            assert_eq!(Some(value["rules"].clone()), baseline);
+        }
+    }
+}
+
+#[test]
+fn unresolved_constructor_and_base_only_reports_exit_successfully() {
+    let root = fixture()
+        .parent()
+        .unwrap()
+        .join("construction-targets/fixture");
+    for (config, advisories) in [
+        ("advisory-only-report.yml", 2),
+        ("advisory-only-advise.yml", 2),
+        ("advisory-only-ignore.yml", 0),
+    ] {
+        for effort in ["low", "max"] {
+            let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+                .args(["check", "--format", "json", "--root"])
+                .arg(&root)
+                .arg("--config")
+                .arg(root.join(config))
+                .args(["--effort", effort])
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(0), "{}", text(&output));
+            let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+            assert_eq!(value["rules"], serde_json::json!([]), "{value}");
+            let rows = value["advisories"].as_array().unwrap();
+            assert_eq!(rows.len(), advisories, "{config}/{effort}: {value}");
+            if advisories > 0 {
+                // Uncertainty is visible even with explicit report, rather than
+                // being discarded to make the CLI succeed.
+                assert!(rows
+                    .iter()
+                    .any(|row| row["message"].as_str().unwrap().contains("Worker")));
+                assert!(rows
+                    .iter()
+                    .any(|row| row["message"].as_str().unwrap().contains("Constructor")));
+            }
+        }
+    }
+}
+
+#[test]
+fn conditional_package_facades_keep_non_error_targets_silent_and_error_children_failing() {
+    let source = fixture()
+        .parent()
+        .unwrap()
+        .join("constructor-target-gaps/fixture");
+    // Installed dependencies must stay external, rather than becoming tracked
+    // primary source files merely because this is a saved repository fixture.
+    let saved = crate::saved_fixture::materialize_path(&source);
+    let root = saved.path();
+    for (config, advisory_count) in [
+        (".no-mistakes.yml", 3),
+        ("advise.yml", 3),
+        ("ignore.yml", 0),
+    ] {
+        for effort in ["low", "max"] {
+            let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+                .args(["check", "--format", "json", "--root"])
+                .arg(root)
+                .arg("--config")
+                .arg(root.join(config))
+                .args(["--effort", effort])
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(1), "{}", text(&output));
+            let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+            let names: Vec<_> = value["rules"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|row| row["target"].as_str().unwrap())
+                .collect();
+            assert_eq!(
+                names,
+                [
+                    "UnusedConfigError",
+                    "UnusedFilterError",
+                    "UnusedPoolError",
+                    "UnusedImportError",
+                    "UnusedRequireError",
+                ],
+                "{config}/{effort}: {value}"
+            );
+            assert_eq!(
+                value["advisories"].as_array().unwrap().len(),
+                advisory_count,
+                "{value}"
+            );
+        }
+    }
 }

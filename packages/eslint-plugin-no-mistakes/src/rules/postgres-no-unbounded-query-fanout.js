@@ -1,7 +1,9 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const helpers = require("./postgres-runtime-helpers");
+const { fanoutMapCall } = require("./postgres-fanout-calls");
 
 const {
   callbackContainsExecutor,
@@ -33,15 +35,19 @@ module.exports = Object.assign(
     },
     (context) => {
       const options = executorOptionDefaults(context.options?.[0] ?? {});
+      const suppressed = ruleSuppression(context, "postgres-no-unbounded-query-fanout");
       let bindings = new Set();
 
       return {
         Program(node) {
-          bindings = executorBindings(node, options, context.filename);
+          bindings = executorBindings(node, options, context.filename, context);
         },
         CallExpression(node) {
-          if (!isPromiseAllCallee(node.callee)) return;
-          const mapped = mapCallArgument(node);
+          if (suppressed(node)) return;
+          // Preserve direct-call recall while adding stricter static forwarding.
+          const mapped =
+            (isPromiseAllCallee(node.callee) && mapCallArgument(node)) ||
+            fanoutMapCall(node, isPromiseAllCallee, context);
           if (!mapped) return;
           if (isStaticallyBounded(mapped.source, options.chunkFunctionNames, context)) return;
           if (!callbackContainsExecutor(mapped.callback, bindings, context)) return;

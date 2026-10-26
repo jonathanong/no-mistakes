@@ -5,13 +5,15 @@ pub(super) fn read_text(
     root: &Path,
     rel: &str,
     sources: &crate::codebase::ts_source::SourceStore,
-) -> String {
+) -> Result<std::sync::Arc<str>, String> {
     let Some(path) = contained_regular_file(root, rel) else {
-        return String::new();
+        return Err(format!(
+            "{rel} is missing or is not a readable repository file"
+        ));
     };
-    super::super::read_source(sources, &path)
-        .map(|source| source.to_string())
-        .unwrap_or_else(|| std::fs::read_to_string(&path).unwrap_or_default())
+    sources
+        .read_path(&path)
+        .map_err(|error| format!("cannot read {rel}: {error}"))
 }
 
 fn contained_regular_file(root: &Path, rel: &str) -> Option<PathBuf> {

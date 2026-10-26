@@ -1,0 +1,7 @@
+{
+  "jsPlugins": [{ "name": "no-mistakes", "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js" }],
+  "rules": {
+    "no-mistakes/no-consecutive-unbatched-reads": ["error", { "imports": [{ "source": "@app/cache", "imported": "cache" }], "readMethods": ["get", "ttl"] }],
+    "no-mistakes/require-top-level-registration": ["error", { "registrar": { "source": "@app/lifecycle", "imported": "register" }, "callback": "onStop" }]
+  }
+}

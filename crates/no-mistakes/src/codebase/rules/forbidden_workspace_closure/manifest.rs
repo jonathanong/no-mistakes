@@ -1,8 +1,10 @@
 use super::{alias, Dependency, PackageNode};
 use crate::codebase::{package_deps, workspaces};
 use std::collections::BTreeMap;
+use std::path::Path;
 
 pub(super) fn manifest_nodes_with_sources(
+    root: &Path,
     workspace: &workspaces::WorkspaceMap,
     dependency_types: &[&str],
     sources: &crate::codebase::ts_source::SourceStore,
@@ -10,6 +12,11 @@ pub(super) fn manifest_nodes_with_sources(
     if let Some(observer) = sources.observer() {
         observer.increment("forbidden_workspace_closure.manifest_projections", 1);
     }
+    let catalogs = workspaces::resolve_pnpm_include_at_root(root, sources)
+        .ok()
+        .flatten()
+        .map(|resolved| resolved.catalogs)
+        .unwrap_or_default();
     workspace
         .packages
         .iter()
@@ -21,22 +28,30 @@ pub(super) fn manifest_nodes_with_sources(
                 sources,
             )
             .into_iter()
-            .map(|entry| Dependency {
-                workspace_name: alias::workspace_dependency_name_with_sources(
+            .map(|entry| {
+                let workspace_name = alias::workspace_dependency_name_with_sources(
                     &entry.name,
                     &entry.specifier,
                     &package.dir,
                     workspace,
                     sources,
-                ),
-                resolved_name: alias::resolved_dependency_name_with_sources(
+                    &catalogs,
+                );
+                // `catalog:` is invisible to the specifier resolver. A link alias
+                // still has to be matchable as the package it names.
+                let resolved_name = alias::resolved_dependency_name_with_sources(
                     &entry.specifier,
                     &package.dir,
                     workspace,
                     sources,
-                ),
-                name: entry.name,
-                field: entry.field,
+                )
+                .or_else(|| workspace_name.clone());
+                Dependency {
+                    workspace_name,
+                    resolved_name,
+                    name: entry.name,
+                    field: entry.field,
+                }
             })
             .collect();
             (package.name.clone(), PackageNode { manifest, deps })

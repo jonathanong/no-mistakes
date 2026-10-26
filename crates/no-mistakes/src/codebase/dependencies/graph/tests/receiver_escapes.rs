@@ -1,8 +1,11 @@
 use super::*;
 
 pub(super) fn graph() -> (DepGraph, std::path::PathBuf) {
-    let root =
-        crate::codebase::ts_resolver::normalize_path(&fixture("value-flow-receiver-escapes"));
+    graph_for("value-flow-receiver-escapes")
+}
+
+pub(super) fn graph_for(name: &str) -> (DepGraph, std::path::PathBuf) {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture(name));
     let config = TsConfig {
         dir: root.clone(),
         paths: vec![],

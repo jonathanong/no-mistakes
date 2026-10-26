@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-no-mistakes",
-  "version": "0.94.0",
+  "version": "0.98.0",
   "description": "ESLint and Oxlint rules that keep code static enough for no-mistakes analyzers and coding agents",
   "license": "MIT",
   "repository": {
@@ -25,10 +25,21 @@
     "@vitest/coverage-v8": "^5.0.4",
     "eslint": "^10.12.0",
     "oxlint": "^1.87.0",
+    "typescript": "^6.0.3",
     "vitest": "^5.0.4"
   },
   "peerDependencies": {
-    "eslint": ">=9"
+    "@typescript-eslint/parser": ">=8",
+    "eslint": ">=9",
+    "typescript": ">=4.8.4"
+  },
+  "peerDependenciesMeta": {
+    "@typescript-eslint/parser": {
+      "optional": true
+    },
+    "typescript": {
+      "optional": true
+    }
   },
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24"

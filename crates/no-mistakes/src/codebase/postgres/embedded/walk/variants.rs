@@ -1,6 +1,7 @@
 use crate::codebase::postgres::embedded::{
     placeholders, EmbeddedSqlSourcePosition, EmbeddedSqlVariant, MAX_EMBEDDED_SQL_VARIANTS,
 };
+mod append_decisions;
 mod append_effects;
 mod conditional;
 mod conditions;
@@ -41,6 +42,9 @@ pub(super) struct Recovered {
     pub enumerated: bool,
     pub choices: Vec<(u64, u32)>,
     pub append_sites: Vec<u32>,
+    pub append_decisions: Vec<u64>,
+    pub decision_offs: Vec<(u64, u32, u32)>,
+    pub variants_truncated: bool,
 }
 
 impl Recovered {
@@ -55,6 +59,9 @@ impl Recovered {
             enumerated: false,
             choices: Vec::new(),
             append_sites: Vec::new(),
+            append_decisions: Vec::new(),
+            decision_offs: Vec::new(),
+            variants_truncated: false,
         }
     }
     pub(super) fn truth(&self) -> bool {
@@ -92,6 +99,7 @@ impl Recovered {
         self.merge_append_sites(suffix);
         self.fragment |= suffix.fragment;
         self.enumerated |= suffix.enumerated;
+        self.variants_truncated |= suffix.variants_truncated;
         for choice in &suffix.choices {
             if !self.choices.contains(choice) {
                 self.choices.push(*choice);
@@ -99,6 +107,13 @@ impl Recovered {
         }
     }
     pub(super) fn merge_append_sites(&mut self, other: &Self) {
+        self.variants_truncated |= other.variants_truncated;
+        self.append_decisions.extend(&other.append_decisions);
+        self.append_decisions.sort_unstable();
+        self.append_decisions.dedup();
+        self.decision_offs.extend(&other.decision_offs);
+        self.decision_offs.sort_unstable();
+        self.decision_offs.dedup();
         for site in &other.append_sites {
             if !self.append_sites.contains(site) {
                 self.append_sites.push(*site);
@@ -110,6 +125,12 @@ impl Recovered {
         let mut right = other.clone();
         left.append_sites.clear();
         right.append_sites.clear();
+        left.append_decisions.clear();
+        right.append_decisions.clear();
+        left.decision_offs.clear();
+        right.decision_offs.clear();
+        left.variants_truncated = false;
+        right.variants_truncated = false;
         left == right
     }
     pub(super) fn publish(self) -> EmbeddedSqlVariant {
@@ -124,6 +145,7 @@ impl Recovered {
             sql_source_positions: self.positions,
             recovered_placeholder_positions,
             append_sites: self.append_sites,
+            variants_truncated: self.variants_truncated,
         }
     }
 }
@@ -140,6 +162,10 @@ fn combine(left: Vec<Recovered>, right: Vec<Recovered>) -> Option<Vec<Recovered>
     {
         return None;
     }
+    let append = left
+        .iter()
+        .chain(&right)
+        .any(|value| !value.append_sites.is_empty());
     let mut out = Vec::new();
     for prefix in left {
         for suffix in &right {
@@ -154,7 +180,7 @@ fn combine(left: Vec<Recovered>, right: Vec<Recovered>) -> Option<Vec<Recovered>
             let mut value = prefix.clone();
             value.append_sql(suffix);
             out.push(value);
-            if out.len() > MAX_EMBEDDED_SQL_VARIANTS {
+            if !append && out.len() > MAX_EMBEDDED_SQL_VARIANTS {
                 return None;
             }
         }

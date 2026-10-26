@@ -1,14 +1,15 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { childNodes } = require("./test-no-shared-state-helpers");
-const { resolveVariable } = require("./test-no-shared-state-aliases");
+const { invokedCall, memberName, methodFromCallee } = require("./playwright-static-call");
+const { isRawScrollCall } = require("./playwright-scroll-call");
 
 const PLAYWRIGHT_PATH_PATTERN =
   /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|$)|(?:^|[/\\])e2e\.(?:spec|test)\.[cm]?[jt]sx?$|\.pw\.(?:spec|test)\.[cm]?[jt]sx?$/;
 
 const CURSOR_WAIT_PROPERTIES = new Set(["waitForRequest", "waitForResponse"]);
-const RAW_SCROLL_NAMES = new Set(["scrollTo", "scrollBy", "scroll"]);
 const SEARCH_PARAMS_ACCESSORS = new Set(["has", "get", "getAll"]);
 
 // The TypeScript node types that wrap a runtime value expression rather than being purely
@@ -27,62 +28,27 @@ function isPlaywrightPath(filename) {
   return PLAYWRIGHT_PATH_PATTERN.test(filename.replace(/\\/g, "/"));
 }
 
-function propertyName(node) {
-  return node.type === "Literal" ? String(node.value) : node.name;
-}
-
-// `page.waitForRequest(...)` / `page.waitForResponse(...)`, matched by property name only — the
-// object (page, frame, a locator, ...) does not affect the cursor relationship.
-// A statically computed access
-// (`page["waitForRequest"]`) is just as unambiguous as dot access and is matched the same way.
-function isCursorWaitCall(node) {
-  return (
-    node.callee.type === "MemberExpression" &&
-    (!node.callee.computed || node.callee.property.type === "Literal") &&
-    CURSOR_WAIT_PROPERTIES.has(propertyName(node.callee.property))
-  );
-}
-
-// `window.scrollTo(...)`/`window.scroll(...)`, bare `scrollTo(...)`/`scroll(...)`, and the
-// `scrollBy` equivalents — the only imperative, position-based browser scroll APIs. A same-named
-// method on any other receiver (`map.scrollTo()`, an editor or page-object helper) is not a
-// browser scroll and is never matched. `scrollIntoView` is element-relative, not a pagination
-// driver, and is intentionally not matched. Both the bare call and the `window`-qualified call
-// only count when the receiver resolves to the global — a project's own locally-declared or
-// imported `scrollTo`/`scroll`/`scrollBy` helper, or a shadowing `window` parameter (as in
-// `page.evaluate((window) => window.scrollTo(...), safeScroller)`), is a different function and
-// must not be misflagged.
-function isRawScrollCall(node, context) {
-  const callee = node.callee;
-  if (callee.type === "Identifier") {
-    if (!RAW_SCROLL_NAMES.has(callee.name)) return false;
-    return !(resolveVariable(callee, context)?.defs?.length > 0);
-  }
-  if (
-    callee.type !== "MemberExpression" ||
-    (callee.computed && callee.property.type !== "Literal") ||
-    callee.object.type !== "Identifier" ||
-    callee.object.name !== "window" ||
-    !RAW_SCROLL_NAMES.has(propertyName(callee.property))
-  ) {
-    return false;
-  }
-  return !(resolveVariable(callee.object, context)?.defs?.length > 0);
+function isCursorWaitCall(node, context) {
+  const invoked = invokedCall(node);
+  if (!invoked) return null;
+  return CURSOR_WAIT_PROPERTIES.has(methodFromCallee(invoked.callee, context)) ? invoked : null;
 }
 
 // `<something>.searchParams.has("after")` / `.get("after")` / `.getAll("after")` — the cursor
 // param name is passed as a bare accessor argument, never appearing with a trailing `=` the way
 // it does in a raw query string, so it needs its own literal-collection path rather than the
 // boundary-matched one below.
-function isSearchParamsAccessorCall(node) {
-  return Boolean(
-    node.callee.type === "MemberExpression" &&
-    !node.callee.computed &&
-    SEARCH_PARAMS_ACCESSORS.has(propertyName(node.callee.property)) &&
-    node.callee.object.type === "MemberExpression" &&
-    !node.callee.object.computed &&
-    propertyName(node.callee.object.property) === "searchParams",
-  );
+function searchParamsAccessorCall(node) {
+  const invoked = invokedCall(node);
+  const callee = invoked?.callee;
+  const object = callee;
+  if (object?.type !== "MemberExpression" || !SEARCH_PARAMS_ACCESSORS.has(memberName(object))) {
+    return null;
+  }
+  let receiver = object.object;
+  while (receiver?.type === "ChainExpression") receiver = receiver.expression;
+  if (receiver?.type !== "MemberExpression" || memberName(receiver) !== "searchParams") return null;
+  return invoked;
 }
 
 function escapeRegExp(value) {
@@ -156,8 +122,9 @@ function staticStringValue(node) {
 }
 
 function collectSearchParamsAccessorArgs(node, results) {
-  if (node.type === "CallExpression" && isSearchParamsAccessorCall(node)) {
-    const value = staticStringValue(node.arguments[0]);
+  if (node.type === "CallExpression") {
+    const invoked = searchParamsAccessorCall(node);
+    const value = invoked ? staticStringValue(invoked.arguments[0]) : null;
     if (value !== null) results.push(value);
   }
   for (const child of childNodes(node)) collectSearchParamsAccessorArgs(child, results);
@@ -209,6 +176,7 @@ module.exports = rule(
     const helperHint = scrollHelper
       ? ` Use ${scrollHelper}, which scrolls repeatedly until the request fires, instead.`
       : " Use a helper that scrolls repeatedly until the request fires instead of a single raw call.";
+    const suppressed = ruleSuppression(context, "playwright-no-raw-scroll-pagination");
     let hasCursorWait = false;
     const scrollCandidates = [];
 
@@ -217,7 +185,8 @@ module.exports = rule(
         if (node.source.value === "@playwright/test") isPlaywrightFile = true;
       },
       CallExpression(node) {
-        if (isCursorWaitCall(node) && mentionsCursorParam(node.arguments[0], cursorParams)) {
+        const wait = isCursorWaitCall(node, context);
+        if (wait && mentionsCursorParam(wait.arguments[0], cursorParams)) {
           hasCursorWait = true;
         }
         if (isRawScrollCall(node, context)) scrollCandidates.push(node);
@@ -225,6 +194,7 @@ module.exports = rule(
       "Program:exit"() {
         if (!isPlaywrightFile || !hasCursorWait) return;
         for (const node of scrollCandidates) {
+          if (suppressed(node)) continue;
           context.report({ node, messageId: "rawScroll", data: { helperHint } });
         }
       },

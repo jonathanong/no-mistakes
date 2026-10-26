@@ -1,23 +1,25 @@
 use super::enabled::{fact_plan, integration_configured, EnabledChecks};
 use super::*;
 use crate::check_parallel::DomainResults;
-use crate::check_tasks::CheckTask;
-use anyhow::anyhow;
+use domain_tasks::{
+    err_codebase, err_filesystem_rules, err_integration, err_queues, err_react, err_rules,
+};
 use no_mistakes::codebase::rules::{RuleFinding, RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_TESTS};
-use no_mistakes::codebase::unique_exports::PreparedUniqueExportFinding;
-use no_mistakes::integration_tests::IntegrationFinding;
-use no_mistakes::queue::CheckFinding;
-use no_mistakes::react_traits;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
-use std::time::Duration;
 
 mod architecture;
+mod checkout_credentials;
+mod companion_redirect;
 mod config_path;
+mod consumers;
+mod domain_tasks;
 mod graph_scope;
 mod integration_gitignore;
+mod nextjs_raw_source_scope;
 mod parse_cache;
 mod playwright_discovery;
+mod postgres_projection_scope;
 #[cfg(feature = "test-instrumentation")]
 mod prepared_parser_cache;
 mod prepared_tsconfig;
@@ -122,6 +124,7 @@ fn disabled_filesystem_check_returns_no_findings_without_dispatching_rules() {
         &[],
         no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
             snapshot: &snapshot,
+            next_config_resolver: None,
             vitest_catalog: None,
             sources: snapshot.source_store_for(&root),
             workflow_documents: None,
@@ -420,165 +423,4 @@ fn integration_configured_covers_vitest_and_playwright_suites() {
     assert!(integration_configured(&playwright));
 }
 
-#[test]
-fn fact_plan_keeps_boundary_only_rules_to_boundary_facts() {
-    let boundary_only = fact_plan(EnabledChecks {
-        boundary_rules: true,
-        ..Default::default()
-    });
-
-    assert!(boundary_only.server_route_client_boundary);
-    assert!(!boundary_only.source);
-    assert!(!boundary_only.imports);
-    assert!(!boundary_only.dynamic_imports);
-
-    let dynamic_import_rule = fact_plan(EnabledChecks {
-        dynamic_import_rules: true,
-        ..Default::default()
-    });
-
-    assert!(dynamic_import_rule.source);
-    assert!(dynamic_import_rule.imports);
-    assert!(dynamic_import_rule.dynamic_imports);
-    assert_eq!(
-        dynamic_import_rule.graph,
-        no_mistakes::codebase::ts_source::facts::TsFactPlan::imports()
-    );
-
-    let nextjs_caching = fact_plan(EnabledChecks {
-        nextjs_caching: true,
-        ..Default::default()
-    });
-
-    assert!(nextjs_caching.source);
-    assert!(nextjs_caching.nextjs_caching);
-
-    let nextjs_api_routes = fact_plan(EnabledChecks {
-        nextjs_api_routes: true,
-        ..Default::default()
-    });
-
-    assert!(nextjs_api_routes.raw_source);
-    assert!(!nextjs_api_routes.source);
-    assert!(!nextjs_api_routes.nextjs_caching);
-
-    let lock_ordering = fact_plan(EnabledChecks {
-        embedded_sql: true,
-        ..Default::default()
-    });
-    assert!(lock_ordering.embedded_sql);
-    assert!(!lock_ordering.postgres_schema);
-}
-
-#[test]
-fn complete_domain_checks_surfaces_each_domain_error() {
-    assert_domain_error(err_react(), "react");
-    assert_domain_error(err_queues(), "queues");
-    assert_domain_error(err_rules(), "rules");
-    assert_domain_error(err_integration(), "integration");
-    assert_domain_error(err_codebase(), "codebase");
-    assert_domain_error(err_filesystem_rules(), "filesystem_rules");
-}
-
-fn assert_domain_error(results: DomainResults, expected: &str) {
-    let err = complete_domain_checks(results)
-        .err()
-        .expect("expected domain check error");
-    assert_eq!(err.to_string(), expected);
-}
-
-fn empty_task<T>(findings: T) -> CheckTask<T> {
-    CheckTask {
-        findings,
-        react_suppression_targets: Vec::new(),
-        suppression_sources: Vec::new(),
-        warning: None,
-        duration: Duration::ZERO,
-    }
-}
-
-fn ok_react() -> anyhow::Result<CheckTask<Vec<react_traits::Violation>>> {
-    Ok(empty_task(Vec::new()))
-}
-
-fn ok_queues() -> anyhow::Result<CheckTask<Vec<CheckFinding>>> {
-    Ok(empty_task(Vec::new()))
-}
-
-fn ok_rules() -> anyhow::Result<CheckTask<Vec<RuleFinding>>> {
-    Ok(empty_task(Vec::new()))
-}
-
-fn ok_integration() -> anyhow::Result<CheckTask<Vec<IntegrationFinding>>> {
-    Ok(empty_task(Vec::new()))
-}
-
-fn ok_codebase() -> anyhow::Result<CheckTask<Vec<PreparedUniqueExportFinding>>> {
-    Ok(empty_task(Vec::new()))
-}
-
-fn err_react() -> DomainResults {
-    (
-        Err(anyhow!("react")),
-        ok_queues(),
-        ok_rules(),
-        ok_integration(),
-        ok_codebase(),
-        ok_rules(),
-    )
-}
-
-fn err_queues() -> DomainResults {
-    (
-        ok_react(),
-        Err(anyhow!("queues")),
-        ok_rules(),
-        ok_integration(),
-        ok_codebase(),
-        ok_rules(),
-    )
-}
-
-fn err_rules() -> DomainResults {
-    (
-        ok_react(),
-        ok_queues(),
-        Err(anyhow!("rules")),
-        ok_integration(),
-        ok_codebase(),
-        ok_rules(),
-    )
-}
-
-fn err_integration() -> DomainResults {
-    (
-        ok_react(),
-        ok_queues(),
-        ok_rules(),
-        Err(anyhow!("integration")),
-        ok_codebase(),
-        ok_rules(),
-    )
-}
-
-fn err_codebase() -> DomainResults {
-    (
-        ok_react(),
-        ok_queues(),
-        ok_rules(),
-        ok_integration(),
-        Err(anyhow!("codebase")),
-        ok_rules(),
-    )
-}
-
-fn err_filesystem_rules() -> DomainResults {
-    (
-        ok_react(),
-        ok_queues(),
-        ok_rules(),
-        ok_integration(),
-        ok_codebase(),
-        Err(anyhow!("filesystem_rules")),
-    )
-}
+mod domain_errors;

@@ -15,7 +15,7 @@ fn fixture(scenario: &str) -> PathBuf {
 
 fn check_fixture_config(root: &PathBuf, name: &str) -> Output {
     Command::new(bin())
-        .args(["check", "--root"])
+        .args(["check", "--format", "json", "--root"])
         .arg(root)
         .arg("--config")
         .arg(root.join(name))
@@ -79,4 +79,22 @@ fn no_raw_ephemeral_port_cli_passes_for_non_zero_ports() {
     let root = fixture("pass");
     let output = check_fixture_config(&root, ".no-mistakes.yml");
     assert!(output.status.success(), "{}", stdout(&output));
+}
+
+#[test]
+fn no_raw_ephemeral_port_cli_retains_wrapped_and_signed_zero_locations() {
+    let root = fixture("literal-recall");
+    let output = check_fixture_config(&root, ".no-mistakes.yml");
+    assert_eq!(output.status.code(), Some(1), "{}", stdout(&output));
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let findings = report["rules"].as_array().expect("rule findings array");
+    let actual: Vec<_> = findings
+        .iter()
+        .map(|f| (f["file"].as_str().unwrap(), f["line"].as_u64().unwrap()))
+        .collect();
+    let expected: Vec<_> = (2..=7)
+        .map(|line| ("server.py", line))
+        .chain((2..=11).map(|line| ("server.ts", line)))
+        .collect();
+    assert_eq!(actual, expected);
 }

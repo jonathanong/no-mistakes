@@ -1,0 +1,11 @@
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+  - rule: unique-exports
+    enabled: false
+    exclude:
+      - "generated/**"
+      - "[bad"
+  - rule: forbidden-dependencies
+    enabled: false
+    include: ["[also-bad"]

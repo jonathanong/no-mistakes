@@ -1,4 +1,4 @@
-use super::finding;
+use super::{context::Context, field::Field};
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -17,42 +17,41 @@ pub(crate) enum Kind {
 
 pub(crate) struct Ref {
     pub(crate) field: String,
+    pub(super) origin: Option<crate::config::source_locations::ConfigPath>,
+    pub(super) rule_index: Option<usize>,
     pub(crate) kind: Kind,
     pub(crate) value: String,
 }
 
 pub(crate) fn references(config: &NoMistakesConfig) -> Vec<Ref> {
     let mut refs = Vec::new();
-    collect::collect(config, &mut refs);
+    collect::collect(config, &mut refs, false);
     refs
 }
 
 pub(super) fn lint(
     config: &NoMistakesConfig,
     tracked: &BTreeSet<String>,
-    config_file: &str,
+    context: &Context<'_>,
 ) -> Result<Vec<RuleFinding>> {
-    Ok(references(config)
+    let mut refs = Vec::new();
+    collect::collect(config, &mut refs, context.origins());
+    Ok(refs
         .into_iter()
-        .filter_map(|item| missing(item, tracked, config_file))
+        .filter_map(|item| missing(item, tracked, context))
         .collect())
 }
 
-fn missing(item: Ref, tracked: &BTreeSet<String>, config_file: &str) -> Option<RuleFinding> {
+fn missing(item: Ref, tracked: &BTreeSet<String>, context: &Context<'_>) -> Option<RuleFinding> {
     let present = match item.kind {
         Kind::Glob => glob_matches(&item.value, tracked),
         Kind::File => tracked.contains(item.value.trim_start_matches("./")),
         Kind::Directory => directory_present(&item.value, tracked),
     };
     (!present).then(|| {
-        finding(
-            config_file,
-            format!(
-                "{}: missing {} `{}`",
-                item.field,
-                kind_label(item.kind),
-                item.value
-            ),
+        context.finding_ref(
+            &item,
+            format!(": missing {} `{}`", kind_label(item.kind), item.value),
         )
     })
 }

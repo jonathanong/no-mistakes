@@ -1,0 +1,165 @@
+use super::*;
+
+#[test]
+fn dynamic_bases_follow_policy_without_guessing_error_ancestry() {
+    let root = fixture().parent().unwrap().join("dynamic-bases/fixture");
+    for policy in ["report", "advise", "ignore"] {
+        let json = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            serde_json::json!({
+                "root": root, "config": root.join(format!("{policy}.yml")),
+                "includeSuppressed": true,
+            })
+            .to_string(),
+        ))
+        .unwrap();
+        let result: serde_json::Value = serde_json::from_str(&json).unwrap();
+        let rules = result["rules"].as_array().unwrap();
+        let advisories = result["advisories"].as_array().unwrap();
+        assert_eq!(result["warnings"], serde_json::json!([]));
+        let definite: Vec<_> = rules
+            .iter()
+            .filter(|finding| finding["target"] != "unanalyzable")
+            .map(|finding| finding["target"].as_str().unwrap())
+            .collect();
+        // The value import proves this same package declaration is analyzable;
+        // the one-line type-only import must still remain uncertain.
+        assert_eq!(
+            definite,
+            ["DefinitelyDead", "RuntimeError"],
+            "{policy}: {result}"
+        );
+        let uncertain: Vec<_> = rules
+            .iter()
+            .chain(advisories)
+            .filter(|finding| finding["target"] == "unanalyzable")
+            .collect();
+        let names = [
+            "MixedError",
+            "MixedBase",
+            "default",
+            "ExpressionBase",
+            "ComputedBase",
+            "StaticChild",
+            "Errors.Dynamic",
+            "TypeOnly",
+        ];
+        assert_eq!(
+            uncertain.len(),
+            if policy == "ignore" { 0 } else { names.len() },
+            "{policy}: {result}"
+        );
+        if policy != "ignore" {
+            for name in names {
+                assert!(
+                    uncertain.iter().any(|finding| finding["message"]
+                        .as_str()
+                        .unwrap()
+                        .contains(&format!("`{name}`"))),
+                    "{name}: {result}"
+                );
+            }
+            let type_only = uncertain
+                .iter()
+                .find(|finding| finding["file"] == "src/type-only.ts")
+                .unwrap();
+            assert_eq!(type_only["line"], 1);
+            for (name, line) in [("MixedError", 4), ("StaticChild", 9)] {
+                let finding = uncertain
+                    .iter()
+                    .find(|row| {
+                        row["message"]
+                            .as_str()
+                            .unwrap()
+                            .contains(&format!("`{name}`"))
+                    })
+                    .unwrap();
+                assert_eq!(finding["line"], line, "{result}");
+            }
+            // Static type-only bases retain the unresolved-target advisory policy.
+            assert!(advisories.contains(type_only));
+            for finding in uncertain
+                .iter()
+                .filter(|row| row["file"] != "src/type-only.ts")
+            {
+                assert_eq!(rules.contains(finding), policy == "report", "{result}");
+                let message = finding["message"].as_str().unwrap();
+                assert!(message.contains("base ancestry contains a dynamic extends expression"));
+                assert!(message.contains("statically named class or analyzable import"));
+                assert!(message.contains("An Error argument does not prove"));
+            }
+        }
+        assert_eq!(
+            rules.len(),
+            if policy == "report" { 9 } else { 2 },
+            "{result}"
+        );
+        assert_eq!(
+            advisories.len(),
+            match policy {
+                "report" => 1,
+                "advise" => 8,
+                _ => 0,
+            },
+            "{result}"
+        );
+        assert_eq!(
+            result["suppressed"].as_array().unwrap().len(),
+            if policy == "ignore" { 0 } else { 1 },
+            "{result}"
+        );
+    }
+}
+
+#[test]
+fn dynamic_ancestry_is_additive_without_synthetic_source_calls() {
+    use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, GraphBuildPlan};
+    use crate::codebase::ts_resolver::TsConfig;
+    let root = fixture().parent().unwrap().join("dynamic-bases/fixture");
+    let config = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let build = |extends, calls| {
+        DepGraph::build_with_plan(
+            &root,
+            &config,
+            GraphBuildPlan {
+                extends,
+                calls,
+                ..Default::default()
+            },
+        )
+        .unwrap()
+    };
+    let with = build(true, true);
+    let without = build(false, true);
+    assert_eq!(with.resolved_call_sites(), without.resolved_call_sites());
+    assert!(without.class_declarations().is_empty());
+    assert!(with
+        .class_declarations()
+        .iter()
+        .all(|class| class.scope != "Expression"));
+    let mixed = with
+        .class_declarations()
+        .iter()
+        .find(|class| class.scope == "MixedError")
+        .unwrap();
+    assert_eq!(mixed.line, 4);
+    assert!(mixed.exported);
+    assert_eq!(mixed.global_base, None);
+    assert!(mixed.dynamic_base);
+    let static_child = with
+        .class_declarations()
+        .iter()
+        .find(|class| class.scope == "StaticChild")
+        .unwrap();
+    assert!(!static_child.dynamic_base);
+    assert!(with
+        .dependencies_of_node(&mixed.node())
+        .into_iter()
+        .flatten()
+        .all(|(_, kind)| *kind != EdgeKind::Extends));
+    assert!(build(true, false).resolved_call_sites().is_empty());
+}

@@ -1,0 +1,61 @@
+{
+  "base": "17139a03be47301db3164557d609fd2a7d376a68",
+  "measuredChangedLines": 692,
+  "coveredChangedLines": 679,
+  "coveragePercent": 98.1214,
+  "requiredPercent": 98.0,
+  "uncoveredChangedLines": {
+    "crates/no-mistakes/src/codebase/postgres/migration/dynamic/routine/wrapper.rs": [
+      29
+    ],
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/procedural.rs": [
+      72,
+      73,
+      74,
+      77,
+      87,
+      108,
+      131
+    ],
+    "crates/no-mistakes/src/codebase/rules/postgres_generated_column_predicates.rs": [
+      98
+    ],
+    "crates/no-mistakes/src/codebase/rules/postgres_sql_statement_policy.rs": [
+      77
+    ],
+    "crates/no-mistakes/src/codebase/rules/postgres_unanalyzable_schema.rs": [
+      88,
+      92
+    ],
+    "crates/no-mistakes/src/codebase/rules/prepared_facts.rs": [
+      97
+    ]
+  },
+  "changedFilesWithoutLineRecords": [
+    "crates/no-mistakes/src/codebase/postgres/conflict/prepared_tests.rs",
+    "crates/no-mistakes/src/codebase/postgres/mod.rs",
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient/tests.rs",
+    "crates/no-mistakes/src/codebase/postgres/parse/sql_text/tests.rs",
+    "crates/no-mistakes/src/codebase/postgres/types/schema_file.rs",
+    "crates/no-mistakes/src/codebase/rules/forbidden_calls/tests.rs",
+    "crates/no-mistakes/src/codebase/rules/forbidden_calls/tests/config_validation.rs",
+    "crates/no-mistakes/src/codebase/rules/forbidden_calls/tests/playwright.rs",
+    "crates/no-mistakes/src/codebase/rules/forbidden_calls/tests/terminal.rs",
+    "crates/no-mistakes/src/codebase/rules/mod.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_constraint_validate/tests.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_idempotent_insert/tests.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_no_generated_column_writes/tests.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_no_generated_column_writes/tests/identities.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_no_generated_column_writes/tests/no_op.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_no_generated_column_writes/tests/review_followups.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_sql_statement_policy/context_tests.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_sql_statement_policy/expanded_tests.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_unanalyzable_schema/tests.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_unanalyzable_schema/tests/copy_tests.rs",
+    "crates/no-mistakes/src/codebase/rules/postgres_unanalyzable_schema/tests/procedural_tests.rs",
+    "crates/no-mistakes/src/napi_api/analyze_project/domain_parity_tests.rs",
+    "crates/no-mistakes/tests/cli_check_rules_forbidden_calls_contract.rs",
+    "crates/no-mistakes/tests/cli_check_rules_postgres_ddl_unanalyzable.rs",
+    "crates/no-mistakes/tests/suite_cli_postgres.rs"
+  ]
+}

@@ -1,0 +1,240 @@
+use super::*;
+use crate::codebase::analysis_session::AnalysisSession;
+use crate::codebase::check_facts::{
+    collect_check_facts_with_supplemental_call_sites, CheckFactMap, CheckFactPlan,
+};
+use crate::codebase::dependencies::graph::TsFactLookup;
+use crate::codebase::ts_source::facts::TsFactPlan;
+use crate::codebase::ts_source::{FileInventory, SourceStore};
+use std::sync::Arc;
+
+#[test]
+fn finite_set_call_sources_skip_unrelated_walks_without_changing_findings() {
+    let saved = call_literal_fixture_root("scoped-demand");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let call = root.join("schedules.ts");
+    let registry = root.join("registry.mts");
+    let unrelated = root.join("unrelated.tsx");
+    let files = vec![call.clone(), registry.clone(), unrelated.clone()];
+    let mut config = call_literal_config("register");
+    // Plain TS shares the historical import projection's physical parse mode.
+    config.rules[0].options["sets"][0]["file"] = serde_yaml::Value::String("schedules.ts".into());
+    let requested = try_required_call_site_fact_files(&root, &config).unwrap();
+    assert_eq!(requested.as_slice(), std::slice::from_ref(&call));
+    let collect = |broad| {
+        let observer = crate::diagnostics::InvocationObserver::new(true);
+        let session = AnalysisSession::new(Some(observer.clone()));
+        let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
+            &files,
+        ))));
+        let mut plan = CheckFactPlan {
+            imports: true,
+            symbols: true,
+            production_import_paths: Arc::new([call.clone()].into_iter().collect()),
+            graph: TsFactPlan {
+                imports: true,
+                call_sites: broad,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        plan.require_call_site_paths(&requested);
+        let facts = crate::diagnostics::with_observer(Some(observer.clone()), || {
+            crate::ast::with_request_parse_cache(|| {
+                collect_check_facts_with_supplemental_call_sites(
+                    &session,
+                    &root,
+                    (
+                        vec![call.clone(), registry.clone()],
+                        vec![unrelated.clone()],
+                    ),
+                    vec![call.clone()],
+                    plan,
+                    None,
+                    sources.clone(),
+                )
+            })
+        });
+        let findings =
+            check_with_files_sources_and_facts(&root, &config, &files, &sources, Some(&facts))
+                .unwrap();
+        (facts, findings, observer.snapshot().work)
+    };
+    let (mut scoped, findings, scoped_work) = collect(false);
+    let (mut broad, broad_findings, broad_work) = collect(true);
+    assert_eq!(findings, broad_findings);
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("missing"));
+    assert_eq!(
+        scoped.ts[&call].ts.call_sites,
+        broad.ts[&call].ts.call_sites
+    );
+    assert_eq!(scoped.ts[&call].ts.call_sites.len(), 2);
+    assert_eq!(scoped.get_production_imports(&call).unwrap().len(), 1);
+    assert!(!scoped.ts[&call].ts.imports.is_empty());
+    assert!(scoped.ts[&registry].ts.symbols.is_some());
+    assert!(scoped.ts[&unrelated].ts.call_sites.is_empty());
+    assert_eq!(broad.ts[&unrelated].ts.call_sites.len(), 2);
+    // An empty registry also incurs a visitor in the broad plan; assert work,
+    // since equal findings alone cannot detect the unnecessary traversals.
+    assert_eq!(broad_work["ast.walks"], scoped_work["ast.walks"] + 2);
+    assert_eq!(broad_work["parse.files"], 3);
+    assert_eq!(scoped_work["parse.files"], 3);
+    let required = TsFactPlan {
+        call_sites: true,
+        ..Default::default()
+    };
+    assert!(!scoped.covers_ts_fact_plan(required));
+    assert!(scoped.covers_ts_fact_plan_for_path(&call, required));
+    assert!(scoped.covers_ts_fact_plan_for_path(&root.join("nested/../schedules.ts"), required));
+    assert!(!scoped.covers_ts_fact_plan_for_path(&unrelated, required));
+    assert!(!scoped.covers_ts_fact_plan_for_path(
+        &call,
+        TsFactPlan {
+            resources: true,
+            ..required
+        }
+    ));
+    assert!(broad.covers_ts_fact_plan(required));
+    assert!(broad.covers_ts_fact_plan_for_path(&call, required));
+    assert!(broad.covers_ts_fact_plan_for_path(&unrelated, required));
+    // Composition retains each projection's exact scoped coverage without
+    // claiming that the whole combined map has call summaries.
+    broad.graph_plan.call_sites = false;
+    broad.call_site_paths = Arc::new([unrelated.clone()].into_iter().collect());
+    let view = scoped.fact_view_filling_missing(&broad);
+    assert!(!view.covers_ts_fact_plan(required));
+    assert!(view.covers_ts_fact_plan_for_path(&call, required));
+    assert!(!view.covers_ts_fact_plan_for_path(&unrelated, required));
+    assert!(!view.covers_ts_fact_plan_for_path(&registry, required));
+    assert!(Arc::ptr_eq(&view.call_site_paths, &scoped.call_site_paths));
+
+    // When every supplemental scoped path wins, the composed view shares its
+    // coverage set and retains the actual call facts behind that coverage.
+    broad.call_site_paths = Arc::new([call.clone(), unrelated.clone()].into_iter().collect());
+    let empty_primary = CheckFactMap::default();
+    let all_winning = empty_primary.fact_view_filling_missing(&broad);
+    assert!(Arc::ptr_eq(
+        &all_winning.call_site_paths,
+        &broad.call_site_paths
+    ));
+    assert!(all_winning.covers_ts_fact_plan_for_path(&call, required));
+    assert!(all_winning.covers_ts_fact_plan_for_path(&unrelated, required));
+    assert_eq!(all_winning.ts[&call].ts.call_sites.len(), 2);
+    assert_eq!(all_winning.ts[&unrelated].ts.call_sites.len(), 2);
+
+    // With one existing primary entry and one missing entry, only the
+    // supplemental path whose real facts win earns scoped coverage.
+    let mut mixed_primary = CheckFactMap::default();
+    mixed_primary
+        .ts
+        .insert(unrelated.clone(), Arc::clone(&scoped.ts[&unrelated]));
+    let mixed = mixed_primary.fact_view_filling_missing(&broad);
+    assert_eq!(mixed.call_site_paths.len(), 1);
+    assert!(mixed.call_site_paths.contains(&call));
+    assert!(!mixed.call_site_paths.contains(&unrelated));
+    assert!(!Arc::ptr_eq(&mixed.call_site_paths, &broad.call_site_paths));
+    assert!(mixed.covers_ts_fact_plan_for_path(&call, required));
+    assert!(!mixed.covers_ts_fact_plan_for_path(&unrelated, required));
+    assert_eq!(mixed.ts[&call].ts.call_sites.len(), 2);
+    assert!(mixed.ts[&unrelated].ts.call_sites.is_empty());
+
+    // Once the primary lacks that entry, the supplemental facts and coverage win together.
+    scoped.ts.remove(&unrelated);
+    let filled = scoped.fact_view_filling_missing(&broad);
+    assert!(filled.covers_ts_fact_plan_for_path(&unrelated, required));
+    assert_eq!(filled.ts[&unrelated].ts.call_sites.len(), 2);
+}
+
+#[test]
+fn default_path_call_site_coverage_preserves_generic_ts_map_semantics() {
+    let saved = call_literal_fixture_root("scoped-demand");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let selected = root.join("schedules.ts");
+    let unrelated = root.join("unrelated.tsx");
+    let files = [selected.clone(), unrelated.clone()];
+    let required = TsFactPlan {
+        call_sites: true,
+        ..Default::default()
+    };
+    let broad = crate::codebase::ts_source::facts::collect_ts_facts(&files, required);
+    let without_calls =
+        crate::codebase::ts_source::facts::collect_ts_facts(&files, TsFactPlan::default());
+    // Generic TsFactMap uses the trait default: coverage follows its global
+    // plan equally for the finite-set source and an unrelated collected source.
+    for path in [&selected, &unrelated] {
+        assert!(broad.covers_ts_fact_plan_for_path(path, required));
+        assert!(!without_calls.covers_ts_fact_plan_for_path(path, required));
+        assert_eq!(broad.get_ts_facts(path).unwrap().call_sites.len(), 2);
+        assert!(without_calls
+            .get_ts_facts(path)
+            .unwrap()
+            .call_sites
+            .is_empty());
+    }
+}
+
+#[test]
+fn overwriting_scoped_calls_with_import_facts_removes_only_losing_coverage() {
+    let saved = call_literal_fixture_root("scoped-demand");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let call = root.join("schedules.ts");
+    let unrelated = root.join("unrelated.tsx");
+    let registry = root.join("registry.mts");
+    let mut plan = CheckFactPlan {
+        imports: true,
+        ..Default::default()
+    };
+    plan.require_call_site_paths(&[call.clone(), unrelated.clone()]);
+    let primary = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        vec![call.clone(), unrelated.clone()],
+        plan,
+    );
+    let imports_only = |path: PathBuf| {
+        crate::codebase::check_facts::collect_check_facts(
+            &root,
+            vec![path],
+            CheckFactPlan {
+                imports: true,
+                ..Default::default()
+            },
+        )
+    };
+    let required = TsFactPlan {
+        call_sites: true,
+        ..Default::default()
+    };
+    let empty_overlay = primary.fact_view_with_supplemental(&CheckFactMap::default());
+    assert!(Arc::ptr_eq(
+        &primary.call_site_paths,
+        &empty_overlay.call_site_paths
+    ));
+    let disjoint = primary.fact_view_with_supplemental(&imports_only(registry));
+    assert!(Arc::ptr_eq(
+        &primary.call_site_paths,
+        &disjoint.call_site_paths
+    ));
+    assert!(disjoint.covers_ts_fact_plan_for_path(&call, required));
+    let overlapping = primary.fact_view_with_supplemental(&imports_only(call.clone()));
+    // The supplemental entry really wins, so stale primary demand cannot
+    // promise call summaries that the surviving entry does not contain.
+    assert!(overlapping.ts[&call].ts.call_sites.is_empty());
+    assert_eq!(overlapping.ts[&call].ts.imports.len(), 1);
+    assert!(!overlapping.covers_ts_fact_plan_for_path(&call, required));
+    assert!(overlapping.covers_ts_fact_plan_for_path(&unrelated, required));
+    assert_eq!(overlapping.ts[&unrelated].ts.call_sites.len(), 2);
+    assert_eq!(overlapping.call_site_paths.len(), 1);
+    assert_eq!(primary.call_site_paths.len(), 2);
+    assert!(overlapping.covers_ts_fact_plan(TsFactPlan::imports()));
+    assert!(!overlapping.covers_ts_fact_plan_for_path(
+        &unrelated,
+        TsFactPlan {
+            resources: true,
+            ..required
+        },
+    ));
+}

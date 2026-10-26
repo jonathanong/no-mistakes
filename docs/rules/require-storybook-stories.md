@@ -29,7 +29,55 @@ Each selected exported component must be reachable from a configured story or
 an allowed covered parent. Generated components and intentionally ineligible
 exports should be excluded explicitly.
 
+### Incomplete analysis
+
+The shared `unanalyzable` policy controls explicitly included TSX/JSX files
+whose prepared TypeScript facts contain a parse error. Such a file produces one
+file-level `unanalyzable` diagnostic at line 1; the rule does not guess which
+components the file exports or report missing stories for them. This check
+applies only when the file matches `options.include`. A file considered only
+through `includeAllReactNamedExports` or `includeAllReactDefaultExports` does
+not produce this diagnostic.
+
+For example, an included `UserCard.tsx` containing the incomplete declaration
+`export function UserCard() { return <article>` is reported as unanalyzable.
+
+The shared `unanalyzable` policy defaults to `report`; rule-level
+`options.unanalyzable` overrides the top-level `unanalyzable` setting
+([configuration](../configuration/README.md)). `report` places
+the diagnostic among failing findings, `advise` places it among advisories,
+and `ignore` omits it. Project scope, test-file exclusions,
+`ignoreIndexAndPrivateFiles`, `exclude`, generic rule filters, `allowFiles`,
+and file suppression continue to apply. The diagnostic is suppressed by
+`no-mistakes-disable-file require-storybook-stories` or
+`no-mistakes-disable-line require-storybook-stories` on line 1.
+
+The message includes the first line of the recorded parser or read error.
+This diagnostic exists because malformed included source cannot be analyzed
+for component exports, so the rule cannot establish Storybook coverage for
+that file. Fix the parse error and use valid TSX/JSX; if the file is
+intentionally outside the coverage policy, remove or narrow the `include`
+pattern, or use a reasoned `allowFiles` entry.
+
 ## Options and defaults
+
+Each rule application requires exactly one project target. To check multiple
+projects, repeat the application with the same generic include and a different
+project; a single `projects: [web, admin]` application is a configuration error:
+
+```yaml
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    include: ["components/**/*.tsx"]
+    options:
+      includeAllReactNamedExports: true
+  - rule: require-storybook-stories
+    projects: [admin]
+    include: ["components/**/*.tsx"]
+    options:
+      includeAllReactNamedExports: true
+```
 
 `stories` selects candidate story files; an empty list matches no stories.
 `include` and `exclude` are rule-local component path globs and both default to
@@ -41,17 +89,177 @@ contains one of the listed prop names. `allowComponents` and `allowFiles` map
 an exempt component key or file path to its required reason and default empty.
 `allowColocatedTests` defaults to `false`. `ignoreIndexAndPrivateFiles` also
 defaults to `false`; enable it to skip `index` and underscore-private source
-files. Generic rule filters remain separate from these rule-local globs.
+files. These `options.include` globs are relative to the selected project's
+root. They add explicitly selected components alongside any components selected
+by `includeAllReactNamedExports` or `includeAllReactDefaultExports`; they do
+not restrict those export-kind selections.
+
+Top-level rule `include` and `exclude` are separate scope filters. They intersect
+with `projects` and accept repository-relative or project-relative paths. To
+check only `web/components/**/*.tsx` while selecting named React exports, use:
+
+```yaml
+projects:
+  web:
+    root: web
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    include: ["components/**/*.tsx"]
+    options:
+      includeAllReactNamedExports: true
+```
+
+A component under another project's `components/` directory is outside this
+application, and `web/other/Other.tsx` is excluded by the generic include filter.
+
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: follows the component render graph and resolves dynamic and mock boundary imports for transitive coverage. **Low**: proves direct story coverage only and routes transitive coverage and export-kind boundary exemptions to `unanalyzable`. No partner rule is required.
+
+`max` is the default and preserves transitive component coverage and dynamic or
+mock boundary analysis. Use the shared `options.effort: low` to check direct
+story coverage without building the component render graph or resolving the
+project's dynamic and mock boundary imports:
+
+```yaml
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      effort: low
+      unanalyzable: advise
+      stories: ["stories/**/*.stories.tsx"]
+      include: ["src/**/*.tsx"]
+```
+
+Low retains story-file discovery, story import and re-export resolution,
+namespace-import checks, allow-entry validation, and configured colocated-test
+coverage. It does not follow a covered parent's render chain. For example:
+
+```tsx
+// stories/Parent.stories.tsx
+import { Parent } from '../src/Parent';
+export default { component: Parent };
+export const Primary = {};
+// src/Parent.tsx
+import { Child } from './Child';
+export function Parent() { return <Child />; }
+```
+
+Both efforts establish direct coverage for `Parent`. Max can also establish
+coverage for `Child`; low treats its coverage as unanalyzable. Add a story that
+directly imports `Child`, use an accepted colocated test when enabled, or use max
+to follow the render chain.
+
+If the project has no direct story coverage seeds, an explicitly included
+component without an accepted colocated test is still definitely missing a
+story at low, just as at max. Otherwise an uncovered component may depend on
+transitive coverage. Components selected only by export kind also need boundary
+analysis to exclude dynamic or mocked modules; low leaves their coverage
+unanalyzable rather than guessing that the exemption applies.
+
+The shared `unanalyzable` policy controls these residual diagnostics: `report`
+fails (the default), `advise` emits a non-failing advisory, and `ignore` omits
+the residual. Definite missing-story findings and namespace/allow-entry findings
+remain findings under every policy. Low's definite findings are contained in
+max's findings; total report counts can differ when low reports uncertainty
+that max resolves clear. No partner check is required because this uncertainty
+remains explicit under the selected policy.
+
+Low-only requests also omit dynamic/mock import facts unless another consumer
+needs them. Mixed low/max rule applications retain the facts required by max
+and reuse the same source inventory and parse.
+
+The same file and line suppression directives suppress low-effort findings and
+advisories. Existing parse-error diagnostics continue to follow `unanalyzable`
+at both efforts.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (a parse-error file under `include`, and at low effort a child component covered only through a parent's render chain) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `src/UserCard.tsx:1: unanalyzable (file has a parse error)`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
+
+- A configured or reachable story with a syntax or read error produces one
+  line-1 `unanalyzable` diagnostic at the story path. Coverage remains unknown
+  for otherwise uncovered components in that rule application: a failed parse
+  can hide imports, so the rule cannot claim those components have no story.
+  Valid stories still establish known coverage, and other rule applications
+  retain their own missing-story findings. Definite namespace and allow-entry
+  violations remain findings. This behavior applies at both efforts.
+- Fix the malformed story and rerun to recover complete coverage. Story-path
+  rule/project filters, reasoned `allowFiles` entries, and file/line suppression
+  directives control diagnostic visibility; they cannot turn incomplete facts
+  into definite missing coverage. If every malformed-story diagnostic is hidden,
+  otherwise uncovered selected components receive residual `unanalyzable`
+  diagnostics so a source-only rule scope cannot silently pass incomplete
+  coverage. `unanalyzable: advise` and `ignore` likewise leave coverage unknown.
+  Suppression audits retain real suppressed story
+  diagnostics under `report` and `advise`.
+- Error details include the first cause line when present, with the current
+  source path relative to the repository; empty causes omit parentheses.
 
 ## Valid example
 
+```yaml
+# .no-mistakes.yml
+projects:
+  web: {root: .}
+tests:
+  storybook:
+    configs: .storybook/main.ts
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      stories: ["stories/**/*.stories.tsx"]
+      includeAllReactNamedExports: true
+# .storybook/main.ts
+export default { stories: [] };
+```
+
 ```tsx
-export const Primary = meta.story({ component: UserCard });
+// src/UserCard.tsx
+export function UserCard() {
+  return <article>User</article>;
+}
+```
+
+```tsx
+// stories/UserCard.stories.tsx
+import { UserCard } from '../src/UserCard';
+
+export default { component: UserCard };
+export const Primary = {};
 ```
 
 ## Counterexample
 
+```yaml
+# .no-mistakes.yml
+projects:
+  web: {root: .}
+tests:
+  storybook:
+    configs: .storybook/main.ts
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      stories: ["stories/**/*.stories.tsx"]
+      includeAllReactNamedExports: true
+```
+
 ```tsx
+// src/UserCard.tsx
 export function UserCard() {
   return <article>User</article>;
 }

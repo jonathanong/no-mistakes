@@ -1,0 +1,15 @@
+on: push
+# Every job declares its bound; there is no workflow-level permissions key.
+jobs:
+  read:
+    permissions: { contents: read }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { persist-credentials: true }
+  empty:
+    permissions: {}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4

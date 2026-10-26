@@ -1,0 +1,10 @@
+effort: low
+rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      include: [unknown-suppression.ts]
+      sqlInclude: [does-not-exist.sql]
+      importSpecifier: '@db'
+      executorNames: [query]

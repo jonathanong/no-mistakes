@@ -5,7 +5,7 @@ mod nested;
 mod shapes;
 mod stars;
 mod table_arms;
-mod uses;
+pub(super) mod uses;
 pub(super) use collector::collect_query_at;
 pub(in crate::codebase::postgres::statements) use from::predicate_text;
 pub(super) use nested::{walk_expr_at, walk_node_at};

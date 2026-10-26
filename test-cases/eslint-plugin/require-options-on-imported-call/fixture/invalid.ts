@@ -17,6 +17,8 @@ export const { validateUrl: exportedUrl } = require("ssrf-guard/node");
 
 export async function rejected(url: string, opts: object, key: string) {
   await checkUrl(url);
+  const alias = checkUrl;
+  await alias(url);
   await checkUrl?.(url);
   await quotedUrl(url, {});
   await namespacedUrl(url);

@@ -8,24 +8,19 @@ pub(super) fn forward(
     values: &mut FxHashMap<(usize, String), Vec<ValueExpression>>,
 ) {
     for call in &collector.value_flow.calls {
-        let ValueExpression::Named { name, scope, .. } = &call.callee else {
-            continue;
-        };
-        let key = (scope.unwrap_or(0), name.clone());
-        let Some(origins) = values.get(&key) else {
-            continue;
-        };
-        let owners: Vec<CallableId> = origins
-            .iter()
-            .filter_map(|origin| {
-                super::super::parameter_call_origins::callable_owner(collector, origin)
-            })
-            .collect();
+        let owners = owners(collector, values, &call.callee);
         for owner in owners {
             let Some(parameters) = slots.get(&owner) else {
                 continue;
             };
+            let shifted = collector
+                .receiver_escapes
+                .uncertain_spreads
+                .get(&(call.offset, call.end));
             for (index, argument) in call.arguments.iter().enumerate() {
+                if shifted.is_some_and(|spread| spread.skips(index)) {
+                    continue;
+                }
                 let Some(parameter) = parameters.get(&index) else {
                     continue;
                 };
@@ -36,4 +31,22 @@ pub(super) fn forward(
             }
         }
     }
+}
+
+pub(super) fn owners(
+    collector: &ImportCollector,
+    values: &FxHashMap<(usize, String), Vec<ValueExpression>>,
+    callee: &ValueExpression,
+) -> Vec<CallableId> {
+    let ValueExpression::Named { name, scope, .. } = callee else {
+        return Vec::new();
+    };
+    values
+        .get(&(scope.unwrap_or(0), name.clone()))
+        .into_iter()
+        .flatten()
+        .filter_map(|origin| {
+            super::super::parameter_call_origins::callable_owner(collector, origin)
+        })
+        .collect()
 }

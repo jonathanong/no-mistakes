@@ -34,12 +34,21 @@ fn load_workspace_metadata_from_files(
     let pnpm_path = normalize_path(&root.join("pnpm-workspace.yaml"));
     if visible.contains(&pnpm_path) {
         let content = sources.read(&pnpm_path)?;
-        let pnpm_workspace: PnpmWorkspace = serde_yaml::from_str(&content)?;
+        let resolved = resolve_pnpm_include(root, &content, |path| sources.read(path).ok())?;
+        if resolved.packages_invalid {
+            return Err(anyhow::Error::msg(
+                "pnpm-workspace.yaml packages field must be a list of strings",
+            ));
+        }
         let root_dependency_names = load_optional_root_dependency_names(root, &visible, sources);
+        let globs = match resolved.packages {
+            PackageGlobs::DefaultStar => vec!["*".to_string()],
+            PackageGlobs::List(globs) => globs,
+            // Claimed twice. An empty list is not the omitted-packages default.
+            PackageGlobs::Conflict => Vec::new(),
+        };
         return Ok(WorkspaceMetadata {
-            globs: pnpm_workspace
-                .packages
-                .unwrap_or_else(|| vec!["*".to_string()]),
+            globs,
             root_dependency_names,
         });
     }

@@ -21,6 +21,14 @@ default to empty lists. `requiredHeading` defaults to unset. Each
 `requiredSubstrings` item names one `file` and one literal `substring`. An
 empty or omitted `bannedPatterns` list does no pattern work.
 
+`requiredHeading` applies to each `requiredFiles` document. A valid ATX value
+(`## Install`) requires the parsed heading text at that exact level; `# Install`
+and fenced or indented code examples do not satisfy it. A value without leading
+`#` characters matches a heading of that text at any level. For compatibility,
+a leading-hash value that is not valid ATX syntax (`#Install` or `####### Install`)
+strips its leading hashes and matches the remaining text at any level. Prefer
+`Install` for any level or `## Install` for an exact level.
+
 Each `bannedPatterns` entry requires `files`, `pattern`, and `message`. There
 is no default message. `files` lists at least one non-empty glob. `pattern` is
 a Rust regex and is not trimmed. It must not be able to match the empty string.
@@ -54,11 +62,6 @@ Patterns run only on the intersection of the rule's existing file scope and the
 entry globs. Literal `bannedSubstrings` and `requiredFiles` behavior is
 unchanged. Substring findings stay on line 1.
 
-## Valid example
-
-A matching document contains every required heading and text, none of the
-banned text, and no configured pin.
-
 ```yaml
 rules:
   - rule: doc-consistency
@@ -69,11 +72,23 @@ rules:
       requiredSubstrings:
         - file: README.md
           substring: "Install the CLI"
-      bannedSubstrings: ["legacy API"]
       bannedPatterns:
         - files: ["docs/**/*.md"]
           pattern: 'PIN-[0-9]{3}'
           message: "Move this pin to versions.md."
+```
+
+## Valid example
+
+A matching document contains every required heading and text, none of the
+banned text, and no configured pin.
+
+```md
+# Guide
+
+## Install
+
+Install the CLI
 ```
 
 ## Counterexample
@@ -93,6 +108,16 @@ suppress a pin that still belongs in the living document.
 # Duplicate
 ```
 
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it compares explicitly configured document facts that are read directly from files, so `options.unanalyzable` has no effect on it.
 
 ## Suppression
 

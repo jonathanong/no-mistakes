@@ -23,9 +23,9 @@ source spelling. Identifier receivers (`page.waitForTimeout()`), renamed
 receivers (`browser.waitForTimeout()`), `this.waitForTimeout()`, static
 computed members (`page["waitForTimeout"]()`), and chained receivers recorded
 as `<unknown>.waitForTimeout()` all match `terminal: waitForTimeout`. Dynamic
-computed access such as `page[method]()` stays ignored when
-`unknownCalls: ignore`. Other unresolved, shadowed, computed, or dynamic calls
-are not reported unless the application sets `unknownCalls: finding`.
+computed access such as `page[method]()` and other unresolved, shadowed, or
+dynamic calls report `unknown call` by default. Set `unknownCalls: ignore` to
+omit unmatched unknown calls; definite selector matches still report.
 
 ## Options and roots
 
@@ -39,9 +39,38 @@ root. Catalog roots select runner-config projects and explicit
 `tests.vitest.projects` / `tests.playwright.projects` entries through those
 projects' include paths (`testDir` and `testMatch` for Playwright).
 `vitest: true` or `playwright: true` includes that merged set, and a named
-list still errors for names present in neither source. `options.excludeRoots`
-removes matching source files from the initial root collection before
-call-graph traversal. Patterns are relative to the repository root and accept
+list still errors for names present in neither source.
+
+The executable examples below use a `glob` root so they do not need a runner
+catalog. Catalog roots belong in a repository that already configures
+`tests.vitest` or `tests.playwright`.
+
+```yaml
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - glob: src/**/*.ts
+      traversal: file
+      targets:
+        - global: setTimeout
+```
+
+A `glob` root selects the same prepared file universe without a runner
+catalog, for example `glob: e2e/**/*.spec.ts` or a list of patterns. Use
+`playwright: true` when the repository already has Playwright `testDir` /
+`testMatch` selection paths. The catalog form is configuration, not a snippet
+fixture:
+
+```yaml
+roots:
+  - vitest: true
+  - playwright: true
+```
+
+`options.excludeRoots` removes matching source files from the initial root
+collection before call-graph traversal. Patterns are relative to the repository root and accept
 one glob or a list, and match the whole repository-relative path (`*` also
 crosses `/`), so excluding a directory needs `dir/**` and
 `src/mocks/mock-only` does not exclude `src/mocks/mock-only.mock.test.mts`. It
@@ -56,10 +85,14 @@ not remove traversal roots.
 caps the selected traversal. `direct` always stops after one call hop. Call
 cycles are finite and each distinct reachable call occurrence is reported once.
 
-`traversal` defaults to `direct`, `unknownCalls` defaults to `ignore`, and
+Transitive source selection shares one breadth-first traversal across expanded
+roots, without constructing per-root call traces. At `maxDepth: N`, only call
+sites whose owners are fewer than N call hops from a root are selected.
+
+`traversal` defaults to `direct`, `unknownCalls` defaults to `finding`, and
 `invocations` defaults to `call`. An omitted `maxDepth` is unbounded for
 `file` and `transitive` traversal. `targets` must be non-empty unless
-`unknownCalls: finding` is selected.
+`unknownCalls: finding` is selected (including the default).
 
 Every selector is a one-key mapping. These are the accepted shapes:
 
@@ -114,45 +147,16 @@ graph without changing what `forbidden-calls` reports.
 
 ## Valid example
 
-Compliant example: a test injects a clock or imports an approved timer wrapper
-instead of invoking a forbidden timer API directly.
+A selected file with statically resolved calls and no forbidden timer API
+passes. This test clock advances without scheduling a real timer.
 
-```yaml
-rules:
-  - name: vitest-no-real-timers
-    rule: forbidden-calls
-    scope: repository
-    options:
-      roots:
-        - vitest: true
-      traversal: file
-      unknownCalls: ignore
-      targets:
-        - global: setTimeout
-        - moduleExport:
-            module: node:timers/promises
-            export: setTimeout
-  - name: playwright-no-set-timeout
-    rule: forbidden-calls
-    scope: repository
-    options:
-      roots:
-        - playwright: true
-      traversal: file
-      unknownCalls: ignore
-      targets:
-        - global: setTimeout
-        - exact: page.waitForTimeout
-        - terminal: waitForTimeout
-        - moduleExport:
-            module: node:timers/promises
-            export: setTimeout
+```ts
+let now = 0;
+function advanceClock(ms: number) {
+  now += ms;
+}
+advanceClock(1);
 ```
-
-A `glob` root selects the same prepared file universe without a runner
-catalog, for example `glob: e2e/**/*.spec.ts` or a list of patterns. Use
-`playwright: true` when the repository already has Playwright `testDir` /
-`testMatch` selection paths.
 
 The consumer acceptance matrix in
 `test-cases/rules/forbidden-calls/consumer-matrix/` is the packaged-CLI
@@ -163,10 +167,29 @@ spelling, and line; YAML application indexes must match declaration order.
 `test-cases/rules/forbidden-calls/workspace-package/` covers `function` targets
 reached through a workspace package name and one of its `exports` subpaths.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, the intent is that inputs this rule cannot prove are never treated as clean ([how analysis works](../../README.md#how-analysis-works)), but unresolved dynamic calls are governed by this rule's own `unknownCalls` option rather than `options.unanalyzable`:
+
+- `unknownCalls: finding` is the default and reports unresolved dynamic calls that match no `exact` or `terminal` selector as explicit policy findings.
+- `unknownCalls: ignore` explicitly omits those unmatched calls.
+- `unknownArguments` defaults to `finding`, so a call whose arguments cannot be evaluated is reported.
+
+See the [migration note](../migrations/forbidden-calls-unknown-calls.md) for
+the finding change in existing configurations.
+
+Definite matches of a configured selector remain findings under either value. See below for the full description.
+
 ## Unknown calls and suppression
 
 `unknownCalls: ignore` omits unresolved dynamic calls that do not match an
-`exact` or `terminal` selector. `unknownCalls: finding` reports remaining
+`exact` or `terminal` selector. The default, `finding`, reports remaining
 unknown calls as explicit policy findings. Configuration errors, such as an
 invalid root, selector, or a requested root that fails to parse, are never
 suppressible.
@@ -179,20 +202,25 @@ root. Source findings honor ordinary `no-mistakes-disable-file`,
 setTimeout(complete, 1);
 ```
 
-Counterexample: configuring a root without a target (and without
-`unknownCalls: finding`) is invalid; suppressions cannot hide that error.
+Counterexample: configuring a root without a target while explicitly setting
+`unknownCalls: ignore` is invalid; suppressions cannot hide that error.
 
 ## Counterexample
 
 ```ts
+// src/timers.ts
 setTimeout(() => {}, 0);
 ```
 
 ## Fix
 
-Inject the behavior, use the repository's approved wrapper, or narrow the rule
-application to the layer where the call is forbidden. Do not add a textual
-allowlist for aliases or namespace imports: configure the canonical target.
+Use a statically resolved approved wrapper, or narrow the rule
+application to the layer where the call is forbidden. For an `unknown call`,
+rewrite dynamic invocation to a statically resolved call when possible; set
+`unknownCalls: ignore` only if the application intentionally permits unmatched
+dynamic calls, including calls through an injected clock or callback. Do not add
+a textual allowlist for aliases or namespace imports:
+configure the canonical target.
 
 ## Related rules
 
@@ -245,3 +273,7 @@ and bounded depth and projection/reference work. Exhaustion produces unknown.
 Argument facts are requested only when a target declares these predicates and
 share the existing request's source inventory and parse. Target-only checks do
 not collect argument summaries.
+
+Argument evidence is collected only for files accepted by applications with
+`whenArguments`, using the same project, include, and exclude filters as findings.
+Other call graph consumers retain their requested facts.

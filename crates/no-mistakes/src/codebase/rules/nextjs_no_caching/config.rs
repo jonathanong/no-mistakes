@@ -1,31 +1,35 @@
-use super::patterns::boolean_value;
-use crate::codebase::ts_source::static_property_key_name;
+use super::const_values::{property_name, resolved_bool, ConstMap};
 use oxc_ast::ast::{
     Argument, AssignmentExpression, AssignmentTarget, CallExpression, ExportDefaultDeclarationKind,
     Expression, ObjectExpression, ObjectPropertyKind,
 };
 use std::collections::HashMap;
 
-pub(super) fn object_findings(obj: &ObjectExpression<'_>) -> Vec<(u32, String)> {
+pub(super) fn object_findings(
+    obj: &ObjectExpression<'_>,
+    scopes: &[ConstMap],
+) -> Vec<(u32, String)> {
     let mut findings = Vec::new();
     for prop in &obj.properties {
         let ObjectPropertyKind::ObjectProperty(prop) = prop else {
             continue;
         };
-        let Some(name) = static_property_key_name(&prop.key) else {
+        let Some(name) = property_name(&prop.key) else {
             continue;
         };
-        match name {
-            "cacheComponents" if boolean_value(&prop.value) == Some(true) => findings.push((
-                prop.span.start,
-                "Next.js cacheComponents config is disabled; remove static caching".to_string(),
-            )),
+        match name.as_str() {
+            "cacheComponents" if resolved_bool(&prop.value, scopes) == Some(true) => {
+                findings.push((
+                    prop.span.start,
+                    "Next.js cacheComponents config is disabled; remove static caching".to_string(),
+                ))
+            }
             "cacheLife" | "cacheHandlers" => {
-                findings.push((prop.span.start, next_config_message(name)));
+                findings.push((prop.span.start, next_config_message(&name)));
             }
             "experimental" => {
                 if let Expression::ObjectExpression(obj) = &prop.value {
-                    findings.extend(object_findings(obj));
+                    findings.extend(object_findings(obj, scopes));
                 }
             }
             _ => {}
@@ -37,19 +41,23 @@ pub(super) fn object_findings(obj: &ObjectExpression<'_>) -> Vec<(u32, String)> 
 pub(super) fn call_findings_with_bindings(
     call: &CallExpression<'_>,
     bindings: &HashMap<String, Vec<(u32, String)>>,
+    scopes: &[ConstMap],
 ) -> Vec<(u32, String)> {
     call.arguments
         .iter()
-        .flat_map(|argument| argument_findings(argument, bindings))
+        .flat_map(|argument| argument_findings(argument, bindings, scopes))
         .collect()
 }
 
-pub(super) fn expression_findings(expr: &Expression<'_>) -> Vec<(u32, String)> {
+pub(super) fn expression_findings(
+    expr: &Expression<'_>,
+    scopes: &[ConstMap],
+) -> Vec<(u32, String)> {
     match expr {
-        Expression::ObjectExpression(obj) => object_findings(obj),
-        Expression::ParenthesizedExpression(expr) => expression_findings(&expr.expression),
-        Expression::TSAsExpression(expr) => expression_findings(&expr.expression),
-        Expression::TSSatisfiesExpression(expr) => expression_findings(&expr.expression),
+        Expression::ObjectExpression(obj) => object_findings(obj, scopes),
+        Expression::ParenthesizedExpression(expr) => expression_findings(&expr.expression, scopes),
+        Expression::TSAsExpression(expr) => expression_findings(&expr.expression, scopes),
+        Expression::TSSatisfiesExpression(expr) => expression_findings(&expr.expression, scopes),
         _ => Vec::new(),
     }
 }
@@ -57,6 +65,7 @@ pub(super) fn expression_findings(expr: &Expression<'_>) -> Vec<(u32, String)> {
 pub(super) fn assignment_findings(
     assignment: &AssignmentExpression<'_>,
     bindings: &HashMap<String, Vec<(u32, String)>>,
+    scopes: &[ConstMap],
 ) -> Vec<(u32, String)> {
     if assignment_target_path(&assignment.left)
         .as_deref()
@@ -64,27 +73,30 @@ pub(super) fn assignment_findings(
     {
         return Vec::new();
     }
-    expression_findings_with_bindings(&assignment.right, bindings)
+    expression_findings_with_bindings(&assignment.right, bindings, scopes)
 }
 
 pub(super) fn default_export_findings(
     export: &ExportDefaultDeclarationKind<'_>,
     bindings: &HashMap<String, Vec<(u32, String)>>,
+    scopes: &[ConstMap],
 ) -> Vec<(u32, String)> {
     match export {
         ExportDefaultDeclarationKind::Identifier(id) => {
             bindings.get(id.name.as_str()).cloned().unwrap_or_default()
         }
         ExportDefaultDeclarationKind::CallExpression(call) => {
-            call_findings_with_bindings(call, bindings)
+            call_findings_with_bindings(call, bindings, scopes)
         }
-        ExportDefaultDeclarationKind::ObjectExpression(obj) => object_findings(obj),
+        ExportDefaultDeclarationKind::ObjectExpression(obj) => object_findings(obj, scopes),
         ExportDefaultDeclarationKind::ParenthesizedExpression(expr) => {
-            expression_findings(&expr.expression)
+            expression_findings(&expr.expression, scopes)
         }
-        ExportDefaultDeclarationKind::TSAsExpression(expr) => expression_findings(&expr.expression),
+        ExportDefaultDeclarationKind::TSAsExpression(expr) => {
+            expression_findings(&expr.expression, scopes)
+        }
         ExportDefaultDeclarationKind::TSSatisfiesExpression(expr) => {
-            expression_findings(&expr.expression)
+            expression_findings(&expr.expression, scopes)
         }
         _ => Vec::new(),
     }
@@ -93,30 +105,32 @@ pub(super) fn default_export_findings(
 fn expression_findings_with_bindings(
     expr: &Expression<'_>,
     bindings: &HashMap<String, Vec<(u32, String)>>,
+    scopes: &[ConstMap],
 ) -> Vec<(u32, String)> {
     match expr {
         Expression::Identifier(id) => bindings.get(id.name.as_str()).cloned().unwrap_or_default(),
-        Expression::CallExpression(call) => call_findings_with_bindings(call, bindings),
+        Expression::CallExpression(call) => call_findings_with_bindings(call, bindings, scopes),
         Expression::ParenthesizedExpression(expr) => {
-            expression_findings_with_bindings(&expr.expression, bindings)
+            expression_findings_with_bindings(&expr.expression, bindings, scopes)
         }
         Expression::TSAsExpression(expr) => {
-            expression_findings_with_bindings(&expr.expression, bindings)
+            expression_findings_with_bindings(&expr.expression, bindings, scopes)
         }
         Expression::TSSatisfiesExpression(expr) => {
-            expression_findings_with_bindings(&expr.expression, bindings)
+            expression_findings_with_bindings(&expr.expression, bindings, scopes)
         }
-        _ => expression_findings(expr),
+        _ => expression_findings(expr, scopes),
     }
 }
 
 fn argument_findings(
     argument: &Argument<'_>,
     bindings: &HashMap<String, Vec<(u32, String)>>,
+    scopes: &[ConstMap],
 ) -> Vec<(u32, String)> {
     match argument {
         Argument::Identifier(id) => bindings.get(id.name.as_str()).cloned().unwrap_or_default(),
-        Argument::ObjectExpression(obj) => object_findings(obj),
+        Argument::ObjectExpression(obj) => object_findings(obj, scopes),
         _ => Vec::new(),
     }
 }

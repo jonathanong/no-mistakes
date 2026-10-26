@@ -5,7 +5,6 @@ mod columns;
 mod verdicts;
 
 use super::CompiledOptions;
-use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
 
@@ -74,20 +73,21 @@ pub(super) fn scan(
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path);
         if opts.fail_unanalyzable && file.parse_failed {
-            dedup.push(
-                &mut findings,
-                file,
-                SqlFactSite::Origin,
-                source.as_deref(),
-                check::sql_finding(
-                    &rel,
-                    file.origin_line.max(1),
-                    "SQL could not be analyzed for required predicates",
-                    Some("unanalyzable"),
-                    None,
-                ),
-            );
-            continue;
+            for (site, line) in file.parse_failure_sites() {
+                dedup.push(
+                    &mut findings,
+                    file,
+                    site,
+                    source.as_deref(),
+                    check::sql_finding(
+                        &rel,
+                        line,
+                        "SQL could not be analyzed for required predicates",
+                        Some("unanalyzable"),
+                        None,
+                    ),
+                );
+            }
         }
         for (site, finding) in check::statement_findings(&rel, file, opts, catalog) {
             dedup.push_merged(&mut findings, file, site, source.as_deref(), finding);

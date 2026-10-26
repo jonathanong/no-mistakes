@@ -19,6 +19,7 @@ mod suppression_tests;
 
 pub(crate) struct FinalizeInput<'a> {
     pub(crate) root: &'a std::path::Path,
+    pub(crate) facts: &'a no_mistakes::codebase::check_facts::CheckFactMap,
     pub(crate) runner_config_deadlines:
         Option<Vec<no_mistakes::integration_tests::RunnerConfigDeadlineEvidence>>,
     pub(crate) config: &'a no_mistakes::config::v2::NoMistakesConfig,
@@ -44,6 +45,8 @@ pub(crate) struct CheckResults {
         Option<Vec<no_mistakes::integration_tests::RunnerConfigDeadlineEvidence>>,
     pub(crate) codebase: Vec<UniqueExportFinding>,
     pub(crate) warnings: Vec<String>,
+    pub(crate) analysis_warning_count: usize,
+    pub(crate) analysis_fallbacks: Vec<no_mistakes::config::v2::AnalysisFallback>,
     pub(crate) advisories: Vec<RuleFinding>,
     pub(crate) sql_verdicts: Vec<no_mistakes::codebase::postgres::SqlObligationVerdict>,
     pub(crate) include_sql_verdicts: bool,
@@ -79,6 +82,7 @@ pub(crate) fn complete_domain_checks(results: DomainResults) -> Result<Completed
 pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckResults> {
     let FinalizeInput {
         root,
+        facts,
         runner_config_deadlines,
         config,
         filesystem_files,
@@ -110,8 +114,10 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         sources,
     );
     let mut advisories = advisories?;
-    advisories::merge_sql(&mut advisories, root, sources, &sql_verdicts);
-    let warnings = [
+    advisories::merge_sql(&mut advisories, root, sources, facts, &sql_verdicts);
+    advisories.extend(std::mem::take(&mut rules.advisories));
+    advisories.extend(std::mem::take(&mut filesystem_rules.advisories));
+    let mut warnings: Vec<String> = [
         react_warning,
         react.warning,
         queues.warning,
@@ -123,6 +129,8 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     .into_iter()
     .flatten()
     .collect();
+    let analysis_warning_count = config.analysis_warnings.len();
+    warnings.extend(config.analysis_warnings.iter().cloned());
     let suppressed = suppression::apply_if_requested(
         include_suppressed,
         suppression::Inputs {
@@ -165,6 +173,8 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
             .map(|prepared| prepared.finding)
             .collect(),
         warnings,
+        analysis_warning_count,
+        analysis_fallbacks: config.analysis_fallbacks.clone(),
         advisories,
         sql_verdicts,
         include_sql_verdicts,

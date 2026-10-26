@@ -1,3 +1,6 @@
+mod analysis_policy;
+pub(crate) use analysis_policy::validate_low_alias;
+pub use analysis_policy::{AnalysisFallback, EffectiveRuleAnalysis, Effort, Unanalyzable};
 pub mod discover;
 pub mod frontend_apps;
 mod postgres_project_scope;

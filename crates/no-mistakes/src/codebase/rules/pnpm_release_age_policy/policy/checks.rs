@@ -10,6 +10,13 @@ pub(super) fn exclude(
     permanent: &HashSet<String>,
     temporary: &HashSet<String>,
 ) {
+    if snapshot
+        .exclude
+        .iter()
+        .any(|entry| matches!(entry, ExcludeEntry::Conflict))
+    {
+        return;
+    }
     let mut seen = HashSet::new();
     let mut yaml_names = HashSet::new();
     for entry in &snapshot.exclude {
@@ -80,6 +87,7 @@ pub(super) fn graph(
     opts: &Options,
     snapshot: &Snapshot,
     permanent: &HashSet<String>,
+    complete: bool,
 ) {
     if !opts.scoped_prefixes.is_empty() {
         for name in &snapshot.active_names {
@@ -99,7 +107,7 @@ pub(super) fn graph(
         }
     }
     for name in permanent {
-        if !snapshot.active_names.contains(name) {
+        if complete && !snapshot.active_names.contains(name) {
             push(
                 issues,
                 FileKind::Lockfile,

@@ -6,7 +6,7 @@ use super::RULE_ID;
 use crate::codebase::dependencies::graph::{CallTraversal, DepGraph, NodeId, ResolvedCallSite};
 use crate::config::v2::schema::RuleDef;
 use crate::config::v2::NoMistakesConfig;
-use crate::fx::FxHashSet;
+use crate::fx::{FxHashMap, FxHashSet};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
@@ -100,11 +100,16 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
         .any(|target| target.arguments().is_some())
         .then_some(facts)
         .flatten();
+    // This application's immutable policy must cache rejected paths as well.
+    let mut path_matches: FxHashMap<&Path, bool> = FxHashMap::default();
     let findings = candidate_sites(graph, &roots, options, &path_filter)
         .into_iter()
         .filter(|site| invocations.contains(&site.invocation))
         .filter(|site| {
-            matches!(options.traversal, Traversal::File) || matches_path(&path_filter, &site.file)
+            matches!(options.traversal, Traversal::File)
+                || *path_matches
+                    .entry(site.file.as_path())
+                    .or_insert_with(|| matches_path(&path_filter, &site.file))
         })
         .filter(|site| source_nodes.contains(&site_source_node(site)))
         .filter_map(|site| {
@@ -162,6 +167,11 @@ fn reachable_source_nodes(
     roots: &[NodeId],
     options: &Options,
 ) -> FxHashSet<NodeId> {
+    // Only transitive policies need a union traversal; keep the existing file
+    // and direct paths intact so their work and lazy graph demand stay scoped.
+    if matches!(options.traversal, Traversal::Transitive) {
+        return graph.call_source_nodes(roots, CallTraversal::Transitive, options.max_depth);
+    }
     let mut nodes: FxHashSet<NodeId> = roots.iter().cloned().collect();
     if matches!(options.traversal, Traversal::File) {
         return nodes;

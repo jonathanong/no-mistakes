@@ -1,0 +1,12 @@
+# A null current key still lets the loader select deprecated dependencies.
+testPlan:
+  vitest:
+    fullSuiteTriggers: null
+    dependencies:
+      triggers:
+        - name: legacy
+          paths:
+            - missing-null-fallback.ts
+rules:
+  - rule: no-mistakes-config
+    scope: repository

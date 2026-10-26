@@ -1,0 +1,16 @@
+name: Fetch an artifact
+description: Download an artifact to exercise effort modes.
+runs:
+  using: composite
+  steps:
+    - name: Literal unverified download
+      shell: bash
+      run: curl -fsSL https://untrusted.example.invalid/action-literal.tgz -o action-literal.tgz
+    - name: Download through one uppercase literal assignment
+      shell: bash
+      run: |
+        BASE_URL='https://untrusted.example.invalid/action-base'
+        wget "$BASE_URL/assigned.tgz" -O "$OUTPUT_FILE"
+    - name: Trusted URL with output filename
+      shell: bash
+      run: curl --output "$OUTPUT_FILE" https://api.github.com/repos/example/project

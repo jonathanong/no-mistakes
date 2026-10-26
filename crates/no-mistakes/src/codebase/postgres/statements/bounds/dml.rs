@@ -1,6 +1,7 @@
 use super::items::Builder;
 use super::{Scope, SqlBoundFact, SqlBoundKind, SqlBoundQuery};
-use sqlparser::ast::{Delete, FromTable, Update, UpdateTableFromKind};
+use crate::codebase::postgres::statements::SqlPinSource;
+use sqlparser::ast::{Delete, FromTable, Query, Statement, Update, UpdateTableFromKind};
 
 /// An `UPDATE` is bounded when the relation it changes is: other FROM items only feed it values.
 pub(super) fn update(
@@ -66,4 +67,50 @@ fn push(
         },
         target: Some(0),
     });
+}
+
+/// RETURNING emits one row per changed target row. Keep only pins independent of
+/// auxiliary FROM/USING items when projecting that cardinality into a CTE.
+pub(super) fn returning_bound(
+    query: &Query,
+    statement: &Statement,
+    scope: &Scope,
+    positions: super::super::value::PlaceholderPositions<'_>,
+) -> Option<SqlBoundQuery> {
+    let mut facts = Vec::new();
+    // The statement's own fact is collected later. This projection must not consume its
+    // shared source-token cursor while inspecting auxiliary subqueries.
+    let mut projection_scope = scope.clone();
+    projection_scope.table_tokens = None;
+    let projection_scope = super::query::with_scope(query, &projection_scope, positions);
+    match statement {
+        Statement::Update(update)
+            if update
+                .returning
+                .as_ref()
+                .is_some_and(|items| !items.is_empty()) =>
+        {
+            self::update(update, &projection_scope, positions, &mut facts);
+        }
+        Statement::Delete(delete)
+            if delete
+                .returning
+                .as_ref()
+                .is_some_and(|items| !items.is_empty()) =>
+        {
+            self::delete(delete, &projection_scope, positions, &mut facts);
+        }
+        _ => return None,
+    }
+    let query = facts.pop()?.query;
+    let mut target = query.items.into_iter().next()?;
+    target
+        .pins
+        .retain(|pin| matches!(&pin.source, SqlPinSource::Value | SqlPinSource::Query(_)));
+    Some(SqlBoundQuery {
+        input_mode: query.input_mode,
+        capped: query.capped,
+        items: vec![target],
+        outputs: Vec::new(),
+    })
 }

@@ -30,6 +30,7 @@ impl ScopeVisitor<'_> {
                     }
                     return if scope[name].executor_alias.is_some()
                         || self.relative_proofs[index].contains_key(name)
+                        || self.scoped.delayed.contains(&identifier.span.start)
                     {
                         vec![Origin::Binding(key.0, key.1)]
                     } else {

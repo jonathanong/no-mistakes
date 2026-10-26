@@ -1,0 +1,2 @@
+A deliberately oversized policy file.
+The second line exceeds the configured one-line budget.

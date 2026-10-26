@@ -3,6 +3,7 @@ pub(crate) mod extract;
 mod extract_factory;
 mod extract_helpers;
 mod extract_model;
+pub(crate) mod extract_prefilter;
 mod extract_processor;
 mod extract_record;
 mod extract_visitor;

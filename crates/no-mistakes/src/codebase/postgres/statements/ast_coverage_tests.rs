@@ -51,7 +51,7 @@ fn insert_and_trigger_from_statement_reject_unrelated_ast() {
         None
     )
     .is_none());
-    assert!(super::trigger::from_statement("", &commit, 1).is_none());
+    assert!(super::trigger::from_statement(&[], &commit).is_none());
     let sql = "INSERT INTO items (id) VALUES (1)";
     let sources = super::lines::InsertSources::new(sql);
     let Statement::Insert(mut insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
@@ -68,14 +68,6 @@ fn insert_and_trigger_from_statement_reject_unrelated_ast() {
         super::insert::from_insert_prepared(&sources, &insert, 1, true, None)
             .table
             .is_empty()
-    );
-}
-
-#[test]
-fn set_expr_insert_non_insert_and_missing_keyword_lines() {
-    assert_eq!(
-        super::lines::nth_keyword_pair_line("SELECT 1", "create", "trigger", 1),
-        1
     );
 }
 
@@ -117,7 +109,7 @@ fn trigger_period_for_and_for_row_object() {
     trigger.period = Some(TriggerPeriod::For);
     trigger.trigger_object = Some(TriggerObjectKind::For(TriggerObject::Row));
     trigger.exec_body = None;
-    let fact = super::trigger::from_statement("", &Statement::CreateTrigger(trigger), 1).unwrap();
+    let fact = super::trigger::from_statement(&[], &Statement::CreateTrigger(trigger)).unwrap();
     assert_eq!(fact.period, SqlTriggerPeriod::Other);
     assert!(fact.for_each_row);
     assert!(fact.function.is_empty());

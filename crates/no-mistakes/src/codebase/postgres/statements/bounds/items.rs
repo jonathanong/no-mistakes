@@ -1,3 +1,4 @@
+mod alternatives;
 mod builder;
 use super::super::value::PlaceholderPositions;
 use super::{start, Scope};

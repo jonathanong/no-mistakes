@@ -4,8 +4,8 @@ use sqlparser::ast::{
     BinaryOperator, Expr, OrderByExpr, Select, SelectItem, Spanned, TableWithJoins,
 };
 
-mod columns;
-mod scope;
+pub(in crate::codebase::postgres::statements) mod columns;
+pub(in crate::codebase::postgres::statements) mod scope;
 use super::super::value::PlaceholderPositions;
 use columns::{bare, resolve};
 use scope::{base_relations, push_factor, BaseRel};

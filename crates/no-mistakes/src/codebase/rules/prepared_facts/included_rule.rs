@@ -39,14 +39,13 @@ pub(crate) fn run_included_postgres_rule<C>(
                     )
                 })
                 .collect();
-            let view = facts.for_sql_application(index, rule.name.as_deref());
+            let view = facts.for_sql_application_with_advice(index, rule.name.as_deref());
             scan(
                 root,
                 &compiled,
                 &files,
                 sources,
-                view.as_ref()
-                    .map_or(facts as &dyn SqlFactContext, |view| view),
+                &view as &dyn SqlFactContext,
             )
         })
         .collect();

@@ -1,0 +1,10 @@
+version: 2
+projects:
+  api:
+    root: api
+    queues:
+      waitScopes: ["routes/**", "extra/**"]
+  workers:
+    root: workers
+    queues:
+      waitScopes: ["tasks/**"]

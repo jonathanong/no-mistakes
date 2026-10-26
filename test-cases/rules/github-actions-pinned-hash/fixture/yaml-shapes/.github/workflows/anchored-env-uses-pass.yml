@@ -1,0 +1,18 @@
+# A nested input named `uses` is not the anchor's action. The alias must not
+# steal the pinned checkout's version comment. A flow `env` value is the same.
+on: [push]
+jobs:
+  build:
+    steps:
+      - &script
+        name: Run
+        env:
+          uses: ./local
+        run: echo hi
+      - *script
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - &flow
+        run: echo
+        env: { uses: ./local }
+      - *flow
+      - uses: actions/setup-node@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.0.0

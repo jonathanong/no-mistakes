@@ -9,7 +9,7 @@ Imports decide which local identifiers execute SQL:
 | `importSpecifier`      | Empty; configure your database module explicitly                                        |
 | `executorNames`        | Empty without a module; `query`, `read`, `write` with a module                          |
 | `executorFactoryNames` | Empty; factory imports whose call result bound to a local is an executor in its block   |
-| `executorTypeNames`    | Empty; imported types whose annotated parameters are executors in their function        |
+| `executorTypeNames`    | Empty; imported types proving annotated parameters and guarded delayed locals        |
 | `trustedSqlTags`       | Empty; named imports of `name` from `module` or its subpaths are parameterized SQL tags |
 
 Without a module, only explicitly configured names match named imports from
@@ -18,10 +18,87 @@ scoped to the declaring block or function and also match imports from subpaths o
 a configured `importSpecifier`, plus relative imports that resolve into that
 package (see the
 [migration notes](../migrations/explicit-postgres-executors.md#scoped-executors)). With neither option set, no executor calls are collected.
+
+At low effort, parameters annotated directly with a configured imported executor
+type support direct calls and `.query` calls, including optional calls and
+bindings destructured from an inline object parameter type. Their SQL uses the
+same literal/one-local-constant contract as named executors. Type annotations,
+type aliases, and `typeof` type queries are erased uses and never create SQL
+findings. Dynamic or unsupported SQL is reported at its executor call; passing
+a configured executor through an unmodeled runtime use remains an unknown escape.
+An unresolved computed parameter key preserves unknown uses of its bound names;
+literal SQL at those calls does not establish executor ownership.
+
+For low SQL-structure checks, a typed parameter may default to a configured
+executor export. Typed callback parameters keep the same literal-SQL contract.
+For a wrapper declared in `executorFactoryNames`, passing a known receiver
+alongside that callback is transport, not another SQL statement. Helpers outside
+that configured set retain uncertainty for any executor passed to them. A configured
+factory result bound to an immutable `const`, `using`,
+or `await using` local is checked at its actual executor calls. Reassignment
+and unsupported defaults remain uncertain. Imported type identities can come
+from another module when explicitly declared in `effects.postgres.typedExecutors`
+and selected by `executorTypeNames`; matching only a type's spelling is insufficient.
+
+Receiver values used as proven SQL bind data or direct executor metadata do not
+create another SQL obligation. An ordinary aggregate or property read of an
+executor-bearing options value is not an escape by itself. Passing an executor,
+or an aggregate that contains it, to an opaque or unproven helper retains
+uncertainty at that invocation. A global-looking intrinsic call is still opaque
+until the analysis proves no local binding or mutation overrides it. Configured callback
+and factory wrappers transport executor values; their callback parameter
+headers do not create extra SQL obligations.
+
+An assertion (`as T` or `<T>value`) or `satisfies T` with a possible configured
+executor type does not create a SQL obligation by itself. The low pass carries
+supported same-file returned and asserted values into a direct invocation when
+it can prove the binding. A function return header alone is erased, and neither
+the header nor a producer result proves SQL passed to a later call safe. Nested
+functions use their own return type; ambient declarations have no returned value
+to report. Arbitrary object mutation and cross-file value flow remain opaque.
+For the SQL-structure low rules, indirect annotations (such as local type aliases
+or interfaces derived from a configured type, generic constraints/defaults,
+intersections, and array/rest or nested binding patterns) retain unknown runtime
+uses; they do not prove a literal call safe. The annotation rule retains its existing
+receiver scope and independently checks the visible leading comment at each
+execution call. See [low-effort annotation](../postgres-query-annotation/low-effort.md).
+
+An uninitialized `let` annotated with a declared executor type can also be used
+inside the block containing its single direct `=` assignment. This proves the
+calls inside the `try`:
+
+```ts
+let client: PoolClient | undefined;
+try {
+  client = await pool.connect();
+  await client.query(sql);
+} finally {
+  client?.release();
+}
+```
+
+The assignment must belong to the declaration's executing
+function and precede the call in the same statement list. Calls before the
+assignment or after that block remain unresolved. Competing writes, including
+destructuring and updates, do not gain executor proof from the annotation.
+These guards apply to both low and maximum annotation effort; unresolved
+receivers retain the normal report/advise/ignore policy.
+
 A configured module's `withTransaction` and `withTransactionOptions` imports
 also bind `query`. Member calls named `query` are collected when a module is configured or `query`
 is explicitly enabled in the executor names. Existing SQL-builder fragment recovery is
 independent of executor selection.
+
+A member call through an imported receiver type that matches the configured
+module but is absent from `executorTypeNames` is an undeclared-executor-type
+candidate. It is diagnosed through the rule's shared `unanalyzable` policy:
+`report` produces a finding, `advise` produces a non-failing advisory, and `ignore`
+produces neither. The diagnostic names the imported type and module and asks you
+to add that type to `executorTypeNames` and explicitly annotate inferred
+receivers. It does not treat the call as executed
+SQL or evaluate its argument. Declaring all receiver types preserves the existing
+SQL findings. This is separate from `reportUnmatchedExecutorNames`, which checks
+configured names that no scanned file imports.
 
 See [the breaking-change migration](../migrations/explicit-postgres-executors.md).
 
@@ -87,11 +164,21 @@ fails closed. Plain string-returning helpers remain bind values, as do calls to
 async functions or generators: their Promise or iterator results are not SQL
 fragments.
 
-Fragment detection follows file-wide aliases to convergence, including cycles,
-default parameter values and synchronous helpers that can return trusted
-fragments. This projection deliberately ignores lexical scope collisions so it
-fails closed. Plain string-returning helpers remain bind values, as do calls to
-async functions or generators: their Promise or iterator results are not SQL
-fragments.
-
 [PostgreSQL fact sources](../postgres-facts.md)
+
+Configured types alone do not prove every receiver shape. Calls through class
+fields or constructor parameter properties (`this.db.query`), typed object
+parameters (`ctx.db.query`), and typed array elements (`clients[0].query`) remain
+unanalyzable when executor ownership is unresolved. They follow the selected
+`unanalyzable` policy, including at low effort. Annotated locals initialized by
+helpers outside the configured set also retain runtime uncertainty at low
+effort. Use a supported explicitly typed parameter to make the receiver
+eligible for SQL analysis.
+
+The low-effort SQL syntax projection also proves simple parameters annotated
+with a configured named imported executor type, including renamed bindings in
+inline object parameter types. It checks literal SQL at `executor(sql)` and
+`executor.query(sql)` with the same rules as direct named imports. Type identity
+is lexical: shadowed names, unions, qualified types, and unrelated imports do
+not provide this low-effort syntax proof. This projection is shared by low SQL
+checks; query annotations retain their separate annotation-head analysis.

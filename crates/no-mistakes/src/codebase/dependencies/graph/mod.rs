@@ -34,6 +34,7 @@ include!("edge_maps.rs");
 include!("fact_lookup.rs");
 
 include!("builder.rs");
+include!("builder_class_ancestry.rs");
 include!("builder_session.rs");
 include!("builder_check_facts.rs");
 include!("builder_observability.rs");

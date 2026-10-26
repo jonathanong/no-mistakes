@@ -36,7 +36,7 @@ fn non_annotation_rules_do_not_request_annotation_projection() {
         ..RuleDef::default()
     });
     let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
-    configure_prepared_postgres_plan(&config, &mut plan).unwrap();
+    configure_prepared_postgres_plan(std::path::Path::new("/repo"), &config, &mut plan).unwrap();
     assert!(!plan.query_annotation);
     assert!(plan.query_annotation_options.is_none());
 }
@@ -54,7 +54,7 @@ fn configured_annotation_demand_preserves_an_existing_all_profiles_request() {
         query_annotation: true,
         ..Default::default()
     };
-    configure_prepared_postgres_plan(&config, &mut plan).unwrap();
+    configure_prepared_postgres_plan(std::path::Path::new("/repo"), &config, &mut plan).unwrap();
     assert!(plan.query_annotation_options.is_none());
 }
 
@@ -75,7 +75,7 @@ fn configured_annotation_demand_merges_an_existing_explicit_profile() {
         query_annotation_options: Some(vec![read.clone()]),
         ..Default::default()
     };
-    configure_prepared_postgres_plan(&config, &mut plan).unwrap();
+    configure_prepared_postgres_plan(std::path::Path::new("/repo"), &config, &mut plan).unwrap();
     assert!(plan.query_annotation);
     assert_eq!(plan.query_annotation_options, Some(vec![read, write]));
 }

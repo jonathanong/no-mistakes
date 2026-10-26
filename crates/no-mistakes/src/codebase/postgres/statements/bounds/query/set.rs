@@ -11,17 +11,21 @@ pub(super) fn bound(
     positions: super::super::super::value::PlaceholderPositions<'_>,
 ) -> SqlBoundQuery {
     match set {
-        SetExpr::Select(select) => SqlBoundQuery {
-            input_mode: if super::super::predicate::rejects_all(select.selection.as_ref()) {
-                SqlBoundInputMode::Skipped
-            } else {
-                SqlBoundInputMode::Streaming
-            },
-            capped: aggregate::pure_aggregate(select)
-                || super::super::predicate::rejects_all(select.selection.as_ref()),
-            items: items::from_select(select, scope, positions),
-            outputs: super::outputs::select(select, positions),
-        },
+        SetExpr::Select(select) => {
+            let items = items::from_select(select, scope, positions);
+            let outputs = super::outputs::select(select, &items, scope, positions);
+            SqlBoundQuery {
+                input_mode: if super::super::predicate::rejects_all(select.selection.as_ref()) {
+                    SqlBoundInputMode::Skipped
+                } else {
+                    SqlBoundInputMode::Streaming
+                },
+                capped: aggregate::pure_aggregate(select)
+                    || super::super::predicate::rejects_all(select.selection.as_ref()),
+                items,
+                outputs,
+            }
+        }
         SetExpr::Query(query) => super::bound_query(query, scope, positions),
         // A set operation returns the rows of both arms, so both must be bounded.
         SetExpr::SetOperation {

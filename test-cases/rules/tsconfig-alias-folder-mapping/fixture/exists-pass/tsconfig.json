@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@agents/email": [
+        "backend/agents/email/index.ts"
+      ],
+      "@agents/sms": [
+        "backend/agents/sms.ts"
+      ],
+      "@agents/jobs/*": [
+        "backend/agents/jobs/*.ts"
+      ],
+      "@agents/dir": [
+        "backend/agents/dir"
+      ],
+      "@agents/v1.data": [
+        "backend/agents/v1.data"
+      ],
+      "@agents/v1.data/*": [
+        "backend/agents/v1.data/*.ts"
+      ]
+    }
+  }
+}

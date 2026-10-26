@@ -135,6 +135,7 @@ words:
   - typmod
   - typmods
   - tsconfig
+  - tsgolint
   - UESCAPE
   - unconstructed
   - ungated

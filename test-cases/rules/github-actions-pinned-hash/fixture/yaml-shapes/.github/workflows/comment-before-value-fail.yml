@@ -1,0 +1,10 @@
+# A blank or comment between `uses:` and its scalar must not shift the next action.
+on: [push]
+jobs:
+  build:
+    steps:
+      - uses:
+
+          # local action
+          ./local
+      - { uses: actions/checkout@v4 }

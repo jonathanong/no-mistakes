@@ -38,6 +38,36 @@ class TooLong {
 }
 ```
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Upgrade note: in-scope files that cannot be read as UTF-8 now fail `check`
+under the default `unanalyzable: report` instead of silently passing. Fix or exclude those inputs, or set
+`options.unanalyzable: advise` or `ignore` to restore the previous successful
+exit status for uncertainty alone. Independent definite findings still fail
+under every policy.
+
+Selected files that cannot be read as UTF-8 produce an `unanalyzable`
+diagnostic instead of silently passing. Restore read access or repair the
+encoding so the rule can verify the file. The shared `options.unanalyzable`
+setting inherits the repository policy: `report` (the default) fails,
+`advise` emits non-failing advice, and `ignore` omits uncertainty. Definite
+violations remain failures under every policy, including when `effort: low`
+falls back to `max`.
+
+Configured scope, includes, excludes, and rule-specific exemptions still
+select the inputs. Suppressions apply to both channels, including directives
+retained in an invalid UTF-8 read error; source bytes are never reinterpreted
+as analyzable code. Rule-level custom messages apply to these diagnostics.
+
+The line-count check does not require a C# syntax parse. Readable malformed
+C# remains subject to the physical line limit.
+
 ## Suppression and related rules
 
 Use file suppression for generated or intentionally exceptional files. See

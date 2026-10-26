@@ -1,32 +1,22 @@
-use super::suppression::{component_is_suppressed, component_suppression_sources};
+pub(super) use super::diagnostics::check_with_resolver;
+use super::suppression::unsuppressed_component_keys;
+use super::types::RuleCheck;
 use super::{
     all_react_component_keys, colocated_test_covered_components, component_disabled,
     directly_covered_components, dynamic_or_mock_boundary_files, effective_story_patterns,
     file_disabled, namespace_import_findings, reachable_story_files, selected_components,
-    stale_or_blank_allow_findings, transitive_covered_components, GlobMatcher, Options,
-    RuleFinding, RULE_ID,
+    stale_or_blank_allow_findings, transitive_covered_components, GlobMatcher, Options, RULE_ID,
 };
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::rules::{path_filter::RulePathFilter, sort_findings};
+use crate::codebase::rules::{
+    analysis_policy::AnalysisDiagnostics, path_filter::RulePathFilter, sort_findings,
+};
 use crate::codebase::ts_resolver::{normalize_path, ImportResolution};
-use crate::config::v2::schema::{NoMistakesConfig, RuleDef};
+use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::{bail, Result};
 use std::collections::HashSet;
 use std::path::Path;
-
-struct RuleCheck<'a> {
-    root: &'a Path,
-    project_root: &'a Path,
-    config: &'a NoMistakesConfig,
-    rule: &'a RuleDef,
-    shared: &'a CheckFactMap,
-    resolver: &'a dyn ImportResolution,
-    inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
-    defer_suppression: bool,
-    sources: &'a crate::codebase::ts_source::SourceStore,
-}
-
-pub(super) fn check_with_resolver(
+pub(super) fn check_diagnostics_with_resolver(
     root: &Path,
     config: &NoMistakesConfig,
     shared: &CheckFactMap,
@@ -34,9 +24,9 @@ pub(super) fn check_with_resolver(
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     defer_suppression: bool,
     sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<AnalysisDiagnostics> {
     let root = normalize_path(root);
-    let mut findings = Vec::new();
+    let mut diagnostics = AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         if rule.projects.len() != 1 || rule.applies_to_repository() {
             bail!("{RULE_ID} requires exactly one project target");
@@ -50,7 +40,7 @@ pub(super) fn check_with_resolver(
             .map(|path| root.join(path))
             .unwrap_or_else(|| root.to_path_buf());
         let project_root = normalize_path(&project_root);
-        findings.extend(check_rule(RuleCheck {
+        diagnostics.append(check_rule(RuleCheck {
             root: &root,
             project_root: &project_root,
             config,
@@ -62,11 +52,11 @@ pub(super) fn check_with_resolver(
             sources,
         })?);
     }
-    sort_findings(&mut findings);
-    Ok(findings)
+    sort_findings(&mut diagnostics.findings);
+    sort_findings(&mut diagnostics.advisories);
+    Ok(diagnostics)
 }
-
-fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
+fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
     let RuleCheck {
         root,
         project_root,
@@ -79,6 +69,8 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         sources,
     } = inputs;
     let opts: Options = rule.try_rule_options()?;
+    let policy = config.effective_rule_analysis(rule)?;
+    let low = policy.effort == crate::config::v2::Effort::Low;
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     let rule_filter = RulePathFilter::new_with_inferred(root, config, rule, &mut inferred_roots)?;
     let include = GlobMatcher::new(&opts.include)?;
@@ -87,8 +79,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
     let stories = GlobMatcher::new(&story_patterns)?;
     let allow_files = GlobMatcher::new(opts.allow_files.keys())?;
     let test_filter = crate::codebase::test_filter::TestFileFilter::new(root, config);
-
-    let components = selected_components(
+    let (components, mut unanalyzable) = selected_components(
         root,
         project_root,
         shared,
@@ -99,17 +90,14 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         &include,
         &exclude,
         &test_filter,
-    )
-    .into_iter()
-    .filter(|component| rule_filter.is_match(&component.file))
-    .collect::<Vec<_>>();
+    );
+    let components = components
+        .into_iter()
+        .filter(|component| rule_filter.is_match(&component.file))
+        .collect::<Vec<_>>();
     let component_keys: HashSet<String> = components.iter().map(|c| c.key.clone()).collect();
-    let suppression_sources = component_suppression_sources(root, &components, shared);
-    let suppression_filtered_component_keys: HashSet<String> = components
-        .iter()
-        .filter(|component| !component_is_suppressed(root, &suppression_sources, component))
-        .map(|component| component.key.clone())
-        .collect();
+    let suppression_filtered_component_keys =
+        unsuppressed_component_keys(root, &components, shared);
     let all_component_keys = all_react_component_keys(project_root, shared);
     let story_files = reachable_story_files(
         project_root,
@@ -118,6 +106,17 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         resolver,
         &all_component_keys,
     );
+    let (incomplete, mut story_errors) =
+        super::diagnostics::malformed_stories(root, shared, &story_files, defer_suppression);
+    let visible_error = super::diagnostics::visible_story_error(
+        root,
+        project_root,
+        shared,
+        &story_errors,
+        &rule_filter,
+        &allow_files,
+    );
+    unanalyzable.append(&mut story_errors);
     let mut namespace_findings =
         namespace_import_findings(root, project_root, shared, &story_files, resolver);
     let direct = directly_covered_components(
@@ -127,15 +126,21 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         resolver,
         &all_component_keys,
     );
-    let covered =
-        transitive_covered_components(root, project_root, shared, &direct, &component_keys);
+    let covered = if low {
+        direct.clone()
+    } else {
+        transitive_covered_components(root, project_root, shared, &direct, &component_keys)
+    };
     let test_covered = if opts.allow_colocated_tests {
         colocated_test_covered_components(shared, &components)
     } else {
         Default::default()
     };
-    let boundary_files = dynamic_or_mock_boundary_files(project_root, shared, resolver);
-
+    let boundary_files = if low {
+        Default::default()
+    } else {
+        dynamic_or_mock_boundary_files(project_root, shared, resolver)
+    };
     let mut findings = Vec::new();
     findings.append(&mut namespace_findings);
     findings.extend(stale_or_blank_allow_findings(
@@ -146,7 +151,6 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         &allow_files,
         shared,
     ));
-
     for component in components {
         if covered.contains(&component.key) || test_covered.contains(&component.key) {
             continue;
@@ -165,19 +169,32 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         {
             continue;
         }
-        findings.push(RuleFinding {
-            rule: RULE_ID.to_string(),
-            file: component.repo_file,
-            line: component.line,
-            message: format!(
-                "React component `{}` is selected for Storybook coverage but no reachable story imports it or a parent component that renders it. Add a Storybook story, add an accepted colocated test when `allow_colocated_tests` is enabled, render it through a covered parent component, exclude it from `{RULE_ID}`, or add a documented no-mistakes disable comment.",
-                component.export_name
-            ),
-            import: None,
-            target: Some(component.key),
-        });
+        if incomplete {
+            unanalyzable.extend(
+                (!visible_error).then(|| super::diagnostics::incomplete_component(component)),
+            );
+            continue;
+        }
+        // Without story seeds, only implicit components need boundary analysis.
+        if low && (!direct.is_empty() || !component.explicit) {
+            unanalyzable.push(super::effort::unanalyzable(component));
+            continue;
+        }
+        findings.push(super::effort::missing(component));
     }
-
     findings.retain(|finding| rule_filter.is_match(&root.join(&finding.file)));
-    Ok(findings)
+    let mut diagnostics = AnalysisDiagnostics {
+        findings,
+        advisories: Vec::new(),
+    };
+    super::diagnostics::append_unanalyzable(
+        &mut diagnostics,
+        unanalyzable,
+        root,
+        project_root,
+        &rule_filter,
+        &allow_files,
+        policy.unanalyzable,
+    );
+    Ok(diagnostics)
 }

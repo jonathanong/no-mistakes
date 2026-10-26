@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@db/a": [
+        "./executors.mts"
+      ],
+      "sql-template-strings": [
+        "./executors.mts"
+      ],
+      "@db/b": [
+        "./executors.mts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "executors.mts"
+  ]
+}

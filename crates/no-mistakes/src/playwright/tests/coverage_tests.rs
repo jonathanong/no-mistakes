@@ -188,6 +188,8 @@ fn selector_coverage_sorts_and_counts_uncovered() {
         file: PathBuf::from("/repo/web/app/page.tsx"),
         attribute: "data-testid".to_string(),
         value: AppSelectorValue::Exact("save".to_string()),
+        line: 1,
+        recovered: false,
     }];
     let settings = default_settings(vec!["data-testid".to_string()]);
     let report = build_coverage(
@@ -212,16 +214,22 @@ fn selector_coverage_sort_uses_value_and_file_tiebreakers() {
             file: PathBuf::from("/repo/web/app/b.tsx"),
             attribute: "data-testid".to_string(),
             value: AppSelectorValue::Exact("same".to_string()),
+            line: 1,
+            recovered: false,
         },
         selectors::AppSelector {
             file: PathBuf::from("/repo/web/app/a.tsx"),
             attribute: "data-testid".to_string(),
             value: AppSelectorValue::Exact("same".to_string()),
+            line: 1,
+            recovered: false,
         },
         selectors::AppSelector {
             file: PathBuf::from("/repo/web/app/c.tsx"),
             attribute: "data-testid".to_string(),
             value: AppSelectorValue::Exact("zzz".to_string()),
+            line: 1,
+            recovered: false,
         },
     ];
     let settings = default_settings(vec!["data-testid".to_string()]);
@@ -246,6 +254,8 @@ fn selector_edges_mark_targets_covered() {
         file: PathBuf::from("/repo/web/app/page.tsx"),
         attribute: "data-testid".to_string(),
         value: AppSelectorValue::Exact("save".to_string()),
+        line: 1,
+        recovered: false,
     }];
     let edges = vec![Edge::Selector {
         test_file: std::sync::Arc::new("tests/e2e/app.spec.ts".to_string()),
@@ -454,6 +464,7 @@ fn coverage_json_includes_helper_references_for_uncovered_selectors() {
 #[test]
 fn coverage_text_covers_fetch_apis() {
     let coverage = CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 0,
             covered_routes: 0,

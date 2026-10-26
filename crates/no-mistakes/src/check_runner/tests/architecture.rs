@@ -4,6 +4,7 @@ fn check_task_sources() -> String {
     [
         include_str!("../../check_tasks.rs"),
         include_str!("../../check_tasks/filesystem.rs"),
+        include_str!("../../check_tasks/filesystem/redirects.rs"),
         include_str!("../../check_tasks/react.rs"),
     ]
     .concat()
@@ -17,3 +18,5 @@ mod domains;
 mod graph;
 #[path = "architecture_preparation.rs"]
 mod preparation;
+#[path = "runner_catalogs.rs"]
+mod runner_catalogs;

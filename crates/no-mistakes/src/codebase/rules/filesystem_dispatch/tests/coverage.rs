@@ -53,6 +53,7 @@ fn dispatch_uses_fallback_for_an_unknown_rule() {
     let sources = crate::codebase::rules::source_store_for_files(&files);
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, &files);
     let findings = super::run_rule::run_rule_with_sources(super::run_rule::RunRuleRequest {
+        next_config_resolver: None,
         rule_id: "future-filesystem-rule",
         fallback,
         root,
@@ -85,6 +86,7 @@ fn run_rule_dispatches_markdown_link_display_text() {
     let sources = crate::codebase::rules::source_store_for_files(&files);
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
     let findings = super::run_rule::run_rule_with_sources(super::run_rule::RunRuleRequest {
+        next_config_resolver: None,
         rule_id: MARKDOWN_LINK_DISPLAY_TEXT,
         fallback,
         root: &root,
@@ -136,4 +138,19 @@ fn supplied_tracked_entrypoint_rejects_invalid_prepared_catalog_options() {
     ).unwrap();
     let error = run_filesystem_rules_with_config(&root, &config, &[]).unwrap_err();
     assert!(error.to_string().contains("schemaCatalogPath"), "{error:#}");
+}
+
+#[test]
+fn dispatch_with_files_returns_configuration_errors() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/filesystem-dispatch/invalid-config");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let error = run_filesystem_rules_with_visible_and_snapshot(
+        &root,
+        Some(&root.join(".no-mistakes.yml")),
+        &[],
+        &snapshot,
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("parse"), "{error:#}");
 }

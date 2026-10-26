@@ -1,16 +1,21 @@
+mod merge_keys;
+
+use merge_keys::expand_merge_keys;
 use serde_yaml::Value;
 use std::path::Path;
 
 /// Parse YAML or JSONC into a YAML value used by structured config rules.
 ///
 /// JSON and JSONC paths use `jsonc_parser` so `//` comments are not skipped.
-/// Other paths use `serde_yaml`. Parse failures return a diagnostic message
-/// instead of a silent skip.
+/// Other paths use `serde_yaml`, then expand YAML 1.1 merge keys (`<<`).
+/// Parse failures return a diagnostic message instead of a silent skip.
 pub fn parse_structured_value(path: &Path, source: &str) -> Result<Value, String> {
     if is_jsonc_path(path) {
         parse_jsonc(source)
     } else {
-        serde_yaml::from_str(source).map_err(|error| format!("failed to parse YAML ({error})"))
+        serde_yaml::from_str(source)
+            .map(expand_merge_keys)
+            .map_err(|error| format!("failed to parse YAML ({error})"))
     }
 }
 

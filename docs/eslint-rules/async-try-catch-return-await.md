@@ -9,20 +9,30 @@ the intended error boundary.
 ## Disallowed
 
 ```ts
-try {
-  return enqueueEmail(user.id);
-} catch (error) {
-  report(error);
+import { enqueueEmail } from "@app/jobs";
+import { handleRateLimit } from "@app/rate-limit";
+
+async function sendEmail(user) {
+  try {
+    return enqueueEmail(user.id);
+  } catch (error) {
+    handleRateLimit(error);
+  }
 }
 ```
 
 ## Allowed
 
 ```ts
-try {
-  return await enqueueEmail(user.id);
-} catch (error) {
-  report(error);
+import { enqueueEmail } from "@app/jobs";
+import { handleRateLimit } from "@app/rate-limit";
+
+async function sendEmail(user) {
+  try {
+    return await enqueueEmail(user.id);
+  } catch (error) {
+    handleRateLimit(error);
+  }
 }
 ```
 
@@ -31,6 +41,19 @@ try {
 - `handlers` is an array of target groups. Each group may set
   `sourceSpecifierPatterns` and `calleeNamePatterns`; values are glob or
   `/regex/` strings.
+
+```js
+{
+  handlers: [
+    {
+      sourceSpecifierPatterns: ["@app/rate-limit"],
+      calleeNamePatterns: ["/^handle.*RateLimit$/"],
+    },
+  ],
+}
+```
+
+Same-file namespace members, a default import of the configured module, a single `const` alias, a string or expression-free template member, an optional call, a comma callee, and `.call` or a literal-array `.apply` are the same callee.
 
 ## Fix
 
@@ -41,6 +64,10 @@ call outside the `try` when that boundary is not meant to handle it.
 
 For a matching direct return, ESLint offers one suggestion: insert `await`
 before the returned call. Review the error-boundary intent before applying it.
+
+## Limits
+
+Another file's re-export is not visible here. `import { handle } from "./barrel.mjs"` stays unreported when that barrel is `export { report as handle } from "@app/errors"` or `export * from "@app/errors"`. A parameter default such as `function run({ report } = errors)` is not judged, because the caller can pass a different object.
 
 ## Suppression
 

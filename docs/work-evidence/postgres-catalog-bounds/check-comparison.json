@@ -1,0 +1,789 @@
+{
+  "baseline": {
+    "revision": "924d220d3f59c0793638308439c856ff282392ef",
+    "sha256": "03a21f01347836ad22a634c40a8ef6f995fe101ca9d7455bf18982cda63eb774"
+  },
+  "candidate": {
+    "revision": "087c8f53e",
+    "sha256": "4dc1e0c78600769cc8d41d0a2bdcc51a149967080c947771917347f31d9c41ed"
+  },
+  "build": "cargo build --locked -p no-mistakes --bin no-mistakes; Rust 1.99.1; incremental disabled",
+  "configurations": [
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/boolean-cte-embedded.yml",
+      "before": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "d0febf0b9b507e472a730d8a453b772a70692720cda8b520846c9394b6f90d17",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "d0febf0b9b507e472a730d8a453b772a70692720cda8b520846c9394b6f90d17",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/boolean-keys.yml",
+      "before": {
+        "status": 1,
+        "findings": 9,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "db18d80a7f1eb746e924ee1fd1544d5d016ac1c4e63538d1133ffd08f0bc4d50",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 9,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "db18d80a7f1eb746e924ee1fd1544d5d016ac1c4e63538d1133ffd08f0bc4d50",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/caller-projection.yml",
+      "before": {
+        "status": 1,
+        "findings": 7,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "8fc64c2a02a6ecfc62640c01f673105bd1d7ae1cf4c82f3f0cbe127e1540b908",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 7,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "8fc64c2a02a6ecfc62640c01f673105bd1d7ae1cf4c82f3f0cbe127e1540b908",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/key-booleans.yml",
+      "before": {
+        "status": 1,
+        "findings": 2,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "198843f5349dcbb177778d67d7f4531a1c5a0539ef5fa134265c12eba08a7920",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "2f58508c82a07175aa702bf718dccdc654b32ef71653f7719ece5da7e671fcd0",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/key-operators.yml",
+      "before": {
+        "status": 1,
+        "findings": 12,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "538b0d8ebaf0072c5d11ba351ebb271f8ba55786471b0a5168f7ab9209f490c5",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 4,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "dd35ae1943252ab02ffc5000032027aae683cd0ee961d7a455a5a6470576e835",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/key-resolution.yml",
+      "before": {
+        "status": 1,
+        "findings": 7,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "9847e4dbf1bc410bd8a640c2843ccffa9251924999c2526915c7fc9e001a40a5",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 5,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "cc4ccf02e8365a74abaf7980ed9313dd240c3670808ce5d4cae6e974d00be1c7",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/view-allow.yml",
+      "before": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "1b6ed2edf3053e88e289a6dd2500180e5b1face555515569d9fdcba3137aabf2",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/view-bounds-ambiguous.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 2,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "9af4d7e512367d665cb23082f88bfa2018dfc389988ecfacc68c39307a8a5c1c"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/view-bounds-duplicate-alias.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 2,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "ff78a746a31df9db048a8b333393f4cb43b28bd7e89df95c544342b1aa8028e2"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/view-bounds-missing.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 2,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "b6f83514dcfc7ff23a98bd229bd5575d21887336cba3c08e1f1f8f5c2ecb37f3"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/view-bounds-table-collision.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 2,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "8fee7bd44b600e0bf39d8d0b1ebd0688fb75e7ab51e7e38e3ebba00d765e36e1"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/view-bounds.yml",
+      "before": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "9009c140804843b6cad7623f6c2fc42dffdc2c939e97721395bd0b257bfbe1f1",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "2e8936229b4931f5e5a79ce2deded5391357de6b2918b31cea579c3d9ee852ae",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/view-suppression.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/view-unconfigured-advise.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 1,
+        "stdout": "b5e65c8d06de3507e1f4d8b07443d1d00027fa2c440fb9a501cc9e1a4df39d25",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 1,
+        "stdout": "b5e65c8d06de3507e1f4d8b07443d1d00027fa2c440fb9a501cc9e1a4df39d25",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/view-unconfigured-fail.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution/view-unconfigured-ignore.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution-identity/archive-schema-view-policy.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution-identity/no-schema-view-policy.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 2,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "8aec2243805547218974caa58905b98354ef7b0af639144e303bab443a470817"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/catalog-resolution-identity/view-identity.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 1,
+        "stdout": "25024acb9b38824bee3defd9c27926ba3c5ecb66fff7b16e9f2f2dea8b1220d4",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/cte-declaration-scope.yml",
+      "before": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "a1c711bc064748748034891d49122ccfb152b98796ba0795a3ded11376308fd4",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "a1c711bc064748748034891d49122ccfb152b98796ba0795a3ded11376308fd4",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/cte-returning-negative.yml",
+      "before": {
+        "status": 1,
+        "findings": 8,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "c10263881f1eda2998fe1363455fe1eb06f45483f0248f13b2ce643f57b3d7f5",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 8,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "c10263881f1eda2998fe1363455fe1eb06f45483f0248f13b2ce643f57b3d7f5",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/cte-returning-positive.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/delete-only.yml",
+      "before": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "5bb483f5d960f2e2e3fce5a06827aa6d49f6c0ca40207d812e5f589dd420c72e",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "5bb483f5d960f2e2e3fce5a06827aa6d49f6c0ca40207d812e5f589dd420c72e",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/embedded.yml",
+      "before": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "156e769dc0d54ad1d23d08965d5215051b8410df68ea033646f7f63ff96fa2e2",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "156e769dc0d54ad1d23d08965d5215051b8410df68ea033646f7f63ff96fa2e2",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/graph.yml",
+      "before": {
+        "status": 1,
+        "findings": 6,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "bccae4fa29898816da15cf267d43a1ab1dd836b3c2913a8dd586a5f3a4523189",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 6,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "bccae4fa29898816da15cf267d43a1ab1dd836b3c2913a8dd586a5f3a4523189",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/ignore-unanalyzable.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/invalid.yml",
+      "before": {
+        "status": 1,
+        "findings": 3,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "7792bb9a3bcf07fe61d9581ff3b8f7e04698eae18a2c43230075811e31c1e458",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 3,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "7792bb9a3bcf07fe61d9581ff3b8f7e04698eae18a2c43230075811e31c1e458",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/keys.yml",
+      "before": {
+        "status": 1,
+        "findings": 6,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "9ad4cbe7086d62ae9995b1f5dc8521949d6fd3b50b4378b21616f11c216fb2b9",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 6,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "9ad4cbe7086d62ae9995b1f5dc8521949d6fd3b50b4378b21616f11c216fb2b9",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/no-catalog.yml",
+      "before": {
+        "status": 2,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "a6dfec74de0e5303c3280eb6af400ddffe15079112ba476fd94c66a0425c329f"
+      },
+      "after": {
+        "status": 2,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "a6dfec74de0e5303c3280eb6af400ddffe15079112ba476fd94c66a0425c329f"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/ordering.yml",
+      "before": {
+        "status": 2,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "f14593f3be80cb24f6a5dbe0b223f9e88029aee15ca2aa5bab588a6003e0fe6e"
+      },
+      "after": {
+        "status": 2,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr": "f14593f3be80cb24f6a5dbe0b223f9e88029aee15ca2aa5bab588a6003e0fe6e"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/stale-allow.yml",
+      "before": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "93f055f3501cf729837d739b85000e379f8c72d40bad349564a4be03d70aec7e",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "93f055f3501cf729837d739b85000e379f8c72d40bad349564a4be03d70aec7e",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/statement-suppressions.yml",
+      "before": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "866a6099871023c94e94d38378b530b39d436193c181b5aa040101fbd0a33fa1",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "866a6099871023c94e94d38378b530b39d436193c181b5aa040101fbd0a33fa1",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/suppress.yml",
+      "before": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "04d2067cfd70921dde5b7289242b96b9db7e2bbb7d83edc16b508bc46b192dda",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "04d2067cfd70921dde5b7289242b96b9db7e2bbb7d83edc16b508bc46b192dda",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/template.yml",
+      "before": {
+        "status": 1,
+        "findings": 2,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "25488b568e3d869a7cd0c5e50269a2cb4529c123351568c489d9f38b53f6d730",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 2,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "25488b568e3d869a7cd0c5e50269a2cb4529c123351568c489d9f38b53f6d730",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/temporary-partition-drop.yml",
+      "before": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "5e31c789eaef6808cdfdb9b4c3ff8cad48e37092891a6f7a7ac06e44258e222b",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 1,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "5e31c789eaef6808cdfdb9b4c3ff8cad48e37092891a6f7a7ac06e44258e222b",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/unanalyzable.yml",
+      "before": {
+        "status": 1,
+        "findings": 2,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "37eb183924e2deec1b4ac0f215d7d1e6d85dcbee7b0fbe4aaf11c7044cebb42e",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 2,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "37eb183924e2deec1b4ac0f215d7d1e6d85dcbee7b0fbe4aaf11c7044cebb42e",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/unique-index-shapes/.no-mistakes.yml",
+      "before": {
+        "status": 1,
+        "findings": 24,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "9ce23dbabfdfc296b5289f42ad8487fbd4ade81dab2015b4ceb5e4f6f0466cf6",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 24,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "9ce23dbabfdfc296b5289f42ad8487fbd4ade81dab2015b4ceb5e4f6f0466cf6",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/unique-index-shapes/guards/.no-mistakes.yml",
+      "before": {
+        "status": 1,
+        "findings": 2,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "56e7392a1d0e8a346cbcbf033f25d71a6ab7418c8f1940b0d72df2eb6be5ed4a",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 2,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "56e7392a1d0e8a346cbcbf033f25d71a6ab7418c8f1940b0d72df2eb6be5ed4a",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/valid.yml",
+      "before": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 0,
+        "findings": 0,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "config": "test-cases/rules/postgres-bounded-statements/fixture/wrapped-statement-suppressions.yml",
+      "before": {
+        "status": 1,
+        "findings": 2,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "f630689f7632e636ad9c94e81ac452a8841768f6eb7ca33e66e4e52404585e9b",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "after": {
+        "status": 1,
+        "findings": 2,
+        "warnings": [],
+        "advisories": 0,
+        "stdout": "f630689f7632e636ad9c94e81ac452a8841768f6eb7ca33e66e4e52404585e9b",
+        "stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "postRebaseCandidate": {
+    "revision": "fc16b360d06d605de457f7ca1603921c3fa3c4c3",
+    "base": "4c1bc0e04b70b677a2b15a04394363f5eff1df8a",
+    "sha256": "149174828f48dda79d727283c99bf20344ba828c67f58bc832c5589facb8eb74",
+    "outputComparison": "All 40 saved configuration outputs match the pre-rebase candidate."
+  },
+  "reviewCandidate": {
+    "revision": "787025372d4d7f2ae7db971d7458eeae863a448e",
+    "sha256": "2693025a6df2722cdef8a34e91967c53dc834e8b511b9e4d54d0dc53806c318d",
+    "outputComparison": "All 40 saved configuration outputs match the pre-review candidate."
+  },
+  "reviewFinalCandidate": {
+    "revision": "7e3b17af0",
+    "sha256": "fb5a956af7ea4940cd83331cf0947c5167c520ddffbc5b346e600fbd0c98eca5",
+    "outputComparison": "All 40 saved configuration outputs match the pre-review candidate; repository check clean after counter module relocation."
+  }
+}

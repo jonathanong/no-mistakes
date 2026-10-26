@@ -382,15 +382,38 @@ triggers, and project configuration provide the typecheck inputs.
 ## Valid example
 
 ```yaml
+# .no-mistakes.yml
 checks:
   commands:
     - name: typecheck
       command: [pnpm, exec, tsc, --noEmit, -p, tsconfig.json]
       fileArgs: none
       always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository
 ```
 
-An applicable workflow job runs the same project with a propagating shell.
+```json
+// tsconfig.json
+{ "compilerOptions": { "strict": true }, "include": ["src/**/*.ts"] }
+```
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on:
+  pull_request:
+    paths: ['src/**', tsconfig.json]
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pnpm exec tsc --noEmit --project tsconfig.json
+```
+
+The local command and workflow both type-check the tracked project.
 
 ## Counterexample
 
@@ -398,7 +421,40 @@ A tracked `web/tsconfig.json` exists, but CI only type-checks the root config an
 the local `checks.commands` block has no web project command.
 
 ```json
-{ "compilerOptions": { "strict": true } }
+// web/tsconfig.json
+{ "compilerOptions": { "strict": true }, "include": ["web/src/**/*.ts"] }
+```
+
+```yaml
+# .no-mistakes.yml
+checks:
+  commands:
+    - name: typecheck-root
+      command: [pnpm, exec, tsc, --noEmit, -p, tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository
+```
+
+```json
+// tsconfig.json
+{ "compilerOptions": { "strict": true }, "include": ["src/**/*.ts"] }
+```
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on:
+  pull_request:
+    paths: ['src/**', tsconfig.json]
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pnpm exec tsc --noEmit --project tsconfig.json
 ```
 
 
@@ -407,6 +463,16 @@ the local `checks.commands` block has no web project command.
 Add a static project-specific `tsc --noEmit` command and an enforcing workflow
 path/filter for the source it covers, or add a reasoned `allowProjects` entry
 for a non-compiler config.
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, inputs this rule cannot prove are never treated as clean ([how analysis works](../../README.md#how-analysis-works)); workflow steps this rule cannot interpret (for example a custom `shell:` such as `python {0}`, or a step whose command depends on an unresolved expression) are never counted as a typecheck gate and conservatively block later steps and dependent jobs from counting. A project whose only gate sits behind such a step is therefore reported as lacking a `tsc` gate. `options.unanalyzable` does not apply; fix it by running `tsc` in a plain `run:` step before the opaque step.
 
 ## Suppression
 

@@ -43,7 +43,10 @@ use `{sourceDir}` and `{sourceStem}`.
 ## Valid example
 
 ```tsx
-// Button.stories.tsx
+// src/components/Button.tsx
+export default function Button() { return null; }
+
+// src/components/Button.stories.tsx
 import Button from "@/components/Button";
 ```
 
@@ -52,9 +55,12 @@ import Button from "@/components/Button";
 `Button.stories.tsx` exists but imports `./Button` while the configured
 `specifierTemplate` requires `@/components/Button`.
 
-```ts
-// src/feature.ts
-export const feature = true;
+```tsx
+// src/components/Button.tsx
+export default function Button() { return null; }
+
+// src/components/Button.stories.tsx
+import Button from "./Button";
 ```
 
 
@@ -62,6 +68,16 @@ export const feature = true;
 
 Make the companion import match the rendered template or narrow the source and
 companion globs to the intended ownership boundary.
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it judges resolved import edges in the canonical graph, so `options.unanalyzable` has no effect on it.
 
 ## Suppression
 

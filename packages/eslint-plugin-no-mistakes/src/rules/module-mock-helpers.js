@@ -1,5 +1,6 @@
 "use strict";
 
+const { propertyName, memberPropertyName, logicalCall, literalString } = require("./logical-call");
 const { collectPatternNames } = require("./ast-pattern-names");
 const {
   expressionName,
@@ -18,25 +19,6 @@ const MODULE_MOCK_METHODS = new Set([
 ]);
 const PRESERVE_METHODS = new Set(["mock", "doMock", "unstable_mockModule"]);
 const DEFAULT_INTERNAL_SPECIFIERS = ["./**", "../**", "/**"];
-
-function propertyName(node) {
-  if (!node) return null;
-  return node.type === "Literal" ? String(node.value) : node.name;
-}
-
-function memberPropertyName(node) {
-  if (!node?.computed) return propertyName(node?.property);
-  return node.property?.type === "Literal" ? String(node.property.value) : null;
-}
-
-function literalString(node) {
-  if (!node) return null;
-  if (node.type === "Literal" && typeof node.value === "string") return node.value;
-  if (node.type === "TemplateLiteral" && node.expressions.length === 0) {
-    return node.quasis.map((quasi) => quasi.value.cooked ?? quasi.value.raw).join("");
-  }
-  return null;
-}
 
 function normalizeFilename(filename) {
   return filename.replace(/\\/g, "/");
@@ -116,15 +98,32 @@ function moduleMockSpecifierArgument(node) {
   return { dynamic: true };
 }
 
+function unwrapCallee(callee) {
+  let current = callee;
+  for (let depth = 0; depth < 4; depth += 1) {
+    if (current?.type === "ChainExpression") {
+      current = current.expression;
+      continue;
+    }
+    if (current?.type === "SequenceExpression" && current.expressions.length > 0) {
+      current = current.expressions[current.expressions.length - 1];
+      continue;
+    }
+    break;
+  }
+  return current;
+}
+
 function isModuleMockMemberCall(node, context) {
-  if (node.callee.type !== "MemberExpression") return false;
-  const method = memberPropertyName(node.callee);
+  const callee = unwrapCallee(node.callee);
+  if (callee?.type !== "MemberExpression") return false;
+  const method = memberPropertyName(callee);
   if (!MODULE_MOCK_METHODS.has(method)) return false;
-  if (!isFrameworkBinding(node.callee.object, context)) return false;
+  if (!isFrameworkBinding(callee.object, context)) return false;
   return {
-    framework: frameworkBindingModule(node.callee.object, context),
+    framework: frameworkBindingModule(callee.object, context),
     method,
-    namespace: expressionName(node.callee.object),
+    namespace: expressionName(callee.object),
   };
 }
 
@@ -150,6 +149,7 @@ module.exports = {
   memberPropertyName,
   isPreserveMockCall,
   literalString,
+  logicalCall,
   moduleMockSpecifierArgument,
   pathAllowed,
   propertyName,

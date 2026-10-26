@@ -1,0 +1,48 @@
+name: unknown-ref
+on: pull_request_target
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.checkout_ref }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/unproven
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: null
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 42
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: [branch]
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: {name: branch}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: false
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/pull/
+          persist-credentials: false

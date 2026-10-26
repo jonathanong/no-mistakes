@@ -204,6 +204,23 @@ empty for the rules that previously expanded an empty list to `**/*.sql`; set
 `returnedMembers` on the effect. See
 [PostgreSQL scope](../configuration/projects.md#postgresql-scope).
 
+### Undeclared receiver types
+
+A typed receiver from the configured executor module can no longer disappear
+silently when its type is missing from `executorTypeNames`. A matching member
+call produces an undeclared-executor-type diagnostic through the shared
+`unanalyzable: report|advise|ignore` policy. Add the imported type name to
+`executorTypeNames`, or to the project's `postgres.executors.typeNames` list.
+For an inferred or complex receiver, move execution into a supported explicitly
+typed parameter scope, such as `function run(client: PoolClient) { ... }`. The
+diagnostic itself does not admit the call or analyze its SQL.
+
+Source-only consumers can request `extractExecutedPostgresSql({ ...options,
+includeDiagnostics: true })` and inspect both `undeclaredExecutorTypes` and
+`unresolvedExecutorReceivers` before claiming complete read coverage. The existing array response stays
+unchanged when the flag is omitted or false. See
+[Node extraction](../node-api/postgres-extraction.md#undeclared-executor-types).
+
 ### Reporting unmatched names
 
 A configured `executorFactoryNames` or `executorTypeNames` entry that no scanned
@@ -264,3 +281,10 @@ Trust comes from a configured `trustedSqlTags` import, or from
 to its default-import `sqlTagModules` list. The ESLint runtime rules accept the
 option so a shared executor configuration validates. They still read every tagged
 template; the list does not hide a call.
+
+Configured types alone do not prove every receiver shape. Calls through class
+fields or constructor parameter properties (`this.db.query`), typed object
+parameters (`ctx.db.query`), and typed array elements (`clients[0].query`) remain
+unanalyzable when executor ownership is unresolved. They follow the selected
+`unanalyzable` policy, including at low effort. Use a supported explicitly typed
+parameter to make the receiver eligible for SQL analysis.

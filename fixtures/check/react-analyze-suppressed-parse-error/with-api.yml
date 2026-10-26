@@ -1,0 +1,8 @@
+version: 2
+reactTraits:
+  frontendRoot: app
+  assertNoFetch: true
+
+rules:
+  - rule: nextjs-no-api-routes
+    scope: repository

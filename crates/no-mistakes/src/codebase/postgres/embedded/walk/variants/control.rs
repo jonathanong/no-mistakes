@@ -1,9 +1,11 @@
 use super::super::ScopeVisitor;
-use super::{alternatives, Recovered};
+use super::Recovered;
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{ConditionalExpression, IfStatement, LogicalExpression};
 use oxc_ast_visit::Visit;
+mod join;
 mod paths;
+pub(super) use join::joined;
 mod truthiness;
 pub(in crate::codebase::postgres::embedded::walk) use paths::branch_paths;
 
@@ -37,6 +39,11 @@ impl ScopeVisitor<'_> {
         id: u64,
         arms: (u32, u32),
     ) {
+        let off = self
+            .append_decision_offs
+            .borrow()
+            .get(&id)
+            .map(|(source, arm)| (id, *source, *arm));
         for (index, scope) in self.scopes.iter_mut().enumerate() {
             for (name, state) in scope {
                 let a = left
@@ -49,23 +56,7 @@ impl ScopeVisitor<'_> {
                     .and_then(|scope| scope.get(name))
                     .cloned()
                     .flatten();
-                state.variants = if a == b {
-                    a
-                } else {
-                    a.zip(b).and_then(|(mut a, mut b)| {
-                        for value in &mut a {
-                            if !value.choices.iter().any(|(other, _)| *other == id) {
-                                value.choices.push((id, arms.0));
-                            }
-                        }
-                        for value in &mut b {
-                            if !value.choices.iter().any(|(other, _)| *other == id) {
-                                value.choices.push((id, arms.1));
-                            }
-                        }
-                        alternatives(a, b)
-                    })
-                };
+                state.variants = joined(a, b, id, arms, off);
             }
         }
     }

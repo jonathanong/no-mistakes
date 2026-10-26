@@ -31,33 +31,10 @@ are `private`, `type`, `license`, `requireScopedName`,
   when a file with that exact name exists beside `package.json`. It defaults to
   unset.
 
-## Valid example
-
-A selected manifest containing each required field with the configured shape
-passes.
-
-```json
-{ "name": "@app/web", "version": "1.0.0", "private": true, "type": "module" }
-```
-
-
-## Counterexample
-
-```json
-{ "name": "web" }
-```
-
-## Suppression and related rules
-
-JSON cannot contain directives, so narrow the configuration for exceptional
-manifests. [`package-json-workspace-coverage`](package-json-workspace-coverage.md)
-checks directory membership rather than field shape.
-
-Flags `package.json` manifests that do not match configured field-shape
-policy: `private`, `type`, `license`, scoped `name`, and `main` when a
-companion entry file exists. Application-specific name pins stay local.
-
-Empty options report nothing. Each check is opt-in.
+Empty options report nothing, including for unreadable or malformed manifests.
+Each check is opt-in. `unscopedNameExceptions`
+applies only when `requireScopedName` is enabled; `web` below is an allowed
+unscoped name, not a free pass on the other fields.
 
 ```yaml
 rules:
@@ -72,17 +49,52 @@ rules:
       mainWhenFileExists: index.mts
 ```
 
-Counterexample: an unscoped workspace package missing required fields.
+## Unanalyzable manifests
+
+When any field check is enabled, a selected manifest that cannot be read as
+UTF-8 or parsed as JSON produces an `unanalyzable` diagnostic. Repair the file
+or restore read access so the required fields can be verified. This prevents
+broken inputs from silently passing the manifest policy.
+
+The shared `options.unanalyzable` setting inherits the repository policy and
+defaults to `report`. `report` fails the check, `advise` emits a non-failing
+advisory, and `ignore` omits this diagnostic. Definite violations in other
+manifests remain failures under every policy. Rule-level `include`, `exclude`,
+and suppressions apply before diagnostics reach the report.
+
+## Valid example
+
+A selected manifest containing each required field with the configured shape
+passes. `mainWhenFileExists` is checked only when that sibling file exists, so
+this example omits `index.mts`.
 
 ```json
+// package.json
 {
-  "name": "foo"
+  "name": "@app/web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED"
 }
 ```
 
-Fix: declare the configured shape.
+## Counterexample
+
+An unscoped name that is not in `unscopedNameExceptions` is a finding, and so
+are missing `private`, `type`, and `license`. `foo` is not the `web` exception.
 
 ```json
+// package.json
+{ "name": "foo" }
+```
+
+## Fix
+
+Declare the configured shape.
+
+```json
+// package.json
 {
   "name": "@scope/foo",
   "private": true,
@@ -92,8 +104,33 @@ Fix: declare the configured shape.
 }
 ```
 
-Exclude an intentional exception with a rule-level `exclude` glob. A valid
-`package.json` cannot contain `no-mistakes-disable-file` comments.
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+A single leading UTF-8 byte order mark in `package.json` is accepted.
+
+Selected package manifests that cannot be read or parsed produce an
+`unanalyzable` diagnostic containing the file and error at line 1. Repair malformed
+JSON or restore read access so required fields can be checked.
+
+`options.unanalyzable` uses the shared analysis policy: `report` (default) emits a
+finding, `advise` emits an advisory, and `ignore` omits the uncertain result.
+Definite field violations remain findings under every policy. File suppression
+runs before policy routing: a malformed JSON file can carry a leading
+`// no-mistakes-disable-file package-json-required-fields` directive to suppress
+its read/parse diagnostic. A custom rule `message` prefixes these diagnostics.
+
+## Suppression
+
+A malformed manifest can carry a leading
+`// no-mistakes-disable-file package-json-required-fields` directive. That
+suppresses its read/parse diagnostic. Exclude a stable exception with a
+rule-level `exclude` glob.
 
 ```yaml
 rules:
@@ -103,3 +140,8 @@ rules:
     options:
       private: true
 ```
+
+## Related rules
+
+[`package-json-workspace-coverage`](package-json-workspace-coverage.md)
+checks directory membership rather than field shape.

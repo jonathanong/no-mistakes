@@ -3,7 +3,7 @@ use super::config::Options;
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::{ClassDeclaration, DepGraph, GraphBuildPlan};
 use crate::codebase::rules::path_filter::{GlobMatcher, RulePathFilter};
-use crate::codebase::rules::RuleFinding;
+use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics, RuleFinding};
 use crate::codebase::ts_source::{is_test_file, relative_slash_path};
 use crate::config::v2::schema::RuleDef;
 use crate::config::v2::NoMistakesConfig;
@@ -22,10 +22,15 @@ pub(crate) fn check_with_graph(
     root: &Path,
     config: &NoMistakesConfig,
     graph: &DepGraph,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<AnalysisDiagnostics> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
-    let mut findings = Vec::new();
+    let mut diagnostics = AnalysisDiagnostics::default();
     for application in config.rule_applications(RULE_ID) {
+        let policy = config.effective_rule_analysis(application)?.unanalyzable;
+        let target_policy = match policy {
+            crate::config::v2::Unanalyzable::Report => crate::config::v2::Unanalyzable::Advise,
+            other => other,
+        };
         let options: Options = application.try_rule_options()?;
         let extra_tests =
             GlobMatcher::new(&options.test_files, &format!("{RULE_ID} options.testFiles"))?;
@@ -40,16 +45,44 @@ pub(crate) fn check_with_graph(
         let classes = unconstructed(graph, is_test, |file| path_filter.is_match(file));
         // A use of a namespace keeps its members quiet even in a test file, so
         // a test file that failed to parse might hold the use that would.
-        if classes.iter().any(|class| class.namespace.is_some()) {
+        if classes
+            .iter()
+            .any(|result| result.class.namespace.is_some())
+        {
             reject_unseen_source(&root, graph, &|_: &Path| false)?;
         }
-        findings.extend(
-            classes
-                .into_iter()
-                .map(|class| finding(&root, application, class)),
-        );
+        for result in classes {
+            let finding = finding(&root, application, result.class);
+            if result.unknown_base || result.unknown_constructor || result.class.namespace_escaped {
+                diagnostics.unanalyzable(
+                    if (result.unknown_base || result.unknown_constructor)
+                        && !result.dynamic_ancestry
+                    {
+                        target_policy
+                    } else {
+                        policy
+                    },
+                    super::diagnostics::uncertain_class(
+                        finding,
+                        application,
+                        result.unknown_base,
+                        result.unknown_constructor,
+                        result.dynamic_ancestry,
+                    ),
+                );
+            } else {
+                diagnostics.findings.push(finding);
+            }
+        }
+        for finding in
+            super::diagnostics::unknown_constructs(&root, application, graph, is_test, |file| {
+                path_filter.is_match(file)
+            })
+        {
+            diagnostics.unanalyzable(target_policy, finding);
+        }
     }
-    Ok(findings)
+    Ok(diagnostics)
 }
 
 /// The rule concludes that no non-test file constructs a class, so a file whose

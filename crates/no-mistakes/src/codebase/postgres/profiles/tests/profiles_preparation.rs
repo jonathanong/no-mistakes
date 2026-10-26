@@ -11,7 +11,7 @@ fn invalid_schema_and_statement_options_stop_request_planning() {
             ..Default::default()
         };
         assert!(
-            configure_prepared_postgres_plan(&config, &mut Default::default())
+            configure_prepared_postgres_plan(std::path::Path::new("/repo"), &config, &mut Default::default())
                 .unwrap_err()
                 .to_string()
                 .contains("sqlInclude")
@@ -34,7 +34,7 @@ fn bounded_rule_alone_requests_bounds_and_standalone_preparation_keeps_them() {
     ] {
         let config = rule_config(rule);
         let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
-        configure_prepared_postgres_plan(&config, &mut plan).unwrap();
+        configure_prepared_postgres_plan(std::path::Path::new("/repo"), &config, &mut plan).unwrap();
         assert!(plan.postgres_dml);
         assert_eq!(plan.postgres_bounds, expected, "{rule}");
         let prepared = prepare_rule_sql_facts(

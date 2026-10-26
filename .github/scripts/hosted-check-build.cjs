@@ -11,7 +11,17 @@ const {
 } = require("./hosted-check-build-artifacts.cjs");
 const { validateCompiler } = require("./hosted-check-refs.cjs");
 
-const ARGS = ["build", "--release", "--locked", "--target", TARGET, "-p", "no-mistakes"];
+const ARGS = [
+  "build",
+  "--release",
+  "--locked",
+  "--target",
+  TARGET,
+  "-p",
+  "no-mistakes",
+  "--bin",
+  "no-mistakes",
+];
 const FLAGS = {
   CARGO_PROFILE_RELEASE_LTO: "fat",
   CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "1",
@@ -41,7 +51,9 @@ function productionManifest(text) {
   ) {
     throw new Error("Expected the official release crate type and default Mermaid features");
   }
-  return text.replace(original, 'crate-type = ["rlib", "cdylib"]');
+  // The measured CLI needs only rlib. Adding cdylib also links the unused addon,
+  // even with --bin, and can exhaust the production job's build deadline.
+  return text;
 }
 
 function verifyEnvironment(env, compiler, rustc) {
@@ -71,7 +83,7 @@ function build(phase, source, output, refs, variant, run = command, env = proces
   const rustc = run("rustc", ["-Vv"], source);
   verifyEnvironment(env, refs.compiler, rustc);
   const manifest = join(source, "crates/no-mistakes/Cargo.toml");
-  const original = readFileSync(manifest, "utf8");
+  const original = productionManifest(readFileSync(manifest, "utf8"));
   const entrypoints = ["lib.rs", "main.rs"].map((name) =>
     join(source, "crates/no-mistakes/src", name),
   );
@@ -97,9 +109,9 @@ function build(phase, source, output, refs, variant, run = command, env = proces
     sourceHashes,
     sourceManifestSha256,
     flags: FLAGS,
+    buildArgs: ARGS,
   };
   const dependencyRecord = join(target, "hosted-dependency-identity.json");
-  writeFileSync(manifest, productionManifest(original));
   if (phase === "dependencies") {
     // Preserve the real dependency graph, feature set, build.rs, and release flags.
     writeFileSync(entrypoints[0], STUB);
@@ -120,13 +132,8 @@ function build(phase, source, output, refs, variant, run = command, env = proces
     throw new Error("Restored dependencies did not contain the placeholder package");
   run("cargo", ARGS, source);
   const changed = run("git", ["diff", "--name-only", "HEAD"], source);
-  if (
-    changed !== "crates/no-mistakes/Cargo.toml" ||
-    readFileSync(manifest, "utf8") !== productionManifest(original)
-  ) {
-    throw new Error(
-      "Production build changed sources beyond the controlled release manifest patch",
-    );
+  if (changed !== "" || readFileSync(manifest, "utf8") !== original) {
+    throw new Error("Production build changed tracked sources");
   }
   stageArtifacts(
     source,
@@ -155,7 +162,7 @@ function build(phase, source, output, refs, variant, run = command, env = proces
       target: TARGET,
       imageOS: env.ImageOS,
       imageVersion: env.ImageVersion,
-      releaseManifestPatch: 'crate-type = ["rlib", "cdylib"], identical to release.yml',
+      releaseManifestPatch: null,
       dependencyPreparation:
         "Temporary entrypoint stubs; real package artifacts removed before production compile",
     },

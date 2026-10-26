@@ -1,33 +1,10 @@
 "use strict";
 const { createTargetMatcher } = require("./async-targets");
 const { unwrapExpression } = require("./async-ast");
-const { resolveVariable, memberPropertyName } = require("./async-target-bindings");
+const { createWrapperResolver } = require("./gh-api-wrappers");
 const { ruleSuppression } = require("../rule-suppression");
 const { inspectArgv, token } = require("./gh-api-argv");
 
-function wrapperName(node, context, stable) {
-  node = unwrapExpression(node);
-  const names = [];
-  while (node?.type === "MemberExpression") {
-    const name = memberPropertyName(node);
-    if (!name) return null;
-    names.unshift(name);
-    node = unwrapExpression(node.object);
-  }
-  if (node?.type !== "Identifier") return null;
-  const variable = resolveVariable(node, context);
-  // A configured module wrapper never means a same-spelled nested parameter.
-  if (variable && !["module", "global"].includes(variable.scope.type)) return null;
-  if (variable) {
-    if (!stable.has(variable))
-      stable.set(
-        variable,
-        !variable.references.some((reference) => reference.isWrite() && !reference.init),
-      );
-    if (!stable.get(variable)) return null;
-  }
-  return [node.name, ...names].join(".");
-}
 module.exports = {
   meta: {
     type: "problem",
@@ -66,7 +43,7 @@ module.exports = {
   },
   create(context) {
     const options = context.options[0] || {};
-    const stable = new WeakMap();
+    const resolveWrapper = createWrapperResolver(context, options.wrappers || []);
     const matcherContext = Object.create(context);
     Object.defineProperty(matcherContext, "options", {
       value: [
@@ -87,14 +64,14 @@ module.exports = {
       CallExpression(node) {
         let array;
         let includesApi = true;
-        if (matcher.resolveCallTarget(node) && token(node.arguments[0]) === "gh") {
-          array = unwrapExpression(node.arguments[1]);
+        const resolved = matcher.resolveCallTarget(node);
+        if (resolved && token(resolved.arguments[0]) === "gh") {
+          array = unwrapExpression(resolved.arguments[1]);
         } else {
-          const name = wrapperName(node.callee, context, stable);
-          const wrapper = (options.wrappers || []).find((entry) => entry.callee === name);
-          if (!wrapper) return;
-          array = unwrapExpression(node.arguments[wrapper.argumentPosition - 1]);
-          includesApi = wrapper.includesApi !== false;
+          const wrapped = resolveWrapper(node);
+          if (!wrapped) return;
+          array = unwrapExpression(wrapped.arguments[wrapped.wrapper.argumentPosition - 1]);
+          includesApi = wrapped.wrapper.includesApi !== false;
         }
         if (suppressed(node)) return;
         const result = inspectArgv(array, includesApi);

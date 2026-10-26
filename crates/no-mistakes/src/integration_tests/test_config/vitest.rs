@@ -176,6 +176,7 @@ fn to_project(
         include: prefix_globs(root, &project_root, &include),
         exclude: prefix_globs(root, &project_root, &options.exclude.unwrap_or_default()),
         declared_deadlines: options.deadlines,
+        matcher_warnings: Vec::new(),
         vitest_setup: options
             .setup_files
             .into_iter()

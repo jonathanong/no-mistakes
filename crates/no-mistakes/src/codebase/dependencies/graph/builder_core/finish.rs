@@ -72,6 +72,7 @@
             module_files,
             resolved_call_sites,
             class_declarations,
+            class_ancestry,
             call_sites_by_file,
             vitest_setup_projects: Vec::new(),
             effective_edges: OnceLock::new(),

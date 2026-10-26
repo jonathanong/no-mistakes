@@ -36,29 +36,37 @@ pub(super) fn collect(
                 let prepared = crate::codebase::postgres::parse::PreparedSql::new(source);
                 let parsed = prepared.parse_policy();
                 let failed = parsed.is_err();
-                let (statements, functions) = match parsed {
-                    Ok(statements) => (statements, Vec::new()),
+                let (statements, functions, failures, statement_sources) = match parsed {
+                    Ok(statements) => (statements, Vec::new(), Vec::new(), Vec::new()),
                     Err(_) => {
-                        let (mut located, functions) = crate::codebase::postgres::parse::partition_function_sources(crate::codebase::postgres::parse::parse_postgres_sql_lenient_with_sources(
+                        let recovered = crate::codebase::postgres::parse::parse_postgres_sql_lenient_with_sources(
                             source,
                             prepared.normalized(),
-                        ));
+                        );
+                        let failures = crate::codebase::postgres::migration::recovery_failures(&recovered);
+                        let (mut located, functions) = crate::codebase::postgres::parse::partition_function_sources(recovered);
                         prepared.adopt_recovered_arbiters(&mut located);
-                        (located.into_iter().map(|located| located.statement).collect(), functions)
+                        {
+                            let sources: Vec<_> = located.iter().map(|located| located.source.clone().or_else(|| located.chunk_tokens.clone())).collect();
+                            (located.into_iter().map(|located| located.statement).collect(), functions, failures, sources)
+                        }
                     }
                 };
-                (statements, functions, failed, prepared)
+                (statements, functions, failures, failed, prepared, statement_sources)
             });
             let schema = (plan.postgres_schema && schema_set.contains(path)).then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, functions, _, prepared)| {
+                    .map(|(statements, functions, failures, _, prepared, statement_sources)| {
                         let mut functions = functions.clone();
                         functions.extend_from_slice(&prepared.functions());
-                        let mut value = crate::codebase::postgres::migration::extract_from_parsed(
+                        let tokens: Vec<_> = statements.iter().enumerate().map(|(index, _)| statement_sources.get(index).and_then(|source| source.as_deref()).unwrap_or_else(|| prepared.tokens())).collect();
+                        let mut value = crate::codebase::postgres::migration::extract_from_parsed_with_failures(
                             source.as_ref().unwrap(),
                             statements,
                             &functions,
+                            failures,
+                            &tokens,
                         );
                         value.path = path.clone();
                         Arc::new(value)
@@ -68,7 +76,7 @@ pub(super) fn collect(
             let statements = plan.postgres_dml.then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, functions, failed, prepared)| {
+                    .map(|(statements, functions, failures, failed, prepared, statement_sources)| {
                         let mut value = crate::codebase::postgres::statements::extract_from_parsed_with_recovered_placeholders(
                             source.as_ref().unwrap(),
                             prepared,
@@ -77,10 +85,13 @@ pub(super) fn collect(
                             plan.postgres_bounds,
                             None,
                             crate::codebase::postgres::statements::StatementPolicySources {
+                                tokens: Some(statement_sources),
                                 schema: schema.as_ref().and_then(|entry| entry.as_ref().ok()).map(std::sync::Arc::as_ref),
                                 functions,
                             },
                         );
+                        value.parse_failures = failures.iter()
+                            .filter(|failure| failure.statement_unanalyzable).cloned().collect();
                         value.path = path.clone();
                         Arc::new(vec![value])
                     })

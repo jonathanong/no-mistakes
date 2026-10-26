@@ -14,7 +14,7 @@ function ruleFixture(name) {
 }
 
 const NOOP = "noopCatch";
-const INVALID_COUNT = 26;
+const INVALID_COUNT = 28;
 const OPTIONS_COUNT = 4;
 
 describe(RULE, () => {

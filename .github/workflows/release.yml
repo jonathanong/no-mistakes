@@ -432,9 +432,11 @@ jobs:
       - name: Install Chromium for timeout-policy browser tests
         timeout-minutes: 5
         # A resumed tag that predates the browser tests has no Playwright CLI.
+        # The runner image already ships Chromium's shared libraries; --with-deps
+        # only added optional CJK/X fonts from apt, whose mirror stalls this step.
         run: |
           if [ -x node_modules/.bin/playwright ]; then
-            pnpm exec playwright install --with-deps chromium
+            pnpm exec playwright install chromium
           fi
 
       - name: Run JavaScript tests

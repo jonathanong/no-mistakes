@@ -34,6 +34,38 @@ pub(super) fn expands_from_data(
     })
 }
 
+/// A projected SRF may emit zero rows for each source row. A result LIMIT therefore cannot
+/// bound how many FROM rows must be read, even when the SRF's arguments are caller-sized.
+pub(super) fn projection_may_erase_input(select: &Select) -> bool {
+    !select.from.is_empty()
+        && projected(select)
+            .iter()
+            .any(|expr| contains_expanding_call(expr))
+}
+
+fn contains_expanding_call(expr: &Expr) -> bool {
+    if let Expr::Function(function) = expr {
+        if projection_can_expand(function) {
+            return true;
+        }
+    }
+    let mut found = false;
+    visit_child_exprs(expr, &mut |child| found |= contains_expanding_call(child));
+    found
+}
+
+pub(super) fn order_may_erase_input(query: &Query) -> bool {
+    let Some(order) = &query.order_by else {
+        return false;
+    };
+    let OrderByKind::Expressions(expressions) = &order.kind else {
+        return false;
+    };
+    expressions
+        .iter()
+        .any(|expression| contains_expanding_call(&expression.expr))
+}
+
 /// An aggregate used only in `ORDER BY` (`SELECT 1 FROM t ORDER BY count(*)`) makes an ungrouped
 /// query a single row as well.
 pub(super) fn orders_by_aggregate(query: &Query) -> bool {
@@ -109,7 +141,7 @@ fn one_group(select: &Select) -> bool {
 
 /// DISTINCT ON evaluates its expressions against the grouped rows, including implicit groups.
 /// A set-returning call there can expand the single aggregate row just like a projected call.
-fn distinct_on_expands(select: &Select) -> bool {
+pub(super) fn distinct_on_expands(select: &Select) -> bool {
     matches!(
         &select.distinct,
         Some(Distinct::On(expressions))

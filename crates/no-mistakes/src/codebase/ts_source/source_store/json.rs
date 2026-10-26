@@ -44,12 +44,15 @@ impl super::SourceStore {
                     .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
                 self.increment("manifest.parses", 1);
                 match self.read_path(&path) {
-                    Ok(source) => serde_json::from_str(&source)
-                        .map(Arc::new)
-                        .map_err(|error| {
-                            self.increment("manifest.errors", 1);
-                            JsonLoadError::Syntax(Arc::new(error))
-                        }),
+                    // Package managers accept one BOM; retain the exact cached source.
+                    Ok(source) => {
+                        serde_json::from_str(source.strip_prefix('\u{FEFF}').unwrap_or(&source))
+                            .map(Arc::new)
+                            .map_err(|error| {
+                                self.increment("manifest.errors", 1);
+                                JsonLoadError::Syntax(Arc::new(error))
+                            })
+                    }
                     Err(error) => {
                         self.increment("manifest.errors", 1);
                         Err(JsonLoadError::Io(error))

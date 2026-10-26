@@ -1,6 +1,13 @@
 # Every catalog-backed rule, reading the catalog that `no-mistakes postgres catalog` generated
 # from schema.sql. A real-PostgreSQL test asserts each rule reports at least one finding.
 rules:
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      include: ['sql/**/*.sql']
+      sqlInclude: ['sql/**/*.sql']
+      executorNames: []
   - rule: postgres-conflict-ordering
     scope: repository
     options:

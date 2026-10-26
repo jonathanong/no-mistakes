@@ -53,10 +53,10 @@ fn conflict_only_boundary_omits_unrequested_exact_location_families() {
         locations.locking.is_empty(),
         "conflict-only demand collected locking metadata"
     );
-    assert!(locations
-        .positions
-        .keys()
-        .all(|site| matches!(site, SqlFactSite::Origin | SqlFactSite::Conflict(_))));
+    assert!(locations.positions.keys().all(|site| matches!(
+        site,
+        SqlFactSite::Origin | SqlFactSite::Conflict(_) | SqlFactSite::ParseFailure(_)
+    )));
     assert_eq!(
         statements[0]
             .variant_locations
@@ -75,8 +75,12 @@ fn conflict_request_union_keeps_general_lock_and_legacy_demand_full() {
     use crate::codebase::postgres::configure_prepared_postgres_plan;
     let conflict = || {
         let mut plan = CheckFactPlan::default();
-        configure_prepared_postgres_plan(&config(&["postgres-conflict-ordering"]), &mut plan)
-            .unwrap();
+        configure_prepared_postgres_plan(
+            std::path::Path::new("/repo"),
+            &config(&["postgres-conflict-ordering"]),
+            &mut plan,
+        )
+        .unwrap();
         plan
     };
     let narrow = conflict();
@@ -124,12 +128,17 @@ fn conflict_request_union_keeps_general_lock_and_legacy_demand_full() {
         vec!["postgres-conflict-ordering", "postgres-lock-ordering"],
     ] {
         let mut plan = CheckFactPlan::default();
-        configure_prepared_postgres_plan(&config(&ids), &mut plan).unwrap();
+        configure_prepared_postgres_plan(std::path::Path::new("/repo"), &config(&ids), &mut plan)
+            .unwrap();
         assert!(plan.wants_full_sql_locations());
     }
     let mut general = CheckFactPlan::default();
-    configure_prepared_postgres_plan(&config(&["postgres-required-predicates"]), &mut general)
-        .unwrap();
+    configure_prepared_postgres_plan(
+        std::path::Path::new("/repo"),
+        &config(&["postgres-required-predicates"]),
+        &mut general,
+    )
+    .unwrap();
     assert!(!general.wants_full_sql_locations());
 }
 
@@ -154,7 +163,8 @@ fn direct_and_shared_boundaries_preserve_full_for_mixed_consumers() {
         let direct =
             prepare_rule_sql_facts(&root, &files, Arc::clone(&sources), &config, &ids).unwrap();
         let mut plan = CheckFactPlan::default();
-        configure_prepared_postgres_plan(&config, &mut plan).unwrap();
+        configure_prepared_postgres_plan(std::path::Path::new("/repo"), &config, &mut plan)
+            .unwrap();
         crate::codebase::postgres::assign_prepared_embedded_sql_options(&config, &mut plan)
             .unwrap();
         let shared = collect_check_facts_with_graph_files_playwright_and_sources(

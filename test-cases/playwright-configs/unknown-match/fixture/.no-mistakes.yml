@@ -1,0 +1,16 @@
+tests:
+  playwright:
+    frontendRoot: web/app
+projects:
+  web:
+    type: nextjs
+    root: web
+rules:
+  - rule: playwright-unique-test-ids
+    scope: repository
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes:
+        - path: .
+          bannedExtensions: [".txt"]

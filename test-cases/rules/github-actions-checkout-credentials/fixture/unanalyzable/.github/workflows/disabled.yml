@@ -1,0 +1,8 @@
+# no-mistakes-disable-file github-actions-checkout-credentials
+on: push
+permissions: { contents: write }
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4
+        with: []

@@ -42,6 +42,110 @@ describe("async-call-disposition", () => {
     );
   });
 
+  it("allows retained promises and known mock pass-through returns", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-call-disposition", "retained-valid.ts"),
+        "async-call-disposition",
+        asyncTargetOptions,
+        "retained-valid.ts",
+      ),
+      [],
+    );
+  });
+
+  it("keeps unknown callbacks and unproven collections reported", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-call-disposition", "retained-invalid.ts"),
+        "async-call-disposition",
+        asyncTargetOptions,
+        "retained-invalid.ts",
+      ),
+      Array(38).fill("disposition"),
+    );
+  });
+
+  it("recognizes unshadowed framework globals without accepting arbitrary globals", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-call-disposition", "retained-globals.ts"),
+        "async-call-disposition",
+        asyncTargetOptions,
+        "retained-globals.ts",
+      ),
+      ["disposition"],
+    );
+  });
+
+  it("rejects rewritten framework globals", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-call-disposition", "retained-mutated-global.ts"),
+        "async-call-disposition",
+        asyncTargetOptions,
+        "retained-mutated-global.ts",
+      ),
+      ["disposition"],
+    );
+  });
+
+  it("rejects rewritten spy methods and framework aliases in isolated fixtures", () => {
+    for (const name of [
+      "retained-mutated-spy-write.ts",
+      "retained-mutated-spy-delete.ts",
+      "retained-mutated-spy-update.ts",
+      "retained-mutated-framework.ts",
+    ]) {
+      assert.deepEqual(
+        messages(
+          ruleFixture("async-call-disposition", name),
+          "async-call-disposition",
+          asyncTargetOptions,
+          name,
+        ),
+        ["disposition"],
+      );
+    }
+  });
+
+  it("honors file and line suppression comments only for this rule", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-call-disposition", "suppressed-file.ts"),
+        "async-call-disposition",
+        asyncTargetOptions,
+        "suppressed-file.ts",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        ruleFixture("async-call-disposition", "suppressed-lines.ts"),
+        "async-call-disposition",
+        asyncTargetOptions,
+        "suppressed-lines.ts",
+      ),
+      ["disposition", "disposition"],
+    );
+  });
+
+  it("executes the documented TypeScript examples", () => {
+    const doc = readFileSync(
+      resolve(__dirname, "../../../docs/eslint-rules/async-call-disposition.md"),
+      "utf8",
+    );
+    const snippets = [...doc.matchAll(/```ts\n([\s\S]*?)```/g)];
+    assert.equal(snippets.length, 7);
+    for (const [index, snippet] of snippets.entries()) {
+      const code = `import { enqueueEmail } from "@app/jobs";\n${snippet[1].replace(/import \{ enqueueEmail \} from "@app\/jobs";\n/g, "")}`;
+      assert.deepEqual(
+        messages(code, "async-call-disposition", asyncTargetOptions, "docs.ts"),
+        index < 2 ? ["disposition"] : [],
+      );
+    }
+  });
+
   it("reports floating enqueue promises", () => {
     assert.deepEqual(
       messages(
@@ -51,7 +155,6 @@ describe("async-call-disposition", () => {
         "invalid.ts",
       ),
       [
-        "disposition",
         "disposition",
         "disposition",
         "disposition",
@@ -549,25 +652,11 @@ describe("ts-no-function-aliases", () => {
         undefined,
         "invalid.ts",
       ),
-      [
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-        "alias",
-      ],
+      Array.from({ length: 7 }, () => "alias"),
     );
   });
 
-  it("covers function expressions, self calls, default params, and TS expression wrappers", () => {
+  it("keeps released private identifier findings and silent self/default wrappers", () => {
     assert.deepEqual(
       messages(
         ruleFixture("ts-no-function-aliases", "coverage.ts"),
@@ -575,7 +664,7 @@ describe("ts-no-function-aliases", () => {
         undefined,
         "coverage.ts",
       ),
-      ["alias", "alias", "alias"],
+      Array.from({ length: 3 }, () => "alias"),
     );
   });
 });
@@ -601,11 +690,11 @@ describe("ts-no-const-aliases", () => {
         undefined,
         "invalid.ts",
       ),
-      ["alias", "alias", "alias", "alias"],
+      Array(6).fill("alias"),
     );
   });
 
-  it("unwraps transparent TypeScript expressions without unwrapping await", () => {
+  it("reports non-null and instantiated aliases while preserving explicit type intent", () => {
     assert.deepEqual(
       messages(
         ruleFixture("ts-no-const-aliases", "coverage.ts"),
@@ -613,7 +702,19 @@ describe("ts-no-const-aliases", () => {
         undefined,
         "coverage.ts",
       ),
-      ["alias", "alias", "alias", "alias", "alias", "alias"],
+      ["alias", "alias"],
+    );
+  });
+
+  it("allows typed declarations through nested non-null and parenthesized wrappers", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("ts-no-const-aliases", "typed.ts"),
+        "ts-no-const-aliases",
+        undefined,
+        "typed.ts",
+      ),
+      [],
     );
   });
 });
@@ -666,6 +767,7 @@ describe("react-no-nullish-react-node", () => {
         "nullish",
         "nullish",
         "nullish",
+        "nullish",
       ],
     );
   });
@@ -693,6 +795,15 @@ describe("ts-preserve-null-option-defaults", () => {
         "invalid.ts",
       ),
       Array(4).fill("default"),
+    );
+    assert.deepEqual(
+      messages(
+        ruleFixture("ts-preserve-null-option-defaults", "static-keys.ts"),
+        "ts-preserve-null-option-defaults",
+        undefined,
+        "static-keys.ts",
+      ),
+      ["default", "default", "default"],
     );
   });
 

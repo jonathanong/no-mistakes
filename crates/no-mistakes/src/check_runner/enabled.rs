@@ -56,23 +56,35 @@ pub(crate) struct EnabledChecks {
 
 pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
     CheckFactPlan {
+        forbidden_call_arguments: None,
+        sql_identifier_profiles: Default::default(),
         imports: enabled.dynamic_import_rules,
+        call_site_paths: Default::default(),
         production_import_paths: Default::default(),
         companion_import_plans: Default::default(),
         symbols: enabled.unique_exports || enabled.storybook_stories,
+        symbols_paths: Default::default(),
         legacy_symbol_paths: Default::default(),
         react: enabled.react || enabled.storybook_stories,
+        react_paths: Default::default(),
         react_usages: false,
         queue: enabled.queue,
+        queue_paths: Default::default(),
         queue_factory_names: enabled.queue_factory_names,
         queue_factory_roles: enabled.queue_factory_roles,
         integration: enabled.integration,
+        integration_paths: Default::default(),
         integration_runner_configs: None,
-        dynamic_imports: enabled.dynamic_import_rules || enabled.storybook_stories,
+        dynamic_imports: enabled.dynamic_import_rules,
         nextjs_caching: enabled.nextjs_caching,
+        nextjs_caching_low: false,
+        nextjs_caching_paths: Default::default(),
         storybook: enabled.storybook_stories,
+        storybook_paths: Default::default(),
         server_route_client_boundary: enabled.boundary_rules,
+        boundary_paths: Default::default(),
         raw_source: enabled.nextjs_api_routes,
+        raw_source_paths: Default::default(),
         // Integration parse failures must retain their directive text so the
         // prepared integration projection can distinguish disabled suite
         // tests from malformed imported helpers without a second source read.
@@ -84,9 +96,11 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         postgres_schema: false,
         embedded_sql: enabled.embedded_sql,
         query_annotation: false,
+        query_annotation_heads: false,
         query_annotation_options: None,
         query_annotation_catalog: None,
         embedded_sql_options: Vec::new(),
+        embedded_sql_head_calls_only: Vec::new(),
         embedded_sql_rule_ids: Default::default(),
         postgres_schema_catalog_paths: Vec::new(),
         postgres_dml: false,
@@ -120,6 +134,7 @@ pub(crate) fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
         || plan.integration
         || plan.dynamic_imports
         || plan.nextjs_caching
+        || plan.nextjs_caching_low
         || plan.storybook
         || plan.server_route_client_boundary
         || plan.raw_source

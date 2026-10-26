@@ -12,6 +12,33 @@ pub(super) fn run(
     defer_suppression: bool,
 ) -> Option<Result<Vec<RuleFinding>>> {
     Some(match rule_id {
+        STRUCTURED_CONFIG_POLICY => structured_config_policy::diagnostics_with_files_and_sources(
+            root,
+            config,
+            files,
+            sources,
+            defer_suppression,
+        )
+        .map(|output| output.findings),
+        NO_EMPTY_OR_COMMENTS_ONLY_FILES => {
+            no_empty_or_comments_only_files::diagnostics_with_files_and_sources(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+            .map(|output| output.findings)
+        }
+        GITHUB_ACTIONS_PINNED_HASH => {
+            github_actions_pinned_hash::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
         CSHARP_MAX_LINES_PER_FILE => {
             csharp_max_lines_per_file::check_with_files_sources_and_deferred_suppression(
                 root,

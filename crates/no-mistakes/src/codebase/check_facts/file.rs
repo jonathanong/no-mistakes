@@ -3,11 +3,14 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::Path;
 use std::sync::Arc;
 
+mod embedded_sql;
 mod plan;
 mod playwright_source;
+mod prepared_program;
 pub(crate) mod production_imports;
 mod program;
 mod program_walk;
+mod sql_identifier;
 mod variants;
 
 use plan::{requires_parse, should_store_source, ts_source};
@@ -30,23 +33,15 @@ pub(crate) fn collect_file_facts_with_session_and_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     retain_parse: bool,
 ) -> Option<CheckFileFacts> {
+    if plan.raw_source
+        && !should_store_source(plan, path)
+        && !requires_parse(root, plan, path, playwright)
+    {
+        return Some(CheckFileFacts::default());
+    }
     let source = match sources.read_path(path) {
         Ok(source) => source,
-        Err(err) => {
-            let parse_error = format!("failed to read {}: {err}", path.display());
-            return Some(CheckFileFacts {
-                ts: Arc::new(TsFileFacts {
-                    operational_error: Some(parse_error.clone()),
-                    parse_error: Some(parse_error.clone()),
-                    ..TsFileFacts::default()
-                }),
-                parse_error: Some(parse_error),
-                server_route_client_boundary: plan
-                    .server_route_client_boundary
-                    .then(Default::default),
-                ..CheckFileFacts::default()
-            });
-        }
+        Err(err) => return Some(super::file_parse_error::read_facts(path, plan, err)),
     };
     if plan.production_import_paths.contains(path) {
         return production_imports::collect(
@@ -72,25 +67,31 @@ fn collect_file_facts_from_source(
     retain_parse: bool,
 ) -> Option<CheckFileFacts> {
     if plan.storybook && is_mdx_file(path) {
-        let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
+        let stored_source = should_store_source(plan, path).then(|| Arc::clone(&source));
+        let storybook =
+            crate::codebase::check_facts::family_scope::applies(&plan.storybook_paths, path)
+                .then(|| crate::codebase::storybook::extract_mdx_source(&source));
         return Some(CheckFileFacts {
             ts: Arc::new(ts_source(stored_source.clone())),
             source: stored_source,
-            storybook: Some(crate::codebase::storybook::extract_mdx_source(&source)),
+            storybook,
             // MDX is intentionally not sent through OXC, but every requested fact
             // family still needs an explicit entry for prepared consumers.
             server_route_client_boundary: plan.server_route_client_boundary.then(Default::default),
             ..CheckFileFacts::default()
         });
     }
-    if plan.raw_source && !requires_parse(plan, path, playwright) {
+    if plan.raw_source
+        && should_store_source(plan, path)
+        && !requires_parse(root, plan, path, playwright)
+    {
         return Some(CheckFileFacts {
             ts: Arc::new(ts_source(Some(Arc::clone(&source)))),
             source: Some(Arc::clone(&source)),
             ..CheckFileFacts::default()
         });
     }
-    if !requires_parse(plan, path, playwright) {
+    if !requires_parse(root, plan, path, playwright) {
         return Some(CheckFileFacts::default());
     }
     let legacy_symbols = plan
@@ -101,7 +102,7 @@ fn collect_file_facts_from_source(
                    parse_error: Option<String>,
                    fatal_parse_error: bool| {
         if let Some(parse_error) = parse_error {
-            let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
+            let stored_source = should_store_source(plan, path).then(|| Arc::clone(&source));
             let mut ts = super::file_parse_error::ts_facts(
                 plan,
                 stored_source.clone(),
@@ -127,8 +128,15 @@ fn collect_file_facts_from_source(
                     )
                 });
             let embedded_sql =
-                program::prepared_embedded_sql(root, path, parsed_source, program, plan);
+                embedded_sql::prepared_embedded_sql(root, path, parsed_source, program, plan);
             return CheckFileFacts {
+                sql_identifier_syntax: sql_identifier::invalid(
+                    root,
+                    path,
+                    parsed_source,
+                    program,
+                    plan,
+                ),
                 ts: Arc::new(ts),
                 source: stored_source,
                 symbols,
@@ -150,7 +158,7 @@ fn collect_file_facts_from_source(
             playwright,
             parsed_source,
             program,
-            should_store_source(plan).then(|| Arc::clone(&source)),
+            should_store_source(plan, path).then(|| Arc::clone(&source)),
         )
     };
     let collected = if legacy_symbols {
@@ -163,7 +171,7 @@ fn collect_file_facts_from_source(
     let facts = match collected {
         Ok(facts) => Some(facts),
         Err(error) => {
-            let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
+            let stored_source = should_store_source(plan, path).then(|| Arc::clone(&source));
             let parse_error = if legacy_symbols {
                 error.to_string()
             } else {

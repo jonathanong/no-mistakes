@@ -1,0 +1,11 @@
+rules:
+  - rule: declared-payload-compatibility
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: ignore
+      contracts:
+        - name: nested-shape-with-missing-consumer
+          producer: {file: producer.json, pointer: /payload}
+          # Intentional missing reference: low ignore must keep this input error hard.
+          consumer: {file: absent-consumer.json, pointer: /payload}

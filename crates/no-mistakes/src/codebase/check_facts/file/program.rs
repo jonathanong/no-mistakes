@@ -1,7 +1,7 @@
+use super::super::file_playwright::collect_playwright_facts;
 use super::super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
-use super::plan::{ts_extract_context, ts_extract_plan};
+use super::plan::ts_extract_plan;
 use super::should_store_source;
-use crate::codebase::ts_source::facts;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -14,22 +14,57 @@ pub(crate) fn collect_file_facts_from_program(
     program: &oxc_ast::ast::Program<'_>,
     owned_source: Option<Arc<str>>,
 ) -> CheckFileFacts {
+    let embedded_sql = prepared_embedded_sql(root, path, source, program, plan);
+    let mut head_candidates = heads::candidates(plan, &embedded_sql);
+    let helpers = embedded_sql
+        .iter()
+        .any(|(profile, _)| !profile.sql_literal_helpers.is_empty());
+    if helpers {
+        head_candidates.extend(
+            embedded_sql
+                .iter()
+                .filter(|(profile, _)| !profile.sql_literal_helpers.is_empty())
+                .flat_map(|(_, file)| file.call_spans.iter().copied()),
+        );
+    }
+    let loop_heads = (plan.query_annotation
+        && !plan.query_annotation_heads
+        && heads::has_annotation_executors(plan, &embedded_sql))
+    .then(|| {
+        crate::codebase::postgres::query_annotation::heads::prepare_loop_heads(
+            program,
+            source,
+            !head_candidates.is_empty(),
+            helpers,
+        )
+    })
+    .flatten();
+    let mut ts_plan = ts_extract_plan(root, plan, path, playwright);
+    ts_plan.module_bindings |= !head_candidates.is_empty() || loop_heads.is_some();
     let stored_source =
-        owned_source.or_else(|| should_store_source(plan).then(|| Arc::<str>::from(source)));
-    let ts = facts::collect_file_facts_from_program(
-        path,
-        ts_extract_plan(plan, path, playwright),
-        &ts_extract_context(root, plan),
-        source,
-        program,
-        None,
-        stored_source.clone(),
-    );
-    let react = (plan.react || plan.graph.react).then(|| {
-        Arc::new(crate::react_traits::analyze::file::FileAnalysis {
-            components: Arc::clone(&ts.react_components),
-        })
-    });
+        owned_source.or_else(|| should_store_source(plan, path).then(|| Arc::<str>::from(source)));
+    let super::prepared_program::PreparedProgramFacts { ts, semantic } =
+        super::prepared_program::collect(
+            root,
+            path,
+            super::prepared_program::Demand {
+                request: plan,
+                ts: ts_plan,
+            },
+            playwright,
+            source,
+            program,
+            stored_source.clone(),
+        );
+
+    let react = ((plan.react
+        && crate::codebase::check_facts::family_scope::applies(&plan.react_paths, path))
+        || plan.graph.react)
+        .then(|| {
+            Arc::new(crate::react_traits::analyze::file::FileAnalysis {
+                components: Arc::clone(&ts.react_components),
+            })
+        });
     let react_usages = plan.react_usages.then(|| {
         crate::react_traits::pipeline::usages::collect_usage_file_facts(
             path,
@@ -38,16 +73,22 @@ pub(crate) fn collect_file_facts_from_program(
             plan.graph_context.visible_files.as_deref(),
         )
     });
-    let integration = plan
-        .integration
-        .then(|| crate::integration_tests::analysis::analyze_program(path, program, source));
+    let integration = (plan.integration
+        && crate::codebase::check_facts::family_scope::applies(&plan.integration_paths, path))
+    .then(|| crate::integration_tests::analysis::analyze_program(path, program, source));
     let integration_runner_config = plan
         .integration_runner_configs
         .as_ref()
         .and_then(|plan| plan.parse_program(path, program, source));
     let fused = super::program_walk::collect_fused_check_program(path, source, program, plan);
     let server_route_client_boundary = plan.server_route_client_boundary.then(|| {
-        crate::codebase::rules::server_route_client_boundary::extract_program(path, source, program)
+        if crate::codebase::check_facts::family_scope::applies(&plan.boundary_paths, path) {
+            crate::codebase::rules::server_route_client_boundary::extract_program(
+                path, source, program,
+            )
+        } else {
+            Default::default()
+        }
     });
     let playwright_fetch = playwright
         .filter(|plan| plan.contains_source(path))
@@ -73,9 +114,7 @@ pub(crate) fn collect_file_facts_from_program(
     let playwright_static_exports = playwright_fetch
         .as_ref()
         .map(|_| crate::playwright::selectors::collect_static_export_values(program));
-    let playwright =
-        super::super::file_playwright::collect_playwright_facts(path, program, source, playwright);
-    let embedded_sql = prepared_embedded_sql(root, path, source, program, plan);
+    let playwright = collect_playwright_facts(path, program, source, playwright, &semantic);
     let query_annotation = if plan.query_annotation {
         let options = plan.query_annotation_options.clone().unwrap_or_else(|| {
             embedded_sql
@@ -95,6 +134,26 @@ pub(crate) fn collect_file_facts_from_program(
     } else {
         Vec::new()
     };
+    let query_annotation_heads = (plan.query_annotation_heads
+        || !head_candidates.is_empty()
+        || loop_heads.is_some())
+    .then(|| {
+        Arc::new(
+            crate::codebase::postgres::query_annotation::heads::collect_prepared(
+                program,
+                &ts,
+                embedded_sql
+                    .iter()
+                    .flat_map(|(_, file)| file.call_spans.iter().copied()),
+                &head_candidates,
+                plan.query_annotation_heads,
+                helpers,
+                loop_heads,
+            ),
+        )
+    });
+    let sql_identifier_syntax =
+        super::sql_identifier::collect(root, path, source, program, &ts, plan);
     let symbols = ts.symbols.clone();
     CheckFileFacts {
         ts: ts.into(),
@@ -108,9 +167,12 @@ pub(crate) fn collect_file_facts_from_program(
         integration_runner_config,
         dynamic_imports: fused.dynamic_imports,
         nextjs_caching: fused.nextjs_caching,
+        nextjs_caching_low: fused.nextjs_caching_low,
         storybook: fused.storybook,
         embedded_sql,
         query_annotation,
+        query_annotation_heads,
+        sql_identifier_syntax,
         server_route_client_boundary,
         playwright,
         playwright_fetch,
@@ -124,61 +186,8 @@ pub(crate) fn collect_file_facts_from_program(
     }
 }
 
-pub(super) fn prepared_embedded_sql(
-    root: &Path,
-    path: &Path,
-    source: &str,
-    program: &oxc_ast::ast::Program<'_>,
-    plan: &CheckFactPlan,
-) -> Vec<(
-    crate::codebase::postgres::EmbeddedSqlOptions,
-    crate::codebase::postgres::EmbeddedSqlFileFacts,
-)> {
-    let mut profiles = plan.embedded_sql_options.clone();
-    if plan.embedded_sql && profiles.is_empty() {
-        profiles.push(crate::codebase::postgres::EmbeddedSqlOptions::default());
-    }
-    profiles.sort();
-    profiles.dedup();
-    let rel = crate::codebase::ts_source::relative_slash_path(root, path);
-    profiles
-        .into_iter()
-        .map(|options| {
-            let mut facts = crate::codebase::postgres::extract_embedded_sql_from_program(
-                path, program, source, &options,
-            );
-            assign_unproven_rules(
-                &mut facts,
-                plan.embedded_sql_rule_ids.get(&options).map(Vec::as_slice),
-                &rel,
-                source,
-            );
-            (options, facts)
-        })
-        .collect()
-}
-
-fn assign_unproven_rules(
-    facts: &mut crate::codebase::postgres::EmbeddedSqlFileFacts,
-    scans: Option<&[crate::codebase::postgres::EmbeddedSqlRuleScan]>,
-    rel: &str,
-    source: &str,
-) {
-    let Some(scans) = scans else {
-        crate::codebase::postgres::retain_unproven_spans(facts, source);
-        return;
-    };
-    let mut ids = Vec::new();
-    for scan in scans {
-        if scan.paths.includes(rel) && !ids.contains(&scan.rule_id) {
-            ids.push(scan.rule_id.clone());
-        }
-    }
-    if ids.is_empty() {
-        facts.unproven_member_query_spans.clear();
-        facts.record_unproven_spans = false;
-        return;
-    }
-    facts.postgres_rule_ids = ids;
-    crate::codebase::postgres::retain_unproven_spans(facts, source);
-}
+#[path = "program_embedded.rs"]
+mod embedded;
+pub(super) use embedded::prepared_embedded_sql;
+#[path = "program_heads.rs"]
+mod heads;

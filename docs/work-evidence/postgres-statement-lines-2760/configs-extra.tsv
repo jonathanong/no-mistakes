@@ -1,0 +1,15 @@
+fixtures/config/named-full-suite-triggers	.no-mistakes.yml
+fixtures/postgres-facts/source/ddl-compat/body-recovery	report.yml
+fixtures/rules/postgres-migration-statement-lines	.no-mistakes.yml
+test-cases/rules/postgres-ddl-unanalyzable/fixture/body-only	default.yml
+test-cases/rules/postgres-ddl-unanalyzable/fixture/body-policy	advise.yml
+test-cases/rules/postgres-ddl-unanalyzable/fixture/body-policy	default.yml
+test-cases/rules/postgres-ddl-unanalyzable/fixture/body-policy	global-alias-report.yml
+test-cases/rules/postgres-ddl-unanalyzable/fixture/body-policy	ignore.yml
+test-cases/rules/postgres-ddl-unanalyzable/fixture/body-policy	override.yml
+test-cases/rules/postgres-ddl-unanalyzable/fixture/body-policy	report.yml
+test-cases/rules/postgres-ddl-unanalyzable/fixture/body-policy	rule-advise.yml
+test-cases/rules/postgres-ddl-unanalyzable/fixture/body-policy	rule-ignore.yml
+test-cases/rules/postgres-ddl-unanalyzable/fixture/body-suppress	default.yml
+test-cases/rules/postgres-ddl-unanalyzable/fixture/body-wrapper	default.yml
+test-cases/rules/postgres-fk-index/fixture/statement-spans	.no-mistakes.yml

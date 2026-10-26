@@ -30,10 +30,12 @@ fn error_from(config: &crate::config::v2::NoMistakesConfig) -> anyhow::Error {
         prepared_graph: None,
         dependency_graph: Some(&graph),
         inferred_roots: None,
+        sources: None,
         prepared_vitest_projects: None,
         prepared_playwright_projects: None,
     })
-    .unwrap_err()
+    .err()
+    .expect("invalid graph rule must fail")
 }
 
 #[test]
@@ -62,6 +64,7 @@ fn panic_without_graph(rule: &str) {
         prepared_graph: None,
         dependency_graph: None,
         inferred_roots: None,
+        sources: None,
         prepared_vitest_projects: None,
         prepared_playwright_projects: None,
     });

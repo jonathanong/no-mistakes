@@ -1,0 +1,9 @@
+# Option entries below keep their own lines; the stale entry is not line 1.
+rules:
+  - rule: postgres-generated-column-predicates
+    scope: repository
+    options:
+      sqlInclude: ["**/*.sql"]
+      executorNames: []
+      extraGeneratedColumns:
+        - {table: orders, column: created_at, sourceColumn: id}

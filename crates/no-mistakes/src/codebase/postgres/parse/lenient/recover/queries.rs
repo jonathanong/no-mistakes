@@ -8,6 +8,7 @@ use sqlparser::tokenizer::{Token, TokenWithSpan, Word};
 pub(super) fn recover(
     tokens: &[Token],
     original: Option<&[TokenWithSpan]>,
+    procedural_body: bool,
 ) -> Vec<(Statement, bool)> {
     let mut at = next(tokens, 0);
     let begin = tokens
@@ -21,24 +22,57 @@ pub(super) fn recover(
         .get(at)
         .is_some_and(|token| word(token, "IF") || word(token, "ELSIF"));
     if guarded {
-        let Some(then) = condition_end(tokens, at + 1) else {
+        let Some(then) = control_end(tokens, at + 1, "THEN") else {
             return result;
         };
         if let Some(condition) = select(
             &tokens[at + 1..then],
             original.map(|tokens| &tokens[at + 1..then]),
             true,
+            procedural_body,
         ) {
             result.push((condition, true));
         }
         at = next(tokens, then + 1);
+    }
+    let mut looped = false;
+    if procedural_body {
+        let end = if tokens.get(at).is_some_and(|token| word(token, "LOOP")) {
+            Some(at)
+        } else if tokens.get(at).is_some_and(|token| {
+            ["FOR", "WHILE", "FOREACH"]
+                .iter()
+                .any(|name| word(token, name))
+        }) {
+            control_end(tokens, at + 1, "LOOP")
+        } else {
+            None
+        };
+        if let Some(end) = end {
+            let located = original.map_or_else(
+                || {
+                    std::borrow::Cow::Owned(
+                        tokens
+                            .iter()
+                            .cloned()
+                            .map(TokenWithSpan::wrap)
+                            .collect::<Vec<_>>(),
+                    )
+                },
+                std::borrow::Cow::Borrowed,
+            );
+            if super::procedural::BodyState::default().control_chunk(&located) {
+                at = next(tokens, end + 1);
+                looped = true;
+            }
+        }
     }
     let Some(first) = tokens.get(at) else {
         return result;
     };
     let mut replace = word(first, "PERFORM") || word(first, "RETURN");
     let query = word(first, "SELECT") || word(first, "WITH");
-    if !(replace || query && (begin || guarded)) {
+    if !(replace || query && (begin || guarded || looped)) {
         return result;
     }
     let mut start = if replace { next(tokens, at + 1) } else { at };
@@ -50,16 +84,38 @@ pub(super) fn recover(
         &tokens[start..],
         original.map(|tokens| &tokens[start..]),
         replace,
+        procedural_body,
     ) {
         result.push((statement, replace));
     }
     result
 }
 
+/// The action following a procedural IF/ELSIF guard, if it shares this semicolon chunk.
+pub(super) fn guarded_action_start(tokens: &[Token]) -> Option<usize> {
+    let mut at = next(tokens, 0);
+    if tokens
+        .get(at)
+        .is_some_and(|token| word(token, "BEGIN") || word(token, "ELSE"))
+    {
+        at = next(tokens, at + 1);
+    }
+    if !tokens
+        .get(at)
+        .is_some_and(|token| word(token, "IF") || word(token, "ELSIF"))
+    {
+        return None;
+    }
+    let then = control_end(tokens, at + 1, "THEN")?;
+    let action = next(tokens, then + 1);
+    (action < tokens.len()).then_some(action)
+}
+
 fn select(
     tokens: &[Token],
     original: Option<&[TokenWithSpan]>,
     prepend: bool,
+    procedural_body: bool,
 ) -> Option<Statement> {
     let dialect = PostgreSqlDialect {};
     let mut located = original.map_or_else(
@@ -75,10 +131,13 @@ fn select(
         let span = located.first()?.span;
         located.insert(0, TokenWithSpan::new(token, span));
     }
-    Parser::new(&dialect)
-        .with_tokens_with_locations(located)
-        .parse_statement()
-        .ok()
+    super::query_locks::rewrite_located(&mut located);
+    if procedural_body && !super::select_into::normalize(&mut located) {
+        return None;
+    }
+    let mut parser = Parser::new(&dialect).with_tokens_with_locations(located);
+    let statement = parser.parse_statement().ok()?;
+    matches!(parser.peek_token().token, Token::EOF).then_some(statement)
 }
 
 fn next(tokens: &[Token], at: usize) -> usize {
@@ -90,7 +149,7 @@ fn next(tokens: &[Token], at: usize) -> usize {
         .map_or(tokens.len(), |(at, _)| at)
 }
 
-fn condition_end(tokens: &[Token], start: usize) -> Option<usize> {
+fn control_end(tokens: &[Token], start: usize, expected: &str) -> Option<usize> {
     let mut depth = 0usize;
     let mut cases = 0usize;
     for (at, token) in tokens.iter().enumerate().skip(start) {
@@ -105,7 +164,7 @@ fn condition_end(tokens: &[Token], start: usize) -> Option<usize> {
         if word(token, "END") {
             cases = cases.saturating_sub(1);
         }
-        if depth == 0 && cases == 0 && word(token, "THEN") {
+        if depth == 0 && cases == 0 && word(token, expected) {
             return Some(at);
         }
     }
@@ -118,3 +177,7 @@ fn word(token: &Token, name: &str) -> bool {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+#[path = "queries/action_tests.rs"]
+mod action_tests;

@@ -1,16 +1,15 @@
-use super::super::bindings::sql_statement_type_bindings;
+mod collected;
 use super::super::helpers;
-use super::super::options::EmbeddedSqlOptions;
 use super::super::relative::{PendingRelativeCall, PendingRelativeSpan};
 use super::super::scoped_bindings::ScopedExecutors;
 use super::executors::MemberQueryProof;
-use super::imported;
 use super::resolve;
 use crate::codebase::postgres::embedded::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
-use oxc_ast::ast::Program;
-use oxc_ast_visit::Visit;
 use std::collections::{BTreeMap, HashMap, HashSet};
+mod collect;
+use collected::CollectedCalls;
 mod fragment;
+pub(crate) use collect::collect_calls;
 #[derive(Clone)]
 pub(crate) struct BindingState {
     pub(super) builder_identity: Option<u32>,
@@ -28,6 +27,7 @@ pub(crate) struct BindingState {
 }
 
 pub(crate) struct ScopeVisitor<'a> {
+    pub(crate) head_calls_only: bool,
     pub(crate) source: &'a str,
     pub(crate) configured_module: String,
     pub(crate) query_members: bool,
@@ -36,6 +36,10 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(in crate::codebase::postgres::embedded) scoped: &'a ScopedExecutors,
     pub(crate) provisional: &'a [PendingRelativeSpan],
     pub(crate) scopes: Vec<HashMap<String, BindingState>>,
+    pub(super) undeclared_scopes:
+        Vec<HashMap<String, super::super::scoped_bindings::UndeclaredReceiverTypes>>,
+    pub(super) undeclared_executor_types: Vec<super::super::UndeclaredExecutorType>,
+    pub(super) executor_methods: Vec<String>,
     pub(crate) relative_proofs: Vec<HashMap<String, u32>>,
     pub(crate) namespace_proofs: Vec<HashSet<String>>,
     pub(crate) imported_namespace_names: HashMap<String, String>,
@@ -53,6 +57,8 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) call_spans: Vec<(u32, u32)>,
     /// Local names bound by value imports; a call to one is an imported helper.
     pub(crate) imported_names: crate::fx::FxHashSet<String>,
+    /// Runtime namespace imports, independent of configured executor modules.
+    pub(super) constant_namespaces: crate::fx::FxHashSet<String>,
     /// The `const` initializer being walked, when it is a recognized IIFE.
     pub(super) iife: Option<super::iife::Iife>,
     pub(crate) imported_sites: std::cell::RefCell<helpers::Sites>,
@@ -66,6 +72,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) fragment_variants: Vec<Vec<super::super::EmbeddedSqlVariant>>,
     pub(crate) suppress_nested_builder_fragments: usize,
     pub(crate) variant_paths: Vec<Vec<(u64, u32)>>,
+    pub(super) append_decision_offs: std::cell::RefCell<crate::fx::FxHashMap<u64, (u32, u32)>>,
     pub(super) variant_guard_owner: Option<usize>,
     pub(crate) control_depth: usize,
     pub(crate) loop_depth: usize,
@@ -78,123 +85,4 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(super) clause_unions: crate::fx::FxHashSet<(usize, String)>,
     pub(crate) exported_constants:
         crate::fx::FxHashMap<String, super::super::helpers::ExportedConstant>,
-}
-pub(crate) struct CollectedCalls {
-    pub(crate) calls: Vec<EmbeddedSqlCall>,
-    pub(crate) call_spans: Vec<(u32, u32)>,
-    pub(crate) exported_helpers: crate::fx::FxHashMap<String, helpers::HelperSummary>,
-    pub(crate) exported_programs:
-        crate::fx::FxHashMap<String, std::sync::Arc<helpers::program::Program>>,
-    pub(crate) exported_constants: crate::fx::FxHashMap<String, helpers::ExportedConstant>,
-    pub(crate) pending_imported: Vec<helpers::PendingImportedSql>,
-    pub(crate) pending_spans: BTreeMap<u32, (u32, u32)>,
-    pub(crate) fragments: Vec<EmbeddedSqlFragment>,
-    pub(crate) fragment_sites: Vec<Option<u32>>,
-    pub(crate) fragment_variants: Vec<Vec<super::super::EmbeddedSqlVariant>>,
-    pub(crate) pending_calls: Vec<PendingRelativeCall>,
-    pub(crate) diagnostic_member_sequences: Vec<u32>,
-    pub(crate) confirmed_order: Vec<u32>,
-    pub(crate) unproven_member_query_spans: Vec<(u32, u32)>,
-}
-
-pub(crate) fn collect_calls<'a>(
-    program: &Program<'a>,
-    source: &'a str,
-    bindings: &'a HashSet<String>,
-    scoped: &'a ScopedExecutors,
-    provisional: &'a [PendingRelativeSpan],
-    options: &EmbeddedSqlOptions,
-) -> CollectedCalls {
-    let track_order = !provisional.is_empty();
-    let imported_namespace_names =
-        super::namespace_imports::configured_namespaces(program, options);
-    let imported_value_origins =
-        super::namespace_imports::configured_values(program, options, bindings);
-    let mut visitor = ScopeVisitor {
-        source,
-        configured_module: options.import_specifier.clone(),
-        query_members: !options.import_specifier.is_empty()
-            || options.executor_names.iter().any(|name| name == "query"),
-        query_binding: options.executor_names.is_empty()
-            || options.executor_names.iter().any(|name| name == "query"),
-        bindings,
-        scoped,
-        provisional,
-        scopes: Vec::new(),
-        relative_proofs: Vec::new(),
-        namespace_proofs: Vec::new(),
-        imported_namespace_names,
-        imported_value_origins,
-        member_query_proof: MemberQueryProof::default(),
-        builder_aliases: crate::fx::FxHashMap::default(),
-        argument_effects: Vec::new(),
-        argument_frames: 0,
-        builder_reference_exemptions: Vec::new(),
-        consumed_links: Default::default(),
-        statement_calls: Default::default(),
-        calls: Vec::new(),
-        call_spans: Vec::new(),
-        imported_names: imported::value_import_names(program),
-        iife: None,
-        imported_sites: Default::default(),
-        pending_spans: BTreeMap::new(),
-        pending_calls: Vec::new(),
-        confirmed_order: Vec::new(),
-        next_seq: 0,
-        track_order,
-        fragments: Vec::new(),
-        fragment_variants: Vec::new(),
-        fragment_sites: Vec::new(),
-        suppress_nested_builder_fragments: 0,
-        variant_paths: vec![Vec::new()],
-        variant_guard_owner: None,
-        control_depth: 0,
-        loop_depth: 0,
-        function_scopes: Vec::new(),
-        functions: resolve::LocalFunctions::collect(program, source, &options.trusted_sql_tags),
-        sql_statement_types: sql_statement_type_bindings(program),
-        unproven_member_query_spans: Vec::new(),
-        literal_objects: super::const_literals::LiteralObjects::default(),
-        declaring_const: false,
-        clause_unions: crate::fx::fx_set(),
-        exported_constants: Default::default(),
-    };
-    visitor.visit_program(program);
-    visitor.downgrade_escaped_member_calls();
-    visitor.finish_const_splices();
-    let sites = std::mem::take(&mut *visitor.imported_sites.borrow_mut()).into_list();
-    let pending_imported = helpers::finalize::finalize(
-        helpers::finalize::Walked {
-            calls: &mut visitor.calls,
-            call_spans: &visitor.call_spans,
-            pending_calls: &mut visitor.pending_calls,
-            pending_spans: &visitor.pending_spans,
-            fragments: &mut visitor.fragments,
-            fragment_variants: &mut visitor.fragment_variants,
-        },
-        &sites,
-    );
-    let diagnostic_member_sequences = visitor
-        .member_query_proof
-        .calls
-        .iter()
-        .filter(|call| call.sql_looking && visitor.pending_spans.contains_key(&call.sequence))
-        .map(|call| call.sequence)
-        .collect();
-    CollectedCalls {
-        calls: visitor.calls,
-        call_spans: visitor.call_spans,
-        exported_helpers: visitor.functions.exported_helpers(),
-        exported_programs: visitor.functions.take_programs(),
-        exported_constants: visitor.exported_constants,
-        pending_imported,
-        pending_spans: visitor.pending_spans,
-        fragments: visitor.fragments,
-        fragment_variants: visitor.fragment_variants,
-        fragment_sites: visitor.fragment_sites,
-        pending_calls: visitor.pending_calls,
-        diagnostic_member_sequences,
-        confirmed_order: visitor.confirmed_order,
-        unproven_member_query_spans: visitor.unproven_member_query_spans,
-    }
 }

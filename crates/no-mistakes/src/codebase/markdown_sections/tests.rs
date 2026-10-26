@@ -114,9 +114,27 @@ fn atx_required_heading_ignores_fenced_and_indented_examples() {
 }
 
 #[test]
-fn atx_heading_spec_requires_space_and_valid_level() {
+fn invalid_atx_documents_do_not_provide_headings() {
     assert!(!has_required_heading("#Perf\n", "#Perf"));
     assert!(!has_required_heading("####### Deep\n", "####### Deep"));
     assert!(has_required_heading("##\n", "##"));
     assert!(has_required_heading("##\tPerf\n", "##\tPerf"));
+}
+
+#[test]
+fn non_atx_required_headings_keep_legacy_bare_name_matching() {
+    let content = include_str!(
+        "../../../../../test-cases/rules/doc-consistency/fixture/heading-levels/exact.md"
+    );
+    for required in [
+        "Related issues",
+        "#Related issues",
+        "####### Related issues",
+        "#######Related issues",
+    ] {
+        assert!(has_required_heading(content, required), "{required}");
+    }
+    // A valid ATX specification still retains its exact-level requirement.
+    assert!(!has_required_heading(content, "# Related issues"));
+    assert!(has_required_heading(content, "## Related issues"));
 }

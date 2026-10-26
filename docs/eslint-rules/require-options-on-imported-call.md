@@ -73,7 +73,14 @@ client.chat.responses.create({ signal });
     pattern. `*` is one segment, `**` is any prefix (`**.responses` also
     matches `responses`), and `/regex/` is tested against the dotted path
     without added anchors. `client.responses.create` matches `*.responses`;
-    `client.chat.responses.create` does not.
+    `client.chat.responses.create` does not. Glob matching preserves property
+    boundaries: `client["foo.responses"]` and `client["foo/responses"]` do not
+    match `client.foo.responses`. Literal slash and percent bytes in a pattern
+    remain literal, so `client.foo/responses` matches the single slash-containing
+    property. Percent-encoded-looking keys keep their literal text.
+    Regex selectors retain joined dotted text: a literal dotted key can have
+    the same regex input as nested properties. Use a glob when those boundaries
+    must remain distinct.
   A target that sets both `globalNamePatterns` and `receiverPatterns`, omits
   its kind, or uses a slash-wrapped pattern that does not compile (`/[/`,
   `/(/`, `/*/`) fails at config load in ESLint and Oxlint. It does not load
@@ -115,25 +122,39 @@ explicit key after a spread overwrites the earlier definition. Dynamic
 computed keys are ignored. This is the same property check for imported,
 global, and receiver targets.
 
-Optional calls (`createResponse?.()` and `client.responses?.create()`) are
+A string or expression-free template member, an optional call, a comma callee,
+and `.call` or a literal-array `.apply` are the same call. `.call` and
+`.apply` shift the options argument. Optional calls (`createResponse?.()` and
+`client.responses?.create()`) are
 still calls. A missing argument, a non-object argument, a spread argument,
 and a spread-only object all fail. Unknown identifiers, calls, and parameters
 stay accepted even if they might be undefined at runtime.
 
-Global and receiver selectors do not follow `const alias = createResponse` or
-`const responses = client.responses`. They do follow a stable `const`, `let`,
-or `var` object destructure with one initialization and no later writes:
-`const { createResponse: respond } = globalThis` and
-`const { create: make } = client.responses`, including a defaulted binding.
-Reassigned bindings, dynamic computed destructure keys, nested patterns, and
-receiver aliases are not reported. A literal computed key is static, so
-`const { ["createResponse"]: respond } = globalThis` is followed. A local
-binding, parameter, catch clause, class, or function with the global's name
-shadows it, and so does a value import. A
-type-only import does not. Ambient declarations do not count as shadowing.
-Receiver shape is the static spelling, so a local named `client` still matches
-`client.responses`. Dynamic members, call receivers, private names, and
-`globalThis[name]()` stay unreported.
+A comma callee such as `(0, createResponse)()` is the same call. Global and
+receiver selectors follow same-file immutable `const` aliases, including
+`const alias = createResponse`, `const send = client.responses.create`, and
+`const responses = client.responses`. Object destructuring through those aliases
+also preserves the selected static path. A directly configured receiver path
+keeps its lexical meaning even when its root has an opaque initializer.
+
+They also follow a stable `const`, `let`, or `var` direct object destructure with
+one initialization and no later writes: `const { createResponse: respond } =
+globalThis` and `const { create: make } = client.responses`. Property defaults,
+reassigned bindings, dynamic computed destructure keys, and nested patterns are
+not followed. For example, with `const client = { responses: {} }`,
+`const { create: make = fallback } = client.responses; make(input)` invokes
+`fallback`, rather than the selected method. A literal computed key is
+static, so `const { ["createResponse"]: respond } = globalThis` is followed.
+A local binding, parameter, catch clause, class, or function with the global's
+name shadows it, and so does a value import. A type-only import does not.
+Ambient declarations do not count as shadowing. Receiver shape is the static
+spelling, so a local named `client` still matches `client.responses`, including
+an alias of that explicitly selected path. Dynamic members, call receivers,
+private names, and `globalThis[name]()` stay unreported. Cross-file aliases such
+as `import { make } from "./barrel.mjs"; make(input)` are not inferred, even if
+the other file re-exports the global or selected receiver method. A parameter
+default such as `function run({ createResponse } = globalThis)` is not inferred,
+because the caller can pass another object.
 
 Default imports match the local binding name, including
 `import { default as local }`. Object destructure from a tracked namespace
@@ -141,8 +162,10 @@ import or CommonJS namespace binding is followed when the property name is
 statically visible. CommonJS provenance supports `const`, `let`,
 and `var` bindings only when their binding has one initialization and no later
 writes. Parameter, catch, or function-name bindings that share a `var` name
-are treated as unstable. The rule does not follow `const alias = imported` or
-injected members such as `deps.validateUrl()`. Computed CommonJS members and
+are treated as unstable. A single `const alias = imported` is the same callee.
+Injected members such as `deps.validateUrl()` are not. A default import is the
+module object, so `import guard from "ssrf-guard/node"; guard.validateUrl(url)`
+matches `validateUrl`. Computed CommonJS members and
 destructuring keys must be string literals or expression-free template literals;
 numeric keys are not coerced into export names. Top-level script `var`
 bindings mutated through `globalThis` are unsupported.
@@ -164,6 +187,15 @@ properties, `propertyMatch`, `optionsPosition`, or message differ.
 Pass an object literal at the configured argument position that includes the
 required property names with values that are not definitely `undefined`.
 Spreads do not count as known keys.
+
+## Limits
+
+A receiver method named `call` or `apply`, such as `client.apply(input)`, is that method. Forwarding stops at the first configured target, including a method named `call`
+or `apply` reached after another forwarding step. Unmatched nested intrinsic
+forwarding uses its explicit receiver, so `createResponse.call.call(other, null, input)`
+invokes `other(input)` rather than `createResponse(input)`. An `.apply` call with a spread argument is not rewritten, because the literal array may not be the runtime argument list.
+
+Another file's re-export is not visible here. `import { check } from "./barrel.mjs"; check(url)` stays unreported when `barrel.mjs` is `export { validateUrl as check } from "ssrf-guard/node"` or `export * from "ssrf-guard/node"`. A parameter default such as `function run({ validateUrl } = guard)` is not judged, because the caller can pass a different object. `const check = (0, validateUrl)` is still `validateUrl`. `const check = validateUrl<string>` is still `validateUrl`. `import * as guard from "ssrf-guard/node"; const api = guard; api.validateUrl(url)` is still `validateUrl`.
 
 ## Suppression
 

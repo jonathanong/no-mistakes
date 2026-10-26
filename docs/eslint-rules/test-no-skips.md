@@ -18,9 +18,19 @@ and `describe` globals in files selected by ESLint. Member chains
 such as `test.skip.each(cases)(...)`, `test.concurrent.only(...)`, and
 `test.only.for(cases)(...)` are checked, as are Playwright forms such as
 `test.describe.fixme(...)`. In Vitest callbacks, a call to the actual callback
-context's `skip()` is also reported. A `.each` callback receives row data,
+context's `skip()` is also reported, including a top-level destructured `skip`
+binding (with a rename or default) and a stable local `const` captured or
+destructured from the callback context. A `.each` callback receives row data,
 while `.for` receives its test context as the second callback parameter; only
 the latter is treated as a context `skip()`.
+
+```ts
+import { test } from "vitest";
+
+test("hidden", ({ skip: omit }) => omit()); // reported
+test("also hidden", (ctx) => { const omit = ctx.skip; omit(); }); // reported
+test.each([{ skip() {} }])("row data", ({ skip }) => skip()); // allowed
+```
 
 For Playwright, the rule also reports statically visible `skip` and `fixme`
 `annotation` values in test and suite declaration details. It follows same-file
@@ -100,7 +110,8 @@ browser.skip("same-file fixture skip", async () => {});
 The rule follows call identity and syntax rather than property spelling. Data
 fields such as `options.skip`, ordinary object methods, and names such as
 `skipIfDeleted()` are allowed. A function's unrelated `skip()` method is also
-allowed; Vitest's bound callback context `context.skip()` is not.
+allowed; Vitest's bound callback context `context.skip()` and its bound local
+aliases are not. Reassigned context or `skip` bindings remain unresolved.
 
 ```ts
 const options = { skip: "explain a skipped result" };
@@ -179,6 +190,37 @@ environment and fail setup clearly when required credentials are missing.
 Replace timer-based waits with an explicit completion signal or test fixture
 barrier. For a known defect, keep an ordinary failing test that records the
 behavior to restore; use `todo` only when the team has explicitly allowed it.
+
+A same-file default import of `@playwright/test` is `test`. A string or expression-free template member, and `const { test } = namespace`, are the same binding. Vitest's default import is not a runner. Another file's re-export is not visible here: `import { check } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { test as check } from "vitest"` or `export * from "vitest"`. A parameter default such as `function run({ test } = vitest)` is not judged, because the caller can pass a different object.
+
+## Immutable computed keys
+
+A computed key can follow a same-file `const` initialized by a string literal,
+an expression-free template, or another such `const`. Resolution uses the actual
+lexical binding, including shadowing, and applies through recognized runner aliases,
+computed API chains and `test.extend(...)` results:
+
+```ts
+import { test } from "vitest";
+const modifier = "skip";
+const check = test.extend({});
+check[modifier]("hidden", () => {}); // reported
+```
+
+Imported keys, parameters, `let`/`var`, destructured bindings, reassigned bindings, cycles,
+and runtime expressions remain unresolved. For example, `test[key](...)` inside
+`function run(key) { ... }` does not use an outer `const key = "skip"`.
+
+## Limits
+
+Another file's re-export is not visible here.
+
+```ts
+import { check } from "./barrel.mjs";
+check.skip("hidden", () => {});
+```
+
+`barrel.mjs` may be `export { test as check } from "vitest"` or `export * from "@playwright/test"`. A parameter default such as `function run({ test } = vitest)` is not judged, because the caller can pass a different object.
 
 ## Suppression
 

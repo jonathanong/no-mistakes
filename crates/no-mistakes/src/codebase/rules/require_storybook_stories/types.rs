@@ -4,6 +4,18 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
+pub(super) struct RuleCheck<'a> {
+    pub(super) root: &'a std::path::Path,
+    pub(super) project_root: &'a std::path::Path,
+    pub(super) config: &'a crate::config::v2::schema::NoMistakesConfig,
+    pub(super) rule: &'a crate::config::v2::schema::RuleDef,
+    pub(super) shared: &'a crate::codebase::check_facts::CheckFactMap,
+    pub(super) resolver: &'a dyn crate::codebase::ts_resolver::ImportResolution,
+    pub(super) inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    pub(super) defer_suppression: bool,
+    pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
+}
+
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub(super) struct Options {

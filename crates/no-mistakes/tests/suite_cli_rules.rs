@@ -1,5 +1,8 @@
 //! Cli rules integration tests, linked in one harness.
 
+#[path = "cli_shellcheck_policy.rs"]
+mod cli_shellcheck_policy;
+
 // Share stateless fixture helpers across the modules in this harness.
 #[path = "common/git_tracked_rule.rs"]
 mod git_tracked_rule;
@@ -7,6 +10,9 @@ mod git_tracked_rule;
 mod gitignore_fixture;
 #[path = "common/saved_fixture.rs"]
 mod saved_fixture;
+
+#[path = "cli_checkout_credentials.rs"]
+mod cli_checkout_credentials;
 
 #[path = "cli_check_banned_paths.rs"]
 mod cli_check_banned_paths;
@@ -18,6 +24,8 @@ mod cli_check_declared_payload;
 mod cli_check_finite_set;
 #[path = "cli_check_mermaid.rs"]
 mod cli_check_mermaid;
+#[path = "cli_check_redirect_delegation.rs"]
+mod cli_check_redirect_delegation;
 #[path = "cli_check_repository_inventory.rs"]
 mod cli_check_repository_inventory;
 #[path = "cli_check_rules.rs"]
@@ -78,3 +86,29 @@ mod cli_check_rules_unconstructed_error_class;
 mod cli_check_rules_version_pin;
 #[path = "cli_check_rules_workflow_topology.rs"]
 mod cli_check_rules_workflow_topology;
+
+#[path = "cli_check_git_identity_prefixes.rs"]
+mod cli_check_git_identity_prefixes;
+
+#[path = "cli_check_storybook_effort.rs"]
+mod cli_check_storybook_effort;
+
+#[path = "cli_check_version_pin_policy.rs"]
+mod cli_check_version_pin_policy;
+#[path = "cli_check_workflow_unreadable_policy.rs"]
+mod cli_check_workflow_unreadable_policy;
+
+#[path = "cli_check_file_input_analysis.rs"]
+mod cli_check_file_input_analysis;
+
+#[path = "cli_check_constructor_resolution.rs"]
+mod cli_check_constructor_resolution;
+
+#[path = "cli_check_playwright_patterns.rs"]
+mod cli_check_playwright_patterns;
+
+#[path = "cli_check_playwright_runner_warnings.rs"]
+mod cli_check_playwright_runner_warnings;
+
+#[path = "cli_manifest_unanalyzable.rs"]
+mod cli_manifest_unanalyzable;

@@ -1,0 +1,7 @@
+effort: low
+rules:
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      executorNames: [query]
+      include: [src/loose.ts]

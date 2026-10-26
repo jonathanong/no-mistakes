@@ -1,0 +1,6 @@
+on: push
+permissions: { future: write }
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4

@@ -7,6 +7,7 @@
 
 use super::locate::{Located, Locator};
 use super::CheckFileFacts;
+use crate::codebase::dependencies::extract::ImportedBindingKind;
 use crate::codebase::postgres::{
     run_helper_program, Callee, Callees, EmbeddedSqlOptions, HelperProgram, ImportedSite, Outcome,
     RecoveredSql, Ret, SiteArg, MAX_CALL_DEPTH,
@@ -34,8 +35,13 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
         }
     }
 
-    /// The module and local name that declare helper `name` as seen from `from`.
-    pub(super) fn find(&mut self, from: &Path, name: &str) -> Option<(PathBuf, String)> {
+    /// Declaring module and local name for a helper or selected namespace constant.
+    pub(super) fn find(
+        &mut self,
+        from: &Path,
+        name: &str,
+        member: Option<&str>,
+    ) -> Option<(PathBuf, String)> {
         let file = self.files.get(from)?;
         let import = file
             .ts
@@ -45,8 +51,13 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
         let Some(import) = import else {
             return Some((from.to_path_buf(), name.to_string()));
         };
+        let exported = match member {
+            Some(member) if import.kind == ImportedBindingKind::Namespace => member,
+            Some(_) => return None,
+            None => &import.imported,
+        };
         let target = self.locator.target(&import.specifier, from)?;
-        match self.locator.locate(&target, &import.imported) {
+        match self.locator.locate(&target, exported) {
             Located::Found(origin, local) => Some((origin, local)),
             _ => None,
         }
@@ -60,7 +71,7 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
         from: &Path,
         site: &ImportedSite,
     ) -> Option<RecoveredSql> {
-        let (origin, local) = self.find(from, &site.local)?;
+        let (origin, local) = self.find(from, &site.local, None)?;
         if origin == from {
             return None;
         }
@@ -84,9 +95,8 @@ impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
         from: &Path,
         site: &ImportedSite,
     ) -> Option<Vec<RecoveredSql>> {
-        if let Some(allow_fragment) = site.constant {
-            return super::constants::recovered(self, options, from, site, allow_fragment)
-                .map(|text| vec![text]);
+        if site.constant.is_some() {
+            return super::constants::recovered(self, options, from, site).map(|text| vec![text]);
         }
         if let Some(text) = self.summary_text(options, from, site) {
             return Some(vec![text]);
@@ -157,7 +167,7 @@ impl<R: FnMut(&str, &Path) -> Option<PathBuf>> Callees for Frame<'_, '_, '_, R> 
         if self.depth >= MAX_CALL_DEPTH {
             return Callee::Failed;
         }
-        let Some((origin, local)) = self.shared.find(&self.file, name) else {
+        let Some((origin, local)) = self.shared.find(&self.file, name, None) else {
             return Callee::Unresolved;
         };
         if self

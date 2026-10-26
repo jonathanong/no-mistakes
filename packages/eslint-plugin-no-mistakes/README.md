@@ -9,6 +9,22 @@ callers, fetches, or selectors behind aliases and dynamic values. See
 npm install --save-dev eslint-plugin-no-mistakes
 ```
 
+For `async-call-disposition` to inspect imported callback implementations when
+the linter does not provide a TypeScript program (including Oxlint's
+`--type-aware` mode), also install `typescript` and
+`@typescript-eslint/parser` in your project:
+
+```sh
+npm install --save-dev typescript @typescript-eslint/parser
+```
+
+These are optional peer dependencies. This fallback requires TypeScript 5 or
+later for Bundler module resolution. With older TypeScript or missing or
+incompatible tooling, calls that rely on this cross-file proof are reported as
+unproven. Same-file proofs and explicitly configured awaiting-consumer
+contracts continue to work. When ESLint provides a typed TypeScript program,
+the rule continues to use that program for its typed proof.
+
 Configure the plugin in a flat config and scope rules with `files` globs. For
 example, this checks test files for skipped or exclusive tests while allowing
 `todo`:
@@ -57,3 +73,8 @@ See [options and examples](../../docs/eslint-rules/postgres-no-async-sql-builder
 `require-options-on-imported-call` requires a static options object on configured
 imports, globals with no local binding, and terminal methods with a matching receiver shape.
 See [options and examples](../../docs/eslint-rules/require-options-on-imported-call.md).
+
+`restricted-api-usage` is an opt-in import/export-name and call-name policy.
+See [options and examples](../../docs/eslint-rules/restricted-api-usage.md).
+
+Opt-in client contracts: [`no-consecutive-unbatched-reads`](../../docs/eslint-rules/no-consecutive-unbatched-reads.md) configures adjacent awaited read batching; [`require-top-level-registration`](../../docs/eslint-rules/require-top-level-registration.md) configures owner-module lifecycle registration. Both support ESLint/Oxlint and have no product defaults.

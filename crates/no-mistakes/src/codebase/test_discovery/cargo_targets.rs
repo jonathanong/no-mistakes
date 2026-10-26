@@ -113,6 +113,7 @@ impl CargoTargets {
                     include,
                     exclude: Vec::new(),
                     declared_deadlines: Default::default(),
+                    matcher_warnings: Vec::new(),
                     vitest_setup: Vec::new(),
                 }
             })

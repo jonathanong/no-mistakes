@@ -1,0 +1,7 @@
+rules:
+  - rule: require-test-per-subdir
+    scope: repository
+    options:
+      # `..` leaves this repository. The finding stays on this file, not the markdown decoy.
+      roots: [".."]
+      testGlob: "*.test.mts"

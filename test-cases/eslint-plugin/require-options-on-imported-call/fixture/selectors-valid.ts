@@ -38,13 +38,13 @@ export function ignored(
   },
   dynamic: string,
 ) {
-  // Local aliases and dynamic shapes are not the configured callee.
+  // Static aliases retain the required option; dynamic shapes stay unclassified.
   const alias = createResponse;
-  alias();
+  alias({ signal: null });
   const responses = client.responses;
-  responses.create();
+  responses.create({ signal: null });
   const method = client.responses.create;
-  method();
+  method({ signal: null });
   client[dynamic].create();
   client.responses[dynamic]();
   getClient().responses.create();
@@ -53,7 +53,6 @@ export function ignored(
   client.chat.responses.create();
   client.#responses.create();
   globalThis.fetch();
-  (0, createResponse)();
   other();
   for (const { createResponse } of [] as object[]) createResponse();
 }

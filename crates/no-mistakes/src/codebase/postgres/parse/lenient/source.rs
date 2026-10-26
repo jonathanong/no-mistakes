@@ -1,4 +1,4 @@
-use sqlparser::ast::Statement;
+use sqlparser::ast::{DiscardObject, Statement};
 use sqlparser::tokenizer::TokenWithSpan;
 use std::sync::Arc;
 
@@ -20,6 +20,8 @@ pub(crate) struct LocatedStatement {
     /// Shared by every statement that came from that chunk, including a marker
     /// left behind when the chunk produced no statement.
     pub(crate) chunk_tokens: Option<Arc<[TokenWithSpan]>>,
+    /// Original failed chunk, retained when an enclosing DO body replaces chunk tokens.
+    pub(crate) recovery_failure: Option<super::super::super::types::SqlUnanalyzableStatement>,
 }
 
 impl LocatedStatement {
@@ -33,9 +35,21 @@ impl LocatedStatement {
             policy_arbiter: None,
             complete: false,
             chunk_tokens: None,
+            recovery_failure: None,
         }
     }
 
+    pub(super) fn failed_source(sql: &str, line: usize, column: usize, ordinal: usize) -> Self {
+        Self {
+            recovery_failure: Some(super::recover::failed_source(sql, line, column, ordinal)),
+            ..Self::functions(
+                Statement::Discard {
+                    object_type: DiscardObject::ALL,
+                },
+                false,
+            )
+        }
+    }
     pub(super) fn functions(statement: Statement, synthetic_select: bool) -> Self {
         Self {
             function_projection: true,

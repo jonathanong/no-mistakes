@@ -26,6 +26,7 @@ pub(super) fn dynamic_imports(req: &IndependentRuleRequest<'_>) -> Result<RuleCh
     Ok(RuleChunk {
         findings: findings.findings,
         suppression_sources: findings.suppression_sources,
+        advisories: findings.advisories,
     })
 }
 
@@ -34,15 +35,17 @@ pub(super) fn boundary(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
     crate::perf_trace::trace("rules.server_route_client_boundary", || {
-        Ok(RuleChunk::from_findings(
-            server_route_client_boundary::check_with_facts_for_aggregate(
-                req.root,
-                req.config,
-                req.shared,
-                req.inferred_roots,
-                req.defer_suppression,
-            )?,
-        ))
+        let output = server_route_client_boundary::diagnostics_with_facts_for_aggregate(
+            req.root,
+            req.config,
+            req.shared,
+            req.sources,
+            req.inferred_roots,
+            req.defer_suppression,
+        )?;
+        let mut chunk = RuleChunk::from_findings(output.findings);
+        chunk.advisories = output.advisories;
+        Ok(chunk)
     })
 }
 
@@ -68,15 +71,16 @@ pub(super) fn caching(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
     crate::perf_trace::trace("rules.nextjs_no_caching", || {
-        Ok(RuleChunk::from_findings(
-            nextjs_no_caching::check_with_facts_for_aggregate(
-                req.root,
-                req.config,
-                req.shared,
-                req.inferred_roots,
-                req.defer_suppression,
-            )?,
-        ))
+        let diagnostics = nextjs_no_caching::diagnostics_with_facts_for_aggregate(
+            req.root,
+            req.config,
+            req.shared,
+            req.inferred_roots,
+            req.defer_suppression,
+        )?;
+        let mut chunk = RuleChunk::from_findings(diagnostics.findings);
+        chunk.advisories = diagnostics.advisories;
+        Ok(chunk)
     })
 }
 
@@ -85,18 +89,19 @@ pub(super) fn storybook(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
     crate::perf_trace::trace("rules.require_storybook_stories", || {
-        Ok(RuleChunk::from_findings(storybook_findings(
-            StorybookFindingsRequest {
-                root: req.root,
-                config: req.config,
-                prepared_tsconfig_catalog: req.prepared_tsconfig_catalog,
-                shared: req.shared,
-                inferred_roots: req.inferred_roots,
-                session: req.session,
-                defer_suppression: req.defer_suppression,
-                sources: req.sources,
-            },
-        )?))
+        let diagnostics = storybook_findings(StorybookFindingsRequest {
+            root: req.root,
+            config: req.config,
+            prepared_tsconfig_catalog: req.prepared_tsconfig_catalog,
+            shared: req.shared,
+            inferred_roots: req.inferred_roots,
+            session: req.session,
+            defer_suppression: req.defer_suppression,
+            sources: req.sources,
+        })?;
+        let mut chunk = RuleChunk::from_findings(diagnostics.findings);
+        chunk.advisories = diagnostics.advisories;
+        Ok(chunk)
     })
 }
 
@@ -104,37 +109,42 @@ pub(super) fn playwright(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> 
     if !crate::playwright::rules::configured(req.config) {
         return Ok(RuleChunk::from_findings(Vec::new()));
     }
-    let findings =
-        crate::perf_trace::trace("rules.playwright", || match req.prepared_playwright {
-            Some(prepared) => crate::playwright::rules::check_with_prepared_facts(
-                req.root,
-                req.config_path,
-                req.config,
-                req.shared,
-                prepared,
-            ),
-            None => crate::playwright::rules::check_with_facts(
-                req.root,
-                req.config_path,
-                req.config,
-                req.shared,
-            ),
-        })?;
-    Ok(RuleChunk::from_findings(findings))
+    let output = crate::perf_trace::trace("rules.playwright", || match req.prepared_playwright {
+        Some(prepared) => crate::playwright::rules::check_with_prepared_facts_outcome(
+            req.root,
+            req.config_path,
+            req.config,
+            req.shared,
+            prepared,
+        ),
+        None => crate::playwright::rules::check_with_facts_outcome(
+            req.root,
+            req.config_path,
+            req.config,
+            req.shared,
+        ),
+    })?;
+    Ok(RuleChunk {
+        suppression_sources: std::iter::repeat_n(None, output.findings.len()).collect(),
+        findings: output.findings,
+        advisories: output.advisories,
+    })
 }
 
 pub(super) fn graph_rules(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
-    Ok(RuleChunk::from_findings(graph_rule_findings(
-        graph_rules::GraphRuleRequest {
-            root: req.root,
-            config: req.config,
-            config_path: req.config_path,
-            shared: req.shared,
-            prepared_graph: req.prepared_graph,
-            dependency_graph: req.dependency_graph,
-            inferred_roots: req.inferred_roots,
-            prepared_vitest_projects: req.prepared_vitest_projects,
-            prepared_playwright_projects: req.prepared_playwright_projects,
-        },
-    )?))
+    let diagnostics = graph_rule_findings(graph_rules::GraphRuleRequest {
+        root: req.root,
+        config: req.config,
+        config_path: req.config_path,
+        shared: req.shared,
+        prepared_graph: req.prepared_graph,
+        dependency_graph: req.dependency_graph,
+        inferred_roots: req.inferred_roots,
+        sources: Some(req.sources),
+        prepared_vitest_projects: req.prepared_vitest_projects,
+        prepared_playwright_projects: req.prepared_playwright_projects,
+    })?;
+    let mut chunk = RuleChunk::from_findings(diagnostics.findings);
+    chunk.advisories = diagnostics.advisories;
+    Ok(chunk)
 }

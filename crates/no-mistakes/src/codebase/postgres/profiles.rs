@@ -17,6 +17,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-explicit-columns",
     "postgres-bounded-statements",
     "postgres-no-offset",
+    "postgres-no-transformed-uuid-predicates",
     "postgres-no-mutable-sql-registry",
     "postgres-no-unbounded-sql-identifier",
     "postgres-sql-shape-policy",
@@ -43,6 +44,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-finite-text-columns",
     "postgres-array-columns",
     "postgres-key-column-types",
+    "postgres-no-transformed-uuid-predicates",
     "postgres-required-predicates",
     "postgres-explicit-columns",
     "postgres-bounded-statements",
@@ -56,6 +58,7 @@ struct EmbeddedSqlRuleOptions {
     executor_factory_names: Vec<String>,
     executor_type_names: Vec<String>,
     trusted_sql_tags: Vec<TrustedSqlTag>,
+    sql_literal_helpers: Vec<String>,
     include: Vec<String>,
     exclude: Vec<String>,
 }
@@ -81,40 +84,6 @@ type AnnotatedSqlProfiles = (
     Vec<EmbeddedSqlOptions>,
     scans::EmbeddedSqlRuleScans,
 );
-
-fn configured_embedded_sql_options_with_annotation(
-    config: &NoMistakesConfig,
-    rule_ids: &[&str],
-) -> Result<AnnotatedSqlProfiles> {
-    let mut grouped = scans::EmbeddedSqlRuleScans::new();
-    let mut annotation_profiles = Vec::new();
-    for rule_id in rule_ids {
-        for rule in config.rule_applications(rule_id) {
-            let options: EmbeddedSqlRuleOptions = rule.try_rule_options()?;
-            let profile = EmbeddedSqlOptions::configured(
-                options.import_specifier.as_deref().unwrap_or_default(),
-                &options.executor_names,
-            )
-            .with_scoped_executors(
-                &options.executor_factory_names,
-                &options.executor_type_names,
-            )
-            .with_trusted_sql_tags(&options.trusted_sql_tags);
-            // Legacy statement policies select only SQL files until executors
-            // are explicitly configured; do not request an empty TS projection.
-            if *rule_id != "postgres-sql-statement-policy" || profile.selects_executors() {
-                if *rule_id == "postgres-require-query-annotation" {
-                    annotation_profiles.push(profile.clone());
-                }
-                scans::record(&mut grouped, profile, rule_id, &options)?;
-            }
-        }
-    }
-    annotation_profiles.sort();
-    annotation_profiles.dedup();
-    let profiles = grouped.keys().cloned().collect();
-    Ok((profiles, annotation_profiles, grouped))
-}
 
 pub fn configured_embedded_sql_options_for_checks(
     config: &NoMistakesConfig,
@@ -193,5 +162,8 @@ use sql_include::sql_patterns;
 mod prepare;
 pub(crate) mod scans;
 pub(crate) use prepare::prepare_rule_sql_facts;
+mod annotation_effort;
+mod collect;
 mod plan;
+use collect::configured_embedded_sql_options_with_annotation;
 pub use plan::{assign_prepared_embedded_sql_options, configure_prepared_postgres_plan};

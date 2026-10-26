@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 use std::process::{Command, Output};
 
+#[path = "cli_check_rules_postgres_bounded/joined_dml.rs"]
+mod joined_dml;
+
 fn fixture() -> PathBuf {
     fixture_dir("fixture")
 }
@@ -112,6 +115,7 @@ fn an_allow_entry_that_suppresses_nothing_is_stale() {
 
 #[test]
 fn only_valid_ready_immediate_whole_key_indexes_prove_one_row() {
+    // The fixture now proves lower(slug) and completes the key in both OR branches.
     expect(
         "keys.yml",
         "sql/keys.sql",
@@ -120,9 +124,7 @@ fn only_valid_ready_immediate_whole_key_indexes_prove_one_row() {
             (8, "table:partial_keys"),
             (9, "table:invalid_keys"),
             (10, "table:deferred_keys"),
-            (11, "table:expr_keys"),
             (13, "table:orders"),
-            (14, "table:orders"),
         ],
     );
 }
@@ -231,4 +233,92 @@ fn embedded_wrapped_statement_directives_keep_recovery_fixtures_isolated() {
         "src/wrapped-statement-suppression.mts",
         &[(9, "table:accounts"), (11, "table:accounts")],
     );
+}
+
+#[test]
+fn unique_index_shape_guards_survive_cli_preparation() {
+    let root = fixture().join("unique-index-shapes");
+    let actual = findings_of(check_in(&root, ".no-mistakes.yml"));
+    assert_eq!(actual.len(), 24, "{actual:?}");
+    assert!(actual
+        .iter()
+        .any(|(file, line, _)| file == "partial-unique.sql" && *line == 3));
+    assert!(!actual
+        .iter()
+        .any(|(file, line, _)| file == "partial-unique.sql" && *line == 2));
+}
+
+#[test]
+fn catalog_key_ownership_and_view_policies_survive_cli_preparation() {
+    for (directory, config, expected) in [
+        ("catalog-resolution", "key-resolution.yml", 6),
+        ("catalog-resolution", "key-operators.yml", 4),
+        ("catalog-resolution", "key-booleans.yml", 1),
+        ("catalog-resolution", "view-bounds.yml", 1),
+        ("catalog-resolution", "view-allow.yml", 0),
+        ("catalog-resolution", "view-suppression.yml", 0),
+        ("catalog-resolution-identity", "view-identity.yml", 1),
+    ] {
+        let actual = findings_of(check_in(&fixture().join(directory), config));
+        assert_eq!(actual.len(), expected, "{config}: {actual:?}");
+    }
+}
+
+#[test]
+fn schemaless_bare_catalog_keys_still_judge_qualified_tables() {
+    let root = fixture().join("schemaless-key-resolution");
+    let mut actual = findings_of(check_in(&root, "qualified-bare-tables.yml"));
+    actual.sort();
+    assert_eq!(
+        actual,
+        [
+            (
+                "sql/qualified-bare-tables.sql".to_string(),
+                1,
+                "table:big".to_string(),
+            ),
+            (
+                "sql/qualified-bare-tables.sql".to_string(),
+                2,
+                "table:big".to_string(),
+            ),
+            (
+                "sql/qualified-bare-tables.sql".to_string(),
+                3,
+                "table:a".to_string(),
+            ),
+            (
+                "sql/qualified-bare-tables.sql".to_string(),
+                3,
+                "table:b".to_string(),
+            ),
+        ]
+    );
+}
+#[test]
+fn issue_2665_shapes_preserve_bounded_inputs_and_conservative_negatives() {
+    let expected = [
+        (4, "table:order_lines"),
+        (8, "table:accounts"),
+        (11, "table:accounts"),
+        (11, "table:orders"),
+        (14, "table:accounts"),
+        (15, "table:accounts"),
+        (16, "table:accounts"),
+        (19, "table:accounts"),
+        (20, "table:order_lines"),
+        (22, "table:orders"),
+    ]
+    .map(|(line, target)| ("sql/issue-2665.sql".to_string(), line, target.to_string()));
+    for effort in ["low", "max"] {
+        let root = fixture();
+        let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["check", "--format", "json", "--effort", effort, "--root"])
+            .arg(&root)
+            .arg("--config")
+            .arg(root.join("issue-2665.yml"))
+            .output()
+            .unwrap();
+        assert_eq!(findings_of(output), expected, "effort {effort}");
+    }
 }

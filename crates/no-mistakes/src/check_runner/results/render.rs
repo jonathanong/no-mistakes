@@ -9,6 +9,8 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         runner_config_deadlines,
         codebase,
         warnings,
+        analysis_warning_count: _,
+        analysis_fallbacks,
         advisories,
         sql_verdicts,
         include_sql_verdicts,
@@ -27,6 +29,9 @@ pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
         "warnings": warnings,
         "advisories": advisories,
     });
+    if !analysis_fallbacks.is_empty() {
+        value["analysisFallbacks"] = serde_json::json!(analysis_fallbacks);
+    }
     if let Some(evidence) = runner_config_deadlines {
         value["runnerConfigDeadlines"] = serde_json::to_value(evidence)
             .expect("finite declared deadline evidence serialization never fails");

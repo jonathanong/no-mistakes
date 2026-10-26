@@ -7,7 +7,6 @@ use crate::playwright::analysis::pipeline::{
 };
 use crate::playwright::config;
 use crate::playwright::playwright_tests;
-use crate::playwright::rule_findings::findings_from_report;
 use anyhow::Result;
 use filter::filter_rule_findings;
 pub use policy::configured;
@@ -15,6 +14,7 @@ use policy::unique_policy;
 use selection::rule_selections;
 use std::path::Path;
 
+pub(crate) mod effort;
 mod fact_plan;
 mod filter;
 mod policy;
@@ -35,24 +35,35 @@ pub const PLAYWRIGHT_UNIQUE_TEST_IDS: &str = "playwright-unique-test-ids";
 pub const PLAYWRIGHT_UNIQUE_HTML_IDS: &str = "playwright-unique-html-ids";
 pub const PLAYWRIGHT_PREFER_TEST_ID_LOCATORS: &str = "playwright-prefer-test-id-locators";
 
-pub(crate) fn check_with_facts(
+pub(crate) struct PlaywrightCheckOutput {
+    pub findings: Vec<RuleFinding>,
+    pub advisories: Vec<RuleFinding>,
+}
+
+#[cfg(test)]
+pub(crate) mod test_api;
+
+pub(crate) fn check_with_facts_outcome(
     root: &Path,
     config_path: Option<&Path>,
     config: &NoMistakesConfig,
     facts: &CheckFactMap,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<PlaywrightCheckOutput> {
     let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(root);
     check_with_facts_from_snapshot(root, config_path, config, facts, &snapshot)
 }
 
-pub(crate) fn check_with_prepared_facts(
+pub(crate) fn check_with_prepared_facts_outcome(
     root: &Path,
     _config_path: Option<&Path>,
     config: &NoMistakesConfig,
     facts: &CheckFactMap,
     prepared: &PreparedPlaywrightRules,
-) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+) -> Result<PlaywrightCheckOutput> {
+    let mut output = PlaywrightCheckOutput {
+        findings: Vec::new(),
+        advisories: Vec::new(),
+    };
     for prepared_selection in &prepared.selections {
         let next = check_selection_with_facts(
             root,
@@ -61,12 +72,15 @@ pub(crate) fn check_with_prepared_facts(
             prepared.snapshot.as_ref(),
             &prepared_selection.selection,
             &prepared_selection.settings,
-        );
-        findings.extend(next?);
+        )?;
+        output.findings.extend(next.findings);
+        output.advisories.extend(next.advisories);
     }
-    findings.sort();
-    findings.dedup();
-    Ok(findings)
+    output.findings.sort();
+    output.findings.dedup();
+    output.advisories.sort();
+    output.advisories.dedup();
+    Ok(output)
 }
 
 fn check_with_facts_from_snapshot(
@@ -75,15 +89,21 @@ fn check_with_facts_from_snapshot(
     config: &NoMistakesConfig,
     facts: &CheckFactMap,
     snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<PlaywrightCheckOutput> {
     let root_paths = snapshot.paths_for(root);
     let apps = crate::config::v2::frontend_apps(root, config, &root_paths)?;
     let selections = rule_selections(config, &apps)?;
     if selections.is_empty() {
-        return Ok(Vec::new());
+        return Ok(PlaywrightCheckOutput {
+            findings: Vec::new(),
+            advisories: Vec::new(),
+        });
     }
 
-    let mut findings = Vec::new();
+    let mut output = PlaywrightCheckOutput {
+        findings: Vec::new(),
+        advisories: Vec::new(),
+    };
     for selection in selections {
         // Deliberately reloaded from `config_path` rather than derived from
         // `config` — see the doc comment on `standalone::check`.
@@ -96,13 +116,16 @@ fn check_with_facts_from_snapshot(
             snapshot,
         );
         let settings = settings?;
-        findings.extend(check_selection_with_facts(
-            root, config, facts, snapshot, &selection, &settings,
-        )?);
+        let next =
+            check_selection_with_facts(root, config, facts, snapshot, &selection, &settings)?;
+        output.findings.extend(next.findings);
+        output.advisories.extend(next.advisories);
     }
-    findings.sort();
-    findings.dedup();
-    Ok(findings)
+    output.findings.sort();
+    output.findings.dedup();
+    output.advisories.sort();
+    output.advisories.dedup();
+    Ok(output)
 }
 
 fn check_selection_with_facts(
@@ -112,12 +135,20 @@ fn check_selection_with_facts(
     snapshot: &crate::playwright::fsutil::VisiblePathSnapshot,
     selection: &selection::RuleSelection,
     settings: &config::Settings,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<PlaywrightCheckOutput> {
     let test_policy = playwright_tests::TestPolicy {
         assert_conditional_tests: false,
         allow_skipped_tests: false,
     };
-    let unique_policy = unique_policy(selection.unique_test_ids, selection.unique_html_ids);
+    let unique_ids = effort::unique_test_ids_policy(config)?;
+    let html_ids = effort::unique_html_ids_policy(config)?;
+    let coverage_effort = effort::coverage_policy(config)?;
+    let unique_policy = unique_policy(
+        selection.unique_test_ids,
+        selection.unique_html_ids,
+        unique_ids.low,
+        html_ids.low,
+    );
     let analysis = if selection.coverage {
         analyze_with_policy_and_facts_from_snapshot(
             root,
@@ -137,7 +168,7 @@ fn check_selection_with_facts(
             snapshot,
         )
     }?;
-    let report_findings = findings_from_report(
+    let report = crate::playwright::rule_findings::findings_from_report_with_effort(
         &analysis,
         selection.unique_test_ids,
         selection.unique_html_ids,
@@ -147,8 +178,17 @@ fn check_selection_with_facts(
             routes: selection.cover_routes,
             selectors: selection.cover_selectors,
         },
+        crate::playwright::rule_findings::LowEffortFindings {
+            configured_html_id_selector: config::has_configured_html_id_selector(settings),
+            unique_test_ids: unique_ids.low.then_some(unique_ids.unanalyzable),
+            unique_html_ids: html_ids.low.then_some(html_ids.unanalyzable),
+            coverage: coverage_effort.low.then_some(coverage_effort.unanalyzable),
+        },
     );
-    filter_rule_findings(root, config, report_findings)
+    Ok(PlaywrightCheckOutput {
+        findings: filter_rule_findings(root, config, report.findings)?,
+        advisories: filter_rule_findings(root, config, report.advisories)?,
+    })
 }
 
 #[cfg(test)]

@@ -28,6 +28,7 @@ pub(super) fn extract(
     }
     let mut facts = SqlStatementFileFacts {
         parse_failed,
+        parse_failures: sources.parse_failures.to_vec(),
         ..Default::default()
     };
     // Conflict analysis borrows the same prepared AST, bind positions and recovery provenance.

@@ -1,0 +1,154 @@
+{
+  "baseline": "c94f1b7939d5c234c2f3409440cd3f199a08bcc2",
+  "rustc": "1.99.1",
+  "postgres": "18",
+  "comparison": {
+    "total": 1075,
+    "byteIdentical": 1070,
+    "preservedConfigErrors": 35,
+    "changes": [
+      {
+        "root": "fixtures/postgres-facts/source/ddl-compat",
+        "config": ".no-mistakes.yml",
+        "key": "c6cd5c1e8d43b4fb",
+        "beforeFindings": 154,
+        "afterFindings": 0,
+        "beforeAdvisories": 0,
+        "afterAdvisories": 0,
+        "beforeStatus": 1,
+        "afterStatus": 0
+      },
+      {
+        "root": "fixtures/postgres-facts/source/ddl-compat",
+        "config": "guarded-do.yml",
+        "key": "31ccedd92d988513",
+        "beforeFindings": 165,
+        "afterFindings": 0,
+        "beforeAdvisories": 0,
+        "afterAdvisories": 0,
+        "beforeStatus": 1,
+        "afterStatus": 0
+      },
+      {
+        "root": "fixtures/postgres-facts/source/ddl-compat",
+        "config": "guarded-function.yml",
+        "key": "106d1cf604ceea02",
+        "beforeFindings": 165,
+        "afterFindings": 0,
+        "beforeAdvisories": 0,
+        "afterAdvisories": 0,
+        "beforeStatus": 1,
+        "afterStatus": 0
+      },
+      {
+        "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/unsupported-policy",
+        "config": "default.yml",
+        "key": "bd8ad5663b11f2af",
+        "beforeFindings": 77,
+        "afterFindings": 44,
+        "beforeAdvisories": 0,
+        "afterAdvisories": 33,
+        "beforeStatus": 1,
+        "afterStatus": 1
+      },
+      {
+        "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/unsupported-suppress",
+        "config": "default.yml",
+        "key": "ad4c29fb0e01279e",
+        "beforeFindings": 1,
+        "afterFindings": 0,
+        "beforeAdvisories": 0,
+        "afterAdvisories": 1,
+        "beforeStatus": 1,
+        "afterStatus": 0
+      }
+    ]
+  },
+  "tests": {
+    "finalNativeApi": {
+      "passed": 578,
+      "files": 21
+    },
+    "postgres18Oracle": "top-level and guarded utility DDL plus DO/function/procedure SQL-bearing commands accepted in rolled-back transactions",
+    "clippy": "workspace all-targets all-features, -D warnings",
+    "repositoryCheck": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    },
+    "fullWorkspaceScope": {
+      "libraryPassed": 13453,
+      "libraryIgnored": 3,
+      "binaryPassed": 458,
+      "integrationPassed": 1402
+    },
+    "additionalFocusedCli": {
+      "passed": 3,
+      "newIntegrationTest": 1,
+      "distinctIntegrationCases": 1403
+    }
+  },
+  "coverage": {
+    "fullScopeFloors": 98,
+    "fullScopeRegions": 98.55,
+    "fullScopeFunctions": 99.35,
+    "fullScopeLines": 99.33,
+    "finalPatch": {
+      "base": "c94f1b7939d5c234c2f3409440cd3f199a08bcc2",
+      "measuredChangedLines": 556,
+      "coveredChangedLines": 555,
+      "coveragePercent": 99.8201,
+      "requiredPercent": 98.0,
+      "uncoveredChangedLines": {
+        "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/procedural/sql.rs": [
+          37
+        ]
+      },
+      "changedFilesWithoutLineRecords": [
+        "crates/no-mistakes/src/codebase/postgres/parse/ddl_compat/tests.rs",
+        "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/procedural/tests.rs",
+        "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/tests.rs",
+        "crates/no-mistakes/src/codebase/postgres/parse/tests.rs",
+        "crates/no-mistakes/src/codebase/postgres/types/schema_file.rs",
+        "crates/no-mistakes/src/codebase/rules/postgres_bounded_statements/tests.rs",
+        "crates/no-mistakes/src/codebase/rules/postgres_bounded_statements/tests/ddl_compat_lifecycle.rs",
+        "crates/no-mistakes/src/codebase/rules/postgres_no_generated_column_writes/tests.rs",
+        "crates/no-mistakes/src/codebase/rules/postgres_unanalyzable_schema/tests.rs",
+        "crates/no-mistakes/src/codebase/rules/postgres_unanalyzable_schema/tests/unsupported_policy.rs",
+        "crates/no-mistakes/tests/cli_check_postgres_release_blocker.rs",
+        "crates/no-mistakes/tests/suite_cli_postgres.rs"
+      ]
+    },
+    "crapFunctions": 15645,
+    "crapAbove30": 0,
+    "note": "Fresh full-workspace counters for the review fix, plus the new focused CLI regression. No merged stale-source counters and no filename exclusions."
+  },
+  "binarySha256": {
+    "baseline": "ad025d1c995c317e9017e9db579660c054140c92e242b7e77b90f0e2bee6e94c",
+    "candidate": "c637b129888b909e6940954c1d18257454c33c818de420e2a183b0538660cf37"
+  },
+  "productionSha256": {
+    "crates/no-mistakes/src/codebase/postgres/parse.rs": "b19ef5211b9d3d17f12c8ee5ba2c10cf6b3c6252f99625c47959042894021df3",
+    "crates/no-mistakes/src/codebase/postgres/parse/ddl_compat.rs": "e9e3a5f0f749570a4fe9e16a23e6625f6dffcf454dd49855f5f6c53c26cbfd2a",
+    "crates/no-mistakes/src/codebase/postgres/parse/ddl_compat/metadata.rs": "ec4c768f2167541c75c941838f3b30c7ae417f8c13b3ead57ac6beffcee5f170",
+    "crates/no-mistakes/src/codebase/postgres/parse/ddl_compat/trigger.rs": "6e1b78c6d601cc56b592eefcf69e9e3eac6b4339fcd8485fee2195e6e1618a86",
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient.rs": "ba8147b395a49c46c2ba1c4019b84b3c92c5b58a5769e824b784c8905dc26bbf",
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover.rs": "abdca9ff71bafe09e469ae84cc129c2aeb16d53ec1e81c198cdd0ea7af42cc51",
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/failure.rs": "12171fec7cc21685bfeff9ba55607207b6f0f4f41884c6ea2e16a975be6eba4f",
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/failure/unsupported.rs": "2ee3e707fa4472fada6aa40c0ad03e8dd6842091d9bbfbccc4ae243d50267729",
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/procedural.rs": "9cec7ee789234d5a42a54632118adff870d0679efd819b034cf014556d894052",
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/procedural/commands.rs": "3496e524b88de3f682267e9885fcb192a46644582381caaa1e24e7f2c3cf873c",
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/procedural/sql.rs": "63028bb0c8a21fb2b2444c9646ad05168efd3bc1cc866180ee3aac91ef193c97",
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/queries.rs": "5f06a34bd6ca9e82d3f64e2bfa93d27bc706764f12a37c11e0b3b8da3a0951bc",
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/query_locks.rs": "820b28c755c969c4582af631d236696f50f469b8405139ce365609a7d1091203",
+    "crates/no-mistakes/src/codebase/postgres/parse/lenient/recover/schema.rs": "25b4884c9679ef7348188be1330721423a33234f1c4105b47130caadfae64562",
+    "crates/no-mistakes/src/codebase/postgres/parse/prepared.rs": "46fd20622f14b81b066c7d24b546f65c4b39acda6e7dbe5ed3ba6908d9155dd9",
+    "crates/no-mistakes/src/codebase/postgres/types/schema_file.rs": "9d226eac79e18213f644785e5b86cb3baa9fbf8d1108c894a54f0b5d9abee12b",
+    "crates/no-mistakes/src/codebase/rules/postgres_unanalyzable_schema.rs": "add1936507c2ad1bba644731462c1e0445b66103e37ec7be2b886b23064fedc6"
+  },
+  "reviewRegression": "Plain SELECT/WITH chunks retain complete ordinary Query ASTs, INTO and lock clauses, exact function/source locations, and configured function-policy findings across CLI/CJS/ESM/prepared reports."
+}

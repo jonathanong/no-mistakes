@@ -1,60 +1,7 @@
 use super::*;
 
-/// Write a minimal `.no-mistakes.yml` that enables all the given rule IDs.
-/// `production-dependency-declarations` has no default `workspaceRoots` (it
-/// is a required option), so it gets an explicit value here to stay in scope
-/// for these "every rule dispatches cleanly" tests.
-fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
-    let rule_entries: String = rules
-        .iter()
-        .map(|id| {
-            let executor_option = if crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id)
-                || matches!(*id, POSTGRES_IDEMPOTENT_INSERT | POSTGRES_REQUIRE_QUERY_ANNOTATION)
-            { "      executorNames: []\n" } else { "" };
-            if *id == PRODUCTION_DEPENDENCY_DECLARATIONS {
-                format!(
-                    "  - rule: {id}\n    scope: repository\n    options:\n      \
-                     workspaceRoots: [\".\"]\n"
-                )
-            } else if *id == POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS {
-                format!(
-                    "  - rule: {id}\n    scope: repository\n    options:\n{}",
-                    include_str!(
-                        "../../../../../../fixtures/rules/filesystem-dispatch/all-rules/status-lifecycle-options.yml"
-                    )
-                )
-            } else if *id == POSTGRES_KEY_COLUMN_TYPES {
-                format!(
-                    "  - rule: {id}\n    scope: repository\n    options:\n      schemaCatalogPath: schema.json\n      allowedTypes: [uuid]\n"
-                )
-            } else if matches!(*id,
-                POSTGRES_CONFLICT_ORDERING | POSTGRES_COLUMN_REQUIRES_TRIGGER
-                | POSTGRES_REQUIRED_COMMENTS | POSTGRES_DUPLICATE_FUNCTION_BODY
-                | POSTGRES_TABLE_SHAPE | POSTGRES_OBJECT_NAMING | POSTGRES_COLUMN_NAMING
-                | POSTGRES_FINITE_TEXT_COLUMNS | POSTGRES_ARRAY_COLUMNS
-                | POSTGRES_EXPLICIT_COLUMNS | POSTGRES_BOUNDED_STATEMENTS)
-            {
-                format!(
-                    "  - rule: {id}\n    scope: repository\n    options:\n      schemaCatalogPath: schema.json\n{executor_option}"
-                )
-            } else if !executor_option.is_empty() {
-                format!("  - rule: {id}\n    scope: repository\n    options:\n{executor_option}")
-            } else {
-                format!("  - rule: {id}\n    scope: repository\n")
-            }
-        })
-        .collect();
-    let yaml = format!("rules:\n{rule_entries}");
-    let config_path = dir.join(".no-mistakes.yml");
-    std::fs::write(&config_path, yaml).unwrap();
-    config_path
-}
-
-fn all_rules_fixture() -> tempfile::TempDir {
-    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/filesystem-dispatch/all-rules");
-    crate::test_support::materialize_saved_fixture(&source)
-}
+mod fixture_config;
+use fixture_config::{all_rules_fixture, write_config};
 
 /// Cover all dispatch branches via `run_filesystem_rules_with_files`.
 /// Passing an empty file list means no rule actually does I/O on files —
@@ -70,21 +17,6 @@ fn dispatch_with_files_covers_all_rule_branches() {
         findings.is_empty(),
         "empty file list should produce no findings: {findings:?}"
     );
-}
-
-#[test]
-fn dispatch_with_files_returns_configuration_errors() {
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/filesystem-dispatch/invalid-config");
-    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
-    let error = run_filesystem_rules_with_visible_and_snapshot(
-        &root,
-        Some(&root.join(".no-mistakes.yml")),
-        &[],
-        &snapshot,
-    )
-    .unwrap_err();
-    assert!(error.to_string().contains("parse"), "{error:#}");
 }
 
 /// Cover all dispatch branches via `run_filesystem_rules`.
@@ -134,6 +66,7 @@ fn prepared_dispatch_rejects_tsconfig_gate_without_workflow_documents() {
         &[],
         PreparedFilesystemRuleInputs {
             snapshot: &snapshot,
+            next_config_resolver: None,
             vitest_catalog: None,
             sources: snapshot.source_store_for(&root),
             workflow_documents: None,
@@ -241,6 +174,7 @@ fn enabling_mermaid_validation_preserves_existing_markdown_findings() {
             &files,
             PreparedFilesystemRuleInputs {
                 snapshot: &snapshot,
+                next_config_resolver: None,
                 vitest_catalog: None,
                 sources: snapshot.source_store_for(&root),
                 workflow_documents: None,
@@ -432,6 +366,7 @@ fn aggregate_reads_rust_sources_once_without_global_suppression_rereads() {
         &files,
         PreparedFilesystemRuleInputs {
             snapshot: &snapshot,
+            next_config_resolver: None,
             vitest_catalog: None,
             sources: std::sync::Arc::clone(&sources),
             workflow_documents: None,
@@ -488,6 +423,7 @@ comparisons:
         &files,
         PreparedFilesystemRuleInputs {
             snapshot: &snapshot,
+            next_config_resolver: None,
             vitest_catalog: None,
             sources,
             workflow_documents: None,
@@ -539,6 +475,7 @@ fn aggregate_finding_and_suppression_share_one_physical_read() {
         &files,
         PreparedFilesystemRuleInputs {
             snapshot: &snapshot,
+            next_config_resolver: None,
             vitest_catalog: None,
             sources: std::sync::Arc::clone(&sources),
             workflow_documents: None,

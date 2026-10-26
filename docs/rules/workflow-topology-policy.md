@@ -20,12 +20,33 @@ rules:
         - jobId: ".github/workflows/ci.yml#lint"
           steps:
             - uses: actions/checkout@v4
+```
+
+The following block is an extended reference of secret inventory and unlocked
+workflows. The Options example above is the one Valid and Counterexample
+execute.
+
+```yaml
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
       secretInventory:
         repository: [DEPLOY_TOKEN]
         environments:
           production: [RELEASE_KEY]
       unlockedWorkflowReasons:
         .github/workflows/ci.yml: "single-job lint has no overlapping work"
+```
+
+For secret names, this workflow-level use is undeclared unless `DEPLOY_TOKEN`
+is listed in the repository inventory. Whether top-level `env` is evaluated
+with each job's `environment` secrets is not verified, so the undeclared
+finding stays and that environment name is not reported unused.
+
+```yaml
+env:
+  DEPLOY_TOKEN: "${{ secrets.DEPLOY_TOKEN }}"
 ```
 
 `jobInventory`, `exactCallerJobs`, and `unlockedWorkflowReasons` are
@@ -132,27 +153,36 @@ and a job lock in the same file.
 ## Valid example
 
 ```yaml
+# .github/workflows/ci.yml
+name: ci
+on: push
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
   test:
     needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test
 ```
 
 ## Counterexample
 
 ```yaml
+# .github/workflows/ci.yml
+name: ci
+on: push
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
   test:
-    steps: [{run: pnpm test}]
-```
-
-For secret names, this workflow-level use is undeclared unless `DEPLOY_TOKEN`
-is listed in the repository inventory. Whether top-level `env` is evaluated
-with each job's `environment` secrets is not verified, so the undeclared
-finding stays and that environment name is not reported unused.
-
-```yaml
-env:
-  DEPLOY_TOKEN: "${{ secrets.DEPLOY_TOKEN }}"
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test
 ```
 
 ## Fix
@@ -174,6 +204,18 @@ scanned, including actions used only by remote callers and actions invoked by
 a path in a script. See the
 [inventory guide](../configuration/workflow-topology-policy.md).
 
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+
+- This rule has no unanalyzable inputs: it judges parsed workflow topology: needs, concurrency groups, and secrets. Nothing is routed through `options.unanalyzable`.
+
 ## Suppression
 
 Prefer an `unlockedWorkflowReasons` entry for a deliberate exception. Suppress
@@ -181,6 +223,19 @@ one source finding with `no-mistakes-disable-line workflow-topology-policy` or
 `no-mistakes-disable-next-line workflow-topology-policy`; use
 `no-mistakes-disable-file workflow-topology-policy` only for a whole-file
 exception such as a generated workflow.
+
+## Limitations
+
+A directory symlink is not followed. `uses: ./actions/link`, where
+`actions/link` is a symlink to `actions/real` and the undeclared secret exists
+only in `actions/real/action.yml`, is not a finding.
+
+Local `uses` paths collapse `.`, empty segments, and in-repo `..` before the
+action file is resolved. `uses: ./.github/actions/../actions/deploy` is
+`.github/actions/deploy`. A normalized path that is `..` or starts with `../`
+leaves the repository and is not a local action, so its secrets are not
+inventoried. A directory whose name only begins with `..`, such as
+`..actions`, stays inside the repository.
 
 ## Related rules
 

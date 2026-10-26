@@ -74,7 +74,10 @@ and `exclude` filters apply before matching.
 
 ```ts
 // runtime/register-workers.ts
-import "./email-worker";
+import "../workers/email-worker";
+
+// workers/email-worker.ts
+export const worker = true;
 ```
 
 With `sourceGlobs: ["workers/**/*.ts"]`, `workers/email-worker.ts` is reachable.
@@ -82,7 +85,12 @@ With `sourceGlobs: ["workers/**/*.ts"]`, `workers/email-worker.ts` is reachable.
 ## Counterexample
 
 ```ts
-import type { EmailWorker } from "./email-worker";
+// runtime/register-workers.ts
+import type { EmailWorker } from "../workers/email-worker";
+
+// workers/email-worker.ts
+export type EmailWorker = { run(): void };
+export const worker = true;
 ```
 
 The type-only import does not load the worker at runtime.
@@ -92,6 +100,16 @@ The type-only import does not load the worker at runtime.
 Add a runtime import or re-export from the intended registry, increase
 `maxDepth` only for the intended chain, or narrow `sourceGlobs` for files not
 owned by that registry.
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it judges reachability in the canonical graph, so `options.unanalyzable` has no effect on it.
 
 ## Suppression
 

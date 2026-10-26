@@ -1,13 +1,13 @@
-// Not flagged: `new this(...)` is an unresolved construction inside the class,
-// so it counts as the class building itself.
+// An unresolved `new this(...)` reports uncertainty, and does not prove that
+// the error class is constructed.
 export class ThisFactoryError extends Error {
   static create(): ThisFactoryError {
     return new this("factory");
   }
 }
 
-// Not flagged: `new this()` inside a nested arrow function still builds the
-// class.
+// An unresolved constructor inside a nested arrow also reports uncertainty,
+// without crediting the enclosing class.
 export class NestedFactoryError extends Error {
   static create(): NestedFactoryError {
     return (() => new this())();

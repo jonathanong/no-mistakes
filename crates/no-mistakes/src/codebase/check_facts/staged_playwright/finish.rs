@@ -19,6 +19,8 @@ pub(super) struct FinishMapInput {
     pub(super) ts: crate::codebase::ts_source::FileIdMap<CheckFileFacts>,
     pub(super) playwright_source_files: Arc<Vec<PathBuf>>,
     pub(super) playwright_test_files_by_project: PlaywrightTestFilesByProject,
+    pub(super) playwright_matcher_warnings:
+        Arc<std::collections::BTreeMap<Option<String>, Vec<String>>>,
     pub(super) integration_runner_configs: RunnerConfigFacts,
 }
 
@@ -36,6 +38,7 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         ts,
         playwright_source_files,
         playwright_test_files_by_project,
+        playwright_matcher_warnings,
         mut integration_runner_configs,
     } = input;
     graph_files.extend(playwright_source_files.iter().cloned());
@@ -58,7 +61,9 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
     let mut map = CheckFactMap {
         sql_application: None,
         sql_verdicts: None,
+        sql_advisories: Arc::default(),
         companion_import_plans: Arc::clone(&plan.companion_import_plans),
+        call_site_paths: Arc::clone(&plan.call_site_paths),
         postgres: Default::default(),
         integration_route_links,
         files,
@@ -73,6 +78,7 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         integration_runner_configs,
         playwright_source_files,
         playwright_test_files_by_project,
+        playwright_matcher_warnings,
         stats: CheckFactStats {
             files_discovered,
             files_parsed,

@@ -40,6 +40,10 @@ impl Evaluator {
                 break;
             }
             if let ArrayExpressionElement::SpreadElement(spread) = element {
+                if self.literals_only {
+                    values.push(Value::Unknown);
+                    continue;
+                }
                 match self.expression(&spread.argument, env, depth) {
                     Value::Array(spread) => values.extend(spread.iter().cloned()),
                     _ => values.push(Value::Unknown),
@@ -84,6 +88,10 @@ impl Evaluator {
                     );
                 }
                 ObjectPropertyKind::SpreadProperty(spread) => {
+                    if self.literals_only {
+                        complete = false;
+                        continue;
+                    }
                     match self.expression(&spread.argument, env, depth) {
                         Value::Object(values, known) => {
                             properties.extend(

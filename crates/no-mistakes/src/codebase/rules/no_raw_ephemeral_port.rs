@@ -56,7 +56,19 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
+    diagnostics_with_files_and_sources(root, config, all_files, sources, defer_suppression)
+        .map(|output| output.findings)
+}
+
+#[doc(hidden)]
+pub fn diagnostics_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+    let mut diagnostics = super::analysis_policy::AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts = compile_options(rule.try_rule_options()?)?;
         let target_roots = super::target_roots(root, config, rule);
@@ -71,10 +83,18 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
             continue;
         }
         let files = super::matching_files(root, &opts.include, &files, &target_roots)?;
-        findings.extend(scan_files(root, &opts, &files, sources, defer_suppression));
+        let findings = scan_files(root, &opts, &files, sources, defer_suppression);
+        diagnostics.append(super::file_diagnostics::application(
+            root,
+            sources,
+            config,
+            rule,
+            findings,
+            defer_suppression,
+            super::file_diagnostics::InputUncertainty::Read,
+        )?);
     }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    Ok(super::file_diagnostics::sorted(diagnostics))
 }
 
 fn compile_options(opts: Options) -> Result<CompiledOptions> {
@@ -112,3 +132,6 @@ fn scan_files(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod literal_recall_tests;

@@ -10,6 +10,7 @@ use crate::codebase::symbols::{ExportKindArg, Include, SymbolsMode};
 #[derive(Debug, Clone, Default, Deserialize, serde::Serialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ProjectOptions {
+    pub(crate) effort: Option<crate::config::v2::Effort>,
     pub(crate) root: Option<String>,
     pub(crate) tsconfig: Option<String>,
     pub(crate) config: Option<String>,

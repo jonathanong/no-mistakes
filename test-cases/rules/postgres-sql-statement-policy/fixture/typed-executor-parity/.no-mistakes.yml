@@ -1,0 +1,28 @@
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    exclude: [schema.sql]
+    options:
+      importSpecifier: '@example/db'
+      unanalyzableSql: ignore
+      executorTypeNames: [QueryExecutor]
+      sqlInclude: []
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      unanalyzableSql: ignore
+      executorTypeNames: [QueryExecutor]
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      unanalyzableSql: ignore
+      executorTypeNames: [QueryExecutor]
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorTypeNames: [QueryExecutor]
+      unanalyzableSql: ignore
+      sqlInclude: [schema.sql]

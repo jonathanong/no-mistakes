@@ -1,0 +1,17 @@
+on: workflow_call
+# The read job must not inherit or hide the write job declared maximum.
+jobs:
+  read:
+    permissions: { contents: read }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+  write:
+    permissions: { contents: write }
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { persist-credentials: true }
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }

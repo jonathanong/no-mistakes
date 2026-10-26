@@ -3,6 +3,18 @@
 // Leaf shared by syntax and forward. Those two files must not require each
 // other: a cycle makes `mutationCall` undefined when forward loads first.
 
+const ARRAY_METHODS = new Set([
+  "copyWithin",
+  "fill",
+  "pop",
+  "push",
+  "reverse",
+  "shift",
+  "sort",
+  "splice",
+  "unshift",
+]);
+
 const TS_EXPRESSIONS = new Set([
   "TSAsExpression",
   "TSNonNullExpression",
@@ -45,6 +57,7 @@ function methodName(member) {
 }
 
 module.exports = {
+  ARRAY_METHODS,
   TS_EXPRESSIONS,
   literalKey,
   methodName,

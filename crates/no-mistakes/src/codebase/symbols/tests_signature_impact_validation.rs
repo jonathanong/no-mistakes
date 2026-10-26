@@ -48,7 +48,9 @@ fn signature_impact_surfaces_tsconfig_and_config_errors() {
     let error = impact::collect_report(&invalid_config).unwrap_err();
     let detail = format!("{error:#}");
     assert!(
-        detail.contains("rules[0].exclude contains invalid glob `[`"),
+        detail.contains(
+            ":5: rules[0] (unique-exports).exclude[0]: contains invalid glob `[`"
+        ),
         "{detail}"
     );
     assert!(detail.contains("unclosed character class"), "{detail}");

@@ -26,7 +26,8 @@ export type TestPlanFramework =
   | "dart"
   | "jest";
 
-interface TestsPlanOptionsBase {
+/** Shared option bag for `testsPlan()`. Direct-owner plans omit incompatible fields via `TestsPlanOptions`. */
+export interface TestsPlanOptionsBase {
   framework?: TestPlanFramework;
   /** Project root. Defaults to the current working directory. */
   root?: string;

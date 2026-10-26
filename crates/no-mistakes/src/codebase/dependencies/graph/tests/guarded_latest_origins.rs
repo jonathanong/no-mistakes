@@ -1,5 +1,5 @@
 use super::*;
-use receiver_escapes::{assert_export, assert_unknown, graph};
+use receiver_escapes::{assert_export, assert_unknown, graph, graph_for};
 
 pub(super) fn possible(built: &DepGraph, root: &Path, file: &str, callee: &str) {
     let sites = built.call_sites_in_file(&root.join(format!("src/{file}.mts")));
@@ -37,8 +37,12 @@ fn guarded_latest_origins_keep_alias_method_and_open_tail_candidates() {
         possible(&built, &root, "array-latest-guarded-method", callee);
     }
     for file in ["array-latest-guarded-open", "array-latest-guarded-push"] {
-        // Moving the guarded literal cannot weaken a guaranteed push or suffix.
-        assert_unknown(&built, &root, file, "primary.get");
+        // The pushed tail is definite; an unknown prefix can shift the ordinary suffix.
+        if file == "array-latest-guarded-open" {
+            possible(&built, &root, file, "primary.get");
+        } else {
+            assert_unknown(&built, &root, file, "primary.get");
+        }
         assert_export(&built, &root, file, "primary.info");
     }
     for file in ["array-latest-guarded-alias", "array-latest-guarded-method"] {
@@ -76,11 +80,10 @@ fn guarded_latest_origins_do_not_weaken_direct_or_reset_writers() {
         "array-reassign-conditional-reset",
         "untouched.get",
     );
-    // Conditional pushes retain their existing definite projection.
+    // A valid no-push execution leaves replica's original method callable.
     for file in ["array-push-conditional", "array-push-loop"] {
-        for callee in ["replica.get", "untouched.get"] {
-            assert_unknown(&built, &root, file, callee);
-        }
+        possible(&built, &root, file, "replica.get");
+        assert_unknown(&built, &root, file, "untouched.get");
     }
 }
 
@@ -170,5 +173,223 @@ fn guarded_push_proof_excludes_replacement_initializer_calls() {
     possible(&built, &root, file, "replica.get");
     for callee in ["primary.get", "replica.info", "unrelated.get"] {
         assert_export(&built, &root, file, callee);
+    }
+}
+
+#[test]
+fn known_empty_prefix_cannot_send_the_suffix_to_the_first_parameter() {
+    let (built, root) = graph();
+    let file = "array-latest-guarded-empty-prefix";
+    for callee in ["replica.get", "untouched.get"] {
+        possible(&built, &root, file, callee);
+    }
+    for callee in ["primary.get", "primary.info", "unrelated.get"] {
+        assert_export(&built, &root, file, callee);
+    }
+}
+
+#[test]
+fn literal_suffix_after_an_open_guarded_spread_remains_possible() {
+    let (built, root) = graph();
+    let file = "array-latest-guarded-open-literal";
+    for callee in ["replica.get", "untouched.get", "primary.get"] {
+        possible(&built, &root, file, callee);
+    }
+    for callee in ["primary.info", "unrelated.get"] {
+        assert_export(&built, &root, file, callee);
+    }
+}
+
+#[test]
+fn unconditional_parameter_rebinding_does_not_write_the_original_argument() {
+    let (built, root) = graph();
+    let file = "reassigned-parameter";
+    assert_unknown(&built, &root, file, "replica.get");
+    assert_export(&built, &root, file, "untouched.get");
+    assert_export(&built, &root, file, "primary.get");
+}
+
+#[test]
+fn optional_pushes_keep_later_pushes_and_suffixes_possible() {
+    let (built, root) = graph();
+    for file in [
+        "array-optional-push-then-push",
+        "array-optional-push-then-suffix",
+        "array-optional-push-forwarded",
+        "array-optional-push-function-call",
+        "array-optional-push-method-call",
+    ] {
+        for callee in ["replica.get", "untouched.get"] {
+            possible(&built, &root, file, callee);
+        }
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+}
+
+#[test]
+fn fixed_arguments_before_the_optional_spread_keep_their_write_origins() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    for file in [
+        "array-optional-push-after-fixed-prefix",
+        "array-optional-push-after-fixed-prefix-call",
+        "array-optional-push-after-fixed-prefix-forwarded",
+    ] {
+        // Both runtime flag values overwrite this vendor method locally.
+        assert_unknown(&built, &root, file, "replica.get");
+        for callee in [
+            "untouched.get",
+            "primary.get",
+            "replica.info",
+            "unrelated.get",
+        ] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+}
+
+#[test]
+fn empty_and_wide_prefixes_preserve_actual_argument_positions() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    for file in [
+        "array-optional-push-after-empty-prefix",
+        "array-optional-push-after-wide-prefix",
+    ] {
+        for callee in [
+            "replica.get",
+            "primary.get",
+            "replica.info",
+            "unrelated.get",
+        ] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+    possible(
+        &built,
+        &root,
+        "array-optional-push-after-empty-prefix",
+        "untouched.get",
+    );
+    assert_export(
+        &built,
+        &root,
+        "array-optional-push-after-wide-prefix",
+        "untouched.get",
+    );
+}
+
+#[test]
+fn deferred_pushes_keep_shifted_suffixes_and_receiver_candidates() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    let file = "array-optional-push-conditional-helper";
+    for callee in ["replica.get", "untouched.get"] {
+        possible(&built, &root, file, callee);
+    }
+    let file = "array-optional-push-uncalled-helper";
+    // The projection does not prove helper reachability: keep the untouched
+    // original receiver while still recording that the suffix may be written.
+    possible(&built, &root, file, "replica.get");
+    let sites = built.call_sites_in_file(&root.join(format!("src/{file}.mts")));
+    assert!(sites
+        .iter()
+        .find(|site| site.source_callee == "untouched.get")
+        .unwrap()
+        .has_unknown_target());
+    for file in [
+        "array-optional-push-uncalled-helper",
+        "array-optional-push-conditional-helper",
+    ] {
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+}
+
+#[test]
+fn pushes_after_guarded_width_changes_keep_both_runtime_candidates() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    let file = "array-push-after-guarded-width-change";
+    for callee in ["replica.get", "untouched.get"] {
+        possible(&built, &root, file, callee);
+    }
+    for callee in ["primary.get", "replica.info", "unrelated.get"] {
+        assert_export(&built, &root, file, callee);
+    }
+}
+
+#[test]
+fn varying_width_without_a_push_keeps_the_possible_suffix_receiver() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    let file = "array-no-push-varying-width-suffix";
+    possible(&built, &root, file, "untouched.get");
+    for callee in [
+        "replica.get",
+        "primary.get",
+        "replica.info",
+        "unrelated.get",
+    ] {
+        assert_export(&built, &root, file, callee);
+    }
+}
+
+#[test]
+fn bound_spreads_remove_this_arg_before_projecting_possible_slots() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    possible(&built, &root, "array-bind-varying-width", "untouched.get");
+    for callee in ["replica.get", "untouched.get"] {
+        possible(&built, &root, "array-bind-optional-push", callee);
+    }
+    assert_unknown(&built, &root, "array-bind-known-empty", "untouched.get");
+    for file in ["array-bind-varying-width", "array-bind-known-empty"] {
+        assert_export(&built, &root, file, "replica.get");
+    }
+    for file in [
+        "array-bind-varying-width",
+        "array-bind-optional-push",
+        "array-bind-known-empty",
+    ] {
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, file, callee);
+        }
+    }
+}
+
+#[test]
+fn bind_consumes_one_expanded_receiver_and_keeps_the_remaining_parameters() {
+    let (built, root) = graph_for("value-flow-optional-prefixes");
+    for (file, replaced, retained) in [
+        (
+            "array-bind-packed-first-spread",
+            "replica.get",
+            "untouched.get",
+        ),
+        (
+            "array-bind-empty-first-spread",
+            "untouched.get",
+            "replica.get",
+        ),
+        (
+            "array-bind-multi-value-spread-suffix",
+            "replica.get",
+            "untouched.get",
+        ),
+    ] {
+        assert_unknown(&built, &root, file, replaced);
+        assert_export(&built, &root, file, retained);
+    }
+    let conditional = "array-bind-conditional-first-spread";
+    for callee in ["replica.get", "untouched.get"] {
+        possible(&built, &root, conditional, callee);
+    }
+    for file in [
+        "array-bind-packed-first-spread",
+        "array-bind-empty-first-spread",
+        "array-bind-multi-value-spread-suffix",
+        conditional,
+    ] {
+        for callee in ["primary.get", "replica.info", "unrelated.get"] {
+            assert_export(&built, &root, file, callee);
+        }
     }
 }

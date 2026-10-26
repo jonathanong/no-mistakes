@@ -82,6 +82,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::TEST_NO_DEPENDENCY_PINS,
     rules::POSTGRES_LOCK_ORDERING,
     rules::POSTGRES_NO_OFFSET,
+    rules::POSTGRES_NO_TRANSFORMED_UUID_PREDICATES,
     rules::POSTGRES_IDENTIFIER_LENGTH,
     rules::POSTGRES_COLUMN_NAMING,
     rules::POSTGRES_FINITE_TEXT_COLUMNS,
@@ -127,16 +128,22 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
             )
         },
     );
-    let findings = findings?;
+    let diagnostics = findings?;
     Ok(CheckTask {
-        findings,
+        findings: diagnostics.findings,
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
+        advisories: diagnostics.advisories,
         warning: None,
         duration,
     })
 }
 
+mod download_integrity;
+mod finite_sets;
+mod manifests;
+mod payload_compatibility;
+mod redirects;
 fn run_enabled_filesystem_rules(
     root: &Path,
     config: &NoMistakesConfig,
@@ -145,19 +152,16 @@ fn run_enabled_filesystem_rules(
     prepared: rules::filesystem_dispatch::PreparedFilesystemRuleInputs<'_>,
     facts: Option<&no_mistakes::codebase::check_facts::CheckFactMap>,
     defer_suppression: bool,
-) -> Result<Vec<RuleFinding>> {
-    if !enabled {
-        return Ok(Vec::new());
-    }
-    if defer_suppression {
-        rules::run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
-            root, config, files, prepared, facts,
-        )
-    } else {
-        rules::run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
-            root, config, files, prepared, facts,
-        )
-    }
+) -> Result<no_mistakes::codebase::rules::analysis_policy::AnalysisDiagnostics> {
+    finite_sets::run(
+        root,
+        config,
+        enabled,
+        files,
+        prepared,
+        facts,
+        defer_suppression,
+    )
 }
 
 pub(crate) fn filesystem_rules_configured(config: &NoMistakesConfig) -> bool {

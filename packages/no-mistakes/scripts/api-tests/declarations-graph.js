@@ -7,7 +7,10 @@ test("executed PostgreSQL source extraction exposes its named async contract", (
   assert.match(declarations, /export interface ExecutedPostgresSource \{/);
   assert.match(declarations, /export interface ExecutedPostgresTrustedSqlTag \{/);
   assert.match(declarations, /export interface ExecutedPostgresResolvedImport \{/);
-  assert.match(declarations, /export interface ExecutedPostgresSqlOptions \{/);
+  assert.match(
+    declarations,
+    /export interface ExecutedPostgresSqlOptions<Diagnostics extends boolean = false> \{/,
+  );
   assert.match(declarations, /trustedSqlTags\?: ExecutedPostgresTrustedSqlTag\[\];/);
   assert.match(declarations, /resolveImports\?: boolean;/);
   assert.match(declarations, /resolvedImports\?: ExecutedPostgresResolvedImport\[\];/);
@@ -142,6 +145,7 @@ test("test plan declarations require current results but accept saved legacy pla
     /export type SavedTestPlan = TestPlan;/,
     /planJson\?: SavedTestPlan \| string;/,
     /export interface TestsWhyOptions \{[\s\S]*plan\?: string;\n  planJson\?: SavedTestPlan \| string;/,
+    /export interface TestsPlanOptionsBase \{/,
     /export type TestsPlanOptions =/,
     /export type TestPlanFramework =\n  \| "vitest"\n  \| "playwright"\n  \| "dotnet"\n  \| "swift"\n  \| "python"\n  \| "go"\n  \| "cargo"\n  \| "rails"\n  \| "php"\n  \| "java"\n  \| "kotlin"\n  \| "elixir"\n  \| "dart"\n  \| "jest";/,
     /directTestOwner: true;[\s\S]*framework: TestPlanFramework;/,

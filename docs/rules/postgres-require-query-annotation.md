@@ -4,9 +4,50 @@ A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configurat
 
 Require a leading `/* name */` block comment on executed PostgreSQL SQL so
 slow-query logs and `EXPLAIN ANALYZE` can name the statement. Line comments
-(`-- name`) do not count. `BEGIN`, `COMMIT`, and `ROLLBACK` are exempt.
+(`-- name`) do not count. Complete literal `BEGIN`, `COMMIT`, and `ROLLBACK`
+commands are exempt at both effort levels.
 
-The rule consumes prepared embedded-SQL and helper summaries from the request's
+If a member call uses a receiver type imported from the configured executor
+module but omitted from `executorTypeNames`, the rule reports an undeclared
+executor type under `unanalyzable: report`, advises under `advise`, and stays
+silent under `ignore`. Add the imported type name to `executorTypeNames` (or the
+project's `postgres.executors.typeNames`) and explicitly annotate inferred
+receivers. These calls are diagnosed without
+being evaluated as SQL; adding a leading comment alone does not declare the
+receiver type. A declared type also proves an uninitialized `let` after one
+direct assignment in the same executing block, including a `try` body; foreign
+function writes, competing writes, and calls outside that block remain
+unresolved. This receiver proof is shared by low and maximum effort. See [executor bindings](../postgres-facts/executor-bindings.md).
+
+When the receiver is imported as a value and its declared executor type is not
+available to this check, the diagnostic names the receiver instead of treating
+that value name as a type. Pass it to a helper with a parameter explicitly
+typed using its actual executor type from the configured module, and add that
+type to `executorTypeNames`. The check confirms package ownership for relative
+imports; it does not propagate type annotations through an exported value:
+
+```ts
+import type { Pool } from "@example/db";
+import { writePool } from "./db.mjs";
+
+function listAccounts(pool: Pool) {
+  pool.query("/* accounts/list */ SELECT id FROM accounts");
+}
+
+listAccounts(writePool);
+```
+
+The receiver-named message starts with ``receiver `<name>` has no declared
+executor type available to this check``. Its target is
+`undeclared-executor-type`; when the imported value name itself is listed in
+`executorTypeNames`, the target is `unresolved-configured-executor-receiver`
+and the message clarifies that listing the value's name alone is insufficient.
+
+The same `unanalyzable` policy applies: `report` emits a finding, `advise`
+emits an advisory, and `ignore` omits the diagnostic. A type already identified
+by an explicit receiver annotation keeps its type-specific message.
+
+At `effort: max`, the rule consumes prepared embedded-SQL and helper summaries from the request's
 shared TypeScript parse. Imported helpers use the request's prepared importer
 project catalog and source session. Package-local TypeScript aliases resolve from
 the importing file's project; an explicit `--tsconfig` deliberately overrides that
@@ -32,15 +73,14 @@ on only one path is still reported at that branch's physical source location,
 where line suppressions also apply:
 
 ```ts
-query(named
-  ? "/* accounts/list */ SELECT id FROM accounts"
-  : "SELECT id FROM accounts"); // The second version needs an annotation.
+query(named ? "/* accounts/list */ SELECT id FROM accounts" : "SELECT id FROM accounts"); // The second version needs an annotation.
 ```
 
 Opaque or over-cap calls retain the richer prepared helper-prefix traversal
-and `unanalyzableSql` behavior. A trusted tag that splices an opaque leading
-SQL fragment has an unknown prefix rather than a bind placeholder. A literal
-leading annotation before a later opaque fragment remains verifiable.
+and `unanalyzableSql` behavior. A trusted tag that splices an opaque nested SQL
+fragment before the annotation has an unknown prefix, not a bind placeholder,
+and follows that policy. A literal leading annotation before a later nested
+fragment remains verifiable.
 
 `String.raw` strings and scalar results of
 comparisons, conditional tests, and object expressions remain bind values even
@@ -48,15 +88,6 @@ when their operands refer to a SQL builder. Without a complete version set,
 arrays and actual fragment-valued branches remain opaque. Reads of array slots
 or object properties containing fragments also remain opaque; interpolation
 effects are evaluated once.
-
-A trusted tag that splices a nested SQL fragment has an unknown prefix when
-the fragment comes first. The rule honors `unanalyzableSql` rather than reading
-that fragment as a bind placeholder. A literal leading annotation before a
-nested fragment remains verifiable. `String.raw` strings and scalar results of
-comparisons, conditional tests, and object expressions remain bind values even
-when their operands refer to a SQL builder. Arrays and actual fragment-valued
-branches remain opaque. Reads of array slots or object properties containing
-fragments also remain opaque; interpolation effects are evaluated once.
 
 SQL initialized in a `var` declaration stays visible in its enclosing function
 or program after a conditional or loop block ends. `let` and `const` stay inside
@@ -114,9 +145,8 @@ need a stable operation name rather than an opaque SQL string.
 
 ## What it catches/requires
 
-Executed PostgreSQL SQL must begin with a non-empty block comment. `BEGIN`,
-`COMMIT`, and `ROLLBACK` are exempt; line comments do not satisfy the contract.
-
+Executed PostgreSQL SQL must begin with a non-empty block comment. At `max`,
+`BEGIN`, `COMMIT`, and `ROLLBACK` are exempt; line comments do not satisfy the contract.
 
 ## Options and defaults
 
@@ -124,22 +154,76 @@ Executed PostgreSQL SQL must begin with a non-empty block comment. `BEGIN`,
 `executorNames` defaults to `[query, read, write]` only with a configured module.
 `unanalyzableSql` defaults to `report`; `ignore` skips residual unknown SQL and
 `advise` puts its reason, known prefix, and helper lines in non-failing
-`advisories`. Proven missing annotations remain findings in every mode.
+`advisories`. At `max`, proven missing annotations remain findings under every
+unanalyzable policy, including decidable literal heads at `low`.
 
 Configuration, SQL helper behavior, and callback forwarding are described in
 [options and helpers](../postgres-query-annotation/options-and-helpers.md).
 Use `check --include-sql-verdicts` for per-call proof and residual evidence;
 see [SQL verdicts](../postgres-sql-verdicts.md).
 
+## Analysis
+
+### Effort
+
+Maximum effort also recognizes a direct loop-carried literal reassignment in
+`for...of`, `for...in`, `while`, `do...while`, and simple `for` loops: an
+unconditional executor call followed by a missing-annotation literal assignment
+can reach that executor on the next iteration. Ordinary declarations, logging,
+plain blocks, and conditional resets or exits may appear before, between,
+or after the call and assignment when a path still carries the literal into
+the next iteration and then to the next read. This proof requires a trusted
+SQL tag (or a literal string) and a local mutable binding. Iterable loops require a direct
+identifier iterable and a declared identifier iteration variable; repeating
+tests and updates must not call code or reset the SQL binding. Awaited calls and member
+calls with proven executor ownership retain the same obligation. This extra
+witness does not model conditional executor calls or literal assignments,
+nested loops in the witnessed body, unsupported loop headers, or literal-false
+loop tests; those shapes use the existing maximum-effort analysis. If every
+reachable path resets the literal or exits before the next iteration, this
+witness stays silent. Stable complementary tests can suppress an apparent path only
+when neither fixed truth value has a witness. Same-polarity tests and tests whose
+inputs change in the loop keep possible paths. Writes to that same binding from
+another function (including closures and hoisted declarations), post-initializer
+writes to module-level `let`/`var`, and unsupported update/destructuring writes prevent
+correlation. Immutable conditions, shadowed writes to another binding, and
+ordinary same-function assignments before the loop retain correlation. Tests
+with member access or calls may over-report because their branches join independently.
+
+`effort: max` is the default and preserves helper, branch, builder, and imported
+value inference. At `effort: low`, a leading named literal at the executor call
+or through one local const qualifies, including tagged templates and safe local
+`.append()` chains. The evaluator does not run. Decidable missing annotations
+remain failing findings under every policy; unresolved shapes follow
+`unanalyzable`. Complete literal transaction commands retain their exemption.
+See [low-effort examples, rewrites, and suppressions](../postgres-query-annotation/low-effort.md).
+See [append composition and bounded alternatives](../postgres-query-annotation/append-composition.md)
+for the SQL text model, truncation, and invalid-SQL advisories.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Executor calls whose leading comment cannot be determined (helper-built or imported SQL at low, opaque SQL at max), SQL with an unresolved head, and calls through a receiver whose type is imported from the executor module but missing from `executorTypeNames`.
+  - `report` (default): fails as a finding, e.g. an undeclared executor type diagnostic.
+  - `advise`: a non-failing advisory carrying the reason, known prefix, and helper lines.
+  - `ignore`: omitted.
+
+  A proven missing annotation (including a decidable literal head at low) remains a finding under every policy.
+
 ## Valid example
 
 ```ts
+import { query } from "@example/db";
+
 query(`/* posts/list */ SELECT id FROM posts ORDER BY id DESC`);
 ```
 
 ## Counterexample
 
 ```ts
+import { query } from "@example/db";
+
 query(`SELECT id FROM posts ORDER BY id DESC`);
 ```
 
@@ -156,7 +240,6 @@ administrative script.
 
 SQL recovered from an imported helper is reported in the helper's module at the helper's line. A directive in the helper's file suppresses it, and so does a directive in the calling file (file-level, on the executor call, or on the imported-helper call). See [Helper-line attribution and suppression](../postgres-facts.md#helper-line-attribution-and-suppression).
 
-
 Detailed mutation and invocation behavior is described in
 [advanced helper semantics](../postgres-query-annotation/advanced-helper-semantics.md).
 
@@ -164,3 +247,36 @@ Detailed mutation and invocation behavior is described in
 
 [`postgres-no-offset`](postgres-no-offset.md) discourages unstable pagination;
 [`postgres-lock-ordering`](postgres-lock-ordering.md) protects concurrent row locks.
+
+### Configured single-literal SQL helpers
+
+Set `sqlLiteralHelpers: ['pg-copy-streams#from']` to recognize a direct runtime
+import of that exact module and export at both `effort: low` and `effort: max`:
+
+```ts
+import { from as copyFrom } from 'pg-copy-streams';
+client.query(copyFrom('/* import users */ COPY users FROM STDIN'));
+```
+
+Named imports, renamed imports, and direct namespace calls such as
+`copies.from(...)`, `copies['from'](...)`, and ``copies[`from`](...)`` are
+supported. Bracket keys must be string literals or template literals without
+interpolations; numeric and regular expression keys are unsupported. Optional
+calls and optional namespace access remain unsupported. The helper must receive
+exactly one string literal or template literal without interpolations. Its SQL
+comment must occur **inside the literal**;
+`copyFrom(/* import users */ 'COPY users FROM STDIN')` is a definite missing
+annotation. Fix it by moving the named comment inside the string. Definite
+missing annotations remain findings under every unanalyzable policy; existing
+transaction exemptions still apply.
+
+The option defaults to `[]` and selects no helpers. Identities use nonempty,
+exact `module#export` strings; package subpaths must be listed separately.
+Shadowed or type-only imports, optional calls, dynamic namespace keys,
+spread arguments, other argument counts,
+interpolated templates, dynamic arguments, stored helper results, and helper
+return forwarding provide no proof. These retain the existing `unanalyzable`
+report/advise/ignore policy. Rewrite them to a direct helper wrapping one static
+literal, or use the existing rule suppression directives documented above.
+`sqlLiteralHelpers` is independent of deprecated `trustedSqlTags` and does not
+add helper support to the general SQL extraction API.

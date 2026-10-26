@@ -24,6 +24,11 @@ bundle.
 Files selected as client/helper code must not live beneath configured server
 route directories. The project configuration supplies the route scope.
 
+The rule checks `.ts`, `.mts`, `.tsx`, `.cts`, `.js`, `.mjs`, `.jsx`, and `.cjs`
+source files. Files outside this set, including Markdown, JSON, and MDX, do not
+establish route boundaries or client violations, even when another configured
+rule prepares import facts for those files.
+
 ## Options and defaults
 
 `excludes` is an optional list of route folders or files to leave outside the
@@ -34,21 +39,102 @@ convention.
 
 ## Valid example
 
-```text
-backend/api/users/route.ts
-backend/services/users-client.ts
+```yaml
+# .no-mistakes.yml
+projects:
+  api:
+    type: server
+    root: backend
+    routes: ['api/**']
+rules:
+  - rule: server-route-client-boundary
+    projects: [api]
+```
+
+```ts
+// backend/api/users/route.ts
+import express from 'express';
+const app = express();
+app.get('/api/users', (_request, response) => response.json([]));
+```
+
+```ts
+// backend/services/users-client.ts
+import axios from 'axios';
+export async function getUsers() {
+  return axios.get('/api/users');
+}
 ```
 
 ## Counterexample
 
-```text
-backend/api/users/client.ts
+```yaml
+# .no-mistakes.yml
+projects:
+  api:
+    type: server
+    root: backend
+    routes: ['api/**']
+rules:
+  - rule: server-route-client-boundary
+    projects: [api]
 ```
+
+```ts
+// backend/api/users/route.ts
+import express from 'express';
+const app = express();
+app.get('/api/users', (_request, response) => response.json([]));
+```
+
+```ts
+// backend/api/users/client.ts
+import axios from 'axios';
+export async function getUsers() {
+  return axios.get('/api/users');
+}
+```
+
+The resolved Express route establishes the folder boundary; the Axios call
+in its sibling file violates it.
 
 ## Fix
 
 Move the client/helper into the configured service/client area, or narrow the
 route project if this directory is not actually a server route boundary.
+
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Upgrade note: in-scope files that cannot be read, or parsed where this rule
+requires parsing, now fail `check` under the default `unanalyzable: report`
+instead of silently passing. Fix or exclude those inputs, or set
+`options.unanalyzable: advise` or `ignore` to restore the previous successful
+exit status for uncertainty alone. Independent definite findings still fail
+under every policy.
+
+Selected files that cannot be read as UTF-8 produce an `unanalyzable`
+diagnostic instead of silently passing. Restore read access or repair the
+encoding so the rule can verify the file. The shared `options.unanalyzable`
+setting inherits the repository policy: `report` (the default) fails,
+`advise` emits non-failing advice, and `ignore` omits uncertainty. Definite
+violations remain failures under every policy, including when `effort: low`
+falls back to `max`.
+
+Configured scope, includes, excludes, and rule-specific exemptions still
+select the inputs. Suppressions apply to both channels, including directives
+retained in an invalid UTF-8 read error; source bytes are never reinterpreted
+as analyzable code. Rule-level custom messages apply to these diagnostics.
+
+TS/JS parse failures use the same policy for configured route candidates or
+files under a verified route folder. The prepared runner consumes its existing
+read/parse errors and boundary facts; it does not read or parse files again to
+recover missing facts. The standalone rule reports the same failures.
 
 ## Suppression
 

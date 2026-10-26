@@ -1,6 +1,7 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::statements::{SqlColumnClause, SqlColumnUseFact, SqlFactSite};
+use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use crate::codebase::ts_source::relative_slash_path;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -18,6 +19,7 @@ pub(super) fn scan(
     query_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     context: &dyn SqlFactContext,
+    anchor: &ConfigAnchor,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let prepared = context.prepared();
     let sql_paths = crate::codebase::postgres::postgres_sql_paths(root, files, &opts.schema)?;
@@ -46,7 +48,7 @@ pub(super) fn scan(
     let columns = catalog::column_index(&live);
     let tracked = catalog::tracked_columns(&live, opts);
     let mut findings = crate::codebase::rules::PostgresFindings::default();
-    findings.extend(catalog::stale_extras(&live, &opts.extras));
+    findings.extend(catalog::stale_extras(&live, &opts.extras, anchor));
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     if tracked.is_empty() {
         return Ok(findings);
@@ -74,19 +76,20 @@ pub(super) fn scan(
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path);
         if opts.fail_unanalyzable && file.parse_failed {
-            dedup.push(
-                &mut findings,
-                file,
-                SqlFactSite::Origin,
-                source.as_deref(),
-                sql_finding(
-                    &rel,
-                    file.origin_line.max(1),
-                    "SQL could not be analyzed for generated column predicates",
-                    "unanalyzable",
-                ),
-            );
-            continue;
+            for (site, line) in file.parse_failure_sites() {
+                dedup.push(
+                    &mut findings,
+                    file,
+                    site,
+                    source.as_deref(),
+                    sql_finding(
+                        &rel,
+                        line,
+                        "SQL could not be analyzed for generated column predicates",
+                        "unanalyzable",
+                    ),
+                );
+            }
         }
         for (select_index, select) in file.selects.iter().enumerate() {
             for (column_index, use_) in select.column_uses.iter().enumerate() {

@@ -1,5 +1,7 @@
 use super::names;
 
+mod boolean_keys;
+
 #[test]
 fn a_whole_unique_key_pinned_to_a_value_bounds_a_relation() {
     assert!(names("SELECT 1 FROM accounts WHERE id = $1").is_empty());

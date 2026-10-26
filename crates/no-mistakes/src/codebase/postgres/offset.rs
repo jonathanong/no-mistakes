@@ -26,12 +26,17 @@ pub struct SqlOffsetFact {
 
 /// Parse `sql` and return every executed `OFFSET` clause in source order.
 pub fn sql_offset_uses(sql: &str) -> Result<Vec<OffsetUse>, PostgresParseError> {
-    let prepared = PreparedSql::new(sql);
-    let statements = prepared.parse()?;
-    Ok(offset_facts_prepared(&prepared, &statements)
+    Ok(sql_offset_facts(sql)?
         .into_iter()
         .map(|fact| fact.kind)
         .collect())
+}
+
+/// Parse only the executed OFFSET facts without collecting unrelated SQL domains.
+pub(crate) fn sql_offset_facts(sql: &str) -> Result<Vec<SqlOffsetFact>, PostgresParseError> {
+    let prepared = PreparedSql::new(sql);
+    let statements = prepared.parse()?;
+    Ok(offset_facts_prepared(&prepared, &statements))
 }
 
 /// Parse `sql` and report whether any query uses an `OFFSET` clause.

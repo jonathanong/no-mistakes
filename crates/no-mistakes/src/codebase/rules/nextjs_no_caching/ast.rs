@@ -24,6 +24,7 @@ pub(crate) fn prepare_visitor<'a>(
     for directive in &program.directives {
         if is_cache_directive(directive.directive.as_str()) {
             findings.push(NextjsCachingFinding {
+                unanalyzable: false,
                 line: byte_offset_to_line(source, directive.span.start as usize) as usize,
                 message: "Next.js cache directives are disabled; remove this directive".to_string(),
             });
@@ -44,7 +45,7 @@ pub(crate) fn finish_visitor(
     visitor.findings
 }
 
-fn is_route_segment_file(path: &Path) -> bool {
+pub(super) fn is_route_segment_file(path: &Path) -> bool {
     let has_route_segment_name = path
         .file_stem()
         .and_then(|name| name.to_str())
@@ -57,7 +58,7 @@ fn is_route_segment_file(path: &Path) -> bool {
         })
 }
 
-fn is_next_config_file(path: &Path) -> bool {
+pub(super) fn is_next_config_file(path: &Path) -> bool {
     path.file_name()
         .and_then(|name| name.to_str())
         .is_some_and(|name| name == "next.config" || name.starts_with("next.config."))

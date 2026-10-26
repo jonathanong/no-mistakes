@@ -84,6 +84,7 @@ fn standalone_playwright_report_releases_cached_asts_before_serialization_return
 #[test]
 fn text_printers_cover_routes_and_selectors() {
     let coverage = CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 1,
             covered_routes: 0,
@@ -118,6 +119,8 @@ fn text_printers_cover_routes_and_selectors() {
                 line: 4,
                 call: "getAsideLocator(...)".to_string(),
             }],
+            line: 1,
+            literal_exact: true,
         }],
         duplicate_selectors: vec![DuplicateSelector {
             attribute: "data-testid".to_string(),

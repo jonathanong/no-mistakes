@@ -145,7 +145,7 @@ where
     Ok(findings)
 }
 
-fn target_roots(
+pub(crate) fn target_roots(
     root: &Path,
     config: &NoMistakesConfig,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,

@@ -1,3 +1,4 @@
+<!-- cspell:ignore dorny -->
 # `vitest-ci-path-coverage`
 
 Requires Vitest project inputs to be covered by GitHub Actions path filters.
@@ -13,7 +14,7 @@ tests:
       backend:
         include: [backend/**/*.test.ts]
       shared:
-        include: [ts-shared/**/*.test.ts]
+        include: ["ts-shared/**/*.test.ts"]
 
 testPlan:
   vitest:
@@ -107,8 +108,62 @@ triggers are checked against their named runner projects.
 ## Valid example
 
 ```yaml
-paths:
-  - ts-shared/**
+# .no-mistakes.yml
+projects:
+  ts-shared: {root: ts-shared}
+tests:
+  vitest:
+    projects:
+      shared:
+        include: [ts-shared/**/*.test.ts]
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        ts-shared:
+          paths: ["ts-shared/**"]
+          targets: [shared]
+rules:
+  - rule: vitest-ci-path-coverage
+    scope: repository
+    options:
+      projectFilters:
+        shared: [shared]
+      sourceGlobsByProject:
+        shared: ['ts-shared/**/*.mts']
+      workflows:
+        - path: .github/workflows/ci.yml
+          job: detect-changes
+          stepId: filter
+```
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on: pull_request
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shared:
+              - 'ts-shared/**'
+```
+
+```ts
+// ts-shared/utils/index.test.ts
+import { it } from 'vitest';
+import { add } from './index.mts';
+
+it('adds values', () => add(1, 1));
+```
+
+```ts
+// ts-shared/utils/index.mts
+export const add = (left: number, right: number) => left + right;
 ```
 
 The filter covers `ts-shared/**/*.test.ts` and its source inputs.
@@ -116,8 +171,62 @@ The filter covers `ts-shared/**/*.test.ts` and its source inputs.
 ## Counterexample
 
 ```yaml
-paths:
-  - ts-shared/*/package.json
+# .no-mistakes.yml
+projects:
+  ts-shared: {root: ts-shared}
+tests:
+  vitest:
+    projects:
+      shared:
+        include: ["ts-shared/**/*.test.ts"]
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        ts-shared:
+          paths: ["ts-shared/**"]
+          targets: [shared]
+rules:
+  - rule: vitest-ci-path-coverage
+    scope: repository
+    options:
+      projectFilters:
+        shared: [shared]
+      sourceGlobsByProject:
+        shared: ['ts-shared/**/*.mts']
+      workflows:
+        - path: .github/workflows/ci.yml
+          job: detect-changes
+          stepId: filter
+```
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on: pull_request
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shared:
+              - 'ts-shared/*/package.json'
+```
+
+```ts
+// ts-shared/utils/index.test.ts
+import { it } from 'vitest';
+import { add } from './index.mts';
+
+it('adds values', () => add(1, 1));
+```
+
+```ts
+// ts-shared/utils/index.mts
+export const add = (left: number, right: number) => left + right;
 ```
 
 This misses a nested `ts-shared/utils/index.mts` change selected locally.
@@ -126,6 +235,18 @@ This misses a nested `ts-shared/utils/index.mts` change selected locally.
 
 Broaden the workflow filter, correct `projectFilters`, or narrow the Vitest
 project input to the files CI really runs.
+
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+
+- This rule has no unanalyzable inputs: it compares configured Vitest includes with CI path filter patterns. Nothing is routed through `options.unanalyzable`.
 
 ## Suppression
 

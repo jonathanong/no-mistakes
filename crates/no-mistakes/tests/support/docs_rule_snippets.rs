@@ -2,19 +2,9 @@ use std::path::{Path, PathBuf};
 
 use tempfile::TempDir;
 
-const SKIP_OPEN_PRS: &[&str] = &[
-    // Open PR #2425 owns these check-rule implementations.
-    "postgres-no-mutable-sql-registry",
-    "postgres-no-unbounded-sql-identifier",
-];
-
 pub struct RulePage {
     pub file: String,
     pub body: String,
-}
-
-pub fn skip_open_pr(rule_id: &str) -> bool {
-    SKIP_OPEN_PRS.contains(&rule_id)
 }
 
 pub fn labeled_section(body: &str, labels: &[&str]) -> String {
@@ -35,7 +25,7 @@ pub fn labeled_section(body: &str, labels: &[&str]) -> String {
 
 pub fn heading_section(body: &str, title: &str) -> String {
     let header = format!("## {title}").to_ascii_lowercase();
-    let mut in_fence: Option<usize> = None;
+    let mut in_fence: Option<(u8, usize)> = None;
     let mut collecting = false;
     let mut collected = Vec::new();
     for line in body.lines() {
@@ -72,13 +62,17 @@ pub fn heading_section(body: &str, title: &str) -> String {
 fn heading_matches(line: &str, header_lc: &str) -> bool {
     let line_lc = line.to_ascii_lowercase();
     line_lc == header_lc
-        || line_lc.starts_with(&format!("{header_lc} "))
+        || line_lc.starts_with(&format!("{header_lc} and "))
         || line_lc.starts_with(&format!("{header_lc},"))
 }
 
-fn open_fence(line: &str) -> Option<(usize, String)> {
+fn open_fence(line: &str) -> Option<((u8, usize), String)> {
     let trimmed = line.trim_start();
-    let mark = trimmed.chars().take_while(|c| *c == '`').count();
+    let character = *trimmed.as_bytes().first()?;
+    if !matches!(character, b'`' | b'~') {
+        return None;
+    }
+    let mark = trimmed.bytes().take_while(|&c| c == character).count();
     if mark < 3 {
         return None;
     }
@@ -88,12 +82,12 @@ fn open_fence(line: &str) -> Option<(usize, String)> {
         .next()
         .unwrap_or("")
         .to_ascii_lowercase();
-    Some((mark, lang))
+    Some(((character, mark), lang))
 }
 
-fn close_fence(line: &str, mark: usize) -> bool {
+fn close_fence(line: &str, (character, mark): (u8, usize)) -> bool {
     let trimmed = line.trim_start();
-    let n = trimmed.chars().take_while(|c| *c == '`').count();
+    let n = trimmed.bytes().take_while(|&c| c == character).count();
     n >= mark && trimmed.chars().skip(n).all(char::is_whitespace)
 }
 
@@ -185,8 +179,18 @@ fn extract_options_block(source: &str) -> String {
 }
 
 pub fn materialize_snippet(config: &str, snippet: &[(String, String)]) -> TempDir {
+    // An explicitly named config is part of the example, including its project
+    // catalog and effects; unnamed rule examples retain the synthesized config.
+    let config = snippet
+        .iter()
+        .filter(|(lang, code)| {
+            matches!(lang.as_str(), "yaml" | "yml") && starts_with_path_comment(lang, code)
+        })
+        .flat_map(|(lang, code)| split_named_files(code, lang, None))
+        .find_map(|(name, body)| (name == ".no-mistakes.yml").then_some(body))
+        .unwrap_or_else(|| config.to_owned());
     let dir = TempDir::new().expect("temp fixture");
-    std::fs::write(dir.path().join(".no-mistakes.yml"), config).expect("write config");
+    std::fs::write(dir.path().join(".no-mistakes.yml"), &config).expect("write config");
     if snippet.iter().any(|(lang, _)| {
         matches!(
             lang.as_str(),
@@ -199,9 +203,12 @@ pub fn materialize_snippet(config: &str, snippet: &[(String, String)]) -> TempDi
             "{\n  \"compilerOptions\": { \"strict\": true },\n  \"include\": [\"**/*\"]\n}\n",
         );
     }
-    let catalog = schema_catalog_path(config);
+    let catalog = schema_catalog_path(&config);
     for (lang, code) in snippet {
-        if matches!(lang.as_str(), "yaml" | "yml") && code.contains("rules:") {
+        if matches!(lang.as_str(), "yaml" | "yml")
+            && code.contains("rules:")
+            && !starts_with_path_comment(lang, code)
+        {
             continue;
         }
         write_files(dir.path(), lang, code, catalog.as_deref());
@@ -247,7 +254,11 @@ fn write_files(root: &Path, lang: &str, code: &str, catalog: Option<&str>) {
     }
     let parts = split_named_files(code, lang, catalog);
     for (name, body) in parts {
-        write_path(root, &name, &wrap_workflow_yaml(lang, &body));
+        if name == ".no-mistakes.yml" {
+            write_path(root, &name, &body);
+        } else {
+            write_path(root, &name, &wrap_workflow_yaml(lang, &body));
+        }
     }
 }
 
@@ -259,21 +270,70 @@ fn looks_like_path_listing(code: &str) -> bool {
         .collect();
     !lines.is_empty()
         && lines.iter().all(|line| {
-            !line.contains(' ') && (line.contains('/') || line.contains('.')) && !line.contains('=')
+            !line.contains(' ')
+                && !looks_like_email_line(line)
+                && (line.contains('/') || line.contains('.'))
+                && !line.contains('=')
         })
 }
 
-fn split_named_files(code: &str, lang: &str, catalog: Option<&str>) -> Vec<(String, String)> {
-    let comment = match lang {
+fn looks_like_email_line(line: &str) -> bool {
+    // `owner@example.com` is fixture content. `app/@modal/page.tsx` and
+    // `packages/@scope/pkg` still contain `/`, so they stay path listings.
+    line.contains('@') && !line.contains('/')
+}
+
+pub fn starts_with_path_comment(lang: &str, code: &str) -> bool {
+    code.lines()
+        .map(str::trim)
+        .find(|line| !line.is_empty())
+        .is_some_and(|line| path_comment(line, path_comment_prefix(lang)).is_some())
+}
+
+/// Named-file fences in one Valid/Counterexample section are one fixture.
+pub fn snippet_runs(fences: &[(String, String)]) -> Vec<(usize, Vec<(String, String)>)> {
+    if fences.len() > 1
+        && fences
+            .iter()
+            .all(|(lang, code)| starts_with_path_comment(lang, code))
+    {
+        return vec![(0, fences.to_vec())];
+    }
+    fences
+        .iter()
+        .enumerate()
+        .map(|(index, fence)| (index, vec![fence.clone()]))
+        .collect()
+}
+
+fn path_comment_prefix(lang: &str) -> &'static str {
+    match lang {
         "sql" => "-- ",
-        "yaml" | "yml" | "sh" | "bash" | "py" => "# ",
+        "yaml" | "yml" | "sh" | "bash" | "py" | "toml" => "# ",
         _ => "// ",
-    };
+    }
+}
+
+fn split_named_files(code: &str, lang: &str, catalog: Option<&str>) -> Vec<(String, String)> {
+    let comment = path_comment_prefix(lang);
     let mut files = Vec::new();
     let mut current_name = default_filename(lang, code, catalog);
     let mut current = String::new();
     for line in code.lines() {
         if let Some(name) = path_comment(line, comment) {
+            // A shell path comment follows its shebang so the named file keeps
+            // the interpreter line at the top. Carry that header into the
+            // named file instead of writing an overwritten default file.
+            if matches!(lang, "sh" | "bash")
+                && current
+                    .lines()
+                    .filter(|line| !line.trim().is_empty())
+                    .all(|line| line.trim().starts_with("#!"))
+                && current.lines().any(|line| line.trim().starts_with("#!"))
+            {
+                current_name = name;
+                continue;
+            }
             if !current.trim().is_empty() {
                 files.push((current_name, current.trim_end().to_string()));
             }

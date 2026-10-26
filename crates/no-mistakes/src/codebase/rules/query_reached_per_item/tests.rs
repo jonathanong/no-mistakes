@@ -364,3 +364,9 @@ mod provenance_cases;
 mod superseded_provenance;
 #[path = "tests/type_import_order.rs"]
 mod type_import_order;
+
+#[path = "tests/sink_paths.rs"]
+pub(crate) mod sink_paths;
+
+#[path = "tests/sink_trace_parity.rs"]
+mod sink_trace_parity;

@@ -1,6 +1,18 @@
 use super::*;
 use serde_json::json;
 
+#[path = "check_config_locations.rs"]
+mod check_config_locations;
+#[path = "check_parse_failure_locations.rs"]
+mod check_parse_failure_locations;
+#[path = "check_tsconfig_alias_locations.rs"]
+mod check_tsconfig_alias_locations;
+#[path = "config_diagnostic_locations.rs"]
+mod config_diagnostic_locations;
+
+#[path = "check_playwright_patterns.rs"]
+mod check_playwright_patterns;
+
 #[path = "check_suppression.rs"]
 mod check_suppression;
 #[path = "check_suppression_audit.rs"]
@@ -359,3 +371,35 @@ fn check_json_reports_unproven_member_query_sql_without_warnings() {
         "{report}"
     );
 }
+
+#[path = "check_analysis_policy.rs"]
+mod check_analysis_policy;
+
+#[path = "check_caching_effort.rs"]
+mod check_caching_effort;
+
+#[path = "check_download_effort.rs"]
+mod check_download_effort;
+
+#[path = "check_literal_helpers.rs"]
+mod check_literal_helpers;
+
+#[path = "check_redirect_effort.rs"]
+mod check_redirect_effort;
+
+#[path = "check_storybook_effort.rs"]
+mod check_storybook_effort;
+
+#[path = "check_unconstructed_error.rs"]
+mod check_unconstructed_error;
+
+#[path = "check_offset_effort.rs"]
+mod check_offset_effort;
+
+#[path = "check_payload_effort.rs"]
+mod check_payload_effort;
+
+#[path = "check_finite_set_effort.rs"]
+mod check_finite_set_effort;
+#[path = "check_transformed_uuid_predicates.rs"]
+mod check_transformed_uuid_predicates;

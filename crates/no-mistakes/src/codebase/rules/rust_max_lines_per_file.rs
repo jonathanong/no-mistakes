@@ -1,10 +1,7 @@
 use super::RuleFinding;
-use crate::codebase::ts_source::{
-    discover_with_extensions, has_disable_file_comment, relative_slash_path,
-};
+use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -23,78 +20,7 @@ pub(crate) struct Options {
 }
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
-    let skip = &config.filesystem.skip_directories;
-    let mut findings = Vec::new();
-    for rule in config.rule_applications(RULE_ID) {
-        let opts = rule.try_rule_options()?;
-        let target_roots = super::target_roots(root, config, rule);
-        let roots = normalize_roots(&opts, root, &target_roots);
-        let files: Vec<PathBuf> = roots
-            .iter()
-            .flat_map(|r| discover_with_extensions(r, skip, &["rs"]))
-            .filter(|p| !is_excluded(root, p, &opts.excludes))
-            .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan(root, &opts, &files)?);
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
-}
-
-fn normalize_roots(opts: &Options, root: &Path, target_roots: &[PathBuf]) -> Vec<PathBuf> {
-    opts.roots
-        .as_deref()
-        .map(|rs| {
-            rs.iter()
-                .map(|r| {
-                    if r.is_absolute() {
-                        r.clone()
-                    } else {
-                        root.join(r)
-                    }
-                })
-                .collect()
-        })
-        .unwrap_or_else(|| target_roots.to_vec())
-}
-
-fn is_excluded(root: &Path, path: &Path, excludes: &[String]) -> bool {
-    let rel = path.strip_prefix(root).unwrap_or(path).to_string_lossy();
-    excludes.iter().any(|e| rel.contains(e.as_str()))
-}
-
-fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
-    let src_max = opts.src_max.unwrap_or(DEFAULT_SRC_MAX);
-    let test_max = opts.test_max.unwrap_or(DEFAULT_TEST_MAX);
-    let mut findings: Vec<RuleFinding> = files
-        .par_iter()
-        .flat_map(|path| {
-            let limit = if is_test_file(root, path) {
-                test_max
-            } else {
-                src_max
-            };
-            check_file(path, root, limit)
-        })
-        .collect();
-    findings.sort_by(|a, b| a.file.cmp(&b.file));
-    Ok(findings)
-}
-
-fn check_file(path: &Path, root: &Path, limit: usize) -> Option<RuleFinding> {
-    let Ok(content) = std::fs::read_to_string(path) else {
-        return None;
-    };
-    check_source(path, root, &content, limit)
-}
-
-pub(crate) fn check_source(
-    path: &Path,
-    root: &Path,
-    content: &str,
-    limit: usize,
-) -> Option<RuleFinding> {
-    check_source_with_deferred_suppression(path, root, content, limit, false)
+    super::rust_rules_combined::standalone::check(root, config, RULE_ID)
 }
 
 pub(crate) fn check_source_with_deferred_suppression(
@@ -141,3 +67,5 @@ mod line_counter;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_support;

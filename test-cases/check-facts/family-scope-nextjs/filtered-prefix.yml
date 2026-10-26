@@ -1,0 +1,8 @@
+# This exclusion sits between cached files in the selected prefix and tail.
+rules:
+  - rule: nextjs-no-caching
+    scope: repository
+    include: ["**/*"]
+    exclude: [web/other/excluded.ts]
+    options:
+      unanalyzable: advise

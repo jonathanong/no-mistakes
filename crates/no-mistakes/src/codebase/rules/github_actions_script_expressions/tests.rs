@@ -3,7 +3,10 @@ use super::{compile_patterns, default_constant_contexts, Options, RULE_ID};
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+
+#[path = "fixture_tests.rs"]
+mod fixture_tests;
 
 const WORKFLOW: &str = ".github/workflows/ci.yml";
 const ACTION: &str = ".github/actions/build/action.yml";
@@ -416,13 +419,7 @@ fn benign_workflow_shapes_pass() {
 }
 
 #[test]
-fn non_workflow_paths_and_missing_sources_are_skipped() {
-    let patterns = compile_patterns(&Options::default()).unwrap();
-    let sources = crate::codebase::rules::source_store_for_files(&[]);
-    let readme = Path::new("README.md");
-    assert!(super::check_file(readme, Path::new("/missing"), &patterns, &sources).is_empty());
-    let workflow = Path::new(".github/workflows/ci.yml");
-    assert!(super::check_file(workflow, Path::new("/missing"), &patterns, &sources).is_empty());
+fn non_workflow_paths_are_skipped() {
     assert!(super::analyze::gha_kind("docs/readme.yml").is_none());
     assert!(super::analyze::gha_kind(".github/actions/build/action.md").is_none());
     assert_eq!(
@@ -431,101 +428,5 @@ fn non_workflow_paths_and_missing_sources_are_skipped() {
     );
 }
 
-fn fixture_root(scenario: &str) -> PathBuf {
-    crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/rules/github-actions-script-expressions/fixture")
-            .join(scenario),
-    )
-}
-
-fn fixture_files(root: &Path, scenario: &str) -> Vec<PathBuf> {
-    let names: &[&str] = match scenario {
-        "pass" => &[
-            ".github/actions/image/action.yml",
-            ".github/actions/pack/action.yml",
-            ".github/workflows/ci.yml",
-            ".no-mistakes.yml",
-        ],
-        "fail" => &[
-            ".github/actions/pack/action.yml",
-            ".github/workflows/ci.yml",
-            ".no-mistakes.yml",
-        ],
-        "allowlist" => &[".github/workflows/ci.yml", ".no-mistakes.yml"],
-        "unanalyzable" => &[
-            ".github/workflows/alias.yml",
-            ".github/workflows/flow.yml",
-            ".no-mistakes.yml",
-        ],
-        other => panic!("unknown fixture scenario {other}"),
-    };
-    names.iter().map(|name| root.join(name)).collect()
-}
-
-fn load_fixture(scenario: &str) -> (PathBuf, NoMistakesConfig, Vec<PathBuf>) {
-    let root = fixture_root(scenario);
-    let config =
-        serde_yaml::from_str(&std::fs::read_to_string(root.join(".no-mistakes.yml")).unwrap())
-            .unwrap();
-    let files = fixture_files(&root, scenario);
-    (root, config, files)
-}
-
-#[test]
-fn saved_fixtures_match_allowed_flagged_allowlist_and_suppression() {
-    let (root, config, files) = load_fixture("pass");
-    let findings = super::check_with_files(&root, &config, &files).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
-
-    let (root, config, files) = load_fixture("fail");
-    let findings = super::check_with_files(&root, &config, &files).unwrap();
-    let mut got = targets(&findings);
-    got.sort_unstable();
-    assert_eq!(
-        got,
-        vec![
-            "env.FOO",
-            "github.actor",
-            "github.actor",
-            "github.event.head_commit.message",
-            "github.event.issue.title",
-            "github.ref",
-            "github.sha || 'unknown'",
-            "inputs.name",
-            "inputs.name",
-            "job.services.redis.ports[6379]",
-            "secrets.TOKEN",
-            "steps.id.outputs.value",
-            "vars.FOO",
-        ]
-    );
-    assert!(findings
-        .iter()
-        .any(|finding| finding.file.ends_with("action.yml")));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.file.ends_with("ci.yml")));
-
-    let (root, config, files) = load_fixture("allowlist");
-    let findings = super::check_with_files(&root, &config, &files).unwrap();
-    assert_eq!(targets(&findings), vec!["github.sha"]);
-
-    let root = fixture_root("suppression");
-    let findings = crate::codebase::rules::run_filesystem_rules(&root, None).unwrap();
-    assert_eq!(
-        targets(&findings),
-        vec!["github.event.head_commit.message"],
-        "{findings:?}"
-    );
-
-    let (root, config, files) = load_fixture("unanalyzable");
-    let findings = super::check_with_files(&root, &config, &files).unwrap();
-    assert!(
-        findings.len() == 2
-            && findings
-                .iter()
-                .all(|finding| finding.message.contains("aligned")),
-        "{findings:?}"
-    );
-}
+#[path = "unreadable_tests.rs"]
+mod unreadable_tests;

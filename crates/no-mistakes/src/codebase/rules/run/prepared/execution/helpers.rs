@@ -32,7 +32,9 @@ pub(super) struct StorybookFindingsRequest<'a> {
     pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
 }
 
-pub(super) fn storybook_findings(input: StorybookFindingsRequest<'_>) -> Result<Vec<RuleFinding>> {
+pub(super) fn storybook_findings(
+    input: StorybookFindingsRequest<'_>,
+) -> Result<crate::codebase::rules::analysis_policy::AnalysisDiagnostics> {
     let StorybookFindingsRequest {
         root,
         config,
@@ -68,6 +70,7 @@ pub(super) fn suppress_findings(
 pub(super) fn finalize_findings(
     findings: Vec<RuleFinding>,
     suppression_sources: Vec<Option<String>>,
+    mut advisories: Vec<RuleFinding>,
 ) -> PreparedRuleFindings {
     let mut paired = findings
         .into_iter()
@@ -76,8 +79,11 @@ pub(super) fn finalize_findings(
     paired.sort_by(|(a, _), (b, _)| a.cmp(b));
     paired.dedup_by(|(a, source_a), (b, source_b)| a == b && source_a == source_b);
     let (findings, suppression_sources): (Vec<_>, Vec<_>) = paired.into_iter().unzip();
+    advisories.sort();
+    advisories.dedup();
     PreparedRuleFindings {
         findings,
         suppression_sources,
+        advisories,
     }
 }

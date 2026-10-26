@@ -1,0 +1,10 @@
+name: Dynamic option names must not prove unsafe URL slots
+on: push
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          # The expanded option consumes the URL-looking argument as a filename.
+          FLAG=output
+          curl --$FLAG https://untrusted.example.invalid/output-filename

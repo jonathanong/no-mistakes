@@ -26,7 +26,7 @@ describe("helpers coverage", () => {
   });
 
   it("uses the fetch-shadow fallback when scope.set.get is missing", () => {
-    const node = { callee: { type: "Identifier", name: "fetch" } };
+    const node = { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } };
     const shadowed = {
       sourceCode: {
         getScope: () => ({
@@ -166,8 +166,11 @@ describe("test-no-shared-state helpers", () => {
     const testCall = {
       type: "CallExpression",
       callee: { type: "Identifier", name: "it" },
+      arguments: [],
     };
-    expect(isInlineTestCallback({ parent: testCall })).toBe(true);
+    const callback = { type: "ArrowFunctionExpression", parent: testCall };
+    testCall.arguments.push(callback);
+    expect(isInlineTestCallback(callback)).toBe(true);
     expect(isInlineTestCallback({ parent: { type: "FunctionDeclaration" } })).toBe(false);
     expect(mutatingCallPropertyName({ callee: { type: "Identifier", name: "push" } })).toBeNull();
   });

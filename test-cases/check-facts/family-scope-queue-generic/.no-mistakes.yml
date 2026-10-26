@@ -1,0 +1,3 @@
+projects:
+  app:
+    type: server

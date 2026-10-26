@@ -11,15 +11,16 @@ fn final_interpolation_mutations_reject_stale_fragment_snapshots() {
     assert_eq!(
         texts(&calls[3]),
         [
-            "SELECT id FROM documents WHERE id = 3 LIMIT sql_placeholder_1",
             "SELECT id FROM documents LIMIT sql_placeholder_1",
+            "SELECT id FROM documents WHERE id = 3 LIMIT sql_placeholder_1",
         ]
     );
     assert_eq!(
         texts(&calls[4]),
         [
-            "SELECT id FROM fresh_users WHERE active AND enabled",
+            // Breadth-first recovery begins with the off (else) arm.
             "SELECT id FROM fresh_users WHERE active AND verified",
+            "SELECT id FROM fresh_users WHERE active AND enabled",
         ]
     );
     assert_eq!(

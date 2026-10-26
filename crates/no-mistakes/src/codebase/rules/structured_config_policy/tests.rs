@@ -25,6 +25,57 @@ fn config(yaml: &str) -> NoMistakesConfig {
 }
 
 #[test]
+fn merge_key_copies_a_banned_key() {
+    // `<<: *defaults` is expanded, so the anchored banned key is present.
+    let root = fixture_root("merge-key");
+    let files = vec![
+        root.join("app.yml"),
+        root.join("sequence.yml"),
+        root.join("scalar.yml"),
+        root.join("required.yml"),
+    ];
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+policies:
+  - files: [app.yml, sequence.yml, scalar.yml]
+    bannedKeys: [runtime.legacy.enabled]
+  - files: [required.yml]
+    requiredKeys: [runtime.owner]
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file.ends_with("app.yml") && finding.message.contains("runtime.legacy.enabled")
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file.ends_with("sequence.yml")
+                && finding.message.contains("runtime.legacy.enabled")
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.file.ends_with("scalar.yml")),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("runtime.owner")),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn reports_required_and_banned_structured_config_keys() {
     let root = fixture_root("fixture");
     let files = vec![root.join("app.yml")];
@@ -52,7 +103,7 @@ policies:
 }
 
 #[test]
-fn ignores_unreadable_structured_config_paths() {
+fn reports_unreadable_structured_config_paths() {
     let root = fixture_root("fixture");
     let files = vec![root.join("config")];
     let findings = check_with_files(
@@ -68,7 +119,8 @@ policies:
     )
     .unwrap();
 
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]

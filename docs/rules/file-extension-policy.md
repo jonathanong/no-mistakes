@@ -8,7 +8,11 @@ boundary that names alone cannot enforce.
 ## What it catches
 
 It rejects a configured extension under a matching scope unless the exact path
-is allowlisted; TypeScript declaration files are exempt.
+is allowlisted; TypeScript declaration files are exempt. Scope paths collapse
+`./`, empty segments, and in-repo `..`, so `./src` is `src`. A leading `/` is
+repository-relative (`/src` is `src`). A scope that leaves the repository,
+such as `../outside`, is one finding on the config file at line 1
+(`../outside: configured root escapes the repository`) and matches no file.
 
 ## Options
 
@@ -36,6 +40,16 @@ export const ok = 1;
 // src/legacy.js
 export const bad = 1;
 ```
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it judges file extensions from the file inventory, so `options.unanalyzable` has no effect on it.
 
 ## Suppression
 

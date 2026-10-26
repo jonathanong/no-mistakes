@@ -27,6 +27,14 @@ export interface PlaywrightRelatedOptions extends PlaywrightOptions {
   files: string[];
 }
 
+/** Playwright coverage output; matcher uncertainty is never complete coverage. */
+export interface PlaywrightCoverageReport {
+  /** Config-file and property-line diagnostics, omitted for fully known matchers. */
+  warnings?: string[];
+  /** Other coverage fields retain their existing opaque JSON contract. */
+  [field: string]: unknown;
+}
+
 export interface GraphEdge {
   from: string;
   to: string;

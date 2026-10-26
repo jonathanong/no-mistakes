@@ -1,0 +1,7 @@
+rules:
+  - rule: rust-max-lines-per-file
+    scope: repository
+    include: [rust-max/bad.rs, rust-max/definite.rs, rust-max/suppressed.rs]
+    options:
+      srcMax: 1
+      testMax: 1

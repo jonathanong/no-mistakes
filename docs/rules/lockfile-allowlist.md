@@ -37,6 +37,16 @@ resolution overrides.
 package-lock.json
 ```
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it judges lockfile names from the file inventory, so `options.unanalyzable` has no effect on it.
+
 ## Suppression
 
 Lockfile findings are file-level; use `no-mistakes-disable-file

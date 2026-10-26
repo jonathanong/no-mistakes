@@ -35,10 +35,6 @@ export async function fanout(items: string[]) {
       enqueueEmail(item);
     }),
   );
-  const callbacks = items.map((item) => {
-    return enqueueEmail(item);
-  });
-  await Promise.all(callbacks);
 }
 
 export function laterRequire(id: string) {

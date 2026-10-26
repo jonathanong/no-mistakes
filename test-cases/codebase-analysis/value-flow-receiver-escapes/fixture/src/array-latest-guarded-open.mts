@@ -12,6 +12,6 @@ if (flag) { args = [other]; }
 mutate(...prefix, ...args, definite);
 replica.get('earlier shifted origin');
 untouched.get('latest shifted origin');
-primary.get('ordinary open suffix remains definite');
+primary.get('open prefix can contain this receiver or leave it untouched');
 primary.info('sibling control');
 unrelated.get('control');

@@ -18,6 +18,7 @@ mod predicates;
 mod select;
 mod sweeps;
 mod tokens;
+mod transformed_predicates;
 mod trigger;
 pub(in crate::codebase::postgres) mod value;
 mod wrappers;
@@ -63,6 +64,8 @@ mod coverage_mask_tests;
 mod coverage_more_tests;
 #[cfg(test)]
 mod coverage_tests;
+#[cfg(test)]
+mod line_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

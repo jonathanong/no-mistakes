@@ -1,21 +1,27 @@
-use super::finding;
+use super::context::Context;
 use super::paths::frameworks;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::schema::{TestPlanEnvironment, TestPlanGroupType, TestPlanLimit};
 use crate::config::v2::NoMistakesConfig;
 
-pub(super) fn lint(config: &NoMistakesConfig, config_file: &str) -> Vec<RuleFinding> {
+pub(super) fn lint(config: &NoMistakesConfig, context: &Context<'_>) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     for (framework, plan) in frameworks(config) {
         for (env_name, env) in &plan.environments {
             if has_effective_limit(&env.limit) && !env.all && has_direct_group(env) {
-                findings.push(finding(
-                    config_file,
-                    format!(
-                        "testPlan.{framework}.environments.{env_name} has a limit while a direct group exists; \
+                findings.push(
+                    context.finding(
+                        &context
+                            .field("testPlan")
+                            .key(framework)
+                            .key("environments")
+                            .key(env_name)
+                            .authored_key("limit"),
+                        " has a limit while a direct group exists; \
 scope the budget onto non-direct groups so changed tests are not dropped (regression #9440)"
+                            .to_string(),
                     ),
-                ));
+                );
             }
         }
     }

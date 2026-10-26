@@ -1,0 +1,11 @@
+effort: low
+projects:
+  selected:
+    root: src
+  wrong:
+    root: elsewhere
+rules:
+  - rule: test-effort-adopter
+    projects: [selected]
+  - rule: test-partner
+    projects: [wrong]

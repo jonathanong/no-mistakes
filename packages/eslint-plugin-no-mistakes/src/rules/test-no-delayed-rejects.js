@@ -1,12 +1,10 @@
 "use strict";
 
 const { rule } = require("../helpers");
-const { findContainingRoot, traverse, unwrapExpression } = require("./async-ast");
-const {
-  chainIsSafelyObserved,
-  literalPropertyName,
-  promiseChainBase,
-} = require("./test-no-delayed-rejects-chains");
+const { ruleSuppression } = require("../rule-suppression");
+const { findContainingRoot, traverse } = require("./async-ast");
+const { originDeclarator } = require("./test-no-delayed-rejects-promise-alias");
+const { chainIsSafelyObserved, promiseChainBase } = require("./test-no-delayed-rejects-chains");
 const { canReachMatcher, contains, executesBefore } = require("./test-no-delayed-rejects-flow");
 const { isImmediateObserver } = require("./test-no-delayed-rejects-observers");
 const {
@@ -15,57 +13,14 @@ const {
   suspensionOccursBeforeMatcher,
 } = require("./test-no-delayed-rejects-suspensions");
 
-const EXPECT_MODULES = new Set(["vitest", "@jest/globals"]);
-
-function findVariable(scope, name) {
-  let current = scope;
-  while (current) {
-    const variable =
-      current.set?.get?.(name) ?? current.variables?.find((item) => item.name === name);
-    if (variable) return variable;
-    current = current.upper;
-  }
-  return null;
-}
-
-function isOrdinaryExpect(identifier, context) {
-  if (identifier.type !== "Identifier" || identifier.name !== "expect") return false;
-  const variable = findVariable(context.sourceCode.getScope(identifier), identifier.name);
-  if (!variable || variable.defs.length === 0) return true;
-  return variable.defs.every(
-    (definition) =>
-      definition.type === "ImportBinding" &&
-      EXPECT_MODULES.has(definition.parent?.source?.value) &&
-      definition.node?.imported?.name === "expect",
-  );
-}
-
-function isExpectCallee(callee, context) {
-  if (isOrdinaryExpect(callee, context)) return true;
-  return (
-    callee.type === "MemberExpression" &&
-    !callee.computed &&
-    callee.property.type === "Identifier" &&
-    callee.property.name === "soft" &&
-    isOrdinaryExpect(callee.object, context)
-  );
-}
-
-function expectedIdentifier(rejects, context) {
-  if (literalPropertyName(rejects) !== "rejects" || rejects.object.type !== "CallExpression") {
-    return null;
-  }
-  const expectation = rejects.object;
-  if (expectation.arguments.length !== 1 || !isExpectCallee(expectation.callee, context))
-    return null;
-  const [argument] = expectation.arguments;
-  const unwrapped = unwrapExpression(argument);
-  return unwrapped.type === "Identifier" ? unwrapped : null;
-}
+const { expectedIdentifier } = require("./test-no-delayed-rejects-expect");
 
 function matcherCall(rejects) {
   let current = rejects;
-  while (current.parent?.type === "MemberExpression" && current.parent.object === current) {
+  while (
+    current.parent?.type === "ChainExpression" ||
+    (current.parent?.type === "MemberExpression" && current.parent.object === current)
+  ) {
     current = current.parent;
   }
   return current.parent?.type === "CallExpression" && current.parent.callee === current
@@ -73,27 +28,8 @@ function matcherCall(rejects) {
     : null;
 }
 
-function constDeclarator(identifier, context) {
-  const variable = findVariable(context.sourceCode.getScope(identifier), identifier.name);
-  if (!variable || variable.defs.length !== 1) return null;
-  const [definition] = variable.defs;
-  if (definition.type !== "Variable") return null;
-  const declarator = definition.node;
-  if (
-    !declarator?.init ||
-    declarator.id.type !== "Identifier" ||
-    declarator.id.name !== identifier.name ||
-    declarator.parent?.type !== "VariableDeclaration" ||
-    declarator.parent.kind !== "const"
-  ) {
-    return null;
-  }
-  if (unwrapExpression(declarator.init).type === "Identifier") return null;
-  return declarator;
-}
-
 function isSameConst(identifier, declarator, context) {
-  return identifier.type === "Identifier" && constDeclarator(identifier, context) === declarator;
+  return identifier.type === "Identifier" && originDeclarator(identifier, context) === declarator;
 }
 
 function isRejectionHandlerCall(node, declarator, context) {
@@ -189,15 +125,18 @@ module.exports = rule(
   },
   (context) => {
     const observerCache = new WeakMap();
+    const suppressed = ruleSuppression(context, "test-no-delayed-rejects");
     return {
       MemberExpression(node) {
         const identifier = expectedIdentifier(node, context);
         if (!identifier) return;
-        const declarator = constDeclarator(identifier, context);
+        const declarator = originDeclarator(identifier, context);
         const call = matcherCall(node);
         if (
           !declarator ||
           !call ||
+          suppressed(node) ||
+          suppressed(call) ||
           !hasInterveningAwait(context, declarator, call, observerCache)
         ) {
           return;

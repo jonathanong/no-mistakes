@@ -1,3 +1,4 @@
+use super::tests_support::*;
 use super::*;
 use crate::codebase::rules::{path_filter, sort_findings, target_roots};
 use crate::config::v2::{
@@ -29,8 +30,9 @@ fn check_with_files(
         let files: Vec<PathBuf> = all_files
             .iter()
             .filter(|path| {
-                roots.iter().any(|rule_root| path.starts_with(rule_root))
-                    && !is_excluded(root, path, &opts.excludes)
+                roots.iter().any(|rule_root| {
+                    crate::codebase::ts_resolver::normalize_path(path).starts_with(rule_root)
+                }) && !is_excluded(root, path, &opts.excludes)
             })
             .cloned()
             .collect();
@@ -234,12 +236,11 @@ fn check_respects_excludes() {
 }
 
 #[test]
-fn check_file_skips_unreadable_file() {
+fn check_file_reports_unreadable_file() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join("missing.rs");
-    // Path does not exist → read_to_string fails → returns None
-    let finding = check_file(&path, tmp.path(), 5);
-    assert!(finding.is_none());
+    let finding = check_file(&path, tmp.path(), 5).unwrap();
+    assert_eq!(finding.target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]
@@ -311,4 +312,27 @@ fn check_respects_disable_file_comment() {
     let config = config_with_rule("{srcMax: 3}");
     let findings = check(tmp.path(), &config).unwrap();
     assert!(findings.is_empty());
+}
+
+#[test]
+fn physical_lines_can_exceed_the_code_line_limit() {
+    let path = fixture("unit/physical_vs_code.rs");
+    let root = path.parent().unwrap();
+    let source = read_fixture("unit/physical_vs_code.rs");
+    // Lock the distinction: a physical-line counter would reject this file.
+    assert_eq!(source.lines().count(), 9);
+    let config = config_with_rule("{srcMax: 3}");
+    assert!(check_with_files(root, &config, std::slice::from_ref(&path))
+        .unwrap()
+        .is_empty());
+
+    let config = config_with_rule("{srcMax: 2}");
+    let findings = check_with_files(root, &config, std::slice::from_ref(&path)).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "physical_vs_code.rs");
+    assert_eq!(findings[0].line, 1);
+    assert_eq!(
+        findings[0].message,
+        "3 code lines (max 2) - split into smaller modules"
+    );
 }

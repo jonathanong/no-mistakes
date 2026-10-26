@@ -15,11 +15,24 @@ await fetch("/api/users");
 ## Allowed
 
 ```ts
-// web/lib/api/users.ts (an allowed helper path)
+// web/lib/api/users.ts
 export const listUsers = () => fetch("/api/users");
 ```
 
 ## Options
+
+The schema accepts an options object.
+
+```js
+{
+  rules: {
+    "no-mistakes/no-global-fetch-outside-helper": ["error", {
+      checkedPathPatterns: ["web/**"],
+      allowedPathPatterns: ["web/lib/api/**"]
+    }]
+  }
+}
+```
 
 - `checkedPathPatterns` scopes files in which global `fetch` is banned.
 - `allowedPathPatterns` exempts the helper paths where global `fetch` may be
@@ -27,10 +40,22 @@ export const listUsers = () => fetch("/api/users");
 
 Both lists default to empty, so repositories opt into the boundary explicitly.
 
+`globalThis`, `window`, `self`, and `global` `fetch`, a string or expression-free template member, a single `const` alias, `const { fetch }` from those roots, an optional call, and `.call` or a literal-array `.apply` are the same call.
+
 ## Fix
 
 Move the request into an allowed client/helper module and call that wrapper from
 application code.
+
+## Limits
+
+`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. `.apply` with a non-literal argument list is not rewritten. A computed identifier key is not the `fetch` property:
+
+```js
+const fetch = "setTimeout";
+const { [fetch]: schedule } = globalThis;
+schedule(handler, 0);
+```
 
 ## Suppression
 

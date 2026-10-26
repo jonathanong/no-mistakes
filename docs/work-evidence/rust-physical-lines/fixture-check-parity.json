@@ -1,0 +1,514 @@
+{
+  "baselineRevision": "341ad89a8",
+  "candidateRevision": "6e327bee850e2914630a919eb1f550dfacb77640",
+  "candidateRustSourceTree": "4e066ef9479ef5c32041f00fc489a208f86288c9",
+  "baselineBinarySha256": "ef2a70201ac151456bc266b5f66ffc5d05df2131737a8d7ffa4791d8b6395c7d",
+  "candidateBinarySha256": "43aa20cc278a6a642e8469f72eaffe59cc6ea45d9a2a16fd40c29b5ade1dcf7e",
+  "command": [
+    "check",
+    "--root",
+    "<fixture>",
+    "--format",
+    "json"
+  ],
+  "compared": [
+    "stdout bytes",
+    "stderr bytes",
+    "exit status"
+  ],
+  "identicalFixtureCount": 82,
+  "fixtures": [
+    {
+      "root": "test-cases/codebase-analysis/no-nextjs-caching/fixture",
+      "exit": 1,
+      "sha256": "4394d13401e9301fea45e0d8b2bc648257cfdb36f0ceed8a47dda45ae9bdc019",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/codebase-analysis/ts-resolver/fixture",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/codebase-analysis/import-facts/fixture",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/codebase-analysis/value-flow-receiver-evaluation-order/fixture",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "fixtures/tsconfig/framework-project-alias",
+      "exit": 1,
+      "sha256": "a1808948b7d231c3b3406f9a30331bdf782bfe571f4ef00d7c7030604b888abe",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "fixtures/tsconfig/symlink-workspace/real",
+      "exit": 1,
+      "sha256": "772d0f86831437a7289dfa8ae286f5ff207ba383ec4fe10c308d2de38280c874",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/integration-tests/basic/fixture",
+      "exit": 1,
+      "sha256": "76bdbc065f5823dfb0350e104e83ad9e0b4f4efab2266b7431251269c6ec4c9d",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/integration-tests/coverage/fixture",
+      "exit": 1,
+      "sha256": "81d97905fcfd66bf6387a16e55d9d7e391423cb39348b6522b615b3a99501aa1",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/integration-tests/declared-deadlines/fixture",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/integration-tests/missing-config/fixture",
+      "exit": 2,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "c48a06a1ae1cfc88666fd81190e5e5e09ecd00846894e893684943a1b4cd2740"
+    },
+    {
+      "root": "test-cases/integration-tests/parse-sharing/fixture",
+      "exit": 1,
+      "sha256": "819481fa5e773815f9bf2489836a950ea496b42094af172148a5e759dc4e7e71",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/integration-tests/unknown-project/fixture",
+      "exit": 2,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "fd1697b3d52dfd644849013d591f0d664101582482f8318ca9e60b964d132101"
+    },
+    {
+      "root": "test-cases/integration-tests/vitest-cjs-config/fixture",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/check-runner/dynamic-import-respects-filesystem-skip/fixture",
+      "exit": 1,
+      "sha256": "025254b2410969be72a7c46def179724746c1b2ea0a6a0ff47e85183fba84181",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/check-runner/facts-and-filesystem/fixture",
+      "exit": 1,
+      "sha256": "ea3a2466c71aab4c93dcf3fd0c535f7ca3a26ee48e5ba755ece0c18a9565cd49",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/check-runner/forbidden-deps-ignores-filesystem-skip/fixture",
+      "exit": 1,
+      "sha256": "101138bae8f734ffa6de3245d02069a09dcd627cdfc1c0c58a13c3c34041aa5e",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/check-runner/playwright-graph-ignores-filesystem-skip/fixture",
+      "exit": 1,
+      "sha256": "08163bc4deea01f39f5741ab9cb69080493577d1231412903e62e432b3756a01",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/check-runner/playwright-prefer-test-id-locators/fixture",
+      "exit": 1,
+      "sha256": "0c9471485519eddb5d87a00d5215f8618e096500cbd541548bd20355baef75de",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/check-runner/playwright-unique-test-ids/fixture",
+      "exit": 1,
+      "sha256": "18910b98167a8cb15188107cf41ba50fa5f4f196843da835687070cdf4c68ecd",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/check-runner/postgres-prepared-offset/fixture",
+      "exit": 1,
+      "sha256": "c37ef0ae7f2f8cf3c6ff98026307b466f60834006c41fa2f9d0d10094ae67180",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/check-runner/postgres-prepared/fixture",
+      "exit": 1,
+      "sha256": "6abde67e5944c16003c90649f42d902b9a1389c471b4f71719bf19c791c21ab6",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/check-runner/react-config-error/fixture",
+      "exit": 2,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "25a79e217a569d6f6eff46d863e59de5597de3a804ec6579bb083398abf9f089"
+    },
+    {
+      "root": "test-cases/check-runner/required-reachability-ignores-filesystem-skip/fixture",
+      "exit": 1,
+      "sha256": "90aec6264a807cdad5fdb681d5a69fe9df91f21e8a415a5e26e362b6ee5cc514",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/fail",
+      "exit": 1,
+      "sha256": "25cc2f4932185e26d1c7708b79432c93bd8b8f3d4e5e278e5fcf926415e2e029",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/fail-line-comment",
+      "exit": 1,
+      "sha256": "25cc2f4932185e26d1c7708b79432c93bd8b8f3d4e5e278e5fcf926415e2e029",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing",
+      "exit": 1,
+      "sha256": "2bbc1f18bd843615ccd3b3a03fc42edd978aaa78131a775eb3100a53cbda277b",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-alternative-callback",
+      "exit": 1,
+      "sha256": "fd2f87aa4edc53854bae2f4ee1c823084527fa96fb061382ce947d86043e9929",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-argument-alias-write",
+      "exit": 1,
+      "sha256": "535bc270cc89a8857e6a61b020422ec2855bb3db621fe74641012c2d75b2d4fc",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-argument-length",
+      "exit": 1,
+      "sha256": "83fe4d875e9d410a691bdc591f67ad63a82ace4076b059298efe488c282dbfe1",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-argument-members",
+      "exit": 1,
+      "sha256": "ff3a2759deee7e7e2d6ae238b76195d108f208ebf20e19d1daee5967ae8a5402",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-argument-slot-write",
+      "exit": 1,
+      "sha256": "5ba19c0963a4b0bc9f25893a1fb7cd1a4be698b4ebc94c1bceaf8dee53546f5e",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-arm-module",
+      "exit": 1,
+      "sha256": "6c3fd4ec49c78581a2d3e0816905ec92ffd389c7f588877806d246db3ce4ade8",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-call-argument-order",
+      "exit": 1,
+      "sha256": "d09aae4a8d7ddbed805ad2f05a2b4037bd725c7d91769dd429e392e72f92fca8",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-callback-installers",
+      "exit": 1,
+      "sha256": "077c43fbc34bd6b187604cdd2fabb7da430b3eb95a81b1a874b65b708d172b42",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-callback-revisit",
+      "exit": 1,
+      "sha256": "328e5d5b7d8fb62fd1b5f0e269f4075a326d2a0d2cd58711cf1c71a911a45568",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-deleted-slot-callback",
+      "exit": 1,
+      "sha256": "8c5544bc08f3d417f86c516c2b1968ec0e8d037bb8fea219abd32cb317f23b4d",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-destructuring-alias",
+      "exit": 1,
+      "sha256": "2d61e787b646ffe529dd5fab3f4fe8ee3192fb5a3a927be932221468132ed18b",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-discarded-values",
+      "exit": 1,
+      "sha256": "2a4e6020978ec2de9f9937634c55cd321cc8fddd0b069a1b080cf9c4ba0b40ae",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-dynamic-delete-slot-write",
+      "exit": 1,
+      "sha256": "b6457462e2bb55c5e8e6a7478e29c4c3c7511e4148a07d10726f34cb0a107a0b",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-executor-names-without-module",
+      "exit": 1,
+      "sha256": "a4abc22387b715c2a340843e5b27837682cac8a56171bc4b739a8b85907ccb7d",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-imported-callback-revisit",
+      "exit": 1,
+      "sha256": "d484f21070ca4bbced1766be7f53bcff99567773ceeea6f52c5bb4f3cda8b2a2",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-live-binding",
+      "exit": 1,
+      "sha256": "123bc4d91bdeeee39c80faa18d0f5553f3e985e6aa72162f0bbd8ba0d9531b19",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-mapped-formal-callback",
+      "exit": 1,
+      "sha256": "91491c8518e9b6c13c645b58005b8e06601dc8caab75dd4531b741253ef319e8",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-mapped-scalar",
+      "exit": 1,
+      "sha256": "b57b4237d0bcf1a408db27f9a553b362934eb02cd53298a50e1033418f4ac145",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-module-ids",
+      "exit": 1,
+      "sha256": "2a0df5b9d04c59ea02cfd98695d3241ce991a66011a01f6628ab56421c8c0203",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-module-sibling",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-module-sibling-reverse",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-monorepo",
+      "exit": 1,
+      "sha256": "08c31d33e13135d40bcdbd74c5767cb9844c5e5b9e32dd14241562ba0d7ec2ab",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-named-delete",
+      "exit": 1,
+      "sha256": "b05242576713b51f204cc5258f92077a7c5785b7816cc93addec09343e2b43c7",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-parse-failed-target",
+      "exit": 1,
+      "sha256": "a4abc22387b715c2a340843e5b27837682cac8a56171bc4b739a8b85907ccb7d",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-pnpm-workspace",
+      "exit": 1,
+      "sha256": "7a9ca9cccbcc5e0330a9db29a0f37ed1c1766e8f53b6920a4e0d65a92b158d12",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-post-merge",
+      "exit": 1,
+      "sha256": "e632706ba8a732618024dbd4fa34f1513bc41a3238d09529154e1131414a2deb",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-reachability",
+      "exit": 1,
+      "sha256": "6f8f29cbedd5e965e563b7e6e860dff487042d9a5bcd3c4a90e0fca4e99c1611",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-resolved-external-alias",
+      "exit": 1,
+      "sha256": "2d71a73e5069727b4fb704c5e8a7fde818fdebc187b8170750109aa5568ecb9d",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-resolved-external-roots",
+      "exit": 1,
+      "sha256": "4485f474746068a688ba9775abe3248ec873a0029716f7e0c4c7f1c748978f49",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-returned-callbacks",
+      "exit": 1,
+      "sha256": "b574d237f55bbf647a0aa9cb893d99175fe573677c324e4ae30582359d948a20",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-review",
+      "exit": 1,
+      "sha256": "d6a6ed97d116cb43d8920511fb0fd66fa122916cd6a1186d455da29030b0d837",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-root-scheduling",
+      "exit": 1,
+      "sha256": "2d36cf3d5a1cf2292f2add793797cbded3d880037f255fd153145e549f81184b",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-safety",
+      "exit": 1,
+      "sha256": "61ea9962fb342ac63efc8b007b5b0e44ce240d68502a98d764f4d86e1b2daad4",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-tag-callback",
+      "exit": 1,
+      "sha256": "a03c9f19fa74253635f5e612360d0c7647c1127945ed565cf38dd38683f8c232",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/helper-tracing-unary-argument-index",
+      "exit": 1,
+      "sha256": "20a9633c9048fa4f936ebcd00ec3f7ab1552b6a7549c7d625eba96dd00322e16",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/low-heads",
+      "exit": 1,
+      "sha256": "c3fb34c1bdaa3a90700cd6810627bb4f4211609f041d14a408f5be82eff8eb03",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/pass-annotated",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/pass-transaction",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/project-scope-one",
+      "exit": 1,
+      "sha256": "25cc2f4932185e26d1c7708b79432c93bd8b8f3d4e5e278e5fcf926415e2e029",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/project-scope-two",
+      "exit": 1,
+      "sha256": "25cc2f4932185e26d1c7708b79432c93bd8b8f3d4e5e278e5fcf926415e2e029",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/provenance-advice",
+      "exit": 0,
+      "sha256": "6fbfad388066eb42cfa4c26bd5c59a7bf9acea2087d4ff6488e0af0a0ee9f84f",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/var-scopes",
+      "exit": 1,
+      "sha256": "ca89fc80ac39b912b8641f2f6cb7b00fa7f1b25bcc08d807a11592d2d26ae88b",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/fixture/verdict-invalid-append",
+      "exit": 1,
+      "sha256": "78ea21e1d9856a59083d3f09f482cc6044eeb1d69e0692678ebe069308f2c890",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/variants/all-good",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/variants/clauses",
+      "exit": 1,
+      "sha256": "ed73395c0cd7cab09f5a84c07eb788c8966d85256e63ca3b67d9fb57e1709a7f",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/variants/deduplicated-common",
+      "exit": 1,
+      "sha256": "74138163c96b1ba71858482faf107693b9c458a8f275dd69a92d87b3a930cdeb",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/variants/one-bad",
+      "exit": 1,
+      "sha256": "ed73395c0cd7cab09f5a84c07eb788c8966d85256e63ca3b67d9fb57e1709a7f",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/variants/suppressed-branch",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/variants/suppressed-call",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/postgres-require-query-annotation/variants/suppressed-fragment",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/github-actions-pinned-hash/fixture/fail",
+      "exit": 1,
+      "sha256": "d38f2457bd9a03efb9defec2557c45602f7d82af7e5e266444e7e8108778d234",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/github-actions-pinned-hash/fixture/local-action-pass",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/github-actions-pinned-hash/fixture/pass",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes",
+      "exit": 1,
+      "sha256": "585ed62bbd3c9866869c193d3012d15c20d624fb864276c274d9a807e2f2b31e",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/check-facts/family-scope-nextjs",
+      "exit": 1,
+      "sha256": "261874f704fba5ae1fa94f445d10294aefa922ce11e505a408b52efca35a8f9b",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "root": "test-cases/codebase-analysis/playwright-coverage/fixture",
+      "exit": 0,
+      "sha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

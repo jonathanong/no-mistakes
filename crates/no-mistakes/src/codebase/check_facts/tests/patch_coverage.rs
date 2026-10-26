@@ -33,7 +33,7 @@ fn aggregate_resolves_deferred_selectors_from_precollected_exports() {
     let source = std::fs::read_to_string(&page).unwrap();
     let deferred = crate::ast::with_program(&page, &source, |program, source| {
         crate::playwright::selectors::extract_app_selectors_from_program_from_visible_deferred(
-            &page, source, program, &regexes, &visible,
+            &page, source, program, &regexes, &visible, true,
         )
     })
     .unwrap();

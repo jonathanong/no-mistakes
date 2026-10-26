@@ -7,15 +7,15 @@ use no_mistakes::benchmark_support::{
     NativeFrontendSummary,
 };
 
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_FILES: usize = 117;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_PARSED: usize = 69;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_IMPORTS: usize = 66;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_FILES: usize = 118;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_PARSED: usize = 70;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_IMPORTS: usize = 67;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_ENQUEUES: usize = 7;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_WORKERS: usize = 6;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_ROUTES: usize = 41;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_EDGES: usize = 125;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_ROUTES: usize = 49;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_EDGES: usize = 143;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_QUEUE_EDGES: usize = 14;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_GLOB_MATCHES: usize = 117;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_GLOB_MATCHES: usize = 118;
 
 pub(super) fn bench_language_frontends(c: &mut Criterion) {
     // Keep this wrapper stable: criterion_group includes its name in CodSpeed

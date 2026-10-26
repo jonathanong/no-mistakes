@@ -10,31 +10,54 @@ impl ImportCollector {
         {
             return;
         }
-        let Some(name) = super::super::mutable_receivers::mutable_root_name(&assignment.left)
-        else {
+        let mut parameters = fx_map();
+        super::super::root_targets::for_each_root(&assignment.left, |name, _| {
+            let Some(scope) = self.callee_binding_scope(name) else {
+                return;
+            };
+            let bare = self
+                .value_parameter_indexes
+                .get(&scope)
+                .and_then(|names| names.get(name))
+                .is_some_and(|indexes| {
+                    indexes.iter().any(|index| {
+                        self.value_flow
+                            .parameters
+                            .get(*index)
+                            .is_some_and(|parameter| parameter.projection.is_empty())
+                    })
+                });
+            if bare {
+                parameters.insert(name.to_owned(), scope);
+            }
+        });
+        if parameters.is_empty() {
             return;
-        };
-        let Some(scope) = self.callee_binding_scope(name) else {
-            return;
-        };
-        let bare = self
-            .value_parameter_indexes
-            .get(&scope)
-            .and_then(|names| names.get(name))
-            .is_some_and(|indexes| {
-                indexes.iter().any(|index| {
-                    self.value_flow
-                        .parameters
-                        .get(*index)
-                        .is_some_and(|parameter| parameter.projection.is_empty())
-                })
-            });
-        if bare {
-            self.receiver_escapes.reassigned.push((
-                scope,
-                name.to_string(),
-                self.value_expression(&assignment.right),
-            ));
+        }
+        let value = self.value_expression(&assignment.right);
+        let roots = super::super::assignment_root_values::roots(
+            &assignment.left,
+            value,
+            &mut |expression| self.value_expression(expression),
+        );
+        for (name, _, value) in roots {
+            let Some(scope) = parameters.get(&name) else {
+                continue;
+            };
+            self.receiver_escapes.reassigned.push(
+                super::super::parameter_call_origins::Reassignment {
+                    recovered: super::super::mutable_receivers::mutable_root_name(&assignment.left)
+                        .is_none(),
+                    key: (*scope, name),
+                    value,
+                    completed_at: assignment.span.end,
+                    context: self.current_function_id(),
+                    certain: assignment.operator.is_assign()
+                        && !self.conditional_execution
+                        && !self.receiver_write_is_conditional
+                        && self.repeat_depth <= self.call_repeat_base,
+                },
+            );
         }
     }
 

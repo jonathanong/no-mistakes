@@ -1,6 +1,7 @@
 "use strict";
 
 const { functionFromExpression, nonEmptyStrings } = require("./component-functions");
+const { collectTopLevelDefinition } = require("./exported-component-definitions");
 
 const DEFAULT_COMPONENT_NAME_PATTERN = "^[A-Z]";
 const DEFAULT_WRAPPERS = ["memo", "forwardRef", "observer"];
@@ -66,15 +67,32 @@ function collectExportedComponents(program, opts) {
   const namedExports = new Set();
   const defaultExports = new Set();
   const components = [];
+  const aliases = [];
 
   for (const statement of program.body) {
-    collectTopLevelDefinition(statement, definitions, opts);
+    collectTopLevelDefinition(statement, definitions, opts, aliases, false);
     if (statement.type === "ExportNamedDeclaration") {
-      collectNamedExport(statement, definitions, namedExports, defaultExports, components, opts);
+      collectNamedExport(
+        statement,
+        definitions,
+        namedExports,
+        defaultExports,
+        components,
+        opts,
+        aliases,
+      );
     }
     if (statement.type === "ExportDefaultDeclaration") {
       collectDefaultExport(statement, definitions, defaultExports, components, opts);
     }
+  }
+
+  for (const alias of aliases) {
+    const target = definitions.get(alias.target);
+    if (!target) continue;
+    const definition = { name: alias.name, fn: target.fn };
+    definitions.set(alias.name, definition);
+    if (alias.exported && opts.exportTypes.has("named")) components.push(definition);
   }
 
   pushExportedDefinitions(namedExports, definitions, components, opts.exportTypes.has("named"));
@@ -94,25 +112,6 @@ function pushExportedDefinitions(names, definitions, components, enabled) {
   }
 }
 
-function collectTopLevelDefinition(statement, definitions, opts) {
-  if (statement.type === "FunctionDeclaration" && statement.id) {
-    definitions.set(statement.id.name, { name: statement.id.name, fn: statement });
-    return;
-  }
-  if (statement.type !== "VariableDeclaration") {
-    return;
-  }
-  for (const declaration of statement.declarations) {
-    if (declaration.id.type !== "Identifier") {
-      continue;
-    }
-    const fn = functionFromExpression(declaration.init, opts);
-    if (fn) {
-      definitions.set(declaration.id.name, { name: declaration.id.name, fn });
-    }
-  }
-}
-
 function collectNamedExport(
   statement,
   definitions,
@@ -120,6 +119,7 @@ function collectNamedExport(
   defaultExports,
   components,
   opts,
+  aliases,
 ) {
   if (statement.source) {
     return;
@@ -133,7 +133,7 @@ function collectNamedExport(
     return;
   }
   if (statement.declaration?.type === "VariableDeclaration") {
-    collectTopLevelDefinition(statement.declaration, definitions, opts);
+    collectTopLevelDefinition(statement.declaration, definitions, opts, aliases, true);
     for (const declaration of statement.declaration.declarations) {
       const definition = definitions.get(declaration.id.name);
       if (declaration.id.type === "Identifier" && definition && opts.exportTypes.has("named")) {

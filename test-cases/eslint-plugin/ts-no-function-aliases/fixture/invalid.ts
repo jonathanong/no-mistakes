@@ -1,44 +1,10 @@
-export function noArgs() {
-  return original();
-}
-
-export function withArg(value: string) {
-  return original(value);
-}
-
-export function sideEffect(value: string) {
-  original(value);
-}
-
-export const arrow = (value: string) => original(value);
-
-export const asyncArrow = async (value: string) => await original(value);
-
-export const restArrow = (...args: string[]) => original(...args);
-
-exports.propertyArrow = (value: string) => original(value);
-
-module.exports.propertyFunction = function (value: string) {
-  return original(value);
-};
-
-api.property = (value: string) => original(value);
-
-exports.sameName = (value: string) => sameName(value);
-
-exports["computed"] = (value: string) => original(value);
-
-async function asyncAlias(value: string) {
-  return await original(value);
-}
-
-function outerAlias() {
-  function nested(value: string) {
-    return original(value);
-  }
-  return nested("x");
-}
-
-function original(value?: string) {
-  return value;
-}
+import original, { work } from "./api";
+import * as api from "./api";
+export const noArgs = () => original();
+export const withArg = value => original(value);
+export const rest = (...args) => original(...args);
+export const member = value => api.create(value);
+export const call = value => work.call(undefined, value);
+export const apply = value => work.apply(undefined, [value]);
+export function exported(value: string): string { return value; }
+export const typed = (value: string): string => exported(value);

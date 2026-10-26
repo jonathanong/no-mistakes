@@ -48,8 +48,8 @@ function touch(box, rows) {
 const cache = new Map();
 cache.get(1).ready = true;
 
-const tables = {};
-for (const row of Object.values(tables)) {
+const tableRows = {};
+for (const row of Object.values(tableRows)) {
   row.ready = true;
 }
 
@@ -69,6 +69,25 @@ const api = {
 };
 ```
 
+Same-file method aliases retain the receiver they were read from. Static string
+and expression-free template keys, optional calls, and a direct destructure without a
+default are included. A forwarded call uses its actual `this` receiver:
+
+```ts
+function append(rows, otherRows, row) {
+  const push = rows["push"];
+  const alias = push;
+  alias?.(row);
+  const { [`push`]: appendRow } = rows;
+  appendRow(row);
+  alias.call(otherRows, row);
+  alias.apply(otherRows, [row]);
+  const bound = alias.bind(otherRows);
+  bound(row);
+  bound.call();
+}
+```
+
 A conditional escape counts: `if (cond) sink(box); box.a = 1` is still a write
 after the object may have escaped.
 
@@ -78,6 +97,38 @@ later `b.a = 1` is reported. `c && {}` does not: the left side is the result
 only when it is falsy, and a falsy value is not the mutated object.
 
 ## Allowed
+
+An inline synchronous `reduce` or `reduceRight` callback may build its first
+parameter when the initial value is an object or array literal and every
+callback return is that parameter. Only direct container writes and array mutator
+calls on that parameter are exempt; the block must end with `return acc`.
+TypeScript assertions around the literal are supported:
+
+```ts
+const byId = rows.reduce((acc, row) => {
+  acc[row.id] = row;
+  return acc;
+}, {} as Record<string, Row>);
+
+const reversed = rows.reduceRight((acc, row) => {
+  acc.push(row);
+  return acc;
+}, []);
+```
+
+Identifier seeds, omitted seeds, async callbacks, accumulator rebinding, aliases,
+member reads, nested writes, and callbacks returning another value retain ordinary
+parameter reporting. Build a complete nested value locally, then assign it through
+a direct root write such as `acc[key] = value`. Other callback parameters and
+shared values nested inside a literal remain shared.
+Passing the accumulator to an unknown call or publishing a closure that captures
+it escapes it; subsequent writes, including writes in later iterations, are
+reported. Publishing a nested member also escapes that member. The result keeps
+this provenance after the reduction. Construct the complete local value before
+publishing it, and avoid mutating a member after publishing that member.
+The exemption assumes the native array callback contract for unknown receivers.
+Known local custom object or class methods named `reduce` keep ordinary callback
+parameter reporting.
 
 ```ts
 function build(extra) {
@@ -104,6 +155,24 @@ function localClass(value) {
   }
   new Writer().set();
   return box;
+}
+```
+
+```ts
+function buildRows(row) {
+  const rows = [];
+  const push = rows.push;
+  push(row);
+  return rows;
+}
+
+function forwardToLocal(sharedRows, row) {
+  const push = sharedRows.push;
+  const local = [];
+  push.call(local, row);
+  const bound = push.bind(local);
+  bound(row);
+  return local;
 }
 ```
 
@@ -154,8 +223,11 @@ function indexed(xs) {
 }
 ```
 
-`xs.reduce((acc, x) => { acc[x] = 1; return acc }, {})` is reported because
-`acc` is a parameter. `indexed` builds the object in one expression instead.
+`xs.reduce((acc, x) => { acc[x] = 1; return acc }, {})` is allowed because
+its literal seed is locally owned. With an identifier seed such as `shared`,
+`xs.reduce((acc, x) => { acc[x] = 1; return acc }, shared)` is still reported.
+Build a fresh literal accumulator instead. `indexed` is another option that
+builds the object in one expression.
 
 `literal-rewrite.mts` declares `tables` once, so the query resolves
 `app.users`, and `replicaClient` returns a known object. `rows-rewrite.mts`
@@ -175,6 +247,43 @@ declaration inside a nested block stays a local builder until the value
 escapes, because that block is not the module environment. Writes through
 `module.exports`, `exports`, `globalThis`, `window`, and `process.env` are
 not flagged.
+
+Aliases of the listed array mutators use the existing receiver provenance and
+options. A later reassignment of the receiver name does not change the object
+captured by an earlier alias. Reassigning the alias replaces its provenance.
+Passing or returning an alias escapes its retained receiver; an unknown caller's
+later invocation is not analyzed. `.call`, literal-array `.apply` (without holes
+or spreads), and `.bind` use their explicit receiver, rather than the object
+from which the method was extracted. Binding alone does not mutate it. A bound alias keeps its first bound receiver
+across later `.call`, `.apply`, or `.bind` wrappers.
+
+A computed identifier key, a destructuring default, a rest pattern, a
+parameter-default destructure, and another file's re-export do not establish a
+mutator alias. For example, none of these calls proves a mutation of `rows`:
+
+```ts
+function unknown(rows, key, fallback) {
+  const dynamic = rows[key];
+  dynamic(1);
+  const { push = fallback } = rows;
+  push(1);
+  const { ...rest } = rows;
+  rest.push(1);
+}
+
+function defaulted({ push } = rows) {
+  push(1);
+}
+
+export { push } from "./mutators";
+```
+
+A conditional or logical choice between different method values does not
+establish one mutator alias. Nested destructuring patterns and method values stored in
+object or array fields are also outside this binding-alias tracking.
+
+Static aliases of `Object` and `Reflect` methods are outside this alias tracking;
+the directly spelled forms in Options retain their existing behavior.
 
 ## Suppression
 

@@ -26,6 +26,20 @@ resolve through relative specifiers with explicit extensions, `tsconfig`
 `paths` aliases, pnpm workspace package names and barrel re-exports (up to 8
 hops).
 
+Exported string constants are recovered through the same imports and barrels.
+For `import * as names from "./tables.mts"`, `names.TABLE` splices an exported
+literal into an untagged template or `.append` when no local binding shadows
+`names`.
+`names.default` also selects a default-exported literal. Computed, optional,
+method, type-only, and non-const reads stay unanalyzable. Namespace recovery
+accepts only string constants: a tagged builder fragment such as `names.FRAGMENT`
+stays unanalyzable even in `.append`, because the exported object can mutate
+after its declaration. Named and default imports of tagged builder fragments
+also stay unanalyzable, including through barrels and `.append`: another
+importer can mutate the object. Named imports of primitive string constants
+still recover. Use an exported string literal instead of a shared builder when
+the fragment must be recoverable without cross-module mutation analysis.
+
 Helpers with control flow are checked too. A helper that returns early, branches
 on its arguments, calls other helpers (up to 8 deep), appends to a
 `SQLStatement` parameter, builds identifiers from literal object properties or

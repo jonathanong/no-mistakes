@@ -1,3 +1,4 @@
+use no_mistakes::codebase::check_facts::CheckFactMap;
 use no_mistakes::codebase::postgres::{SqlObligationVerdict, SqlVerdictStatus};
 use no_mistakes::codebase::rules::RuleFinding;
 use no_mistakes::codebase::ts_source::{byte_offset_to_line, SourceStore};
@@ -8,6 +9,7 @@ pub(crate) fn merge_sql(
     advisories: &mut Vec<RuleFinding>,
     root: &Path,
     sources: &SourceStore,
+    facts: &CheckFactMap,
     verdicts: &[SqlObligationVerdict],
 ) {
     let mut groups = BTreeMap::new();
@@ -31,7 +33,7 @@ pub(crate) fn merge_sql(
     }
     let added = !groups.is_empty();
     for rows in groups.into_values() {
-        advisories.push(finding(root, sources, &rows));
+        advisories.push(finding(root, sources, facts, &rows));
     }
     if added {
         advisories.sort_by(|left, right| {
@@ -45,13 +47,22 @@ pub(crate) fn merge_sql(
     }
 }
 
-fn finding(root: &Path, sources: &SourceStore, rows: &[&SqlObligationVerdict]) -> RuleFinding {
+fn finding(
+    root: &Path,
+    sources: &SourceStore,
+    facts: &CheckFactMap,
+    rows: &[&SqlObligationVerdict],
+) -> RuleFinding {
     let verdict = rows[0];
-    let line = sources
-        .read_path(&root.join(&verdict.file))
-        .ok()
-        .map(|source| byte_offset_to_line(&source, verdict.span.0 as usize) as usize)
-        .unwrap_or(1);
+    let line = facts
+        .prepared_low_sql_display_line(root, verdict)
+        .unwrap_or_else(|| {
+            sources
+                .read_path(&root.join(&verdict.file))
+                .ok()
+                .map(|source| byte_offset_to_line(&source, verdict.span.0 as usize) as usize)
+                .unwrap_or(1)
+        });
     let reasons = rows
         .iter()
         .flat_map(|row| row.residual_reasons.iter().map(String::as_str))

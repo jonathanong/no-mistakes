@@ -66,9 +66,31 @@ dynamic config parsing.
 ## Valid example
 
 ```yaml
-projects:
-  backend: {include: [backend/**/*.test.ts]}
-  web: {include: [web/**/*.test.ts]}
+# .no-mistakes.yml
+tests:
+  vitest:
+    projects:
+      backend: {include: ["backend/**/*.test.ts"]}
+      web: {include: ["web/**/*.test.ts"]}
+rules:
+  - rule: vitest-project-mapping
+    scope: repository
+    options:
+      explicitProjectsOnly: true
+```
+
+```ts
+// backend/api.test.ts
+import { it } from 'vitest';
+
+it('runs in the backend project', () => {});
+```
+
+```ts
+// web/profile.test.ts
+import { it } from 'vitest';
+
+it('runs in the web project', () => {});
 ```
 
 ## Counterexample
@@ -76,9 +98,25 @@ projects:
 `web/profile.test.ts` matches both `web/**/*.test.ts` and a broad
 `**/*.test.ts` project.
 
+```yaml
+# .no-mistakes.yml
+tests:
+  vitest:
+    projects:
+      broad: {include: ['**/*.test.ts']}
+      web: {include: ['web/**/*.test.ts']}
+rules:
+  - rule: vitest-project-mapping
+    scope: repository
+    options:
+      explicitProjectsOnly: true
+```
+
 ```ts
-// vitest.config.ts
-export default { test: { include: ['src/**/*.test.ts'] } };
+// web/profile.test.ts
+import { it } from 'vitest';
+
+it('has two matching projects', () => {});
 ```
 
 
@@ -86,6 +124,18 @@ export default { test: { include: ['src/**/*.test.ts'] } };
 
 Make project globs mutually exclusive, add the missing include, or enable
 `explicitProjectsOnly` for a runtime-generated config with explicit ownership.
+
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+
+- This rule has no unanalyzable inputs: it maps test files to configured Vitest projects by glob. Nothing is routed through `options.unanalyzable`.
 
 ## Suppression
 

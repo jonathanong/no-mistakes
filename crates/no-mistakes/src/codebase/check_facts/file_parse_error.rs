@@ -2,6 +2,24 @@ use super::CheckFactPlan;
 use crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source;
 use crate::codebase::ts_source::facts::TsFileFacts;
 
+pub(crate) fn read_facts(
+    path: &std::path::Path,
+    plan: &CheckFactPlan,
+    error: impl std::fmt::Display,
+) -> super::CheckFileFacts {
+    let parse_error = format!("failed to read {}: {error}", path.display());
+    super::CheckFileFacts {
+        ts: std::sync::Arc::new(TsFileFacts {
+            operational_error: Some(parse_error.clone()),
+            parse_error: Some(parse_error.clone()),
+            ..TsFileFacts::default()
+        }),
+        parse_error: Some(parse_error),
+        server_route_client_boundary: plan.server_route_client_boundary.then(Default::default),
+        ..super::CheckFileFacts::default()
+    }
+}
+
 pub(crate) fn ts_facts(
     plan: &CheckFactPlan,
     source: Option<std::sync::Arc<str>>,

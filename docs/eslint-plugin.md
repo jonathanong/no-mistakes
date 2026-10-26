@@ -51,6 +51,22 @@ and point to related rules.
 `targets` is an array whose objects may set `sourceSpecifierPatterns?: string[]`
 and `calleeNamePatterns?: string[]`.
 
+`awaitingConsumers` optionally declares imported APIs that adopt returned callback
+promises. Entries require `sourceSpecifierPatterns`, `calleeNamePatterns`, and
+at least one callback contract: `callbackArgumentIndexes` (distinct nonnegative
+zero-based integers), or `callbackArgumentProperties` (objects with an
+`argumentIndex` and distinct `propertyNames` for fresh dependency objects). Only
+those callback slots or properties gain the trusted return disposition. Inline callbacks, unchanged
+`const` callback bindings, and function declarations with no reassignment qualify;
+every call argument use of a named callback must adopt its returned promise.
+Stable same-file consumers can also prove adoption by awaiting every invocation
+of their callback parameter. Resolvable named imports prove that adoption from
+the implementation, including in Oxlint `--type-aware` mode, which does not
+expose a TypeScript program. Without that program, `export default`, `export *`,
+and `module.exports` stay unproven. A `require()` consumer stays unproven in
+either mode. Missing bodies, unresolved imports, `noResolve`, writes, and
+escaping implementations stay unproven. Unknown consumers keep reporting.
+
 ### `async-try-catch-return-await`
 
 `handlers` is an array whose objects may set `sourceSpecifierPatterns?: string[]`
@@ -162,7 +178,9 @@ when set).
 
 `selectorAttributes?: string[]` (default `["data-testid", "data-pw"]`) and
 `interactiveComponents?: string[]`; component entries may be exact names or
-`/regex/` strings.
+`/regex/` strings. `slotProps?: string[]` defaults to `["asChild"]`; `[]` disables
+slot recognition. A configured slot component's literal selector covers one
+direct JSX child. Missing or nonliteral slot selectors are reported on the parent.
 
 ### `postgres-cursor-call-contract`
 
@@ -174,6 +192,13 @@ when set).
 `["sql-template-strings"]`. `trustedSqlTags` trusts a named import of `name` from
 `module` or a subpath of `module`, including a rename. A default import is not
 enough, and a shadowed or rebound local fails closed.
+
+The check rule `postgres-require-query-annotation` accepts any tagged template
+at `effort: low` when the first quasi begins with a literal named block comment.
+The tag's import form and identity are not checked. In that rule only,
+`trustedSqlTags` is deprecated and ignored at low effort, with a configuration
+warning; its max-effort behavior and use by other SQL rules are unchanged. See
+the [rule reference](rules/postgres-require-query-annotation.md#effort).
 
 ### `postgres-no-async-sql-builder`
 
@@ -373,3 +398,22 @@ Opt-in bans for configured static member chains. Each `chains` entry sets
 `path` is a schema error. Object destructuring of the final segment matches,
 and a named root ignores shadowing. File scope stays on the lint config. See
 [the rule reference](eslint-rules/forbidden-member-chains.md).
+
+### `restricted-api-usage`
+
+An opt-in file-local import and call policy. `targets` entries select an exact
+`source` and exported `importedNamePattern`, an independent lexical
+`callNamePattern`, or both. `message` supplies a local reason and safe rewrite.
+Type-only imports are ignored; imported aliases and namespace calls use lexical
+binding identity. Lexical call patterns intentionally also match unrelated
+bindings with those names. Invalid expressions fail during initialization.
+See [the rule reference](eslint-rules/restricted-api-usage.md) for file scoping,
+exclusions, suppression, and complete examples.
+
+### Explicit client and lifecycle contracts
+
+`no-consecutive-unbatched-reads` accepts `clients`, `imports` selectors with `source` and `imported`, required `readMethods`, and optional `message`. It reports adjacent direct awaited reads on the same selected client binding unless the second references a previous result. See [the rule](eslint-rules/no-consecutive-unbatched-reads.md) for the configured independence contract and static limits.
+
+`require-top-level-registration` accepts required `registrar` (`source`, `imported`) and `callback`, plus optional `message`. Scope owner modules with lint configuration; a genuine runtime imported registrar must receive the callback in a direct module-level expression statement. See [the rule](eslint-rules/require-top-level-registration.md).
+
+Both rules are opt-in and support ESLint and Oxlint, custom messages, and file/line/next-line suppression. Neither is enabled by a preset.

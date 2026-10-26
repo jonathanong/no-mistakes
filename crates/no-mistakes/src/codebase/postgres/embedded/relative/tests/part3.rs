@@ -6,7 +6,11 @@ fn relative_imports_stay_unresolved_until_projection() {
     assert!(pending.calls.is_empty());
     assert!(pending.matched_factory_names.is_empty());
     assert!(pending.matched_type_names.is_empty());
-    assert_eq!(pending.pending_relative.candidates.len(), 2);
+    // An unlisted import is retained only as a diagnostic ownership candidate.
+    assert_eq!(pending.pending_relative.candidates.len(), 3);
+    assert!(pending.pending_relative.candidates.iter().any(|candidate| {
+        candidate.imported_name == "other" && !candidate.factory && !candidate.type_import
+    }));
     assert_eq!(pending.pending_relative.calls.len(), 9);
     assert!(pending.pending_relative.candidates.iter().any(|candidate| {
         candidate.imported_name == "openTransaction" && candidate.factory && !candidate.type_import
@@ -63,6 +67,10 @@ fn relative_member_escapes_retain_unanalyzable_pending_calls() {
     });
     assert_eq!(bodies(&pending), ["SELECT direct relative"]);
     assert_eq!(pending.calls.len(), 3);
+    assert!(
+        pending.undeclared_executor_types.is_empty(),
+        "even unanalyzable SQL retains its proven receiver"
+    );
 }
 
 #[test]
@@ -74,6 +82,10 @@ fn projecting_a_saved_relative_import_keeps_only_files_inside_the_package() {
         Some(root.join("src/transaction.ts"))
     });
     assert_eq!(pending.calls.len(), 9);
+    assert!(
+        pending.undeclared_executor_types.is_empty(),
+        "resolved relative receiver proof must supersede its provisional diagnostic"
+    );
     assert_eq!(
         bodies(&pending),
         [

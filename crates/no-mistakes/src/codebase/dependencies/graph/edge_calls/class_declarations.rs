@@ -1,4 +1,5 @@
-/// A class with a statically named `extends` base. The base itself is the
+/// A class ancestry declaration. An unresolved or dynamic `extends` base keeps
+/// the declaration without inventing a target. A resolved base is the
 /// [`EdgeKind::Extends`] edge leaving [`ClassDeclaration::node`]; this record
 /// carries what an edge cannot: where the class is declared, whether it is
 /// exported, ambient or a namespace member, and a base that names a global
@@ -30,6 +31,8 @@ pub struct ClassDeclaration {
     /// The global the base resolved to, such as `Error`. A global has no graph
     /// node, so it cannot be an `Extends` edge target.
     pub global_base: Option<String>,
+    /// The declared base is an expression rather than a statically named class.
+    pub dynamic_base: bool,
 }
 
 impl ClassDeclaration {
@@ -40,7 +43,64 @@ impl ClassDeclaration {
 }
 
 impl DepGraph {
+    pub(crate) fn constructor_class(&self, file: &std::path::Path, offset: u32) -> Option<&NodeId> {
+        self.class_ancestry.constructors.get(file)?.get(&offset)
+    }
+
+    pub(crate) fn constructor_proves_site(&self, site: &ResolvedCallSite) -> bool {
+        self.class_ancestry
+            .constructor_provenance
+            .get(&site.file)
+            .and_then(|sites| sites.get(&site.offset))
+            .is_some_and(|prepared| prepared == site)
+    }
+
+    pub(crate) fn constructor_is_resolved(&self, file: &std::path::Path, offset: u32) -> bool {
+        self.constructor_class(file, offset).is_some()
+            || self
+                .class_ancestry
+                .global_constructors
+                .get(file)
+                .is_some_and(|offsets| offsets.contains(&offset))
+    }
+
+    pub(crate) fn class_is_root(
+        &self,
+        file: &std::path::Path,
+        scope: &str,
+        id: Option<crate::codebase::dependencies::extract::CallableId>,
+    ) -> bool {
+        id.is_some_and(|id| {
+            self.class_ancestry
+                .roots
+                .contains(&NodeId::callable(file, scope, id))
+        })
+    }
+
+    pub(crate) fn constructor_expression(
+        &self,
+        file: &std::path::Path,
+        offset: u32,
+    ) -> Option<&str> {
+        self.class_ancestry
+            .expressions
+            .get(&(file.to_path_buf(), offset))
+            .map(String::as_str)
+    }
+
     pub fn class_declarations(&self) -> &[ClassDeclaration] {
         &self.class_declarations
     }
+}
+
+/// A class's base is recorded as a callback-flavoured construct whose caller
+/// is the class itself; nothing else produces that combination. Returns the
+/// derived class's identity and scope.
+fn class_base_owner(
+    call: &FunctionCall,
+) -> Option<(crate::codebase::dependencies::extract::CallableId, &str)> {
+    if !call.is_callback || call.invocation != InvocationKind::Construct {
+        return None;
+    }
+    Some((call.caller_id?, call.caller.as_deref()?))
 }

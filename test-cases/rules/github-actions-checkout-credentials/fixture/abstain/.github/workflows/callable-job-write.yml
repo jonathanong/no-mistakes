@@ -1,4 +1,4 @@
-# A job write grant on workflow_call is still the caller's ceiling, not proof.
+# A reusable job declared write maximum is unsafe when checkout persists credentials.
 name: callable
 on: workflow_call
 jobs:

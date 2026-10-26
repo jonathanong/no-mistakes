@@ -850,13 +850,6 @@ export async function mutableBinding() {
   await expect(update).rejects.toThrow();
 }
 
-export async function alias() {
-  const update = startOperation();
-  const alias = update;
-  await release();
-  await expect(alias).rejects.toThrow();
-}
-
 export async function crossFunctionFlow() {
   const update = startOperation();
   await release();

@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@agents/missing": [
+        "backend/agents/missing.ts"
+      ],
+      "@agents/directory": [
+        "backend/agents/directory.ts"
+      ],
+      "@agents/jobs/*": [
+        "backend/agents/jobs/*.ts"
+      ],
+      "@agents/file": [
+        "backend/agents/file"
+      ]
+    }
+  }
+}

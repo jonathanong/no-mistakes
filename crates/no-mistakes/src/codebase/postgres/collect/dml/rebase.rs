@@ -29,8 +29,11 @@ pub(super) fn rebase_embedded_lines(
         let sql = call.sql_text.as_deref().unwrap_or_default();
         for position in locations.positions.values_mut() {
             position.source_line = source_line(position.sql_line, position.sql_column);
-            position.source_offset =
-                call.source_offset_at_sql_position(sql, position.sql_line, position.sql_column);
+            position.source_offset = variant
+                .then(|| {
+                    call.source_offset_at_sql_position(sql, position.sql_line, position.sql_column)
+                })
+                .flatten();
             position.source_path = call
                 .sql_source_positions
                 .partition_point(|origin| {
@@ -50,6 +53,13 @@ pub(super) fn rebase_embedded_lines(
                 |position| position.source_line,
             )
     };
+    for (index, failure) in facts.parse_failures.iter_mut().enumerate() {
+        failure.line = physical_line(
+            SqlFactSite::ParseFailure(index),
+            failure.line,
+            failure.column,
+        );
+    }
     for (i, setting) in facts.setting_uses.iter_mut().enumerate() {
         setting.line = physical_line(SqlFactSite::Setting(i), setting.line, 1);
     }
@@ -100,6 +110,13 @@ pub(super) fn rebase_embedded_lines(
     }
     for (i, use_) in facts.mutation_column_uses.iter_mut().enumerate() {
         use_.line = physical_line(SqlFactSite::MutationColumn(i), use_.line, 1);
+    }
+    for (i, use_) in facts.transformed_column_uses.iter_mut().enumerate() {
+        use_.line = physical_line(
+            SqlFactSite::TransformedColumn(i),
+            use_.line,
+            use_.column_position,
+        );
     }
     for (i, star) in facts.returning_stars.iter_mut().enumerate() {
         star.line = physical_line(SqlFactSite::ReturningStar(i), star.line, 1);

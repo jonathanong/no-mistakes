@@ -1,13 +1,14 @@
+mod graph_files;
 use super::{
-    any_codebase_rule_enabled, canonical_graph_requires_full_file_universe, rule_enabled,
-    try_canonical_graph_plan, PreparedRulesCheck, FORBIDDEN_CALLS, NEXTJS_NO_API_ROUTES,
-    NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
-    TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    any_codebase_rule_enabled, rule_enabled, try_canonical_graph_plan, PreparedRulesCheck,
+    NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
+    SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use crate::codebase::check_facts::{
     collect_check_facts_with_graph_files_playwright_and_sources, CheckFactPlan,
 };
 use anyhow::Result;
+use graph_files::standalone_graph_files;
 use std::path::Path;
 use std::sync::Arc;
 
@@ -22,6 +23,16 @@ pub(super) fn run_check(
     if !any_codebase_rule_enabled(&config) {
         return Ok(Vec::new());
     }
+
+    let files = crate::codebase::ts_source::discover_files_from_visible(
+        root,
+        &config.filesystem.skip_directories,
+        &visible_paths,
+    );
+    let sources = snapshot.source_store_for(root);
+    let config =
+        super::require_storybook_stories::prepare_low_config(root, &config, &files, &sources)?
+            .unwrap_or(config);
 
     let inferred_roots = crate::codebase::config::InferredRoots::from_visible(root, &visible_paths);
     let prepared_tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
@@ -55,8 +66,8 @@ pub(super) fn run_check(
         })
         .transpose()?;
 
-    let mut fact_plan = standalone_fact_plan(&config);
-    crate::codebase::postgres::configure_prepared_postgres_plan(&config, &mut fact_plan)?;
+    let mut fact_plan = standalone_fact_plan(&config)?;
+    crate::codebase::postgres::configure_prepared_postgres_plan(root, &config, &mut fact_plan)?;
     crate::codebase::postgres::assign_prepared_embedded_sql_options(&config, &mut fact_plan)?;
     fact_plan.embedded_sql = !fact_plan.embedded_sql_options.is_empty();
     fact_plan.postgres_schema_catalog_paths =
@@ -73,8 +84,11 @@ pub(super) fn run_check(
         fact_plan.graph_context = graph_context;
     }
     fact_plan.graph.per_item_calls |= config.rule_configured(super::QUERY_REACHED_PER_ITEM);
-    fact_plan.graph.call_arguments |=
-        crate::codebase::rules::forbidden_calls::argument_facts_required(&config);
+    crate::codebase::rules::forbidden_calls::configure_argument_facts(
+        root,
+        &config,
+        &mut fact_plan,
+    );
     fact_plan.production_import_paths =
         super::super::production_dependency_declarations::required_import_fact_files(
             root,
@@ -82,16 +96,33 @@ pub(super) fn run_check(
             &visible_paths,
         )?;
     fact_plan.graph.imports |= !fact_plan.production_import_paths.is_empty();
-    let files = crate::codebase::ts_source::discover_files_from_visible(
-        root,
-        &config.filesystem.skip_directories,
-        &visible_paths,
-    );
+
     let graph_files = standalone_graph_files(root, &config, graph_plan, &visible_paths, &files);
     let playwright_fact_plan = prepared_playwright
         .as_ref()
         .map(crate::playwright::rules::PreparedPlaywrightRules::fact_plan);
-    let sources = snapshot.source_store_for(root);
+
+    crate::codebase::check_facts::configure_family_path_scopes(
+        root,
+        &files,
+        &config,
+        sources.as_ref(),
+        &mut fact_plan,
+    )?;
+    crate::codebase::check_facts::configure_nextjs_caching_scope(
+        root,
+        &visible_paths,
+        &config,
+        &inferred_roots,
+        &mut fact_plan,
+    )?;
+    crate::codebase::check_facts::configure_nextjs_api_route_source_scope(
+        root,
+        &visible_paths,
+        &config,
+        &inferred_roots,
+        &mut fact_plan,
+    );
     let prepared_tsconfig_catalog = Arc::new(super::prepared_tsconfig_catalog(
         root,
         tsconfig_path,
@@ -112,22 +143,13 @@ pub(super) fn run_check(
             ),
         ));
     }
-    let prepared_vitest_projects = config.rule_configured(FORBIDDEN_CALLS).then(|| {
-        crate::codebase::rules::prepare_vitest_project_catalog(
+    let (prepared_vitest_projects, prepared_playwright_projects) =
+        crate::codebase::rules::forbidden_calls::prepare_root_catalogs(
             root,
             &config,
             snapshot.as_ref(),
             &prepared_tsconfig_catalog,
-        )
-    });
-    let prepared_playwright_projects = config.rule_configured(FORBIDDEN_CALLS).then(|| {
-        crate::codebase::rules::prepare_playwright_project_catalog(
-            root,
-            &config,
-            snapshot.as_ref(),
-            &prepared_tsconfig_catalog,
-        )
-    });
+        );
     let shared = collect_check_facts_with_graph_files_playwright_and_sources(
         root,
         files,
@@ -157,41 +179,28 @@ pub(super) fn run_check(
     })
 }
 
-fn standalone_graph_files(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    graph_plan: Option<crate::codebase::dependencies::graph::GraphBuildPlan>,
-    visible_paths: &[std::path::PathBuf],
-    scoped_files: &[std::path::PathBuf],
-) -> Vec<std::path::PathBuf> {
-    if canonical_graph_requires_full_file_universe(config) {
-        crate::codebase::ts_source::discover_files_from_visible(root, &[], visible_paths)
-    } else if graph_plan.is_some() {
-        scoped_files.to_vec()
-    } else {
-        Vec::new()
-    }
-}
-
 #[cfg(test)]
 mod tests;
 
-fn standalone_fact_plan(config: &crate::config::v2::NoMistakesConfig) -> CheckFactPlan {
+fn standalone_fact_plan(config: &crate::config::v2::NoMistakesConfig) -> Result<CheckFactPlan> {
     let dynamic_imports = rule_enabled(config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS);
     let boundary = rule_enabled(config, SERVER_ROUTE_CLIENT_BOUNDARY);
     let nextjs_api_routes = rule_enabled(config, NEXTJS_NO_API_ROUTES);
     let nextjs_caching = rule_enabled(config, NEXTJS_NO_CACHING);
     let storybook = rule_enabled(config, REQUIRE_STORYBOOK_STORIES);
-    CheckFactPlan {
+    let mut plan = CheckFactPlan {
         imports: dynamic_imports,
         symbols: storybook,
         react: storybook,
-        dynamic_imports: dynamic_imports || storybook,
+        dynamic_imports,
         nextjs_caching,
         storybook,
         server_route_client_boundary: boundary,
         raw_source: nextjs_api_routes,
         source: dynamic_imports || nextjs_caching || storybook,
         ..CheckFactPlan::default()
-    }
+    };
+    super::nextjs_no_caching::configure_effort_plan(config, &mut plan)?;
+    super::require_storybook_stories::configure_effort_plan(config, &mut plan)?;
+    Ok(plan)
 }

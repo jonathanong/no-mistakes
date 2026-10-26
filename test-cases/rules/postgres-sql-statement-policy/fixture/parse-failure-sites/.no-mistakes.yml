@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    include: ['**/*.test.ts']
+    options:
+      importSpecifier: '@example/db'

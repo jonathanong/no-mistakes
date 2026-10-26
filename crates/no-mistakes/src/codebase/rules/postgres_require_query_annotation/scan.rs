@@ -1,11 +1,33 @@
 use super::{CompiledOptions, RULE_ID};
-use crate::codebase::check_facts::SqlFactContext;
+use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::sql_requires_query_annotation;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
+mod composition;
+mod literal_helpers;
+mod loop_carried;
+mod low;
+mod trusted_append;
 mod verdicts;
+
+type AnnotationVerdict = (
+    crate::codebase::postgres::SqlVerdictStatus,
+    Option<crate::codebase::postgres::SqlEvidenceKind>,
+    Vec<String>,
+    Option<String>,
+);
+
+fn head_verdict(
+    facts: &CheckFactMap,
+    path: &Path,
+    opts: &CompiledOptions,
+    span: (u32, u32),
+) -> Option<AnnotationVerdict> {
+    loop_carried::verdict(facts, path, opts, span)
+        .or_else(|| literal_helpers::verdict(facts, path, opts, span))
+}
 
 pub(super) fn scan_with_sources(
     root: &Path,
@@ -13,7 +35,11 @@ pub(super) fn scan_with_sources(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &dyn SqlFactContext,
+    observer: Option<&crate::diagnostics::InvocationObserver>,
 ) -> Result<crate::codebase::rules::PostgresFindings> {
+    if opts.effort == crate::config::v2::Effort::Low {
+        return low::scan(root, opts, files, facts, observer);
+    }
     let prepared = facts.prepared();
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
@@ -34,32 +60,73 @@ pub(super) fn scan_with_sources(
             .transpose()?
             .map(crate::codebase::rules::index_sql_variants)
             .unwrap_or_default();
+        let invalid =
+            composition::diagnostics(&rel, file, &opts.embedded, &statements, facts, observer);
         if facts.wants_sql_verdicts() {
-            verdicts::record(
-                &rel,
-                file,
-                &opts.embedded,
-                opts.unanalyzable_sql == super::UnanalyzableSql::Advise,
-                facts,
-            );
+            verdicts::record(&rel, file, opts, facts, &invalid, prepared, path);
         }
         for (call_index, (call, span)) in file.calls.iter().zip(&file.call_spans).enumerate() {
+            if loop_carried::proves_missing(prepared, path, opts, *span) {
+                findings.push(missing_annotation_finding(&rel, call.line));
+                continue;
+            }
+            if let Some(proof) = literal_helpers::proof(prepared, path, opts, *span) {
+                use crate::codebase::postgres::query_annotation::heads::HeadProof;
+                if proof == HeadProof::Missing
+                    || (proof == HeadProof::Unproven
+                        && opts.unanalyzable_sql == super::UnanalyzableSql::Report)
+                {
+                    findings.push(RuleFinding {
+                        rule: RULE_ID.to_string(), file: rel.clone(), line: call.line as usize,
+                        message: format!("{rel}:{}: {}", call.line, if proof == HeadProof::Missing {
+                            "query execution must start with a /* name */ annotation"
+                        } else { "query annotation cannot be verified because the configured SQL helper requires one static literal argument" }),
+                        import: None, target: Some("annotation".to_string()),
+                    });
+                }
+                continue;
+            }
+            let mut retained_violation = false;
             if !call.variants.is_empty() {
                 for (variant_index, version) in call.statement_calls().enumerate() {
+                    // A truncated residual has no complete statement to parse.
+                    if version.sql_text.is_none() || invalid.contains(&(call_index, variant_index))
+                    {
+                        continue;
+                    }
                     let statement = statements
                         .get(&(call_index, variant_index))
                         .copied()
                         .ok_or_else(|| anyhow::anyhow!("prepared SQL variant facts are missing"))?;
                     for finding in findings_for_call(&rel, &version) {
-                        dedup.push(
-                            &mut findings,
-                            statement,
-                            crate::codebase::postgres::statements::SqlFactSite::Annotation,
-                            Some(&source),
-                            finding,
-                        );
+                        retained_violation = true;
+                        // A newly published deterministic append mirror keeps
+                        // the legacy executor location and its suppressions.
+                        if call.mirrors_single_variant() {
+                            findings.push(finding);
+                        } else {
+                            dedup.push(
+                                &mut findings,
+                                statement,
+                                crate::codebase::postgres::statements::SqlFactSite::Annotation,
+                                Some(&source),
+                                finding,
+                            );
+                        }
                     }
                 }
+                // Retained alternatives do not settle an unexplored residual.
+                // Preserve max's prefix proof / unanalyzable policy for that path.
+                if !call.variants_truncated() {
+                    continue;
+                }
+                // Concrete branch findings already identify this obligation.
+                // Its unknown remainder remains in the advisory/verdict ledger.
+                if retained_violation {
+                    continue;
+                }
+            }
+            if trusted_append::accepts(prepared, path, call, *span) {
                 continue;
             }
             let prefix = prepared.query_annotation_prefix(path, &opts.embedded, *span);
@@ -94,15 +161,16 @@ pub(super) fn findings_for_call(
     if !sql_requires_query_annotation(sql) {
         return Vec::new();
     }
-    vec![RuleFinding {
+    vec![missing_annotation_finding(file, call.line)]
+}
+
+fn missing_annotation_finding(file: &str, line: u32) -> RuleFinding {
+    RuleFinding {
         rule: RULE_ID.to_string(),
         file: file.to_string(),
-        line: call.line as usize,
-        message: format!(
-            "{file}:{}: query execution must start with a /* name */ annotation",
-            call.line
-        ),
+        line: line as usize,
+        message: format!("{file}:{line}: query execution must start with a /* name */ annotation"),
         import: None,
         target: Some("annotation".to_string()),
-    }]
+    }
 }

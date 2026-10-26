@@ -1,0 +1,9 @@
+effort: low
+rules:
+  - rule: test-effort-adopter
+    scope: repository
+    include: ['src/*.ts']
+  - rule: test-partner
+    scope: repository
+    options:
+      include: ['src/covered.ts']

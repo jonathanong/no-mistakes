@@ -1,51 +1,84 @@
-use super::permissions::{job_proof, triggers_workflow_call, Proof};
+use super::events::has_event;
+use super::findings::{finding, reference, uncertain};
+use super::gha_kind;
+use super::inputs::{verdict, Verdict};
+use super::permissions::{job_proof, Proof};
+use super::refs::{self, RefRisk};
 use super::uses::is_checkout_uses;
-use super::{gha_kind, RuleFinding, RULE_ID};
+use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::github_actions_script_expressions::{step_uses_lines, StepUse};
+use crate::config::v2::Unanalyzable;
 use serde_yaml::{Mapping, Value};
 
 struct Checkout {
     job: String,
     step: usize,
-    reason: Option<String>,
+    verdict: Verdict,
+    declared_maximum: bool,
+    reference: RefRisk,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum Persist {
-    IsFalse,
-    NotFalse,
-    Unknown,
-}
-
-pub(super) fn check_source(rel: &str, source: &str, assume_unspecified: bool) -> Vec<RuleFinding> {
-    let Some(action) = gha_kind(rel) else {
-        return Vec::new();
-    };
+pub(super) fn analyze_with_default_branch(
+    rel: &str,
+    source: &str,
+    assume_unspecified: bool,
+    policy: Unanalyzable,
+    default_branch: Option<&str>,
+) -> AnalysisDiagnostics {
+    let mut diagnostics = AnalysisDiagnostics::default();
+    if gha_kind(rel) != Some(false) {
+        return diagnostics;
+    }
     let source = source.trim_start_matches('\u{feff}');
-    // Composite and other action files do not grant GITHUB_TOKEN. A permissions
-    // or workflow_call key in an action file is not applied by GitHub.
-    if action {
-        return Vec::new();
-    }
-    // Unparseable YAML is not proof that a write token is persisted.
-    let Ok(value) = serde_yaml::from_str::<Value>(source) else {
-        return Vec::new();
+    let value = match serde_yaml::from_str::<Value>(source) {
+        Ok(value) => value,
+        Err(error) => {
+            let line = error.location().map_or(1, |location| location.line());
+            diagnostics.unanalyzable(
+                policy,
+                uncertain(
+                    rel,
+                    line,
+                    "unknown",
+                    "unknown",
+                    &format!("invalid YAML: {error}"),
+                ),
+            );
+            return diagnostics;
+        }
     };
-    let checkouts = workflow_checkouts(&value, assume_unspecified);
-    if checkouts.iter().all(|checkout| checkout.reason.is_none()) {
-        return Vec::new();
-    }
-    // The shared step locator keeps compact sequences and block scalars. Flow
-    // style has no `uses` line to name, so those findings stay on line 1.
     let locations = step_uses_lines(source);
-    checkouts
-        .into_iter()
-        .filter_map(|checkout| {
-            let reason = checkout.reason?;
-            let line = located_line(&locations, &checkout.job, checkout.step);
-            Some(finding(rel, line, &checkout.job, checkout.step, &reason))
-        })
-        .collect()
+    for checkout in workflow_checkouts(&value, assume_unspecified, default_branch) {
+        let line = located_line(&locations, &checkout.job, checkout.step);
+        match checkout.verdict {
+            Verdict::Safe => {}
+            Verdict::Write(reason) => diagnostics.findings.push(finding(
+                rel,
+                line,
+                &checkout.job,
+                checkout.step,
+                &reason,
+                checkout.declared_maximum,
+            )),
+            Verdict::Unknown(reason) => diagnostics.unanalyzable(
+                policy,
+                uncertain(rel, line, &checkout.job, &checkout.step.to_string(), reason),
+            ),
+        }
+        match checkout.reference {
+            RefRisk::Base => {}
+            RefRisk::Head => {
+                diagnostics
+                    .findings
+                    .push(reference(rel, line, &checkout.job, checkout.step, true))
+            }
+            RefRisk::Unknown => diagnostics.unanalyzable(
+                policy,
+                reference(rel, line, &checkout.job, checkout.step, false),
+            ),
+        }
+    }
+    diagnostics
 }
 
 fn located_line(locations: &[StepUse], job: &str, step: usize) -> usize {
@@ -56,11 +89,16 @@ fn located_line(locations: &[StepUse], job: &str, step: usize) -> usize {
         .unwrap_or(1)
 }
 
-fn workflow_checkouts(value: &Value, assume_unspecified: bool) -> Vec<Checkout> {
+fn workflow_checkouts(
+    value: &Value,
+    assume_unspecified: bool,
+    default_branch: Option<&str>,
+) -> Vec<Checkout> {
     let Some(doc) = value.as_mapping() else {
         return Vec::new();
     };
-    let callable = triggers_workflow_call(doc);
+    let callable = has_event(doc, "workflow_call");
+    let pull_target = has_event(doc, "pull_request_target");
     let workflow_permissions = mapping_get(doc, "permissions");
     let Some(jobs) = mapping_get(doc, "jobs").and_then(Value::as_mapping) else {
         return Vec::new();
@@ -71,13 +109,30 @@ fn workflow_checkouts(value: &Value, assume_unspecified: bool) -> Vec<Checkout> 
             continue;
         };
         let job_name = scalar_name(job_id);
-        let proof = job_proof(job, workflow_permissions, callable, assume_unspecified);
-        collect_steps(job, &job_name, &proof, &mut checkouts);
+        let (proof, declared) = job_proof(job, workflow_permissions, assume_unspecified);
+        // This labels a permitted maximum, not the caller's actual runtime grant.
+        collect_steps(
+            job,
+            &job_name,
+            &proof,
+            callable && declared,
+            pull_target,
+            default_branch,
+            &mut checkouts,
+        );
     }
     checkouts
 }
 
-fn collect_steps(job: &Mapping, job_name: &str, proof: &Proof, checkouts: &mut Vec<Checkout>) {
+fn collect_steps(
+    job: &Mapping,
+    job_name: &str,
+    proof: &Proof,
+    declared_maximum: bool,
+    pull_target: bool,
+    default_branch: Option<&str>,
+    checkouts: &mut Vec<Checkout>,
+) {
     let Some(steps) = mapping_get(job, "steps").and_then(Value::as_sequence) else {
         return;
     };
@@ -91,61 +146,18 @@ fn collect_steps(job: &Mapping, job_name: &str, proof: &Proof, checkouts: &mut V
         if !is_checkout_uses(uses) {
             continue;
         }
-        let reason = flagged(proof, step).map(str::to_string);
+        let verdict = verdict(proof, step);
         checkouts.push(Checkout {
             job: job_name.to_string(),
             step: index + 1,
-            reason,
+            verdict,
+            declared_maximum,
+            reference: if pull_target {
+                refs::classify(step, default_branch)
+            } else {
+                RefRisk::Base
+            },
         });
-    }
-}
-
-fn flagged<'a>(proof: &'a Proof, step: &Mapping) -> Option<&'a str> {
-    let Proof::Write(reason) = proof else {
-        return None;
-    };
-    if persist(step) != Persist::NotFalse || token_set(step) {
-        return None;
-    }
-    Some(reason)
-}
-
-/// An explicit `token` is not the job `GITHUB_TOKEN`. Do not prove it can write.
-fn token_set(step: &Mapping) -> bool {
-    let Some(Value::Mapping(map)) = mapping_get(step, "with") else {
-        return false;
-    };
-    mapping_get(map, "token").is_some()
-}
-
-fn persist(step: &Mapping) -> Persist {
-    let Some(with) = mapping_get(step, "with") else {
-        return Persist::NotFalse;
-    };
-    match with {
-        Value::Null => Persist::NotFalse,
-        Value::Mapping(map) => match mapping_get(map, "persist-credentials") {
-            None => Persist::NotFalse,
-            Some(value) => classify_persist(value),
-        },
-        _ => Persist::Unknown,
-    }
-}
-
-fn classify_persist(value: &Value) -> Persist {
-    match value {
-        Value::Bool(false) => Persist::IsFalse,
-        Value::Bool(true) => Persist::NotFalse,
-        Value::String(text) => classify_persist_str(text),
-        _ => Persist::Unknown,
-    }
-}
-
-fn classify_persist_str(text: &str) -> Persist {
-    match text.trim().to_ascii_lowercase().as_str() {
-        "true" => Persist::NotFalse,
-        "false" => Persist::IsFalse,
-        _ => Persist::Unknown,
     }
 }
 
@@ -160,19 +172,4 @@ fn scalar_name(key: &Value) -> String {
 
 fn mapping_get<'a>(map: &'a Mapping, key: &str) -> Option<&'a Value> {
     map.get(Value::String(key.to_owned()))
-}
-
-fn finding(rel: &str, line: usize, job: &str, step: usize, reason: &str) -> RuleFinding {
-    RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: rel.to_string(),
-        line,
-        message: format!(
-            "{rel}:{line}: job `{job}` step {step} uses actions/checkout while the GITHUB_TOKEN \
-             can write ({reason}), but persist-credentials is not false. actions/checkout writes \
-             that token into the git credential store unless with.persist-credentials is false."
-        ),
-        import: None,
-        target: Some(job.to_string()),
-    }
 }

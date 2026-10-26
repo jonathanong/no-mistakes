@@ -107,6 +107,7 @@ fn configured_project(
         scope: None,
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
+        matcher_warnings: Vec::new(),
         vitest_setup,
         declared_deadlines,
     })

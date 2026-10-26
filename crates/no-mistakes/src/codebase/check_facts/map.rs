@@ -5,6 +5,7 @@ mod views;
 mod fragments;
 mod postgres_catalog;
 mod postgres_readable;
+mod sql_locations;
 mod sql_verdicts;
 use super::{CheckFactStats, PlaywrightSettingsKey, PlaywrightTestFacts};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
@@ -21,7 +22,7 @@ use dashmap::DashMap;
 pub use sql_verdicts::{SqlApplicationFacts, SqlFactContext};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 
 pub(crate) type PlaywrightTestFilesByProject = Arc<
     Vec<(
@@ -46,6 +47,8 @@ pub struct CheckFactMap {
     pub(crate) sql_application: Option<crate::codebase::postgres::SqlRuleApplication>,
     pub(crate) sql_verdicts:
         Option<Arc<Mutex<Vec<crate::codebase::postgres::SqlObligationVerdict>>>>,
+    pub(crate) sql_advisories:
+        Arc<OnceLock<Mutex<Vec<crate::codebase::postgres::SqlObligationVerdict>>>>,
     pub(crate) companion_import_plans: Arc<
         Vec<Arc<crate::codebase::rules::required_companion_imports::PreparedCompanionImportPlan>>,
     >,
@@ -55,6 +58,7 @@ pub struct CheckFactMap {
     pub(crate) graph_files: Vec<PathBuf>,
     pub(crate) graph_files_complete: bool,
     pub(crate) ts: FileIdMap<Arc<CheckFileFacts>>,
+    pub(crate) call_site_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     pub(crate) graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
     pub(crate) integration_runner_configs: std::collections::BTreeMap<
         PathBuf,
@@ -62,6 +66,8 @@ pub struct CheckFactMap {
     >,
     pub(crate) playwright_source_files: Arc<Vec<PathBuf>>,
     pub(crate) playwright_test_files_by_project: PlaywrightTestFilesByProject,
+    pub(crate) playwright_matcher_warnings:
+        Arc<std::collections::BTreeMap<Option<String>, Vec<String>>>,
     pub stats: CheckFactStats,
     /// Deduped SQL-looking member `.query` calls that were not proven executors.
     /// Printed by the CLI; it is not a finding and does not fail the run.
@@ -99,11 +105,15 @@ pub(crate) struct CheckFileFacts {
         Option<crate::integration_tests::runner_config::RunnerConfigFileFacts>,
     pub dynamic_imports: Option<TestFacts>,
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
+    pub nextjs_caching_low: Option<Vec<NextjsCachingFinding>>,
     pub storybook: Option<StorybookFileFacts>,
     pub(crate) embedded_sql: Vec<(
         crate::codebase::postgres::EmbeddedSqlOptions,
         crate::codebase::postgres::EmbeddedSqlFileFacts,
     )>,
+    pub(crate) sql_identifier_syntax: crate::codebase::postgres::sql_identifier_syntax::FileFacts,
+    pub(crate) query_annotation_heads:
+        Option<Arc<crate::codebase::postgres::query_annotation::heads::AnnotationHeads>>,
     pub(crate) query_annotation: Vec<(
         crate::codebase::postgres::EmbeddedSqlOptions,
         crate::codebase::postgres::query_annotation::QueryAnnotationFileFacts,

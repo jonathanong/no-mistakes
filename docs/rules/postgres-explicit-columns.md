@@ -9,12 +9,13 @@ relation is wider than `maxColumns`, or when it is named in `relations`.
 rules:
   - rule: postgres-explicit-columns
     options:
-      include: ["src/**/*.ts"]
+      include: ["src/**/*.ts", "queries/**/*.sql"]
       exclude: ["**/*.test.ts"]
-      sqlInclude: []
+      importSpecifier: "@example/db"
+      sqlInclude: ["queries/**/*.sql"]
       schemaCatalogPath: db/schema.json
       maxColumns: 12
-      relations: [accounts]
+      relations: [orders, accounts]
       allowWholeRowFunctions: [row_to_json, to_json, to_jsonb, json_agg, jsonb_agg]
       checkReturning: true
       unanalyzableSql: ignore
@@ -121,7 +122,54 @@ their existing scopes. See [the migration notes](../migrations/explicit-postgres
 
 ## Valid example
 
+```jsonc
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "status": {
+          "dataType": "text"
+        },
+        "account_id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "tags": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "name": {
+          "dataType": "text"
+        },
+        "slug": {
+          "dataType": "text"
+        }
+      }
+    },
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "name": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}
+```
+
 ```sql
+-- queries/examples.sql
 SELECT id, status FROM orders WHERE id = $1;
 SELECT * FROM tags;
 SELECT EXISTS (SELECT * FROM orders WHERE account_id = $1);
@@ -130,19 +178,67 @@ SELECT row_to_json(o.*) FROM orders o WHERE id = $1;
 WITH r AS (SELECT id, status FROM orders) SELECT * FROM r;
 ```
 
-`tags` has three columns, under the default limit of 12. `orders` is wide, so
-the explicit list and the `row_to_json` wrapper are the shapes that pass.
+`tags` has three columns, under the default limit of 12. `orders` is listed
+in `relations`, so the explicit list and the `row_to_json` wrapper pass even
+though its catalog lists only three columns.
 
 ## Counterexample
 
+```jsonc
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "status": {
+          "dataType": "text"
+        },
+        "account_id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "tags": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "name": {
+          "dataType": "text"
+        },
+        "slug": {
+          "dataType": "text"
+        }
+      }
+    },
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "name": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}
+```
+
 ```sql
+-- queries/examples.sql
 SELECT * FROM orders WHERE id = $1;
 SELECT o.*, a.name FROM orders o JOIN accounts a ON a.id = o.account_id;
 UPDATE orders SET status = 'paid' WHERE id = $1 RETURNING *;
 WITH recent AS (SELECT * FROM orders WHERE id > $1) SELECT id FROM recent;
 ```
 
-`orders` has 40 columns. The join reports `orders`. It also reports `accounts`
+`orders` is listed in `relations`. The join reports `orders`. It also reports `accounts`
 when that name is in `relations` and the query stars it. The CTE reports the
 inner `SELECT *`.
 
@@ -168,6 +264,28 @@ SELECT id, status FROM orders WHERE id = $1;
 
 For a whole-row JSON payload, keep the star inside a function listed in
 `allowWholeRowFunctions`, such as `row_to_json(o.*)`.
+
+## Analysis
+
+Raw SQL parse failures retain each failing statement's first code token. Separate
+statements produce separate findings, and a `no-mistakes-disable-next-line`
+directive immediately above one statement suppresses that failure independently.
+Successfully parsed sibling statements remain analyzable.
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files selected by `sqlInclude`.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove: executor calls whose SQL has no complete recovered alternative or exceeds the 16-alternative cap (for example `query(buildSql(filters))` with an unrecoverable helper), and SQL, embedded or in a `sqlInclude` file, that fails to parse. They follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable for explicit columns` or `SQL could not be analyzed for explicit columns`.
+  - `advise`: a non-failing advisory with the same reason.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
 
 ## Suppression
 

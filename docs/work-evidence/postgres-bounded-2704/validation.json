@@ -1,0 +1,22 @@
+{
+  "baseline": "17139a03be47301db3164557d609fd2a7d376a68",
+  "baselineBinarySha256": "c67602fe12da988add3f51212dbbecdc27e1fe89dcf5276d281424ae7a20ca61",
+  "candidateBinarySha256": "c70ac1f62d8d38804137e8673ec1a1984eb9ecc0832ff58fc1551d58bc0424aa",
+  "sourceSha256": {
+    "crates/no-mistakes/src/codebase/postgres/catalog/bounded.rs": "ded946bdcf25f5cfde30bbafd9c6be33db150ff3882619bc6f42f0c8396c6a85",
+    "crates/no-mistakes/src/codebase/postgres/statements/bounds/pins.rs": "1bc0246a9f9e8ae537f93a52b67063d91f1ca8a6476d55401a681d8063ac0c4f"
+  },
+  "rust": {
+    "libraryPassed": 13263,
+    "existingIgnored": 3,
+    "binaryPassed": 449,
+    "integrationPassed": 1388
+  },
+  "nativePassed": 575,
+  "globalCoverage": {
+    "regionsPercent": 98.55,
+    "functionsPercent": 99.34,
+    "linesPercent": 99.34
+  },
+  "configuredMinimumPercent": 98
+}

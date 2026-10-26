@@ -1,4 +1,4 @@
-use super::super::checkout::check_source;
+use super::super::analysis_tests::analyze;
 use crate::codebase::rules::RuleFinding;
 
 #[path = "assume_write_fixture_tests.rs"]
@@ -6,8 +6,15 @@ mod assume_write_fixture_tests;
 
 const WORKFLOW: &str = ".github/workflows/ci.yml";
 
+// Match definite violations here; policy_tests exercises the default report boundary.
 fn findings(source: &str, assume: bool) -> Vec<RuleFinding> {
-    check_source(WORKFLOW, source, assume)
+    analyze(
+        WORKFLOW,
+        source,
+        assume,
+        crate::config::v2::Unanalyzable::Ignore,
+    )
+    .findings
 }
 
 #[test]
@@ -52,7 +59,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 ";
-    assert!(findings(callable_write, true).is_empty());
+    for assume in [false, true] {
+        let bound = findings(callable_write, assume);
+        assert_eq!(bound.len(), 1, "{bound:?}");
+        assert!(bound[0].message.contains("declared permissions may allow"));
+    }
 
     let read = "\
 on: push

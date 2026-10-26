@@ -1,0 +1,5 @@
+# A numeric job id is not a string. The step is still checked.
+jobs:
+  1:
+    steps:
+      - uses: actions/checkout@v4

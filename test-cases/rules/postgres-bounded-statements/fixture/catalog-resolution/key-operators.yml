@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: catalog.json
+      sqlInclude: [sql/key-operators.sql]

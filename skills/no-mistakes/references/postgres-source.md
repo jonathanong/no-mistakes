@@ -1,10 +1,16 @@
 # Parse PostgreSQL source without a repository
 
 For executed TypeScript SQL, use `check` with configured
-`postgres-require-query-annotation` instead. It traces straight-line local/imported
+`postgres-require-query-annotation` instead. At default `effort: max`, it traces straight-line local/imported
 helpers and callback forwarding, and reports unknown leading SQL by default.
-Inspect unanalyzable findings before using `unanalyzableSql: ignore`; a static
+Inspect unanalyzable findings before using `unanalyzable: ignore` (or its
+legacy alias `unanalyzableSql: ignore`); a static
 leading `/* name */` can establish the annotation even when later appends are opaque.
+
+At `effort: low`, annotation checking skips the helper evaluator. Keep the
+leading name literal at the executor call or in one same-file local const
+passed directly; explicitly configured trusted-tag templates qualify in both
+positions. Other shapes use `unanalyzable: report | advise | ignore`.
 
 Use the async Node `parsePostgresSql({ sql, fileName })` export for migration
 text and schema-authoring facts. Pass an array for a source batch. It needs no
@@ -126,3 +132,14 @@ with `x = ANY(t.aliases)` can therefore be complete.
 
 Grouped residual advice, including a `target` that may list several checks, is described in
 [SQL verdicts](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).
+
+For `postgres-no-unbounded-sql-identifier`, low effort accepts direct literal SQL/templates or one lexical const and skips call-graph/provenance inference. Keep relations literal; bind external values. Helper/alias/factory/type shapes are unanalyzable and follow `report`, `advise`, or `ignore`. Direct global `process.env` relation inputs remain violations.
+
+`postgres-no-mutable-sql-registry` also supports `effort: low`. Use it when SQL
+relations are literal: the syntax tier skips cross-file mutation and call-graph
+analysis. Imported registry relations, helpers, and other indirect SQL produce
+an unanalyzable diagnostic under `report` (or an advisory under `advise`).
+`as const` does not freeze runtime registry members. Choose `max` when the
+cross-file registry path needs inspection; see the rule's Effort section.
+
+For annotation checks, configure `sqlLiteralHelpers: [pg-copy-streams#from]` to unwrap a direct imported helper with one string or interpolation-free template literal at low and max effort. Put the SQL name comment inside the literal. Other argument shapes remain unanalyzable; unannotated static literals remain definite findings under every policy. This option is separate from deprecated `trustedSqlTags`.

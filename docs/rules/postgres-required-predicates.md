@@ -27,6 +27,7 @@ rules:
   - rule: postgres-required-predicates
     scope: repository
     options:
+      executorNames: []
       sqlInclude: ["**/*.sql"]
       schemaCatalogPath: db/schema.json
       partitionKeys: require
@@ -150,7 +151,43 @@ See [Executor SQL built by helpers](postgres-required-predicates-helpers.md) and
 
 ## Valid example
 
+This catalog makes `events.account_id` a partition key; `orders.account_id`
+is required by `relations` and `topics` needs the textual predicate:
+
+```json
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "topics": {
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "parent_id": {"dataType": "uuid", "nullable": true}
+      }
+    },
+    "events": {
+      "relationKind": "partitioned table",
+      "physicalPartition": {"key": "RANGE (account_id)"},
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "account_id": {"dataType": "uuid"},
+        "kind": {"dataType": "text"}
+      }
+    },
+    "orders": {
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "account_id": {"dataType": "uuid"},
+        "status": {"dataType": "text"}
+      }
+    }
+  }
+}
+```
+
 ```sql
+-- db/queries.sql
 SELECT id FROM topics WHERE parent_id IS NOT NULL AND id = $1;
 SELECT id FROM events WHERE account_id = $1;
 SELECT id FROM events WHERE account_id = ANY($1::uuid[]) AND kind = 'login';
@@ -163,7 +200,42 @@ not the partitioned table. Quoted CTE and column names preserve their case; all 
 
 ## Counterexample
 
+Use the same catalog to check all three requirements:
+
+```json
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "topics": {
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "parent_id": {"dataType": "uuid", "nullable": true}
+      }
+    },
+    "events": {
+      "relationKind": "partitioned table",
+      "physicalPartition": {"key": "RANGE (account_id)"},
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "account_id": {"dataType": "uuid"},
+        "kind": {"dataType": "text"}
+      }
+    },
+    "orders": {
+      "columns": {
+        "id": {"dataType": "uuid"},
+        "account_id": {"dataType": "uuid"},
+        "status": {"dataType": "text"}
+      }
+    }
+  }
+}
+```
+
 ```sql
+-- db/queries.sql
 SELECT id FROM topics WHERE id = $1;
 SELECT id FROM events WHERE kind = 'login';
 DELETE FROM orders WHERE id = $1;
@@ -175,6 +247,28 @@ Add the required predicate or a comparison, `IN`, `= ANY`, or `BETWEEN` on
 the required column. For a partition key, constrain every key column or add a
 `partitionKeyExemptions` entry with a reason. For an expression partition key,
 add that exemption instead of a query predicate.
+
+## Analysis
+
+Raw SQL parse failures retain each failing statement's first code token. Separate
+statements produce separate findings, and a `no-mistakes-disable-next-line`
+directive immediately above one statement suppresses that failure independently.
+Successfully parsed sibling statements remain analyzable.
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files selected by `sqlInclude`.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove: executor calls whose SQL has no complete recovered alternative or exceeds the 16-alternative cap (for example `query(buildSql(filters))` with an unrecoverable helper), and SQL, embedded or in a `sqlInclude` file, that fails to parse. They follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable for required predicates` or `SQL could not be analyzed for required predicates`.
+  - `advise`: a non-failing advisory with the same reason.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
 
 ## Suppression
 

@@ -1,0 +1,6 @@
+{
+  "name": "@typescript-eslint/parser",
+  "version": "8.40.0",
+  "main": "index.cjs",
+  "private": true
+}

@@ -1,0 +1,19 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: "@bench/db"
+      executorNames: [read, query, sql]
+      trustedSqlTags: [{ module: "@bench/db", name: sql }]
+      include: ["src/query.mts"]
+      effort: low
+      unanalyzable: report
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      importSpecifier: "@bench/db"
+      executorNames: [read, query, sql]
+      include: ["src/query.mts"]
+      trustedSqlTags: [{ module: "@other/db", name: sql }]
+      effort: low
+      unanalyzable: advise

@@ -1,0 +1,4 @@
+# The apostrophe is part of the name. The version comment still covers the pin.
+- { name: Don't fail, uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd } # v1
+# The same shape without a comment still needs one.
+- { name: Don't fail, uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd }

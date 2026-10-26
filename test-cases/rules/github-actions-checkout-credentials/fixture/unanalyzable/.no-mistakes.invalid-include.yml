@@ -1,0 +1,4 @@
+rules:
+  - rule: github-actions-checkout-credentials
+    scope: repository
+    include: ["["]

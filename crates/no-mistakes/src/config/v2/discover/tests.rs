@@ -133,7 +133,7 @@ fn project_and_rule_globs_surface_validation_context() {
         .unwrap_err()
         .to_string();
     assert!(
-        project_error.contains("projects.app.include contains invalid glob `[`"),
+        project_error.contains("projects.app.include[0]: contains invalid glob `[`"),
         "{project_error}"
     );
 
@@ -147,7 +147,7 @@ fn project_and_rule_globs_surface_validation_context() {
         .unwrap_err()
         .to_string();
     assert!(
-        rule_error.contains("rules[0].exclude contains invalid glob `[`"),
+        rule_error.contains("rules[0] (unrelated-rule).exclude[0]: contains invalid glob `[`"),
         "{rule_error}"
     );
 }
@@ -171,7 +171,7 @@ fn source_store_config_loading_uses_the_request_snapshot_and_validates_globs() {
         .expect_err("an invalid path glob must be rejected during config validation");
     assert!(error
         .to_string()
-        .contains("rules[0].exclude contains invalid glob `[`"));
+        .contains("rules[0] (unique-exports).exclude[0]: contains invalid glob `[`"));
 }
 
 #[test]

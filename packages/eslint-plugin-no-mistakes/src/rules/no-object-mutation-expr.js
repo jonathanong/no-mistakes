@@ -98,8 +98,15 @@ function visitExpression(state, node, scope, role) {
     }
     case "AssignmentExpression":
       return visitAssignment(state, node, scope);
-    case "MemberExpression":
-      return readMember(api.visit(state, node.object, scope, "read"), memberKey(node));
+    case "MemberExpression": {
+      const member = readMember(
+        api.visit(state, node.object, scope, "read"),
+        memberKey(node),
+        node.object,
+      );
+      if (role === "escape") api.releaseEscaping(state, member);
+      return member;
+    }
     case "ObjectExpression":
       return visitObject(state, node, scope, role);
     case "ArrayExpression":

@@ -1,0 +1,9 @@
+{
+  "$comment": "This nested array schema is compatible at max but unknown at low.",
+  "payload": {
+    "type": "object",
+    "properties": {"labels": {"type": "array", "items": {"type": "string"}}},
+    "required": ["labels"],
+    "additionalProperties": false
+  }
+}

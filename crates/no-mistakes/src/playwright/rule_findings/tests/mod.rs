@@ -1,0 +1,463 @@
+use super::*;
+use crate::playwright::analysis::types::{
+    Analysis, CoverageFetch, CoverageReport, CoverageRoute, CoverageSelector, DuplicateSelector,
+    Edge, EdgeReport, SelectorRef, Summary,
+};
+use crate::playwright::rules::{
+    PLAYWRIGHT_COVERAGE, PLAYWRIGHT_PREFER_TEST_ID_LOCATORS, PLAYWRIGHT_UNIQUE_HTML_IDS,
+};
+use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
+use std::sync::Arc;
+
+mod coverage_effort;
+mod html_effort;
+mod unique_effort;
+
+fn coverage_all(enabled: bool) -> CoverageFindingOptions {
+    CoverageFindingOptions {
+        enabled,
+        routes: true,
+        selectors: true,
+    }
+}
+
+fn findings_from_report(
+    analysis: &Analysis,
+    unique_test_ids: bool,
+    unique_html_ids: bool,
+    prefer_test_id_locators: bool,
+    coverage: CoverageFindingOptions,
+) -> Vec<crate::codebase::rules::RuleFinding> {
+    findings_from_report_with_effort(
+        analysis,
+        unique_test_ids,
+        unique_html_ids,
+        prefer_test_id_locators,
+        coverage,
+        LowEffortFindings::default(),
+    )
+    .findings
+}
+
+fn report_findings(
+    analysis: &Analysis,
+    coverage: bool,
+    unique_test_ids: bool,
+    unique_html_ids: bool,
+    prefer_test_id_locators: bool,
+) -> Vec<crate::codebase::rules::RuleFinding> {
+    findings_from_report(
+        analysis,
+        unique_test_ids,
+        unique_html_ids,
+        prefer_test_id_locators,
+        coverage_all(coverage),
+    )
+}
+
+#[test]
+fn findings_from_report_maps_routes_selectors_and_duplicates() {
+    let report = CoverageReport {
+        warnings: Vec::new(),
+        summary: Summary {
+            total_routes: 1,
+            covered_routes: 0,
+            uncovered_routes: 1,
+            total_selectors: 1,
+            covered_selectors: 0,
+            uncovered_selectors: 1,
+            duplicate_selectors: 2,
+            total_fetch_apis: 1,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 1,
+        },
+        routes: vec![CoverageRoute {
+            route: "/missing".to_string(),
+            file: "web/app/missing/page.tsx".to_string(),
+            covered: false,
+            tests: vec![],
+            tests_detail: vec![],
+            urls: vec![],
+        }],
+        selectors: vec![CoverageSelector {
+            attribute: "data-testid".to_string(),
+            value: "missing".to_string(),
+            file: "web/app/page.tsx".to_string(),
+            covered: false,
+            unsupported_dynamic: false,
+            tests: vec![],
+            tests_detail: vec![],
+            selectors: vec![],
+            helper_references: vec![],
+            line: 1,
+            literal_exact: true,
+        }],
+        duplicate_selectors: vec![
+            DuplicateSelector {
+                attribute: "data-testid".to_string(),
+                value: "save".to_string(),
+                file: "web/app/page.tsx".to_string(),
+            },
+            DuplicateSelector {
+                attribute: HTML_ID_ATTRIBUTE.to_string(),
+                value: "save".to_string(),
+                file: "web/app/other.tsx".to_string(),
+            },
+        ],
+        fetch_apis: vec![CoverageFetch {
+            method: "GET".to_string(),
+            path: "/api/missing".to_string(),
+            covered: false,
+            tests: vec![],
+            tests_detail: vec![],
+            route_files: vec!["web/app/page.tsx".to_string()],
+        }],
+    };
+
+    let findings = report_findings(&analysis(report, vec![]), true, true, true, false);
+    let targets: Vec<_> = findings
+        .iter()
+        .map(|finding| (finding.rule.as_str(), finding.target.as_deref()))
+        .collect();
+
+    assert!(targets.contains(&(PLAYWRIGHT_COVERAGE, Some("/missing"))));
+    assert!(targets.contains(&(PLAYWRIGHT_COVERAGE, Some("data-testid=missing"))));
+    assert!(targets.contains(&(PLAYWRIGHT_UNIQUE_TEST_IDS, Some("data-testid=save"))));
+    assert!(targets.contains(&(PLAYWRIGHT_UNIQUE_HTML_IDS, Some("id=save"))));
+}
+
+#[test]
+fn coverage_findings_omit_selectors_when_selector_coverage_is_disabled() {
+    let report = CoverageReport {
+        warnings: Vec::new(),
+        summary: Summary {
+            total_routes: 1,
+            covered_routes: 0,
+            uncovered_routes: 1,
+            total_selectors: 1,
+            covered_selectors: 0,
+            uncovered_selectors: 1,
+            duplicate_selectors: 0,
+            total_fetch_apis: 0,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 0,
+        },
+        routes: vec![CoverageRoute {
+            route: "/missing".to_string(),
+            file: "web/app/missing/page.tsx".to_string(),
+            covered: false,
+            tests: vec![],
+            tests_detail: vec![],
+            urls: vec![],
+        }],
+        selectors: vec![CoverageSelector {
+            attribute: "data-testid".to_string(),
+            value: "missing".to_string(),
+            file: "web/app/page.tsx".to_string(),
+            covered: false,
+            unsupported_dynamic: false,
+            tests: vec![],
+            tests_detail: vec![],
+            selectors: vec![],
+            helper_references: vec![],
+            line: 1,
+            literal_exact: true,
+        }],
+        duplicate_selectors: vec![],
+        fetch_apis: vec![],
+    };
+    let findings = findings_from_report(
+        &analysis(report, vec![]),
+        false,
+        false,
+        false,
+        CoverageFindingOptions {
+            enabled: true,
+            routes: true,
+            selectors: false,
+        },
+    );
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("/missing"));
+}
+
+#[test]
+fn findings_from_report_filters_disabled_duplicate_rules() {
+    let report = CoverageReport {
+        warnings: Vec::new(),
+        summary: Summary {
+            total_routes: 0,
+            covered_routes: 0,
+            uncovered_routes: 0,
+            total_selectors: 0,
+            covered_selectors: 0,
+            uncovered_selectors: 0,
+            duplicate_selectors: 2,
+            total_fetch_apis: 0,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 0,
+        },
+        routes: vec![],
+        selectors: vec![],
+        duplicate_selectors: vec![
+            DuplicateSelector {
+                attribute: "data-testid".to_string(),
+                value: "save".to_string(),
+                file: "web/app/page.tsx".to_string(),
+            },
+            DuplicateSelector {
+                attribute: HTML_ID_ATTRIBUTE.to_string(),
+                value: "save".to_string(),
+                file: "web/app/other.tsx".to_string(),
+            },
+        ],
+        fetch_apis: vec![],
+    };
+
+    let findings = report_findings(&analysis(report, vec![]), false, false, true, false);
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].rule, PLAYWRIGHT_UNIQUE_HTML_IDS);
+}
+
+#[test]
+fn findings_from_report_skips_unsupported_dynamic_selectors() {
+    // Selectors with unsupported_dynamic: true (fully-dynamic expressions like
+    // `data-pw={id}`) must NOT produce playwright-coverage findings.
+    let report = CoverageReport {
+        warnings: Vec::new(),
+        summary: Summary {
+            total_routes: 0,
+            covered_routes: 0,
+            uncovered_routes: 0,
+            total_selectors: 2,
+            covered_selectors: 0,
+            uncovered_selectors: 2,
+            duplicate_selectors: 0,
+            total_fetch_apis: 0,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 0,
+        },
+        routes: vec![],
+        selectors: vec![
+            CoverageSelector {
+                attribute: "data-pw".to_string(),
+                value: "~dynamic~".to_string(),
+                file: "web/app/page.tsx".to_string(),
+                covered: false,
+                unsupported_dynamic: true,
+                tests: vec![],
+                tests_detail: vec![],
+                selectors: vec![],
+                helper_references: vec![],
+                line: 1,
+                literal_exact: false,
+            },
+            CoverageSelector {
+                attribute: "data-pw".to_string(),
+                value: "static-btn".to_string(),
+                file: "web/app/page.tsx".to_string(),
+                covered: false,
+                unsupported_dynamic: false,
+                tests: vec![],
+                tests_detail: vec![],
+                selectors: vec![],
+                helper_references: vec![],
+                line: 1,
+                literal_exact: true,
+            },
+        ],
+        duplicate_selectors: vec![],
+        fetch_apis: vec![],
+    };
+
+    let findings = report_findings(&analysis(report, vec![]), true, false, false, false);
+    assert_eq!(
+        findings.len(),
+        1,
+        "only the static selector should produce a finding"
+    );
+    assert_eq!(findings[0].target.as_deref(), Some("data-pw=static-btn"));
+}
+
+#[test]
+fn findings_from_report_maps_id_duplicates_to_test_ids_when_html_rule_is_disabled() {
+    let report = CoverageReport {
+        warnings: Vec::new(),
+        summary: Summary {
+            total_routes: 0,
+            covered_routes: 0,
+            uncovered_routes: 0,
+            total_selectors: 0,
+            covered_selectors: 0,
+            uncovered_selectors: 0,
+            duplicate_selectors: 1,
+            total_fetch_apis: 0,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 0,
+        },
+        routes: vec![],
+        selectors: vec![],
+        duplicate_selectors: vec![DuplicateSelector {
+            attribute: HTML_ID_ATTRIBUTE.to_string(),
+            value: "save".to_string(),
+            file: "web/app/page.tsx".to_string(),
+        }],
+        fetch_apis: vec![],
+    };
+
+    let findings = report_findings(&analysis(report, vec![]), false, true, false, false);
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].rule, PLAYWRIGHT_UNIQUE_TEST_IDS);
+}
+
+#[test]
+fn findings_from_report_flags_copy_coupled_locators_with_selector_refs() {
+    let edge = Edge::LocatorText {
+        test_file: Arc::new("tests/e2e/app.spec.ts".to_string()),
+        test_name: Some(Arc::new("uses text locator".to_string())),
+        describe_path: Arc::new(vec![]),
+        app_file: Arc::new("web/app/page.tsx".to_string()),
+        locator_kind: "role".to_string(),
+        role: Some("button".to_string()),
+        text: "Save".to_string(),
+        locator: "getByRole(button, name: Save)".to_string(),
+        test_id_attributes: vec!["data-pw".to_string()],
+        selector_refs: vec![SelectorRef {
+            attribute: "data-pw".to_string(),
+            value: "save-button".to_string(),
+        }],
+        reasons: vec!["route-signal".to_string()],
+        line: 12,
+    };
+
+    let findings = report_findings(
+        &analysis(empty_report(), vec![edge]),
+        false,
+        false,
+        false,
+        true,
+    );
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].rule, PLAYWRIGHT_PREFER_TEST_ID_LOCATORS);
+    assert_eq!(findings[0].file, "tests/e2e/app.spec.ts");
+    assert_eq!(findings[0].line, 12);
+    assert_eq!(findings[0].target.as_deref(), Some("data-pw=save-button"));
+}
+
+#[test]
+fn prefer_test_id_locator_uses_effective_test_id_attribute() {
+    let edge = Edge::LocatorText {
+        test_file: Arc::new("tests/e2e/app.spec.ts".to_string()),
+        test_name: Some(Arc::new("uses text locator".to_string())),
+        describe_path: Arc::new(vec![]),
+        app_file: Arc::new("web/app/page.tsx".to_string()),
+        locator_kind: "role".to_string(),
+        role: Some("button".to_string()),
+        text: "Save".to_string(),
+        locator: "getByRole(button, name: Save)".to_string(),
+        test_id_attributes: vec!["data-qa".to_string()],
+        selector_refs: vec![
+            SelectorRef {
+                attribute: "id".to_string(),
+                value: "save".to_string(),
+            },
+            SelectorRef {
+                attribute: "data-pw".to_string(),
+                value: "save-button".to_string(),
+            },
+            SelectorRef {
+                attribute: "data-qa".to_string(),
+                value: "save-action".to_string(),
+            },
+        ],
+        reasons: vec!["route-signal".to_string()],
+        line: 12,
+    };
+
+    let findings = report_findings(
+        &analysis(empty_report(), vec![edge]),
+        false,
+        false,
+        false,
+        true,
+    );
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("data-qa=save-action"));
+}
+
+#[test]
+fn prefer_test_id_locator_ignores_non_effective_selector_refs() {
+    let edge = Edge::LocatorText {
+        test_file: Arc::new("tests/e2e/app.spec.ts".to_string()),
+        test_name: Some(Arc::new("uses text locator".to_string())),
+        describe_path: Arc::new(vec![]),
+        app_file: Arc::new("web/app/page.tsx".to_string()),
+        locator_kind: "role".to_string(),
+        role: Some("button".to_string()),
+        text: "Save".to_string(),
+        locator: "getByRole(button, name: Save)".to_string(),
+        test_id_attributes: vec!["data-qa".to_string()],
+        selector_refs: vec![SelectorRef {
+            attribute: "data-pw".to_string(),
+            value: "save-button".to_string(),
+        }],
+        reasons: vec!["route-signal".to_string()],
+        line: 12,
+    };
+
+    let findings = report_findings(
+        &analysis(empty_report(), vec![edge]),
+        false,
+        false,
+        false,
+        true,
+    );
+
+    assert!(findings.is_empty());
+}
+
+fn analysis(report: CoverageReport, edges: Vec<Edge>) -> Analysis {
+    let unanalyzable_html_ids = report
+        .selectors
+        .iter()
+        .filter(|selector| selector.attribute == HTML_ID_ATTRIBUTE && !selector.literal_exact)
+        .map(|selector| crate::playwright::selectors::AppSelector {
+            file: selector.file.clone().into(),
+            attribute: selector.attribute.clone(),
+            value: crate::playwright::selectors::AppSelectorValue::Exact(selector.value.clone()),
+            line: selector.line,
+            recovered: true,
+        })
+        .collect();
+    Analysis {
+        coverage: report,
+        edges: EdgeReport { edges },
+        unanalyzable_html_ids,
+    }
+}
+
+fn empty_report() -> CoverageReport {
+    CoverageReport {
+        warnings: Vec::new(),
+        summary: Summary {
+            total_routes: 0,
+            covered_routes: 0,
+            uncovered_routes: 0,
+            total_selectors: 0,
+            covered_selectors: 0,
+            uncovered_selectors: 0,
+            duplicate_selectors: 0,
+            total_fetch_apis: 0,
+            covered_fetch_apis: 0,
+            uncovered_fetch_apis: 0,
+        },
+        routes: vec![],
+        selectors: vec![],
+        duplicate_selectors: vec![],
+        fetch_apis: vec![],
+    }
+}

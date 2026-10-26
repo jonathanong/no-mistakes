@@ -102,13 +102,15 @@ pub(super) fn scan(
         let source = crate::codebase::rules::read_source(sources, path);
         for file in statements {
             if file.parse_failed && opts.fail_unanalyzable {
-                dedup.push(
-                    &mut findings,
-                    file,
-                    crate::codebase::postgres::statements::SqlFactSite::Origin,
-                    source.as_deref(),
-                    unanalyzable(&rel, file.origin_line.max(1)),
-                );
+                for (site, line) in file.parse_failure_sites() {
+                    dedup.push(
+                        &mut findings,
+                        file,
+                        site,
+                        source.as_deref(),
+                        unanalyzable(&rel, line),
+                    );
+                }
             }
             for (index, setting) in file.setting_uses.iter().enumerate() {
                 for finding in settings(&rel, std::slice::from_ref(setting), opts) {

@@ -1,6 +1,9 @@
 "use strict";
 
 const rules = {
+  "restricted-api-usage": require("./rules/restricted-api-usage"),
+  "no-consecutive-unbatched-reads": require("./rules/no-consecutive-unbatched-reads"),
+  "require-top-level-registration": require("./rules/require-top-level-registration"),
   "forbidden-member-chains": require("./rules/forbidden-member-chains"),
   "gh-api-argument-safety": require("./rules/gh-api-argument-safety"),
   "no-argv-main-guard": require("./rules/no-argv-main-guard"),

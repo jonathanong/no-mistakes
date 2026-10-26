@@ -1,0 +1,10 @@
+on: workflow_call
+jobs:
+  write:
+    permissions: { contents: write }
+    runs-on: ubuntu-latest
+    steps:
+      # no-mistakes-disable-next-line github-actions-checkout-credentials
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4 # no-mistakes-disable-line github-actions-checkout-credentials
+      - uses: actions/checkout@v4

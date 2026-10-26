@@ -51,6 +51,7 @@ impl IndexedWorkspaceMap {
 }
 
 mod extra;
+mod pnpm_include;
 mod resolution;
 mod visibility;
 

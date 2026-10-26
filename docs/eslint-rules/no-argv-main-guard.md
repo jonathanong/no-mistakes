@@ -15,6 +15,18 @@ import { fileURLToPath } from 'node:url';
 if (process.argv[1] === fileURLToPath(import.meta.url)) main();
 const invoked = process.argv.at(1);
 if (invoked !== import.meta.filename) return;
+if (import.meta.url === `file://${process.argv[1]}`) main();
+if (import.meta.url === "file://" + process.argv[1]) main();
+if (import.meta.url === `file://${process.argv[1]}`.toString()) main();
+if (import.meta.url === String(`file://${process.argv[1]}`)) main();
+if (import.meta.url === new URL(`file://${process.argv[1]}`).href) main();
+if (import.meta.url === new URL(`file://${process.argv[1]}`).toString()) main();
+if (import.meta.url === "file://".concat(process.argv[1])) main();
+if (import.meta.url === `${"file://"}${process.argv[1]}`) main();
+if (import.meta.url === `file://${process.argv[1]}` + "") main();
+if (import.meta.url === `file://${process.argv[1] ?? ""}`) main();
+if (import.meta.url === `file:///${process.argv[1]}`) main();
+if (import.meta.url === `FILE://${process.argv[1]}`) main();
 ```
 
 ## Allowed
@@ -48,6 +60,18 @@ one side is argv index 1 and the other is `import.meta.url`,
 `import.meta.filename`, or global CommonJS `__filename`. Optional
 `process.argv?.[1]` and `process.argv.at(1)` forms are recognized. Ordinary argv
 reads, index 2, `slice(2)`, and comparisons to unrelated paths are not findings.
+Decoded file URL prefixes accept exactly `file://` or `file:///`, ignoring case.
+String concatenation and constant template substitutions before the single argv
+substitution are folded, including direct `const` aliases of those string parts.
+An empty string suffix in concatenation and `argv[1] ?? ""` preserve the identity.
+Global `String(value)`, a zero-argument `.toString()` on a recognized identity
+or on global `new URL(fileUrl)`, and global `new URL(fileUrl).href` are
+transparent; shadowed `String` and `URL` bindings are unknown. String
+`.concat(...)` folds like `+` on a direct call. `.call`, `.apply`, and comma
+calls stay unknown because they replace that receiver. URL construction requires one argument that is
+already a recognized file URL expression. Other prefixes, nonempty suffixes,
+substitutions after argv (even empty ones), repeated argv substitutions, and
+tagged templates are not classified as argv identities.
 
 The global `process` and default/namespace imports or direct `const require`
 bindings from `node:process` / `process` are recognized by binding identity.
@@ -63,6 +87,8 @@ are recognized only from their corresponding Node `url`, `path`, and `fs`
 imports or CommonJS bindings. Same-spelled local wrappers are not assumed
 transparent. Transparent TypeScript assertions and optional chains are supported.
 
+A named `argv` import, `const { argv }` from `process`, a string or expression-free template index, `.at` with a static `1`, and `fileURLToPath.call` or a literal-array `.apply` are the same access.
+
 ## Fix
 
 Use `import.meta.main` on a runtime that supports it, or inject an explicit
@@ -70,6 +96,10 @@ Use `import.meta.main` on a runtime that supports it, or inject an explicit
 CommonJS and older Node runtimes need their own supported entrypoint check; do
 not copy ESM syntax into them blindly. The rule has no automatic fix and does
 not execute filesystem or symlink probes.
+
+## Limits
+
+Another file's re-export is not visible here. `import { toPath } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { fileURLToPath as toPath } from "node:url"` or `export * from "node:url"`. A parameter default such as `function run({ argv } = process)` is not judged, because the caller can pass a different object.
 
 ## Suppression
 

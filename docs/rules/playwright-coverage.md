@@ -115,30 +115,169 @@ static relationships it can resolve from the configured app and test roots.
 
 ## Options and defaults
 
-The rule has no rule-local `options` block. `tests.playwright.coverage.routes`
+The rule has no coverage-specific `options` block. `tests.playwright.coverage.routes`
 and `.selectors` default to `true`; set either to `false` to disable that class
 of finding. `tests.playwright.selectors.htmlIds` defaults to `false`, and
 `tests.playwright.testIdAttribute` overrides static config discovery when set.
+Shared `effort` and `unanalyzable` options apply as described below.
+
+## Analysis
+
+Playwright `testMatch` and `testIgnore` support static string/RegExp matchers.
+Unsupported matcher values produce config-file and property-line warnings while
+other checks continue; see [file matchers](../configuration/tests.md#playwright-file-matchers).
+Coverage remains uncertain until those warnings are resolved.
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: recovers identifier, helper, ternary, map, and imported bindings into exact test IDs before judging selector coverage; route coverage is unchanged. **Low**: accepts only string-literal attributes and props with literal defaults and routes other selector shapes to `unanalyzable`. No partner rule is required; if any application is not `low`, the invocation stays at `max`.
+
+`effort: max` is the default. It recovers identifier, helper, ternary, object
+map, and imported bindings into exact test IDs before judging selector
+coverage. Route coverage is unchanged.
+
+At effective `effort: low`, selector coverage accepts only:
+
+- a string literal attribute, including JSX `data-testid={"save"}`
+- a prop whose default is a string literal, matching `playwright-literals`
+
+```tsx
+<button data-testid="save-profile" />
+<button data-testid={"cancel-profile"} />
+function SaveButton({ testId = "save-button" }) {
+  return <button data-testid={testId} />;
+}
+```
+
+Every other selector shape is unanalyzable: an identifier without a literal
+default, a ternary or logical leaf, a template, a helper call, or a
+cross-file binding. Those shapes are not uncovered-selector findings. The
+diagnostic names the rewrite:
+
+```text
+web/app/page.tsx:12: selector [data-testid="{id}"] is unanalyzable at effort low; use a literal test id such as data-pw="save-button", or a prop with a literal default
+```
+
+The shared `unanalyzable` policy controls that diagnostic: `report` fails,
+`advise` emits a non-failing advisory, and `ignore` skips it. Rejected shapes
+are never selector coverage evidence under any of those policies.
+
+These syntax proofs do not require a companion rule. The rule checks each
+selector once, so if any enabled application of this rule is not `low`, the
+invocation stays at `max`. The low grammar is a findings filter: recovered
+exact IDs are unanalyzable rather than uncovered hits. Identifier recovery
+itself is skipped only when every Playwright selector consumer in the
+invocation is effectively `low`.
+
+Suppress a low-effort shape on its own line:
+
+```tsx
+// no-mistakes-disable-next-line playwright-coverage
+<button data-testid={id} />
+```
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (at low effort, selectors given by an identifier without a literal default, a ternary, template, helper call, or cross-file binding) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `web/app/page.tsx:12: selector [data-testid="{id}"] is unanalyzable at effort low`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
 
 ## Valid example
 
+```yaml
+# .no-mistakes.yml
+projects:
+  web:
+    type: nextjs
+    root: web
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: [data-pw]
+rules:
+  - rule: playwright-coverage
+    tests:
+      playwright: [web]
+```
+
 ```ts
-test("saves a profile", async ({ page }) => {
-  await page.goto("/profile");
-  await page.getByTestId("save-profile").click();
+// playwright.config.ts
+import { defineConfig } from '@playwright/test';
+export default defineConfig({
+  testDir: './tests/e2e',
+  use: { testIdAttribute: 'data-pw' },
+  projects: [{ name: 'web' }],
+});
+```
+
+```tsx
+// web/app/profile/page.tsx
+export default function ProfilePage() {
+  return <button data-pw="save-profile">Save</button>;
+}
+```
+
+```ts
+// tests/e2e/profile.spec.ts
+import { test } from '@playwright/test';
+test('saves a profile', async ({ page }) => {
+  await page.goto('/profile');
+  await page.getByTestId('save-profile').click();
 });
 ```
 
 ## Counterexample
 
+```yaml
+# .no-mistakes.yml
+projects:
+  web:
+    type: nextjs
+    root: web
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: [data-pw]
+rules:
+  - rule: playwright-coverage
+    tests:
+      playwright: [web]
+```
+
+```ts
+// playwright.config.ts
+import { defineConfig } from '@playwright/test';
+export default defineConfig({
+  testDir: './tests/e2e',
+  use: { testIdAttribute: 'data-pw' },
+  projects: [{ name: 'web' }],
+});
+```
+
 ```tsx
-export function ProfileForm() {
+// web/app/profile/page.tsx
+export default function ProfilePage() {
   return <button data-pw="save-profile">Save</button>;
 }
 ```
 
-If no configured Playwright test reaches this component or its route, the
-selector remains uncovered.
+```ts
+// tests/e2e/profile.spec.ts
+import { test } from '@playwright/test';
+test('saves a profile', async ({ page }) => {
+  await page.goto('/profile');
+  // Navigation covers the route, but no assertion covers save-profile.
+});
+```
+
+The route is covered; its `data-pw="save-profile"` selector is uncovered.
 
 ## Fix
 

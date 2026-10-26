@@ -30,6 +30,8 @@ rules:
   - rule: postgres-no-generated-column-writes
     options:
       importSpecifier: "@app/db"
+      sqlInclude: ["db/**/*.sql"]
+      triggerMaintainedColumns: [updated_at]
 ```
 
 The configured `importSpecifier` limits executor calls to proven receivers from
@@ -44,18 +46,44 @@ See [details](postgres-no-generated-column-writes-options.md).
 ## Valid example
 
 ```sql
+-- db/schema.sql
+CREATE TABLE items (
+  id bigint PRIMARY KEY,
+  note text,
+  normalized_note text GENERATED ALWAYS AS (lower(note)) STORED
+);
+CREATE TABLE orders (id bigint PRIMARY KEY, status text, updated_at timestamptz);
+
+-- db/write.sql
 INSERT INTO items (id, note) VALUES ($1, $2);
 ```
 
 ## Counterexample
 
+Run each counterexample independently in a SQL file under `db/`. Each includes
+its own schema so a finding for one write cannot cover for the other.
+
 ```sql
-UPDATE items SET created_at = now() WHERE id = $1;
+CREATE TABLE items (
+  id bigint PRIMARY KEY,
+  note text,
+  normalized_note text GENERATED ALWAYS AS (lower(note)) STORED
+);
+CREATE TABLE orders (id bigint PRIMARY KEY, status text, updated_at timestamptz);
+
+UPDATE items SET normalized_note = 'override' WHERE id = $1;
 ```
 
 With `triggerMaintainedColumns: [updated_at]`, this also fails:
 
 ```sql
+CREATE TABLE items (
+  id bigint PRIMARY KEY,
+  note text,
+  normalized_note text GENERATED ALWAYS AS (lower(note)) STORED
+);
+CREATE TABLE orders (id bigint PRIMARY KEY, status text, updated_at timestamptz);
+
 UPDATE orders SET status = 'paid', updated_at = now() WHERE id = $1;
 ```
 
@@ -80,6 +108,59 @@ UPDATE orders SET status = 'paid' WHERE id = $1;
 Remove the generated column from the write and provide only source columns
 from which PostgreSQL computes it. For an `unanalyzable` finding, make the
 executed SQL statically recoverable or set `unanalyzableSql: ignore`.
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files whose writes are checked. Two scopes apply: `sqlInclude` (default `**/*.sql`) selects the schema inputs (table, column and trigger definitions) that establish which columns are generated, while `options.include` selects the query inputs whose writes are checked (when empty, the default DML paths apply).
+
+### Unanalyzable inputs
+
+Valid PostgreSQL can still be unsupported by this analyzer. When it cannot
+recover statements such as `ALTER DEFAULT PRIVILEGES`, `CREATE PUBLICATION`,
+or `REFRESH MATERIALIZED VIEW`, it diagnoses them under
+[`options.unanalyzable`](../migrations/postgres-schema-unanalyzable.md). The
+same diagnostic also catches rejected syntax such as `CREATE RECURSIVE VIEW`
+without its required explicit column list; it reports missing analyzer facts,
+not a PostgreSQL validity verdict.
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove: dynamic executor calls that could assign a generated or trigger-maintained column and cannot be ruled out. They follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable, so a write to a generated or trigger-maintained column cannot be ruled out`.
+  - `advise`: a non-failing advisory with the same reason.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+
+SQL schema statements selected by `sqlInclude` also retain diagnostics when the
+lenient parser cannot parse or recover them. Each diagnostic identifies the file,
+statement line, and statement head, and follows the same `options.unanalyzable`
+policy. Valid sibling statements remain available to the catalog. A real
+`DISCARD ALL` statement does not trigger this recovery diagnostic. Existing file
+and line suppressions apply; rewrite unsupported syntax into a supported static
+statement or suppress the specific diagnostic with a reason.
+
+For schema parse failures, the implicit default advises for any statement that
+cannot be analyzed inside a recognized `DO`, PL/pgSQL function, or procedure body.
+This includes malformed body statements: an advisory means analysis is incomplete,
+not that PostgreSQL accepts the SQL. Successfully parsed body statements still
+contribute facts and rule findings. At the top level, only these complete forms
+advise. Malformed and unrecognized statements retain findings.
+
+- `REFRESH MATERIALIZED VIEW [CONCURRENTLY] view [WITH [NO] DATA]`
+- `CREATE PUBLICATION name FOR ALL TABLES`
+- `CREATE PUBLICATION name FOR TABLE table [, table ...]`
+- `ALTER DEFAULT PRIVILEGES [FOR {ROLE | USER} role [, role ...]] [IN SCHEMA schema [, schema ...]] GRANT {ALL [PRIVILEGES] | privilege [, privilege ...]} ON {TABLES | SEQUENCES | FUNCTIONS | ROUTINES | TYPES | SCHEMAS} TO grantee [, grantee ...] [WITH GRANT OPTION]`
+
+Privileges are `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`,
+`TRIGGER`, `USAGE`, `CREATE`, `EXECUTE`, and `MAINTAIN`. `view` and each `table`
+may be schema-qualified; `name`, `role`, `schema`, and `grantee` may not.
+`CONCURRENTLY` precedes the view name, and `WITH` requires `DATA`. A matching
+prefix with extra tokens is not recognized. Explicit rule or
+repository `unanalyzable` policies override these defaults. See the
+[schema diagnostic migration](../migrations/postgres-schema-unanalyzable.md).
 
 ## Suppression
 

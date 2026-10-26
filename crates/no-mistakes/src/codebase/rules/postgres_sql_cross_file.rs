@@ -1,6 +1,7 @@
 //! Shared prepared-fact helpers for cross-file SQL identifier provenance.
 mod expressions;
 mod graph;
+pub(crate) mod low;
 mod options;
 mod provenance;
 mod sql;
@@ -25,9 +26,19 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use std::path::Path;
 
-pub(crate) fn enabled(config: &NoMistakesConfig) -> bool {
-    config.rule_configured("postgres-no-mutable-sql-registry")
-        || config.rule_configured("postgres-no-unbounded-sql-identifier")
+pub(crate) fn needs_deep_analysis(config: &NoMistakesConfig) -> bool {
+    [
+        "postgres-no-mutable-sql-registry",
+        "postgres-no-unbounded-sql-identifier",
+    ]
+    .iter()
+    .any(|id| {
+        config.rule_applications(id).iter().any(|rule| {
+            config.effective_rule_analysis(rule).map_or(true, |policy| {
+                policy.effort != crate::config::v2::Effort::Low
+            })
+        })
+    })
 }
 
 pub(crate) fn count(metric: &'static str, amount: u64) {
@@ -58,27 +69,23 @@ pub(crate) fn finding(
     }
 }
 
-pub(crate) fn check_applications(
+#[cfg(test)]
+mod tests;
+
+/// Borrow one application without copying the request's prepared configuration.
+pub(crate) fn check_application(
     root: &Path,
     config: &NoMistakesConfig,
+    application: &crate::config::v2::schema::RuleDef,
     graph: &DepGraph,
     facts: &CheckFactMap,
     rule_id: &str,
     visit: impl Fn(&Path, &CompiledOptions, &DepGraph, &CheckFactMap) -> Result<Vec<RuleFinding>>,
 ) -> Result<Vec<RuleFinding>> {
-    let root = crate::codebase::ts_resolver::normalize_path(root);
-    let mut findings = Vec::new();
-    for application in config.rule_applications(rule_id) {
-        let opts: Options = application.try_rule_options()?;
-        let compiled = compile(rule_id, &opts)?;
-        let filter = super::path_filter::RulePathFilter::new(&root, config, application)?;
-        let mut next = visit(&root, &compiled, graph, facts)?;
-        next.retain(|finding| filter.is_match(&root.join(&finding.file)));
-        findings.extend(next);
-    }
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    let opts: Options = application.try_rule_options()?;
+    let compiled = compile(rule_id, &opts)?;
+    let filter = super::path_filter::RulePathFilter::new(root, config, application)?;
+    let mut next = visit(root, &compiled, graph, facts)?;
+    next.retain(|finding| filter.is_match(&root.join(&finding.file)));
+    Ok(next)
 }
-
-#[cfg(test)]
-mod tests;

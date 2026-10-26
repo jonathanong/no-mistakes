@@ -13,6 +13,7 @@ mod rule_findings;
 pub mod rules;
 pub mod selectors;
 pub(crate) mod test_file_occurrences;
+pub(crate) mod test_patterns;
 #[cfg(test)]
 pub(crate) mod test_support;
 #[cfg(test)]
@@ -83,6 +84,8 @@ fn report_json_with_cache(
             html_ids: options.assert_unique_html_ids,
             aggregate: false,
             configured_html_id_selector: false,
+            literal_test_ids_only: false,
+            literal_html_ids_only: false,
         },
         &snapshot,
     );

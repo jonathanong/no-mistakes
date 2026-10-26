@@ -53,9 +53,6 @@ rules:
         acknowledgement: acknowledgment
       doubleUnderscore:
         allowPattern: "^link__[a-z0-9]+(_[a-z0-9]+)*__[a-z0-9_]+__[a-z0-9_]+$"
-      allow:
-        - object: "table:legacy_cfg_values"
-          reason: "Name owned by an external replication tool"
 ```
 
 Patterns are not anchored for you. Write `^` and `$` when the whole name
@@ -154,21 +151,84 @@ configuration errors.
 
 `idx_ord_line_itms__order_id` on `order_line_items` matches
 `^idx_{table}__[a-z0-9_]+$` when abbreviations are enabled.
-`account_people` ends in the irregular plural `people`. `orders_pkey` is
-skipped while `checkConstraintBackedIndexes` stays at its default `false`.
+`account_people` ends in the irregular plural `people`. The primary index
+`orders_pkey` on `user_orders` is treated as constraint-backed even though the
+snapshot omits `constraintBacked`. It is skipped while
+`checkConstraintBackedIndexes` stays at its default `false`.
 
-```sql
-CREATE TABLE orders (id uuid PRIMARY KEY);
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "order_line_items": {
+      "columns": {
+        "order_id": {
+          "dataType": "bigint"
+        }
+      },
+      "indexes": {
+        "idx_ord_line_itms__order_id": {
+          "unique": false
+        }
+      }
+    },
+    "account_people": {},
+    "user_orders": {
+      "indexes": {
+        "orders_pkey": {
+          "unique": true,
+          "primary": true
+        }
+      }
+    }
+  }
+}
 ```
 
 
 ## Counterexample
 
-```text
-schema.json: index:order_line_items.idx_oli__order_id: index name does not match pattern ^idx_{table}__[a-z0-9_]+$ ({table} = order_line_items or an abbreviation such as ordr_lin_itms)
-schema.json: table:invoice_line: table name must end in a plural word; "line" is singular
-schema.json: table:app_cfg_values: name uses denied token "cfg"; use "configuration"
+The first case has an index name that does not match the configured pattern.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "order_line_items": {
+      "columns": { "order_id": { "dataType": "bigint" } },
+      "indexes": { "idx_oli__order_id": { "unique": false } }
+    }
+  }
+}
 ```
+
+`invoice_line` ends in the singular `line`.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": { "invoice_line": {} }
+}
+```
+
+`app_cfg_values` contains the denied token `cfg`.
+
+```json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": { "app_cfg_values": {} }
+}
+```
+
+The findings include:
+
+- `index name does not match pattern ^idx_{table}__[a-z0-9_]+$`
+- `table name must end in a plural word; "line" is singular`
+- `name uses denied token "cfg"; use "configuration"`
 
 ## Fix
 
@@ -177,7 +237,25 @@ abbreviation when `{table}` is shortened. Pluralize the last word, replace a
 denied token or misspelling, and add words until `tableMinWords` is met.
 Reserve `__` for names that match `allowPattern`.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. It judges the generated schema catalog (`schemaCatalogPath`); executor calls in TS/JS are not evaluated.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), this rule has no inputs it must guess at, so nothing is silently treated as clean. This rule has no unanalyzable inputs: it judges the configured schema catalog, a JSONC file read directly from `schemaCatalogPath` (no SQL is parsed by the rule), so every entry is either present or absent. A catalog that cannot be read, is not valid JSONC, is empty, or is not a valid snapshot is a hard error, not an unanalyzable input. The repository-level `unanalyzable` default does not affect it.
+
 ## Suppression
+
+For an intentional exception, add an entry under the rule's `options.allow`:
+
+```yaml
+allow:
+  - object: "table:legacy_cfg_values"
+    reason: "Name owned by an external replication tool"
+```
 
 Snapshot findings have no source comments. Suppress one object with `allow`:
 

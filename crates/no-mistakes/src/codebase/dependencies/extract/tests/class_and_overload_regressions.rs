@@ -307,7 +307,7 @@ fn nested_aggregate_callables_keep_their_owner_and_member_identity() {
 }
 
 #[test]
-fn class_declaration_lines_cover_only_classes_with_a_statically_named_base() {
+fn class_declaration_lines_cover_static_and_dynamic_declared_bases() {
     let facts = facts(
         "class Plain {}\n\nexport class Child extends Base {}\nclass Nested extends ns.Base {}\nclass Opaque extends mixin(Base) {}\n",
     );
@@ -325,7 +325,7 @@ fn class_declaration_lines_cover_only_classes_with_a_statically_named_base() {
         .collect();
     lines.sort_by_key(|(_, line)| *line);
 
-    assert_eq!(lines, [("Child", 3), ("Nested", 4)]);
+    assert_eq!(lines, [("Child", 3), ("Nested", 4), ("Opaque", 5)]);
 }
 
 #[test]

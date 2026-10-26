@@ -15,8 +15,12 @@ impl Debug for SqlStatementFileFacts {
             .field("deletes", &self.deletes)
             .field("triggers", &self.triggers)
             .field("returning_stars", &self.returning_stars)
-            .field("mutation_column_uses", &self.mutation_column_uses)
-            .field("offset_uses", &self.offset_uses)
+            .field("mutation_column_uses", &self.mutation_column_uses);
+        // Empty additive facts must preserve the legacy projection bytes.
+        if !self.transformed_column_uses.is_empty() {
+            out.field("transformed_column_uses", &self.transformed_column_uses);
+        }
+        out.field("offset_uses", &self.offset_uses)
             .field("bounds", &self.bounds)
             .field("lifecycle", &self.lifecycle)
             .field("limit_uses", &self.limit_uses)
@@ -25,9 +29,15 @@ impl Debug for SqlStatementFileFacts {
             .field("insert_keyword_count", &self.insert_keyword_count)
             .field("has_top_level_not_exists", &self.has_top_level_not_exists)
             .field("origin_line", &self.origin_line);
+        if !self.parse_failures.is_empty() {
+            out.field("parse_failures", &self.parse_failures);
+        }
         if let Some(locations) = &self.variant_locations {
             out.field("variant_locations", locations);
         }
         out.finish()
     }
 }
+
+#[cfg(test)]
+mod tests;

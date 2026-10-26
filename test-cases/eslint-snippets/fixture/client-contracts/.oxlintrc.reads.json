@@ -1,0 +1,22 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/no-consecutive-unbatched-reads": [
+      "error",
+      {
+        "clients": [
+          "client"
+        ],
+        "readMethods": [
+          "get",
+          "ttl"
+        ]
+      }
+    ]
+  }
+}

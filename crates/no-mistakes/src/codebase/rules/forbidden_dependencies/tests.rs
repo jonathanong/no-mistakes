@@ -28,6 +28,7 @@ fn legacy_graph_plan_keeps_default_fallback() {
 }
 use std::path::{Path, PathBuf};
 
+mod directory_roots;
 mod shared_facts;
 
 fn fixture(name: &str) -> PathBuf {
@@ -55,7 +56,14 @@ fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Ve
         }],
         ..Default::default()
     };
-    check_rule_application(root, &config, &config.rules[0], opts, graph, None, None)
+    check_rule_application(
+        root,
+        &config,
+        &config.rules[0],
+        opts,
+        graph,
+        application_scope(None, None, None),
+    )
 }
 
 fn check_with_facts(
@@ -304,7 +312,7 @@ fn nonexistent_root_is_silently_skipped() {
 }
 
 #[test]
-fn directory_root_is_silently_skipped() {
+fn directory_root_selects_graph_sources() {
     let root = fixture("forbidden-dependencies-basic");
     let opts = Options {
         roots: vec!["entrypoints".to_string()],
@@ -325,10 +333,9 @@ fn directory_root_is_silently_skipped() {
     )
     .unwrap();
     let findings = check_application(&root, &opts, &graph).unwrap();
-    assert!(
-        findings.is_empty(),
-        "directory root should produce no findings (not a file)"
-    );
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "entrypoints/api.mts");
+    assert_eq!(findings[0].target.as_deref(), Some("sharp"));
 }
 
 #[test]
@@ -414,9 +421,15 @@ fn source_filter_excludes_matching_forbidden_root() {
     )
     .unwrap();
 
-    let findings =
-        check_rule_application(&root, &config, &config.rules[0], &opts, &graph, None, None)
-            .unwrap();
+    let findings = check_rule_application(
+        &root,
+        &config,
+        &config.rules[0],
+        &opts,
+        &graph,
+        application_scope(None, None, None),
+    )
+    .unwrap();
 
     assert!(findings.is_empty());
 }

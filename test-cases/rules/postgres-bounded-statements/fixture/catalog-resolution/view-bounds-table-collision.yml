@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      executorNames: []
+      schemaCatalogPath: catalog.json
+      sqlInclude: [sql/view-allow.sql]
+      viewBounds:
+        "public.table_view_collision": bounded

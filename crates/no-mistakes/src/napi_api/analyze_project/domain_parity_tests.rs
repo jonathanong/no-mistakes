@@ -54,6 +54,8 @@ include!("domain_parity_tests/check_effects.rs");
 include!("domain_parity_tests/call_sites_scope.rs");
 include!("domain_parity_tests/query_diagnostics.rs");
 include!("domain_parity_tests/check_per_item.rs");
+include!("domain_parity_tests/forbidden_call_arguments.rs");
+include!("domain_parity_tests/recall_policies.rs");
 include!("domain_parity_tests/production_dependencies.rs");
 include!("domain_parity_tests/companion_imports.rs");
 include!("domain_parity_tests/finite_set_consistency.rs");
@@ -77,3 +79,7 @@ include!("domain_parity_tests/effects_provenance.rs");
 include!("domain_parity_tests/lang_frontend_shared_session.rs");
 
 include!("domain_parity_tests/resolver_projection_parity.rs");
+
+include!("domain_parity_tests/resolver_projection_reentry.rs");
+
+include!("domain_parity_tests/constructor_resolution.rs");

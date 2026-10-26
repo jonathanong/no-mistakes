@@ -8,9 +8,10 @@ later step can execute or unpack different bytes than the author read. The
 rule is opt-in. Listing it is what turns it on. Product defaults do not enable
 it, and it is not part of a recommended or strict preset.
 
-The rule reports only a download it can judge. A URL it cannot resolve is not
-a finding. That silence means the URL was not followed, not that the download
-is safe.
+At the default `max` effort, the rule reports only a download it can judge.
+A URL it cannot resolve is not a finding. That silence means the URL was not
+followed, not that the download is safe. Low effort uses the explicit
+[unanalyzable policy](#effort) for supported downloader calls with indirect URLs.
 
 ## What it catches
 
@@ -83,6 +84,65 @@ http(s) URL. The default is only `curl` and `wget`. An explicit list is extra,
 not a replacement, so `[]` leaves `curl` and `wget` in place. A helper is a
 single command token such as `ci_download_to`.
 
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: expands one whole-line uppercase literal assignment before checking `$VAR` URL arguments. **Low**: accepts only literal URL arguments and routes a command with any dynamic candidate URL to `unanalyzable`. No partner rule is required.
+
+`effort: max` is the default. It keeps the current expansion of one whole-line
+uppercase assignment with a literal value, such as `BASE_URL="https://example.invalid/base"`,
+before checking later `$BASE_URL` or `${BASE_URL}` URL arguments.
+
+Select low effort and its explicit uncertainty policy on the rule application:
+
+```yaml
+rules:
+  - rule: github-actions-download-integrity
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: report
+```
+
+At `effort: low`, the rule does not expand assignments to URL values. If a
+known downloader command has any dynamic candidate URL argument, the whole
+command is unanalyzable: it emits one diagnostic and no definite unsafe-URL
+findings from that command. The shared `unanalyzable` policy controls the
+result: `report` fails, `advise` emits a non-failing advisory, and `ignore` skips
+it. The static rewrite is to put the complete URL directly in the downloader's
+URL argument. An unanalyzable URL does not prove that the download is unsafe;
+`ignore` therefore leaves that command without analysis.
+With `report`, low can produce more findings than max when max resolves a
+dynamic URL to a trusted host or another allowed form: this is the explicit
+price of skipping expansion, rather than proof of an unsafe download.
+
+A dynamic option name such as `curl --$FLAG URL` also makes argument slots
+uncertain: the expanded option could consume the apparent URL as a filename.
+It follows the same policy. Fixed option names with dynamic values, such as
+`--output="$OUT"` or `--header="$HEADER"`, keep their known operand positions.
+An unquoted dynamic value can split into additional options, so it also makes
+the command unanalyzable. Quote those values to keep their argument positions.
+
+Low effort may inspect one uppercase literal binding to identify a downloader
+or wrapper used as a dynamic command prefix. It does not use that binding to
+expand URL values. When this proves a configured downloader behind an indirect
+prefix, the shared `unanalyzable` policy applies; the rewrite is to call `curl`,
+`wget`, or a configured helper directly. Commands that cannot be identified as
+configured download commands remain outside this rule's target scope. Quoted
+dynamic operands of known output and header options
+keep using the existing option parser, so they do not trigger this policy as
+candidate URL arguments.
+Even a literal trusted-host URL behind a proved indirect prefix follows the
+policy: low does not use alias recovery to prove the complete argument shape.
+
+Commands whose URL arguments are all literal keep the same checks at low and
+max: trusted-host and checksum-file exceptions, same-step checksum verification,
+and the `integrity-check: skip` comment still apply. URL-option parsing also
+stays enabled, so header and output-file arguments are not treated as dynamic
+URL slots.
+The default `max` output is unchanged.
+
 ```yaml
 rules:
   - rule: github-actions-download-integrity
@@ -102,6 +162,17 @@ rules:
       downloadHelpers:
         - ci_download_to
 ```
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (a downloader URL built from a variable, a dynamic option name such as `curl --$FLAG URL`, an unquoted dynamic option value, or an indirect command prefix, at low effort) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `curl URL argument "$BASE/x.sh" is unanalyzable at effort low`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
 
 ## Valid example
 

@@ -5,7 +5,7 @@ use crate::config::v2::{
 };
 use std::path::{Path, PathBuf};
 
-fn fixture(name: &str) -> PathBuf {
+pub(super) fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/no-raw-ephemeral-port/fixture")
@@ -25,12 +25,12 @@ fn config(yaml: &str) -> NoMistakesConfig {
     }
 }
 
-fn run(root: &Path, yaml: &str) -> Vec<RuleFinding> {
+pub(super) fn run(root: &Path, yaml: &str) -> Vec<RuleFinding> {
     let files = crate::codebase::ts_source::discover_files(root, &[]);
     check_with_files(root, &config(yaml), &files).unwrap()
 }
 
-fn run_deferred(root: &Path, yaml: &str, defer_suppression: bool) -> Vec<RuleFinding> {
+pub(super) fn run_deferred(root: &Path, yaml: &str, defer_suppression: bool) -> Vec<RuleFinding> {
     let files = crate::codebase::ts_source::discover_files(root, &[]);
     let sources = super::super::source_store_for_files(&files);
     check_with_files_sources_and_deferred_suppression(
@@ -94,6 +94,7 @@ fn listen_zero_forms_are_findings() {
     assert!(files.contains(&"options.ts"), "{findings:?}");
     assert!(files.contains(&"trailing.ts"), "{findings:?}");
     assert!(files.contains(&"app.jsx"), "{findings:?}");
+    assert!(files.contains(&"escaped.ts"), "{findings:?}");
 }
 
 #[test]
@@ -144,12 +145,17 @@ fn disable_file_comment_skips_the_source() {
 }
 
 #[test]
-fn unreadable_file_is_skipped() {
+fn unreadable_file_reports_unanalyzable_input() {
     let root = fixture("pass");
     let path = root.join("missing.py");
     let sources = super::super::source_store_for_files(&[]);
     let opts = compile_options(Options::default()).unwrap();
-    assert!(scan::check_file(&root, &path, &opts, &sources, false).is_empty());
+    assert_eq!(
+        scan::check_file(&root, &path, &opts, &sources, false)[0]
+            .target
+            .as_deref(),
+        Some("unanalyzable")
+    );
 }
 
 #[test]
@@ -397,6 +403,43 @@ fn same_line_bind_and_listen_dedup() {
     let findings = scan::check_file(dir.path(), &path, &opts, &sources, false);
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].line, 1);
+}
+
+#[test]
+fn prefilter_preserves_fixture_findings() {
+    let opts = compile_options(Options::default()).unwrap();
+    for name in ["fail-python", "fail-listen", "pass", "allow", "disable"] {
+        let root = fixture(name);
+        let files = crate::codebase::ts_source::discover_files(&root, &[]);
+        let sources = super::super::source_store_for_files(&files);
+        for path in &files {
+            let filtered = scan::check_file(&root, path, &opts, &sources, false);
+            let unfiltered =
+                scan::check_file_with_prefilter(&root, path, &opts, &sources, false, false);
+            assert_eq!(filtered, unfiltered, "{}", path.display());
+        }
+    }
+}
+
+#[test]
+fn prefilter_skips_files_without_bind_or_listen() {
+    scan::BIND_PREFILTER_SKIPS.with(|skips| skips.set(0));
+    scan::LISTEN_PREFILTER_SKIPS.with(|skips| skips.set(0));
+    let root = fixture("pass");
+    let opts = compile_options(Options::default()).unwrap();
+    let py = root.join("plain.py");
+    let ts = root.join("plain.ts");
+    let sources = super::super::source_store_for_files(&[py.clone(), ts.clone()]);
+    assert!(scan::check_file(&root, &py, &opts, &sources, false).is_empty());
+    assert!(scan::check_file(&root, &ts, &opts, &sources, false).is_empty());
+    assert!(
+        scan::BIND_PREFILTER_SKIPS.with(|skips| skips.get()) >= 1,
+        "Python files without bind must skip the tuple-bind regex"
+    );
+    assert!(
+        scan::LISTEN_PREFILTER_SKIPS.with(|skips| skips.get()) >= 1,
+        "JS/TS files without listen or a backslash must skip the AST scan"
+    );
 }
 
 #[test]

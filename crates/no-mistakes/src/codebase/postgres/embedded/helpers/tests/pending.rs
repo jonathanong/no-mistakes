@@ -29,7 +29,7 @@ fn appended_helper_is_a_hole_between_the_callers_own_fragments() {
     assert_eq!(call(&facts, 0).recovered_placeholder_positions, [(1, 47)]);
     let pending = pending_for(&facts, 0).expect("pending");
     assert_eq!(pending.template.kind, EmbeddedSqlKind::Composed);
-    let template = pending.template.sql_text.as_deref().expect("template");
+    let template = pending.template.variants[0].sql_text.as_str();
     let holes = sentinel::find_all(template);
     assert_eq!(holes.len(), 1);
     assert!(template[holes[0].0.end..].ends_with(" ORDER BY l.id"));
@@ -76,7 +76,15 @@ fn argument_kinds_are_recorded_for_the_projection() {
     assert_eq!(args(3), Some(vec![SiteArg::Scalar]));
     assert_eq!(args(5), Some(vec![SiteArg::Builder, SiteArg::Scalar]));
     let template = pending_for(&facts, 5)
-        .and_then(|pending| pending.template.sql_text.clone())
+        .and_then(|pending| {
+            pending.template.sql_text.clone().or_else(|| {
+                pending
+                    .template
+                    .variants
+                    .first()
+                    .map(|variant| variant.sql_text.clone())
+            })
+        })
         .expect("template");
     assert!(template.starts_with("SELECT 1 FROM p WHERE true"));
     assert!(sentinel::contains(&template));
@@ -260,4 +268,39 @@ fn an_invalid_template_escape_is_not_spliced() {
             .as_deref()
             .is_none_or(|sql| !sql.contains("ORDER BY"))
     }));
+}
+
+#[test]
+fn imported_helper_arguments_accept_shallow_values_and_reject_untracked_shapes() {
+    let facts = extract("argument-boundaries.ts");
+    assert_eq!(facts.calls.len(), 11);
+    let accepted = pending_for(&facts, 0).expect("shallow values have a helper hole");
+    assert_eq!(accepted.sites.len(), 1);
+    assert_eq!(
+        accepted.sites[0].1.args,
+        vec![
+            SiteArg::Undefined,
+            SiteArg::Scalar,
+            SiteArg::Array(vec![
+                SiteArg::Scalar,
+                SiteArg::Bool(true),
+                SiteArg::Null,
+                SiteArg::Undefined,
+            ]),
+            SiteArg::Object(vec![("id".into(), SiteArg::Scalar)]),
+        ]
+    );
+    // Builders in containers, nested containers, spread, computed/numeric keys,
+    // methods and accessors cannot be tracked as literal helper arguments.
+    for index in 1..facts.calls.len() {
+        assert!(pending_for(&facts, index).is_none(), "call {index}");
+        assert_eq!(call(&facts, index).kind, EmbeddedSqlKind::Dynamic);
+        assert_eq!(
+            call(&facts, index).sql_text.as_deref(),
+            Some("SELECT 1 WHERE "),
+            "call {index}"
+        );
+        assert!(call(&facts, index).variants.is_empty(), "call {index}");
+    }
+    assert_eq!(facts.pending_imported.len(), 1);
 }

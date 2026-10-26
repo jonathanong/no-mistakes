@@ -1,0 +1,6 @@
+# `<<: *defaults` copies `legacy`, so `runtime.legacy.enabled` is present.
+defaults: &defaults
+  legacy:
+    enabled: true
+runtime:
+  <<: *defaults

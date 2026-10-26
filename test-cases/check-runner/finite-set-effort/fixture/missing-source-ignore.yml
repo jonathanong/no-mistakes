@@ -1,0 +1,12 @@
+# Ignore must not hide an unreadable declaration source.
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: ignore
+      sets:
+        - name: missing
+          file: absent.ts
+          kind: ts-array-literal
+          target: Missing

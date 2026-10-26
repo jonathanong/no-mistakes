@@ -1,13 +1,19 @@
 "use strict";
 
 const { childNodes, resolveVariable } = require("./postgres-query-text");
+const { memberPropertyName } = require("./postgres-executor");
+const { isScopedMember } = require("./postgres-scoped-executors");
 const {
   TS_ASSERTIONS,
   constInitializer,
   variableIsImportedExecutor,
   variableIsScopedExecutor,
 } = require("./postgres-no-executor-adapter-binding");
-const { isProvenQueryMember } = require("./postgres-no-executor-adapter-member");
+const {
+  destructuredExecutor,
+  isProvenQueryMember,
+  namespaceExecutor,
+} = require("./postgres-no-executor-adapter-member");
 
 const NESTED_THIS_BOUNDARIES = new Set([
   "ClassDeclaration",
@@ -31,12 +37,25 @@ function executorRef(node, context, bindings, options) {
     if (variableIsScopedExecutor(variable, bindings.scoped ?? [], current)) {
       return { name: current.name, kind: "identifier", aliasable: false };
     }
-    return null;
+    return destructuredExecutor(current, context, bindings, options);
+  }
+  if (
+    current.type === "MemberExpression" &&
+    !current.optional &&
+    current.object.type === "Identifier" &&
+    isScopedMember(
+      bindings.scoped,
+      current.object.name,
+      memberPropertyName(current),
+      resolveVariable(current.object, context),
+    )
+  ) {
+    return { name: context.sourceCode.getText(current), kind: "member", aliasable: false };
   }
   if (isProvenQueryMember(current, context, bindings, options)) {
     return { name: context.sourceCode.getText(current), kind: "member", aliasable: false };
   }
-  return null;
+  return namespaceExecutor(current, context, options);
 }
 
 function executorLeaves(node, context, bindings, options) {

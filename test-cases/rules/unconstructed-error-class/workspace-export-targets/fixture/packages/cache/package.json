@@ -1,0 +1,20 @@
+{
+  "name": "@fixture/cache",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.mts",
+      "import": "./index.mts",
+      "default": "./index.mts"
+    },
+    "./*": {
+      "types": "./*.mts",
+      "import": "./*.mts",
+      "default": "./*.mts"
+    }
+  },
+  "dependencies": {
+    "@fixture/cache-core": "workspace:*"
+  }
+}

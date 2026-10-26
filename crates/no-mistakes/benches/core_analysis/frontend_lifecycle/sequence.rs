@@ -65,8 +65,8 @@ pub(super) fn validate_relationships(
     assert_eq!(
         edges,
         LanguageFrontendSummary {
-            files: 117,
-            edges: 125,
+            files: 118,
+            edges: 143,
             queue_edges: 14,
             ..LanguageFrontendSummary::default()
         }
@@ -74,8 +74,8 @@ pub(super) fn validate_relationships(
     assert_eq!(
         globs,
         LanguageFrontendSummary {
-            files: 117,
-            glob_matches: 117,
+            files: 118,
+            glob_matches: 118,
             ..LanguageFrontendSummary::default()
         }
     );
@@ -83,12 +83,12 @@ pub(super) fn validate_relationships(
 
 pub(super) fn expected_facts() -> LanguageFrontendSummary {
     LanguageFrontendSummary {
-        files: 117,
-        parsed_files: 69,
-        imports: 66,
+        files: 118,
+        parsed_files: 70,
+        imports: 67,
         enqueues: 7,
         workers: 6,
-        route_handlers: 41,
+        route_handlers: 49,
         ..LanguageFrontendSummary::default()
     }
 }

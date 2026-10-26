@@ -28,7 +28,7 @@ rules:
   - rule: production-dependency-declarations
     scope: repository
     options:
-      workspaceRoots: [backend]
+      workspaceRoots: [packages]
       allowedFields: [dependencies, optionalDependencies, peerDependencies]
       testFilePatterns:
         - "**/__tests__/**"
@@ -38,8 +38,10 @@ rules:
 
 `workspaceRoots` is required and must list at least one root; it is not
 inferred from the check root, so an omitted or empty value is a configuration
-error. `allowedFields` and `testFilePatterns` default to the values shown above
-when omitted.
+error. An omitted option is reported on the loaded config file, including a
+path passed with `--config`, at the rule entry's line. An explicit empty
+`workspaceRoots` list is reported on that option's line. `allowedFields` and
+`testFilePatterns` default to the values shown above when omitted.
 
 `workspaceRoots` also bounds which files the scan can see at all, including
 for reachability seeding: a package's only external importer living outside
@@ -53,60 +55,6 @@ imports and the historical TypeScript/TSX interpretation of source extensions.
 Within each rule application, each distinct source/specifier pair is resolved
 once, then package reachability uses those prepared relationships. Preparation
 and memoization belong to that invocation and do not persist between checks.
-
-Counterexample:
-
-```json
-// packages/lib/package.json
-{
-  "name": "@acme/lib",
-  "devDependencies": {
-    "@acme/tool": "workspace:^"
-  }
-}
-```
-
-```ts
-// packages/lib/index.mts — imported by @acme/app, a production dependency
-import { doThing } from "@acme/tool";
-
-export function helper() {
-  return doThing();
-}
-```
-
-Compliant example:
-
-```json
-// packages/lib/package.json
-{
-  "name": "@acme/lib",
-  "dependencies": {
-    "@acme/tool": "workspace:^"
-  }
-}
-```
-
-```ts
-// packages/lib/index.mts
-import { doThing } from "@acme/tool";
-
-export function helper() {
-  return doThing();
-}
-```
-
-Fix: move the import's package into `dependencies` (or
-`optionalDependencies`/`peerDependencies`) in the owning package's
-`package.json`. If the import is genuinely unused in production — for
-example, a build script or test helper only reachable from other tooling —
-confirm nothing outside the package imports it, since that changes the finding
-kind rather than the fix.
-
-Suppression caveat: findings point at the importing source file and line, so
-`no-mistakes-disable-line`/`-next-line`/`-file` directives work as usual.
-Prefer fixing the declaration over suppressing — a suppressed finding still
-fails at runtime after a production install.
 
 ## Why and when
 
@@ -130,26 +78,95 @@ include/exclude filters further bound the scan.
 
 ## Valid example
 
+`@acme/app` imports `@acme/lib`, so `packages/lib/index.mts` is
+production-reachable. `@acme/tool` is declared in `dependencies`.
+
 ```json
+// packages/app/package.json
 {
-  "dependencies": { "@acme/tool": "workspace:^" }
+  "name": "@acme/app",
+  "dependencies": {
+    "@acme/lib": "workspace:^"
+  }
+}
+
+// packages/lib/package.json
+{
+  "name": "@acme/lib",
+  "dependencies": {
+    "@acme/tool": "workspace:^"
+  }
+}
+```
+
+```mts
+// packages/app/index.mts
+import { helper } from "@acme/lib";
+export function run() {
+  return helper();
+}
+
+// packages/lib/index.mts
+import { doThing } from "@acme/tool";
+export function helper() {
+  return doThing();
 }
 ```
 
 ## Counterexample
 
+The same graph with `@acme/tool` only in `devDependencies` is a `dev-only`
+finding: a production install can prune it.
+
 ```json
+// packages/app/package.json
 {
-  "devDependencies": { "@acme/tool": "workspace:^" }
+  "name": "@acme/app",
+  "dependencies": {
+    "@acme/lib": "workspace:^"
+  }
+}
+
+// packages/lib/package.json
+{
+  "name": "@acme/lib",
+  "devDependencies": {
+    "@acme/tool": "workspace:^"
+  }
 }
 ```
 
-When production code imports `@acme/tool`, a production install can prune it.
+```mts
+// packages/app/index.mts
+import { helper } from "@acme/lib";
+export function run() {
+  return helper();
+}
+
+// packages/lib/index.mts
+import { doThing } from "@acme/tool";
+export function helper() {
+  return doThing();
+}
+```
 
 ## Fix
 
 Move the package to `dependencies`, `optionalDependencies`, or
-`peerDependencies`, or prove that the importer is not runtime-reachable.
+`peerDependencies`, or prove that the importer is not runtime-reachable. If
+the import is genuinely unused in production — for example, a build script or
+test helper only reachable from other tooling — confirm nothing outside the
+package imports it, since that changes the finding kind rather than the fix.
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it compares resolved imports with declared dependencies in parsed manifests, so `options.unanalyzable` has no effect on it.
 
 ## Suppression
 

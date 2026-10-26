@@ -9,13 +9,16 @@ pub(super) struct GraphRuleRequest<'a> {
         Option<&'a crate::codebase::dependencies::graph::PreparedGraphConfig>,
     pub(super) dependency_graph: Option<&'a DepGraph>,
     pub(super) inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    pub(super) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
     pub(super) prepared_vitest_projects:
         Option<&'a crate::codebase::rules::PreparedVitestProjectCatalog>,
     pub(super) prepared_playwright_projects:
         Option<&'a crate::codebase::rules::PreparedPlaywrightProjectCatalog>,
 }
 
-pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
+pub(super) fn graph_rule_findings(
+    request: GraphRuleRequest<'_>,
+) -> Result<crate::codebase::rules::analysis_policy::AnalysisDiagnostics> {
     let GraphRuleRequest {
         root,
         config,
@@ -24,10 +27,12 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
         prepared_graph,
         dependency_graph,
         inferred_roots,
+        sources,
         prepared_vitest_projects,
         prepared_playwright_projects,
     } = request;
     let mut findings = Vec::new();
+    let mut advisories = Vec::new();
     if rule_enabled(config, FORBIDDEN_CALLS) {
         findings.extend(crate::perf_trace::trace("rules.forbidden_calls", || {
             forbidden_calls::check_with_graph(
@@ -48,7 +53,10 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
                 forbidden_dependencies::check_with_prepared_facts_and_graph(
                     root,
                     config,
-                    config_path,
+                    forbidden_dependencies::PreparedConfig {
+                        path: config_path,
+                        sources,
+                    },
                     shared,
                     prepared_graph,
                     inferred_roots,
@@ -68,21 +76,21 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
                     dependency_graph
                         .expect("required-entrypoint-reachability requires canonical graph"),
                     inferred_roots,
+                    sources,
                 )
             },
         )?);
     }
     if rule_enabled(config, UNCONSTRUCTED_ERROR_CLASS) {
-        findings.extend(crate::perf_trace::trace(
-            "rules.unconstructed_error_class",
-            || {
-                unconstructed_error_class::check_with_graph(
-                    root,
-                    config,
-                    dependency_graph.expect("unconstructed-error-class requires canonical graph"),
-                )
-            },
-        )?);
+        let diagnostics = crate::perf_trace::trace("rules.unconstructed_error_class", || {
+            unconstructed_error_class::check_with_graph(
+                root,
+                config,
+                dependency_graph.expect("unconstructed-error-class requires canonical graph"),
+            )
+        })?;
+        findings.extend(diagnostics.findings);
+        advisories.extend(diagnostics.advisories);
     }
     if rule_enabled(config, query_reached_per_item::RULE_ID) {
         findings.extend(crate::perf_trace::trace(
@@ -107,12 +115,20 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
                 crate::codebase::rules::postgres_no_mutable_sql_registry::check_with_graph(
                     root,
                     config,
-                    dependency_graph
-                        .expect("postgres-no-mutable-sql-registry requires canonical graph"),
+                    dependency_graph,
                     shared,
                 )
             },
         )?);
+        findings.extend(
+            crate::codebase::rules::postgres_undeclared_executors::check(
+                root,
+                config,
+                crate::codebase::rules::POSTGRES_NO_MUTABLE_SQL_REGISTRY,
+                shared.graph_file_universe(),
+                shared,
+            )?,
+        );
     }
     if rule_enabled(
         config,
@@ -124,14 +140,27 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
                 crate::codebase::rules::postgres_no_unbounded_sql_identifier::check_with_graph(
                     root,
                     config,
-                    dependency_graph
-                        .expect("postgres-no-unbounded-sql-identifier requires canonical graph"),
+                    dependency_graph,
                     shared,
                 )
             },
         )?);
+        findings.extend(
+            crate::codebase::rules::postgres_undeclared_executors::check(
+                root,
+                config,
+                crate::codebase::rules::POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER,
+                shared.graph_file_universe(),
+                shared,
+            )?,
+        );
     }
-    Ok(findings)
+    Ok(
+        crate::codebase::rules::analysis_policy::AnalysisDiagnostics {
+            findings,
+            advisories,
+        },
+    )
 }
 
 #[cfg(test)]

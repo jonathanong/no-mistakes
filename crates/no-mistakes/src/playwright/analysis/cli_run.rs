@@ -38,6 +38,8 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
             html_ids: cli.assert_unique_html_ids,
             aggregate: false,
             configured_html_id_selector: false,
+            literal_test_ids_only: false,
+            literal_html_ids_only: false,
         },
         &snapshot,
     );
@@ -53,6 +55,7 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
             if analysis.coverage.summary.uncovered_routes > 0
                 || analysis.coverage.summary.uncovered_selectors > 0
                 || analysis.coverage.summary.duplicate_selectors > 0
+                || !analysis.coverage.warnings.is_empty()
             {
                 Ok(ExitCode::from(1))
             } else {

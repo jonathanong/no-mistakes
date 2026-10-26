@@ -17,3 +17,6 @@ fn nonrecursive_cte_definitions_keep_base_relation_ownership() {
     assert!(matches!(pin.source, SqlPinSource::Query(_)));
     assert!(!pin.qualified_reads.is_empty());
 }
+
+#[path = "returning_ctes.rs"]
+mod returning_ctes;

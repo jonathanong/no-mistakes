@@ -1,0 +1,15 @@
+{
+  "numTotalTests": 2,
+  "numPassedTests": 2,
+  "numFailedTests": 0,
+  "testResults": [
+    {
+      "name": "/work/packages/no-mistakes/scripts/real-napi-api.test.js",
+      "status": "passed",
+      "assertionResults": [
+        { "fullName": "slow parity", "status": "passed", "duration": 5000 },
+        { "fullName": "quick parity", "status": "passed", "duration": 5 }
+      ]
+    }
+  ]
+}

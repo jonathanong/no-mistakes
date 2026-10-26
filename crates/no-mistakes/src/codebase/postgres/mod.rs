@@ -19,6 +19,7 @@ pub(crate) mod query_annotation;
 pub(crate) use migration_order::cmp_sql_rel;
 mod numeric_literal;
 mod offset;
+pub(crate) use offset::sql_offset_facts;
 mod on_conflict;
 mod parse;
 pub(crate) mod predicate_normalization;
@@ -27,6 +28,8 @@ mod profiles;
 mod rule_options;
 mod schema;
 mod source;
+pub(crate) mod sql_identifier_syntax;
+pub use sql_identifier_syntax::plan::SqlIdentifierScans;
 mod sql_include_policy;
 mod statement_facts;
 pub use statement_facts::SqlLifecycleFacts;
@@ -74,9 +77,11 @@ pub(crate) use embedded::helpers::{
 pub(crate) use embedded::walk::resolve::functions::provenance::RecoveredSql;
 pub use embedded::{
     executed_query_text, executor_bindings, extract_embedded_sql_from_program,
-    extract_embedded_sql_from_source, is_database_call, sql_text, EmbeddedSqlCall,
-    EmbeddedSqlFileFacts, EmbeddedSqlFragment, EmbeddedSqlKind, EmbeddedSqlOptions,
-    EmbeddedSqlSourcePosition, EmbeddedSqlVariant, TrustedSqlTag, MAX_EMBEDDED_SQL_VARIANTS,
+    extract_embedded_sql_from_source, is_database_call, sql_text,
+    summarize_undeclared_executor_types, EmbeddedSqlCall, EmbeddedSqlFileFacts,
+    EmbeddedSqlFragment, EmbeddedSqlKind, EmbeddedSqlOptions, EmbeddedSqlSourcePosition,
+    EmbeddedSqlVariant, TrustedSqlTag, UndeclaredExecutorType, UndeclaredExecutorTypeSummary,
+    MAX_EMBEDDED_SQL_VARIANTS,
 };
 pub(crate) use embedded::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, retain_unproven_spans,
@@ -85,8 +90,9 @@ pub(crate) use embedded::{
     recovered_sql_may_select, recovered_sql_may_write_columns, recovered_sql_needs_insert_check,
 };
 pub use executed_source::{
-    extract_executed_postgres_sql, extract_executed_postgres_sql_with_imports,
-    ExecutedPostgresResolvedImport, ExecutedPostgresSource, ExecutedPostgresSql,
+    extract_executed_postgres_sql, extract_executed_postgres_sql_report,
+    extract_executed_postgres_sql_with_imports, ExecutedPostgresResolvedImport,
+    ExecutedPostgresSource, ExecutedPostgresSql, ExecutedPostgresSqlReport,
 };
 pub(crate) use executed_source::{
     extract_executed_postgres_sql_with_imports_and_session,
@@ -134,7 +140,8 @@ pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,
     SqlColumnMetadata, SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlDeclaredIdentifier,
     SqlDropIndexMetadata, SqlForeignKeyMetadata, SqlIndexParam, SqlNamedConstraint,
-    SqlSchemaFileFacts, SqlSettingUse, SqlStatementKind, SqlTableSchemaEvent, SqlUnnamedConstraint,
+    SqlSchemaFileFacts, SqlSettingUse, SqlStatementKind, SqlTableSchemaEvent,
+    SqlUnanalyzableStatement, SqlUnnamedConstraint,
 };
 pub(crate) use verdict::sql_evidence_for_call;
 pub use verdict::{
@@ -147,5 +154,7 @@ pub(crate) mod tests;
 
 pub(crate) use collect::collect_prepared_schema_facts;
 
-pub(crate) use on_conflict::judge_file_with_insert_indices;
+pub(crate) use on_conflict::judge_file_with_sites;
 pub(crate) use on_conflict::judge_subcheck as judge_idempotent_subcheck;
+
+pub use embedded::undeclared::summarize_unresolved_executor_receivers;

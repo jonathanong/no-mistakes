@@ -15,15 +15,6 @@ rules:
           valueAssertions:
             - key: runtime.enabled
               kind: boolean
-            - key: overrides.[].files.[]
-              kind: string-prefix
-              prefix: "**/"
-            - key: overrides.[].files.[]
-              kind: not-single-file
-            - key: rules.[]
-              kind: object-shape
-              requiredValues:
-                severity: error
 ```
 
 Supported assertion kinds are `boolean`, `positive-number`, `string-array`,
@@ -91,6 +82,17 @@ policies:
         kind: equals-file
         file: .oxlintrc.json
         fromKey: plugins
+  - files: [globs.yml]
+    valueAssertions:
+      - key: overrides.[].files.[]
+        kind: string-prefix
+        prefix: "**/"
+      - key: overrides.[].files.[]
+        kind: not-single-file
+      - key: rules.[]
+        kind: object-shape
+        requiredValues:
+          severity: error
 ```
 
 Counterexample: a config file omits a required key, still contains a banned
@@ -137,16 +139,21 @@ support `boolean`, `positive-number`, `string-array`, `record-of-boolean`,
 ## Valid example
 
 ```yaml
+# app.yml
 runtime:
+  version: "1"
   enabled: true
 ```
 
-With `runtime.enabled` asserted as boolean, this file satisfies the policy.
+With `runtime.version` present and `runtime.enabled` a boolean, this file
+satisfies the policy.
 
 ## Counterexample
 
 ```yaml
+# app.yml
 runtime:
+  version: "1"
   enabled: "yes"
 ```
 
@@ -160,10 +167,73 @@ Repair the file's syntax or value shape, add the required key, remove the
 banned legacy key, restate lost ancestor override rules, or narrow the policy
 glob to its intended configs.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Upgrade note: in-scope files that cannot be read as UTF-8 now fail `check`
+under the default `unanalyzable: report` instead of silently passing. Fix or exclude those inputs, or set
+`options.unanalyzable: advise` or `ignore` to restore the previous successful
+exit status for uncertainty alone. Independent definite findings still fail
+under every policy.
+
+Selected files that cannot be read as UTF-8 produce an `unanalyzable`
+diagnostic instead of silently passing. Restore read access or repair the
+encoding so the rule can verify the file. The shared `options.unanalyzable`
+setting inherits the repository policy: `report` (the default) fails,
+`advise` emits non-failing advice, and `ignore` omits uncertainty. Definite
+violations remain failures under every policy, including when `effort: low`
+falls back to `max`.
+
+Configured scope, includes, excludes, and rule-specific exemptions still
+select the inputs. Suppressions apply to both channels, including directives
+retained in an invalid UTF-8 read error; source bytes are never reinterpreted
+as analyzable code. Rule-level custom messages apply to these diagnostics.
+
+Structured-data parse errors remain definite findings under every policy.
+Only a source read failure is routed as uncertainty; the rule never treats
+an unavailable document as an absent optional config key.
+
 ## Suppression
 
 Use a top-of-file `no-mistakes-disable-file structured-config-policy` directive
 for generated config that cannot be edited. Findings currently report line 1.
+
+## Limitations
+
+YAML 1.1 merge keys (`<<: *anchor`) are expanded after `serde_yaml` parses the
+file. The anchored mapping is copied into its parent. A key already written on
+the parent wins. When `<<` is a sequence, an earlier mapping wins over a later
+one. A banned key that exists only after that copy is a finding. A required
+key that exists only after that copy is present.
+
+```yaml
+defaults: &defaults
+  legacy:
+    enabled: true
+runtime:
+  <<: *defaults
+```
+
+With `bannedKeys: [runtime.legacy.enabled]`, the file above is a finding.
+`runtime.legacy.enabled` is `true` after the merge.
+
+A merge value that is not a mapping, and not a sequence of mappings, is
+dropped. It does not invent keys. JSON and JSONC keep a literal `<<` key,
+because merge keys are a YAML 1.1 construct.
+
+```yaml
+label: &label plain
+runtime:
+  <<: *label
+```
+
+A bare alias is separate from a merge key. `enabled: *flag` is expanded by the
+YAML parser, and the policy sees the value the alias points at.
 
 ## Related rules
 

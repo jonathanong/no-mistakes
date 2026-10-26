@@ -9,6 +9,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
+pub(crate) mod class_ancestry;
 mod intern;
 mod io;
 mod lang_facts;
@@ -40,6 +41,14 @@ pub struct AnalysisSession {
     interner: Arc<PathInterner>,
     test_filters: DashMap<PathBuf, Arc<TestFilterCell>>,
     lang_facts: lang_facts::LangFactsCache,
+    class_ancestry_projections:
+        DashMap<class_ancestry::ProjectionKey, Arc<OnceLock<Arc<class_ancestry::ClassAncestry>>>>,
+    pub(super) declaration_resolutions: DashMap<
+        crate::codebase::ts_resolver::declarations::ProjectionKey,
+        Arc<crate::codebase::ts_resolver::declarations::DeclarationResults>,
+    >,
+    class_declaration_facts:
+        DashMap<PathBuf, Arc<OnceLock<Arc<crate::codebase::ts_source::facts::TsFileFacts>>>>,
 }
 
 type AnalysisDataset = crate::codebase::analysis_dataset::AnalysisDataset;
@@ -70,6 +79,9 @@ impl AnalysisSession {
             interner: Arc::new(PathInterner::new()),
             test_filters: DashMap::new(),
             lang_facts: lang_facts::LangFactsCache::new(),
+            class_ancestry_projections: DashMap::new(),
+            class_declaration_facts: DashMap::new(),
+            declaration_resolutions: DashMap::new(),
         })
     }
 

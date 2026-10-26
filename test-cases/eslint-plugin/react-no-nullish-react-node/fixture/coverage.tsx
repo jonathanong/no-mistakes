@@ -80,6 +80,7 @@ export function DefaultParam(slot: Alias = null) {
 }
 
 export const Ignored = ({ title }: Props) => {
+  // A static bracket key is the same footer prop as props.footer.
   const computed = props["footer"];
   const unknown = {};
   return (

@@ -1,53 +1,5 @@
-pub(super) struct InsertSources<'a> {
-    sql: &'a str,
-    pairs: std::cell::OnceCell<Vec<Word>>,
-}
-
-impl<'a> InsertSources<'a> {
-    pub(super) fn new(sql: &'a str) -> Self {
-        Self {
-            sql,
-            pairs: std::cell::OnceCell::new(),
-        }
-    }
-
-    fn pairs(&self) -> &[Word] {
-        self.pairs
-            .get_or_init(|| keyword_pair_words(self.sql, "insert", "into"))
-    }
-
-    pub(super) fn line(&self, n: usize) -> usize {
-        self.pairs()
-            .get(n.saturating_sub(1))
-            .map_or(1, |word| word.line)
-    }
-
-    pub(super) fn source(&self, n: usize) -> &str {
-        let start = self
-            .pairs()
-            .get(n.saturating_sub(1))
-            .map_or(0, |word| word.start);
-        let end = self
-            .pairs()
-            .get(n)
-            .map_or(self.sql.len(), |word| word.start);
-        self.sql.get(start..end).unwrap_or_default()
-    }
-}
-
-pub(super) fn nth_keyword_pair_line(sql: &str, first: &str, second: &str, n: usize) -> usize {
-    keyword_pair_lines(sql, first, second)
-        .get(n.saturating_sub(1))
-        .copied()
-        .unwrap_or(1)
-}
-
-fn keyword_pair_lines(sql: &str, first: &str, second: &str) -> Vec<usize> {
-    keyword_pair_words(sql, first, second)
-        .into_iter()
-        .map(|word| word.line)
-        .collect()
-}
+mod inserts;
+pub(super) use inserts::InsertSources;
 
 fn keyword_pair_words(sql: &str, first: &str, second: &str) -> Vec<Word> {
     let words = words(sql);
@@ -55,29 +7,6 @@ fn keyword_pair_words(sql: &str, first: &str, second: &str) -> Vec<Word> {
         .filter(|&index| eq(&words[index], first) && eq(&words[index + 1], second))
         .map(|index| words[index].clone())
         .collect()
-}
-
-/// Line of the first code token equal to `word` (case-insensitive), skipping
-/// comments and quoted text.
-pub(super) fn first_word_line(sql: &str, word: &str) -> Option<usize> {
-    words(sql)
-        .into_iter()
-        .find(|found| eq(found, word))
-        .map(|found| found.line)
-}
-
-pub(super) fn line_containing(source: &str, parts: &[&str]) -> usize {
-    source
-        .lines()
-        .enumerate()
-        .find(|(_, line)| {
-            let lower = line.to_ascii_lowercase();
-            parts
-                .iter()
-                .all(|part| lower.contains(&part.to_ascii_lowercase()))
-        })
-        .map(|(index, _)| index + 1)
-        .unwrap_or(1)
 }
 
 /// Line and column (both 1-based) of the last `word` that starts before `end`,

@@ -1,5 +1,8 @@
 # `finite-set-consistency`
 
+Compares named finite string sets extracted from source files, structured
+config, docs, and file paths.
+
 ## Why and when
 
 Use this rule when two explicit inventories must remain synchronized without
@@ -18,20 +21,101 @@ fields (`file`, `target`, `key`, `pattern`, `property`, `minSize`,
 `right` and default `mode` to `equal-set`; supported modes are documented
 below.
 
+```yaml
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: left
+          file: src/left.ts
+          kind: ts-array-literal
+          target: STATUS
+        - name: right
+          file: src/right.ts
+          kind: ts-array-literal
+          target: STATUS
+      comparisons:
+        - left: left
+          right: right
+```
+
 ## Valid example
 
-Two configured route inventories containing the same static values pass an
+Two configured `STATUS` arrays containing the same static values pass an
 `equal-set` comparison.
 
 ```ts
+// src/left.ts
+export const STATUS = ['open', 'closed'] as const;
+
+// src/right.ts
 export const STATUS = ['open', 'closed'] as const;
 ```
-
 
 ## Counterexample
 
 ```ts
+// src/left.ts
+export const STATUS = ['open', 'closed'] as const;
+
+// src/right.ts
 export const STATUS = ['open'] as const;
+```
+
+## Analysis
+
+### Effort
+
+`max` is the default and preserves every extractor, including TypeScript,
+SQL-enum, and Markdown extraction. `low` evaluates only the declarative data
+extractors `yaml-sequence`, `yaml-string-selector`, and `path-regex-capture`.
+Their values still receive the configured `stripPrefix` and `excludePrefix`
+transforms, `minSize` checks, and comparison modes.
+
+### Unanalyzable inputs
+
+At low effort, the other documented extractor kinds are unavailable:
+`ts-string-union`, `ts-const-object-keys`, `ts-const-object-property`,
+`ts-array-literal`, `ts-const-array-property`,
+`ts-call-first-string-argument`, `markdown-table-code-cells`, and `sql-enum`.
+Each named unsupported set, including an unrecognized kind, produces one
+residual diagnostic under `options.unanalyzable` (`report`, `advise`, or
+`ignore`). The extractor does not run and `minSize` is not applied to its
+unavailable values, so an unsupported empty set cannot create a misleading
+minimum-size finding.
+
+Any comparison that uses an unsupported set is skipped, even when its residual
+is ignored or suppressed. Suppression hides the residual; it does not make an
+unknown set usable as comparison data. Comparisons between supported sets
+continue to run, and definite mismatches remain findings under all three
+policies. Supported extractor configuration and input errors, unreadable
+configured sources, and empty call targets remain hard errors.
+
+For example, low can compare a YAML package list with names captured from
+configured route paths while reporting an unanalyzable residual for a
+TypeScript union in the same rule application. Use the default or
+`effort: max` to analyze the union and other unsupported kinds, or rewrite the
+set as one of the supported declarative forms. No partner check is required.
+
+Low's definite findings are a subset of max's definite findings for the same
+application. With `unanalyzable: report`, total diagnostic counts can be higher
+at low: a compatible TypeScript union passes at max but reports one uncertainty
+at low. `advise` keeps that uncertainty non-failing; `ignore` omits it. Neither
+policy treats the unsupported extraction as a proven set.
+
+```yaml
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: advise
+      sets:
+        - name: routeFiles
+          kind: path-regex-capture
+          pattern: "^src/routes/(?<value>[^/]+)\\.ts$"
+          minSize: 1
 ```
 
 ## Related rules
@@ -40,8 +124,8 @@ export const STATUS = ['open'] as const;
 cross-file consistency; [`structured-config-policy`](structured-config-policy.md)
 checks individual config shapes.
 
-Compares named finite string sets extracted from source files, structured
-config, docs, and file paths.
+The following block is an extended reference of extractor kinds. The Options
+example above is the one Valid and Counterexample execute.
 
 ```yaml
 rules:

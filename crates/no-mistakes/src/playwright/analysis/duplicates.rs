@@ -34,6 +34,9 @@ pub(crate) fn build_duplicate_selectors(
                     .or_default()
                     .push(selector);
             } else if selector.attribute == selectors::HTML_ID_ATTRIBUTE {
+                if policy.literal_html_ids_only && selector.recovered {
+                    continue;
+                }
                 if policy.html_ids || (policy.test_ids && policy.configured_html_id_selector) {
                     by_value
                         .entry(DuplicateSelectorKey::HtmlId(value.as_str()))
@@ -41,6 +44,9 @@ pub(crate) fn build_duplicate_selectors(
                         .push(selector);
                 }
             } else if policy.test_ids {
+                if policy.literal_test_ids_only && selector.recovered {
+                    continue;
+                }
                 by_value
                     .entry(DuplicateSelectorKey::TestId(value.as_str()))
                     .or_default()

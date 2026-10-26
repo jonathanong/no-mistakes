@@ -73,6 +73,11 @@ impl Scope {
         Arc::ptr_eq(&self.0, &other.0)
     }
 
+    /// Borrow an existing summary without initializing cold snapshots.
+    pub(super) fn cached_references(&self) -> Option<&Edges> {
+        self.0.references.get()
+    }
+
     pub(super) fn references(&self) -> &Edges {
         self.0.references.get_or_init(|| {
             if let Some(observer) = crate::diagnostics::current() {

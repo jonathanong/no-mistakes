@@ -33,7 +33,9 @@ pub(super) fn with_imports(mut plan: CheckFactPlan) -> CheckFactPlan {
 
 pub(super) fn graph_plan(plan: &CheckFactPlan) -> CheckFactPlan {
     CheckFactPlan {
+        forbidden_call_arguments: plan.forbidden_call_arguments.clone(),
         graph: plan.graph,
+        call_site_paths: plan.call_site_paths.clone(),
         graph_context: plan.graph_context.clone(),
         integration_runner_configs: plan.integration_runner_configs.clone(),
         ..CheckFactPlan::default()
@@ -41,8 +43,12 @@ pub(super) fn graph_plan(plan: &CheckFactPlan) -> CheckFactPlan {
 }
 
 pub(super) fn needs_scoped_facts(plan: &CheckFactPlan) -> bool {
-    plan.imports
+    !plan.call_site_paths.is_empty()
+        || plan.imports
+        || plan.forbidden_call_arguments.is_some()
         || plan.query_annotation
+        || plan.query_annotation_heads
+        || !plan.sql_identifier_profiles.is_empty()
         || plan.symbols
         || plan.react
         || plan.react_usages
@@ -51,6 +57,7 @@ pub(super) fn needs_scoped_facts(plan: &CheckFactPlan) -> bool {
         || plan.integration_runner_configs.is_some()
         || plan.dynamic_imports
         || plan.nextjs_caching
+        || plan.nextjs_caching_low
         || plan.storybook
         || plan.source
         || plan.raw_source
@@ -66,3 +73,6 @@ pub(super) fn has_indexable_graph_only(
         .chain(playwright_only_sources)
         .any(|path| crate::codebase::dependencies::extract::is_indexable(path))
 }
+
+#[cfg(test)]
+mod tests;

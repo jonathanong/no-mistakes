@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::dependencies::graph::EdgeKind;
 
 fn check_with_graph(
     root: &Path,
@@ -6,7 +7,7 @@ fn check_with_graph(
     files: &[PathBuf],
     graph: &DepGraph,
 ) -> Result<Vec<RuleFinding>> {
-    check_with_graph_and_inferred(root, config, files, graph, None)
+    check_with_graph_and_inferred(root, config, files, graph, None, None)
 }
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use std::path::{Path, PathBuf};
@@ -334,7 +335,9 @@ fn aggregate_runner_propagates_invalid_common_filters() {
     .unwrap_err();
 
     assert!(
-        error.to_string().contains("include contains invalid glob"),
+        error.to_string().contains(
+            ":4: rules[0] (required-entrypoint-reachability).include[0]: contains invalid glob"
+        ),
         "unexpected error: {error:#}"
     );
 }
@@ -344,7 +347,7 @@ fn aggregate_runner_propagates_invalid_common_filters() {
 /// files this rule considers reachable.
 #[test]
 fn runtime_edge_kinds_exclude_call_and_extends() {
-    let kinds = runtime_edge_kinds();
+    let kinds = paths::runtime_edge_kinds();
     assert!(!kinds.contains(&EdgeKind::Call));
     assert!(!kinds.contains(&EdgeKind::Extends));
     let plan = GraphBuildPlan::from_allowed(Some(&kinds));

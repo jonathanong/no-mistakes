@@ -152,6 +152,40 @@ fixture `timeout` option. `extend`, `override`, and deprecated `scoped` preserve
 registrar identity, so actual test and hook overrides on their returned APIs are
 still checked. This rule does not invent a deadline from arbitrary fixture data.
 
+## Limits
+
+A helper's parameter is not replaced by its callers' argument values. For example,
+this file does not prove the effective timeout inside `run`:
+
+```ts
+import { it } from "vitest";
+function run(ms: number) {
+  it("runs", () => {}, ms);
+}
+run(60_000);
+```
+
+The parameter follows `unknownValues`: the default ignores it and `"finding"`
+reports an unknown timeout. Use a literal or immutable scalar budget at the
+registration. A Vitest default import is not a supported runner binding; imports
+or re-exports from another file do not prove Vitest identity here.
+
+```ts
+import runner from "vitest";
+import { remoteTest } from "./runner"; // That file re-exports Vitest's `it`.
+runner("default import", () => {}, 60_000);
+runner.it("default member", () => {}, 60_000);
+remoteTest("cross-file runner", () => {}, 60_000);
+```
+
+Rewrite the registration with a named Vitest import and a local immutable budget:
+
+```ts
+import { it } from "vitest";
+const budget = 4_000;
+it("runs", () => {}, budget);
+```
+
 ## Options
 
 - `defaultMax` sets the maximum config/project `testTimeout` and `hookTimeout`

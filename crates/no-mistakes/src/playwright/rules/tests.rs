@@ -1,3 +1,4 @@
+use super::test_api::{check_with_facts, check_with_prepared_facts};
 use super::*;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope, RuleTestTargets, StringOrList};
@@ -94,6 +95,73 @@ fn html_id_uniqueness_does_not_enable_coverage_in_standalone_checks() {
             "{fixture}: {findings:?}"
         );
     }
+}
+
+#[test]
+fn low_html_id_uniqueness_keeps_literal_findings_when_coverage_html_ids_are_disabled() {
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/playwright/html-id-rule-composition/html-disabled-duplicate");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let mut config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let default = check(&root, None, &config).unwrap();
+    assert!(default.iter().any(|finding| {
+        finding.rule == PLAYWRIGHT_UNIQUE_HTML_IDS
+            && finding.target.as_deref() == Some("id=duplicate-disabled")
+    }));
+
+    let html_rule = config
+        .rules
+        .iter_mut()
+        .find(|rule| rule.rule == PLAYWRIGHT_UNIQUE_HTML_IDS)
+        .unwrap();
+    html_rule.resolved_analysis = Some(crate::config::v2::EffectiveRuleAnalysis {
+        effort: crate::config::v2::Effort::Low,
+        unanalyzable: crate::config::v2::Unanalyzable::Report,
+    });
+    assert_eq!(check(&root, None, &config).unwrap(), default);
+}
+
+#[test]
+fn standalone_low_html_id_uniqueness_reports_indirection_without_html_coverage() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/check-runner/playwright-unique-html-ids/fixture/effort-low"),
+    );
+    let config_path = root.join(".no-mistakes-report.yml");
+    let mut config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    // This lower-level API consumes the certified policy. The check-runner
+    // fixture tests exercise configuration preparation and adopter registration.
+    config.rules[0].resolved_analysis = Some(crate::config::v2::EffectiveRuleAnalysis {
+        effort: crate::config::v2::Effort::Low,
+        unanalyzable: crate::config::v2::Unanalyzable::Report,
+    });
+    let findings = check(&root, Some(&config_path), &config).unwrap();
+    let indirect: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding.message.contains("unanalyzable at effort low"))
+        .collect();
+    // Standalone returns raw findings; aggregate check-runner tests verify
+    // suppression of the three directive-controlled sites in this fixture.
+    assert_eq!(indirect.len(), 5, "{findings:?}");
+    for finding in indirect {
+        assert_eq!(finding.rule, PLAYWRIGHT_UNIQUE_HTML_IDS);
+        assert!(
+            finding.file.ends_with("derived-a.tsx")
+                || finding.file.ends_with("derived-b.tsx")
+                || finding.file.ends_with("suppressed.tsx")
+                || finding.file.ends_with("suppressed-file.tsx")
+        );
+        assert!(!std::path::Path::new(&finding.file).is_absolute());
+        assert!(finding.message.contains("literal HTML id"));
+    }
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.target.as_deref() == Some("id=literal-duplicate"))
+            .count(),
+        2,
+    );
 }
 
 #[test]

@@ -104,13 +104,21 @@ function createViMockTracker(context, mutableTopLevel) {
   };
 }
 
-function createRegistryReports(context, mutableTopLevel, cleanupTracker, isCaptured) {
+function createRegistryReports(
+  context,
+  mutableTopLevel,
+  cleanupTracker,
+  isCaptured,
+  suppressed = () => false,
+) {
   const pending = [];
 
   return {
     flush() {
       for (const { node, path, suiteKey } of pending) {
-        if (!cleanupTracker.has(path, suiteKey)) context.report({ node, messageId: "shared" });
+        if (!cleanupTracker.has(path, suiteKey) && !suppressed(node)) {
+          context.report({ node, messageId: "shared" });
+        }
       }
     },
     remember(node, name, path, testDepth, setupDepth) {

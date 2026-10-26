@@ -1,11 +1,10 @@
+use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::RuleFinding;
-use crate::playwright::analysis::types::{Analysis, CoverageReport, DuplicateSelector, Edge};
-use crate::playwright::rules::{
-    PLAYWRIGHT_COVERAGE, PLAYWRIGHT_PREFER_TEST_ID_LOCATORS, PLAYWRIGHT_UNIQUE_HTML_IDS,
-    PLAYWRIGHT_UNIQUE_TEST_IDS,
-};
-use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
-use std::collections::BTreeMap;
+use crate::config::v2::Unanalyzable;
+use crate::playwright::analysis::types::Analysis;
+use crate::playwright::rules::{PLAYWRIGHT_COVERAGE, PLAYWRIGHT_UNIQUE_TEST_IDS};
+
+mod emit;
 
 #[derive(Clone, Copy)]
 pub(crate) struct CoverageFindingOptions {
@@ -14,158 +13,78 @@ pub(crate) struct CoverageFindingOptions {
     pub(crate) selectors: bool,
 }
 
-pub(crate) fn findings_from_report(
+#[derive(Clone, Copy, Default)]
+pub(crate) struct LowEffortFindings {
+    pub unique_test_ids: Option<Unanalyzable>,
+    pub unique_html_ids: Option<Unanalyzable>,
+    pub coverage: Option<Unanalyzable>,
+    /// HTML IDs collected only for coverage are not configured test-ID hooks.
+    pub configured_html_id_selector: bool,
+}
+
+pub(crate) struct ReportOutcome {
+    pub findings: Vec<RuleFinding>,
+    pub advisories: Vec<RuleFinding>,
+}
+
+pub(crate) fn findings_from_report_with_effort(
     analysis: &Analysis,
     unique_test_ids: bool,
     unique_html_ids: bool,
     prefer_test_id_locators: bool,
     coverage: CoverageFindingOptions,
-) -> Vec<RuleFinding> {
+    low: LowEffortFindings,
+) -> ReportOutcome {
     let mut findings = Vec::new();
+    let mut diagnostics = AnalysisDiagnostics::default();
     let report = &analysis.coverage;
     if coverage.enabled {
-        findings.extend(coverage_findings(
-            report,
-            coverage.routes,
-            coverage.selectors,
-        ));
+        findings.extend(emit::coverage(report, coverage, low.coverage.is_some()));
     }
     if unique_test_ids || unique_html_ids {
-        findings.extend(unique_findings(
+        findings.extend(emit::unique(
             &report.duplicate_selectors,
             unique_test_ids,
             unique_html_ids,
         ));
     }
-    if prefer_test_id_locators {
-        findings.extend(prefer_test_id_locator_findings(analysis));
+    if unique_test_ids {
+        emit::unanalyzable(
+            &mut diagnostics,
+            report,
+            PLAYWRIGHT_UNIQUE_TEST_IDS,
+            low.unique_test_ids,
+            unique_html_ids || !low.configured_html_id_selector,
+        );
     }
+    if unique_html_ids {
+        emit::unanalyzable_html_ids(
+            &mut diagnostics,
+            &analysis.unanalyzable_html_ids,
+            low.unique_html_ids,
+        );
+    }
+    if coverage.enabled && coverage.selectors {
+        emit::unanalyzable(
+            &mut diagnostics,
+            report,
+            PLAYWRIGHT_COVERAGE,
+            low.coverage,
+            false,
+        );
+    }
+    if prefer_test_id_locators {
+        findings.extend(emit::prefer_test_id_locators(analysis));
+    }
+    findings.extend(diagnostics.findings);
     findings.sort();
     findings.dedup();
-    findings
-}
-
-fn coverage_findings(report: &CoverageReport, routes: bool, selectors: bool) -> Vec<RuleFinding> {
-    let mut findings = Vec::new();
-    if routes {
-        for route in report.routes.iter().filter(|route| !route.covered) {
-            findings.push(RuleFinding {
-                rule: PLAYWRIGHT_COVERAGE.to_string(),
-                file: route.file.clone(),
-                line: 1,
-                message: format!(
-                    "Next.js route `{}` is not covered by a Playwright navigation assertion",
-                    route.route
-                ),
-                import: None,
-                target: Some(route.route.clone()),
-            });
-        }
+    diagnostics.advisories.sort();
+    diagnostics.advisories.dedup();
+    ReportOutcome {
+        findings,
+        advisories: diagnostics.advisories,
     }
-    if !selectors {
-        return findings;
-    }
-    for selector in report
-        .selectors
-        .iter()
-        .filter(|selector| !selector.covered && !selector.unsupported_dynamic)
-    {
-        findings.push(RuleFinding {
-            rule: PLAYWRIGHT_COVERAGE.to_string(),
-            file: selector.file.clone(),
-            line: 1,
-            message: uncovered_selector_message(selector),
-            import: None,
-            target: Some(format!("{}={}", selector.attribute, selector.value)),
-        });
-    }
-    findings
-}
-
-fn uncovered_selector_message(
-    selector: &crate::playwright::analysis::types::CoverageSelector,
-) -> String {
-    let mut message = format!(
-        "selector [{}=\"{}\"] is not covered by a Playwright locator",
-        selector.attribute, selector.value
-    );
-    if let Some(reference) = selector.helper_references.first() {
-        message.push_str(&format!(
-            "; found '{}' in {}:{} {}, but selector coverage only counts literal getByTestId('{}') calls. Inline the getByTestId call or add explicit wrapper support.",
-            selector.value, reference.test_file, reference.line, reference.call, selector.value
-        ));
-    }
-    message
-}
-
-fn unique_findings(
-    duplicates: &[DuplicateSelector],
-    unique_test_ids: bool,
-    unique_html_ids: bool,
-) -> Vec<RuleFinding> {
-    duplicates
-        .iter()
-        .filter_map(|selector| {
-            let rule = if selector.attribute == HTML_ID_ATTRIBUTE {
-                unique_html_ids
-                    .then_some(PLAYWRIGHT_UNIQUE_HTML_IDS)
-                    .or_else(|| unique_test_ids.then_some(PLAYWRIGHT_UNIQUE_TEST_IDS))
-            } else {
-                unique_test_ids.then_some(PLAYWRIGHT_UNIQUE_TEST_IDS)
-            }?;
-            Some(RuleFinding {
-                rule: rule.to_string(),
-                file: selector.file.clone(),
-                line: 1,
-                message: format!(
-                    "selector [{}=\"{}\"] is duplicated; Playwright selectors must be unique",
-                    selector.attribute, selector.value
-                ),
-                import: None,
-                target: Some(format!("{}={}", selector.attribute, selector.value)),
-            })
-        })
-        .collect()
-}
-
-fn prefer_test_id_locator_findings(analysis: &Analysis) -> Vec<RuleFinding> {
-    let mut by_locator = BTreeMap::new();
-    for edge in &analysis.edges.edges {
-        let Edge::LocatorText {
-            test_file,
-            locator_kind,
-            locator,
-            test_id_attributes,
-            selector_refs,
-            line,
-            ..
-        } = edge
-        else {
-            continue;
-        };
-        let Some(selector) = selector_refs
-            .iter()
-            .find(|selector| test_id_attributes.contains(&selector.attribute))
-        else {
-            continue;
-        };
-        by_locator
-            .entry((test_file.as_ref().clone(), *line as usize, locator.clone()))
-            .or_insert_with(|| {
-                RuleFinding {
-                    rule: PLAYWRIGHT_PREFER_TEST_ID_LOCATORS.to_string(),
-                    file: test_file.as_ref().clone(),
-                    line: *line as usize,
-                    message: format!(
-                        "Prefer getByTestId('{}') over copy-coupled {} locator {}; matched app element exposes {}=\"{}\"",
-                        selector.value, locator_kind, locator, selector.attribute, selector.value
-                    ),
-                    import: None,
-                    target: Some(format!("{}={}", selector.attribute, selector.value)),
-                }
-            });
-    }
-    by_locator.into_values().collect()
 }
 
 #[cfg(test)]

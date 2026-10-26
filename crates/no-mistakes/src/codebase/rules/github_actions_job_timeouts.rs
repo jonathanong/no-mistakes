@@ -6,14 +6,18 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+mod effort;
+pub(super) use effort::partner_scope;
 mod job_lines;
 mod scan;
+mod step_comparison;
 mod step_sum;
 mod yaml;
 
 pub const RULE_ID: &str = "github-actions-job-timeouts";
 
-const DEFAULT_INCLUDE: &[&str] = &[".github/workflows/**/*.yml", ".github/workflows/**/*.yaml"];
+pub(super) const DEFAULT_INCLUDE: &[&str] =
+    &[".github/workflows/**/*.yml", ".github/workflows/**/*.yaml"];
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -38,6 +42,7 @@ struct CompiledOptions {
     reject_step_exceeding_job: bool,
     reject_job_at_or_above_step_sum: bool,
     allow: BTreeMap<String, Option<u64>>,
+    partner_cap: Option<u64>,
 }
 
 pub(crate) fn check_with_files(
@@ -54,13 +59,14 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    super::run_selected_workflow_rule(
-        super::SourcedRuleContext::new(root, config, all_files, sources),
-        RULE_ID,
-        compile_options,
-        |opts| &opts.include,
-        scan_files,
-    )
+    super::run_rule_applications(config, RULE_ID, |rule| {
+        let mut compiled = compile_options(rule.try_rule_options()?);
+        compiled.partner_cap = effort::certified_cap(config, rule)?;
+        let (selected, roots) =
+            super::selected_rule_files_with_roots(root, config, rule, all_files)?;
+        let files = super::matching_files(root, &compiled.include, &selected, &roots)?;
+        Ok(scan_files(root, &compiled, &files, sources))
+    })
 }
 
 fn compile_options(opts: Options) -> CompiledOptions {
@@ -68,6 +74,7 @@ fn compile_options(opts: Options) -> CompiledOptions {
     CompiledOptions {
         include,
         max_minutes: opts.max_minutes,
+        partner_cap: None,
         reject_step_exceeding_job: opts.reject_step_exceeding_job,
         reject_job_at_or_above_step_sum: opts.reject_job_at_or_above_step_sum,
         allow: opts
@@ -92,3 +99,6 @@ fn scan_files(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod effort_tests;

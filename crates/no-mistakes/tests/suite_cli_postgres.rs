@@ -1,5 +1,14 @@
 //! Cli postgres integration tests, linked in one harness.
 
+#[path = "cli_check_postgres_statement_lines.rs"]
+mod cli_check_postgres_statement_lines;
+
+#[path = "cli_check_postgres_body_recovery.rs"]
+mod cli_check_postgres_body_recovery;
+
+#[path = "cli_check_postgres_release_blocker.rs"]
+mod cli_check_postgres_release_blocker;
+
 #[path = "cli_check_rules_postgres.rs"]
 mod cli_check_rules_postgres;
 #[path = "cli_check_rules_postgres_add_column.rs"]
@@ -16,6 +25,8 @@ mod cli_check_rules_postgres_column_naming;
 mod cli_check_rules_postgres_column_trigger;
 #[path = "cli_check_rules_postgres_conflict.rs"]
 mod cli_check_rules_postgres_conflict;
+#[path = "cli_check_rules_postgres_ddl_unanalyzable.rs"]
+mod cli_check_rules_postgres_ddl_unanalyzable;
 #[path = "cli_check_rules_postgres_dml.rs"]
 mod cli_check_rules_postgres_dml;
 #[path = "cli_check_rules_postgres_duplicate_function.rs"]

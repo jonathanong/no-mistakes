@@ -8,8 +8,13 @@ describe("require-exported-component-attribute edge cases", () => {
   it("ignores exported variables without function initializers", () => {
     assert.deepEqual(messages("export let Button;", RULE), []);
     assert.deepEqual(messages("export const Button = memo(Component);", RULE), []);
-    assert.deepEqual(messages("export const Button = React['memo'](() => <button />);", RULE), []);
     assert.deepEqual(messages("export const { Button } = things;", RULE), []);
+  });
+
+  it("reports a component wrapped in a static computed memo call", () => {
+    assert.deepEqual(messages("export const Button = React['memo'](() => <button />);", RULE), [
+      "missing",
+    ]);
   });
 
   it("unwraps syntax wrappers around configured wrapper arguments", () => {

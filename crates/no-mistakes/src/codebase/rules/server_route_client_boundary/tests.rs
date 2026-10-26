@@ -1,5 +1,7 @@
+use super::tests_support::check_with_facts_for_aggregate;
 use super::*;
 use crate::codebase::check_facts::CheckFactMap;
+use std::path::PathBuf;
 
 fn check_with_facts(
     root: &Path,
@@ -490,3 +492,5 @@ fn repository_scoped_rule_uses_all_server_projects() {
 
     assert_eq!(findings.len(), 1);
 }
+
+mod non_source_files;

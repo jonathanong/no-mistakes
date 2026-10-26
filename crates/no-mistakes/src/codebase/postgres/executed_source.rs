@@ -3,51 +3,17 @@ use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::ts_source::FileIdMap;
 use anyhow::{bail, Result};
 use rayon::prelude::*;
-use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Arc;
 
 mod imports;
 mod output;
+mod report;
+mod types;
 use imports::{extract_source_with_imports, resolve_supplied_relative};
 use output::{project_calls, statement};
-
-/// Supplied TypeScript or JavaScript source; no repository read is performed.
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ExecutedPostgresSource {
-    pub file_name: String,
-    pub source: String,
-}
-
-/// An explicit import edge between two supplied source files.
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ExecutedPostgresResolvedImport {
-    pub from_file_name: String,
-    pub specifier: String,
-    pub to_file_name: String,
-}
-
-/// One executor call or one complete alternative of a conditional executor call.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ExecutedPostgresSql {
-    pub file_name: String,
-    pub line: u32,
-    pub annotation: Option<String>,
-    pub sql_text: Option<String>,
-    /// `dynamic` may expose only a verified prefix. An incomplete statement
-    /// needs `only_value_placeholders` before a consumer may parse its shape.
-    pub complete: bool,
-    /// SQL is structurally known except for generated value binds. Consumers
-    /// must still parse the statement and reject writes or unsupported syntax.
-    pub only_value_placeholders: bool,
-    pub kind: EmbeddedSqlKind,
-    /// Why the evaluator could not recover the whole statement. Generated
-    /// value binds have their own provenance and do not use a failure reason.
-    pub incomplete_reason: Option<String>,
-}
+pub use report::{extract_executed_postgres_sql_report, ExecutedPostgresSqlReport};
+pub use types::{ExecutedPostgresResolvedImport, ExecutedPostgresSource, ExecutedPostgresSql};
 
 /// Reuse the embedded-SQL executor analysis for supplied source texts.
 /// Ordering follows the supplied files, call sites, then concrete alternatives.
@@ -56,6 +22,7 @@ pub fn extract_executed_postgres_sql(
     options: &EmbeddedSqlOptions,
 ) -> Result<Vec<ExecutedPostgresSql>> {
     extract_executed_postgres_sql_with_session(sources, options, &AnalysisSession::disabled())
+        .map(|report| report.statements)
 }
 
 /// Resolve imported SQL values and builder effects only among supplied files.
@@ -70,32 +37,40 @@ pub fn extract_executed_postgres_sql_with_imports(
         imports,
         &AnalysisSession::disabled(),
     )
+    .map(|report| report.statements)
 }
 
 pub(crate) fn extract_executed_postgres_sql_with_session(
     sources: &[ExecutedPostgresSource],
     options: &EmbeddedSqlOptions,
     session: &AnalysisSession,
-) -> Result<Vec<ExecutedPostgresSql>> {
+) -> Result<ExecutedPostgresSqlReport> {
     let batches: Vec<_> = sources
         .par_iter()
         .map(|source| {
             crate::ast::with_owned_request_parse_cache(|| {
                 let path = Path::new(&source.file_name);
                 session.with_program(path, &Arc::from(source.source.as_str()), |program, text| {
-                    project_calls(
-                        &source.file_name,
-                        extract_embedded_sql_from_program(path, program, text, options).calls,
+                    let facts = extract_embedded_sql_from_program(path, program, text, options);
+                    (
+                        project_calls(&source.file_name, facts.calls),
+                        facts.undeclared_executor_types,
                     )
                 })
             })
         })
         .collect();
-    let mut statements = Vec::new();
+    let mut report = ExecutedPostgresSqlReport::default();
+    let mut undeclared = Vec::new();
     for batch in batches {
-        statements.extend(batch?);
+        let (statements, occurrences) = batch?;
+        report.statements.extend(statements);
+        undeclared.extend(occurrences);
     }
-    Ok(statements)
+    report.undeclared_executor_types = super::summarize_undeclared_executor_types(&undeclared);
+    report.unresolved_executor_receivers =
+        super::summarize_unresolved_executor_receivers(&undeclared);
+    Ok(report)
 }
 
 pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
@@ -103,7 +78,7 @@ pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
     options: &EmbeddedSqlOptions,
     imports: &[ExecutedPostgresResolvedImport],
     session: &AnalysisSession,
-) -> Result<Vec<ExecutedPostgresSql>> {
+) -> Result<ExecutedPostgresSqlReport> {
     let batches: Vec<_> = sources
         .par_iter()
         .map(|source| {
@@ -143,18 +118,21 @@ pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
             }
             resolve_supplied_relative(from, specifier, &supplied)
         });
-    let mut statements = Vec::new();
+    let mut report = ExecutedPostgresSqlReport::default();
+    let mut undeclared = Vec::new();
     for source in sources {
         let facts = files
             .get(Path::new(&source.file_name))
             .expect("supplied source");
         let embedded = &facts.embedded_sql[0].1;
+        undeclared.extend(embedded.undeclared_executor_types.iter());
         for (index, call) in embedded.calls.iter().enumerate() {
             let mut statements_for_call = project_calls(&source.file_name, vec![call.clone()]);
-            if call.kind == EmbeddedSqlKind::ImmutableLocal
-                || call.kind == EmbeddedSqlKind::Dynamic
-                || call.kind == EmbeddedSqlKind::Composed
-                || !call.recovered_placeholder_positions.is_empty()
+            if !call.variants_truncated()
+                && (call.kind == EmbeddedSqlKind::ImmutableLocal
+                    || call.kind == EmbeddedSqlKind::Dynamic
+                    || call.kind == EmbeddedSqlKind::Composed
+                    || !call.recovered_placeholder_positions.is_empty())
             {
                 let key = (
                     crate::codebase::ts_resolver::normalize_path(Path::new(&source.file_name)),
@@ -199,8 +177,12 @@ pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
                     }
                 }
             }
-            statements.extend(statements_for_call);
+            report.statements.extend(statements_for_call);
         }
     }
-    Ok(statements)
+    report.undeclared_executor_types =
+        super::summarize_undeclared_executor_types(undeclared.iter().copied());
+    report.unresolved_executor_receivers =
+        super::summarize_unresolved_executor_receivers(undeclared);
+    Ok(report)
 }

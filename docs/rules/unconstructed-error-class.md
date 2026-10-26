@@ -34,9 +34,11 @@ construction. Test files never count as construction sites, so a class that only
 a test builds is reported. Test files are `__tests__` directories and
 `.test.*` / `.spec.*` files; the `testFiles` option adds more.
 
-A `new this()` or `new` of an unresolved value inside a class member counts as
-constructing that class, so static factories such as
-`static create() { return new this(); }` keep their class alive.
+An unresolved `new`, including `new this()` or `new this.ctor()`, does not prove
+that its lexically enclosing class is constructed or unconstructed. Both the
+construction site and its otherwise-unconstructed enclosing class are advisory
+unless `options.unanalyzable: ignore` omits them; use a named constructor such as
+`static create() { return new AppError(); }` to make the construction explicit.
 
 Declaration files (`.d.ts`, `.d.mts`, `.d.cts`) are skipped: they describe code
 outside the analyzed source, so their classes are never reported.
@@ -56,16 +58,17 @@ the member, nested and dotted namespaces included:
 default }`), or through barrels and `export *`. A name that another `export *`
   source of the same barrel may also supply (a second namespace, a value, or a
   package outside the repository) is ambiguous, so a construction through it
-  builds nothing the rule can see and the namespace's classes stay quiet;
+  builds nothing the rule can prove and the namespace's classes follow the
+  unanalyzable policy;
 - a bare `new TopicError()` written inside the body of the namespace that
   declares `TopicError`, including inside a nested namespace or function there;
 - `new Outer.Inner.DeepError()`, and `new A.B.C()` for `namespace A.B { export
 class C extends Error {} }`;
 - `class Child extends Errors.Base {}`, which subclasses `Errors.Base`.
 
-The rule stays quiet about every class of a namespace when any use of that
-namespace is not a static member access the graph can follow, because that use
-might build any of its classes:
+When a namespace escapes through a use the graph cannot follow, remaining error
+classes without known construction or inheritance follow `options.unanalyzable`,
+because that use might build any of its classes:
 
 - an alias or destructuring (`const E = Errors`), passing the namespace or one of
   its members as a value (`register(Errors)`, `register(Errors.TopicError)`), or
@@ -74,7 +77,7 @@ might build any of its classes:
   (`new (Errors.TopicError.bind(null))()`), which can build the class somewhere
   the graph does not see. The list is deliberately these three: any other method
   on a member, such as a static guard (`Errors.TopicError.is(value)`), only reads
-  the class, so it neither keeps the class quiet nor builds it;
+  the class, so it neither makes the class uncertain nor builds it;
 - `export default Errors`, `export = Errors`, or `import Alias = Errors.Inner`;
 - a namespace merged with a class, function, variable, enum, or import of the
   same name, whose statics or members the graph cannot tell apart from the
@@ -107,7 +110,7 @@ might build any of its classes:
 Several things are not uses of a namespace. A parameter or local that shadows the
 namespace or one of its classes (`function f(Errors) { return new Errors.X(); }`)
 names that binding, so the construction builds no class of the namespace and does
-not keep it quiet. A value that only shares the name, such as a top-level
+not make its classes uncertain. A value that only shares the name, such as a top-level
 `const Inner = {}` beside `namespace Errors { export namespace Inner { ... } }`,
 is no use of the nested namespace: a name counts as a use only when it resolves
 to a declared namespace path or an imported binding. A namespace body is a scope
@@ -128,7 +131,7 @@ classes are covered; any other call resolves as before. A
 class and a nested namespace of one name in one body are a single merged value
 that hides nothing. A string-literal member (`Errors["Dead"]`,
 `Errors["Inner"].Dead`) is followed like a dot, but `new Errors.Inner["Dead"]()`
-reads `Errors.Inner` as a value, so the namespace stays quiet.
+reads `Errors.Inner` as a value, so remaining namespace classes are uncertain.
 A bare decorator (`@Errors.mark`) calls the member it names and is not a use of
 the namespace. A name written only in an erased type (`typeof Errors`,
 `implements Errors.Marker`, an interface that extends `Errors.Base`) is not a use
@@ -136,9 +139,9 @@ of the namespace, because it runs no code. `import type x = require("./m")` is e
 sourced clause (`export { Errors } from "./m"`) exports the `Errors` of `./m`,
 never a namespace of the same name declared locally.
 
-These uses count wherever they are written, test files included: a test file that
-copies a namespace into a variable keeps its classes quiet, even though a test
-that constructs a class never keeps that class alive.
+These escapes count wherever they are written, test files included: a test file
+that copies a namespace into a variable leaves its remaining classes uncertain,
+even though a test that constructs a class never keeps that class alive.
 
 Only a class another module can reach is exported: an `export class` inside a
 namespace that its module exports, at every level of nesting. A class without
@@ -162,7 +165,7 @@ finding there, never add one.
 Fix the file, or, if it really is test-only, classify it as a test file with
 `testFiles`. Test files that fail to parse do not stop the rule, because they
 never count as construction, unless the rule would report a namespace member: a
-use of a namespace in a test file keeps its classes quiet, so a test file the
+use of a namespace in a test file makes its remaining classes uncertain, so a test file the
 rule cannot read might hold that use. Declaration files that fail to parse do not
 stop it either: they hold no construction.
 
@@ -186,10 +189,10 @@ code, such as a shared `test-helpers/` directory. A construction there does not
 count. It defaults to an empty list, so only the built-in `__tests__`,
 `.test.*`, and `.spec.*` classification applies. Unknown options are rejected.
 
-The common rule fields apply to the declaration only. `include`, `exclude`, and
-`projects` choose which error classes are reported; a construction in a file
-outside them still counts, because the rule must see every use to know a class is
-dead. `message` is prefixed to the class name: `message: Dead error` reports
+The common rule fields select class declarations and unresolved construction
+sites. `include`, `exclude`, and `projects` choose where diagnostics are reported;
+a known construction in a file outside them still counts, because the rule must
+see every use to know a class is dead. `message` is prefixed to the class name: `message: Dead error` reports
 "Dead error: `ClassName`". Without it the message names the class and says it is
 never constructed or subclassed in non-test source.
 
@@ -207,6 +210,39 @@ declaration record with the class line and export state
 call, so it never shows up in `forbidden-calls` and never counts as a
 construction. The rule follows `extends` edges to a built-in error, and treats a
 subclass in non-test source as a use of its base.
+
+Constructor lookup also reuses the prepared class-ancestry facts and resolver,
+including tsconfig path aliases, workspace package exports, re-exports, and
+usable package declarations. Workspace `.` and wildcard subpath exports can
+lead through several `export *` and named re-export hops, including source
+outside this rule's include. Unrelated, resolved star exports do not hide a class;
+unresolved or conflicting exports retain uncertainty.
+The importer selects its own tsconfig resolver scope. Immutable constructor
+aliases and destructured facades reuse prepared binding facts; package members
+declared as `typeof NamedClass` can identify that class. Included ambient module
+declarations can prove a non-Error base without a path mapping. A nullish constructor
+choice is narrowed only when its selected class value is provably non-nullish.
+An annotated constant such as `export const Config: new (...) => Raw = Raw`
+follows its immutable runtime initializer through re-exports and `export *`;
+the constructor annotation alone does not establish identity. Dependency lookup
+starts from the re-exporting package, including dependencies installed only in
+its own `node_modules`.
+
+The session's shared declaration resolver follows conditional package entries.
+Static imports and re-exports from `.mts`/`.mjs` files (including `.d.mts`) use
+the `import` condition; `.cts`/`.cjs` files use `require`. With no proven mode,
+applicable declaration branches must agree. Explicit `types` and runtime entry
+sidecars must also be compatible. Primary source facts keep their selected
+targets, and ambiguous dependency contexts remain uncertain. This also supports
+default-object destructuring such as `import pg from 'pg'; const { Pool } = pg`
+when the package declaration
+identifies the member's concrete class.
+
+Resolving the constructed class credits that exact class even when its own base
+ancestry remains unknown. This does not widen ordinary import or call query
+results. Known non-Error global constructors, including `Intl.DateTimeFormat`
+and `Intl.NumberFormat`, do not produce unresolved-target diagnostics. A local
+binding that shadows a global name must resolve independently.
 
 A class inside a `namespace` is resolved the same way, through the namespace's
 member path: the extractor records each namespace member, and each namespace
@@ -272,10 +308,114 @@ that mention it, or add the `throw new ...` that makes it real. Removing a
 subclass can leave its base unconstructed and newly reported, so rerun the check
 until it is clean.
 
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Inputs whose construction or error ancestry cannot be proved use
+`options.unanalyzable` with the constructor/base exception below
+([how analysis works](../../README.md#how-analysis-works)):
+
+- A selected non-test construction whose target is unresolved, including an
+  unknown constructor inside a class member. It is reported at the construction
+  line and never credits the lexically enclosing class. Instead, that class is
+  uncertain too, unless a known construction or subclass proves it used; the
+  class diagnostic points at its declaration. This avoids claiming a static
+  `new this()` factory is definitely unused.
+- An exported error class whose namespace escapes, unless a known construction
+  or subclass already proves it used. It is reported at the class line.
+- An exported class with unresolved base ancestry, including an external package
+  without usable class declarations, or
+  a repository subclass whose ancestry reaches that base, unless known
+  construction or inheritance already proves it used. It is reported at the
+  class line because the graph cannot determine whether it is an error class.
+
+Unresolved constructor targets, their otherwise-unused enclosing classes, and
+otherwise-unused classes with statically named unresolved base ancestry produce
+**non-failing advisories**, even under `report` (the default). An unresolved
+constructor or base does not establish
+that an Error class exists and is unused. `advise` also produces advisories;
+`ignore` omits these diagnostics. No option turns an unresolved constructor or
+a statically named unresolved base into a failure. Dynamic base ancestry and
+namespace-escape-only uncertainty retain the shared policy: `report` fails,
+`advise` advises, and `ignore` omits them. `report` and `advise` differ for
+dynamic base ancestry and when namespace escape is the class's only
+uncertainty. All these uncertainties have `target: unanalyzable`. The
+setting inherits from repository
+`unanalyzable` and can be overridden per rule application.
+Unrelated definite unconstructed error classes remain findings under every
+policy. An unknown constructor does not turn its enclosing class into a definite
+unused finding: `FactoryError.make(FactoryError)` can really construct it when
+`make(ctor)` returns `new ctor()`. Known constructions and inheritance retain
+their existing meaning. These
+policies run at the supported `max` effort, including an explicit `max` or a
+requested `low` that falls back to `max`.
+
+Rewrite dynamic constructors as statically named classes or analyzable imports,
+replace namespace aliases with direct class references, and include repository
+base source or usable package type declarations, or extend a locally analyzable
+error class. Suppressions below work
+for findings and advisories, at the diagnostic's class or construction line.
+
+```yaml
+rules:
+  - rule: unconstructed-error-class
+    scope: repository
+    options:
+      unanalyzable: advise
+```
+
+## Upgrading
+
+The constructor-target fix for [#2734 section 2](https://github.com/jonathanong/no-mistakes/issues/2734)
+removes false failures introduced by #2699:
+
+- Resolvable alias and package constructors reuse the existing resolver and
+  available class declarations. Known non-Error globals no longer produce
+  unresolved-target diagnostics.
+- Still-unresolved `new` targets, including `new this()`, `new someParam()`, and
+  computed or conditional constructors, are advisory even under `report`.
+  Otherwise-unused enclosing classes with those constructors are advisory too.
+- Statically named unresolved class bases, including unavailable host-module or
+  package type declarations, are advisory even under `report`. Dynamic bases
+  follow `options.unanalyzable` and fail under `report`.
+- Otherwise-unconstructed error classes in escaping namespaces still follow the
+  shared policy, including failing under `report` when that is their only
+  uncertainty. Definite unused Error classes remain failures under every policy.
+  No option turns an unresolved constructor or a statically named unresolved
+  base into a failure. `report` and `advise` differ for dynamic base ancestry
+  and when namespace escape is the class's only uncertainty.
+
+Use statically named constructors and analyzable class bases where possible.
+Set `options.unanalyzable: advise` to make namespace uncertainty advisory too,
+or `ignore` to omit uncertainty diagnostics. Repository `unanalyzable` supplies
+the default when no rule override is set. Usable declarations can remove a
+proven non-Error finding
+or establish a definite unused-Error finding even under `advise`/`ignore`. For
+intentional cases, use a reasoned file, line, or next-line suppression at each
+reported class or construction site.
+
+See the [migration note](../migrations/unconstructed-error-class-constructor-targets.md)
+for CLI and Node report behavior.
+
+The [#2758 constructor fix](https://github.com/jonathanong/no-mistakes/issues/2758)
+also follows compatible conditional declaration entries in the re-exporter's
+package context, including runtime packages with separate `@types` declarations.
+Proven non-Error targets become silent. An otherwise-unused exported subclass
+of a proven Error base remains a failing finding, including under `advise` and
+`ignore`; remove that subclass or give it a real production construction.
+
 ## Suppression
 
-The finding points at the class declaration. Suppress a class that is built in
-a way the graph cannot see, for example by a plugin loader or a dynamic lookup:
+Class diagnostics point at the declaration; unresolved-construction diagnostics
+point at the construction site. Suppressing only a dynamic call does not prove
+its class constructed; suppress the class diagnostic too, or use a file-level
+exception. Suppress a class that is built in a way the
+graph cannot see, for example by a plugin loader or a dynamic lookup:
 
 ```ts
 // no-mistakes-disable-next-line unconstructed-error-class: built by the plugin loader
@@ -284,37 +424,77 @@ export class PluginError extends Error {}
 
 `no-mistakes-disable-line` on the declaration line and
 `no-mistakes-disable-file unconstructed-error-class` at the top of a file (every
-class in it) work too.
+class and construction in it) work too.
+
+`Reflect.construct(ReflectedError, [])` is not recognized as construction.
+Its class can still receive a definite finding, even when `unanalyzable` is
+`advise` or `ignore`; suppress that class declaration or file explicitly.
 
 ## Limitations
 
-The rule reads static code only. Most limitations below hide a dead class; the
-first reports a class that is not really dead, which a suppression comment
-resolves.
+The rule reads static code only. Unresolved constructors and statically named
+unresolved bases are advisory unless ignored. Dynamic base ancestry follows
+`options.unanalyzable`: `report` fails, `advise` advises, and `ignore` omits it.
+Reflection and some alias forms can still hide a dead class.
 
-- Dynamic construction (`new (registry[name])()`, `Reflect.construct`) is not
-  seen, so such a class is reported; suppress it.
-- A base class imported from an external package (`TRPCError`, `HttpError`) is
-  not an error root, because the package source is not analyzed. Classes that
-  extend one are not reported.
-- Mixin and expression bases (`extends withCode(Error)`) and class expressions
-  are not tracked.
+- A dynamic `new` (`new (registry[name])()`) produces an advisory unless ignored,
+  without proving which class is constructed. Reflection such as
+  `Reflect.construct` is not recognized as construction; suppress a class built
+  only through reflection.
+- Imported bases reuse the canonical class graph. Package `types`/`typings`,
+  exact `exports` entries with a `types` branch, and `@types` declarations can
+  prove class ancestry, including local declaration reexports and `export =`
+  namespaces. Runtime-only package entries can fall back to `@types` when no
+  conflicting declaration sidecar exists. A resolved non-Error class such as
+  `React.Component` is skipped; a declared Error subclass is judged. Supported
+  versioned `types` conditions use the consuming project's installed TypeScript
+  version, including through declaration reexports; conflicting applicable
+  targets remain uncertain. `typesVersions` is ignored when `exports` owns
+  resolution; legacy version maps, export patterns, missing compiler versions
+  needed by conditions, opaque aliases/functions and unsupported conditions stay
+  unknown and advisory unless `options.unanalyzable: ignore` omits them.
+  Anonymous default classes without a stable class identity also remain unknown.
+  This is a conservative ancestry
+  projection, not full TypeScript compiler resolution; ordinary import and call
+  targets retain their existing semantics. Transitive bare or parent-relative
+  imports from internally symlinked declarations remain uncertain when their
+  package dependency context cannot be proved; safe same-directory reexports
+  remain supported. Distinct symlink spellings retain separate logical identities.
+  An immutable constructor obtained by destructuring a default-imported object
+  can resolve when its declaration member names a concrete class with `typeof`.
+  A bare construct signature does not identify class ancestry. A choice between
+  a module's default export and its namespace can resolve when the default is a
+  proven non-nullish class; genuinely unknown alternatives remain uncertain.
+  Shadowed, reassigned, or otherwise unproven targets remain advisory unless
+  ignored. Prefer a direct class import when the package exposes one.
+- Mixin and expression bases (`extends withCode(Error)`, `extends mixin(Base)`,
+  or a computed/conditional base) have unknown ancestry and follow
+  `options.unanalyzable`: `report` fails, `advise` emits an advisory, and
+  `ignore` omits them. This also applies to statically named descendants of
+  these dynamic bases. Statically named unresolved bases, including type-only
+  imports, remain advisory under `report` and `advise`. An Error argument does
+  not prove a factory returns an
+  Error constructor. Rewrite the base as a statically named class or analyzable
+  import. Known construction or subclassing still satisfies such a class.
+  Class expressions are not tracked.
+- A type-only imported base stays unknown even when its package declaration
+  extends `Error`. Use a value import when the base is a runtime constructor;
+  type declarations alone do not prove that runtime binding.
 - A dead subclass still satisfies its base. The check converges over repeated
   runs as you delete dead classes.
 - Only exported classes are reported. A non-exported class that nothing uses is
   a plain unused declaration.
-- A class declared with `declare` or inside an ambient block is not reported, and
-  neither is a namespaced class whose namespace is used in a way the graph cannot
-  follow (see [What it catches](#what-it-catches)).
+- A class declared with `declare` or inside an ambient block is not reported.
+  Namespace escapes follow the unanalyzable policy (see
+  [What it catches](#what-it-catches)).
 - An exported alias of a class is not recognized as an export, so the class is
   not reported. With `const PublicError = InternalError;` and
   `export { PublicError };`, `InternalError` is skipped.
-- An alias of a built-in error used as a base is not followed, so the class is
-  not reported. With `const BaseError = Error;`, a class that extends
-  `BaseError` is skipped.
-- An unresolved `new`, such as `new this()`, credits the outermost class of the
-  member it sits in. A class nested inside an error class's method can
-  therefore hide that error class.
+- An alias of a built-in error used as a base is not a recognized error root.
+  With `const E2 = Error; export class Al extends E2 {}`, the class follows
+  the unresolved-base advisory policy because the base cannot be proved.
+- An unresolved `new`, such as `new this()`, is advisory unless ignored;
+  it does not credit an enclosing class.
 
 ## Related rules
 

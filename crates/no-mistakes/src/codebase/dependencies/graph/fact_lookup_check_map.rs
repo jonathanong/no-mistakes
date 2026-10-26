@@ -22,6 +22,20 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         self.graph_plan().covers(required)
     }
 
+    fn covers_ts_fact_plan_for_path(&self, path: &Path, mut required: TsFactPlan) -> bool {
+        if required.call_sites
+            && !self.graph_plan().call_sites
+            && (self.call_site_paths.contains(path)
+                || (!self.call_site_paths.is_empty()
+                    && self
+                        .call_site_paths
+                        .contains(&crate::codebase::ts_resolver::normalize_path(path))))
+        {
+            required.call_sites = false;
+        }
+        self.covers_ts_fact_plan(required)
+    }
+
     fn graph_files(&self) -> Option<&[PathBuf]> {
         self.graph_files_complete
             .then_some(self.graph_files.as_slice())
@@ -36,6 +50,12 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
 
     fn playwright_source_files(&self) -> Option<&[PathBuf]> {
         Some(&self.playwright_source_files)
+    }
+
+    fn playwright_matcher_warnings(&self, project: Option<&str>) -> &[String] {
+        self.playwright_matcher_warnings.iter()
+            .find(|(candidate, _)| candidate.as_deref() == project)
+            .map(|(_, warnings)| warnings.as_slice()).unwrap_or_default()
     }
 
     fn get_playwright_test_files(

@@ -1,6 +1,7 @@
 "use strict";
 const { rule, options } = require("../helpers");
-const { memberName, testBinding, isContextSkip } = require("./test-no-skips-bindings");
+const { memberName, testBinding, isContextObject } = require("./test-no-skips-bindings");
+const { isContextSkipAlias } = require("./test-no-skips-context");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression } = require("./async-ast");
@@ -110,10 +111,10 @@ function annotationFinding(node, context, banned) {
 
 // `skip` and `fixme` already remove the test. `only` does not, so an annotation
 // on the same call is still reported.
-function impliesSkippedDeclaration(node, banned) {
+function impliesSkippedDeclaration(node, banned, context) {
   let current = unwrapExpression(node);
   while (current?.type === "MemberExpression") {
-    const name = memberName(current);
+    const name = memberName(current, context);
     if ((name === "skip" || name === "fixme") && banned.has(name)) return true;
     current = current.object;
   }
@@ -150,27 +151,39 @@ module.exports = rule(
     );
     return {
       MemberExpression(node) {
-        const modifier = memberName(node);
+        const modifier = memberName(node, context);
         if (!banned.has(modifier) || suppressed(node.property)) return;
         const test = testBinding(node.object, context);
         const contextCall =
           modifier === "skip" &&
           node.parent.type === "CallExpression" &&
           node.parent.callee === node &&
-          isContextSkip(node, context);
+          isContextObject(node.object, context);
         if (!test && !contextCall) return;
         context.report({ node: node.property, messageId: "modifier", data: { modifier } });
       },
       CallExpression(node) {
+        if (
+          banned.has("skip") &&
+          node.callee.type === "Identifier" &&
+          !suppressed(node.callee) &&
+          isContextSkipAlias(node.callee, context)
+        ) {
+          context.report({ node: node.callee, messageId: "modifier", data: { modifier: "skip" } });
+        }
         // extend's arguments are fixture options, not test declaration details.
-        if (node.callee.type === "MemberExpression" && memberName(node.callee) === "extend") return;
+        if (
+          node.callee.type === "MemberExpression" &&
+          memberName(node.callee, context) === "extend"
+        )
+          return;
         const binding = testBinding(node.callee, context);
         if (
           binding?.framework !== "@playwright/test" ||
           !["test", "describe"].includes(binding.name)
         )
           return;
-        if (impliesSkippedDeclaration(node.callee, banned)) return;
+        if (impliesSkippedDeclaration(node.callee, banned, context)) return;
         const details = node.arguments[1];
         if (!details || details.type === "SpreadElement") return;
         const annotation = annotationFinding(details, context, banned);

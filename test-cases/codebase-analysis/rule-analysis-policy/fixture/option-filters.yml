@@ -1,0 +1,17 @@
+effort: low
+projects:
+  selected:
+    root: src
+  wrong:
+    root: elsewhere
+rules:
+  - rule: test-effort-adopter
+    projects: [selected]
+    options:
+      include: ['*.ts']
+      exclude: ['outside.ts']
+  - rule: test-partner
+    projects: [selected]
+    options:
+      include: ['*.ts']
+      exclude: ['outside.ts']

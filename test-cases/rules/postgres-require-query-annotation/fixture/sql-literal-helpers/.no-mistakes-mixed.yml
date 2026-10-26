@@ -1,0 +1,21 @@
+rules:
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      include: [src/query.mts]
+      importSpecifier: pg
+      executorTypeNames: [PoolClient]
+      reportUnmatchedExecutorNames: true
+      sqlLiteralHelpers: [pg-copy-streams#from]
+      effort: low
+      unanalyzable: report
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      include: [src/query.mts]
+      importSpecifier: pg
+      executorTypeNames: [PoolClient]
+      reportUnmatchedExecutorNames: true
+      sqlLiteralHelpers: [other-copy-streams#from]
+      effort: max
+      unanalyzable: report

@@ -252,12 +252,18 @@ fn exclude_path_option_skips_file() {
 
 #[test]
 fn multiple_violations_reported() {
-    let content = "\
-      - uses: actions/checkout@v6.0.2
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-";
-    let findings = run_on_workflow(content);
+    // Keep valid YAML here; malformed-workflow uncertainty has its own saved regression.
+    let root = crate::test_support::rule_fixture_root("file-input-analysis");
+    let path = root.join(".github/workflows/multiple-unpinned.yml");
+    let (uses_re, sha_re, version_re) = build_patterns();
+    let findings = check_file(
+        &path,
+        &root,
+        &build_exclude_globset(&[]),
+        &uses_re,
+        &sha_re,
+        &version_re,
+    );
     assert_eq!(findings.len(), 2, "expected 2 violations: {findings:?}");
 }
 
@@ -324,8 +330,7 @@ fn composite_action_yaml_extension_checked() {
 }
 
 #[test]
-fn unreadable_file_produces_no_findings() {
-    // check_file must return empty when the path does not exist
+fn unreadable_file_reports_unanalyzable_input() {
     let tmp = tempfile::tempdir().unwrap();
     let path = tmp.path().join(".github/workflows/missing.yml");
     let (uses_re, sha_re, version_re) = build_patterns();
@@ -338,10 +343,42 @@ fn unreadable_file_produces_no_findings() {
         &sha_re,
         &version_re,
     );
-    assert!(
-        findings.is_empty(),
-        "missing file should produce no findings"
-    );
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable"));
+}
+
+#[test]
+fn block_header_accepts_one_chomp_or_indent() {
+    assert!(yaml_uses::is_block_header("|+2"));
+    assert!(yaml_uses::is_block_header("|2+"));
+    assert!(yaml_uses::is_block_header("|-"));
+    assert!(!yaml_uses::is_block_header("|not"));
+    assert!(!yaml_uses::is_block_header("|12"));
+    assert!(!yaml_uses::is_block_header("|+-"));
+    assert!(!yaml_uses::is_block_header("plain"));
+}
+
+#[test]
+fn non_string_job_id_still_checks_the_step_line() {
+    // YAML reads `1` as a number, so the job is not walked by name. The step
+    // line is still a `uses` hit.
+    let findings = check_yaml_shape("numeric-job-fail.yml");
+    assert_eq!(lines_of(&findings), vec![5], "{findings:?}");
+    assert!(findings[0].message.contains("actions/checkout@v4"));
+}
+
+#[test]
+fn aliased_steps_and_job_named_env_are_checked() {
+    let aliased = check_yaml_shape("aliased-steps-fail.yml");
+    assert_eq!(lines_of(&aliased), vec![10], "{aliased:?}");
+    assert!(aliased[0].message.contains("actions/checkout@v4"));
+    let named = check_yaml_shape("job-named-env-fail.yml");
+    assert_eq!(lines_of(&named), vec![5, 8], "{named:?}");
+    assert!(named[0].message.contains("actions/checkout@v4"));
+    assert!(named[1].message.contains("actions/setup-node@v4"));
+    // A job id of steps or jobs is still a job, so its workflow uses is checked.
+    let structural = check_yaml_shape("job-named-steps-fail.yml");
+    assert_eq!(lines_of(&structural), vec![4, 6], "{structural:?}");
 }
 
 #[test]
@@ -351,3 +388,16 @@ fn uses_line_not_matching_regex_skipped() {
     let findings = run_on_workflow("      # uses: some comment reference\n");
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+fn check_yaml_shape(name: &str) -> Vec<RuleFinding> {
+    let root = fixture("yaml-shapes");
+    let config = config_with_options("{}");
+    let files = vec![root.join(".github").join("workflows").join(name)];
+    check_with_files(&root, &config, &files).unwrap()
+}
+
+fn lines_of(findings: &[RuleFinding]) -> Vec<usize> {
+    findings.iter().map(|finding| finding.line).collect()
+}
+
+mod yaml_shapes;

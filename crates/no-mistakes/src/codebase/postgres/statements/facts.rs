@@ -25,7 +25,6 @@ use sources::StatementSources;
 use sqlparser::ast::{Spanned, Statement};
 use std::collections::HashMap;
 use std::sync::Arc;
-
 mod prepared;
 use prepared::PreparedStatements;
 
@@ -51,14 +50,14 @@ fn extract_from_parsed_and_sources(
     let mut returning_stars = Vec::new();
     let mut bounds = Vec::new();
     let mut mutation_column_uses = Vec::new();
+    let mut transformed_column_uses = Vec::new();
     let mut insert_n = 0usize;
-    let mut trigger_n = 0usize;
     let tokens = Tokens::with_prepared(sql, prepared_sql.tokens());
     let has_table_token = tokens.all().iter().any(table_keyword);
     let need_table_tokens = collect_bounds || has_table_token;
     let table_index = need_table_tokens.then(|| bounds::TableTokenIndex::new(tokens.all()));
     let mut recovered_indexes = HashMap::new();
-    let insert_sources = super::lines::InsertSources::new(sql);
+    let insert_sources = super::lines::InsertSources::with_tokens(sql, &tokens);
     let policy_arbiters: crate::fx::FxHashMap<_, _> = prepared_sql
         .policy_arbiters()
         .iter()
@@ -68,7 +67,6 @@ fn extract_from_parsed_and_sources(
         policy_arbiters: &policy_arbiters,
         insert_sources: &insert_sources,
         insert_n: &mut insert_n,
-        trigger_n: &mut trigger_n,
         inserts: &mut inserts,
         selects: &mut selects,
         updates: &mut updates,
@@ -112,8 +110,14 @@ fn extract_from_parsed_and_sources(
                 locations.collect(statement);
             }
             writes::collect(statement, &mut writes);
+            super::transformed_predicates::collect(
+                statement,
+                placeholder_positions,
+                &mut transformed_column_uses,
+            );
             collect_one(
                 sql,
+                sources.location_tokens(index, tokens.all()),
                 statement,
                 placeholder_positions,
                 table_cursor.as_mut(),
@@ -155,8 +159,6 @@ fn extract_from_parsed_and_sources(
     let (statement_kinds, setting_uses, function_calls) =
         policy::collect(sql, prepared_sql, statements, sources.policy);
     let mut facts = SqlStatementFileFacts {
-        variant_locations: None,
-        path: Default::default(),
         statement_kinds,
         setting_uses,
         function_calls,
@@ -168,15 +170,17 @@ fn extract_from_parsed_and_sources(
         triggers,
         returning_stars,
         mutation_column_uses,
+        transformed_column_uses,
         offset_uses: super::super::offset::offset_facts_prepared(prepared_sql, statements),
         bounds,
         lifecycle: lifecycle.finish(),
         limit_uses,
         sweeps,
         parse_failed,
+        parse_failures: sources.parse_failures.to_vec(),
         insert_keyword_count,
         has_top_level_not_exists: not_exists::has_top_level_conjunctive_not_exists(&masked),
-        origin_line: 0,
+        ..Default::default()
     };
     facts.variant_locations = locations.map(|locations| {
         locations::finish(
@@ -191,7 +195,4 @@ fn extract_from_parsed_and_sources(
     });
     facts
 }
-
-pub fn has_top_level_not_exists_in(sql: &str) -> bool {
-    not_exists::has_top_level_conjunctive_not_exists(&fallback::mask_quoted_sql(sql))
-}
+pub use super::not_exists::has_top_level_not_exists_in;

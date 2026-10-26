@@ -1,0 +1,36 @@
+projects:
+  app:
+    root: src/a
+    include: ["**/*.mjs"]
+rules:
+  - rule: forbidden-calls
+    name: project-arguments
+    projects: [app]
+    exclude: ["**/excluded.mjs"]
+    options:
+      roots: [{ file: src/a/entry.mjs }]
+      traversal: transitive
+      unknownArguments: finding
+      targets:
+        - moduleExport: { module: node:child_process, export: execFile }
+          whenArguments:
+            all: [{ position: 0, equals: live }]
+  - rule: forbidden-calls
+    name: second-arguments
+    scope: repository
+    include: [src/b/*.mjs]
+    options:
+      roots: [{ file: src/b/entry.mjs }]
+      traversal: file
+      unknownArguments: finding
+      targets:
+        - moduleExport: { module: node:child_process, export: execFile }
+          whenArguments:
+            all: [{ position: 0, equals: live }]
+  - rule: forbidden-calls
+    name: target-only-must-not-widen
+    scope: repository
+    options:
+      roots: [{ file: src/unrelated.mjs }]
+      traversal: file
+      targets: [{ global: setTimeout }]

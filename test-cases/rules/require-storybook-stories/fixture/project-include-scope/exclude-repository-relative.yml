@@ -1,0 +1,14 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+  admin:
+    type: nextjs
+    root: admin
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    include: [components/**/*.tsx]
+    exclude: [web/components/Card.tsx]
+    options:
+      includeAllReactNamedExports: true

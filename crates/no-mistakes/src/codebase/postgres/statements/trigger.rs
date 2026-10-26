@@ -1,17 +1,24 @@
 use super::{SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod};
 use crate::codebase::postgres::schema::relation_name;
 use sqlparser::ast::{
-    CreateTrigger, Statement, TriggerEvent, TriggerObject, TriggerObjectKind, TriggerPeriod,
+    CreateTrigger, Spanned, Statement, TriggerEvent, TriggerObject, TriggerObjectKind,
+    TriggerPeriod,
 };
 
-pub(super) fn from_statement(sql: &str, statement: &Statement, n: usize) -> Option<SqlTriggerFact> {
+pub(super) fn from_statement(
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
+    statement: &Statement,
+) -> Option<SqlTriggerFact> {
     match statement {
-        Statement::CreateTrigger(trigger) => Some(from_trigger(sql, trigger, n)),
+        Statement::CreateTrigger(trigger) => Some(from_trigger(tokens, trigger)),
         _ => None,
     }
 }
 
-fn from_trigger(sql: &str, trigger: &CreateTrigger, n: usize) -> SqlTriggerFact {
+fn from_trigger(
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
+    trigger: &CreateTrigger,
+) -> SqlTriggerFact {
     SqlTriggerFact {
         table: relation_name(&trigger.table_name),
         function: trigger
@@ -31,7 +38,11 @@ fn from_trigger(sql: &str, trigger: &CreateTrigger, n: usize) -> SqlTriggerFact 
                 | Some(TriggerObjectKind::For(TriggerObject::Row))
         ),
         events: trigger.events.iter().map(from_event).collect(),
-        line: super::lines::nth_keyword_pair_line(sql, "create", "trigger", n),
+        line: crate::codebase::postgres::migration::statement_keyword_line(
+            tokens,
+            "CREATE",
+            trigger.name.span().start,
+        ),
     }
 }
 

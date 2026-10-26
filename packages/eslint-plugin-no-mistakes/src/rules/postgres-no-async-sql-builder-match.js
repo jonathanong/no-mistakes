@@ -3,6 +3,7 @@
 const { traverse, unwrapExpression } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { isInside } = require("./postgres-no-async-sql-builder-bindings");
+const { destructuredImport, importedBinding } = require("./postgres-no-async-sql-builder-import");
 const { staticKeyName } = require("./postgres-no-async-sql-builder-types");
 
 function stringList(value) {
@@ -49,41 +50,24 @@ function functionName(func) {
   return null;
 }
 
-function importedBinding(identifier, context) {
-  if (identifier?.type !== "Identifier") return null;
-  const variable = resolveVariable(identifier, context);
-  const definition = variable?.defs.find(
-    (item) => item.type === "ImportBinding" && item.node.importKind !== "type",
-  );
-  const specifier = definition?.node;
-  const declaration = specifier?.parent;
-  if (
-    !specifier ||
-    declaration?.type !== "ImportDeclaration" ||
-    declaration.importKind === "type" ||
-    typeof declaration.source?.value !== "string"
-  ) {
-    return null;
-  }
-  if (specifier.type === "ImportNamespaceSpecifier") {
-    return { kind: "namespace", source: declaration.source.value };
-  }
-  if (specifier.type !== "ImportSpecifier") return null;
-  const imported = specifier.imported;
-  const name = imported.type === "Identifier" ? imported.name : String(imported.value);
-  return { kind: "named", source: declaration.source.value, name };
-}
-
 function calleeMatches(callee, builder, context) {
   const node = unwrapExpression(callee);
   if (node.type === "Identifier") {
     if (!builder.source) return builder.callees.includes(node.name);
     const imported = importedBinding(node, context);
-    return Boolean(
+    if (
       imported &&
       imported.kind === "named" &&
       imported.source === builder.source &&
-      builder.callees.includes(imported.name),
+      builder.callees.includes(imported.name)
+    ) {
+      return true;
+    }
+    const destructured = destructuredImport(node, context);
+    return Boolean(
+      destructured &&
+      destructured.source === builder.source &&
+      builder.callees.includes(destructured.name),
     );
   }
   if (node.type !== "MemberExpression") return false;
@@ -188,7 +172,9 @@ function tagCalleeIsStable(tag, context, func) {
   let current = unwrapTagCallee(tag);
   if (current?.type === "Identifier") return true;
   while (current?.type === "MemberExpression") {
-    if (current.computed) return false;
+    // A string or expression-free template key is the same member as `db.sql`.
+    // A computed identifier can name a different property, so it stays unstable.
+    if (current.computed && !staticKeyName(current)) return false;
     current = unwrapTagCallee(current.object);
   }
   return current?.type === "Identifier" && identifierDeclaredOutside(current, context, func);

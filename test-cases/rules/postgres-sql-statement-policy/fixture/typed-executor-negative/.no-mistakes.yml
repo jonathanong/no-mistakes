@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      effort: low
+      importSpecifier: '@example/db'
+      executorTypeNames: [QueryExecutor]
+      unanalyzableSql: ignore

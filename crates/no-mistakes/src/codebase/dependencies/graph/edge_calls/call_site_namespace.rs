@@ -32,7 +32,10 @@ impl CallSiteResolution<'_, '_> {
                 invocation: call.invocation,
                 target: resolved_target,
                 target_node,
-                alternatives: Vec::new(), returned_from: Vec::new(), typed_from: Vec::new(), returned_member_from: Vec::new(),
+                alternatives: Vec::new(),
+                returned_from: Vec::new(),
+                typed_from: Vec::new(),
+                returned_member_from: Vec::new(),
             },
         )
     }
@@ -90,9 +93,7 @@ impl CallSiteResolution<'_, '_> {
     fn import_hidden_by_body(&self, call: &FunctionCall, callee: &str) -> bool {
         let table = &self.index.namespaces;
         call.invocation == InvocationKind::Construct
-            && table
-                .context(call.caller_id, call.offset)
-                .is_some_and(|context| table.binds_head(context, callee))
+            && table.hides_constructor(call.caller_id, call.offset, callee)
     }
 
     /// Records that a use of `root` in `file` (`"*"`: every root there) cannot

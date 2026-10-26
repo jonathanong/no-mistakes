@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { logicalCall } = require("./module-mock-helpers");
 const helpers = require("./no-global-fetch-outside-helper-helpers");
 
 const {
@@ -200,8 +201,10 @@ module.exports = Object.assign(
           );
         },
         CallExpression(node) {
-          if (!isGlobalFetchExpression(node.callee, context, activeAliases())) return;
-          context.report({ node: node.callee, messageId: "globalFetch" });
+          const invoked = logicalCall(node);
+          if (!invoked || !isGlobalFetchExpression(invoked.callee, context, activeAliases()))
+            return;
+          context.report({ node: invoked.callee, messageId: "globalFetch" });
         },
       };
     },

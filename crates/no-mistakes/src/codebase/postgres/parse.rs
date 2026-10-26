@@ -3,6 +3,7 @@ use sqlparser::parser::ParserError;
 use std::fmt;
 
 mod copy_data;
+mod ddl_compat;
 mod derived_table;
 mod distinct_group;
 pub(super) mod fetch_expression;
@@ -13,9 +14,12 @@ mod lock_of_list;
 mod lock_strength;
 pub(super) mod operator_boundary;
 mod prepared;
-pub(crate) use lenient::parse_postgres_sql_with_function_sources;
 pub(crate) use lenient::rewrite::rewrite_referential_set_column_lists_located;
 pub(crate) use lenient::LocatedStatement;
+pub(crate) use lenient::ProceduralBodyState;
+pub(crate) use lenient::{
+    parse_postgres_body_with_function_sources, parse_postgres_sql_with_function_sources,
+};
 pub(crate) use prepared::PreparedSql;
 mod radix_numbers;
 mod recursive_view;
@@ -24,10 +28,11 @@ mod source_escape;
 mod source_unicode;
 mod sql_text;
 mod standalone_table;
+mod statement_head;
 mod table_boundary;
 mod table_only;
-pub(super) use sql_text::normalize_copy_data;
-pub(crate) use sql_text::top_level_statements;
+use sql_text::located_statements;
+pub(super) use sql_text::{normalize_copy_data, normalize_copy_data_for_tokens};
 pub(super) mod unicode;
 mod unicode_decode;
 
@@ -113,7 +118,7 @@ fn prepare_postgres_tokens_inner(
         Vec::new()
     };
     normalize_table_queries(&mut tokens);
-    let recursive_views = recursive_view::prepare(&mut tokens);
+    let recursive_views = recursive_view::prepare(&mut tokens, None);
     PreparedPostgresTokens {
         tokens,
         occurrence_tokens,

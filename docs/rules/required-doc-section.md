@@ -23,8 +23,12 @@ operational section, such as performance notes or ownership guidance.
 ## What it catches/requires
 
 Every file matching `glob` must contain the exact `requiredHeading` Markdown
-heading. A fenced or four-space-indented example of that line is not a heading.
-Content below the heading is not inferred or validated by this rule.
+heading. When `requiredHeading` is a valid ATX heading, the level and the text
+must both match, so `### Perf` does not satisfy `## Perf`. A value without
+`#` matches any level. An underlined heading, and a heading that ends with
+hashes, use the parsed level and text. A fenced or four-space-indented
+example of that line is not a heading. Content below the heading is not inferred or validated by this
+rule.
 
 ## Options and defaults
 
@@ -33,10 +37,17 @@ empty string, which disables the rule application rather than inferring a
 document set or heading. `roots`, `requiredFile`, `codeExtensions`, and
 `testExcludePatterns` belong to sibling `required-local-docs`, not this rule.
 
+A value without leading `#` characters matches a heading of that text at any
+level. A valid ATX value (`## Perf`) requires that exact level. For compatibility,
+a leading-hash value that is not valid ATX syntax (`#Perf` or `####### Perf`)
+strips its leading hashes and matches the remaining text at any level. Prefer
+`Perf` for any level or `## Perf` for an exact level.
+
 ## Valid example
 
 ```md
 // agents/demo/README.md
+
 ## Perf
 
 This agent keeps its query under 100 ms.
@@ -46,6 +57,7 @@ This agent keeps its query under 100 ms.
 
 ```md
 // agents/demo/README.md
+
 # Perf
 ```
 
@@ -53,10 +65,28 @@ The configured heading is `## Perf`, so the level-one heading does not satisfy
 the contract. A fenced or indented example that merely quotes `## Perf` also
 does not satisfy the contract, because it is not a document heading.
 
+```md
+// agents/demo/README.md
+
+### Perf
+```
+
+A deeper heading does not satisfy `## Perf` either.
+
 ## Fix
 
 Add the exact configured heading to each matched file or correct the glob and
 heading together when the policy changed.
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it checks headings in parsed Markdown, so `options.unanalyzable` has no effect on it.
 
 ## Suppression
 

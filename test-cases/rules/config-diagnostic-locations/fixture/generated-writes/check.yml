@@ -1,0 +1,11 @@
+# Option entries below keep their own lines; stale entries are not line 1.
+rules:
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    options:
+      sqlInclude: ["**/*.sql"]
+      executorNames: []
+      extraGeneratedColumns:
+        - {table: orders, column: created_at}
+      triggerMaintainedColumns:
+        - missing_column

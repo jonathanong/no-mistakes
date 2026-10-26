@@ -1,6 +1,8 @@
 "use strict";
 
 const { literalString, rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
+const { invokedCall, methodFromCallee } = require("./playwright-static-call");
 
 const HEADING_TAGS = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
 const ALLOWED_PREFIXES = [
@@ -48,6 +50,7 @@ module.exports = rule(
     },
   },
   (context) => {
+    const suppressed = ruleSuppression(context, "playwright-selector-priority");
     let isPlaywrightFile = isPlaywrightPath(context.filename);
     return {
       ImportDeclaration(node) {
@@ -55,12 +58,12 @@ module.exports = rule(
       },
       CallExpression(node) {
         if (!isPlaywrightFile) return;
-        if (node.callee.type !== "MemberExpression") return;
-        if (node.callee.property.type !== "Identifier" || node.callee.property.name !== "locator") {
-          return;
-        }
-        const selector = literalString(node.arguments[0])?.trim();
+        const invoked = invokedCall(node);
+        if (!invoked || methodFromCallee(invoked.callee, context) !== "locator") return;
+        const argument = invoked.arguments[0];
+        const selector = argument && literalString(argument)?.trim();
         if (!selector || isAllowedSelector(selector)) return;
+        if (suppressed(node)) return;
         if (/^\.[a-zA-Z_-]/.test(selector) || selector.startsWith("#")) {
           context.report({ node, messageId: "semantic" });
         } else if (HEADING_TAGS.has(selector.toLowerCase())) {

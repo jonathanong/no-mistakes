@@ -83,11 +83,15 @@ rules:
     options:
       srcMax: 200
       testMax: 500
+      # Deliberately unreadable inputs exercise required-source diagnostics.
+      excludes: [test-cases/rules/file-input-analysis/]
   - rule: rust-no-inline-tests
     scope: repository
     options:
       excludes:
         - test-cases/
+        # builder_core.rs uses include! for this expression fragment, not a full module.
+        - crates/no-mistakes/src/codebase/dependencies/graph/builder_core/body.rs
   - rule: rust-no-inline-allows
     scope: repository
     options:

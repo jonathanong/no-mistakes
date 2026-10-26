@@ -7,6 +7,7 @@ use super::manifest::PackageManifest;
 use super::reachability::{self, FileImport};
 use super::Options;
 use crate::codebase::dependencies::graph::TsFactLookup;
+use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
@@ -29,17 +30,30 @@ pub(super) fn run(
     files: &[PathBuf],
     sources: &SourceStore,
     facts: Option<&dyn TsFactLookup>,
+    anchor: &ConfigAnchor,
 ) -> anyhow::Result<Vec<RuleFinding>> {
     let allowed_fields = match allowed_fields(opts) {
         Ok(fields) => fields,
-        Err(message) => return Ok(vec![super::findings::config(&message)]),
+        Err(message) => {
+            let line = opts
+                .allowed_fields
+                .iter()
+                .position(|field| {
+                    !crate::codebase::package_deps::ALL_DEPENDENCY_FIELDS.contains(&field.as_str())
+                })
+                .map(|index| anchor.option_item_line("allowedFields", index))
+                .unwrap_or_else(|| anchor.option_line("allowedFields"));
+            return Ok(vec![super::findings::config(anchor, line, &message)]);
+        }
     };
     let test_globset = match build_globset(&test_file_patterns(opts)) {
         Ok(globset) => globset,
         Err(error) => {
-            return Ok(vec![super::findings::config(&format!(
-                "invalid glob pattern in testFilePatterns: {error}"
-            ))]);
+            return Ok(vec![super::findings::config(
+                anchor,
+                anchor.invalid_glob_line("testFilePatterns", &opts.test_file_patterns),
+                &format!("invalid glob pattern in testFilePatterns: {error}"),
+            )]);
         }
     };
 

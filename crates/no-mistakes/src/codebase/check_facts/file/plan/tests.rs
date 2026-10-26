@@ -1,8 +1,116 @@
-use super::{ts_extract_context, ts_extract_plan, ts_source};
+use super::{requires_parse, ts_extract_context, ts_extract_plan, ts_source};
 use crate::codebase::check_facts::CheckFactPlan;
 use crate::codebase::ts_source::facts::TsFactPlan;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+#[test]
+fn raw_source_scope_preserves_graph_and_generic_source_demand() {
+    use crate::codebase::check_facts::FamilyPathScope;
+    let root = Path::new("/repo");
+    let selected = Path::new("/repo/app/api/route.ts");
+    let other = Path::new("/repo/app/page.ts");
+    let mut plan = CheckFactPlan {
+        raw_source: true,
+        raw_source_paths: FamilyPathScope::Only(Arc::new(
+            [selected.to_path_buf()].into_iter().collect(),
+        )),
+        ..Default::default()
+    };
+    assert!(ts_extract_plan(root, &plan, selected, None).source);
+    assert!(!ts_extract_plan(root, &plan, other, None).source);
+    assert!(!plan.collected_ts_plan().source);
+    plan.graph.source = true;
+    assert!(ts_extract_plan(root, &plan, other, None).source);
+    plan.graph.source = false;
+    plan.source = true;
+    assert!(ts_extract_plan(root, &plan, other, None).source);
+    assert!(
+        CheckFactPlan {
+            raw_source: true,
+            ..Default::default()
+        }
+        .collected_ts_plan()
+        .source
+    );
+}
+
+#[test]
+fn graph_source_with_scoped_raw_source_reuses_owned_text_on_success_and_error() {
+    use crate::codebase::check_facts::FamilyPathScope;
+    use crate::codebase::ts_source::{FileInventory, SourceStore};
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/shared-facts/fixture");
+    let files = [root.join("src/everything.tsx"), root.join("src/invalid.ts")];
+    let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&files)));
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let plan = CheckFactPlan {
+        raw_source: true,
+        raw_source_paths: FamilyPathScope::Only(Arc::new(Default::default())),
+        graph: TsFactPlan {
+            source: true,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    for (index, path) in files.iter().enumerate() {
+        let original = sources.read_path(path).unwrap();
+        let facts = super::super::collect_file_facts_with_session_and_sources(
+            &session, &root, path, &plan, None, &sources, false,
+        )
+        .unwrap();
+        assert!(Arc::ptr_eq(facts.source.as_ref().unwrap(), &original));
+        assert!(Arc::ptr_eq(facts.ts.source.as_ref().unwrap(), &original));
+        assert_eq!(facts.parse_error.is_some(), index == 1);
+    }
+
+    let graph_only = CheckFactPlan {
+        raw_source: false,
+        ..plan
+    };
+    let facts = super::super::collect_file_facts_with_session_and_sources(
+        &session,
+        &root,
+        &files[0],
+        &graph_only,
+        None,
+        &sources,
+        false,
+    )
+    .unwrap();
+    assert!(facts.source.is_none());
+    assert!(facts.ts.source.is_some());
+}
+
+#[test]
+fn react_parse_error_suppression_keeps_raw_source_outside_route_scope() {
+    use crate::codebase::check_facts::FamilyPathScope;
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/react-analyze-suppressed-parse-error");
+    let path = root.join("app/Broken.tsx");
+    let plan = CheckFactPlan {
+        react: true,
+        raw_source: true,
+        raw_source_paths: FamilyPathScope::Only(Arc::new(Default::default())),
+        ..Default::default()
+    };
+    assert!(plan.collected_ts_plan().source);
+    let facts =
+        crate::codebase::check_facts::tests::collect_file_facts(&root, &path, &plan, None).unwrap();
+    assert!(facts.parse_error.is_some());
+    assert!(facts.source.as_deref().is_some_and(|source| {
+        crate::codebase::ts_source::has_disable_file_comment(source, "assert-no-fetch")
+    }));
+    assert!(facts.ts.source.is_some());
+    assert!(
+        !CheckFactPlan {
+            react: true,
+            ..Default::default()
+        }
+        .collected_ts_plan()
+        .source
+    );
+}
 
 #[test]
 fn ts_source_reuses_the_same_arc_pointer() {
@@ -24,6 +132,32 @@ fn ts_source_preserves_missing_source() {
 }
 
 #[test]
+fn ts_extract_plan_clears_family_flags_outside_path_scope() {
+    let inside = PathBuf::from("src/in.ts");
+    let outside = PathBuf::from("src/out.ts");
+    let scope = crate::codebase::check_facts::family_scope::FamilyPathScope::Only(
+        std::sync::Arc::new([inside.clone()].into_iter().collect()),
+    );
+    let plan = CheckFactPlan {
+        react: true,
+        queue: true,
+        symbols: true,
+        react_paths: scope.clone(),
+        queue_paths: scope.clone(),
+        symbols_paths: scope,
+        ..CheckFactPlan::default()
+    };
+    let ts = ts_extract_plan(Path::new("/repo"), &plan, &outside, None);
+    assert!(!ts.react, "{ts:?}");
+    assert!(!ts.queue_project, "{ts:?}");
+    assert!(!ts.symbols, "{ts:?}");
+    let ts = ts_extract_plan(Path::new("/repo"), &plan, &inside, None);
+    assert!(ts.react);
+    assert!(ts.queue_project);
+    assert!(ts.symbols);
+}
+
+#[test]
 fn ts_extract_plan_mirrors_collected_ts_plan() {
     let path = Path::new("src/widget.ts");
     let plan = CheckFactPlan {
@@ -40,7 +174,10 @@ fn ts_extract_plan_mirrors_collected_ts_plan() {
         ..CheckFactPlan::default()
     };
 
-    assert_eq!(ts_extract_plan(&plan, path, None), plan.collected_ts_plan());
+    assert_eq!(
+        ts_extract_plan(Path::new("/repo"), &plan, path, None),
+        plan.collected_ts_plan()
+    );
 }
 
 #[test]
@@ -130,7 +267,7 @@ fn playwright_test_files_request_shared_import_facts() {
         demands_text_imports: true,
     });
 
-    let ts_plan = ts_extract_plan(&plan, &file, Some(&playwright));
+    let ts_plan = ts_extract_plan(Path::new("/repo"), &plan, &file, Some(&playwright));
 
     assert!(ts_plan.imports);
     assert!(ts_plan.function_calls);
@@ -162,7 +299,7 @@ fn unproven_member_spans_follow_rule_path_filters() {
     let path = Path::new("/repo/src/legacy/old.ts");
     let profile =
         crate::codebase::postgres::EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
-    let direct = super::super::program::prepared_embedded_sql(
+    let direct = super::super::embedded_sql::prepared_embedded_sql(
         root,
         path,
         source,
@@ -181,7 +318,7 @@ fn unproven_member_spans_follow_rule_path_filters() {
         &["src/legacy/**".into()],
     )
     .unwrap();
-    let dropped = super::super::program::prepared_embedded_sql(
+    let dropped = super::super::embedded_sql::prepared_embedded_sql(
         root,
         path,
         source,
@@ -206,7 +343,7 @@ fn unproven_member_spans_follow_rule_path_filters() {
         &[],
     )
     .unwrap();
-    let counted = super::super::program::prepared_embedded_sql(
+    let counted = super::super::embedded_sql::prepared_embedded_sql(
         root,
         path,
         source,
@@ -223,4 +360,114 @@ fn unproven_member_spans_follow_rule_path_filters() {
         counted[0].1.postgres_rule_ids,
         ["postgres-required-predicates".to_string()]
     );
+}
+
+#[test]
+fn playwright_const_urls_share_module_binding_projection_across_variants() {
+    let source = crate::playwright::test_support::fixture_source(&[
+        "playwright",
+        "recall-gaps",
+        "const-urls.spec.ts",
+    ]);
+    let root = Path::new("/repo");
+    let file = root.join("const-urls.spec.ts");
+    let mut playwright = crate::codebase::check_facts::PlaywrightFactPlan::default();
+    for attribute in ["data-testid", "data-test"] {
+        playwright.add_file(crate::codebase::check_facts::PlaywrightFactSelection {
+            path: file.clone(),
+            navigation_helpers: &[],
+            selector_wrappers: &[],
+            selector_attributes: &[attribute.to_string()],
+            component_selector_attributes: &Default::default(),
+            html_ids: false,
+            test_id_attributes: &[attribute.to_string()],
+            policy: Default::default(),
+            demands_text_imports: false,
+        });
+    }
+    let plan = CheckFactPlan {
+        graph: TsFactPlan {
+            module_bindings: true,
+            call_arguments: true,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    crate::ast::with_program(&file, &source, |program, source| {
+        let baseline = crate::codebase::ts_source::facts::collect_file_facts_from_program(
+            &file,
+            plan.graph,
+            &ts_extract_context(root, &plan),
+            source,
+            program,
+            None,
+            None,
+        );
+        let combined = super::super::program::collect_file_facts_from_program(
+            root,
+            &file,
+            &plan,
+            Some(&playwright),
+            source,
+            program,
+            None,
+        );
+        assert_eq!(
+            serde_json::to_value(baseline.module_bindings).unwrap(),
+            serde_json::to_value(&combined.ts.module_bindings).unwrap(),
+        );
+        let variants = combined.playwright.unwrap().all();
+        assert_eq!(variants.len(), 2);
+        for variant in variants {
+            assert!(variant.urls().iter().any(|url| url.value == "/blog/post"));
+            assert!(variant
+                .urls()
+                .iter()
+                .any(|url| url.value == "/parameter/${slug}"));
+        }
+    })
+    .unwrap();
+}
+
+#[test]
+fn scoped_call_sites_select_normalized_paths_without_narrowing_generic_demand() {
+    let selected = PathBuf::from("/repo/src/entry.ts");
+    let other = PathBuf::from("/repo/src/other.ts");
+    let mut plan = CheckFactPlan::default();
+    plan.require_call_site_paths(std::slice::from_ref(&selected));
+    assert!(ts_extract_plan(Path::new("/repo"), &plan, &selected, None).call_sites);
+    assert!(
+        ts_extract_plan(
+            Path::new("/repo"),
+            &plan,
+            Path::new("/repo/src/nested/../entry.ts"),
+            None,
+        )
+        .call_sites
+    );
+    assert!(!ts_extract_plan(Path::new("/repo"), &plan, &other, None).call_sites);
+    plan.graph.call_sites = true;
+    assert!(ts_extract_plan(Path::new("/repo"), &plan, &other, None).call_sites);
+}
+
+#[test]
+fn raw_source_only_paths_parse_only_when_selected_for_call_sites() {
+    let root = Path::new("/repo");
+    let selected = PathBuf::from("/repo/src/entry.ts");
+    let other = PathBuf::from("/repo/src/other.ts");
+    let mut plan = CheckFactPlan {
+        raw_source: true,
+        ..Default::default()
+    };
+    plan.require_call_site_paths(std::slice::from_ref(&selected));
+    assert!(requires_parse(root, &plan, &selected, None));
+    assert!(requires_parse(
+        root,
+        &plan,
+        Path::new("/repo/src/nested/../entry.ts"),
+        None
+    ));
+    assert!(!requires_parse(root, &plan, &other, None));
+    plan.graph.call_sites = true;
+    assert!(requires_parse(root, &plan, &other, None));
 }

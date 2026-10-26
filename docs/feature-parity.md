@@ -1,5 +1,10 @@
 # Feature Parity
 
+Playwright config `testMatch` / `testIgnore` accept static string globs, RegExp
+literals, and mixed arrays in both CLI and Node analysis. Unsupported matchers
+produce scoped aggregate-check warnings; see
+[matcher recovery](configuration/tests.md#playwright-file-matchers).
+
 `no-mistakes` is a local, deterministic codebase-intelligence engine. TypeScript
 and JavaScript are the reference implementation for the full product surface.
 This page is the contract for bringing other languages and their key frameworks
@@ -10,6 +15,12 @@ static lexical aliases, and barrels, excluding shadowed bindings. The `effects`
 query and `query-reached-per-item` rule support opt-in module/export selectors with the same prepared call
 resolver while retaining spelling-based string configuration. CLI, async Node,
 and batched `analyzeProject` queries share this behavior.
+
+TS/JS `unconstructed-error-class` uses canonical class ancestry for imported
+bases, including conservatively resolved package type declarations. Positive
+non-Error class ancestry is skipped; unresolved or opaque ancestry follows the
+shared unanalyzable policy. CLI `check`, async `check()` and `analyzeProject()`
+check reports share this behavior without widening ordinary import/call queries.
 
 Explicit Vitest and Playwright configurations expose optional declared
 case/hook/fixture deadline evidence through Rust, CLI
@@ -34,6 +45,12 @@ are checked; the rule does not discover tests or infer repository-wide scope.
 This remains a plugin capability and adds no `no-mistakes` CLI or N-API
 command. See [test-no-skips](eslint-rules/test-no-skips.md).
 
+The file-local `playwright-require-interactive-test-id` plugin rule recognizes
+Radix-style single-child slots on configured interactive components. `slotProps`
+defaults to `["asChild"]`; literal parent selectors cover the direct child,
+while ambiguous props or children remain checked. See
+[interactive test IDs](eslint-rules/playwright-require-interactive-test-id.md).
+
 The opt-in ESLint/Oxlint `vitest-timeout-cap` rule checks effective Vitest
 configuration and test/hook timeout overrides in files selected by ESLint
 `files` globs. Its defaults cap configuration timeouts at 5,000 ms and
@@ -57,6 +74,12 @@ and the default `unanalyzableSql: report` policy; explicitly choose `ignore` for
 opaque leading SQL. This annotation evidence does not imply complete SQL for
 structural PostgreSQL rules.
 
+`sql-template-strings` `.append()` chains preserve the leading annotation at
+low effort and compose text for full SQL consumers, with interpolations treated
+as value placeholders. Conditional appends use bounded breadth-first alternatives;
+loops retain zero/one previews and an unknown remainder. These behaviors share
+Rust, CLI and async Node evidence; see [append composition](postgres-query-annotation/append-composition.md).
+
 Opt-in `postgres-no-mutable-sql-registry` and
 `postgres-no-unbounded-sql-identifier` checks follow cross-file registry writes
 (including re-export aliases, `export *` barrels, namespace imports, `delete`,
@@ -64,7 +87,11 @@ and `Object.defineProperty`) and unbounded identifier interpolations
 (`process.env`, imported config, request parameters, query rows, and
 non-finite wrappers) through prepared import, value-flow, and embedded-SQL
 facts plus the canonical graph. CLI `check`, Node `check()`,
-and batched `analyzeProject()` share findings. Unknown provenance and HTTP
+and batched `analyzeProject()` share findings. Immutable array-destructured
+query rows retain source provenance; comma expressions retain their final
+operand's value provenance. A direct adjacent scalar overwrite can prove one
+array-row member finite; the shared statement fact pass records this narrow
+proof, while other mutations retain conservative provenance. Unknown provenance and HTTP
 `.query` collisions stay silent. See
 [mutable SQL registries](rules/postgres-no-mutable-sql-registry.md) and
 [unbounded SQL identifiers](rules/postgres-no-unbounded-sql-identifier.md).
@@ -86,21 +113,21 @@ language CLIs are not started.
 
 ## Current Status
 
-| Domain                  | Module graph                                   | Test plan                                                                | HTTP routes                                                     | Queues                                                    | Status                           |
-| ----------------------- | ---------------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------- |
-| TypeScript / JavaScript | yes                                            | Vitest, Playwright, Jest                                                 | Express, Hono, Koa, Fastify, NestJS, Next.js, Remix file routes | BullMQ, glide-mq                                          | shipped (tRPC procedures opt-in) |
-| Swift                   | `swift-import`, `swift-ref`, `swift-package`   | `tests plan swift`, semantic `Package.swift` / `Package.resolved` impact | no (client `http` edges only)                                   | no                                                        | shipped, narrower                |
-| .NET / C#               | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet`, semantic project / central NuGet / lock impact      | ASP.NET `MapGet` / `[HttpGet]` literals                         | no                                                        | shipped (v1 extractors + plan)   |
-| Python, Django, Celery  | `python-import`, `python-ref`                  | `tests plan python`                                                      | Django `path(`, Flask, FastAPI                                  | Celery `.delay(` / `@shared_task`                         | shipped (v1 extractors + plan)   |
-| Go, Asynq               | `go-import`, `go-ref`                          | `tests plan go`                                                          | net/http, Chi, Gin, Echo, Fiber literals                        | Asynq `NewTask` / `HandleFunc`                            | shipped (v1 extractors + plan)   |
-| Kafka                   | n/a                                            | n/a                                                                      | n/a                                                             | static topic produce/consume                              | shipped (v1 extractors)          |
-| Rust                    | `rust-use`, `rust-mod`                         | `tests plan cargo`                                                       | Axum, Actix, Rocket literals                                    | no                                                        | shipped (v1 extractors + plan)   |
-| Ruby on Rails           | `ruby-require`, `ruby-ref`                     | `tests plan rails`                                                       | `routes.rb` `to:` / `resources`                                 | Active Job `perform_later`, Sidekiq `perform_async`       | shipped (v1 extractors + plan)   |
-| PHP                     | `php-use`, `php-package`                       | `tests plan php`                                                         | Laravel `Route::` / `Route::resource` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan)   |
-| Java, Spring            | `java-import`, `java-ref`                      | `tests plan java`                                                        | Spring `@RequestMapping` / `@GetMapping` literals               | no                                                        | shipped (v1 extractors + plan)   |
-| Kotlin, Spring          | `kotlin-import`, `kotlin-ref`                  | `tests plan kotlin`                                                      | Spring `@RequestMapping` / `@GetMapping` literals on `.kt`      | no                                                        | shipped (v1 extractors + plan)   |
-| Elixir, Phoenix         | `elixir-import`, `elixir-ref`                  | `tests plan elixir`                                                      | Phoenix `get`/`post`/`put`/`patch`/`delete` literals            | no                                                        | shipped (v1 extractors + plan)   |
-| Dart / Flutter          | `dart-import`, `dart-ref`                      | `tests plan dart`                                                        | no Dart server graph; client `http` edges to TS routes          | no                                                        | shipped (v1 extractors + plan)   |
+| Domain                  | Module graph                                   | Test plan                                                                | HTTP routes                                                                            | Queues                                                    | Status                           |
+| ----------------------- | ---------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------- |
+| TypeScript / JavaScript | yes                                            | Vitest, Playwright, Jest                                                 | Express, Hono, Koa, Fastify, NestJS, Next.js, Remix file routes                        | BullMQ, glide-mq                                          | shipped (tRPC procedures opt-in) |
+| Swift                   | `swift-import`, `swift-ref`, `swift-package`   | `tests plan swift`, semantic `Package.swift` / `Package.resolved` impact | no (client `http` edges only)                                                          | no                                                        | shipped, narrower                |
+| .NET / C#               | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet`, semantic project / central NuGet / lock impact      | ASP.NET `MapGet` / `[HttpGet]` literals                                                | no                                                        | shipped (v1 extractors + plan)   |
+| Python, Django, Celery  | `python-import`, `python-ref`                  | `tests plan python`                                                      | Django `path(`, Flask, FastAPI                                                         | Celery `.delay(` / `@shared_task`                         | shipped (v1 extractors + plan)   |
+| Go, Asynq               | `go-import`, `go-ref`                          | `tests plan go`                                                          | net/http, Chi, Gin, Echo, Fiber literals                                               | Asynq `NewTask` / `HandleFunc`                            | shipped (v1 extractors + plan)   |
+| Kafka                   | n/a                                            | n/a                                                                      | n/a                                                                                    | static topic produce/consume                              | shipped (v1 extractors)          |
+| Rust                    | `rust-use`, `rust-mod`                         | `tests plan cargo`                                                       | Axum, Actix, Rocket literals                                                           | no                                                        | shipped (v1 extractors + plan)   |
+| Ruby on Rails           | `ruby-require`, `ruby-ref`                     | `tests plan rails`                                                       | `routes.rb` `to:` / `resources`                                                        | Active Job `perform_later`, Sidekiq `perform_async`       | shipped (v1 extractors + plan)   |
+| PHP                     | `php-use`, `php-package`                       | `tests plan php`                                                         | Laravel `Route::` / `Route::resource` / `Route::apiResource` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan)   |
+| Java, Spring            | `java-import`, `java-ref`                      | `tests plan java`                                                        | Spring `@RequestMapping` / `@GetMapping` literals                                      | no                                                        | shipped (v1 extractors + plan)   |
+| Kotlin, Spring          | `kotlin-import`, `kotlin-ref`                  | `tests plan kotlin`                                                      | Spring `@RequestMapping` / `@GetMapping` literals on `.kt`                             | no                                                        | shipped (v1 extractors + plan)   |
+| Elixir, Phoenix         | `elixir-import`, `elixir-ref`                  | `tests plan elixir`                                                      | Phoenix `get`/`post`/`put`/`patch`/`delete` literals with literal `scope` prefixes     | no                                                        | shipped (v1 extractors + plan)   |
+| Dart / Flutter          | `dart-import`, `dart-ref`                      | `tests plan dart`                                                        | no Dart server graph; client `http` edges to TS routes                                 | no                                                        | shipped (v1 extractors + plan)   |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
@@ -111,6 +138,11 @@ Static SQL returned by imported helpers (relative, `tsconfig` `paths` and barrel
 imports, with string-literal arguments spliced into literal-identifier
 templates) is recovered for every embedded-SQL rule and mapped to the helper's
 original file and line, including assigned results and appended fragments.
+Static runtime namespace reads such as `names.TABLE` and `names.default` also
+recover exported string constants through prepared imports and re-exports;
+computed, optional, method, type-only, and non-const reads remain unknown.
+Tagged builder fragments accessed through namespaces stay unknown because the
+exported object can mutate.
 Named imports, factory handles, and typed executor parameters honor configured
 scope; SQL-file selection retains `sqlInclude` semantics. The `ddl` group covers
 23 documented statement kinds, including routines and database utility commands.
@@ -453,18 +485,19 @@ PHP support is Composer/PSR-4 facts plus one configured framework extractor.
 Set `tests.php.framework` to `laravel` or `symfony`. Do not infer the
 framework from files, and do not enable both extractors from a missing value.
 
-| Feature          | TS/JS reference     | PHP equivalent                                                                         |
-| ---------------- | ------------------- | -------------------------------------------------------------------------------------- |
-| Module graph     | `import`            | `use`, `require`/`include` of local files, PSR-4 from configured `composer.json`       |
-| Package identity | workspace packages  | configured Composer packages / path repositories                                       |
-| Tests            | `tests plan vitest` | `tests plan php` over PHPUnit / Pest files                                             |
-| HTTP routes      | `server routes`     | configured Laravel `Route::` / bare `Route::resource` or Symfony attribute/YAML routes |
-| Queues           | BullMQ              | Laravel `SomeJob::dispatch()` / `ShouldQueue`, or Symfony Messenger handlers           |
-| Lockfile         | npm-family          | later (`lockfile diff` is npm-family; `composer.lock` diffs are not started)           |
+| Feature          | TS/JS reference     | PHP equivalent                                                                                                |
+| ---------------- | ------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Module graph     | `import`            | `use`, `require`/`include` of local files, PSR-4 from configured `composer.json`                              |
+| Package identity | workspace packages  | configured Composer packages / path repositories                                                              |
+| Tests            | `tests plan vitest` | `tests plan php` over PHPUnit / Pest files                                                                    |
+| HTTP routes      | `server routes`     | configured Laravel `Route::` / bare `Route::resource` / `Route::apiResource` or Symfony attribute/YAML routes |
+| Queues           | BullMQ              | Laravel `SomeJob::dispatch()` / `ShouldQueue`, or Symfony Messenger handlers                                  |
+| Lockfile         | npm-family          | later (`lockfile diff` is npm-family; `composer.lock` diffs are not started)                                  |
 
 ```php
 Route::get('/api/users', [UserController::class, 'index']);
 Route::resource('users', UserController::class);
+Route::apiResource('accounts', UserController::class);
 SomeJob::dispatch($user);
 #[Route('/health', methods: ['GET'])]
 class HealthController {}
@@ -474,7 +507,8 @@ $bus->dispatch(new WelcomeMessage());
 `__DIR__ . '/' . $name`, `app($abstract)`, `#[Route($prefix . '/users')]`,
 `$bus->dispatch($message)` lookups, `Route::resource(..., ['only' => ...])`,
 `Route::resource(...)->only([...])`, nested dotted `Route::resource` names,
-named-argument `Route::resource` calls, and `Route::apiResource` are non-edges. Missing `tests.php.framework`
+named-argument `Route::resource` / `Route::apiResource` calls, and
+`Route::apiResources` maps are non-edges. Missing `tests.php.framework`
 still enables neither Laravel nor Symfony extractors.
 
 ## Java, Spring
@@ -561,37 +595,46 @@ file stem, matching Java `-Dtest`.
 
 Elixir support is a language frontend for configured `tests.elixir.apps`.
 Empty lists disable the extractor; there is no `mix.exs` inference.
-Exact `alias`/`import`/`use MyApp.User` statements emit `elixir-import`.
-Brace aliases `alias MyApp.{User, Role}` and wildcard imports are non-edges.
+Exact `alias`/`import`/`use MyApp.User` statements and brace aliases
+`alias MyApp.{User, Role}` emit `elixir-import`. Nested braces
+`alias MyApp.{Foo.{Bar}}` and wildcard imports are non-edges.
 Module names plus capitalized identifiers emit `elixir-ref`. Same-package
 refs without an `alias`/`import`/`use` are non-edges.
 
 Phoenix HTTP v1 matches literal `get "/users", Controller, :index` (and
-`post`/`put`/`patch`/`delete`) registrations. `resources` macros and
-`scope "/api"` prefix joining are non-edges.
+`post`/`put`/`patch`/`delete`) registrations and joins literal
+`scope "/api"` prefixes onto nested verb paths. `resources` macros and
+computed `scope path` blocks are non-edges.
 
 | Feature          | TS/JS reference     | Elixir equivalent                                                                                                            |
 | ---------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Module graph     | `import`            | exact `alias`/`import`/`use MyApp.User`                                                                                      |
+| Module graph     | `import`            | exact `alias`/`import`/`use MyApp.User` and brace aliases `alias MyApp.{User, Role}`                                         |
 | Package identity | workspace packages  | configured `tests.elixir.apps`                                                                                               |
 | Tests            | `tests plan vitest` | `tests plan elixir` over `*_test.exs`; `mix test <path>` from the Mix project root (umbrella child paths stay repo-relative) |
-| HTTP routes      | `server routes`     | Phoenix `get`/`post`/`put`/`patch`/`delete` literals                                                                         |
+| HTTP routes      | `server routes`     | Phoenix `get`/`post`/`put`/`patch`/`delete` literals, including literal `scope "/api"` prefixes                              |
 | Queues           | BullMQ              | no                                                                                                                           |
 | Lockfile         | npm-family          | later (`mix.exs` native fallback only)                                                                                       |
 
 ```elixir
+defmodule MyApp.App do
+  alias MyApp.{User, Role}
+end
+
 defmodule MyAppWeb.Router do
   get "/users", MyAppWeb.UserController, :index
   post "/users", MyAppWeb.UserController, :create
+  scope "/api" do
+    get "/items", MyAppWeb.UserController, :index
+  end
 end
 ```
 
-Brace aliases, same-package refs without `alias`/`import`/`use`, Phoenix
-`resources` macros, `scope "/api"` prefix joining, `mix.lock` / `config.exs`
-native fallback, queues, and a dedicated `no-mistakes elixir` CLI are
-non-edges / later work. Native fallback is `mix.exs` plus non-test `.ex`
-files under configured apps. Any `.ex`/`.exs` under `/test/` is
-non-production. `*_test.exs` is the test suffix.
+Nested brace aliases, wildcard imports, same-package refs without
+`alias`/`import`/`use`, Phoenix `resources` macros, computed `scope path`
+blocks, `mix.lock` / `config.exs` native fallback, queues, and a dedicated
+`no-mistakes elixir` CLI are non-edges / later work. Native fallback is
+`mix.exs` plus non-test `.ex` files under configured apps. Any `.ex`/`.exs`
+under `/test/` is non-production. `*_test.exs` is the test suffix.
 
 ## Dart, Flutter
 
@@ -724,10 +767,11 @@ shipped for configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and D
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients besides
-Dart/Flutter `Uri.parse` / `http.*` literals, Laravel
-`Route::resource` `only`/`except`, nested dotted names, named arguments, and `Route::apiResource`, Kafka
-outside TS/Python literal shapes, language `symbols`/`call-sites`, and
-dedicated `no-mistakes python|go|rust|rails|php|java|kotlin|elixir|dart` CLIs.
+Dart/Flutter `Uri.parse` / `http.*` literals, Laravel `Route::resource` /
+`Route::apiResource` `only`/`except`, nested dotted names, named arguments, and
+`Route::apiResources`, Kafka outside TS/Python literal shapes, language
+`symbols`/`call-sites`, and dedicated
+`no-mistakes python|go|rust|rails|php|java|kotlin|elixir|dart` CLIs.
 
 See [Architecture](architecture.md) for the one-pass session rules,
 [Graph edges](graph-edges.md) for the current edge kinds, and
@@ -774,6 +818,14 @@ Literal PL/pgSQL `EXECUTE` nested SQL facts have Rust/native and asynchronous
 Node ESM/CJS parity, including decoded child spans and original wrapper
 provenance. Dynamic expressions remain explicitly unsupported; see the
 [PostgreSQL source API](postgres-source-api.md).
+
+The shared Rust/native parser and asynchronous Node APIs also recognize the
+selected PostgreSQL 17 DDL forms in the
+[schema migration guide](migrations/postgres-schema-unanalyzable.md), including
+default-privilege revocations, publication options, and metadata from the saved
+statement-family survey. Recognized unsupported metadata retains diagnostics
+and advises by default across the eleven schema rules; malformed top-level SQL
+continues to report. Explicit policies and report shapes are unchanged.
 
 Procedural `DO` occurrence kinds (`utility`, `controlFlow`, `dml`,
 `dynamicExecute`, `unknown`) have the same Rust/native and asynchronous Node

@@ -41,6 +41,10 @@ pub(crate) struct CoverageSelector {
     pub(crate) selectors: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub(crate) helper_references: Vec<SelectorHelperReference>,
+    #[serde(skip)]
+    pub(crate) line: usize,
+    #[serde(skip)]
+    pub(crate) literal_exact: bool,
 }
 
 #[derive(Serialize)]
@@ -69,15 +73,9 @@ pub(crate) struct SelectorRef {
     pub(crate) value: String,
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct CoverageReport {
-    pub(crate) summary: Summary,
-    pub(crate) routes: Vec<CoverageRoute>,
-    pub(crate) selectors: Vec<CoverageSelector>,
-    pub(crate) duplicate_selectors: Vec<DuplicateSelector>,
-    pub(crate) fetch_apis: Vec<CoverageFetch>,
-}
+mod coverage_report;
+use coverage_report::is_arc_empty;
+pub(crate) use coverage_report::CoverageReport;
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -145,13 +143,6 @@ pub(crate) enum Edge {
     },
 }
 
-fn is_arc_empty<T>(arc: &Arc<Vec<T>>) -> bool {
-    // Serde calls this predicate with `&Arc<Vec<T>>`, and `Arc` has no
-    // `is_empty`, so this helper preserves the same skip-behavior as `Vec::is_empty`
-    // for arc-backed paths.
-    arc.is_empty()
-}
-
 #[derive(Serialize)]
 pub(crate) struct EdgeReport {
     pub(crate) edges: Vec<Edge>,
@@ -168,6 +159,9 @@ pub(crate) struct RelatedReport {
 pub(crate) struct Analysis {
     pub(crate) coverage: CoverageReport,
     pub(crate) edges: EdgeReport,
+    /// Diagnostic-only records have root-relative paths and never enter coverage output.
+    #[serde(skip)]
+    pub(crate) unanalyzable_html_ids: Vec<selectors::AppSelector>,
 }
 
 pub(crate) struct CoverageInputs<'a> {
@@ -188,6 +182,10 @@ pub(crate) struct UniqueSelectorPolicy {
     pub(crate) html_ids: bool,
     pub(crate) aggregate: bool,
     pub(crate) configured_html_id_selector: bool,
+    /// Skip recovered Exact values when judging unique test IDs.
+    pub(crate) literal_test_ids_only: bool,
+    /// HTML-ID effort is independent of configured test-ID effort.
+    pub(crate) literal_html_ids_only: bool,
 }
 
 pub(crate) type FetchIndex =

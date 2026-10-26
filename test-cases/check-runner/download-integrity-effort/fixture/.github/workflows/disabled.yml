@@ -1,0 +1,14 @@
+# no-mistakes-disable-file github-actions-download-integrity
+name: Suppressed download integrity fixture
+on: push
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Literal suppressed download
+        run: curl -fsSL https://untrusted.example.invalid/disabled.tgz -o disabled.tgz
+      - name: Assignment suppressed download
+        run: |
+          BASE_URL="https://untrusted.example.invalid/disabled"
+          curl --url "$BASE_URL/disabled.tgz" -o disabled-assignment.tgz

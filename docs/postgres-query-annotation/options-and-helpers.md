@@ -21,6 +21,26 @@ SQL-file/native-SQL analysis where supported. See the
 | `trustedSqlTags` | Empty | Named imports of `name` from `module`, or a subpath of `module`, are parameterized SQL tags. A renamed local binding is trusted. A default import is not. A shadowed or rebound local fails closed. The same name from another module, or a sibling prefix such as `@example/dbx`, stays untrusted. |
 | `unanalyzableSql` | `report` | Report unverified leading SQL. `ignore` skips it; `advise` emits a non-failing residual advisory with reason, known prefix, and helper lines when available. |
 
+The `trustedSqlTags` row and helper tracing behavior below describe `effort: max`.
+At `effort: low`, this rule ignores `trustedSqlTags` and warns if it is
+configured; any tagged template qualifies when its first quasi starts with a
+literal named annotation, regardless of tag identity or import form. See the
+[low-effort contract](../rules/postgres-require-query-annotation.md#effort).
+
+A receiver type imported from the configured executor module but omitted from
+`executorTypeNames` is an undeclared executor type. The shared `unanalyzable`
+policy controls its finding or advisory; `ignore` suppresses both. Add the named
+type to `executorTypeNames` and explicitly annotate inferred receivers to analyze
+its calls. This diagnostic does not infer
+an executor or run its SQL argument.
+
+Configured types alone do not prove every receiver shape. Calls through class
+fields or constructor parameter properties (`this.db.query`), typed object
+parameters (`ctx.db.query`), and typed array elements (`clients[0].query`) remain
+unanalyzable when executor ownership is unresolved. They follow the selected
+`unanalyzable` policy, including at low effort. Use a supported explicitly typed
+parameter to make the receiver eligible for SQL analysis.
+
 ### SQL helpers and callbacks
 
 Straight-line same-file and imported helpers can return SQL assembled from strings,

@@ -1,0 +1,12 @@
+name: head-mapping
+on: {pull_request_target: {types: [opened]}}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: false

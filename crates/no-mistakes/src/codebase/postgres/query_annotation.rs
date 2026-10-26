@@ -4,6 +4,7 @@ mod coverage;
 mod evaluate;
 mod exports;
 mod expressions;
+pub(crate) mod heads;
 mod mapped_arguments;
 pub(crate) mod modules;
 mod progress;
@@ -125,3 +126,9 @@ pub(crate) fn collect(
 }
 
 mod module_ids;
+
+impl QueryAnnotationFileFacts {
+    pub(crate) fn trusts_loop_tag(&self, name: &str) -> bool {
+        self.trusted_tags.contains(name)
+    }
+}

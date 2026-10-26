@@ -20,10 +20,20 @@ pub(super) enum Value {
 pub(super) type Environment = BTreeMap<String, Value>;
 pub(super) struct Evaluator {
     remaining: usize,
+    literals_only: bool,
 }
 impl Evaluator {
     pub(super) fn new() -> Self {
-        Self { remaining: 4096 }
+        Self {
+            remaining: 4096,
+            literals_only: false,
+        }
+    }
+    pub(super) fn literals_only() -> Self {
+        Self {
+            remaining: 4096,
+            literals_only: true,
+        }
     }
     pub(super) fn expression(
         &mut self,
@@ -38,15 +48,19 @@ impl Evaluator {
         let depth = depth + 1;
         match unwrap_ts_wrappers(expr) {
             Expression::StringLiteral(literal) => Value::String(literal.value.to_string()),
-            Expression::Identifier(ident) => env
+            Expression::Identifier(ident) if !self.literals_only => env
                 .get(ident.name.as_str())
                 .cloned()
                 .unwrap_or(Value::Unknown),
-            Expression::TemplateLiteral(template) => self.template(template, env, depth),
+            Expression::TemplateLiteral(template)
+                if !self.literals_only || template.expressions.is_empty() =>
+            {
+                self.template(template, env, depth)
+            }
             Expression::ArrayExpression(array) => self.array(array, env, depth),
             Expression::ObjectExpression(object) => self.object(object, env, depth),
-            Expression::CallExpression(call) => self.map(call, env, depth),
-            Expression::StaticMemberExpression(member) => {
+            Expression::CallExpression(call) if !self.literals_only => self.map(call, env, depth),
+            Expression::StaticMemberExpression(member) if !self.literals_only => {
                 match self.expression(&member.object, env, depth) {
                     Value::Object(values, true) => values
                         .get(member.property.name.as_str())
@@ -55,7 +69,7 @@ impl Evaluator {
                     _ => Value::Unknown,
                 }
             }
-            Expression::ComputedMemberExpression(member) => {
+            Expression::ComputedMemberExpression(member) if !self.literals_only => {
                 let Value::Array(values) = self.expression(&member.object, env, depth) else {
                     return Value::Unknown;
                 };

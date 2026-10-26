@@ -2,34 +2,45 @@ use super::PostgresParseError;
 use sqlparser::ast::{CreateView, Spanned, Statement, Visit, VisitMut, Visitor, VisitorMut};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Location, Token, TokenWithSpan, Whitespace};
-use std::{collections::BTreeSet, ops::ControlFlow};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    ops::ControlFlow,
+};
 
 mod query;
 
 /// Located recursive declarations survive compatibility normalization so source
 /// projections can validate columns and model the implicit recursive CTE scope.
 #[derive(Default)]
-pub(crate) struct RecursiveViews(BTreeSet<Location>);
+pub(crate) struct RecursiveViews {
+    names: BTreeSet<Location>,
+}
 
 impl RecursiveViews {
     pub(crate) fn contains(&self, view: &CreateView) -> bool {
-        self.0.contains(&view.name.span().start)
+        self.names.contains(&view.name.span().start)
     }
 
     pub(crate) fn relocate(&self, from: Location, to: Location, relocated: &mut Self) {
-        if self.0.contains(&from) {
-            relocated.0.insert(to);
+        if self.names.contains(&from) {
+            relocated.names.insert(to);
         }
     }
 
-    pub(super) fn restore_valid(&self, statements: &mut Vec<super::LocatedStatement>) {
-        statements.retain_mut(|located| {
-            if self.validate(&located.statement).is_err() {
-                return false;
+    pub(super) fn restore_statements(
+        &self,
+        statements: &mut [super::LocatedStatement],
+        original_heads: &BTreeMap<Location, String>,
+    ) {
+        for located in statements {
+            if let Some(failure) = &mut located.recovery_failure {
+                let location = Location::new(failure.line as u64, failure.column as u64);
+                if let Some(head) = original_heads.get(&location) {
+                    failure.head.clone_from(head);
+                }
             }
             self.restore(&mut located.statement);
-            true
-        });
+        }
     }
 
     /// Preserve the implicit binding for every downstream AST consumer.
@@ -46,13 +57,13 @@ impl RecursiveViews {
                 ControlFlow::Continue(())
             }
         }
-        if !self.0.is_empty() {
+        if !self.names.is_empty() {
             let _ = statement.visit(&mut Restore(self));
         }
     }
 
     pub(crate) fn validate(&self, statement: &Statement) -> Result<(), PostgresParseError> {
-        if self.0.is_empty() {
+        if self.names.is_empty() {
             return Ok(());
         }
         struct Validate<'a>(&'a RecursiveViews);
@@ -78,19 +89,30 @@ impl RecursiveViews {
 
 /// sqlparser 0.63 has no recursive-view modifier. Normalize only declaration
 /// headers, retaining their name locations and every original source span.
-pub(super) fn prepare(tokens: &mut [TokenWithSpan]) -> RecursiveViews {
+pub(super) fn prepare(
+    tokens: &mut [TokenWithSpan],
+    mut original_heads: Option<&mut BTreeMap<Location, String>>,
+) -> RecursiveViews {
     let mut result = RecursiveViews::default();
     let mut preceding = [Keyword::NoKeyword; 5];
     let mut previous_index = 0;
     let mut name_next = false;
+    let mut chunk_start = 0;
+    let mut create_start = 0;
     for index in 0..tokens.len() {
+        if tokens[index].token == Token::SemiColon {
+            chunk_start = index + 1;
+        }
         let keyword = match &tokens[index].token {
             Token::Whitespace(_) => continue,
             Token::Word(word) if word.quote_style.is_none() => word.keyword,
             _ => Keyword::NoKeyword,
         };
+        if keyword == Keyword::CREATE {
+            create_start = index;
+        }
         if name_next {
-            result.0.insert(tokens[index].span.start);
+            result.names.insert(tokens[index].span.start);
             name_next = false;
         }
         if keyword == Keyword::VIEW
@@ -120,6 +142,15 @@ pub(super) fn prepare(tokens: &mut [TokenWithSpan]) -> RecursiveViews {
                     ]
             )
         {
+            // Recovery can anchor either the procedural chunk or its guarded CREATE action.
+            // Save both original heads before RECURSIVE disappears from the parser tokens.
+            if let Some(heads) = original_heads.as_deref_mut() {
+                for start in [chunk_start, create_start] {
+                    if let Some((location, head)) = super::statement_head::head(&tokens[start..]) {
+                        heads.entry(location).or_insert(head);
+                    }
+                }
+            }
             tokens[previous_index].token = Token::Whitespace(Whitespace::Space);
             name_next = true;
         }

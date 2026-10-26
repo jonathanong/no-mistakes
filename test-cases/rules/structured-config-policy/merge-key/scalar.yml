@@ -1,0 +1,5 @@
+# A merge value that is not a mapping does not invent `legacy`.
+label: &label plain
+runtime:
+  <<: *label
+  version: 1

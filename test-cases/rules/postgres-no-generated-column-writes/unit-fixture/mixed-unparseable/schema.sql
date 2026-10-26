@@ -1,5 +1,5 @@
--- Keep DO $$ plus VIRTUAL generated columns in one file. The rule must skip
--- the unparseable DO block and still flag DML writes to created_at.
+-- Enum DDL in DO and VIRTUAL generated columns must both parse in one file.
+-- Still flag DML writes to created_at.
 DO $$ BEGIN
   CREATE TYPE item_kinds AS ENUM ('note');
 EXCEPTION WHEN duplicate_object THEN NULL;

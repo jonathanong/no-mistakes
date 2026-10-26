@@ -1,0 +1,22 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: web
+  plain:
+    type: nextjs
+    root: plain
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    options:
+      include: ["*.tsx"]
+      # Transitive coverage is tested separately; this comparison counts missing components.
+      exclude: [Child.tsx, "*.stories.tsx"]
+      stories: ["*.stories.tsx"]
+  - rule: require-storybook-stories
+    projects: [plain]
+    options:
+      include: ["*.tsx"]
+effort: low
+unanalyzable: ignore

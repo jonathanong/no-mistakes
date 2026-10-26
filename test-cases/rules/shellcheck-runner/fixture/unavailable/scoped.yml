@@ -1,0 +1,8 @@
+unanalyzable: report
+rules:
+  - rule: shellcheck-runner
+    scope: repository
+    include: [scripts/check.sh]
+    options:
+      shellFiles: []
+      shebangDirs: []

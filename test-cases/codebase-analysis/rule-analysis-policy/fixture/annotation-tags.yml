@@ -1,0 +1,25 @@
+rules:
+  - rule: postgres-require-query-annotation
+    name: tagged-low
+    options:
+      effort: low
+      trustedSqlTags: [{ module: sql-template-strings, name: default }]
+  - rule: postgres-require-query-annotation
+    name: empty-low
+    options:
+      effort: low
+      trustedSqlTags: []
+  - rule: postgres-require-query-annotation
+    options:
+      effort: max
+      trustedSqlTags: [{ module: sql-template-strings, name: default }]
+  - rule: postgres-require-query-annotation
+    options: { effort: low }
+  - rule: postgres-require-query-annotation
+    enabled: false
+    options:
+      effort: low
+      trustedSqlTags: []
+  - rule: postgres-no-offset
+    options:
+      trustedSqlTags: [{ module: sql-template-strings, name: default }]

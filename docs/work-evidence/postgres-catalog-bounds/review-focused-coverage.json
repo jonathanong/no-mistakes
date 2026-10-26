@@ -1,0 +1,54 @@
+[
+  {
+    "file": "src/codebase/postgres/catalog/view_relation.rs",
+    "lines": {
+      "count": 63,
+      "covered": 63,
+      "percent": 100.0
+    },
+    "functions": {
+      "count": 6,
+      "covered": 6,
+      "percent": 100.0
+    }
+  },
+  {
+    "file": "src/codebase/postgres/statements/bounds/pins/any_source.rs",
+    "lines": {
+      "count": 39,
+      "covered": 39,
+      "percent": 100.0
+    },
+    "functions": {
+      "count": 3,
+      "covered": 3,
+      "percent": 100.0
+    }
+  },
+  {
+    "file": "src/codebase/rules/postgres_bounded_statements/evaluate/ownership.rs",
+    "lines": {
+      "count": 33,
+      "covered": 32,
+      "percent": 96.96969696969698
+    },
+    "functions": {
+      "count": 4,
+      "covered": 4,
+      "percent": 100.0
+    }
+  },
+  {
+    "file": "src/codebase/rules/postgres_bounded_statements/view_bounds.rs",
+    "lines": {
+      "count": 25,
+      "covered": 25,
+      "percent": 100.0
+    },
+    "functions": {
+      "count": 2,
+      "covered": 2,
+      "percent": 100.0
+    }
+  }
+]

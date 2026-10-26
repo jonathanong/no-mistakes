@@ -27,7 +27,8 @@ impl VariantParseModes {
         let existing_base = variant.plan.production_import_paths.contains(&normalized)
             && !crate::codebase::dependencies::extract::is_indexable(path);
         let standard = !existing_base
-            && (!legacy_symbols || super::requires_parse(&standard_plan, path, variant.playwright));
+            && (!legacy_symbols
+                || super::requires_parse(variant.root, &standard_plan, path, variant.playwright));
         Self {
             standard,
             legacy_symbols,

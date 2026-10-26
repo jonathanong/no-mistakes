@@ -153,15 +153,10 @@ fn callback_array_parameter_reads_the_element() {
     unknown_replica_keeps_primary("callback-array-slot");
 }
 
-fn guarded_array_keeps_both_origins(file: &str, newly_recovered: bool) {
+fn guarded_array_keeps_both_origins(file: &str) {
     let (built, root) = graph();
-    if newly_recovered {
-        assert_possible_export(&built, &root, file, "replica.get");
-        assert_possible_export(&built, &root, file, "untouched.get");
-    } else {
-        assert_unknown(&built, &root, file, "replica.get");
-        assert_unknown(&built, &root, file, "untouched.get");
-    }
+    assert_possible_export(&built, &root, file, "replica.get");
+    assert_possible_export(&built, &root, file, "untouched.get");
     for callee in ["primary.get", "replica.info", "unrelated.get"] {
         assert_export(&built, &root, file, callee);
     }
@@ -169,22 +164,32 @@ fn guarded_array_keeps_both_origins(file: &str, newly_recovered: bool) {
 
 #[test]
 fn conditional_array_reassignment_keeps_the_earlier_and_later_origins() {
-    guarded_array_keeps_both_origins("array-reassign-conditional", true);
+    guarded_array_keeps_both_origins("array-reassign-conditional");
 }
 
 #[test]
 fn loop_array_reassignment_keeps_the_earlier_and_later_origins() {
-    guarded_array_keeps_both_origins("array-reassign-loop", true);
+    guarded_array_keeps_both_origins("array-reassign-loop");
 }
 
 #[test]
 fn conditional_array_push_keeps_the_initial_and_appended_origins() {
-    guarded_array_keeps_both_origins("array-push-conditional", false);
+    optional_push_keeps_the_original_method("array-push-conditional");
 }
 
 #[test]
 fn loop_array_push_keeps_the_initial_and_appended_origins() {
-    guarded_array_keeps_both_origins("array-push-loop", false);
+    optional_push_keeps_the_original_method("array-push-loop");
+}
+
+fn optional_push_keeps_the_original_method(file: &str) {
+    let (built, root) = graph();
+    // The saved default makes the no-push path reach the original replica call.
+    assert_possible_export(&built, &root, file, "replica.get");
+    assert_unknown(&built, &root, file, "untouched.get");
+    for callee in ["primary.get", "replica.info", "unrelated.get"] {
+        assert_export(&built, &root, file, callee);
+    }
 }
 
 #[test]
@@ -287,7 +292,7 @@ fn unconditional_array_reset_discards_earlier_guarded_origins() {
 
 #[test]
 fn guarded_array_lengths_preserve_origins_of_shifted_arguments() {
-    guarded_array_keeps_both_origins("array-reassign-conditional-shift", true);
+    guarded_array_keeps_both_origins("array-reassign-conditional-shift");
 }
 
 #[test]
@@ -379,7 +384,7 @@ fn guarded_escape_keeps_existing_authored_choice_metadata() {
 
 #[test]
 fn guarded_multiple_spreads_keep_const_tail_origins_and_positions() {
-    guarded_array_keeps_both_origins("array-guarded-multiple-spreads", true);
+    guarded_array_keeps_both_origins("array-guarded-multiple-spreads");
 }
 
 #[test]
@@ -462,12 +467,12 @@ fn guarded_inline_factory_keeps_the_returned_executor_candidate() {
 
 #[test]
 fn earlier_entries_of_later_spreads_follow_prior_open_shifts() {
-    guarded_array_keeps_both_origins("array-guarded-open-earlier-entry", true);
+    guarded_array_keeps_both_origins("array-guarded-open-earlier-entry");
 }
 
 #[test]
 fn possible_foreign_forward_replay_does_not_become_definite() {
-    guarded_array_keeps_both_origins("array-guarded-foreign-forward", true);
+    guarded_array_keeps_both_origins("array-guarded-foreign-forward");
 }
 
 #[test]

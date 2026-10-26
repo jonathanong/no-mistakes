@@ -37,21 +37,118 @@ independent apps are allowed when each rule application is app-scoped.
 
 ## Options and defaults
 
-There are no rule-local options. The configured selector attributes and roots
-under `tests.playwright` determine which values are considered.
+There are no uniqueness-specific options. The configured selector attributes
+and roots under `tests.playwright` determine which values are considered.
+Shared `effort` and `unanalyzable` options apply as described below.
+
+## Analysis
+
+Playwright `testMatch` and `testIgnore` support static string/RegExp matchers.
+Unsupported matcher values produce config-file and property-line warnings while
+other checks continue; see [file matchers](../configuration/tests.md#playwright-file-matchers).
+Matcher uncertainty does not change which selector shapes this rule judges.
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: recovers identifier, helper, ternary, map, and imported bindings into exact test IDs. **Low**: accepts only string-literal attributes and props with literal defaults and routes other shapes to `unanalyzable`. No partner rule is required; if any application is not `low`, the invocation stays at `max`.
+
+`effort: max` is the default. It recovers identifier, helper, ternary, object
+map, and imported bindings into exact test IDs before judging uniqueness.
+
+At effective `effort: low`, uniqueness accepts only:
+
+- a string literal attribute, including JSX `data-testid={"save"}`
+- a prop whose default is a string literal, matching `playwright-literals`
+
+```tsx
+<button data-testid="save-profile" />
+<button data-testid={"cancel-profile"} />
+function SaveButton({ testId = "save-button" }) {
+  return <button data-testid={testId} />;
+}
+```
+
+Every other shape is unanalyzable: an identifier without a literal default, a
+ternary or logical leaf, a template, a helper call, or a cross-file binding.
+The diagnostic names the rewrite:
+
+```text
+web/app/page.tsx:12: selector [data-testid="{id}"] is unanalyzable at effort low; use a literal test id such as data-pw="save-button", or a prop with a literal default
+```
+
+The shared `unanalyzable` policy controls that diagnostic: `report` fails,
+`advise` emits a non-failing advisory, and `ignore` skips it. Rejected shapes
+are never uniqueness evidence under any of those policies.
+
+HTML IDs requested only with `tests.playwright.selectors.htmlIds: true` for
+coverage do not produce this rule's low-effort uncertainty diagnostics. Use
+`playwright-unique-html-ids` to check them. If `id` is explicitly configured in
+`selectors.testIds` or as a `componentTestIds` mapping value, it remains a test-ID
+hook and follows this rule's `unanalyzable` policy. Enabling the HTML-ID rule
+routes HTML-ID uncertainty to that rule without duplicate test-ID diagnostics.
+
+The lower-level Rust `playwright::rules::check` adapter returns findings only.
+Use aggregate `check` or the async Node check API to receive non-failing
+`advise` diagnostics as well.
+
+These syntax proofs do not require a companion rule. The rule checks each
+selector once, so if any enabled application of this rule is not `low`, the
+invocation stays at `max` and does not rewrite the other application's
+findings. Identifier recovery is skipped only when every Playwright selector
+consumer in the invocation is effectively `low`; a max `playwright-coverage`
+application still recovers values, and this rule then treats recovered exact
+IDs as unanalyzable rather than uniqueness hits.
+
+Suppress a low-effort shape on its own line:
+
+```tsx
+// no-mistakes-disable-next-line playwright-unique-test-ids
+<button data-testid={id} />
+```
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (at low effort, an identifier without a literal default, a ternary, template, helper call, or cross-file binding) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `web/app/page.tsx:12: selector [data-testid="{id}"] is unanalyzable at effort low`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
 
 ## Valid example
 
 ```tsx
-<button data-pw="save-profile">Save</button>
-<button data-pw="cancel-profile">Cancel</button>
+// next.config.ts
+export default {};
+
+// app/page.tsx
+export default function Page() {
+  return (
+    <>
+      <button data-pw="save-profile">Save</button>
+      <button data-pw="cancel-profile">Cancel</button>
+    </>
+  );
+}
 ```
 
 ## Counterexample
 
 ```tsx
-<SaveButton data-pw="save" />
-<DeleteButton data-pw="save" />
+// next.config.ts
+export default {};
+
+// app/page.tsx
+export default function Page() {
+  return (
+    <>
+      <SaveButton data-pw="save" />
+      <DeleteButton data-pw="save" />
+    </>
+  );
+}
 ```
 
 ## Fix

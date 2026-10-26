@@ -1,14 +1,33 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
+const { literalString } = require("./module-mock-helpers");
 
 const SKIP_KEYS = new Set(["comments", "loc", "parent", "range", "tokens"]);
 
+function unwrap(node) {
+  while (node?.type === "ChainExpression") node = node.expression;
+  if (node?.type === "SequenceExpression" && node.expressions?.length) {
+    return unwrap(node.expressions.at(-1));
+  }
+  return node;
+}
+
+function isFunctionCallee(node) {
+  const current = unwrap(node);
+  if (["ArrowFunctionExpression", "FunctionExpression"].includes(current?.type)) return true;
+  if (current?.type !== "MemberExpression") return false;
+  if (current.computed && current.property?.type === "Identifier") return false;
+  const name =
+    !current.computed && current.property?.type === "Identifier"
+      ? current.property.name
+      : literalString(current.property);
+  return (name === "call" || name === "apply") && isFunctionCallee(current.object);
+}
+
 function isIife(node) {
-  return (
-    node?.type === "CallExpression" &&
-    ["ArrowFunctionExpression", "FunctionExpression"].includes(node.callee?.type)
-  );
+  return node?.type === "CallExpression" && isFunctionCallee(node.callee);
 }
 
 function visit(node, callback, seen = new Set()) {
@@ -34,18 +53,28 @@ function visit(node, callback, seen = new Set()) {
   }
 }
 
-module.exports = rule(
-  {
-    type: "suggestion",
-    docs: { description: "disallow immediately invoked functions inside JSX", recommended: false },
-    schema: [],
-    messages: { iife: "Avoid IIFEs in JSX; extract the logic into a variable or component." },
-  },
-  (context) => ({
-    JSXExpressionContainer(node) {
-      visit(node.expression, (child) => {
-        if (isIife(child)) context.report({ node: child, messageId: "iife" });
-      });
+module.exports = Object.assign(
+  rule(
+    {
+      type: "suggestion",
+      docs: {
+        description: "disallow immediately invoked functions inside JSX",
+        recommended: false,
+      },
+      schema: [],
+      messages: { iife: "Avoid IIFEs in JSX; extract the logic into a variable or component." },
     },
-  }),
+    (context) => {
+      const suppressed = ruleSuppression(context, "react-no-iife-in-jsx");
+      return {
+        JSXExpressionContainer(node) {
+          visit(node.expression, (child) => {
+            if (isIife(child) && !suppressed(child))
+              context.report({ node: child, messageId: "iife" });
+          });
+        },
+      };
+    },
+  ),
+  { __test: { isFunctionCallee, isIife } },
 );

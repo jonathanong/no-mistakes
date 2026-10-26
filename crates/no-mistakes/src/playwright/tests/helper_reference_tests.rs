@@ -39,11 +39,15 @@ fn helper_reference_hints_are_scoped_to_test_id_attributes() {
             file: PathBuf::from("/repo/web/app/page.tsx"),
             attribute: "data-testid".to_string(),
             value: AppSelectorValue::Exact("save".to_string()),
+            line: 1,
+            recovered: false,
         },
         selectors::AppSelector {
             file: PathBuf::from("/repo/web/app/page.tsx"),
             attribute: "id".to_string(),
             value: AppSelectorValue::Exact("save".to_string()),
+            line: 1,
+            recovered: false,
         },
     ];
     let settings = default_settings(vec!["data-testid".to_string(), "id".to_string()]);

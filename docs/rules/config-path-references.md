@@ -28,12 +28,6 @@ not scanned.
 `config-file`, `allowGlobs` defaults to `true`, and `presets` selects the
 documented config extractors. Empty selectors collect no explicit references.
 
-## Valid example
-
-`paths.requiredFiles: ["existing.json"]` passes when `existing.json` exists
-relative to the selected base directory; a preset passes when every required
-extracted path exists.
-
 ```yaml
 rules:
   - rule: config-path-references
@@ -43,15 +37,22 @@ rules:
       keys: [paths.requiredFiles, paths.testGlobs]
       baseDir: config-file
       allowGlobs: true
-      presets:
-        - oxlintrc
-        - knip
-        - dependabot
-        - sgconfig
-        - syncpack
-        - coverage-rules
-        - pnpm-workspace-filters
-        - no-mistakes
+```
+
+## Valid example
+
+`paths.requiredFiles: ["existing.json"]` passes when `existing.json` exists
+relative to the selected base directory; a preset passes when every required
+extracted path exists.
+
+```yaml
+# config/app.yml
+paths:
+  requiredFiles:
+    - existing.json
+
+# config/existing.json
+{}
 ```
 
 | Preset                   | Files                                                                       | Required paths                                                                        |
@@ -112,9 +113,25 @@ values are ignored.
 
 ## Counterexample
 
-```json
-{ "name": "app", "scripts": { "test": "vitest --config missing.config.ts" } }
+`config/app.yml` contains `paths.requiredFiles: ["missing.json"]`, and
+`config/missing.json` does not exist.
+
+```yaml
+# config/app.yml
+paths:
+  requiredFiles:
+    - missing.json
 ```
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it checks that configured path references exist in the file inventory, so `options.unanalyzable` has no effect on it.
 
 ## Suppression
 

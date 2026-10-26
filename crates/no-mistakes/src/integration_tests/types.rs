@@ -146,6 +146,8 @@ pub(crate) struct ConfigProject {
     pub(crate) scope: Option<String>,
     pub(crate) include: Vec<String>,
     pub(crate) exclude: Vec<String>,
+    /// Static runner matcher uncertainty retained for every consumer of this project.
+    pub(crate) matcher_warnings: Vec<String>,
     /// Vitest setup modules statically declared for this effective project.
     /// Other runners always leave this empty.
     pub(crate) vitest_setup: Vec<VitestSetupDependency>,

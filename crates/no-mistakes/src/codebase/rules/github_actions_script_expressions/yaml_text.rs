@@ -2,7 +2,10 @@ pub(super) fn is_github_script(uses: &str) -> bool {
     let uses = strip_unquoted_comment(uses).trim();
     let uses = unquote(uses);
     let action = uses.split('@').next().unwrap_or(uses).trim();
-    action.trim_end_matches('/') == "actions/github-script"
+    // GitHub treats owner/repo as case-insensitive. Nothing else is folded.
+    action
+        .trim_end_matches('/')
+        .eq_ignore_ascii_case("actions/github-script")
 }
 
 pub(super) fn normalize_uses(value: &str) -> String {

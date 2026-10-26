@@ -14,9 +14,16 @@ reports a path that reaches a forbidden file or module.
 
 ## Options
 
-`roots` selects boundary origins, `forbiddenModules` and `forbiddenFiles` name
-blocked targets, and `relationships` selects graph edge kinds. Omitted
-`relationships` follows all standard edge families; other lists default empty.
+`roots` selects file or directory boundary origins. `forbiddenModules` and
+`forbiddenFiles` name blocked targets, and `relationships` selects graph edge
+kinds. Omitted `relationships` follows all standard edge families; other lists
+default empty.
+
+Directory roots select source files recursively from the request's discovered
+graph, within the rule's project, include, and exclude filters. File roots remain
+valid, missing roots are skipped, and overlapping roots select each source once.
+Each finding names its source file and includes a query for that file.
+Reachability may follow dependencies outside the origin directory.
 
 ## Valid example
 
@@ -33,8 +40,18 @@ export const page = true;
 
 ```ts
 // web/app/page.ts
-import 'server-only';
+import 'fs';
 ```
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it judges dependency edges in the canonical graph, where unresolved specifiers are already explicit graph facts, so `options.unanalyzable` has no effect on it.
 
 ## Related rules
 

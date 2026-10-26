@@ -4,6 +4,74 @@ const test = globalThis.test || require("node:test").test;
 
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
+const identifierCases = [
+  ["fail-array-destructured-row", [[5, "id"]]],
+  ["fail-array-destructured-row-elision", [[4, "schema"]]],
+  ["fail-comma-env", [[3, "process.env.SCHEMA"]]],
+  ["pass-array-row-overwritten-member", []],
+  ["fail-array-row-untouched-member", [[5, "first"]]],
+  ["fail-array-row-earlier-read", [[4, "first"]]],
+  ["fail-array-row-copied-member", [[6, "schema"]]],
+  ["fail-array-row-env-write", [[5, "first"]]],
+  ["fail-array-row-conditional-write", [[6, "first"]]],
+  ["fail-array-row-alias-write-barrier", [[7, "first"]]],
+  ["fail-array-row-call-barrier", [[7, "first"]]],
+  ["fail-array-row-object-write-barrier", [[6, "first"]]],
+  ["fail-array-row-interpolation-effect-barrier", [[6, "first"]]],
+  ["fail-array-row-shadow-scope", [[9, "first"]]],
+  [
+    "fail-array-row-unmatched-overwrites",
+    [
+      [6, "first"],
+      [8, "first"],
+      [10, "first"],
+      [14, "first"],
+    ],
+  ],
+  ["pass-comma-discarded-env", []],
+  ["pass-array-destructured-http-row", []],
+  ["pass-array-destructured-mutable-row", []],
+  ["pass-array-destructured-mutable-result", []],
+  ["pass-empty-and-computed-patterns", []],
+];
+
+for (const [scenario, expected] of identifierCases)
+  test(
+    `compiled identifier checks retain array rows and comma result provenance: ${scenario}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const root = join(
+        __dirname,
+        "../../../test-cases/rules/postgres-no-unbounded-sql-identifier/fixture",
+        scenario,
+      );
+      const options = { root, config: join(root, ".no-mistakes.yml") };
+      const pending = cjs.check(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.check(options), report, scenario);
+      const found = report.rules.filter(
+        (finding) => finding.rule === "postgres-no-unbounded-sql-identifier",
+      );
+      assert.deepEqual(
+        found.map((finding) => [finding.line, finding.target]),
+        expected,
+        scenario,
+      );
+      for (const finding of found) {
+        assert.equal(finding.file, "src/query.ts", scenario);
+        assert.match(finding.message, /switch whose default throws/, scenario);
+      }
+      const batch = await cjs.analyzeProject({
+        ...options,
+        reports: [{ type: "check", id: "check" }],
+      });
+      assert.deepEqual(batch.reports[0].result, report, scenario);
+    },
+  );
+
 test(
   "compiled SQL verdict checks preserve CJS, ESM, suppression, and batched isolation",
   { skip: !compiled },
@@ -69,17 +137,17 @@ test(
   },
 );
 
-test(
-  "compiled CJS and ESM report a conflict inside an executed CTE",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const root = join(
-      __dirname,
-      "../../../test-cases/rules/postgres-sql-verdicts/fixture/consumer-cte-conflict",
-    );
-    for (const config of ["fail.yml", ".no-mistakes.yml", "advise.yml"]) {
+for (const config of ["fail.yml", ".no-mistakes.yml", "advise.yml"])
+  test(
+    `compiled CJS and ESM report a conflict inside an executed CTE: ${config}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const root = join(
+        __dirname,
+        "../../../test-cases/rules/postgres-sql-verdicts/fixture/consumer-cte-conflict",
+      );
       const options = { root, config: join(root, config) };
       const plain = await cjs.check(options);
       const detailed = await cjs.check({ ...options, includeSqlVerdicts: true });
@@ -93,34 +161,34 @@ test(
       assert.equal(detailed.sqlVerdicts.length, 1);
       assert.equal(detailed.sqlVerdicts[0].status, "violation");
       assert.equal(detailed.sqlVerdicts[0].evidence, "exact");
-    }
-  },
-);
+    },
+  );
 
-test(
-  "compiled advice aggregates obligations and matches CLI with either ledger flag",
-  { skip: !compiled },
-  async () => {
-    const { execFileSync } = require("node:child_process");
-    const { mkdtempSync, rmSync } = require("node:fs");
-    const { tmpdir } = require("node:os");
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const root = join(
-      __dirname,
-      "../../../test-cases/rules/postgres-sql-verdicts/fixture/advisory-aggregation",
-    );
-    const cli =
-      process.env.NO_MISTAKES_TEST_CLI_PATH ||
-      join(
-        dirname(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH),
-        process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes",
-      );
-    const runtime = mkdtempSync(join(tmpdir(), "no-mistakes-sql-advice-"));
-    try {
-      for (const configName of [".no-mistakes.yml", "fail.yml"]) {
-        const config = join(root, configName);
-        for (const includeSqlVerdicts of [false, true]) {
+for (const configName of [".no-mistakes.yml", "fail.yml"])
+  for (const includeSqlVerdicts of [false, true])
+    test(
+      `compiled advice matches CLI: ${configName}, ledger ${includeSqlVerdicts}`,
+      { skip: !compiled },
+      async () => {
+        const { execFileSync } = require("node:child_process");
+        const { mkdtempSync, rmSync } = require("node:fs");
+        const { tmpdir } = require("node:os");
+        const cjs = require("../index.js");
+        const esm = await import("../index.mjs");
+        const root = join(
+          __dirname,
+          "../../../test-cases/rules/postgres-sql-verdicts/fixture/advisory-aggregation",
+        );
+        const cli =
+          process.env.NO_MISTAKES_TEST_CLI_PATH ||
+          join(
+            dirname(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH),
+            process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes",
+          );
+        const runtime = mkdtempSync(join(tmpdir(), "no-mistakes-sql-advice-"));
+
+        try {
+          const config = join(root, configName);
           const pending = cjs.check({ root, config, includeSqlVerdicts });
           assert.ok(pending instanceof Promise);
           const report = await pending;
@@ -153,13 +221,11 @@ test(
             report.rules.some(({ line, target }) => line === 9 && target === "CREATE TABLE"),
           );
           if (includeSqlVerdicts) assert.equal(report.sqlVerdicts.length, 84);
+        } finally {
+          rmSync(runtime, { recursive: true, force: true });
         }
-      }
-    } finally {
-      rmSync(runtime, { recursive: true, force: true });
-    }
-  },
-);
+      },
+    );
 
 test(
   "borrowed coincident applications preserve full async reports and independent sinks",

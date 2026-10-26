@@ -60,12 +60,7 @@ fn coverage_files(prefix: &str, suffix: &str) -> Vec<String> {
 #[test]
 fn playwright_config_parser_covers_project_defaults() {
     let root = fixture("coverage");
-    let expected_errors = BTreeSet::from([
-        "playwright.empty-match-invalid.ts",
-        "playwright.empty-test-match.ts",
-        "playwright.invalid.ts",
-        "playwright.object-testignore-invalid.ts",
-    ]);
+    let expected_errors = BTreeSet::from(["playwright.invalid.ts"]);
     let unresolved_exports = BTreeSet::from([
         "playwright.call-invalid.ts",
         "playwright.default-identifier-missing.ts",

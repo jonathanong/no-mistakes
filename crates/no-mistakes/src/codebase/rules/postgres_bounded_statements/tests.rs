@@ -1,12 +1,16 @@
 mod blocking_query_wrappers;
 mod caller_array_provenance;
 mod cardinality_basics;
+mod catalog_identity_edges;
+mod catalog_resolution;
 mod current_database;
+mod ddl_compat_lifecycle;
 mod ddl_search_path;
 mod fetch_expressions;
 mod fixed_catalog_functions;
 mod fixture_configs;
 mod json_function_outputs;
+mod key_propagation;
 mod legacy_single_column;
 mod nested_positive_order;
 mod nested_zero_order;
@@ -57,6 +61,8 @@ mod search_path;
 mod shadow_drop;
 mod suppression;
 mod trigger_scope;
+mod unique_index_joins;
+mod unique_index_shapes;
 mod view_dependencies;
 mod wrapped_suppression;
 mod xml_array;
@@ -169,33 +175,7 @@ fn offenders_carry_the_line_of_each_relation() {
     );
 }
 
-#[test]
-fn quoted_key_columns_match_quoted_sql_columns() {
-    let catalog = SchemaCatalog::from_json(
-        r#"{
-          "formatVersion": 2, "coverage": "complete",
-          "tables": { "mixed": {
-            "columns": { "Order Id": { "dataType": "uuid" } },
-            "indexes": { "mixed_pkey": {
-              "accessMethod": "btree",
-              "unique": true, "primary": true, "valid": true, "ready": true,
-              "keys": [ { "column": "Order Id", "expression": "\"Order Id\"" } ]
-            } }
-          } }
-        }"#,
-    )
-    .unwrap();
-    assert_eq!(catalog.unique_keys("mixed"), [vec!["Order Id".to_string()]]);
-    let judge = |sql: &str| {
-        extract_sql_statement_facts(sql)
-            .bounds
-            .iter()
-            .flat_map(|fact| offenders(fact, &catalog))
-            .count()
-    };
-    assert_eq!(judge("SELECT 1 FROM mixed WHERE \"Order Id\" = $1"), 0);
-    assert_eq!(judge("SELECT 1 FROM mixed WHERE order_id = $1"), 1);
-}
+mod catalog_keys;
 
 #[test]
 fn an_unknown_relation_is_not_judged_and_bounds_nothing() {
@@ -369,57 +349,6 @@ fn a_null_safe_comparison_bounds_only_a_not_null_key() {
 }
 
 #[test]
-fn a_recovered_interpolation_pins_like_a_placeholder() {
-    // A `${…}` interpolation reaches the rule as `sql_placeholder_N`.
-    for sql in [
-        "SELECT id FROM invoices WHERE id = sql_placeholder_1",
-        "SELECT id FROM invoices WHERE sql_placeholder_1 = id",
-        "SELECT id FROM invoices WHERE id = sql_placeholder_1::uuid",
-        "SELECT 1 FROM order_lines WHERE order_id = sql_placeholder_1 AND line_no = sql_placeholder_2",
-        "UPDATE exports SET s3_key = NULL WHERE id = sql_placeholder_1 AND expires_at IS NOT NULL",
-        "SELECT id FROM orders WHERE id IN (sql_placeholder_1, sql_placeholder_2)",
-        "SELECT id FROM orders WHERE id = ANY(sql_placeholder_1::uuid[])",
-        "SELECT o.id FROM orders o JOIN accounts a ON a.id = o.account_id WHERE o.id = sql_placeholder_1",
-    ] {
-        assert!(names(sql).is_empty(), "{sql}");
-    }
-    // Only a key is pinned: a bind compared with another column is not.
-    assert_eq!(
-        names("SELECT 1 FROM invoices WHERE paid_at = sql_placeholder_1"),
-        ["invoices"]
-    );
-}
-
-#[test]
-fn a_bound_propagates_across_joins_on_unique_keys() {
-    // One hop, whichever side of the join and of the equality the key is on.
-    for sql in [
-        "SELECT 1 FROM accounts a JOIN profiles p ON p.account_id = a.id WHERE a.id = $1",
-        "SELECT 1 FROM accounts a JOIN profiles p ON a.id = p.account_id WHERE a.id = $1",
-        "SELECT 1 FROM profiles p JOIN accounts a ON a.id = p.account_id WHERE a.id = $1",
-        "SELECT 1 FROM accounts a JOIN profiles p ON p.account_id = a.id WHERE a.id = sql_placeholder_1",
-    ] {
-        assert!(names(sql).is_empty(), "{sql}");
-    }
-    // Two hops, as explicit joins and as a comma list with the conditions in WHERE.
-    for sql in [
-        "SELECT 1 FROM orders o JOIN accounts a ON a.id = o.account_id JOIN profiles p ON p.account_id = a.id WHERE o.id = $1",
-        "SELECT 1 FROM orders o, accounts a, profiles p WHERE o.id = $1 AND a.id = o.account_id AND p.account_id = a.id",
-    ] {
-        assert!(names(sql).is_empty(), "{sql}");
-    }
-    // A hop through a column that is not a whole key ends the chain.
-    assert_eq!(
-        names("SELECT 1 FROM accounts a JOIN orders o ON o.account_id = a.id WHERE a.id = $1"),
-        ["orders"]
-    );
-    assert_eq!(
-        names("SELECT 1 FROM accounts a JOIN orders o ON o.account_id = a.id JOIN order_lines l ON l.order_id = o.id WHERE a.id = $1"),
-        ["orders", "order_lines"]
-    );
-}
-
-#[test]
 fn outer_joins_bound_only_the_side_they_cannot_null_extend() {
     // The right side of a LEFT JOIN hangs off the left row by its key, so it is bounded with it.
     assert!(names(
@@ -469,46 +398,7 @@ fn config(yaml: &str) -> NoMistakesConfig {
     }
 }
 
-#[test]
-fn the_standalone_entry_points_prepare_their_own_facts() {
-    let root = fixture_root();
-    let files = [root.join("sql/invalid.sql"), root.join("schema.json")];
-    let yaml =
-        "schemaCatalogPath: schema.json\nsqlInclude: ['sql/invalid.sql']\nexclude: ['src/**']";
-    let direct = check_with_files(&root, &config(yaml), &files).unwrap();
-    assert_eq!(direct.len(), 3, "{direct:#?}");
-    let sources = crate::codebase::rules::source_store_for_files(&files);
-    let shared = check_with_files_and_sources(&root, &config(yaml), &files, &sources).unwrap();
-    assert_eq!(direct, shared);
-}
-
-#[test]
-fn sql_that_cannot_be_analyzed_fails_closed_unless_ignored() {
-    let root = fixture_root();
-    let files = [
-        root.join("sql/broken.sql"),
-        root.join("src/dynamic.ts"),
-        root.join("schema.json"),
-    ];
-    let base = "schemaCatalogPath: schema.json\nimportSpecifier: '@example/db'\nexecutorNames: [query, read, write]\nsqlInclude: ['sql/broken.sql']\n";
-    let found: Vec<_> = check_with_files(&root, &config(base), &files)
-        .unwrap()
-        .into_iter()
-        .map(|finding| (finding.file, finding.message, finding.target.unwrap()))
-        .collect();
-    assert_eq!(found.len(), 2, "{found:#?}");
-    assert!(found.iter().all(|(_, _, target)| target == "unanalyzable"));
-    assert!(found[0]
-        .1
-        .contains("SQL could not be analyzed for bounded statements"));
-    assert!(found[1]
-        .1
-        .contains("not statically recoverable for bounded statements"));
-    let ignored = format!("{base}unanalyzableSql: ignore\n");
-    assert!(check_with_files(&root, &config(&ignored), &files)
-        .unwrap()
-        .is_empty());
-}
+mod entrypoints;
 
 mod set_operation_limits;
 
@@ -541,3 +431,5 @@ mod conditional_table_function_inputs;
 mod wrapped_scalar_reducer_arrays;
 
 mod table_source_association;
+
+mod issue_2665;

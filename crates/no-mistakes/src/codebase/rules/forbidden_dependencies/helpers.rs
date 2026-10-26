@@ -1,10 +1,62 @@
-use crate::codebase::dependencies::graph::NodeId;
+use super::{Options, RuleFinding, RULE_ID};
+use crate::codebase::dependencies::graph::{DepGraph, NodeId};
 use crate::codebase::dependencies::{EdgeKind, RelationshipArg};
+use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 use std::path::{Path, PathBuf};
 
-pub(super) fn resolve_root_path(root: &Path, raw: &str) -> Option<PathBuf> {
+pub(super) fn config_matchers(
+    anchor: &ConfigAnchor,
+    opts: &Options,
+) -> Result<(Option<GlobSet>, Option<GlobSet>), Vec<RuleFinding>> {
+    if opts.roots.is_empty()
+        || (opts.forbidden_modules.is_empty() && opts.forbidden_files.is_empty())
+    {
+        let key = if opts.roots.is_empty() {
+            "roots"
+        } else if opts.forbidden_modules.is_empty() {
+            "forbiddenModules"
+        } else {
+            "forbiddenFiles"
+        };
+        return Err(vec![config_emit(
+            anchor,
+            anchor.option_line(key),
+            format!(
+                "{RULE_ID}: each rule entry requires at least one root and \
+                 one forbiddenModules or forbiddenFiles entry"
+            ),
+        )]);
+    }
+    let modules = match build_globset(&opts.forbidden_modules) {
+        Ok(matcher) => matcher,
+        Err(error) => {
+            return Err(vec![config_emit(
+                anchor,
+                anchor.invalid_glob_line("forbiddenModules", &opts.forbidden_modules),
+                format!("{RULE_ID}: invalid glob pattern in forbiddenModules: {error}"),
+            )]);
+        }
+    };
+    let files = match build_globset(&opts.forbidden_files) {
+        Ok(matcher) => matcher,
+        Err(error) => {
+            return Err(vec![config_emit(
+                anchor,
+                anchor.invalid_glob_line("forbiddenFiles", &opts.forbidden_files),
+                format!("{RULE_ID}: invalid glob pattern in forbiddenFiles: {error}"),
+            )]);
+        }
+    };
+    Ok((modules, files))
+}
+
+fn config_emit(anchor: &ConfigAnchor, line: usize, message: String) -> RuleFinding {
+    anchor.emit(RULE_ID, line, message, None, None)
+}
+
+pub(super) fn resolve_root_paths(root: &Path, raw: &str, graph: &DepGraph) -> Vec<PathBuf> {
     let p = Path::new(raw);
     let path = if p.is_absolute() {
         p.to_path_buf()
@@ -12,7 +64,19 @@ pub(super) fn resolve_root_path(root: &Path, raw: &str) -> Option<PathBuf> {
         root.join(raw)
     };
     let normalized = crate::codebase::ts_resolver::normalize_path(&path);
-    normalized.is_file().then_some(normalized)
+    if normalized.is_file() {
+        return vec![normalized];
+    }
+    if !normalized.is_dir() {
+        return Vec::new();
+    }
+    // Reuse the canonical graph; never rediscover or parse directory contents here.
+    graph
+        .all_files()
+        .filter_map(NodeId::as_file)
+        .filter(|path| path.starts_with(&normalized))
+        .map(Path::to_path_buf)
+        .collect()
 }
 
 pub(super) fn build_globset(patterns: &[String]) -> Result<Option<GlobSet>> {

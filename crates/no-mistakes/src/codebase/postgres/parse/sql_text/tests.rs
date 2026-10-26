@@ -58,3 +58,22 @@ fn dollar_tags_use_unicode_identifier_characters() {
     let dollar = dash.find('$').unwrap();
     assert_eq!(super::dollar::skip(dash, dollar, &mut line), dash.len());
 }
+
+#[test]
+fn copy_payload_with_sql_punctuation_stays_out_of_statement_split() {
+    let path = crate::test_support::rule_fixture_root("postgres-ddl-unanalyzable")
+        .join("copy/migrations/001.sql");
+    let sql = std::fs::read_to_string(path).unwrap();
+    let statements: Vec<_> = located_statements(&sql)
+        .into_iter()
+        .map(|(line, _, text)| (line, text))
+        .collect();
+    assert_eq!(statements.len(), 3, "{statements:?}");
+    assert_eq!(statements[2].0, 8);
+    assert!(statements[2].1.starts_with("FROBULATE accounts"));
+
+    let normalized = normalize_copy_data(&sql);
+    assert_eq!(normalized.lines().count(), sql.lines().count());
+    assert!(!normalized.contains("unterminated"));
+    assert!(normalized.contains("FROBULATE accounts"));
+}

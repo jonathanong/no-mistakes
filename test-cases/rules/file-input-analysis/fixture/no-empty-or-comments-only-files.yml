@@ -1,0 +1,5 @@
+rules:
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+    include: [empty/bad.ts, empty/definite.ts, empty/suppressed.ts]
+    options: {}

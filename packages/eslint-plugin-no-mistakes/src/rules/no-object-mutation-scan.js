@@ -113,7 +113,7 @@ function visit(state, node, scope, role) {
       return unknown();
     case "ReturnStatement":
       if (node.argument) {
-        visit(state, node.argument, scope, "escape");
+        visit(state, node.argument, scope, scope.fnTag?.reduceSeed ? "read" : "escape");
       }
       return unknown();
     case "LabeledStatement":
@@ -139,7 +139,14 @@ function visit(state, node, scope, role) {
     case "VariableDeclaration":
       for (const declarator of node.declarations) {
         const init = declarator.init ? visit(state, declarator.init, scope, "read") : unknown();
-        bindPattern(state, declarator.id, init, scope, node.kind === "var" ? "var" : "local");
+        bindPattern(
+          state,
+          declarator.id,
+          init,
+          scope,
+          node.kind === "var" ? "var" : "local",
+          declarator.init,
+        );
       }
       return unknown();
     case "FunctionDeclaration":

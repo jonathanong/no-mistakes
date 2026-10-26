@@ -9,6 +9,16 @@ able to identify the version represented by each immutable SHA.
 
 It rejects mutable tag or branch refs, non-40-character refs, and SHA refs
 without a version-shaped trailing comment. Local and Docker actions are exempt.
+Flow mappings, quoted `uses` keys, values on the line after `uses:`, including
+a flow mapping that breaks after the key, and YAML aliases are checked the
+same way. An alias is judged as the action reference it resolves to. Each YAML
+document is walked, so a flow `uses` in a later document is still checked. A
+quoted flow scalar folded across lines is reported on the `uses` key line. A
+`uses` key nested under `with` or `env` is an action input, not an action
+reference, including when that flow mapping continues on the next line. Every
+`uses` on one physical line is checked. A `|` or `>` script is not an action
+reference; the following line of a block `uses` is. A `uses` field under
+`strategy.matrix`, including a flow `include` entry, is not an action reference.
 
 ## Options
 
@@ -80,6 +90,38 @@ rules:
       excludePaths:
         - .github/workflows/release.yml
 ```
+
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Upgrade note: in-scope files that cannot be read, or parsed where this rule
+requires parsing, now fail `check` under the default `unanalyzable: report`
+instead of silently passing. Fix or exclude those inputs, or set
+`options.unanalyzable: advise` or `ignore` to restore the previous successful
+exit status for uncertainty alone. Independent definite findings still fail
+under every policy.
+
+Selected files that cannot be read as UTF-8 produce an `unanalyzable`
+diagnostic instead of silently passing. Restore read access or repair the
+encoding so the rule can verify the file. The shared `options.unanalyzable`
+setting inherits the repository policy: `report` (the default) fails,
+`advise` emits non-failing advice, and `ignore` omits uncertainty. Definite
+violations remain failures under every policy, including when `effort: low`
+falls back to `max`.
+
+Configured scope, includes, excludes, and rule-specific exemptions still
+select the inputs. Suppressions apply to both channels, including directives
+retained in an invalid UTF-8 read error; source bytes are never reinterpreted
+as analyzable code. Rule-level custom messages apply to these diagnostics.
+
+YAML parse failures also use this policy. Definite pin violations recovered
+by the line scan remain findings when YAML cannot be parsed, including with
+`advise` or `ignore`.
 
 ## Suppression
 

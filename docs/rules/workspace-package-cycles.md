@@ -34,20 +34,53 @@ documented intentional cycles.
 
 ## Valid example
 
-```text
-@app/api -> @app/domain -> @app/types
+`@app/api` depends on `@app/domain`, which depends on `@app/types`. The
+workspace graph is acyclic.
+
+```json
+// package.json
+{ "name": "root", "private": true, "workspaces": ["packages/*"] }
+
+// packages/api/package.json
+{ "name": "@app/api", "dependencies": { "@app/domain": "workspace:*" } }
+
+// packages/domain/package.json
+{ "name": "@app/domain", "dependencies": { "@app/types": "workspace:*" } }
+
+// packages/types/package.json
+{ "name": "@app/types" }
 ```
 
 ## Counterexample
 
-```text
-@app/api -> @app/domain -> @app/api
+`@app/api` depends on `@app/domain`, while `@app/domain` depends on
+`@app/api`.
+
+```json
+// package.json
+{ "name": "root", "private": true, "workspaces": ["packages/*"] }
+
+// packages/api/package.json
+{ "name": "@app/api", "dependencies": { "@app/domain": "workspace:*" } }
+
+// packages/domain/package.json
+{ "name": "@app/domain", "dependencies": { "@app/api": "workspace:*" } }
 ```
 
 ## Fix
 
 Extract shared types or utilities, invert one dependency through an interface,
 or split the package boundary so the runtime graph becomes directional.
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it detects cycles in the workspace package graph built from parsed manifests, so `options.unanalyzable` has no effect on it.
 
 ## Suppression
 

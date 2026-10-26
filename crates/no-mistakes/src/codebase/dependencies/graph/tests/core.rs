@@ -15,6 +15,7 @@ mod extra;
 mod extra_runtime;
 mod files_config;
 mod module_cases;
+mod call_source_nodes;
 mod swift_edges;
 mod terraform_edges;
 

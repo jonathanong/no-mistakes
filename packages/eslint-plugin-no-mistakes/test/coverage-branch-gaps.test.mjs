@@ -736,7 +736,7 @@ describe("preserve-null, react-node, and helper remaining arms", () => {
       body: { type: "Literal", value: null },
     });
     isFetchCall(
-      { callee: { type: "Identifier", name: "fetch" } },
+      { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } },
       {
         sourceCode: {
           getScope: () => ({
@@ -1115,7 +1115,7 @@ describe("null and visitor remaining arms", () => {
       },
     });
     isFetchCall(
-      { callee: { type: "Identifier", name: "fetch" } },
+      { type: "CallExpression", callee: { type: "Identifier", name: "fetch" } },
       {
         sourceCode: {
           getScope: () => ({
@@ -1367,6 +1367,10 @@ describe("null and visitor remaining arms", () => {
     });
     require("../src/rules/nextjs-no-manual-script-tags.js").__test.attributeValue({
       value: { type: "JSXExpressionContainer", expression: { type: "Literal", value: "x" } },
+    });
+    require("../src/rules/playwright-assertion-timeout-cap.js").__test.propertyName({
+      name: "timeout",
+      type: "Identifier",
     });
     require("../src/rules/playwright-assertion-timeout-cap.js").__test.propertyName({
       type: "Unknown",

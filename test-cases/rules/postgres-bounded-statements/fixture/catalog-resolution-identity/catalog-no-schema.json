@@ -1,0 +1,13 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {},
+  "functions": {},
+  "enums": {},
+  "views": {
+    "active_accounts": {
+      "materialized": false,
+      "definition": "SELECT 1"
+    }
+  }
+}

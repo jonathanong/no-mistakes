@@ -1,0 +1,34 @@
+import { query } from "@example/db";
+Promise.all.call(Promise, items.map.call([1, 2], query));
+Promise.all.apply(Promise, [items.map.apply([1, 2], [query])]);
+Promise.all.call(Promise, items.map.call(chunkArray(items, 2), query));
+Promise.all.apply(Promise, args);
+Promise.all.apply(Promise, [...args]);
+Promise.all.apply(Promise, [, items.map(query)]);
+Promise.all.call(...args);
+Promise.all(items.map.apply(items, args));
+Promise.all(items.map.apply(items, [...args]));
+Promise.all(items.map.call(...args));
+Promise.all(items[key](query));
+Promise[key].call(Promise, items.map(query));
+Promise[`a${suffix}`].call(Promise, items.map(query));
+Promise.all(items[`m${suffix}`](query));
+Promise.all.call(Promise, value);
+other.all.call(other, items.map(query));
+Promise.all.call(Promise, items.filter(query));
+// Detached Promise.all has no constructor receiver.
+const all = Promise.all;
+all(items.map(query));
+let mutable = Promise.all;
+mutable.call(Promise, items.map(query));
+const assigned = Promise.all;
+assigned = unrelated;
+assigned.call(Promise, items.map(query));
+const cycleA = cycleB, cycleB = cycleA;
+cycleA.call(Promise, items.map(query));
+const { all: destructured } = Promise;
+destructured.call(Promise, items.map(query));
+function shadow(all) { all.call(Promise, items.map(query)); }
+(42).call(Promise, items.map(query));
+(0, Promise.all)(items.map(query));
+Promise.all((0, items.map)(query));

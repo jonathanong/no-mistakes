@@ -54,8 +54,6 @@ export async function ignored(
   other.validateUrl(url);
   ssrf.otherFn(url);
   deps.validateUrl(url);
-  const alias = checkUrl;
-  alias(url);
   ssrf[dynamic](url);
   rest.validateUrl(url);
   const { [dynamic]: skipped } = ssrf;

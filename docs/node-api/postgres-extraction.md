@@ -36,13 +36,13 @@ unproven alternatives do not establish an executor binding. This does not infer
 read-only SQL. It returns one record per executor call or
 recoverable conditional alternative, in source order. Sources without a configured
 executor call return an empty array, including when import-aware analysis evaluates
-nested SQL-building helpers. Records include `fileName`, the one-based executor
-`line`, `annotation`, `sqlText`, `kind`, and `complete`.
+nested SQL-building helpers. This remains the default return shape. Records
+include `fileName`, the one-based executor `line`, `annotation`, `sqlText`, `kind`, and `complete`.
 With `importSpecifier`, a `.query` member requires a receiver from a configured
 import, factory, type, or immutable alias; unrelated HTTP query parameters are
 excluded. Explicit `executorNames: [query]` without a module selects broad
 member matching.
-Recovered conditional alternatives have `kind: "composed"`. The named
+Untruncated conditional alternatives have `kind: "composed"`. The named
 `ExecutedPostgresTrustedSqlTag` type describes each `trustedSqlTags` entry.
 Template interpolations appear as `sql_placeholder_N` markers and remain
 `complete: false` because their runtime content is unknown. Dynamic SQL can
@@ -52,6 +52,11 @@ true only when the SQL structure is proven and the remaining holes are generated
 value binds. Parse that SQL and inspect nested statements before classifying a
 `WITH` query as read-only; the field does not certify read-only effects.
 `annotation` is `null` for unannotated or unrecoverable SQL.
+When append exploration is truncated, retained alternatives keep their SQL text
+with `kind: "dynamic"`, `complete: false`, `onlyValuePlaceholders: false`, and
+`incompleteReason: "sql-variants-truncated"`. This also applies to zero/one
+iteration loop previews, whose remaining iterations are unproven. Enabling
+`resolveImports` preserves those alternatives and their incomplete status.
 An invalid TS/JS source or unknown option rejects the whole request, so a
 recovered parse cannot silently report incomplete input as complete SQL.
 This source-only API reads no files. By default it leaves imported SQL helpers
@@ -66,6 +71,58 @@ SQL construction; consumers must inspect the statement before classifying a
 `WITH` body as a read. Supplied static dependencies execute before their importer;
 opaque top-level effects and unscheduled async helper work make affected shared
 builders unproven. Use `check()` for project-wide annotation enforcement.
+
+### Undeclared executor types
+
+Use `includeDiagnostics: true` when a coverage or explain report needs to detect
+member calls omitted because their imported receiver type is missing from
+`executorTypeNames`:
+
+```ts
+const report = await extractExecutedPostgresSql({
+  sources,
+  importSpecifier: "pg",
+  executorTypeNames: ["Pool"],
+  includeDiagnostics: true,
+});
+// Check this before treating the extracted statements as complete coverage.
+if (report.undeclaredExecutorTypes.length || report.unresolvedExecutorReceivers.length) {
+  // For example: { type: "PoolClient", module: "pg", count: 2 }.
+}
+```
+
+The result is an `ExecutedPostgresSqlReport` with `statements` and an always-present
+`undeclaredExecutorTypes` array and an always-present `unresolvedExecutorReceivers`
+array. The latter counts configured imported types whose member or element
+receivers still lack executor proof. Its exported `UnresolvedExecutorReceiverSummary`
+type has the same fields as `UndeclaredExecutorTypeSummary`: `type`,
+`module`, and `count`; entries are sorted by type, then module, and count omitted
+call sites rather than SQL alternatives. An empty array means no such omitted
+types were found, not that every possible executor or SQL value was resolved.
+These calls stay excluded from `statements`: diagnostics do not widen executor
+selection or evaluate an undeclared receiver's SQL. Add the imported type name
+to `executorTypeNames`. If a receiver still appears in `unresolvedExecutorReceivers`,
+use a supported explicitly typed parameter, rather than assuming configuration
+alone proves a complex property or array receiver:
+
+```ts
+function execute(client: PoolClient) {
+  return client.query("/* widgets/list */ SELECT id FROM widgets");
+}
+execute(this.db);
+```
+
+This diagnostic applies to `this.db.query`, object-parameter properties such as
+`ctx.db.query`, and indexed receivers such as `clients[0].query`. Check mode routes
+both missing types and unresolved configured receivers through `unanalyzable`;
+source extraction exposes both arrays independently of that policy.
+
+Omitting `includeDiagnostics`, or setting it to `false`, preserves the existing
+statement-array response. The generic `ExecutedPostgresSqlOptions` defaults to
+that array mode; use `ExecutedPostgresSqlOptions<boolean>` for a runtime Boolean
+flag, whose response is the array/report union. The diagnostics summary is
+independent of a check rule's `unanalyzable` policy so downstream coverage reports
+can assert that it is empty even when check findings are ignored.
 
 Import-aware evaluation treats named private functions returned through reachable
 branch arms of an exported factory as public callable entrypoints, including

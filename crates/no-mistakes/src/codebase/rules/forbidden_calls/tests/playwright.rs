@@ -73,8 +73,9 @@ fn playwright_terminal_matches_typed_page_parameter() {
 
 #[test]
 fn named_playwright_roots_use_the_prepared_catalog() {
+    // This case isolates named project selection and the configured target.
     let findings = fixture_findings(&format!(
-        "{PLAYWRIGHT_CONFIG}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ playwright: [chromium] }}]\n      targets: [{{ global: setTimeout }}]\n",
+        "{PLAYWRIGHT_CONFIG}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ playwright: [chromium] }}]\n      unknownCalls: ignore\n      targets: [{{ global: setTimeout }}]\n",
     ))
     .unwrap();
 

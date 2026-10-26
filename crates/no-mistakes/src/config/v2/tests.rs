@@ -332,7 +332,9 @@ fn invalid_rule_path_filter_errors() {
         .err()
         .unwrap();
 
-    assert!(err.to_string().contains("rules[0].exclude"));
+    assert!(err
+        .to_string()
+        .contains("rules[0] (unique-exports).exclude[0]"));
 }
 
 #[test]

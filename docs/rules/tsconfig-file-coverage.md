@@ -14,6 +14,15 @@ without a snapshot should pass tracked paths themselves.
 rules:
   - rule: tsconfig-file-coverage
     scope: repository
+```
+
+Optional `allow` and `auxiliaryConfigs` entries name reasoned exceptions. Those
+paths must exist or they are findings:
+
+```yaml
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
     options:
       allow:
         - path: scripts/generate.ts
@@ -86,17 +95,25 @@ be repository-relative and reasons non-empty.
 ## Valid example
 
 ```json
+// tsconfig.json
 {"include":["src/**/*.ts"]}
 ```
 
-```text
-src/index.ts
+```ts
+// src/index.ts
+export const ok = 1;
 ```
 
 ## Counterexample
 
-```text
-orphan.ts
+```json
+// tsconfig.json
+{"include":["src"]}
+```
+
+```ts
+// orphan.ts
+export const orphan = 1;
 ```
 
 The file is tracked beside a config that includes only `src`.
@@ -105,6 +122,16 @@ The file is tracked beside a config that includes only `src`.
 
 Add the file to a compiler `include`/`files` set or add a precise `allow` entry
 with why it intentionally stays outside the program.
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it compares tsconfig `include` coverage with the file inventory, so `options.unanalyzable` has no effect on it.
 
 ## Suppression
 

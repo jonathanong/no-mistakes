@@ -1,0 +1,170 @@
+version: 2
+rules:
+  - rule: unique-exports
+    scope: repository
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: component-00
+          file: src/components/component-00.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-01
+          file: src/components/component-01.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-02
+          file: src/components/component-02.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-03
+          file: src/components/component-03.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-04
+          file: src/components/component-04.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-05
+          file: src/components/component-05.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-06
+          file: src/components/component-06.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-07
+          file: src/components/component-07.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-08
+          file: src/components/component-08.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-09
+          file: src/components/component-09.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-10
+          file: src/components/component-10.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-11
+          file: src/components/component-11.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-12
+          file: src/components/component-12.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-13
+          file: src/components/component-13.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-14
+          file: src/components/component-14.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-15
+          file: src/components/component-15.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-16
+          file: src/components/component-16.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-17
+          file: src/components/component-17.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-18
+          file: src/components/component-18.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-19
+          file: src/components/component-19.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-20
+          file: src/components/component-20.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-21
+          file: src/components/component-21.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-22
+          file: src/components/component-22.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-23
+          file: src/components/component-23.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-24
+          file: src/components/component-24.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-25
+          file: src/components/component-25.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-26
+          file: src/components/component-26.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-27
+          file: src/components/component-27.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-28
+          file: src/components/component-28.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-29
+          file: src/components/component-29.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-30
+          file: src/components/component-30.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: component-31
+          file: src/components/component-31.tsx
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: shared-0
+          file: src/shared/shared-0.ts
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: shared-1
+          file: src/shared/shared-1.ts
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: shared-2
+          file: src/shared/shared-2.ts
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: shared-3
+          file: src/shared/shared-3.ts
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: types
+          file: src/shared/types.ts
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+        - name: worker-a
+          file: src/schedules/worker-a.ts
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+          minSize: 4
+        - name: worker-b
+          file: src/schedules/worker-b.ts
+          kind: ts-call-first-string-argument
+          target: scheduler.register
+          minSize: 4
+      comparisons:
+        - left: worker-a
+          right: worker-b
+          mode: equal-set

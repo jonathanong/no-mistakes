@@ -200,3 +200,73 @@ fn file_with_no_extension_has_empty_ext_and_is_not_flagged() {
         "file with no extension should not match any banned extension"
     );
 }
+
+#[test]
+fn dot_prefix_scope_fixture_flags_helper_js() {
+    let root = fixture_root("dot-prefix-fail");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.file == "src/helper.js"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn normalized_scope_prefixes_match_src_helper() {
+    // `src/../src` is the same prefix as `src`. Do not compare the raw string.
+    let root = fixture_root("dot-prefix-fail");
+    let path = root.join("src/helper.js");
+    let allowlist = HashSet::new();
+    for scope in ["src", "./src", "src/../src", "src/"] {
+        let findings = check_file(&path, &root, &allowlist, &[make_scope(scope, &[".js"])]);
+        assert_eq!(findings.len(), 1, "{scope}: {findings:?}");
+        assert_eq!(findings[0].file, "src/helper.js");
+    }
+}
+
+#[test]
+fn escaping_scope_is_one_config_finding() {
+    let root = fixture_root("scope-escape");
+    let config_path = root.join(".no-mistakes.yml");
+    let findings = check(
+        &root,
+        &crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, ".no-mistakes.yml");
+    assert_eq!(findings[0].line, 1);
+    assert!(
+        findings[0]
+            .message
+            .contains("../outside: configured root escapes the repository"),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.file != "src/in-repo.js"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn scope_that_escapes_the_repo_matches_nothing() {
+    let root = fixture_root("dot-prefix-fail");
+    let path = root.join("src/helper.js");
+    let allowlist = HashSet::new();
+    for scope in ["..", "../src", "src/../..", "foo/../../src"] {
+        let findings = check_file(&path, &root, &allowlist, &[make_scope(scope, &[".js"])]);
+        assert!(
+            findings.is_empty(),
+            "{scope} matched inside the repo: {findings:?}"
+        );
+    }
+}

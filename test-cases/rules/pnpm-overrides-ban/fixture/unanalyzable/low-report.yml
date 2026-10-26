@@ -1,0 +1,6 @@
+rules:
+  - rule: pnpm-overrides-ban
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: report

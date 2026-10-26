@@ -20,6 +20,7 @@ const {
 const {
   childNodes,
   executedQueryText,
+  quasiText,
   resolveVariable,
   sqlStatementBindings,
   sqlText,
@@ -94,10 +95,20 @@ function isStaticallyBounded(source, chunkFunctionNames, context) {
   return false;
 }
 
+function staticPromiseMember(node) {
+  if (!node.computed) return node.property?.name ?? null;
+  const key = unwrapTs(node.property);
+  if (key?.type === "Literal" && typeof key.value === "string") return key.value;
+  if (key?.type === "TemplateLiteral" && key.expressions.length === 0) {
+    return quasiText(key.quasis[0]);
+  }
+  return null;
+}
+
 function isPromiseAllCallee(node) {
   const callee = unwrapTs(node);
-  if (callee?.type !== "MemberExpression" || callee.computed) return false;
-  if (callee.property?.name !== "all") return false;
+  if (callee?.type !== "MemberExpression") return false;
+  if (staticPromiseMember(callee) !== "all") return false;
   const object = unwrapTs(callee.object);
   return object?.type === "Identifier" && object.name === "Promise";
 }
@@ -118,10 +129,7 @@ function mapCallArgument(node) {
 function containsDatabaseCall(node, bindings) {
   if (!node || typeof node !== "object") return false;
   if (isDatabaseCall(node, bindings)) return true;
-  for (const child of childNodes(node)) {
-    if (containsDatabaseCall(child, bindings)) return true;
-  }
-  return false;
+  return childNodes(node).some((child) => containsDatabaseCall(child, bindings));
 }
 
 function functionFromDefinition(def) {
@@ -156,10 +164,17 @@ function callbackContainsExecutor(callback, bindings, context) {
   ) {
     return containsDatabaseCall(callback, bindings);
   }
+  if (bindings?.resolveCall && bindings.resolveCall.reference(callback)) return true;
   if (callback.type !== "Identifier") return false;
-  if (bindings?.has(callback.name)) return true;
+  if (!bindings?.resolveCall && bindings?.has(callback.name)) return true;
   if (!context) return false;
   const variable = resolveVariable(callback, context);
+  if (
+    bindings?.resolveCall &&
+    (isReassignedBinding(variable) ||
+      variable?.defs.some((def) => def.type === "Variable" && def.parent.kind !== "const"))
+  )
+    return false;
   for (const def of variable?.defs ?? []) {
     const fn = functionFromDefinition(def);
     if (fn && containsDatabaseCall(fn, bindings)) return true;

@@ -1,3 +1,7 @@
 fixtures/rules/markdown-structure-budget/exact-crlf.md -text -whitespace
 fixtures/postgres-facts/source/operator-line-comment-boundaries.sql -text -whitespace
 test-cases/rules/doc-consistency/fixture/patterns/docs/crlf.md -text -whitespace
+test-cases/rules/postgres-no-offset/fixture/effort/src/crlf.ts -text -whitespace
+fixtures/postgres/prepared-projection-low/src/low.ts -text -whitespace
+test-cases/rules/postgres-no-transformed-uuid-predicates/fixture/crlf.ts -text -whitespace
+test-cases/rules/postgres-ddl-unanalyzable/fixture/copy/migrations/crlf.sql -text -whitespace

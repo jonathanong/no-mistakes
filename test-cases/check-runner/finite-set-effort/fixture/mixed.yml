@@ -1,0 +1,38 @@
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: advise
+      sets:
+        - name: yaml-values
+          file: data.yml
+          kind: yaml-sequence
+          key: values
+        - name: route-names
+          kind: path-regex-capture
+          pattern: '^routes/(?<value>[^/]+)\.ts$'
+        - name: compatible-type
+          file: types.ts
+          kind: ts-string-union
+          target: Route
+      comparisons:
+        - left: yaml-values
+          right: route-names
+        - left: compatible-type
+          right: route-names
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      effort: max
+      sets:
+        - name: mismatching-type
+          file: types.ts
+          kind: ts-string-union
+          target: Other
+        - name: route-names
+          kind: path-regex-capture
+          pattern: '^routes/(?<value>[^/]+)\.ts$'
+      comparisons:
+        - left: mismatching-type
+          right: route-names

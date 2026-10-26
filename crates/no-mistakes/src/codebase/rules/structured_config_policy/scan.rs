@@ -47,9 +47,14 @@ pub(super) fn scan_with_state(
         let matching = super::super::matching_files(root, &policy.files, files, target_roots)?;
         for path in matching {
             let rel = relative_slash_path(root, &path);
-            let Some(source) = super::super::read_source(sources, &path) else {
-                continue;
-            };
+            let source =
+                match super::super::source_access::checked_source(sources, &path, root, RULE_ID) {
+                    Ok(source) => source,
+                    Err(finding) => {
+                        findings.push(*finding);
+                        continue;
+                    }
+                };
             let value =
                 match crate::codebase::structured_value::parse_structured_value(&path, &source) {
                     Ok(value) => value,

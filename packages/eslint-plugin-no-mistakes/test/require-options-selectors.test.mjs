@@ -39,7 +39,7 @@ describe("configured global and receiver selectors", () => {
     const found = messages(code, RULE, selectorOptions, "selectors-invalid.ts");
     assert.deepEqual(
       found,
-      Array.from({ length: 32 }, () => "missingOptions"),
+      Array.from({ length: 33 }, () => "missingOptions"),
     );
     const texts = lint(
       code,
@@ -63,9 +63,10 @@ describe("configured global and receiver selectors", () => {
   });
 
   it("checks optional calls and follows supported destructure aliases", () => {
+    // Two receiver aliases now report; a property default no longer proves its target.
     assert.deepEqual(
       ids("selectors-alias.ts"),
-      Array.from({ length: 10 }, () => "missingOptions"),
+      Array.from({ length: 11 }, () => "missingOptions"),
     );
   });
 

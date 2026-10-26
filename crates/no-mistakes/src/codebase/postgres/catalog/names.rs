@@ -1,3 +1,6 @@
+#[cfg(any(test, feature = "test-instrumentation"))]
+pub(super) mod key_work;
+
 fn parts(raw: &str) -> Vec<String> {
     let mut parts = Vec::new();
     let mut part = String::new();
@@ -50,6 +53,8 @@ pub(super) fn split_name(name: &str) -> (Option<String>, String) {
 /// The same for a key of the catalog, which is already normalized: its parts are unquoted but
 /// never case-folded again, since a mixed-case key (`Order Items`) is exact.
 pub(super) fn split_key(key: &str) -> (Option<String>, String) {
+    #[cfg(any(test, feature = "test-instrumentation"))]
+    key_work::record();
     let unquote = |part: &String| match part.strip_prefix('"').and_then(|p| p.strip_suffix('"')) {
         Some(inner) => inner.replace("\"\"", "\""),
         None => part.clone(),

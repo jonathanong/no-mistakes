@@ -32,8 +32,8 @@ pub(super) enum Traversal {
 #[serde(rename_all = "kebab-case")]
 pub(super) enum UnknownCalls {
     #[default]
-    Ignore,
     Finding,
+    Ignore,
 }
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]

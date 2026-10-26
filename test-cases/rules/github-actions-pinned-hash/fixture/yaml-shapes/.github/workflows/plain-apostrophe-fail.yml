@@ -1,0 +1,3 @@
+# An apostrophe inside the step name is not a quote.
+- name: Don't fail
+- { uses: actions/checkout@v4 }

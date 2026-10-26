@@ -1,0 +1,7 @@
+rules:
+  - rule: package-json-required-fields
+    scope: repository
+    include: [packages/broken/package.json, packages/invalid-utf8/package.json, packages/suppressed/package.json]
+    options:
+      unanalyzable: advise
+      private: true

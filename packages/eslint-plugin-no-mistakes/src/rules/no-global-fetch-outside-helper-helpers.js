@@ -2,7 +2,6 @@
 
 const {
   memberPropertyName,
-  propertyName,
   repoRelativeFilename,
   stringMatches,
 } = require("./module-mock-helpers");
@@ -12,6 +11,7 @@ const {
   hasLocalBinding,
   isAmbientDeclaration,
   isRuntimeBinding,
+  isStaticFetchProperty,
   resolveVariable,
 } = require("./no-global-fetch-outside-helper-bindings");
 const {
@@ -98,7 +98,7 @@ function recordObjectPatternFetchAliases(id, init, context, aliases, clearedAlia
 function setObjectPatternFetchAliases(id, enabled, context, aliases, clearedAliases) {
   if (id.type !== "ObjectPattern") return;
   for (const property of id.properties) {
-    if (property.type !== "Property" || propertyName(property.key) !== "fetch") continue;
+    if (!isStaticFetchProperty(property)) continue;
     setAlias(bindingIdentifier(property.value), enabled, context, aliases, clearedAliases);
   }
 }

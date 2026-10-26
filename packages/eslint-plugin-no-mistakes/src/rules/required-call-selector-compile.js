@@ -25,10 +25,14 @@ function compileNamePatterns(patterns) {
     .filter(Boolean);
 }
 
+function globSegment(value) {
+  return value.replaceAll("%", "%25").replaceAll("/", "%2F");
+}
+
 // Globs use `.` as a segment separator. `/regex/` is tested against the dotted path.
 function compileDottedPattern(pattern) {
   if (typeof pattern !== "string" || !pattern) return null;
-  return compileSelectorPattern(pattern, pattern.replaceAll(".", "/"));
+  return compileSelectorPattern(pattern, globSegment(pattern).replaceAll(".", "/"));
 }
 
 function compileDottedPatterns(patterns) {
@@ -36,8 +40,10 @@ function compileDottedPatterns(patterns) {
 }
 
 function matchesDotted(path, patterns) {
-  const slashed = path.replaceAll(".", "/");
-  return patterns.some((pattern) => pattern.regex.test(pattern.glob ? slashed : path));
+  const segments = Array.isArray(path) ? path : path.split(".");
+  const slashed = segments.map(globSegment).join("/");
+  const dotted = segments.join(".");
+  return patterns.some((pattern) => pattern.regex.test(pattern.glob ? slashed : dotted));
 }
 
 function selectorTarget(target, requiredProperties) {

@@ -34,23 +34,19 @@ pub struct SqlBoundQuery {
     pub outputs: Vec<SqlBoundOutput>,
 }
 
-/// Whether set-operation inputs stream, must complete before output, or cannot execute.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum SqlBoundInputMode {
-    #[default]
-    Streaming,
-    Blocking,
-    Skipped,
-}
-
 /// Syntactic value provenance for one projected column, independent of query row cardinality.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlBoundOutput {
     pub name: Option<String>,
     pub caller_sized: bool,
+    /// A syntactically scalar value, or a column whose scalarity the catalog must prove.
+    pub scalar: bool,
+    pub source_column: Option<(usize, String)>,
+    /// A simple array_agg element column; its input rows need an independent bound.
+    pub array_aggregate_column: Option<(usize, String)>,
 }
 
-/// One FROM item and the columns the statement pins on it.
+/// One FROM item and the columns or index expressions the statement pins on it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlBoundItem {
     pub kind: SqlBoundItemKind,
@@ -65,8 +61,14 @@ pub struct SqlBoundItem {
     pub line: usize,
     pub column: usize,
     pub pins: Vec<SqlBoundPin>,
-    /// A `LATERAL` source that reads the FROM items before it: it is sized per row of those, so
-    /// it bounds nothing pinned to it, but the relations inside it are still judged.
+    /// Catalog-independent, table-local conjuncts from WHERE and restricting JOIN ON arms.
+    pub predicate_conjuncts: Vec<Expr>,
+    /// Plain columns made non-NULL by strict equality in those same conjuncts.
+    pub nonnull_columns: Vec<String>,
+    /// Number of disjunctive alternatives; every alternative must complete a unique key.
+    pub pin_alternatives: usize,
+    /// A certain bare outer read in a `LATERAL` source; its driver ownership is unproven.
+    /// Qualified outer reads retain separate scope evidence for driver-dependent bounds.
     pub lateral: bool,
     /// Bare columns of a `LATERAL` source that none of its own relations is known to own: it
     /// reads the items before it when the catalog shows that none of their tables has them.
@@ -117,27 +119,7 @@ pub struct SqlQualifiedScope {
     pub unknown: bool,
 }
 
-impl SqlBoundItem {
-    pub fn new(
-        kind: SqlBoundItemKind,
-        alias: Option<String>,
-        (line, column): (usize, usize),
-    ) -> Self {
-        Self {
-            kind,
-            possible_temporary: None,
-            alias,
-            alias_explicit: false,
-            column_aliases: Vec::new(),
-            line,
-            column,
-            pins: Vec::new(),
-            lateral: false,
-            lateral_reads: Vec::new(),
-            lateral_qualified_reads: Vec::new(),
-        }
-    }
-}
+mod item;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SqlBoundItemKind {
@@ -153,12 +135,18 @@ pub enum SqlBoundItemKind {
     Opaque,
 }
 
-/// A conjunct that equates one column of an item with a value.
+/// A conjunct that equates one column or index expression of an item with a value.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlBoundPin {
+    /// Disjunctive alternative owning this pin; None means an unconditional conjunct.
+    pub alternative: Option<usize>,
     pub column: String,
+    /// Bare column with multiple possible FROM owners; only catalog projection may credit it.
+    pub unqualified_candidate: bool,
+    /// The canonical table-local expression fixed by this equality, when it is not a column.
+    pub expression: Option<Expr>,
     pub source: SqlPinSource,
-    /// `IS NOT DISTINCT FROM` also matches NULL, so it picks out one row only on a NOT NULL column.
+    /// `IS NOT DISTINCT FROM` also matches NULL; a nullable key needs NULLS NOT DISTINCT.
     pub null_safe: bool,
     /// Bare columns that subqueries in the value read: when one resolves to the enclosing query
     /// the value depends on the row checked, and the pin fixes nothing.
@@ -189,36 +177,14 @@ pub enum SqlPinSource {
     },
     /// `IN (SELECT …)` or `= ANY (SELECT …)`: sized by the subquery.
     Query(SqlBoundQuery),
+    /// ARRAY(SELECT ...) or a scalar array_agg: input rows and scalar elements need proof.
+    ArrayQuery(SqlBoundQuery),
     /// An executed correlated IN/ANY subquery: retain its reads, never grant key credit.
     ReadQuery(SqlBoundQuery),
 }
 
-impl SqlBoundFact {
-    /// Map every position through `map(line, column)`, for SQL embedded in a host file: the
-    /// column decides which physical operand of a recovered string owns the line.
-    pub fn map_lines(&mut self, map: &impl Fn(usize, usize) -> usize) {
-        self.line = map(self.line, self.column);
-        if let Some((line, column)) = &mut self.statement_start {
-            *line = map(*line, *column);
-        }
-        self.query.map_lines(map);
-    }
-}
-
-impl SqlBoundQuery {
-    // Borrow one callback through the recursive tree instead of specializing each traversal.
-    fn map_lines(&mut self, map: &dyn Fn(usize, usize) -> usize) {
-        for item in &mut self.items {
-            item.line = map(item.line, item.column);
-            if let SqlBoundItemKind::Query(query) = &mut item.kind {
-                query.map_lines(map);
-            }
-            for pin in &mut item.pins {
-                if let SqlPinSource::Query(query) | SqlPinSource::ReadQuery(query) = &mut pin.source
-                {
-                    query.map_lines(map);
-                }
-            }
-        }
-    }
-}
+mod input_mode;
+mod lines;
+pub use input_mode::SqlBoundInputMode;
+use sqlparser::ast::Expr;
+mod row_inputs;

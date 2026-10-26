@@ -4,7 +4,7 @@
 
 ```ts
 // next.config.ts
-export default { async redirects() { return [{ source: '/a', destination: 'https://evil.test', permanent: true }]; } };
+export default { async redirects() { return [{ source: '/a', destination: '/gone', permanent: true }]; } };
 ```
 
 ## Suppression
@@ -33,11 +33,14 @@ to `true`. `trackedRoutesOnly` defaults to `false`.
 
 ## Valid example
 
-A redirect from `/old` to an existing `app/new/page.tsx` route passes.
+A redirect from `/a` to an existing `app/b/page.tsx` route passes.
 
 ```ts
 // next.config.ts
 export default { async redirects() { return [{ source: '/a', destination: '/b', permanent: true }]; } };
+
+// app/b/page.tsx
+export default function Page() { return null; }
 ```
 
 
@@ -107,6 +110,23 @@ If `redirects` or `rewrites` text exists but the extractor cannot find a
 method/function body or string destinations, the rule reports extractor drift
 instead of silently passing.
 
+A config entry that does not itself contain `redirects` or `rewrites` is
+followed one hop when it re-exports a relative default (`export { default }
+from "./next-shared"`) or default-imports that binding and exports it
+(`import nextConfig from "./next-shared"; export default nextConfig`). Every
+default import is remembered and matched to the exported identifier, including
+when another default import comes later. A specifier counts as having an
+extension only when that extension is a JS or TS source extension. A dotted
+basename such as `./next.shared` still receives those extensions, including
+`next.shared.ts` and `next.shared/index.ts`. A `.js` / `.jsx` / `.mjs` /
+`.cjs` specifier also resolves the TypeScript sibling. The shared file is then
+checked with the same extractor. Configured TypeScript `paths` aliases such as
+`@/next-shared` are also followed. A second hop, a package specifier,
+`export * from`, `module.exports = require("./x")`,
+and a wrapper such as `export default withPlugin(shared)` or `{ ...shared }`
+are not followed. Two entries that delegate to the same shared module each
+report that module's findings.
+
 Counterexample: `next.config.ts` redirects `/old` to `/gone`, and
 `app/gone/page.tsx` does not exist. A destination of `/secret` also fails when
 the only page is `app/_secret/page.tsx`, because `_` segments are private.
@@ -118,6 +138,75 @@ move the page out of a `_` segment or stop redirecting to that path.
 Use `no-mistakes-disable-file nextjs-redirect-destinations` to opt a Next.js
 config out, or `no-mistakes-disable-next-line nextjs-redirect-destinations`
 on a destination line.
+
+## Analysis
+
+### Effort
+
+- Supports `low` and `max` (default `max`). **Max**: recovers helper, binding, `.map()` callback, and template destinations. **Low**: accepts only literal arrays and objects returned from `redirects()` / `rewrites()` and routes everything else to `unanalyzable`. No partner rule is required.
+
+`effort: max` is the default and preserves helper, binding, map-callback, and
+template inference described below. At effective `effort: low`, this rule
+accepts only literal arrays and objects returned from `redirects()` /
+`rewrites()`:
+
+```ts
+export default {
+  async redirects() {
+    return [{ source: "/a", destination: "/b", permanent: true }];
+  },
+};
+```
+
+String literals, no-expression templates, and function bodies that only return
+that literal array qualify. Identifiers, helpers, `.map()` callbacks, spreads,
+destructuring, and interpolated templates are **unanalyzable**, even when `max`
+can recover them. Rewrite them as a literal array of objects with string
+`destination` fields, for example
+`return [{ source: '/a', destination: '/b', permanent: true }]`.
+
+Missing pages for recovered literal destinations remain ordinary findings at
+both efforts, including when the same `redirects()` / `rewrites()` array also
+has unanalyzable entries. `unanalyzable` only governs the undecidable rows.
+
+The shared `unanalyzable` policy controls unsupported shapes: `report` fails,
+`advise` emits a non-failing advisory, and `ignore` skips them. For example,
+set `options.effort: low` and `options.unanalyzable: report` to require literal
+arrays. Shared configuration and CLI overrides also apply. These syntax proofs
+do not require a companion rule.
+
+If the selected entry `next.config.*` cannot be read as UTF-8 or parsed, the
+rule reports one `unanalyzable` diagnostic at either effort. Its message names
+the config and the read or parser error, so fix that file before relying on
+redirect or rewrite coverage. `report` fails, `advise` emits a non-failing
+advisory, and `ignore` skips the diagnostic. A read failure is anchored at line
+1 because the source is unavailable. A parse failure is anchored at the first
+code line after leading blank lines and comments; this is a suppression anchor,
+not necessarily the parser's error location. For readable configs with parse
+errors, use `no-mistakes-disable-file`, `no-mistakes-disable-line`, or
+`no-mistakes-disable-next-line` on that anchor. Inline directives cannot be
+read from an unreadable config; use the `unanalyzable` policy in that case.
+
+Low-effort unanalyzable diagnostics use the `redirects` / `rewrites` method
+line. Suppress at that method:
+
+```ts
+// no-mistakes-disable-next-line nextjs-redirect-destinations
+async redirects() {
+  return rows.map((row) => row);
+}
+```
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), inputs this rule can't prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove (at low effort, identifiers, helpers, `.map()` callbacks, spreads, destructuring, and interpolated templates; at either effort, an unreadable or unparsable `next.config.*`) follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `next.config.ts: redirects() destinations are unanalyzable at effort low`.
+  - `advise`: a non-failing advisory.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy.
 
 ## Static destination construction
 
@@ -158,3 +247,44 @@ exceeding a limit also reports incomplete extraction.
 
 Destination collection and mutation alias traversal are also bounded to 4,096
 value visits and 64 nesting levels; exhaustion reports incomplete extraction.
+
+## Delegated configuration
+
+The default config binding may import or re-export one local module through a
+relative specifier or a configured TypeScript `paths` alias. The rule uses the
+request's prepared project resolver and attributes findings to the shared
+module. For example, `import nextConfig from "@/next-shared"; export default
+nextConfig;` checks `next-shared.ts` when the selected tsconfig maps `@/*` to
+`./*`. A `/gone` redirect there still requires a matching App Router page.
+
+Only one hop is followed. Package imports, `baseUrl`-only specifiers, and a
+second delegated module are outside this bounded extraction. Keep redirects
+and rewrites in the directly delegated module to make them statically checkable.
+
+At either effort, the same one-hop relative re-export or configured TypeScript paths alias is followed. Low effort checks literal destinations in the delegated file and applies `unanalyzable` to its unsupported entries. Findings and advisories name that helper file, including its suppression directives. For rewrites, use `return [{ source: "/a", destination: "/b" }]` (no `permanent` field).
+
+A relative specifier or matching TypeScript `paths` mapping whose local target
+cannot be resolved reports incomplete extraction at the entry config, naming
+the unresolved specifier. Restore the module or correct the specifier/mapping;
+a failed `paths` mapping does not fall back to `baseUrl` or a less-specific
+mapping. A relative specifier that resolves outside the scanned file set is
+also reported; include the delegated file in the rule's scope to check it.
+A catch-all TypeScript `paths` entry such as `"*": ["./vendor/*"]` also makes
+bare default re-exports eligible for one-hop lookup. When its mapped file is
+absent, the rule reports incomplete extraction even if the bare specifier
+would be a package import at runtime. This favors recall; remove the catch-all
+mapping or narrow its pattern if the report is unwanted.
+
+This prevents unavailable delegated configs from silently hiding stale
+destinations. At `effort: low`, an unresolved target uses `unanalyzable: report`,
+`advise`, or `ignore`; at `effort: max`, it remains a finding under every policy.
+Entry-config `no-mistakes-disable-file`, `no-mistakes-disable-line`, and
+`no-mistakes-disable-next-line` directives suppress it in either diagnostic
+channel. Resolved helpers retain their own finding locations and suppressions.
+
+If a resolved delegated file cannot be read or parsed, the entry config instead
+reports the delegated path and the read or parse error at its import or
+re-export line. At both `effort: low` and `effort: max`, `unanalyzable: report`
+fails, `advise` emits an advisory, and `ignore` skips this diagnostic. Restore
+a readable, valid module to check its destinations. The same entry-config
+suppression directives apply.

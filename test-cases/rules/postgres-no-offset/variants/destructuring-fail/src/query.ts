@@ -109,7 +109,7 @@ let guard = gate ? "SELECT 29" : "SELECT 30";
 query(({ guard } = { guard: "SELECT 29 OFFSET 12" }) ? guard : "SELECT 31"); // findings: unanalyzable
 let fragment = gate ? sql`SELECT 32` : sql`SELECT 33`;
 /* A destructuring interpolation invalidates recovery before later fragments are read. */
-query(sql`${({ fragment } = { fragment: sql`SELECT 32 OFFSET 13` }), 0} ${fragment}`); // findings: unanalyzable
+query(`${({ fragment } = { fragment: sql`SELECT 32 OFFSET 13` }), 0} ${fragment}`); // findings: unanalyzable
 query(gate ? "SELECT 34 OFFSET 14" : "SELECT 35"); // findings: offset
 let suppressed = gate ? "SELECT 54" : "SELECT 55";
 ({ suppressed } = { suppressed: "SELECT 54 OFFSET 24" });

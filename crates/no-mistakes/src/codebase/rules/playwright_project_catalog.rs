@@ -10,6 +10,7 @@ use std::path::Path;
 pub struct PreparedPlaywrightProjectCatalog {
     config_projects: Result<Vec<ConfigProject>, String>,
     explicit_projects: Vec<ConfigProject>,
+    matcher_warnings: Vec<String>,
 }
 
 #[doc(hidden)]
@@ -32,13 +33,26 @@ pub fn prepare_playwright_project_catalog(
     } else {
         Ok(Vec::new())
     };
+    let explicit_projects = explicit_playwright_projects(root, config);
+    let effective_projects = super::runner_project_catalog::merge_explicit_projects(
+        config_projects.clone().unwrap_or_default(),
+        explicit_projects.clone(),
+    );
+    let matcher_warnings = matcher_warnings::selected(config, &effective_projects);
     PreparedPlaywrightProjectCatalog {
         config_projects,
-        explicit_projects: explicit_playwright_projects(root, config),
+        explicit_projects,
+        matcher_warnings,
     }
 }
 
+mod matcher_warnings;
+
 impl PreparedPlaywrightProjectCatalog {
+    pub fn matcher_warnings(&self) -> &[String] {
+        &self.matcher_warnings
+    }
+
     pub(crate) fn config_projects(&self) -> anyhow::Result<Vec<ConfigProject>> {
         self.config_projects.clone().map_err(anyhow::Error::msg)
     }
@@ -48,18 +62,33 @@ impl PreparedPlaywrightProjectCatalog {
         root: &Path,
         names: &[String],
         files: &[std::path::PathBuf],
-    ) -> anyhow::Result<Vec<std::path::PathBuf>> {
-        let projects = super::runner_project_catalog::merge_explicit_projects(
+    ) -> anyhow::Result<(Vec<std::path::PathBuf>, bool)> {
+        let mut projects = super::runner_project_catalog::merge_explicit_projects(
             self.config_projects()?,
             self.explicit_projects.clone(),
         );
-        super::runner_project_catalog::matching_catalog_files(
+        let mut unknown = false;
+        for project in &mut projects {
+            let selected = names.is_empty()
+                || project
+                    .policy_name
+                    .as_deref()
+                    .is_some_and(|name| names.iter().any(|selected| selected == name));
+            if selected && !project.matcher_warnings.is_empty() {
+                unknown = true;
+                // Keep identity for named-root validation, but don't turn possibly
+                // excluded helper files into definite forbidden-call findings.
+                project.include.clear();
+            }
+        }
+        let files = super::runner_project_catalog::matching_catalog_files(
             root,
             &projects,
             names,
             files,
             "forbidden-calls Playwright root names an unknown project",
-        )
+        )?;
+        Ok((files, unknown))
     }
 }
 

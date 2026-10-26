@@ -93,6 +93,7 @@ pub(super) fn directly_covered_components(
         let Some(facts) = shared
             .ts
             .get(file)
+            .filter(|facts| facts.parse_error.is_none())
             .and_then(|facts| facts.storybook.as_ref())
         else {
             continue;

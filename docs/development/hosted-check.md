@@ -20,14 +20,21 @@ absolute budgets, not a version change. GitHub's
 orders published stable releases by creation date (`created_at`, the release
 commit's date), not semantic version precedence.
 
+<!-- cspell:ignore rlib cdylib -->
+
 Both variants are built from source with the same resolved Rust compiler,
 production release profile, default features (including Mermaid), fat LTO and
-one code generation unit. The same controlled N-API manifest adjustment applies to both.
+one code generation unit. Both build only `--bin no-mistakes` with the unchanged
+`rlib` manifest. Adding `cdylib` would also link the unused Node addon, even with
+`--bin`, and has exhausted the 24-minute production build deadline. The shipped
+`NO_MISTAKES_BUILD_NAPI=1` linker setup remains enabled for both CLIs.
 Dependency compilation and production compilation use separate bounded jobs;
 the production phase removes the temporary analyzer artifacts before building
 the real sources. Source identities, build settings and binary hashes accompany
 both binaries. Cargo targets live outside the checkout, with incremental
 compilation disabled.
+The dependency identity also records build arguments, so archives prepared for
+the older CLI-plus-addon scope cannot be reused as CLI-only preparation.
 
 Measurement uses standard four-core, 16-GB Linux hosted VMs, matching the
 calibration's CPU/RSS population; the one-core `ubuntu-slim` runner would change
@@ -145,7 +152,14 @@ cannot kill unrelated `no-mistakes` sessions. Production measurements still run
 on a dedicated hosted runner. Candidate timeouts, signals, nonzero exits, missing samples and
 invalid measurements fail the gate with `Candidate did not complete successfully`,
 not a calibration-helper error. Timeout cohorts still write a `*.processes.txt`
-snapshot. A failing baseline never excuses a candidate failure. Calibration
+snapshot. If a command remains alive at 540 seconds, the harness also saves a
+`*.live-processes.txt` snapshot of its descendant tree and the exact fixture
+native executable before the 600-second cap terminates it. That snapshot
+includes process-group IDs and command lines, so a stalled pnpm launcher and
+its analyzer remain distinguishable even when the post-timeout snapshot contains
+neither process. The process probe has a separate two-second limit and cannot
+turn a failed check into a success. A
+failing baseline never excuses a candidate failure. Calibration
 proposals are emitted only from six completed successful candidate samples.
 
 Timeout or signal resource counters are censored: exclude them from resource maxima,

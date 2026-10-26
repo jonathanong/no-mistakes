@@ -23,7 +23,11 @@ carry at least one local regression test.
 ## What it catches/requires
 
 Each selected first-level subdirectory containing source must match at least
-one file under `testGlob`.
+one file under `testGlob`. Roots are normalized before the scan: `./`, empty
+segments, and in-repo `..` collapse, so `services/../agents` is `agents`. A
+root that leaves the repository, such as `..`, is one finding on the config
+file at line 1 (`..: configured root escapes the repository`). The parent
+directory is not scanned.
 
 ## Options and defaults
 
@@ -49,6 +53,16 @@ src/payments/charge.ts
 
 Add a focused test in the selected subtree or exclude generated/adapter-only
 directories from the rule application.
+
+## Analysis
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it checks file presence in the file inventory, so `options.unanalyzable` has no effect on it.
 
 ## Suppression
 

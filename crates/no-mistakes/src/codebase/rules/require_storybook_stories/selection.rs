@@ -6,7 +6,7 @@ use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::dependencies::extract::is_indexable;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{
-    has_disable_comment, has_disable_file_comment, relative_slash_path,
+    has_disable_comment, has_disable_file_comment, has_disable_line_comment, relative_slash_path,
 };
 use crate::codebase::ts_symbols::ExportKind;
 use std::collections::HashSet;
@@ -25,10 +25,11 @@ pub(super) fn selected_components(
     include: &GlobMatcher,
     exclude: &GlobMatcher,
     test_filter: &crate::codebase::test_filter::TestFileFilter,
-) -> Vec<Component> {
+) -> (Vec<Component>, Vec<super::RuleFinding>) {
     let opts = selection.options;
     let defer_suppression = selection.defer_suppression;
     let mut components = Vec::new();
+    let mut unanalyzable = Vec::new();
     let scoped_files = shared.files().iter().collect::<HashSet<_>>();
     for (path, facts) in &shared.ts {
         if !scoped_files.contains(path)
@@ -49,15 +50,30 @@ pub(super) fn selected_components(
             continue;
         }
         let explicit = include.is_match(&project_file);
-        if facts.parse_error.is_some() {
+        if should_skip_file(facts, opts, explicit, defer_suppression) {
+            continue;
+        }
+        if let Some(error) = &facts.parse_error {
+            // Malformed facts cannot establish exports or React component kinds.
+            // Only explicit file selection proves that coverage was requested.
+            let line_disabled = !defer_suppression
+                && facts
+                    .source
+                    .as_deref()
+                    .is_some_and(|source| has_disable_line_comment(source, 1, RULE_ID));
+            if explicit && !line_disabled {
+                unanalyzable.push(super::diagnostics::malformed_finding(
+                    root,
+                    path,
+                    error,
+                    "Selected React source",
+                ));
+            }
             continue;
         }
         let Some(react) = facts.react.as_ref() else {
             continue;
         };
-        if should_skip_file(facts, opts, explicit, defer_suppression) {
-            continue;
-        }
         for component in react.components.iter() {
             let include_by_kind = if component.name == "default" {
                 opts.include_all_react_default_exports
@@ -85,7 +101,7 @@ pub(super) fn selected_components(
     components
         .sort_by(|a, b| (&a.project_file, &a.export_name).cmp(&(&b.project_file, &b.export_name)));
     components.dedup_by_key(|c| c.key.clone());
-    components
+    (components, unanalyzable)
 }
 
 fn should_skip_file(

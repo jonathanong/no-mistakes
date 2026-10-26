@@ -11,13 +11,14 @@ pub fn parse(source: &str, config_dir: &Path) -> Result<PlaywrightConfig> {
 
 pub fn parse_from_path(source: &str, path: &Path, config_dir: &Path) -> Result<PlaywrightConfig> {
     ast::with_program(path, source, |program, source| {
-        parse_program(program, source, config_dir)
+        parse_program(program, source, path, config_dir)
     })?
 }
 
 fn parse_program(
     program: &Program<'_>,
     source: &str,
+    path: &Path,
     config_dir: &Path,
 ) -> Result<PlaywrightConfig> {
     let bindings = top_level_object_bindings(program);
@@ -27,7 +28,7 @@ fn parse_program(
             projects: vec![merge_project(config_dir, &ParsedOptions::default(), None)],
         });
     };
-    let root_options = parse_options(root_object, source, &bindings)?;
+    let root_options = parse_options(root_object, source, path, &bindings)?;
     let project_objects = project_objects(root_object);
 
     if project_objects.is_empty() {
@@ -42,7 +43,7 @@ fn parse_program(
         projects.push(merge_project(
             config_dir,
             &root_options,
-            Some(parse_options(project_object, source, &bindings)?),
+            Some(parse_options(project_object, source, path, &bindings)?),
         ));
     }
 

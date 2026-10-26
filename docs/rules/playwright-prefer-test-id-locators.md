@@ -41,23 +41,113 @@ its resolved frontend-app binding, and the configured selector attributes.
 
 ## Valid example
 
+```yaml
+# .no-mistakes.yml
+projects:
+  web:
+    type: nextjs
+    root: web
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: [data-pw]
+rules:
+  - rule: playwright-prefer-test-id-locators
+    tests:
+      playwright: [web]
+```
+
 ```ts
-await page.getByTestId("save-button").click();
+// playwright.config.ts
+import { defineConfig } from '@playwright/test';
+export default defineConfig({
+  testDir: './tests/e2e',
+  use: { testIdAttribute: 'data-pw' },
+  projects: [{ name: 'web' }],
+});
+```
+
+```tsx
+// web/app/profile/page.tsx
+export default function ProfilePage() {
+  return <button data-pw="save-profile">Save</button>;
+}
+```
+
+```ts
+// tests/e2e/profile.spec.ts
+import { test } from '@playwright/test';
+test('saves a profile', async ({ page }) => {
+  await page.goto('/profile');
+  await page.getByTestId('save-profile').click();
+});
 ```
 
 ## Counterexample
 
-```ts
-await page.getByRole("button", { name: "Save" }).click();
+```yaml
+# .no-mistakes.yml
+projects:
+  web:
+    type: nextjs
+    root: web
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: [data-pw]
+rules:
+  - rule: playwright-prefer-test-id-locators
+    tests:
+      playwright: [web]
 ```
 
-This is a finding when the matched button also has `data-pw="save-button"`.
+```ts
+// playwright.config.ts
+import { defineConfig } from '@playwright/test';
+export default defineConfig({
+  testDir: './tests/e2e',
+  use: { testIdAttribute: 'data-pw' },
+  projects: [{ name: 'web' }],
+});
+```
+
+```tsx
+// web/app/profile/page.tsx
+export default function ProfilePage() {
+  return <button data-pw="save-button">Save</button>;
+}
+```
+
+```ts
+// tests/e2e/profile.spec.ts
+import { test } from '@playwright/test';
+test('saves a profile', async ({ page }) => {
+  await page.goto('/profile');
+  await page.getByRole('button', { name: 'Save' }).click();
+});
+```
+
+The button has a stable test ID, so the role locator is reported.
 
 ## Fix
 
 Use `getByTestId` for the stable contract, or keep the text/role locator only
 when the copy itself is the behavior under test and suppress that intentional
 exception.
+
+## Analysis
+
+### Effort
+
+- Runs at `max` only. Configuring `effort: low` (on the rule, or as a repository or CLI default) is not an error: `check` records the warning `requested effort low; effective effort max because this rule has no low implementation` and runs the rule at `max`.
+
+### Unanalyzable inputs
+
+Following [recall over precision](../../README.md#how-analysis-works), nothing this rule cannot prove is treated as clean, and it has no such inputs.
+
+- This rule has no unanalyzable inputs: it judges literal Playwright locator calls against test-id attributes present in source. Nothing is routed through `options.unanalyzable`.
 
 ## Suppression
 

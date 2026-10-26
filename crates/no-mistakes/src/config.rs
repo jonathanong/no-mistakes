@@ -156,6 +156,7 @@ pub fn resolve(root: &Path, path: &Path) -> PathBuf {
 
 #[path = "config/resolve.rs"]
 pub mod resolved;
+pub(crate) mod source_locations;
 pub mod v2;
 pub use resolved::resolve_config;
 

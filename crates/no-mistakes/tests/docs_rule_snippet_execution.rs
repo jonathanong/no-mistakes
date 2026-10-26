@@ -1,7 +1,10 @@
 //! Check-rule snippet execution, extracted from docs_coverage.rs.
 
 #[path = "support/docs_rule_snippets.rs"]
-mod docs_rule_snippets;
+pub(super) mod docs_rule_snippets;
+
+#[path = "support/docs_uuid_predicate_operands.rs"]
+mod uuid_predicate_operands;
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -70,9 +73,6 @@ fn rule_docs_execute_valid_and_counterexample_snippets() {
     let root = repo_root();
     let mut failures = Vec::new();
     for rule_id in rule_ids_from_source(&root) {
-        if docs_rule_snippets::skip_open_pr(&rule_id) {
-            continue;
-        }
         let page = docs_rule_snippets::load_page(&root, &rule_id);
         let mut valid = docs_rule_snippets::heading_section(&page.body, "Valid example");
         if docs_rule_snippets::fences(&valid).is_empty() {
@@ -103,9 +103,8 @@ fn rule_docs_execute_valid_and_counterexample_snippets() {
             ("Valid example", false, valid_fences.as_slice()),
             ("Counterexample", true, counter_fences.as_slice()),
         ] {
-            for (index, fence) in snippet.iter().enumerate() {
-                let fixture =
-                    docs_rule_snippets::materialize_snippet(&config, std::slice::from_ref(fence));
+            for (index, fences) in docs_rule_snippets::snippet_runs(snippet) {
+                let fixture = docs_rule_snippets::materialize_snippet(&config, &fences);
                 match docs_rule_snippets::run_rule(fixture.path(), &rule_id) {
                     Ok(hits) => {
                         if hits.is_empty() == expect_report {
@@ -185,6 +184,113 @@ fn known_gap_prefixes_fail_once_they_stop_reproducing() {
 }
 
 #[test]
+fn nextjs_caching_documentation_examples_execute() {
+    let rule = "nextjs-no-caching";
+    let page = docs_rule_snippets::load_page(&repo_root(), rule);
+    let config = docs_rule_snippets::rule_config_yaml(&page.body, rule);
+    for (heading, expected) in [("Valid example", 0), ("Counterexample", 1)] {
+        let section = docs_rule_snippets::heading_section(&page.body, heading);
+        let fences = docs_rule_snippets::fences(&section);
+        assert!(!fences.is_empty(), "{heading}: executable example required");
+        for (index, snippets) in docs_rule_snippets::snippet_runs(&fences) {
+            let fixture = docs_rule_snippets::materialize_snippet(&config, &snippets);
+            let findings = docs_rule_snippets::run_rule(fixture.path(), rule).unwrap();
+            assert_eq!(findings.len(), expected, "{heading}[{index}]: {findings:?}");
+        }
+    }
+}
+
+#[test]
+fn no_mistakes_config_examples_execute_unknown_key_and_missing_root_independently() {
+    let rule = "no-mistakes-config";
+    let page = docs_rule_snippets::load_page(&repo_root(), rule);
+    let fallback = docs_rule_snippets::rule_config_yaml(&page.body, rule);
+    for (heading, unknown_key, expected_count) in [
+        ("Unknown-key limitation", true, 0),
+        ("Counterexample", false, 1),
+    ] {
+        let section = docs_rule_snippets::heading_section(&page.body, heading);
+        let fences = docs_rule_snippets::fences(&section);
+        let runs = docs_rule_snippets::snippet_runs(&fences);
+        assert_eq!(
+            runs.len(),
+            1,
+            "{heading}: one independently executed config"
+        );
+        let fixture = docs_rule_snippets::materialize_snippet(&fallback, &runs[0].1);
+        let active = read(&fixture.path().join(".no-mistakes.yml"));
+        assert!(active.contains("rule: no-mistakes-config"), "{active}");
+        assert_eq!(active.contains("unknownKey: true"), unknown_key, "{active}");
+        assert_eq!(
+            active.contains("root: apps/missing"),
+            !unknown_key,
+            "{active}"
+        );
+        let findings = docs_rule_snippets::run_rule(fixture.path(), rule).unwrap();
+        assert_eq!(findings.len(), expected_count, "{heading}: {findings:?}");
+        if !unknown_key {
+            assert_eq!(
+                findings,
+                [".no-mistakes.yml:3:projects.web.root: missing directory `apps/missing`"]
+            );
+        }
+    }
+}
+
+#[test]
+fn no_mistakes_config_documented_line_suppression_targets_the_real_entry() {
+    let rule = "no-mistakes-config";
+    let page = docs_rule_snippets::load_page(&repo_root(), rule);
+    let section = docs_rule_snippets::heading_section(&page.body, "Suppression");
+    let fences = docs_rule_snippets::fences(&section);
+    let runs = docs_rule_snippets::snippet_runs(&fences);
+    assert_eq!(runs.len(), 1);
+    let fallback = docs_rule_snippets::rule_config_yaml(&page.body, rule);
+    let fixture = docs_rule_snippets::materialize_snippet(&fallback, &runs[0].1);
+    assert!(docs_rule_snippets::run_rule(fixture.path(), rule)
+        .unwrap()
+        .is_empty());
+    // Removing just the directive must expose the documented missing root.
+    let unsuppressed: Vec<_> = runs[0]
+        .1
+        .iter()
+        .map(|(lang, code)| {
+            let code = code
+                .lines()
+                .filter(|line| !line.contains("no-mistakes-disable-next-line"))
+                .collect::<Vec<_>>()
+                .join("\n");
+            (lang.clone(), code)
+        })
+        .collect();
+    let fixture = docs_rule_snippets::materialize_snippet(&fallback, &unsuppressed);
+    let findings = docs_rule_snippets::run_rule(fixture.path(), rule).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].contains("projects.web.root: missing directory `generated-at-deploy`"));
+}
+
+#[test]
+fn playwright_locator_documented_fix_targets_the_counterexample_element() {
+    let rule = "playwright-prefer-test-id-locators";
+    let page = docs_rule_snippets::load_page(&repo_root(), rule);
+    let fixes = regex::Regex::new(r#"page\.getByTestId\("([^"]+)"\)"#).unwrap();
+    let fix = fixes.captures(&page.body).expect("documented literal fix");
+    let config = docs_rule_snippets::rule_config_yaml(&page.body, rule);
+    let counter = docs_rule_snippets::counterexample_section(&page.body);
+    let fences = docs_rule_snippets::fences(&counter);
+    let runs = docs_rule_snippets::snippet_runs(&fences);
+    assert_eq!(runs.len(), 1);
+    let fixture = docs_rule_snippets::materialize_snippet(&config, &runs[0].1);
+    let findings = docs_rule_snippets::run_rule(fixture.path(), rule).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    // Verify the real replacement suggested for the matched app element.
+    assert!(
+        findings[0].contains(&format!("Prefer getByTestId('{}')", &fix[1])),
+        "documented fix must match the counterexample element: {findings:?}"
+    );
+}
+
+#[test]
 fn heading_section_skips_hashes_inside_fences_and_accepts_suffixes() {
     let body = "\
 ## Valid example
@@ -229,6 +335,107 @@ flowchart TD
 }
 
 #[test]
+fn named_file_fences_in_one_section_materialize_together() {
+    let runs = docs_rule_snippets::snippet_runs(&[
+        ("toml".into(), "# .mise.toml\n[tools]\nfoo = \"1\"\n".into()),
+        (
+            "yaml".into(),
+            "# .github/actions/setup/action.yml\nVERSION: 1\n".into(),
+        ),
+    ]);
+    assert_eq!(runs.len(), 1, "{runs:?}");
+    assert_eq!(runs[0].0, 0);
+    let fixture = docs_rule_snippets::materialize_snippet(
+        "rules:\n  - rule: version-pin-consistency\n    scope: repository\n",
+        &runs[0].1,
+    );
+    assert!(fixture.path().join(".mise.toml").exists());
+    assert!(fixture
+        .path()
+        .join(".github/actions/setup/action.yml")
+        .exists());
+}
+
+#[test]
+fn text_email_is_file_content_not_a_path() {
+    let fixture = docs_rule_snippets::materialize_snippet(
+        "rules:\n  - rule: test-email-domain-policy\n    scope: repository\n",
+        &[("text".into(), "owner@example.com".into())],
+    );
+    let body = std::fs::read_to_string(fixture.path().join("fixture.txt")).unwrap();
+    assert_eq!(
+        body, "owner@example.com",
+        "a lone email must stay fixture content, not become an empty path"
+    );
+    assert!(
+        !fixture.path().join("owner@example.com").exists(),
+        "email addresses are not path listings"
+    );
+}
+
+#[test]
+fn explicitly_named_configs_preserve_project_facts_and_catalog_paths() {
+    let page = read(&repo_root().join("fixtures/docs-coverage/named-config/page.md"));
+    let fallback = docs_rule_snippets::rule_config_yaml(&page, "postgres-object-naming");
+    let section = docs_rule_snippets::heading_section(&page, "Named config");
+    let fences = docs_rule_snippets::fences(&section);
+    let runs = docs_rule_snippets::snippet_runs(&fences);
+    assert_eq!(runs.len(), 1);
+    let fixture = docs_rule_snippets::materialize_snippet(&fallback, &runs[0].1);
+    let config = std::fs::read_to_string(fixture.path().join(".no-mistakes.yml")).unwrap();
+    assert!(config.starts_with("projects:\n"), "{config}");
+    assert!(config.contains("root: web"), "{config}");
+    assert!(
+        !config.contains("jobs:"),
+        "named configs must not be workflow-wrapped"
+    );
+    assert!(fixture.path().join("db/catalog.json").exists());
+    assert!(!fixture.path().join("fallback.json").exists());
+    // Reading the real named config must enable the pattern, not merely copy YAML.
+    let hits = docs_rule_snippets::run_rule(fixture.path(), "postgres-object-naming").unwrap();
+    assert_eq!(hits.len(), 1, "{hits:?}");
+    assert!(hits[0].contains("uses: is literal text"), "{hits:?}");
+}
+
+#[test]
+fn unnamed_rule_config_examples_keep_the_synthesized_config() {
+    let page = read(&repo_root().join("fixtures/docs-coverage/named-config/page.md"));
+    let fallback = docs_rule_snippets::rule_config_yaml(&page, "postgres-object-naming");
+    let section = docs_rule_snippets::heading_section(&page, "Unnamed config");
+    let fixture =
+        docs_rule_snippets::materialize_snippet(&fallback, &docs_rule_snippets::fences(&section));
+    assert_eq!(
+        std::fs::read_to_string(fixture.path().join(".no-mistakes.yml")).unwrap(),
+        fallback
+    );
+    assert!(fixture.path().join("fallback.json").exists());
+    assert!(!fixture.path().join("ignored.json").exists());
+}
+
+#[test]
+fn text_at_prefixed_paths_are_path_listings() {
+    let fixture = docs_rule_snippets::materialize_snippet(
+        "rules:\n  - rule: test-email-domain-policy\n    scope: repository\n",
+        &[(
+            "text".into(),
+            "app/@modal/page.tsx\npackages/@scope/pkg/index.ts".into(),
+        )],
+    );
+    assert!(
+        fixture.path().join("app/@modal/page.tsx").exists(),
+        "Next.js parallel-route paths must stay named files"
+    );
+    assert!(
+        fixture.path().join("packages/@scope/pkg/index.ts").exists(),
+        "scoped package paths must stay named files"
+    );
+    assert!(
+        !fixture.path().join("fixture.txt").exists(),
+        "at-prefixed paths are not email content"
+    );
+}
+
+#[test]
 fn composite_action_yaml_is_not_wrapped_as_a_workflow() {
     let fixture = docs_rule_snippets::materialize_snippet(
         "rules:\n  - rule: github-actions-composite-step-schema\n    scope: repository\n",
@@ -247,4 +454,24 @@ fn composite_action_yaml_is_not_wrapped_as_a_workflow() {
         !body.contains("jobs:"),
         "timeout-minutes on a composite step must not wrap the file as a workflow: {body}"
     );
+}
+
+#[test]
+fn heading_sections_and_fences_share_delimiter_and_title_boundaries() {
+    // Fake headings and malformed closers must remain inside their saved fence.
+    let body = read(&repo_root().join("fixtures/docs-coverage/fence-sections/page.md"));
+    for (title, expected) in [
+        ("Valid example", "## Inside tilde fence"),
+        ("Counterexample", "## Inside backtick fence"),
+    ] {
+        let section = docs_rule_snippets::heading_section(&body, title);
+        assert!(section.contains(expected), "{title}: {section}");
+        assert!(!section.contains("wrong section"), "{title}: {section}");
+        assert!(!section.contains("outside sections"), "{title}: {section}");
+        let fences = docs_rule_snippets::fences(&section);
+        assert_eq!(fences.len(), 1, "{title}: {fences:?}");
+        assert_eq!(fences[0].0, "markdown");
+        assert!(fences[0].1.contains(expected), "{title}: {fences:?}");
+        assert!(fences[0].1.contains("## Shorter"), "{title}: {fences:?}");
+    }
 }

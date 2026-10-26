@@ -7,7 +7,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 mod errors;
-use errors::{fill_parse_errors, read_errors};
+use errors::{fill_parse_errors, read_errors, recovered_error_facts};
 mod parse_modes;
 use parse_modes::{collect_legacy_variants, collect_standard_variants, VariantParseModes};
 
@@ -47,14 +47,15 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
         {
             // Unknown extensions were historically parsed as TypeScript by
             // this rule. Avoid a competing unsupported Standard parse.
-            let stored_source = should_store_source(variant.plan).then(|| Arc::clone(&source));
+            let stored_source =
+                should_store_source(variant.plan, path).then(|| Arc::clone(&source));
             results[index] = Some(CheckFileFacts {
                 ts: Arc::new(super::ts_source(stored_source.clone())),
                 source: stored_source,
                 ..CheckFileFacts::default()
             });
         } else if variant.plan.storybook && is_mdx_file(path)
-            || !requires_parse(variant.plan, path, variant.playwright)
+            || !requires_parse(variant.root, variant.plan, path, variant.playwright)
         {
             results[index] = collect_file_facts_from_source(
                 session,
@@ -131,64 +132,10 @@ fn collect_variant(
         variant.playwright,
         parsed_source,
         program,
-        should_store_source(variant.plan).then(|| Arc::clone(source)),
+        should_store_source(variant.plan, path).then(|| Arc::clone(source)),
     );
     if recovery.symbols {
         facts.legacy_symbols = facts.symbols.clone();
     }
     facts
-}
-
-fn recovered_error_facts(
-    path: &Path,
-    variant: &CheckFactVariant<'_>,
-    source: &Arc<str>,
-    program: &oxc_ast::ast::Program<'_>,
-    parsed_source: &str,
-    parse_error: String,
-    recovery: VariantRecovery,
-) -> CheckFileFacts {
-    let plan = variant.plan;
-    let stored_source = should_store_source(plan).then(|| Arc::clone(source));
-    let mut ts = super::super::file_parse_error::ts_facts(
-        plan,
-        stored_source.clone(),
-        parsed_source,
-        program,
-        parse_error.clone(),
-    );
-    ts.fatal_parse_error = recovery.fatal_parse_error;
-    let symbols = (recovery.symbols && (plan.symbols || plan.graph.symbols)).then(|| {
-        Arc::new(crate::codebase::ts_symbols::extract_symbols_from_program(
-            program,
-            parsed_source,
-        ))
-    });
-    if let Some(symbols) = &symbols {
-        ts.symbols = Some(Arc::clone(symbols));
-    }
-    let integration_runner_config = plan.integration_runner_configs.as_ref().and_then(|runner| {
-        runner.parse_error(
-            path,
-            format!("failed to parse {}: {parse_error}", path.display()),
-        )
-    });
-    CheckFileFacts {
-        ts: Arc::new(ts),
-        source: stored_source,
-        symbols: symbols.clone(),
-        legacy_symbols: symbols,
-        integration_runner_config,
-        embedded_sql: super::program::prepared_embedded_sql(
-            variant.root,
-            path,
-            parsed_source,
-            program,
-            plan,
-        ),
-        parse_error: Some(parse_error),
-        parsed: true,
-        server_route_client_boundary: plan.server_route_client_boundary.then(Default::default),
-        ..CheckFileFacts::default()
-    }
 }

@@ -1,7 +1,9 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const helpers = require("./postgres-runtime-helpers");
+const { resolveVariable, unwrapTs } = require("./postgres-query-text");
 
 const {
   executedQueryText,
@@ -14,6 +16,38 @@ const {
   isOwnerFile,
   sqlStatementBindings,
 } = helpers;
+
+// Only supplement legacy text recovery. Each hop stays in its declaring scope
+// and reads a completed, unwritten const initializer; no runtime SQL evaluation.
+function constChainText(argument, context) {
+  let node = unwrapTs(argument);
+  const seen = new Set();
+  while (node?.type === "Identifier") {
+    const variable = resolveVariable(node, context);
+    if (!variable || seen.has(variable) || variable.defs.length !== 1) return null;
+    seen.add(variable);
+    const def = variable.defs[0];
+    if (
+      def.node.type !== "VariableDeclarator" ||
+      def.node.id.type !== "Identifier" ||
+      def.parent.kind !== "const" ||
+      !def.node.init ||
+      context.sourceCode.getScope(node) !== variable.scope ||
+      def.node.init.range[1] > node.range[0] ||
+      variable.references.some(
+        (reference) =>
+          (reference.isWrite() && !reference.init) ||
+          context.sourceCode.getScope(reference.identifier) !== variable.scope,
+      )
+    )
+      return null;
+    node = unwrapTs(def.node.init);
+  }
+  if (node?.type === "Literal" && typeof node.value === "string") return node.value;
+  if (node?.type === "TemplateLiteral" && node.expressions.length === 0)
+    return node.quasis[0].value.cooked;
+  return null;
+}
 
 module.exports = Object.assign(
   rule(
@@ -35,19 +69,22 @@ module.exports = Object.assign(
     },
     (context) => {
       const options = executorOptionDefaults(context.options?.[0] ?? {});
+      const suppressed = ruleSuppression(context, "postgres-no-manual-transaction");
       if (isOwnerFile(context.filename, options.owners)) return {};
       let bindings = new Set();
       let statements = new Map();
 
       return {
         Program(node) {
-          bindings = executorBindings(node, options, context.filename);
+          bindings = executorBindings(node, options, context.filename, context);
           statements = sqlStatementBindings(node);
         },
         CallExpression(node) {
+          if (suppressed(node)) return;
           if (!isDatabaseCall(node, bindings)) return;
-          const argument = firstCallArgument(node);
-          const text = executedQueryText(argument, statements, context);
+          const argument = firstCallArgument(node, bindings);
+          const text =
+            executedQueryText(argument, statements, context) ?? constChainText(argument, context);
           if (!isManualTransactionText(text)) return;
           context.report({ node, messageId: "manualTransaction" });
         },

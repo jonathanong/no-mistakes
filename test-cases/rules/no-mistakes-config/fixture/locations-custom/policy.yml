@@ -1,0 +1,7 @@
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+  - rule: unique-exports
+    enabled: false
+    exclude:
+      - "gone/**/*.ts"

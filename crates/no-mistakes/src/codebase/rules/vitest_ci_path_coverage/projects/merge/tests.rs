@@ -17,6 +17,7 @@ fn project(
         include: include.iter().map(|item| item.to_string()).collect(),
         exclude: exclude.iter().map(|item| item.to_string()).collect(),
         declared_deadlines: Default::default(),
+        matcher_warnings: Vec::new(),
         vitest_setup: Vec::new(),
     }
 }

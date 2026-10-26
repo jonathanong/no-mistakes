@@ -27,6 +27,8 @@ pub(crate) fn sql_evidence_for_call(
 ) -> Option<SqlEvidenceKind> {
     if status == SqlVerdictStatus::Abstain {
         None
+    } else if call.variants_truncated() {
+        Some(SqlEvidenceKind::VerifiedPrefix)
     } else if !call.variants.is_empty() {
         Some(SqlEvidenceKind::ExhaustiveUnion)
     } else if call.kind == EmbeddedSqlKind::Dynamic {

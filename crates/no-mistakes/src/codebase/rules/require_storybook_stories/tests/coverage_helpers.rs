@@ -387,7 +387,8 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
         &include,
         &exclude,
         &test_filter,
-    );
+    )
+    .0;
     assert_eq!(
         selected
             .iter()
@@ -446,6 +447,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
                                 line: 2,
                             }],
                             mock_specifiers: vec!["../OtherProject".to_string()],
+                            ..Default::default()
                         },
                     ),
                     ..Default::default()
@@ -461,6 +463,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
                                 line: 1,
                             }],
                             mock_specifiers: Vec::new(),
+                            ..Default::default()
                         },
                     ),
                     ..Default::default()

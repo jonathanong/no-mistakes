@@ -106,7 +106,12 @@ fn annotation_projects_only_its_profile_without_losing_imported_helper_calls() {
             crate::codebase::postgres::configured_embedded_sql_options_for_checks(&config).unwrap(),
         ..Default::default()
     };
-    crate::codebase::postgres::configure_prepared_postgres_plan(&config, &mut plan).unwrap();
+    crate::codebase::postgres::configure_prepared_postgres_plan(
+        std::path::Path::new("/repo"),
+        &config,
+        &mut plan,
+    )
+    .unwrap();
     assert_eq!(plan.embedded_sql_options.len(), 2);
     assert_eq!(plan.query_annotation_options.as_ref().unwrap().len(), 1);
     let sources = Arc::new(crate::codebase::ts_source::SourceStore::new(Arc::new(
@@ -145,4 +150,46 @@ fn annotation_projects_only_its_profile_without_losing_imported_helper_calls() {
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "src/helper.mts");
     assert_eq!(findings[0].line, 3);
+}
+
+#[test]
+fn low_heads_and_executor_projection_share_one_parse_without_evaluation() {
+    let saved = crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+        .join("low-heads");
+    let fixture = crate::test_support::materialize_saved_fixture(&saved);
+    let root = normalize_path(fixture.path());
+    let path = normalize_path(&root.join("root.mts"));
+    let profile =
+        crate::codebase::postgres::EmbeddedSqlOptions::configured("@bench/db", &["read".into()]);
+    crate::ast::begin_parse_count(&root);
+    let facts = collect_check_facts(
+        &root,
+        vec![path.clone()],
+        CheckFactPlan {
+            query_annotation_heads: true,
+            embedded_sql_options: vec![profile.clone()],
+            ..Default::default()
+        },
+    );
+    let counts = crate::ast::finish_parse_count(&root);
+    assert_eq!(counts.get(&path), Some(&1), "{counts:#?}");
+
+    let file = facts.ts.get(&path).expect("parsed file facts");
+    assert!(file.ts.module_bindings.is_some());
+    assert_eq!(file.embedded_sql.len(), 1);
+    assert_eq!(file.embedded_sql[0].0, profile);
+    assert!(!file.embedded_sql[0].1.call_spans.is_empty());
+    let heads = file
+        .query_annotation_heads
+        .as_ref()
+        .expect("low-head projection");
+    assert!(file.embedded_sql[0]
+        .1
+        .call_spans
+        .iter()
+        .any(|span| heads.accepts(*span)));
+    assert!(
+        file.query_annotation.is_empty(),
+        "helper evaluator is skipped"
+    );
 }

@@ -46,6 +46,7 @@ rules:
   - rule: postgres-sql-shape-policy
     scope: repository
     options:
+      executorNames: []
       sqlInclude: ["**/*.sql"]
       bannedShapes:
         - correlated-exists-set-operation
@@ -138,8 +139,17 @@ SELECT 1 WHERE EXISTS (
   UNION ALL
   SELECT 1 FROM topics WHERE id = $1
 );
+```
+
+```sql
 SELECT id FROM accounts a WHERE NOT EXISTS (SELECT 1 FROM bans b WHERE b.account_id = a.id);
+```
+
+```sql
 SELECT id FROM accounts WHERE id NOT IN (1, 2, 3);
+```
+
+```sql
 SELECT account_id FROM orders GROUP BY account_id HAVING COUNT(*) > 0;
 ```
 
@@ -152,7 +162,13 @@ WHERE EXISTS (
   UNION ALL
   SELECT 1 FROM tags WHERE tags.post_id = posts.id
 );
+```
+
+```sql
 SELECT id FROM accounts WHERE id NOT IN (SELECT account_id FROM bans);
+```
+
+```sql
 SELECT COUNT(*) > 0 AS has_orders FROM orders WHERE account_id = $1;
 ```
 
@@ -162,6 +178,30 @@ Rewrite so the set operation is not inside a correlated `EXISTS`: test
 `IN (SELECT … FROM (<set-operation>) alias)` or use one restricted subquery.
 Replace `NOT IN (SELECT …)` and a `COUNT(*)` compared with 0 or 1 with
 `NOT EXISTS (SELECT 1 FROM … WHERE …)` or `EXISTS (SELECT 1 FROM … WHERE …)`.
+
+## Analysis
+
+Raw SQL parse failures retain each failing statement's first code token. Separate
+statements produce separate findings, and a `no-mistakes-disable-next-line`
+directive immediately above one statement suppresses that failure independently.
+Successfully parsed sibling statements remain analyzable.
+
+### Effort
+
+Runs at `max` only. Configuring `effort: low` (rule option, repository `effort`, or the invocation override) is not an error: the rule has no low implementation, so the check warns `requested effort low; effective effort max because this rule has no low implementation` and runs at `max`. At max it evaluates executor calls in TS/JS (helpers, builders, and up to 16 finite SQL alternatives per call) and SQL files selected by `sqlInclude`.
+
+### Unanalyzable inputs
+
+Following recall over precision ([how analysis works](../../README.md#how-analysis-works)), inputs this rule cannot prove are never treated as clean; they follow `options.unanalyzable`.
+
+- Inputs this rule cannot prove: executor calls whose SQL has no complete recovered alternative or exceeds the 16-alternative cap (for example `query(buildSql(filters))` with an unrecoverable helper), and SQL, embedded or in a `sqlInclude` file, that fails to parse. They follow `options.unanalyzable`:
+  - `report` (default): fails as a finding, e.g. `executed SQL is not statically recoverable for shape policy` or `SQL could not be analyzed for shape policy`.
+  - `advise`: a non-failing advisory with the same reason.
+  - `ignore`: omitted.
+
+  Definite violations remain findings under every policy. The legacy `unanalyzableSql: fail` spelling means `report`; `advise` and `ignore` keep their names.
+
+The finding target is taken from the enabled `bannedShapes`.
 
 ## Suppression
 

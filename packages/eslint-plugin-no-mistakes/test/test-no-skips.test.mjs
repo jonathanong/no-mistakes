@@ -6,6 +6,33 @@ import { fixture, lint, messages, plugin, __dirname } from "./helpers.mjs";
 const rule = "test-no-skips";
 const code = (name) => fixture(`test-no-skips/${name}.ts`);
 describe(rule, () => {
+  it("resolves immutable lexical keys through runner aliases and extended APIs", () => {
+    const findings = lint(
+      code("immutable-keys"),
+      { [`no-mistakes/${rule}`]: "error" },
+      "suite.test.ts",
+    );
+    assert.deepEqual(
+      findings.map(({ line, messageId }) => [line, messageId]),
+      [
+        [7, "modifier"],
+        [8, "modifier"],
+        [10, "modifier"],
+        [12, "modifier"],
+        [13, "modifier"],
+        [14, "modifier"],
+        [15, "modifier"],
+        [18, "modifier"],
+        [20, "modifier"],
+      ],
+    );
+  });
+  it("leaves dynamic, imported, reassigned, cyclic and shadowed keys unresolved", () => {
+    assert.deepEqual(
+      messages(code("immutable-key-controls"), rule, undefined, "suite.test.ts"),
+      [],
+    );
+  });
   it("reports each modifier and table chain once, with bound contexts only", () => {
     const findings = lint(code("modifiers"), { [`no-mistakes/${rule}`]: "error" }, "suite.test.ts");
     assert.deepEqual(
@@ -13,6 +40,21 @@ describe(rule, () => {
       [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15],
     );
     assert.ok(findings.every((item) => item.messageId === "modifier"));
+  });
+  it("follows Vitest callback skip bindings without treating table data as context", () => {
+    const findings = lint(
+      code("context-bindings"),
+      { [`no-mistakes/${rule}`]: "error" },
+      "suite.test.ts",
+    );
+    assert.deepEqual(
+      findings.map(({ line, messageId }) => [line, messageId]),
+      [4, 5, 6, 7, 10, 15, 19, 21, 24].map((line) => [line, "modifier"]),
+    );
+    assert.deepEqual(
+      messages(code("context-bindings"), rule, { allow: ["skip"] }, "suite.test.ts"),
+      [],
+    );
   });
   it("ignores test data, unrelated members, and shadowed bindings", () => {
     assert.deepEqual(messages(code("lookalikes"), rule, undefined, "suite.test.ts"), []);
@@ -256,6 +298,14 @@ describe("test-no-skips suppression and binding edges", () => {
       [17, 18, 19, 21],
     );
   });
+  it("follows a Playwright default import, a namespace destructure, and static member keys", () => {
+    assert.deepEqual(messages(code("recall"), rule, undefined, "suite.test.ts"), [
+      "modifier",
+      "modifier",
+      "modifier",
+      "modifier",
+    ]);
+  });
 });
 
 it("loads test-no-skips in Oxlint with the same import and suppression semantics", () => {
@@ -282,5 +332,13 @@ it("loads test-no-skips in Oxlint with the same import and suppression semantics
   const suppressed = run("suppression-file");
   assert.ok(
     !JSON.parse(suppressed.stdout).diagnostics.some((item) => item.code?.includes("test-no-skips")),
+  );
+  const bound = run("context-bindings");
+  assert.notEqual(bound.status, 0);
+  assert.deepEqual(
+    JSON.parse(bound.stdout)
+      .diagnostics.filter((item) => item.code?.includes("test-no-skips"))
+      .map((item) => item.labels[0].span.line),
+    [4, 5, 6, 7, 10, 15, 19, 21, 24],
   );
 });

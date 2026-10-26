@@ -22,10 +22,16 @@ await fetch("/api/users", { method: `POST` });
 
 This rule has no options.
 
+`globalThis`, `window`, `self`, and `global` `fetch`, a string or expression-free template member, a single `const` alias, `const { fetch }` from those roots, an optional call, and `.call` or a literal-array `.apply` are the same call. `.call` and `.apply` shift the arguments.
+
 ## Fix
 
 Use a string literal or an expression-free template. Split genuinely dynamic
 methods into small static branches when route analysis matters.
+
+## Limits
+
+`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. `.apply` with a non-literal argument list is not rewritten. A computed identifier key is not the `fetch` property, including when that identifier is spelled `fetch`: `const fetch = "setTimeout"; const { [fetch]: schedule } = globalThis`. `const request = fetch as typeof fetch` is still `fetch`. `(globalThis as typeof globalThis).fetch` and `const { fetch: request } = globalThis as typeof globalThis` are still the global `fetch`.
 
 ## Suppression
 

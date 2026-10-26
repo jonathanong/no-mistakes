@@ -1,19 +1,8 @@
 use super::{collect_elixir_facts, extract_elixir_imports, primary_module};
 use std::path::{Path, PathBuf};
 
-#[test]
-fn exact_alias_import_and_use_extract() {
-    let source = r#"
-alias MyApp.User
-alias MyApp.{Role, Team}
-import MyApp.Accounts
-use Phoenix.Controller
-"#;
-    assert_eq!(
-        extract_elixir_imports(source),
-        vec!["MyApp.Accounts", "MyApp.User", "Phoenix.Controller"]
-    );
-}
+#[path = "elixir_tests/brace_rejection.rs"]
+mod brace_rejection;
 
 #[test]
 fn primary_module_prefers_filename_over_nested_builder() {
@@ -75,6 +64,11 @@ fn elixir_collects_aliases_and_phoenix_routes() {
         .find(|file| file.path.ends_with("app.ex"))
         .expect("app");
     assert!(app.imports.iter().any(|import| import == "MyApp.User"));
+    assert!(app.imports.iter().any(|import| import == "MyApp.Role"));
+    assert!(app
+        .imports
+        .iter()
+        .all(|import| import != "MyApp.Ghost" && !import.contains(".Foo")));
     assert_eq!(app.module.as_deref(), Some("MyApp.App"));
     let router = facts
         .files
@@ -89,6 +83,36 @@ fn elixir_collects_aliases_and_phoenix_routes() {
         .route_handlers
         .iter()
         .any(|(route, handler)| route == "/users" && handler.ends_with(".create")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/api/items" && handler.ends_with(".index")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/after-comment-end" && handler.ends_with(".index")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/z" && handler.ends_with(".index")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/g/h" && handler.ends_with(".index")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/after-inline" && handler.ends_with(".index")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| route == "/aliased" && handler.ends_with(".index")));
+    assert!(router.route_handlers.iter().all(|(route, _)| {
+        route != "/api/after-comment-end"
+            && route != "/e/z"
+            && route != "/g/after-inline"
+            && !route.contains("#{")
+    }));
     let computed = facts
         .files
         .values()

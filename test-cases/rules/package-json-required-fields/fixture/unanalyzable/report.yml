@@ -1,0 +1,6 @@
+rules:
+  - rule: package-json-required-fields
+    scope: repository
+    options:
+      unanalyzable: report
+      private: true

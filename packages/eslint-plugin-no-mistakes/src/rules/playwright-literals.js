@@ -2,7 +2,6 @@
 
 const {
   attributeName,
-  callMethodName,
   isSelectorAttribute,
   options,
   rule,
@@ -10,6 +9,8 @@ const {
   selectorValueNode,
 } = require("../helpers");
 const { isLiteralLike } = require("../defaulted-props");
+const { ruleSuppression } = require("../rule-suppression");
+const { invokedCall, methodFromCallee } = require("./playwright-static-call");
 
 module.exports = rule(
   {
@@ -34,6 +35,7 @@ module.exports = rule(
     },
   },
   (context) => {
+    const suppressed = ruleSuppression(context, "playwright-literals");
     const opts = {
       allowDefaultedProps: options(context).allowDefaultedProps !== false,
       allowStaticTemplates: options(context).allowStaticTemplates === true,
@@ -47,15 +49,18 @@ module.exports = rule(
         }
         const valueNode = selectorValueNode(node);
         if (!valueNode || !isLiteralLike(valueNode, opts, context)) {
+          if (suppressed(node)) return;
           context.report({ node, messageId: "literal" });
         }
       },
       CallExpression(node) {
-        if (callMethodName(node) !== "getByTestId") {
+        const invoked = invokedCall(node);
+        if (!invoked || methodFromCallee(invoked.callee, context) !== "getByTestId") {
           return;
         }
-        const arg = node.arguments[0];
+        const arg = invoked.arguments[0];
         if (!arg || !isLiteralLike(arg, opts, context)) {
+          if (suppressed(arg || node)) return;
           context.report({ node: arg || node, messageId: "literal" });
         }
       },

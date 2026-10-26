@@ -2,7 +2,7 @@
 mod empty;
 mod fetch;
 mod fixed_count;
-use fixed_count::is_fixed_at;
+pub(super) use fixed_count::is_fixed_at;
 mod zero;
 pub(super) use super::tokens::Tokens;
 use super::SqlLimitValue;

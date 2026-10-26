@@ -8,14 +8,19 @@ mod const_literals;
 mod executor_arguments;
 mod executors;
 mod flow;
+mod head_calls;
 mod iife;
 mod imported;
+mod loop_visits;
 mod namespace_imports;
+mod observability;
 mod reference_escapes;
 pub(crate) mod resolve;
 mod scope;
 mod scope_visits;
 mod state;
+mod undeclared;
+mod undeclared_receivers;
 mod variants;
 pub(super) use state::{collect_calls, BindingState, ScopeVisitor};
 
@@ -25,7 +30,9 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         resolve::hoist_vars(&program.body, self);
         resolve::record_statements(&program.body, self);
         walk::walk_program(self, program);
-        imported::constants::snapshot_exports(self, program);
+        if !self.head_calls_only {
+            imported::constants::snapshot_exports(self, program);
+        }
         self.pop_scope();
     }
 
@@ -174,30 +181,35 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 
     fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
         resolve::enter_classic_for(statement, self);
-        self.with_loop(|visitor| walk::walk_for_statement(visitor, statement));
+        self.with_append_loop(statement.span.start, |visitor| {
+            walk::walk_for_statement(visitor, statement)
+        });
         resolve::leave_classic_for(statement, self);
     }
 
     fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {
-        self.push_scope();
-        resolve::bind_for_statement_left(&statement.left, self);
-        self.with_loop(|visitor| walk::walk_for_in_statement(visitor, statement));
-        self.pop_scope();
+        loop_visits::for_in_statement(self, statement);
     }
 
     fn visit_for_of_statement(&mut self, statement: &oxc_ast::ast::ForOfStatement<'a>) {
         self.push_scope();
         resolve::bind_for_statement_left(&statement.left, self);
-        self.with_loop(|visitor| walk::walk_for_of_statement(visitor, statement));
+        self.with_append_loop(statement.span.start, |visitor| {
+            walk::walk_for_of_statement(visitor, statement)
+        });
         self.pop_scope();
     }
 
     fn visit_while_statement(&mut self, statement: &oxc_ast::ast::WhileStatement<'a>) {
-        self.with_loop(|visitor| walk::walk_while_statement(visitor, statement));
+        self.with_append_loop(statement.span.start, |visitor| {
+            walk::walk_while_statement(visitor, statement)
+        });
     }
 
     fn visit_do_while_statement(&mut self, statement: &oxc_ast::ast::DoWhileStatement<'a>) {
-        self.with_loop(|visitor| walk::walk_do_while_statement(visitor, statement));
+        self.with_append_loop(statement.span.start, |visitor| {
+            walk::walk_do_while_statement(visitor, statement)
+        });
     }
 
     fn visit_switch_statement(&mut self, statement: &oxc_ast::ast::SwitchStatement<'a>) {

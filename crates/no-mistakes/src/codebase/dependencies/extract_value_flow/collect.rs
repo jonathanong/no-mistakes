@@ -1,4 +1,6 @@
 use super::*;
+#[path = "binding_patterns.rs"]
+mod binding_patterns;
 #[path = "for_of_value_binding.rs"]
 mod for_of_value_binding;
 
@@ -35,70 +37,6 @@ impl ImportCollector {
                 return;
             }
             self.record_value_pattern(&declarator.id, value, declarator.span.start, immutable);
-        }
-    }
-    pub(super) fn record_value_pattern(
-        &mut self,
-        pattern: &BindingPattern<'_>,
-        value: ValueExpression,
-        declared_at: u32,
-        immutable: bool,
-    ) {
-        match pattern {
-            BindingPattern::BindingIdentifier(identifier) => {
-                let name = identifier.name.to_string();
-                let scope = self
-                    .callee_binding_scope(&name)
-                    .unwrap_or(self.current_lexical_scope_id());
-                self.value_binding_indexes
-                    .entry(scope)
-                    .or_default()
-                    .entry(name.clone())
-                    .or_default()
-                    .push(self.value_flow.bindings.len());
-                self.record_value_reference(scope, &name, &value);
-                self.value_flow.bindings.push(ValueBinding {
-                    immutable,
-                    owner: self.current_function_id(),
-                    name,
-                    scope,
-                    declared_at,
-                    repeated: self.repeat_depth > self.call_repeat_base,
-                    invalidated_at: None,
-                    mutation_contexts: fx_set(),
-                    value,
-                });
-            }
-            BindingPattern::ObjectPattern(object) => {
-                let shared = std::sync::Arc::new(value);
-                for property in &object.properties {
-                    if !property.computed {
-                        if let Some(key) =
-                            crate::codebase::ts_source::static_property_key_name(&property.key)
-                        {
-                            self.record_value_pattern(
-                                &property.value,
-                                ValueExpression::Member(
-                                    std::sync::Arc::clone(&shared),
-                                    key.to_string(),
-                                ),
-                                declared_at,
-                                immutable,
-                            );
-                        }
-                    }
-                }
-            }
-            BindingPattern::AssignmentPattern(assignment) => self.record_value_pattern(
-                &assignment.left,
-                ValueExpression::Default(
-                    std::sync::Arc::new(value),
-                    std::sync::Arc::new(self.value_expression(&assignment.right)),
-                ),
-                declared_at,
-                immutable,
-            ),
-            BindingPattern::ArrayPattern(_) => {}
         }
     }
     pub(in super::super) fn record_value_parameters(&mut self, params: &FormalParameters<'_>) {
@@ -174,6 +112,12 @@ impl ImportCollector {
     ) {
         self.invalidate_replacement_execution();
         if self.collect_value_flow {
+            if let Some(owner) = self.current_function_id() {
+                self.receiver_escapes
+                    .return_offsets
+                    .entry(owner)
+                    .or_insert(statement.span.end);
+            }
             self.note_value_return(statement);
         }
         walk::walk_return_statement(self, statement);

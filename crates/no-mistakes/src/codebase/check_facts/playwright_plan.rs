@@ -9,6 +9,7 @@ mod merge;
 mod module_resolution;
 mod regex_cache;
 mod source;
+mod warnings;
 pub(crate) use module_resolution::PlaywrightModuleResolution;
 use regex_cache::SelectorRegexCache;
 
@@ -20,8 +21,12 @@ pub struct PlaywrightFactPlan {
     config_files: Arc<crate::fx::PathSet>,
     source_plans: Vec<PlaywrightSourceFactPlan>,
     test_files_by_project: super::PlaywrightTestFilesByProject,
+    matcher_warnings: Arc<std::collections::BTreeMap<Option<String>, Vec<String>>>,
     module_resolution: Option<Arc<PlaywrightModuleResolution>>,
     regex_cache: SelectorRegexCache,
+    /// When true, skip identifier/helper/cross-file test-id recovery.
+    /// Default is false so existing Default plans keep today's analysis.
+    pub skip_dynamic_recovery: bool,
 }
 
 #[derive(Clone)]

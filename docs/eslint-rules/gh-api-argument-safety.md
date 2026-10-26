@@ -47,8 +47,17 @@ Renamed and namespace imports work; shadowed imports do not match.
 
 A wrapper is a configuration assertion about that exact module-level binding or
 unbound global, not import resolution or proof of its implementation. Nested
-shadowing and reassigned root bindings are excluded. Dynamic member names and
-aliases are not followed. Unrelated arrays starting with `api` are ignored.
+shadowing and reassigned root bindings are excluded. Same-file immutable `const`
+aliases, namespace aliases, and object destructuring
+without defaults preserve that binding identity, including static string or
+expression-free template keys. Optional/comma calls and `.call` / literal-array
+`.apply` forwarding preserve the configured argv position. A configured method
+literally named `call` or `apply` uses its original arguments, including when
+forwarded again as `api.call.call(null, argv)`. Unmatched nested intrinsic
+forwarding uses the explicit receiver: `ghApi.call.call(other, null, argv)`
+invokes `other(argv)` and is not attributed to `ghApi`. Dynamic member
+names, mutable aliases, destructuring defaults, and cross-file aliases are not
+followed. Unrelated arrays starting with `api` are ignored.
 
 Only literal arrays are inspected. Endpoint templates retain their static
 segments, so a slash before a question mark is detected across substitutions.
@@ -65,10 +74,16 @@ as `repos/${repo}/labels`, cannot become a flag or the exact `graphql` endpoint,
 so its field flags still require an explicit method. It does not execute arrays, follow argv aliases, or prove unknown
 requests safe. Configure wrappers only for APIs with this argv protocol.
 
+Same-file `child_process` namespace members, a default import of that module, a single `const` alias, a string or expression-free template member, an optional call, and a comma callee are the same call. `execFile.call` and a literal-array `execFile.apply` shift the arguments. A spread `.call` or a non-literal `.apply` is not read as argv.
+
 ## Fix
 
 Move query parameters into `-f name=value` or `-F name=value` arguments and specify
 `-X GET` (or the intended write method). No automatic fix rewrites request data.
+
+## Limits
+
+Another file's re-export is not visible here. `import { run } from "./barrel.mjs"; run("gh", ["api", "repos/O/R/labels?per_page=100"])` stays unreported when `barrel.mjs` is `export { execFile as run } from "node:child_process"` or `export * from "node:child_process"`. A parameter default such as `function run({ execFile } = cp)` is not judged, because the caller can pass a different object. `.apply` with a non-literal argument list is not rewritten. `const run = (0, execFile)` is still `execFile`. `const run = execFile<string>` is still `execFile`. `import * as cp from "node:child_process"; const child = cp; child.execFile(...)` is still `execFile`.
 
 ## Suppression
 

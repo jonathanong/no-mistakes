@@ -1,7 +1,7 @@
 use super::heredoc;
-use super::{
-    flush_command, flush_word, push_char, skip_arithmetic, take_expansion, Command, Parse,
-};
+use super::{flush_command, push_char, skip_arithmetic, Command, Parse};
+
+mod word;
 
 struct Scan<'a> {
     chars: &'a [char],
@@ -9,6 +9,7 @@ struct Scan<'a> {
     line: usize,
     word: String,
     word_line: usize,
+    word_expansion_may_split: bool,
     quoting: Option<char>,
     current: Command,
     commands: Vec<Command>,
@@ -25,6 +26,7 @@ pub(super) fn run(script: &str) -> Parse {
         line: 1,
         word: String::new(),
         word_line: 1,
+        word_expansion_may_split: false,
         quoting: None,
         current: Command {
             dynamic: false,
@@ -36,7 +38,7 @@ pub(super) fn run(script: &str) -> Parse {
         stop: false,
     };
     while scan.index < scan.chars.len() && !scan.step() {}
-    flush_word(&mut scan.word, &mut scan.current, scan.word_line);
+    scan.flush_word();
     flush_command(&mut scan.current, &mut scan.commands);
     Parse {
         commands: scan.commands,
@@ -77,22 +79,6 @@ impl<'a> Scan<'a> {
         true
     }
 
-    fn quoted(&mut self, ch: char) -> bool {
-        let Some(quote) = self.quoting else {
-            return false;
-        };
-        if ch == quote {
-            self.quoting = None;
-        } else {
-            push_char(&mut self.word, &mut self.word_line, self.line, ch);
-            if ch == '\n' {
-                self.line += 1;
-            }
-        }
-        self.index += 1;
-        true
-    }
-
     /// `#` starts a comment only at the beginning of a word, outside quotes.
     /// The newline stays for `separator`, so a here-document opener on the
     /// same line still skips its body (`cat <<EOF # note`).
@@ -121,39 +107,15 @@ impl<'a> Scan<'a> {
         true
     }
 
-    fn start_quote(&mut self, ch: char) -> bool {
-        if ch != '\'' && ch != '"' {
-            return false;
-        }
-        self.quoting = Some(ch);
-        self.index += 1;
-        true
-    }
-
-    fn expansion(&mut self, ch: char) -> bool {
-        if ch == '`' {
-            self.current.dynamic = true;
-        }
-        if ch != '$' || !matches!(self.chars.get(self.index + 1), Some(&'(' | &'{')) {
-            return false;
-        }
-        self.current.dynamic = true;
-        if self.word.is_empty() {
-            self.word_line = self.line;
-        }
-        self.index = take_expansion(self.chars, self.index, &mut self.word, &mut self.line);
-        true
-    }
-
     fn heredoc_op(&mut self) -> bool {
         match heredoc::look(self.chars, self.index) {
             Some(heredoc::Look::Herestring { index }) => {
-                flush_word(&mut self.word, &mut self.current, self.word_line);
+                self.flush_word();
                 self.index = index;
                 true
             }
             Some(heredoc::Look::Document { index, opener }) => {
-                flush_word(&mut self.word, &mut self.current, self.word_line);
+                self.flush_word();
                 flush_command(&mut self.current, &mut self.commands);
                 self.pending = Some(opener);
                 self.index = index;
@@ -171,7 +133,7 @@ impl<'a> Scan<'a> {
         {
             return false;
         }
-        flush_word(&mut self.word, &mut self.current, self.word_line);
+        self.flush_word();
         flush_command(&mut self.current, &mut self.commands);
         if ch == '\n' {
             if let Some(opener) = self.pending.take() {
@@ -197,7 +159,7 @@ impl<'a> Scan<'a> {
         if !ch.is_whitespace() && ch != '<' && ch != '>' {
             return false;
         }
-        flush_word(&mut self.word, &mut self.current, self.word_line);
+        self.flush_word();
         self.index += 1;
         true
     }

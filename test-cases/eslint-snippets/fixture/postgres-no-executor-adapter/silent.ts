@@ -51,13 +51,18 @@ export function stored(
   let rebound = read;
   run(rebound, account);
   run(read.bind, account);
-  run(read?.bind(null), account);
-  run(read.bind?.(null), account);
   run(((statement: string) => read(statement)).bind(null), account);
   run(read[name](null), account);
   run(read[`${name}`](null), account);
   run(read(account), account);
-  run({ get exec() { return read; } }, account);
+  run(
+    {
+      get exec() {
+        return read;
+      },
+    },
+    account,
+  );
   run({ set exec(_value: unknown) {} }, account);
   class Box {
     #bind() {

@@ -1,0 +1,3 @@
+# The metadata lookup follows the last authored duplicate, if the loader accepts it.
+root: first
+root: second

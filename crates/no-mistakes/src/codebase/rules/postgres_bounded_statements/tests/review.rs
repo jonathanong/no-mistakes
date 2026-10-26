@@ -214,24 +214,28 @@ fn a_lateral_source_that_reads_the_row_through_a_bare_column_bounds_nothing() {
              orders o WHERE a.id = $1 AND o.id = c.id"
         )
     };
-    // The same as naming the account's column.
-    assert_eq!(names(&sql("a.id AS id")), ["orders"]);
+    // Qualified references retain the independently pinned driver identity; bare reads do not.
+    assert!(names(&sql("a.id AS id")).is_empty());
     assert_eq!(names(&sql("id")), ["orders"]);
     // `code` is the source's own column, so it is bounded by its limit.
     assert!(names(&sql("code AS id")).is_empty());
 }
 
 #[test]
-fn a_data_modifying_cte_bounds_nothing_pinned_to_it() {
-    // RETURNING yields a row per modified row; nothing in the text sizes it.
-    for sql in [
-        "WITH moved AS (INSERT INTO archive SELECT * FROM orders RETURNING id) \
-         DELETE FROM orders USING moved WHERE orders.id = moved.id",
+fn a_data_modifying_cte_bounds_joined_rows_only_when_its_target_is_bounded() {
+    // INSERT remains opaque; a key-pinned DELETE RETURNING carries its target row cap.
+    assert_eq!(
+        names(
+            "WITH moved AS (INSERT INTO archive SELECT * FROM orders RETURNING id) \
+             DELETE FROM orders USING moved WHERE orders.id = moved.id"
+        ),
+        ["orders"]
+    );
+    assert!(names(
         "WITH d AS (DELETE FROM sessions WHERE id = $1 RETURNING id) \
-         SELECT 1 FROM orders o JOIN d ON o.id = d.id",
-    ] {
-        assert_eq!(names(sql), ["orders"], "{sql}");
-    }
+         SELECT 1 FROM orders o JOIN d ON o.id = d.id"
+    )
+    .is_empty());
 }
 
 #[test]
@@ -483,52 +487,4 @@ fn known_source_outputs_resolve_bare_columns_before_outer_pins() {
     );
 }
 
-#[test]
-fn projected_composites_ordinality_and_join_aliases_preserve_ownership() {
-    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/projected-output-regressions.sql"));
-    let facts = crate::codebase::postgres::extract_sql_statement_facts(sql);
-    assert!(!facts.parse_failed);
-    let catalog = super::catalog();
-    let found: Vec<_> = facts
-        .bounds
-        .iter()
-        .flat_map(|fact| super::offenders(fact, &catalog))
-        .map(|finding| (finding.table, finding.line))
-        .collect();
-    assert_eq!(
-        found,
-        [12, 13, 14, 15, 23, 24].map(|line| ("accounts".to_string(), line))
-    );
-}
-
-#[test]
-fn projected_source_aliases_set_arms_and_unknown_functions_preserve_ownership() {
-    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
-        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/projected-column-variants.sql"));
-    assert!(names(sql).is_empty());
-}
-
-#[test]
-fn qualified_scalar_functions_and_unknown_record_layouts_preserve_ownership() {
-    let sql = include_str!(concat!(env!("CARGO_MANIFEST_DIR"),
-        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/projected-column-coverage.sql"));
-    assert_eq!(names(sql), ["accounts"]);
-}
-
-#[test]
-fn unnest_without_a_column_alias_exposes_its_function_or_alias_name() {
-    let sql = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/projected-unnest.sql"
-    ));
-    assert_eq!(names(sql), ["accounts", "accounts", "accounts", "accounts"]);
-}
-
-#[test]
-fn distinct_on_set_returning_aggregate_keys_keep_their_input_unbounded() {
-    let sql = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../test-cases/rules/postgres-bounded-statements/fixture/sql/distinct-on-order-srf.sql"
-    ));
-    assert_eq!(names(sql), ["orders"]);
-}
+mod extra;

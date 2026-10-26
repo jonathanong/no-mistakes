@@ -1,0 +1,28 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/no-banned-import-outside-allowed-paths": [
+      "error",
+      {
+        "checkedPathPatterns": [
+          "**/*"
+        ],
+        "bannedImports": [
+          {
+            "module": "@acme/rate-limit",
+            "names": [
+              "invalidateAll",
+              "call",
+              "apply"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
