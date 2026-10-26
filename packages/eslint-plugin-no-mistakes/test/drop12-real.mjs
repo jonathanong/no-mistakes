@@ -29,17 +29,14 @@ export function realDrop12(installed) {
     mkdirSync(plugin, { recursive: true });
     cpSync(resolve(packageRoot, "src"), resolve(plugin, "src"), { recursive: true });
     cpSync(resolve(packageRoot, "package.json"), resolve(plugin, "package.json"));
+    const probe = resolve(isolated, "peer-probe.cjs");
+    cpSync(resolve(fixtures, "aggregate-spreads/peer-probe.cjs"), probe);
     if (installed) {
       for (const name of ["typescript", "@typescript-eslint/parser"]) {
         const target = resolve(isolated, "node_modules", name);
         mkdirSync(dirname(target), { recursive: true });
         symlinkSync(dirname(require.resolve(`${name}/package.json`)), target, "junction");
       }
-    }
-    const pluginRequire = createRequire(resolve(plugin, "package.json"));
-    for (const name of ["typescript", "@typescript-eslint/parser"]) {
-      if (installed) assert.ok(pluginRequire.resolve(name));
-      else assert.throws(() => pluginRequire.resolve(name), { code: "MODULE_NOT_FOUND" });
     }
     const checkerRequire = createRequire(require.resolve("oxlint-tsgolint/package.json"));
     const checker = checkerRequire.resolve(
@@ -73,7 +70,13 @@ export function realDrop12(installed) {
         {
           cwd: root,
           encoding: "utf8",
-          env: { ...process.env, NODE_PATH: "", NODE_OPTIONS: "", OXLINT_TSGOLINT_PATH: checker },
+          env: {
+            ...process.env,
+            NODE_PATH: "",
+            NODE_OPTIONS: `--require=${JSON.stringify(probe)}`,
+            NO_MISTAKES_TEST_PEERS: installed ? "present" : "absent",
+            OXLINT_TSGOLINT_PATH: checker,
+          },
         },
       );
       assert.equal(result.status, 1, result.stderr || result.stdout);
