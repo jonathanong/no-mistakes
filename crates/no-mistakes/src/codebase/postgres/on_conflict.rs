@@ -129,7 +129,7 @@ fn judge_insert(
     let triggers = || {
         installed
             .into_iter()
-            .flat_map(|prepared| prepared.at(path, insert.line, &insert.table))
+            .flat_map(|prepared| prepared.at(path, (insert.line, insert.column), &insert.table))
     };
     if insert.guarded_select {
         return if catalog.check_triggers {

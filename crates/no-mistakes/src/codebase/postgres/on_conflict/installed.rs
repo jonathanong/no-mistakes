@@ -11,7 +11,7 @@ struct Interval<'a> {
 /// Application-scoped installation intervals, grouped by target table.
 /// Queries borrow facts without rebuilding or cloning the trigger catalog.
 pub(crate) struct InstalledTriggers<'a> {
-    positions: Vec<(PathBuf, usize)>,
+    positions: Vec<(PathBuf, (usize, usize))>,
     tables: crate::fx::FxHashMap<String, Vec<Interval<'a>>>,
 }
 
@@ -24,7 +24,7 @@ impl<'a> InstalledTriggers<'a> {
         events.sort_by(|left, right| {
             left.source_path
                 .cmp(&right.source_path)
-                .then(left.line.cmp(&right.line))
+                .then((left.line, left.column).cmp(&(right.line, right.column)))
                 .then(left.removed.cmp(&right.removed))
         });
         if let Some(observer) = crate::diagnostics::current().filter(|observer| observer.verbose())
@@ -56,7 +56,7 @@ impl<'a> InstalledTriggers<'a> {
             let position = index + 1;
             prepared
                 .positions
-                .push((event.source_path.clone(), event.line));
+                .push((event.source_path.clone(), (event.line, event.column)));
             let name = event.name.to_ascii_lowercase();
             let table = event.table.to_ascii_lowercase();
             let named = active.entry(name).or_default();
@@ -93,7 +93,7 @@ impl<'a> InstalledTriggers<'a> {
     pub(crate) fn at(
         &self,
         path: &Path,
-        line: usize,
+        location: (usize, usize),
         table: &str,
     ) -> impl Iterator<Item = &SqlTriggerFact> + Clone {
         // SQL include patterns may select .psql or extensionless migrations.
@@ -105,9 +105,11 @@ impl<'a> InstalledTriggers<'a> {
         let position = if embedded {
             self.positions.len()
         } else {
-            self.positions.partition_point(|(event_path, event_line)| {
-                event_path.as_path() < path || (event_path == path && *event_line < line)
-            })
+            self.positions
+                .partition_point(|(event_path, event_location)| {
+                    event_path.as_path() < path
+                        || (event_path == path && *event_location < location)
+                })
         };
         self.tables
             .get(&table.to_ascii_lowercase())

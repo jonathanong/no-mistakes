@@ -8,7 +8,7 @@ mod dynamic_merge;
 mod identifiers;
 mod indexes;
 mod locating;
-pub(crate) use locating::statement_keyword_line;
+pub(crate) use locating::statement_keyword_position;
 mod predicate;
 mod recovery;
 mod statements;

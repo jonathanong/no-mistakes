@@ -62,7 +62,11 @@ fn drop_without_a_table_matches_the_trigger_name() {
     file.path = PathBuf::from("sql/003.sql");
     let triggers = [created, dropped];
     let found = installed::InstalledTriggers::new(&triggers)
-        .at(&file.path, file.inserts[0].line, "items")
+        .at(
+            &file.path,
+            (file.inserts[0].line, file.inserts[0].column),
+            "items",
+        )
         .cloned()
         .collect::<Vec<_>>();
     assert!(found.is_empty(), "{found:?}");
@@ -89,7 +93,11 @@ fn unpositioned_create_applies_beside_positioned_events() {
     file.path = PathBuf::from("sql/003.sql");
     let triggers = [created, dropped, always, ignored];
     let found = installed::InstalledTriggers::new(&triggers)
-        .at(&file.path, file.inserts[0].line, "items")
+        .at(
+            &file.path,
+            (file.inserts[0].line, file.inserts[0].column),
+            "items",
+        )
         .cloned()
         .collect::<Vec<_>>();
     assert_eq!(
@@ -114,7 +122,7 @@ fn prepared_timeline_replays_events_once_across_repeated_insert_lookups() {
     });
     for _ in 0..100 {
         let found = prepared
-            .at(std::path::Path::new("app/q.ts"), 1, "items")
+            .at(std::path::Path::new("app/q.ts"), (1, 1), "items")
             .next()
             .unwrap();
         assert!(std::ptr::eq(found, &triggers[0]));

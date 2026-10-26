@@ -326,3 +326,13 @@ fn dropped_trigger_does_not_invalidate_a_surviving_triggers_noop_proof() {
     let findings = check_with_files(&root, &config, &[root.join("sql/001.sql")]).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+#[test]
+fn same_line_trigger_events_follow_statement_columns() {
+    let before = run(&fixture("fail-trigger-same-line-create-insert-drop"));
+    assert_eq!(before.len(), 1, "{before:?}");
+    assert_eq!(before[0].line, 2);
+    assert!(before[0].message.contains("fires before conflict checks"));
+    let after = run(&fixture("pass-trigger-same-line-drop-insert-create"));
+    assert!(after.is_empty(), "{after:?}");
+}

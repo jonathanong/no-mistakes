@@ -44,6 +44,7 @@ pub(super) fn from_insert_prepared(
     SqlInsertFact {
         table,
         line: sources.line(insert, n),
+        column: sources.column(insert, n),
         executed,
         guarded_select: insert
             .source

@@ -19,6 +19,11 @@ fn from_trigger(
     tokens: &[sqlparser::tokenizer::TokenWithSpan],
     trigger: &CreateTrigger,
 ) -> SqlTriggerFact {
+    let location = crate::codebase::postgres::migration::statement_keyword_position(
+        tokens,
+        "CREATE",
+        trigger.name.span().start,
+    );
     SqlTriggerFact {
         table: relation_name(&trigger.table_name),
         function: trigger
@@ -38,11 +43,8 @@ fn from_trigger(
                 | Some(TriggerObjectKind::For(TriggerObject::Row))
         ),
         events: trigger.events.iter().map(from_event).collect(),
-        line: crate::codebase::postgres::migration::statement_keyword_line(
-            tokens,
-            "CREATE",
-            trigger.name.span().start,
-        ),
+        line: location.line.max(1) as usize,
+        column: location.column.max(1) as usize,
         name: relation_name(&trigger.name),
         removed: false,
         source_path: std::path::PathBuf::new(),
@@ -53,6 +55,11 @@ pub(super) fn from_drop(
     tokens: &[sqlparser::tokenizer::TokenWithSpan],
     drop: &DropTrigger,
 ) -> SqlTriggerFact {
+    let location = crate::codebase::postgres::migration::statement_keyword_position(
+        tokens,
+        "DROP",
+        drop.trigger_name.span().start,
+    );
     SqlTriggerFact {
         table: drop
             .table_name
@@ -63,11 +70,8 @@ pub(super) fn from_drop(
         period: SqlTriggerPeriod::Other,
         for_each_row: false,
         events: Vec::new(),
-        line: crate::codebase::postgres::migration::statement_keyword_line(
-            tokens,
-            "DROP",
-            drop.trigger_name.span().start,
-        ),
+        line: location.line.max(1) as usize,
+        column: location.column.max(1) as usize,
         name: relation_name(&drop.trigger_name),
         removed: true,
         source_path: std::path::PathBuf::new(),
