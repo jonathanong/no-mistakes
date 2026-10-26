@@ -21,9 +21,13 @@ const { currentSources } = require("../src/rules/async-source-files");
 const { createImportedSources } = require("../src/rules/async-source-store");
 const { sourceOwner, withSourceOwner } = require("../src/rules/async-source-owner");
 
-it.each([false, true])(
-  "shares source preparation in a real multi-file Oxlint invocation (typed=%s)",
-  (typed) => {
+it.each([
+  [false, false],
+  [true, false],
+  [true, true],
+])(
+  "shares source preparation in a real multi-file Oxlint invocation (typed=%s, parserAbsent=%s)",
+  (typed, parserAbsent) => {
     const files = Array.from({ length: 8 }, (_, i) => fixtureFile(`callers/caller${i}.ts`));
     const checkerRequire = createRequire(require.resolve("oxlint-tsgolint/package.json"));
     const checker = checkerRequire.resolve(
@@ -48,7 +52,12 @@ it.each([false, true])(
       {
         cwd: sessionFixture,
         encoding: "utf8",
-        env: { ...process.env, NODE_OPTIONS: "", OXLINT_TSGOLINT_PATH: checker },
+        env: {
+          ...process.env,
+          NODE_OPTIONS: "",
+          OXLINT_TSGOLINT_PATH: checker,
+          SOURCE_SESSION_PARSER_ABSENT: String(parserAbsent),
+        },
       },
     );
     assert.equal(result.status, 1, result.stdout + result.stderr);

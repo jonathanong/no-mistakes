@@ -2,6 +2,12 @@ const { Module } = require('node:module');
 const original = Module._load;
 const stats = { reads: {}, parses: 0, resolutions: 0 };
 Module._load = function(name, ...args) {
+  const absent = process.env.SOURCE_SESSION_PARSER_ABSENT === 'true';
+  if (absent && name === '@typescript-eslint/parser') {
+    const error = new Error("Cannot find module '@typescript-eslint/parser'");
+    error.code = 'MODULE_NOT_FOUND';
+    throw error;
+  }
   const value = original.call(this, name, ...args);
   if (name === 'typescript') return {
     ...value,
@@ -9,6 +15,10 @@ Module._load = function(name, ...args) {
       stats.reads[path] = (stats.reads[path] || 0) + 1;
       return value.sys.readFile(path, ...rest);
     } },
+    createSourceFile(...input) {
+      if (absent) stats.parses++;
+      return value.createSourceFile(...input);
+    },
     resolveModuleName(...input) {
       stats.resolutions++;
       return value.resolveModuleName(...input);
