@@ -128,10 +128,11 @@ fn positional_column(table: &CatalogTable, index: usize) -> Option<&str> {
 fn writes_column(write: &SqlJsonWriteFact, table: &CatalogTable, mapped: &str) -> bool {
     match &write.written_columns {
         SqlWriteColumns::Named(columns) => columns.iter().any(|column| column == mapped),
-        SqlWriteColumns::Positional(Some(width)) => table
-            .columns
-            .iter()
-            .any(|column| column.name == mapped && column.ordinal_position as usize <= *width),
+        SqlWriteColumns::Positional(Some(width)) => table.columns.iter().any(|column| {
+            column.name == mapped
+                && column.ordinal_position > 0
+                && column.ordinal_position as usize <= *width
+        }),
         _ => false,
     }
 }

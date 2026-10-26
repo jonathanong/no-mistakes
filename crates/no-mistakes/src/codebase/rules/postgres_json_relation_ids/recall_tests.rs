@@ -53,3 +53,12 @@ fn jsonb_constructor_assignment_to_text_still_exposes_the_reference() {
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].target.as_deref(), Some("column:orders.note"));
 }
+
+#[test]
+fn missing_catalog_ordinals_cannot_excuse_a_positional_json_reference() {
+    let options = "schemaCatalogPath: schema-missing-ordinals.json\nidKeyPattern: Id$\nkeyColumnMap: {accountId: account_id}\nsqlInclude: ['db/*.sql']";
+    let findings = run(options, &["db/positional-missing-ordinals.sql"]);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 2);
+    assert_eq!(findings[0].target.as_deref(), Some("table:orders"));
+}

@@ -109,7 +109,9 @@ VALUES ($1, $2, jsonb_build_object('accountId', $2::text, 'total', 10));
 
 Here `keyColumnMap.accountId` is `account_id`, and the catalog confirms that
 `orders.account_id` references another table. The same-statement write proves
-the JSON identifier has a relational counterpart.
+the JSON identifier has a relational counterpart. For positional `INSERT`s, the
+catalog must supply column ordinals to prove that write. Use an explicit column
+list when ordinals are unavailable.
 
 ```sql
 -- db/invoices.sql
