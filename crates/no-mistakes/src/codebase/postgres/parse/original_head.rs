@@ -69,76 +69,69 @@ fn restore(
         {
             continue;
         }
-        let token = &tokens[at];
-        let start = token_lines
-            .offset(token.span.start)
-            .expect("captured token starts in tokenized SQL");
-        let end = token_lines
-            .offset(token.span.end)
-            .expect("captured token ends in tokenized SQL");
-        if let Some((source, _)) = raw_span(start, end, map, &normalized_lines, &source_lines) {
-            let original = source_lines
-                .location(source)
-                .expect("mapped token starts in original SQL");
-            failure.line = original.line as usize;
-            failure.column = original.column as usize;
-        }
-        let mut head = String::new();
-        let mut count = 0;
-        let mut at = at;
-        while count < 8 {
-            let Some(token) = tokens.get(at) else { break };
-            if token.terminal {
-                break;
-            }
-            at += 1;
-            if token.whitespace {
-                continue;
-            }
-            let start = token_lines
-                .offset(token.span.start)
-                .expect("captured token starts in tokenized SQL");
-            let token_end = token_lines
-                .offset(token.span.end)
-                .expect("captured token ends in tokenized SQL");
-            let Some((start, end)) =
-                raw_span(start, token_end, map, &normalized_lines, &source_lines)
-            else {
-                continue;
-            };
-            let value = sql.get(start..end).expect("mapped span is original SQL");
-            if !head.is_empty() {
-                head.push(' ');
-            }
-            head.push_str(value);
-            count += 1;
-            // The lexer can split a radix literal into adjacent `0` and `x1F`,
-            // `b101`, or `o77` tokens. It remains one source lexeme in a head.
-            if value == "0" {
-                if let Some(next) = tokens.get(at) {
-                    if next.span.start == token.span.end {
-                        let tail_end = token_lines
-                            .offset(next.span.end)
-                            .expect("adjacent token ends in tokenized SQL");
-                        let (_, tail_end) =
-                            raw_span(token_end, tail_end, map, &normalized_lines, &source_lines)
-                                .expect("adjacent radix token is not a synthetic separator");
-                        let tail = sql
-                            .get(end..tail_end)
-                            .expect("mapped radix is original SQL");
-                        if tail
-                            .chars()
-                            .next()
-                            .is_some_and(|c| matches!(c, 'x' | 'X' | 'b' | 'B' | 'o' | 'O'))
-                        {
-                            head.push_str(tail);
-                            at += 1;
+        let restored = (|| {
+            let token = &tokens[at];
+            let start = token_lines.offset(token.span.start)?;
+            let end = token_lines.offset(token.span.end)?;
+            let (source, _) = raw_span(start, end, map, &normalized_lines, &source_lines)?;
+            let original = source_lines.location(source)?;
+            let mut head = String::new();
+            let mut count = 0;
+            let mut at = at;
+            while count < 8 {
+                let Some(token) = tokens.get(at) else { break };
+                if token.terminal {
+                    break;
+                }
+                at += 1;
+                if token.whitespace {
+                    continue;
+                }
+                let start = token_lines.offset(token.span.start)?;
+                let token_end = token_lines.offset(token.span.end)?;
+                let Some((start, end)) =
+                    raw_span(start, token_end, map, &normalized_lines, &source_lines)
+                else {
+                    continue;
+                };
+                let value = sql.get(start..end)?;
+                if !head.is_empty() {
+                    head.push(' ');
+                }
+                head.push_str(value);
+                count += 1;
+                // The lexer can split a radix literal into adjacent `0` and `x1F`,
+                // `b101`, or `o77` tokens. It remains one source lexeme in a head.
+                if value == "0" {
+                    if let Some(next) = tokens.get(at) {
+                        if next.span.start == token.span.end {
+                            let tail_end = token_lines.offset(next.span.end)?;
+                            let (_, tail_end) = raw_span(
+                                token_end,
+                                tail_end,
+                                map,
+                                &normalized_lines,
+                                &source_lines,
+                            )?;
+                            let tail = sql.get(end..tail_end)?;
+                            if tail
+                                .chars()
+                                .next()
+                                .is_some_and(|c| matches!(c, 'x' | 'X' | 'b' | 'B' | 'o' | 'O'))
+                            {
+                                head.push_str(tail);
+                                at += 1;
+                            }
                         }
                     }
                 }
             }
-        }
-        if !head.is_empty() {
+            Some((original, head))
+        })();
+        if let Some((original, head)) = restored.filter(|(_, head)| !head.is_empty()) {
+            // Commit text and location together; mapping drift preserves both.
+            failure.line = original.line as usize;
+            failure.column = original.column as usize;
             failure.head = head;
         }
     }
@@ -156,3 +149,6 @@ fn raw_span(
     let end = source.offset(normalized.location(end)?)?;
     Some((start, end))
 }
+
+#[cfg(test)]
+mod tests;

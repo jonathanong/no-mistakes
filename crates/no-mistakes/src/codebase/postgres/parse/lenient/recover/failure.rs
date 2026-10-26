@@ -46,6 +46,7 @@ pub(super) fn guarded_action(
 
 /// A compatibility AST rejected by validation is a failed schema action,
 /// even when a preceding IF condition was recovered for function calls.
+/// RecursiveViews::validate currently rejects only CREATE RECURSIVE VIEW ASTs.
 pub(super) fn rejected_schema(
     tokens: &[TokenWithSpan],
     procedural_body: bool,

@@ -32,7 +32,10 @@ fn action_start(tokens: &[&TokenWithSpan]) -> usize {
         ) && matches!(
             tokens.get(at + 2).map(|token| &token.token),
             Some(Token::ShiftRight)
-        ) {
+        ) && ["BEGIN", "DECLARE", "FOR", "WHILE", "FOREACH", "LOOP"]
+            .iter()
+            .any(|name| word(tokens, at + 3, name))
+        {
             at + 3
         } else if ["BEGIN", "ELSE", "LOOP"]
             .iter()
@@ -78,3 +81,6 @@ fn word(tokens: &[&TokenWithSpan], at: usize, name: &str) -> bool {
     matches!(tokens.get(at).map(|token| &token.token), Some(Token::Word(word))
         if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(name))
 }
+
+#[cfg(test)]
+mod tests;
