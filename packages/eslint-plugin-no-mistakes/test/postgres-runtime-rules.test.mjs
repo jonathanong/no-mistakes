@@ -1193,7 +1193,7 @@ describe("postgres-no-manual-transaction", () => {
     ]);
   });
 
-  it("resolves identifier bindings and leaves unproven query members alone", () => {
+  it("resolves identifier bindings and reports unproven query members", () => {
     const code = `
       ${IMPORT}
       const start = "BEGIN";
@@ -1207,6 +1207,9 @@ describe("postgres-no-manual-transaction", () => {
       foo.bar("BEGIN");
     `;
     assert.deepEqual(ids(code, "postgres-no-manual-transaction"), [
+      "manualTransaction",
+      "manualTransaction",
+      "manualTransaction",
       "manualTransaction",
       "manualTransaction",
     ]);

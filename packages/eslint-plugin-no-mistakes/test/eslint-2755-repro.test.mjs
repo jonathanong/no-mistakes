@@ -11,11 +11,16 @@ const root = resolve(__dirname, "../../../test-cases/eslint-plugin/issue-2755/fi
 const filename = resolve(root, "repro.ts");
 const rules = JSON.parse(readFileSync(resolve(root, ".oxlintrc.json"), "utf8")).rules;
 const expected = [
+  // Manual transaction recall takes precedence over proving a receiver's library.
+  [45, "manualTransaction"],
+  [46, "manualTransaction"],
   [52, "manualTransaction"],
   [53, "manualTransaction"],
+  [61, "manualTransaction"],
+  [62, "manualTransaction"],
 ];
 it.each([false, true])(
-  "keeps only proven pg transaction findings from issue #2755 (typed=%s)",
+  "retains transaction findings on unproven receivers from issue #2755 (typed=%s)",
   (typed) => {
     const findings = new Linter({ cwd: root }).verify(
       readFileSync(filename, "utf8"),

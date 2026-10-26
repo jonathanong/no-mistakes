@@ -43,7 +43,20 @@ function functionBody(fn) {
 
 // This resolver belongs to the lint invocation. It follows bindings, never names
 // copied across scopes, and substitutes only one transparent local forwarder.
-function executorCallResolver(bindings, context, options, propertyName, scopedExecutor) {
+function executorCallResolver(
+  bindings,
+  context,
+  options,
+  propertyName,
+  scopedExecutor,
+  reportUnprovenQueryReceivers = false,
+) {
+  function queryMember(node) {
+    return (
+      (reportUnprovenQueryReceivers && options.executorNames.includes("query")) ||
+      isProvenQueryMember(node, context, bindings, options)
+    );
+  }
   function memberName(node) {
     const key = unwrapTs(node.property);
     if (
@@ -77,9 +90,7 @@ function executorCallResolver(bindings, context, options, propertyName, scopedEx
       ) {
         return { name };
       }
-      return name === "query" && isProvenQueryMember(node, context, bindings, options)
-        ? { name }
-        : null;
+      return name === "query" && queryMember(node) ? { name } : null;
     }
     if (node.type !== "Identifier") return null;
     if (!resolveVariable(node, context) && bindings.has(node.name)) return { name: node.name };
@@ -115,17 +126,12 @@ function executorCallResolver(bindings, context, options, propertyName, scopedEx
       if (name && options.executorNames.includes(name) && namespaceImport(init, context, options))
         return { name };
       return name === "query" &&
-        isProvenQueryMember(
-          {
-            type: "MemberExpression",
-            object: init,
-            property: property.key,
-            computed: property.computed,
-          },
-          context,
-          bindings,
-          options,
-        )
+        queryMember({
+          type: "MemberExpression",
+          object: init,
+          property: property.key,
+          computed: property.computed,
+        })
         ? { name }
         : null;
     }

@@ -9,29 +9,36 @@ import { __dirname, plugin } from "./helpers.mjs";
 
 const repo = resolve(__dirname, "../../..");
 const cases = [
-  ["test-cases/eslint-plugin/async-call-disposition/fixture/optional-peers", "configured.js"],
-  ["test-cases/eslint-snippets/fixture/postgres-2755", "constructed-clients.ts"],
+  ["test-cases/eslint-plugin/async-call-disposition/fixture/optional-peers", "configured.js", []],
+  // Unknown receiver identity must not hide explicit manual transaction commands.
+  ["test-cases/eslint-snippets/fixture/postgres-2755", "constructed-clients.ts", [8, 10, 11, 12]],
 ];
-it.each(cases)("checks declared contracts under real type-aware Oxlint (%s)", (path, file) => {
-  const root = resolve(repo, path);
-  const result = spawnSync(
-    process.execPath,
-    [
-      resolve(repo, "node_modules/oxlint/bin/oxlint"),
-      "--type-aware",
-      "--deny-warnings",
-      "--config",
-      resolve(root, file === "configured.js" ? ".oxlintrc-contracts.json" : ".oxlintrc.json"),
-      "--format",
-      "json",
-      resolve(root, file),
-    ],
-    { cwd: root, encoding: "utf8" },
-  );
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(JSON.parse(result.stdout).diagnostics, []);
-});
-for (const [path, file] of cases) {
+it.each(cases)(
+  "checks declared contracts under real type-aware Oxlint (%s)",
+  (path, file, lines) => {
+    const root = resolve(repo, path);
+    const result = spawnSync(
+      process.execPath,
+      [
+        resolve(repo, "node_modules/oxlint/bin/oxlint"),
+        "--type-aware",
+        "--deny-warnings",
+        "--config",
+        resolve(root, file === "configured.js" ? ".oxlintrc-contracts.json" : ".oxlintrc.json"),
+        "--format",
+        "json",
+        resolve(root, file),
+      ],
+      { cwd: root, encoding: "utf8" },
+    );
+    assert.equal(result.status, lines.length ? 1 : 0, result.stderr);
+    assert.deepEqual(
+      JSON.parse(result.stdout).diagnostics.map(({ labels, code }) => [labels[0].span.line, code]),
+      lines.map((line) => [line, "no-mistakes(postgres-no-manual-transaction)"]),
+    );
+  },
+);
+for (const [path, file, lines] of cases) {
   it.each([false, true])(`checks declared contracts in ESLint (${file}, typed=%s)`, (typed) => {
     const root = resolve(repo, path);
     const filename = resolve(root, file);
@@ -59,6 +66,13 @@ for (const [path, file] of cases) {
       },
       { filename },
     );
-    assert.deepEqual(messages, []);
+    assert.deepEqual(
+      messages.map(({ line, messageId, ruleId }) => [line, messageId, ruleId]),
+      lines.map((line) => [
+        line,
+        "manualTransaction",
+        "no-mistakes/postgres-no-manual-transaction",
+      ]),
+    );
   });
 }

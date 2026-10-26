@@ -77,7 +77,8 @@ module.exports = Object.assign(
 
       return {
         Program(node) {
-          bindings = executorBindings(node, options, context.filename, context);
+          // Transaction control must not disappear when a selected query receiver is unknown.
+          bindings = executorBindings(node, options, context.filename, context, true);
           statements = sqlStatementBindings(node);
         },
         CallExpression(node) {

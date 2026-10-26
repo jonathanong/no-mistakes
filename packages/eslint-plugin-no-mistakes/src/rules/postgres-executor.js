@@ -59,7 +59,13 @@ function importedName(specifier) {
   return imported.type === "Literal" ? String(imported.value) : imported.name;
 }
 
-function executorBindings(program, options = {}, filename, context) {
+function executorBindings(
+  program,
+  options = {},
+  filename,
+  context,
+  reportUnprovenQueryReceivers = false,
+) {
   const bindings = new Set();
   const defaults = executorOptionDefaults(options);
   const { importSpecifier, executorNames } = defaults;
@@ -89,6 +95,7 @@ function executorBindings(program, options = {}, filename, context) {
           (entry) =>
             !entry.property && entry.name === node.name && entry.range[0] === def.node.range[0],
         ),
+      reportUnprovenQueryReceivers,
     );
   }
   return bindings;

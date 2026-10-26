@@ -80,24 +80,36 @@ export async function lockAccounts(run: TxExecutor, ids: string[]) {
   block is not scanned. A same-named import from outside that package does not
   match.
 
-For a configured module, `.query(sql)` requires a receiver proven to be a
+For the other PostgreSQL rules, `.query(sql)` requires a receiver proven to be a
 configured import, factory result, typed parameter, or immutable alias. A
 same-named nested local does not inherit that proof. An HTTP request's `.query`
 parameters therefore do not become SQL candidates merely because the file uses
 PostgreSQL elsewhere. Without `importSpecifier`, explicit
 `executorNames: [query]` opts into broad member matching.
 
-With `importSpecifier: "pg"`, `new Pool()` and `new Client()` instances also
-need explicit receiver proof; pass them through parameters annotated `Pool` or
-`Client` and configure `executorTypeNames: ["Pool", "Client"]`.
+`postgres-no-manual-transaction` is the deliberate exception: when `query` is
+selected by its configured module and the rule's lint scope, it checks
+statically named `.query(...)` calls even when receiver provenance is unknown.
+This catches transaction control on clients returned by indirect connections,
+at the cost of possible findings on unrelated `.query` methods. Its imported
+executor calls and supported `.call` / `.apply` forms still use the configured
+executor resolver. `executorNames: []`, owners, and normal suppressions remain
+available. Other PostgreSQL rules keep the receiver requirements described
+above.
+
+For those other PostgreSQL rules, `importSpecifier: "pg"` does not by itself
+prove that `new Pool()` and `new Client()` instances are executors; pass them
+through parameters annotated `Pool` or `Client` and configure
+`executorTypeNames: ["Pool", "Client"]`.
 
 ### Release note: member-query selection
 
-This is a breaking change: `importSpecifier` alone no longer treats every
-`.query(...)` in a scanned file as SQL. Add `executorFactoryNames` or
-`executorTypeNames` for database receivers, or bind a configured import to a
-local before calling it. The broad `executorNames: [query]` selector requires
-an empty `importSpecifier` and also admits unrelated `.query` calls.
+For query-analysis rules, this is a breaking change: `importSpecifier` alone no
+longer treats every `.query(...)` in a scanned file as SQL. Add
+`executorFactoryNames` or `executorTypeNames` for database receivers, or bind a
+configured import to a local before calling it. The broad
+`executorNames: [query]` selector requires an empty `importSpecifier` and also
+admits unrelated `.query` calls.
 
 For a configured factory, bind the result first:
 `const tx = openTransaction(); tx.query(sql)`. Inline chains such as
