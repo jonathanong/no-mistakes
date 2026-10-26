@@ -44,6 +44,8 @@ select each origin once. Use `excludeRoots` or the rule's top-level `exclude`
 to remove test files as origins; excluding an origin does not remove that file
 as a reachable forbidden target. Use explicit exclusions rather than `!` patterns.
 Malformed glob patterns report configuration findings at their option entries.
+An existing literal file or directory takes precedence over glob interpretation,
+so a literal root containing brackets remains usable.
 
 ### Per-root exceptions
 
