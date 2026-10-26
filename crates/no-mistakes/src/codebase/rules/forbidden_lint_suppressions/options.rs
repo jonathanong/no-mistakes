@@ -79,7 +79,9 @@ impl Options {
         )
     }
     pub(super) fn banned(&self, rule: &str) -> bool {
-        self.rule_ids.iter().any(|v| v == rule)
-            || self.rule_prefixes.iter().any(|v| rule.starts_with(v))
+        // A malformed comma item is not a blanket disable or a matching rule.
+        !rule.chars().any(char::is_whitespace)
+            && (self.rule_ids.iter().any(|v| v == rule)
+                || self.rule_prefixes.iter().any(|v| rule.starts_with(v)))
     }
 }

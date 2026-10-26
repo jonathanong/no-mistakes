@@ -44,7 +44,7 @@ pub(crate) fn collect(program: &Program<'_>, source: &str) -> Vec<Suppression> {
                 syntax::without_reason(tail)
                     .split(',')
                     .map(syntax::rule_id)
-                    .filter(|v| !v.is_empty() && !v.chars().any(char::is_whitespace))
+                    .filter(|v| !v.is_empty())
                     .map(str::to_owned)
                     .collect()
             };

@@ -77,6 +77,10 @@ fn actual_comment_headers_report_every_protected_id_and_form() {
 #[test]
 fn blanket_and_typescript_are_explicit_opt_ins() {
     let blanket = run("blanket.yml");
+    // Non-comma lists are malformed rule text, never blanket disables.
+    assert!(!blanket
+        .iter()
+        .any(|f| f.file == "src/quoted.ts" && [3, 7].contains(&f.line)));
     assert_eq!(
         blanket
             .iter()
