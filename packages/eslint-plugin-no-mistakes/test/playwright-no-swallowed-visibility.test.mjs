@@ -48,6 +48,10 @@ describe(RULE, () => {
     assert.deepEqual(ids("attached.mjs"), []);
   });
 
+  it("does not attribute an inner catch to the outer boolean", () => {
+    assert.deepEqual(ids("nested-try.mjs"), [SWALLOWED, SWALLOWED]);
+  });
+
   it("replaces the default method list", () => {
     assert.deepEqual(ids("catch-false.mjs", { methods: ["isAttached"] }), []);
     assert.deepEqual(ids("catch-false.mjs", { methods: [] }), []);

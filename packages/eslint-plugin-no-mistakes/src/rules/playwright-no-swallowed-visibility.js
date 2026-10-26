@@ -12,6 +12,8 @@ const DEFAULT_MESSAGE =
 // Named handlers are not resolved. A same-file function that returns false is
 // unproven, which keeps `.catch(handleError)` that rethrows silent. try/catch
 // counts only a returned await, so a rejection that leaves the try is not a swallow.
+// A nested try with its own catch owns that body. The outer catch is not proof
+// the inner rejection became the outer boolean, even when the inner catch rethrows.
 const methodList = {
   type: "array",
   items: { type: "string", minLength: 1 },
@@ -48,10 +50,28 @@ function handlerReturnsBoolean(context, handler) {
   return blockReturnsBoolean(context, current.body);
 }
 
+function inTryBlock(node, tryStatement) {
+  for (let cursor = node; cursor !== tryStatement; cursor = cursor.parent) {
+    if (cursor === tryStatement.block) return true;
+  }
+  return false;
+}
+
+// A handler between this return and the outer try block catches the await.
+// The handler body and a handler-less finally still propagate outward.
+function shieldedByNestedTry(node, outerBlock) {
+  for (let current = node.parent; current !== outerBlock; current = current.parent) {
+    if (current.type === "TryStatement" && current.handler && inTryBlock(node, current)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function tryReturnsAwaitedState(context, block, methods) {
   let found = false;
   traverse(context, block, (node) => {
-    if (node.type !== "ReturnStatement") return;
+    if (node.type !== "ReturnStatement" || shieldedByNestedTry(node, block)) return;
     const awaited = unwrapSequence(node.argument);
     if (awaited?.type !== "AwaitExpression") return;
     if (isStateCall(awaited.argument, methods)) found = true;

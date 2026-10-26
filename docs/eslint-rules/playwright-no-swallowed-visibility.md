@@ -47,11 +47,28 @@ await locator.isVisible().catch(handleError);
 await expect(locator).toBeVisible();
 ```
 
+```ts
+async function nested(locator) {
+  try {
+    try {
+      return await locator.isVisible();
+    } catch {
+      return null;
+    }
+  } catch {
+    return false;
+  }
+}
+```
+
 A named handler is not inspected, including one in the same file. The rule
 only proves an inline function, or a `try`/`catch` whose `try` returns an
 await of a configured state method. A rejection that is not awaited inside
-that `try` is not caught, so it is not reported. `expect(locator).toBeVisible()`
-is an assertion, not a state method.
+that `try` is not caught, so it is not reported. A nested `try` with its own
+`catch` owns the await inside that nested body, so the outer boolean is not
+evidence. An inner `catch` that rethrows is not read. A nested `try`/`finally`
+with no `catch` still propagates. `expect(locator).toBeVisible()` is an
+assertion, not a state method.
 
 ## Options
 
