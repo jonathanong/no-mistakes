@@ -1,5 +1,6 @@
 "use strict";
 
+const { isPromiseMethodCall } = require("./async-disposition-bindings");
 const { unwrapTransparentParent, unwrapExpression } = require("./async-ast");
 const { resolveVariable, isReassigned, memberPropertyName } = require("./async-target-bindings");
 const { localFunction } = require("./async-consumer-local-proof");
@@ -51,9 +52,13 @@ function assertionExpression(node, context) {
     : null;
 }
 
-function promiseChainFrom(node, origin) {
+function promiseChainFrom(node, origin, context) {
   let current = unwrapExpression(node);
   while (current !== origin) {
+    if (isPromiseMethodCall(current, context, ["resolve"])) {
+      current = unwrapExpression(current.arguments[0]);
+      continue;
+    }
     const callee = unwrapExpression(current?.callee);
     if (
       current?.type !== "CallExpression" ||
@@ -78,7 +83,7 @@ function handledCatchStatement(node, context, origin) {
     !callee.optional &&
     memberPropertyName(callee) === "catch" &&
     !node.optional &&
-    promiseChainFrom(node, origin) &&
+    promiseChainFrom(node, origin, context) &&
     !(origin.type === "Identifier" && propertiesWritten(origin, context)) &&
     !observerMutated(origin, context) &&
     !globalObserverMutated("Promise", context) &&
@@ -87,4 +92,4 @@ function handledCatchStatement(node, context, origin) {
   );
 }
 
-module.exports = { assertionExpression, handledCatchStatement };
+module.exports = { assertionExpression, handledCatchStatement, promiseChainFrom };

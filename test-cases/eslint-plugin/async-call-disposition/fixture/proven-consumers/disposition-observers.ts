@@ -44,3 +44,7 @@ enqueueEmail().catch(unknownHandler);
 enqueueEmail().catch?.(onRejected);
 await expect(enqueueEmail()).resolves.unknown?.();
 await expect(enqueueEmail()).resolves?.unknown();
+const retainedUnknown = enqueueEmail().unknownMethod();
+retainedUnknown.catch(() => {});
+const retainedKnown = enqueueEmail().then(() => {});
+retainedKnown.catch(() => {});

@@ -16,16 +16,19 @@ const {
 } = require("./async-disposition-expressions");
 const { dispositionOptionsSchema } = require("./async-schema");
 const { createTargetMatcher } = require("./async-targets");
+const { promiseChainFrom } = require("./async-disposition-observers");
 const { createAwaitingConsumers } = require("./async-disposition-consumers");
 
-function isDisposed(node, context, consumers, seen = new Set()) {
+function isDisposed(node, context, consumers, seen = new Set(), catchProven = true) {
   if (seen.has(node)) return false;
   seen.add(node);
   const observed = observedExpression(node, context);
-  const disposed = (value) => isDisposed(value, context, consumers, seen);
+  const retainedCatch =
+    catchProven && (observed === node || promiseChainFrom(observed, node, context));
+  const disposed = (value) => isDisposed(value, context, consumers, seen, retainedCatch);
   return (
     directlyDisposed(node, context, consumers) ||
-    directlyDisposed(observed, context, consumers, node) ||
+    directlyDisposed(observed, context, consumers, catchProven ? node : null) ||
     promiseAllDisposed(observed, context, consumers) ||
     retainedPromise(observed, context, disposed) ||
     mappedPromise(observed, context, consumers, disposed) ||

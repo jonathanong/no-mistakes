@@ -92,3 +92,15 @@ async function opaqueArray() {
   Reflect.set(box[0], 'catch', () => {});
   p.catch(() => {});
 }
+async function resolvedIdentity() {
+  const p = enqueueEmail();
+  const same = Promise.resolve(p);
+  p.catch = () => {};
+  same.catch(() => {});
+}
+async function chainIdentity() {
+  const p = enqueueEmail();
+  const chain = p.then(() => {});
+  chain.catch = () => {};
+  chain.catch(() => {});
+}

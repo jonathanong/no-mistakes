@@ -1,5 +1,6 @@
 "use strict";
 
+const { isPromiseMethodCall } = require("./async-disposition-bindings");
 const { unwrapExpression } = require("./async-ast");
 const { resolveVariable, memberPropertyName } = require("./async-target-bindings");
 
@@ -8,6 +9,15 @@ function observerMutated(node, context, suffix = []) {
     value = unwrapExpression(value);
     if (value?.type === "MemberExpression") {
       return paths(value.object, seen).map((base) => [...base, memberPropertyName(value) ?? "*"]);
+    }
+    if (value?.type === "CallExpression") {
+      const callee = unwrapExpression(value.callee);
+      if (isPromiseMethodCall(value, context, ["resolve"])) return paths(value.arguments[0], seen);
+      if (
+        callee?.type === "MemberExpression" &&
+        ["then", "catch", "finally"].includes(memberPropertyName(callee))
+      )
+        return paths(callee.object, seen);
     }
     if (value?.type !== "Identifier") return [];
     const variable = resolveVariable(value, context);
@@ -92,7 +102,12 @@ function observerMutated(node, context, suffix = []) {
         }
       }
       // An unknown callee can replace a handler through an escaped object.
-      if (!reflected && value.arguments.some((argument) => intersects(argument))) written = true;
+      if (
+        !reflected &&
+        !isPromiseMethodCall(value, context, ["resolve"]) &&
+        value.arguments.some((argument) => intersects(argument))
+      )
+        written = true;
     }
     for (const key of context.sourceCode.visitorKeys[value.type] || []) {
       const child = value[key];

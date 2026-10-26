@@ -12,7 +12,7 @@ const root = resolve(
   "../../../test-cases/eslint-plugin/async-call-disposition/fixture/proven-consumers",
 );
 const expected = [
-  12, 13, 14, 15, 17, 19, 20, 21, 28, 29, 30, 31, 32, 33, 34, 35, 38, 40, 41, 43, 44, 45, 46,
+  12, 13, 14, 15, 17, 19, 20, 21, 28, 29, 30, 31, 32, 33, 34, 35, 38, 40, 41, 43, 44, 45, 46, 47,
 ];
 it.each([false, true])(
   "handles assertions, rejection handlers, and proven inline consumers (typed=%s)",
@@ -101,12 +101,12 @@ it.each([
   [
     false,
     "disposition-observer-mutations.ts",
-    [3, 8, 14, 20, 28, 31, 36, 41, 46, 52, 58, 72, 78, 84, 90],
+    [3, 8, 14, 20, 28, 31, 36, 41, 46, 52, 58, 72, 78, 84, 90, 96, 102],
   ],
   [
     true,
     "disposition-observer-mutations.ts",
-    [3, 8, 14, 20, 28, 31, 36, 41, 46, 52, 58, 72, 78, 84, 90],
+    [3, 8, 14, 20, 28, 31, 36, 41, 46, 52, 58, 72, 78, 84, 90, 96, 102],
   ],
   [false, "disposition-observer-clean-globals.ts", [6]],
   [true, "disposition-observer-clean-globals.ts", [6]],
@@ -156,7 +156,10 @@ it.each([
 });
 
 it.each([
-  ["disposition-observer-mutations.ts", [3, 8, 14, 20, 28, 31, 36, 41, 46, 52, 58, 72, 78, 84, 90]],
+  [
+    "disposition-observer-mutations.ts",
+    [3, 8, 14, 20, 28, 31, 36, 41, 46, 52, 58, 72, 78, 84, 90, 96, 102],
+  ],
   ["disposition-observer-clean-globals.ts", [6]],
   ...["global", "window", "self"].map((holder) => [`disposition-observer-${holder}.ts`, [3]]),
   ["disposition-observer-alias-controls.ts", []],

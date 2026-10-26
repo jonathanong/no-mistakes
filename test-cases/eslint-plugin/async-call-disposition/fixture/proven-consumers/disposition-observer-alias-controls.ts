@@ -8,3 +8,8 @@ let holder = globalThis;
 const setter = Reflect.set;
 setter(holder, 'fetch', () => {});
 await expect(enqueueEmail()).rejects.toThrow();
+async function resolvedIdentity() {
+  const p = enqueueEmail();
+  const same = Promise.resolve(p);
+  same.catch(() => {});
+}
