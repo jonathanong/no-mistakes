@@ -14,6 +14,7 @@ export const cases = {
   "accepted.ts": [17],
   "controls.ts": [7, 9, 13, 17, 19, 22, 23, 24, 26, 30],
   "depth.ts": [37],
+  "dynamic-member.ts": [9],
   "date-prototype.ts": [3, 4],
   "object-prototype.ts": [3, 4],
   "shadowed-date.ts": [3, 4],

@@ -54,7 +54,10 @@ it("keeps source contracts conservative when optional proof peers are missing", 
     ],
     {
       encoding: "utf8",
-      env: { ...process.env, NODE_OPTIONS: `--require=${resolve(root, "without-peers.cjs")}` },
+      env: {
+        ...process.env,
+        NODE_OPTIONS: `--require=${JSON.stringify(resolve(root, "without-peers.cjs"))}`,
+      },
     },
   );
   assert.equal(result.status, 1, result.stderr);

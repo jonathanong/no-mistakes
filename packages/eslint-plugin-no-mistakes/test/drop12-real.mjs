@@ -59,6 +59,7 @@ export function realDrop12(installed) {
           ? [7, 9, 13, 17, 19, 22, 23, 24, 26, 30]
           : [7, 9, 13, 17, 19, 22, 24, 26, 30],
         "depth.ts": [37],
+        "dynamic-member.ts": [9],
         "date-prototype.ts": installed ? [3, 4] : [3],
         "object-prototype.ts": installed ? [3, 4] : [3],
         "shadowed-date.ts": installed ? [3, 4] : [3],

@@ -126,6 +126,7 @@ function createDataFacts() {
       )
     );
   }
+  // Handoff uses reject unresolved property names before consulting data facts.
   function safeRead(member, context, shape) {
     const name = memberPropertyName(member);
     // Missing data is undefined: even a later throwing member read cannot invoke
