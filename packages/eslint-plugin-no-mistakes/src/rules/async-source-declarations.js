@@ -46,13 +46,16 @@ function createDeclarations(sources) {
     const matches = names.get(name) || [];
     if (matches.length > 1) return false;
     if (!matches.length) {
-      const candidates = stars.map((specifier) => {
+      const found = [];
+      for (const specifier of stars) {
+        // Bound resolution work too, including cached or unresolved branches.
+        if (budget.remaining <= 0) return false;
         const target = sources.resolve(specifier, filename);
-        return target ? exported(target, name, seen, budget) : false;
-      });
-      // An unreadable branch may also export this name; absence is not proof.
-      if (candidates.includes(false)) return false;
-      const found = candidates.filter(Boolean);
+        const candidate = target ? exported(target, name, seen, budget) : false;
+        // An unreadable branch may also export this name; absence is not proof.
+        if (candidate === false) return false;
+        if (candidate) found.push(candidate);
+      }
       return found.length > 1 ? false : found[0] || null;
     }
     const match = matches[0];

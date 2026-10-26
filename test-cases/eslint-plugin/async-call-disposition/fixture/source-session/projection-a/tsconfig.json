@@ -1,0 +1,1 @@
+{"compilerOptions":{"moduleResolution":"Bundler","module":"ESNext","paths":{"@session/jobs":["./jobs.ts"]}}}
