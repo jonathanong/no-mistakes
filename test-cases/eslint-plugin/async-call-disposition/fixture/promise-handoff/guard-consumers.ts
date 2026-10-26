@@ -47,3 +47,34 @@ export function fallback(d: Dependencies): Job { return d.x ?? enqueueEmail; }
 export function unknownFallback(d: Dependencies): Job { return d.x ?? (async () => {}); }
 export function returnedArrow(d: Dependencies) { return (): Job => d.x; }
 export function unsupportedExpression(d: Dependencies) { void d.x; }
+import { run } from './final';
+// The stored handler blocks the old immediate-await proof; the sibling alias
+// can still invoke a captured callback before this typed call adopts it.
+export function siblingAlias(d: Dependencies) {
+  const other = d.other;
+  const handler = () => { other?.(); return run({ x: d.x ?? enqueueEmail }); };
+  return handler;
+}
+export function siblingAliasCall(d: Dependencies) {
+  const other = d.other;
+  return () => { other?.call(undefined); return run({ x: d.x ?? enqueueEmail }); };
+}
+export function siblingAliasPassed(d: Dependencies) {
+  const other = d.other;
+  return () => { guardOpaque(other); return run({ x: d.x ?? enqueueEmail }); };
+}
+export function siblingReturned(d: Dependencies) {
+  return () => { if (d.note) return d.other; return run({ x: d.x ?? enqueueEmail }); };
+}
+export function siblingObjectPassed(d: Dependencies) {
+  return () => { guardOpaque({ other: d.other }); return run({ x: d.x ?? enqueueEmail }); };
+}
+export function siblingMutableAlias(d: Dependencies) {
+  let other = d.other;
+  return () => { other?.(); return run({ x: d.x ?? enqueueEmail }); };
+}
+export function siblingArray(d: Dependencies) {
+  const callbacks = [d.other];
+  return () => { callbacks[0]?.(); return run({ x: d.x ?? enqueueEmail }); };
+}
+declare function guardOpaque(value: unknown): unknown;

@@ -1,10 +1,10 @@
 "use strict";
-const { unwrapTransparentParent } = require("./async-ast");
 const { resolveVariable, memberPropertyName } = require("./async-target-bindings");
 const { sourceSlot } = require("./async-source-slots");
 const { annotation } = require("./async-source-types");
 const { propertiesWritten } = require("./async-disposition-mocks");
 const { localBodySafe } = require("./async-consumer-local-proof");
+const { siblingRead } = require("./async-handoff-sibling");
 
 // A typeof annotation carries responsibility only while visible uses preserve
 // it. An opaque forwarding call cannot erase the original callback finding.
@@ -44,16 +44,7 @@ function createHandoffSafety(proof) {
             ["__proto__", "constructor", "prototype"].includes(name)
           )
             return false;
-          if (name !== property) {
-            const parent = unwrapTransparentParent(member).parent;
-            if (parent?.type === "MemberExpression") return false;
-            return (
-              parent?.type !== "CallExpression" ||
-              parent.callee !== unwrapTransparentParent(member) ||
-              shape.get(name) === true ||
-              (parent.optional && !shape.has(name))
-            );
-          }
+          if (name !== property) return siblingRead(member, owner, shape, proof);
           return flow(member, null, owner, target, seen, shape, binding, consumer);
         }
         return flow(value, property, owner, target, seen, shape, binding, consumer);
