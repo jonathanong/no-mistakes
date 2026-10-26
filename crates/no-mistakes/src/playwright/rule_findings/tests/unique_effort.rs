@@ -6,6 +6,7 @@ use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
 #[test]
 fn low_effort_emits_unanalyzable_for_non_literal_exact_selectors() {
     let report = CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 0,
             covered_routes: 0,
@@ -74,6 +75,7 @@ fn low_effort_emits_unanalyzable_for_non_literal_exact_selectors() {
 #[test]
 fn low_effort_skips_html_ids_when_the_html_rule_is_enabled() {
     let report = CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 0,
             covered_routes: 0,

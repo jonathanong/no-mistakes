@@ -52,6 +52,12 @@ impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
         Some(&self.playwright_source_files)
     }
 
+    fn playwright_matcher_warnings(&self, project: Option<&str>) -> &[String] {
+        self.playwright_matcher_warnings.iter()
+            .find(|(candidate, _)| candidate.as_deref() == project)
+            .map(|(_, warnings)| warnings.as_slice()).unwrap_or_default()
+    }
+
     fn get_playwright_test_files(
         &self,
         project: Option<&str>,

@@ -80,7 +80,8 @@ fn prepared_catalog_merges_explicit_projects_without_runner_configs() {
     assert!(catalog.config_projects().unwrap().is_empty());
     let matched = catalog
         .matching_files(&root, &["custom".to_string()], &visible)
-        .unwrap();
+        .unwrap()
+        .0;
     assert_eq!(
         matched,
         vec![root.join("src/custom.spec.ts")],

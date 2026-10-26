@@ -141,6 +141,7 @@
   "PermissionLevel",
   "PermissionSource",
   "PlanningImpactArtifacts",
+  "PlaywrightCoverageReport",
   "PlaywrightOptions",
   "PlaywrightRelatedOptions",
   "PostgresCatalog",

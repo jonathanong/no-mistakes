@@ -1,13 +1,14 @@
 use super::shared;
 use crate::codebase::ts_resolver::ImportResolution;
-use crate::integration_tests::project_config::prefix_globs;
-use crate::integration_tests::types::ConfigProject;
+use crate::playwright::test_patterns::Patterns;
 use anyhow::Result;
 use oxc_ast::ast::Program;
 use oxc_span::GetSpan;
 use std::path::{Path, PathBuf};
 
+mod patterns;
 mod project_arrays;
+mod projects;
 #[cfg(test)]
 pub(in crate::integration_tests) mod tests;
 
@@ -39,8 +40,8 @@ pub(in crate::integration_tests) struct PlaywrightProject {
     runner_project_arg: Option<String>,
     config_dir: PathBuf,
     test_dir: String,
-    test_match: Vec<String>,
-    test_ignore: Vec<String>,
+    test_match: Patterns,
+    test_ignore: Patterns,
     deadlines: crate::integration_tests::types::DeclaredDeadlines,
 }
 
@@ -49,36 +50,8 @@ struct Options {
     deadlines: crate::integration_tests::types::DeclaredDeadlines,
     name: Option<String>,
     test_dir: Option<String>,
-    test_match: Option<Vec<String>>,
-    test_ignore: Option<Vec<String>>,
-}
-
-impl ParsedPlaywrightConfig {
-    pub(in crate::integration_tests) fn into_projects(
-        self,
-        root: &Path,
-        config: &str,
-    ) -> Vec<ConfigProject> {
-        self.projects
-            .into_iter()
-            .map(|project| {
-                let test_dir = project.test_dir(root);
-                ConfigProject {
-                    config: Some(config.to_string()),
-                    workspace: false,
-                    policy_name: project.policy_name,
-                    runner_project_arg: project.runner_project_arg,
-                    scope: Some(crate::codebase::ts_source::relative_slash_path(
-                        root, &test_dir,
-                    )),
-                    include: prefix_globs(root, &test_dir, &project.test_match),
-                    exclude: prefix_globs(root, &test_dir, &project.test_ignore),
-                    declared_deadlines: project.deadlines,
-                    vitest_setup: Vec::new(),
-                }
-            })
-            .collect()
-    }
+    test_match: Option<Patterns>,
+    test_ignore: Option<Patterns>,
 }
 
 pub(in crate::integration_tests) fn parse_program_with_resolver(
@@ -179,14 +152,17 @@ fn merge_project(config_dir: &Path, root: &Options, project: Option<Options>) ->
     }
 }
 
-fn default_test_match() -> Vec<String> {
-    DEFAULT_TEST_MATCH
-        .iter()
-        .map(|glob| glob.to_string())
-        .collect()
+fn default_test_match() -> Patterns {
+    Patterns {
+        globs: DEFAULT_TEST_MATCH
+            .iter()
+            .map(|glob| glob.to_string())
+            .collect(),
+        ..Default::default()
+    }
 }
 
-fn combine(left: Option<Vec<String>>, right: Option<Vec<String>>) -> Vec<String> {
+fn combine(left: Option<Patterns>, right: Option<Patterns>) -> Patterns {
     let mut values = left.unwrap_or_default();
     values.extend(right.unwrap_or_default());
     values

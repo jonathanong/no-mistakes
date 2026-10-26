@@ -67,6 +67,10 @@ pub(crate) trait TsFactLookup: Sync {
         None
     }
 
+    fn playwright_matcher_warnings(&self, _project: Option<&str>) -> &[String] {
+        &[]
+    }
+
     fn get_playwright_test_files(
         &self,
         _project: Option<&str>,

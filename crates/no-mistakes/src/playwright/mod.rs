@@ -13,6 +13,7 @@ mod rule_findings;
 pub mod rules;
 pub mod selectors;
 pub(crate) mod test_file_occurrences;
+pub(crate) mod test_patterns;
 #[cfg(test)]
 pub(crate) mod test_support;
 #[cfg(test)]

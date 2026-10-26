@@ -23,3 +23,10 @@ configures more than one `type: nextjs` project, set
 so these commands know which app `--project` exercises; without it, an
 ambiguous repository fails with an error naming the candidate apps instead of
 guessing.
+
+Config `testMatch` / `testIgnore` support string globs, RegExp literals, and mixed
+arrays. Regexes match absolute file paths within the configured `testDir`.
+See [static matcher recovery](../configuration/tests.md#playwright-file-matchers)
+for the supported subset. Unknown matchers produce scoped warnings in aggregate
+`check` and an optional `warnings` array in `playwright check --json`. The
+standalone command exits 1 while selection is uncertain.

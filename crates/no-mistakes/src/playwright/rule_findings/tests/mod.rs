@@ -58,6 +58,7 @@ fn report_findings(
 #[test]
 fn findings_from_report_maps_routes_selectors_and_duplicates() {
     let report = CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 1,
             covered_routes: 0,
@@ -128,6 +129,7 @@ fn findings_from_report_maps_routes_selectors_and_duplicates() {
 #[test]
 fn coverage_findings_omit_selectors_when_selector_coverage_is_disabled() {
     let report = CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 1,
             covered_routes: 0,
@@ -182,6 +184,7 @@ fn coverage_findings_omit_selectors_when_selector_coverage_is_disabled() {
 #[test]
 fn findings_from_report_filters_disabled_duplicate_rules() {
     let report = CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 0,
             covered_routes: 0,
@@ -222,6 +225,7 @@ fn findings_from_report_skips_unsupported_dynamic_selectors() {
     // Selectors with unsupported_dynamic: true (fully-dynamic expressions like
     // `data-pw={id}`) must NOT produce playwright-coverage findings.
     let report = CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 0,
             covered_routes: 0,
@@ -279,6 +283,7 @@ fn findings_from_report_skips_unsupported_dynamic_selectors() {
 #[test]
 fn findings_from_report_maps_id_duplicates_to_test_ids_when_html_rule_is_disabled() {
     let report = CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 0,
             covered_routes: 0,
@@ -437,6 +442,7 @@ fn analysis(report: CoverageReport, edges: Vec<Edge>) -> Analysis {
 
 fn empty_report() -> CoverageReport {
     CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 0,
             covered_routes: 0,

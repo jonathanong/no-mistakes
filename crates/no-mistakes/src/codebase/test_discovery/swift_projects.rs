@@ -55,6 +55,7 @@ pub(super) fn swift_projects_from_facts(
                         ),
                         exclude: Vec::new(),
                         declared_deadlines: Default::default(),
+                        matcher_warnings: Vec::new(),
                         vitest_setup: Vec::new(),
                     })
                     .collect::<Vec<_>>()
@@ -70,6 +71,7 @@ pub(super) fn swift_projects_from_facts(
                 include: vec![format!("{package_slash}/Tests/**/*.swift")],
                 exclude: Vec::new(),
                 declared_deadlines: Default::default(),
+                matcher_warnings: Vec::new(),
                 vitest_setup: Vec::new(),
             });
         } else {
@@ -113,6 +115,7 @@ fn configured_swift_project(
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
         declared_deadlines: Default::default(),
+        matcher_warnings: Vec::new(),
         vitest_setup: Vec::new(),
     })
 }

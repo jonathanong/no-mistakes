@@ -148,6 +148,11 @@ pub(crate) fn prepare_from_shared(
         })
         .transpose()?
         .flatten();
+    if let Some(playwright) = &playwright {
+        config
+            .analysis_warnings
+            .extend(playwright.warnings().iter().cloned());
+    }
     let (vitest_from_calls, playwright_projects) =
         no_mistakes::codebase::rules::forbidden_calls::prepare_root_catalogs(
             root,
@@ -155,6 +160,13 @@ pub(crate) fn prepare_from_shared(
             visible_paths.as_ref(),
             &tsconfig_catalog,
         );
+    if let Some(projects) = &playwright_projects {
+        for warning in projects.matcher_warnings() {
+            if !config.analysis_warnings.contains(warning) {
+                config.analysis_warnings.push(warning.clone());
+            }
+        }
+    }
     let vitest_projects = vitest_from_calls.or_else(|| {
         (config.rule_configured(no_mistakes::codebase::rules::VITEST_PROJECT_MAPPING)
             || config.rule_configured(no_mistakes::codebase::rules::VITEST_CI_PATH_COVERAGE))

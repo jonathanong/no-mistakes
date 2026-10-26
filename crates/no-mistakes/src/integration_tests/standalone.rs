@@ -15,6 +15,11 @@ pub(super) fn check(
         crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, root, &visible_paths)?;
     let runner_configs = runner_config::prepare(root, &config, &visible_paths, &tsconfig);
     let parsed_runner_configs = runner_configs.parse_all()?;
+    let warnings =
+        config::selected_matcher_warnings(root, &config, &runner_configs, &parsed_runner_configs)?;
+    if !warnings.is_empty() {
+        anyhow::bail!("{}", warnings.join("; "));
+    }
     let suites = config::configured_suites_from_runner_configs(
         root,
         &config,

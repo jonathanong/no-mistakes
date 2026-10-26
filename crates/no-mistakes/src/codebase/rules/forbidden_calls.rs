@@ -47,7 +47,7 @@ fn catalog_root_configured(config: &crate::config::v2::NoMistakesConfig, key: &s
     })
 }
 
-/// Prepare runner catalogs only for forbidden-calls root kinds that exist.
+/// Prepare runner catalogs for declared call roots and integration-suite ownership.
 #[doc(hidden)]
 pub fn prepare_root_catalogs(
     root: &std::path::Path,
@@ -62,7 +62,14 @@ pub fn prepare_root_catalogs(
         vitest_roots_configured(config).then(|| {
             super::prepare_vitest_project_catalog(root, config, snapshot, tsconfig_catalog)
         }),
-        playwright_roots_configured(config).then(|| {
+        (playwright_roots_configured(config)
+            || config
+                .tests
+                .playwright
+                .projects
+                .values()
+                .any(|policy| !policy.integration_suites.is_empty() && policy.include.is_empty()))
+        .then(|| {
             super::prepare_playwright_project_catalog(root, config, snapshot, tsconfig_catalog)
         }),
     )

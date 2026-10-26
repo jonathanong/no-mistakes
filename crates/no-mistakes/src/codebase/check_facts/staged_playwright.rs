@@ -99,8 +99,6 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         "precollected graph facts must cover the staged graph plan"
     );
     let partitions = FilePartitions::new(&files, &graph_files, &playwright);
-    let playwright_source_files = playwright.source_files();
-    let playwright_test_files_by_project = playwright.test_files_by_project();
     let graph_only_files = super::graph_only_files(&files, &graph_files);
     let has_indexable_graph_only =
         has_indexable_graph_only(&graph_only_files, &partitions.playwright_only_sources);
@@ -188,8 +186,9 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         has_indexable_graph_only,
         files_discovered: partitions.files_discovered,
         ts,
-        playwright_source_files,
-        playwright_test_files_by_project,
+        playwright_source_files: playwright.source_files(),
+        playwright_test_files_by_project: playwright.test_files_by_project(),
+        playwright_matcher_warnings: playwright.matcher_warnings(),
         integration_runner_configs,
     });
     map.unproven_member_query_sql = unproven_member_query_sql;

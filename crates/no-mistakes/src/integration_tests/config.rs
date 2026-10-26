@@ -6,6 +6,9 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+mod matcher_warnings;
+pub(super) use matcher_warnings::selected_matcher_warnings;
+
 pub(super) fn validate_config(config: &NoMistakesConfig) -> Result<()> {
     for (framework, projects) in [
         ("playwright", &config.tests.playwright.projects),
@@ -81,6 +84,11 @@ fn suites_for_framework(
             Some(project) => project,
             None => exact_project(framework, project_name, projects)?,
         };
+        if !project.matcher_warnings.is_empty() {
+            // Aggregate preparation reports these scoped catalog warnings. Keep
+            // uncertain ownership out of both fact planning and definite findings.
+            continue;
+        }
         let allowed_integrations = policy
             .integration_suites
             .values()
@@ -118,6 +126,7 @@ pub(crate) fn configured_project(
         scope: None,
         include: prefix_globs(root, root, &policy.include),
         exclude: prefix_globs(root, root, &policy.exclude),
+        matcher_warnings: Vec::new(),
         vitest_setup: super::project_config::policy_setup_dependencies(root, policy),
         declared_deadlines: Default::default(),
     })

@@ -21,7 +21,7 @@ fn collect_playwright_selector_edges_for_settings(
         inputs.facts,
         inputs.snapshot,
     );
-    let test_files = test_files?;
+    let (test_files, _) = test_files?;
     let app_setup = crate::playwright::analysis::pipeline_setup::collect_app_selectors(
         root,
         settings,

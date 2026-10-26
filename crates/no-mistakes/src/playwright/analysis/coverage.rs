@@ -144,6 +144,7 @@ pub(crate) fn build_coverage(inputs: CoverageInputs<'_>) -> CoverageReport {
     let uncovered_fetch_apis = total_fetch_apis.saturating_sub(covered_fetch_apis);
 
     CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes,
             covered_routes,

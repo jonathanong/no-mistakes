@@ -160,6 +160,7 @@ fn with_materialized_vitest_cache(mut graph: DepGraph) -> DepGraph {
                 include: Vec::new(),
                 exclude: Vec::new(),
                 declared_deadlines: Default::default(),
+                matcher_warnings: Vec::new(),
                 vitest_setup: Vec::new(),
             },
         )

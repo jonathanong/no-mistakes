@@ -152,6 +152,39 @@ project with `setup_files` must have a nonempty `include` matcher; invalid or
 missing paths report a configuration warning and skip the rule in aggregate
 checks rather than silently dropping the setup mock.
 
+## Playwright file matchers
+
+Static `testMatch` and `testIgnore` accept string globs, RegExp literals, and
+arrays mixing both at the config root or within `projects`. Regexes match the
+absolute file path within the project's `testDir`; strings keep their existing
+config-relative glob behavior. An explicit empty `testMatch: []` selects no
+files. Project `testMatch` overrides the root matcher, while root and project
+`testIgnore` exclusions are combined.
+
+The static regex subset supports ordinary path patterns and the `i`, `m`, `s`,
+`g`, `y`, `d`, and `u` flags where their semantics can be preserved. Non-Unicode
+wildcards are limited to ungrouped `.*` and `.+` runs; non-Unicode negated
+classes, non-ASCII pattern literals, and multiline anchors are uncertain. Each
+file starts with a fresh match: global regexes
+have no retained position, and sticky regexes start at offset zero. Constructs
+with incompatible engine semantics (including Unicode character-class escapes,
+identity escapes, lookaround, backreferences, and `v` mode), dynamic values, and
+invalid globs produce scoped uncertainty instead of aborting aggregate `check`.
+Its JSON `warnings` name the config file and property line. Unknown includes
+retain candidates only within that project's `testDir`; unknown excludes cannot
+remove candidates. Supported array entries and other projects still run. Treat
+coverage as uncertain until the matcher is rewritten using supported literals.
+Runner-only forbidden-call roots retain the same warnings and skip uncertain
+projects instead of reporting calls from files that may not be tests.
+Integration-suite checks skip projects with uncertain matchers and report their
+config/property diagnostics; known suites and other check domains continue. A known
+sibling project or an explicit project `include` override keeps its own scope.
+
+Standalone `playwright check --json` and `playwrightCheck()` include a `warnings`
+array when matcher selection is uncertain; complete selections omit that field.
+The text report displays those warnings instead of claiming full coverage, and
+the standalone CLI exits 1 when warnings remain.
+
 ## Jest
 
 `tests.jest.configs` lists explicit Jest config files for `tests plan jest`.

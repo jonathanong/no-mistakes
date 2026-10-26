@@ -61,7 +61,8 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
     let required_routes = require_routes
         .then(|| collect_playwright_routes(root, settings, true, false, facts, snapshot))
         .transpose()?;
-    let test_files = discover_playwright_test_files(root, settings, facts, snapshot)?;
+    let (test_files, matcher_warnings) =
+        discover_playwright_test_files(root, settings, facts, snapshot)?;
     let app_selector_setup = collect_app_selectors(
         root,
         settings,
@@ -174,7 +175,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
     });
     test_analysis.helper_references.sort();
     test_analysis.helper_references.dedup();
-    super::pipeline_finish::finish_analysis(
+    let mut analysis = super::pipeline_finish::finish_analysis(
         root,
         settings,
         unique_selector_policy,
@@ -182,5 +183,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         test_analysis,
         facts,
         snapshot,
-    )
+    )?;
+    analysis.coverage.warnings = matcher_warnings;
+    Ok(analysis)
 }

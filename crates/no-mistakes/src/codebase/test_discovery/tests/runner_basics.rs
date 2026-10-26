@@ -274,6 +274,7 @@ fn vitest_project_discovery_without_playwright_projects_keeps_matching_tests() {
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
         declared_deadlines: Default::default(),
+        matcher_warnings: Vec::new(),
         vitest_setup: Vec::new(),
     }];
     let discovered = discover_from_projects(&root, &config, TestRunner::Vitest, projects).unwrap();

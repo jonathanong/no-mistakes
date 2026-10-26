@@ -29,6 +29,7 @@ pub(in crate::integration_tests) fn config_project(
         include: include_globs(root, config_dir, source, visible_files)?,
         exclude: Vec::new(),
         declared_deadlines: Default::default(),
+        matcher_warnings: Vec::new(),
         vitest_setup: Vec::new(),
     })
 }

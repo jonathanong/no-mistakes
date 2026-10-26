@@ -37,6 +37,7 @@ import type {
   ResolvedConfig,
   GraphEdge,
   PlaywrightOptions,
+  PlaywrightCoverageReport,
   PlaywrightRelatedOptions,
   ProjectOptions,
   QueueCheckFinding,
@@ -160,7 +161,7 @@ export function testsGraphMermaid(
 ): Promise<string>;
 export function playwrightCheck(
   options?: WithInvocationOptions<PlaywrightOptions>,
-): Promise<unknown>;
+): Promise<PlaywrightCoverageReport>;
 export function playwrightEdges(
   options?: WithInvocationOptions<PlaywrightOptions>,
 ): Promise<unknown>;

@@ -68,18 +68,14 @@ fn config_parsers_reject_invalid_literals() {
     assert!(pw_err.to_string().contains("expected string literal"));
     let empty_match_path = root.join("playwright.empty-match-invalid.ts");
     let empty_match_source = std::fs::read_to_string(&empty_match_path).unwrap();
-    let empty_match_err = match test_support::parse_playwright(
-        &empty_match_source,
-        &empty_match_path,
-        &root,
-        &tsconfig,
-    ) {
-        Ok(_) => panic!("expected empty testMatch to fail"),
-        Err(error) => error,
-    };
-    assert!(empty_match_err
-        .to_string()
-        .contains("expected string literal or string array"));
+    let empty_match =
+        test_support::parse_playwright(&empty_match_source, &empty_match_path, &root, &tsconfig)
+            .expect("an explicit empty matcher selects no tests");
+    assert!(
+        empty_match.into_projects(&root, "playwright.empty-match-invalid.ts")[0]
+            .include
+            .is_empty()
+    );
 
     let vitest_path = root.join("vitest.invalid.mts");
     let vitest_source = std::fs::read_to_string(&vitest_path).unwrap();

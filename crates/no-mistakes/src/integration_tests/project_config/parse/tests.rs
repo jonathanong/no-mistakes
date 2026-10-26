@@ -44,14 +44,32 @@ fn jest_and_dotnet_program_parse_return_no_projects() {
 }
 
 #[test]
-fn playwright_program_parse_errors_propagate() {
+fn playwright_program_parse_non_matcher_errors_propagate() {
     let root = Path::new("/nm-playwright-parse-error");
     let error = program_projects(
         root,
         "playwright.config.ts",
-        "export default { testMatch: 1 };",
+        "export default { testDir: 1 };",
         Framework::Playwright,
     )
     .unwrap_err();
     assert!(error.to_string().contains("expected string literal"));
+}
+
+#[test]
+fn playwright_program_regex_projection_requires_prepared_inventory() {
+    let root =
+        crate::playwright::test_support::fixture_path(&["playwright-configs", "regexp-match"]);
+    let source = std::fs::read_to_string(root.join("playwright.config.ts")).unwrap();
+    let error = program_projects(
+        &root,
+        "playwright.config.ts",
+        &source,
+        Framework::Playwright,
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("playwright.config.ts"));
+    assert!(error
+        .to_string()
+        .contains("caller-owned visible file inventory"));
 }

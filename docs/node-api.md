@@ -322,3 +322,11 @@ The async `check()` API accepts `PostgresRequireQueryAnnotationOptions.sqlLitera
 [`postgres-no-transformed-uuid-predicates`](rules/postgres-no-transformed-uuid-predicates.md).
 Import `PostgresNoTransformedUuidPredicatesOptions` to name its catalog, executor,
 and effort options. Both APIs preserve findings and non-failing advisories.
+
+Playwright file selection uses the same static string/RegExp/mixed-array config
+matchers as the CLI. `check()` and `analyzeProject({ check: ... })` retain scoped
+matcher uncertainty in their existing `warnings` field; see
+[Playwright file matchers](configuration/tests.md#playwright-file-matchers).
+`playwrightCheck()` includes an optional `warnings` array for the same uncertainty;
+the field is omitted when all configured matchers can be analyzed. Import
+`PlaywrightCoverageReport` to name the warning-bearing result.

@@ -1,5 +1,10 @@
 # Feature Parity
 
+Playwright config `testMatch` / `testIgnore` accept static string globs, RegExp
+literals, and mixed arrays in both CLI and Node analysis. Unsupported matchers
+produce scoped aggregate-check warnings; see
+[matcher recovery](configuration/tests.md#playwright-file-matchers).
+
 `no-mistakes` is a local, deterministic codebase-intelligence engine. TypeScript
 and JavaScript are the reference implementation for the full product surface.
 This page is the contract for bringing other languages and their key frameworks

@@ -18,3 +18,14 @@ pub(in crate::integration_tests) fn parse_program(
     };
     parse_program_with_resolver(program, source, path, config_dir, &resolver)
 }
+
+impl ParsedPlaywrightConfig {
+    pub(in crate::integration_tests) fn into_projects(
+        self,
+        root: &Path,
+        config: &str,
+    ) -> Vec<crate::integration_tests::types::ConfigProject> {
+        self.into_projects_from_visible(root, config, None)
+            .expect("regex projection requires the caller-owned visible inventory")
+    }
+}

@@ -72,6 +72,7 @@ fn project_for(
         include: prefix_globs(root, &package_root, includes),
         exclude: Vec::new(),
         declared_deadlines: Default::default(),
+        matcher_warnings: Vec::new(),
         vitest_setup: Vec::new(),
     }
 }

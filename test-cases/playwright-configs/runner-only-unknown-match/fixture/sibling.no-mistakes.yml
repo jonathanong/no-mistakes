@@ -1,0 +1,14 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - playwright: [sibling]
+      targets:
+        - global: setTimeout
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes:
+        - path: .
+          bannedExtensions: [".txt"]

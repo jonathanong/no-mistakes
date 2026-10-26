@@ -1,5 +1,5 @@
 use crate::playwright::analysis::context::{
-    DiscoveredTestFile, TestProjectContext, TestProjectDiscovery,
+    DiscoveredTestFile, FileMatcher, TestProjectContext, TestProjectDiscovery,
 };
 use crate::playwright::config::Settings;
 use crate::playwright::fsutil::{
@@ -62,12 +62,10 @@ pub(crate) fn discover_test_files_from_visible(
             let abs = slash_path(&path);
             let mut contexts_to_add = Vec::new();
             for project_discovery in &projects {
-                let included = project_discovery.include.is_match(&rel_root)
-                    || project_discovery.include.is_match(&rel_test)
-                    || project_discovery.include.is_match(&abs);
-                let ignored = project_discovery.ignore.is_match(&rel_root)
-                    || project_discovery.ignore.is_match(&rel_test)
-                    || project_discovery.ignore.is_match(&abs);
+                let included = project_discovery
+                    .include
+                    .matches(&rel_root, &rel_test, &abs);
+                let ignored = project_discovery.ignore.matches(&rel_root, &rel_test, &abs);
                 if included && !ignored {
                     contexts_to_add.push(project_discovery.context.clone());
                 }
@@ -102,8 +100,16 @@ pub(crate) fn build_project_discovery(
                 &settings.selector_attributes,
             ),
             test_dir: project.test_dir(root),
-            include: build_globset(&project.test_match)?,
-            ignore: build_globset(&project.test_ignore)?,
+            include: FileMatcher {
+                globs: build_globset(&project.test_match)?,
+                regexes: project.pattern_options.test_match.regexes.clone(),
+                unknown: !project.pattern_options.test_match.warnings.is_empty(),
+            },
+            ignore: FileMatcher {
+                globs: build_globset(&project.test_ignore)?,
+                regexes: project.pattern_options.test_ignore.regexes.clone(),
+                unknown: false,
+            },
         });
     }
     Ok(discovery)
@@ -133,12 +139,8 @@ pub(crate) fn matching_project_contexts(
 
         let rel_test = relative_string(&project.test_dir, path);
         let abs = slash_path(path);
-        let included = project.include.is_match(&rel_root)
-            || project.include.is_match(&rel_test)
-            || project.include.is_match(&abs);
-        let ignored = project.ignore.is_match(&rel_root)
-            || project.ignore.is_match(&rel_test)
-            || project.ignore.is_match(&abs);
+        let included = project.include.matches(&rel_root, &rel_test, &abs);
+        let ignored = project.ignore.matches(&rel_root, &rel_test, &abs);
         if included && !ignored {
             contexts.insert(project.context.clone());
         }

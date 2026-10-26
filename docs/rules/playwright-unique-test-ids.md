@@ -43,6 +43,11 @@ Shared `effort` and `unanalyzable` options apply as described below.
 
 ## Analysis
 
+Playwright `testMatch` and `testIgnore` support static string/RegExp matchers.
+Unsupported matcher values produce config-file and property-line warnings while
+other checks continue; see [file matchers](../configuration/tests.md#playwright-file-matchers).
+Matcher uncertainty does not change which selector shapes this rule judges.
+
 ### Effort
 
 - Supports `low` and `max` (default `max`). **Max**: recovers identifier, helper, ternary, map, and imported bindings into exact test IDs. **Low**: accepts only string-literal attributes and props with literal defaults and routes other shapes to `unanalyzable`. No partner rule is required; if any application is not `low`, the invocation stays at `max`.

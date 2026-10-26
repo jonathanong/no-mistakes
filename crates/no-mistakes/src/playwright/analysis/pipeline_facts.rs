@@ -79,6 +79,7 @@ pub(crate) fn extend_standalone_fact_plan(
         Some(snapshot.source_store_for(root).as_ref()),
     );
     let playwright = playwright?;
+    fact_plan.add_matcher_warnings(settings.project.clone(), playwright.matcher_warnings(root));
     let test_files = crate::playwright::analysis::discover::discover_test_files_from_visible(
         root,
         settings,
