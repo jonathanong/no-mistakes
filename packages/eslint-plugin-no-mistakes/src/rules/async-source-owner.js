@@ -53,6 +53,11 @@ function withSourceOwner(rule) {
         activeOwners.set(context, owner);
         try {
           visitor = rule.create(context);
+          if (Object.keys(visitor).length === 0) {
+            visitor = null;
+            activeOwners.delete(context);
+            return false;
+          }
         } catch (error) {
           activeOwners.delete(context);
           throw error;
