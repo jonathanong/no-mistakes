@@ -93,6 +93,8 @@ impl CheckFactMap {
 #[derive(Default)]
 pub(crate) struct CheckFileFacts {
     pub ts: Arc<TsFileFacts>,
+    pub(crate) lint_suppressions:
+        Option<Vec<crate::codebase::rules::forbidden_lint_suppressions::Suppression>>,
     pub(crate) production_imports:
         Option<Arc<Vec<crate::codebase::dependencies::extract::ExtractedImport>>>,
     pub source: Option<Arc<str>>,

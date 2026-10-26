@@ -193,7 +193,7 @@ remain failures. See
 | Selected TS/JS modules | `analyzeTypeScriptModules({ root, files })` |
 | `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
 | Global `--progress` | Pass `diagnosticsId` and poll `diagnosticsSnapshot({ id })`; stderr-free live snapshots |
-| `check`                                    | `check(options)`                                                                                                                                                                                                                                                           |
+| `check`                                    | `check(options)` (including configured `forbidden-lint-suppressions`)                                                                                                                                                                                                                                                           |
 | `config resolve`                           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
 | `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
 | `effects`                                  | `effects(options)`                                                                                                                                                                                                                                                         |
@@ -230,7 +230,7 @@ remain failures. See
 | `analyzeProject` | `analyzeProject(options)`; import `AnalyzeProjectReportType` for report `type` instead of indexing `AnalyzeProjectReportRequest['type']` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
-| `check` | `check(options)` |
+| `check` | `check(options)`; configured `forbidden-lint-suppressions` uses `checkJson` |
 | `ciEnv` | `ciEnv(options)` |
 | `ciImpact` | `ciImpact(options)` |
 | `ciTopology` | `ciTopology(options)` |
@@ -341,3 +341,12 @@ the field is omitted when all configured matchers can be analyzed. Import
 `PlaywrightCoverageReport` to name the warning-bearing result.
 
 `check()` also runs configured [coverage-producer-assertion-owner](rules/coverage-producer-assertion-owner.md) applications, returning ordinary `rules` findings or `advisories`. Its exported option types are `CoverageProducerAssertionOwnerOptions`, `CoverageProducerFunction`, `CoverageAssertionImport`, and `CoverageAssertionOwnership`. The existing asynchronous `check` → `checkJson` binding remains the runtime entrypoint.
+
+`check()` and batched `analyzeProject()` check reports also run configured
+[forbidden-lint-suppressions](rules/forbidden-lint-suppressions.md) applications.
+Import `ForbiddenLintSuppressionsOptions` and
+`ForbiddenLintSuppressionDirective` for their public configuration contract.
+The existing asynchronous `check` → `checkJson` binding returns ordinary
+`RuleFinding` rows: `line` identifies the directive and `target` identifies the
+forbidden lint ID, `*` for a selected blanket disable, or the explicitly enabled
+TypeScript directive name. No additional runtime export is required.

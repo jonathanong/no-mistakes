@@ -14,6 +14,7 @@ mod finding;
 pub mod finite_set_consistency;
 pub mod forbidden_calls;
 pub mod forbidden_dependencies;
+pub mod forbidden_lint_suppressions;
 pub mod forbidden_workspace_closure;
 pub mod github_actions_action_timeout_pair;
 pub mod github_actions_checkout_credentials;

@@ -88,7 +88,8 @@ pub(super) fn requires_parse(
     path: &Path,
     playwright: Option<&PlaywrightFactPlan>,
 ) -> bool {
-    plan.requires_call_sites(path)
+    plan.lint_suppression_paths.contains(path)
+        || plan.requires_call_sites(path)
         || plan.imports
         || plan.production_import_paths.contains(path)
         || plan.query_annotation

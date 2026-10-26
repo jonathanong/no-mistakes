@@ -922,3 +922,8 @@ and asynchronous Node checks. Runtime endpoint adoption and inferred payload
 values are outside this declaration-only boundary.
 
 TS/JS coverage producers can opt into [assertion-owner checks](rules/coverage-producer-assertion-owner.md) through CLI and async Node `check()`, sharing prepared calls and explicit cross-process ownership.
+
+TS/JS [forbidden lint suppression checks](rules/forbidden-lint-suppressions.md)
+use AST comment facts through CLI and async Node `check()`/`analyzeProject()`.
+Configured file globs, exact rule IDs, literal rule prefixes, and opt-in blanket
+or TypeScript directive bans have the same finding locations and targets.

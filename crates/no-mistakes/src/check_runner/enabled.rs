@@ -59,6 +59,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         forbidden_call_arguments: None,
         sql_identifier_profiles: Default::default(),
         imports: enabled.dynamic_import_rules,
+        lint_suppression_paths: Default::default(),
         call_site_paths: Default::default(),
         production_import_paths: Default::default(),
         companion_import_plans: Default::default(),

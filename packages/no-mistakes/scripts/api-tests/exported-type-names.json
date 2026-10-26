@@ -104,6 +104,8 @@
   "ForbiddenCallArgumentLiteral",
   "ForbiddenCallArgumentPredicate",
   "ForbiddenCallUnknownArguments",
+  "ForbiddenLintSuppressionDirective",
+  "ForbiddenLintSuppressionsOptions",
   "GraphEdge",
   "GroupedExecutionTarget",
   "ImpactEdgeDetail",

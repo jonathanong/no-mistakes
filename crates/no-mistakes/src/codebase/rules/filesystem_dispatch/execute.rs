@@ -77,7 +77,8 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     // This public standalone adapter owns missing demand at its boundary.
     // Lower rule layers only borrow it; a supplied sparse map is not repaired.
     let owned_facts = if facts.is_none()
-        && (rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
+        && (rule_enabled(config, FORBIDDEN_LINT_SUPPRESSIONS)
+            || rule_enabled(config, PRODUCTION_DEPENDENCY_DECLARATIONS)
             || rule_enabled(config, REQUIRED_COMPANION_IMPORTS)
             || crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS
                 .iter()

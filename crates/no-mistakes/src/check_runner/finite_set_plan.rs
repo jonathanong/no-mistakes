@@ -7,6 +7,7 @@ pub(crate) struct PreparedFactDemand {
     companion_import_files: Vec<PathBuf>,
     has_companion_plan: bool,
     call_site_files: Vec<PathBuf>,
+    comment_files: Vec<PathBuf>,
     runner_config_files: Vec<PathBuf>,
     needs_other_facts: bool,
 }
@@ -27,6 +28,7 @@ impl PreparedFactDemand {
         self.needs_other_facts
             || self.has_companion_plan
             || !self.call_site_files.is_empty()
+            || !self.comment_files.is_empty()
             || !self.runner_config_files.is_empty()
     }
 
@@ -40,6 +42,7 @@ impl PreparedFactDemand {
             return discovered;
         }
         let mut requested = self.call_site_files.clone();
+        requested.extend(self.comment_files.iter().cloned());
         requested.extend(self.companion_import_files.iter().cloned());
         requested.extend(self.runner_config_files.iter().cloned());
         no_mistakes::codebase::check_facts::ordered_path_intersection(&requested, &discovered)
@@ -81,6 +84,7 @@ pub(crate) fn prepare(
         companion_import_files: Vec::new(),
         has_companion_plan: false,
         call_site_files: files,
+        comment_files: plan.lint_suppression_paths.iter().cloned().collect(),
         runner_config_files: plan
             .integration_runner_configs
             .as_ref()

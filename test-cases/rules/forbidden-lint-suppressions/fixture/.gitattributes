@@ -1,0 +1,2 @@
+# Preserve the mixed JavaScript line terminators in the location regression.
+src/line-endings.ts -text whitespace=cr-at-eol

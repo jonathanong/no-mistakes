@@ -18,6 +18,7 @@ macro_rules! filesystem_rules {
             CSHARP_MAX_LINES_PER_FILE => csharp_max_lines_per_file::check_with_files,
             CSHARP_NO_ASYNC_VOID_DELEGATE => csharp_no_async_void_delegate::check_with_files,
             FINITE_SET_CONSISTENCY => finite_set_consistency::check_with_files,
+            FORBIDDEN_LINT_SUPPRESSIONS => forbidden_lint_suppressions::check_with_files,
             FORBIDDEN_WORKSPACE_CLOSURE => forbidden_workspace_closure::check_with_files,
             DECLARED_PAYLOAD_COMPATIBILITY => declared_payload_compatibility::check_with_files,
             STRUCTURED_CONFIG_POLICY => structured_config_policy::check_with_files,

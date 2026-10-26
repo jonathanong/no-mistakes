@@ -1,0 +1,8 @@
+rules:
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    options:
+      files: ['src/**/*.{ts,tsx}']
+      ruleIds: ['react/purity']
+      rulePrefixes: ['react-hooks-js/']
+      message: Keep compiler checks enabled.

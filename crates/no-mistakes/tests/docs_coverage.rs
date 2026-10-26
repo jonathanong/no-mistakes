@@ -2,6 +2,8 @@
 mod docs_audit;
 #[path = "support/docs_include_fragment_regressions.rs"]
 mod docs_include_fragment_regressions;
+#[path = "support/docs_lint_suppression_regressions.rs"]
+mod docs_lint_suppression_regressions;
 #[path = "common/saved_fixture.rs"]
 mod saved_fixture;
 
@@ -181,7 +183,7 @@ fn no_mistakes_rules_have_docs() {
     let root = repo_root();
     let index = read(&root.join("docs/rules/README.md"));
     let rule_ids = rule_ids_from_source(&root);
-    assert_eq!(rule_ids.len(), 115, "source rule inventory changed");
+    assert_eq!(rule_ids.len(), 116, "source rule inventory changed");
     for rule_id in rule_ids {
         let file = format!("{rule_id}.md");
         let path = root.join("docs/rules").join(&file);

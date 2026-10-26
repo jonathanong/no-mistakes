@@ -211,3 +211,24 @@ fn prepare_join_serial_time_does_not_exceed_its_wall_time() {
     assert_eq!(snapshot.work.get("check.prepare.catalog"), Some(&1));
     assert_eq!(snapshot.work.get("check.prepare.independent"), Some(&1));
 }
+
+#[test]
+fn lint_suppressions_and_call_graph_share_one_ast_parse() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/forbidden-lint-suppressions/fixture/shared");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+    let result = {
+        let _guard = no_mistakes::diagnostics::InvocationGuard::install(Arc::clone(&observer));
+        run_all(root, None, None).unwrap()
+    };
+    assert!(result
+        .rules
+        .iter()
+        .any(|f| f.rule == "forbidden-lint-suppressions"));
+    assert!(result.rules.iter().any(|f| f.rule == "forbidden-calls"));
+    let work = observer.snapshot().work;
+    assert_eq!(work.get("parse.files"), Some(&1), "{work:#?}");
+    assert_eq!(work.get("parse.files_after_extract"), Some(&1), "{work:#?}");
+}
