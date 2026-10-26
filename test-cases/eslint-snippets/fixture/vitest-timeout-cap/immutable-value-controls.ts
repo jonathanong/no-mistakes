@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 const scalar = 30000;
 const bounded = { timeout: scalar };
 const alias = bounded;
-test("immutable alias", alias, () => {});
+test("immutable alias", /* no-mistakes-timeout-reason: isolated worker startup needs this budget */ alias, () => {});
 const config = { test: { testTimeout: 1, hookTimeout: 30000 } };
 defineConfig(config);
 const changed = { timeout: 1 };

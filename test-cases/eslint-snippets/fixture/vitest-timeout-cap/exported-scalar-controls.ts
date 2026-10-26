@@ -5,6 +5,6 @@ export { upper };
 const alias = upper;
 export default alias;
 test("lower exported scalar", { timeout: lower }, () => {});
-test("upper exported scalar", { timeout: alias }, () => {});
+test("upper exported scalar", { /* no-mistakes-timeout-reason: isolated worker startup needs this budget */ timeout: alias }, () => {});
 export const oversized = 30001;
 test("oversized exported scalar", { timeout: oversized }, () => {});

@@ -10,7 +10,7 @@ const options = { timeout: POSITIVE };
 const runtime = { testTimeout: POSITIVE };
 test('negative is invalid', () => {}, NEGATIVE);
 test('positive', () => {}, POSITIVE);
-test('boundary', () => {}, MIN);
+test('boundary', () => {}, /* no-mistakes-timeout-reason: isolated worker startup needs this budget */ MIN);
 test('unknown unary', () => {}, UNKNOWN);
 test('unknown getter', getter, () => {});
 // no-mistakes-disable-next-line vitest-timeout-cap -- suppress at options usage, not declaration

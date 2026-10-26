@@ -140,7 +140,11 @@ function createEvaluator(context, consumed) {
                 properties.set(key, { ...entry, value: taint(entry.value) });
             }
             for (const [key, entry] of spread.properties)
-              properties.set(key, { ...entry, origin: property });
+              properties.set(key, {
+                ...entry,
+                annotationOrigin: entry.annotationOrigin || entry.origin,
+                origin: property,
+              });
           } else if (spread.kind !== "null") {
             unknown = true;
             for (const [key, entry] of properties)

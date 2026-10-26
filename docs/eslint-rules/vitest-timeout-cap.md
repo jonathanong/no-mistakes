@@ -35,6 +35,9 @@ Vitest APIs, `defineConfig`,
 project entries, and `vi.setConfig` updates to `testTimeout` or `hookTimeout`.
 The default caps are 5,000 ms for configuration `testTimeout` and `hookTimeout`,
 and 30,000 ms for individual test, suite, hook, and runtime overrides.
+An override above `defaultMax` also requires an explicit, non-placeholder reason.
+The reason never permits an invalid value, a higher project default, or a value
+above `overrideMax`.
 
 ```ts
 import { defineConfig } from "vitest/config";
@@ -50,7 +53,8 @@ beforeEach(async () => {}, 45_000);
 
 ## Allowed
 
-Positive values at or below the cap are accepted. The rule evaluates same-module
+Positive overrides at or below `defaultMax` need no reason. Above that threshold,
+add an adjacent comment and stay within `overrideMax`. The rule evaluates same-module
 constants, object and array literals, known spreads, and config callbacks with
 expression bodies or a single return statement. It applies deep object merges
 and concatenates merged arrays, so only effective config/project timeout
@@ -66,8 +70,49 @@ export default defineConfig({
   test: { testTimeout: shortTimeout, hookTimeout: 5_000 },
 });
 
+// no-mistakes-timeout-reason: waits for the external sandbox to finish provisioning
 it("uses a bounded timeout", { timeout: 25_000 }, async () => {});
 ```
+
+### Justifying an override
+
+Use `// no-mistakes-timeout-reason: <specific reason>` immediately before the
+registration or runtime setter, with no blank line or intervening code. A
+preceding block comment with the same marker also works. A comment immediately
+before the effective timeout property or value can document that timeout alone.
+
+Grouping parentheses around the timeout value preserve adjacency. Parentheses
+belonging to another call do not transfer its reason to a nested registration.
+
+```ts
+import { it, vi } from "vitest";
+
+it(
+  "provisions a sandbox",
+  {
+    // no-mistakes-timeout-reason: creates the isolated external sandbox
+    timeout: 15_000,
+  },
+  async () => provisionSandbox(),
+);
+
+// no-mistakes-timeout-reason: waits for the sandbox's real network handshake
+vi.setConfig({ testTimeout: 12_000 });
+```
+
+The same requirement applies to numeric arguments, options objects, all recognized
+hooks and native aliases, suites, and registrations on APIs returned by
+`test.extend`, `override`, or `scoped`. It applies to both `testTimeout` and
+`hookTimeout` in `vi.setConfig`. It is a source comment, not a Vitest option.
+
+Empty or punctuation-only text and placeholder reasons are reported: `TODO`,
+`TBD`, `FIXME`, `XXX`, and `placeholder` prefixes, or an exact `reason`, `<reason>`,
+`explanation`, `<explanation>`, `specific reason`, `<specific reason>`, `n/a`, or
+`none` (case-insensitive). The rule checks this syntax; reviewers still
+judge whether the named reason is appropriate. A reason on an enclosing suite
+does not justify nested registrations. Trailing comments on another statement do
+not apply. A reason on an effective shared options property travels with that
+property; a comment on a scalar constant declaration does not justify its uses.
 
 Returned object bindings remain known for synchronous expression-body or
 single-return callbacks whose immutable aliases are consumed only by
@@ -106,7 +151,6 @@ initialized by an object or array literal. The proof uses the module statement
 list, so a prior deletion still exposes inherited setters and retains unknown
 values. Receiver aliases, nested receivers, functions, loops, branches, and
 uncertain deletion keys do not establish this execution order.
-
 
 Object and array spreads make shallow copies. Replacing, updating, or deleting a
 copy's own property does not make the source's timeout unknown; the copy's own
@@ -189,9 +233,12 @@ it("runs", () => {}, budget);
 ## Options
 
 - `defaultMax` sets the maximum config/project `testTimeout` and `hookTimeout`
-  in milliseconds. It defaults to `5000`.
+  in milliseconds and the threshold above which overrides require a reason.
+  It defaults to `5000`.
 - `overrideMax` sets the maximum timeout for test, suite, hook, and
   `vi.setConfig` overrides. It defaults to `30000`.
+  A reason is still required above `defaultMax`; raising this hard cap does not
+  justify an override.
 - `unknownValues` is `"ignore"` by default. Set it to `"finding"` to report
   unresolved timeout expressions.
 
@@ -209,7 +256,7 @@ export default [
       "no-mistakes/vitest-timeout-cap": [
         "error",
         {
-          defaultMax: 8_000,
+          defaultMax: 5_000,
           overrideMax: 20_000,
           unknownValues: "finding",
         },
@@ -247,8 +294,9 @@ Use the shortest timeout that covers the work and make asynchronous completion
 explicit. Replace arbitrary sleeps with a readiness signal, event, or fixture
 barrier. For slow external work, move setup behind a deliberate test seam and
 keep the required environment provisioned; do not raise a timeout to mask
-missing credentials or a stalled dependency. If a larger limit is justified,
-set a documented `defaultMax` or `overrideMax` for the applicable test files.
+missing credentials or a stalled dependency. For a justified individual override,
+keep the project default small, choose a value within `overrideMax`, and add an
+adjacent `no-mistakes-timeout-reason` comment naming the work that needs it.
 
 ## Suppression
 
@@ -275,7 +323,7 @@ also apply.
 
 Numeric arithmetic (`+`, `-`, `*`, `/`, `%`, `**`) is resolved when both operands
 resolve to numbers, including module constants. This catches `60 * 1000`
-and accepts a `30 * 1000` override at the cap. Infinity is over cap; NaN
+and accepts a justified `30 * 1000` override at the cap. Infinity is over cap; NaN
 remains unknown. Bitwise operators remain unresolved rather than duration arithmetic. Strings are not coerced and arbitrary calls are not executed.
 Unresolved expressions still follow `unknownValues`; use `"finding"` to report
 them. This source rule does not inspect shell or Vitest CLI timeout flags.

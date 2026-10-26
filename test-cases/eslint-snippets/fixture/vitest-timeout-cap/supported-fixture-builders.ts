@@ -7,7 +7,7 @@ overridden("overridden oversized", () => {}, 30001);
 const scoped = extended.scoped({ owned: [async ({}, use) => use(1), { auto: true }] });
 scoped("scoped invalid", { timeout: -1 }, () => {});
 const worker = test.extend("owned", { scope: "worker" }, async () => 1);
-worker("worker registrar positive", { timeout: 30000 }, () => {});
+worker("worker registrar positive", { /* no-mistakes-timeout-reason: isolated worker startup needs this budget */ timeout: 30000 }, () => {});
 const file = test.extend("owned", { scope: "file" }, async () => 1);
 file("file registrar positive", { timeout: 1 }, () => {});
 // A fixture value's timeout property is data, not a FixtureOptions deadline.

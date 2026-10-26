@@ -50,7 +50,9 @@ for the complete list.
 To cap long Vitest timeouts, enable `no-mistakes/vitest-timeout-cap` in the
 test and Vitest config files selected by your flat-config globs. It defaults to
 5,000 ms for configured test and hook timeouts and 30,000 ms for per-test and
-hook overrides. See the [rule documentation](../../docs/eslint-rules/vitest-timeout-cap.md)
+hook overrides. Overrides above the default cap require an adjacent
+`// no-mistakes-timeout-reason: <specific reason>` comment.
+See the [rule documentation](../../docs/eslint-rules/vitest-timeout-cap.md)
 for options and examples.
 
 `gh-api-argument-safety` is an opt-in rule for structured endpoint fields and explicit API methods.

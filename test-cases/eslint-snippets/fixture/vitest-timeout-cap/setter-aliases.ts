@@ -14,4 +14,4 @@ const wrapTest = aroundEach;
 wrapTest(async run => run(), 0);
 const finish = onTestFinished;
 finish(() => {}, 30001);
-update({ testTimeout: 30000, hookTimeout: 25 });
+update(/* no-mistakes-timeout-reason: isolated worker startup needs this budget */ { testTimeout: 30000, hookTimeout: 25 });

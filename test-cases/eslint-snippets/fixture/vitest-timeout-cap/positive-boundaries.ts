@@ -19,7 +19,7 @@ export default defineConfig({ test: {
 
 check('zero', () => {}, ALIAS);
 check('negative', { timeout: NEGATIVE }, () => {});
-check('boundary', () => {}, BOUND);
+check('boundary', () => {}, /* no-mistakes-timeout-reason: isolated worker startup needs this budget */ BOUND);
 check('over', () => {}, OVER);
 beforeAll(() => {}, SIGNED_ZERO);
 beforeEach(() => {}, { timeout: ZERO });
