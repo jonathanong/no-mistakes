@@ -114,6 +114,11 @@ payloads retain their query, function, and schema facts. Recovery supports
 newline-continued single-quoted text and dollar-quoted text, including tagged
 quotes.
 
+Multiline `FOR ... IN SELECT` headers may include `= ANY (...)`, `ORDER BY`, and
+row-lock clauses such as `FOR NO KEY UPDATE`; the lock clause's `UPDATE` is part
+of the query header, not loop-body DML. Malformed loop headers or malformed SQL
+in the body retain the existing uncertainty and advisory.
+
 For body `SELECT INTO`, the analyzer validates and retains the full variable
 target list, then removes the unsupported `STRICT` modifier in a parser clone.
 Targets may include subscripts with nested calls and array literals; commas

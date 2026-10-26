@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-fk-index
+    scope: repository
+    options:
+      sqlInclude: ['malformed-boundaries.sql']
+      unanalyzable: report

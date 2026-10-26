@@ -7,6 +7,8 @@ mod assignment;
 pub(super) use assignment::{comma_parts as assignment_parts, target as assignment_target};
 mod commands;
 mod declaration;
+mod labels;
+use labels::unlabeled;
 mod sql;
 
 /// Declaration sections last across semicolon chunks, including in nested blocks.
@@ -116,7 +118,9 @@ impl BodyState {
                     assignment::expression(&code[1..at])
                 } else {
                     commands::foreach_header(&code[..at])
-                }) && (at + 1 == code.len() || self.control(&code[at + 1..]))
+                }) && (at + 1 == code.len()
+                    || self.control(&code[at + 1..])
+                    || commands::dml(&code[at + 1..]))
             });
         }
         if word(first, "LOOP") || word(first, "EXCEPTION") {
@@ -142,15 +146,6 @@ impl BodyState {
     }
 }
 
-fn unlabeled<'a>(code: &'a [&'a Token]) -> &'a [&'a Token] {
-    if let [Token::ShiftLeft, label_token, Token::ShiftRight, rest @ ..] = code {
-        if block_label(label_token) {
-            return rest;
-        }
-    }
-    code
-}
-
 fn ending(code: &[&Token]) -> bool {
     match code {
         [] => true,
@@ -163,11 +158,6 @@ fn ending(code: &[&Token]) -> bool {
 fn label(token: &Token) -> bool {
     matches!(token, Token::Word(word) if word.quote_style.is_some() || word.keyword == Keyword::NoKeyword)
 }
-
-fn block_label(token: &Token) -> bool {
-    matches!(token, Token::Word(_))
-}
-
 fn boundary(code: &[&Token], expected: &str) -> Option<usize> {
     let mut depth = 0usize;
     let mut cases = 0usize;

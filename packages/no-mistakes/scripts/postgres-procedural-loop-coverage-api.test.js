@@ -3,6 +3,10 @@ const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
+const queryLoopRoot = join(
+  __dirname,
+  "../../../test-cases/rules/postgres-ddl-unanalyzable/fixture/query-loops",
+);
 const sql = readFileSync(
   join(__dirname, "../../../fixtures/postgres-facts/source/procedural-loop-coverage.sql"),
   "utf8",
@@ -11,6 +15,41 @@ const sql = readFileSync(
 function shape(occurrences) {
   return occurrences.map(({ kind, occurrences: children }) =>
     children.length ? `${kind}(${shape(children).join(",")})` : kind,
+  );
+}
+
+for (const [config, findings, advisories] of [
+  ["valid.yml", 0, 0],
+  ["valid-report.yml", 0, 0],
+  ["default.yml", 0, 11],
+  ["report.yml", 11, 0],
+  ["generated-write.yml", 1, 0],
+]) {
+  test(
+    `compiled query-loop check preserves policy and prepared parity: ${config}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const options = { root: queryLoopRoot, config };
+      const pending = cjs.check(options);
+      assert.equal(typeof pending.then, "function");
+      const report = await pending;
+      assert.deepEqual(await esm.check(options), report);
+      const prepared = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+      assert.deepEqual(prepared.reports[0].result, report);
+      assert.equal(report.rules.length, findings);
+      assert.equal(report.advisories.length, advisories);
+      if (config === "generated-write.yml") {
+        assert.equal(report.rules[0].rule, "postgres-no-generated-column-writes");
+        assert.match(report.rules[0].message, /do not write generated column/);
+      } else {
+        for (const row of [...report.rules, ...report.advisories]) {
+          assert.equal(row.file, "malformed.sql");
+          assert.equal(row.line, 6);
+        }
+      }
+    },
   );
 }
 

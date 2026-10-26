@@ -79,3 +79,58 @@ fn opaque_body_advisories_do_not_fail_the_cli() {
     assert_eq!(advisories.len(), 11, "{report}");
     assert!(advisories.iter().all(|item| item["line"] == 4));
 }
+
+#[test]
+fn locked_query_loops_keep_malformed_sql_visible_under_both_policies() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/query-loops");
+    for (config, findings, advisories) in [
+        ("valid.yml", 0, 0),
+        ("valid-report.yml", 0, 0),
+        ("default.yml", 0, 11),
+        ("report.yml", 11, 0),
+    ] {
+        let (success, report) = check(&root, config);
+        assert_eq!(success, findings == 0, "{config}: {report}");
+        let rows = report["rules"].as_array().unwrap();
+        let notes = report["advisories"].as_array().unwrap();
+        assert_eq!(rows.len(), findings, "{config}: {report}");
+        assert_eq!(notes.len(), advisories, "{config}: {report}");
+        assert!(
+            rows.iter()
+                .chain(notes)
+                .all(|item| { item["file"] == "malformed.sql" && item["line"] == 6 }),
+            "{config}: {report}"
+        );
+    }
+}
+
+#[test]
+fn recovered_locked_loop_preserves_a_definite_sibling_write_finding() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/query-loops");
+    let (success, report) = check(&root, "generated-write.yml");
+    assert!(!success, "{report}");
+    let rows = report["rules"].as_array().unwrap();
+    assert_eq!(rows.len(), 1, "{report}");
+    assert_eq!(rows[0]["rule"], "postgres-no-generated-column-writes");
+    assert!(rows[0]["message"]
+        .as_str()
+        .unwrap()
+        .contains("do not write generated column"));
+    assert_eq!(report["advisories"], serde_json::json!([]));
+}
+
+#[test]
+fn incomplete_labels_and_conditional_boundaries_remain_findings() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/query-loops");
+    let (success, report) = check(&root, "boundaries.yml");
+    assert!(!success, "{report}");
+    let rows = report["rules"].as_array().unwrap();
+    assert_eq!(rows.len(), 2, "{report}");
+    assert!(rows
+        .iter()
+        .all(|row| row["file"] == "malformed-boundaries.sql"));
+    assert_eq!(report["advisories"], serde_json::json!([]));
+}

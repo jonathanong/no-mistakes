@@ -169,7 +169,8 @@ fn parse_chunk(
                     .into_iter()
                     .map(|(statement, synthetic)| LocatedStatement::functions(statement, synthetic))
                     .collect();
-                let schema = schema::recover(&chunk, original, allow_concurrent_detach);
+                let schema =
+                    schema::recover(&chunk, original, allow_concurrent_detach, procedural_body);
                 let has_schema = schema.is_some();
                 if schema.as_ref().is_some_and(|item| item.complete) {
                     // The complete utility also validated its IF/ELSIF guard;
