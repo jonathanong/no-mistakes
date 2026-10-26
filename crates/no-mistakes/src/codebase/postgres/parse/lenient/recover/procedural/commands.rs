@@ -24,6 +24,18 @@ pub(super) fn matches(code: &[&Token]) -> bool {
     word(first, "CLOSE") && code.len() == 2 && label(code[1])
 }
 
+pub(super) fn dml(code: &[&Token]) -> bool {
+    matches!(
+        parsed_statement(code),
+        Some(
+            Statement::Insert(_)
+                | Statement::Update(_)
+                | Statement::Delete(_)
+                | Statement::Merge(_)
+        )
+    )
+}
+
 pub(super) fn query(code: &[&Token]) -> bool {
     matches!(parsed_statement(code), Some(Statement::Query(_)))
 }

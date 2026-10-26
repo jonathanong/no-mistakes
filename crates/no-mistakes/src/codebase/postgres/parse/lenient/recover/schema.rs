@@ -128,9 +128,26 @@ pub(super) fn recover(
     tokens: &[Token],
     original: Option<&[sqlparser::tokenizer::TokenWithSpan]>,
     allow_concurrent_detach: bool,
+    procedural_body: bool,
 ) -> Option<super::super::LocatedStatement> {
     use sqlparser::{dialect::PostgreSqlDialect, parser::Parser, tokenizer::TokenWithSpan};
-    let start = start(tokens)?;
+    // A row-lock UPDATE belongs to the validated loop header, never its action.
+    let action = if procedural_body {
+        match super::queries::loop_action_start(tokens) {
+            Ok(action) => action,
+            // Keep definite suffix facts while the caller retains header uncertainty.
+            Err(()) => super::queries::loop_header::fallback_action_start(tokens),
+        }
+    } else {
+        None
+    };
+    let start = action.map_or_else(
+        || start(tokens),
+        |at| start(&tokens[at..]).map(|start| at + start),
+    )?;
+    if action.is_some_and(|at| !guarded_prefix(&tokens[at..start])) {
+        return None;
+    }
     if let Some(change) = super::partition::recover_partition_change(
         &tokens[start..],
         original.map(|tokens| &tokens[start..]),
@@ -152,7 +169,7 @@ pub(super) fn recover(
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(located);
     let statement = parser.parse_statement().ok()?;
     let utility = utility_start(tokens, start);
-    if utility && parser.peek_token().token != Token::EOF {
+    if (utility || action.is_some()) && parser.peek_token().token != Token::EOF {
         return None;
     }
     let mut located = super::super::LocatedStatement::plain(statement);

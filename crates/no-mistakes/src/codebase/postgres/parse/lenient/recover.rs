@@ -162,6 +162,7 @@ fn parse_chunk(
             }
             let recovered = recover_chr_encoded(&chunk, original, allow_concurrent_detach);
             if recovered.is_empty() {
+                let failed = procedural_body && queries::loop_action_start(&chunk).is_err();
                 let expressions = queries::recover(&chunk, original, procedural_body);
                 let action_projected = expressions.iter().any(|(_, synthetic)| !synthetic);
                 // Preserve guarded DML/DDL recovery alongside the condition.
@@ -169,8 +170,10 @@ fn parse_chunk(
                     .into_iter()
                     .map(|(statement, synthetic)| LocatedStatement::functions(statement, synthetic))
                     .collect();
-                let schema = schema::recover(&chunk, original, allow_concurrent_detach);
+                let schema =
+                    schema::recover(&chunk, original, allow_concurrent_detach, procedural_body);
                 let has_schema = schema.is_some();
+                *handled_procedural = (failed && has_schema).then_some(false);
                 if schema.as_ref().is_some_and(|item| item.complete) {
                     // The complete utility also validated its IF/ELSIF guard;
                     // its synthetic condition is not partial statement recovery.

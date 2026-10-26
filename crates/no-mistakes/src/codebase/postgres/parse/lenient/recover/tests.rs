@@ -139,18 +139,20 @@ fn recover_schema_ddl_parses_or_skips_trailing_junk() {
         &tokens("IF THEN ALTER TABLE t ADD CONSTRAINT c CHECK (true) NOT VALID"),
         None,
         true,
+        false,
     )
     .expect("alter");
     assert!(matches!(
         parsed.statement,
         sqlparser::ast::Statement::AlterTable(_)
     ));
-    assert!(recover_schema_ddl(&tokens("IF THEN ALTER TABLE"), None, true).is_none());
+    assert!(recover_schema_ddl(&tokens("IF THEN ALTER TABLE"), None, true, false).is_none());
     assert!(matches!(
         recover_schema_ddl(
             &tokens("IF THEN CREATE UNIQUE INDEX t_id ON t (id)"),
             None,
-            true
+            true,
+            false
         )
         .expect("index")
         .statement,

@@ -1,0 +1,8 @@
+unanalyzable: report
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options: {executorNames: [], sqlInclude: ['uncertain-header-actions.sql'], bannedStatements: [TRUNCATE]}
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    options: {executorNames: [], sqlInclude: ['uncertain-header-actions.sql']}

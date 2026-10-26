@@ -22,7 +22,12 @@ pub(super) fn push_query_payload(
     }
     let Some(at) = code.windows(2).position(|pair| {
         (keyword(pair[0], "FOR") || keyword(pair[0], "IN") || keyword(pair[0], "IS"))
-            && (keyword(pair[1], "SELECT") || keyword(pair[1], "WITH"))
+            && (keyword(pair[1], "SELECT")
+                || keyword(pair[1], "WITH")
+                || keyword(pair[0], "IN")
+                    && ["INSERT", "UPDATE", "DELETE"]
+                        .iter()
+                        .any(|kind| keyword(pair[1], kind)))
     }) else {
         return;
     };
@@ -39,7 +44,7 @@ pub(super) fn push_query_payload(
     push_schema_statement(body, start, end, ordinal, executed, false, result);
     let payload = result.last_mut().expect("query payload was just added");
     payload.query_payload = true;
-    // Slicing at SELECT must not move first-line calls to column one. Keep the
+    // Slicing at the query must not move first-line calls to column one. Keep the
     // source column without reintroducing the procedural FOR/cursor prefix.
     let column = body
         .peeled_column_offset

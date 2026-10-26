@@ -114,6 +114,16 @@ payloads retain their query, function, and schema facts. Recovery supports
 newline-continued single-quoted text and dollar-quoted text, including tagged
 quotes.
 
+Multiline `FOR ... IN SELECT` headers may include `= ANY (...)`, `ORDER BY`, and
+row-lock clauses such as `FOR NO KEY UPDATE`; the lock clause's `UPDATE` is part
+of the query header, not loop-body DML. Malformed loop headers or malformed SQL
+in the body retain the existing uncertainty and advisory.
+An unsupported or malformed header still permits an independently parsed body
+action to report beside that advisory, such as a banned `TRUNCATE` or a write to
+a generated column. Malformed action text is not accepted by this fallback.
+Recovery also covers nested row-locked query loops whose first action is
+`MERGE`; unsupported nested prefixes retain their uncertainty.
+
 For body `SELECT INTO`, the analyzer validates and retains the full variable
 target list, then removes the unsupported `STRICT` modifier in a parser clone.
 Targets may include subscripts with nested calls and array literals; commas
