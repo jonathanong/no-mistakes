@@ -5,7 +5,23 @@ const { dirname } = require("node:path");
 // Resolve only the imported implementation; memoize sources/failures for this rule context.
 function createImportedSources(context) {
   try {
-    return createSources(context, require("typescript"), require("@typescript-eslint/parser"));
+    const ts = require("typescript");
+    let parser;
+    try {
+      parser = require("@typescript-eslint/parser");
+    } catch (error) {
+      // A broken installed parser must not silently select a different proof model.
+      if (
+        error.code !== "MODULE_NOT_FOUND" ||
+        !error.message.startsWith("Cannot find module '@typescript-eslint/parser'")
+      )
+        throw error;
+      parser = {
+        parseForESLint: (text, options) =>
+          require("./async-source-ts-parser").parseTypeScript(ts, text, options.filePath),
+      };
+    }
+    return createSources(context, ts, parser);
   } catch {
     // Optional tooling cannot establish a contract when unavailable or incompatible.
     return null;
