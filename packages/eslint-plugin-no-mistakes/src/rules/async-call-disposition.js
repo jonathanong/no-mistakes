@@ -19,6 +19,7 @@ const { createTargetMatcher } = require("./async-targets");
 const { promiseChainFrom } = require("./async-disposition-observers");
 const { createAwaitingConsumers } = require("./async-disposition-consumers");
 const { createPromiseHandoff } = require("./async-promise-handoff");
+const { possibleValueType } = require("./async-source-candidates");
 
 function isDisposed(node, context, consumers, seen = new Set(), catchProven = true) {
   if (seen.has(node)) return false;
@@ -89,9 +90,12 @@ module.exports = rule(
       ),
       CallExpression(node) {
         if (suppressed(node)) return;
+        const target = matcher.isTargetCall(node);
+        // Unrelated calls cannot need a callback-body or imported type proof.
+        if (!target && !possibleValueType(node.callee, context)) return;
         // Disposed calls need no cross-file type lookup, including local/configured JS consumers.
         if (isDisposed(node, context, consumers)) return;
-        if (!matcher.isTargetCall(node) && !promiseTypedTargetCall(node)) return;
+        if (!target && !promiseTypedTargetCall(node)) return;
         context.report({
           node,
           messageId: "disposition",

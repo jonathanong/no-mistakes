@@ -6,30 +6,45 @@ const { unwrapExpression } = require("./async-ast");
 // Follow bounded static declarations. Missing source, cycles, and changing bindings
 // cannot establish the identity of a configured target or dependency type.
 function createDeclarations(sources) {
-  function exported(filename, name, seen = new Set(), budget = { remaining: 128 }) {
-    const key = `${filename}:${name}`;
-    if (budget.remaining-- <= 0 || seen.size >= 32 || seen.has(key)) return false;
-    seen = new Set(seen).add(key);
-    const source = sources.load(filename);
-    if (!source) return false;
-    const matches = [];
+  const indexes = new WeakMap();
+  function exportIndex(ast) {
+    if (indexes.has(ast)) return indexes.get(ast);
+    const names = new Map();
     const stars = [];
-    for (const statement of source.ast.body) {
+    function add(name, match) {
+      if (!names.has(name)) names.set(name, []);
+      names.get(name).push(match);
+    }
+    for (const statement of ast.body) {
       if (statement.type === "ExportAllDeclaration") {
         if (!statement.exported) stars.push(statement.source.value);
         continue;
       }
       if (statement.type !== "ExportNamedDeclaration") continue;
       const declaration = statement.declaration;
-      if (declaration?.id?.name === name) matches.push({ local: declaration.id });
+      if (declaration?.id?.name) add(declaration.id.name, { local: declaration.id });
       if (declaration?.type === "VariableDeclaration")
         for (const item of declaration.declarations)
-          if (item.id.type === "Identifier" && item.id.name === name)
-            matches.push({ local: item.id });
+          if (item.id.type === "Identifier") add(item.id.name, { local: item.id });
       for (const item of statement.specifiers)
-        if ((item.exported.name ?? item.exported.value) === name)
-          matches.push({ local: item.local, source: statement.source });
+        add(item.exported.name ?? item.exported.value, {
+          local: item.local,
+          source: statement.source,
+        });
     }
+    const index = { names, stars };
+    indexes.set(ast, index);
+    return index;
+  }
+
+  function exported(filename, name, seen = new Set(), budget = { remaining: 128 }) {
+    const key = `${filename}:${name}`;
+    if (budget.remaining-- <= 0 || seen.size >= 32 || seen.has(key)) return false;
+    seen = new Set(seen).add(key);
+    const source = sources.load(filename);
+    if (!source) return false;
+    const { names, stars } = exportIndex(source.ast);
+    const matches = names.get(name) || [];
     if (matches.length > 1) return false;
     if (!matches.length) {
       const candidates = stars.map((specifier) => {
