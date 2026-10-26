@@ -37,7 +37,7 @@ test(
 
     // The allowed helper remains traversable to the separate forbidden tests/other target.
     const traversal = { files: ["ci/check-coverage.mts"], relationships: ["import"] };
-    const dependencies = await cjs.dependencies({ ...options, ...traversal });
+    const dependencies = await cjs.dependencies({ root, ...traversal });
     const request = {
       ...options,
       reports: [
