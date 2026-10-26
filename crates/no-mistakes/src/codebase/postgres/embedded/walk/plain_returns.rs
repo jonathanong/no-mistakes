@@ -1,5 +1,6 @@
 mod calls;
 mod literals;
+mod members;
 
 use super::{resolve, ScopeVisitor};
 use calls::walk_calls;
@@ -13,6 +14,8 @@ type FunctionKey = (u32, String);
 pub(super) struct PlainState {
     pub(super) pending_name: Option<FunctionKey>,
     names: Vec<Option<FunctionKey>>,
+    member_spans: crate::fx::FxHashSet<u32>,
+    member_frames: Vec<bool>,
     reached: crate::fx::FxHashSet<FunctionKey>,
     returns: Vec<DeferredReturn>,
     edges: Vec<ReturnEdge>,
@@ -31,14 +34,17 @@ struct ReturnEdge {
 }
 
 impl ScopeVisitor<'_> {
-    pub(super) fn enter_plain_function(&mut self, explicit: Option<&str>) {
+    pub(super) fn enter_plain_function(&mut self, explicit: Option<&str>, start: u32) {
         let pending = self.plain.pending_name.take();
         let name = pending.or_else(|| explicit.map(|name| self.plain_key(name)));
         self.plain.names.push(name);
+        let member = self.plain.member_spans.remove(&start);
+        self.plain.member_frames.push(member);
     }
 
     pub(super) fn leave_plain_function(&mut self) {
         self.plain.names.pop();
+        self.plain.member_frames.pop();
     }
 
     pub(super) fn arm_plain_binding(
@@ -164,7 +170,7 @@ impl ScopeVisitor<'_> {
                 line,
                 sql,
             });
-        } else {
+        } else if self.is_plain_member() {
             // Member calls have no lexical callable key: retain recall conservatively.
             self.push_fragment(line, Some(sql), None, None);
         }
@@ -173,7 +179,9 @@ impl ScopeVisitor<'_> {
     fn note_returned_calls(&mut self, argument: &Expression<'_>) {
         let Some(owner) = self.current_plain_name() else {
             // Unknown owners retain their lexical helper dependencies as well.
-            self.note_sql_expression(argument);
+            if self.is_plain_member() {
+                self.note_sql_expression(argument);
+            }
             return;
         };
         let mut calls = Vec::new();

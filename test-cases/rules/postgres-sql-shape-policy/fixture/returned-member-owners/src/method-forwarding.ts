@@ -5,7 +5,12 @@ function makeSql() {
 }
 class Repo {
   q() { return makeSql() }
-  run() { return query(this.q()) }
+  run() {
+    // Anonymous callbacks nested in a member do not inherit its fallback.
+    [1].map(() => { return '-' })
+    [1].map(() => { return unusedSql() })
+    return query(this.q())
+  }
 }
 // Unrelated lexical helpers must still be filtered.
 function unusedSql() { return 'SELECT 9 LIMIT 10' }

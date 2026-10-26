@@ -19,7 +19,7 @@ impl<'a> ScopeVisitor<'a> {
             .then_some(function.id.as_ref())
             .flatten()
             .map(|id| id.name.as_str());
-        self.enter_plain_function(declaration_name);
+        self.enter_plain_function(declaration_name, function.span.start);
         self.push_scope();
         self.record_params(&function.params);
         // A named function expression shadows outer helpers only in its own
@@ -58,7 +58,7 @@ impl<'a> ScopeVisitor<'a> {
         // Class static blocks are also independent var ownership boundaries.
         self.push_scope();
         self.enter_function();
-        self.enter_plain_function(None);
+        self.enter_plain_function(None, block.span.start);
         resolve::hoist_vars(&block.body, self);
         resolve::record_statements(&block.body, self);
         walk::walk_static_block(self, block);
@@ -71,7 +71,7 @@ impl<'a> ScopeVisitor<'a> {
         self.push_scope();
         self.record_params(&arrow.params);
         self.enter_function();
-        self.enter_plain_function(None);
+        self.enter_plain_function(None, arrow.span.start);
         if let Some(result) = arrow.body.as_expression() {
             // A concise return can expose a receiver to later property writes.
             self.revoke_query_receiver(result);
