@@ -1,24 +1,15 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, realpathSync, rmSync } from "node:fs";
 import { createRequire, Module } from "node:module";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Linter } from "eslint";
 import { it, vi } from "vitest";
 import { plugin } from "./helpers.mjs";
 
 const require = createRequire(import.meta.url);
-// Execute npm through Node so Windows does not need to spawn its .cmd shim.
-const npmCli = join(
-  dirname(
-    require.resolve("npm/package.json", {
-      paths: [dirname(process.execPath), resolve(dirname(process.execPath), "../lib")],
-    }),
-  ),
-  "bin/npm-cli.js",
-);
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const fixture = resolve(
   packageRoot,
@@ -34,16 +25,26 @@ function run(command, args, cwd) {
   return result.stdout;
 }
 
+function runNpm(args, cwd) {
+  // pnpm's Node runtime may not bundle npm. Use PATH, including POSIX shims.
+  if (process.platform !== "win32") return run("npm", args, cwd);
+  // Windows cannot spawn .cmd shims directly; run that installation's JS entry.
+  const command = process.env.PATH.split(delimiter)
+    .map((directory) => join(directory, "npm.cmd"))
+    .find(existsSync);
+  assert.ok(command, "consumer installation tests require npm on PATH");
+  const cli = join(dirname(realpathSync(command)), "node_modules/npm/bin/npm-cli.js");
+  return run(process.execPath, [cli, ...args], cwd);
+}
+
 it("loads a packed plugin and conservatively lints consumers with optional proof peers absent", () => {
   // Physical installation outside the repository prevents workspace peers from
   // accidentally making an absent-peer consumer appear to work.
   const root = mkdtempSync(join(tmpdir(), "no-mistakes-optional-peers-"));
   try {
     const packed = JSON.parse(
-      run(
-        process.execPath,
+      runNpm(
         [
-          npmCli,
           "pack",
           "--offline",
           "--ignore-scripts",
@@ -57,10 +58,8 @@ it("loads a packed plugin and conservatively lints consumers with optional proof
       ),
     )[0];
     cpSync(fixture, root, { recursive: true });
-    run(
-      process.execPath,
+    runNpm(
       [
-        npmCli,
         "install",
         "--offline",
         "--ignore-scripts",
