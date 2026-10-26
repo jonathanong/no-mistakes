@@ -189,3 +189,34 @@ fn namespace_reexport_relays_and_missing_named_reexports_preserve_uncertainty() 
         EdgeKind::SymbolReexport
     ));
 }
+
+#[test]
+fn semantic_type_import_records_distinguish_multiline_declarations_and_same_line_references() {
+    let (dir, graph) = fixture_graph(true);
+    let source = dir.path().join("source.mts");
+    let multiline = NodeId::file(dir.path().join("multiline-type.mts"));
+    assert!(has_edge(
+        &graph,
+        multiline.clone(),
+        NodeId::symbol(&source, "Contract"),
+        EdgeKind::SymbolImport
+    ));
+    assert!(graph
+        .dependencies_of_node(&multiline)
+        .into_iter()
+        .flatten()
+        .all(|(_, kind)| *kind != EdgeKind::SymbolImportUnknown));
+    let mixed = NodeId::file(dir.path().join("mixed-type.mts"));
+    assert!(has_edge(
+        &graph,
+        mixed.clone(),
+        NodeId::symbol(&source, "Contract"),
+        EdgeKind::SymbolImport
+    ));
+    assert!(has_edge(
+        &graph,
+        mixed,
+        NodeId::file(source),
+        EdgeKind::SymbolImportUnknown
+    ));
+}

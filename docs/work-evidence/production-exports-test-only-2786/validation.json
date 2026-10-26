@@ -48,7 +48,7 @@
   },
   "artifactSha256": {
     "baseline": "43807345dd0fbd9510669578eb14066e497981d2788a585afa56a52ea47d129e",
-    "candidate": "4367475f5a6afa65caf1abd0c45d87f31f93f79da8c85cb84b5772f042d28b43"
+    "candidate": "85853578aad814602d20f8cc1b9e339c3ee16abc6d75139837e305c2dedf4fda"
   },
   "javascript": {
     "passed": 2477,
@@ -60,5 +60,12 @@
       "functions": 99.52,
       "lines": 99.75
     }
+  },
+  "reviewFix": {
+    "reviewedHead": "6c56bb24ec9f32db5439f15eded9a15534724fb4",
+    "focusedTestsPassed": 20,
+    "changedRuntimeLines": 8,
+    "coveredRuntimeLines": 8,
+    "purpose": "Distinguish semantic named import declarations from opaque type import references independently of source lines."
   }
 }

@@ -61,3 +61,15 @@ intentional invalid-UTF-8 fixture, so validation used the full workspace scope.
 See `validation.json` for counts and binary hashes and `patch-coverage.json` for
 the measured patch lines. Full logs and LCOV were retained outside the target
 directory before cleanup.
+
+## Review delta
+
+The first review found that multiline named type imports were confused with
+opaque type references by comparing declaration and specifier lines. The fix
+reads the existing semantic import records directly. Saved fixtures distinguish
+multiline declarations and named/opaque imports sharing a source and physical
+line; the original end-to-end type fixture now uses a multiline declaration.
+All 20 focused graph/rule tests pass with 8/8 changed runtime lines covered.
+`review-patch-coverage.json` records this delta against the initial reviewed head.
+The full-scope counts above describe that initial implementation; the review
+delta also repeats native API parity, worker determinism and all-target lint.

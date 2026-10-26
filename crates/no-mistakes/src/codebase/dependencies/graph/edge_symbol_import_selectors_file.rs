@@ -96,20 +96,19 @@ fn collect_symbol_import_selectors_file(
             }
         }
     }
-    let named_sources: HashSet<_> = inputs
-        .symbols
-        .imports
-        .iter()
-        .map(|import| (import.source.as_str(), import.line))
-        .collect();
+    // The semantic import record distinguishes declarations from TS import()
+    // references by binding identity, independent of declaration/specifier lines.
+    for module in file_facts.module_bindings.iter() {
+        for import in module
+            .imports
+            .iter()
+            .filter(|import| import.type_only && import.bindings.is_empty())
+        {
+            selector_unknown(&inputs, &import.specifier, &mut edges);
+        }
+    }
     for import in &file_facts.imports {
-        let unbound_type_reference = matches!(
-            import.kind,
-            crate::codebase::dependencies::extract::ImportKind::Type
-        ) && !import.re_export
-            && !named_sources.contains(&(import.specifier.as_str(), import.line));
         if import.computed
-            || unbound_type_reference
             || matches!(
                 import.kind,
                 crate::codebase::dependencies::extract::ImportKind::Dynamic

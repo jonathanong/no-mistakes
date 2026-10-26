@@ -1,0 +1,11 @@
+{
+  "base": "6c56bb24ec9f32db5439f15eded9a15534724fb4",
+  "measuredChangedLines": 8,
+  "coveredChangedLines": 8,
+  "coveragePercent": 100.0,
+  "requiredPercent": 98.0,
+  "uncoveredChangedLines": {},
+  "changedFilesWithoutLineRecords": [
+    "crates/no-mistakes/src/codebase/dependencies/graph/tests/symbol_import_selectors.rs"
+  ]
+}
