@@ -16,6 +16,13 @@ pub(super) fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::
                     "  - rule: {id}\n    scope: repository\n    options:\n      \
                      workspaceRoots: [\".\"]\n"
                 )
+            } else if *id == FORBIDDEN_LINT_SUPPRESSIONS {
+                format!(
+                    "  - rule: {id}\n    scope: repository\n    options:\n{}",
+                    include_str!(
+                        "../../../../../../../fixtures/rules/filesystem-dispatch/all-rules/lint-suppression-options.yml"
+                    )
+                )
             } else if *id == POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS {
                 format!(
                     "  - rule: {id}\n    scope: repository\n    options:\n{}",
