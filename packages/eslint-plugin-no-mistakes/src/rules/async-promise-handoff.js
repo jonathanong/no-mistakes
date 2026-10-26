@@ -8,6 +8,7 @@ const { sourceSlot } = require("./async-source-slots");
 const { createHandoffSafety } = require("./async-handoff-safety");
 const { createReceiverProof } = require("./async-consumer-receivers");
 const { localBodySafe } = require("./async-consumer-local-proof");
+const { targetReturns } = require("./async-handoff-return");
 
 // This source projection shares imported source parsing with the body proof. It
 // never constructs a TypeScript program or depends on the runner's argv.
@@ -34,7 +35,8 @@ function createPromiseHandoff(context, sourceFacts) {
         Array.isArray(value[key]) ? value[key].every(receiverFree) : receiverFree(value[key]),
       );
     }
-    if (!receiverFree(callback.node)) return false;
+    if (!receiverFree(callback.node) || !targetReturns(callback.node, callback.context, proof))
+      return false;
     const receiving = sourceSlot(node, context, proof);
     const target = receiving && proof.targetType(receiving.type, receiving.context);
     if (!target || !(safeSlot ||= createHandoffSafety(proof))(receiving, target)) return false;

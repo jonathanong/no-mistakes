@@ -21,12 +21,12 @@ function createHandoffSafety(proof) {
     if (cache.has(key)) return cache.get(key);
     cache.set(key, false);
     depth++;
-    const safe = uses(binding, property, consumer.context, target, new Set(), shape);
+    const safe = uses(binding, property, consumer.context, target, new Set(), shape, consumer.node);
     depth--;
     cache.set(key, safe);
     return safe;
   }
-  function uses(binding, property, owner, target, seen, shape) {
+  function uses(binding, property, owner, target, seen, shape, consumer) {
     if (!binding || seen.has(binding) || seen.size >= 32) return false;
     seen = new Set(seen).add(binding);
     const reads = binding.references.filter((ref) => !ref.init);
@@ -54,40 +54,41 @@ function createHandoffSafety(proof) {
               (parent.optional && !shape.has(name))
             );
           }
-          return flow(member, null, owner, target, seen, shape, binding);
+          return flow(member, null, owner, target, seen, shape, binding, consumer);
         }
-        return flow(value, property, owner, target, seen, shape, binding);
+        return flow(value, property, owner, target, seen, shape, binding, consumer);
       })
     );
   }
-  function returned(value, property, owner, target) {
+  function returned(value, property, owner, target, consumer) {
     let fn = value.parent;
     while (
       fn &&
       !["FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression"].includes(fn.type)
     )
       fn = fn.parent;
-    const type = fn?.returnType?.typeAnnotation;
+    if (fn !== consumer) return false;
+    const type = fn.returnType?.typeAnnotation;
     if (!type) return false;
     const selected =
       property === null ? { type, context: owner } : proof.property(type, owner, property);
     return selected && proof.targetType(selected.type, selected.context) === target;
   }
-  function flow(value, property, owner, target, seen, shape, binding) {
+  function flow(value, property, owner, target, seen, shape, binding, consumer) {
     const parent = value.parent;
     if (!parent) return false;
     if (parent.type.startsWith("TS") && parent.expression === value) {
       return (
         property === null &&
         proof.targetType(parent.typeAnnotation, owner) === target &&
-        flow(parent, property, owner, target, seen, shape, binding)
+        flow(parent, property, owner, target, seen, shape, binding, consumer)
       );
     }
     if (parent.type === "LogicalExpression" && parent.operator === "??" && parent.left === value) {
       return (
         property === null &&
         proof.target(parent.right, owner) === target &&
-        flow(parent, property, owner, target, seen, shape, binding)
+        flow(parent, property, owner, target, seen, shape, binding, consumer)
       );
     }
     if (parent.type === "CallExpression") {
@@ -108,12 +109,20 @@ function createHandoffSafety(proof) {
           property === null ? { type, context: owner } : proof.property(type, owner, property);
         if (!selected || proof.targetType(selected.type, selected.context) !== target) return false;
       }
-      return uses(resolveVariable(parent.id, owner), property, owner, target, seen, shape);
+      return uses(
+        resolveVariable(parent.id, owner),
+        property,
+        owner,
+        target,
+        seen,
+        shape,
+        consumer,
+      );
     }
     if (parent.type === "ReturnStatement" && parent.argument === value)
-      return returned(value, property, owner, target);
+      return returned(value, property, owner, target, consumer);
     if (parent.type === "ArrowFunctionExpression" && parent.body === value)
-      return returned(value, property, owner, target);
+      return returned(value, property, owner, target, consumer);
     if (
       parent.type === "Property" &&
       parent.value === value &&
@@ -135,7 +144,16 @@ function createHandoffSafety(proof) {
       )
         return false;
       shape = proof.receiverShape(object, owner, binding, shape);
-      return flow(object, parent.key.name ?? parent.key.value, owner, target, seen, shape, binding);
+      return flow(
+        object,
+        parent.key.name ?? parent.key.value,
+        owner,
+        target,
+        seen,
+        shape,
+        binding,
+        consumer,
+      );
     }
     if (parent.type === "SpreadElement" && parent.argument === value && property !== null) {
       const object = parent.parent;
@@ -153,7 +171,7 @@ function createHandoffSafety(proof) {
       )
         return false;
       shape = proof.receiverShape(object, owner, binding, shape);
-      return flow(object, property, owner, target, seen, shape, binding);
+      return flow(object, property, owner, target, seen, shape, binding, consumer);
     }
     return false;
   }
