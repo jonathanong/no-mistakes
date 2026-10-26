@@ -72,7 +72,7 @@ it("checks disposition observers under real type-aware Oxlint", () => {
 
 it("accepts unshadowed global assertions but requires observation", () => {
   const filename = resolve(root, "disposition-global-expect.ts");
-  const messages = new Linter().verify(
+  const messages = new Linter({ cwd: dirname(filename) }).verify(
     readFileSync(filename, "utf8"),
     {
       files: ["**/*.ts"],

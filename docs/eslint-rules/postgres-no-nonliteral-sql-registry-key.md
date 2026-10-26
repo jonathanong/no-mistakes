@@ -166,3 +166,10 @@ initializer whose executor call was suppressed.
 [`postgres-no-correlated-sql-builder`](postgres-no-correlated-sql-builder.md)
 covers repeated appends. [`postgres-no-executor-adapter`](postgres-no-executor-adapter.md)
 covers forwarding the executor instead of the SQL text.
+
+With `importSpecifier: "pg"`, receiver identity must still be proven. Queries on
+instances created by `new Pool()` or `new Client()`, and clients obtained from
+`pool.connect()`, are not recognized from the constructor import alone and do
+not report. Use an explicitly configured executor factory or an imported
+executor type annotation to declare those receivers. Direct named `query`
+imports and `pg.query()` on an imported namespace remain recognized.
