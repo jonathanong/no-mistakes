@@ -185,7 +185,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
     findings.retain(|finding| rule_filter.is_match(&root.join(&finding.file)));
     let mut diagnostics = AnalysisDiagnostics {
         findings,
-        advisories: Vec::new(),
+        ..Default::default()
     };
     super::diagnostics::append_unanalyzable(
         &mut diagnostics,

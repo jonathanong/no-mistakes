@@ -50,6 +50,7 @@ pub(crate) fn run_react_check(
     Ok(CheckTask {
         findings,
         react_suppression_targets,
+        pre_suppressed: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: Vec::new(),
         warning,

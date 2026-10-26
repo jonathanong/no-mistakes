@@ -1,4 +1,4 @@
-use crate::codebase::rules::RuleFinding;
+use crate::codebase::rules::{RuleFinding, SuppressedFinding};
 use crate::config::v2::Unanalyzable;
 
 /// Low-tier adopters route unsupported shapes through the same resolved policy.
@@ -6,6 +6,8 @@ use crate::config::v2::Unanalyzable;
 pub struct AnalysisDiagnostics {
     pub findings: Vec<RuleFinding>,
     pub advisories: Vec<RuleFinding>,
+    /// Findings consumed by a contextual directive before aggregate filtering.
+    pub suppressed: Vec<SuppressedFinding>,
 }
 impl AnalysisDiagnostics {
     pub fn unanalyzable(&mut self, policy: Unanalyzable, finding: RuleFinding) {
@@ -21,5 +23,6 @@ impl AnalysisDiagnostics {
     pub fn append(&mut self, other: Self) {
         self.findings.extend(other.findings);
         self.advisories.extend(other.advisories);
+        self.suppressed.extend(other.suppressed);
     }
 }

@@ -6,6 +6,7 @@ use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
 use crate::config::v2::{EffectiveRuleAnalysis, Effort};
 mod resolve;
+mod suppression;
 use resolve::{default_module_specifier, resolve_relative};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -132,6 +133,7 @@ pub(super) fn append_delegated(request: &DelegateRequest<'_>) -> AnalysisDiagnos
             }));
         }
     }
+    suppression::consume_entry_file_directive(request, &mut diagnostics);
     diagnostics
 }
 

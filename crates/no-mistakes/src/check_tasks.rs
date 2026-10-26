@@ -5,8 +5,9 @@ use no_mistakes::codebase::unique_exports::{self, PreparedUniqueExportFinding};
 use no_mistakes::config::v2::NoMistakesConfig;
 use no_mistakes::integration_tests::{self, IntegrationFinding};
 use no_mistakes::queue::CheckFinding;
-use std::time::Duration;
 
+mod configured;
+pub(crate) use configured::{queues_configured, rule_configured, unique_exports_configured};
 mod filesystem;
 mod react;
 #[cfg(test)]
@@ -15,15 +16,8 @@ mod tests;
 pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_check_with_facts};
 pub(crate) use react::run_react_check;
 
-pub(crate) struct CheckTask<T> {
-    pub(crate) findings: T,
-    pub(crate) react_suppression_targets:
-        Vec<Vec<no_mistakes::react_traits::ReactSuppressionTarget>>,
-    pub(crate) suppression_sources: Vec<Option<String>>,
-    pub(crate) advisories: Vec<RuleFinding>,
-    pub(crate) warning: Option<String>,
-    pub(crate) duration: Duration,
-}
+mod types;
+pub(crate) use types::CheckTask;
 
 pub(crate) fn run_queue_check(
     root: &std::path::Path,
@@ -53,6 +47,7 @@ pub(crate) fn run_queue_check(
     let findings = findings?;
     Ok(CheckTask {
         findings,
+        pre_suppressed: Vec::new(),
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: Vec::new(),
@@ -93,6 +88,7 @@ pub(crate) fn run_rules_check(
         );
     Ok(CheckTask {
         findings,
+        pre_suppressed: Vec::new(),
         react_suppression_targets: Vec::new(),
         suppression_sources,
         advisories,
@@ -131,6 +127,7 @@ pub(crate) fn run_integration_check(
     let findings = findings?;
     Ok(CheckTask {
         findings,
+        pre_suppressed: Vec::new(),
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: Vec::new(),
@@ -186,25 +183,11 @@ pub(crate) fn run_codebase_check_with_catalog(
     let findings = findings?;
     Ok(CheckTask {
         findings,
+        pre_suppressed: Vec::new(),
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: Vec::new(),
         warning: None,
         duration,
     })
-}
-
-pub(crate) fn queues_configured(config: &NoMistakesConfig) -> bool {
-    config
-        .projects
-        .values()
-        .any(|project| !project.queues.enqueues.is_empty() || !project.queues.workers.is_empty())
-}
-
-pub(crate) fn unique_exports_configured(config: &NoMistakesConfig) -> bool {
-    rule_configured(config, unique_exports::RULE_ID)
-}
-
-pub(crate) fn rule_configured(config: &NoMistakesConfig, rule_id: &str) -> bool {
-    config.rule_configured(rule_id)
 }

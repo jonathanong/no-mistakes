@@ -29,8 +29,7 @@ pub(super) fn scan_diagnostics(
     let mut diagnostics = AnalysisDiagnostics::default();
     for target_root in target_roots {
         let next = scan_target(root, opts, files, route_files, target_root, context);
-        diagnostics.findings.extend(next.findings);
-        diagnostics.advisories.extend(next.advisories);
+        diagnostics.append(next);
     }
     diagnostics
 }

@@ -159,6 +159,7 @@ pub(super) fn graph_rule_findings(
         crate::codebase::rules::analysis_policy::AnalysisDiagnostics {
             findings,
             advisories,
+            suppressed: Vec::new(),
         },
     )
 }
