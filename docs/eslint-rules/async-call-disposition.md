@@ -329,7 +329,9 @@ are reported; same-file proofs and explicitly configured `awaitingConsumers`
 contracts remain available. With TypeScript present and no typed
 program, the rule resolves the import using the nearest tsconfig and parses
 only the implementation module. Sources, resolution results, and failures are
-cached in memory for this lint context. Missing bodies, unresolved imports,
+cached in memory for this lint context. Erased type declarations and type-only
+imports cannot hide runtime callback uses or sensitive global mutations.
+Missing bodies, unresolved imports,
 `noResolve`, writes, and escaping implementations remain unproven.
 That resolution follows only `import { name }` to one `export function`, one
 `export const` function, or one `export { name }` declaration, including

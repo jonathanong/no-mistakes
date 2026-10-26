@@ -1,6 +1,6 @@
 "use strict";
 
-const { resolveVariable } = require("./async-target-bindings");
+const { resolveVariable, resolveRuntimeVariable } = require("./async-target-bindings");
 const { propertiesWritten } = require("./async-disposition-mocks");
 
 function sameKey(first, key, context) {
@@ -34,18 +34,18 @@ function builtinMap(node, context) {
     references.some(
       (ref) =>
         ["eval", "Function"].includes(ref.identifier.name) &&
-        !resolveVariable(ref.identifier, context)?.defs.length,
+        !resolveRuntimeVariable(ref.identifier, context)?.defs.length,
     )
   )
     return false;
-  const binding = resolveVariable(node, context);
+  const binding = resolveRuntimeVariable(node, context);
   // Do not infer built-in semantics after the constructor/prototype escapes to
   // reflective APIs or unknown consumers, whose effects are not modeled here.
   if (
     references.some(
       (ref) =>
         ref.identifier.name === "Map" &&
-        resolveVariable(ref.identifier, context) === binding &&
+        resolveRuntimeVariable(ref.identifier, context) === binding &&
         !(
           ref.identifier.parent.type === "NewExpression" &&
           ref.identifier.parent.callee === ref.identifier
@@ -56,7 +56,7 @@ function builtinMap(node, context) {
   const holders = ["globalThis", "global", "window", "self"];
   return !references.some((ref) => {
     if (!holders.includes(ref.identifier.name)) return false;
-    if (resolveVariable(ref.identifier, context)?.defs.length) return false;
+    if (resolveRuntimeVariable(ref.identifier, context)?.defs.length) return false;
     if (propertiesWritten(ref.identifier, context)) return true;
     const member = ref.identifier.parent;
     if (member.type !== "MemberExpression" || member.object !== ref.identifier) return true;

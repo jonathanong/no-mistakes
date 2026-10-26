@@ -132,6 +132,13 @@ it("loads a packed plugin with TypeScript-only, absent, and incompatible proof p
         join(root, "syntax.js"),
         join(root, "heritage.js"),
         join(root, "type-shadow.js"),
+        join(root, "global-value.js"),
+        ...[
+          "global-type.js",
+          "global-type-import.js",
+          "global-type-specifier.js",
+          "global-type-local.ts",
+        ].map((file) => join(root, file)),
         join(root, "unsupported.js"),
       ],
       root,
@@ -153,6 +160,12 @@ it("loads a packed plugin with TypeScript-only, absent, and incompatible proof p
           "no-mistakes(async-call-disposition)",
         ]),
         ["unsupported.js", 3, "no-mistakes(async-call-disposition)"],
+        ...["global-type.js", "global-type-import.js", "global-type-specifier.js"].map((file) => [
+          file,
+          3,
+          "no-mistakes(async-call-disposition)",
+        ]),
+        ["global-type-local.ts", 9, "no-mistakes(async-call-disposition)"],
         ...[4, 6, 8, 12].map((line) => [
           "type-shadow.js",
           line,
