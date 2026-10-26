@@ -131,8 +131,8 @@ pub fn suppress_domain_findings_with_source_locations<T>(
 }
 
 /// Invalid UTF-8 remains an analyzer error. Its retained bytes are usable only
-/// here, for matching suppression directives after the caller validates the path.
-fn read_directive_source(
+/// for matching or auditing directives after the caller validates the path.
+pub(crate) fn read_directive_source(
     sources: &crate::codebase::ts_source::SourceStore,
     path: &Path,
 ) -> Option<std::sync::Arc<str>> {

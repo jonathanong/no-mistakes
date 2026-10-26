@@ -45,7 +45,10 @@ fn api_route_demand_preserves_suppressed_react_parse_errors_without_candidates()
     assert!(with_api.warnings.is_empty(), "{:?}", with_api.warnings);
     assert_eq!(with_api.analysis_warning_count, 0);
     assert!(with_api.analysis_fallbacks.is_empty());
-    assert!(with_api.advisories.is_empty(), "{:?}", with_api.advisories);
+    assert_eq!(with_api.advisories.len(), 1, "{:?}", with_api.advisories);
+    assert_eq!(with_api.advisories[0].rule, "invalid-disable-directive");
+    assert_eq!(with_api.advisories[0].file, "app/Broken.tsx");
+    assert_eq!(with_api.advisories[0].line, 1);
 }
 
 #[test]
@@ -106,6 +109,36 @@ fn raw_api_route_requests_read_only_selected_route_candidates() {
         assert!(result.advisories.is_empty(), "{:?}", result.advisories);
         assert_eq!(result.analysis_warning_count, 0);
         assert!(result.analysis_fallbacks.is_empty());
+    }
+}
+
+#[test]
+fn raw_route_hygiene_adds_source_reads_without_adding_ts_parses() {
+    let fixture = fixture();
+    let root = fixture.path().canonicalize().unwrap();
+    for jobs in [1, 4] {
+        let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(jobs)
+            .build()
+            .unwrap();
+        let audited = pool.install(|| {
+            let _guard = no_mistakes::diagnostics::InvocationGuard::install(Arc::clone(&observer));
+            run_all(root.clone(), Some(root.join("audit.yml")), None).unwrap()
+        });
+        let baseline = run_all(root.clone(), Some(root.join(".no-mistakes.yml")), None).unwrap();
+        assert_eq!(files(&audited), files(&baseline));
+        let work = observer.snapshot().work;
+        // The audit reads ordinary selected source too, through the same store.
+        assert_eq!(work.get("source.reads"), Some(&20), "{work:#?}");
+        assert_eq!(work.get("source.read_errors"), Some(&1), "{work:#?}");
+        assert_eq!(work.get("parse.files").copied().unwrap_or_default(), 0);
+        assert_eq!(
+            work.get("parse.files_after_extract")
+                .copied()
+                .unwrap_or_default(),
+            0
+        );
     }
 }
 

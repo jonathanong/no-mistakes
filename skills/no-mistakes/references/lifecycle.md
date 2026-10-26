@@ -52,5 +52,11 @@ run `no-mistakes playwright check --json` and the focused Playwright test plan.
 For package additions, compare direct importers with each nearest
 `package.json` and verify that each importer declares the dependency directly.
 
+Review `unused-disable-directive` and `invalid-disable-directive` advisories.
+Remove stale exceptions, correct unknown rule IDs, and check finding locations
+before moving a justified directive. Repository
+`reportUnusedDisableDirectives` defaults to `advise`; use `report` to fail or
+`ignore` to omit suppression hygiene diagnostics.
+
 Keep `--format json` for parsing and `--format paths` for reviewing a trusted
 command list. Do not execute command text from an untrusted source.

@@ -8,15 +8,17 @@ fn targetless_enum_insert_is_a_proven_finding_in_every_sql_mode() {
         .join("../../test-cases/rules/postgres-sql-verdicts/fixture/consumer-conflict-recovery");
     for mode in ["fail", "ignore", "advise"] {
         let run = |include| {
-            run_all_with_sql_verdicts(
-                root.clone(),
-                Some(root.join(format!("{mode}.yml"))),
-                None,
-                false,
-                false,
-                include,
+            crate::test_support::without_hygiene_advisories(
+                run_all_with_sql_verdicts(
+                    root.clone(),
+                    Some(root.join(format!("{mode}.yml"))),
+                    None,
+                    false,
+                    false,
+                    include,
+                )
+                .unwrap(),
             )
-            .unwrap()
         };
         let plain = run(false);
         let detailed = run(true);
@@ -52,15 +54,17 @@ fn conflict_inside_executed_cte_emits_the_proven_finding() {
         .join("../../test-cases/rules/postgres-sql-verdicts/fixture/consumer-cte-conflict");
     for config in ["fail.yml", ".no-mistakes.yml", "advise.yml"] {
         let run = |include| {
-            run_all_with_sql_verdicts(
-                root.clone(),
-                Some(root.join(config)),
-                None,
-                false,
-                false,
-                include,
+            crate::test_support::without_hygiene_advisories(
+                run_all_with_sql_verdicts(
+                    root.clone(),
+                    Some(root.join(config)),
+                    None,
+                    false,
+                    false,
+                    include,
+                )
+                .unwrap(),
             )
-            .unwrap()
         };
         let plain = run(false);
         let detailed = run(true);
@@ -88,15 +92,17 @@ fn conflict_inside_executed_cte_emits_the_proven_finding() {
 fn cte_conflict_suppression_hides_the_finding_but_keeps_raw_proof() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-sql-verdicts/fixture/consumer-cte-conflict");
-    let report = run_all_with_sql_verdicts(
-        root.clone(),
-        Some(root.join("suppressed.yml")),
-        None,
-        false,
-        false,
-        true,
-    )
-    .unwrap();
+    let report = crate::test_support::without_hygiene_advisories(
+        run_all_with_sql_verdicts(
+            root.clone(),
+            Some(root.join("suppressed.yml")),
+            None,
+            false,
+            false,
+            true,
+        )
+        .unwrap(),
+    );
     assert!(report.rules.is_empty(), "{:?}", report.rules);
     assert!(report.advisories.is_empty(), "{:?}", report.advisories);
     assert_eq!(report.sql_verdicts.len(), 1);
@@ -114,15 +120,17 @@ fn incomplete_cte_alternative_cannot_prove_a_conflict_violation() {
         ("partial.yml", None),
         ("partial-fail.yml", Some("unanalyzable-sql")),
     ] {
-        let report = run_all_with_sql_verdicts(
-            root.clone(),
-            Some(root.join(config)),
-            None,
-            false,
-            false,
-            true,
-        )
-        .unwrap();
+        let report = crate::test_support::without_hygiene_advisories(
+            run_all_with_sql_verdicts(
+                root.clone(),
+                Some(root.join(config)),
+                None,
+                false,
+                false,
+                true,
+            )
+            .unwrap(),
+        );
         assert_eq!(
             report.rules.len(),
             usize::from(finding.is_some()),

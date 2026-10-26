@@ -41,11 +41,18 @@ fn file_input_analysis_routes_every_rule_through_policy_at_max_and_low_fallback(
                     "{prefix}{policy}/{effort}: {report}"
                 );
                 assert_eq!(
-                    report["advisories"].as_array().unwrap().len(),
+                    super::policy_advisories::without_hygiene(&report).len(),
                     advisories,
                     "{prefix}{policy}/{effort}: {report}"
                 );
-                assert!(!body.contains("suppressed."), "{report}");
+                for finding in report["rules"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .chain(super::policy_advisories::without_hygiene(&report))
+                {
+                    assert!(!finding.to_string().contains("suppressed."), "{report}");
+                }
             }
         }
     }

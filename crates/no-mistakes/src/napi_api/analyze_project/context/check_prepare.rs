@@ -1,5 +1,4 @@
 include!("check_prepare_graph.rs");
-
 impl SharedCheckContext {
     fn prepare(
         root: &Path,
@@ -21,7 +20,6 @@ impl SharedCheckContext {
             deadlines,
             effort,
         } = options;
-        // Borrow the aggregate root identity; canonicalizing here would split shared keys.
         let root = root.to_path_buf();
         let mut config = config.clone();
         config.effort_override = effort;
@@ -172,12 +170,13 @@ impl SharedCheckContext {
         };
         let supplemental_call_site_files =
             fact_demand.supplemental_call_site_files(&fact_files, &graph_files);
-        let fs_files = if filesystem_rules_enabled {
+        let fs_files = if filesystem_rules_enabled || config.audits_disable_directives() {
             discovered
         } else {
             Default::default()
         };
         Ok(Self {
+            disable_directives: prepare_disable_directives(&root, config, &fs_files, &prepared)?,
             root,
             config_path: config_path.map(Path::to_path_buf),
             tsconfig_path: tsconfig_path.map(Path::to_path_buf),

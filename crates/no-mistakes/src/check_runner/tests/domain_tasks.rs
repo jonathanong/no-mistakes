@@ -11,6 +11,7 @@ use std::time::Duration;
 fn empty_task<T>(findings: T) -> CheckTask<T> {
     CheckTask {
         findings,
+        pre_suppressed: Vec::new(),
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: Vec::new(),

@@ -10,11 +10,13 @@ fn async_check_options_preserve_sql_alias_and_default_effort_reports() {
             if let Some(effort) = effort {
                 options["effort"] = effort.into();
             }
-            serde_json::from_str::<serde_json::Value>(
-                &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string()))
-                    .unwrap(),
+            crate::test_support::without_hygiene_advisory_json(
+                serde_json::from_str::<serde_json::Value>(
+                    &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string()))
+                        .unwrap(),
+                )
+                .unwrap(),
             )
-            .unwrap()
         };
         let default = execute(format!("sql-{mode}.yml"), None);
         assert_eq!(execute(format!("legacy-sql-{mode}.yml"), None), default);
@@ -51,11 +53,13 @@ fn low_literal_annotation_violations_survive_every_policy_in_the_public_check_ap
                 "config": root.join(format!(".no-mistakes-literals-{policy}.yml")),
                 "includeSqlVerdicts": include,
             });
-            serde_json::from_str::<serde_json::Value>(
-                &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string()))
-                    .unwrap(),
+            crate::test_support::without_hygiene_advisory_json(
+                serde_json::from_str::<serde_json::Value>(
+                    &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string()))
+                        .unwrap(),
+                )
+                .unwrap(),
             )
-            .unwrap()
         };
         let plain = execute(false);
         let detailed = execute(true);
@@ -121,10 +125,12 @@ fn low_typed_executors_keep_statement_lines_in_the_public_check_api() {
         "root": root,
         "config": root.join(".no-mistakes-default.yml"),
     });
-    let result: serde_json::Value = serde_json::from_str(
-        &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),
-    )
-    .unwrap();
+    let result: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+        serde_json::from_str(
+            &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),
+        )
+        .unwrap(),
+    );
     let rows = result["rules"].as_array().unwrap();
     for rule in [
         "postgres-no-offset",
@@ -173,10 +179,12 @@ fn low_executor_transports_preserve_native_callsite_advisories() {
         .filter_map(|(index, line)| line.contains("// ADVISE").then_some(index + 1))
         .collect::<Vec<_>>();
     let options = serde_json::json!({"root":root,"config":root.join(".no-mistakes-low.yml")});
-    let report: serde_json::Value = serde_json::from_str(
-        &check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
-    )
-    .unwrap();
+    let report: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+        serde_json::from_str(
+            &check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+        )
+        .unwrap(),
+    );
     for rule in [
         "postgres-no-offset",
         "postgres-no-unbounded-sql-identifier",

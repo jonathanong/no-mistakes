@@ -133,6 +133,7 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
     let diagnostics = findings?;
     Ok(CheckTask {
         findings: diagnostics.findings,
+        pre_suppressed: diagnostics.suppressed,
         react_suppression_targets: Vec::new(),
         suppression_sources: Vec::new(),
         advisories: diagnostics.advisories,

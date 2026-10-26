@@ -42,6 +42,15 @@ const { analyzeProject } = require("no-mistakes");
 
 ## CLI Mapping
 
+`check()` and `analyzeProject()` reports with `type: "check"` audit unused
+no-mistakes disable comments using the selected configuration's
+`reportUnusedDisableDirectives` setting. The default `advise` puts
+`unused-disable-directive` and `invalid-disable-directive` diagnostics in
+`CheckReport.advisories`; `report` puts them in `CheckReport.rules`, and
+`ignore` omits them. Locations refer to the comment. Unknown and disabled rule
+IDs have distinct messages. `includeSuppressed` controls only the optional
+ledger of hidden findings. See [suppression hygiene](configuration/suppressions.md).
+
 `check(options)` and check reports in `analyzeProject()` accept the same
 `effort: "low" | "max"` option as CLI `--effort`. See
 [check options](node-api/check-verdicts.md) for precedence and fallback

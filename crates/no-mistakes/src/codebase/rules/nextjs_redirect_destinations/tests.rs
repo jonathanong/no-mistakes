@@ -1,3 +1,4 @@
+mod deferred_suppression;
 mod delegated_effort;
 mod effort;
 mod entry_failure;

@@ -3,11 +3,11 @@ use crate::check_tasks::CheckTask;
 use anyhow::Result;
 use no_mistakes::codebase::rules::RuleFinding;
 use no_mistakes::codebase::unique_exports::{PreparedUniqueExportFinding, UniqueExportFinding};
+use no_mistakes::config::v2::DisableDirectivePolicy;
 use no_mistakes::integration_tests::IntegrationFinding;
 use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
 use std::time::Duration;
-
 mod advisories;
 mod empty;
 pub(crate) use empty::empty_results;
@@ -23,6 +23,8 @@ pub(crate) struct FinalizeInput<'a> {
     pub(crate) runner_config_deadlines:
         Option<Vec<no_mistakes::integration_tests::RunnerConfigDeadlineEvidence>>,
     pub(crate) config: &'a no_mistakes::config::v2::NoMistakesConfig,
+    pub(crate) disable_directives:
+        &'a no_mistakes::codebase::rules::disable_directive_audit::PreparedDisableDirectives,
     pub(crate) filesystem_files: &'a [std::path::PathBuf],
     pub(crate) sources: &'a no_mistakes::codebase::ts_source::SourceStore,
     pub(crate) filesystem_rules_enabled: bool,
@@ -86,17 +88,19 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         runner_config_deadlines,
         config,
         filesystem_files,
+        disable_directives,
         sources,
         filesystem_rules_enabled,
         react_warning,
         discover_duration,
         facts_duration,
-        completed,
+        mut completed,
         include_suppressed,
         unproven_member_query_sql,
         sql_verdicts,
         include_sql_verdicts,
     } = input;
+    let pre_suppressed = suppression::take_pre_suppressed(&mut completed);
     let mut react = completed.react;
     let react_suppression_targets = react.react_suppression_targets.as_slice();
     let mut queues = completed.queues;
@@ -105,9 +109,11 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     let mut integration = completed.integration;
     let mut codebase = completed.codebase;
     let mut filesystem_rules = completed.filesystem_rules;
+    let audit_directives = config.audits_disable_directives();
+    let retain_suppression = include_suppressed || audit_directives;
     let advisories = advisories::collect(
         filesystem_rules_enabled,
-        include_suppressed,
+        retain_suppression,
         root,
         config,
         filesystem_files,
@@ -131,13 +137,14 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     .collect();
     let analysis_warning_count = config.analysis_warnings.len();
     warnings.extend(config.analysis_warnings.iter().cloned());
-    let suppressed = suppression::apply_if_requested(
-        include_suppressed,
+    let accounting = suppression::apply_if_requested(
+        retain_suppression,
         suppression::Inputs {
+            pre_suppressed,
             root,
             sources,
             react: &mut react.findings,
-            react_suppression_targets: include_suppressed.then_some(react_suppression_targets),
+            react_suppression_targets: retain_suppression.then_some(react_suppression_targets),
             queues: &mut queues.findings,
             rules: &mut rules.findings,
             rule_suppression_sources,
@@ -147,6 +154,13 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
             advisories: &mut advisories,
         },
     );
+    let directive_findings = disable_directives.findings_from_consumed(&accounting.consumed);
+    let suppressed = accounting.into_public(include_suppressed);
+    if config.report_unused_disable_directives == DisableDirectivePolicy::Report {
+        rules.findings.extend(directive_findings);
+    } else {
+        advisories.extend(directive_findings);
+    }
     // The public `rules` list has historically contained both codebase and
     // filesystem findings in that domain order. Preserve it while retaining
     // the distinct adapter identity in optional suppression accounting.
@@ -178,11 +192,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         advisories,
         sql_verdicts,
         include_sql_verdicts,
-        suppressed: if include_suppressed {
-            suppressed
-        } else {
-            Vec::new()
-        },
+        suppressed,
         include_suppressed,
         unproven_member_query_sql,
     })

@@ -1,0 +1,5 @@
+# no-mistakes-disable-file github-actions-composite-step-schema
+# Saved fixture keeps audit findings visible until the shared suppression pass.
+runs:
+  using: composite
+  steps: []

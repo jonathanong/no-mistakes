@@ -1,0 +1,4 @@
+reportUnusedDisableDirectives: report
+rules:
+  - rule: nextjs-redirect-destinations
+    scope: repository

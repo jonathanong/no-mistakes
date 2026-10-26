@@ -54,6 +54,10 @@ pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
 }
 
 fn disable_file_directive_line(source: &str, rule_id: &str) -> Option<u32> {
+    disable_file_directive_line_at(source, rule_id, None)
+}
+
+fn disable_file_directive_line_at(source: &str, rule_id: &str, expected: Option<u32>) -> Option<u32> {
     let mut in_block_comment = false;
     let mut saw_hash_attribute = false;
 
@@ -93,7 +97,7 @@ fn disable_file_directive_line(source: &str, rule_id: &str) -> Option<u32> {
                 return None;
             }
             let rule_part = after_directive.trim();
-            if rule_part_matches(rule_part, rule_id) {
+            if rule_part_matches(rule_part, rule_id) && expected.is_none_or(|line| line == (index + 1) as u32) {
                 return Some((index + 1) as u32);
             }
             break;
@@ -169,3 +173,8 @@ fn disabled_statement_lines_with_scan_observer(
     }
     disabled
 }
+
+#[path = "disable_comments/inventory.rs"]
+mod directive_inventory;
+#[doc(hidden)]
+pub use directive_inventory::{disable_directives, NamedDisableDirective};

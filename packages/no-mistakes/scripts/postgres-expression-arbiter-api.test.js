@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { policyAdvisories } = require("./check-policy-test-helpers");
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
@@ -208,7 +209,7 @@ for (const [scenario, config, findings, advisories, subdirectory = ""] of [
       assert.deepEqual(prepared.reports[0].result, report);
       assert.deepEqual(report.warnings, []);
       assert.equal(report.rules.length, findings, config);
-      assert.equal(report.advisories.length, advisories, config);
+      assert.equal(policyAdvisories(report).length, advisories, config);
     },
   );
 }

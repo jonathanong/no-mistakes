@@ -70,6 +70,7 @@ impl SharedCheckContext {
             && !self.filesystem_rules_enabled
             && !self.playwright_rules_enabled
             && !self.graph_rules_enabled
+            && !self.prepared.config.audits_disable_directives()
         {
             let mut results = crate::check_runner::empty_results([None]);
             results
@@ -129,9 +130,8 @@ impl SharedCheckContext {
                 playwright_projects: self.prepared.playwright_projects.as_ref(),
                 workflow_documents: self.prepared.workflow_documents.as_deref(),
                 tsconfig_gate_project_inputs: self.prepared.tsconfig_gate_project_inputs.as_ref(),
-                // Preserve ordinary check behavior; defer only when this
-                // additive report requests suppression accounting.
-                defer_suppression: include_suppressed,
+                // Hygiene and optional accounting share the same consumed directives.
+                defer_suppression: include_suppressed || config.audits_disable_directives(),
             });
         let completed = crate::check_runner::complete_domain_checks((
             react,
@@ -147,6 +147,7 @@ impl SharedCheckContext {
                 facts,
                 runner_config_deadlines,
                 config,
+                disable_directives: &self.disable_directives,
                 filesystem_files: &self.fs_files,
                 sources: &sources,
                 filesystem_rules_enabled: self.filesystem_rules_enabled,

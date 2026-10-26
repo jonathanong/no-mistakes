@@ -141,6 +141,13 @@ Node API: `check({ includeSuppressed: true })` exposes the same optional
 `suppressed` accounting. `check({ includeSqlVerdicts: true })` and check reports
 inside `analyzeProject()` expose the same optional `sqlVerdicts` field.
 
+Unused disable comments produce `unused-disable-directive` advice by default,
+at the comment's file and line. `invalid-disable-directive` identifies unknown
+or disabled rule names separately. Set repository
+`reportUnusedDisableDirectives: report` to fail or `ignore` to omit these
+diagnostics. This works without `--include-suppressed`; see
+[suppression hygiene](../configuration/suppressions.md).
+
 Swift and C# source rules scan executable code only. Comments and string
 literals, including raw and multiline forms, do not create findings; code in a
 string interpolation remains executable and is checked at its source line.

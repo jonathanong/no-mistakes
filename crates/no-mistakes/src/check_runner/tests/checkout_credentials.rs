@@ -9,7 +9,9 @@ fn checkout_unknowns_reach_aggregate_findings_and_advisories_once() {
         (".no-mistakes.advise.yml", 2, 18),
         (".no-mistakes.ignore.yml", 2, 0),
     ] {
-        let results = run_all(root.clone(), Some(root.join(name)), None).unwrap();
+        let results = crate::test_support::without_hygiene_advisories(
+            run_all(root.clone(), Some(root.join(name)), None).unwrap(),
+        );
         assert_eq!(results.rules.len(), failures, "{:?}", results.rules);
         assert_eq!(
             results.advisories.len(),
@@ -37,7 +39,9 @@ fn trusted_target_ref_and_credential_diagnostics_reach_aggregate_once() {
         (".no-mistakes.max-advise.yml", 26, 27),
         (".no-mistakes.max-ignore.yml", 26, 0),
     ] {
-        let results = run_all(root.clone(), Some(root.join(name)), None).unwrap();
+        let results = crate::test_support::without_hygiene_advisories(
+            run_all(root.clone(), Some(root.join(name)), None).unwrap(),
+        );
         assert_eq!(results.rules.len(), failures, "{:?}", results.rules);
         assert_eq!(
             results.advisories.len(),

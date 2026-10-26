@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { policyAdvisories } = require("../check-policy-test-helpers");
 const { spawnSync } = require("node:child_process");
 const { dirname, join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
@@ -28,7 +29,7 @@ for (const config of ["default", "ts", "blanket", "custom", "none", "excluded", 
       assert.deepEqual((await esm.analyzeProject(request)).reports[0].result, report);
       const findings = report.rules.filter((row) => row.rule === "forbidden-lint-suppressions");
       assert.deepEqual(report.warnings, []);
-      assert.deepEqual(report.advisories, []);
+      assert.deepEqual(policyAdvisories(report), []);
       assert.ok(findings.every((row) => row.file.startsWith("src/") && row.line > 0));
       if (config === "ts") {
         assert.deepEqual(

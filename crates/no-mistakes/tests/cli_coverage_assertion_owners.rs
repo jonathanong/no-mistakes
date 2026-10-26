@@ -94,7 +94,7 @@ fn cli_reports_generator_uncertainty_without_assertion_proof() {
             "{report}"
         );
         assert_eq!(
-            report["advisories"].as_array().unwrap().len(),
+            super::policy_advisories::without_hygiene(&report).len(),
             advisories,
             "{report}"
         );

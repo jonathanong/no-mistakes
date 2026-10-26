@@ -7,7 +7,7 @@ use crate::config::v2::{
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 
-fn fixture(path: &str) -> PathBuf {
+pub(super) fn fixture(path: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/github-actions-composite-step-schema/fixture")
         .join(path)

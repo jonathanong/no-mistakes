@@ -14,13 +14,15 @@ fn public_caching_effort_preserves_literal_findings_and_routes_residuals_once() 
         (".no-mistakes.low-advise.yml", 7, 4),
         (".no-mistakes.low-ignore.yml", 7, 0),
     ] {
-        let report: serde_json::Value = serde_json::from_str(
-            &check_json_impl(crate::napi_api::options::test_json_arg(
-                json!({ "root": root, "config": root.join(config) }).to_string(),
-            ))
+        let report: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+            serde_json::from_str(
+                &check_json_impl(crate::napi_api::options::test_json_arg(
+                    json!({ "root": root, "config": root.join(config) }).to_string(),
+                ))
+                .unwrap(),
+            )
             .unwrap(),
-        )
-        .unwrap();
+        );
         assert_eq!(
             report["rules"].as_array().unwrap().len(),
             expected_findings,
@@ -50,19 +52,24 @@ fn analyze_project_caching_low_matches_public_check_and_effort_override_wins() {
     let root = root();
     for (effort, expected_findings, expected_advisories) in [("low", 7, 4), ("max", 11, 0)] {
         let mut options = json!({ "root": root, "config": root.join(".no-mistakes.low-advise.yml"), "effort": effort });
-        let check: serde_json::Value = serde_json::from_str(
-            &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string())).unwrap(),
-        )
-        .unwrap();
-        options.as_object_mut().unwrap().remove("effort");
-        options["reports"] = json!([{ "type": "check", "effort": effort }]);
-        let project: serde_json::Value = serde_json::from_str(
-            &crate::napi_api::analyze_project::analyze_project_json_impl(
-                crate::napi_api::options::test_json_arg(options.to_string()),
+        let check: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+            serde_json::from_str(
+                &check_json_impl(crate::napi_api::options::test_json_arg(options.to_string()))
+                    .unwrap(),
             )
             .unwrap(),
-        )
-        .unwrap();
+        );
+        options.as_object_mut().unwrap().remove("effort");
+        options["reports"] = json!([{ "type": "check", "effort": effort }]);
+        let project: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+            serde_json::from_str(
+                &crate::napi_api::analyze_project::analyze_project_json_impl(
+                    crate::napi_api::options::test_json_arg(options.to_string()),
+                )
+                .unwrap(),
+            )
+            .unwrap(),
+        );
         assert_eq!(
             check["rules"].as_array().unwrap().len(),
             expected_findings,

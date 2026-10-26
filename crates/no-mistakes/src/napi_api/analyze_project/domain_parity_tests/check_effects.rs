@@ -82,8 +82,8 @@ fn prepared_check_advisories_match_standalone_and_share_the_source_store() {
         }));
     assert_eq!(
         reads_after - reads_before,
-        1,
-        "check, advisory, and suppression consumers must share the CLAUDE.md source slot"
+        0,
+        "suppression hygiene prepares CLAUDE.md; report consumers must reuse its source slot"
     );
 }
 

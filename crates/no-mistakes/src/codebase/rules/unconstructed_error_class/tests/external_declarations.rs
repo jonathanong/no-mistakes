@@ -38,7 +38,9 @@ fn declaration_ancestry_preserves_policy_and_effort_channels() {
                 .to_string(),
         ))
         .unwrap();
-        let report: serde_json::Value = serde_json::from_str(&json).unwrap();
+        let report: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+            serde_json::from_str(&json).unwrap(),
+        );
         assert_eq!(
             report["rules"].as_array().unwrap().len(),
             failures,
@@ -154,7 +156,9 @@ fn cyclic_declaration_classes_keep_shared_uncertainty_policy() {
             serde_json::json!({"root":root,"config":root.join(config)}).to_string(),
         ))
         .unwrap();
-        let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+        let report: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+            serde_json::from_str(&output).unwrap(),
+        );
         assert_eq!(
             report["rules"].as_array().unwrap().len(),
             failures,

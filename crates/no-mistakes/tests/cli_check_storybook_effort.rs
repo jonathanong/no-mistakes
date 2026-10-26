@@ -32,7 +32,7 @@ fn storybook_effort_max_reports_at_least_as_much_as_low() {
             "{config}: {report}"
         );
         assert_eq!(
-            report["advisories"].as_array().unwrap().len(),
+            super::policy_advisories::without_hygiene(&report).len(),
             advisories,
             "{config}: {report}"
         );

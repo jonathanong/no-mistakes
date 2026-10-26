@@ -24,7 +24,8 @@ fn malformed_story_makes_only_its_application_incomplete_in_public_reports() {
         serde_json::json!({ "root": root }).to_string(),
     ))
     .unwrap();
-    let report: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let report: serde_json::Value =
+        crate::test_support::without_hygiene_advisory_json(serde_json::from_str(&json).unwrap());
     assert_eq!(report["rules"], serde_json::to_value(direct).unwrap());
 }
 
@@ -78,7 +79,9 @@ fn malformed_story_advisories_and_audit_preserve_policy() {
             let json = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
                 serde_json::json!({ "root": root, "config": root.join(config), "includeSuppressed": audit }).to_string(),
             )).unwrap();
-            serde_json::from_str::<serde_json::Value>(&json).unwrap()
+            crate::test_support::without_hygiene_advisory_json(
+                serde_json::from_str::<serde_json::Value>(&json).unwrap(),
+            )
         };
         let baseline = report(false);
         let audit = report(true);
@@ -117,7 +120,9 @@ fn hidden_story_errors_keep_component_residuals_and_audit_parity() {
             let json = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
                 serde_json::json!({ "root": root, "config": root.join(config), "includeSuppressed": audit }).to_string(),
             )).unwrap();
-            let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+            let value: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+                serde_json::from_str(&json).unwrap(),
+            );
             assert_eq!(value["rules"], serde_json::to_value(&direct).unwrap());
             if audit {
                 assert_eq!(value["suppressed"].as_array().unwrap().len(), suppressed);

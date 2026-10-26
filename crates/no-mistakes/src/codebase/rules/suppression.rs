@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 mod accounting;
+pub(crate) use accounting::read_directive_source;
 pub use accounting::{
     suppress_domain_findings_with_source_files, suppress_domain_findings_with_source_locations,
     suppress_domain_findings_with_sources, SuppressedFinding, SuppressionDirective,

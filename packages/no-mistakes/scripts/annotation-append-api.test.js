@@ -3,6 +3,7 @@ const { spawnSync } = require("node:child_process");
 const { dirname, join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 const addon = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
+const { policyAdvisories } = require("./check-policy-test-helpers");
 
 test(
   "compiled low annotation keeps append heads, policies, suppressions and CLI parity",
@@ -39,10 +40,10 @@ test(
         expectedRules.map((line) => ["append.mts", line]),
       );
       assert.deepEqual(
-        locations(report.advisories),
+        locations(policyAdvisories(report)),
         expectedAdvisories.map((line) => ["append.mts", line]),
       );
-      for (const finding of [...report.rules, ...report.advisories]) {
+      for (const finding of [...report.rules, ...policyAdvisories(report)]) {
         if (definiteMissing.includes(finding.line)) {
           assert.match(finding.message, /query execution must start/);
         } else {

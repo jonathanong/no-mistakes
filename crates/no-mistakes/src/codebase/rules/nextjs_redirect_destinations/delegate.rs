@@ -6,6 +6,7 @@ use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
 use crate::config::v2::{EffectiveRuleAnalysis, Effort};
 mod resolve;
+mod suppression;
 use resolve::{default_module_specifier, resolve_relative};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -46,6 +47,7 @@ pub(super) struct DelegateRequest<'a> {
     pub(super) include_rewrites: bool,
     pub(super) specifier: Option<(&'a str, usize)>,
     pub(super) analysis: EffectiveRuleAnalysis,
+    pub(super) defer_suppression: bool,
 }
 
 pub(super) fn append_delegated(request: &DelegateRequest<'_>) -> AnalysisDiagnostics {
@@ -95,7 +97,7 @@ pub(super) fn append_delegated(request: &DelegateRequest<'_>) -> AnalysisDiagnos
             return delegation_error(request, line, &delegated, "read", &error.to_string())
         }
     };
-    if has_disable_file_comment(&delegated_source, RULE_ID) {
+    if !request.defer_suppression && has_disable_file_comment(&delegated_source, RULE_ID) {
         return diagnostics;
     }
     let rel = relative_slash_path(request.root, &delegated);
@@ -131,6 +133,7 @@ pub(super) fn append_delegated(request: &DelegateRequest<'_>) -> AnalysisDiagnos
             }));
         }
     }
+    suppression::consume_entry_file_directive(request, &mut diagnostics);
     diagnostics
 }
 

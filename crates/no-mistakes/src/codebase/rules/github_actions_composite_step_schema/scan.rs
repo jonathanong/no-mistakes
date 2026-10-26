@@ -21,14 +21,18 @@ pub(super) fn check_file(
 }
 
 fn check_source(rel: &str, source: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
-    if crate::codebase::ts_source::has_disable_file_comment(source, RULE_ID) {
+    if !opts.defer_suppression
+        && crate::codebase::ts_source::has_disable_file_comment(source, RULE_ID)
+    {
         return Vec::new();
     }
     let mut findings = match serde_yaml::from_str::<Value>(source) {
         Ok(value) => check_parsed(rel, source, &value, opts),
         Err(err) => vec![invalid_yaml_finding(rel, &err)],
     };
-    super::super::suppress_rule_findings_with_source(&mut findings, source);
+    if !opts.defer_suppression {
+        super::super::suppress_rule_findings_with_source(&mut findings, source);
+    }
     findings
 }
 

@@ -44,3 +44,17 @@ fn prepare_shared_graph(
     }
     Ok(prepared_graph)
 }
+
+fn prepare_disable_directives(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    files: &[PathBuf],
+    prepared: &crate::check_runner::prepared::PreparedCheckInputs,
+) -> Result<crate::codebase::rules::disable_directive_audit::PreparedDisableDirectives> {
+    crate::codebase::rules::disable_directive_audit::PreparedDisableDirectives::prepare(
+        root,
+        config,
+        files,
+        &prepared.visible_paths.source_store_for(root),
+    )
+}

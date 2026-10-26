@@ -7,6 +7,8 @@ pub mod coverage_producer_assertion_owner;
 pub mod csharp_max_lines_per_file;
 pub mod csharp_no_async_void_delegate;
 pub mod declared_payload_compatibility;
+#[doc(hidden)]
+pub mod disable_directive_audit;
 pub mod doc_consistency;
 pub mod file_extension_policy;
 mod file_matching;

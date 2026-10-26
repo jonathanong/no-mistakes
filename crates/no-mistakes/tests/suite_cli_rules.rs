@@ -8,6 +8,8 @@ mod cli_shellcheck_policy;
 mod git_tracked_rule;
 #[path = "common/gitignore_fixture.rs"]
 mod gitignore_fixture;
+#[path = "common/policy_advisories.rs"]
+mod policy_advisories;
 #[path = "common/saved_fixture.rs"]
 mod saved_fixture;
 
@@ -86,6 +88,8 @@ mod cli_check_rules_unconstructed_error_class;
 mod cli_check_rules_version_pin;
 #[path = "cli_check_rules_workflow_topology.rs"]
 mod cli_check_rules_workflow_topology;
+#[path = "cli_check_unused_disable_directives.rs"]
+mod cli_check_unused_disable_directives;
 
 #[path = "cli_check_git_identity_prefixes.rs"]
 mod cli_check_git_identity_prefixes;

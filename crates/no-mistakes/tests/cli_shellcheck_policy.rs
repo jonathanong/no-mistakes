@@ -38,7 +38,7 @@ fn shellcheck_missing_executable_routes_selected_scripts_through_policy_at_max()
             "{config}: {report}"
         );
         assert_eq!(
-            report["advisories"].as_array().unwrap().len(),
+            super::policy_advisories::without_hygiene(&report).len(),
             advisories,
             "{config}: {report}"
         );
@@ -47,7 +47,7 @@ fn shellcheck_missing_executable_routes_selected_scripts_through_policy_at_max()
             .as_array()
             .unwrap()
             .iter()
-            .chain(report["advisories"].as_array().unwrap())
+            .chain(super::policy_advisories::without_hygiene(&report))
         {
             assert_eq!(finding["target"], "unanalyzable");
             assert_eq!(finding["line"], 1);

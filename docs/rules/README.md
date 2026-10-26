@@ -3,6 +3,11 @@
 These are configured `no-mistakes check` rules. Add them under `rules:` in
 `.no-mistakes.yml`.
 
+Disable comments that suppress nothing produce advisory diagnostics by default.
+Comments naming unknown or disabled rules are reported separately. Configure
+`reportUnusedDisableDirectives: report` to fail or `ignore` to omit them; see
+[suppression hygiene](../configuration/suppressions.md).
+
 ```yaml
 rules:
   - rule: unique-exports

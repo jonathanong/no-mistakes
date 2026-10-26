@@ -29,6 +29,7 @@ fn shared_unanalyzable_policies_route_actual_sql_failures_advisories_and_skips()
             check_runner::json_value(&shared),
             check_runner::json_value(&legacy)
         );
+        let shared = crate::test_support::without_hygiene_advisories(shared);
         assert_eq!(shared.rules.len(), failures, "{mode}");
         assert_eq!(shared.advisories.len(), advisories, "{mode}");
         assert_eq!(has_failures(&shared), failures != 0, "{mode}");

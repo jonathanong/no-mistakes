@@ -12,7 +12,9 @@ fn dynamic_bases_follow_policy_without_guessing_error_ancestry() {
             .to_string(),
         ))
         .unwrap();
-        let result: serde_json::Value = serde_json::from_str(&json).unwrap();
+        let result: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
+            serde_json::from_str(&json).unwrap(),
+        );
         let rules = result["rules"].as_array().unwrap();
         let advisories = result["advisories"].as_array().unwrap();
         assert_eq!(result["warnings"], serde_json::json!([]));

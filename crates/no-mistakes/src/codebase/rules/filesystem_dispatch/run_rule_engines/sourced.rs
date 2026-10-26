@@ -45,12 +45,22 @@ pub(super) fn run(
             )
         }
         GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA => {
-            github_actions_composite_step_schema::check_with_files_and_sources(
-                root, config, files, sources,
+            github_actions_composite_step_schema::check_with_files_and_sources_deferred(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
             )
         }
         GITHUB_ACTIONS_JOB_TIMEOUTS => {
-            github_actions_job_timeouts::check_with_files_and_sources(root, config, files, sources)
+            github_actions_job_timeouts::check_with_files_and_sources_deferred(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
         }
         GITHUB_ACTIONS_STEP_TIMEOUTS => github_actions_step_timeouts::check_with_files_and_sources(
             root,

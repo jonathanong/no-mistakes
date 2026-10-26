@@ -15,13 +15,15 @@ fn report(config: &str, effort: Option<&str>) -> serde_json::Value {
     if let Some(effort) = effort {
         options["effort"] = effort.into();
     }
-    serde_json::from_str(
-        &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
-            options.to_string(),
-        ))
+    crate::test_support::without_hygiene_advisory_json(
+        serde_json::from_str(
+            &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+                options.to_string(),
+            ))
+            .unwrap(),
+        )
         .unwrap(),
     )
-    .unwrap()
 }
 
 #[test]

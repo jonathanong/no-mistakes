@@ -20,6 +20,7 @@ effects:
       pubsub: [createPublisher]
 effort: max
 unanalyzable: report
+reportUnusedDisableDirectives: advise
 rules:
   - rule: unique-exports
     projects: [web]
@@ -59,6 +60,11 @@ configured scope, `check` warns and runs that rule at `max`.
 For example, [`github-actions-job-timeouts`](../rules/github-actions-job-timeouts.md#effort)
 uses a covering `github-actions-step-timeouts` partner to avoid redundant
 step comparisons when the partner caps steps below the job deadline.
+
+`reportUnusedDisableDirectives` defaults to `advise`: stale disable comments and
+comments naming unknown or disabled check rules produce non-failing advice.
+Use `report` to fail or `ignore` to omit it. See
+[suppression hygiene](suppressions.md) for locations, examples, and API parity.
 
 The top-level `frontendRoot`, `assertNoFetch`, and `reactTraits` fields are
 legacy compatibility settings for the standalone `react` command. Prefer

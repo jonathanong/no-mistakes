@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { policyAdvisories } = require("./check-policy-test-helpers");
 const { execFile, spawnSync } = require("node:child_process");
 const { dirname, join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
@@ -38,14 +39,14 @@ for (const [policy, failures, advisories] of [
       assert.ok(pending instanceof Promise);
       const expected = await pending;
       assert.equal(expected.rules.length, failures);
-      assert.equal(expected.advisories.length, advisories);
+      assert.equal(policyAdvisories(expected).length, advisories);
       const low = await cjs.check({ ...options, effort: "low" });
       assert.equal(low.rules.length, failures);
-      assert.equal(low.advisories.length, advisories);
+      assert.equal(policyAdvisories(low).length, advisories);
       const locations = (rows) => rows.map(({ rule, file, line }) => ({ rule, file, line }));
       assert.deepEqual(locations(low.rules), locations(expected.rules));
-      assert.deepEqual(locations(low.advisories), locations(expected.advisories));
-      for (const finding of [...low.rules, ...low.advisories]) {
+      assert.deepEqual(locations(policyAdvisories(low)), locations(policyAdvisories(expected)));
+      for (const finding of [...low.rules, ...policyAdvisories(low)]) {
         assert.match(finding.message, /query\("\/\* name \*\/ " \+ sql\)/);
         assert.match(finding.message, /one local const/);
       }
@@ -196,7 +197,7 @@ test(
           report.rules.map(({ file, line }) => [file, line]),
           locations,
         );
-        assert.deepEqual(report.advisories, []);
+        assert.deepEqual(policyAdvisories(report), []);
         assert.equal(report.warnings.length, warningCount);
         if (warningCount)
           assert.match(

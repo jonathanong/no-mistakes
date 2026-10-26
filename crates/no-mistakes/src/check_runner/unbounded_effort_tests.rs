@@ -7,15 +7,17 @@ fn root() -> PathBuf {
 }
 fn run(config: &str, evidence: bool) -> super::CheckResults {
     let root = root();
-    run_all_with_sql_verdicts(
-        root.clone(),
-        Some(root.join(config)),
-        None,
-        false,
-        false,
-        evidence,
+    crate::test_support::without_hygiene_advisories(
+        run_all_with_sql_verdicts(
+            root.clone(),
+            Some(root.join(config)),
+            None,
+            false,
+            false,
+            evidence,
+        )
+        .unwrap(),
     )
-    .unwrap()
 }
 #[test]
 fn unbounded_effort_policies_preserve_proven_violations_and_route_unknowns() {

@@ -1,0 +1,14 @@
+reportUnusedDisableDirectives: report
+projects:
+  web:
+    type: nextjs
+    root: web
+    exclude: [app/excluded.ts]
+rules:
+  - rule: nextjs-no-caching
+    projects: [web]
+    exclude: [app/application-excluded.ts]
+  - rule: nextjs-no-api-routes
+    enabled: false
+    projects: [web]
+    exclude: [app/application-excluded.ts]

@@ -65,8 +65,18 @@ pub fn advisories_with_files_sources_and_deferred_suppression(
         return Ok(Vec::new());
     }
     prepared::with_standalone(root, config, all_files, sources, |resolver| {
-        let diagnostics =
-            dispatch::collect(root, config, all_files, sources, None, false, resolver)?;
+        let diagnostics = dispatch::collect(
+            root,
+            config,
+            all_files,
+            sources,
+            None,
+            dispatch::CollectPolicy {
+                require_tracked_snapshot: false,
+                defer_suppression: true,
+            },
+            resolver,
+        )?;
         Ok(dispatch::finish_advisories(diagnostics))
     })
 }
@@ -101,7 +111,7 @@ pub(crate) fn check_with_files_sources_and_snapshot(
     }
     prepared::with_standalone(root, config, all_files, sources, |resolver| {
         Ok(dispatch::finish_findings(diagnostics_prepared(
-            root, config, all_files, sources, snapshot, resolver, true,
+            root, config, all_files, sources, snapshot, resolver, false,
         )?))
     })
 }
@@ -138,8 +148,18 @@ pub fn diagnostics_prepared(
     resolver: &PreparedConfigResolver<'_>,
     defer_suppression: bool,
 ) -> Result<super::analysis_policy::AnalysisDiagnostics> {
-    let mut diagnostics =
-        dispatch::collect(root, config, all_files, sources, snapshot, true, resolver)?;
+    let mut diagnostics = dispatch::collect(
+        root,
+        config,
+        all_files,
+        sources,
+        snapshot,
+        dispatch::CollectPolicy {
+            require_tracked_snapshot: true,
+            defer_suppression,
+        },
+        resolver,
+    )?;
     if !defer_suppression {
         super::suppress_rule_findings_with_sources(root, &mut diagnostics.findings, sources);
         super::suppress_rule_findings_with_sources(root, &mut diagnostics.advisories, sources);
