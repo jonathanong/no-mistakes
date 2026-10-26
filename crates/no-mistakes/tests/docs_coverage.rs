@@ -16,6 +16,10 @@ use std::path::{Path, PathBuf};
 mod cli_docs_helpers;
 #[path = "support/docs_coverage_rule_helpers.rs"]
 mod rule_docs_helpers;
+#[path = "support/docs_rule_inventory.rs"]
+mod rule_inventory;
+#[path = "support/docs_rule_inventory_regressions.rs"]
+mod rule_inventory_regressions;
 use rule_docs_helpers::{read, repo_root, rule_ids_from_source};
 #[path = "support/docs_review_regressions.rs"]
 mod docs_review_regressions;
@@ -181,17 +185,12 @@ fn assert_cli_group_has_one_leaf(
 #[test]
 fn no_mistakes_rules_have_docs() {
     let root = repo_root();
-    let index = read(&root.join("docs/rules/README.md"));
     let rule_ids = rule_ids_from_source(&root);
-    assert_eq!(rule_ids.len(), 118, "source rule inventory changed");
+    rule_inventory::assert_inventory(&root, &rule_ids);
     for rule_id in rule_ids {
         let file = format!("{rule_id}.md");
         let path = root.join("docs/rules").join(&file);
         assert!(path.exists(), "missing rule doc {}", path.display());
-        assert!(
-            index.contains(&file),
-            "docs/rules/README.md must link {file}"
-        );
         let body = read(&path);
         assert!(
             body.contains(&format!("# `{rule_id}`")),
