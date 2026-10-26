@@ -3,17 +3,22 @@
 const { resolveVariable, stableConstInitializer } = require("./async-target-bindings");
 const { unwrapExpression } = require("./async-ast");
 
-// Follow named declarations only. Missing source, cycles, and changing bindings
+// Follow bounded static declarations. Missing source, cycles, and changing bindings
 // cannot establish the identity of a configured target or dependency type.
 function createDeclarations(sources) {
-  function exported(filename, name, seen = new Set()) {
+  function exported(filename, name, seen = new Set(), budget = { remaining: 128 }) {
     const key = `${filename}:${name}`;
-    if (seen.size >= 32 || seen.has(key)) return null;
+    if (budget.remaining-- <= 0 || seen.size >= 32 || seen.has(key)) return false;
     seen = new Set(seen).add(key);
     const source = sources.load(filename);
-    if (!source) return null;
+    if (!source) return false;
     const matches = [];
+    const stars = [];
     for (const statement of source.ast.body) {
+      if (statement.type === "ExportAllDeclaration") {
+        if (!statement.exported) stars.push(statement.source.value);
+        continue;
+      }
       if (statement.type !== "ExportNamedDeclaration") continue;
       const declaration = statement.declaration;
       if (declaration?.id?.name === name) matches.push({ local: declaration.id });
@@ -25,13 +30,23 @@ function createDeclarations(sources) {
         if ((item.exported.name ?? item.exported.value) === name)
           matches.push({ local: item.local, source: statement.source });
     }
-    if (matches.length !== 1) return null;
+    if (matches.length > 1) return false;
+    if (!matches.length) {
+      const candidates = stars.map((specifier) => {
+        const target = sources.resolve(specifier, filename);
+        return target ? exported(target, name, seen, budget) : false;
+      });
+      // An unreadable branch may also export this name; absence is not proof.
+      if (candidates.includes(false)) return false;
+      const found = candidates.filter(Boolean);
+      return found.length > 1 ? false : found[0] || null;
+    }
     const match = matches[0];
     if (match.source) {
       const target = sources.resolve(match.source.value, filename);
-      return target && exported(target, match.local.name ?? match.local.value, seen);
+      return target ? exported(target, match.local.name ?? match.local.value, seen, budget) : false;
     }
-    return declaration(match.local, source.context, seen);
+    return declaration(match.local, source.context, seen) || false;
   }
 
   function imported(id, context) {

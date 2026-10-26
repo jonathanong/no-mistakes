@@ -20,15 +20,26 @@ function createSourceTypes(targets, sources, receiverShape) {
   function builtin(id, owner) {
     return id?.type === "Identifier" && !resolveVariable(id, owner)?.defs.length;
   }
+  function promiseType(type, owner, seen = new Set()) {
+    const next = fresh(type, seen);
+    if (!next) return false;
+    if (type.type === "TSTypeAliasDeclaration")
+      return promiseType(type.typeAnnotation, owner, next);
+    if (type.type !== "TSTypeReference") return false;
+    if (type.typeName.name === "Promise" && builtin(type.typeName, owner)) return true;
+    // Generic aliases need substitution, so only follow aliases without arguments.
+    if ((type.typeArguments?.params || type.typeParameters?.params)?.length) return false;
+    const resolved = declarations.declaration(type.typeName, owner);
+    return Boolean(
+      resolved &&
+      !resolved.node.typeParameters?.params?.length &&
+      promiseType(resolved.node, resolved.context, next),
+    );
+  }
   function promise(fn, owner) {
     if (fn.generator) return false;
     if (fn.async) return true;
-    const type = fn.returnType?.typeAnnotation;
-    return (
-      type?.type === "TSTypeReference" &&
-      type.typeName.name === "Promise" &&
-      builtin(type.typeName, owner)
-    );
+    return promiseType(fn.returnType?.typeAnnotation, owner);
   }
   function target(id, owner, seen = new Set()) {
     const next = fresh(id, seen);

@@ -14,6 +14,7 @@ it.each([false, true])("resolves target aliases through tsconfig extends (typed=
   for (const [name, lines] of [
     ["caller.ts", [15]],
     ["consumer.ts", [6]],
+    ["controls.ts", [7, 8, 9, 10, 11]],
   ]) {
     const filename = resolve(root, name);
     const messages = new Linter({ cwd: root }).verify(

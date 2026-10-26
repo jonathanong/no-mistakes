@@ -26,6 +26,7 @@ const cases = [
     lines: {
       "promise-handoff-alias/caller.ts": [15],
       "promise-handoff-alias/consumer.ts": [6],
+      "promise-handoff-alias/controls.ts": [7, 8, 9, 10, 11],
     },
   },
   {
