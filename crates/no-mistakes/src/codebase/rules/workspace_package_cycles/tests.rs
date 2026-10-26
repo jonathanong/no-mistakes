@@ -193,8 +193,9 @@ fn empty_workspace_and_wrapped_cycle_helpers() {
     assert!(check_with_files(&root, &invalid, &files).is_err());
 }
 
-// `catalog:`, a registry range, and a `file:` path can reuse a workspace
-// package name. Those specifiers stay external; only `workspace:` is an edge.
+// `catalog:`, a registry range the workspace version does not satisfy, and a
+// `file:` path into `node_modules` share a workspace package's name without
+// resolving to it. See issue 2761.
 #[test]
 fn external_same_name_dependencies_are_not_workspace_edges() {
     let root = fixture_root("external-name-collision");
@@ -204,6 +205,7 @@ fn external_same_name_dependencies_are_not_workspace_edges() {
         root.join("apps/storybook/package.json"),
         root.join("packages/react/package.json"),
         root.join("packages/left-pad/package.json"),
+        root.join("packages/alias/package.json"),
     ];
     let findings = check_with_files(&root, &config("{}"), &files).unwrap();
 
@@ -225,4 +227,82 @@ fn workspace_protocol_self_dependency_still_reports() {
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "packages/storybook/package.json");
     assert!(findings[0].message.contains("storybook -> storybook"));
+}
+
+fn npm_workspace_files(root: &std::path::Path) -> Vec<PathBuf> {
+    vec![
+        root.join("package.json"),
+        root.join("packages/a/package.json"),
+        root.join("packages/b/package.json"),
+    ]
+}
+
+fn assert_workspace_cycle(name: &str, cycle: &str) {
+    let root = fixture_root(name);
+    let findings = check_with_files(&root, &config("{}"), &npm_workspace_files(&root)).unwrap();
+    assert_eq!(findings.len(), 1, "{name}: {findings:?}");
+    assert!(
+        findings[0].message.contains(cycle),
+        "{name}: {}",
+        findings[0].message
+    );
+}
+
+fn assert_no_workspace_cycle(name: &str) {
+    let root = fixture_root(name);
+    let findings = check_with_files(&root, &config("{}"), &npm_workspace_files(&root)).unwrap();
+    assert!(findings.is_empty(), "{name}: {findings:?}");
+}
+
+#[test]
+fn star_specifier_cycle_between_workspace_packages_reports() {
+    assert_workspace_cycle("star-cycle", "a -> b -> a");
+}
+
+#[test]
+fn caret_range_cycle_between_workspace_packages_reports() {
+    assert_workspace_cycle("range-cycle", "a -> b -> a");
+}
+
+#[test]
+fn file_path_cycle_between_workspace_packages_reports() {
+    assert_workspace_cycle("file-cycle", "a -> b -> a");
+}
+
+#[test]
+fn link_path_cycle_between_workspace_packages_reports() {
+    assert_workspace_cycle("link-cycle", "a -> b -> a");
+}
+
+#[test]
+fn portal_path_cycle_between_workspace_packages_reports() {
+    assert_workspace_cycle("portal-cycle", "a -> b -> a");
+}
+
+#[test]
+fn unsatisfied_range_is_not_a_workspace_edge() {
+    assert_no_workspace_cycle("unsatisfied-range");
+}
+
+#[test]
+fn version_range_match_follows_workspace_linking_rules() {
+    assert!(super::range::version_satisfies("*", "1.2.0"));
+    assert!(super::range::version_satisfies("^1.0.0", "1.2.0"));
+    assert!(!super::range::version_satisfies("^1.0.0", "2.0.0"));
+    assert!(!super::range::version_satisfies("^2.0.0", "1.0.0"));
+    assert!(super::range::version_satisfies("~1.2.0", "1.2.9"));
+    assert!(!super::range::version_satisfies("~1.2.0", "1.3.0"));
+    assert!(super::range::version_satisfies(">=1.2.0 <2.0.0", "1.4.0"));
+    assert!(!super::range::version_satisfies(">=1.2.0 <2.0.0", "2.0.0"));
+    assert!(super::range::version_satisfies(">1.2.0", "1.2.1"));
+    assert!(!super::range::version_satisfies(">1.2.0", "1.2.0"));
+    assert!(super::range::version_satisfies("<=1.2.0", "1.2.0"));
+    assert!(!super::range::version_satisfies("<1.2.0", "1.2.0"));
+    assert!(super::range::version_satisfies("^0.2.3", "0.2.9"));
+    assert!(!super::range::version_satisfies("^0.2.3", "0.3.0"));
+    assert!(super::range::version_satisfies("^0.0.3", "0.0.3"));
+    assert!(!super::range::version_satisfies("^0.0.3", "0.0.4"));
+    assert!(!super::range::version_satisfies("^1.0.0", "1.0.0-rc.1"));
+    assert!(!super::range::version_satisfies("latest", "1.0.0"));
+    assert!(super::range::version_satisfies("1.2.3 || ^2.0.0", "2.1.0"));
 }

@@ -1,3 +1,5 @@
+mod edges;
+mod range;
 mod scc;
 
 use super::RuleFinding;
@@ -7,7 +9,7 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
 use serde::Deserialize;
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "workspace-package-cycles";
@@ -78,19 +80,13 @@ fn scan_with_sources(
         .iter()
         .map(|pkg| (pkg.name.clone(), pkg.dir.clone()))
         .collect();
-    let package_names: HashSet<&str> = workspace
-        .packages
-        .iter()
-        .map(|pkg| pkg.name.as_str())
-        .collect();
     let dependency_types = dependency_types(opts);
     let allowlist: BTreeSet<String> = opts
         .allowlist
         .iter()
         .map(|cycle| scc::canonical_cycle(cycle))
         .collect();
-    let graph =
-        workspace_graph_with_sources(&workspace, &package_names, &dependency_types, sources);
+    let graph = workspace_graph_with_sources(&workspace, &dependency_types, sources);
 
     let mut findings = Vec::new();
     for key in scc::cycle_keys(&graph) {
@@ -131,42 +127,16 @@ fn dependency_types(opts: &Options) -> Vec<&str> {
 
 fn workspace_graph_with_sources(
     workspace: &workspaces::WorkspaceMap,
-    package_names: &HashSet<&str>,
     dependency_types: &[&str],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> BTreeMap<String, BTreeSet<String>> {
     let mut graph = BTreeMap::new();
     for package in &workspace.packages {
-        let deps = workspace_dependency_names(
-            &package.dir.join("package.json"),
-            dependency_types,
-            package_names,
-            sources,
-        );
+        let deps =
+            edges::workspace_dependency_names(&package.dir, dependency_types, workspace, sources);
         graph.insert(package.name.clone(), deps);
     }
     graph
-}
-
-fn workspace_dependency_names(
-    path: &Path,
-    dependency_types: &[&str],
-    package_names: &HashSet<&str>,
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> BTreeSet<String> {
-    crate::codebase::package_deps::dependency_entries_from_source_store(
-        path,
-        dependency_types,
-        sources,
-    )
-    .into_iter()
-    .filter(|entry| {
-        // A registry, catalog, or node_modules package can share a workspace
-        // name. Only a `workspace:` specifier is an edge in this graph.
-        package_names.contains(entry.name.as_str()) && entry.specifier.starts_with("workspace:")
-    })
-    .map(|entry| entry.name)
-    .collect()
 }
 
 #[cfg(test)]

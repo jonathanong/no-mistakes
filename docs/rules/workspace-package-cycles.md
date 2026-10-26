@@ -24,11 +24,18 @@ they can be built, published, and tested independently.
 ## What it catches/requires
 
 The workspace package graph must contain no cycles among the configured
-dependency types. A dependency is a workspace edge only when its name is a
-workspace package and its specifier uses the `workspace:` protocol. A registry
-range, version catalog (`catalog:`), `file:` path, or other external specifier
-stays outside the graph, including when that name matches a workspace package.
-Findings report the package-level cycle path.
+dependency types. A dependency is a workspace edge when its name is a
+workspace package and the specifier resolves to that package. `workspace:`
+always does. `file:`, `link:`, and `portal:` do when the path, resolved from
+the depending package, is that package's directory. A version range or `*`
+does when that package's `version` satisfies the range and the specifier is
+not an explicit non-workspace resolution. That is how npm and Yarn link
+workspace packages, and how pnpm links them when `linkWorkspacePackages`
+allows a matching range. A dependency is skipped only when it is proven to
+resolve outside the workspace: `catalog:`, an `npm:` alias, a git or URL
+specifier, a path that is not the workspace package directory, or a range the
+workspace version does not satisfy (including a package that has no
+`version`). Findings report the package-level cycle path.
 
 ## Options and defaults
 

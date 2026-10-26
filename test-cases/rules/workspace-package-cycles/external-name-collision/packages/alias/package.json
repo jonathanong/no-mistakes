@@ -1,0 +1,7 @@
+{
+  "name": "alias",
+  "version": "1.0.0",
+  "dependencies": {
+    "alias": "npm:alias@^1.0.0"
+  }
+}
