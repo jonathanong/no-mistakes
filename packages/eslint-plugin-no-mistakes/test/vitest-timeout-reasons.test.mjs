@@ -85,12 +85,9 @@ it("keeps reasons local across hook contexts, effective spreads and config defau
   );
 });
 
-it("does not reuse reasons across blank comment lines or intervening grouping syntax", () => {
+it("does not reuse reasons across blank comment lines or another call's syntax", () => {
   assert.deepEqual(
     findings({}, "reason-adjacency").map(({ line, messageId }) => [line, messageId]),
-    [
-      [6, "reason"],
-      [11, "reason"],
-    ],
+    [6, 19, 21, 23, 26, 30, 47, 50, 53].map((line) => [line, "reason"]),
   );
 });

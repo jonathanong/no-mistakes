@@ -79,7 +79,10 @@ it("uses a bounded timeout", { timeout: 25_000 }, async () => {});
 Use `// no-mistakes-timeout-reason: <specific reason>` immediately before the
 registration or runtime setter, with no blank line or intervening code. A
 preceding block comment with the same marker also works. A comment immediately
-before the effective timeout property or value can document that timeout alone:
+before the effective timeout property or value can document that timeout alone.
+
+Grouping parentheses around the timeout value preserve adjacency. Parentheses
+belonging to another call do not transfer its reason to a nested registration.
 
 ```ts
 import { it, vi } from "vitest";
