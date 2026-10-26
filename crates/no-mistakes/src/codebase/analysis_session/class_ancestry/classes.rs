@@ -1,5 +1,6 @@
 use super::super::namespaces::{self, Binding};
 use super::*;
+use crate::codebase::dependencies::extract::DYNAMIC_BASE_CALLEE;
 
 impl Builder<'_> {
     pub(super) fn class(&mut self, path: &Path, file: &TsFileFacts, class: &ClassShape) -> NodeId {
@@ -67,7 +68,7 @@ impl Builder<'_> {
             namespace: None,
             namespace_escaped: false,
             global_base,
-            dynamic_base: base.is_some_and(|base| base.callee == "<unknown>"),
+            dynamic_base: base.is_some_and(|base| base.callee == DYNAMIC_BASE_CALLEE),
         });
         node
     }

@@ -1,4 +1,4 @@
-use crate::codebase::dependencies::extract::CallTargetIdentity;
+use crate::codebase::dependencies::extract::{CallTargetIdentity, DYNAMIC_BASE_CALLEE};
 
 /// Everything needed to resolve the calls of one source file. Ordinary call
 /// sites and class `extends` bases share this so both follow identical
@@ -184,7 +184,7 @@ impl CallSiteResolution<'_, '_> {
                     .and_then(|member| member.path.rsplit_once('.'))
                     .map(|(namespace, _)| namespace.to_string()),
                 namespace_escaped: false,
-                dynamic_base: call.callee == "<unknown>",
+                dynamic_base: call.callee == DYNAMIC_BASE_CALLEE,
                 global_base: match site.target {
                     ResolvedCallTarget::Global { name } => Some(name),
                     _ => None,

@@ -486,8 +486,10 @@ Reflection and some alias forms can still hide a dead class.
   or a computed/conditional base) have unknown ancestry and follow
   `options.unanalyzable`: `report` fails, `advise` emits an advisory, and
   `ignore` omits them. This also applies to statically named descendants of
-  these dynamic bases. Statically named unresolved bases, including type-only
-  imports, remain advisory under `report` and `advise`. An Error argument does
+  these dynamic bases. Even `mixin(NonErrorBase)` fails under default `report`;
+  use a statically named base or set `options.unanalyzable: advise` while
+  rewriting dynamic ancestry. Statically named unresolved bases, including
+  type-only imports, remain advisory under `report` and `advise`. An Error argument does
   not prove a factory returns an
   Error constructor. Rewrite the base as a statically named class or analyzable
   import. Known construction or subclassing still satisfies such a class.
