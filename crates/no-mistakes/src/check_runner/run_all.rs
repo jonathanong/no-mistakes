@@ -111,8 +111,7 @@ pub(super) fn run_all_with_session_options(
         playwright_fact_plan.is_some(),
         dynamic_import_rules,
     );
-    // Parse and analysis are the CPU-bound check phases. The deadline names
-    // whichever of them is active; it does not drop files from the result.
+    // The deadline names the active phase without dropping files from the result.
     no_mistakes::invocation::set_timeout_phase("check.parse");
     no_mistakes::invocation::check_timeout()?;
     let ((fs_files, mut facts), facts_duration) =
@@ -129,6 +128,10 @@ pub(super) fn run_all_with_session_options(
             playwright_fact_plan,
             sources: std::sync::Arc::clone(&sources),
         });
+    let disable_directives =
+        no_mistakes::codebase::rules::disable_directive_audit::PreparedDisableDirectives::prepare(
+            &root, config, &fs_files, &sources,
+        )?;
     if include_sql_verdicts || no_mistakes::codebase::postgres::has_sql_advice(config) {
         facts.enable_sql_verdicts();
     }
@@ -175,6 +178,7 @@ pub(super) fn run_all_with_session_options(
             .map(|plan| plan.deadline_evidence(&facts)),
         config,
         filesystem_files: &fs_files,
+        disable_directives: &disable_directives,
         sources: &sources,
         filesystem_rules_enabled,
         react_warning: None,

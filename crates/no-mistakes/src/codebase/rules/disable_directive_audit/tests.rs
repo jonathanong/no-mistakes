@@ -88,3 +88,42 @@ fn known_rule_catalog_includes_core_rules_without_public_id_aliases() {
     ));
     assert!(!known_rule("typo-configured-as-a-rule"));
 }
+
+#[test]
+fn prepared_comments_finalize_after_source_owner_is_dropped() {
+    let root = root();
+    let files = vec![root.join("source.sql")];
+    let config: NoMistakesConfig = serde_yaml::from_str(include_str!(
+        "../../../../../../fixtures/rules/disable-directive-audit/disabled.yml"
+    ))
+    .unwrap();
+    let sources = super::super::source_store_for_files(&files);
+    let prepared = PreparedDisableDirectives::prepare(&root, &config, &files, &sources).unwrap();
+    assert_eq!(sources.physical_read_count(), 1);
+    let first = prepared.findings(&[]);
+    assert_eq!(sources.physical_read_count(), 1);
+    // Finalization owns only comment metadata, so it cannot reread even a cached source.
+    drop(sources);
+    let repeated = prepared.findings(&[]);
+    assert_eq!(first.len(), 4);
+    assert_eq!(
+        serde_json::to_value(first).unwrap(),
+        serde_json::to_value(repeated).unwrap()
+    );
+}
+
+#[test]
+fn ignored_audit_preparation_does_not_read_sources() {
+    let root = root();
+    let files = vec![root.join("source.sql")];
+    let mut config: NoMistakesConfig = serde_yaml::from_str(include_str!(
+        "../../../../../../fixtures/rules/disable-directive-audit/disabled.yml"
+    ))
+    .unwrap();
+    config.report_unused_disable_directives = DisableDirectivePolicy::Ignore;
+    let sources = super::super::source_store_for_files(&files);
+    let prepared = PreparedDisableDirectives::prepare(&root, &config, &files, &sources).unwrap();
+    assert_eq!(sources.physical_read_count(), 0);
+    assert!(prepared.findings(&[]).is_empty());
+    assert_eq!(sources.physical_read_count(), 0);
+}

@@ -20,56 +20,121 @@ pub fn audit(
     sources: &SourceStore,
     suppressed: &[SuppressedFinding],
 ) -> Result<Vec<RuleFinding>> {
-    if config.report_unused_disable_directives == DisableDirectivePolicy::Ignore {
-        return Ok(Vec::new());
-    }
-    let mut scopes: BTreeMap<PathBuf, BTreeSet<&str>> = BTreeMap::new();
-    for rule in &config.rules {
-        // Audit the declared application scope; domain-specific options can
-        // select inputs rather than filter source files and must not be reinterpreted.
-        let mut selected_rule = rule.clone();
-        selected_rule.enabled = true;
-        let selected = super::selected_rule_files(root, config, &selected_rule, files)?;
-        for file in selected {
-            let enabled = scopes.entry(file).or_default();
-            if rule.enabled && known_rule(&rule.rule) && config.rule_configured(&rule.rule) {
-                enabled.insert(&rule.rule);
+    Ok(PreparedDisableDirectives::prepare(root, config, files, sources)?.findings(suppressed))
+}
+
+/// Comment metadata owned by the request, prepared before source inputs freeze.
+#[doc(hidden)]
+pub struct PreparedDisableDirectives {
+    root: PathBuf,
+    comments: Vec<PreparedComment>,
+}
+
+struct PreparedComment {
+    file: String,
+    rule: String,
+    directive: SuppressionDirective,
+    status: DirectiveStatus,
+}
+
+enum DirectiveStatus {
+    Enabled,
+    Disabled,
+    Unknown,
+}
+
+impl PreparedDisableDirectives {
+    pub fn prepare(
+        root: &Path,
+        config: &NoMistakesConfig,
+        files: &[PathBuf],
+        sources: &SourceStore,
+    ) -> Result<Self> {
+        if config.report_unused_disable_directives == DisableDirectivePolicy::Ignore {
+            return Ok(Self {
+                root: root.to_path_buf(),
+                comments: Vec::new(),
+            });
+        }
+        let mut scopes: BTreeMap<PathBuf, BTreeSet<&str>> = BTreeMap::new();
+        for rule in &config.rules {
+            // Audit the declared application scope; domain-specific options can
+            // select inputs rather than filter source files and must not be reinterpreted.
+            let mut selected_rule = rule.clone();
+            selected_rule.enabled = true;
+            let selected = super::selected_rule_files(root, config, &selected_rule, files)?;
+            for file in selected {
+                let enabled = scopes.entry(file).or_default();
+                if rule.enabled && known_rule(&rule.rule) && config.rule_configured(&rule.rule) {
+                    enabled.insert(&rule.rule);
+                }
             }
         }
-    }
-    let used: BTreeSet<_> = suppressed
-        .iter()
-        .map(|item| {
-            (
-                relative_slash_path(root, Path::new(&item.source_file)),
-                item.rule.as_str(),
-                item.directive.clone(),
-            )
+
+        let comments = scopes
+            .par_iter()
+            .flat_map_iter(|(path, enabled)| {
+                let Ok(source) = sources.read_path(path) else {
+                    return Vec::new();
+                };
+                let file = relative_slash_path(root, path);
+                let markdown = path.extension().is_some_and(|ext| {
+                    ext.eq_ignore_ascii_case("md") || ext.eq_ignore_ascii_case("markdown")
+                });
+                disable_directives(&source, !markdown)
+                    .into_iter()
+                    .map(|named| {
+                        let status = if enabled.contains(named.rule.as_str()) {
+                            DirectiveStatus::Enabled
+                        } else if known_rule(&named.rule) {
+                            DirectiveStatus::Disabled
+                        } else {
+                            DirectiveStatus::Unknown
+                        };
+                        PreparedComment {
+                            file: file.clone(),
+                            rule: named.rule,
+                            directive: project(named.directive),
+                            status,
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+        Ok(Self {
+            root: root.to_path_buf(),
+            comments,
         })
-        .collect();
-    let mut findings: Vec<_> = scopes.par_iter().flat_map_iter(|(path, enabled)| {
-        let file = relative_slash_path(root, path);
-        let Ok(source) = sources.read_path(path) else { return Vec::new() };
-        let markdown = path.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("md") || ext.eq_ignore_ascii_case("markdown"));
-        disable_directives(&source, !markdown).into_iter().filter_map(|named| {
-            let directive = project(named.directive);
-            if used.contains(&(file.clone(), named.rule.as_str(), directive.clone())) { return None }
-            let (rule, detail) = if enabled.contains(named.rule.as_str()) {
-                ("unused-disable-directive", format!("directive for `{}` suppressed no findings in this invocation", named.rule))
-            } else if known_rule(&named.rule) {
-                ("invalid-disable-directive", format!("directive names disabled or out-of-scope rule `{}`", named.rule))
-            } else {
-                ("invalid-disable-directive", format!("directive names unknown rule `{}`", named.rule))
+    }
+
+    /// Finalization only matches retained comments to consumed provenance.
+    pub fn findings(&self, suppressed: &[SuppressedFinding]) -> Vec<RuleFinding> {
+        let used: BTreeSet<_> = suppressed
+            .iter()
+            .map(|item| {
+                (
+                    relative_slash_path(&self.root, Path::new(&item.source_file)),
+                    item.rule.as_str(),
+                    item.directive.clone(),
+                )
+            })
+            .collect();
+        let mut findings = self.comments.iter().filter_map(|comment| {
+            if used.contains(&(comment.file.clone(), comment.rule.as_str(), comment.directive.clone())) { return None }
+            let (rule, detail) = match comment.status {
+                DirectiveStatus::Enabled => ("unused-disable-directive", format!("directive for `{}` suppressed no findings in this invocation", comment.rule)),
+                DirectiveStatus::Disabled => ("invalid-disable-directive", format!("directive names disabled or out-of-scope rule `{}`", comment.rule)),
+                DirectiveStatus::Unknown => ("invalid-disable-directive", format!("directive names unknown rule `{}`", comment.rule)),
             };
             Some(RuleFinding {
-                rule: rule.to_owned(), file: file.clone(), line: directive.line,
+                rule: rule.to_owned(), file: comment.file.clone(), line: comment.directive.line,
                 message: format!("{detail}; remove or correct the comment so suppressions cannot hide stale rule intent"),
-                import: None, target: Some(named.rule),
+                import: None, target: Some(comment.rule.clone()),
             })
-        }).collect::<Vec<_>>()
-    }).collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+        }).collect();
+        super::sort_findings(&mut findings);
+        findings
+    }
 }
 
 fn project(directive: DisableDirective) -> SuppressionDirective {

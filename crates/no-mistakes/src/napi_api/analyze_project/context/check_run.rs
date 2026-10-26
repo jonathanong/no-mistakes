@@ -147,6 +147,7 @@ impl SharedCheckContext {
                 facts,
                 runner_config_deadlines,
                 config,
+                disable_directives: &self.disable_directives,
                 filesystem_files: &self.fs_files,
                 sources: &sources,
                 filesystem_rules_enabled: self.filesystem_rules_enabled,

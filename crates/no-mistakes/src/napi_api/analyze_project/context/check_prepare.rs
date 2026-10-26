@@ -20,7 +20,6 @@ impl SharedCheckContext {
             deadlines,
             effort,
         } = options;
-        // Borrow the aggregate root identity; canonicalizing here would split shared keys.
         let root = root.to_path_buf();
         let mut config = config.clone();
         config.effort_override = effort;
@@ -177,6 +176,7 @@ impl SharedCheckContext {
             Default::default()
         };
         Ok(Self {
+            disable_directives: prepare_disable_directives(&root, config, &fs_files, &prepared)?,
             root,
             config_path: config_path.map(Path::to_path_buf),
             tsconfig_path: tsconfig_path.map(Path::to_path_buf),

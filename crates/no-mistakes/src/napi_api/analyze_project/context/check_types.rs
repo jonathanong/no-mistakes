@@ -16,6 +16,7 @@ struct SharedCheckContext {
     supplemental_call_site_files: Vec<PathBuf>,
     graph_files: Vec<PathBuf>,
     fs_files: Vec<PathBuf>,
+    disable_directives: crate::codebase::rules::disable_directive_audit::PreparedDisableDirectives,
     prepared_graph: Option<crate::codebase::dependencies::graph::PreparedGraphConfig>,
     react_enabled: bool,
     queues_enabled: bool,

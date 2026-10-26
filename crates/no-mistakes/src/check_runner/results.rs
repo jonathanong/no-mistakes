@@ -23,6 +23,8 @@ pub(crate) struct FinalizeInput<'a> {
     pub(crate) runner_config_deadlines:
         Option<Vec<no_mistakes::integration_tests::RunnerConfigDeadlineEvidence>>,
     pub(crate) config: &'a no_mistakes::config::v2::NoMistakesConfig,
+    pub(crate) disable_directives:
+        &'a no_mistakes::codebase::rules::disable_directive_audit::PreparedDisableDirectives,
     pub(crate) filesystem_files: &'a [std::path::PathBuf],
     pub(crate) sources: &'a no_mistakes::codebase::ts_source::SourceStore,
     pub(crate) filesystem_rules_enabled: bool,
@@ -86,6 +88,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         runner_config_deadlines,
         config,
         filesystem_files,
+        disable_directives,
         sources,
         filesystem_rules_enabled,
         react_warning,
@@ -149,13 +152,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
             advisories: &mut advisories,
         },
     );
-    let directive_findings = no_mistakes::codebase::rules::disable_directive_audit::audit(
-        root,
-        config,
-        filesystem_files,
-        sources,
-        &suppressed,
-    )?;
+    let directive_findings = disable_directives.findings(&suppressed);
     if config.report_unused_disable_directives == DisableDirectivePolicy::Report {
         rules.findings.extend(directive_findings);
     } else {
