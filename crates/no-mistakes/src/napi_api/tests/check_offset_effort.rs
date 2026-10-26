@@ -106,3 +106,7 @@ fn public_offset_low_suppression_is_auditable() {
         "{report}"
     );
 }
+
+// Native assertions belong here because check_runner is also compiled by the CLI binary.
+#[path = "patch_rule_adapters.rs"]
+mod patch_rule_adapters;

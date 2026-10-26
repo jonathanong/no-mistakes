@@ -182,6 +182,3 @@ mod low_helper_acceptance_tests;
 
 #[path = "upper_patch_tests.rs"]
 mod upper_patch_tests;
-
-#[path = "patch_rule_adapter_tests.rs"]
-mod patch_rule_adapter_tests;
