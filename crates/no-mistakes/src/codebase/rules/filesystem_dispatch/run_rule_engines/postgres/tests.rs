@@ -22,6 +22,7 @@ fn missing_facts_use_the_file_checkers() {
     let config = NoMistakesConfig::default();
     let files: &[PathBuf] = &[];
     for rule_id in [
+        POSTGRES_JSON_RELATION_IDS,
         POSTGRES_CONSTRAINT_VALIDATE,
         POSTGRES_NO_ADD_COLUMN,
         POSTGRES_FK_INDEX,
@@ -59,6 +60,7 @@ fn prepared_facts_use_the_fact_checkers() {
     let files: &[PathBuf] = &[];
     let facts = CheckFactMap::default();
     for rule_id in [
+        POSTGRES_JSON_RELATION_IDS,
         POSTGRES_CONSTRAINT_VALIDATE,
         POSTGRES_NO_ADD_COLUMN,
         POSTGRES_FK_INDEX,

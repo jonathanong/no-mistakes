@@ -41,6 +41,7 @@ fn recovered_policy_lines_match_with_and_without_schema_projection() {
                 tokens: Some(&sources),
                 schema,
                 functions: &functions,
+                ..Default::default()
             },
         )
     };

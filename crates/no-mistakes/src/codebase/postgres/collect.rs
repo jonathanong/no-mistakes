@@ -115,6 +115,7 @@ pub fn collect_postgres_facts(
             schema_options,
             &embedded,
             plan.postgres_bounds,
+            plan.postgres_json_writes,
         )?
     } else {
         Vec::new()

@@ -1,6 +1,7 @@
 mod bounds;
 mod debug;
 mod iteration;
+mod json_writes;
 mod locations;
 mod parse_failures;
 mod select;
@@ -12,6 +13,7 @@ pub use bounds::{
     SqlQualifiedRead, SqlQualifiedScope,
 };
 pub use iteration::{SqlConjunctFact, SqlCursorBound, SqlLimitFact, SqlLimitValue, SqlSweepFact};
+pub use json_writes::SqlJsonWriteFact;
 pub(crate) use locations::SqlLocationDemand;
 pub use locations::{SqlFactPosition, SqlFactSite, SqlVariantLocations};
 pub use select::{
@@ -32,13 +34,11 @@ pub struct SqlLifecycleFacts {
     pub(crate) raw_bounds: Vec<SqlBoundFact>,
     pub(crate) batches: Vec<SqlLifecycleBatch>,
 }
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SqlLifecycleBatch {
     pub source: Statement,
     pub steps: Vec<SqlLifecycleStep>,
 }
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SqlLifecycleStep {
     pub statement: Statement,
@@ -46,7 +46,6 @@ pub(crate) struct SqlLifecycleStep {
     pub last_bound: usize,
     pub view_reads: Option<SqlViewReads>,
 }
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SqlViewReads {
     pub query: SqlBoundQuery,
@@ -66,6 +65,7 @@ pub struct SqlStatementFileFacts {
     pub function_calls: Vec<super::SqlFunctionCallFact>,
     /// Syntactic write targets; catalog resolution happens after preparation.
     pub writes: Vec<SqlWriteFact>,
+    pub json_writes: Vec<SqlJsonWriteFact>,
     pub inserts: Vec<SqlInsertFact>,
     pub selects: Vec<SqlSelectFact>,
     /// One entry per `UPDATE`. Each entry is that statement's relation instances.

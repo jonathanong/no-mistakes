@@ -89,6 +89,11 @@ pub(crate) fn prepare_rule_sql_facts(
                         && super::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id)
                 }),
                 postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
+                postgres_json_writes: rule_ids.contains(&"postgres-json-relation-ids")
+                    && config
+                        .rule_applications("postgres-json-relation-ids")
+                        .iter()
+                        .any(|rule| rule.options.get("idKeyPattern").is_some()),
                 postgres_fragments: rule_ids.contains(&"postgres-sql-shape-policy"),
                 postgres_sql_include: patterns,
                 postgres_write_sql_include: if rule_ids

@@ -1,0 +1,50 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "invoices": {
+      "columns": {
+        "document_sha256": { "dataType": "text" },
+        "other_text": { "dataType": "text" }
+      },
+      "indexes": {
+        "invoices_lower_hash_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "accessMethod": "btree",
+          "keys": [{ "expression": "lower(document_sha256)" }],
+          "definition": "CREATE UNIQUE INDEX invoices_lower_hash_key ON invoices (lower(document_sha256))"
+        },
+        "invoices_literal_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "accessMethod": "btree",
+          "keys": [{ "expression": "lower('document_sha256')" }],
+          "definition": "CREATE UNIQUE INDEX invoices_literal_key ON invoices (lower('document_sha256'))"
+        },
+        "invoices_function_name_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "accessMethod": "btree",
+          "keys": [{ "expression": "document_sha256(other_text)" }],
+          "definition": "CREATE UNIQUE INDEX invoices_function_name_key ON invoices (document_sha256(other_text))"
+        },
+        "invoices_other_qualifier_key": {
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "accessMethod": "btree",
+          "keys": [{ "expression": "lower(other.document_sha256)" }],
+          "definition": "CREATE UNIQUE INDEX invoices_other_qualifier_key ON invoices (lower(other.document_sha256))"
+        }
+      }
+    },
+    "other": {
+      "columns": { "document_sha256": { "dataType": "text" } }
+    }
+  }
+}

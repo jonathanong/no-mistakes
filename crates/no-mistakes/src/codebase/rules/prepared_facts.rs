@@ -98,9 +98,12 @@ pub(crate) fn check_prepared_sql_rule(
             .findings,
         );
     }
-    findings.extend(super::postgres_undeclared_executors::check(
-        root, config, rule_id, all_files, &facts,
-    )?);
+    // JSON relation advice is restricted to recovered literal writes, never opaque SQL.
+    if rule_id != super::POSTGRES_JSON_RELATION_IDS {
+        findings.extend(super::postgres_undeclared_executors::check(
+            root, config, rule_id, all_files, &facts,
+        )?);
+    }
     super::sort_findings(&mut findings);
     Ok(findings)
 }

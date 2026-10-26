@@ -99,6 +99,8 @@ pub struct CheckFactPlan {
     pub postgres_general_locations: bool,
     /// Opted-in row-bound projection within the shared SQL statement fact pass.
     pub postgres_bounds: bool,
+    /// Literal JSON relation keys, collected only for their configured consumer.
+    pub postgres_json_writes: bool,
     /// Opted-in builder-fragment statement facts for shape-policy consumers.
     pub postgres_fragments: bool,
     /// Query-file globs for write facts, independent of migration schema scope.

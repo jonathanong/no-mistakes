@@ -2,6 +2,7 @@
 use std::cell::Cell;
 #[derive(Clone, Copy, Default, Debug)]
 pub(crate) struct Counts {
+    pub json_key_walks: usize,
     pub full_walks: usize,
     pub general_fact_collections: usize,
     pub statement_extractions: usize,
@@ -39,4 +40,8 @@ pub(crate) fn statement_extraction() {
 
 pub(crate) fn general_fact_collection() {
     record(|counts| counts.general_fact_collections += 1);
+}
+
+pub(crate) fn json_key_walk() {
+    record(|counts| counts.json_key_walks += 1);
 }

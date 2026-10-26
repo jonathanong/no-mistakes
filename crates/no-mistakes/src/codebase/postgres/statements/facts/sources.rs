@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 #[derive(Default)]
 pub(crate) struct StatementPolicySources<'a> {
+    pub(crate) collect_json_writes: bool,
     pub(crate) tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
     pub(crate) schema: Option<&'a crate::codebase::postgres::SqlSchemaFileFacts>,
     pub(crate) functions: &'a [crate::codebase::postgres::SqlFunctionCallFact],
