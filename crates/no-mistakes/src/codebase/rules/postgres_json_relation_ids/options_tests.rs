@@ -113,3 +113,12 @@ fn file_glob_validation_reports_invalid_patterns() {
         assert!(actual.contains("invalid glob"), "{actual}");
     }
 }
+
+#[test]
+fn duplicate_allow_entries_are_configuration_errors() {
+    let actual = error("allow: [{object: 'table:orders', reason: history}, {object: 'table:orders', reason: duplicate}]");
+    assert_eq!(
+        actual,
+        format!("{RULE_ID} option allow: duplicate entry table:orders")
+    );
+}

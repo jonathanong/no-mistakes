@@ -62,3 +62,24 @@ fn missing_catalog_ordinals_cannot_excuse_a_positional_json_reference() {
     assert_eq!(findings[0].line, 2);
     assert_eq!(findings[0].target.as_deref(), Some("table:orders"));
 }
+
+#[test]
+fn postgres_literal_key_spellings_and_casts_keep_the_same_fk_obligation() {
+    let findings = run(IDS, &["db/literal-key-forms.sql"]);
+    assert_eq!(findings.len(), 3, "{findings:#?}");
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| finding.line)
+            .collect::<Vec<_>>(),
+        [2, 3, 4]
+    );
+    assert!(findings
+        .iter()
+        .all(|finding| finding.target.as_deref() == Some("column:orders.details")));
+}
+
+#[test]
+fn dynamic_keys_and_opaque_row_projections_remain_outside_the_literal_check() {
+    assert!(run(IDS, &["db/opaque-key-forms.sql"]).is_empty());
+}

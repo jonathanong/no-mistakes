@@ -95,3 +95,35 @@ fn imported_helpers_honor_each_suppression_at_the_physical_origin() {
     assert_eq!(findings.len(), 3, "{findings:#?}");
     assert!(suppress(&files, findings).is_empty());
 }
+
+#[test]
+fn direct_collector_honors_json_write_demand_for_embedded_calls() {
+    use crate::codebase::check_facts::CheckFactPlan;
+    use crate::codebase::postgres::{
+        collect_postgres_facts, EmbeddedSqlOptions, PostgresSchemaOptions,
+    };
+    let root = fixture();
+    let files = [root.join("src/query.ts")];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    for requested in [false, true] {
+        let facts = collect_postgres_facts(
+            &root,
+            &sources,
+            &files,
+            &CheckFactPlan {
+                postgres_dml: true,
+                postgres_json_writes: requested,
+                ..Default::default()
+            },
+            &PostgresSchemaOptions::default(),
+            &EmbeddedSqlOptions::configured("@example/db", &[]),
+        )
+        .unwrap();
+        let lines: Vec<_> = facts
+            .statements
+            .iter()
+            .flat_map(|statement| statement.json_writes.iter().map(|write| write.line))
+            .collect();
+        assert_eq!(lines, if requested { vec![3, 5, 7] } else { vec![] });
+    }
+}
