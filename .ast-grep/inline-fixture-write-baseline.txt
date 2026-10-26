@@ -3,24 +3,6 @@
 # Adding a path fails once this file is on the base revision.
 crates/no-mistakes/src/check_discovery/preserved_roots/tests.rs
 crates/no-mistakes/src/check_discovery/tests.rs
-crates/no-mistakes/src/codebase/rules/no_raw_ephemeral_port/tests.rs
-crates/no-mistakes/src/codebase/rules/package_json_registry_only/tests.rs
-crates/no-mistakes/src/codebase/rules/package_json_required_fields/tests.rs
-crates/no-mistakes/src/codebase/rules/pnpm_overrides_ban/tests.rs
-crates/no-mistakes/src/codebase/rules/require_files_in_subdirs/tests.rs
-crates/no-mistakes/src/codebase/rules/require_test_per_subdir/tests.rs
-crates/no-mistakes/src/codebase/rules/required_local_docs/tests.rs
-crates/no-mistakes/src/codebase/rules/run/standalone/tests.rs
-crates/no-mistakes/src/codebase/rules/rust_max_lines_per_file/tests.rs
-crates/no-mistakes/src/codebase/rules/rust_no_inline_tests/tests.rs
-crates/no-mistakes/src/codebase/rules/shellcheck_runner/tests.rs
-crates/no-mistakes/src/codebase/rules/strict_package_layout/tests.rs
-crates/no-mistakes/src/codebase/rules/suppression_tests.rs
-crates/no-mistakes/src/codebase/rules/tests.rs
-crates/no-mistakes/src/codebase/rules/tsconfig_file_coverage/tests/inventory.rs
-crates/no-mistakes/src/codebase/rules/version_pin_consistency/tests/guard.rs
-crates/no-mistakes/src/codebase/rules/version_pin_consistency/tests/mod.rs
-crates/no-mistakes/src/codebase/rules/vitest_test_correspondence/tests/mod.rs
 crates/no-mistakes/src/codebase/symbols/tests_pipeline_errors.rs
 crates/no-mistakes/src/codebase/ts_process_spawn/tests.rs
 crates/no-mistakes/src/codebase/ts_resolver/tests.rs

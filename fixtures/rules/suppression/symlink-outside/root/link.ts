@@ -1,0 +1,1 @@
+../outside/safe.ts

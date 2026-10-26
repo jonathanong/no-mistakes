@@ -19,22 +19,17 @@ fn config_with(rule: &str) -> crate::config::v2::NoMistakesConfig {
 }
 
 fn graph_files_for(config: &crate::config::v2::NoMistakesConfig) -> Vec<std::path::PathBuf> {
-    let fixture = tempfile::tempdir().unwrap();
-    let root = fixture.path();
-    std::fs::create_dir_all(root.join("src")).unwrap();
-    std::fs::create_dir_all(root.join("generated")).unwrap();
-    std::fs::write(root.join("src/api.ts"), "export {};\n").unwrap();
-    std::fs::write(root.join("generated/worker.ts"), "export {};\n").unwrap();
-
-    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
-    let visible_paths = snapshot.paths_for(root);
+    let root =
+        crate::test_support::rule_fixture_root("standalone-graph-files").join("skip-generated");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible_paths = snapshot.paths_for(&root);
     let scoped = crate::codebase::ts_source::discover_files_from_visible(
-        root,
+        &root,
         &config.filesystem.skip_directories,
         &visible_paths,
     );
     standalone_graph_files(
-        root,
+        &root,
         config,
         crate::codebase::rules::canonical_graph_plan(config),
         &visible_paths,

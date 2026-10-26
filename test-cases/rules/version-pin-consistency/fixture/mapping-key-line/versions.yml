@@ -1,0 +1,4 @@
+# node is documented here
+package:
+  engines:
+    node: 20

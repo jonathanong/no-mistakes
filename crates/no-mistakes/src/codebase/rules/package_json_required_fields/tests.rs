@@ -160,13 +160,9 @@ fn include_excludes_unselected_unanalyzable_manifests() {
 
 #[test]
 fn nested_companion_path_is_resolved_from_manifest() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::codebase::ts_resolver::normalize_path(dir.path());
+    let root = fixture("nested-companion");
     let pkg = root.join("package.json");
     let companion = root.join("src/index.js");
-    std::fs::create_dir(companion.parent().unwrap()).unwrap();
-    std::fs::write(&pkg, r#"{"name":"@scope/foo"}"#).unwrap();
-    std::fs::write(&companion, "export {}\n").unwrap();
     let config = NoMistakesConfig {
         rules: vec![RuleDef {
             rule: RULE_ID.to_string(),

@@ -51,19 +51,6 @@ fn run_config(root: &Path, cfg: &NoMistakesConfig, files: &[&str]) -> Vec<RuleFi
     check_with_files(root, cfg, &files).unwrap()
 }
 
-fn write_pair(root: &Path, source: &str, source_name: &str, anchor: &str) {
-    let action = root.join(".github/actions/setup-lychee/action.yml");
-    std::fs::create_dir_all(action.parent().unwrap()).unwrap();
-    std::fs::write(root.join(source_name), source).unwrap();
-    std::fs::write(action, anchor).unwrap();
-}
-
-fn tmp_pair(source: &str, anchor: &str) -> tempfile::TempDir {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(tmp.path(), source, ".mise.toml", anchor);
-    tmp
-}
-
 #[test]
 fn matching_pins_pass() {
     let root = fixture("pass");
@@ -102,8 +89,8 @@ fn empty_options_are_silent() {
 
 #[test]
 fn missing_source_key_is_a_finding() {
-    let tmp = tmp_pair("[tools]\nfoo = \"1.0.0\"\n", "LYCHEE_VERSION: 0.24.2\n");
-    let findings = run(tmp.path(), OPTIONS, &PAIR);
+    let root = fixture("missing-source-key");
+    let findings = run(&root, OPTIONS, &PAIR);
     assert!(
         findings
             .iter()
@@ -114,11 +101,8 @@ fn missing_source_key_is_a_finding() {
 
 #[test]
 fn non_string_pin_is_a_finding() {
-    let tmp = tmp_pair(
-        "[tools]\n\"aqua:lycheeverse/lychee\" = 8\n",
-        "LYCHEE_VERSION: 0.24.2\n",
-    );
-    let findings = run(tmp.path(), OPTIONS, &PAIR);
+    let root = fixture("non-string-pin");
+    let findings = run(&root, OPTIONS, &PAIR);
     assert!(
         findings
             .iter()
@@ -129,11 +113,8 @@ fn non_string_pin_is_a_finding() {
 
 #[test]
 fn missing_capture_is_a_finding() {
-    let tmp = tmp_pair(
-        "[tools]\n\"aqua:lycheeverse/lychee\" = \"0.24.2\"\n",
-        "# no version here\n",
-    );
-    let findings = run(tmp.path(), OPTIONS, &PAIR);
+    let root = fixture("missing-capture");
+    let findings = run(&root, OPTIONS, &PAIR);
     assert!(
         findings
             .iter()
@@ -144,8 +125,8 @@ fn missing_capture_is_a_finding() {
 
 #[test]
 fn invalid_toml_is_a_finding() {
-    let tmp = tmp_pair("[tools]\n\"broken", "LYCHEE_VERSION: 0.24.2\n");
-    let findings = run(tmp.path(), OPTIONS, &PAIR);
+    let root = fixture("invalid-toml");
+    let findings = run(&root, OPTIONS, &PAIR);
     assert!(
         findings
             .iter()
@@ -156,39 +137,21 @@ fn invalid_toml_is_a_finding() {
 
 #[test]
 fn json_source_file_is_supported() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
-        r#"{"tools":{"aqua:lycheeverse/lychee":"0.24.2"}}"#,
-        "versions.json",
-        "LYCHEE_VERSION: 0.24.2\n",
-    );
+    let root = fixture("json-source");
     let yaml = OPTIONS.replace("sourceFile: .mise.toml", "sourceFile: versions.json");
-    assert!(run(tmp.path(), &yaml, &["versions.json", PAIR[1]]).is_empty());
+    assert!(run(&root, &yaml, &["versions.json", PAIR[1]]).is_empty());
 }
 
 #[test]
 fn yaml_source_file_is_supported() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
-        "tools:\n  \"aqua:lycheeverse/lychee\": \"0.24.2\"\n",
-        "versions.yml",
-        "LYCHEE_VERSION: 0.24.2\n",
-    );
+    let root = fixture("yaml-source");
     let yaml = OPTIONS.replace("sourceFile: .mise.toml", "sourceFile: versions.yml");
-    assert!(run(tmp.path(), &yaml, &["versions.yml", PAIR[1]]).is_empty());
+    assert!(run(&root, &yaml, &["versions.yml", PAIR[1]]).is_empty());
 }
 
 #[test]
 fn nested_dotted_key_is_walked() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
-        "{\"package\":{\"engines\":{\"node\":\"20.0.0\"}}}",
-        "package.json",
-        "NODE_VERSION: 20.0.0\n",
-    );
+    let root = fixture("nested-dotted-key");
     let yaml = r#"
 sourceFile: package.json
 sourceKey: package.engines.node
@@ -197,20 +160,17 @@ anchors:
     pattern: 'NODE_VERSION:\s*(\d+\.\d+\.\d+)'
     label: node
 "#;
-    assert!(run(tmp.path(), yaml, &["package.json", PAIR[1]]).is_empty());
+    assert!(run(&root, yaml, &["package.json", PAIR[1]]).is_empty());
 }
 
 #[test]
 fn pattern_must_have_one_capturing_group() {
-    let tmp = tmp_pair(
-        "[tools]\n\"aqua:lycheeverse/lychee\" = \"0.24.2\"\n",
-        "LYCHEE_VERSION: 0.24.2\n",
-    );
+    let root = fixture("matching-short-anchor");
     let yaml = OPTIONS.replace(
         r"LYCHEE_VERSION:\s*(\d+\.\d+\.\d+)",
         r"LYCHEE_VERSION:\s*\d+\.\d+\.\d+",
     );
-    let findings = run(tmp.path(), &yaml, &PAIR);
+    let findings = run(&root, &yaml, &PAIR);
     assert!(
         findings
             .iter()

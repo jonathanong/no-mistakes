@@ -114,16 +114,10 @@ fn run_check_with_facts_executes_playwright_rules() {
 
 #[test]
 fn run_check_with_facts_propagates_playwright_rule_errors() {
-    let temp = tempfile::tempdir().unwrap();
-    let root = temp.path();
+    let root = fixture("check-runner/playwright-missing-config");
     let config_path = root.join(".no-mistakes.yml");
-    std::fs::write(
-        &config_path,
-        "tests:\n  playwright:\n    configs: missing.config.ts\nrules:\n  - rule: playwright-unique-test-ids\n    scope: repository\n",
-    )
-    .unwrap();
     let facts = crate::codebase::check_facts::CheckFactMap::default();
-    let error = run_check_with_facts(root, Some(&config_path), None, &facts).unwrap_err();
+    let error = run_check_with_facts(&root, Some(&config_path), None, &facts).unwrap_err();
     assert!(error
         .to_string()
         .contains("Playwright config does not exist"));

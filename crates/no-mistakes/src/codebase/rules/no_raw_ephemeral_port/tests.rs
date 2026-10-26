@@ -377,30 +377,24 @@ fn deferred_suppression_still_emits_disabled_file() {
 
 #[test]
 fn next_line_disable_is_skipped_unless_deferred() {
-    let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("server.ts");
-    std::fs::write(
-        &path,
-        "// no-mistakes-disable-next-line no-raw-ephemeral-port\nserver.listen(0);\n",
-    )
-    .unwrap();
+    let root = fixture("next-line-disable");
+    let path = root.join("server.ts");
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(Options::default()).unwrap();
-    assert!(scan::check_file(dir.path(), &path, &opts, &sources, false).is_empty());
+    assert!(scan::check_file(&root, &path, &opts, &sources, false).is_empty());
     assert_eq!(
-        scan::check_file(dir.path(), &path, &opts, &sources, true).len(),
+        scan::check_file(&root, &path, &opts, &sources, true).len(),
         1
     );
 }
 
 #[test]
 fn same_line_bind_and_listen_dedup() {
-    let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("server.py");
-    std::fs::write(&path, "s.bind((\"127.0.0.1\", 0)); s.bind((host, 0x0))\n").unwrap();
+    let root = fixture("same-line-bind");
+    let path = root.join("server.py");
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(Options::default()).unwrap();
-    let findings = scan::check_file(dir.path(), &path, &opts, &sources, false);
+    let findings = scan::check_file(&root, &path, &opts, &sources, false);
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].line, 1);
 }
@@ -444,19 +438,18 @@ fn prefilter_skips_files_without_bind_or_listen() {
 
 #[test]
 fn js_function_bind_is_silent() {
-    let dir = tempfile::tempdir().unwrap();
     let opts = compile_options(Options::default()).unwrap();
+    let root = fixture("js-function-bind");
     for name in ["handler.ts", "handler.js"] {
-        let path = dir.path().join(name);
-        std::fs::write(&path, "handler.bind((context, 0));\n").unwrap();
+        let path = root.join(name);
         let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
-        let findings = scan::check_file(dir.path(), &path, &opts, &sources, false);
+        let findings = scan::check_file(&root, &path, &opts, &sources, false);
         assert!(findings.is_empty(), "{name}: {findings:?}");
     }
-    let path = dir.path().join("server.ts");
-    std::fs::write(&path, "handler.bind((context, 0)); server.listen(0);\n").unwrap();
+    let root = fixture("js-bind-listen");
+    let path = root.join("server.ts");
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
-    let findings = scan::check_file(dir.path(), &path, &opts, &sources, false);
+    let findings = scan::check_file(&root, &path, &opts, &sources, false);
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].line, 1);
 }

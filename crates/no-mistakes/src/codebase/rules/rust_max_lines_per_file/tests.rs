@@ -171,38 +171,27 @@ fn is_test_file_src_file() {
 
 #[test]
 fn check_passes_within_src_limit() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("lib.rs");
-    let content = "fn a() {}\nfn b() {}\n";
-    std::fs::write(&path, content).unwrap();
+    let root = fixture("within-src-limit");
     let config = config_with_rule("{srcMax: 5}");
-    let findings = check(tmp.path(), &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty());
 }
 
 #[test]
 fn check_fails_over_src_limit() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("big.rs");
-    let content = (0..10)
-        .map(|i| format!("fn f{i}() {{}}\n"))
-        .collect::<String>();
-    std::fs::write(&path, content).unwrap();
+    let root = fixture("over-src-limit");
     let config = config_with_rule("{srcMax: 3}");
-    let findings = check(tmp.path(), &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("code lines"));
 }
 
 #[test]
 fn check_sorts_multiple_findings_by_file() {
-    let tmp = tempfile::tempdir().unwrap();
-    let content = "fn a() {}\nfn b() {}\n";
-    std::fs::write(tmp.path().join("b.rs"), content).unwrap();
-    std::fs::write(tmp.path().join("a.rs"), content).unwrap();
+    let root = fixture("sort-by-file");
     let config = config_with_rule("{srcMax: 1}");
 
-    let findings = check(tmp.path(), &config).unwrap();
+    let findings = check(&root, &config).unwrap();
 
     assert_eq!(findings.len(), 2);
     assert_eq!(findings[0].file, "a.rs");
@@ -211,27 +200,17 @@ fn check_sorts_multiple_findings_by_file() {
 
 #[test]
 fn check_uses_test_limit_for_tests_rs() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("tests.rs");
-    let content = (0..10)
-        .map(|i| format!("fn f{i}() {{}}\n"))
-        .collect::<String>();
-    std::fs::write(&path, content).unwrap();
+    let root = fixture("test-limit");
     let config = config_with_rule("{srcMax: 3, testMax: 20}");
-    let findings = check(tmp.path(), &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty(), "tests.rs should use testMax");
 }
 
 #[test]
 fn check_respects_excludes() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("generated.rs");
-    let content = (0..10)
-        .map(|i| format!("fn f{i}() {{}}\n"))
-        .collect::<String>();
-    std::fs::write(&path, content).unwrap();
+    let root = fixture("respects-excludes");
     let config = config_with_rule("{srcMax: 3, excludes: [\"generated\"]}");
-    let findings = check(tmp.path(), &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty());
 }
 
@@ -245,19 +224,14 @@ fn check_file_reports_unreadable_file() {
 
 #[test]
 fn check_with_files_respects_roots() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("roots");
     let sub = root.join("sub");
-    std::fs::create_dir_all(&sub).unwrap();
-    let content: String = (0..10).map(|i| format!("fn f{i}() {{}}\n")).collect();
     let outside = root.join("big.rs");
     let inside = sub.join("big.rs");
-    std::fs::write(&outside, &content).unwrap();
-    std::fs::write(&inside, &content).unwrap();
     let sub_str = sub.to_str().unwrap();
     let config = config_with_rule(&format!("{{srcMax: 3, roots: [\"{sub_str}\"]}}"));
     let all_files = vec![outside, inside];
-    let findings = check_with_files(root, &config, &all_files).unwrap();
+    let findings = check_with_files(&root, &config, &all_files).unwrap();
     assert_eq!(
         findings.len(),
         1,
@@ -268,18 +242,12 @@ fn check_with_files_respects_roots() {
 
 #[test]
 fn check_with_files_normalizes_relative_roots() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let sub = root.join("sub");
-    std::fs::create_dir_all(&sub).unwrap();
-    let content: String = (0..10).map(|i| format!("fn f{i}() {{}}\n")).collect();
+    let root = fixture("roots");
     let outside = root.join("big.rs");
-    let inside = sub.join("big.rs");
-    std::fs::write(&outside, &content).unwrap();
-    std::fs::write(&inside, &content).unwrap();
+    let inside = root.join("sub/big.rs");
     let config = config_with_rule("{srcMax: 3, roots: [\"sub\"]}");
     let all_files = vec![outside, inside];
-    let findings = check_with_files(root, &config, &all_files).unwrap();
+    let findings = check_with_files(&root, &config, &all_files).unwrap();
     assert_eq!(findings.len(), 1, "relative root resolves relative to root");
     assert!(findings[0].file.contains("sub"));
 }
@@ -300,17 +268,9 @@ fn check_with_files_uses_options_per_rule_application() {
 
 #[test]
 fn check_respects_disable_file_comment() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("big.rs");
-    let content = format!(
-        "// no-mistakes-disable-file {RULE_ID}\n{}",
-        (0..10)
-            .map(|i| format!("fn f{i}() {{}}\n"))
-            .collect::<String>()
-    );
-    std::fs::write(&path, content).unwrap();
+    let root = fixture("disable-file");
     let config = config_with_rule("{srcMax: 3}");
-    let findings = check(tmp.path(), &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty());
 }
 

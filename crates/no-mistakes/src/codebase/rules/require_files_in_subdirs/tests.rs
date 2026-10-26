@@ -100,14 +100,11 @@ fn nested_direct_child_glob_fixture_reports_missing_group() {
 
 #[test]
 fn bracketed_required_file_is_treated_as_literal_path() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("bracketed-route");
     let route = root.join("routes/users/pages/[id].tsx");
-    std::fs::create_dir_all(route.parent().unwrap()).unwrap();
-    std::fs::write(&route, "export {};\n").unwrap();
     let yaml = "packages:\n  - root: routes\n    requiredFiles: [\"pages/[id].tsx\"]";
     let config = config_with_rule(yaml);
-    let findings = check_with_files(root, &config, &[route]).unwrap();
+    let findings = check_with_files(&root, &config, &[route]).unwrap();
     assert!(
         findings.is_empty(),
         "bracketed route filename should be matched as an exact path: {findings:?}"
@@ -124,15 +121,12 @@ fn no_op_when_packages_empty() {
 
 #[test]
 fn reports_missing_required_file() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("email-package-only");
     let pkg = root.join("queues/email/package.json");
-    std::fs::create_dir_all(pkg.parent().unwrap()).unwrap();
-    std::fs::write(&pkg, "{}").unwrap();
     let yaml = "packages:\n  - root: queues\n    requiredFiles: [package.json, queues.mts]";
     let config = config_with_rule(yaml);
     let files = vec![pkg];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("queues.mts"));
     assert_eq!(findings[0].line, 1);
@@ -140,76 +134,60 @@ fn reports_missing_required_file() {
 
 #[test]
 fn no_finding_when_all_required_present() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("email-package-and-queues");
     let pkg = root.join("queues/email/package.json");
     let qts = root.join("queues/email/queues.mts");
-    std::fs::create_dir_all(pkg.parent().unwrap()).unwrap();
-    std::fs::write(&pkg, "{}").unwrap();
-    std::fs::write(&qts, "").unwrap();
     let yaml = "packages:\n  - root: queues\n    requiredFiles: [package.json, queues.mts]";
     let config = config_with_rule(yaml);
     let files = vec![pkg, qts];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(findings.is_empty());
 }
 
 #[test]
 fn require_any_of_passes_when_one_present() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("email-enqueues");
     let enq = root.join("queues/email/enqueues.mts");
-    std::fs::create_dir_all(enq.parent().unwrap()).unwrap();
-    std::fs::write(&enq, "").unwrap();
     let yaml =
         "packages:\n  - root: queues\n    requireAnyOf:\n      - [enqueues.mts, consumers.mts]";
     let config = config_with_rule(yaml);
     let files = vec![enq];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(findings.is_empty());
 }
 
 #[test]
 fn require_any_of_fails_when_none_present() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("email-package-only");
     let pkg = root.join("queues/email/package.json");
-    std::fs::create_dir_all(pkg.parent().unwrap()).unwrap();
-    std::fs::write(&pkg, "{}").unwrap();
     let yaml =
         "packages:\n  - root: queues\n    requireAnyOf:\n      - [enqueues.mts, consumers.mts]";
     let config = config_with_rule(yaml);
     let files = vec![pkg];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("enqueues.mts"));
 }
 
 #[test]
 fn glob_pattern_in_require_any_of() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("email-enqueues");
     let f = root.join("queues/email/enqueues.mts");
-    std::fs::create_dir_all(f.parent().unwrap()).unwrap();
-    std::fs::write(&f, "").unwrap();
     let yaml = "packages:\n  - root: queues\n    requireAnyOf:\n      - [\"*.mts\"]";
     let config = config_with_rule(yaml);
     let files = vec![f];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(findings.is_empty(), "glob *.mts should match enqueues.mts");
 }
 
 #[test]
 fn root_level_files_not_treated_as_subdirs() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("direct-child");
     let f = root.join("queues/direct-file.mts");
-    std::fs::create_dir_all(f.parent().unwrap()).unwrap();
-    std::fs::write(&f, "").unwrap();
     let yaml = "packages:\n  - root: queues\n    requiredFiles: [package.json]";
     let config = config_with_rule(yaml);
     let files = vec![f];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(
         findings.is_empty(),
         "direct children of root have no first-level subdir, got: {findings:?}"
@@ -228,29 +206,20 @@ fn check_with_files_empty_packages_is_noop() {
 #[test]
 fn check_standalone_with_packages_discovers_files() {
     // Exercises lines 34-35 of check(): non-empty packages → discover_files.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let pkg = root.join("queues/email/package.json");
-    std::fs::create_dir_all(pkg.parent().unwrap()).unwrap();
-    std::fs::write(&pkg, "{}").unwrap();
-    // This directory is not a git repo so discover_files returns nothing,
-    // meaning no subdirs are found and no findings are produced.
+    // The required package.json is present, so discovery produces no finding.
+    let root = fixture("email-package-only");
     let yaml = "packages:\n  - root: queues\n    requiredFiles: [package.json]";
     let config = config_with_rule(yaml);
-    let findings = check(root, &config).unwrap();
-    // discover_files returns empty outside a git repo, so no findings.
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty());
 }
 
 #[test]
 fn absolute_package_root_is_used_directly() {
     // Exercises spec.root.is_absolute() branch (line 64).
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("email-package-only");
     let abs_queues = root.join("queues");
     let pkg = abs_queues.join("email/package.json");
-    std::fs::create_dir_all(pkg.parent().unwrap()).unwrap();
-    std::fs::write(&pkg, "{}").unwrap();
     // Use absolute path for the package root
     let yaml = format!(
         "packages:\n  - root: {}\n    requiredFiles: [queues.mts]",
@@ -258,7 +227,7 @@ fn absolute_package_root_is_used_directly() {
     );
     let config = config_with_rule(&yaml);
     let files = vec![pkg];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     // Should report missing queues.mts
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("queues.mts"));
@@ -267,15 +236,12 @@ fn absolute_package_root_is_used_directly() {
 #[test]
 fn glob_pattern_in_require_any_of_matched_returns_early() {
     // Exercises the `return Ok(true)` (line 129) when glob matches.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("email-enqueues");
     let f = root.join("queues/email/enqueues.mts");
-    std::fs::create_dir_all(f.parent().unwrap()).unwrap();
-    std::fs::write(&f, "").unwrap();
     let yaml = "packages:\n  - root: queues\n    requireAnyOf:\n      - [\"*.mts\", other.mts]";
     let config = config_with_rule(yaml);
     let files = vec![f];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(findings.is_empty(), "glob match should return true early");
 }
 
@@ -283,20 +249,15 @@ fn glob_pattern_in_require_any_of_matched_returns_early() {
 fn files_outside_root_are_skipped_in_first_level_subdirs() {
     // Exercises the strip_prefix error branch (line 145): files not under root are
     // skipped by first_level_subdirs.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let other_root = tempfile::tempdir().unwrap();
-    let outside_file = other_root.path().join("unrelated/something.ts");
-    std::fs::create_dir_all(outside_file.parent().unwrap()).unwrap();
-    std::fs::write(&outside_file, "").unwrap();
+    let bundle = fixture("outside-and-in");
+    let root = bundle.join("root");
+    let outside_file = bundle.join("outside/unrelated/something.ts");
     let pkg = root.join("queues/email/package.json");
-    std::fs::create_dir_all(pkg.parent().unwrap()).unwrap();
-    std::fs::write(&pkg, "{}").unwrap();
     let yaml = "packages:\n  - root: queues\n    requiredFiles: [package.json]";
     let config = config_with_rule(yaml);
     // Include both the in-root file and an out-of-root file
     let files = vec![pkg, outside_file];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(
         findings.is_empty(),
         "email subdir has package.json, should pass; outside file is skipped"
@@ -307,15 +268,13 @@ fn files_outside_root_are_skipped_in_first_level_subdirs() {
 fn spec_root_itself_in_file_list_is_skipped_by_first_level_subdirs() {
     // Exercises line 149: when rel is empty (file == spec_root), components.next()
     // returns None and the iteration skips without recording a subdir.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("spec-root-itself");
     let queues = root.join("queues");
-    std::fs::create_dir_all(&queues).unwrap();
     let yaml = "packages:\n  - root: queues\n    requiredFiles: [package.json]";
     let config = config_with_rule(yaml);
     // Pass the spec root directory itself in the file list — strip_prefix returns ""
     let files = vec![queues];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(
         findings.is_empty(),
         "spec root dir in file list should produce no subdirs and no findings"
@@ -326,19 +285,14 @@ fn spec_root_itself_in_file_list_is_skipped_by_first_level_subdirs() {
 fn files_in_root_but_outside_spec_subroot_skip_strip_prefix() {
     // Exercises line 151: strip_prefix(abs_root) fails for files that are inside the
     // top-level root (passing target_roots) but outside the spec's sub-root.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("outside-spec");
     // This file is under root but NOT under root/queues — strip_prefix(root/queues) fails.
     let outside_spec = root.join("other-dir/file.ts");
-    std::fs::create_dir_all(outside_spec.parent().unwrap()).unwrap();
-    std::fs::write(&outside_spec, "").unwrap();
     let pkg = root.join("queues/email/package.json");
-    std::fs::create_dir_all(pkg.parent().unwrap()).unwrap();
-    std::fs::write(&pkg, "{}").unwrap();
     let yaml = "packages:\n  - root: queues\n    requiredFiles: [package.json]";
     let config = config_with_rule(yaml);
     let files = vec![outside_spec, pkg];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(
         findings.is_empty(),
         "email subdir has package.json; outside-spec file is skipped"
@@ -350,17 +304,14 @@ fn glob_pattern_not_matched_falls_through_to_next_group_entry() {
     // Exercises line 130 (closing `}` of `if matched { return Ok(true); }`):
     // the glob is checked but does NOT match any file, so `matched = false`
     // and the `if` block is skipped; execution falls through to the next pattern.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    // Create a file that does NOT match the first glob *.ts, but DOES match *.mts
+    let root = fixture("email-something-mts");
+    // A file that does NOT match the first glob *.ts, but DOES match *.mts
     let f = root.join("queues/email/something.mts");
-    std::fs::create_dir_all(f.parent().unwrap()).unwrap();
-    std::fs::write(&f, "").unwrap();
     // Two-pattern group: first *.ts won't match (no .ts files), second *.mts will.
     let yaml = "packages:\n  - root: queues\n    requireAnyOf:\n      - [\"*.ts\", \"*.mts\"]";
     let config = config_with_rule(yaml);
     let files = vec![f];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     // The second pattern *.mts matches, so no finding.
     assert!(
         findings.is_empty(),

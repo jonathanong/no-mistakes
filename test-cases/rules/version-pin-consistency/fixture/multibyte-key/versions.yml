@@ -1,0 +1,4 @@
+package:
+  engines:
+    description: énode
+    node: 20

@@ -165,20 +165,16 @@ fn fail_unparseable_workspace_yaml() {
 
 #[test]
 fn skips_non_mapping_workspace_yaml() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::write(root.join("pnpm-workspace.yaml"), "[]\n").unwrap();
-    let findings = check(root, &config()).unwrap();
+    let root = fixture_root("non-mapping-workspace");
+    let findings = check(&root, &config()).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn skips_non_object_package_json() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::write(root.join("package.json"), "[1]\n").unwrap();
+    let root = fixture_root("non-object-package");
     let files = vec![root.join("package.json")];
-    let findings = check_with_files(root, &config(), &files).unwrap();
+    let findings = check_with_files(&root, &config(), &files).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }
 
@@ -198,17 +194,11 @@ fn reports_unreadable_workspace_and_invalid_json() {
 
 #[test]
 fn check_with_files_and_sources_flags_both_package_override_forms() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture_root("both-override-forms");
     let path = root.join("package.json");
-    std::fs::write(
-        &path,
-        r#"{"overrides":{"hono":"1.0.0"},"pnpm":{"overrides":{"fast-uri":"1.0.0"}}}"#,
-    )
-    .unwrap();
     let files = vec![path];
     let sources = super::super::source_store_for_files(&files);
-    let findings = check_with_files_and_sources(root, &config(), &files, &sources).unwrap();
+    let findings = check_with_files_and_sources(&root, &config(), &files, &sources).unwrap();
     assert_eq!(findings.len(), 2);
     assert!(
         findings.iter().all(|finding| finding.line == 1),

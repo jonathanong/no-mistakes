@@ -1,0 +1,6 @@
+{
+        "dependencies": {"a": "file:../a"},
+        "devDependencies": {"b": "link:../b"},
+        "peerDependencies": {"c": "git+https://github.com/x/y"},
+        "optionalDependencies": {"d": "^1.0.0"}
+    }

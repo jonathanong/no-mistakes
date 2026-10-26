@@ -1,0 +1,6 @@
+tests:
+  playwright:
+    configs: missing.config.ts
+rules:
+  - rule: playwright-unique-test-ids
+    scope: repository

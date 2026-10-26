@@ -1,7 +1,5 @@
 use super::*;
 
-pub(super) const PIN: &str = "[tools]\n\"aqua:lycheeverse/lychee\" = \"0.24.2\"\n";
-
 fn extra_yaml(source_file: &str, extra: &str) -> String {
     format!(
         "sourceFile: {source_file}\nsourceKey: tools.aqua:lycheeverse/lychee\nanchors:\n{extra}"
@@ -59,23 +57,17 @@ fn leading_dot_slash_paths_match_tracked_rels() {
 
 #[test]
 fn disable_file_comment_suppresses_locally() {
-    let tmp = tmp_pair(
-        PIN,
-        "# no-mistakes-disable-file version-pin-consistency\nLYCHEE_VERSION: 0.24.1\n",
-    );
-    assert!(run(tmp.path(), OPTIONS, &PAIR).is_empty());
+    let root = fixture("disable-file");
+    assert!(run(&root, OPTIONS, &PAIR).is_empty());
 }
 
 #[test]
 fn deferred_suppression_still_emits_disabled_file() {
-    let tmp = tmp_pair(
-        PIN,
-        "# no-mistakes-disable-file version-pin-consistency\nLYCHEE_VERSION: 0.24.1\n",
-    );
-    let files: Vec<PathBuf> = PAIR.iter().map(|file| tmp.path().join(file)).collect();
+    let root = fixture("disable-file");
+    let files: Vec<PathBuf> = PAIR.iter().map(|file| root.join(file)).collect();
     let sources = crate::codebase::rules::source_store_for_files(&files);
     let findings = check_with_files_sources_and_deferred_suppression(
-        tmp.path(),
+        &root,
         &config(OPTIONS),
         &files,
         &sources,
@@ -91,9 +83,9 @@ fn deferred_suppression_still_emits_disabled_file() {
 
 #[test]
 fn invalid_pattern_is_a_finding() {
-    let tmp = tmp_pair(PIN, "LYCHEE_VERSION: 0.24.2\n");
+    let root = fixture("matching-short-anchor");
     let yaml = OPTIONS.replace(r"LYCHEE_VERSION:\s*(\d+\.\d+\.\d+)", r"LYCHEE_VERSION:(");
-    let findings = run(tmp.path(), &yaml, &PAIR);
+    let findings = run(&root, &yaml, &PAIR);
     assert!(
         findings
             .iter()
@@ -104,12 +96,12 @@ fn invalid_pattern_is_a_finding() {
 
 #[test]
 fn two_capturing_groups_are_rejected() {
-    let tmp = tmp_pair(PIN, "LYCHEE_VERSION: 0.24.2\n");
+    let root = fixture("matching-short-anchor");
     let yaml = OPTIONS.replace(
         r"LYCHEE_VERSION:\s*(\d+\.\d+\.\d+)",
         r"LYCHEE_VERSION:\s*(\d+)\.(\d+\.\d+)",
     );
-    let findings = run(tmp.path(), &yaml, &PAIR);
+    let findings = run(&root, &yaml, &PAIR);
     assert!(
         findings
             .iter()
@@ -120,22 +112,22 @@ fn two_capturing_groups_are_rejected() {
 
 #[test]
 fn empty_anchor_file_is_skipped() {
-    let tmp = tmp_pair(PIN, "LYCHEE_VERSION: 0.24.1\n");
+    let root = fixture("pin-mismatch");
     let yaml = extra_yaml(
         ".mise.toml",
         "  - file: \"\"\n    pattern: '(x)'\n    label: empty\n",
     );
-    assert!(run(tmp.path(), &yaml, &PAIR).is_empty());
+    assert!(run(&root, &yaml, &PAIR).is_empty());
 }
 
 #[test]
 fn empty_label_uses_the_anchor_path() {
-    let tmp = tmp_pair(PIN, "LYCHEE_VERSION: 0.24.1\n");
+    let root = fixture("pin-mismatch");
     let yaml = extra_yaml(
         ".mise.toml",
         &default_anchor(r"LYCHEE_VERSION:\s*(\d+\.\d+\.\d+)", ""),
     );
-    let findings = run(tmp.path(), &yaml, &PAIR);
+    let findings = run(&root, &yaml, &PAIR);
     assert!(
         findings
             .iter()
@@ -146,21 +138,18 @@ fn empty_label_uses_the_anchor_path() {
 
 #[test]
 fn pin_kinds_are_reported() {
-    for (source, kind) in [
-        ("[tools]\n\"aqua:lycheeverse/lychee\" = true\n", "true"),
-        ("tools:\n  \"aqua:lycheeverse/lychee\": null\n", "null"),
-        ("tools:\n  \"aqua:lycheeverse/lychee\": [1]\n", "array"),
-        ("tools:\n  \"aqua:lycheeverse/lychee\": {a: 1}\n", "object"),
+    for (name, source_file, kind) in [
+        ("pin-kind-true", ".mise.toml", "true"),
+        ("pin-kind-null", "versions.yml", "null"),
+        ("pin-kind-array", "versions.yml", "array"),
+        ("pin-kind-object", "versions.yml", "object"),
     ] {
-        let tmp = tempfile::tempdir().unwrap();
-        let name = if source.starts_with("tools:") {
-            "versions.yml"
-        } else {
-            ".mise.toml"
-        };
-        write_pair(tmp.path(), source, name, "LYCHEE_VERSION: 0.24.2\n");
-        let yaml = OPTIONS.replace("sourceFile: .mise.toml", &format!("sourceFile: {name}"));
-        let findings = run(tmp.path(), &yaml, &[name, PAIR[1]]);
+        let root = fixture(name);
+        let yaml = OPTIONS.replace(
+            "sourceFile: .mise.toml",
+            &format!("sourceFile: {source_file}"),
+        );
+        let findings = run(&root, &yaml, &[source_file, PAIR[1]]);
         assert!(
             findings
                 .iter()
@@ -172,13 +161,7 @@ fn pin_kinds_are_reported() {
 
 #[test]
 fn undotted_source_key_is_resolved() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
-        "\"1.2.3\"\n",
-        "version.yml",
-        "TOOL_VERSION: 1.2.3\n",
-    );
+    let root = fixture("undotted-scalar");
     let yaml = r#"
 sourceFile: version.yml
 sourceKey: ignored
@@ -188,7 +171,7 @@ anchors:
     label: tool
 "#;
     // A YAML scalar document is not a mapping, so the undotted key is missing.
-    let findings = run(tmp.path(), yaml, &["version.yml", PAIR[1]]);
+    let findings = run(&root, yaml, &["version.yml", PAIR[1]]);
     assert!(
         findings
             .iter()
@@ -199,8 +182,8 @@ anchors:
 
 #[test]
 fn empty_toml_source_is_a_missing_key() {
-    let tmp = tmp_pair("", "LYCHEE_VERSION: 0.24.2\n");
-    let findings = run(tmp.path(), OPTIONS, &PAIR);
+    let root = fixture("empty-toml");
+    let findings = run(&root, OPTIONS, &PAIR);
     assert!(
         findings
             .iter()
@@ -211,15 +194,9 @@ fn empty_toml_source_is_a_missing_key() {
 
 #[test]
 fn invalid_yaml_source_is_a_finding() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
-        ":\n",
-        "versions.yml",
-        "LYCHEE_VERSION: 0.24.2\n",
-    );
+    let root = fixture("invalid-yaml");
     let yaml = OPTIONS.replace("sourceFile: .mise.toml", "sourceFile: versions.yml");
-    let findings = run(tmp.path(), &yaml, &["versions.yml", PAIR[1]]);
+    let findings = run(&root, &yaml, &["versions.yml", PAIR[1]]);
     assert!(
         findings
             .iter()
@@ -230,28 +207,16 @@ fn invalid_yaml_source_is_a_finding() {
 
 #[test]
 fn jsonc_source_file_is_supported() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
-        "{\n  // pin\n  \"tools\": { \"aqua:lycheeverse/lychee\": \"0.24.2\" }\n}\n",
-        "versions.jsonc",
-        "LYCHEE_VERSION: 0.24.2\n",
-    );
+    let root = fixture("jsonc-source");
     let yaml = OPTIONS.replace("sourceFile: .mise.toml", "sourceFile: versions.jsonc");
-    assert!(run(tmp.path(), &yaml, &["versions.jsonc", PAIR[1]]).is_empty());
+    assert!(run(&root, &yaml, &["versions.jsonc", PAIR[1]]).is_empty());
 }
 
 #[test]
 fn tagged_yaml_pin_is_invalid() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
-        "tools:\n  \"aqua:lycheeverse/lychee\": !custom \"hello\"\n",
-        "versions.yml",
-        "LYCHEE_VERSION: 0.24.2\n",
-    );
+    let root = fixture("tagged-yaml");
     let yaml = OPTIONS.replace("sourceFile: .mise.toml", "sourceFile: versions.yml");
-    let findings = run(tmp.path(), &yaml, &["versions.yml", PAIR[1]]);
+    let findings = run(&root, &yaml, &["versions.yml", PAIR[1]]);
     assert!(
         findings
             .iter()
@@ -262,12 +227,12 @@ fn tagged_yaml_pin_is_invalid() {
 
 #[test]
 fn optional_capture_without_a_match_is_a_mismatch() {
-    let tmp = tmp_pair(PIN, "LYCHEE_VERSION:\n");
+    let root = fixture("optional-capture");
     let yaml = OPTIONS.replace(
         r"LYCHEE_VERSION:\s*(\d+\.\d+\.\d+)",
         r"LYCHEE_VERSION:\s*(\d+\.\d+\.\d+)?",
     );
-    let findings = run(tmp.path(), &yaml, &PAIR);
+    let findings = run(&root, &yaml, &PAIR);
     assert!(
         findings
             .iter()
@@ -278,20 +243,14 @@ fn optional_capture_without_a_match_is_a_mismatch() {
 
 #[test]
 fn missing_key_line_defaults_when_needle_is_absent() {
-    let tmp = tmp_pair("[other]\nfoo = \"1\"\n", "LYCHEE_VERSION: 0.24.2\n");
-    let findings = run(tmp.path(), OPTIONS, &PAIR);
+    let root = fixture("missing-key-line");
+    let findings = run(&root, OPTIONS, &PAIR);
     assert_eq!(findings[0].line, 1, "{findings:?}");
 }
 
 #[test]
 fn undotted_mapping_key_matches() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
-        "pin: \"1.2.3\"\n",
-        "version.yml",
-        "TOOL_VERSION: 1.2.3\n",
-    );
+    let root = fixture("undotted-mapping");
     let yaml = r#"
 sourceFile: version.yml
 sourceKey: pin
@@ -300,7 +259,7 @@ anchors:
     pattern: 'TOOL_VERSION:\s*(\d+\.\d+\.\d+)'
     label: tool
 "#;
-    assert!(run(tmp.path(), yaml, &["version.yml", PAIR[1]]).is_empty());
+    assert!(run(&root, yaml, &["version.yml", PAIR[1]]).is_empty());
 }
 
 #[test]
@@ -315,26 +274,23 @@ fn empty_files_after_filter_are_silent() {
 
 #[test]
 fn invalid_pattern_on_untracked_source_is_silent() {
-    let tmp = tmp_pair(PIN, "LYCHEE_VERSION: 0.24.2\n");
+    let root = fixture("matching-short-anchor");
     let yaml = OPTIONS.replace(r"LYCHEE_VERSION:\s*(\d+\.\d+\.\d+)", r"LYCHEE_VERSION:(");
-    let findings = run(tmp.path(), &yaml, &[PAIR[1]]);
+    let findings = run(&root, &yaml, &[PAIR[1]]);
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn missing_key_on_untracked_source_is_silent() {
-    let tmp = tmp_pair("[tools]\nfoo = \"1.0.0\"\n", "LYCHEE_VERSION: 0.24.2\n");
-    let findings = run(tmp.path(), OPTIONS, &[PAIR[1]]);
+    let root = fixture("missing-source-key");
+    let findings = run(&root, OPTIONS, &[PAIR[1]]);
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn non_string_pin_on_untracked_source_is_silent() {
-    let tmp = tmp_pair(
-        "[tools]\n\"aqua:lycheeverse/lychee\" = 8\n",
-        "LYCHEE_VERSION: 0.24.2\n",
-    );
-    let findings = run(tmp.path(), OPTIONS, &[PAIR[1]]);
+    let root = fixture("non-string-pin");
+    let findings = run(&root, OPTIONS, &[PAIR[1]]);
     assert!(findings.is_empty(), "{findings:?}");
 }
 
@@ -349,13 +305,7 @@ fn empty_source_file_option_is_silent() {
 
 #[test]
 fn unicode_value_before_mapping_key_does_not_panic() {
-    let tmp = tempfile::tempdir().unwrap();
-    write_pair(
-        tmp.path(),
-        "description: 版本\nnote: \"版本\"\n版本: 123\n",
-        "versions.yml",
-        "TOOL_VERSION: 1.2.3\n",
-    );
+    let root = fixture("unicode-key");
     let yaml = r#"
 sourceFile: versions.yml
 sourceKey: 版本
@@ -364,15 +314,15 @@ anchors:
     pattern: 'TOOL_VERSION:\s*(\d+\.\d+\.\d+)'
     label: tool
 "#;
-    let findings = run(tmp.path(), yaml, &["versions.yml", PAIR[1]]);
+    let findings = run(&root, yaml, &["versions.yml", PAIR[1]]);
     assert_eq!(findings[0].line, 3, "{findings:?}");
     assert!(findings[0].message.contains("invalid pin"), "{findings:?}");
 }
 
 #[test]
 fn tracked_source_without_anchors_reports_missing_key() {
-    let tmp = tmp_pair("[tools]\nfoo = \"1.0.0\"\n", "LYCHEE_VERSION: 0.24.2\n");
-    let findings = run(tmp.path(), OPTIONS, &[".mise.toml"]);
+    let root = fixture("missing-source-key");
+    let findings = run(&root, OPTIONS, &[".mise.toml"]);
     assert!(
         findings
             .iter()
@@ -383,11 +333,8 @@ fn tracked_source_without_anchors_reports_missing_key() {
 
 #[test]
 fn tracked_source_without_anchors_reports_non_string_pin() {
-    let tmp = tmp_pair(
-        "[tools]\n\"aqua:lycheeverse/lychee\" = 8\n",
-        "LYCHEE_VERSION: 0.24.2\n",
-    );
-    let findings = run(tmp.path(), OPTIONS, &[".mise.toml"]);
+    let root = fixture("non-string-pin");
+    let findings = run(&root, OPTIONS, &[".mise.toml"]);
     assert!(
         findings
             .iter()
@@ -398,9 +345,9 @@ fn tracked_source_without_anchors_reports_non_string_pin() {
 
 #[test]
 fn exclude_all_anchors_still_validates_source_pin() {
-    let tmp = tmp_pair("[tools]\nfoo = \"1.0.0\"\n", "LYCHEE_VERSION: 0.24.2\n");
+    let root = fixture("missing-source-key");
     let findings = run_config(
-        tmp.path(),
+        &root,
         &config_filtered(OPTIONS, &[], &[".github/**"]),
         &PAIR,
     );

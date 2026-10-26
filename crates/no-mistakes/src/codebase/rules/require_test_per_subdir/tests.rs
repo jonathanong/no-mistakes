@@ -126,15 +126,12 @@ fn no_op_when_roots_empty() {
 
 #[test]
 fn excludes_dirs_are_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("exclude-shared");
     let shared = root.join("agents/_shared/helpers.mts");
-    std::fs::create_dir_all(shared.parent().unwrap()).unwrap();
-    std::fs::write(&shared, "").unwrap();
     let config =
         config_with_rule("roots: [agents]\nexcludeDirs: [_shared]\ntestGlob: \"*.test.mts\"");
     let files = vec![shared];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(
         findings.is_empty(),
         "_shared should be excluded, got: {findings:?}"
@@ -143,14 +140,11 @@ fn excludes_dirs_are_skipped() {
 
 #[test]
 fn reports_subdir_without_matching_test() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("email-source-only");
     let src = root.join("agents/email/index.mts");
-    std::fs::create_dir_all(src.parent().unwrap()).unwrap();
-    std::fs::write(&src, "").unwrap();
     let config = config_with_rule("roots: [agents]\ntestGlob: \"*.test.mts\"");
     let files = vec![src];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].line, 1);
     assert!(findings[0].message.contains("agents/email"));
@@ -158,31 +152,24 @@ fn reports_subdir_without_matching_test() {
 
 #[test]
 fn no_finding_when_test_file_present() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("email-with-test");
     let src = root.join("agents/email/index.mts");
     let test = root.join("agents/email/index.test.mts");
-    std::fs::create_dir_all(src.parent().unwrap()).unwrap();
-    std::fs::write(&src, "").unwrap();
-    std::fs::write(&test, "").unwrap();
     let config = config_with_rule("roots: [agents]\ntestGlob: \"*.test.mts\"");
     let files = vec![src, test];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(findings.is_empty());
 }
 
 #[test]
 fn root_level_files_not_treated_as_subdirs() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("root-level-file");
     let f = root.join("agents/root-level.mts");
-    std::fs::create_dir_all(f.parent().unwrap()).unwrap();
-    std::fs::write(&f, "").unwrap();
     // root-level.mts is directly under agents/, so agents/ itself is the only
     // "root" — no first-level subdirectory exists, so no finding.
     let config = config_with_rule("roots: [agents]\ntestGlob: \"*.test.mts\"");
     let files = vec![f];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     // There are no first-level subdirs (files are direct children of agents/),
     // so no findings should be emitted.
     assert!(
@@ -193,16 +180,12 @@ fn root_level_files_not_treated_as_subdirs() {
 
 #[test]
 fn default_test_glob_matches_any_extension() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("default-glob");
     let src = root.join("agents/email/index.ts");
     let test = root.join("agents/email/index.test.ts");
-    std::fs::create_dir_all(src.parent().unwrap()).unwrap();
-    std::fs::write(&src, "").unwrap();
-    std::fs::write(&test, "").unwrap();
     let config = config_with_rule("roots: [agents]");
     let files = vec![src, test];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(
         findings.is_empty(),
         "default glob *.test.* should match .test.ts"
@@ -231,16 +214,13 @@ fn check_standalone_with_non_empty_roots_discovers_files() {
 #[test]
 fn files_outside_root_are_skipped_in_first_level_subdirs() {
     // Exercises strip_prefix error branch (line 101): file outside root is skipped.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    let other_dir = tempfile::tempdir().unwrap();
-    let outside = other_dir.path().join("unrelated/file.ts");
-    std::fs::create_dir_all(outside.parent().unwrap()).unwrap();
-    std::fs::write(&outside, "").unwrap();
+    let bundle = fixture("outside-file");
+    let root = bundle.join("root");
+    let outside = bundle.join("outside/unrelated/file.ts");
     // No in-scope files → no subdirs → no findings
     let config = config_with_rule("roots: [agents]\ntestGlob: \"*.test.mts\"");
     let files = vec![outside];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(findings.is_empty(), "outside files don't generate subdirs");
 }
 
@@ -248,15 +228,12 @@ fn files_outside_root_are_skipped_in_first_level_subdirs() {
 fn files_in_root_but_outside_spec_subroot_skip_strip_prefix() {
     // Exercises line 115: strip_prefix(abs_root) fails for files that pass the
     // target_roots filter (under root) but are not under the spec's sub-root (agents/).
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("outside-spec-subroot");
     // File is under root but NOT under root/agents — strip_prefix(agents/) fails.
     let outside_agents = root.join("other-dir/file.mts");
-    std::fs::create_dir_all(outside_agents.parent().unwrap()).unwrap();
-    std::fs::write(&outside_agents, "").unwrap();
     let config = config_with_rule("roots: [agents]\ntestGlob: \"*.test.mts\"");
     let files = vec![outside_agents];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(
         findings.is_empty(),
         "files outside the spec subroot should not generate subdirs or findings"
@@ -266,21 +243,17 @@ fn files_in_root_but_outside_spec_subroot_skip_strip_prefix() {
 #[test]
 fn absolute_root_path_is_used_directly() {
     // Exercises rule_root.is_absolute() branch (line 62) in scan().
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("email-with-test");
     let abs_agents = root.join("agents");
     let src = abs_agents.join("email/index.mts");
     let test = abs_agents.join("email/index.test.mts");
-    std::fs::create_dir_all(src.parent().unwrap()).unwrap();
-    std::fs::write(&src, "").unwrap();
-    std::fs::write(&test, "").unwrap();
     let yaml = format!(
         "roots:\n  - {}\ntestGlob: \"*.test.mts\"",
         abs_agents.display()
     );
     let config = config_with_rule(&yaml);
     let files = vec![src, test];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(
         findings.is_empty(),
         "absolute root with test file should produce no findings: {findings:?}"
@@ -291,14 +264,12 @@ fn absolute_root_path_is_used_directly() {
 fn root_dir_itself_in_file_list_is_skipped_by_first_level_subdirs() {
     // Exercises line 105: when rel is empty (file == abs_root), components.next()
     // returns None and the file is skipped.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture("root-dir-itself");
     let agents = root.join("agents");
-    std::fs::create_dir_all(&agents).unwrap();
     // Pass the root dir itself in the file list — strip_prefix returns "" (empty path)
     let config = config_with_rule("roots: [agents]\ntestGlob: \"*.test.mts\"");
     let files = vec![agents.clone()];
-    let findings = check_with_files(root, &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(
         findings.is_empty(),
         "root dir itself should be skipped, no subdirs found"

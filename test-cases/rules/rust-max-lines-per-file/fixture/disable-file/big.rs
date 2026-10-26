@@ -1,0 +1,11 @@
+// no-mistakes-disable-file rust-max-lines-per-file
+fn f0() {}
+fn f1() {}
+fn f2() {}
+fn f3() {}
+fn f4() {}
+fn f5() {}
+fn f6() {}
+fn f7() {}
+fn f8() {}
+fn f9() {}
