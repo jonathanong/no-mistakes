@@ -4,7 +4,6 @@ const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { createImportedSources } = require("./async-consumer-imported-proof");
 const { annotation, createSourceTypes } = require("./async-source-types");
-const { propertiesWritten } = require("./async-disposition-mocks");
 const { sourceSlot } = require("./async-source-slots");
 const { createHandoffSafety } = require("./async-handoff-safety");
 const { createReceiverProof } = require("./async-consumer-receivers");
@@ -48,10 +47,7 @@ function createPromiseHandoff(context, sourceFacts) {
     const proof = sourceTypes();
     if (!proof) return false;
     const type = proof.valueType(node.callee, context);
-    if (!type || !proof.targetType(type.type, type.context)) return false;
-    let root = node.callee;
-    while (root.type === "MemberExpression") root = root.object;
-    return !propertiesWritten(root, context, new Set(), null, true);
+    return Boolean(type && proof.targetType(type.type, type.context));
   }
   return { promiseSlotHandoff, promiseTypedTargetCall };
 }

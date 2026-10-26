@@ -82,14 +82,12 @@ function createSourceTypes(context, sources, receiverShape) {
     if (!next) return null;
     if (value.type === "Identifier") {
       const variable = resolveVariable(value, owner);
-      if (
-        variable?.defs.length !== 1 ||
-        variable.references.some((ref) => ref.isWrite() && !ref.init)
-      )
-        return null;
+      if (variable?.defs.length !== 1) return null;
       const def = variable.defs[0];
       const type = annotation(def.name);
+      // A declared target contract still describes possible promise calls after writes.
       if (type) return { type, context: owner };
+      if (variable.references.some((ref) => ref.isWrite() && !ref.init)) return null;
       const init = stableConstInitializer(value, owner, new Set());
       return init ? valueType(init, owner, next) : null;
     }
