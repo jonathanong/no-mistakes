@@ -20,7 +20,7 @@ export const guardLines = [
 ];
 const ruleCode = "no-mistakes(async-call-disposition)";
 const proven = "proven-consumers/";
-const cases = [
+export const realScenarios = [
   {
     config: "promise-handoff-alias/.oxlintrc.json",
     lines: {
@@ -78,8 +78,8 @@ const cases = [
   },
 ];
 
-export function runRealGate(typeAware = true) {
-  for (const scenario of cases) {
+export function runRealGate(typeAware = true, scenarios = realScenarios) {
+  for (const scenario of scenarios) {
     const paths = scenario.files || Object.keys(scenario.lines);
     for (const name of paths) assert.ok(existsSync(resolve(fixture, name)), name);
     const result = spawnSync(

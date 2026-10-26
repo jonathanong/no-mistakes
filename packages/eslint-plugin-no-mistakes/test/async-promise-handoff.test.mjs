@@ -3,13 +3,14 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Linter } from "eslint";
 import tsParser from "@typescript-eslint/parser";
-import { beforeAll, it } from "vitest";
+import { it } from "vitest";
 import { plugin } from "./helpers.mjs";
 import {
   callerLines,
   guardLines,
   handoff,
   recallLines,
+  realScenarios,
   runRealGate,
   slotLines,
 } from "./async-promise-handoff-real.mjs";
@@ -41,8 +42,14 @@ function reports(name, typed) {
     .map(({ line, messageId }) => [line, messageId]);
 }
 
-// This runs in addition to the standalone real gate performed before ESLint validation.
-beforeAll(() => runRealGate());
+// Each subprocess gets its own ordinary test budget; all scenarios still run
+// before ESLint, in addition to the standalone real gate used for validation.
+for (const typeAware of [true, false]) {
+  it.each(realScenarios.map((scenario) => [scenario.config, scenario]))(
+    `proves source slots under real Oxlint (typeAware=${typeAware}, %s)`,
+    (_name, scenario) => runRealGate(typeAware, [scenario]),
+  );
+}
 it.each([true, false])("proves source target slots and preserves recall (typed=%s)", (typed) => {
   for (const [name, lines] of [
     ["caller.ts", callerLines],
@@ -63,4 +70,3 @@ it.each([true, false])("proves source target slots and preserves recall (typed=%
     );
   }
 });
-it("uses the same source proof under plain Oxlint", () => runRealGate(false));
