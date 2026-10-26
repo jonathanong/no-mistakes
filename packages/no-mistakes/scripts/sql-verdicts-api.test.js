@@ -49,6 +49,47 @@ for (const [state, expected] of [
     },
   );
 
+test(
+  "compiled SQL returns retain callable bindings, await, and lexical shadows",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-sql-shape-policy/fixture/returned-call-identities",
+    );
+    const options = { root, config: join(root, ".no-mistakes.yml") };
+    const pending = cjs.check(options);
+    assert.ok(pending instanceof Promise);
+    const report = await pending;
+    assert.deepEqual(await esm.check(options), report);
+    assert.deepEqual(
+      report.rules.map(({ file, line, target }) => [file, line, target]),
+      [
+        ["src/await.ts", 3, "literal-limit"],
+        ["src/named.ts", 3, "literal-limit"],
+        ["src/recursive.ts", 6, "literal-limit"],
+        ["src/shadow-edge.ts", 5, "literal-limit"],
+        ["src/shadow.ts", 5, "literal-limit"],
+      ],
+    );
+    const batch = await cjs.analyzeProject({
+      ...options,
+      reports: [{ type: "check", id: "check" }],
+    });
+    assert.deepEqual(batch.reports[0].result, report);
+    const strict = await cjs.check({ root, config: join(root, "strict.yml") });
+    assert.deepEqual(
+      strict.rules.map(({ file, line }) => [file, line]),
+      [
+        ["src/shadow.ts", 5],
+        ["src/shadow.ts", 6],
+      ],
+    );
+  },
+);
+
 const identifierCases = [
   ["fail-array-destructured-row", [[5, "id"]]],
   ["fail-array-destructured-row-elision", [[4, "schema"]]],
