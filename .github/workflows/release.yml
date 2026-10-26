@@ -557,6 +557,34 @@ jobs:
           shared-key: release-${{ matrix.target }}
           cache-bin: "false"
 
+      # Fat LTO with one codegen unit holds the whole crate in memory. The
+      # aarch64 Linux job was SIGTERMed (exit 143) ~19m in, right after git2
+      # compiled, in runs on the 16 GB ubuntu-22.04-arm runner (run
+      # 40325778215); swap keeps the unchanged release profile from OOMing.
+      - name: Add swap
+        if: ${{ runner.os == 'Linux' }}
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          set -euo pipefail
+          free -h
+          df -h /
+          avail_gb=$(( $(df --output=avail -B1 / | tail -1 | tr -dc '0-9') / 1073741824 ))
+          size_gb=16
+          if [ "$avail_gb" -lt $((size_gb + 4)) ]; then
+            size_gb=$((avail_gb - 4))
+          fi
+          if [ "$size_gb" -lt 1 ]; then
+            echo "not enough free disk for swap"
+            exit 0
+          fi
+          sudo swapoff -a || true
+          sudo fallocate -l "${size_gb}G" /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
       # Rewrite crate-type in this job only so one rustc emits the rlib (CLI)
       # and the Node cdylib. Do not commit that crate-type: Linux coverage
       # should not also link a cdylib.
@@ -575,7 +603,14 @@ jobs:
               raise SystemExit(f"expected {old!r} in {path}")
           path.write_text(text.replace(old, new, 1))
           PY
-          NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes
+          free -h || true
+          if [ "$RUNNER_OS" = Linux ] && [ -x /usr/bin/time ]; then
+            # Log peak RSS so a future kill is diagnosable.
+            /usr/bin/time -v env NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes
+          else
+            NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes
+          fi
+          free -h || true
 
       - name: Stage CLI assets
         timeout-minutes: 2
