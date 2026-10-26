@@ -324,3 +324,30 @@ fn invalid_utf8_source_reads_are_cached_as_invalid_data() {
     assert!(Arc::ptr_eq(&first, &second));
     assert_eq!(store.physical_read_count(), 1);
 }
+
+#[test]
+fn json_bom_is_accepted_once_without_changing_cached_source() {
+    let path = fixture("bom.json");
+    let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&path)));
+    let store = SourceStore::new(inventory);
+    let first = store.parse_json_path(&path).unwrap();
+    let second = store.parse_json_path(&path).unwrap();
+    assert_eq!(first["name"], "@acme/bom");
+    assert!(Arc::ptr_eq(&first, &second));
+    assert!(store.read_path(&path).unwrap().starts_with('\u{FEFF}'));
+    assert_eq!(store.physical_read_count(), 1);
+    assert_eq!(store.json_parse_count(), 1);
+}
+
+#[test]
+fn json_bom_does_not_hide_malformed_or_repeated_markers() {
+    for name in ["bom-malformed.json", "bom-repeated.json"] {
+        let path = fixture(name);
+        let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&path)));
+        let store = SourceStore::new(inventory);
+        assert!(matches!(
+            store.parse_json_path(&path),
+            Err(super::JsonLoadError::Syntax(_))
+        ));
+    }
+}

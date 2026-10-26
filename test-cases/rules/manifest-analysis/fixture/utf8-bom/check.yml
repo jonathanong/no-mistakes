@@ -1,0 +1,11 @@
+rules:
+  - rule: package-json-registry-only
+    scope: repository
+  - rule: pnpm-overrides-ban
+    scope: repository
+  - rule: pnpm-release-age-policy
+    scope: repository
+    options: {permanentPackages: []}
+  - rule: package-json-required-fields
+    scope: repository
+    options: {private: true}

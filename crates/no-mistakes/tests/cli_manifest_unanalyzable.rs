@@ -98,3 +98,45 @@ fn manifest_failures_follow_policy_without_hiding_definite_findings() {
         }
     }
 }
+
+#[test]
+fn bom_manifests_remain_analyzable_without_hiding_definite_violations() {
+    let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/manifest-analysis/fixture/utf8-bom");
+    for (scenario, expected) in [("valid", 0), ("violation", 3)] {
+        let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["check", "--root"])
+            .arg(fixture.join(scenario))
+            .arg("--config")
+            .arg(fixture.join("check.yml"))
+            .args(["--format", "json"])
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        let findings = report["rules"].as_array().unwrap();
+        assert_eq!(output.status.success(), expected == 0, "{report}");
+        assert_eq!(findings.len(), expected, "{report}");
+        if scenario == "violation" {
+            let mut rules = findings
+                .iter()
+                .map(|finding| finding["rule"].as_str().unwrap())
+                .collect::<Vec<_>>();
+            rules.sort_unstable();
+            assert_eq!(
+                rules,
+                [
+                    "package-json-registry-only",
+                    "package-json-required-fields",
+                    "pnpm-overrides-ban"
+                ]
+            );
+        }
+        assert_eq!(report["advisories"], serde_json::json!([]), "{report}");
+        assert!(
+            findings
+                .iter()
+                .all(|finding| finding["target"] != "unanalyzable"),
+            "{report}"
+        );
+    }
+}

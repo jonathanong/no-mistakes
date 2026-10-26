@@ -112,6 +112,8 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
+A single leading UTF-8 byte order mark in `package.json` is accepted.
+
 Selected package manifests that cannot be read or parsed produce an
 `unanalyzable` diagnostic containing the file and error at line 1. Repair malformed
 JSON or restore read access so required fields can be checked.
