@@ -45,7 +45,7 @@ function materialize(runTest) {
 function runner(directory, phase, commands = []) {
   return (executable, args) => {
     commands.push([executable, ...args]);
-    if (executable === "git" && args[1] === "--name-only") return "crates/no-mistakes/Cargo.toml";
+    if (executable === "git" && args[1] === "--name-only") return "";
     if (executable === "git")
       return args[1] === "HEAD"
         ? refs.candidate.commit
@@ -56,6 +56,11 @@ function runner(directory, phase, commands = []) {
     if (executable === "cargo" && args[0] === "-V") return `cargo ${compiler} (saved)`;
     if (executable === "cargo") {
       assert.deepEqual(args, ARGS);
+      // --bin alone still links the unused addon if the manifest includes cdylib.
+      assert.equal(
+        readFileSync(join(directory, "source/crates/no-mistakes/Cargo.toml"), "utf8"),
+        readFileSync(join(fixture, "source/crates/no-mistakes/Cargo.toml"), "utf8"),
+      );
       if (phase === "production") {
         const profile = join(directory, "target", TARGET, "release");
         assert.equal(
@@ -170,7 +175,18 @@ test("rejects prereleases, drafts, malformed tags, non-GitHub releases, mutable 
 
 test("keeps identical official release flags, default Mermaid, and an external nonincremental target", () => {
   const manifest = readFileSync(join(fixture, "source/crates/no-mistakes/Cargo.toml"), "utf8");
-  assert.match(productionManifest(manifest), /crate-type = \["rlib", "cdylib"\]/);
+  assert.equal(productionManifest(manifest), manifest);
+  assert.deepEqual(ARGS, [
+    "build",
+    "--release",
+    "--locked",
+    "--target",
+    TARGET,
+    "-p",
+    "no-mistakes",
+    "--bin",
+    "no-mistakes",
+  ]);
   assert.throws(
     () => productionManifest(manifest.replace('"mermaid-validation"', '"other"')),
     /default Mermaid/,
@@ -217,6 +233,12 @@ test("restored dependencies cannot ship a stub: remove only owned outputs, rebui
     assert.equal(provenance.tree, refs.candidate.tree);
     assert.equal(provenance.compiler, compiler);
     assert.equal(provenance.removedStubArtifacts, 3);
+    assert.equal(provenance.releaseManifestPatch, null);
+    assert.match(provenance.command, /--bin no-mistakes$/);
+    const identity = JSON.parse(
+      readFileSync(join(directory, "target/hosted-dependency-identity.json"), "utf8"),
+    );
+    assert.deepEqual(identity.buildArgs, ARGS);
     assert.equal(
       provenance.sourceHashes["lib.rs"],
       hashFile(join(fixture, "source/crates/no-mistakes/src/lib.rs")),
@@ -312,7 +334,7 @@ test("rejects dependency stubs and unexpected tracked source changes instead of 
               : realRunner(executable, args),
           environment(directory),
         ),
-      /changed sources beyond/,
+      /changed tracked sources/,
     );
   }));
 

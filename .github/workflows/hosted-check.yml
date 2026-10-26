@@ -219,7 +219,8 @@ jobs:
           sudo mkswap /mnt/no-mistakes-hosted.swap
           sudo swapon /mnt/no-mistakes-hosted.swap
 
-      - name: Rebuild real package with default features and official release flags
+      # Keep the rlib manifest: adding cdylib links an unused addon even with --bin.
+      - name: Rebuild only the CLI with default features and official release flags
         timeout-minutes: 24
         env:
           VARIANT: ${{ matrix.variant }}
