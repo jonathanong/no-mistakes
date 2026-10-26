@@ -144,7 +144,8 @@ function sourceScopes(ast, visitorKeys) {
       if (["typeAnnotation", "returnType", "typeArguments", "typeParameters"].includes(key))
         typed = true;
       if (node.type === "TSTypeQuery" && key === "exprName") typed = false;
-      if (node.type === "TSTypeAliasDeclaration" || node.type === "TSInterfaceBody") typed = true;
+      if (["TSTypeAliasDeclaration", "TSInterfaceBody", "TSInterfaceHeritage"].includes(node.type))
+        typed = true;
       references(child, typed);
     });
   }

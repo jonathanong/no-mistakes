@@ -130,6 +130,7 @@ it("loads a packed plugin with TypeScript-only, absent, and incompatible proof p
         join(root, "imported.js"),
         join(root, "recall.js"),
         join(root, "syntax.js"),
+        join(root, "heritage.js"),
         join(root, "unsupported.js"),
       ],
       root,

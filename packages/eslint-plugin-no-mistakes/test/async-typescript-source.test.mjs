@@ -29,7 +29,12 @@ scenarios.push({
   name: "optional-peer-syntax",
   root: resolve(fixture, "optional-peers"),
   rules: JSON.parse(readFileSync(resolve(fixture, "optional-peers/.oxlintrc.json"), "utf8")).rules,
-  files: { "syntax.js": [], "recall.js": [3, 5, 7, 9, 12, 15], "unsupported.js": [3] },
+  files: {
+    "syntax.js": [],
+    "heritage.js": [],
+    "recall.js": [3, 5, 7, 9, 12, 15],
+    "unsupported.js": [3],
+  },
 });
 it.each(scenarios)("keeps source proof and recall with only TypeScript ($name)", (scenario) => {
   const original = Module._load;
