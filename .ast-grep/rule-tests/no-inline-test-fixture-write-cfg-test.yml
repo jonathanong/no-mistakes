@@ -1,0 +1,88 @@
+id: no-inline-test-fixture-write-cfg
+valid:
+  - |
+    fn prod() {
+        fs::write(path, data);
+    }
+  - |
+    #[test]
+    fn not_cfg() {
+        fs::write(path, data);
+    }
+  - |
+    #[cfg(not(test))]
+    fn prod() {
+        fs::write(path, data);
+    }
+  - |
+    #[cfg(all(feature = "test-instrumentation"))]
+    fn feature_only() {
+        fs::write(path, data);
+    }
+  - |
+    #[cfg(test)]
+    mod tests {
+        fn t() {
+            fs::create_dir(path);
+            let _ = fs::read(path);
+        }
+    }
+  - |
+    #[cfg(test)]
+    mod tests {
+        fn t() {
+            let _ = fs::read(path);
+        }
+    }
+    mod prod {
+        fn t() {
+            fs::write(path, data);
+        }
+    }
+  - |
+    fn builder() {
+        builder.create(true);
+    }
+invalid:
+  - |
+    #[cfg(test)]
+    mod tests {
+        fn t() {
+            fs::write(path, data);
+        }
+    }
+  - |
+    #[cfg(test)]
+    fn direct() {
+        std::fs::create_dir_all(path);
+    }
+  - |
+    #[cfg(test)]
+    #[test]
+    fn flagged() {
+        fs::write(path, data);
+    }
+  - |
+    #[cfg(test)]
+    #[ignore]
+    #[test]
+    fn two_attrs() {
+        fs::write(path, data);
+    }
+  - |
+    #[cfg(all(test, unix))]
+    fn unix_test() {
+        File::create(path);
+    }
+  - |
+    #[cfg(all(feature = "test-instrumentation", test))]
+    fn feature_then_test() {
+        fs::write(path, data);
+    }
+  - |
+    #[cfg(test)]
+    impl Foo {
+        fn t() {
+            OpenOptions::new().create(true).open(path);
+        }
+    }

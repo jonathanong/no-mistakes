@@ -2,5 +2,7 @@
 # as ast-grep rules instead of native `no-mistakes check` rules.
 ruleDirs:
   - .ast-grep/rules
+utilDirs:
+  - .ast-grep/utils
 testConfigs:
   - testDir: .ast-grep/rule-tests

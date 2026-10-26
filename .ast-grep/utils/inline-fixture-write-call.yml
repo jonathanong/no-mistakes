@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Shared call shapes for the inline-fixture-write ban. Not a project rule.
+# `create_dir` (no `_all`) and `Write::write` are intentionally absent.
+id: inline-fixture-write-call
+language: rust
+rule:
+  any:
+    - pattern: std::fs::write($$$ARGS)
+    - pattern: fs::write($$$ARGS)
+    - pattern: std::fs::create_dir_all($$$ARGS)
+    - pattern: fs::create_dir_all($$$ARGS)
+    - pattern: create_dir_all($$$ARGS)
+    - pattern: std::fs::File::create($$$ARGS)
+    - pattern: fs::File::create($$$ARGS)
+    - pattern: File::create($$$ARGS)
+    - all:
+        - pattern: $RECV.create($$$ARGS)
+        - regex: OpenOptions

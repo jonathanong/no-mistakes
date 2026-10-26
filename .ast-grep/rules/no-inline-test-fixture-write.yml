@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Path half of the inline fixture-write ban. The cfg(test) half is
+# no-inline-test-fixture-write-cfg. Scan turns both off; the checker in
+# .ast-grep/check-inline-fixture-writes.py is the gate.
+id: no-inline-test-fixture-write
+language: rust
+severity: error
+message: >-
+  Inline fixture write in Rust test code. Save the fixture under fixtures/ or
+  test-cases/ and load it through the per-crate fixture helper or a
+  crates/no-mistakes/src/test_support copy helper. Runtime creation
+  (permissions, locks, symlinks, concurrent writes, or mutation of a copied
+  fixture) needs a one-line justification in
+  .ast-grep/inline-fixture-write-allowlist.txt.
+rule:
+  matches: inline-fixture-write-call
+files:
+  - "**/tests/**/*.rs"
+  - "**/tests.rs"
+  - "**/*_tests.rs"
+ignores:
+  - "fixtures/**"
+  - "test-cases/**"
+  - "**/fixtures/**"
+  - "**/test-cases/**"
