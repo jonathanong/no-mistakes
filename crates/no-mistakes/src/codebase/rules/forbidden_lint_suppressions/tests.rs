@@ -1,6 +1,7 @@
 use super::*;
 use crate::codebase::check_facts::{
-    collect_check_facts_with_graph_files_playwright_and_sources, CheckFactPlan,
+    collect_check_facts_with_graph_files_playwright_and_sources,
+    collect_check_facts_with_graph_files_playwright_sources_and_session, CheckFactPlan,
 };
 
 fn fixture() -> PathBuf {
@@ -126,12 +127,14 @@ fn prepared_comments_are_borrowed_without_second_reads_or_parses() {
     let sources = super::super::source_store_for_files(&files);
     let paths = required_files(&fixture(), &config, &files).unwrap();
     let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(Some(Arc::clone(&observer)));
     let facts = {
         let _guard = crate::diagnostics::InvocationGuard::install(Arc::clone(&observer));
-        collect_check_facts_with_graph_files_playwright_and_sources(
+        collect_check_facts_with_graph_files_playwright_sources_and_session(
+            &session,
             &fixture(),
-            paths.iter().cloned().collect(),
-            Vec::new(),
+            (paths.iter().cloned().collect(), Vec::new()),
             CheckFactPlan {
                 lint_suppression_paths: Arc::clone(&paths),
                 graph: crate::codebase::ts_source::facts::TsFactPlan::imports(),
@@ -213,4 +216,44 @@ fn typescript_accepts_compiler_prefix_markers_without_lint_boundaries() {
             .collect::<Vec<_>>(),
         [(1, "@ts-ignore")]
     );
+}
+
+#[test]
+fn missing_prepared_facts_never_trigger_private_reads_or_parses() {
+    let files = files();
+    let config = configured("default.yml");
+    let sources = super::super::source_store_for_files(&files);
+    let empty = collect_check_facts_with_graph_files_playwright_and_sources(
+        &fixture(),
+        Vec::new(),
+        Vec::new(),
+        CheckFactPlan::default(),
+        None,
+        Arc::clone(&sources),
+    );
+    for facts in [None, Some(&empty)] {
+        let error =
+            check_prepared(&fixture(), &config, &files, &sources, facts, false).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("missing prepared comment facts for src/"),
+            "{error}"
+        );
+    }
+    assert_eq!(sources.physical_read_count(), 0);
+}
+
+#[test]
+fn lexical_and_normalized_source_aliases_share_the_prepared_identity() {
+    let mut files = files();
+    files.extend(
+        files
+            .clone()
+            .iter()
+            .map(|path| crate::codebase::ts_resolver::normalize_path(path)),
+    );
+    let actual = check_with_files(&fixture(), &configured("quoted.yml"), &files).unwrap();
+    assert_eq!(actual.len(), 7, "{actual:#?}");
+    assert!(actual.iter().all(|finding| finding.file == "src/quoted.ts"));
 }

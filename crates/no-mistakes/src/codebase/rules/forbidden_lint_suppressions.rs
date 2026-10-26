@@ -28,6 +28,8 @@ pub fn required_files(
     config: &NoMistakesConfig,
     files: &[PathBuf],
 ) -> Result<Arc<BTreeSet<PathBuf>>> {
+    let (root, files) = normalized_inputs(root, files);
+    let root = root.as_path();
     let mut selected = BTreeSet::new();
     for rule in config.rule_applications(RULE_ID) {
         let options: options::Options = rule.try_rule_options()?;
@@ -75,6 +77,9 @@ pub(crate) fn check_prepared(
     facts: Option<&CheckFactMap>,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
+    let (root, files) = normalized_inputs(root, files);
+    let root = root.as_path();
+    let files = files.as_slice();
     let batches: Result<Vec<Vec<RuleFinding>>> = config.rule_applications(RULE_ID).into_par_iter().map(|rule| {
         let options: options::Options = rule.try_rule_options()?;
         let matcher = options.validate()?;
@@ -103,5 +108,17 @@ pub(crate) fn check_prepared(
     super::sort_findings(&mut findings);
     Ok(findings)
 }
+// Normalize at the rule boundary; strict prepared maps keep one canonical key.
+fn normalized_inputs(root: &Path, files: &[PathBuf]) -> (PathBuf, Vec<PathBuf>) {
+    let root = crate::codebase::ts_resolver::normalize_path(root);
+    let files = files
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect();
+    (root, files)
+}
+
 #[cfg(test)]
 mod tests;
