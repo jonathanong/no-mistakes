@@ -26,7 +26,7 @@ pub(super) fn collect(config: &NoMistakesConfig, refs: &mut Vec<Ref>, origins: b
 }
 
 pub(super) fn path_kind(value: &str) -> Kind {
-    if value.contains(['*', '?', '[', '{']) {
+    if value.contains('*') || value.contains('?') || value.contains('{') {
         Kind::Glob
     } else {
         Kind::File

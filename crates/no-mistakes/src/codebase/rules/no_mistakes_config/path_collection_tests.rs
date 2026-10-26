@@ -95,10 +95,13 @@ rules:
     let refs = super::paths::references(&config);
     assert_eq!(refs.len(), 6);
     for reference in &refs {
-        let expected = if reference.value == "backend/api" {
+        let expected = if reference.field.ends_with("allowedFiles[0]")
+            || reference.field.ends_with("forbiddenFiles[0]") {
+            super::paths::Kind::Glob
+        } else if reference.value == "backend/api" {
             super::paths::Kind::Directory
         } else {
-            super::paths::Kind::Glob
+            super::paths::Kind::Selector
         };
         assert!(reference.kind == expected, "{}", reference.field);
     }

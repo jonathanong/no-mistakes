@@ -13,6 +13,7 @@ pub(crate) enum Kind {
     File,
     Directory,
     Glob,
+    Selector,
 }
 
 pub(crate) struct Ref {
@@ -47,6 +48,9 @@ fn missing(item: Ref, tracked: &BTreeSet<String>, context: &Context<'_>) -> Opti
         Kind::Glob => glob_matches(&item.value, tracked),
         Kind::File => tracked.contains(item.value.trim_start_matches("./")),
         Kind::Directory => directory_present(&item.value, tracked),
+        Kind::Selector => {
+            directory_present(&item.value, tracked) || glob_matches(&item.value, tracked)
+        }
     };
     (!present).then(|| {
         context.finding_ref(
@@ -60,7 +64,7 @@ fn kind_label(kind: Kind) -> &'static str {
     match kind {
         Kind::File => "file",
         Kind::Directory => "directory",
-        Kind::Glob => "path",
+        Kind::Glob | Kind::Selector => "path",
     }
 }
 

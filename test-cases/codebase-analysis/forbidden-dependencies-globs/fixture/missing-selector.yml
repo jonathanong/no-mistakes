@@ -1,0 +1,9 @@
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: ["app/[tenant]", "missing/[ab]/**/*.mts"]
+      forbiddenFiles: [tests/other.mts]
+      relationships: [import]

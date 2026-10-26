@@ -35,14 +35,14 @@ fn collect_rule_paths(rule: &str, value: &Value, field: &Field, refs: &mut Vec<R
             object_paths_at(value, "scopes", "path", field, Kind::Directory, refs);
         }
         "forbidden-dependencies" => {
-            paths_at(value, "roots", field, Kind::Directory, refs);
-            paths_at(value, "excludeRoots", field, Kind::Directory, refs);
-            paths_at(value, "forbiddenFiles", field, Kind::File, refs);
+            paths_at(value, "roots", field, Kind::Selector, refs);
+            paths_at(value, "excludeRoots", field, Kind::Selector, refs);
+            paths_at(value, "forbiddenFiles", field, Kind::Glob, refs);
             if let Some(exceptions) = value.get("exceptions").and_then(Value::as_sequence) {
                 for (index, exception) in exceptions.iter().enumerate() {
                     let nested = field.key("exceptions").index(index);
-                    paths_at(exception, "roots", &nested, Kind::Directory, refs);
-                    paths_at(exception, "allowedFiles", &nested, Kind::File, refs);
+                    paths_at(exception, "roots", &nested, Kind::Selector, refs);
+                    paths_at(exception, "allowedFiles", &nested, Kind::Glob, refs);
                 }
             }
         }
@@ -151,7 +151,10 @@ fn push_path(refs: &mut Vec<Ref>, field: Field, kind: Kind, value: &str) {
     if value.is_empty() || value.starts_with('!') {
         return;
     }
-    let kind = if path_kind(value) == Kind::Glob {
+    let kind = if kind == Kind::Selector && !value.contains(['*', '?', '[', '{']) {
+        // Preserve historical diagnostics for ordinary literal roots.
+        Kind::Directory
+    } else if kind != Kind::Selector && path_kind(value) == Kind::Glob {
         Kind::Glob
     } else {
         kind

@@ -63,3 +63,6 @@ pub(crate) fn config_rel(root: &Path, all_files: &[PathBuf]) -> String {
 mod location_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod selector_tests;
