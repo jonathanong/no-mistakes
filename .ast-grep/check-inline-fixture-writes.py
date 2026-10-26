@@ -5,7 +5,8 @@ ast-grep scan runs with both fixture-write rules turned off so the shrink-only
 baseline does not fail the raw scan. This script is the gate:
 
 - findings are the union of the two project rules plus the same calls in test
-  files the path globs miss (`#[cfg(test)] mod` targets and `include!` slices)
+  files the path globs miss (`#[cfg(test)] mod` targets, child `mod`s of test
+  files, and `include!` slices)
 - allowlisted paths must still match, must carry a one-line justification, and
   must not also be baselined
 - `copy` allowlist entries may only match `create_dir_all`
@@ -32,6 +33,9 @@ CFG_RULE = "no-inline-test-fixture-write-cfg"
 
 CFG_ATTR = re.compile(
     r"#\s*\[\s*cfg\(\s*(?:test\s*\)|(?:all|any)\((?:[^]\"']|\"[^\"]*\")*\btest\s*[,)])"
+)
+NOT_TEST_ATTR = re.compile(
+    r"#\s*\[\s*cfg\(\s*not\(\s*(?:test\b|(?:all|any)\((?:[^]\"']|\"[^\"]*\")*\btest\b)"
 )
 PATH_ATTR = re.compile(r"#\s*\[\s*path\s*=\s*\"([^\"]+)\"\s*\]")
 MOD_DECL = re.compile(
@@ -130,29 +134,20 @@ def resolve_mod(parent: Path, name: str, path_attr: str | None) -> list[Path]:
     return [base / f"{name}.rs", base / name / "mod.rs"]
 
 
-def cfg_mod_targets(rel: str) -> list[str]:
-    text = (ROOT / rel).read_text(encoding="utf-8", errors="replace")
-    targets: list[str] = []
+def parse_mod_decls(text: str) -> list[tuple[list[str], str, str | None]]:
+    decls: list[tuple[list[str], str, str | None]] = []
     pending: list[str] = []
 
     def take(attrs: list[str], body: str) -> None:
         match = MOD_DECL.match(body)
-        if not match or not any(CFG_ATTR.search(attr) for attr in attrs):
+        if not match:
             return
         path_attr = None
         for attr in attrs:
             found = PATH_ATTR.search(attr)
             if found:
                 path_attr = found.group(1)
-        for candidate in resolve_mod(ROOT / rel, match.group(1), path_attr):
-            if not candidate.is_file():
-                continue
-            try:
-                relative = candidate.resolve().relative_to(ROOT.resolve()).as_posix()
-            except ValueError:
-                continue
-            if not is_sample(relative):
-                targets.append(relative)
+        decls.append((attrs, match.group(1), path_attr))
 
     for raw in text.splitlines():
         stripped = raw.strip()
@@ -169,12 +164,62 @@ def cfg_mod_targets(rel: str) -> list[str]:
             continue
         take(pending, stripped)
         pending = []
+    return decls
+
+
+def existing_mod_files(rel: str, name: str, path_attr: str | None) -> list[str]:
+    found: list[str] = []
+    for candidate in resolve_mod(ROOT / rel, name, path_attr):
+        if not candidate.is_file():
+            continue
+        try:
+            relative = candidate.resolve().relative_to(ROOT.resolve()).as_posix()
+        except ValueError:
+            continue
+        if not is_sample(relative):
+            found.append(relative)
+    return found
+
+
+def cfg_mod_targets(rel: str) -> list[str]:
+    text = (ROOT / rel).read_text(encoding="utf-8", errors="replace")
+    targets: list[str] = []
+    for attrs, name, path_attr in parse_mod_decls(text):
+        if any(CFG_ATTR.search(attr) for attr in attrs):
+            targets.extend(existing_mod_files(rel, name, path_attr))
     if re.search(
         r"#!\s*\[\s*cfg\(\s*(?:test\s*\)|(?:all|any)\((?:[^]\"']|\"[^\"]*\")*\btest\s*[,)])",
         text,
     ):
         # File-level `#![cfg(test)]` makes the whole module test-only.
         targets.append(rel)
+    return targets
+
+
+def module_dir(parent: Path) -> Path:
+    if parent.name == "mod.rs":
+        return parent.parent
+    return parent.parent / parent.stem
+
+
+def inherited_mod_targets(rel: str) -> list[str]:
+    """Child modules of a test file. Paths that leave its module directory stay out.
+
+    Integration tests sometimes `#[path]` back at production modules. Those files
+    are not test slices. `#[cfg(test)]` modules are collected separately.
+    """
+    text = (ROOT / rel).read_text(encoding="utf-8", errors="replace")
+    directory = module_dir(ROOT / rel).resolve()
+    targets: list[str] = []
+    for attrs, name, path_attr in parse_mod_decls(text):
+        if any(NOT_TEST_ATTR.search(attr) for attr in attrs):
+            continue
+        for relative in existing_mod_files(rel, name, path_attr):
+            try:
+                (ROOT / relative).resolve().relative_to(directory)
+            except ValueError:
+                continue
+            targets.append(relative)
     return targets
 
 
@@ -206,6 +251,7 @@ def close_test_files(seeds: set[str]) -> set[str]:
     while queue:
         batch = queue[:100]
         queue = queue[100:]
+        additions: list[str] = []
         for parent, include in include_targets(batch):
             candidate = (ROOT / parent).parent / include
             if not candidate.is_file():
@@ -214,7 +260,12 @@ def close_test_files(seeds: set[str]) -> set[str]:
                 relative = candidate.resolve().relative_to(ROOT.resolve()).as_posix()
             except ValueError:
                 continue
-            if relative in seen or is_sample(relative) or not relative.endswith(".rs"):
+            if relative.endswith(".rs") and not is_sample(relative):
+                additions.append(relative)
+        for parent in batch:
+            additions.extend(inherited_mod_targets(parent))
+        for relative in additions:
+            if relative in seen:
                 continue
             seen.add(relative)
             queue.append(relative)
@@ -364,6 +415,36 @@ def self_test() -> None:
     assert CFG_ATTR.search("#[cfg(all(test, unix))]")
     assert CFG_ATTR.search('#[cfg(all(feature = "test-instrumentation", test))]')
     assert not CFG_ATTR.search("#[cfg(not(test))]")
+    assert NOT_TEST_ATTR.search("#[cfg(not(test))]")
+    assert not NOT_TEST_ATTR.search("#[cfg(test)]")
+    decls = parse_mod_decls(
+        "\n".join(
+            [
+                '#[path = "flow_query_tests/basics.rs"]',
+                "mod basics;",
+                "#[cfg(not(test))]",
+                "mod hidden;",
+                "#[cfg(test)]",
+                "mod tests;",
+            ]
+        )
+    )
+    assert [name for _attrs, name, _path in decls] == ["basics", "hidden", "tests"]
+    assert decls[0][2] == "flow_query_tests/basics.rs"
+    assert module_dir(Path("/tmp/crate/src/flow_query_tests.rs")) == Path(
+        "/tmp/crate/src/flow_query_tests"
+    )
+    inside = Path("/tmp/crate/src/flow_query_tests/basics.rs").resolve()
+    outside = Path("/tmp/crate/src/invocation.rs").resolve()
+    directory = module_dir(Path("/tmp/crate/src/flow_query_tests.rs")).resolve()
+    inside.relative_to(directory)
+    try:
+        outside.relative_to(directory)
+        raise AssertionError("production path should escape the test module directory")
+    except ValueError:
+        pass
+    assert any(NOT_TEST_ATTR.search(attr) for attr in decls[1][0])
+    assert not any(NOT_TEST_ATTR.search(attr) for attr in decls[0][0])
     assert not CFG_ATTR.search('#[cfg(all(feature = "test-instrumentation"))]')
     parent = Path("/tmp/crate/src/lock.rs")
     assert resolve_mod(parent, "tests", "lock/tests.rs") == [

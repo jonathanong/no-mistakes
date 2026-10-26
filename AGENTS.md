@@ -73,7 +73,8 @@ graph. Details:
   helper or a `crates/no-mistakes/src/test_support` copy helper such as
   `materialize_saved_fixture`. `no-inline-test-fixture-write` and
   `no-inline-test-fixture-write-cfg` enforce this for `tests.rs`, `*_tests.rs`,
-  `tests/**`, `include!` slices of those files, and `#[cfg(test)]` modules
+  `tests/**`, `include!` slices of those files, child `mod`s of those files,
+  and `#[cfg(test)]` modules
   ([ast-grep rules](docs/ast-grep-rules.md)). Runtime exceptions need a one-line
   justification in `.ast-grep/inline-fixture-write-allowlist.txt`. Existing
   violations are listed in `.ast-grep/inline-fixture-write-baseline.txt`; that

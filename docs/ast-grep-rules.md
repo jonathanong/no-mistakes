@@ -236,9 +236,11 @@ the same file is not flagged. Sample projects under `fixtures/` and
 `create_dir` (one directory) and `Write::write` are outside this ban. A bare
 `write(...)` call is also outside it, so `Write::write` stays legal.
 
-The checker also scans two shapes the path globs miss: a `#[cfg(test)] mod name;`
-file (including `#[path = "..."]`) and an `include!` slice reached from a test
-file. Copy helpers under `crates/no-mistakes/src/test_support/` are outside
+The checker also scans shapes the path globs miss: a `#[cfg(test)] mod name;`
+file (including `#[path = "..."]`), a child `mod` that stays inside a test
+file's module directory (including `#[path]`, and skipping `#[cfg(not(test))]`
+and paths that point back at production code), and an `include!` slice reached
+from a test file. Copy helpers under `crates/no-mistakes/src/test_support/` are outside
 those shapes. Use them, or the per-crate fixture helper, to copy a saved
 fixture into a temp directory.
 
