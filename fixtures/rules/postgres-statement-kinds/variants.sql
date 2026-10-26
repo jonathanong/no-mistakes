@@ -1,0 +1,21 @@
+CREATE TEMP TABLE scratch (id integer);
+CREATE TEMPORARY TABLE scratch_two (id integer);
+CREATE UNLOGGED TABLE scratch_three (id integer);
+CREATE UNIQUE INDEX scratch_idx ON scratch (id);
+CREATE MATERIALIZED VIEW scratch_view AS SELECT id FROM scratch;
+CREATE OR REPLACE VIEW scratch_plain_view AS SELECT id FROM scratch;
+CREATE OR REPLACE FUNCTION scratch_fn() RETURNS integer LANGUAGE sql AS 'SELECT 1';
+CREATE OR REPLACE PROCEDURE scratch_proc() LANGUAGE sql AS 'SELECT 1';
+CREATE OR REPLACE TRIGGER scratch_trigger BEFORE INSERT ON scratch FOR EACH ROW EXECUTE FUNCTION scratch_fn();
+ALTER VIEW scratch_plain_view RENAME TO scratch_renamed_view;
+ALTER MATERIALIZED VIEW scratch_view RENAME TO scratch_renamed_materialized_view;
+ALTER TRIGGER scratch_trigger ON scratch RENAME TO scratch_renamed_trigger;
+ALTER FUNCTION scratch_fn() OWNER TO postgres;
+ALTER PROCEDURE scratch_proc() OWNER TO postgres;
+ALTER INDEX scratch_idx RENAME TO scratch_renamed_idx;
+ALTER TYPE scratch_type RENAME TO scratch_renamed_type;
+-- A missing object name is intentionally incomplete and must not become a kind.
+ALTER VIEW;
+ALTER INDEX;
+ALTER INDEX scratch_renamed_idx;
+ALTER FUNCTION scratch_fn();
