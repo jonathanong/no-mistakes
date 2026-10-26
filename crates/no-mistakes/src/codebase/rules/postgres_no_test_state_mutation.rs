@@ -126,3 +126,6 @@ pub(crate) fn check_with_files_sources_and_facts(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod execution_tests;

@@ -60,6 +60,9 @@ selected helper files:
 - `SET session_replication_role` and `SET LOCAL session_replication_role`.
 - Calls to `pg_sleep`, including calls in nested queries.
 
+Plan-only `EXPLAIN` and `EXPLAIN (ANALYZE false/off)` do not execute the
+enclosed function call. `EXPLAIN ANALYZE` and `EXPLAIN (ANALYZE true/on)` do.
+
 SQL printed in an assertion message, stored in a snapshot, or compared as data
 (for example `pg_indexes.indexdef`) does not reach an executor and is not
 reported. Ordinary DML in test setup is allowed by this rule.
