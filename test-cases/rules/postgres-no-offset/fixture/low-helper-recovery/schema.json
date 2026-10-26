@@ -5,7 +5,12 @@
   "tables": {
     "accounts": {
       "columns": {
-        "id": { "dataType": "uuid" }
+        "id": {
+          "dataType": "uuid"
+        },
+        "name": {
+          "dataType": "text"
+        }
       }
     }
   }

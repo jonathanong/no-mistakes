@@ -134,3 +134,10 @@ mod precision_tests;
 
 #[cfg(test)]
 mod coverage_tests;
+
+#[cfg(test)]
+mod patch_budget_tests;
+#[cfg(test)]
+mod patch_catalog_tests;
+#[cfg(test)]
+mod patch_support_tests;
