@@ -195,3 +195,77 @@ fn procedural_bodies_are_skipped_but_unknown_sql_and_top_level_siblings_report()
         "{report}"
     );
 }
+
+#[test]
+fn original_heads_and_rejected_branch_locations_survive_cli_preparation() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/issue-2731");
+    let expected: std::collections::BTreeMap<String, Vec<(usize, usize, String)>> =
+        serde_json::from_str(&std::fs::read_to_string(root.join("expected.json")).unwrap())
+            .unwrap();
+    let mut expected: Vec<_> = expected
+        .into_iter()
+        .flat_map(|(name, rows)| {
+            rows.into_iter()
+                .map(move |(line, _, head)| (format!("migrations/{name}"), line, head))
+        })
+        .collect();
+    expected.sort_unstable();
+    for config in ["report.yml", "low.yml"] {
+        let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["check", "--format", "json", "--root"])
+            .arg(&root)
+            .arg("--config")
+            .arg(root.join(config))
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(1));
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        let warnings = report["warnings"].as_array().unwrap();
+        assert_eq!(warnings.len(), if config == "low.yml" { 11 } else { 0 });
+        assert!(warnings.iter().all(|warning| {
+            warning.as_str().unwrap().ends_with(
+            "requested effort low; effective effort max because this rule has no low implementation"
+        )
+        }));
+
+        assert_eq!(report["advisories"], serde_json::json!([]));
+        let findings = report["rules"].as_array().unwrap();
+        // Two CREATE VIEW violations accompany the 35 failures per schema rule;
+        // the saved branch-local directive suppresses one postgres-fk-index finding.
+        assert_eq!(findings.len(), 386, "{report}");
+        let mut by_rule = std::collections::BTreeMap::<String, Vec<_>>::new();
+        for finding in findings
+            .iter()
+            .filter(|finding| finding["target"] != "CREATE VIEW")
+        {
+            let head = finding["target"].as_str().unwrap();
+            assert!(finding["message"]
+                .as_str()
+                .unwrap()
+                .contains(&format!("SQL statement `{head}` could not be analyzed")));
+            by_rule
+                .entry(finding["rule"].as_str().unwrap().to_owned())
+                .or_default()
+                .push((
+                    finding["file"].as_str().unwrap().to_owned(),
+                    finding["line"].as_u64().unwrap() as usize,
+                    head.to_owned(),
+                ));
+        }
+        assert_eq!(by_rule.len(), 11);
+        for (rule, mut findings) in by_rule {
+            findings.sort_unstable();
+            let expected_for_rule = expected
+                .iter()
+                .filter(|(file, line, _)| {
+                    rule != "postgres-fk-index"
+                        || file != "migrations/branch-bodies.sql"
+                        || *line != 7
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            assert_eq!(findings, expected_for_rule, "{config}: {rule}");
+        }
+    }
+}

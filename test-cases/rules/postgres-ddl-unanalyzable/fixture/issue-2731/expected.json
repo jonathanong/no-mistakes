@@ -1,0 +1,189 @@
+{
+  "branch-bodies.sql": [
+    [
+      7,
+      5,
+      "CREATE RECURSIVE VIEW do_if_head AS SELECT 1"
+    ],
+    [
+      9,
+      5,
+      "CREATE RECURSIVE VIEW do_elsif_head AS SELECT 1"
+    ],
+    [
+      11,
+      5,
+      "CREATE RECURSIVE VIEW do_else_head AS SELECT 1"
+    ],
+    [
+      16,
+      5,
+      "CREATE RECURSIVE VIEW do_loop_head AS SELECT 1"
+    ],
+    [
+      18,
+      7,
+      "CREATE RECURSIVE VIEW do_nested_loop_if_head AS SELECT 1"
+    ],
+    [
+      25,
+      7,
+      "CREATE RECURSIVE VIEW do_case_when_head AS SELECT 1"
+    ],
+    [
+      27,
+      7,
+      "CREATE RECURSIVE VIEW do_case_else_head AS SELECT 1"
+    ],
+    [
+      31,
+      3,
+      "FROBULATE 0b101"
+    ],
+    [
+      40,
+      5,
+      "CREATE RECURSIVE VIEW function_if_head AS SELECT 1"
+    ],
+    [
+      42,
+      5,
+      "CREATE RECURSIVE VIEW function_elsif_head AS SELECT 1"
+    ],
+    [
+      44,
+      5,
+      "CREATE RECURSIVE VIEW function_else_head AS SELECT 1"
+    ],
+    [
+      49,
+      5,
+      "CREATE RECURSIVE VIEW function_loop_head AS SELECT 1"
+    ],
+    [
+      51,
+      7,
+      "CREATE RECURSIVE VIEW function_nested_loop_if_head AS SELECT 1"
+    ],
+    [
+      58,
+      7,
+      "CREATE RECURSIVE VIEW function_case_when_head AS SELECT 1"
+    ],
+    [
+      60,
+      7,
+      "CREATE RECURSIVE VIEW function_case_else_head AS SELECT 1"
+    ],
+    [
+      64,
+      3,
+      "FROBULATE 0x1F"
+    ],
+    [
+      69,
+      1,
+      "CREATE RECURSIVE VIEW top_level_after_body AS SELECT 0x1F"
+    ]
+  ],
+  "radix-heads.sql": [
+    [
+      2,
+      1,
+      "CREATE RECURSIVE VIEW hex_head AS SELECT 0x1F"
+    ],
+    [
+      3,
+      1,
+      "CREATE RECURSIVE VIEW binary_head AS SELECT 0b101"
+    ],
+    [
+      4,
+      1,
+      "FROBULATE 0x1F"
+    ]
+  ],
+  "rewrite-heads.sql": [
+    [
+      2,
+      1,
+      "FROBULATE 0o17"
+    ],
+    [
+      3,
+      1,
+      "FROBULATE FETCH FIRST ( 1 + 1 )"
+    ],
+    [
+      4,
+      1,
+      "FROBULATE TABLE accounts"
+    ],
+    [
+      5,
+      1,
+      "FROBULATE GENERATED ALWAYS AS ( 1 ) VIRTUAL"
+    ],
+    [
+      6,
+      1,
+      "FROBULATE ON DELETE SET NULL ( a )"
+    ],
+    [
+      8,
+      13,
+      "FROBULATE 0x1F"
+    ],
+    [
+      10,
+      1,
+      "FROBULATE GROUP BY DISTINCT ROLLUP ( x )"
+    ],
+    [
+      11,
+      39,
+      "FROBULATE 0x1F"
+    ]
+  ],
+  "group-rewrite-heads.sql": [
+    [
+      2,
+      1,
+      "FROBULATE GROUP BY DISTINCT ROLLUP ( 0x1F )"
+    ],
+    [
+      4,
+      1,
+      "FROBULATE GROUP BY DISTINCT CUBE ( 0b101 )"
+    ],
+    [
+      5,
+      1,
+      "FROBULATE GROUP BY DISTINCT ROLLUP ( 0o17 )"
+    ]
+  ],
+  "copy-before-head.sql": [
+    [
+      5,
+      1,
+      "FROBULATE 0x1F"
+    ]
+  ],
+  "malformed-openers.sql": [
+    [
+      2,
+      1,
+      "<< 1 >> FROBULATE 0x1F"
+    ],
+    [
+      3,
+      1,
+      "<< broken > FROBULATE 0b101"
+    ],
+    [
+      4,
+      1,
+      "IF TRUE FROBULATE 0x1F"
+    ]
+  ]
+}

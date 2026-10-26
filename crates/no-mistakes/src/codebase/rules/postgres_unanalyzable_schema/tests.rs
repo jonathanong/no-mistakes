@@ -5,6 +5,7 @@ use crate::config::v2::load_v2_config;
 
 mod body_policy;
 mod copy_tests;
+mod original_heads;
 mod procedural_tests;
 mod recursive_heads;
 mod unsupported_policy;

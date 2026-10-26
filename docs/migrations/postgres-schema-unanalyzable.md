@@ -116,6 +116,14 @@ Rust consumers constructing `SqlUnanalyzableStatement` facts must now provide
 `procedural_body`: use `false` for top-level statements and `true` for statements
 identified inside a routine body. Node options and JSON report shapes are unchanged.
 
+Diagnostic heads retain the original statement spelling, including radix
+literals such as `0x1F` and `0b101`, through compatibility rewrites. Rejected
+SQL actions in procedural branches retain the action's own line. Invalid labels
+before an `IF` remain anchored on that rejected opener. If source views drift,
+diagnostics retain their captured tokenized head and location. An explicit
+`report` policy reports these actions as findings; the default body policy
+advises on them.
+
 The rule's configured roots, path filters, and `sqlInclude` determine which
 files are checked. Set `options.unanalyzable` on a rule application to `report`
 (explicitly including body statements), `advise` for a non-failing advisory, or

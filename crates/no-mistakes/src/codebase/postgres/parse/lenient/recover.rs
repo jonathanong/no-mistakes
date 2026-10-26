@@ -59,8 +59,7 @@ pub(super) fn parse_chunks_with_function_calls(
             &mut handled_procedural,
             procedural_body,
         );
-        // Rejected compatibility ASTs need the same leaf failure marker as parse errors.
-        produced.retain(|item| recursive_views.validate(&item.statement).is_ok());
+        failure::reject_incompatible(&mut produced, original, procedural_body, recursive_views);
         if handled_procedural.is_none() {
             failure::partial_chunk(original, &mut produced);
         }

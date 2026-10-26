@@ -6,9 +6,26 @@ mod keywords;
 mod unsupported;
 use crate::codebase::postgres::types::SqlUnanalyzableStatement;
 use sqlparser::ast::{visit_statements, DiscardObject, Statement};
+use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 use std::ops::ControlFlow;
 use std::sync::Arc;
+
+/// Replace rejected compatibility ASTs with the same leaf marker as parse errors.
+pub(super) fn reject_incompatible(
+    produced: &mut Vec<LocatedStatement>,
+    original: Option<&[TokenWithSpan]>,
+    procedural_body: bool,
+    recursive_views: &super::super::super::RecursiveViews,
+) {
+    let rejected = produced
+        .iter()
+        .any(|item| recursive_views.validate(&item.statement).is_err());
+    produced.retain(|item| recursive_views.validate(&item.statement).is_ok());
+    if rejected {
+        produced.extend(original.and_then(|tokens| rejected_schema(tokens, procedural_body)));
+    }
+}
 
 pub(super) fn guarded_action(
     tokens: &[Token],
@@ -24,6 +41,30 @@ pub(super) fn guarded_action(
     );
     marker.recovery_failure = unrecoverable_chunk(suffix, 0);
     marker.recovery_failure.as_mut()?.source_order.clear();
+    Some(marker)
+}
+
+/// A compatibility AST rejected by validation is a failed schema action,
+/// even when a preceding IF condition was recovered for function calls.
+/// RecursiveViews::validate currently rejects only CREATE RECURSIVE VIEW ASTs.
+pub(super) fn rejected_schema(
+    tokens: &[TokenWithSpan],
+    procedural_body: bool,
+) -> Option<LocatedStatement> {
+    let start = tokens.iter().position(|token| {
+        matches!(&token.token, Token::Word(word)
+            if word.quote_style.is_none() && word.keyword == Keyword::CREATE)
+    })?;
+    let mut marker = LocatedStatement::functions(
+        Statement::Discard {
+            object_type: DiscardObject::ALL,
+        },
+        false,
+    );
+    marker.recovery_failure = unrecoverable_chunk(&tokens[start..], 0);
+    let failure = marker.recovery_failure.as_mut()?;
+    failure.procedural_body = procedural_body;
+    failure.source_order.clear();
     Some(marker)
 }
 

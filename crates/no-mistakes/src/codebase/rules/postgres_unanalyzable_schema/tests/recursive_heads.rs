@@ -18,6 +18,7 @@ fn recursive_view_heads_match_canonical_facts_messages_and_targets() {
         (19, 1, "CREATE RECURSIVE VIEW"),
         (20, 1, "CREATE RECURSIVE VIEW table_body AS TABLE accounts"),
         (23, 16, "CREATE RECURSIVE VIEW"),
+        (25, 16, "CREATE RECURSIVE VIEW guarded_columns AS SELECT 1"),
     ];
     assert_eq!(
         direct
@@ -35,18 +36,15 @@ fn recursive_view_heads_match_canonical_facts_messages_and_targets() {
             .collect::<Vec<_>>(),
         direct.iter().collect::<Vec<_>>()
     );
-    // A surviving IF condition keeps its partial failure in the statement projection only.
-    let partial = statements
+    // Rejected guarded actions are schema failures at CREATE, not partial IF wrappers.
+    let guarded = statements
         .parse_failures
         .iter()
-        .find(|failure| failure.line == 25)
-        .unwrap();
-    assert_eq!(partial.column, 3);
-    assert_eq!(
-        partial.head,
-        "IF TRUE THEN CREATE RECURSIVE VIEW guarded_columns AS"
-    );
-    assert!(!partial.schema_unanalyzable);
+        .filter(|failure| failure.line == 25)
+        .collect::<Vec<_>>();
+    assert_eq!(guarded.len(), 1);
+    assert!(guarded[0].schema_unanalyzable);
+    assert_eq!(guarded[0].column, 16);
     for config_name in ["report.yml", "low.yml"] {
         let (config, files, facts) = prepared(&root, config_name);
         assert_eq!(
@@ -58,7 +56,8 @@ fn recursive_view_heads_match_canonical_facts_messages_and_targets() {
         );
         let output = diagnostics(&root, &config, &files, &facts).unwrap();
         for rule_id in RULE_IDS {
-            // Only nested body failures advise; malformed top-level recursive heads still fail.
+            // Body failures, including rejected guarded actions, advise by default.
+            // Malformed top-level recursive heads still fail.
             for (items, body) in [(&output.findings, false), (&output.advisories, true)] {
                 let findings = items
                     .iter()
@@ -66,7 +65,7 @@ fn recursive_view_heads_match_canonical_facts_messages_and_targets() {
                     .collect::<Vec<_>>();
                 let expected = expected
                     .iter()
-                    .filter(|(line, _, _)| [9, 23].contains(line) == body)
+                    .filter(|(line, _, _)| [9, 23, 25].contains(line) == body)
                     .collect::<Vec<_>>();
                 assert_eq!(
                     findings.len(),
@@ -87,8 +86,8 @@ fn recursive_view_heads_match_canonical_facts_messages_and_targets() {
         }
         let mut findings = output.findings;
         suppress_rule_findings_with_sources(&root, &mut findings, &source_store_for_files(&files));
-        assert_eq!(findings.len(), RULE_IDS.len() * (expected.len() - 2) - 1);
-        assert_eq!(output.advisories.len(), RULE_IDS.len() * 2);
+        assert_eq!(findings.len(), RULE_IDS.len() * (expected.len() - 3) - 1);
+        assert_eq!(output.advisories.len(), RULE_IDS.len() * 3);
         assert!(!findings
             .iter()
             .any(|finding| finding.rule == "postgres-fk-index" && finding.line == 18));
