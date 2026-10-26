@@ -1,0 +1,1582 @@
+{
+  "eslint": [
+    {
+      "diagnostics": [],
+      "file": "alias/caller.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 23,
+          "file": "cross-file-chain.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 24,
+          "file": "cross-file-chain.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 22,
+          "file": "cross-file-chain.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 22,
+          "file": "cross-file-chain.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 24,
+          "file": "cross-file-chain.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 30,
+          "file": "cross-file-chain.ts",
+          "line": 15,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 29,
+          "file": "cross-file-chain.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "cross-file-chain.ts",
+      "mode": "typed"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 23,
+          "file": "cross-file-chain.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 24,
+          "file": "cross-file-chain.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 22,
+          "file": "cross-file-chain.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 22,
+          "file": "cross-file-chain.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 24,
+          "file": "cross-file-chain.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 30,
+          "file": "cross-file-chain.ts",
+          "line": 15,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 29,
+          "file": "cross-file-chain.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "cross-file-chain.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 6,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 8,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 10,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 12,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 16,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 18,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 20,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 21,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 22,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 17,
+          "file": "cross-file-forwarding.ts",
+          "line": 24,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "cross-file-forwarding.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 32,
+          "file": "cross-file-hostile.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "cross-file-hostile.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 32,
+          "file": "cross-file-hostile.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "cross-file-hostile.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 32,
+          "file": "cross-file-hostile.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 32,
+          "file": "cross-file-hostile.ts",
+          "line": 15,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 36,
+          "file": "cross-file-hostile.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 37,
+          "file": "cross-file-hostile.ts",
+          "line": 19,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "cross-file-hostile.ts",
+          "line": 21,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 35,
+          "file": "cross-file-hostile.ts",
+          "line": 23,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 28,
+          "file": "cross-file-hostile.ts",
+          "line": 25,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 36,
+          "file": "cross-file-hostile.ts",
+          "line": 27,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 36,
+          "file": "cross-file-hostile.ts",
+          "line": 29,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "cross-file-hostile.ts",
+          "line": 31,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 37,
+          "file": "cross-file-hostile.ts",
+          "line": 33,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 30,
+          "file": "cross-file-hostile.ts",
+          "line": 35,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 32,
+          "file": "cross-file-hostile.ts",
+          "line": 37,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "cross-file-hostile.ts",
+          "line": 39,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 30,
+          "file": "cross-file-hostile.ts",
+          "line": 41,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "cross-file-hostile.ts",
+          "line": 47,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 30,
+          "file": "cross-file-hostile.ts",
+          "line": 50,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 29,
+          "file": "cross-file-hostile.ts",
+          "line": 53,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 34,
+          "file": "cross-file-hostile.ts",
+          "line": 56,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 29,
+          "file": "cross-file-hostile.ts",
+          "line": 62,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "cross-file-hostile.ts",
+      "mode": "typed"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 32,
+          "file": "cross-file-hostile.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "cross-file-hostile.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 32,
+          "file": "cross-file-hostile.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "cross-file-hostile.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 32,
+          "file": "cross-file-hostile.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 32,
+          "file": "cross-file-hostile.ts",
+          "line": 15,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 36,
+          "file": "cross-file-hostile.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 37,
+          "file": "cross-file-hostile.ts",
+          "line": 19,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "cross-file-hostile.ts",
+          "line": 21,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 35,
+          "file": "cross-file-hostile.ts",
+          "line": 23,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 28,
+          "file": "cross-file-hostile.ts",
+          "line": 25,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 36,
+          "file": "cross-file-hostile.ts",
+          "line": 27,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 36,
+          "file": "cross-file-hostile.ts",
+          "line": 29,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "cross-file-hostile.ts",
+          "line": 31,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 37,
+          "file": "cross-file-hostile.ts",
+          "line": 33,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 30,
+          "file": "cross-file-hostile.ts",
+          "line": 35,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 32,
+          "file": "cross-file-hostile.ts",
+          "line": 37,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "cross-file-hostile.ts",
+          "line": 39,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 30,
+          "file": "cross-file-hostile.ts",
+          "line": 41,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "cross-file-hostile.ts",
+          "line": 44,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "cross-file-hostile.ts",
+          "line": 47,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 30,
+          "file": "cross-file-hostile.ts",
+          "line": 50,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 29,
+          "file": "cross-file-hostile.ts",
+          "line": 53,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 34,
+          "file": "cross-file-hostile.ts",
+          "line": 56,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "cross-file-hostile.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 23,
+          "file": "cross-file-prototypes.ts",
+          "line": 3,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 25,
+          "file": "cross-file-prototypes.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 23,
+          "file": "cross-file-prototypes.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "cross-file-prototypes.ts",
+      "mode": "typed"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 23,
+          "file": "cross-file-prototypes.ts",
+          "line": 3,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 25,
+          "file": "cross-file-prototypes.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 23,
+          "file": "cross-file-prototypes.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "cross-file-prototypes.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 22,
+          "file": "cross-file-receivers.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 27,
+          "file": "cross-file-receivers.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 30,
+          "file": "cross-file-receivers.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 25,
+          "file": "cross-file-receivers.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 26,
+          "file": "cross-file-receivers.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 25,
+          "file": "cross-file-receivers.ts",
+          "line": 22,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 28,
+          "file": "cross-file-receivers.ts",
+          "line": 24,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 26,
+          "file": "cross-file-receivers.ts",
+          "line": 30,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 26,
+          "file": "cross-file-receivers.ts",
+          "line": 33,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 32,
+          "file": "cross-file-receivers.ts",
+          "line": 39,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "cross-file-receivers.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 24,
+          "file": "cross-file.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "cross-file.ts",
+      "mode": "typed"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 24,
+          "file": "cross-file.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "cross-file.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 25,
+          "file": "imported.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 23,
+          "file": "imported.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 27,
+          "file": "imported.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 21,
+          "file": "imported.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "imported.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 32,
+          "file": "imported.ts",
+          "line": 19,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "imported.ts",
+          "line": 21,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "imported.ts",
+          "line": 23,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "imported.ts",
+          "line": 25,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "imported.ts",
+          "line": 28,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 34,
+          "file": "imported.ts",
+          "line": 30,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "imported.ts",
+          "line": 32,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "imported.ts",
+      "mode": "typed"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 25,
+          "file": "imported.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 23,
+          "file": "imported.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 27,
+          "file": "imported.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 21,
+          "file": "imported.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "imported.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 32,
+          "file": "imported.ts",
+          "line": 19,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "imported.ts",
+          "line": 21,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 31,
+          "file": "imported.ts",
+          "line": 23,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "imported.ts",
+          "line": 25,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "imported.ts",
+          "line": 28,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 34,
+          "file": "imported.ts",
+          "line": 30,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "imported.ts",
+          "line": 32,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "imported.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 24,
+          "file": "invalid-config/caller.ts",
+          "line": 3,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "invalid-config/caller.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 24,
+          "file": "invalid-options/caller.ts",
+          "line": 3,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "invalid-options/caller.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 23,
+          "file": "local.ts",
+          "line": 16,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 25,
+          "file": "local.ts",
+          "line": 19,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 23,
+          "file": "local.ts",
+          "line": 25,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 21,
+          "file": "local.ts",
+          "line": 27,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 23,
+          "file": "local.ts",
+          "line": 31,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 24,
+          "file": "local.ts",
+          "line": 38,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 22,
+          "file": "local.ts",
+          "line": 43,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 23,
+          "file": "local.ts",
+          "line": 50,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 30,
+          "file": "local.ts",
+          "line": 56,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "local.ts",
+          "line": 64,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "local.ts",
+      "mode": "typed"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 23,
+          "file": "local.ts",
+          "line": 16,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 25,
+          "file": "local.ts",
+          "line": 19,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 23,
+          "file": "local.ts",
+          "line": 25,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 21,
+          "file": "local.ts",
+          "line": 27,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 23,
+          "file": "local.ts",
+          "line": 31,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 24,
+          "file": "local.ts",
+          "line": 38,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 22,
+          "file": "local.ts",
+          "line": 43,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 23,
+          "file": "local.ts",
+          "line": 50,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 30,
+          "file": "local.ts",
+          "line": 56,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 33,
+          "file": "local.ts",
+          "line": 64,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "local.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 24,
+          "file": "missing-extends/caller.ts",
+          "line": 3,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "missing-extends/caller.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 24,
+          "file": "no-resolve/caller.ts",
+          "line": 3,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "no-resolve/caller.ts",
+      "mode": "untyped"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 23,
+          "file": "properties.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 29,
+          "file": "properties.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 25,
+          "file": "properties.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 22,
+          "file": "properties.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 21,
+          "file": "properties.ts",
+          "line": 15,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 22,
+          "file": "properties.ts",
+          "line": 18,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 25,
+          "file": "properties.ts",
+          "line": 20,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 21,
+          "file": "properties.ts",
+          "line": 24,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 24,
+          "file": "properties.ts",
+          "line": 28,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "properties.ts",
+      "mode": "properties"
+    },
+    {
+      "diagnostics": [
+        {
+          "column": 21,
+          "file": "properties.ts",
+          "line": 3,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 23,
+          "file": "properties.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 23,
+          "file": "properties.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 29,
+          "file": "properties.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 25,
+          "file": "properties.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 22,
+          "file": "properties.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 21,
+          "file": "properties.ts",
+          "line": 15,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 22,
+          "file": "properties.ts",
+          "line": 18,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 25,
+          "file": "properties.ts",
+          "line": 20,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 21,
+          "file": "properties.ts",
+          "line": 24,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 36,
+          "file": "properties.ts",
+          "line": 26,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        },
+        {
+          "column": 24,
+          "file": "properties.ts",
+          "line": 28,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition"
+        }
+      ],
+      "file": "properties.ts",
+      "mode": "untyped"
+    }
+  ],
+  "oxlint": [
+    {
+      "diagnostics": [
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 25,
+          "file": "imported.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 23,
+          "file": "imported.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 27,
+          "file": "imported.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 21,
+          "file": "imported.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 33,
+          "file": "imported.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 32,
+          "file": "imported.ts",
+          "line": 19,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 31,
+          "file": "imported.ts",
+          "line": 21,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 31,
+          "file": "imported.ts",
+          "line": 23,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 33,
+          "file": "imported.ts",
+          "line": 25,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 33,
+          "file": "imported.ts",
+          "line": 28,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 34,
+          "file": "imported.ts",
+          "line": 30,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 33,
+          "file": "imported.ts",
+          "line": 32,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        }
+      ],
+      "files": [
+        "imported.ts"
+      ],
+      "status": 1,
+      "typeAware": false
+    },
+    {
+      "diagnostics": [
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 23,
+          "file": "local.ts",
+          "line": 16,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 25,
+          "file": "local.ts",
+          "line": 19,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 23,
+          "file": "local.ts",
+          "line": 25,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 21,
+          "file": "local.ts",
+          "line": 27,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 23,
+          "file": "local.ts",
+          "line": 31,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 24,
+          "file": "local.ts",
+          "line": 38,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 22,
+          "file": "local.ts",
+          "line": 43,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 23,
+          "file": "local.ts",
+          "line": 50,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 30,
+          "file": "local.ts",
+          "line": 56,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 33,
+          "file": "local.ts",
+          "line": 64,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        }
+      ],
+      "files": [
+        "local.ts"
+      ],
+      "status": 1,
+      "typeAware": false
+    },
+    {
+      "diagnostics": [
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 23,
+          "file": "properties.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 29,
+          "file": "properties.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 25,
+          "file": "properties.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 22,
+          "file": "properties.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 21,
+          "file": "properties.ts",
+          "line": 15,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 22,
+          "file": "properties.ts",
+          "line": 18,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 25,
+          "file": "properties.ts",
+          "line": 20,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 21,
+          "file": "properties.ts",
+          "line": 24,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 24,
+          "file": "properties.ts",
+          "line": 28,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        }
+      ],
+      "files": [
+        "properties.ts"
+      ],
+      "status": 1,
+      "typeAware": false
+    },
+    {
+      "diagnostics": [
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 23,
+          "file": "cross-file-chain.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 24,
+          "file": "cross-file-chain.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 22,
+          "file": "cross-file-chain.ts",
+          "line": 9,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 22,
+          "file": "cross-file-chain.ts",
+          "line": 11,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 24,
+          "file": "cross-file-chain.ts",
+          "line": 13,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 30,
+          "file": "cross-file-chain.ts",
+          "line": 15,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 29,
+          "file": "cross-file-chain.ts",
+          "line": 17,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        },
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 24,
+          "file": "cross-file.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        }
+      ],
+      "files": [
+        "cross-file-chain.ts",
+        "cross-file.ts"
+      ],
+      "status": 1,
+      "typeAware": true
+    }
+  ]
+}
