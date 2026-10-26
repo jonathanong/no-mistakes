@@ -114,6 +114,12 @@ Rule options still default executor names to `query`, `read`, and
 `write` when `importSpecifier` is set and `executorNames` is empty. Effects do
 not gain `functions` or `targets` from that default.
 
+`postgres-no-test-state-mutation` additionally requires rule-local
+`options.testGlobs` and accepts `options.helperRoots` to select explicit test
+and helper files. The project's scope still bounds those globs. This rule does
+not scan project `postgres.sqlInclude` files: only configured executor-reaching
+SQL in the selected TS/JS files is checked.
+
 On config load, each enabled `postgres-*` rule whose `projects` list references
 at least one project with a `postgres` block inherits that block:
 

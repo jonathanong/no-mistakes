@@ -257,13 +257,16 @@ inventories remain explicit opt-in. See [catalog options](https://github.com/jon
 Generated catalogs also record the exact connected database in `currentDatabase`.
 Older catalogs omit that evidence, so database qualification stays conservative.
 
-To ban DDL in test executors, configure `postgres-sql-statement-policy` with
-rule application `include`/`exclude`, `importSpecifier`, and any factory/type
-executor names. `sqlInclude` continues to select SQL files. Dynamic calls follow
-`unanalyzableSql` (`fail` by default, or `ignore`). Set `bannedStatements: [ddl]`
-for all 23 supported kinds and `bannedSettings` for named SET/set_config changes.
-Unknown statement kinds or groups fail configuration validation. See the
-[statement policy](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-statement-policy.md).
+To keep test SQL from changing shared PostgreSQL state, enable
+`postgres-no-test-state-mutation` with explicit `testGlobs`, optional
+`helperRoots`, and an executor `importSpecifier` (or inherit one from the
+selected project's `postgres` block). It bans schema DDL, `TRUNCATE`,
+`ALTER SYSTEM`, replication-role changes, and `pg_sleep` in executed test SQL.
+Move schema setup into migrations and inject a throwing executor for failure
+tests. See [test state mutation](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-test-state-mutation.md).
+For other statement policies, configure `postgres-sql-statement-policy` with
+`bannedStatements` and `bannedSettings`; `sqlInclude` selects raw SQL files.
+See the [statement policy](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-statement-policy.md).
 
 To catch cross-file SQL identifier registries and unbounded env/config/parameter
 sources, enable `postgres-no-mutable-sql-registry` and

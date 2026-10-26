@@ -163,6 +163,7 @@
   "PostgresCompleteCatalogColumn",
   "PostgresCompleteCatalogTable",
   "PostgresNoMutableSqlRegistryOptions",
+  "PostgresNoTestStateMutationOptions",
   "PostgresNoTransformedUuidPredicatesOptions",
   "PostgresNoUnboundedSqlIdentifierOptions",
   "PostgresOrderingCatalog",

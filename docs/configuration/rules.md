@@ -48,6 +48,14 @@ typed parameter, for example `function run(client: PoolClient) { ... }`. Merely
 configuring a type does not prove a complex receiver. The policy does not promote
 unresolved calls into executed SQL.
 
+[`postgres-no-test-state-mutation`](../rules/postgres-no-test-state-mutation.md)
+requires nonempty `options.testGlobs` and optionally accepts
+`options.helperRoots`. These globs explicitly select the test and helper files
+whose executed SQL is checked; there is no inferred test convention or
+`sqlInclude` path scan. Configure executor identities through the rule or
+inherit them from a selected project's `postgres` block. The rule uses the
+shared `unanalyzable` policy and accepts the legacy `unanalyzableSql` spelling.
+
 `postgres-bounded-statements` also accepts application-local `options.viewBounds`,
 a map from catalog view names to `bounded` or `unbounded`. It declares each
 selected view's cardinality contract; views without a policy remain unknown.
