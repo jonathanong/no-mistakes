@@ -93,6 +93,11 @@ function createSourceTypes(context, sources, receiverShape) {
       const init = stableConstInitializer(value, owner, new Set());
       return init ? valueType(init, owner, next) : null;
     }
+    if (value.type === "CallExpression" && !value.optional) {
+      const fn = declarations.callable(value.callee, owner);
+      const type = fn?.node.returnType?.typeAnnotation;
+      return type ? { type, context: fn.context } : null;
+    }
     if (value.type === "MemberExpression" && !value.computed) {
       const receiver = valueType(value.object, owner, next);
       return receiver && property(receiver.type, receiver.context, value.property.name);

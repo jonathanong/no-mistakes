@@ -68,7 +68,7 @@ function createHandoffSafety(proof) {
     )
       fn = fn.parent;
     const type = fn?.returnType?.typeAnnotation;
-    if (!type) return true;
+    if (!type) return false;
     const selected =
       property === null ? { type, context: owner } : proof.property(type, owner, property);
     return selected && proof.targetType(selected.type, selected.context) === target;
