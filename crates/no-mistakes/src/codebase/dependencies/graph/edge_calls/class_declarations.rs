@@ -1,5 +1,5 @@
-/// A class ancestry declaration. Source classes name a static `extends` base;
-/// demanded ambient declarations may retain an unresolved base. The base is the
+/// A class ancestry declaration. An unresolved or dynamic `extends` base keeps
+/// the declaration without inventing a target. A resolved base is the
 /// [`EdgeKind::Extends`] edge leaving [`ClassDeclaration::node`]; this record
 /// carries what an edge cannot: where the class is declared, whether it is
 /// exported, ambient or a namespace member, and a base that names a global
@@ -31,6 +31,8 @@ pub struct ClassDeclaration {
     /// The global the base resolved to, such as `Error`. A global has no graph
     /// node, so it cannot be an `Extends` edge target.
     pub global_base: Option<String>,
+    /// The declared base is an expression rather than a statically named class.
+    pub dynamic_base: bool,
 }
 
 impl ClassDeclaration {
@@ -89,4 +91,16 @@ impl DepGraph {
     pub fn class_declarations(&self) -> &[ClassDeclaration] {
         &self.class_declarations
     }
+}
+
+/// A class's base is recorded as a callback-flavoured construct whose caller
+/// is the class itself; nothing else produces that combination. Returns the
+/// derived class's identity and scope.
+fn class_base_owner(
+    call: &FunctionCall,
+) -> Option<(crate::codebase::dependencies::extract::CallableId, &str)> {
+    if !call.is_callback || call.invocation != InvocationKind::Construct {
+        return None;
+    }
+    Some((call.caller_id?, call.caller.as_deref()?))
 }

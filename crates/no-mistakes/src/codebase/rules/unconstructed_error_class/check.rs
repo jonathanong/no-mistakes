@@ -55,7 +55,9 @@ pub(crate) fn check_with_graph(
             let finding = finding(&root, application, result.class);
             if result.unknown_base || result.unknown_constructor || result.class.namespace_escaped {
                 diagnostics.unanalyzable(
-                    if result.unknown_base || result.unknown_constructor {
+                    if (result.unknown_base || result.unknown_constructor)
+                        && !result.dynamic_ancestry
+                    {
                         target_policy
                     } else {
                         policy
@@ -65,6 +67,7 @@ pub(crate) fn check_with_graph(
                         application,
                         result.unknown_base,
                         result.unknown_constructor,
+                        result.dynamic_ancestry,
                     ),
                 );
             } else {

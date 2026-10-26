@@ -335,16 +335,17 @@ Inputs whose construction or error ancestry cannot be proved use
   class line because the graph cannot determine whether it is an error class.
 
 Unresolved constructor targets, their otherwise-unused enclosing classes, and
-otherwise-unused classes with unresolved base ancestry produce **non-failing
-advisories**, even under
-`report` (the default). An unresolved constructor or base does not establish
+otherwise-unused classes with statically named unresolved base ancestry produce
+**non-failing advisories**, even under `report` (the default). An unresolved
+constructor or base does not establish
 that an Error class exists and is unused. `advise` also produces advisories;
-`ignore` omits these diagnostics. No option turns unresolved constructor or
-base uncertainty into a failure. `report` and `advise` differ only when
-namespace escape is the class's only uncertainty. Namespace-escape-only
-uncertainty retains the shared policy: `report` fails, `advise` advises, and
-`ignore` omits it. All these
-uncertainties have `target: unanalyzable`. The setting inherits from repository
+`ignore` omits these diagnostics. No option turns an unresolved constructor or
+a statically named unresolved base into a failure. Dynamic base ancestry and
+namespace-escape-only uncertainty retain the shared policy: `report` fails,
+`advise` advises, and `ignore` omits them. `report` and `advise` differ for
+dynamic base ancestry and when namespace escape is the class's only
+uncertainty. All these uncertainties have `target: unanalyzable`. The
+setting inherits from repository
 `unanalyzable` and can be overridden per rule application.
 Unrelated definite unconstructed error classes remain findings under every
 policy. An unknown constructor does not turn its enclosing class into a definite
@@ -379,14 +380,15 @@ removes false failures introduced by #2699:
 - Still-unresolved `new` targets, including `new this()`, `new someParam()`, and
   computed or conditional constructors, are advisory even under `report`.
   Otherwise-unused enclosing classes with those constructors are advisory too.
-- Unresolved class bases, including unavailable host-module or package type
-  declarations, are advisory even under `report`.
+- Statically named unresolved class bases, including unavailable host-module or
+  package type declarations, are advisory even under `report`. Dynamic bases
+  follow `options.unanalyzable` and fail under `report`.
 - Otherwise-unconstructed error classes in escaping namespaces still follow the
   shared policy, including failing under `report` when that is their only
   uncertainty. Definite unused Error classes remain failures under every policy.
-  No option turns unresolved constructor or base uncertainty into a failure.
-  `report` and `advise` differ only when namespace escape is the class's only
-  uncertainty.
+  No option turns an unresolved constructor or a statically named unresolved
+  base into a failure. `report` and `advise` differ for dynamic base ancestry
+  and when namespace escape is the class's only uncertainty.
 
 Use statically named constructors and analyzable class bases where possible.
 Set `options.unanalyzable: advise` to make namespace uncertainty advisory too,
@@ -430,9 +432,10 @@ Its class can still receive a definite finding, even when `unanalyzable` is
 
 ## Limitations
 
-The rule reads static code only. Unsupported constructor and base shapes are
-advisory unless ignored; reflection and some alias forms can still hide a dead
-class.
+The rule reads static code only. Unresolved constructors and statically named
+unresolved bases are advisory unless ignored. Dynamic base ancestry follows
+`options.unanalyzable`: `report` fails, `advise` advises, and `ignore` omits it.
+Reflection and some alias forms can still hide a dead class.
 
 - A dynamic `new` (`new (registry[name])()`) produces an advisory unless ignored,
   without proving which class is constructed. Reflection such as
@@ -464,8 +467,19 @@ class.
   proven non-nullish class; genuinely unknown alternatives remain uncertain.
   Shadowed, reassigned, or otherwise unproven targets remain advisory unless
   ignored. Prefer a direct class import when the package exposes one.
-- Mixin and expression bases (`extends withCode(Error)`) and class expressions
-  are not tracked.
+- Mixin and expression bases (`extends withCode(Error)`, `extends mixin(Base)`,
+  or a computed/conditional base) have unknown ancestry and follow
+  `options.unanalyzable`: `report` fails, `advise` emits an advisory, and
+  `ignore` omits them. This also applies to statically named descendants of
+  these dynamic bases. Statically named unresolved bases, including type-only
+  imports, remain advisory under `report` and `advise`. An Error argument does
+  not prove a factory returns an
+  Error constructor. Rewrite the base as a statically named class or analyzable
+  import. Known construction or subclassing still satisfies such a class.
+  Class expressions are not tracked.
+- A type-only imported base stays unknown even when its package declaration
+  extends `Error`. Use a value import when the base is a runtime constructor;
+  type declarations alone do not prove that runtime binding.
 - A dead subclass still satisfies its base. The check converges over repeated
   runs as you delete dead classes.
 - Only exported classes are reported. A non-exported class that nothing uses is

@@ -144,7 +144,7 @@ pub struct TsFileFacts {
     /// Exact class shapes and constructor display spans from the shared AST.
     #[doc(hidden)]
     pub ancestry: ancestry::AncestryFacts,
-    /// One-based declaration line of each class that names a static base.
+    /// One-based declaration line of each class with a static or dynamic base.
     pub class_declaration_lines: Vec<(crate::codebase::dependencies::extract::CallableId, u32)>,
     /// Namespace declarations, the uses of their names, and the classes that
     /// are ambient.

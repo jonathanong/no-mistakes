@@ -49,6 +49,7 @@ pub(super) struct UnconstructedClass<'a> {
     pub(super) class: &'a ClassDeclaration,
     pub(super) unknown_base: bool,
     pub(super) unknown_constructor: bool,
+    pub(super) dynamic_ancestry: bool,
 }
 
 pub(super) fn unconstructed<'a>(
@@ -71,7 +72,8 @@ pub(super) fn unconstructed<'a>(
             .or_default()
             .push(UnconstructedClass {
                 class,
-                unknown_base: kind == ErrorKind::Unknown,
+                unknown_base: matches!(kind, ErrorKind::Unknown | ErrorKind::DynamicUnknown),
+                dynamic_ancestry: kind == ErrorKind::DynamicUnknown,
                 unknown_constructor: false,
             });
     }

@@ -71,6 +71,8 @@ pub(super) fn bases<'a>(
 pub(super) enum ErrorKind {
     Other,
     Unknown,
+    // Preserve dynamic ancestry through named descendants for policy routing.
+    DynamicUnknown,
     Error,
 }
 
@@ -95,6 +97,8 @@ pub(super) fn error_kinds(graph: &DepGraph, classes: &[ClassDeclaration]) -> Vec
             // edge or global means the declared base could not be analyzed.
             let mut kind = if class.global_base.as_deref().is_some_and(builtin_error) {
                 ErrorKind::Error
+            } else if class.dynamic_base {
+                ErrorKind::DynamicUnknown
             } else if class.global_base.is_none() && parents.peek().is_none() {
                 ErrorKind::Unknown
             } else {

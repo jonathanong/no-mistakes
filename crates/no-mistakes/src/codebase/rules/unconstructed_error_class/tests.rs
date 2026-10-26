@@ -474,14 +474,12 @@ mod external_declarations;
 #[path = "tests/symlink_declarations.rs"]
 mod symlink_declarations;
 
-#[path = "tests/shared_package_targets.rs"]
-mod shared_package_targets;
-
-#[path = "tests/scoped_construction_targets.rs"]
-mod scoped_construction_targets;
-
 #[path = "tests/constructor_proof_ownership.rs"]
 mod constructor_proof_ownership;
+#[path = "tests/scoped_construction_targets.rs"]
+mod scoped_construction_targets;
+#[path = "tests/shared_package_targets.rs"]
+mod shared_package_targets;
 
 #[path = "tests/ambient_module_targets.rs"]
 mod ambient_module_targets;
@@ -498,3 +496,6 @@ mod constructor_target_gaps;
 mod declaration_proof_guards;
 #[path = "tests/workspace_export_targets.rs"]
 mod workspace_export_targets;
+
+#[path = "tests/dynamic_bases.rs"]
+mod dynamic_bases;
