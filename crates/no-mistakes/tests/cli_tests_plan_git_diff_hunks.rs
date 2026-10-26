@@ -19,19 +19,6 @@ fn fixture_dir(name: &str) -> PathBuf {
         .join(name)
 }
 
-fn copy_dir_all(src: &std::path::Path, dst: &std::path::Path) {
-    std::fs::create_dir_all(dst).unwrap();
-    for entry in std::fs::read_dir(src).unwrap() {
-        let entry = entry.unwrap();
-        let ty = entry.file_type().unwrap();
-        if ty.is_dir() {
-            copy_dir_all(&entry.path(), &dst.join(entry.file_name()));
-        } else {
-            std::fs::copy(entry.path(), dst.join(entry.file_name())).unwrap();
-        }
-    }
-}
-
 fn setup_git_repo(root: &std::path::Path) {
     Command::new("git")
         .args(["init", "-q", "-b", "main"])
@@ -96,9 +83,8 @@ fn selected_test_names(plan: &serde_json::Value) -> Vec<String> {
 /// `selector.tsx`, and bumps the `lib` workspace package (and its lockfile
 /// importer entry).
 fn two_commit_hunks_repo() -> tempfile::TempDir {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = crate::saved_fixture::materialize_path(&fixture_dir("hunks/initial"));
     let root = dir.path();
-    copy_dir_all(&fixture_dir("hunks/initial"), root);
     setup_git_repo(root);
 
     git(
@@ -406,10 +392,10 @@ fn shallow_clone_missing_the_merge_base_reports_shallow_history_and_is_nonzero()
     let origin_dir = tempfile::tempdir().unwrap();
     let origin = origin_dir.path();
     setup_git_repo(origin);
-    std::fs::write(origin.join("f.txt"), "a\n").unwrap();
+    std::fs::copy(fixture_dir("shallow/a.txt"), origin.join("f.txt")).unwrap();
     git_commit_all(origin, "c2");
     git(&["checkout", "-q", "-b", "feature"], origin);
-    std::fs::write(origin.join("f.txt"), "a\nb\n").unwrap();
+    std::fs::copy(fixture_dir("shallow/ab.txt"), origin.join("f.txt")).unwrap();
     git_commit_all(origin, "c3-feature");
 
     let shallow_dir = tempfile::tempdir().unwrap();
@@ -469,9 +455,8 @@ fn shallow_clone_missing_the_merge_base_reports_shallow_history_and_is_nonzero()
 /// *pre-base* commit — matching neither `--base` nor `--head`'s config
 /// content, like a CI runner checked out at a synthetic merge commit.
 fn detached_config_change_repo() -> (tempfile::TempDir, String, String) {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = crate::saved_fixture::materialize_path(&fixture_dir("hunks/initial"));
     let root = dir.path();
-    copy_dir_all(&fixture_dir("hunks/initial"), root);
     setup_git_repo(root);
     let root_sha = stdout(&git(&["rev-parse", "HEAD"], root))
         .trim()

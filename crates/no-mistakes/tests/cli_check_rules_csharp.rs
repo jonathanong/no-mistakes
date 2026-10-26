@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn bin() -> PathBuf {
@@ -13,14 +13,20 @@ fn fixture(scenario: &str) -> PathBuf {
     )
 }
 
-fn check(root: &PathBuf, yaml: &str) -> Output {
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(config.path(), yaml).unwrap();
+fn config(rule: &str, name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules")
+        .join(rule)
+        .join("config")
+        .join(name)
+}
+
+fn check(root: &Path, config: &Path) -> Output {
     Command::new(bin())
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
-        .arg(config.path())
+        .arg(config)
         .output()
         .unwrap()
 }
@@ -34,7 +40,10 @@ fn csharp_max_lines_per_file_passes_under_limit() {
     let root = fixture("pass");
     let out = check(
         &root,
-        "rules:\n  - rule: csharp-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 20\n",
+        &config(
+            "csharp-max-lines-per-file",
+            "csharp_max_lines_per_file_passes_under_limit.yml",
+        ),
     );
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
@@ -44,7 +53,10 @@ fn csharp_max_lines_per_file_fails_over_limit() {
     let root = fixture("fail");
     let out = check(
         &root,
-        "rules:\n  - rule: csharp-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 3\n",
+        &config(
+            "csharp-max-lines-per-file",
+            "csharp_max_lines_per_file_fails_over_limit.yml",
+        ),
     );
     assert!(!out.status.success(), "expected exit 1");
     assert!(stdout(&out).contains("physical lines"), "{}", stdout(&out));
@@ -57,7 +69,10 @@ fn csharp_max_lines_per_file_disabled_skips() {
     let root = fixture("fail");
     let out = check(
         &root,
-        "rules:\n  - rule: csharp-max-lines-per-file\n    enabled: false\n    scope: repository\n    options:\n      srcMax: 3\n",
+        &config(
+            "csharp-max-lines-per-file",
+            "csharp_max_lines_per_file_disabled_skips.yml",
+        ),
     );
     assert!(
         out.status.success(),
@@ -69,17 +84,15 @@ fn csharp_max_lines_per_file_disabled_skips() {
 #[test]
 fn csharp_max_lines_per_file_json_has_rule_id() {
     let root = fixture("fail");
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(
-        config.path(),
-        "rules:\n  - rule: csharp-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 3\n",
-    )
-    .unwrap();
+    let config = config(
+        "csharp-max-lines-per-file",
+        "csharp_max_lines_per_file_fails_over_limit.yml",
+    );
     let out = Command::new(bin())
         .args(["check", "--root"])
         .arg(&root)
         .arg("--config")
-        .arg(config.path())
+        .arg(&config)
         .args(["--format", "json"])
         .output()
         .unwrap();
@@ -95,7 +108,10 @@ fn csharp_max_lines_per_file_skips_generated() {
     let root = fixture("generated");
     let out = check(
         &root,
-        "rules:\n  - rule: csharp-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 3\n",
+        &config(
+            "csharp-max-lines-per-file",
+            "csharp_max_lines_per_file_fails_over_limit.yml",
+        ),
     );
     assert!(
         out.status.success(),
@@ -109,7 +125,10 @@ fn csharp_max_lines_per_file_uses_test_max() {
     let root = fixture("test");
     let out = check(
         &root,
-        "rules:\n  - rule: csharp-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 3\n      testMax: 20\n",
+        &config(
+            "csharp-max-lines-per-file",
+            "csharp_max_lines_per_file_uses_test_max.yml",
+        ),
     );
     assert!(
         out.status.success(),
@@ -131,7 +150,10 @@ fn csharp_no_async_void_delegate_cli_fails() {
     let root = async_void_fixture("fail");
     let out = check(
         &root,
-        "rules:\n  - rule: csharp-no-async-void-delegate\n    scope: repository\n",
+        &config(
+            "csharp-no-async-void-delegate",
+            "csharp_no_async_void_delegate_cli_fails.yml",
+        ),
     );
     assert!(!out.status.success(), "expected exit 1");
     assert!(
@@ -151,7 +173,10 @@ fn csharp_no_async_void_delegate_cli_passes() {
     let root = async_void_fixture("pass");
     let out = check(
         &root,
-        "rules:\n  - rule: csharp-no-async-void-delegate\n    scope: repository\n",
+        &config(
+            "csharp-no-async-void-delegate",
+            "csharp_no_async_void_delegate_cli_fails.yml",
+        ),
     );
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }

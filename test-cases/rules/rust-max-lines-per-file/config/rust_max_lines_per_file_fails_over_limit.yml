@@ -1,0 +1,5 @@
+rules:
+  - rule: rust-max-lines-per-file
+    scope: repository
+    options:
+      srcMax: 3

@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn bin() -> PathBuf {
@@ -13,21 +13,22 @@ fn fixture(scenario: &str) -> PathBuf {
     )
 }
 
-fn check(root: &PathBuf, yaml: &str) -> Output {
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(config.path(), yaml).unwrap();
+fn config(rule: &str, name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules")
+        .join(rule)
+        .join("config")
+        .join(name)
+}
+
+fn check(root: &Path, config: &Path) -> Output {
     Command::new(bin())
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
-        .arg(config.path())
+        .arg(config)
         .output()
         .unwrap()
-}
-
-fn check_fixture_config(root: &PathBuf, name: &str) -> Output {
-    let yaml = std::fs::read_to_string(root.join(name)).unwrap();
-    check(root, &yaml)
 }
 
 fn stdout(o: &Output) -> String {
@@ -35,11 +36,12 @@ fn stdout(o: &Output) -> String {
 }
 
 const RULE: &str = "postgres-require-query-annotation";
+const ANNOTATION: &str = "postgres_require_query_annotation_fails_without_comment.yml";
 
 #[test]
 fn postgres_require_query_annotation_fails_without_comment() {
     let root = fixture("fail");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config(RULE, ANNOTATION));
     let body = stdout(&out);
     assert!(!out.status.success(), "expected exit 1: {body}");
     assert!(body.contains(RULE), "{body}");
@@ -50,7 +52,7 @@ fn postgres_require_query_annotation_fails_without_comment() {
 #[test]
 fn postgres_require_query_annotation_fails_for_line_comment() {
     let root = fixture("fail-line-comment");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config(RULE, ANNOTATION));
     let body = stdout(&out);
     assert!(!out.status.success(), "expected exit 1: {body}");
     assert!(body.contains(RULE), "{body}");
@@ -59,14 +61,14 @@ fn postgres_require_query_annotation_fails_for_line_comment() {
 #[test]
 fn postgres_require_query_annotation_passes_with_block_comment() {
     let root = fixture("pass-annotated");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config(RULE, ANNOTATION));
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 
 #[test]
 fn postgres_require_query_annotation_passes_transaction_commands() {
     let root = fixture("pass-transaction");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config(RULE, ANNOTATION));
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 

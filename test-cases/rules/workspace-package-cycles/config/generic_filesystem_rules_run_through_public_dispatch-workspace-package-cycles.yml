@@ -1,0 +1,4 @@
+
+rules:
+  - rule: workspace-package-cycles
+    scope: repository

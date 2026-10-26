@@ -15,3 +15,10 @@ crates/no-mistakes/tests/common/git_tracked_rule.rs	copy	Copies a saved rule fix
 crates/no-mistakes/tests/common/gitignore_fixture.rs	copy	Copies a saved gitignore fixture into a tempdir.
 crates/no-mistakes/tests/common/saved_fixture.rs	runtime	Copies a saved fixture into a tempdir and rewrites tokenized control bytes that committed files cannot contain.
 crates/no-mistakes/tests/postgres_catalog_real/support.rs	copy	Copies a committed catalog fixture into a tempdir so a test can add generated files beside it.
+crates/no-mistakes/src/tests/comment.rs	runtime	Production tests comment command writes the requested --out path.
+crates/no-mistakes/src/tests/git_diff/tests.rs	runtime	Creates tab, newline, and non-UTF-8 paths and a line longer than MAX_DIFF_LINE_BYTES.
+crates/no-mistakes/src/tests/graph.rs	runtime	Production tests graph command writes the requested --out path.
+crates/no-mistakes/tests/cli_check_rules.rs	runtime	Substitutes the absolute fixture src path into .no-mistakes.yml.in.
+crates/no-mistakes/tests/cli_tests_plan_git_diff_hunks.rs	runtime	Generates a patch larger than 10 MB at runtime.
+crates/no-mistakes/tests/postgres_catalog_real/rules.rs	runtime	Derives a one-rule config from the committed catalog config.
+crates/no-mistakes/tests/support/docs_rule_snippets.rs	runtime	Writes documentation example fences, already stored in docs/, into a temp project.

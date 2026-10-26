@@ -1,53 +1,68 @@
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
+fn config(rule: &str, name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules")
+        .join(rule)
+        .join("config")
+        .join(name)
+}
+
+const DISPATCH_CONFIG_PATHS: &str =
+    "generic_filesystem_rules_run_through_public_dispatch-config-path-references.yml";
+const DISPATCH_COMPANIONS: &str =
+    "generic_filesystem_rules_run_through_public_dispatch-required-companion-imports.yml";
+const DISPATCH_VITEST_PROJECTS: &str =
+    "generic_filesystem_rules_run_through_public_dispatch-vitest-project-mapping.yml";
+const DISPATCH_PACKAGE_CYCLES: &str =
+    "generic_filesystem_rules_run_through_public_dispatch-workspace-package-cycles.yml";
+const DISPATCH_CLOSURE: &str =
+    "generic_filesystem_rules_run_through_public_dispatch-forbidden-workspace-closure.yml";
+const FINITE_SET_GLOB: &str = "finite_set_consistency_glob_coverage_appears_in_cli_json.yml";
+const PINNED_HASH_FAIL: &str = "github_actions_pinned_hash_cli_fails_for_tag_ref.yml";
+const SCRIPT_EXPRESSIONS_FAIL: &str =
+    "github_actions_script_expressions_cli_fails_for_inline_expressions.yml";
+const VITEST_CI_PATHS: &str = "vitest_ci_path_coverage_appears_in_cli_json.yml";
+const CHECKOUT_FAIL: &str = "github_actions_checkout_credentials_cli_fails_for_a_write_token.yml";
+
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
 }
 
+fn rules_dir(parts: &[&str]) -> PathBuf {
+    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/rules");
+    for part in parts {
+        path.push(part);
+    }
+    no_mistakes::codebase::ts_resolver::normalize_path(&path)
+}
+
 fn fixture(category: &str, scenario: &str) -> PathBuf {
-    no_mistakes::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/rules")
-            .join(category)
-            .join("fixture")
-            .join(scenario),
-    )
+    rules_dir(&[category, "fixture", scenario])
 }
 
 fn rule_fixture(category: &str) -> PathBuf {
-    no_mistakes::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/rules")
-            .join(category)
-            .join("fixture"),
-    )
+    rules_dir(&[category, "fixture"])
 }
 
 fn rule_fixture_scenario(category: &str, scenario: &str) -> PathBuf {
-    no_mistakes::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/rules")
-            .join(category)
-            .join(scenario),
-    )
+    rules_dir(&[category, scenario])
 }
 
-fn filesystem_findings(root: &Path, yaml: &str) -> Vec<no_mistakes::codebase::rules::RuleFinding> {
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(config.path(), yaml).unwrap();
-    no_mistakes::codebase::rules::run_filesystem_rules(root, Some(config.path())).unwrap()
+fn filesystem_findings(
+    root: &Path,
+    config: &Path,
+) -> Vec<no_mistakes::codebase::rules::RuleFinding> {
+    no_mistakes::codebase::rules::run_filesystem_rules(root, Some(config)).unwrap()
 }
 
-fn check_fixture_config(root: &PathBuf, name: &str) -> Output {
-    let yaml = std::fs::read_to_string(root.join(name)).unwrap();
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(config.path(), &yaml).unwrap();
+fn check(root: &Path, config: &Path) -> Output {
     Command::new(bin())
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
-        .arg(config.path())
+        .arg(config)
         .output()
         .unwrap()
 }
@@ -55,8 +70,6 @@ fn check_fixture_config(root: &PathBuf, name: &str) -> Output {
 fn stdout(o: &Output) -> String {
     String::from_utf8_lossy(&o.stdout).into_owned()
 }
-
-// ── github-actions-pinned-hash ───────────────────────────────────────────────
 
 #[test]
 fn github_actions_pinned_hash_fails_for_tag_ref() {
@@ -79,7 +92,10 @@ fn github_actions_pinned_hash_passes_for_pinned_workflows() {
 #[test]
 fn github_actions_pinned_hash_cli_fails_for_tag_ref() {
     let root = fixture("github-actions-pinned-hash", "fail");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(
+        &root,
+        &config("github-actions-pinned-hash", PINNED_HASH_FAIL),
+    );
     let body = stdout(&out);
 
     assert!(!out.status.success(), "expected exit 1");
@@ -93,8 +109,6 @@ fn github_actions_pinned_hash_passes_for_local_actions() {
     let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
-
-// ── github-actions-script-expressions ────────────────────────────────────────
 
 #[test]
 fn github_actions_script_expressions_flags_run_and_script_bodies() {
@@ -119,7 +133,10 @@ fn github_actions_script_expressions_passes_for_env_and_constants() {
 #[test]
 fn github_actions_script_expressions_cli_fails_for_inline_expressions() {
     let root = fixture("github-actions-script-expressions", "fail");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(
+        &root,
+        &config("github-actions-script-expressions", SCRIPT_EXPRESSIONS_FAIL),
+    );
     let body = stdout(&out);
 
     assert!(!out.status.success(), "expected exit 1: {body}");
@@ -131,49 +148,19 @@ fn github_actions_script_expressions_cli_fails_for_inline_expressions() {
 fn generic_filesystem_rules_run_through_public_dispatch() {
     let config_paths = filesystem_findings(
         &rule_fixture("config-path-references"),
-        r#"
-rules:
-  - rule: config-path-references
-    scope: repository
-    options:
-      files: [config/app.yml]
-      keys: [paths.required]
-      baseDir: root
-"#,
+        &config("config-path-references", DISPATCH_CONFIG_PATHS),
     );
     assert!(format!("{config_paths:?}").contains("missing.json"));
-
     let companions = filesystem_findings(
         &rule_fixture("required-companion-imports"),
-        r#"
-rules:
-  - rule: required-companion-imports
-    scope: repository
-    options:
-      sourceDirs: [src/components]
-      directChildOnly: true
-      sourceExtensions: [.tsx]
-      excludeBasenames: [Internal.tsx, Button.stories.tsx, Card.stories.tsx]
-      companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
-      specifierTemplate: "@/components/{sourceStem}"
-      stripSourcePrefix: src/
-"#,
+        &config("required-companion-imports", DISPATCH_COMPANIONS),
     );
     assert!(format!("{companions:?}").contains("@/components/Card"));
-
     let vitest_projects = filesystem_findings(
         &rule_fixture("vitest-project-mapping"),
-        r#"
-tests:
-  vitest:
-    configs: vitest.config.mts
-rules:
-  - rule: vitest-project-mapping
-    scope: repository
-"#,
+        &config("vitest-project-mapping", DISPATCH_VITEST_PROJECTS),
     );
     assert!(format!("{vitest_projects:?}").contains("src/unmapped.test.ts"));
-
     let vitest_ci_root = rule_fixture_scenario("vitest-ci-path-coverage", "fixture");
     let vitest_ci = no_mistakes::codebase::rules::run_filesystem_rules(
         &vitest_ci_root,
@@ -181,28 +168,15 @@ rules:
     )
     .unwrap();
     assert!(format!("{vitest_ci:?}").contains("ts-shared/utils/index.mts"));
-
     let package_cycles = filesystem_findings(
         &rule_fixture_scenario("workspace-package-cycles", "cycle"),
-        r#"
-rules:
-  - rule: workspace-package-cycles
-    scope: repository
-"#,
+        &config("workspace-package-cycles", DISPATCH_PACKAGE_CYCLES),
     );
     assert!(format!("{package_cycles:?}").contains("@x/api -> @x/domain -> @x/api"));
-
     let closure_root = rule_fixture_scenario("forbidden-workspace-closure", "transitive-workspace");
     let closure = filesystem_findings(
         &closure_root,
-        r#"
-rules:
-  - rule: forbidden-workspace-closure
-    scope: repository
-    options:
-      packages: ["@acme/app"]
-      forbidden: ["@acme/secret"]
-"#,
+        &config("forbidden-workspace-closure", DISPATCH_CLOSURE),
     );
     assert!(format!("{closure:?}").contains("@acme/app -> @acme/domain -> @acme/secret"));
 }
@@ -210,46 +184,12 @@ rules:
 #[test]
 fn finite_set_consistency_glob_coverage_appears_in_cli_json() {
     let root = rule_fixture("finite-set-consistency");
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(
-        config.path(),
-        r#"
-rules:
-  - rule: finite-set-consistency
-    scope: repository
-    options:
-      sets:
-        - name: registry
-          file: src/types.ts
-          kind: ts-const-array-property
-          target: FIRST_PARTY_EXEMPTIONS
-          property: name
-        - name: dependabotGlobs
-          file: .github/dependabot.yml
-          kind: yaml-sequence
-          key: updates.0.cooldown.exclude
-        - name: names
-          file: src/types.ts
-          kind: ts-array-literal
-          target: FIRST_PARTY_NAMES
-        - name: docsMentions
-          file: docs/dependency-updates.md
-          kind: markdown-table-code-cells
-      comparisons:
-        - left: registry
-          right: dependabotGlobs
-          mode: glob-coverage
-        - left: names
-          right: docsMentions
-"#,
-    )
-    .unwrap();
-
+    let config_path = config("finite-set-consistency", FINITE_SET_GLOB);
     let out = Command::new(bin())
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
-        .arg(config.path())
+        .arg(&config_path)
         .args(["--format", "json"])
         .output()
         .unwrap();
@@ -302,7 +242,7 @@ fn finite_set_call_sources_under_skipped_directories_stay_out_of_other_checks() 
 #[test]
 fn vitest_ci_path_coverage_appears_in_cli_json() {
     let root = rule_fixture_scenario("vitest-ci-path-coverage", "fixture");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config("vitest-ci-path-coverage", VITEST_CI_PATHS));
     let body = stdout(&out);
 
     assert!(!out.status.success(), "expected vitest CI path finding");
@@ -544,7 +484,10 @@ fn finite_set_path_regex_matches_broken_symlink_path_existence() {
 #[test]
 fn github_actions_checkout_credentials_cli_fails_for_a_write_token() {
     let root = fixture("github-actions-checkout-credentials", "fail");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(
+        &root,
+        &config("github-actions-checkout-credentials", CHECKOUT_FAIL),
+    );
     let body = stdout(&out);
     assert!(!out.status.success(), "{body}");
     assert!(

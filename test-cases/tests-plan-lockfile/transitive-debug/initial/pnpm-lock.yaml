@@ -1,0 +1,7 @@
+lockfileVersion: '9.0'
+
+packages:
+  lodash@4.17.20:
+    resolution: {integrity: sha512-old}
+  debug@4.3.0:
+    resolution: {integrity: sha512-dbg-old}

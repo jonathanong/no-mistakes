@@ -1,10 +1,14 @@
-use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Output};
-use tempfile::tempdir;
 
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
+}
+
+fn plan_path(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/tests-impact-rendering")
+        .join(name)
 }
 
 fn run(args: &[&str]) -> Output {
@@ -20,24 +24,7 @@ fn stdout(output: &Output) -> String {
 
 #[test]
 fn tests_why_preserves_vitest_setup_provenance_from_plan_json() {
-    let tmp = tempdir().unwrap();
-    let plan_file = tmp.path().join("plan.json");
-    let sample_plan = serde_json::json!({
-        "selected_tests": [{
-            "test_file": "a.test.mts",
-            "confidence": "high",
-            "reasons": [{
-                "changed_file": "setup/helpers.mts",
-                "path": ["setup/helpers.mts", "setup/vitest.mts", "a.test.mts"],
-                "via": ["import", "vitest-setup"],
-                "via_details": [null, {"type": "vitest-setup", "field": "setupFiles"}]
-            }]
-        }],
-        "warnings": [],
-        "fallback_triggered": false,
-        "fallback_reason": null
-    });
-    fs::write(&plan_file, serde_json::to_string(&sample_plan).unwrap()).unwrap();
+    let plan_file = plan_path("why-vitest-setup.json");
 
     let output = run(&[
         "tests",
@@ -61,23 +48,7 @@ fn tests_why_preserves_vitest_setup_provenance_from_plan_json() {
 
 #[test]
 fn tests_comment_formats_markdown() {
-    let tmp = tempdir().unwrap();
-    let plan_file = tmp.path().join("plan.json");
-    let sample_plan = serde_json::json!({
-        "selected_tests": [{
-            "test_file": "a.test.mts",
-            "confidence": "high",
-            "reasons": [{
-                "changed_file": "c.mts",
-                "path": ["c.mts", "b.mts", "a.mts", "a.test.mts"],
-                "via": ["Import", "Import", "Import"]
-            }]
-        }],
-        "warnings": [],
-        "fallback_triggered": false,
-        "fallback_reason": null
-    });
-    fs::write(&plan_file, serde_json::to_string(&sample_plan).unwrap()).unwrap();
+    let plan_file = plan_path("comment-markdown.json");
 
     let output = run(&["tests", "comment", plan_file.to_str().unwrap()]);
 
@@ -90,24 +61,7 @@ fn tests_comment_formats_markdown() {
 
 #[test]
 fn tests_graph_mermaid_outputs_flowchart() {
-    let tmp = tempdir().unwrap();
-    let plan_file = tmp.path().join("plan.json");
-    let sample_plan = serde_json::json!({
-        "selected_tests": [{
-            "test_file": "a.test.mts",
-            "confidence": "high",
-            "reasons": [{
-                "changed_file": "c.mts",
-                "path": ["c.mts", "b.mts", "a.mts", "a.test.mts"],
-                "via": ["Import", "vitest-setup", "Import"],
-                "via_details": [null, {"type": "vitest-setup", "field": "setupFiles"}, null]
-            }]
-        }],
-        "warnings": [],
-        "fallback_triggered": false,
-        "fallback_reason": null
-    });
-    fs::write(&plan_file, serde_json::to_string(&sample_plan).unwrap()).unwrap();
+    let plan_file = plan_path("graph-mermaid.json");
 
     let output_mermaid = run(&[
         "tests",

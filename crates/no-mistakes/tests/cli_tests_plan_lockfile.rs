@@ -1,12 +1,21 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
 }
 
-fn setup_git_repo_with_file(root: &std::path::Path, filename: &str, content: &str) {
-    std::fs::write(root.join(filename), content).unwrap();
+fn fixture_dir(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/tests-plan-lockfile")
+        .join(name)
+}
+
+fn materialize(name: &str) -> tempfile::TempDir {
+    crate::saved_fixture::materialize_path(&fixture_dir(name))
+}
+
+fn git_init(root: &Path) {
     Command::new("git")
         .args(["init", "-b", "main"])
         .current_dir(root)
@@ -19,16 +28,24 @@ fn setup_git_repo_with_file(root: &std::path::Path, filename: &str, content: &st
             .output()
             .unwrap();
     }
+}
+
+fn git_commit(root: &Path, pathspec: &[&str], message: &str) {
     Command::new("git")
-        .args(["add", filename])
+        .arg("add")
+        .args(pathspec)
         .current_dir(root)
         .output()
         .unwrap();
     Command::new("git")
-        .args(["commit", "-m", "initial"])
+        .args(["commit", "-m", message])
         .current_dir(root)
         .output()
         .unwrap();
+}
+
+fn copy_saved(src: &Path, dest: &Path) {
+    std::fs::copy(src, dest).unwrap();
 }
 
 fn stdout(output: &Output) -> String {
@@ -37,57 +54,14 @@ fn stdout(output: &Output) -> String {
 
 #[test]
 fn tests_plan_with_lockfile_base_finds_impacted_tests() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize("direct-lodash-impact/initial");
     let root = dir.path();
-
-    let old_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    let new_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
-
-    std::fs::create_dir(root.join("src")).unwrap();
-    std::fs::write(
-        root.join("package.json"),
-        r#"{"name":"t","dependencies":{"lodash":"^4.17.0"}}"#,
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("src/utils.mts"),
-        "import { pick } from \"lodash\";\nexport const utils = { pick };\n",
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("src/utils.test.mts"),
-        "import { utils } from \"./utils.mts\";\n",
-    )
-    .unwrap();
-    std::fs::write(root.join("pnpm-lock.yaml"), old_lock).unwrap();
-
-    Command::new("git")
-        .args(["init", "-b", "main"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["config", "user.email", "test@test.com"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["config", "user.name", "Test"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["add", "-A"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["commit", "-m", "initial"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-
-    std::fs::write(root.join("pnpm-lock.yaml"), new_lock).unwrap();
+    git_init(root);
+    git_commit(root, &["-A"], "initial");
+    copy_saved(
+        &fixture_dir("direct-lodash-impact/after-pnpm-lock.yaml"),
+        &root.join("pnpm-lock.yaml"),
+    );
 
     let output = Command::new(bin())
         .args([
@@ -126,38 +100,15 @@ fn tests_plan_with_lockfile_base_finds_impacted_tests() {
 // Covers the --head branch in analyze_lockfile_changes: new content from git show <head>:.
 #[test]
 fn tests_plan_lockfile_head_option() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize("lockfile-head-option/initial");
     let root = dir.path();
-    let old_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    let new_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
-    std::fs::create_dir(root.join("src")).unwrap();
-    std::fs::write(
-        root.join("package.json"),
-        r#"{"name":"t","dependencies":{"lodash":"^4.0.0"}}"#,
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("src/utils.mts"),
-        "import { pick } from \"lodash\";\nexport const u = pick;\n",
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("src/utils.test.mts"),
-        "import { u } from \"./utils.mts\";\n",
-    )
-    .unwrap();
-    setup_git_repo_with_file(root, "pnpm-lock.yaml", old_lock);
-    std::fs::write(root.join("pnpm-lock.yaml"), new_lock).unwrap();
-    Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["commit", "-m", "v2"])
-        .current_dir(root)
-        .output()
-        .unwrap();
+    git_init(root);
+    git_commit(root, &["pnpm-lock.yaml"], "initial");
+    copy_saved(
+        &fixture_dir("lockfile-head-option/after-pnpm-lock.yaml"),
+        &root.join("pnpm-lock.yaml"),
+    );
+    git_commit(root, &["pnpm-lock.yaml"], "v2");
     let output = Command::new(bin())
         .args([
             "tests",
@@ -191,9 +142,8 @@ fn tests_plan_lockfile_head_option() {
 // find_git_root is always called but returns None here; git_root falls back to root.
 #[test]
 fn tests_plan_lockfile_no_git_repo_emits_warning() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize("no-git-baseline");
     let root = dir.path();
-    std::fs::write(root.join("pnpm-lock.yaml"), "lockfileVersion: '9.0'\n").unwrap();
     // No --base: avoids the CLI's own git-diff phase (which would fail in a non-git dir).
     // analyze_lockfile_changes still calls find_git_root (returns None → git_root = root)
     // and then hits the args.base = None branch, emitting the lockfile-no-baseline warning.
@@ -224,10 +174,10 @@ fn tests_plan_lockfile_no_git_repo_emits_warning() {
 // and a lockfile-no-baseline warning is emitted with fallback_triggered=true.
 #[test]
 fn tests_plan_invalid_base_ref_falls_back_with_warning() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize("invalid-head-ref");
     let root = dir.path();
-    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
-    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock);
+    git_init(root);
+    git_commit(root, &["pnpm-lock.yaml"], "initial");
     let output = Command::new(bin())
         .args([
             "tests",
@@ -262,59 +212,15 @@ fn tests_plan_invalid_base_ref_falls_back_with_warning() {
 // by any codebase file (no reverse edge in the dep graph) triggers a full-suite fallback.
 #[test]
 fn tests_plan_transitive_dep_triggers_fallback() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize("transitive-debug/initial");
     let root = dir.path();
-
-    // Only lodash is a direct dep (imported in code). debug is transitive (not imported).
-    let old_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n  debug@4.3.0:\n    resolution: {integrity: sha512-dbg-old}\n";
-    let new_lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n  debug@4.3.1:\n    resolution: {integrity: sha512-dbg-new}\n";
-
-    std::fs::create_dir(root.join("src")).unwrap();
-    std::fs::write(
-        root.join("package.json"),
-        r#"{"name":"t","dependencies":{"lodash":"^4.17.0"}}"#,
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("src/utils.mts"),
-        "import { pick } from \"lodash\";\nexport const utils = { pick };\n",
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("src/utils.test.mts"),
-        "import { utils } from \"./utils.mts\";\n",
-    )
-    .unwrap();
-    std::fs::write(root.join("pnpm-lock.yaml"), old_lock).unwrap();
-
-    Command::new("git")
-        .args(["init", "-b", "main"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["config", "user.email", "test@test.com"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["config", "user.name", "Test"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["add", "-A"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["commit", "-m", "initial"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-
+    git_init(root);
+    git_commit(root, &["-A"], "initial");
     // Only debug changed (lodash unchanged) → debug is transitive → fallback
-    std::fs::write(root.join("pnpm-lock.yaml"), new_lock).unwrap();
+    copy_saved(
+        &fixture_dir("transitive-debug/after-pnpm-lock.yaml"),
+        &root.join("pnpm-lock.yaml"),
+    );
 
     let output = Command::new(bin())
         .args([
@@ -348,14 +254,11 @@ fn tests_plan_transitive_dep_triggers_fallback() {
 // --base provided, the working tree may still be at the base. Should emit warning.
 #[test]
 fn tests_plan_diff_only_mode_without_head_emits_warning() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize("invalid-head-ref");
     let root = dir.path();
-    let lock_content = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
-    // A minimal diff that mentions pnpm-lock.yaml as changed
-    let diff_content = "diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml\nindex 0000000..0000001 100644\n--- a/pnpm-lock.yaml\n+++ b/pnpm-lock.yaml\n@@ -1 +1 @@\n-old\n+new\n";
-    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock_content);
-    let diff_path = root.join("change.diff");
-    std::fs::write(&diff_path, diff_content).unwrap();
+    git_init(root);
+    git_commit(root, &["pnpm-lock.yaml"], "initial");
+    let diff_path = fixture_dir("diff-only-fallback/lockfile.diff");
     // Run with --diff (diff-only mode) and --base but no --head.
     // is_diff_only_mode detects this and falls back instead of reading stale disk content.
     let output = Command::new(bin())
@@ -393,13 +296,11 @@ fn tests_plan_diff_only_mode_without_head_emits_warning() {
 // select the full suite unless global fallback is explicitly enabled.
 #[test]
 fn tests_plan_diff_only_mode_without_global_fallback_flag_does_not_fall_back() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize("invalid-head-ref");
     let root = dir.path();
-    let lock_content = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
-    let diff_content = "diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml\nindex 0000000..0000001 100644\n--- a/pnpm-lock.yaml\n+++ b/pnpm-lock.yaml\n@@ -1 +1 @@\n-old\n+new\n";
-    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock_content);
-    let diff_path = root.join("change.diff");
-    std::fs::write(&diff_path, diff_content).unwrap();
+    git_init(root);
+    git_commit(root, &["pnpm-lock.yaml"], "initial");
+    let diff_path = fixture_dir("diff-only-fallback/lockfile.diff");
     // Explicitly disable global fallback so the policy boundary is regression-tested.
     let output = Command::new(bin())
         .args([
@@ -437,56 +338,14 @@ fn tests_plan_diff_only_mode_without_global_fallback_flag_does_not_fall_back() {
 // packages in the new content are considered added and can be traced to tests.
 #[test]
 fn tests_plan_newly_added_lockfile_traces_packages() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize("newly-added-direct/initial");
     let root = dir.path();
-    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
-
-    std::fs::create_dir(root.join("src")).unwrap();
-    std::fs::write(
-        root.join("package.json"),
-        r#"{"name":"t","dependencies":{"lodash":"^4.17.0"}}"#,
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("src/utils.mts"),
-        "import { pick } from \"lodash\";\nexport const utils = { pick };\n",
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("src/utils.test.mts"),
-        "import { utils } from \"./utils.mts\";\n",
-    )
-    .unwrap();
-
-    // Init git repo WITHOUT the lockfile
-    Command::new("git")
-        .args(["init", "-b", "main"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["config", "user.email", "test@test.com"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["config", "user.name", "Test"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["add", "package.json", "src/"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["commit", "-m", "initial-no-lock"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-
-    // Now add the lockfile (not yet committed) — this is the "newly added" scenario
-    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
+    git_init(root);
+    git_commit(root, &["package.json", "src/"], "initial-no-lock");
+    copy_saved(
+        &fixture_dir("newly-added-direct/pnpm-lock.yaml"),
+        &root.join("pnpm-lock.yaml"),
+    );
 
     let output = Command::new(bin())
         .args([

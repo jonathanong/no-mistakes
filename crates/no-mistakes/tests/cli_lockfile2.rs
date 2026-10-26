@@ -1,12 +1,11 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
 }
 
-fn setup_git_repo_with_file(root: &std::path::Path, filename: &str, content: &str) {
-    std::fs::write(root.join(filename), content).unwrap();
+fn git_init(root: &Path) {
     Command::new("git")
         .args(["init", "-b", "main"])
         .current_dir(root)
@@ -19,45 +18,93 @@ fn setup_git_repo_with_file(root: &std::path::Path, filename: &str, content: &st
             .output()
             .unwrap();
     }
+}
+
+fn git_commit(root: &Path, pathspec: &[&str], message: &str) {
     Command::new("git")
-        .args(["add", filename])
+        .arg("add")
+        .args(pathspec)
         .current_dir(root)
         .output()
         .unwrap();
     Command::new("git")
-        .args(["commit", "-m", "initial"])
+        .args(["commit", "-m", message])
         .current_dir(root)
         .output()
         .unwrap();
+}
+
+fn fixture(name: &str) -> PathBuf {
+    no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis")
+            .join(name)
+            .join("fixture"),
+    )
+}
+
+fn scenario_file(name: &str, file: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis")
+        .join(name)
+        .join(file)
+}
+
+fn committed_repo(name: &str) -> tempfile::TempDir {
+    let dir = crate::saved_fixture::materialize_path(&fixture(name));
+    git_init(dir.path());
+    git_commit(dir.path(), &["-A"], "initial");
+    dir
+}
+
+fn empty_repo() -> tempfile::TempDir {
+    let dir = tempfile::tempdir().unwrap();
+    git_init(dir.path());
+    Command::new("git")
+        .args(["commit", "--allow-empty", "-m", "empty"])
+        .current_dir(dir.path())
+        .output()
+        .unwrap();
+    dir
+}
+
+fn copy_lock(name: &str, dest: &Path) {
+    std::fs::copy(fixture(name).join("pnpm-lock.yaml"), dest).unwrap();
+}
+
+fn copy_after(name: &str, dest: &Path) {
+    std::fs::copy(scenario_file(name, "after-pnpm-lock.yaml"), dest).unwrap();
 }
 
 fn stdout(output: &Output) -> String {
     String::from_utf8(output.stdout.clone()).expect("stdout should be utf8")
 }
 
+fn run(args: &[&str]) -> Output {
+    Command::new(bin())
+        .args(args)
+        .output()
+        .expect("no-mistakes should run")
+}
+
 // Covers --head failure path in run_diff: when git show <head>:<file> fails,
 // emits a warning to stderr and skips the entry (empty JSON array output).
 #[test]
 fn lockfile_diff_head_failure_warns_and_skips() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = committed_repo("lockfile-diff-pnpm-x");
     let root = dir.path();
-    let content = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
-    setup_git_repo_with_file(root, "pnpm-lock.yaml", content);
-    let output = Command::new(bin())
-        .args([
-            "lockfile",
-            "diff",
-            "--root",
-            root.to_str().unwrap(),
-            "--base",
-            "HEAD",
-            "--head",
-            "nonexistent-ref-xyz",
-            "--lockfile",
-            "pnpm-lock.yaml",
-        ])
-        .output()
-        .expect("no-mistakes should run");
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD",
+        "--head",
+        "nonexistent-ref-xyz",
+        "--lockfile",
+        "pnpm-lock.yaml",
+    ]);
     assert!(output.status.success());
     let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
     assert_eq!(arr.len(), 0, "entry skipped when head ref is missing");
@@ -67,52 +114,20 @@ fn lockfile_diff_head_failure_warns_and_skips() {
 // git show uses a repo-root-relative path (e.g. packages/api/pnpm-lock.yaml).
 #[test]
 fn lockfile_diff_subdirectory_root_uses_git_relative_path() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = committed_repo("lockfile-diff-pnpm-subdir");
     let root = dir.path();
     let sub = root.join("packages").join("api");
-    std::fs::create_dir_all(&sub).unwrap();
-    let old_content = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    std::fs::write(sub.join("pnpm-lock.yaml"), old_content).unwrap();
-    Command::new("git")
-        .args(["init", "-b", "main"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["config", "user.email", "test@test.com"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["config", "user.name", "Test"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["add", "-A"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["commit", "-m", "initial"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    let new_content = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
-    std::fs::write(sub.join("pnpm-lock.yaml"), new_content).unwrap();
-    let output = Command::new(bin())
-        .args([
-            "lockfile",
-            "diff",
-            "--root",
-            sub.to_str().unwrap(),
-            "--base",
-            "HEAD",
-            "--lockfile",
-            "pnpm-lock.yaml",
-        ])
-        .output()
-        .expect("no-mistakes should run");
+    copy_after("lockfile-diff-pnpm-subdir", &sub.join("pnpm-lock.yaml"));
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        sub.to_str().unwrap(),
+        "--base",
+        "HEAD",
+        "--lockfile",
+        "pnpm-lock.yaml",
+    ]);
     assert!(
         output.status.success(),
         "stderr: {}",
@@ -131,58 +146,21 @@ fn lockfile_diff_subdirectory_root_uses_git_relative_path() {
 // that did not exist at base, treat base as empty so all packages are reported as added.
 #[test]
 fn lockfile_diff_newly_added_lockfile_reports_added_packages() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = empty_repo();
     let root = dir.path();
-    let lock_v1 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
+    copy_lock("lockfile-diff-pnpm-x", &root.join("pnpm-lock.yaml"));
+    git_commit(root, &["pnpm-lock.yaml"], "add-lock");
 
-    // Initial commit with NO lockfile
-    Command::new("git")
-        .args(["init", "-b", "main"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["config", "user.email", "test@test.com"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["config", "user.name", "Test"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["commit", "--allow-empty", "-m", "empty"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-
-    // Second commit adds the lockfile
-    std::fs::write(root.join("pnpm-lock.yaml"), lock_v1).unwrap();
-    Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["commit", "-m", "add-lock"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-
-    let output = Command::new(bin())
-        .args([
-            "lockfile",
-            "diff",
-            "--root",
-            root.to_str().unwrap(),
-            "--base",
-            "HEAD~1",
-            "--head",
-            "HEAD",
-        ])
-        .output()
-        .expect("no-mistakes should run");
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD~1",
+        "--head",
+        "HEAD",
+    ]);
 
     assert!(
         output.status.success(),
@@ -202,25 +180,20 @@ fn lockfile_diff_newly_added_lockfile_reports_added_packages() {
 // provided, the command warns and skips rather than treating the lockfile as newly added.
 #[test]
 fn lockfile_diff_invalid_base_with_head_warns_and_skips() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = committed_repo("lockfile-diff-pnpm-x");
     let root = dir.path();
-    let lock_content = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
-    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock_content);
-    let output = Command::new(bin())
-        .args([
-            "lockfile",
-            "diff",
-            "--root",
-            root.to_str().unwrap(),
-            "--base",
-            "nonexistent-base-xyz",
-            "--head",
-            "HEAD",
-            "--lockfile",
-            "pnpm-lock.yaml",
-        ])
-        .output()
-        .expect("no-mistakes should run");
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "nonexistent-base-xyz",
+        "--head",
+        "HEAD",
+        "--lockfile",
+        "pnpm-lock.yaml",
+    ]);
     assert!(output.status.success());
     let arr: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
     assert_eq!(arr.len(), 0, "invalid base ref should be skipped: {arr:?}");
@@ -231,10 +204,8 @@ fn lockfile_diff_invalid_base_with_head_warns_and_skips() {
 // previously in the lockfile are reported as removed.
 #[test]
 fn lockfile_diff_deleted_lockfile_at_head_reports_removed_packages() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = committed_repo("lockfile-diff-pnpm-x");
     let root = dir.path();
-    let lock_v1 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
-    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock_v1);
     Command::new("git")
         .args(["rm", "pnpm-lock.yaml"])
         .current_dir(root)
@@ -245,21 +216,18 @@ fn lockfile_diff_deleted_lockfile_at_head_reports_removed_packages() {
         .current_dir(root)
         .output()
         .unwrap();
-    let output = Command::new(bin())
-        .args([
-            "lockfile",
-            "diff",
-            "--root",
-            root.to_str().unwrap(),
-            "--base",
-            "HEAD~1",
-            "--head",
-            "HEAD",
-            "--lockfile",
-            "pnpm-lock.yaml",
-        ])
-        .output()
-        .expect("no-mistakes should run");
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD~1",
+        "--head",
+        "HEAD",
+        "--lockfile",
+        "pnpm-lock.yaml",
+    ]);
     assert!(
         output.status.success(),
         "stderr: {}",
@@ -279,59 +247,21 @@ fn lockfile_diff_deleted_lockfile_at_head_reports_removed_packages() {
 // name for the git show probe (e.g. packages/api/pnpm-lock.yaml).
 #[test]
 fn lockfile_diff_subdirectory_root_with_head_uses_prefixed_path() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = committed_repo("lockfile-diff-pnpm-subdir");
     let root = dir.path();
     let sub = root.join("packages").join("api");
-    std::fs::create_dir_all(&sub).unwrap();
-    let old = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    let new = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
-    std::fs::write(sub.join("pnpm-lock.yaml"), old).unwrap();
-    Command::new("git")
-        .args(["init", "-b", "main"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    for (k, v) in [("user.email", "test@test.com"), ("user.name", "Test")] {
-        Command::new("git")
-            .args(["config", k, v])
-            .current_dir(root)
-            .output()
-            .unwrap();
-    }
-    Command::new("git")
-        .args(["add", "-A"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["commit", "-m", "initial"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::fs::write(sub.join("pnpm-lock.yaml"), new).unwrap();
-    Command::new("git")
-        .args(["add", "-A"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    Command::new("git")
-        .args(["commit", "-m", "v2"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    let output = Command::new(bin())
-        .args([
-            "lockfile",
-            "diff",
-            "--root",
-            sub.to_str().unwrap(),
-            "--base",
-            "HEAD~1",
-            "--head",
-            "HEAD",
-        ])
-        .output()
-        .expect("no-mistakes should run");
+    copy_after("lockfile-diff-pnpm-subdir", &sub.join("pnpm-lock.yaml"));
+    git_commit(root, &["-A"], "v2");
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        sub.to_str().unwrap(),
+        "--base",
+        "HEAD~1",
+        "--head",
+        "HEAD",
+    ]);
     assert!(
         output.status.success(),
         "stderr: {}",
@@ -351,42 +281,24 @@ fn lockfile_diff_subdirectory_root_with_head_uses_prefixed_path() {
 // This matters when the checkout is still at base and the head adds a new lockfile.
 #[test]
 fn lockfile_diff_head_autodetect_from_commit() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = committed_repo("lockfile-diff-pnpm-short");
     let root = dir.path();
-    let lock_v1 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.20:\n    resolution: {integrity: sha512-old}\n";
-    let lock_v2 = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-new}\n";
-
-    setup_git_repo_with_file(root, "pnpm-lock.yaml", lock_v1);
-    std::fs::write(root.join("pnpm-lock.yaml"), lock_v2).unwrap();
-    std::process::Command::new("git")
-        .args(["add", "pnpm-lock.yaml"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    std::process::Command::new("git")
-        .args(["commit", "-m", "v2"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-
+    copy_after("lockfile-diff-pnpm-short", &root.join("pnpm-lock.yaml"));
+    git_commit(root, &["pnpm-lock.yaml"], "v2");
     // Revert disk to old content so disk-based autodetect would find nothing new.
     // But --head HEAD means we detect from HEAD commit → finds pnpm-lock.yaml there.
-    std::fs::write(root.join("pnpm-lock.yaml"), lock_v1).unwrap();
+    copy_lock("lockfile-diff-pnpm-short", &root.join("pnpm-lock.yaml"));
 
-    let output = Command::new(bin())
-        .args([
-            "lockfile",
-            "diff",
-            "--root",
-            root.to_str().unwrap(),
-            "--base",
-            "HEAD~1",
-            "--head",
-            "HEAD",
-            // No --lockfile: auto-detect from head
-        ])
-        .output()
-        .expect("no-mistakes should run");
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD~1",
+        "--head",
+        "HEAD",
+    ]);
     assert!(
         output.status.success(),
         "stderr: {}",
@@ -406,42 +318,19 @@ fn lockfile_diff_head_autodetect_from_commit() {
 // in the current working-tree lockfile are reported as added.
 #[test]
 fn lockfile_diff_no_head_newly_added_lockfile_reports_added() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = empty_repo();
     let root = dir.path();
-    // Initial commit with NO lockfile
-    Command::new("git")
-        .args(["init", "-b", "main"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    for (k, v) in [("user.email", "test@test.com"), ("user.name", "Test")] {
-        Command::new("git")
-            .args(["config", k, v])
-            .current_dir(root)
-            .output()
-            .unwrap();
-    }
-    Command::new("git")
-        .args(["commit", "--allow-empty", "-m", "empty"])
-        .current_dir(root)
-        .output()
-        .unwrap();
-    // Write lockfile to disk only (not yet committed)
-    let lock = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
-    std::fs::write(root.join("pnpm-lock.yaml"), lock).unwrap();
-    let output = Command::new(bin())
-        .args([
-            "lockfile",
-            "diff",
-            "--root",
-            root.to_str().unwrap(),
-            "--base",
-            "HEAD",
-            "--lockfile",
-            "pnpm-lock.yaml",
-        ])
-        .output()
-        .expect("no-mistakes should run");
+    copy_lock("lockfile-diff-pnpm-x", &root.join("pnpm-lock.yaml"));
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD",
+        "--lockfile",
+        "pnpm-lock.yaml",
+    ]);
     assert!(
         output.status.success(),
         "stderr: {}",
@@ -465,24 +354,18 @@ fn lockfile_diff_no_head_newly_added_lockfile_reports_added() {
 // should emit a warning to stderr rather than silently producing an empty result.
 #[test]
 fn lockfile_diff_explicit_binary_lockfile_warns() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = committed_repo("lockfile-diff-bun-binary");
     let root = dir.path();
-    // Write a minimal bun.lockb stand-in so the path exists
-    std::fs::write(root.join("bun.lockb"), b"binarydata").unwrap();
-    setup_git_repo_with_file(root, "bun.lockb", "binarydata");
-    let output = Command::new(bin())
-        .args([
-            "lockfile",
-            "diff",
-            "--root",
-            root.to_str().unwrap(),
-            "--base",
-            "HEAD",
-            "--lockfile",
-            "bun.lockb",
-        ])
-        .output()
-        .expect("no-mistakes should run");
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD",
+        "--lockfile",
+        "bun.lockb",
+    ]);
     assert!(output.status.success(), "should exit 0");
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
@@ -498,24 +381,18 @@ fn lockfile_diff_explicit_binary_lockfile_warns() {
 // emits a warning, and returns success with empty output.
 #[test]
 fn lockfile_diff_invalid_head_without_explicit_lockfile_warns_and_succeeds() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = committed_repo("lockfile-diff-pnpm-x");
     let root = dir.path();
-    let content = "lockfileVersion: '9.0'\n\npackages:\n  lodash@4.17.21:\n    resolution: {integrity: sha512-x}\n";
-    setup_git_repo_with_file(root, "pnpm-lock.yaml", content);
-    let output = Command::new(bin())
-        .args([
-            "lockfile",
-            "diff",
-            "--root",
-            root.to_str().unwrap(),
-            "--base",
-            "HEAD",
-            "--head",
-            "nonexistent-ref-xyz",
-            // no --lockfile: triggers the outer git_ref_exists check
-        ])
-        .output()
-        .expect("no-mistakes should run");
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD",
+        "--head",
+        "nonexistent-ref-xyz",
+    ]);
     assert!(output.status.success());
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(

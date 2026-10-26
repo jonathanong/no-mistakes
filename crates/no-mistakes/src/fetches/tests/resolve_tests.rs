@@ -1,27 +1,27 @@
 use crate::fetches::analyze::resolve::{relative_string, resolve_import};
-use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tempfile::tempdir;
+
+fn fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/nextjs-fetches")
+        .join(name)
+        .join("fixture")
+}
 
 #[test]
 fn test_resolve_import_index() {
-    let dir = tempdir().unwrap();
-    let lib = dir.path().join("lib");
-    fs::create_dir(&lib).unwrap();
-    fs::write(lib.join("index.ts"), "").unwrap();
-
-    let current = dir.path().join("main.ts");
+    let root = fixture("resolve-import-index");
+    let current = root.join("main.ts");
     let resolved = resolve_import(&current, "./lib").unwrap();
     assert!(resolved.ends_with("lib/index.ts"));
 }
 
 #[test]
 fn test_resolve_import_explicit_extension() {
-    let dir = tempdir().unwrap();
-    let file = dir.path().join("lib.ts");
-    fs::write(&file, "").unwrap();
-
-    let current = dir.path().join("main.ts");
+    let root = fixture("resolve-import-explicit-extension");
+    let file = root.join("lib.ts");
+    let current = root.join("main.ts");
     let resolved = resolve_import(&current, "./lib.ts").unwrap();
     assert_eq!(
         resolved.canonicalize().unwrap(),
@@ -31,21 +31,13 @@ fn test_resolve_import_explicit_extension() {
 
 #[test]
 fn test_resolve_import_skips_non_javascript_file() {
-    let dir = tempdir().unwrap();
-    let stylesheet = dir.path().join("styles.css");
-    fs::write(&stylesheet, "body { }").unwrap();
-
-    let current = dir.path().join("main.ts");
+    let current = fixture("resolve-import-skips-stylesheet").join("main.ts");
     assert_eq!(resolve_import(&current, "./styles"), None);
 }
 
 #[test]
 fn test_resolve_import_skips_existing_non_javascript_file_without_extension() {
-    let dir = tempdir().unwrap();
-    let non_js = dir.path().join("legacy");
-    fs::write(&non_js, "legacy").unwrap();
-    let current = dir.path().join("main.ts");
-
+    let current = fixture("resolve-import-skips-extensionless").join("main.ts");
     assert_eq!(resolve_import(&current, "./legacy"), None);
 }
 

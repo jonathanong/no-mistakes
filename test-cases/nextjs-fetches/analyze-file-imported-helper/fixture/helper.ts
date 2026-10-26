@@ -1,0 +1,1 @@
+export const helper = () => fetch('/api/helper');

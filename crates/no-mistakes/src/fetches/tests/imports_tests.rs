@@ -6,24 +6,18 @@ use no_mistakes::fetch::imports::{
 };
 use oxc_ast::ast::Statement;
 use std::collections::HashMap;
-use std::fs;
-use tempfile::tempdir;
+use std::path::PathBuf;
+
+fn fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/nextjs-fetches")
+        .join(name)
+        .join("fixture")
+}
 
 #[test]
 fn test_collect_imports_reuses_cached_imports() {
-    let dir = tempdir().unwrap();
-    fs::create_dir_all(dir.path().join("pkg")).unwrap();
-    fs::write(dir.path().join("pkg/side-effect.ts"), "").unwrap();
-    fs::write(dir.path().join("pkg/types.ts"), "").unwrap();
-    let file = dir.path().join("pkg/index.ts");
-    fs::write(
-        &file,
-        "
-                import './side-effect';
-                import type { Foo } from './types';
-            ",
-    )
-    .unwrap();
+    let file = fixture("collect-imports-cached").join("pkg/index.ts");
 
     let mut import_cache = HashMap::new();
     let first = collect_imports(&file, &mut import_cache).unwrap();
@@ -33,16 +27,7 @@ fn test_collect_imports_reuses_cached_imports() {
 
 #[test]
 fn test_collect_imports_from_program_reuses_cached_value() {
-    let dir = tempdir().unwrap();
-    let file = dir.path().join("main.ts");
-    fs::write(file.parent().unwrap().join("side-effect.ts"), "").unwrap();
-    fs::write(
-        &file,
-        "
-            import './side-effect';
-            ",
-    )
-    .unwrap();
+    let file = fixture("collect-imports-from-program-cached").join("main.ts");
 
     let abs_path = file.canonicalize().unwrap();
     let source = std::fs::read_to_string(&abs_path).unwrap();
@@ -61,27 +46,7 @@ fn test_collect_imports_from_program_reuses_cached_value() {
 
 #[test]
 fn test_collect_imports_filters_runtime_and_type_only_imports_exports() {
-    let dir = tempdir().unwrap();
-    fs::create_dir_all(dir.path().join("pkg")).unwrap();
-
-    fs::write(dir.path().join("pkg/side-effect.ts"), "").unwrap();
-    fs::write(dir.path().join("pkg/runtime.ts"), "").unwrap();
-    fs::write(dir.path().join("pkg/runtime-all.ts"), "").unwrap();
-    fs::write(dir.path().join("pkg/types.ts"), "").unwrap();
-
-    let file = dir.path().join("pkg/index.ts");
-    fs::write(
-        &file,
-        "
-            import './side-effect';
-            import type { Foo } from './types';
-            export type { Foo } from './types';
-            export type * from './types';
-            export { runtimeExport } from './runtime';
-            export * from './runtime-all';
-            ",
-    )
-    .unwrap();
+    let file = fixture("collect-imports-runtime-and-type-only").join("pkg/index.ts");
 
     let mut import_cache = HashMap::new();
     let imports = collect_imports(&file, &mut import_cache).unwrap();
@@ -94,31 +59,11 @@ fn test_collect_imports_filters_runtime_and_type_only_imports_exports() {
 
 #[test]
 fn test_collect_runtime_imports_from_program_follows_used_runtime_imports_only() {
+    let main_file = fixture("collect-runtime-imports-used-only").join("main.ts");
+    let source = std::fs::read_to_string(&main_file).unwrap();
     let allocator = oxc_allocator::Allocator::default();
-    let source = "
-            import './side-effect';
-            import type { Foo } from './types';
-            import { used, unused } from './named';
-            import defaultImport from './default';
-            import * as namespaceImport from './namespace';
-            import { onlyUnused } from './only-unused';
-            defaultImport();
-            namespaceImport.helper();
-            used();
-            fetch('/api/entry');
-        ";
     let source_type = oxc_span::SourceType::from_path(std::path::Path::new("main.ts")).unwrap();
-    let parsed = oxc_parser::Parser::new(&allocator, source, source_type).parse();
-    let dir = tempdir().unwrap();
-    fs::create_dir_all(dir.path()).unwrap();
-    fs::write(dir.path().join("side-effect.ts"), "").unwrap();
-    fs::write(dir.path().join("named.ts"), "").unwrap();
-    fs::write(dir.path().join("default.ts"), "").unwrap();
-    fs::write(dir.path().join("namespace.ts"), "").unwrap();
-    fs::write(dir.path().join("only-unused.ts"), "").unwrap();
-
-    let main_file = dir.path().join("main.ts");
-    fs::write(&main_file, source).unwrap();
+    let parsed = oxc_parser::Parser::new(&allocator, &source, source_type).parse();
     let referenced_identifiers = collect_identifier_references(&parsed.program);
     let imports =
         collect_runtime_imports_from_program(&main_file, &parsed.program, &referenced_identifiers);

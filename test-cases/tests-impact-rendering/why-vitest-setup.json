@@ -1,0 +1,1 @@
+{"selected_tests":[{"test_file":"a.test.mts","confidence":"high","reasons":[{"changed_file":"setup/helpers.mts","path":["setup/helpers.mts","setup/vitest.mts","a.test.mts"],"via":["import","vitest-setup"],"via_details":[null,{"type":"vitest-setup","field":"setupFiles"}]}]}],"warnings":[],"fallback_triggered":false,"fallback_reason":null}

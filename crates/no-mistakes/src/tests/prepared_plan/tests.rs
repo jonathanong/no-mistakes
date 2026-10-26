@@ -40,12 +40,14 @@ fn prepared_request_keeps_dotnet_semantic_records_and_filters_only_handled_paths
     let fixture = crate::test_support::materialize_saved_fixture(&source);
     let root = fixture.path().canonicalize().unwrap();
     let mixed = root.join("mixed.csproj");
-    let mixed_after = std::fs::read(&mixed).unwrap();
+    let outside = tempfile::tempdir().unwrap();
+    let mixed_saved = outside.path().join("mixed.csproj");
+    std::fs::copy(&mixed, &mixed_saved).unwrap();
     std::fs::copy(root.join("base.csproj"), &mixed).unwrap();
     crate::test_support::git_init(&root);
     crate::test_support::git_commit_all(&root, "base");
     std::fs::copy(root.join("project-add.csproj"), root.join("base.csproj")).unwrap();
-    std::fs::write(&mixed, mixed_after).unwrap();
+    std::fs::copy(&mixed_saved, &mixed).unwrap();
     let mut args = framework_args(&root, TestFramework::Dotnet);
     args.base = Some("HEAD".to_string());
     args.changed_file = vec![root.join("base.csproj"), mixed.clone()];

@@ -1,0 +1,4 @@
+rules:
+  - rule: rust-no-inline-tests
+    enabled: false
+    scope: repository
