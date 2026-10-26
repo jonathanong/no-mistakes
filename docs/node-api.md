@@ -324,7 +324,7 @@ Import `PostgresNoTransformedUuidPredicatesOptions` to name its catalog, executo
 and effort options. Both APIs preserve findings and non-failing advisories.
 
 Playwright file selection uses the same static string/RegExp/mixed-array config
-matchers as the CLI. `check()` and `analyzeProject({ check: ... })` retain scoped
+matchers as the CLI. `check()` and `check` reports in `analyzeProject()` retain scoped
 matcher uncertainty in their existing `warnings` field; see
 [Playwright file matchers](configuration/tests.md#playwright-file-matchers).
 `playwrightCheck()` includes an optional `warnings` array for the same uncertainty;
