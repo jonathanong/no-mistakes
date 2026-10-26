@@ -7,3 +7,6 @@ insert into itest1 overriding user value;
 insert into itest1 overriding user values (1);
 INSERT INTO t (SELECT[1]) VALUES (1);
 UPDATE SELECT SET a[1] = 1;
+-- PostgreSQL rejects a third slice component even though sqlparser accepts it.
+INSERT INTO t (a[1:2:3]) VALUES (ARRAY[1,2]);
+UPDATE t SET a[1:2:3] = ARRAY[1,2];

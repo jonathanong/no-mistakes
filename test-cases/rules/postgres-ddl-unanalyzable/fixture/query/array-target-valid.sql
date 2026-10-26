@@ -11,6 +11,10 @@ insert into t1 (f1[5].q1) values(42) on conflict do nothing;
 update op set f1[2] = 3;
 -- PostgreSQL permits an omitted lower and upper slice bound.
 UPDATE arrtest_s SET a[:] = '{11, 12, 13, 14, 15}';
+-- Cast colons and nested array reads are valid inside slices.
+UPDATE arrtest_s SET a[1::int:2] = '{11, 12}';
+UPDATE arrtest_s SET a[1:(ARRAY[2,3])[1]] = '{11, 12}';
+INSERT INTO arrtest_s (a[(1)::int:2]) VALUES ('{11, 12}');
 insert into itest1 overriding user value values (30, 'xyz') on conflict do nothing;
 insert into itest5 overriding system value values (1, 'a') on conflict do nothing;
 -- Identity overrides without an arbiter clause remain INSERT facts.

@@ -1,7 +1,7 @@
 use super::recover::failure::keywords::{reserved, type_reserved};
 use sqlparser::ast::{
-    AssignmentTarget, Expr, Ident, ObjectName, ObjectNamePart, Statement, TableAlias, TableFactor,
-    Visit, Visitor,
+    AccessExpr, AssignmentTarget, Expr, Ident, ObjectName, ObjectNamePart, Statement, Subscript,
+    TableAlias, TableFactor, Visit, Visitor,
 };
 use std::ops::ControlFlow;
 
@@ -66,6 +66,13 @@ impl Visitor for QueryIdentifiers {
             return ControlFlow::Break(());
         }
         if matches!(expr, Expr::Cast { data_type, .. } if !valid_type(data_type)) {
+            return ControlFlow::Break(());
+        }
+        // sqlparser accepts a slice stride, but PostgreSQL array targets do not.
+        if matches!(expr, Expr::CompoundFieldAccess { access_chain, .. }
+            if access_chain.iter().any(|access| matches!(access,
+                AccessExpr::Subscript(Subscript::Slice { stride: Some(_), .. }))))
+        {
             return ControlFlow::Break(());
         }
         let first = match expr {
