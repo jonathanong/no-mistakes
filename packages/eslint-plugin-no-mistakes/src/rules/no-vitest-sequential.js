@@ -4,6 +4,7 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression, unwrapSequence: unwrap } = require("./async-ast");
 const { literalString } = require("./module-mock-helpers");
+const { logicalCall } = require("./logical-call");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_NAMES = new Set(["test", "it", "describe"]);
@@ -39,6 +40,8 @@ function chainInfo(node, context, seen = new Set()) {
     const forwarded = staticName(current.property, current.computed);
     if (forwarded === "call" || forwarded === "apply") {
       current = unwrap(current.object);
+      const init = constInit(current, context, seen);
+      if (init) current = unwrap(init);
     }
   }
   const names = [];
@@ -60,7 +63,12 @@ function hasSequentialMember(node) {
 }
 
 function hasSequentialOption(node) {
-  return (node.arguments || []).slice(1).some((argument) => {
+  // Opaque forwarding must not erase options already visible to the legacy check.
+  const args =
+    node.type === "CallExpression"
+      ? (logicalCall(node)?.arguments ?? node.arguments)
+      : node.arguments;
+  return (args || []).slice(1).some((argument) => {
     const value = unwrap(argument);
     return (
       value?.type === "ObjectExpression" &&

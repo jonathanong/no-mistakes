@@ -3,6 +3,7 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { literalString } = require("./module-mock-helpers");
+const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_FILE_PATTERN = /\.(?:mock\.)?(?:test|spec)\.[cm]?[jt]sx?$/;
 const TEST_IMPORT_PATTERN = /\.(?:mock\.)?(?:test|spec)(?:\.[cm]?[jt]sx?)?$/;
@@ -27,7 +28,36 @@ function forwardedName(member) {
   return literalString(member.property);
 }
 
-function requireSource(call) {
+function requireBinding(node, context, seen = new Set()) {
+  if (node?.type !== "Identifier") return false;
+  if (!context) return node.name === "require";
+  const variable = resolveVariable(node, context);
+  if (!variable || variable.defs.length === 0) return node.name === "require";
+  if (seen.has(variable)) return false;
+  seen.add(variable);
+  const def = variable.defs.length === 1 ? variable.defs[0] : null;
+  return (
+    def?.type === "Variable" &&
+    def.node?.parent?.kind === "const" &&
+    def.node.id.type === "Identifier" &&
+    !variable.references.some((ref) => ref.isWrite() && !ref.init) &&
+    requireBinding(def.node.init, context, seen)
+  );
+}
+
+function isRequireAlias(statement, context) {
+  return (
+    statement.type === "VariableDeclaration" &&
+    statement.kind === "const" &&
+    statement.declarations.length > 0 &&
+    statement.declarations.every(
+      (declaration) =>
+        declaration.id.type === "Identifier" && requireBinding(declaration.id, context),
+    )
+  );
+}
+
+function requireSource(call, context) {
   let current = call;
   while (current?.type === "ChainExpression") current = current.expression;
   if (current?.type !== "CallExpression") return null;
@@ -44,14 +74,14 @@ function requireSource(call) {
     args = args[1].elements;
   }
   while (callee?.type === "ChainExpression") callee = callee.expression;
-  if (callee?.type !== "Identifier" || callee.name !== "require") return null;
+  if (!requireBinding(callee, context)) return null;
   return stringArgument(args?.[0]);
 }
 
-function isTestRequire(statement) {
+function isTestRequire(statement, context) {
   if (
     statement.type === "ExpressionStatement" &&
-    isTestImportSource(requireSource(statement.expression))
+    isTestImportSource(requireSource(statement.expression, context))
   ) {
     return true;
   }
@@ -59,7 +89,7 @@ function isTestRequire(statement) {
     statement.type === "VariableDeclaration" &&
     statement.declarations.length > 0 &&
     statement.declarations.every((declaration) =>
-      isTestImportSource(requireSource(declaration.init)),
+      isTestImportSource(requireSource(declaration.init, context)),
     )
   );
 }
@@ -86,12 +116,20 @@ module.exports = Object.assign(
       Program(node) {
         const suppressed = ruleSuppression(context, "no-import-only-test-files");
         if (!isTestFile(context.filename) || node.body.length === 0) return;
-        const statements = node.body.filter((statement) => statement.directive === undefined);
+        const statements = node.body.filter((statement) => typeof statement.directive !== "string");
         if (statements.length === 0) return;
         if (
           suppressed(node) ||
           statements.some((statement) => suppressed(statement)) ||
-          !statements.every((statement) => isTestImport(statement) || isTestRequire(statement))
+          !statements.some(
+            (statement) => isTestImport(statement) || isTestRequire(statement, context),
+          ) ||
+          !statements.every(
+            (statement) =>
+              isTestImport(statement) ||
+              isTestRequire(statement, context) ||
+              isRequireAlias(statement, context),
+          )
         ) {
           return;
         }
