@@ -143,6 +143,11 @@ in that PR.
   plus `crates/no-mistakes/tests/docs_coverage.rs` when adding a CLI command
   or rule page. Update and run
   `crates/no-mistakes/src/main/diagnostics_args_tests.rs` for new CLI leaves.
+- **Rule snapshots** — new or changed rule output includes a committed `.snap`
+  (`*.snap text eol=lf`). Rust `check --format json` goes through
+  `check_json_snapshot` for a saved fixture. ESLint plugin fixture diagnostics
+  use Vitest `toMatchFileSnapshot`. Review that diff like code. Regenerate only
+  with `INSTA_UPDATE=1` or `vitest run -u`.
 
 ## Agent Best Practices
 

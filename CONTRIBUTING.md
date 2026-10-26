@@ -13,7 +13,9 @@ This repository is a huge token sink. Thus, contributions are welcomed.
    `crates/no-mistakes/tests/common/check_json_snapshot.rs`, which compares `--jobs 1`
    with `--jobs 2` and rewrites absolute paths, temp directories, process ids, and
    timings so the file is stable on Linux, macOS, and Windows. CI sets `INSTA_UPDATE=no`
-   and fails when a snapshot is missing or changed. Regenerate on purpose with
+   and fails when a snapshot is missing or changed. Text-format coverage for
+   `agents-md-max-size` moved into that JSON snapshot: the empty pass, the
+   over-limit message, the rule id, and the disabled skip. Regenerate on purpose with
    `INSTA_UPDATE=1 cargo test -p no-mistakes --test suite_cli_rules check_json_snapshot`
    or `cargo insta review`. In `packages/eslint-plugin-no-mistakes`, fixture
    diagnostics use Vitest `toMatchFileSnapshot` with relative paths and sorted
