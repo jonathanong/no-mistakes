@@ -6,6 +6,7 @@ const { resolveVariable, memberPropertyName } = require("./async-target-bindings
 // invocation safe. Primitive fields can still be copied into ordinary carriers.
 function siblingRead(member, context, shape, proof) {
   const name = memberPropertyName(member);
+  if (proof.receiverShape.dataFacts?.safeRead(member, context, shape)) return true;
   if (unwrapTransparentParent(member).parent?.type === "MemberExpression") return false;
   if (shape.get(name) === true) return true;
   const type = proof.valueType(member, context)?.type;

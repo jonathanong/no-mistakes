@@ -1,0 +1,1 @@
+{"categories":{"correctness":"off"},"jsPlugins":[{"name":"no-mistakes","specifier":"../../../../../packages/eslint-plugin-no-mistakes/src/index.js"}],"rules":{"no-mistakes/async-call-disposition":["error",{"targets":[{"sourceSpecifierPatterns":["@data/jobs"],"calleeNamePatterns":["enqueue"]}]}]}}
