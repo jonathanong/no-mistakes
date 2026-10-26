@@ -65,11 +65,17 @@ key column is allowed.
 
 Nested keys and non-literal dynamic keys are out of scope and skipped. Dynamic
 embedded SQL that cannot be analyzed produces no finding. This rule does not
-infer a JSON document format.
+infer a JSON document format. Only `jsonb_build_object` and literal objects
+cast to `jsonb` are collected. Keys introduced by `json_build_object`,
+`jsonb_set`, `jsonb_build_array`, `to_jsonb(row)`, or non-literal operands of
+`||` are skipped. Literal operands of a `||` merge are still checked.
 
 Separately, a `bytea` or `text` column whose name matches
 `fingerprintNamePattern` is reported for each unique constraint or unique index
-that includes it. A matching column outside a unique key is clean.
+that includes it. A matching column outside a unique key is clean. A composite
+key containing both a real foreign-key column and a fingerprint is still
+reported; confirm the relational key and use `allow` with a reason when that
+content-deduplication key is intentional.
 
 ## Valid example
 
@@ -179,8 +185,8 @@ CREATE TABLE invoices (
 ```
 
 With `fingerprintNamePattern: '_sha256$'`, the fingerprint participates in a
-unique key and is reported. Prefer a unique key over the relational foreign-key
-columns.
+unique key and is reported. Confirm that row references also have relational
+keys; use a reasoned `allow` entry for an intentional content-deduplication key.
 
 ## Findings
 
@@ -188,7 +194,7 @@ Example messages:
 
 ```text
 db/write.sql:12: (postgres-json-relation-ids) key "accountId" written into orders.details has no same-row foreign key column; write account_id with a foreign key, or allow the column with a reason
-db/schema.json:8: (postgres-json-relation-ids) column invoices.fingerprint_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_fingerprint_key; key on foreign key columns instead
+db/schema.json:8: (postgres-json-relation-ids) column invoices.fingerprint_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_fingerprint_key; confirm a relational key exists, or allow the column with a reason
 ```
 
 Each finding references `table:<table>` or `column:<table>.<column>`. Results
@@ -199,7 +205,9 @@ produces one advisory for each key.
 
 Write the real foreign-key column in the same statement as the JSON document,
 and make sure that column is a foreign key in the schema catalog. For a
-fingerprint advisory, use relational key columns in the unique constraint.
+fingerprint advisory, confirm that row references have proper relational keys.
+A unique hash can coexist with a foreign key for intentional content
+deduplication; cover it with a reasoned `allow` entry after that review.
 If the document intentionally retains identifiers only for a reason that does
 not need a relation, add a narrowly scoped `allow` entry with a useful reason.
 

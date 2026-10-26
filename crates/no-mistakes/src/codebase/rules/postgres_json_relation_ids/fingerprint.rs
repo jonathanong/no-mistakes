@@ -26,7 +26,7 @@ pub(super) fn scan(opts: &CompiledOptions, catalog: &SchemaCatalog) -> Vec<RuleF
                     rule: RULE_ID.to_string(),
                     file: file.clone(),
                     line,
-                    message: format!("{file}:{line}: column {}.{} matches fingerprintNamePattern and is part of UNIQUE key {key}; key on foreign key columns instead", table.name, column.name),
+                    message: format!("{file}:{line}: column {}.{} matches fingerprintNamePattern and is part of UNIQUE key {key}; confirm a relational key exists, or allow the column with a reason", table.name, column.name),
                     import: None,
                     target: Some(format!("column:{}.{}", table.name, column.name)),
                 });

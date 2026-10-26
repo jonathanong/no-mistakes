@@ -135,7 +135,7 @@ fn fingerprint_columns_report_once_per_unique_key_and_use_exact_guidance() {
         assert_eq!(finding.file, "schema.json");
         assert_eq!(finding.target, Some(format!("column:invoices.{column}")));
         assert_eq!(finding.message, format!(
-            "schema.json:{}: column invoices.{column} matches fingerprintNamePattern and is part of UNIQUE key {key}; key on foreign key columns instead",
+            "schema.json:{}: column invoices.{column} matches fingerprintNamePattern and is part of UNIQUE key {key}; confirm a relational key exists, or allow the column with a reason",
             finding.line
         ));
     }

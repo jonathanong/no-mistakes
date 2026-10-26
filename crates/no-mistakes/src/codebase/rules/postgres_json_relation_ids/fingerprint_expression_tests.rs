@@ -13,7 +13,7 @@ fn expression_unique_keys_reuse_catalog_columns_without_matching_names_or_litera
         Some("column:invoices.document_sha256")
     );
     assert_eq!(finding.message, format!(
-        "schema-expression-index.json:{}: column invoices.document_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_lower_hash_key; key on foreign key columns instead",
+        "schema-expression-index.json:{}: column invoices.document_sha256 matches fingerprintNamePattern and is part of UNIQUE key invoices_lower_hash_key; confirm a relational key exists, or allow the column with a reason",
         finding.line
     ));
 }
