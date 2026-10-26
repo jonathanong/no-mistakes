@@ -1,5 +1,5 @@
-import { enqueueEmail } from "@app/jobs";
+import type { Dependencies } from './types';
 
-export async function run(dependencies: { x: typeof enqueueEmail }) {
+export async function run(dependencies: Dependencies) {
   await dependencies.x([], undefined);
 }

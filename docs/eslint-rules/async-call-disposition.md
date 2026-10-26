@@ -357,23 +357,34 @@ selected-property overrides, dynamic accesses, and whole-object escapes remain
 unproven. Merely returning a promise from a named callback does not establish
 adoption.
 
-With TypeScript type information, a callback that returns the target call — a
-`return` or an expression body — hands that promise to its caller. The return
-is accepted only when every argument slot is a configured target function that
-returns a Promise. That type is the parameter or property type at the boundary,
-or the callback's own explicit annotation when the annotation and the slot are
-the same target function. `any`, `unknown`, a missing type, and a slot that is
-not a function do not qualify, so a returning callback passed to an untyped
-slot still reports. A callback that calls the target without returning it still
-reports. Structural `() => Promise<...>` parameters are not this contract, so
-same-file and imported consumer proofs stay in force. Untyped ESLint and Oxlint
-without `--type-aware` keep the previous behavior. Oxlint does not give JS
-plugins a TypeScript program; this check builds one from the nearest tsconfig
-only under `--type-aware`, and it does not follow the copy proof above.
+The source can also prove a directly returned target promise through an explicitly typed
+consumer slot, including copies inside a stored handler. The slot's parameter or
+property must resolve to `typeof` a configured imported target. That target must
+be an exported async function, or declare a return of the built-in `Promise`.
+Generators and a locally shadowed `Promise` do not qualify. An explicit callback
+annotation must preserve the same target identity; the annotation alone cannot
+prove an unknown receiving slot.
+
+This proof follows named imports, reexports, interfaces, type aliases, and the
+built-in `Partial`, `Required`, and `Readonly` wrappers. It shares the existing
+source session in typed and untyped ESLint and in Oxlint, including
+`--type-aware`. It neither requests nor builds a TypeScript program. A consumer
+may import only its dependency type; it need not repeat the target import.
+
+Every visible forwarding use must preserve that target contract. An unknown or
+untyped destination, receiver mutation, an unsafe sibling method, a custom
+prototype, `eval`, or `arguments` keeps the callback unproven. Returned carriers
+need an explicit matching return annotation so later calls retain a source
+type. Missing or ambiguous declarations, cycles, interface extensions, and paths
+beyond the proof bound stay unproven. Structural `() => Promise<...>`, `any`,
+`unknown`, and missing slots are not this contract. A callback that calls the
+target without returning its promise still reports.
 
 A call whose callee type is that same target function is checked in the file
 that invokes it. `await dependencies.x(...)` is handled there. Dropping the
-call reports at that invocation.
+call reports at that invocation, including after writes to an explicitly typed
+receiver. Unannotated or unsupported returned carriers retain the original
+callback finding instead of erasing it.
 
 Configured contracts trust the API rather than inspecting its body or inferring
 behavior from names. As with ordinary function and mock callback returns, the

@@ -1,16 +1,19 @@
 "use strict";
 
-const { resolveVariable, stableConstInitializer } = require("./async-target-bindings");
+const {
+  resolveVariable,
+  stableConstInitializer,
+  memberPropertyName,
+} = require("./async-target-bindings");
 const { createDeclarations } = require("./async-source-declarations");
-const { compileTargets, targetMatches } = require("./async-patterns");
+const { targetMatches } = require("./async-patterns");
 
 function annotation(node) {
   return node?.typeAnnotation?.typeAnnotation || null;
 }
 
-function createSourceTypes(context, sources, receiverShape) {
+function createSourceTypes(targets, sources, receiverShape) {
   const declarations = createDeclarations(sources);
-  const targets = compileTargets(context.options?.[0] || {}, "targets");
   function fresh(node, seen) {
     return node && seen.size < 32 && !seen.has(node) ? new Set(seen).add(node) : null;
   }
@@ -96,9 +99,10 @@ function createSourceTypes(context, sources, receiverShape) {
       const type = fn?.node.returnType?.typeAnnotation;
       return type ? { type, context: fn.context } : null;
     }
-    if (value.type === "MemberExpression" && !value.computed) {
+    if (value.type === "MemberExpression") {
       const receiver = valueType(value.object, owner, next);
-      return receiver && property(receiver.type, receiver.context, value.property.name);
+      const name = memberPropertyName(value);
+      return receiver && name !== null && property(receiver.type, receiver.context, name);
     }
     return null;
   }

@@ -18,7 +18,7 @@ function createPromiseHandoff(context, sourceFacts) {
   function sourceTypes() {
     if (context.sourceCode.parserServices?.program?.getCompilerOptions().noResolve) return null;
     return (types ||= createSourceTypes(
-      context,
+      sourceFacts.targets,
       (sourceFacts.sources ||= createImportedSources(context)),
       (sourceFacts.receiverShape ||= createReceiverProof(sourceFacts)),
     ));

@@ -4,17 +4,22 @@
   },
   "jsPlugins": [
     {
+      "name": "handoff-host",
+      "specifier": "./source-host-probe.cjs"
+    },
+    {
       "name": "no-mistakes",
       "specifier": "../../../../../packages/eslint-plugin-no-mistakes/src/index.js"
     }
   ],
   "rules": {
+    "handoff-host/no-program": "error",
     "no-mistakes/async-call-disposition": [
       "error",
       {
         "targets": [
           {
-            "sourceSpecifierPatterns": ["@app/jobs"],
+            "sourceSpecifierPatterns": ["@app/jobs", "@app/declared-jobs", "@app/ambient-jobs", "@app/non-promise-jobs", "@app/shadowed-promise-jobs", "./guard-target-*"],
             "calleeNamePatterns": ["enqueueEmail"]
           }
         ]

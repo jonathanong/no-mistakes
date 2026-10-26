@@ -1,1 +1,4 @@
-export declare function enqueueEmail(entries: unknown, options: unknown): Promise<void>;
+export async function enqueueEmail(entries: unknown, options: unknown) {
+  void entries;
+  void options;
+}

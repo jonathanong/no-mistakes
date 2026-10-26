@@ -1,0 +1,18 @@
+import { enqueueEmail } from '@app/jobs';
+import { defaultSlot, literalSlot, missingSlot, overloadedSlot, extendedSlot, quotedSlot, mergedSlot, mutableConsumer } from './extra-consumers';
+const defaultJob = (entries, options) => enqueueEmail(entries, options);
+defaultSlot({ x: defaultJob });
+const literalJob = (entries, options) => enqueueEmail(entries, options);
+literalSlot({ x: literalJob });
+const missingJob = (entries, options) => enqueueEmail(entries, options);
+missingSlot({ x: missingJob });
+const overloadedJob = (entries, options) => enqueueEmail(entries, options);
+overloadedSlot({ x: overloadedJob });
+const extendedJob = (entries, options) => enqueueEmail(entries, options);
+extendedSlot({ x: extendedJob });
+const quotedJob = (entries, options) => enqueueEmail(entries, options);
+quotedSlot({ x: quotedJob });
+const mergedJob = (entries, options) => enqueueEmail(entries, options);
+mergedSlot({ x: mergedJob });
+const mutableJob = (entries, options) => enqueueEmail(entries, options);
+mutableConsumer({ x: mutableJob });

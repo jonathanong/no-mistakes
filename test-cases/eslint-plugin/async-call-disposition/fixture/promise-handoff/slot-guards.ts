@@ -1,0 +1,25 @@
+import { enqueueEmail } from '@app/jobs';
+import { slot, restSlot, reassignedSlot, writtenSlot, destructuredSlot } from './slot-guard-consumers';
+const getter = (entries, options) => enqueueEmail(entries, options);
+slot({ x: getter, get other() { return 1; } });
+const method = (entries, options) => enqueueEmail(entries, options);
+slot({ x: method, other() { return 1; } });
+const computed = (entries, options) => enqueueEmail(entries, options);
+slot({ x: computed, ['other']: 1 });
+// Duplicate static fields cannot establish a callback's identity.
+const duplicate = (entries, options) => enqueueEmail(entries, options);
+slot({ x: duplicate, x: duplicate });
+const spread = (entries, options) => enqueueEmail(entries, options);
+slot({ x: spread, ...{} });
+const optional = (entries, options) => enqueueEmail(entries, options);
+slot?.({ x: optional });
+const extra = (entries, options) => enqueueEmail(entries, options);
+slot({ x: extra }, ...[]);
+const rest = (entries, options) => enqueueEmail(entries, options);
+restSlot({ x: rest });
+const reassigned = (entries, options) => enqueueEmail(entries, options);
+reassignedSlot({ x: reassigned });
+const written = (entries, options) => enqueueEmail(entries, options);
+writtenSlot({ x: written });
+const pattern = (entries, options) => enqueueEmail(entries, options);
+destructuredSlot({ x: pattern });

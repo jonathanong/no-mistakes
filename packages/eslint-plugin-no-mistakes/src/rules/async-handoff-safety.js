@@ -67,7 +67,7 @@ function createHandoffSafety(proof) {
   }
   function flow(value, property, owner, target, seen, shape, binding, consumer) {
     const parent = value.parent;
-    if (!parent) return false;
+    // Scoped references and forwarded expressions already belong to a parented AST.
     if (parent.type.startsWith("TS") && parent.expression === value) {
       return (
         property === null &&

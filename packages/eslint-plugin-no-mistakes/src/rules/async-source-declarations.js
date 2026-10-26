@@ -35,7 +35,7 @@ function createDeclarations(sources) {
   }
 
   function imported(id, context) {
-    if (id?.type !== "Identifier") return null;
+    // Both callers validate the identifier before resolving this import.
     const variable = resolveVariable(id, context);
     if (
       variable?.defs.length !== 1 ||
@@ -59,14 +59,16 @@ function createDeclarations(sources) {
       const target = sources.resolve(importInfo.source, context.filename);
       return target && exported(target, importInfo.name, new Set(seen).add(variable));
     }
-    return { node: def.node, context, id };
+    return { node: def.node, context, id, kind: def.type };
   }
 
   function callable(id, context, seen = new Set()) {
     const resolved = declaration(id, context, seen);
     if (!resolved || seen.has(resolved.node) || seen.size >= 32) return null;
     const { node, context: owner } = resolved;
-    if (["FunctionDeclaration", "TSDeclareFunction"].includes(node.type)) return resolved;
+    // A parameter definition also points at its enclosing function, not a callee implementation.
+    if (["FunctionDeclaration", "TSDeclareFunction"].includes(node.type))
+      return resolved.kind === "FunctionName" ? resolved : null;
     if (node.type !== "VariableDeclarator") return null;
     const init = unwrapExpression(stableConstInitializer(resolved.id, owner, new Set()));
     if (["ArrowFunctionExpression", "FunctionExpression"].includes(init?.type))

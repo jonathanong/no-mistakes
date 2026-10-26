@@ -1,0 +1,38 @@
+import { enqueueEmail } from '@app/jobs';
+import { sibling, evalSlot, argumentsSlot, identitySlot, typedIdentitySlot } from './consumers';
+import type { Dependencies } from './types';
+import { enqueueReferralLinkCrawlsForUrlId } from './consumers';
+const receiverJob = (entries, options) => enqueueEmail(entries, options);
+sibling({ x: receiverJob, other: function() { this.x([], undefined); } });
+const safeJob = (entries, options) => enqueueEmail(entries, options);
+sibling({ x: safeJob, other: () => 1 });
+const captured = (entries, options) => enqueueEmail(entries, options);
+const helper = () => { captured([], undefined); };
+sibling({ x: captured, other: () => helper() });
+const prototypeJob = (entries, options) => enqueueEmail(entries, options);
+sibling({ x: prototypeJob, __proto__: { other() { this.x([], undefined); } } });
+const selectedThis: typeof enqueueEmail = function(entries, options) {
+  if (entries) this.x([], undefined);
+  return enqueueEmail(entries, options);
+};
+enqueueReferralLinkCrawlsForUrlId({ x: selectedThis });
+const evalJob = (entries, options) => enqueueEmail(entries, options);
+evalSlot({ x: evalJob });
+const argumentsJob = (entries, options) => enqueueEmail(entries, options);
+argumentsSlot({ x: argumentsJob });
+// An untyped returned carrier must not erase the target at its next invocation.
+const returnedJob = (entries, options) => enqueueEmail(entries, options);
+const result = identitySlot({ x: returnedJob });
+result.x([], undefined);
+const typedJob = (entries, options) => enqueueEmail(entries, options);
+const typedResult = typedIdentitySlot({ x: typedJob });
+typedResult.x([], undefined);
+const changedJob = (entries, options) => enqueueEmail(entries, options);
+const changed: Dependencies = typedIdentitySlot({ x: changedJob });
+changed.x([], undefined);
+changed.x = enqueueEmail;
+changed.x([], undefined);
+const reboundJob = (entries, options) => enqueueEmail(entries, options);
+let rebound: Dependencies = typedIdentitySlot({ x: reboundJob });
+rebound = { x: enqueueEmail };
+rebound.x([], undefined);

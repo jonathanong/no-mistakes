@@ -7,7 +7,7 @@ function createImportedSources(context) {
   const ts = require("typescript");
   const parser = require("@typescript-eslint/parser");
   const reads = new Map();
-  const files = new Map();
+  const files = new Map([[context.filename, { ast: context.sourceCode.ast, context }]]);
   const configs = new Map();
   const host = {
     ...ts.sys,
@@ -81,7 +81,6 @@ function createImportedSources(context) {
     }
     return files.get(filename);
   }
-  if (context) files.set(context.filename, { ast: context.sourceCode.ast, context });
   return { resolve, load };
 }
 

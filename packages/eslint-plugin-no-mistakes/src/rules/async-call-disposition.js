@@ -57,7 +57,7 @@ module.exports = rule(
   },
   (context) => {
     const matcher = createTargetMatcher(context);
-    const sourceFacts = { typed: new WeakMap(), sources: null };
+    const sourceFacts = { typed: new WeakMap(), sources: null, targets: matcher.targets };
     const { promiseSlotHandoff, promiseTypedTargetCall } = createPromiseHandoff(
       context,
       sourceFacts,
