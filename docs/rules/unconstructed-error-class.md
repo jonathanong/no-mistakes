@@ -323,8 +323,11 @@ otherwise-unused classes with unresolved base ancestry produce **non-failing
 advisories**, even under
 `report` (the default). An unresolved constructor or base does not establish
 that an Error class exists and is unused. `advise` also produces advisories;
-`ignore` omits these diagnostics. Namespace-escape-only uncertainty retains the
-shared policy: `report` fails, `advise` advises, and `ignore` omits it. All these
+`ignore` omits these diagnostics. No option turns unresolved constructor or
+base uncertainty into a failure. `report` and `advise` differ only when
+namespace escape is the class's only uncertainty. Namespace-escape-only
+uncertainty retains the shared policy: `report` fails, `advise` advises, and
+`ignore` omits it. All these
 uncertainties have `target: unanalyzable`. The setting inherits from repository
 `unanalyzable` and can be overridden per rule application.
 Unrelated definite unconstructed error classes remain findings under every
@@ -365,6 +368,9 @@ removes false failures introduced by #2699:
 - Otherwise-unconstructed error classes in escaping namespaces still follow the
   shared policy, including failing under `report` when that is their only
   uncertainty. Definite unused Error classes remain failures under every policy.
+  No option turns unresolved constructor or base uncertainty into a failure.
+  `report` and `advise` differ only when namespace escape is the class's only
+  uncertainty.
 
 Use statically named constructors and analyzable class bases where possible.
 Set `options.unanalyzable: advise` to make namespace uncertainty advisory too,

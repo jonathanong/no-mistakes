@@ -60,8 +60,12 @@ those callback slots or properties gain the trusted return disposition. Inline c
 `const` callback bindings, and function declarations with no reassignment qualify;
 every call argument use of a named callback must adopt its returned promise.
 Stable same-file consumers can also prove adoption by awaiting every invocation
-of their callback parameter. Imported bodies require parser-provided type
-information; unknown consumers keep reporting.
+of their callback parameter. Resolvable named imports prove that adoption from
+the implementation, including in Oxlint `--type-aware` mode, which does not
+expose a TypeScript program. Without that program, `export default`, `export *`,
+and `module.exports` stay unproven. A `require()` consumer stays unproven in
+either mode. Missing bodies, unresolved imports, `noResolve`, writes, and
+escaping implementations stay unproven. Unknown consumers keep reporting.
 
 ### `async-try-catch-return-await`
 

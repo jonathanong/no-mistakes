@@ -409,8 +409,10 @@ it is not a discovery graph — existing callers still need this manual pass.
 For imported APIs that adopt callback returns, configure `awaitingConsumers`
 with explicit `callbackArgumentIndexes`, or `callbackArgumentProperties` for
 named properties of fresh DI objects. Same-file awaited consumers can prove
-adoption directly; imported bodies require parser-owned type information.
-Unknown callback APIs remain reported.
+adoption directly. Resolvable named imports prove adoption without a TypeScript
+program, including under Oxlint `--type-aware`. `export default`, `export *`,
+and `module.exports` stay unproven on that path, and a `require()` consumer
+stays unproven in either mode. Unknown callback APIs remain reported.
 
 For file-local API prevention policies, configure the opt-in
 [`restricted-api-usage`](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-rules/restricted-api-usage.md)
