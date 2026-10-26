@@ -874,7 +874,21 @@ jobs:
 
       - name: Run ast-grep scan
         timeout-minutes: 2
-        run: ast-grep scan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ -n "${BASE_SHA}" ] && [ "${BASE_SHA}" != "0000000000000000000000000000000000000000" ]; then
+            if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+              git fetch --no-tags --depth=1 origin "${BASE_SHA}"
+            fi
+            base="${BASE_SHA}"
+          else
+            git fetch --no-tags --depth=1 origin main
+            base="origin/main"
+          fi
+          ast-grep scan --off=no-inline-test-fixture-write --off=no-inline-test-fixture-write-cfg
+          python3 .ast-grep/check-inline-fixture-writes.py --base "${base}"
 
   bench:
     name: Build benchmarks

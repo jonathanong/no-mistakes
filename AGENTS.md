@@ -67,7 +67,18 @@ graph. Details:
 - Run `rustup update stable` before validation (`rust-toolchain.toml` pins stable).
 - When finding an error, always create a regression test
 - Continuously add test fixtures for cases you find. Which tree (`test-cases/` or `fixtures/`) a suite loads is in [Contributing](CONTRIBUTING.md); add to the tree its loader reads.
-- Do NOT create fixtures inline in test code (no `fs::create_dir_all` / `fs::write` to build a fixture during a test run). Save the files to that fixture tree and reference them via the per-crate / per-package fixture helper.
+- Do NOT create fixtures inline in test code (`fs::write`, `std::fs::write`,
+  `create_dir_all`, `File::create`, or `OpenOptions` `.create`). Save the files
+  under `fixtures/` or `test-cases/` and load them through the per-crate fixture
+  helper or a `crates/no-mistakes/src/test_support` copy helper such as
+  `materialize_saved_fixture`. `no-inline-test-fixture-write` and
+  `no-inline-test-fixture-write-cfg` enforce this for `tests.rs`, `*_tests.rs`,
+  `tests/**`, `include!` slices of those files, child `mod`s of those files,
+  and `#[cfg(test)]` modules
+  ([ast-grep rules](docs/ast-grep-rules.md)). Runtime exceptions need a one-line
+  justification in `.ast-grep/inline-fixture-write-allowlist.txt`. Existing
+  violations are listed in `.ast-grep/inline-fixture-write-baseline.txt`; that
+  list can only shrink. Do not add fixture content writes to an allowlisted file.
 - After broad mechanical renames, run `rg` for the old names before the first
   compile to catch stragglers.
 - After editing nearby test arguments or fixture paths, re-read the exact diff

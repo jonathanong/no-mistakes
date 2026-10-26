@@ -39,6 +39,11 @@ if ! command -v ast-grep >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "Error: python3 is not installed."
+  exit 1
+fi
+
 root=$(git rev-parse --show-toplevel)
 oxfmt="$root/node_modules/.bin/oxfmt"
 oxlint="$root/node_modules/.bin/oxlint"
@@ -55,7 +60,9 @@ fail=0
 
 echo "Running ast-grep..."
 (
-  ast-grep test --skip-snapshot-tests && ast-grep scan
+  ast-grep test --skip-snapshot-tests &&
+    ast-grep scan --off=no-inline-test-fixture-write --off=no-inline-test-fixture-write-cfg &&
+    python3 .ast-grep/check-inline-fixture-writes.py --base FETCH_HEAD
 ) </dev/null &
 pid_ast=$!
 

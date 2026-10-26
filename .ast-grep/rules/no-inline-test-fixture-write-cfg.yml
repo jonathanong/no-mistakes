@@ -1,0 +1,69 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Structural half of the inline fixture-write ban. `#[cfg(test)]` is a sibling
+# attribute, not a child of the module or function. `follows` + `stopBy:
+# neighbor` matches only the next item, so a later production item in the same
+# file stays clean. Up to two attributes may sit between the cfg and the item
+# (`#[cfg(test)] #[test] fn`, `#[cfg(test)] #[ignore] #[test] fn`).
+id: no-inline-test-fixture-write-cfg
+language: rust
+severity: error
+message: >-
+  Inline fixture write in a #[cfg(test)] module. Save the fixture under
+  fixtures/ or test-cases/ and load it through the per-crate fixture helper or
+  a crates/no-mistakes/src/test_support copy helper. Runtime creation
+  (permissions, locks, symlinks, concurrent writes, or mutation of a copied
+  fixture) needs a one-line justification in
+  .ast-grep/inline-fixture-write-allowlist.txt.
+utils:
+  cfg-attr:
+    regex: '#\[cfg\(\s*(?:test\s*\)|(?:all|any)\((?:[^]"'']|"[^"]*")*\btest\s*[,)])'
+  item:
+    any:
+      - kind: mod_item
+      - kind: function_item
+      - kind: impl_item
+rule:
+  all:
+    - matches: inline-fixture-write-call
+    - any:
+        - inside:
+            stopBy: end
+            all:
+              - matches: item
+              - follows:
+                  matches: cfg-attr
+                  stopBy: neighbor
+        - inside:
+            stopBy: end
+            all:
+              - matches: item
+              - follows:
+                  stopBy: neighbor
+                  all:
+                    - kind: attribute_item
+                    - follows:
+                        matches: cfg-attr
+                        stopBy: neighbor
+        - inside:
+            stopBy: end
+            all:
+              - matches: item
+              - follows:
+                  stopBy: neighbor
+                  all:
+                    - kind: attribute_item
+                    - follows:
+                        stopBy: neighbor
+                        all:
+                          - kind: attribute_item
+                          - follows:
+                              matches: cfg-attr
+                              stopBy: neighbor
+files:
+  - "**/*.rs"
+ignores:
+  - "fixtures/**"
+  - "test-cases/**"
+  - "**/fixtures/**"
+  - "**/test-cases/**"

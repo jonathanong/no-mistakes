@@ -1,0 +1,16 @@
+# Runtime file creation that cannot be a saved fixture.
+# path<TAB>copy|runtime<TAB>one-line justification
+# copy: the file only calls create_dir_all while copying a saved tree.
+# runtime: permissions, locks, symlinks, concurrency, or bytes that cannot be committed.
+# Do not add fixture content writes to an allowlisted file. A copy entry fails
+# if a later edit adds fs::write, File::create, or OpenOptions create.
+crates/no-mistakes/src/invocation/lock/tests.rs	runtime	Creates the lock path at runtime to prove a file path is not a lock directory.
+crates/no-mistakes/src/napi_api/filesystem/tests.rs	runtime	Creates files, hard links, and symlinks at runtime to prove planning-lock identity checks.
+crates/no-mistakes/tests/cli_invocation/fsmonitor.rs	runtime	Creates the live helper stderr file while two processes contend for the invocation lock.
+crates/no-mistakes/tests/cli_tests_plan_from_git_diff.rs	copy	Copies saved tests-plan fixtures into a tempdir.
+crates/no-mistakes/tests/cli_tests_plan_lockfile2.rs	copy	Copies saved lockfile fixtures into a tempdir.
+crates/no-mistakes/tests/cli_tests_plan_lockfile3.rs	copy	Copies saved lockfile fixtures into a tempdir.
+crates/no-mistakes/tests/common/git_tracked_rule.rs	copy	Copies a saved rule fixture into a tempdir and initializes git there.
+crates/no-mistakes/tests/common/gitignore_fixture.rs	copy	Copies a saved gitignore fixture into a tempdir.
+crates/no-mistakes/tests/common/saved_fixture.rs	runtime	Copies a saved fixture into a tempdir and rewrites tokenized control bytes that committed files cannot contain.
+crates/no-mistakes/tests/postgres_catalog_real/support.rs	copy	Copies a committed catalog fixture into a tempdir so a test can add generated files beside it.

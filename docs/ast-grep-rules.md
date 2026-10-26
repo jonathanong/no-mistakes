@@ -22,22 +22,32 @@ time, rather than as a new native Rust-source `no-mistakes` rule.
 
 ## Project layout
 
-- `sgconfig.yml` (repo root) — points `ruleDirs` at `.ast-grep/rules` and
-  `testConfigs` at `.ast-grep/rule-tests`.
+- `sgconfig.yml` (repo root) — points `ruleDirs` at `.ast-grep/rules`,
+  `utilDirs` at `.ast-grep/utils`, and `testConfigs` at `.ast-grep/rule-tests`.
 - `.ast-grep/rules/*.yml` — one rule per file.
+- `.ast-grep/utils/*.yml` — shared matchers referenced with `matches`.
 - `.ast-grep/rule-tests/*.yml` — `valid`/`invalid` snippets per rule, run via
   `ast-grep test --skip-snapshot-tests` (no `fix:` is used by either rule, so
   there is nothing to snapshot).
+- `.ast-grep/inline-fixture-write-allowlist.txt` — justified runtime exceptions.
+- `.ast-grep/inline-fixture-write-baseline.txt` — existing violations. The list
+  can only shrink.
+- `.ast-grep/check-inline-fixture-writes.py` — gates the fixture-write ban.
 
 Run locally:
 
 ```sh
-ast-grep scan                                    # scan the whole project
-ast-grep test --skip-snapshot-tests               # run rule test cases
+ast-grep test --skip-snapshot-tests
+ast-grep scan --off=no-inline-test-fixture-write --off=no-inline-test-fixture-write-cfg
+python3 .ast-grep/check-inline-fixture-writes.py --base origin/main
 ```
 
-All rules use `severity: error`, so `ast-grep scan` exits non-zero on any
-finding — no extra flag needed.
+All rules use `severity: error`, so a plain `ast-grep scan` exits non-zero on
+any finding. Pre-push and CI turn the two inline fixture-write rules off in
+that scan. The checker above is what fails a new violation. Pass the pull
+request's base commit, or `FETCH_HEAD` after the pre-push fetch of `main`. The
+first revision that adds the baseline skips the shrink check because the file
+is absent at that base.
 
 ## Rules
 
@@ -210,6 +220,40 @@ source. Process startup must be batched once per invocation or replaced with
 an in-process parser/resolver. A canonical one-shot Git discovery subprocess
 outside a loop remains valid.
 
+### `no-inline-test-fixture-write` and `no-inline-test-fixture-write-cfg`
+
+These two rules are one ban. They flag `std::fs::write`, `fs::write`,
+`create_dir_all`, `File::create`, and an `OpenOptions` `.create(...)` call in
+Rust test code. `no-inline-test-fixture-write` applies to `tests.rs`,
+`*_tests.rs`, and files under a `tests/` directory.
+`no-inline-test-fixture-write-cfg` applies the same calls inside a
+`#[cfg(test)]` module, function, or impl,
+including `#[cfg(all(test, ...))]` and `#[cfg(any(test, ...))]`, with up to two
+attributes between the cfg attribute and the item. A later production item in
+the same file is not flagged. Sample projects under `fixtures/` and
+`test-cases/` are ignored.
+
+`create_dir` (one directory) and `Write::write` are outside this ban. A bare
+`write(...)` call is also outside it, so `Write::write` stays legal.
+
+The checker also scans shapes the path globs miss: a `#[cfg(test)] mod name;`
+file (including `#[path = "..."]`), a child `mod` that stays inside a test
+file's module directory (including `#[path]`, and skipping `#[cfg(not(test))]`
+and paths that point back at production code), and an `include!` slice reached
+from a test file. Copy helpers under `crates/no-mistakes/src/test_support/` are outside
+those shapes. Use them, or the per-crate fixture helper, to copy a saved
+fixture into a temp directory.
+
+`.ast-grep/inline-fixture-write-allowlist.txt` lists files that must create
+files at runtime. Each line is `path`, `copy` or `runtime`, and a one-line
+justification. A `copy` entry may only call `create_dir_all` while copying a
+saved tree. A `runtime` entry covers permissions, locks, symlinks, concurrent
+writes, or bytes that cannot be committed. Do not add fixture content writes
+to an allowlisted file. Every other current violation is listed in
+`.ast-grep/inline-fixture-write-baseline.txt`. Delete a path only in the change
+that removes the last banned call from that file. Adding a path fails once the
+baseline exists on the base revision.
+
 ## Adding more rules of this shape
 
 1. `ast-grep new rule -y -l rust <id>` from the repo root creates a stub in
@@ -225,5 +269,7 @@ outside a loop remains valid.
 4. Only allowlist a file/call site via `ignores` when it's genuinely bounded
    or is the documented fallback itself — leave everything else caught.
 5. `ast-grep scan` is already wired into `.husky/pre-push` and into the
-   `ast-analysis` job in `.github/workflows/ci.yml` — a new rule under
-   `.ast-grep/rules/` is picked up automatically, no additional wiring needed.
+   `ast-analysis` job in `.github/workflows/ci.yml`. A new rule under
+   `.ast-grep/rules/` is picked up by that scan. The inline fixture-write rules
+   are the exception: the scan turns them off and
+   `.ast-grep/check-inline-fixture-writes.py` enforces the baseline.
