@@ -64,12 +64,14 @@ impl Engine<'_> {
                 self.failures += 1;
             }
         }
+        let (alternatives, execution_sites) = self
+            .executed
+            .iter()
+            .map(|event| (event.sql.raw.clone(), Some(event.site())))
+            .unzip();
         Some(Recovered {
-            alternatives: self
-                .executed
-                .iter()
-                .map(|event| event.sql.raw.clone())
-                .collect(),
+            alternatives,
+            execution_sites,
             residual: self.residual() || self.executed.iter().any(|event| !event.sql.valid_binds()),
             nonexecuting: self.executed.is_empty() && !self.residual(),
         })

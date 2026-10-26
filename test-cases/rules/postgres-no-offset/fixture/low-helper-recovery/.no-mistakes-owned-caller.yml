@@ -1,0 +1,10 @@
+effort: low
+unanalyzable: advise
+rules:
+  - rule: postgres-no-offset
+    name: caller-only
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: [src/execution-ownership.mts]

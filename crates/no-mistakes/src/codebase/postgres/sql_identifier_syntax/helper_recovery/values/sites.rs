@@ -59,14 +59,15 @@ impl Engine<'_> {
             .iter()
             .filter(|event| event.file == file && event.start == call.span.0)
             .any(|event| !event.sql.valid_binds());
-        let alternatives = self
+        let (alternatives, execution_sites): (Vec<_>, Vec<_>) = self
             .executed
             .iter()
             .filter(|event| event.file == file && event.start == call.span.0)
-            .map(|event| event.sql.raw.clone())
-            .collect::<Vec<_>>();
+            .map(|event| (event.sql.raw.clone(), Some(event.site())))
+            .unzip();
         (!alternatives.is_empty()).then(|| Recovered {
             alternatives,
+            execution_sites,
             residual: self.residual() || invalid_bind,
             nonexecuting: false,
         })

@@ -11,7 +11,7 @@ mod sql_text;
 mod state;
 mod value;
 mod values;
-pub(crate) use recovered::Recovered;
+pub(crate) use recovered::{ExecutionSite, Recovered};
 pub(crate) mod lower;
 use super::{span, template_binds::TemplateBinds, Span};
 use crate::codebase::dependencies::extract::CallableId;

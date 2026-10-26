@@ -1,10 +1,21 @@
 //! A proof result is separate from ordinary trusted-tag syntax.
 use crate::codebase::postgres::embedded::walk::resolve::functions::provenance::RecoveredSql;
-use std::{fmt, path::Path};
+use std::{
+    fmt,
+    path::{Path, PathBuf},
+};
+
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub(crate) struct ExecutionSite {
+    pub file: PathBuf,
+    pub start: u32,
+}
 
 #[derive(Clone, Default)]
 pub(crate) struct Recovered {
     pub alternatives: Vec<RecoveredSql>,
+    /// Aligned provenance for SQL executed inside a modeled helper.
+    pub execution_sites: Vec<Option<ExecutionSite>>,
     /// Any unaccounted effect, value, branch or exhausted limit stays explicit.
     pub residual: bool,
     pub nonexecuting: bool,

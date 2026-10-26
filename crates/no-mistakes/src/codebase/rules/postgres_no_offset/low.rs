@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 
 mod cache;
 mod inputs;
+mod ownership;
 
 const REWRITE: &str = "pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL";
 
@@ -31,6 +32,13 @@ pub(super) fn scan(
         .cloned()
         .collect::<Vec<_>>();
     let mut findings = super::scan::scan(root, opts, &sql_files, context, sources)?;
+    let key =
+        crate::codebase::postgres::sql_identifier_syntax::helper_recovery::ApplicationKey::new(
+            &opts.embedded,
+            RULE_ID,
+            index,
+        );
+    let owners = ownership::Owners::new(files, facts, &key, sources)?;
     let observer = crate::diagnostics::current();
     for path in files
         .iter()
@@ -41,13 +49,7 @@ pub(super) fn scan(
             .ts
             .get(path)
             .ok_or_else(|| anyhow::anyhow!("{RULE_ID}: prepared facts missing for {rel}"))?;
-        let application =
-            crate::codebase::postgres::sql_identifier_syntax::helper_recovery::ApplicationKey::new(
-                &opts.embedded,
-                RULE_ID,
-                index,
-            );
-        let calls = file.sql_identifier_syntax.calls_for(&application);
+        let calls = file.sql_identifier_syntax.calls_for(&key);
         let Some(calls) = calls else {
             if file.parse_error.is_some() || file.ts.parse_error.is_some() {
                 continue;
@@ -71,8 +73,9 @@ pub(super) fn scan(
                 rel: &rel,
                 source: &source,
                 literals,
+                owners: &owners,
             }
-            .evaluate(call, &application, &mut ordinal, &mut findings);
+            .evaluate(call, &key, &mut ordinal, &mut findings);
             if is_unknown && opts.fail_unanalyzable {
                 findings.push(unknown(&rel, call));
             }

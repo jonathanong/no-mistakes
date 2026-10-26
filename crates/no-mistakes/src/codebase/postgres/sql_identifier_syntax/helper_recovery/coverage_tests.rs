@@ -79,6 +79,7 @@ fn variant_limits_keep_known_sql_and_debug_output_private() {
         assert!(alternatives.iter().any(|sql| sql.sql.contains("OFFSET 8")));
         let proof = Recovered {
             alternatives,
+            execution_sites: Vec::new(),
             residual: engine.residual(),
             nonexecuting: false,
         };

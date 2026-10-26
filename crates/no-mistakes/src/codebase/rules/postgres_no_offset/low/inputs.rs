@@ -23,6 +23,7 @@ pub(super) struct Inputs<'a> {
     pub rel: &'a str,
     pub source: &'a str,
     pub literals: &'a Literals,
+    pub owners: &'a super::ownership::Owners<'a>,
 }
 impl Inputs<'_> {
     pub fn evaluate(
@@ -78,11 +79,18 @@ impl Inputs<'_> {
         let mut result = Outcome::default();
         match self.literals.get(&(Some(application.clone()), call.span)) {
             Some(ProjectedLiteral::Recovered { alternatives, .. }) => {
-                for (sql, facts) in alternatives {
+                for (index, (sql, facts)) in alternatives.iter().enumerate() {
                     match facts {
                         Ok(offsets) => {
                             result.violation |= !offsets.is_empty();
-                            for offset in offsets {
+                            let duplicate = proof
+                                .execution_sites
+                                .get(index)
+                                .and_then(Option::as_ref)
+                                .is_some_and(|site| {
+                                    self.owners.covers(self.path, call.span.0, site, sql)
+                                });
+                            for offset in offsets.iter().filter(|_| !duplicate) {
                                 let (origin, line) =
                                     Recovered::position(sql, offset.line, offset.column, self.path);
                                 let mut offset = *offset;

@@ -8,7 +8,7 @@ function budgetIdentity(value: string) {
 export function conditionalBudget(enabled: unknown) {
   // Copies and nested summaries must consume the same per-root work budget.
   const statement = SQL`SELECT 1 OFFSET 9`;
-  budgetIdentity("SELECT 1 OFFSET 9");
+  budgetIdentity("metadata");
   if (enabled) statement.append(SQL` /* more text */`);
   const selected = enabled ? statement : statement;
   const retained = (enabled && selected) || selected;

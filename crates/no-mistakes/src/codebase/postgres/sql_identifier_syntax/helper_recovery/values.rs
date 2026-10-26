@@ -12,6 +12,7 @@ use super::{
     lower::Lowered,
     state::State,
     value::Value,
+    ExecutionSite,
 };
 use crate::codebase::dependencies::extract::CallableId;
 use crate::fx::FxHashMap;
@@ -37,6 +38,14 @@ struct Execution {
     file: PathBuf,
     start: u32,
     sql: super::sql_text::SqlText,
+}
+impl Execution {
+    fn site(&self) -> ExecutionSite {
+        ExecutionSite {
+            file: self.file.clone(),
+            start: self.start,
+        }
+    }
 }
 #[derive(Clone)]
 struct Summary {

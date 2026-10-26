@@ -182,3 +182,6 @@ mod low_helper_acceptance_tests;
 
 #[path = "upper_patch_tests.rs"]
 mod upper_patch_tests;
+
+#[path = "offset_execution_ownership_tests.rs"]
+mod offset_execution_ownership_tests;
