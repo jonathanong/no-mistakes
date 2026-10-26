@@ -24,8 +24,11 @@ fn entry_file_directive_suppresses_delegated_findings_in_every_policy() {
                 let records = value["suppressed"].as_array().unwrap();
                 assert_eq!(records.len(), 1, "{value}");
                 assert_eq!(records[0]["file"], "next-shared.ts");
-                assert_eq!(records[0]["directiveKind"], "file");
-                assert_eq!(records[0]["directiveLine"], 1);
+                assert_eq!(records[0]["sourceFile"], "next.config.ts");
+                assert_eq!(
+                    records[0]["directive"],
+                    json!({ "kind": "file", "line": 1 })
+                );
             }
         }
     }

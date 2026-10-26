@@ -155,7 +155,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         },
     );
     let directive_findings = disable_directives.findings_from_consumed(&accounting.consumed);
-    let suppressed = accounting.suppressed;
+    let suppressed = accounting.into_public(include_suppressed);
     if config.report_unused_disable_directives == DisableDirectivePolicy::Report {
         rules.findings.extend(directive_findings);
     } else {
@@ -192,7 +192,7 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
         advisories,
         sql_verdicts,
         include_sql_verdicts,
-        suppressed: include_suppressed.then_some(suppressed).unwrap_or_default(),
+        suppressed,
         include_suppressed,
         unproven_member_query_sql,
     })

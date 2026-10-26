@@ -13,6 +13,12 @@ Use a line directive for a deliberate external or dynamic destination. Prefer
 the rule-level `exclude` filter when the whole config file is outside policy;
 there are no rule-local destination allowlists.
 
+A leading `no-mistakes-disable-file nextjs-redirect-destinations` comment on
+the entry config also covers destinations recovered from delegated helpers.
+Their public diagnostic location remains the helper, while optional
+`includeSuppressed` accounting identifies the entry comment. A helper's own
+directives still apply; entry line directives do not match helper line numbers.
+
 ## Why and when
 
 Use this rule when rewrites and redirects must remain aligned with real App

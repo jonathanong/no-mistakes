@@ -64,3 +64,49 @@ for (const [config, failures, advice] of [
     },
   );
 }
+
+for (const [fixture, file, sourceFile, kind, line] of [
+  ["redirect-suppression-entry-disabled", "next-shared.ts", "next.config.ts", "file", 1],
+  ["react-consumed-directives/all", "app/Fetcher.tsx", "app/Fetcher.tsx", "nextLine", 3],
+]) {
+  test(
+    `strict hygiene preserves contributing directives across public APIs: ${fixture}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const root = join(__dirname, "../../../fixtures/check", fixture);
+      const config = join(root, "report.yml");
+      const options = { root, config, includeSuppressed: true };
+      const expected = await cjs.check(options);
+      for (const field of ["rules", "react", "advisories", "warnings"])
+        assert.deepEqual(expected[field], []);
+      // Complete consumption stays internal: each case has one public finding row.
+      assert.equal(expected.suppressed.length, 1);
+      assert.equal(expected.suppressed[0].file, file);
+      assert.equal(expected.suppressed[0].sourceFile, sourceFile);
+      assert.deepEqual(expected.suppressed[0].directive, { kind, line });
+      for (const api of [cjs, esm]) {
+        assert.deepEqual(await api.check(options), expected);
+        const pending = api.analyzeProject({
+          root,
+          config,
+          reports: [{ type: "check", includeSuppressed: true }],
+        });
+        assert.ok(pending instanceof Promise);
+        assert.deepEqual((await pending).reports[0].result, expected);
+      }
+      const cli =
+        process.env.NO_MISTAKES_TEST_CLI_PATH ||
+        join(dirname(addon), process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes");
+      const child = spawnSync(
+        cli,
+        ["check", "--root", root, "--config", config, "--include-suppressed", "--format", "json"],
+        { encoding: "utf8", env: process.env },
+      );
+      assert.equal(child.error, undefined);
+      assert.equal(child.status, 0, child.stderr);
+      assert.deepEqual(JSON.parse(child.stdout), expected);
+    },
+  );
+}

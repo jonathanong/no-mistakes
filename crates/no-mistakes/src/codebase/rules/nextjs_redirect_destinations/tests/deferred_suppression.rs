@@ -45,13 +45,10 @@ fn deferred_entry_file_opt_out_keeps_helper_location_and_entry_provenance() {
     assert_eq!(diagnostics.suppressed.len(), 1);
     let consumed = &diagnostics.suppressed[0];
     assert_eq!(consumed.file, "next-shared.ts");
-    assert_eq!(
-        consumed.source_file,
-        root.join("next.config.ts").to_string_lossy()
-    );
+    assert_eq!(consumed.source_file, "next.config.ts");
     assert_eq!(consumed.directive.line, 1);
     assert_eq!(
         consumed.directive.kind,
-        super::super::super::SuppressionDirectiveKind::File
+        crate::codebase::rules::suppression::SuppressionDirectiveKind::File
     );
 }

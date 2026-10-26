@@ -21,6 +21,16 @@ pub(super) struct SuppressionAccounting {
     pub(super) consumed: Vec<ConsumedDisableDirective>,
 }
 
+impl SuppressionAccounting {
+    pub(super) fn into_public(self, requested: bool) -> Vec<SuppressedFinding> {
+        if requested {
+            self.suppressed
+        } else {
+            Vec::new()
+        }
+    }
+}
+
 pub(super) fn take_pre_suppressed(
     completed: &mut super::CompletedDomainChecks,
 ) -> Vec<SuppressedFinding> {
@@ -55,21 +65,21 @@ pub(super) struct Inputs<'a> {
 }
 
 pub(super) fn apply_if_requested(
-    include_suppressed: bool,
+    retain_accounting: bool,
     input: Inputs<'_>,
 ) -> SuppressionAccounting {
     // Directive filtering is part of the ordinary check contract. The flag
     // controls whether we retain the accounting records, not whether a
     // directive hides its matching finding.
-    let mut accounting = apply(input);
-    if !include_suppressed {
+    let mut accounting = apply(input, retain_accounting);
+    if !retain_accounting {
         accounting.suppressed.clear();
         accounting.consumed.clear();
     }
     accounting
 }
 
-fn apply(input: Inputs<'_>) -> SuppressionAccounting {
+fn apply(input: Inputs<'_>, retain_accounting: bool) -> SuppressionAccounting {
     let Inputs {
         pre_suppressed,
         root,
@@ -93,7 +103,7 @@ fn apply(input: Inputs<'_>) -> SuppressionAccounting {
             react,
             react_suppression_targets,
             &mut suppressed,
-            &mut consumed,
+            Some(&mut consumed),
         );
     }
     suppressed.extend(suppress_domain_findings_with_sources(
@@ -151,9 +161,11 @@ fn apply(input: Inputs<'_>) -> SuppressionAccounting {
                 .map(|(file, line)| (file.as_str(), usize::try_from(*line).ok()))
         },
     ));
-    consumed.extend(suppressed.iter().map(ConsumedDisableDirective::from));
-    consumed.sort();
-    consumed.dedup();
+    if retain_accounting {
+        consumed.extend(suppressed.iter().map(ConsumedDisableDirective::from));
+        consumed.sort();
+        consumed.dedup();
+    }
     suppressed.sort();
     SuppressionAccounting {
         suppressed,

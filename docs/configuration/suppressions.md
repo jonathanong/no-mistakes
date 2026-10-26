@@ -55,6 +55,11 @@ selected source text. `ignore` skips that audit work.
 CLI `check`, async `check()`, and `analyzeProject()` reports with
 `type: "check"` use the same repository setting and diagnostic channels.
 `includeSuppressed` remains an independent, opt-in ledger of findings actually
-hidden by directives; it is not required to report unused comments. This audit
-covers no-mistakes check rules. ESLint uses its own
+hidden by directives; it is not required to report unused comments. A React
+component can have one public ledger row while several fetch directives count
+as used, including when an unsuppressed fetch keeps the component's violation
+visible. An entry-file directive on a Next.js config also counts when it hides
+a finding attributed to a delegated helper.
+
+This audit covers no-mistakes check rules. ESLint uses its own
 `reportUnusedDisableDirectives` setting.

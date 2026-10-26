@@ -15,7 +15,7 @@ pub(super) fn consume_entry_file_directive(
     if !request.defer_suppression {
         return;
     }
-    let entry = request.config_path.to_string_lossy();
+    let entry = crate::codebase::ts_source::relative_slash_path(request.root, request.config_path);
     // The entry's historical file opt-out covers the whole delegated config.
     // A helper's line numbers must never match entry line/next-line directives.
     for (domain, findings) in [
