@@ -1,0 +1,6 @@
+{
+  "name": "storybook",
+  "devDependencies": {
+    "storybook": "catalog:"
+  }
+}

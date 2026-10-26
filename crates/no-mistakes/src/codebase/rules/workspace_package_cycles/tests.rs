@@ -168,7 +168,7 @@ fn package_dependency_helpers_tolerate_missing_and_invalid_files() {
     assert!(
         package_dependencies(&root.join("packages/api/package.json"), &["dependencies"]).is_empty()
     );
-    assert_eq!(canonical_cycle(""), "");
+    assert_eq!(scc::canonical_cycle(""), "");
 }
 
 #[test]
@@ -180,8 +180,8 @@ fn empty_workspace_and_wrapped_cycle_helpers() {
         check_with_files_and_sources(&root, &config("{}"), &files, sources.as_ref()).unwrap();
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 
-    assert_eq!(canonical_cycle("b -> a -> b"), "a -> b");
-    assert_eq!(canonical_cycle("a -> "), "");
+    assert_eq!(scc::canonical_cycle("b -> a -> b"), "a -> b");
+    assert_eq!(scc::canonical_cycle("a -> "), "");
 
     let mut invalid = NoMistakesConfig::default();
     invalid.rules.push(RuleDef {
@@ -191,4 +191,38 @@ fn empty_workspace_and_wrapped_cycle_helpers() {
         ..Default::default()
     });
     assert!(check_with_files(&root, &invalid, &files).is_err());
+}
+
+// `catalog:`, a registry range, and a `file:` path can reuse a workspace
+// package name. Those specifiers stay external; only `workspace:` is an edge.
+#[test]
+fn external_same_name_dependencies_are_not_workspace_edges() {
+    let root = fixture_root("external-name-collision");
+    let files = vec![
+        root.join("pnpm-workspace.yaml"),
+        root.join("package.json"),
+        root.join("apps/storybook/package.json"),
+        root.join("packages/react/package.json"),
+        root.join("packages/left-pad/package.json"),
+    ];
+    let findings = check_with_files(&root, &config("{}"), &files).unwrap();
+
+    assert!(
+        findings.is_empty(),
+        "external same-name dependencies are not workspace edges: {findings:?}"
+    );
+}
+
+#[test]
+fn workspace_protocol_self_dependency_still_reports() {
+    let root = fixture_root("workspace-self-cycle");
+    let files = vec![
+        root.join("package.json"),
+        root.join("packages/storybook/package.json"),
+    ];
+    let findings = check_with_files(&root, &config("{}"), &files).unwrap();
+
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].file, "packages/storybook/package.json");
+    assert!(findings[0].message.contains("storybook -> storybook"));
 }

@@ -24,7 +24,11 @@ they can be built, published, and tested independently.
 ## What it catches/requires
 
 The workspace package graph must contain no cycles among the configured
-dependency types. Findings report the package-level cycle path.
+dependency types. A dependency is a workspace edge only when its name is a
+workspace package and its specifier uses the `workspace:` protocol. A registry
+range, version catalog (`catalog:`), `file:` path, or other external specifier
+stays outside the graph, including when that name matches a workspace package.
+Findings report the package-level cycle path.
 
 ## Options and defaults
 

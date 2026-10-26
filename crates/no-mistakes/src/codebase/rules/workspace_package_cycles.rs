@@ -87,7 +87,7 @@ fn scan_with_sources(
     let allowlist: BTreeSet<String> = opts
         .allowlist
         .iter()
-        .map(|cycle| canonical_cycle(cycle))
+        .map(|cycle| scc::canonical_cycle(cycle))
         .collect();
     let graph =
         workspace_graph_with_sources(&workspace, &package_names, &dependency_types, sources);
@@ -97,7 +97,7 @@ fn scan_with_sources(
         if allowlist.contains(&key) {
             continue;
         }
-        let cycle = display_cycle(&key);
+        let cycle = scc::display_cycle(&key);
         let first = cycle
             .first()
             .expect("collected cycle keys always contain at least one package");
@@ -137,22 +137,21 @@ fn workspace_graph_with_sources(
 ) -> BTreeMap<String, BTreeSet<String>> {
     let mut graph = BTreeMap::new();
     for package in &workspace.packages {
-        let deps = package_dependencies_with_sources(
+        let deps = workspace_dependency_names(
             &package.dir.join("package.json"),
             dependency_types,
+            package_names,
             sources,
-        )
-        .into_iter()
-        .filter(|dep| package_names.contains(dep.as_str()))
-        .collect();
+        );
         graph.insert(package.name.clone(), deps);
     }
     graph
 }
 
-fn package_dependencies_with_sources(
+fn workspace_dependency_names(
     path: &Path,
     dependency_types: &[&str],
+    package_names: &HashSet<&str>,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> BTreeSet<String> {
     crate::codebase::package_deps::dependency_entries_from_source_store(
@@ -161,44 +160,13 @@ fn package_dependencies_with_sources(
         sources,
     )
     .into_iter()
+    .filter(|entry| {
+        // A registry, catalog, or node_modules package can share a workspace
+        // name. Only a `workspace:` specifier is an edge in this graph.
+        package_names.contains(entry.name.as_str()) && entry.specifier.starts_with("workspace:")
+    })
     .map(|entry| entry.name)
     .collect()
-}
-
-pub(super) fn canonical_cycle(cycle: &str) -> String {
-    let mut nodes: Vec<String> = cycle
-        .split("->")
-        .map(str::trim)
-        .filter(|part| !part.is_empty())
-        .map(str::to_string)
-        .collect();
-    if nodes.first() == nodes.last() {
-        nodes.pop();
-    }
-    if nodes.is_empty() {
-        return String::new();
-    }
-    let min_idx = nodes
-        .iter()
-        .enumerate()
-        .min_by(|(_, a), (_, b)| a.cmp(b))
-        .map(|(idx, _)| idx)
-        .unwrap_or(0);
-    nodes.rotate_left(min_idx);
-    nodes.join(" -> ")
-}
-
-fn display_cycle(canonical: &str) -> Vec<String> {
-    let mut nodes: Vec<String> = canonical
-        .split("->")
-        .map(str::trim)
-        .filter(|part| !part.is_empty())
-        .map(str::to_string)
-        .collect();
-    if let Some(first) = nodes.first().cloned() {
-        nodes.push(first);
-    }
-    nodes
 }
 
 #[cfg(test)]
