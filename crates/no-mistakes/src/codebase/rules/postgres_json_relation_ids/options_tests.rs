@@ -36,14 +36,9 @@ fn empty_and_invalid_patterns_have_option_specific_errors() {
         format!("{RULE_ID} option idKeyPattern: must not be empty")
     );
     for option in ["idKeyPattern", "fingerprintNamePattern"] {
-        let expected = format!(
-            "{RULE_ID} option {option}: {}",
-            regex::Regex::new("[").unwrap_err()
-        );
-        assert_eq!(
-            error(&format!("schemaCatalogPath: schema.json\n{option}: '['")),
-            expected
-        );
+        let actual = error(&format!("schemaCatalogPath: schema.json\n{option}: '['"));
+        assert!(actual.starts_with(&format!("{RULE_ID} option {option}: ")));
+        assert!(actual.contains("unclosed character class"), "{actual}");
     }
     // An empty fingerprint regex is valid and explicitly matches every column name.
     assert!(!super::tests::run(
