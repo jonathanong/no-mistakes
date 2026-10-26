@@ -17,9 +17,12 @@ function createPromiseHandoff(context, sourceFacts) {
   let safeSlot;
   function sourceTypes() {
     if (context.sourceCode.parserServices?.program?.getCompilerOptions().noResolve) return null;
+    // Share the body's unavailable-tooling result as well as its successful source session.
+    if (sourceFacts.sources === null) sourceFacts.sources = createImportedSources(context) || false;
+    if (!sourceFacts.sources) return null;
     return (types ||= createSourceTypes(
       sourceFacts.targets,
-      (sourceFacts.sources ||= createImportedSources(context)),
+      sourceFacts.sources,
       (sourceFacts.receiverShape ||= createReceiverProof(sourceFacts)),
     ));
   }

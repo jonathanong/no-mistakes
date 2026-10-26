@@ -86,8 +86,9 @@ module.exports = rule(
       ),
       CallExpression(node) {
         if (suppressed(node)) return;
-        if (!matcher.isTargetCall(node) && !promiseTypedTargetCall(node)) return;
+        // Disposed calls need no cross-file type lookup, including local/configured JS consumers.
         if (isDisposed(node, context, consumers)) return;
+        if (!matcher.isTargetCall(node) && !promiseTypedTargetCall(node)) return;
         context.report({
           node,
           messageId: "disposition",
