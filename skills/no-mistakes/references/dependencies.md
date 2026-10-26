@@ -3,7 +3,7 @@
 Find every file that the given file(s) transitively import.
 
 For a persistent production-to-test boundary, configure
-[`forbidden-dependencies`](../../../docs/rules/forbidden-dependencies.md#glob-semantics)
+[`forbidden-dependencies`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/forbidden-dependencies.md#glob-semantics)
 and run `no-mistakes check --root /path/to/project --format json`. Its glob
 `roots` and `excludeRoots` select origins, `forbiddenFiles` matches transitive
 targets, and `exceptions: [{ roots, allowedFiles }]` permits file targets only
