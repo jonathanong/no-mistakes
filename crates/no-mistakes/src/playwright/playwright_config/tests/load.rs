@@ -159,6 +159,7 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
         test_dir: "/tmp/tests".to_string(),
         test_match: vec![],
         test_ignore: vec![],
+        pattern_options: Default::default(),
         base_url: None,
         test_id_attribute: Some("data-testid".to_string()),
     };
@@ -173,6 +174,7 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
         test_dir: "tests".to_string(),
         test_match: vec![],
         test_ignore: vec![],
+        pattern_options: Default::default(),
         base_url: None,
         test_id_attribute: Some("data-testid".to_string()),
     };
@@ -187,6 +189,7 @@ fn test_dir_resolves_absolute_relative_and_relative_config_dir() {
         test_dir: "tests".to_string(),
         test_match: vec![],
         test_ignore: vec![],
+        pattern_options: Default::default(),
         base_url: None,
         test_id_attribute: Some("data-testid".to_string()),
     };

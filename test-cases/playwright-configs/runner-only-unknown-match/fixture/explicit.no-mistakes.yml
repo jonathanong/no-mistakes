@@ -1,0 +1,19 @@
+tests:
+  playwright:
+    projects:
+      web:
+        include: [tests/example.e2e.ts]
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - playwright: [web]
+      targets:
+        - global: setTimeout
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes:
+        - path: .
+          bannedExtensions: [".txt"]

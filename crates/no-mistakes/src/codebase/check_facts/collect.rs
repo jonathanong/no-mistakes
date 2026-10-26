@@ -124,6 +124,7 @@ fn collect_check_facts_inner(
         integration_runner_configs,
         playwright_source_files: Arc::new(Vec::new()),
         playwright_test_files_by_project: Arc::new(Vec::new()),
+        playwright_matcher_warnings: Arc::default(),
         stats: CheckFactStats {
             files_parsed,
             parse_errors,

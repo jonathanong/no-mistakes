@@ -464,6 +464,7 @@ fn coverage_json_includes_helper_references_for_uncovered_selectors() {
 #[test]
 fn coverage_text_covers_fetch_apis() {
     let coverage = CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 0,
             covered_routes: 0,

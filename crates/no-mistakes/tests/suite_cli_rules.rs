@@ -103,3 +103,9 @@ mod cli_check_file_input_analysis;
 
 #[path = "cli_check_constructor_resolution.rs"]
 mod cli_check_constructor_resolution;
+
+#[path = "cli_check_playwright_patterns.rs"]
+mod cli_check_playwright_patterns;
+
+#[path = "cli_check_playwright_runner_warnings.rs"]
+mod cli_check_playwright_runner_warnings;

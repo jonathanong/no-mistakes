@@ -199,3 +199,8 @@ project, taking precedence over both the resolved app's defaults and the
 top-level `tests.playwright.frontendRoot`/`selectorRoots`. An entry that
 sets `frontendRoot`, `selectorRoots`, and `rewrites` without `project` is
 fully explicit and does not need a frontend app name.
+
+Playwright `testMatch` / `testIgnore` accept static string globs, RegExp literals,
+and mixed arrays. Regexes match absolute paths within `testDir`. Inspect aggregate
+`check` warnings for unsupported matchers: they name the config and property line,
+and coverage remains uncertain until those matchers use supported literals.

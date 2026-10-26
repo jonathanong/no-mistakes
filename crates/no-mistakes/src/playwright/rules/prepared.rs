@@ -1,13 +1,12 @@
 use super::selection::rule_selections;
 use crate::codebase::check_facts::PlaywrightFactPlan;
 use crate::config::v2::NoMistakesConfig;
-use crate::playwright::analysis::discover::discover_test_files_from_visible;
 use crate::playwright::config;
 use crate::playwright::fsutil::VisiblePathSnapshot;
 use crate::playwright::playwright_config;
 use anyhow::Result;
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::Arc;
 
 type SettingsForProject<'a> = dyn FnMut(Option<String>, Option<String>, &VisiblePathSnapshot) -> Result<config::Settings>
@@ -20,6 +19,7 @@ pub struct PreparedPlaywrightRules {
     pub(super) snapshot: Arc<VisiblePathSnapshot>,
     pub(super) selections: Vec<PreparedRuleSelection>,
     fact_plan: PlaywrightFactPlan,
+    warnings: Vec<String>,
 }
 
 pub(super) struct PreparedRuleSelection {
@@ -28,6 +28,10 @@ pub(super) struct PreparedRuleSelection {
 }
 
 impl PreparedPlaywrightRules {
+    pub fn warnings(&self) -> &[String] {
+        &self.warnings
+    }
+
     pub fn fact_plan(&self) -> PlaywrightFactPlan {
         self.fact_plan.clone()
     }
@@ -104,6 +108,7 @@ pub(super) fn prepare_with_settings(
     );
     let loaded_configs = loaded_configs?;
 
+    let mut warnings = Vec::new();
     let mut fact_plan = PlaywrightFactPlan::default();
     fact_plan.skip_dynamic_recovery = super::effort::skip_dynamic_recovery(config, false)?;
     let mut test_files_by_project = BTreeMap::new();
@@ -117,13 +122,17 @@ pub(super) fn prepare_with_settings(
             &mut fact_plan,
             selection.unique_html_ids,
         );
-        let test_files = test_files?;
+        let (test_files, project_warnings) = test_files?;
+        warnings.extend(project_warnings);
         test_files_by_project.insert(settings.project.clone(), test_files);
         prepared_selections.push(PreparedRuleSelection {
             selection,
             settings,
         });
     }
+    warnings.sort();
+    warnings.dedup();
+    fact_plan.set_matcher_warnings(warnings.clone());
     fact_plan.set_test_files_by_project(test_files_by_project.into_iter().collect());
     if let Some(tsconfig_catalog) = tsconfig_catalog {
         fact_plan.configure_module_resolution_with_catalog(
@@ -139,45 +148,12 @@ pub(super) fn prepare_with_settings(
         snapshot,
         selections: prepared_selections,
         fact_plan,
+        warnings,
     }))
 }
 
 #[cfg(test)]
 mod tests;
 
-fn add_settings_facts(
-    root: &Path,
-    settings: &config::Settings,
-    loaded_configs: &[(PathBuf, playwright_config::PlaywrightConfig)],
-    snapshot: &VisiblePathSnapshot,
-    fact_plan: &mut PlaywrightFactPlan,
-    scan_html_ids: bool,
-) -> Result<Arc<Vec<crate::playwright::analysis::context::DiscoveredTestFile>>> {
-    let playwright = playwright_config::select_loaded(
-        root,
-        &settings.playwright_configs,
-        settings.project.as_deref(),
-        loaded_configs,
-    );
-    let playwright = playwright?;
-    let test_files = discover_test_files_from_visible(root, settings, &playwright, snapshot)?;
-    for test_file in &test_files {
-        let attributes = test_file.test_id_attributes();
-        fact_plan.add_file(crate::codebase::check_facts::PlaywrightFactSelection {
-            path: test_file.path.clone(),
-            navigation_helpers: &settings.navigation_helpers,
-            selector_wrappers: &settings.selector_wrappers,
-            selector_attributes: &settings.selector_attributes,
-            component_selector_attributes: &settings.component_selector_attributes,
-            html_ids: settings.html_ids,
-            test_id_attributes: &attributes,
-            policy: crate::playwright::playwright_tests::TestPolicy {
-                assert_conditional_tests: false,
-                allow_skipped_tests: false,
-            },
-            demands_text_imports: true,
-        });
-    }
-    fact_plan.add_source_settings(root, settings.clone(), scan_html_ids, snapshot)?;
-    Ok(Arc::new(test_files))
-}
+mod add_settings;
+use add_settings::add_settings_facts;

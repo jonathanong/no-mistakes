@@ -19,3 +19,11 @@ test("annotation literal helpers remain an exported option and verdict profile",
     assert.match(readFileSync(join(packageRoot, file), "utf8"), /sqlLiteralHelpers\?: string\[\];/);
   }
 });
+
+test("Playwright coverage exposes named optional matcher warnings", () => {
+  const declarations = readFileSync(join(packageRoot, "report-types.d.ts"), "utf8");
+  assert.match(declarations, /export interface PlaywrightCoverageReport/);
+  assert.match(declarations, /warnings\?: string\[\]/);
+  const index = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  assert.match(index, /playwrightCheck\([\s\S]*?Promise<PlaywrightCoverageReport>/);
+});

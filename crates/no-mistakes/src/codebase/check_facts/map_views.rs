@@ -103,6 +103,7 @@ impl CheckFactMap {
             integration_runner_configs: self.integration_runner_configs.clone(),
             playwright_source_files: Arc::clone(&self.playwright_source_files),
             playwright_test_files_by_project: Arc::clone(&self.playwright_test_files_by_project),
+            playwright_matcher_warnings: Arc::clone(&self.playwright_matcher_warnings),
             app_selector_occurrences_cache: Arc::clone(&self.app_selector_occurrences_cache),
             playwright_routes_cache: Arc::clone(&self.playwright_routes_cache),
             app_text_targets_cache: Arc::clone(&self.app_text_targets_cache),

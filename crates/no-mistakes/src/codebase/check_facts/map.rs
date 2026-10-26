@@ -65,6 +65,8 @@ pub struct CheckFactMap {
     >,
     pub(crate) playwright_source_files: Arc<Vec<PathBuf>>,
     pub(crate) playwright_test_files_by_project: PlaywrightTestFilesByProject,
+    pub(crate) playwright_matcher_warnings:
+        Arc<std::collections::BTreeMap<Option<String>, Vec<String>>>,
     pub stats: CheckFactStats,
     /// Deduped SQL-looking member `.query` calls that were not proven executors.
     /// Printed by the CLI; it is not a finding and does not fail the run.

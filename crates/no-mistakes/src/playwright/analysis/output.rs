@@ -4,6 +4,9 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn print_coverage_text(report: &CoverageReport) {
+    for warning in &report.warnings {
+        println!("Warning: {warning}");
+    }
     println!("Routes: {}", report.summary.total_routes);
     println!("Covered routes: {}", report.summary.covered_routes);
     println!("Uncovered routes: {}", report.summary.uncovered_routes);
@@ -23,7 +26,11 @@ pub(crate) fn print_coverage_text(report: &CoverageReport) {
         && report.summary.duplicate_selectors == 0
     {
         println!();
-        println!("All routes and selectors covered.");
+        if report.warnings.is_empty() {
+            println!("All routes and selectors covered.");
+        } else {
+            println!("Coverage is uncertain; see warnings above.");
+        }
         return;
     }
 

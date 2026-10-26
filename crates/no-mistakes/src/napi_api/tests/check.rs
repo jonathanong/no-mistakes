@@ -8,6 +8,9 @@ mod check_parse_failure_locations;
 #[path = "check_tsconfig_alias_locations.rs"]
 mod check_tsconfig_alias_locations;
 
+#[path = "check_playwright_patterns.rs"]
+mod check_playwright_patterns;
+
 #[path = "check_suppression.rs"]
 mod check_suppression;
 #[path = "check_suppression_audit.rs"]

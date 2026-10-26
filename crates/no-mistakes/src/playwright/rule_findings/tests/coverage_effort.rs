@@ -9,6 +9,7 @@ use crate::playwright::rules::PLAYWRIGHT_COVERAGE;
 #[test]
 fn low_coverage_skips_recovered_uncovered_selectors() {
     let report = CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 0,
             covered_routes: 0,
@@ -84,6 +85,7 @@ fn low_coverage_skips_recovered_uncovered_selectors() {
 #[test]
 fn low_coverage_skips_unanalyzable_when_selector_coverage_is_disabled() {
     let report = CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 0,
             covered_routes: 0,

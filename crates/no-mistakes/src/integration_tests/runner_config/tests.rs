@@ -306,6 +306,7 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
         include: vec!["tests/**/*.test.ts".to_string()],
         exclude: Vec::new(),
         declared_deadlines: Default::default(),
+        matcher_warnings: Vec::new(),
         vitest_setup: Vec::new(),
     };
     let parsed = ParsedRunnerConfigs::with_files(BTreeMap::from([(

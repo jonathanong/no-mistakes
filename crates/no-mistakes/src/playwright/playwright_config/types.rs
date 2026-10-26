@@ -13,6 +13,7 @@ pub struct TestProject {
     pub test_dir: String,
     pub test_match: Vec<String>,
     pub test_ignore: Vec<String>,
+    pub(crate) pattern_options: crate::playwright::test_patterns::PatternOptions,
     pub base_url: Option<String>,
     /// The `testIdAttribute` resolved from the Playwright config's `use` block,
     /// or `None` when it could not be read statically (e.g. the config is built
@@ -25,8 +26,8 @@ pub struct TestProject {
 pub(super) struct ParsedOptions {
     pub(super) name: Option<String>,
     pub(super) test_dir: Option<String>,
-    pub(super) test_match: Option<Vec<String>>,
-    pub(super) test_ignore: Option<Vec<String>>,
+    pub(super) test_match: Option<crate::playwright::test_patterns::Patterns>,
+    pub(super) test_ignore: Option<crate::playwright::test_patterns::Patterns>,
     pub(super) base_url: Option<String>,
     pub(super) test_id_attribute: Option<String>,
 }
@@ -54,5 +55,26 @@ impl TestProject {
         } else {
             root.join(&self.config_dir).join(path)
         }
+    }
+}
+
+impl PlaywrightConfig {
+    pub(crate) fn matcher_warnings(&self, root: &Path) -> Vec<String> {
+        let mut warnings = self
+            .projects
+            .iter()
+            .flat_map(|project| {
+                project
+                    .pattern_options
+                    .test_match
+                    .warnings
+                    .iter()
+                    .chain(project.pattern_options.test_ignore.warnings.iter())
+            })
+            .map(|warning| warning.render(root))
+            .collect::<Vec<_>>();
+        warnings.sort();
+        warnings.dedup();
+        warnings
     }
 }

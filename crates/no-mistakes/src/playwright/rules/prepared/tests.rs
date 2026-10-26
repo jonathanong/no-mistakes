@@ -26,6 +26,7 @@ fn settings(project: Option<&str>) -> config::Settings {
 
 fn prepared(project: Option<&str>, app: Option<&str>) -> PreparedPlaywrightRules {
     PreparedPlaywrightRules {
+        warnings: Vec::new(),
         snapshot: Arc::new(VisiblePathSnapshot::from_paths(Path::new("/repo"), &[])),
         selections: vec![PreparedRuleSelection {
             selection: super::super::selection::RuleSelection {

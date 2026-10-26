@@ -40,8 +40,24 @@ pub(crate) struct DiscoveredTestFile {
 pub(crate) struct TestProjectDiscovery {
     pub(crate) context: TestProjectContext,
     pub(crate) test_dir: PathBuf,
-    pub(crate) include: GlobSet,
-    pub(crate) ignore: GlobSet,
+    pub(crate) include: FileMatcher,
+    pub(crate) ignore: FileMatcher,
+}
+
+pub(crate) struct FileMatcher {
+    pub(crate) globs: GlobSet,
+    pub(crate) regexes: Vec<regex::Regex>,
+    pub(crate) unknown: bool,
+}
+
+impl FileMatcher {
+    pub(crate) fn matches(&self, relative_root: &str, relative_test: &str, absolute: &str) -> bool {
+        self.unknown
+            || self.globs.is_match(relative_root)
+            || self.globs.is_match(relative_test)
+            || self.globs.is_match(absolute)
+            || self.regexes.iter().any(|regex| regex.is_match(absolute))
+    }
 }
 
 pub(crate) struct TestAnalysisContext<'a> {

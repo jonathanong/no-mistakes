@@ -73,15 +73,9 @@ pub(crate) struct SelectorRef {
     pub(crate) value: String,
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct CoverageReport {
-    pub(crate) summary: Summary,
-    pub(crate) routes: Vec<CoverageRoute>,
-    pub(crate) selectors: Vec<CoverageSelector>,
-    pub(crate) duplicate_selectors: Vec<DuplicateSelector>,
-    pub(crate) fetch_apis: Vec<CoverageFetch>,
-}
+mod coverage_report;
+use coverage_report::is_arc_empty;
+pub(crate) use coverage_report::CoverageReport;
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -147,13 +141,6 @@ pub(crate) enum Edge {
         reasons: Vec<String>,
         line: u32,
     },
-}
-
-fn is_arc_empty<T>(arc: &Arc<Vec<T>>) -> bool {
-    // Serde calls this predicate with `&Arc<Vec<T>>`, and `Arc` has no
-    // `is_empty`, so this helper preserves the same skip-behavior as `Vec::is_empty`
-    // for arc-backed paths.
-    arc.is_empty()
 }
 
 #[derive(Serialize)]

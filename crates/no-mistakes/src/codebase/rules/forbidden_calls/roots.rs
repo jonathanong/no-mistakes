@@ -25,10 +25,16 @@ pub(super) fn expand(input: ExpandRequest<'_>) -> Result<Vec<NodeId>> {
         .unwrap_or_default();
     let exclude_roots = GlobMatcher::new(&exclude_roots, "forbidden-calls excludeRoots")?;
     let mut call_roots = Vec::new();
+    let mut skipped_unknown = false;
     for selector in &input.options.roots {
-        if let Some(call_root) = expand_selector(&input, selector, &exclude_roots)? {
+        if let Some(call_root) =
+            expand_selector(&input, selector, &exclude_roots, &mut skipped_unknown)?
+        {
             call_roots.push(call_root);
         }
+    }
+    if call_roots.is_empty() && skipped_unknown {
+        return Ok(Vec::new());
     }
     if call_roots.is_empty() {
         bail!("{RULE_ID}: excludeRoots excluded all configured roots");
@@ -52,6 +58,7 @@ fn expand_selector(
     input: &ExpandRequest<'_>,
     selector: &Root,
     exclude_roots: &GlobMatcher,
+    skipped_unknown: &mut bool,
 ) -> Result<Option<CallRoot>> {
     match selector {
         Root::File(selector) => {
@@ -96,11 +103,15 @@ fn expand_selector(
             let catalog = input.playwright.context(
                 "forbidden-calls Playwright roots require a prepared Playwright project catalog",
             )?;
-            let files = catalog.matching_files(
+            let (files, unknown) = catalog.matching_files(
                 input.root,
                 &catalog_names(playwright),
                 input.graph_files,
             )?;
+            if files.is_empty() && unknown {
+                *skipped_unknown = true;
+                return Ok(None);
+            }
             collection_root(
                 input,
                 files,

@@ -27,11 +27,18 @@ pub(crate) fn discover_playwright_test_files(
     settings: &Settings,
     facts: Option<&dyn TsFactLookup>,
     snapshot: &VisiblePathSnapshot,
-) -> Result<Vec<DiscoveredTestFile>> {
+) -> Result<(Vec<DiscoveredTestFile>, Vec<String>)> {
     if let Some(test_files) =
         facts.and_then(|facts| facts.get_playwright_test_files(settings.project.as_deref()))
     {
-        return Ok(test_files.as_ref().clone());
+        let warnings = facts
+            .map(|facts| {
+                facts
+                    .playwright_matcher_warnings(settings.project.as_deref())
+                    .to_vec()
+            })
+            .unwrap_or_default();
+        return Ok((test_files.as_ref().clone(), warnings));
     }
     let playwright = playwright_config::load_many_with_sources(
         root,
@@ -40,9 +47,11 @@ pub(crate) fn discover_playwright_test_files(
         Some(snapshot.source_store_for(root).as_ref()),
     );
     let playwright = playwright?;
-    crate::perf_trace::trace("playwright.discover_test_files", || {
+    let warnings = playwright.matcher_warnings(root);
+    let files = crate::perf_trace::trace("playwright.discover_test_files", || {
         discover_test_files_from_visible(root, settings, &playwright, snapshot)
-    })
+    })?;
+    Ok((files, warnings))
 }
 
 pub(crate) fn collect_playwright_routes(

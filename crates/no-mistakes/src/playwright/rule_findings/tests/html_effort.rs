@@ -28,6 +28,7 @@ fn selector_report() -> CoverageReport {
     )
     .collect();
     CoverageReport {
+        warnings: Vec::new(),
         summary: Summary {
             total_routes: 0,
             covered_routes: 0,

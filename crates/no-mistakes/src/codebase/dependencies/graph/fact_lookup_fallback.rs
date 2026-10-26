@@ -1,9 +1,11 @@
 use super::{RouteReachableFiles, TsFactLookup};
 use crate::codebase::ts_source::facts::{TsFactMap, TsFactPlan, TsFileFacts};
 use anyhow::Result;
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+mod universe;
+pub(crate) use universe::same_graph_universe;
 
 /// Adds facts for files missing from a caller-provided sparse lookup while
 /// preserving per-file Playwright facts. App-wide memoization is safe only
@@ -54,19 +56,6 @@ pub(crate) fn playwright_fetch_parse_error(
     Some(Err(format!("failed to parse {}: {error}", path.display())))
 }
 
-pub(crate) fn same_graph_universe(
-    primary_files: &[PathBuf],
-    graph_visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
-) -> bool {
-    let primary_visible: HashSet<&Path> = primary_files.iter().map(PathBuf::as_path).collect();
-    if primary_visible.len() != graph_visible.visible_len() {
-        return false;
-    }
-    let graph_paths = graph_visible.visible_cache_key();
-    graph_paths
-        .iter()
-        .all(|path| primary_visible.contains(path.as_path()))
-}
 
 impl TsFactLookup for FallbackTsFactLookup<'_> {
     fn integration_route_links(
@@ -132,6 +121,14 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
             self.primary.playwright_source_files()
         } else {
             None
+        }
+    }
+
+    fn playwright_matcher_warnings(&self, project: Option<&str>) -> &[String] {
+        if self.reuse_primary_playwright_cache {
+            self.primary.playwright_matcher_warnings(project)
+        } else {
+            &[]
         }
     }
 

@@ -48,6 +48,9 @@ impl PlaywrightFactPlan {
             }
         }
         self.set_test_files_by_project(test_files);
+        for (project, warnings) in other.matcher_warnings.iter() {
+            self.add_matcher_warnings(project.clone(), warnings.clone());
+        }
     }
 
     pub(super) fn merge_source_plan(&mut self, source_plan: PlaywrightSourceFactPlan) {
