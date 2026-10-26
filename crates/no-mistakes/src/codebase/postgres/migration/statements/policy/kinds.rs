@@ -57,18 +57,8 @@ pub(super) fn new_kind(code: &[&TokenWithSpan]) -> Option<&'static str> {
     ]
     .into_iter()
     .find(|kind| word(name, kind))?;
-    if action == "CREATE" && object > 1 {
-        let modifier = code[object - 1];
-        let allowed = (word(modifier, "TEMP") || word(modifier, "TEMPORARY"))
-            && ["TABLE", "VIEW"].contains(&category)
-            || word(modifier, "UNLOGGED") && category == "TABLE"
-            || word(modifier, "UNIQUE") && category == "INDEX"
-            || word(modifier, "MATERIALIZED") && category == "VIEW"
-            || word(modifier, "CONSTRAINT") && category == "TRIGGER"
-            || word(modifier, "REPLACE");
-        if !allowed {
-            return None;
-        }
+    if action == "CREATE" && object > 1 && !valid_modifier(code[object - 1], category) {
+        return None;
     }
     if action == "ALTER"
         && ["VIEW", "TRIGGER", "FUNCTION", "PROCEDURE", "INDEX", "TYPE"].contains(&category)
@@ -121,6 +111,15 @@ pub(super) fn new_kind(code: &[&TokenWithSpan]) -> Option<&'static str> {
             | "DROP VIEW"
     ))
     .then_some(kind)
+}
+
+fn valid_modifier(modifier: &TokenWithSpan, category: &str) -> bool {
+    (word(modifier, "TEMP") || word(modifier, "TEMPORARY")) && ["TABLE", "VIEW"].contains(&category)
+        || word(modifier, "UNLOGGED") && category == "TABLE"
+        || word(modifier, "UNIQUE") && category == "INDEX"
+        || word(modifier, "MATERIALIZED") && category == "VIEW"
+        || word(modifier, "CONSTRAINT") && category == "TRIGGER"
+        || word(modifier, "REPLACE")
 }
 
 pub(super) fn word(token: &TokenWithSpan, expected: &str) -> bool {
