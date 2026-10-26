@@ -17,7 +17,7 @@ const root = resolve(
 );
 it.each([true, false])("projects disjoint source intersections (typed=%s)", (typed) => {
   for (const [name, lines] of [
-    ["intersection-caller.ts", [5, 6, 7, 8, 9, 10, 11, 12, 13]],
+    ["intersection-caller.ts", [4, 5, 6, 7, 8, 9, 10, 11, 12, 13]],
     ["intersection-consumers.ts", [5]],
   ]) {
     const filename = resolve(root, name);

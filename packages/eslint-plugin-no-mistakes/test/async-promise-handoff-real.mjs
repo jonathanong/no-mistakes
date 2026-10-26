@@ -10,7 +10,7 @@ export const fixture = resolve(
   "../../../test-cases/eslint-plugin/async-call-disposition/fixture",
 );
 export const handoff = resolve(fixture, "promise-handoff");
-export const callerLines = [18, 23, 28, 32, 36, 49, 51, 59, 61, 63];
+export const callerLines = [18, 23, 28, 32, 36, 49, 51, 57, 59, 61, 63];
 export const recallLines = [5, 9, 12, 16, 19, 21, 24, 29, 32, 34, 38];
 export const slotLines = [3, 5, 7, 10, 12, 14, 16, 18, 20, 22, 24];
 export const guardLines = [
@@ -24,7 +24,7 @@ export const realScenarios = [
   {
     config: "promise-handoff-alias/.oxlintrc.json",
     lines: {
-      "promise-handoff-alias/caller.ts": [15],
+      "promise-handoff-alias/caller.ts": [11, 15],
       "promise-handoff-alias/consumer.ts": [6],
       "promise-handoff-alias/controls.ts": [7, 8, 9, 10, 11],
     },
@@ -42,6 +42,7 @@ export const realScenarios = [
       "promise-handoff/slot-guards.ts": slotLines,
       "promise-handoff/parameter-guards.ts": [5],
       "promise-handoff/static-final.ts": [3],
+      "promise-handoff/static-caller.ts": [3],
       "promise-handoff/extra-caller.ts": [7, 9, 11, 15, 17],
     },
   },

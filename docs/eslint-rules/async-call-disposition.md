@@ -450,7 +450,11 @@ target without returning its promise still reports.
 A call whose callee type is that same target function is checked in the file
 that invokes it. `await dependencies.x(...)` is handled there. Dropping the
 call reports at that invocation, including after writes to an explicitly typed
-receiver. Unannotated or unsupported returned carriers retain the original
+receiver. The producer exemption also requires a proven disposal of each terminal
+invocation, including copies created inside nested handlers. A dropped call or
+an opaque consumer of its promise retains the original callback finding even
+when the copied receiver cannot be classified at its own call site.
+Unannotated or unsupported returned carriers retain the original
 callback finding instead of erasing it.
 
 Configured contracts trust the API rather than inspecting its body or inferring

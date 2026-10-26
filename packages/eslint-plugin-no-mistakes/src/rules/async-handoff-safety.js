@@ -4,11 +4,22 @@ const { sourceSlot } = require("./async-source-slots");
 const { annotation } = require("./async-source-types");
 const { propertiesWritten } = require("./async-disposition-mocks");
 const { localBodySafe } = require("./async-consumer-local-proof");
+const { directlyDisposed, promiseAllDisposed } = require("./async-disposition-expressions");
+const { retainedPromise } = require("./async-disposition-bindings");
 const { siblingRead } = require("./async-handoff-sibling");
 
 // A typeof annotation carries responsibility only while visible uses preserve
 // it. An opaque forwarding call cannot erase the original callback finding.
 function createHandoffSafety(proof) {
+  // Returning from an unproven callback consumer does not establish disposal.
+  const consumers = { returnsThroughConsumer: () => false, namedDisposition: () => false };
+  function disposed(value, owner) {
+    return (
+      directlyDisposed(value, owner, consumers) ||
+      promiseAllDisposed(value, owner, consumers) ||
+      retainedPromise(value, owner, (reference) => disposed(reference, owner))
+    );
+  }
   const results = new WeakMap();
   let depth = 0;
   function safeSlot(slot, target) {
@@ -83,7 +94,8 @@ function createHandoffSafety(proof) {
       );
     }
     if (parent.type === "CallExpression") {
-      if (parent.callee === value) return property === null && !parent.optional;
+      if (parent.callee === value)
+        return property === null && !parent.optional && disposed(parent, owner);
       const next = sourceSlot(value, owner, proof, property, shape);
       return next && proof.targetType(next.type, next.context) === target && safeSlot(next, target);
     }

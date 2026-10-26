@@ -57,7 +57,7 @@ it.each([true, false])("proves source target slots and preserves recall (typed=%
     ["guard-caller.ts", guardLines],
     ["slot-guards.ts", slotLines],
     ["parameter-guards.ts", [5]],
-    ["static-caller.ts", []],
+    ["static-caller.ts", [3]],
     ["static-final.ts", [3]],
     ["extra-caller.ts", [7, 9, 11, 15, 17]],
     ["final.ts", []],

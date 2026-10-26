@@ -45,14 +45,16 @@ export function realDrop12(installed) {
     const cases = {
       "aggregate-spreads": { "caller.ts": aggregateLines },
       "promise-handoff-alias": {
-        "caller.ts": installed ? [15] : [6, 11, 15],
+        "caller.ts": installed ? [11, 15] : [6, 11, 15],
+        "nested-caller.ts": installed ? [9, 13] : [4, 9, 13],
+        "nested-consumers.ts": [],
         "consumer.ts": installed ? [6] : [],
         "controls.ts": range(7, 11),
-        "intersection-caller.ts": range(installed ? 5 : 3, 13),
+        "intersection-caller.ts": range(installed ? 4 : 3, 13),
         "intersection-consumers.ts": installed ? [5] : [],
       },
       "handoff-data": {
-        "accepted.ts": installed ? [] : [5, 10, 12, 14, 17],
+        "accepted.ts": installed ? [17] : [5, 10, 12, 14, 17],
         "controls.ts": installed
           ? [7, 9, 13, 17, 19, 22, 23, 24, 26, 30]
           : [7, 9, 13, 17, 19, 22, 24, 26, 30],

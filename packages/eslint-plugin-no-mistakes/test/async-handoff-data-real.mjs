@@ -11,7 +11,7 @@ export const root = resolve(
 );
 export const rules = JSON.parse(readFileSync(resolve(root, ".oxlintrc.json"), "utf8")).rules;
 export const cases = {
-  "accepted.ts": [],
+  "accepted.ts": [17],
   "controls.ts": [7, 9, 13, 17, 19, 22, 23, 24, 26, 30],
   "depth.ts": [37],
   "date-prototype.ts": [3, 4],

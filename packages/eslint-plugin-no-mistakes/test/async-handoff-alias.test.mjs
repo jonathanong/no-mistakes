@@ -12,7 +12,9 @@ const root = resolve(fixture, "promise-handoff-alias");
 const rules = JSON.parse(readFileSync(resolve(root, ".oxlintrc.json"), "utf8")).rules;
 it.each([false, true])("resolves target aliases through tsconfig extends (typed=%s)", (typed) => {
   for (const [name, lines] of [
-    ["caller.ts", [15]],
+    ["caller.ts", [11, 15]],
+    ["nested-caller.ts", [9, 13]],
+    ["nested-consumers.ts", []],
     ["consumer.ts", [6]],
     ["controls.ts", [7, 8, 9, 10, 11]],
   ]) {
