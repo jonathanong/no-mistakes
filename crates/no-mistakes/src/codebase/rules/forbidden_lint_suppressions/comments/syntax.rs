@@ -6,12 +6,18 @@ pub(super) fn header(text: &str, directive: &str) -> bool {
 pub(super) fn typescript_text(raw: &str, block: bool) -> &str {
     if block {
         // TypeScript scans the last line of a block, including JSDoc prefixes.
-        raw.rsplit(['\n', '\r', '\u{2028}', '\u{2029}'])
+        let line = raw
+            .rsplit(['\n', '\r', '\u{2028}', '\u{2029}'])
             .next()
-            .unwrap_or(raw)
-            .trim_start()
-            .trim_start_matches(['*', '/'])
-            .trim_start()
+            .unwrap_or(raw);
+        // On the opening line, the compiler consumed /* before whitespace;
+        // stars after that whitespace cannot restart the directive prefix.
+        let line = if line.len() == raw.len() {
+            line
+        } else {
+            line.trim_start()
+        };
+        line.trim_start_matches(['*', '/']).trim_start()
     } else {
         raw.strip_prefix('/').unwrap_or(raw).trim_start()
     }
