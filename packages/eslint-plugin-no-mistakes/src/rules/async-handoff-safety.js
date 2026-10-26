@@ -1,4 +1,5 @@
 "use strict";
+const { unwrapTransparentParent } = require("./async-ast");
 const { resolveVariable, memberPropertyName } = require("./async-target-bindings");
 const { sourceSlot } = require("./async-source-slots");
 const { annotation } = require("./async-source-types");
@@ -12,19 +13,20 @@ function createHandoffSafety(proof) {
   let depth = 0;
   function safeSlot(slot, target) {
     if (depth >= 32) return false;
-    const { consumer, binding, property } = slot;
+    const { consumer, binding, property, shape } = slot;
     if (!localBodySafe(consumer.node, consumer.context)) return false;
     if (!results.has(binding)) results.set(binding, new Map());
     const cache = results.get(binding);
-    if (cache.has(property)) return cache.get(property);
-    cache.set(property, false);
+    const key = JSON.stringify([property, [...shape].sort()]);
+    if (cache.has(key)) return cache.get(key);
+    cache.set(key, false);
     depth++;
-    const safe = uses(binding, property, consumer.context, target, new Set());
+    const safe = uses(binding, property, consumer.context, target, new Set(), shape);
     depth--;
-    cache.set(property, safe);
+    cache.set(key, safe);
     return safe;
   }
-  function uses(binding, property, owner, target, seen) {
+  function uses(binding, property, owner, target, seen, shape) {
     if (!binding || seen.has(binding) || seen.size >= 32) return false;
     seen = new Set(seen).add(binding);
     const reads = binding.references.filter((ref) => !ref.init);
@@ -36,11 +38,25 @@ function createHandoffSafety(proof) {
         const member = value.parent;
         if (property !== null && member?.type === "MemberExpression" && member.object === value) {
           const name = memberPropertyName(member);
-          if (name === null) return false;
-          if (name !== property) return true;
-          return flow(member, null, owner, target, seen);
+          if (
+            name === null ||
+            member.optional ||
+            ["__proto__", "constructor", "prototype"].includes(name)
+          )
+            return false;
+          if (name !== property) {
+            const parent = unwrapTransparentParent(member).parent;
+            if (parent?.type === "MemberExpression") return false;
+            return (
+              parent?.type !== "CallExpression" ||
+              parent.callee !== unwrapTransparentParent(member) ||
+              shape.get(name) === true ||
+              (parent.optional && !shape.has(name))
+            );
+          }
+          return flow(member, null, owner, target, seen, shape, binding);
         }
-        return flow(value, property, owner, target, seen);
+        return flow(value, property, owner, target, seen, shape, binding);
       })
     );
   }
@@ -57,26 +73,26 @@ function createHandoffSafety(proof) {
       property === null ? { type, context: owner } : proof.property(type, owner, property);
     return selected && proof.targetType(selected.type, selected.context) === target;
   }
-  function flow(value, property, owner, target, seen) {
+  function flow(value, property, owner, target, seen, shape, binding) {
     const parent = value.parent;
     if (!parent) return false;
     if (parent.type.startsWith("TS") && parent.expression === value) {
       return (
         property === null &&
         proof.targetType(parent.typeAnnotation, owner) === target &&
-        flow(parent, property, owner, target, seen)
+        flow(parent, property, owner, target, seen, shape, binding)
       );
     }
     if (parent.type === "LogicalExpression" && parent.operator === "??" && parent.left === value) {
       return (
         property === null &&
         proof.target(parent.right, owner) === target &&
-        flow(parent, property, owner, target, seen)
+        flow(parent, property, owner, target, seen, shape, binding)
       );
     }
     if (parent.type === "CallExpression") {
       if (parent.callee === value) return property === null && !parent.optional;
-      const next = sourceSlot(value, owner, proof, property);
+      const next = sourceSlot(value, owner, proof, property, shape);
       return next && proof.targetType(next.type, next.context) === target && safeSlot(next, target);
     }
     if (
@@ -92,7 +108,7 @@ function createHandoffSafety(proof) {
           property === null ? { type, context: owner } : proof.property(type, owner, property);
         if (!selected || proof.targetType(selected.type, selected.context) !== target) return false;
       }
-      return uses(resolveVariable(parent.id, owner), property, owner, target, seen);
+      return uses(resolveVariable(parent.id, owner), property, owner, target, seen, shape);
     }
     if (parent.type === "ReturnStatement" && parent.argument === value)
       return returned(value, property, owner, target);
@@ -108,10 +124,18 @@ function createHandoffSafety(proof) {
     ) {
       const object = parent.parent;
       const names = object.properties.map((item) =>
-        item.type === "Property" && !item.computed ? (item.key.name ?? item.key.value) : null,
+        item.type === "Property" && !item.computed && !item.method && item.kind === "init"
+          ? (item.key.name ?? item.key.value)
+          : null,
       );
-      if (names.includes(null) || new Set(names).size !== names.length) return false;
-      return flow(object, parent.key.name ?? parent.key.value, owner, target, seen);
+      if (
+        names.includes(null) ||
+        names.includes("__proto__") ||
+        new Set(names).size !== names.length
+      )
+        return false;
+      shape = proof.receiverShape(object, owner, binding, shape);
+      return flow(object, parent.key.name ?? parent.key.value, owner, target, seen, shape, binding);
     }
     if (parent.type === "SpreadElement" && parent.argument === value && property !== null) {
       const object = parent.parent;
@@ -122,11 +146,14 @@ function createHandoffSafety(proof) {
             item !== parent &&
             (item.type !== "Property" ||
               item.computed ||
-              (item.key.name ?? item.key.value) === property),
+              item.method ||
+              item.kind !== "init" ||
+              [property, "__proto__"].includes(item.key.name ?? item.key.value)),
         )
       )
         return false;
-      return flow(object, property, owner, target, seen);
+      shape = proof.receiverShape(object, owner, binding, shape);
+      return flow(object, property, owner, target, seen, shape, binding);
     }
     return false;
   }

@@ -8,7 +8,7 @@ function annotation(node) {
   return node?.typeAnnotation?.typeAnnotation || null;
 }
 
-function createSourceTypes(context, sources) {
+function createSourceTypes(context, sources, receiverShape) {
   const declarations = createDeclarations(sources);
   const targets = compileTargets(context.options?.[0] || {}, "targets");
   function fresh(node, seen) {
@@ -99,7 +99,7 @@ function createSourceTypes(context, sources) {
     }
     return null;
   }
-  return { ...declarations, target, targetType, property, valueType };
+  return { ...declarations, target, targetType, property, valueType, receiverShape };
 }
 
 module.exports = { annotation, createSourceTypes };

@@ -4,7 +4,7 @@ const { resolveVariable } = require("./async-target-bindings");
 const { annotation } = require("./async-source-types");
 const { propertiesWritten } = require("./async-disposition-mocks");
 
-function sourceSlot(argument, context, proof, selected = null) {
+function sourceSlot(argument, context, proof, selected = null, shape = null) {
   let value = unwrapTransparentParent(argument);
   let property = selected;
   if (value.parent?.type === "Property") {
@@ -21,9 +21,12 @@ function sourceSlot(argument, context, proof, selected = null) {
       return null;
     const names = object.properties.map((item) => item.key.name ?? item.key.value);
     if (new Set(names).size !== names.length) return null;
+    shape ||= proof.receiverShape(object, context);
     property = entry.key.name ?? entry.key.value;
     value = unwrapTransparentParent(object);
   }
+  shape ||= value.type === "ObjectExpression" ? proof.receiverShape(value, context) : new Map();
+  if (shape.has("__proto__")) return null;
   const call = value.parent;
   if (
     call?.type !== "CallExpression" ||
@@ -49,7 +52,7 @@ function sourceSlot(argument, context, proof, selected = null) {
     property === null
       ? { type, context: consumer.context }
       : proof.property(type, consumer.context, property);
-  return receiving && { ...receiving, consumer, param, property, binding };
+  return receiving && { ...receiving, consumer, param, property, binding, shape };
 }
 
 module.exports = { sourceSlot };

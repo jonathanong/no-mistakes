@@ -1,12 +1,14 @@
 "use strict";
 
-const { unwrapTransparentParent } = require("./async-ast");
+const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { createImportedSources } = require("./async-consumer-imported-proof");
 const { annotation, createSourceTypes } = require("./async-source-types");
 const { propertiesWritten } = require("./async-disposition-mocks");
 const { sourceSlot } = require("./async-source-slots");
 const { createHandoffSafety } = require("./async-handoff-safety");
+const { createReceiverProof } = require("./async-consumer-receivers");
+const { localBodySafe } = require("./async-consumer-local-proof");
 
 // This source projection shares imported source parsing with the body proof. It
 // never constructs a TypeScript program or depends on the runner's argv.
@@ -18,11 +20,22 @@ function createPromiseHandoff(context, sourceFacts) {
     return (types ||= createSourceTypes(
       context,
       (sourceFacts.sources ||= createImportedSources(context)),
+      (sourceFacts.receiverShape ||= createReceiverProof(sourceFacts)),
     ));
   }
   function promiseSlotHandoff(node) {
     const proof = sourceTypes();
     if (!proof) return false;
+    const callback = proof.callable(unwrapExpression(node), context);
+    if (!callback || !localBodySafe(callback.node, callback.context)) return false;
+    function receiverFree(value) {
+      if (!value?.type) return true;
+      if (value.type === "ThisExpression") return false;
+      return (callback.context.sourceCode.visitorKeys[value.type] || []).every((key) =>
+        Array.isArray(value[key]) ? value[key].every(receiverFree) : receiverFree(value[key]),
+      );
+    }
+    if (!receiverFree(callback.node)) return false;
     const receiving = sourceSlot(node, context, proof);
     const target = receiving && proof.targetType(receiving.type, receiving.context);
     if (!target || !(safeSlot ||= createHandoffSafety(proof))(receiving, target)) return false;
