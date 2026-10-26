@@ -1,5 +1,6 @@
 "use strict";
 const { unwrapTransparentParent } = require("./async-ast");
+const { adoptNode, intersectShapes } = require("./async-consumer-property-carrier");
 const { resolveVariable, memberPropertyName } = require("./async-target-bindings");
 const { localBodySafe } = require("./async-consumer-local-proof");
 
@@ -13,7 +14,26 @@ function propertyBodyAwaited(fn, index, context, property, proveCall, receiverSh
   )
     return false;
   const variable = resolveVariable(param, context);
+  const seen = new WeakSet();
   let count = 0;
+  // null until a use adopts the callback or returns the copied object.
+  // Mixed results fail the walk instead of combining into one outcome.
+  let outcome = null;
+  const note = (mode) => {
+    if (mode === true) {
+      if (outcome?.returned) return false;
+      outcome = true;
+      return true;
+    }
+    if (mode?.returned) {
+      if (outcome === true) return false;
+      outcome = outcome
+        ? { returned: true, shape: intersectShapes(outcome.shape, mode.shape) }
+        : mode;
+      return true;
+    }
+    return false;
+  };
   const safe = variable.references
     .filter((ref) => !ref.init)
     .every((ref) => {
@@ -54,13 +74,19 @@ function propertyBodyAwaited(fn, index, context, property, proveCall, receiverSh
           selected = unwrapTransparentParent(selected.parent);
         const invocation = selected.parent;
         if (invocation?.type === "CallExpression" && invocation.callee === selected)
-          return !invocation.optional && awaited(invocation);
-        return forwarded(selected, null, context, proveCall, receiverShape, variable, shape);
+          return note(!invocation.optional && awaited(invocation));
+        return note(
+          forwarded(selected, null, context, proveCall, receiverShape, variable, shape, seen),
+        );
       }
       count++;
-      return forwarded(value, property, context, proveCall, receiverShape, variable, shape);
+      return note(
+        forwarded(value, property, context, proveCall, receiverShape, variable, shape, seen),
+      );
     });
-  return safe && count > 0;
+  // Every accepted use goes through note(), which records the outcome.
+  if (!safe || !count) return false;
+  return outcome;
 }
 
 // Follow member objects and assignment patterns only along their writable target.
@@ -108,7 +134,16 @@ function awaited(call) {
   return value.parent?.type === "AwaitExpression" && value.parent.argument === value;
 }
 
-function forwarded(value, property, context, proveCall, receiverShape, variable, shape) {
+function forwarded(
+  value,
+  property,
+  context,
+  proveCall,
+  receiverShape,
+  variable,
+  shape,
+  seen = new WeakSet(),
+) {
   let argument = value;
   if (value.parent?.type === "SpreadElement") {
     const spread = value.parent;
@@ -145,10 +180,14 @@ function forwarded(value, property, context, proveCall, receiverShape, variable,
     shape = receiverShape(object, context, variable, shape);
     argument = unwrapTransparentParent(object);
   }
-  const call = argument.parent;
-  if (call?.type !== "CallExpression" || !awaited(call)) return false;
-  const index = call.arguments.indexOf(argument);
-  return index >= 0 && proveCall(call, index, property, context, shape);
+  return adoptNode(
+    argument,
+    property,
+    context,
+    shape,
+    { proveCall, receiverShape, propertyWritten, forward: forwarded, variable },
+    seen,
+  );
 }
 
-module.exports = { propertyBodyAwaited };
+module.exports = { propertyBodyAwaited, propertyWritten, forwarded };

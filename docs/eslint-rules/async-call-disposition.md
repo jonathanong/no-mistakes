@@ -311,6 +311,12 @@ use of the selected property reaches an immediately awaited invocation, such as
 same-file and imported helper calls, a defaulted dependency parameter, and
 `{ ...dependencies, otherField }` forwarding that preserves the selected property.
 It also follows a selected property through `??` into another fresh object.
+That copy may be a direct argument, a `const` binding, or the return value of the
+helper that builds it. The caller adopts the copy by awaiting that same property,
+or by passing the object to an awaited helper whose implementation awaits the
+property. Returning the copy does not adopt it. Replacing the copied property, a
+helper call that is not awaited, an unknown helper, and a callback on the
+right-hand side of `??` stay unproven.
 Pure static property reads do not change this callback's disposition. Sibling
 assignments, updates, deletes, nested writes, and assignment-pattern or loop
 targets invalidate the supplied shape; runtime mutation cannot prove adoption. An

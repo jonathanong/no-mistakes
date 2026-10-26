@@ -144,7 +144,9 @@ function importedAwaited(call, index, context, state, property, proveBody) {
     );
 
   const resolved = importedFunction(unwrapExpression(call.callee), context, state);
-  return Boolean(resolved && proveBody(resolved.fn, index, resolved.context, property));
+  if (!resolved) return false;
+  const mode = proveBody(resolved.fn, index, resolved.context, property);
+  return mode?.returned ? { ...mode, async: Boolean(resolved.fn.async) } : mode;
 }
 
 function importedFunction(callee, context, state) {
