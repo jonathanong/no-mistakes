@@ -32,8 +32,10 @@ pub(super) fn valid(source: Option<&[TokenWithSpan]>) -> bool {
     let Some(after_name) = pg_ident::table_head(&tokens) else {
         return false;
     };
-    if tokens.get(after_name) == Some(&Token::LParen) && !column_clauses(&tokens, after_name) {
-        return false;
+    if tokens.get(after_name) == Some(&Token::LParen) {
+        if !column_clauses(&tokens, after_name) || !table_tail(&tokens, after_name) {
+            return false;
+        }
     }
     partition_columns(&tokens, after_name)
 }
@@ -83,7 +85,37 @@ fn relevant(tokens: &[Token]) -> bool {
                 && matches!(tokens.get(at + 1), Some(Token::Word(_)))
                 && matches!(tokens.get(at + 2), Some(Token::Comma | Token::RParen))
             || word(token, "PARTITION") && tokens.get(at + 1).is_some_and(|token| word(token, "OF"))
+            || word(token, "PARTITION") && tokens.get(at + 1).is_some_and(|token| word(token, "BY"))
+            || word(token, "USING")
     })
+}
+
+fn table_tail(tokens: &[Token], open: usize) -> bool {
+    let mut depth = 0usize;
+    let mut close = None;
+    for (at, token) in tokens.iter().enumerate().skip(open) {
+        match token {
+            Token::LParen => depth += 1,
+            Token::RParen => {
+                depth -= 1;
+                if depth == 0 {
+                    close = Some(at);
+                    break;
+                }
+            }
+            _ => {}
+        }
+    }
+    let Some(close) = close else {
+        return true; // The ordinary parser diagnoses the missing closing parenthesis.
+    };
+    let at = close + 1;
+    (!tokens.get(at).is_some_and(|token| word(token, "USING"))
+        || tokens.get(at + 1).is_some_and(pg_ident::method))
+        && !(tokens.get(at).is_some_and(|token| word(token, "PARTITION"))
+            && tokens.get(at + 1).is_some_and(|token| word(token, "BY"))
+            && tokens.get(at + 3) == Some(&Token::LParen)
+            && tokens.get(at + 4) == Some(&Token::RParen))
 }
 
 fn partition_columns(tokens: &[Token], after_name: usize) -> bool {

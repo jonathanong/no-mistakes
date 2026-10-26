@@ -118,17 +118,43 @@ fn stored_after_expression(tokens: &[TokenWithSpan], code: &[usize], open: usize
 }
 
 pub(super) fn table_options(tokens: &mut [TokenWithSpan], code: &[usize]) -> bool {
-    for at in 1..code.len().saturating_sub(1) {
-        if word(&tokens[code[at]].token, "WITHOUT")
-            && word(&tokens[code[at + 1]].token, "OIDS")
-            && tokens[code[at - 1]].token == Token::RParen
-            && at + 2 == code.len()
-        {
-            mask(tokens, code, at, at + 2);
-            return true;
-        }
+    let Some(at) = table_body_close(tokens, code).map(|close| close + 1) else {
+        return false;
+    };
+    if at + 2 != code.len() {
+        return false;
+    }
+    let without_oids =
+        word(&tokens[code[at]].token, "WITHOUT") && word(&tokens[code[at + 1]].token, "OIDS");
+    let using_method =
+        word(&tokens[code[at]].token, "USING") && pg_ident::method(&tokens[code[at + 1]].token);
+    if without_oids || using_method {
+        mask(tokens, code, at, at + 2);
+        return true;
     }
     false
+}
+
+fn table_body_close(tokens: &[TokenWithSpan], code: &[usize]) -> Option<usize> {
+    let plain: Vec<_> = code.iter().map(|at| tokens[*at].token.clone()).collect();
+    let open = pg_ident::table_head(&plain)?;
+    if plain.get(open) != Some(&Token::LParen) {
+        return None;
+    }
+    let mut depth = 0;
+    for (at, token) in plain.iter().enumerate().skip(open) {
+        match token {
+            Token::LParen => depth += 1,
+            Token::RParen => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(at);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
 }
 
 pub(super) fn word(token: &Token, expected: &str) -> bool {
