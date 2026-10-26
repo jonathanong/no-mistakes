@@ -128,14 +128,18 @@ pub(crate) fn embedded_call_facts_with_demand(
                 )
             };
             if call.kind == EmbeddedSqlKind::Dynamic && !variant {
-                // Recovered interpolation text can prove OFFSET syntax and write
-                // targets for general consumers. Conflict-only opaque calls were
-                // omitted above because ordering rejects the tail before lookup.
+                // The retained prefix can prove policy operations, OFFSET syntax,
+                // and write targets even when the remaining SQL is opaque.
+                // Conflict-only opaque calls were omitted above because ordering
+                // rejects the tail before lookup.
                 let locations = exact_locations
                     .then(|| facts.variant_locations.take())
                     .flatten();
                 let parse_failed = exact_locations && facts.parse_failed;
                 facts = SqlStatementFileFacts {
+                    statement_kinds: facts.statement_kinds,
+                    setting_uses: facts.setting_uses,
+                    function_calls: facts.function_calls,
                     offset_uses: facts.offset_uses,
                     writes: facts.writes,
                     variant_locations: locations,
