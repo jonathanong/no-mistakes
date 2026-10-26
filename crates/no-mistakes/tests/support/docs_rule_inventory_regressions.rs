@@ -112,3 +112,12 @@ fn readme_links_do_not_grant_guide_ownership() {
 fn external_parent_directory_and_non_markdown_links_are_not_rule_entries() {
     assert_failures("ignored-readme-links", &["alpha-rule"], &[]);
 }
+
+#[test]
+fn a_fenced_matching_heading_does_not_repair_the_wrong_rule_title() {
+    assert_failures(
+        "title-mismatch",
+        &["alpha-rule"],
+        &["rule page title mismatch: alpha-rule"],
+    );
+}
