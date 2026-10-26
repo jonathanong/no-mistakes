@@ -31,7 +31,7 @@
   "peerDependencies": {
     "@typescript-eslint/parser": ">=8",
     "eslint": ">=9",
-    "typescript": ">=4.8.4"
+    "typescript": ">=5"
   },
   "peerDependenciesMeta": {
     "@typescript-eslint/parser": {
@@ -44,5 +44,5 @@
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24"
   },
-  "//": "typescript stays on 6.0.3. typescript-eslint does not support TypeScript 7. https://github.com/typescript-eslint/typescript-eslint/issues/10940"
+  "//": "typescript stays on 6.0.3. TypeScript 7 makes the typescript-eslint parser throw on load. https://github.com/typescript-eslint/typescript-eslint/issues/12518 Related: https://github.com/typescript-eslint/typescript-eslint/issues/10940"
 }
