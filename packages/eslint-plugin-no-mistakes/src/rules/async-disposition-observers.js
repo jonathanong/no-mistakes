@@ -47,7 +47,24 @@ function assertionExpression(node, context) {
     : null;
 }
 
-function handledCatchStatement(node, context) {
+function promiseChainFrom(node, origin) {
+  let current = unwrapExpression(node);
+  while (current !== origin) {
+    const callee = unwrapExpression(current?.callee);
+    if (
+      current?.type !== "CallExpression" ||
+      current.optional ||
+      callee?.type !== "MemberExpression" ||
+      callee.optional ||
+      !["then", "catch", "finally"].includes(memberPropertyName(callee))
+    )
+      return false;
+    current = unwrapExpression(callee.object);
+  }
+  return node !== origin;
+}
+
+function handledCatchStatement(node, context, origin) {
   const callee = unwrapExpression(node?.callee);
   const handler = unwrapExpression(node?.arguments?.[0]);
   return Boolean(
@@ -57,6 +74,7 @@ function handledCatchStatement(node, context) {
     !callee.optional &&
     memberPropertyName(callee) === "catch" &&
     !node.optional &&
+    promiseChainFrom(node, origin) &&
     (["ArrowFunctionExpression", "FunctionExpression"].includes(handler?.type) ||
       localFunction(handler, context)),
   );

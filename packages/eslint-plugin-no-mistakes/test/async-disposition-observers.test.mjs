@@ -11,7 +11,9 @@ const root = resolve(
   __dirname,
   "../../../test-cases/eslint-plugin/async-call-disposition/fixture/proven-consumers",
 );
-const expected = [12, 13, 14, 15, 17, 19, 20, 21, 28, 29, 30, 31, 32, 33, 34, 35, 38];
+const expected = [
+  12, 13, 14, 15, 17, 19, 20, 21, 28, 29, 30, 31, 32, 33, 34, 35, 38, 40, 41, 43, 44,
+];
 it.each([false, true])(
   "handles assertions, rejection handlers, and proven inline consumers (typed=%s)",
   (typed) => {

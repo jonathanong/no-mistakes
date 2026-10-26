@@ -25,7 +25,7 @@ function isDisposed(node, context, consumers, seen = new Set()) {
   const disposed = (value) => isDisposed(value, context, consumers, seen);
   return (
     directlyDisposed(node, context, consumers) ||
-    directlyDisposed(observed, context, consumers) ||
+    directlyDisposed(observed, context, consumers, node) ||
     promiseAllDisposed(observed, context, consumers) ||
     retainedPromise(observed, context, disposed) ||
     mappedPromise(observed, context, consumers, disposed) ||

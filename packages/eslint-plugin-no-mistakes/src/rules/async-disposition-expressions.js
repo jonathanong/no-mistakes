@@ -16,7 +16,7 @@ const {
   unwrapTransparentParent,
 } = require("./async-ast");
 
-function directlyDisposed(node, context, consumers) {
+function directlyDisposed(node, context, consumers, origin = node) {
   const expression = unwrapTransparentParent(node);
   const parent = expression.parent;
   if (parent?.type === "ReturnStatement") {
@@ -28,7 +28,7 @@ function directlyDisposed(node, context, consumers) {
     return returnedFromFunction(parent, context, consumers);
   }
   return (
-    handledCatchStatement(expression, context) ||
+    handledCatchStatement(expression, context, origin) ||
     parent?.type === "AwaitExpression" ||
     (parent?.type === "UnaryExpression" && parent.operator === "void")
   );
@@ -140,7 +140,7 @@ function promiseAllDisposed(node, context, consumers, collectionRole = false) {
     if (isPromiseAllCall(current, context) && canReachPromiseAll(node, current, collectionRole)) {
       return (
         directlyDisposed(current, context, consumers) ||
-        directlyDisposed(observedExpression(current, context), context, consumers) ||
+        directlyDisposed(observedExpression(current, context), context, consumers, current) ||
         promiseAllDisposed(current, context, consumers)
       );
     }

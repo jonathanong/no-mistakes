@@ -37,3 +37,8 @@ async function localExpect() {
   const expect = (value: unknown): any => value;
   await expect(enqueueEmail()).rejects.toThrow();
 }
+enqueueEmail().unknownMethod().catch(() => {}); // Unknown member consumers may discard the promise.
+enqueueEmail().then(() => {}).unknownMethod().catch(() => {});
+enqueueEmail().catch(() => {}).finally(() => {}).catch(onRejected);
+enqueueEmail().catch(unknownHandler);
+enqueueEmail().catch?.(onRejected);
