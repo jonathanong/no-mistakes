@@ -124,6 +124,7 @@ frontends, and repository rules.
 | Rename a queue job and miss the worker | Producers with no processor | [`queues check`](cli/queues-check.md), [`queues related`](cli/queues-related.md) |
 | Hoist a uniqueness token above re-entrant `beforeAll` | Duplicate-key failures that depend on the worker | [`playwright-no-hoisted-unique-token`](eslint-rules/playwright-no-hoisted-unique-token.md) |
 | One raw `scrollTo` racing cursor pagination | A wait that burns its timeout | [`playwright-no-raw-scroll-pagination`](eslint-rules/playwright-no-raw-scroll-pagination.md) |
+| Catch `isVisible()` and return a boolean | A broken locator looks like a normal absence | [`playwright-no-swallowed-visibility`](eslint-rules/playwright-no-swallowed-visibility.md) |
 | Alias a function or rename an export | A public name the graph cannot follow | [`ts-no-function-aliases`](eslint-rules/ts-no-function-aliases.md), [`ts-no-export-renaming`](eslint-rules/ts-no-export-renaming.md) |
 | Parse human CLI output or `eval` command text | Broken paths and unsafe shell | `--format json` and JSON `command` arrays |
 | Shell out once per question | Repeated discovery, parse, and graph builds | `analyzeProject()` in the [Node API](node-api.md) |

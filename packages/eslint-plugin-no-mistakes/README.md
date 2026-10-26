@@ -67,6 +67,9 @@ See [options and examples](../../docs/eslint-rules/no-comment-phrases.md).
 `forbidden-member-chains` is an opt-in rule for configured static member-access chains.
 See [options and examples](../../docs/eslint-rules/forbidden-member-chains.md).
 
+`playwright-no-swallowed-visibility` is an opt-in rule for Playwright state checks whose rejection becomes a boolean literal.
+See [options and examples](../../docs/eslint-rules/playwright-no-swallowed-visibility.md).
+
 `no-object-mutation` is an opt-in rule for shared object writes and mutating calls.
 See [options and examples](../../docs/eslint-rules/no-object-mutation.md).
 
