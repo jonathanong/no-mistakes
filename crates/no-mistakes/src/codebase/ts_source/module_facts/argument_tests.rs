@@ -5,8 +5,11 @@ use oxc_parser::Parser;
 use oxc_span::SourceType;
 
 fn read(name: &str, requested: bool) -> TypeScriptModuleFacts {
-    let path =
-        crate::test_support::rule_fixture_root("forbidden-calls/argument-predicates").join(name);
+    read_fixture("forbidden-calls/argument-predicates", name, requested)
+}
+
+fn read_fixture(rule: &str, name: &str, requested: bool) -> TypeScriptModuleFacts {
+    let path = crate::test_support::rule_fixture_root(rule).join(name);
     let source = std::fs::read_to_string(path).unwrap();
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, SourceType::mjs()).parse();
@@ -88,4 +91,38 @@ fn invalid_semantic_identity_does_not_publish_literal_argument_proofs() {
     let facts = read("semantic-invalid.mjs", true);
     assert!(!facts.diagnostics.is_empty());
     assert!(facts.call_arguments.is_none());
+}
+
+#[test]
+fn literal_argument_and_static_key_identities_remain_distinct() {
+    let facts = read_fixture("forbidden-calls/literal-identity", "repro.mjs", true);
+    assert!(facts.diagnostics.is_empty(), "{:?}", facts.diagnostics);
+    let calls = facts.call_arguments.unwrap();
+    assert_eq!(calls.len(), 1);
+    let values = &calls.values().next().unwrap().values;
+    let expected = [
+        "\u{fffd}d800",
+        "\u{fffd}dc00",
+        r"\ud800",
+        "\u{fffd}",
+        "\u{fffd}fffd\u{fffd}d800",
+        "𐀀",
+    ];
+    assert_eq!(values.len(), expected.len() * 2 + 1);
+    // A display adapter would merge the surrogate with the literal backslash-u key.
+    for (index, text) in expected.iter().enumerate() {
+        let scalar = ArgumentValue::Scalar(serde_json::json!(text));
+        assert_eq!(values[index], scalar);
+        assert_eq!(values[index + expected.len()], scalar);
+    }
+    let ArgumentValue::Object(properties) = &values[expected.len() * 2] else {
+        panic!("static literal keys must remain analyzable");
+    };
+    assert_eq!(properties.len(), expected.len());
+    for (index, key) in expected.iter().enumerate() {
+        assert_eq!(
+            properties.get(*key),
+            Some(&ArgumentValue::Scalar(serde_json::json!(index.to_string())))
+        );
+    }
 }
