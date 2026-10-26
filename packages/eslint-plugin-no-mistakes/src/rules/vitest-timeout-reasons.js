@@ -12,7 +12,7 @@ function timeoutJustified(sourceCode, entry, origin, registration) {
       (text) =>
         /[\p{L}\p{N}]/u.test(text) &&
         !/^(?:todo|tbd|fixme|xxx|placeholder)\b/i.test(text) &&
-        !/^(?:<?reason>?|n\/a|none)$/i.test(text),
+        !/^(?:<?(?:reason|explanation|specific reason)>?|n\/a|none)$/i.test(text),
     ),
   );
 }

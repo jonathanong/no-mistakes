@@ -104,7 +104,8 @@ hooks and native aliases, suites, and registrations on APIs returned by
 
 Empty or punctuation-only text and placeholder reasons are reported: `TODO`,
 `TBD`, `FIXME`, `XXX`, and `placeholder` prefixes, or an exact `reason`, `<reason>`,
-`n/a`, or `none` (case-insensitive). The rule checks this syntax; reviewers still
+`explanation`, `<explanation>`, `specific reason`, `<specific reason>`, `n/a`, or
+`none` (case-insensitive). The rule checks this syntax; reviewers still
 judge whether the named reason is appropriate. A reason on an enclosing suite
 does not justify nested registrations. Trailing comments on another statement do
 not apply. A reason on an effective shared options property travels with that

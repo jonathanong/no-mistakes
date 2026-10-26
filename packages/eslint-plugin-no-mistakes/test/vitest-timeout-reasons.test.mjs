@@ -42,7 +42,7 @@ it("requires local non-placeholder reasons while retaining diagnostic priorities
 });
 it("preserves reason and cap diagnostics through Oxlint for every carrier", () => {
   const root = resolve(__dirname, `../../../test-cases/eslint-snippets/fixture/${rule}`);
-  for (const name of ["reasons", "reason-carriers", "reason-adjacency"]) {
+  for (const name of ["reasons", "reason-carriers", "reason-adjacency", "reason-placeholders"]) {
     const result = spawnSync(
       process.execPath,
       [
@@ -64,6 +64,13 @@ it("preserves reason and cap diagnostics through Oxlint for every carrier", () =
       findings({}, name).map(({ line, message }) => [line, message]),
     );
   }
+});
+
+it("rejects unfilled explanation and specific reason templates", () => {
+  assert.deepEqual(
+    findings({}, "reason-placeholders").map(({ line, messageId }) => [line, messageId]),
+    [4, 6, 8, 10, 12, 14, 16, 18].map((line) => [line, "reason"]),
+  );
 });
 
 it("keeps reasons local across hook contexts, effective spreads and config defaults", () => {
