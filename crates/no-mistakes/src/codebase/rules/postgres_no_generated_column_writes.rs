@@ -84,6 +84,8 @@ pub(crate) fn check_with_files_sources_and_facts(
             let compiled = compile_options(&opts)?;
             let files = super::selected_rule_files(root, config, rule, all_files)?;
             let view = facts.for_sql_application(index, rule.name.as_deref());
+            let anchor =
+                super::config_diagnostic::ConfigAnchor::resolve(root, config, Some(sources), rule);
             scan::scan(
                 root,
                 &compiled,
@@ -91,6 +93,7 @@ pub(crate) fn check_with_files_sources_and_facts(
                 sources,
                 view.as_ref()
                     .map_or(facts as &dyn SqlFactContext, |view| view),
+                &anchor,
             )
         })
         .collect();

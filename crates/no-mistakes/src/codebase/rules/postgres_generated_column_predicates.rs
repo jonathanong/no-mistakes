@@ -142,6 +142,8 @@ fn check_applications(
                 .filter(|path| query_set.contains(path) || schema_set.contains(path))
                 .collect();
             let view = facts.for_sql_application(index, rule.name.as_deref());
+            let anchor =
+                super::config_diagnostic::ConfigAnchor::resolve(root, config, Some(sources), rule);
             scan::scan(
                 root,
                 &compiled,
@@ -150,6 +152,7 @@ fn check_applications(
                 sources,
                 view.as_ref()
                     .map_or(facts as &dyn SqlFactContext, |view| view),
+                &anchor,
             )
         })
         .collect();

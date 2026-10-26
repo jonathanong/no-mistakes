@@ -1,5 +1,6 @@
 use super::super::{CompiledOptions, ExtraGeneratedColumn, RuleFinding, RULE_ID};
 use crate::codebase::postgres::{SqlColumnMetadata, SqlSchemaFileFacts, SqlTableSchemaEvent};
+use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) struct Tracked {
@@ -114,25 +115,28 @@ pub(super) fn column_index(live: &LiveColumns) -> BTreeMap<String, BTreeSet<Stri
 pub(super) fn stale_extras(
     live: &LiveColumns,
     extras: &[ExtraGeneratedColumn],
+    anchor: &ConfigAnchor,
 ) -> Vec<RuleFinding> {
     extras
         .iter()
-        .filter(|extra| {
+        .enumerate()
+        .filter(|(_, extra)| {
             live.get(extra.table.trim())
                 .and_then(|columns| columns.get(extra.column.trim()))
                 .is_some_and(|column| column.is_generated)
         })
-        .map(|extra| RuleFinding {
-            rule: RULE_ID.to_string(),
-            file: ".no-mistakes.yml".to_string(),
-            line: 1,
-            message: format!(
-                "stale postgres-generated-column-predicates extraGeneratedColumns entry: {}.{}",
-                extra.table.trim(),
-                extra.column.trim()
-            ),
-            import: Some(format!("{}.{}", extra.table.trim(), extra.column.trim())),
-            target: Some(extra.column.trim().to_string()),
+        .map(|(index, extra)| {
+            anchor.emit(
+                RULE_ID,
+                anchor.option_item_line("extraGeneratedColumns", index),
+                format!(
+                    "stale postgres-generated-column-predicates extraGeneratedColumns entry: {}.{}",
+                    extra.table.trim(),
+                    extra.column.trim()
+                ),
+                Some(format!("{}.{}", extra.table.trim(), extra.column.trim())),
+                Some(extra.column.trim().to_string()),
+            )
         })
         .collect()
 }

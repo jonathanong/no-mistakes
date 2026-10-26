@@ -1,6 +1,7 @@
 use super::*;
 use crate::codebase::ts_source::{FileInventory, SourceStore};
 use crate::config::v2::schema::{RuleDef, RuleScope};
+use std::collections::BTreeSet;
 use std::sync::Arc;
 
 fn fixture_root(name: &str) -> PathBuf {

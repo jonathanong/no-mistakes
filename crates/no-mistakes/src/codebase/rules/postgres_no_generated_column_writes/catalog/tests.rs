@@ -92,8 +92,11 @@ fn stale_extras_that_duplicate_schema_generated_columns() {
         table: "items".to_string(),
         column: "created_at".to_string(),
     }];
-    let findings =
-        stale_extra_findings_from_tables(&live_tables(&schema.iter().collect::<Vec<_>>()), &extra);
+    let findings = stale_extra_findings_from_tables(
+        &live_tables(&schema.iter().collect::<Vec<_>>()),
+        &extra,
+        &crate::codebase::rules::config_diagnostic::ConfigAnchor::fallback(),
+    );
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("items.created_at"));
 }

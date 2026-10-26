@@ -104,9 +104,17 @@ pub(crate) fn check_with_files_sources_and_facts(
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
+            let anchor =
+                super::config_diagnostic::ConfigAnchor::resolve(root, config, Some(sources), rule);
             let workspace_roots = match workspace_roots(root, &opts) {
                 Ok(roots) => roots,
-                Err(message) => return Ok(vec![findings::config(&message)]),
+                Err(message) => {
+                    return Ok(vec![findings::config(
+                        &anchor,
+                        anchor.option_line("workspaceRoots"),
+                        &message,
+                    )])
+                }
             };
             let skip = super::skip_dir_set(config);
             let files: Vec<PathBuf> = all_files
@@ -114,7 +122,15 @@ pub(crate) fn check_with_files_sources_and_facts(
                 .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &workspace_roots))
                 .cloned()
                 .collect();
-            scan::run(root, &workspace_roots, &opts, &files, sources, facts)
+            scan::run(
+                root,
+                &workspace_roots,
+                &opts,
+                &files,
+                sources,
+                facts,
+                &anchor,
+            )
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();

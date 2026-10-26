@@ -34,6 +34,7 @@ pub(super) fn validate_shared_graph_plan(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn check_with_prepared_facts_and_graph(
     root: &Path,
     config: &NoMistakesConfig,
@@ -42,6 +43,7 @@ pub(crate) fn check_with_prepared_facts_and_graph(
     prepared_graph: Option<&crate::codebase::dependencies::graph::PreparedGraphConfig>,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     graph: &DepGraph,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<RuleFinding>> {
     let applications = config.rule_applications(RULE_ID);
     if applications.is_empty() {
@@ -68,6 +70,7 @@ pub(crate) fn check_with_prepared_facts_and_graph(
             graph,
             inferred_roots,
             Some(&file_universe),
+            sources,
         )?);
     }
     crate::codebase::rules::sort_findings(&mut findings);

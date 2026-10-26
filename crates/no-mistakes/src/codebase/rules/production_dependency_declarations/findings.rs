@@ -51,13 +51,10 @@ pub(super) fn undeclared(
     }
 }
 
-pub(super) fn config(message: &str) -> RuleFinding {
-    RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: ".no-mistakes.yml".to_string(),
-        line: 1,
-        message: format!("{RULE_ID}: {message}"),
-        import: None,
-        target: None,
-    }
+pub(super) fn config(
+    anchor: &crate::codebase::rules::config_diagnostic::ConfigAnchor,
+    line: usize,
+    message: &str,
+) -> RuleFinding {
+    anchor.emit(RULE_ID, line, format!("{RULE_ID}: {message}"), None, None)
 }

@@ -1,5 +1,6 @@
 use super::ExtraGeneratedColumn;
 use crate::codebase::postgres::dml::{GeneratedTable, GeneratedTableColumns};
+use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 
 mod configured;
 mod live;
@@ -62,19 +63,22 @@ pub(super) use trigger::trigger_catalog_from_tables;
 pub(super) fn stale_trigger_findings(
     tables: &LiveTables<'_>,
     columns: &[String],
+    anchor: &ConfigAnchor,
 ) -> Vec<crate::codebase::rules::RuleFinding> {
     columns
         .iter()
-        .filter(|column| !schema_has_column(tables, column))
-        .map(|column| crate::codebase::rules::RuleFinding {
-            rule: super::RULE_ID.to_string(),
-            file: ".no-mistakes.yml".to_string(),
-            line: 1,
-            message: format!(
-                "stale triggerMaintainedColumns entry: `{column}` matches no column in schema SQL"
-            ),
-            import: Some(column.clone()),
-            target: Some(column.clone()),
+        .enumerate()
+        .filter(|(_, column)| !schema_has_column(tables, column))
+        .map(|(index, column)| {
+            anchor.emit(
+                super::RULE_ID,
+                anchor.option_item_line("triggerMaintainedColumns", index),
+                format!(
+                    "stale triggerMaintainedColumns entry: `{column}` matches no column in schema SQL"
+                ),
+                Some(column.clone()),
+                Some(column.clone()),
+            )
         })
         .collect()
 }
@@ -91,27 +95,32 @@ fn schema_has_column(tables: &LiveTables<'_>, name: &str) -> bool {
 pub(super) fn stale_extra_findings_from_tables(
     tables: &LiveTables<'_>,
     extras: &[ExtraGeneratedColumn],
+    anchor: &ConfigAnchor,
 ) -> Vec<crate::codebase::rules::RuleFinding> {
     extras
         .iter()
-        .filter(|extra| !extra.table.is_empty() && !extra.column.is_empty())
-        .filter(|extra| {
+        .enumerate()
+        .filter(|(_, extra)| !extra.table.is_empty() && !extra.column.is_empty())
+        .filter(|(_, extra)| {
             configured::relation(tables, &extra.table)
                 .and_then(|key| tables.get(&key))
-                .is_some_and(|table| table.columns.iter().any(|column| {
-                    column.generated && column.name.eq_ignore_ascii_case(&extra.column)
-                }))
+                .is_some_and(|table| {
+                    table.columns.iter().any(|column| {
+                        column.generated && column.name.eq_ignore_ascii_case(&extra.column)
+                    })
+                })
         })
-        .map(|extra| crate::codebase::rules::RuleFinding {
-            rule: super::RULE_ID.to_string(),
-            file: ".no-mistakes.yml".to_string(),
-            line: 1,
-            message: format!(
-                "stale extraGeneratedColumns entry: `{}.{}` is already a generated column in schema SQL",
-                extra.table, extra.column
-            ),
-            import: Some(format!("{}.{}", extra.table, extra.column)),
-            target: Some(extra.column.clone()),
+        .map(|(index, extra)| {
+            anchor.emit(
+                super::RULE_ID,
+                anchor.option_item_line("extraGeneratedColumns", index),
+                format!(
+                    "stale extraGeneratedColumns entry: `{}.{}` is already a generated column in schema SQL",
+                    extra.table, extra.column
+                ),
+                Some(format!("{}.{}", extra.table, extra.column)),
+                Some(extra.column.clone()),
+            )
         })
         .collect()
 }

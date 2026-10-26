@@ -1,6 +1,7 @@
 use super::CompiledOptions;
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::dependencies::extract::is_indexable;
+use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use crate::codebase::ts_source::relative_slash_path;
 use history::{events_before, snapshots, Catalogs};
 use std::path::{Path, PathBuf};
@@ -11,6 +12,7 @@ pub(super) fn scan(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     facts: &dyn SqlFactContext,
+    anchor: &ConfigAnchor,
 ) -> anyhow::Result<crate::codebase::rules::PostgresFindings> {
     let prepared = facts.prepared();
     let schema_files = crate::codebase::postgres::postgres_sql_paths(root, files, &opts.schema)
@@ -33,10 +35,12 @@ pub(super) fn scan(
     findings.extend(super::catalog::stale_extra_findings_from_tables(
         &tables,
         &opts.extra_generated_columns,
+        anchor,
     ));
     findings.extend(super::catalog::stale_trigger_findings(
         &tables,
         &opts.trigger_maintained_columns,
+        anchor,
     ));
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
     let has_history = schema.iter().any(|file| !file.table_events.is_empty());

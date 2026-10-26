@@ -9,6 +9,7 @@ pub(super) struct GraphRuleRequest<'a> {
         Option<&'a crate::codebase::dependencies::graph::PreparedGraphConfig>,
     pub(super) dependency_graph: Option<&'a DepGraph>,
     pub(super) inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    pub(super) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
     pub(super) prepared_vitest_projects:
         Option<&'a crate::codebase::rules::PreparedVitestProjectCatalog>,
     pub(super) prepared_playwright_projects:
@@ -26,6 +27,7 @@ pub(super) fn graph_rule_findings(
         prepared_graph,
         dependency_graph,
         inferred_roots,
+        sources,
         prepared_vitest_projects,
         prepared_playwright_projects,
     } = request;
@@ -56,6 +58,7 @@ pub(super) fn graph_rule_findings(
                     prepared_graph,
                     inferred_roots,
                     dependency_graph.expect("forbidden-dependencies requires canonical graph"),
+                    sources,
                 )
             },
         )?);
@@ -71,6 +74,7 @@ pub(super) fn graph_rule_findings(
                     dependency_graph
                         .expect("required-entrypoint-reachability requires canonical graph"),
                     inferred_roots,
+                    sources,
                 )
             },
         )?);

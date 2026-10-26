@@ -1,11 +1,14 @@
 use super::RuleFinding;
-use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, GraphBuildPlan, NodeId};
+use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, NodeId};
+use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+
+mod paths;
 
 pub const RULE_ID: &str = "required-entrypoint-reachability";
 
@@ -20,7 +23,7 @@ pub(crate) struct Options {
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     config
         .rule_configured(RULE_ID)
-        .then(|| GraphBuildPlan::from_allowed(Some(&runtime_edge_kinds())))
+        .then(|| GraphBuildPlan::from_allowed(Some(&paths::runtime_edge_kinds())))
 }
 
 pub(crate) fn check_with_graph_and_inferred(
@@ -29,6 +32,7 @@ pub(crate) fn check_with_graph_and_inferred(
     files: &[PathBuf],
     graph: &DepGraph,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<RuleFinding>> {
     let file_universe = files
         .iter()
@@ -52,6 +56,7 @@ pub(crate) fn check_with_graph_and_inferred(
             .collect::<Vec<_>>();
         let target_roots =
             super::target_roots_with_inferred(root, config, rule, &mut inferred_roots);
+        let anchor = ConfigAnchor::resolve(root, config, sources, rule);
         findings.extend(check_rule_application(
             root,
             &options,
@@ -59,6 +64,7 @@ pub(crate) fn check_with_graph_and_inferred(
             &target_roots,
             graph,
             &file_universe,
+            &anchor,
         ));
     }
     super::sort_findings(&mut findings);
@@ -72,16 +78,21 @@ fn check_rule_application(
     target_roots: &[PathBuf],
     graph: &DepGraph,
     file_universe: &crate::fx::PathSet,
+    anchor: &ConfigAnchor,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     if options.source_globs.is_empty() {
         findings.push(config_finding(
+            anchor,
+            anchor.option_line("sourceGlobs"),
             "each rule entry requires at least one sourceGlobs pattern",
             None,
         ));
     }
     if options.entrypoints.is_empty() {
         findings.push(config_finding(
+            anchor,
+            anchor.option_line("entrypoints"),
             "each rule entry requires at least one entrypoint",
             None,
         ));
@@ -96,11 +107,15 @@ fn check_rule_application(
             target_roots,
         ) {
             Ok(matches) if matches.is_empty() => findings.push(config_finding(
+                anchor,
+                anchor.listed_line("sourceGlobs", &options.source_globs, pattern),
                 &format!("sourceGlobs pattern `{pattern}` matched no files"),
                 Some(pattern.clone()),
             )),
             Ok(matches) => source_files.extend(matches),
             Err(error) => findings.push(config_finding(
+                anchor,
+                anchor.invalid_glob_line("sourceGlobs", &options.source_globs),
                 &format!("invalid sourceGlobs pattern `{pattern}`: {error}"),
                 Some(pattern.clone()),
             )),
@@ -110,12 +125,14 @@ fn check_rule_application(
     let mut entrypoint_paths = Vec::new();
     let mut entrypoint_labels = Vec::new();
     for configured in &options.entrypoints {
-        let path = resolve_entrypoint(root, configured);
+        let path = paths::resolve_entrypoint(root, configured);
         if path
             .as_ref()
             .is_none_or(|path| !file_universe.contains(path) || !graph.contains_file(path))
         {
             findings.push(config_finding(
+                anchor,
+                anchor.listed_line("entrypoints", &options.entrypoints, configured),
                 &format!("entrypoint `{configured}` does not exist"),
                 Some(configured.clone()),
             ));
@@ -131,7 +148,7 @@ fn check_rule_application(
     entrypoint_paths.dedup();
 
     if !entrypoint_paths.is_empty() {
-        let allowed = runtime_edge_kinds();
+        let allowed = paths::runtime_edge_kinds();
         let roots = entrypoint_paths
             .iter()
             .cloned()
@@ -165,38 +182,13 @@ fn check_rule_application(
     findings
 }
 
-fn resolve_entrypoint(root: &Path, configured: &str) -> Option<PathBuf> {
-    let configured = Path::new(configured.trim_start_matches("./"));
-    let path = if configured.is_absolute() {
-        configured.to_path_buf()
-    } else {
-        root.join(configured)
-    };
-    let path = crate::codebase::ts_resolver::normalize_path(&path);
-    path.starts_with(root).then_some(path)
-}
-
-fn runtime_edge_kinds() -> HashSet<EdgeKind> {
-    [
-        EdgeKind::Import,
-        EdgeKind::DynamicImport,
-        EdgeKind::Require,
-        EdgeKind::WorkspaceImport,
-        EdgeKind::AssetImport,
-    ]
-    .into_iter()
-    .collect()
-}
-
-fn config_finding(message: &str, target: Option<String>) -> RuleFinding {
-    RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: ".no-mistakes.yml".to_string(),
-        line: 1,
-        message: format!("{RULE_ID}: {message}"),
-        import: None,
-        target,
-    }
+fn config_finding(
+    anchor: &ConfigAnchor,
+    line: usize,
+    message: &str,
+    target: Option<String>,
+) -> RuleFinding {
+    anchor.emit(RULE_ID, line, format!("{RULE_ID}: {message}"), None, target)
 }
 
 #[cfg(test)]

@@ -98,6 +98,7 @@ fn verdict_recording_errors_when_embedded_path_has_no_statement_facts() {
         std::slice::from_ref(&embedded_path),
         &sources,
         &facts,
+        &crate::codebase::rules::config_diagnostic::ConfigAnchor::fallback(),
     )
     .expect_err("statement facts");
     assert!(

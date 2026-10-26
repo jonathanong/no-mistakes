@@ -42,6 +42,7 @@ fn absolute_directory_roots_preserve_the_prepared_file_universe() {
         &graph,
         None,
         Some(&universe),
+        None,
     )
     .unwrap();
     assert_eq!(findings.len(), 1);
