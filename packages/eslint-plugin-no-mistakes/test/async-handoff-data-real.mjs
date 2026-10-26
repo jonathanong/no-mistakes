@@ -19,6 +19,8 @@ export const cases = {
   "shadowed-date.ts": [3, 4],
   "array-prototype.ts": [3, 7],
   "pipeline.ts": [37],
+  "snapshot-coercion.ts": [3],
+  "snapshot-parameters.ts": [12, 18, 24, 30],
 };
 export function realGate(typeAware) {
   const result = spawnSync(

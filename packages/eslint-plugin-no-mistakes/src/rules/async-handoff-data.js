@@ -6,6 +6,7 @@ const {
   stableConstInitializer,
 } = require("./async-target-bindings");
 const { globalObserverMutated } = require("./async-observer-mutations");
+const { beforeCallbacks } = require("./async-handoff-snapshots");
 
 const CLOSED = "\0closed-data";
 const prototypeKeys = new Set([
@@ -41,17 +42,17 @@ function createDataFacts() {
       environment(context, name)
     );
   }
-  function primitive(node, context, seen = new Set(), snapshot = false) {
+  function primitive(node, context, seen = new Set(), snapshot = false, callbacks = new Set()) {
     node = unwrapExpression(node);
     if (!node || seen.has(node) || seen.size >= 32) return false;
     seen = new Set(seen).add(node);
     if (node.type === "Literal") return node.value === null || typeof node.value !== "object";
     if (node.type === "UnaryExpression" && ["+", "-", "!", "~", "void"].includes(node.operator))
-      return primitive(node.argument, context, seen, snapshot);
+      return primitive(node.argument, context, seen, snapshot, callbacks);
     if (node.type === "BinaryExpression")
       return (
-        primitive(node.left, context, seen, snapshot) &&
-        primitive(node.right, context, seen, snapshot)
+        primitive(node.left, context, seen, snapshot, callbacks) &&
+        primitive(node.right, context, seen, snapshot, callbacks)
       );
     if (
       node.type === "CallExpression" &&
@@ -62,11 +63,14 @@ function createDataFacts() {
     ) {
       // An already evaluated immutable binding holds the builtin's numeric result.
       // Direct argument evaluation still has to exclude object coercion/getters.
-      return snapshot || node.arguments.every((arg) => primitive(arg, context, seen));
+      return (
+        node.arguments.every((arg) => primitive(arg, context, seen, false, callbacks)) ||
+        (snapshot && beforeCallbacks(node, context, callbacks))
+      );
     }
     if (node.type !== "Identifier") return false;
     const init = stableConstInitializer(node, context, new Set());
-    if (init) return primitive(init, context, seen, true);
+    if (init) return primitive(init, context, seen, true, callbacks);
     const binding = resolveVariable(node, context);
     if (binding?.defs.length !== 1 || binding.references.some((ref) => ref.isWrite() && !ref.init))
       return false;
@@ -91,18 +95,19 @@ function createDataFacts() {
       rows.elements.every((row) => {
         row = unwrapExpression(row);
         return (
-          row?.type === "ArrayExpression" && primitive(row.elements[index], context, seen, true)
+          row?.type === "ArrayExpression" &&
+          primitive(row.elements[index], context, seen, true, callbacks)
         );
       })
     );
   }
-  function date(node, context) {
+  function date(node, context, callbacks = new Set()) {
     node = unwrapExpression(node);
     return (
       node?.type === "NewExpression" &&
       builtin(node.callee, "Date", context) &&
       node.arguments.length <= 7 &&
-      node.arguments.every((arg) => primitive(arg, context))
+      node.arguments.every((arg) => primitive(arg, context, new Set(), false, callbacks))
     );
   }
   function closed(object, context, inherited) {

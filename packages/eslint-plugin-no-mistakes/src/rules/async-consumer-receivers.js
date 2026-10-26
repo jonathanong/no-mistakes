@@ -131,7 +131,11 @@ function createReceiverProof(state) {
       if (entry.type !== "Property") continue;
       const value = unwrapExpression(entry.value);
       const fn = value.type === "Identifier" ? localFunction(value, context) : value;
-      if (fn) supplied.add(fn);
+      if (
+        fn &&
+        ["ArrowFunctionExpression", "FunctionExpression", "FunctionDeclaration"].includes(fn.type)
+      )
+        supplied.add(fn);
     }
     for (const entry of object.properties) {
       if (entry.type === "SpreadElement") {
@@ -141,7 +145,7 @@ function createReceiverProof(state) {
         const value = unwrapExpression(entry.value);
         result.set(
           name,
-          dataFacts.date(value, context)
+          dataFacts.date(value, context, supplied)
             ? "date"
             : safe(entry.value, context, parameter, inherited, supplied),
         );
