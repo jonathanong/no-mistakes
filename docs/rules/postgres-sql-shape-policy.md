@@ -15,6 +15,11 @@ The rule consumes dual-source statement facts (`CheckFactPlan.postgres_dml`),
 including recoverable SQL returned from builders and fragments appended to a
 known SQL builder (a recovered SQL binding or a parameter typed
 `SQLStatement`). Arbitrary `.append(...)` receivers are not SQL builders.
+A string or empty template returned from a named function is builder SQL only
+when a same-file call reaches an executor argument, `.append` on a known SQL
+builder, or a trusted SQL tag interpolation. Another same-file function that
+returns that call counts. A return that is itself a trusted tag, known builder,
+or `.append` chain stays builder SQL. Other string returns are not fragments.
 Builder recovery honors the same trusted-tag and lexical-shadow rules as
 executed SQL. Unresolved raw appended identifiers become a synthetic qualified
 outer reference, so a builder that may append an outer column is conservatively

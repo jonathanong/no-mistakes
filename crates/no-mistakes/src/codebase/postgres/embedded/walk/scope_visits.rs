@@ -25,7 +25,9 @@ impl<'a> ScopeVisitor<'a> {
             }
         }
         self.enter_function();
+        self.enter_plain_function(function.id.as_ref().map(|id| id.name.as_str()));
         walk::walk_function(self, function, flags);
+        self.leave_plain_function();
         self.leave_function();
         self.pop_scope();
     }
@@ -50,9 +52,26 @@ impl<'a> ScopeVisitor<'a> {
         // Class static blocks are also independent var ownership boundaries.
         self.push_scope();
         self.enter_function();
+        self.enter_plain_function(None);
         resolve::hoist_vars(&block.body, self);
         resolve::record_statements(&block.body, self);
         walk::walk_static_block(self, block);
+        self.leave_plain_function();
+        self.leave_function();
+        self.pop_scope();
+    }
+
+    pub(super) fn walk_arrow_scope(&mut self, arrow: &ast::ArrowFunctionExpression<'a>) {
+        self.push_scope();
+        self.record_params(&arrow.params);
+        self.enter_function();
+        self.enter_plain_function(None);
+        if let Some(result) = arrow.body.as_expression() {
+            // A concise return can expose a receiver to later property writes.
+            self.revoke_query_receiver(result);
+        }
+        walk::walk_arrow_function_expression(self, arrow);
+        self.leave_plain_function();
         self.leave_function();
         self.pop_scope();
     }

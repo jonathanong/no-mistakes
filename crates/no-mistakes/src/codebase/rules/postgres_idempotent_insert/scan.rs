@@ -2,7 +2,7 @@ use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactPlan;
 use crate::codebase::postgres::{
     collect_postgres_facts, judge_file_with_sites, EmbeddedSqlFileFacts, IdempotentCatalog,
-    SqlStatementFileFacts,
+    SqlStatementFileFacts, SqlTriggerFact,
 };
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Context;
@@ -30,11 +30,7 @@ pub(super) fn scan(
         &opts.embedded,
     )
     .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
-    let triggers: Vec<_> = facts
-        .statements
-        .iter()
-        .flat_map(|file| file.triggers.iter().cloned())
-        .collect();
+    let triggers = with_trigger_paths(facts.statements.iter());
     let catalog = IdempotentCatalog {
         schema: &facts.schema,
         triggers: &triggers,
@@ -105,6 +101,22 @@ fn collect_findings<'a>(
     }
     findings.sort();
     findings
+}
+
+pub(super) fn with_trigger_paths<'a>(
+    files: impl IntoIterator<Item = &'a SqlStatementFileFacts>,
+) -> Vec<SqlTriggerFact> {
+    files
+        .into_iter()
+        .flat_map(|file| {
+            file.triggers.iter().cloned().map(|mut trigger| {
+                if trigger.source_path.as_os_str().is_empty() {
+                    trigger.source_path.clone_from(&file.path);
+                }
+                trigger
+            })
+        })
+        .collect()
 }
 
 fn is_embedded_source(path: &Path) -> bool {

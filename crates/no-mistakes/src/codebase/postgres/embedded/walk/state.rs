@@ -85,4 +85,5 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(super) clause_unions: crate::fx::FxHashSet<(usize, String)>,
     pub(crate) exported_constants:
         crate::fx::FxHashMap<String, super::super::helpers::ExportedConstant>,
+    pub(super) plain: super::plain_returns::PlainState,
 }

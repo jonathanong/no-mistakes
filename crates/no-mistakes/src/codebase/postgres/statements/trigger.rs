@@ -43,7 +43,38 @@ fn from_trigger(
             "CREATE",
             trigger.name.span().start,
         ),
+        name: relation_name(&trigger.name),
+        removed: false,
+        source_path: std::path::PathBuf::new(),
     }
+}
+
+pub(super) fn from_drop(
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
+    statement: &Statement,
+) -> Option<SqlTriggerFact> {
+    let Statement::DropTrigger(drop) = statement else {
+        return None;
+    };
+    Some(SqlTriggerFact {
+        table: drop
+            .table_name
+            .as_ref()
+            .map(relation_name)
+            .unwrap_or_default(),
+        function: String::new(),
+        period: SqlTriggerPeriod::Other,
+        for_each_row: false,
+        events: Vec::new(),
+        line: crate::codebase::postgres::migration::statement_keyword_line(
+            tokens,
+            "DROP",
+            drop.trigger_name.span().start,
+        ),
+        name: relation_name(&drop.trigger_name),
+        removed: true,
+        source_path: std::path::PathBuf::new(),
+    })
 }
 
 fn from_event(event: &TriggerEvent) -> SqlTriggerEvent {

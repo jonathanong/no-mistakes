@@ -189,3 +189,58 @@ fn psql_standalone_and_ignored_unparseable_inserts() {
         "{flagged:?}"
     );
 }
+
+fn sql_files(root: &std::path::Path, names: &[&str]) -> Vec<PathBuf> {
+    names
+        .iter()
+        .map(|name| root.join("sql").join(name))
+        .collect()
+}
+
+#[test]
+fn later_trigger_does_not_flag_an_earlier_insert() {
+    let root = fixture("pass-trigger-dropped-later");
+    let files = sql_files(
+        &root,
+        &["0029-insert.sql", "0035-trigger.sql", "0052-drop.sql"],
+    );
+    let findings = check_with_files(&root, &default_config(), &files).unwrap();
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn live_before_insert_trigger_still_flags_do_nothing() {
+    let root = fixture("fail-live-before-insert-trigger");
+    let files = sql_files(&root, &["001-trigger.sql", "002-insert.sql"]);
+    let findings = check_with_files(&root, &default_config(), &files).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("fires before conflict checks")),
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn trigger_dropped_before_insert_is_not_installed() {
+    let root = fixture("pass-trigger-dropped-before-insert");
+    assert!(run(&root).is_empty());
+}
+
+#[test]
+fn trigger_dropped_after_insert_still_fires() {
+    let root = fixture("fail-trigger-dropped-after-insert");
+    let findings = run(&root);
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("fires before conflict checks")),
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn replaced_trigger_uses_the_definition_installed_at_the_insert() {
+    let root = fixture("pass-trigger-replaced-before-insert");
+    assert!(run(&root).is_empty());
+}

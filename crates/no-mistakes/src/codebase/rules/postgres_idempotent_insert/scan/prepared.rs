@@ -43,10 +43,7 @@ pub(crate) fn scan(
     // Legacy collection sorted SQL files and embedded calls by file before
     // deduplication; retain that order for unchanged finding attribution.
     statements.sort_by(|left, right| left.path.cmp(&right.path));
-    let triggers = statements
-        .iter()
-        .flat_map(|file| file.triggers.iter().cloned())
-        .collect::<Vec<_>>();
+    let triggers = super::with_trigger_paths(statements.iter().copied());
     let catalog = IdempotentCatalog {
         schema: &schema,
         triggers: &triggers,

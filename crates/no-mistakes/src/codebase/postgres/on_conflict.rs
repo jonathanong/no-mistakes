@@ -3,6 +3,7 @@
 mod arbiter;
 mod convergence;
 mod generated;
+mod installed;
 mod trigger;
 mod verdicts;
 mod where_noop;
@@ -14,6 +15,8 @@ mod coverage_more_tests;
 mod coverage_tests;
 #[cfg(test)]
 mod expression_arbiter_tests;
+#[cfg(test)]
+mod installed_tests;
 #[cfg(test)]
 mod trigger_tests;
 #[cfg(test)]
@@ -27,6 +30,7 @@ use crate::codebase::postgres::statement_facts::{
 };
 use crate::codebase::postgres::types::SqlSchemaFileFacts;
 
+#[derive(Copy, Clone)]
 pub struct Catalog<'a> {
     pub schema: &'a [SqlSchemaFileFacts],
     pub triggers: &'a [SqlTriggerFact],
@@ -96,7 +100,12 @@ pub(crate) fn judge_file_with_sites(
         if !insert.executed {
             continue;
         }
-        if let Some(message) = judge_insert(insert, catalog) {
+        let installed = installed::at(catalog.triggers, &file.path, insert.line);
+        let narrowed = Catalog {
+            triggers: &installed,
+            ..*catalog
+        };
+        if let Some(message) = judge_insert(insert, &narrowed) {
             findings.push((SqlFactSite::Insert(index), insert.line.max(1), message));
         }
     }

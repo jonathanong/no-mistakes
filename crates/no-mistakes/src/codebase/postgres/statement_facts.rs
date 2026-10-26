@@ -178,6 +178,9 @@ pub struct SqlTriggerFact {
     pub for_each_row: bool,
     pub events: Vec<SqlTriggerEvent>,
     pub line: usize,
+    pub name: String,
+    pub removed: bool,
+    pub source_path: PathBuf,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

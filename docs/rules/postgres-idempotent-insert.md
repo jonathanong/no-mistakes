@@ -8,7 +8,12 @@ converges. Optional follow-on proofs (volatility, arbiter identity, triggers,
 generated-arbiter sources) default on and can be disabled.
 
 The rule consumes dual-source statement facts plus schema facts for generated
-columns and `CREATE TRIGGER`. Unparseable fragments with more than one
+columns and `CREATE TRIGGER`. A trigger applies to an `INSERT` only when its
+`CREATE TRIGGER` is strictly earlier in path and line order and no `DROP TRIGGER`
+of that name on that table has removed it. `CREATE OR REPLACE` keeps the latest
+definition. A trigger created later, or dropped before the insert, does not fire
+for that statement; a drop after the insert leaves it in force.
+Unparseable fragments with more than one
 `INSERT` fail closed. A recovered `INSERT` keeps expression conflict-key
 dependencies when a malformed neighboring statement forces SQL recovery.
 Each complete

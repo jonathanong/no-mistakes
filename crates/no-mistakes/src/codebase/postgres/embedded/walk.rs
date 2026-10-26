@@ -14,6 +14,7 @@ mod imported;
 mod loop_visits;
 mod namespace_imports;
 mod observability;
+mod plain_returns;
 mod reference_escapes;
 pub(crate) mod resolve;
 mod scope;
@@ -78,16 +79,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         &mut self,
         arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     ) {
-        self.push_scope();
-        self.record_params(&arrow.params);
-        self.enter_function();
-        if let Some(result) = arrow.body.as_expression() {
-            // A concise return can expose a receiver to later property writes.
-            self.revoke_query_receiver(result);
-        }
-        walk::walk_arrow_function_expression(self, arrow);
-        self.leave_function();
-        self.pop_scope();
+        self.walk_arrow_scope(arrow);
     }
 
     fn visit_variable_declarator(&mut self, declaration: &ast::VariableDeclarator<'a>) {

@@ -24,6 +24,7 @@ impl<'a> ScopeVisitor<'a> {
             self.visit_head_call(call);
             return;
         }
+        self.note_builder_append(call);
         // `helper(builder)` on an imported builder helper appends its fixed
         // fragments to `builder`, so it composes like `builder.append(...)`.
         let statement_append = super::imported::builder_statement(self, call);

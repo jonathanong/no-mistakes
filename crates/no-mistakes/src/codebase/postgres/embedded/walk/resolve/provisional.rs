@@ -97,6 +97,7 @@ fn push_pending(
         owners,
         call: executor_call(visitor, call, callee.to_string()),
     });
+    visitor.note_executor_call(call);
 }
 
 fn push_confirmed(
@@ -111,5 +112,6 @@ fn push_confirmed(
     }
     visitor.calls.push(executor_call(visitor, call, callee));
     visitor.call_spans.push((call.span.start, call.span.end));
+    visitor.note_executor_call(call);
     seq
 }
