@@ -151,6 +151,14 @@ scope; SQL-file selection retains `sqlInclude` semantics. The `ddl` group covers
 calls, including recovered routine bodies and static EXECUTE. See
 [statement policy](rules/postgres-sql-statement-policy.md).
 
+PostgreSQL 17 query and `CREATE TABLE` compatibility applies to the same SQL
+source facts used by the CLI and async Node checks. Supported target and table
+clauses retain typed facts; complete syntax the AST cannot represent produces
+the configured unanalyzable advisory. The PostgreSQL 17 regression suite's
+index opclass options, quantified `VALUES`, XML table expressions, `TABLESAMPLE`, CTE
+`SEARCH`, and CTE-backed `MERGE` whole-row casts use that same path. See the
+[schema diagnostic migration](migrations/postgres-schema-unanalyzable.md).
+
 PostgreSQL SQL shape checks have CLI and
 async Node parity. The opt-in `banned-function-call` SQL shape consumes shared AST
 function-call facts in SQL files and parameterized embedded SQL, including

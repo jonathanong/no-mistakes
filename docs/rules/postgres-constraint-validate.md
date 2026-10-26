@@ -16,8 +16,9 @@ rules:
 ```
 
 `sqlInclude` defaults to `**/*.sql`. Pairing is by `table.name` across every
-included SQL file. Unnamed `NOT VALID` adds are ignored because they cannot be
-validated by name. `NOT VALID` adds inside `DO $$` blocks (including
+included SQL file. Unquoted constraint names use PostgreSQL's lower-case
+folding. An unnamed single-column `ADD CHECK ... NOT VALID` pairs using its
+generated `table_column_check` name. `NOT VALID` adds inside `DO $$` blocks (including
 idempotent `IF NOT EXISTS` wrappers) pair with a later `VALIDATE CONSTRAINT`,
 whether that validate sits inside the same block or at top level.
 PostgreSQL column lists on `ON DELETE SET NULL` and `ON DELETE SET DEFAULT`
@@ -82,8 +83,8 @@ Every named `NOT VALID` constraint add in the included SQL must have a matching
 ## Options and defaults
 
 `sqlInclude` is the only rule option and defaults to `**/*.sql`. Pairing uses
-the canonical `table.name`; unnamed `NOT VALID` additions are ignored because
-they cannot be paired by name.
+the canonical `table.name`; unnamed checks that do not identify one column
+cannot be paired by a predictable generated name.
 
 ## Valid example
 

@@ -1,12 +1,12 @@
 // PostgreSQL 17 keyword classes, sourced from REL_17_STABLE
 // src/include/parser/kwlist.h. sqlparser also knows other dialects' keywords.
-pub(super) fn reserved(word: &str) -> bool {
+pub(crate) fn reserved(word: &str) -> bool {
     member(word, RESERVED) || member(word, TYPE_FUNCTION)
 }
 pub(super) fn function_reserved(word: &str) -> bool {
     member(word, RESERVED) || member(word, COLUMN)
 }
-pub(super) fn type_reserved(word: &str) -> bool {
+pub(crate) fn type_reserved(word: &str) -> bool {
     member(word, RESERVED)
 }
 fn member(word: &str, values: &[&str]) -> bool {

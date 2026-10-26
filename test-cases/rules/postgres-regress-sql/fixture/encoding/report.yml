@@ -1,0 +1,35 @@
+unanalyzable: report
+rules:
+  - rule: postgres-constraint-validate
+    scope: repository
+    options: {sqlInclude: ['*.sql']}
+  - rule: postgres-fk-index
+    scope: repository
+    options: {sqlInclude: ['*.sql']}
+  - rule: postgres-generated-column-predicates
+    scope: repository
+    options: {executorNames: [], sqlInclude: ['*.sql']}
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options: {executorNames: [], sqlInclude: ['*.sql']}
+  - rule: postgres-identifier-length
+    scope: repository
+    options: {sqlInclude: ['*.sql']}
+  - rule: postgres-no-add-column
+    scope: repository
+    options: {sqlInclude: ['*.sql']}
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    options: {executorNames: [], sqlInclude: ['*.sql']}
+  - rule: postgres-redundant-index
+    scope: repository
+    options: {sqlInclude: ['*.sql']}
+  - rule: postgres-require-fk-on-delete
+    scope: repository
+    options: {sqlInclude: ['*.sql']}
+  - rule: postgres-require-named-constraints
+    scope: repository
+    options: {sqlInclude: ['*.sql']}
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options: {executorNames: [], sqlInclude: ['*.sql'], bannedStatements: []}

@@ -2,8 +2,10 @@ use super::super::LocatedStatement;
 use super::queries;
 mod ddl_foreign;
 mod ddl_metadata;
-mod keywords;
+pub(crate) mod keywords;
 mod unsupported;
+#[cfg(test)]
+mod utility_tests;
 use crate::codebase::postgres::types::SqlUnanalyzableStatement;
 use sqlparser::ast::{visit_statements, DiscardObject, Statement};
 use sqlparser::keywords::Keyword;

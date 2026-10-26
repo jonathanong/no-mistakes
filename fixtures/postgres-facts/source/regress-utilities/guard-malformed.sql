@@ -1,0 +1,1 @@
+EXPLAIN (ANALYZE) CREATE TABLE t (a int);

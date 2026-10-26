@@ -1,6 +1,6 @@
 # PostgreSQL schema statements that cannot be analyzed
 
-<!-- cspell:ignore tablespace -->
+<!-- cspell:ignore tablespace OIDS -->
 
 The 11 rules below diagnose each selected SQL statement that the lenient
 PostgreSQL parser cannot parse or recover. By default, complete recognized
@@ -68,6 +68,24 @@ grammar. Complete metadata recognition produces an advisory without fabricating
 schema facts. Missing required clauses and unexpected trailing tokens still
 report by default. The grammar reference is the
 [PostgreSQL 17 statement list](https://www.postgresql.org/docs/17/sql-commands.html).
+
+Selected PostgreSQL query forms that sqlparser cannot represent also produce
+advisories after their full rewritten statement parses: inherited-table `*`,
+`COLLATION FOR`, SQL/JSON options and `JSON_TABLE` columns, XML expressions,
+interval window bounds, `ROWS FROM`, and `AT LOCAL`. Array-slice INSERT and
+UPDATE targets and identity `OVERRIDING` inserts are parsed through a validated
+target rewrite so their `ON CONFLICT` and write facts remain available.
+Malformed clauses and trailing tokens remain findings.
+
+PostgreSQL 17 `CREATE TABLE` clauses for compression, storage, partition column
+lists, generated defaults, and `WITHOUT OIDS` retain typed table facts after
+narrow compatibility rewrites. `LIKE ... INCLUDING`, `UNIQUE NULLS NOT
+DISTINCT`, and `CHECK ... NOT VALID` use advisories because dropping those
+clauses would change constraint facts. Selected table-as-query, base type,
+domain, role, schema, policy, index-collation, view-option, and DROP forms use
+complete syntax recognition when the parser cannot represent their original
+clause. A foreign-key `SET NULL` column list outside its referencing key
+remains an advisory; no altered foreign-key fact is inferred.
 
 Enum types, triggers, comments on functions/tables/triggers, indexes on `ONLY`
 tables, index partition attachments, and text search configurations now parse

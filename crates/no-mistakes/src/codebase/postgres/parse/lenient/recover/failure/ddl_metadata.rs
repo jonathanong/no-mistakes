@@ -9,6 +9,9 @@ mod cursor;
 mod data_type;
 mod definitions;
 mod event;
+mod regress_alter;
+mod regress_create;
+mod regress_objects;
 use cursor::Cursor;
 
 pub(super) fn valid(tokens: &[TokenWithSpan]) -> bool {
@@ -29,7 +32,15 @@ pub(super) fn valid(tokens: &[TokenWithSpan]) -> bool {
         || parse(definitions::parse)
         || parse(catalog::parse)
         || parse(create::parse)
+        || parse(regress_alter::parse)
+        || parse(regress_objects::parse)
+        || parse(regress_create::parse)
+        || regress_create::valid_native(&code)
 }
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+#[path = "ddl_metadata/regress_create_tests.rs"]
+mod regress_create_tests;

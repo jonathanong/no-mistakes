@@ -4,10 +4,12 @@ use sqlparser::tokenizer::{Token, TokenWithSpan};
 mod cursor;
 mod native;
 mod publication;
+mod query;
+mod utility;
 use cursor::Cursor;
 
 pub(super) fn valid(tokens: &[TokenWithSpan]) -> bool {
-    if native::valid(tokens) {
+    if native::valid(tokens) || utility::valid(tokens) || query::valid(tokens) {
         return true;
     }
     let tokens = tokens

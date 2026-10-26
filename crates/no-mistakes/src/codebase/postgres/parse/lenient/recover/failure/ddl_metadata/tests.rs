@@ -167,3 +167,59 @@ fn metadata_clause_boundaries_follow_postgres() {
         }
     }
 }
+
+#[test]
+fn regress_ddl_rejects_saved_malformed_branches() {
+    use super::{regress_alter, regress_create, regress_objects, Cursor};
+    use sqlparser::{dialect::PostgreSqlDialect, parser::Parser, tokenizer::Tokenizer};
+
+    let fixture = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-docs-survey/regress-branches-invalid.sql"
+    ));
+    for sql in fixture.lines().filter(|line| !line.starts_with("--")) {
+        let tokens = Tokenizer::new(&PostgreSqlDialect {}, sql)
+            .tokenize_with_location()
+            .unwrap();
+        for recognizer in [
+            regress_alter::parse as fn(&mut Cursor<'_>) -> bool,
+            regress_objects::parse,
+            regress_create::parse,
+        ] {
+            let mut cursor = Cursor(
+                Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(tokens.clone()),
+            );
+            assert!(!recognizer(&mut cursor), "{sql}");
+        }
+        assert!(!regress_create::valid_native(&tokens), "{sql}");
+        let failures = extract_migration_facts(sql).unanalyzable_statements;
+        assert!(
+            failures.iter().any(|failure| !failure.valid_unsupported),
+            "{sql}: {failures:?}"
+        );
+    }
+}
+
+#[test]
+fn regress_alter_accepts_saved_option_and_partition_forms() {
+    use super::{regress_alter, Cursor};
+    use sqlparser::{dialect::PostgreSqlDialect, parser::Parser, tokenizer::Tokenizer};
+
+    let fixture = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/postgres-facts/source/ddl-docs-survey/regress-branches-valid.sql"
+    ));
+    for sql in fixture.lines().filter(|line| !line.starts_with("--")) {
+        let tokens = Tokenizer::new(&PostgreSqlDialect {}, sql)
+            .tokenize_with_location()
+            .unwrap();
+        let mut cursor =
+            Cursor(Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(tokens));
+        assert!(regress_alter::parse(&mut cursor), "{sql}");
+        let failures = extract_migration_facts(sql).unanalyzable_statements;
+        assert!(
+            failures.iter().all(|failure| failure.valid_unsupported),
+            "{sql}: {failures:?}"
+        );
+    }
+}

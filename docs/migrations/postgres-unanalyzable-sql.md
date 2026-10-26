@@ -39,3 +39,11 @@ rules:
       importSpecifier: "@example/db"
       unanalyzableSql: ignore
 ```
+
+PostgreSQL 17 migration files can contain complete DDL forms that the bundled
+SQL AST parser cannot represent. The schema checks recognize the exact grammar
+of selected `ALTER TABLE`, `ALTER TYPE`, and `ALTER INDEX` forms from the
+PostgreSQL regression suite and classify them as valid but unsupported. Under
+the default policy these produce advice rather than an unanalyzable finding.
+Recognition requires a complete statement, including its clause values and
+closing delimiters; a malformed suffix remains a finding.

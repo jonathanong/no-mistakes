@@ -148,6 +148,8 @@ If recovery cannot extract an `INSERT` from a failed chunk, the rule reports
 parsed sibling `INSERT` statements do not turn it into the old line-1
 `more than one INSERT` finding. A failed chunk containing multiple `INSERT`s
 still uses `more than one INSERT` when INSERT recovery is incomplete.
+Recovered INSERT facts use each statement's source position. When an earlier
+INSERT cannot be recovered, later `ON CONFLICT` findings stay on their own lines.
 Separate statements produce separate findings, and a
 `no-mistakes-disable-next-line` directive immediately above one statement
 suppresses that failure independently. Successfully parsed sibling statements

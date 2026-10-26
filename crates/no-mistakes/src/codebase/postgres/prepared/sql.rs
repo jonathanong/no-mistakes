@@ -71,7 +71,13 @@ pub(super) fn collect(
                         value.path = path.clone();
                         Arc::new(value)
                     })
-                    .map_err(|error| Arc::clone(error))
+                    .or_else(|error| {
+                        if error.source_kind == Some(std::io::ErrorKind::InvalidData) {
+                            Ok(Arc::new(super::super::collect::encoding::failure(path)))
+                        } else {
+                            Err(Arc::clone(error))
+                        }
+                    })
             });
             let statements = plan.postgres_dml.then(|| {
                 parsed
@@ -95,7 +101,11 @@ pub(super) fn collect(
                         value.path = path.clone();
                         Arc::new(vec![value])
                     })
-                    .map_err(|error| Arc::clone(error))
+                    .or_else(|error| {
+                        if error.source_kind == Some(std::io::ErrorKind::InvalidData) {
+                            Ok(Arc::new(vec![super::super::collect::encoding::statement_failure(path)]))
+                        } else { Err(Arc::clone(error)) }
+                    })
             });
             (path.clone(), schema, statements)
         })

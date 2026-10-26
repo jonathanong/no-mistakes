@@ -4,6 +4,38 @@ const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
+for (const policy of ["default", "report", "advise", "ignore"]) {
+  test(
+    `compiled schema checks isolate invalid SQL encoding under ${policy}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const options = {
+        root: join(__dirname, "../../../test-cases/rules/postgres-regress-sql/fixture/encoding"),
+        config: `${policy}.yml`,
+      };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      const prepared = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+      assert.deepEqual(prepared.reports[0].result, report);
+      const bad = (field) => report[field].filter(({ file }) => file === "bad.sql");
+      assert.equal(bad("rules").length, ["default", "report"].includes(policy) ? 11 : 0);
+      assert.equal(bad("advisories").length, policy === "advise" ? 11 : 0);
+      for (const item of [...bad("rules"), ...bad("advisories")]) {
+        assert.equal(item.line, 1);
+        assert.match(item.message, /invalid UTF-8/);
+      }
+      assert.ok(
+        report.rules.some(
+          ({ file, rule, line }) =>
+            file === "good.sql" && rule === "postgres-no-add-column" && line === 2,
+        ),
+      );
+    },
+  );
+}
+
 test(
   "compiled PostgreSQL locations match across worker counts and prepared reports",
   { skip: !compiled },

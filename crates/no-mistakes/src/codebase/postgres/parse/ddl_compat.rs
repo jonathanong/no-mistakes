@@ -9,6 +9,7 @@ use sqlparser::tokenizer::{Token, TokenWithSpan};
 
 mod comment;
 mod metadata;
+mod table_star;
 mod trigger;
 
 pub(super) fn normalize(tokens: &mut Vec<TokenWithSpan>) {
@@ -20,7 +21,7 @@ pub(super) fn normalize(tokens: &mut Vec<TokenWithSpan>) {
         let candidate = match (head.next(), head.next()) {
             (Some(first), Some(second)) if word(first, "COMMENT") => word(second, "ON"),
             (Some(first), Some(second)) if word(first, "ALTER") => {
-                word(second, "INDEX") || word(second, "TEXT")
+                word(second, "INDEX") || word(second, "TEXT") || word(second, "TABLE")
             }
             (Some(first), Some(second)) if word(first, "CREATE") => {
                 word(second, "INDEX")
@@ -55,6 +56,7 @@ pub(super) fn normalize(tokens: &mut Vec<TokenWithSpan>) {
             continue;
         }
         let replacement = trigger::rewrite(&code)
+            .or_else(|| table_star::rewrite(&code))
             .or_else(|| rewrite(&code))
             .or_else(|| comment::rewrite(&code))
             .or_else(|| {

@@ -42,6 +42,9 @@ when a whole file is an intentional exception.
 
 ## Why and when
 
+`MATCH FULL` may precede an explicit `ON DELETE` action. The rule checks each
+foreign key against its own action and reports its own source statement.
+
 Use this rule when every foreign-key delete behavior should be an explicit
 review decision rather than PostgreSQL's implicit `NO ACTION` default.
 

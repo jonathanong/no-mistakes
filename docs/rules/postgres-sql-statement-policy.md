@@ -134,6 +134,9 @@ when a whole file is an intentional exception.
 
 ## Why and when
 
+Statement kinds come from SQL statements, not comment banners or identifiers
+containing words such as `table`. Findings point to their own statement.
+
 Use this rule on seed, config, or runtime SQL directories where schema DDL must
 remain in migrations and the file's allowed purpose should be machine-checked.
 

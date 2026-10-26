@@ -1,0 +1,1 @@
+COMMENT ON TABLE t IS 'ä';
