@@ -1,7 +1,7 @@
 use crate::codebase::rules::{run_check, RuleFinding};
 use std::path::PathBuf;
 
-fn fixture(case: &str) -> PathBuf {
+pub(super) fn fixture(case: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/production-exports-only-used-by-tests/fixture")
@@ -58,7 +58,7 @@ fn computed_and_unresolved_imports_do_not_silently_pass() {
     assert!(found.iter().any(|row| row.file == "src/unresolved.mts"));
     assert!(found
         .iter()
-        .all(|row| row.target.as_deref() == Some("unanalyzable")));
+        .any(|row| row.target.as_deref() == Some("uncertain")));
 }
 
 #[test]
@@ -76,12 +76,12 @@ fn opaque_literal_selectors_only_make_their_target_modules_uncertain() {
 }
 
 #[test]
-fn malformed_test_importer_blocks_false_production_conclusions() {
+fn malformed_importer_diagnostics_preserve_known_test_only_exports() {
     let found = findings("malformed");
     assert!(found.iter().any(|row| row.file == "tests/broken.mts"));
     assert!(found
         .iter()
-        .all(|row| row.target.as_deref() == Some("unanalyzable")));
+        .any(|row| row.target.as_deref() == Some("value")));
 }
 
 #[test]
@@ -95,7 +95,7 @@ fn unsupported_commonjs_and_import_equals_are_explicit_at_their_own_lines() {
     }
     assert!(found
         .iter()
-        .all(|row| row.target.as_deref() == Some("unanalyzable")));
+        .any(|row| row.target.as_deref() == Some("value")));
     let root = fixture("unsupported-modules");
     for (policy, advisories) in [("advise", true), ("ignore", false)] {
         let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
@@ -106,7 +106,8 @@ fn unsupported_commonjs_and_import_equals_are_explicit_at_their_own_lines() {
         ))
         .unwrap();
         let report: serde_json::Value = serde_json::from_str(&report).unwrap();
-        assert!(report["rules"].as_array().unwrap().is_empty());
+        assert_eq!(report["rules"].as_array().unwrap().len(), 1);
+        assert_eq!(report["rules"][0]["target"], "value");
         assert_eq!(
             !report["advisories"].as_array().unwrap().is_empty(),
             advisories
@@ -145,11 +146,54 @@ fn uncertainty_respects_shared_analysis_policy() {
         ))
         .unwrap();
         let report: serde_json::Value = serde_json::from_str(&report).unwrap();
-        assert!(report["rules"].as_array().unwrap().is_empty());
+        assert_eq!(report["rules"].as_array().unwrap().len(), 1);
+        assert_eq!(report["rules"][0]["target"], "uncertain");
         if config == "advise.yml" {
             assert!(!report[channel].as_array().unwrap().is_empty());
         } else {
             assert!(report["advisories"].as_array().unwrap().is_empty());
+        }
+    }
+}
+
+#[test]
+fn unrelated_uncertainty_never_hides_a_known_violation_under_any_policy() {
+    let root = fixture("policy-isolation");
+    for policy in ["report", "advise", "ignore"] {
+        let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            serde_json::json!({
+                "root": root, "config": root.join(format!("{policy}.yml")),
+            })
+            .to_string(),
+        ))
+        .unwrap();
+        let report: serde_json::Value = serde_json::from_str(&report).unwrap();
+        let rules = report["rules"].as_array().unwrap();
+        let definite: Vec<_> = rules
+            .iter()
+            .filter(|row| row["target"] != "unanalyzable")
+            .collect();
+        assert_eq!(definite.len(), 1, "{policy}: {report}");
+        assert_eq!(definite[0]["file"], "src/value.mts");
+        assert_eq!(definite[0]["target"], "testOnly");
+        let uncertainties: Vec<_> = rules
+            .iter()
+            .filter(|row| row["target"] == "unanalyzable")
+            .collect();
+        let advisories = report["advisories"].as_array().unwrap();
+        assert_eq!(
+            !uncertainties.is_empty(),
+            policy == "report",
+            "{policy}: {report}"
+        );
+        assert_eq!(
+            !advisories.is_empty(),
+            policy == "advise",
+            "{policy}: {report}"
+        );
+        for row in uncertainties.into_iter().chain(advisories) {
+            assert_eq!(row["file"], "other/dynamic.mts");
+            assert_eq!(row["target"], "unanalyzable");
         }
     }
 }

@@ -88,6 +88,11 @@ Fix unresolved imports and replace dynamic module selection with static imports
 so the consumer relationship can be established. Definite violations remain
 findings under every policy.
 
+An incomplete source elsewhere in the graph produces its own uncertainty
+diagnostic; it does not veto an export's known all-test consumer set. Only an
+unknown selector attached to that export or its re-export chain makes the
+export itself unanalyzable.
+
 CommonJS export assignments, TypeScript import-equals and export assignments,
 and unsupported module-binding forms are unanalyzable. Unresolved local aliases
 also report uncertainty; `baseUrl` resolution candidates are treated

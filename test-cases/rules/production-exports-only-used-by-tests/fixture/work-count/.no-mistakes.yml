@@ -1,0 +1,16 @@
+rules:
+  - rule: production-exports-only-used-by-tests
+    name: first
+    scope: repository
+    options:
+      productionRoots: [src]
+      testGlobs: ["tests/**/*.test.mts"]
+      unanalyzable: ignore
+  - rule: production-exports-only-used-by-tests
+    name: second
+    scope: repository
+    message: Second application
+    options:
+      productionRoots: [src]
+      testGlobs: ["tests/**/*.test.mts"]
+      unanalyzable: ignore

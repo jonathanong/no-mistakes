@@ -1,0 +1,12 @@
+{
+  "base": "d55567192127d28ed3da3d01f167a06ccbcf7c90",
+  "measuredChangedLines": 5,
+  "coveredChangedLines": 5,
+  "coveragePercent": 100.0,
+  "requiredPercent": 98.0,
+  "uncoveredChangedLines": {},
+  "changedFilesWithoutLineRecords": [
+    "crates/no-mistakes/src/codebase/rules/production_exports_test_only/tests.rs",
+    "crates/no-mistakes/tests/cli_check_production_exports_test_only.rs"
+  ]
+}

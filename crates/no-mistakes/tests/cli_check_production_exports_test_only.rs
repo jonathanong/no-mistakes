@@ -4,6 +4,10 @@ use std::process::{Command, Output};
 const RULE: &str = "production-exports-only-used-by-tests";
 
 fn check(scenario: &str) -> Output {
+    check_config(scenario, ".no-mistakes.yml")
+}
+
+fn check_config(scenario: &str, config: &str) -> Output {
     let root = no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/production-exports-only-used-by-tests/fixture")
@@ -13,10 +17,34 @@ fn check(scenario: &str) -> Output {
         .args(["check", "--root"])
         .arg(&root)
         .arg("--config")
-        .arg(root.join(".no-mistakes.yml"))
+        .arg(root.join(config))
         .args(["--format", "json"])
         .output()
         .unwrap()
+}
+
+#[test]
+fn computed_imports_preserve_definite_findings_and_failure_status_for_every_policy() {
+    for policy in ["report", "advise", "ignore"] {
+        let output = check_config("policy-isolation", &format!("{policy}.yml"));
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(output.status.code(), Some(1), "{policy}: {report}");
+        let rules = report["rules"].as_array().unwrap();
+        let definite: Vec<_> = rules
+            .iter()
+            .filter(|row| row["target"] != "unanalyzable")
+            .collect();
+        assert_eq!(definite.len(), 1, "{policy}: {report}");
+        assert_eq!(definite[0]["target"], "testOnly");
+        assert_eq!(
+            rules.iter().any(|row| row["target"] == "unanalyzable"),
+            policy == "report"
+        );
+        assert_eq!(
+            !report["advisories"].as_array().unwrap().is_empty(),
+            policy == "advise"
+        );
+    }
 }
 
 #[test]

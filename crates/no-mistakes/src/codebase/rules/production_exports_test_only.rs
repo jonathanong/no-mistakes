@@ -31,12 +31,12 @@ pub(crate) fn check_with_graph(
 ) -> Result<AnalysisDiagnostics> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut diagnostics = AnalysisDiagnostics::default();
+    let incomplete = traversal::incomplete_sources(graph, facts);
     for application in config.rule_applications(RULE_ID) {
         let options = config::Selection::new(&root, application)?;
         let filter = RulePathFilter::new(&root, config, application)?;
         let policy = config.effective_rule_analysis(application)?.unanalyzable;
         let files = facts.graph_file_universe();
-        let incomplete = traversal::incomplete_sources(graph, facts);
         for (file, line, reason) in &incomplete {
             diagnostics.unanalyzable(policy, uncertain(&root, application, file, *line, reason));
         }
@@ -83,8 +83,7 @@ pub(crate) fn check_with_graph(
                                 ),
                             ),
                         );
-                    } else if incomplete.is_empty()
-                        && !consumers.files.is_empty()
+                    } else if !consumers.files.is_empty()
                         && consumers.files.iter().all(|file| options.test(file))
                     {
                         chunk
@@ -154,3 +153,5 @@ fn uncertain(
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod work_tests;

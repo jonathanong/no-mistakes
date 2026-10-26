@@ -55,6 +55,9 @@ pub(super) fn incomplete_sources(
     graph: &DepGraph,
     facts: &CheckFactMap,
 ) -> Vec<(PathBuf, usize, String)> {
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("production_exports.incomplete_scans", 1);
+    }
     let mut incomplete = Vec::new();
     for file in facts.graph_file_universe() {
         if !crate::codebase::dependencies::extract::is_indexable(file) {

@@ -73,3 +73,27 @@ All 20 focused graph/rule tests pass with 8/8 changed runtime lines covered.
 `review-patch-coverage.json` records this delta against the initial reviewed head.
 The full-scope counts above describe that initial implementation; the review
 delta also repeats native API parity, worker determinism and all-target lint.
+
+## Uncertainty policy isolation
+
+The owner review at `383c9ff` found that the global incomplete-source list
+vetoed every definite finding, even when the uncertainty was unrelated. The
+rule now keeps that list as diagnostics only; each export's own unknown
+selectors determine whether that export is uncertain. The global scan is
+computed once outside the rule-application loop.
+
+The saved `policy-isolation` fixture contains a test-only export, its test
+importer, and a computed import in another directory. Before the fix, both
+`advise` and `ignore` exited zero without a finding. All three policies now
+retain the same finding and exit one, while routing uncertainty independently.
+`policy-isolation.json` records the before/after outputs and validation counts.
+
+The saved `work-count` fixture has eight exports through a star barrel and
+two applications. Its test asserts 16 findings, four parses, no parsing after
+extraction, one canonical graph, and one incomplete-source scan. The policy
+delta passed 22 focused tests, 630 native API tests, three CLI tests and 89
+contract tests. All five changed runtime lines are covered; see
+`policy-patch-coverage.json`.
+
+This validation uses a rebase onto `7ce5d8059`, preserving main's rule docs,
+declarations and tests. The full JavaScript suite and coverage gates also pass.

@@ -26,5 +26,4 @@ export type * from "./postgres-test-state-mutation-types";
 export type * from "./coverage-assertion-owner-types";
 export type * from "./lint-suppression-types";
 
-
 export type * from "./production-exports-test-only-types";
