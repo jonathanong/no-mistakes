@@ -20,6 +20,8 @@ pub fn configure_family_path_scopes(
     sources: &SourceStore,
     plan: &mut CheckFactPlan,
 ) -> Result<()> {
+    plan.lint_suppression_paths =
+        crate::codebase::rules::forbidden_lint_suppressions::required_files(root, config, files)?;
     if plan.symbols {
         plan.symbols_paths = symbols_scope(root, files, sources, config, plan.storybook)?;
     }

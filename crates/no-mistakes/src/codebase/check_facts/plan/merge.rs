@@ -12,6 +12,10 @@ impl CheckFactPlan {
         self.merge_location_demand(&other);
         super::super::family_scope::include_scopes(self, &other);
         self.merge_call_site_paths(&other);
+        if !other.lint_suppression_paths.is_empty() {
+            Arc::make_mut(&mut self.lint_suppression_paths)
+                .extend(other.lint_suppression_paths.iter().cloned());
+        }
         self.imports |= other.imports;
         self.query_annotation_heads |= other.query_annotation_heads;
         crate::codebase::postgres::sql_identifier_syntax::plan::merge(

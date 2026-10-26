@@ -2,7 +2,6 @@ use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::Path;
 use std::sync::Arc;
-
 mod embedded_sql;
 mod plan;
 mod playwright_source;
@@ -130,6 +129,7 @@ fn collect_file_facts_from_source(
             let embedded_sql =
                 embedded_sql::prepared_embedded_sql(root, path, parsed_source, program, plan);
             return CheckFileFacts {
+                lint_suppressions: plan.collect_lint_suppressions(path, program, parsed_source),
                 sql_identifier_syntax: sql_identifier::invalid(
                     root,
                     path,

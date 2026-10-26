@@ -99,6 +99,7 @@ pub(super) fn recovered_error_facts(
         )
     });
     CheckFileFacts {
+        lint_suppressions: plan.collect_lint_suppressions(path, program, parsed_source),
         ts: Arc::new(ts),
         source: stored_source,
         symbols: symbols.clone(),

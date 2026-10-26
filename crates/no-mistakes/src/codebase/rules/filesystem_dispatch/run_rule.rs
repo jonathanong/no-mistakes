@@ -38,6 +38,14 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
                 defer_suppression,
             )
         }
+        FORBIDDEN_LINT_SUPPRESSIONS => forbidden_lint_suppressions::check_prepared(
+            root,
+            config,
+            files,
+            sources,
+            facts,
+            defer_suppression,
+        ),
         FINITE_SET_CONSISTENCY => finite_set_consistency::check_with_files_sources_and_facts(
             root,
             config,

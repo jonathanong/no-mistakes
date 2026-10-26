@@ -8,6 +8,8 @@ use std::{collections::HashSet, path::PathBuf};
 #[derive(Clone, Default)]
 pub struct CheckFactPlan {
     pub imports: bool,
+    /// Exact configured files whose AST comments are requested.
+    pub lint_suppression_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     /// Exact call-source demand; broad `graph.call_sites` remains independent.
     #[doc(hidden)]
     pub call_site_paths: Arc<std::collections::BTreeSet<PathBuf>>,
@@ -111,3 +113,5 @@ mod merge;
 mod head_calls_only;
 #[cfg(test)]
 mod tests;
+
+mod lint_suppressions;

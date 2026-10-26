@@ -1,0 +1,7 @@
+rules:
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    options:
+      files: ['absent/**/*.ts']
+      ruleIds: ['react/purity']
+      rulePrefixes: ['react-hooks-js/']

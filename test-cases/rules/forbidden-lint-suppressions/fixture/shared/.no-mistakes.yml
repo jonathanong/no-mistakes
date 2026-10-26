@@ -1,0 +1,12 @@
+rules:
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    options:
+      files: ['src/**/*.ts']
+      ruleIds: ['react/purity']
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{glob: 'src/**/*.ts'}]
+      traversal: file
+      targets: [{global: setTimeout}]

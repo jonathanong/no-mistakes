@@ -10,6 +10,7 @@ pub use super::file_extension_policy::RULE_ID as FILE_EXTENSION_POLICY;
 pub use super::finite_set_consistency::RULE_ID as FINITE_SET_CONSISTENCY;
 pub use super::forbidden_calls::RULE_ID as FORBIDDEN_CALLS;
 pub use super::forbidden_dependencies::RULE_ID as FORBIDDEN_DEPENDENCIES;
+pub use super::forbidden_lint_suppressions::RULE_ID as FORBIDDEN_LINT_SUPPRESSIONS;
 pub use super::forbidden_workspace_closure::RULE_ID as FORBIDDEN_WORKSPACE_CLOSURE;
 pub use super::github_actions_action_timeout_pair::RULE_ID as GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR;
 pub use super::github_actions_composite_step_schema::RULE_ID as GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA;

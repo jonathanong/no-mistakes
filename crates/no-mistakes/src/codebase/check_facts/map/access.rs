@@ -89,3 +89,12 @@ impl CheckFactMap {
         self.view_with_supplemental(&Self::default(), graph_files)
     }
 }
+
+impl CheckFactMap {
+    pub(crate) fn lint_suppressions(
+        &self,
+        path: &std::path::Path,
+    ) -> Option<&[crate::codebase::rules::forbidden_lint_suppressions::Suppression]> {
+        self.ts.get(path)?.lint_suppressions.as_deref()
+    }
+}
