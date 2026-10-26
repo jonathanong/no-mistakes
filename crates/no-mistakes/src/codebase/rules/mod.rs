@@ -76,6 +76,7 @@ pub mod postgres_no_add_column;
 pub mod postgres_no_generated_column_writes;
 pub mod postgres_no_mutable_sql_registry;
 pub mod postgres_no_offset;
+pub mod postgres_no_test_state_mutation;
 pub mod postgres_no_transformed_uuid_predicates;
 pub mod postgres_no_unbounded_sql_identifier;
 pub mod postgres_object_naming;

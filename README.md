@@ -65,6 +65,9 @@ fixable afterwards. So bad patterns are banned up front, in schema SQL and in
 the queries your code executes. For example,
 [`postgres-no-offset`](docs/rules/postgres-no-offset.md) bans `OFFSET`
 pagination (use cursor pagination), and
+[`postgres-no-test-state-mutation`](docs/rules/postgres-no-test-state-mutation.md)
+bans test-executed schema and server-state changes, plus `pg_sleep`, within
+explicitly selected tests and helpers.
 [`postgres-sql-shape-policy`](docs/rules/postgres-sql-shape-policy-banned-functions.md)
 with `banned-function-call` can ban `uuidv7()` calls inside `WHERE`, `JOIN ON`,
 and `HAVING` predicates, so the key is compared against a stable bound computed

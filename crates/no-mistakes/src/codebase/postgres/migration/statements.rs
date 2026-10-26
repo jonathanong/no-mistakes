@@ -2,7 +2,7 @@ use crate::codebase::postgres::types::{SqlSchemaFileFacts, SqlStatementKind};
 use sqlparser::ast::{ObjectType, Statement};
 
 pub(super) fn record(line: usize, statement: &Statement, facts: &mut SqlSchemaFileFacts) {
-    super::super::function_calls::collect(statement, &mut facts.function_calls);
+    super::super::function_calls::collect_executed(statement, &mut facts.function_calls);
     let Some((kind, _parts)) = kind_and_parts(statement) else {
         return;
     };

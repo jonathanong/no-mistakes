@@ -325,6 +325,13 @@ checks direct literal SQL through named executor imports without preparing
 cross-file mutation analysis;
 unsupported inputs use the shared `unanalyzable` report/advice/ignore policy.
 
+Configured [`postgres-no-test-state-mutation`](rules/postgres-no-test-state-mutation.md)
+applications run through the existing async `check()` binding and through
+`analyzeProject()` check reports, with the same findings and advisories as CLI
+`check`. Import the exported `PostgresNoTestStateMutationOptions` type for
+`testGlobs`, `helperRoots`, executor targets, and the unanalyzable policy. The
+runtime export remains `check(options)`; this rule adds no separate function.
+
 The async `check()` API accepts `PostgresRequireQueryAnnotationOptions.sqlLiteralHelpers` in rule configuration, for example `["pg-copy-streams#from"]`. Both effort modes recognize direct imported helper calls with one static literal argument; `SqlExecutorProfile.sqlLiteralHelpers` records the configured identities in requested SQL verdicts. See [the annotation rule](rules/postgres-require-query-annotation.md#configured-single-literal-sql-helpers).
 
 `check()` and check reports in `analyzeProject()` support

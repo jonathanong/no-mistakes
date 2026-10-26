@@ -54,7 +54,8 @@ fn every_new_category_survives_do_function_and_static_execute_recovery() {
         .filter(|finding| !finding.message.contains("could not be analyzed"))
         .collect();
     assert_eq!(findings.len(), 49, "{findings:?}");
-    for kind in &crate::codebase::postgres::SUPPORTED_KINDS[7..] {
+    // This fixture predates the additional ALTER object kinds.
+    for kind in &crate::codebase::postgres::SUPPORTED_KINDS[7..23] {
         let count = findings
             .iter()
             .filter(|finding| finding.target.as_deref() == Some(*kind))

@@ -1,6 +1,9 @@
 use super::*;
 use serde_json::json;
 
+#[path = "check_test_state.rs"]
+mod check_test_state;
+
 #[path = "check_config_locations.rs"]
 mod check_config_locations;
 #[path = "check_parse_failure_locations.rs"]

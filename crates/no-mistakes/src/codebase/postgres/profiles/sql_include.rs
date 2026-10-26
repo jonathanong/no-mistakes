@@ -13,6 +13,10 @@ struct SqlOptions {
 pub(super) fn sql_patterns(config: &NoMistakesConfig, rule_ids: &[&str]) -> Result<Vec<String>> {
     let mut patterns = Vec::new();
     for id in rule_ids {
+        // Test-state mutation inspects executor calls, never standalone SQL files.
+        if *id == "postgres-no-test-state-mutation" {
+            continue;
+        }
         for rule in config.rule_applications(id) {
             let options: SqlOptions = rule.try_rule_options()?;
             patterns.extend(crate::codebase::postgres::profile_sql_include(

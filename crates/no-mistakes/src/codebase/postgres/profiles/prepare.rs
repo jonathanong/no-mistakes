@@ -66,7 +66,8 @@ pub(crate) fn prepare_rule_sql_facts(
                 postgres_schema: rule_ids.iter().any(|id| {
                     !matches!(
                         *id,
-                        "postgres-sql-shape-policy"
+                        "postgres-no-test-state-mutation"
+                            | "postgres-sql-shape-policy"
                             | "postgres-require-query-annotation"
                             | "postgres-lock-ordering"
                             | "postgres-conflict-ordering"

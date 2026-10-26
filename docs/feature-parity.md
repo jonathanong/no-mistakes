@@ -97,6 +97,14 @@ proof, while other mutations retain conservative provenance. Unknown provenance 
 [mutable SQL registries](rules/postgres-no-mutable-sql-registry.md) and
 [unbounded SQL identifiers](rules/postgres-no-unbounded-sql-identifier.md).
 
+Opt-in [`postgres-no-test-state-mutation`](rules/postgres-no-test-state-mutation.md)
+uses explicit test and helper globs to reject
+executed PostgreSQL schema or server-state changes and `pg_sleep`. It shares
+the prepared TS/JS and SQL facts across CLI `check`, async Node `check()`, and
+`analyzeProject()` checks. SQL held only as assertion text or snapshot data,
+and production migrations outside the declared test scope, stay out of this
+rule.
+
 Import-aware executed SQL extraction follows named private callables returned
 from nested branches of exported factories through the same Rust and async Node
 ESM/CJS API. Static callable wrappers and cyclic return references retain their

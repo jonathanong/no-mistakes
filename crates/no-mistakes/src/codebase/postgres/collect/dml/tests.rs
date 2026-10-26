@@ -137,3 +137,4 @@ fn conditional_lifecycle_bounds_follow_embedded_source_lines() {
 }
 
 mod location_demand;
+mod prefix_policy;

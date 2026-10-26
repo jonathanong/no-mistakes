@@ -126,7 +126,7 @@ fn ddl_expands_exactly_supported_kinds_and_unknown_values_error() {
         ..Default::default()
     })
     .unwrap();
-    assert_eq!(compiled.banned.len(), 23);
+    assert_eq!(compiled.banned.len(), 29);
     for kind in crate::codebase::postgres::SUPPORTED_KINDS {
         assert!(compiled.banned.contains(*kind));
     }

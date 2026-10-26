@@ -15,6 +15,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-required-predicates",
     "postgres-generated-column-predicates",
     "postgres-explicit-columns",
+    "postgres-no-test-state-mutation",
     "postgres-bounded-statements",
     "postgres-no-offset",
     "postgres-no-transformed-uuid-predicates",
@@ -60,6 +61,8 @@ struct EmbeddedSqlRuleOptions {
     trusted_sql_tags: Vec<TrustedSqlTag>,
     sql_literal_helpers: Vec<String>,
     include: Vec<String>,
+    test_globs: Vec<String>,
+    helper_roots: Vec<String>,
     exclude: Vec<String>,
 }
 

@@ -118,6 +118,12 @@ use prepared import, value-flow, and embedded-SQL facts with the canonical graph
 to prove cross-file registry writes and unbounded identifier interpolations.
 At maximum effort, unknown provenance is never a finding.
 
+Opt-in [postgres-no-test-state-mutation](../rules/postgres-no-test-state-mutation.md)
+requires explicit `testGlobs` and optionally selects helper files with
+`helperRoots`. It rejects test-executed PostgreSQL schema changes, `TRUNCATE`,
+`ALTER SYSTEM`, replication-role settings, and `pg_sleep`. SQL used only as
+assertion data or in production migrations outside those globs is not selected.
+
 Rules must be explicitly configured. See [no-mistakes rules](../rules/README.md)
 and [configuration](../configuration/README.md).
 `path-regex-capture` matches visible symlink paths, including directory-target

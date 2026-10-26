@@ -39,7 +39,17 @@ pub(super) fn record(
     rule_id: &str,
     options: &super::EmbeddedSqlRuleOptions,
 ) -> Result<()> {
-    let scan = EmbeddedSqlRuleScan::new(rule_id, &options.include, &options.exclude)?;
+    let include = if rule_id == "postgres-no-test-state-mutation" {
+        options
+            .test_globs
+            .iter()
+            .chain(&options.helper_roots)
+            .cloned()
+            .collect()
+    } else {
+        options.include.clone()
+    };
+    let scan = EmbeddedSqlRuleScan::new(rule_id, &include, &options.exclude)?;
     let scans = grouped.entry(profile).or_default();
     if !scans
         .iter()

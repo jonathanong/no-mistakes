@@ -23,6 +23,16 @@ pub(super) fn collect(statement: &Statement, out: &mut Vec<SqlFunctionCallFact>)
     collect_projected(statement, out, false);
 }
 
+/// Project calls from statements that actually execute, while retaining the
+/// syntactic collector for callers that inspect the original SQL expression.
+pub(super) fn collect_executed(statement: &Statement, out: &mut Vec<SqlFunctionCallFact>) {
+    let mut executed = Vec::new();
+    super::statements::walk_executed(statement, &mut executed);
+    for statement in executed {
+        collect(statement, out);
+    }
+}
+
 pub(super) fn collect_projected(
     statement: &Statement,
     out: &mut Vec<SqlFunctionCallFact>,
@@ -171,3 +181,6 @@ mod variant_tests;
 
 #[cfg(test)]
 mod mutation_tests;
+
+#[cfg(test)]
+mod execution_tests;

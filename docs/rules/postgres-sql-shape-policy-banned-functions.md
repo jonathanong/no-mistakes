@@ -15,6 +15,7 @@ column references and aliases with the same spelling are not reported.
 
 The check covers calls in CTEs, subqueries, mutations, native SQL, configured
 executor calls, routine bodies, and statically recovered `EXECUTE` strings.
+Plan-only `EXPLAIN` does not contribute calls; `EXPLAIN ANALYZE` does.
 This is useful in parallel tests: `pg_sleep` occupies a database connection
 for the duration of the delay and can stall other work waiting for a pooled
 connection.

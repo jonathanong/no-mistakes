@@ -59,6 +59,7 @@ pub use super::postgres_no_add_column::RULE_ID as POSTGRES_NO_ADD_COLUMN;
 pub use super::postgres_no_generated_column_writes::RULE_ID as POSTGRES_NO_GENERATED_COLUMN_WRITES;
 pub use super::postgres_no_mutable_sql_registry::RULE_ID as POSTGRES_NO_MUTABLE_SQL_REGISTRY;
 pub use super::postgres_no_offset::RULE_ID as POSTGRES_NO_OFFSET;
+pub use super::postgres_no_test_state_mutation::RULE_ID as POSTGRES_NO_TEST_STATE_MUTATION;
 pub use super::postgres_no_transformed_uuid_predicates::RULE_ID as POSTGRES_NO_TRANSFORMED_UUID_PREDICATES;
 pub use super::postgres_no_unbounded_sql_identifier::RULE_ID as POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER;
 pub use super::postgres_object_naming::RULE_ID as POSTGRES_OBJECT_NAMING;
