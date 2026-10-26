@@ -97,6 +97,7 @@ pub mod postgres_unanalyzable_schema;
 pub(crate) mod postgres_undeclared_executors;
 pub(crate) mod postgres_unmatched_executors;
 pub mod production_dependency_declarations;
+pub mod production_exports_test_only;
 pub mod query_reached_per_item;
 pub mod require_files_in_subdirs;
 pub mod require_storybook_stories;

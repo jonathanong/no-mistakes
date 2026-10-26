@@ -175,7 +175,10 @@ pub(crate) fn path_confidence(edges: &[EdgeKind]) -> Confidence {
 
 pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
     match edge {
-        EdgeKind::Import
+        EdgeKind::SymbolImport
+        | EdgeKind::SymbolReexport
+        | EdgeKind::SymbolImportUnknown
+        | EdgeKind::Import
         | EdgeKind::TypeImport
         | EdgeKind::DynamicImport
         | EdgeKind::ConditionalDynamicImport

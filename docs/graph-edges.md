@@ -821,3 +821,25 @@ no-mistakes dependencies 'tests/coverage.mts#produceCoverage' --root . --relatio
 ```
 
 Node uses `await dependencies({ root: '.', files: ['tests/coverage.mts#produceCoverage'], relationships: ['assertion-owner'], includeSymbols: true })`. Owner-only queries follow only the modeled owner edge kind; `call` queries retain ordinary call-only semantics.
+
+
+## Symbol consumer selectors
+
+The opt-in symbol-selector projection adds canonical edges for
+[`production-exports-only-used-by-tests`](rules/production-exports-only-used-by-tests.md).
+Ordinary graph requests retain their existing edge set. These relationships reuse
+prepared import/export facts, resolver projections, and the canonical graph;
+no separate rule graph or second parsing pass is built.
+
+| Serialized `via` | Internal edge kind | Meaning |
+| --- | --- | --- |
+| `symbol-import` | `SymbolImport` | A static import selects a particular exported symbol; aliases, default imports and type-only imports retain selector identity. |
+| `symbol-reexport` | `SymbolReexport` | A static named, local-alias, or star re-export forwards an exported symbol to its origin. Forwarding alone does not establish a production consumer. |
+| `symbol-import-unknown` | `SymbolImportUnknown` | A module or symbol consumer cannot be resolved statically. It records uncertainty rather than proving production or test-only use. |
+
+The rule follows symbol forwarding before classifying consumer files against
+explicit production/test/helper configuration. An unrelated production import
+from the same module does not prove use of another export. Unknown relationships
+follow the configured `unanalyzable` policy. These rule-only edge kinds are not
+CLI or Node `Relationship` filters. Check findings and advisories retain their
+existing public report shape.

@@ -1,0 +1,33 @@
+{
+  "base": "144e6caa627617090d0c2ede90ec363a6b5b58f5",
+  "measuredChangedLines": 545,
+  "coveredChangedLines": 541,
+  "coveragePercent": 99.2661,
+  "requiredPercent": 98.0,
+  "uncoveredChangedLines": {
+    "crates/no-mistakes/src/codebase/dependencies/graph/edge_symbol_import_selectors.rs": [
+      43
+    ],
+    "crates/no-mistakes/src/codebase/rules/production_exports_test_only.rs": [
+      53,
+      60
+    ],
+    "crates/no-mistakes/src/codebase/rules/production_exports_test_only/traversal.rs": [
+      90
+    ]
+  },
+  "changedFilesWithoutLineRecords": [
+    "crates/no-mistakes/src/codebase/dependencies/graph/mod.rs",
+    "crates/no-mistakes/src/codebase/dependencies/graph/tests/mod.rs",
+    "crates/no-mistakes/src/codebase/dependencies/graph/tests/symbol_import_selectors.rs",
+    "crates/no-mistakes/src/codebase/dependencies/output/tests/edge_kinds.rs",
+    "crates/no-mistakes/src/codebase/rules/ids.rs",
+    "crates/no-mistakes/src/codebase/rules/mod.rs",
+    "crates/no-mistakes/src/codebase/rules/production_exports_test_only/tests.rs",
+    "crates/no-mistakes/src/codebase/rules/run/prepared/tests.rs",
+    "crates/no-mistakes/src/tests/plan_bfs.rs",
+    "crates/no-mistakes/tests/cli_check_production_exports_test_only.rs",
+    "crates/no-mistakes/tests/docs_coverage.rs",
+    "crates/no-mistakes/tests/suite_cli_rules.rs"
+  ]
+}

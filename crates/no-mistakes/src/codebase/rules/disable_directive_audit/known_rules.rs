@@ -3,6 +3,7 @@ pub(super) fn known_rule(rule: &str) -> bool {
     super::super::filesystem_dispatch::FILESYSTEM_RULE_IDS.contains(&rule)
         || [
             coverage_producer_assertion_owner::RULE_ID,
+            production_exports_test_only::RULE_ID,
             FORBIDDEN_CALLS,
             FORBIDDEN_DEPENDENCIES,
             NEXTJS_NO_API_ROUTES,

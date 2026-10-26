@@ -79,6 +79,9 @@ fn provenance_accounting_uses_source_file_instead_of_public_finding_target() {
 
 #[test]
 fn known_rule_catalog_includes_core_rules_without_public_id_aliases() {
+    assert!(known_rule(
+        super::super::production_exports_test_only::RULE_ID
+    ));
     // This core rule intentionally has no entry in ids.rs or the filesystem registry.
     assert!(known_rule(
         super::super::coverage_producer_assertion_owner::RULE_ID

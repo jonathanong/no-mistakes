@@ -64,6 +64,10 @@ fn graph_plan_with_forbidden(
 ) -> Option<GraphBuildPlan> {
     let mut plan = GraphBuildPlan::default();
     let mut needed = false;
+    if let Some(export_plan) = super::super::production_exports_test_only::graph_plan(config) {
+        plan.include(export_plan);
+        needed = true;
+    }
     if config.rule_configured(super::super::coverage_producer_assertion_owner::RULE_ID) {
         plan.calls = true;
         plan.assertion_owners = true;
@@ -112,6 +116,7 @@ pub fn canonical_graph_requires_full_file_universe(
         || config.rule_configured(FORBIDDEN_DEPENDENCIES)
         || config.rule_configured(FORBIDDEN_CALLS)
         || config.rule_configured(UNCONSTRUCTED_ERROR_CLASS)
+        || config.rule_configured(super::super::production_exports_test_only::RULE_ID)
 }
 
 pub fn run_check_with_config_and_facts_and_playwright(

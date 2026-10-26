@@ -330,3 +330,5 @@ repository check requires explicit `options.files` globs and protects exact
 six ESLint/oxlint disable forms. TypeScript suppression directives and blanket
 lint disables are separate opt-ins through `directives` and
 `banBlanketDisable`; neither widens the configured file scope.
+
+For [`production-exports-only-used-by-tests`](../rules/production-exports-only-used-by-tests.md), configure nonempty `options.productionRoots` and at least one of `options.testGlobs` or `options.testHelperRoots`. These root-relative scopes are explicit: no production/test naming defaults are inferred. The rule follows the shared `options.unanalyzable` policy (default `report`); exports without known consumers are ignored.

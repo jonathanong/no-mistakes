@@ -40,7 +40,6 @@
                         .cloned()
                         .collect::<Vec<_>>()
                 };
-
                 match supplied_fact_policy {
                     SuppliedFactPolicy::RequireComplete if !covers_plan => {
                         anyhow::bail!(
@@ -120,6 +119,7 @@
             || plan.workspace
             || plan.package
             || plan.symbols
+            || plan.symbol_import_selectors
             || plan.calls
             || plan.extends;
         let owned_workspace = (needs_workspace && supplied_workspace.is_none()).then(|| {

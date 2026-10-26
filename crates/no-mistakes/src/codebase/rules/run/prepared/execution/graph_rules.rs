@@ -33,6 +33,19 @@ pub(super) fn graph_rule_findings(
     } = request;
     let mut findings = Vec::new();
     let mut advisories = Vec::new();
+    if config.rule_configured(crate::codebase::rules::PRODUCTION_EXPORTS_ONLY_USED_BY_TESTS) {
+        let diagnostics = crate::perf_trace::trace("rules.production_exports_test_only", || {
+            crate::codebase::rules::production_exports_test_only::check_with_graph(
+                root,
+                config,
+                dependency_graph
+                    .expect("production-exports-only-used-by-tests requires canonical graph"),
+                shared,
+            )
+        })?;
+        findings.extend(diagnostics.findings);
+        advisories.extend(diagnostics.advisories);
+    }
     if rule_enabled(config, FORBIDDEN_CALLS) {
         findings.extend(crate::perf_trace::trace("rules.forbidden_calls", || {
             forbidden_calls::check_with_graph(

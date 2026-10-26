@@ -1,5 +1,8 @@
 //! Cli rules integration tests, linked in one harness.
 
+#[path = "cli_check_production_exports_test_only.rs"]
+mod cli_check_production_exports_test_only;
+
 #[path = "cli_shellcheck_policy.rs"]
 mod cli_shellcheck_policy;
 

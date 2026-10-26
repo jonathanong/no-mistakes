@@ -1,0 +1,72 @@
+{
+  "reviewedHead": "383c9ff3f7c1430173e75b9062b1172730e43176",
+  "rebasedOnto": "7ce5d8059",
+  "before": [
+    {
+      "policy": "report",
+      "status": 1,
+      "rules": 2,
+      "advisories": 0
+    },
+    {
+      "policy": "advise",
+      "status": 0,
+      "rules": 0,
+      "advisories": 2
+    },
+    {
+      "policy": "ignore",
+      "status": 0,
+      "rules": 0,
+      "advisories": 0
+    }
+  ],
+  "after": [
+    {
+      "policy": "report",
+      "status": 1,
+      "definiteTargets": [
+        "testOnly"
+      ],
+      "rules": 3,
+      "advisories": 0
+    },
+    {
+      "policy": "advise",
+      "status": 1,
+      "definiteTargets": [
+        "testOnly"
+      ],
+      "rules": 1,
+      "advisories": 2
+    },
+    {
+      "policy": "ignore",
+      "status": 1,
+      "definiteTargets": [
+        "testOnly"
+      ],
+      "rules": 1,
+      "advisories": 0
+    }
+  ],
+  "workCount": {
+    "exports": 8,
+    "applications": 2,
+    "findings": 16,
+    "parse.files": 4,
+    "parse.files_after_extract": 4,
+    "graph.builds": 1,
+    "production_exports.incomplete_scans": 1
+  },
+  "validation": {
+    "focusedTestsPassed": 22,
+    "nativeTestsPassed": 630,
+    "nativeSuites": 21,
+    "contractsPassed": 89,
+    "cliTestsPassed": 3,
+    "javascriptPassed": 2501,
+    "javascriptSkipped": 955
+  },
+  "artifactSha256": "b2bd5862d511d2e9513d360a2e9fe168271b216a131d90051dbb2bd7c1d61b6e"
+}

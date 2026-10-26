@@ -224,3 +224,5 @@ tracked graph require a fallback such as `rg`. `ci` remains the separate
 legacy workflow-file-to-Rust-binary Cargo relationship.
 
 For configured coverage producers, enable `coverage-producer-assertion-owner` with exact function roots, assertion module/export identities, and genuine callback/process contracts; run `check --root <root> --format json`. Dynamic dispatch and traversal bounds follow `unanalyzable`, never assertion proof.
+
+For production exports retained only by tests, configure `production-exports-only-used-by-tests` with explicit `productionRoots` and `testGlobs`/`testHelperRoots`, then run `check --root <root> --format json`. Follow the reported symbol through aliases/re-exports before removing the export or moving its implementation to test helpers.
