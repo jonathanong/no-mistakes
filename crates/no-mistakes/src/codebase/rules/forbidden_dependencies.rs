@@ -1,12 +1,12 @@
 use super::RuleFinding;
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, NodeId};
-use crate::codebase::dependencies::{relationship_filter, EdgeKind, RelationshipArg};
+use crate::codebase::dependencies::{relationship_filter, EdgeKind};
 use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use helpers::{edge_kind_str, repro_command, resolve_root_paths};
-use std::collections::{BTreeMap, HashSet};
+use helpers::{edge_kind_str, repro_command};
+use std::collections::HashSet;
 use std::path::Path;
 
 mod config_check;
@@ -17,14 +17,9 @@ pub(crate) use shared::{check_with_prepared_facts_and_graph, PreparedConfig};
 
 pub const RULE_ID: &str = "forbidden-dependencies";
 
-#[derive(Debug, serde::Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
-pub(crate) struct Options {
-    pub roots: Vec<String>,
-    pub forbidden_modules: Vec<String>,
-    pub forbidden_files: Vec<String>,
-    pub relationships: Vec<RelationshipArg>,
-}
+mod options;
+mod selectors;
+use options::Options;
 
 /// Resolves the `DepGraph`'s `GraphConfigOptions` via default `--config`
 /// discovery. Callers that already have an explicit `config_path` in scope
@@ -115,6 +110,10 @@ fn check_rule_application(
         Ok(matchers) => matchers,
         Err(findings) => return Ok(findings),
     };
+    let selectors = match selectors::Selectors::new(root, &anchor, opts) {
+        Ok(selectors) => selectors,
+        Err(finding) => return Ok(vec![finding]),
+    };
     let allowed = relationship_filter(&opts.relationships);
     let mut inferred_roots = scope.inferred_roots.cloned().unwrap_or_default();
     let source_filter = super::path_filter::RulePathFilter::new_with_inferred(
@@ -125,13 +124,7 @@ fn check_rule_application(
     );
     let source_filter = source_filter?;
     let mut findings = Vec::new();
-    let mut selected_roots = BTreeMap::new();
-    for root_str in &opts.roots {
-        for path in resolve_root_paths(root, root_str, graph) {
-            selected_roots.entry(path).or_insert(root_str);
-        }
-    }
-    for (resolved_path, root_str) in selected_roots {
+    for (resolved_path, root_str) in selectors.select(graph, scope.file_universe) {
         if !source_filter.is_match(&resolved_path) {
             continue;
         }
@@ -140,7 +133,7 @@ fn check_rule_application(
             .unwrap_or(&resolved_path)
             .to_string_lossy()
             .replace('\\', "/");
-        let root_node = NodeId::file(resolved_path);
+        let root_node = NodeId::file(resolved_path.clone());
         let entries = match scope.file_universe {
             Some(universe) => {
                 graph.deps_of_in_file_universe(&[root_node], None, allowed.as_ref(), universe)
@@ -156,6 +149,7 @@ fn check_rule_application(
                     file_matcher.as_ref().is_some_and(|m| {
                         let rel = path.strip_prefix(root).unwrap_or(path);
                         m.is_match(rel.to_string_lossy().replace('\\', "/"))
+                            && !selectors.allows(&resolved_path, path)
                     })
                 }
                 NodeId::QueueJob { .. }

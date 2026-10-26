@@ -36,7 +36,15 @@ fn collect_rule_paths(rule: &str, value: &Value, field: &Field, refs: &mut Vec<R
         }
         "forbidden-dependencies" => {
             paths_at(value, "roots", field, Kind::Directory, refs);
+            paths_at(value, "excludeRoots", field, Kind::Directory, refs);
             paths_at(value, "forbiddenFiles", field, Kind::File, refs);
+            if let Some(exceptions) = value.get("exceptions").and_then(Value::as_sequence) {
+                for (index, exception) in exceptions.iter().enumerate() {
+                    let nested = field.key("exceptions").index(index);
+                    paths_at(exception, "roots", &nested, Kind::Directory, refs);
+                    paths_at(exception, "allowedFiles", &nested, Kind::File, refs);
+                }
+            }
         }
         "forbidden-workspace-closure" => paths_at(value, "lockfile", field, Kind::File, refs),
         "markdown-reachability" | "markdown-structure-budget" => {

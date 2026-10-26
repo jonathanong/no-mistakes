@@ -1,0 +1,8 @@
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [ci/check-*.mts]
+      forbiddenFiles: [tests/**]
+      excludeRoots:
+        - "[invalid"
