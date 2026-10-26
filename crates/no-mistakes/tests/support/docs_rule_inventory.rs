@@ -5,7 +5,7 @@ use std::path::Path;
 
 struct Page {
     links: BTreeSet<String>,
-    rule_title: bool,
+    rule_titles: BTreeSet<String>,
 }
 
 pub(super) fn assert_inventory(root: &Path, source: &BTreeSet<String>) {
@@ -53,13 +53,21 @@ pub(super) fn inventory_failures(root: &Path, source: &BTreeSet<String>) -> Vec<
                 .map(|id| format!("{label}: {id}")),
         );
     }
+    for id in source {
+        if pages
+            .get(id)
+            .is_some_and(|page| !page.rule_titles.contains(id))
+        {
+            failures.push(format!("rule page title mismatch: {id}"));
+        }
+    }
     failures
 }
 
 fn page(body: &str) -> Page {
     let mut links = BTreeSet::new();
     let mut heading = None;
-    let mut rule_title = false;
+    let mut rule_titles = BTreeSet::new();
     for event in Parser::new(body) {
         if let Event::Start(Tag::Link { dest_url, .. }) = &event {
             if let Some(id) = local_page(dest_url) {
@@ -74,9 +82,11 @@ fn page(body: &str) -> Page {
                 heading = Some(Vec::new());
             }
             Event::End(TagEnd::Heading(HeadingLevel::H1)) => {
-                rule_title |= heading
-                    .take()
-                    .is_some_and(|events| matches!(events.as_slice(), [Event::Code(_)]));
+                if let Some(events) = heading.take() {
+                    if let [Event::Code(id)] = events.as_slice() {
+                        rule_titles.insert(id.to_string());
+                    }
+                }
             }
             event => {
                 if let Some(events) = heading.as_mut() {
@@ -85,7 +95,7 @@ fn page(body: &str) -> Page {
             }
         }
     }
-    Page { links, rule_title }
+    Page { links, rule_titles }
 }
 
 fn local_page(target: &str) -> Option<&str> {
@@ -101,7 +111,11 @@ fn supporting_guides(
 ) -> BTreeSet<String> {
     let mut pending: Vec<_> = source
         .iter()
-        .filter(|id| pages.get(*id).is_some_and(|page| page.rule_title))
+        .filter(|id| {
+            pages
+                .get(*id)
+                .is_some_and(|page| page.rule_titles.contains(*id))
+        })
         .cloned()
         .collect();
     let mut guides = BTreeSet::new();
@@ -109,7 +123,9 @@ fn supporting_guides(
         for target in &pages[&id].links {
             // Linked SQL guides are not registry entries. A stale rule page
             // keeps its canonical title, so links cannot hide it as a guide.
-            if pages.get(target).is_some_and(|page| !page.rule_title)
+            if pages
+                .get(target)
+                .is_some_and(|page| page.rule_titles.is_empty())
                 && !source.contains(target)
                 && guides.insert(target.clone())
             {
