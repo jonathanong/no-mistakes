@@ -21,6 +21,12 @@ mod invocation;
 
 // Keep CLI-level lock/timeout regressions in the native macOS CI harness too;
 // the full suite_cli_queries harness otherwise runs only on Linux coverage CI.
+// fsmonitor loads this helper through `crate::saved_fixture`, so the macOS
+// harness must declare the same module the Linux queries suite declares.
 #[cfg(target_os = "macos")]
 #[path = "cli_invocation.rs"]
 mod cli_invocation;
+#[cfg(target_os = "macos")]
+#[allow(dead_code)]
+#[path = "common/saved_fixture.rs"]
+mod saved_fixture;
