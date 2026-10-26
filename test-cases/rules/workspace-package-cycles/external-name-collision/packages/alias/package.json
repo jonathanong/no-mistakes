@@ -2,6 +2,7 @@
   "name": "alias",
   "version": "1.0.0",
   "dependencies": {
-    "alias": "npm:alias@^1.0.0"
+    "alias": "npm:alias@^1.0.0",
+    "lodash": "1.0.0"
   }
 }

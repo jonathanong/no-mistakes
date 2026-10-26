@@ -305,4 +305,68 @@ fn version_range_match_follows_workspace_linking_rules() {
     assert!(!super::range::version_satisfies("^1.0.0", "1.0.0-rc.1"));
     assert!(!super::range::version_satisfies("latest", "1.0.0"));
     assert!(super::range::version_satisfies("1.2.3 || ^2.0.0", "2.1.0"));
+    assert!(super::range::version_satisfies("x", "1.2.0"));
+    assert!(super::range::version_satisfies("X", "9.0.0"));
+    assert!(super::range::version_satisfies(">=1.0.0 *", "1.2.0"));
+    assert!(super::range::version_satisfies("=1.2.3", "1.2.3"));
+    assert!(super::range::version_satisfies("=1.2.3", "1.2.3+build.1"));
+    assert!(!super::range::version_satisfies("=1.2.3", "1.2.4"));
+    assert!(!super::range::version_satisfies("=1.2.3", "1.2.3-rc.1"));
+    assert!(super::range::version_satisfies("1", "1.9.0"));
+    assert!(!super::range::version_satisfies("1", "2.0.0"));
+    assert!(super::range::version_satisfies("1.2", "1.2.9"));
+    assert!(!super::range::version_satisfies("1.2", "1.3.0"));
+    assert!(super::range::version_satisfies("1.2.3", "1.2.3"));
+    assert!(!super::range::version_satisfies("1.2.3", "1.2.4"));
+    assert!(!super::range::version_satisfies("2", "1.0.0"));
+    assert!(super::range::version_satisfies("~1", "1.9.0"));
+    assert!(!super::range::version_satisfies("~1.2.0", "1.1.0"));
+    assert!(!super::range::version_satisfies("~1.2.0", "1.2.0-rc.1"));
+    assert!(super::range::version_satisfies("1.2.x", "1.2.9"));
+    assert!(super::range::version_satisfies("1.X", "1.9.0"));
+    assert!(!super::range::version_satisfies("1.2.x", "1.2.0-rc.1"));
+    assert!(!super::range::version_satisfies("1.x.foo", "1.0.0"));
+    assert!(!super::range::version_satisfies("2.x", "1.0.0"));
+    assert!(!super::range::version_satisfies(">=nope", "1.0.0"));
+    assert!(!super::range::version_satisfies("1.0.0", "nope"));
+    assert!(!super::range::version_satisfies("1.2.3.4", "1.2.3"));
+    assert!(!super::range::version_satisfies("1.0.0", "1.2.3.4"));
+}
+
+#[test]
+fn workspace_protocol_path_cycle_between_workspace_packages_reports() {
+    assert_workspace_cycle("workspace-path-cycle", "a -> b -> a");
+}
+
+#[test]
+fn non_string_versions_are_not_workspace_edges() {
+    let root = fixture_root("non-string-version");
+    assert_no_workspace_cycle("non-string-version");
+    let sources = super::super::source_store_for_files(&npm_workspace_files(&root));
+    assert!(super::edges::package_version(&root.join("packages/missing"), &sources).is_none());
+}
+
+#[test]
+fn local_paths_count_only_when_they_are_the_package_directory() {
+    let root = fixture_root("file-cycle");
+    let package_a = root.join("packages/a");
+    let package_b = root.join("packages/b");
+    let absolute = package_b.to_str().expect("fixture path is unicode");
+    assert!(super::edges::path_is_package_dir(
+        absolute, &package_a, &package_b
+    ));
+    assert!(!super::edges::path_is_package_dir(
+        "", &package_a, &package_b
+    ));
+    assert!(!super::edges::path_is_package_dir(
+        package_a.to_str().expect("fixture path is unicode"),
+        &package_a,
+        &package_b
+    ));
+    let manifest = package_b.join("package.json");
+    assert!(super::edges::path_is_package_dir(
+        manifest.to_str().expect("fixture path is unicode"),
+        &package_a,
+        &package_b
+    ));
 }

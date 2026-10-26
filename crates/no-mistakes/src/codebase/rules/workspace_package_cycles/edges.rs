@@ -82,7 +82,7 @@ fn archive_path(path: &str) -> bool {
     path.ends_with(".tgz") || path.ends_with(".tar") || path.ends_with(".tar.gz")
 }
 
-fn path_is_package_dir(path: &str, from_dir: &Path, package_dir: &Path) -> bool {
+pub(super) fn path_is_package_dir(path: &str, from_dir: &Path, package_dir: &Path) -> bool {
     let raw = path.trim_end_matches(['/', '\\']);
     if raw.is_empty() {
         return false;
@@ -122,7 +122,7 @@ fn explicit_external(specifier: &str) -> bool {
     .any(|prefix| specifier.starts_with(prefix))
 }
 
-fn package_version(
+pub(super) fn package_version(
     package_dir: &Path,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Option<String> {

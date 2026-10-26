@@ -54,8 +54,7 @@ fn token_satisfies(token: &str, version: Version) -> bool {
         Some(">") => ordered(rest, version, std::cmp::Ordering::Less, true),
         Some("<") => ordered(rest, version, std::cmp::Ordering::Greater, true),
         Some("=") => exact_satisfies(rest, version),
-        None => bare_satisfies(token, version),
-        Some(_) => false,
+        _ => bare_satisfies(token, version),
     }
 }
 
@@ -104,8 +103,7 @@ fn ordered(base_text: &str, version: Version, reject: std::cmp::Ordering, strict
 }
 
 fn exact_satisfies(base_text: &str, version: Version) -> bool {
-    comparable_base(base_text, version)
-        .is_some_and(|base| version == base && version.pre == base.pre)
+    comparable_base(base_text, version).is_some_and(|base| version == base)
 }
 
 fn bare_satisfies(token: &str, version: Version) -> bool {
