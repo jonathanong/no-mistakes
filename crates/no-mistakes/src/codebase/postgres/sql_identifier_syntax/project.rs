@@ -6,6 +6,19 @@ pub(crate) fn collect(
     source: &str,
     profiles: &[EmbeddedSqlOptions],
 ) -> FileFacts {
+    collect_with_types(program, ts, source, profiles, &Default::default())
+}
+
+pub(crate) fn collect_with_types(
+    program: &Program<'_>,
+    ts: &TsFileFacts,
+    source: &str,
+    profiles: &[EmbeddedSqlOptions],
+    declared_types: &std::collections::BTreeMap<
+        EmbeddedSqlOptions,
+        Vec<crate::config::v2::schema::EffectTargetConfig>,
+    >,
+) -> FileFacts {
     let Some(module) = ts.module_bindings.as_deref() else {
         return FileFacts::default();
     };
@@ -13,15 +26,19 @@ pub(crate) fn collect(
         .iter()
         .map(|profile| {
             let mut selection = Selection::new(profile, module);
-            let (typed, unsupported, runtime) =
-                typed::collect(program, module, profile, &selection.unsupported);
+            let types = declared_types.get(profile).map_or(&[][..], Vec::as_slice);
+            let (typed, unsupported, runtime, transports) =
+                typed::collect(program, module, profile, &selection, types);
             selection.typed = typed;
             selection.runtime = runtime;
+            selection.transports = transports;
             selection.unsupported.extend(unsupported);
             selection
         })
         .collect::<Vec<_>>();
     let mut syntax = Syntax {
+        metadata: metadata::Metadata::new(module, &selections),
+        template_binds: template_binds::TemplateBinds::new(module, source),
         loose_query: profiles.iter().any(|profile| {
             profile.import_specifier.is_empty()
                 && profile.executor_names.iter().any(|name| name == "query")
@@ -53,6 +70,7 @@ pub(crate) fn collect(
     }
     aliases::collect(program, module, &selections, &mut syntax);
     syntax.visit_program(program);
+    syntax.safe_parameterized = template_binds::safe_constants(module, &syntax.calls);
     let mut owners = FxHashMap::default();
     for binding in &module.bindings {
         for usage in &binding.references {
@@ -89,14 +107,7 @@ pub(crate) fn collect(
             output.profiles.push((profile.clone(), Vec::new()));
             continue;
         }
-        let mut calls = calls::project(profile, &selection, module, &syntax, &owners, source);
-        calls.extend(selection.runtime.iter().map(|at| SqlCall {
-            span: *at,
-            line: crate::codebase::ts_source::byte_offset_to_line(source, at.0 as usize),
-            input: Input::Unknown,
-        }));
-        calls.sort_by_key(|call| call.span);
-        calls.dedup_by_key(|call| call.span);
+        let calls = calls::project(profile, &selection, module, &syntax, &owners, source);
         output.profiles.push((profile.clone(), calls));
     }
     output

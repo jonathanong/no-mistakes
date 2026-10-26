@@ -1,0 +1,33 @@
+effort: low
+unanalyzable: advise
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ["src/**/*.ts"]
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ["src/**/*.ts"]
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      executorFactoryNames: [beginTransaction]
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ["src/**/*.ts"]
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      importSpecifier: "@example/db"
+      executorFactoryNames: [beginTransaction]
+      executorNames: [read]
+      executorTypeNames: [QueryExecutor, QueryOptions]
+      include: ["src/**/*.ts"]

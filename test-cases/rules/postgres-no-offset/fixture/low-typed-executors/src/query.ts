@@ -29,7 +29,7 @@ export function destructured({ executor }: { executor: QueryExecutor }, sql: str
   executor(sql); // UNKNOWN
 }
 consume(QueryExecutor); // RUNTIME_TYPE
-const factory = createExecutor(); // FACTORY
+const factory = createExecutor(); // CLEAR factory transport executes no statement
 export function union(executor: QueryExecutor | undefined) {
   executor?.("/* union */ SELECT 1 OFFSET 1"); // UNSUPPORTED_TYPE
 }
@@ -144,7 +144,7 @@ export class MemberShapes {
   #db!: QueryExecutor;
   ordinary = 1;
   constructor(ordinary: string) {}
-  field = this.db; // UNSUPPORTED_TYPE
+  field = this.db; // NON_SQL
   static { consume(this.db); } // UNSUPPORTED_TYPE
   static db: QueryExecutor = unconfigured();
   static run() { this.db.query("SELECT 1 OFFSET 1"); } // UNSUPPORTED_TYPE
@@ -171,7 +171,7 @@ export class EnclosingUntyped {
 }
 export class AccessorRunner {
   accessor db: QueryExecutor = unconfigured();
-  accessor saved = this.db; // UNSUPPORTED_TYPE
+  accessor saved = this.db; // NON_SQL
   run() { this.db.query("SELECT 1 OFFSET 1"); } // UNSUPPORTED_TYPE
 }
 export class PrivateIdentity {
@@ -199,46 +199,46 @@ export function nestedUnconfigured(other: OtherExecutor, sql: string) {
 // Return annotations stay erased; only their own executing value is uncertain.
 declare function unconfiguredAny(): any; // CLEAR
 function getDb(): QueryExecutor { // CLEAR
-  return unconfiguredAny(); // UNSUPPORTED_TYPE
+  return unconfiguredAny(); // NON_SQL
 }
 const returnedDb = getDb(); // CLEAR
-returnedDb.query("SELECT 1 OFFSET 1"); // CLEAR
-const assertedDb = unconfiguredAny() as QueryExecutor; // UNSUPPORTED_TYPE
-assertedDb.query("SELECT 1 OFFSET 1"); // CLEAR
-const angleDb = <QueryExecutor>unconfiguredAny(); // UNSUPPORTED_TYPE
-angleDb.query("SELECT 1 OFFSET 1"); // CLEAR
-const satisfiedDb = unconfiguredAny() satisfies QueryExecutor; // UNSUPPORTED_TYPE
-satisfiedDb.query("SELECT 1 OFFSET 1"); // CLEAR
+returnedDb.query("SELECT 1 OFFSET 1"); // UNSUPPORTED_TYPE
+const assertedDb = unconfiguredAny() as QueryExecutor; // NON_SQL
+assertedDb.query("SELECT 1 OFFSET 1"); // UNSUPPORTED_TYPE
+const angleDb = <QueryExecutor>unconfiguredAny(); // NON_SQL
+angleDb.query("SELECT 1 OFFSET 1"); // UNSUPPORTED_TYPE
+const satisfiedDb = unconfiguredAny() satisfies QueryExecutor; // NON_SQL
+satisfiedDb.query("SELECT 1 OFFSET 1"); // UNSUPPORTED_TYPE
 const objectDb = {
-  db: null as any as QueryExecutor, // UNSUPPORTED_TYPE
-  run() { this.db.query("SELECT 1 OFFSET 1"); }, // CLEAR
+  db: null as any as QueryExecutor, // NON_SQL
+  run() { this.db.query("SELECT 1 OFFSET 1"); }, // UNSUPPORTED_TYPE
 };
 objectDb.run(); // CLEAR
 // Nested functions own their return obligation; enclosing annotations do not leak.
 function outerTyped(): QueryExecutor { // CLEAR
   function innerUntyped() { return unconfiguredAny(); } // CLEAR
   innerUntyped(); // CLEAR
-  return unconfiguredAny(); // UNSUPPORTED_TYPE
+  return unconfiguredAny(); // NON_SQL
 }
 function outerUntyped() { // CLEAR
   function innerTyped(): QueryExecutor { // CLEAR
-    return unconfiguredAny(); // UNSUPPORTED_TYPE
+    return unconfiguredAny(); // NON_SQL
   }
   innerTyped(); // CLEAR
   return unconfiguredAny(); // CLEAR
 }
-const arrowTyped = (): QueryExecutor => unconfiguredAny(); // UNSUPPORTED_TYPE
+const arrowTyped = (): QueryExecutor => unconfiguredAny(); // NON_SQL
 const blockArrowTyped = (): QueryExecutor => { // CLEAR
-  return unconfiguredAny(); // UNSUPPORTED_TYPE
+  return unconfiguredAny(); // NON_SQL
 };
 class ReturningMethod {
   getDb(): QueryExecutor { // CLEAR
-    return unconfiguredAny(); // UNSUPPORTED_TYPE
+    return unconfiguredAny(); // NON_SQL
   }
 }
 type ErasedReturn = ReturnType<typeof getDb>; // CLEAR
 // A return annotation and transparent assertion describe one runtime value.
 function assertedReturn(): QueryExecutor { // CLEAR
-  return (unconfiguredAny() as QueryExecutor); // UNSUPPORTED_TYPE
+  return (unconfiguredAny() as QueryExecutor); // NON_SQL
 }
-const objectProducer = { query: unconfiguredAny() } satisfies { query: QueryExecutor }; // UNSUPPORTED_TYPE
+const objectProducer = { query: unconfiguredAny() } satisfies { query: QueryExecutor }; // NON_SQL

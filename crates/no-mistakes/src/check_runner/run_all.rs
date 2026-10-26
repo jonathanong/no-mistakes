@@ -167,6 +167,7 @@ pub(super) fn run_all_with_session_options(
     no_mistakes::invocation::check_timeout()?;
     results::finalize_domain_checks(results::FinalizeInput {
         root: &root,
+        facts: &facts,
         runner_config_deadlines: runner_deadline_plan
             .as_ref()
             .map(|plan| plan.deadline_evidence(&facts)),

@@ -5,6 +5,7 @@ mod views;
 mod fragments;
 mod postgres_catalog;
 mod postgres_readable;
+mod sql_locations;
 mod sql_verdicts;
 use super::{CheckFactStats, PlaywrightSettingsKey, PlaywrightTestFacts};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;

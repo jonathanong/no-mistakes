@@ -447,3 +447,41 @@ mod nextjs_scope;
 
 #[path = "tests/constructor_policy.rs"]
 mod constructor_policy;
+
+#[test]
+fn analyze_project_preserves_prepared_low_sql_advisory_locations() {
+    let root =
+        crate::test_support::rule_fixture_root("postgres-no-offset").join("opaque-escape-sites");
+    let config = root.join(".no-mistakes-low.yml");
+    let batched: Value = serde_json::from_str(
+        &analyze_project_json_impl(crate::napi_api::options::test_json_arg(json!({
+            "root": root, "config": config, "reports": [{ "type": "check" }]
+        })))
+        .unwrap(),
+    )
+    .unwrap();
+    let standalone: Value = serde_json::from_str(
+        &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "config": config }),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    let actual = &batched["reports"][0]["result"]["advisories"];
+    assert_eq!(actual, &standalone["advisories"]);
+    let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();
+    let invocation = source
+        .lines()
+        .position(|line| line.contains("// TWO:"))
+        .unwrap()
+        + 1;
+    assert_eq!(
+        actual
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|row| row["line"] == invocation)
+            .count(),
+        2
+    );
+}
