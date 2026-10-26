@@ -61,6 +61,24 @@ pattern, or use a reasoned `allowFiles` entry.
 
 ## Options and defaults
 
+Each rule application requires exactly one project target. To check multiple
+projects, repeat the application with the same generic include and a different
+project; a single `projects: [web, admin]` application is a configuration error:
+
+```yaml
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    include: ["components/**/*.tsx"]
+    options:
+      includeAllReactNamedExports: true
+  - rule: require-storybook-stories
+    projects: [admin]
+    include: ["components/**/*.tsx"]
+    options:
+      includeAllReactNamedExports: true
+```
+
 `stories` selects candidate story files; an empty list matches no stories.
 `include` and `exclude` are rule-local component path globs and both default to
 empty lists. `includeAllReactNamedExports` and
@@ -71,7 +89,29 @@ contains one of the listed prop names. `allowComponents` and `allowFiles` map
 an exempt component key or file path to its required reason and default empty.
 `allowColocatedTests` defaults to `false`. `ignoreIndexAndPrivateFiles` also
 defaults to `false`; enable it to skip `index` and underscore-private source
-files. Generic rule filters remain separate from these rule-local globs.
+files. These `options.include` globs are relative to the selected project's
+root. They add explicitly selected components alongside any components selected
+by `includeAllReactNamedExports` or `includeAllReactDefaultExports`; they do
+not restrict those export-kind selections.
+
+Top-level rule `include` and `exclude` are separate scope filters. They intersect
+with `projects` and accept repository-relative or project-relative paths. To
+check only `web/components/**/*.tsx` while selecting named React exports, use:
+
+```yaml
+projects:
+  web:
+    root: web
+rules:
+  - rule: require-storybook-stories
+    projects: [web]
+    include: ["components/**/*.tsx"]
+    options:
+      includeAllReactNamedExports: true
+```
+
+A component under another project's `components/` directory is outside this
+application, and `web/other/Other.tsx` is excluded by the generic include filter.
 
 ## Analysis
 
