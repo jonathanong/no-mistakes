@@ -1,9 +1,15 @@
 "use strict";
-const { dirname } = require("node:path");
+
+const { sourceOwner } = require("./async-source-owner");
+const { currentSources } = require("./async-source-files");
+const { createSourceSession } = require("./async-source-session");
 
 // Oxlint's type-aware checker does not expose a TypeScript program to JS plugins.
-// Resolve only the imported implementation; memoize sources/failures for this rule context.
+// A verified one-shot CLI owns shared imported facts; other hosts stay per-file.
 function createImportedSources(context) {
+  const owner = sourceOwner(context);
+  if (owner?.sources === false) return null;
+  if (owner?.sources) return currentSources(context, owner.sources);
   try {
     const ts = require("typescript");
     let parser;
@@ -24,89 +30,16 @@ function createImportedSources(context) {
     return createSources(context, ts, parser);
   } catch {
     // Optional tooling cannot establish a contract when unavailable or incompatible.
+    if (owner) owner.sources = false;
     return null;
   }
 }
 
 function createSources(context, ts, parser) {
-  // Legacy resolution may inspect `main` while runtime `exports` selects another body.
-  if (ts.ModuleResolutionKind.Bundler === undefined) return null;
-  const reads = new Map();
-  const files = new Map([[context.filename, { ast: context.sourceCode.ast, context }]]);
-  const configs = new Map();
-  const host = {
-    ...ts.sys,
-    readFile(path) {
-      if (!reads.has(path)) reads.set(path, ts.sys.readFile(path));
-      return reads.get(path);
-    },
-  };
-  const resolutions = ts.createModuleResolutionCache(process.cwd(), (path) => path);
-  function options(filename) {
-    const directory = dirname(filename);
-    if (!configs.has(directory)) {
-      const path = ts.findConfigFile(directory, host.fileExists);
-      const config = path && ts.readConfigFile(path, host.readFile);
-      configs.set(
-        directory,
-        config?.error
-          ? null
-          : config
-            ? compilerOptions(config.config, path)
-            : { moduleResolution: ts.ModuleResolutionKind.Bundler },
-      );
-    }
-    return configs.get(directory);
-  }
-  function compilerOptions(config, path) {
-    const parsed = ts.parseJsonConfigFileContent(
-      config,
-      { ...host, readDirectory: () => [] },
-      dirname(path),
-      undefined,
-      path,
-    );
-    return parsed.errors.some((error) => error.code !== 18003) ? null : parsed.options;
-  }
-  function resolve(source, filename) {
-    const config = options(filename);
-    if (!config || config.noResolve) return null;
-    return ts.resolveModuleName(source, filename, config, host, resolutions).resolvedModule
-      ?.resolvedFileName;
-  }
-  function load(filename) {
-    if (!files.has(filename)) {
-      files.set(filename, null);
-      const text = host.readFile(filename);
-      try {
-        const parsed = parser.parseForESLint(text, { filePath: filename, range: true, loc: true });
-        function parents(node, parent) {
-          node.parent = parent;
-          for (const key of parsed.visitorKeys[node.type] || []) {
-            const child = node[key];
-            if (Array.isArray(child)) child.forEach((item) => item && parents(item, node));
-            else if (child) parents(child, node);
-          }
-        }
-        parents(parsed.ast, null);
-        const sourceCode = {
-          ...parsed,
-          getScope(node) {
-            // Every parsed node has a Program ancestor with a global scope.
-            for (let owner = node; ; owner = owner.parent) {
-              const scope = parsed.scopeManager.acquire(owner, true);
-              if (scope) return scope;
-            }
-          },
-        };
-        files.set(filename, { ast: parsed.ast, context: { sourceCode, filename } });
-      } catch {
-        // Missing, ambient, or unsupported source never establishes an awaiting contract.
-      }
-    }
-    return files.get(filename);
-  }
-  return { resolve, load };
+  const store = createSourceSession(ts, parser);
+  const owner = sourceOwner(context);
+  if (owner) owner.sources = store || false;
+  return store && currentSources(context, store);
 }
 
 module.exports = { createImportedSources };

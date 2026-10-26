@@ -20,6 +20,7 @@ const { promiseChainFrom } = require("./async-disposition-observers");
 const { createAwaitingConsumers } = require("./async-disposition-consumers");
 const { createPromiseHandoff } = require("./async-promise-handoff");
 const { possibleValueType } = require("./async-source-candidates");
+const { sourcesUnavailable, withSourceOwner } = require("./async-source-owner");
 
 function isDisposed(node, context, consumers, seen = new Set(), catchProven = true) {
   if (seen.has(node)) return false;
@@ -44,7 +45,7 @@ function isDisposed(node, context, consumers, seen = new Set(), catchProven = tr
   );
 }
 
-module.exports = rule(
+const dispositionRule = rule(
   {
     type: "problem",
     docs: {
@@ -61,7 +62,11 @@ module.exports = rule(
   },
   (context) => {
     const matcher = createTargetMatcher(context);
-    const sourceFacts = { typed: new WeakMap(), sources: null, targets: matcher.targets };
+    const sourceFacts = {
+      typed: new WeakMap(),
+      sources: sourcesUnavailable(context) ? false : null,
+      targets: matcher.targets,
+    };
     const { promiseSlotHandoff, promiseTypedTargetCall } = createPromiseHandoff(
       context,
       sourceFacts,
@@ -92,7 +97,8 @@ module.exports = rule(
         if (suppressed(node)) return;
         const target = matcher.isTargetCall(node);
         // Unrelated calls cannot need a callback-body or imported type proof.
-        if (!target && !possibleValueType(node.callee, context)) return;
+        if (!target && (sourceFacts.sources === false || !possibleValueType(node.callee, context)))
+          return;
         // Disposed calls need no cross-file type lookup, including local/configured JS consumers.
         if (isDisposed(node, context, consumers)) return;
         if (!target && !promiseTypedTargetCall(node)) return;
@@ -115,3 +121,5 @@ module.exports = rule(
     };
   },
 );
+
+module.exports = withSourceOwner(dispositionRule);

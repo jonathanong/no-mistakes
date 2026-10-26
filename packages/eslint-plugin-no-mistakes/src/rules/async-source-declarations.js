@@ -6,16 +6,15 @@ const { unwrapExpression } = require("./async-ast");
 // Follow bounded static declarations. Missing source, cycles, and changing bindings
 // cannot establish the identity of a configured target or dependency type.
 function createDeclarations(sources) {
-  const indexes = new WeakMap();
-  function exportIndex(ast) {
-    if (indexes.has(ast)) return indexes.get(ast);
+  function exportIndex(source) {
+    if (source.exportIndex) return source.exportIndex;
     const names = new Map();
     const stars = [];
     function add(name, match) {
       if (!names.has(name)) names.set(name, []);
       names.get(name).push(match);
     }
-    for (const statement of ast.body) {
+    for (const statement of source.ast.body) {
       if (statement.type === "ExportAllDeclaration") {
         if (!statement.exported) stars.push(statement.source.value);
         continue;
@@ -33,7 +32,7 @@ function createDeclarations(sources) {
         });
     }
     const index = { names, stars };
-    indexes.set(ast, index);
+    source.exportIndex = index;
     return index;
   }
 
@@ -43,7 +42,7 @@ function createDeclarations(sources) {
     seen = new Set(seen).add(key);
     const source = sources.load(filename);
     if (!source) return false;
-    const { names, stars } = exportIndex(source.ast);
+    const { names, stars } = exportIndex(source);
     const matches = names.get(name) || [];
     if (matches.length > 1) return false;
     if (!matches.length) {
