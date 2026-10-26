@@ -374,3 +374,55 @@ fn unresolved_constructor_and_base_only_reports_exit_successfully() {
         }
     }
 }
+
+#[test]
+fn conditional_package_facades_keep_non_error_targets_silent_and_error_children_failing() {
+    let source = fixture()
+        .parent()
+        .unwrap()
+        .join("constructor-target-gaps/fixture");
+    // Installed dependencies must stay external, rather than becoming tracked
+    // primary source files merely because this is a saved repository fixture.
+    let saved = crate::saved_fixture::materialize_path(&source);
+    let root = saved.path();
+    for (config, advisory_count) in [
+        (".no-mistakes.yml", 3),
+        ("advise.yml", 3),
+        ("ignore.yml", 0),
+    ] {
+        for effort in ["low", "max"] {
+            let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+                .args(["check", "--format", "json", "--root"])
+                .arg(root)
+                .arg("--config")
+                .arg(root.join(config))
+                .args(["--effort", effort])
+                .output()
+                .unwrap();
+            assert_eq!(output.status.code(), Some(1), "{}", text(&output));
+            let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+            let names: Vec<_> = value["rules"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|row| row["target"].as_str().unwrap())
+                .collect();
+            assert_eq!(
+                names,
+                [
+                    "UnusedConfigError",
+                    "UnusedFilterError",
+                    "UnusedPoolError",
+                    "UnusedImportError",
+                    "UnusedRequireError",
+                ],
+                "{config}/{effort}: {value}"
+            );
+            assert_eq!(
+                value["advisories"].as_array().unwrap().len(),
+                advisory_count,
+                "{value}"
+            );
+        }
+    }
+}

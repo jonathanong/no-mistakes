@@ -1,4 +1,4 @@
-use super::conditions;
+use super::{conditions, mode::ConditionMode};
 use serde_json::Value;
 use std::cell::OnceCell;
 use std::path::Path;
@@ -14,6 +14,7 @@ pub(super) fn targets(
     exports: &Value,
     subpath: &str,
     consumer_root: &Path,
+    mode: ConditionMode,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<(bool, Vec<Target>), ()> {
     let selected = if let Some(map) = exports.as_object() {
@@ -41,13 +42,16 @@ pub(super) fn targets(
     };
     if !has_types(selected) {
         let mut targets = Vec::new();
-        runtime_targets(selected, true, &mut targets)?;
+        runtime_targets(selected, true, mode, &mut targets)?;
+        if targets.is_empty() {
+            return Err(());
+        }
         return Ok((false, targets));
     }
     let version = OnceCell::new();
     let compiler = || *version.get_or_init(|| conditions::compiler_version(consumer_root, sources));
     let mut targets = Vec::new();
-    select(selected, true, true, &compiler, &mut targets)?;
+    select(selected, true, true, mode, &compiler, &mut targets)?;
     if targets.is_empty() {
         return Err(());
     }
@@ -61,7 +65,12 @@ fn has_types(value: &Value) -> bool {
     })
 }
 
-fn runtime_targets(value: &Value, known: bool, targets: &mut Vec<Target>) -> Result<(), ()> {
+fn runtime_targets(
+    value: &Value,
+    known: bool,
+    mode: ConditionMode,
+    targets: &mut Vec<Target>,
+) -> Result<(), ()> {
     if let Some(text) = value.as_str() {
         let mut target = declaration_target(text, true)?;
         target.known = known;
@@ -73,7 +82,11 @@ fn runtime_targets(value: &Value, known: bool, targets: &mut Vec<Target>) -> Res
         if key.starts_with('.') {
             return Err(());
         }
-        runtime_targets(value, known && key == "default", targets)?;
+        let applies = mode.applies(key);
+        if applies == Some(false) {
+            continue;
+        }
+        runtime_targets(value, known && applies == Some(true), mode, targets)?;
     }
     Ok(())
 }
@@ -82,6 +95,7 @@ fn select(
     value: &Value,
     runtime: bool,
     known: bool,
+    mode: ConditionMode,
     compiler: &impl Fn() -> Option<(u64, u64)>,
     targets: &mut Vec<Target>,
 ) -> Result<(), ()> {
@@ -94,7 +108,8 @@ fn select(
     let map = value.as_object().ok_or(())?;
     for (key, value) in map {
         let applies = match key.as_str() {
-            "types" | "default" => Some(true),
+            "types" => Some(true),
+            "default" | "import" | "require" => mode.applies(key),
             _ if key.starts_with("types@") => conditions::applicable(&key[6..], compiler),
             _ => return Err(()),
         };
@@ -103,8 +118,9 @@ fn select(
         }
         select(
             value,
-            runtime && key == "default",
+            runtime && key != "types" && !key.starts_with("types@"),
             known && applies == Some(true),
+            mode,
             compiler,
             targets,
         )?;

@@ -9,6 +9,8 @@ mod conditions;
 mod context;
 #[path = "package_exports.rs"]
 mod exports;
+#[path = "package_mode.rs"]
+mod mode;
 #[path = "package_paths.rs"]
 mod paths;
 
@@ -18,6 +20,7 @@ pub(super) fn resolve_in_context(
     consumer_root: &Path,
     sources: &SourceStore,
 ) -> Option<PathBuf> {
+    let mode = mode::ConditionMode::for_importer(importer);
     let importer = lookup_context(specifier, importer, consumer_root)?;
     let consumer_root = std::fs::canonicalize(consumer_root).ok()?;
     if specifier.starts_with("./") || specifier.starts_with("../") {
@@ -34,7 +37,7 @@ pub(super) fn resolve_in_context(
         if !installed(&root).ok()? {
             continue;
         }
-        if let Some(path) = entry(&root, &subpath, &consumer_root, sources).ok()? {
+        if let Some(path) = entry(&root, &subpath, &consumer_root, mode, sources).ok()? {
             return Some(path);
         }
         // An installed nearer package shadows outer versions, even without types.
@@ -46,7 +49,7 @@ pub(super) fn resolve_in_context(
     for modules in directories {
         let root = modules.join("@types").join(&types_name);
         if installed(&root).ok()? {
-            return entry(&root, &subpath, &consumer_root, sources).ok()?;
+            return entry(&root, &subpath, &consumer_root, mode, sources).ok()?;
         }
     }
     None
@@ -64,6 +67,7 @@ fn entry(
     root: &Path,
     subpath: &str,
     consumer_root: &Path,
+    mode: mode::ConditionMode,
     sources: &SourceStore,
 ) -> Result<Option<PathBuf>, ()> {
     // parse_json_path shares both the read_path result and JSON parse slot.
@@ -80,7 +84,7 @@ fn entry(
         return Err(());
     }
     if let Some(value) = object.get("exports") {
-        let (typed, targets) = exports::targets(value, subpath, consumer_root, sources)?;
+        let (typed, targets) = exports::targets(value, subpath, consumer_root, mode, sources)?;
         let mut resolved = None;
         let mut absent = false;
         let mut known = false;

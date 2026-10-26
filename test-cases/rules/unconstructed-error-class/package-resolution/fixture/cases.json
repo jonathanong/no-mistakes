@@ -360,10 +360,10 @@
     "expected": null
   },
   {
-    "name": "exports-nested-default",
+    "name": "explicit types survives absent nested import runtime sidecar",
     "specifier": "exports-nested-default",
     "importer": "src/main.ts",
-    "expected": null
+    "expected": "node_modules/exports-nested-default/index.d.ts"
   },
   {
     "name": "exports-runtime-types",
@@ -730,5 +730,35 @@
     "specifier": "main-unsupported-extension",
     "expected": null,
     "importer": "src/main.ts"
+  },
+  {
+    "name": "explicit ESM runtime extension selects import declaration",
+    "specifier": "mode-import-only",
+    "importer": "src/esm.mjs",
+    "expected": "node_modules/mode-import-only/root.d.mts"
+  },
+  {
+    "name": "explicit CJS runtime extension selects require declaration",
+    "specifier": "mode-require-only",
+    "importer": "src/cjs.cjs",
+    "expected": "node_modules/mode-require-only/root.d.cts"
+  },
+  {
+    "name": "ESM has no applicable require-only declaration",
+    "specifier": "mode-require-only",
+    "importer": "src/esm.mts",
+    "expected": null
+  },
+  {
+    "name": "CJS has no applicable import-only declaration",
+    "specifier": "mode-import-only",
+    "importer": "src/cjs.cts",
+    "expected": null
+  },
+  {
+    "name": "ambiguous TS does not assume import-only condition",
+    "specifier": "mode-import-only",
+    "importer": "src/main.ts",
+    "expected": null
   }
 ]

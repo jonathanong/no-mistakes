@@ -222,6 +222,22 @@ aliases and destructured facades reuse prepared binding facts; package members
 declared as `typeof NamedClass` can identify that class. Included ambient module
 declarations can prove a non-Error base without a path mapping. A nullish constructor
 choice is narrowed only when its selected class value is provably non-nullish.
+An annotated constant such as `export const Config: new (...) => Raw = Raw`
+follows its immutable runtime initializer through re-exports and `export *`;
+the constructor annotation alone does not establish identity. Dependency lookup
+starts from the re-exporting package, including dependencies installed only in
+its own `node_modules`.
+
+The session's shared declaration resolver follows conditional package entries.
+Static imports and re-exports from `.mts`/`.mjs` files (including `.d.mts`) use
+the `import` condition; `.cts`/`.cjs` files use `require`. With no proven mode,
+applicable declaration branches must agree. Explicit `types` and runtime entry
+sidecars must also be compatible. Primary source facts keep their selected
+targets, and ambiguous dependency contexts remain uncertain. This also supports
+default-object destructuring such as `import pg from 'pg'; const { Pool } = pg`
+when the package declaration
+identifies the member's concrete class.
+
 Resolving the constructed class credits that exact class even when its own base
 ancestry remains unknown. This does not widen ordinary import or call query
 results. Known non-Error global constructors, including `Intl.DateTimeFormat`
@@ -383,6 +399,13 @@ reported class or construction site.
 
 See the [migration note](../migrations/unconstructed-error-class-constructor-targets.md)
 for CLI and Node report behavior.
+
+The [#2758 constructor fix](https://github.com/jonathanong/no-mistakes/issues/2758)
+also follows compatible conditional declaration entries in the re-exporter's
+package context, including runtime packages with separate `@types` declarations.
+Proven non-Error targets become silent. An otherwise-unused exported subclass
+of a proven Error base remains a failing finding, including under `advise` and
+`ignore`; remove that subclass or give it a real production construction.
 
 ## Suppression
 

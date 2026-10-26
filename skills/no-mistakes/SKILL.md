@@ -105,6 +105,12 @@ Immutable constructor aliases and declaration members typed `typeof NamedClass`
 retain the concrete class identity. Included ambient module declarations can
 prove a non-Error base; a bare constructor signature cannot. Known non-Error
 globals are quiet; shadowed names resolve independently.
+Typed constant facades follow the immutable initializer through export barrels.
+Declarations use the re-exporting package's dependency context. Static imports
+and re-exports in `.mts`/`.mjs` select conditional `import` declarations;
+`.cts`/`.cjs` select `require`. Ambiguous contexts retain branch-agreement checks.
+Non-Error targets are silent; otherwise-unused Error subclasses still fail under
+every policy.
 Ordinary import/call query results remain unchanged. Suppressions apply at the
 construction or class line in both report channels. The rule remains `max`
 only; a requested `low` warns and runs `max`.

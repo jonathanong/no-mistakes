@@ -114,6 +114,14 @@ the actual class.
 Immutable aliases and package constructor facades can resolve through shared
 binding facts and concrete `typeof` class declarations. Unknown alternatives
 remain uncertain; declaration proof does not broaden ordinary query scope.
+Annotated constants follow their runtime initializer through barrels, and
+dependency lookup uses the re-exporter's package context. Conditional package
+entries and separate `@types` declarations honor the static import/re-export
+context: `.mts`/`.mjs` selects `import`, `.cts`/`.cjs` selects `require`, and
+ambiguous extensions retain agreement checks across branches. This also covers
+default-object destructuring. CLI and aggregate API reports apply
+the same proof: non-Error targets are silent, while unused Error subclasses
+remain findings under every policy.
 Known non-Error globals are quiet; shadowed names resolve independently.
 Ordinary import/call query results remain unchanged. Suppressions apply at the
 construction or class line in both report channels. The rule remains `max`

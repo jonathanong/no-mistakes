@@ -492,8 +492,9 @@ mod constructor_identity;
 #[path = "tests/ambient_import_equals.rs"]
 mod ambient_import_equals;
 
+#[path = "tests/constructor_target_gaps.rs"]
+mod constructor_target_gaps;
 #[path = "tests/declaration_proof_guards.rs"]
 mod declaration_proof_guards;
-
 #[path = "tests/workspace_export_targets.rs"]
 mod workspace_export_targets;
