@@ -15,13 +15,13 @@ const fixture = resolve(
   packageRoot,
   "../../test-cases/eslint-plugin/async-call-disposition/fixture/optional-peers",
 );
-function run(command, args, cwd) {
+function run(command, args, cwd, status = 0, env = {}) {
   const result = spawnSync(command, args, {
     cwd,
     encoding: "utf8",
-    env: { ...process.env, NODE_PATH: "", NODE_OPTIONS: "" },
+    env: { ...process.env, NODE_PATH: "", NODE_OPTIONS: "", ...env },
   });
-  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+  assert.equal(result.status, status, `${result.stdout}\n${result.stderr}`);
   return result.stdout;
 }
 
@@ -83,6 +83,33 @@ it("loads a packed plugin and conservatively lints consumers with optional proof
     const runner = join(root, "run.cjs");
     const eslint = require.resolve("eslint");
     run(process.execPath, [runner, eslint, "none"], root);
+    const checkerRequire = createRequire(require.resolve("oxlint-tsgolint/package.json"));
+    const checker = checkerRequire.resolve(
+      `@oxlint-tsgolint/${process.platform}-${process.arch}/tsgolint${process.platform === "win32" ? ".exe" : ""}`,
+    );
+    const oxlint = join(dirname(require.resolve("oxlint")), "../bin/oxlint");
+    const oxlintOutput = run(
+      process.execPath,
+      [
+        oxlint,
+        "--type-aware",
+        "--deny-warnings",
+        "--format",
+        "json",
+        "--config",
+        join(root, ".oxlintrc.json"),
+        join(root, "imported.js"),
+      ],
+      root,
+      1,
+      { OXLINT_TSGOLINT_PATH: checker },
+    );
+    assert.ok(oxlintOutput.startsWith("{"), oxlintOutput);
+    const diagnostics = JSON.parse(oxlintOutput).diagnostics;
+    assert.deepEqual(
+      diagnostics.map((item) => [item.labels[0].span.line, item.code]),
+      [4, 6, 8].map((line) => [line, "no-mistakes(async-call-disposition)"]),
+    );
     // Copy the actual package rather than symlinking: symlinks could expose
     // the workspace parser through Node's realpath-based module resolution.
     cpSync(
@@ -91,49 +118,77 @@ it("loads a packed plugin and conservatively lints consumers with optional proof
       { recursive: true },
     );
     run(process.execPath, [runner, eslint, "typescript"], root);
+    rmSync(join(root, "node_modules/typescript"), { recursive: true });
+    // Stub versions exercise peer metadata without network access. Their empty
+    // exports also prove incompatible optional tooling cannot crash linting.
+    // They isolate this plugin's constraints, not the parser's own peer ranges.
+    runNpm(
+      [
+        "install",
+        "--offline",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund",
+        "--cache",
+        join(root, "npm-cache"),
+        join(root, packed.filename),
+        ...["typescript", "parser", "eslint"].map((name) => join(root, "peer-stubs", name)),
+      ],
+      root,
+    );
+    run(process.execPath, [runner, eslint, "incompatible"], root);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
 }, 30_000);
 
-it.each(["typescript", "@typescript-eslint/parser", "legacy TypeScript"])(
-  "reports unproven imported contracts with unavailable proof tooling (%s)",
-  (missing) => {
-    const load = Module._load;
-    const peer = vi.spyOn(Module, "_load").mockImplementation(function (name, ...args) {
-      if (name === missing) throw new Error("Optional peer failed to load");
-      if (name === "typescript" && missing === "legacy TypeScript") {
-        const ts = load.call(this, name, ...args);
-        // TypeScript 4.8 has no Bundler mode; its legacy resolver is not equivalent.
-        return { ...ts, ModuleResolutionKind: { ...ts.ModuleResolutionKind, Bundler: undefined } };
-      }
-      return load.call(this, name, ...args);
-    });
-    try {
-      const filename = join(fixture, "imported.js");
-      const messages = new Linter({ cwd: fixture }).verify(
-        readFileSync(filename, "utf8"),
-        {
-          plugins: { "no-mistakes": plugin },
-          rules: {
-            "no-mistakes/async-call-disposition": [
-              "error",
-              {
-                targets: [
-                  { sourceSpecifierPatterns: ["@app/jobs"], calleeNamePatterns: ["enqueueEmail"] },
-                ],
-              },
-            ],
-          },
-        },
-        { filename },
-      );
-      assert.deepEqual(
-        messages.map(({ line, messageId }) => [line, messageId]),
-        [4, 6, 8].map((line) => [line, "disposition"]),
-      );
-    } finally {
-      peer.mockRestore();
+it.each([
+  "typescript",
+  "@typescript-eslint/parser",
+  "legacy TypeScript",
+  "empty TypeScript",
+  "missing resolution cache",
+  "empty parser",
+])("reports unproven imported contracts with unavailable proof tooling (%s)", (missing) => {
+  const load = Module._load;
+  const peer = vi.spyOn(Module, "_load").mockImplementation(function (name, ...args) {
+    if (name === missing) throw new Error("Optional peer failed to load");
+    if (name === "typescript" && missing === "empty TypeScript") return {};
+    if (name === "@typescript-eslint/parser" && missing === "empty parser") return {};
+    if (name === "typescript" && missing === "missing resolution cache") {
+      return { ...load.call(this, name, ...args), createModuleResolutionCache: undefined };
     }
-  },
-);
+    if (name === "typescript" && missing === "legacy TypeScript") {
+      const ts = load.call(this, name, ...args);
+      // TypeScript 4.8 has no Bundler mode; its legacy resolver is not equivalent.
+      return { ...ts, ModuleResolutionKind: { ...ts.ModuleResolutionKind, Bundler: undefined } };
+    }
+    return load.call(this, name, ...args);
+  });
+  try {
+    const filename = join(fixture, "imported.js");
+    const messages = new Linter({ cwd: fixture }).verify(
+      readFileSync(filename, "utf8"),
+      {
+        plugins: { "no-mistakes": plugin },
+        rules: {
+          "no-mistakes/async-call-disposition": [
+            "error",
+            {
+              targets: [
+                { sourceSpecifierPatterns: ["@app/jobs"], calleeNamePatterns: ["enqueueEmail"] },
+              ],
+            },
+          ],
+        },
+      },
+      { filename },
+    );
+    assert.deepEqual(
+      messages.map(({ line, messageId }) => [line, messageId]),
+      [4, 6, 8].map((line) => [line, "disposition"]),
+    );
+  } finally {
+    peer.mockRestore();
+  }
+});

@@ -8,14 +8,15 @@ const { localFunction } = require("./async-consumer-local-proof");
 // Oxlint's type-aware checker does not expose a TypeScript program to JS plugins.
 // Resolve only the imported implementation; memoize sources/failures for this rule context.
 function createImportedSources() {
-  let ts, parser;
   try {
-    ts = require("typescript");
-    parser = require("@typescript-eslint/parser");
+    return createSources(require("typescript"), require("@typescript-eslint/parser"));
   } catch {
-    // Optional tooling cannot establish a contract when unavailable or unloadable.
+    // Optional tooling cannot establish a contract when unavailable or incompatible.
     return null;
   }
+}
+
+function createSources(ts, parser) {
   // Legacy resolution may inspect `main` while runtime `exports` selects another body.
   if (ts.ModuleResolutionKind.Bundler === undefined) return null;
   const reads = new Map();

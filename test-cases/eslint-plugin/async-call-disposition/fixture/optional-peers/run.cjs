@@ -5,8 +5,9 @@ const { join } = require("node:path");
 const { Linter } = require(process.argv[2]);
 const pluginRequire = createRequire(require.resolve("eslint-plugin-no-mistakes"));
 const hasTypeScript = process.argv[3] === "typescript";
+const incompatible = process.argv[3] === "incompatible";
 for (const name of ["typescript", "@typescript-eslint/parser"]) {
-  if (name === "typescript" && hasTypeScript) pluginRequire.resolve(name);
+  if (incompatible || (name === "typescript" && hasTypeScript)) pluginRequire.resolve(name);
   else assert.throws(() => pluginRequire.resolve(name), { code: "MODULE_NOT_FOUND" });
 }
 const loads = { typescript: 0, "@typescript-eslint/parser": 0 };

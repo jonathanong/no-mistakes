@@ -19,9 +19,9 @@ npm install --save-dev typescript @typescript-eslint/parser
 ```
 
 These are optional peer dependencies. This fallback requires TypeScript 5 or
-later for Bundler module resolution. With older TypeScript or either peer
-unavailable, calls that rely on this cross-file proof are reported as unproven.
-Same-file proofs and explicitly configured awaiting-consumer
+later for Bundler module resolution. With older TypeScript or missing or
+incompatible tooling, calls that rely on this cross-file proof are reported as
+unproven. Same-file proofs and explicitly configured awaiting-consumer
 contracts continue to work. When ESLint provides a typed TypeScript program,
 the rule continues to use that program for its typed proof.
 
