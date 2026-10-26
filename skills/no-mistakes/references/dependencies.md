@@ -2,6 +2,14 @@
 
 Find every file that the given file(s) transitively import.
 
+For a persistent production-to-test boundary, configure
+[`forbidden-dependencies`](../../../docs/rules/forbidden-dependencies.md#glob-semantics)
+and run `no-mistakes check --root /path/to/project --format json`. Its glob
+`roots` and `excludeRoots` select origins, `forbiddenFiles` matches transitive
+targets, and `exceptions: [{ roots, allowedFiles }]` permits file targets only
+for matching origins. An allowed intermediate helper does not hide a different
+forbidden dependency further along the path.
+
 ## When to use a different tool
 
 - Need a file's exported/imported **symbol list** (its public API) → `no-mistakes symbols`, not `no-mistakes dependencies`.

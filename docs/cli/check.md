@@ -8,6 +8,12 @@ Enabled TS/JS checks share one source inventory and one parse per file for their
 combined fact demand. Resolution results, including unresolved imports, are
 memoized within the request. Analysis data is discarded when the request ends.
 
+Configure [`forbidden-dependencies`](../rules/forbidden-dependencies.md#glob-semantics)
+with glob `roots`, `excludeRoots`, and `forbiddenFiles` to keep production code
+from reaching tests transitively. Per-root `exceptions` allow specified file
+targets without pruning other reachable dependencies. The CLI uses the shared
+canonical graph and resolver for these checks.
+
 The `postgres-require-query-annotation` rule traces straight-line SQL helpers and
 callback forwarding. Unknown leading SQL reports by default; use the rule option
 `unanalyzableSql: ignore` explicitly to skip opaque executor arguments. Findings
