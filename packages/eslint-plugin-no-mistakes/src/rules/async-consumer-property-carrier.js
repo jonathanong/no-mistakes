@@ -133,4 +133,4 @@ function adoptReturned(call, mode, property, context, api, seen = new WeakSet())
   return adoptNode(value, property, context, mode.shape, api, seen);
 }
 
-module.exports = { adoptNode, adoptReturned, intersectShapes };
+module.exports = { adoptNode, adoptReturned, followConst, intersectShapes };

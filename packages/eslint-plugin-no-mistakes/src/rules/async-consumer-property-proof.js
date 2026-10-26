@@ -1,6 +1,11 @@
 "use strict";
 const { unwrapTransparentParent } = require("./async-ast");
 const { adoptNode, intersectShapes } = require("./async-consumer-property-carrier");
+const {
+  destructureMode,
+  spreadPreserves,
+  unwrapCopyLogical,
+} = require("./async-consumer-copy-spellings");
 const { resolveVariable, memberPropertyName } = require("./async-target-bindings");
 const { localBodySafe } = require("./async-consumer-local-proof");
 
@@ -34,19 +39,31 @@ function propertyBodyAwaited(fn, index, context, property, proveCall, receiverSh
     }
     return false;
   };
+  const copyApi = {
+    proveCall,
+    receiverShape,
+    propertyWritten,
+    forward: forwarded,
+    lexicalCallback,
+    variable,
+  };
   const safe = variable.references
     .filter((ref) => !ref.init)
     .every((ref) => {
       if (ref.isWrite()) return false;
       const value = unwrapTransparentParent(ref.identifier);
+      const destructured = destructureMode(value, property, context, shape, copyApi, seen);
+      if (destructured === "safe") return true;
+      if (destructured !== null) {
+        count++;
+        return note(destructured);
+      }
       const member = value.parent;
       if (member?.type === "MemberExpression" && member.object === value) {
         const name = memberPropertyName(member);
-        if (
-          name === null ||
-          member.optional ||
-          ["__proto__", "constructor", "prototype"].includes(name)
-        )
+        if (name === null || ["__proto__", "constructor", "prototype"].includes(name)) return false;
+        // An optional read is the supplied callback only on the left of ?? or ||.
+        if (member.optional && unwrapCopyLogical(member) === unwrapTransparentParent(member))
           return false;
         // Runtime writes invalidate the supplied receiver shape, even for siblings.
         if (propertyWritten(member)) return false;
@@ -65,13 +82,7 @@ function propertyBodyAwaited(fn, index, context, property, proveCall, receiverSh
         }
         count++;
         if (!lexicalCallback(member, fn)) return false;
-        let selected = unwrapTransparentParent(member);
-        if (
-          selected.parent?.type === "LogicalExpression" &&
-          selected.parent.operator === "??" &&
-          selected.parent.left === selected
-        )
-          selected = unwrapTransparentParent(selected.parent);
+        const selected = unwrapCopyLogical(member);
         const invocation = selected.parent;
         if (invocation?.type === "CallExpression" && invocation.callee === selected)
           return note(!invocation.optional && awaited(invocation));
@@ -148,19 +159,7 @@ function forwarded(
   if (value.parent?.type === "SpreadElement") {
     const spread = value.parent;
     const object = spread.parent;
-    if (
-      object.type !== "ObjectExpression" ||
-      object.properties.some(
-        (entry) =>
-          entry !== spread &&
-          (entry.type !== "Property" ||
-            entry.computed ||
-            entry.method ||
-            entry.kind !== "init" ||
-            (entry.key.name ?? entry.key.value) === property),
-      )
-    )
-      return false;
+    if (!spreadPreserves(object, spread, property)) return false;
     shape = receiverShape(object, context, variable, shape);
     argument = unwrapTransparentParent(object);
   } else if (property === null && value.parent?.type === "Property") {

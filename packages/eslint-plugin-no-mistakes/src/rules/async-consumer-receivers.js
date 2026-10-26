@@ -5,6 +5,7 @@ const {
   memberPropertyName,
   stableConstInitializer,
 } = require("./async-target-bindings");
+const { logicalCopyLeft } = require("./async-consumer-copy-spellings");
 const { localFunction } = require("./async-consumer-local-proof");
 const { importedFunction } = require("./async-consumer-imported-proof");
 
@@ -14,8 +15,8 @@ function createReceiverProof(state) {
   const facts = new WeakMap();
   function safe(value, context, parameter, inherited, supplied) {
     value = unwrapExpression(value);
-    if (value.type === "LogicalExpression" && value.operator === "??")
-      return safe(value.left, context, parameter, inherited, supplied);
+    const copied = logicalCopyLeft(value);
+    if (copied) return safe(copied, context, parameter, inherited, supplied);
     if (
       value.type === "MemberExpression" &&
       value.object.type === "Identifier" &&
