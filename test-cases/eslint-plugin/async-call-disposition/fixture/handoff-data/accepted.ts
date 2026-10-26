@@ -13,3 +13,5 @@ const absent: typeof enqueue = () => enqueue();
 void start({ enqueue: absent, compute });
 const unary: typeof enqueue = () => enqueue();
 void start({ enqueue: unary, now: new Date(-1), 'compute': compute });
+import { droppedWithData } from './pipeline';
+const dropped: typeof enqueue = () => enqueue(); droppedWithData({ enqueue: dropped, now: new Date(0) });

@@ -30,3 +30,8 @@ export function nestedCallback(options: Dependencies & { holder?: { fire(): void
   return options;
 }
 declare function opaque(value: unknown): void;
+export function droppedWithData(options: Options) {
+  const handler = () => { void (options.now ?? new Date()).getTime(); finalDrop({ enqueue: options.enqueue ?? enqueue }); };
+  return handler;
+}
+function finalDrop(dependencies: { enqueue: typeof enqueue }) { dependencies.enqueue(); }

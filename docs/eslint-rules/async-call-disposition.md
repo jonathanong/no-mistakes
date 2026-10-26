@@ -427,6 +427,15 @@ As with the imported-body proof, optional proof peers must be installed for
 cross-file declarations. Without them, returning callbacks passed to unproven
 slots still report; array aggregate disposition itself needs no proof peers.
 
+Fresh dependency literals can also establish harmless metadata reads. A field
+known to be absent can be checked or optionally read without invoking a supplied
+callback. A fresh built-in `Date` with proven primitive inputs supports zero-argument
+`getTime()` and `toISOString()` reads, including a fresh-Date nullish fallback.
+Timestamp constants from built-in `Date.parse`/`Date.UTC` and literal tuple loops
+can establish those inputs. Date annotations, unknown holders, getters, aliased
+or escaped Date instances, and Object/Date/Array prototype mutation do not
+establish this proof.
+
 Every visible forwarding use must preserve that target contract. An unknown or
 untyped destination, receiver mutation, an unsafe sibling method, a custom
 prototype, `eval`, or `arguments` keeps the callback unproven. Returned carriers

@@ -18,6 +18,7 @@ export const cases = {
   "object-prototype.ts": [3, 4],
   "shadowed-date.ts": [3, 4],
   "array-prototype.ts": [3, 7],
+  "pipeline.ts": [37],
 };
 export function realGate(typeAware) {
   const result = spawnSync(
@@ -25,6 +26,7 @@ export function realGate(typeAware) {
     [
       resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
       ...(typeAware ? ["--type-aware"] : []),
+      "--deny-warnings",
       "--config",
       resolve(root, ".oxlintrc.json"),
       "--format",

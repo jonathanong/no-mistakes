@@ -51,6 +51,18 @@ export function realDrop12(installed) {
         "intersection-caller.ts": range(installed ? 5 : 3, 13),
         "intersection-consumers.ts": installed ? [5] : [],
       },
+      "handoff-data": {
+        "accepted.ts": installed ? [] : [5, 10, 12, 14, 17],
+        "controls.ts": installed
+          ? [7, 9, 13, 17, 19, 22, 23, 24, 26, 30]
+          : [7, 9, 13, 17, 19, 22, 24, 26, 30],
+        "depth.ts": [37],
+        "date-prototype.ts": installed ? [3, 4] : [3],
+        "object-prototype.ts": installed ? [3, 4] : [3],
+        "shadowed-date.ts": installed ? [3, 4] : [3],
+        "array-prototype.ts": installed ? [3, 7] : [3],
+        "pipeline.ts": installed ? [37] : [],
+      },
     };
     for (const [name, files] of Object.entries(cases)) {
       const root = resolve(isolated, name);
