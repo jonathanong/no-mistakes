@@ -1,0 +1,6 @@
+# no-mistakes-disable-file github-actions-job-timeouts
+# Saved fixture keeps audit findings visible until the shared suppression pass.
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps: []

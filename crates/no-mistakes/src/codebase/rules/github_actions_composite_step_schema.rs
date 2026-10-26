@@ -43,6 +43,7 @@ pub(crate) struct Options {
 }
 
 struct CompiledOptions {
+    defer_suppression: bool,
     include: Vec<String>,
     allowed_keys: HashSet<String>,
     extra_forbidden_keys: HashSet<String>,
@@ -68,10 +69,24 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    check_with_files_and_sources_deferred(root, config, all_files, sources, false)
+}
+
+pub(crate) fn check_with_files_and_sources_deferred(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
     super::run_selected_workflow_rule(
         super::SourcedRuleContext::new(root, config, all_files, sources),
         RULE_ID,
-        compile_options,
+        |opts| {
+            let mut compiled = compile_options(opts);
+            compiled.defer_suppression = defer_suppression;
+            compiled
+        },
         |opts| &opts.include,
         scan_files,
     )
@@ -88,6 +103,7 @@ fn compile_options(opts: Options) -> CompiledOptions {
         opts.allowed_keys.into_iter().collect()
     };
     CompiledOptions {
+        defer_suppression: false,
         include,
         allowed_keys,
         extra_forbidden_keys: opts.extra_forbidden_keys.into_iter().collect(),
@@ -110,3 +126,6 @@ fn scan_files(
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod deferred_tests;

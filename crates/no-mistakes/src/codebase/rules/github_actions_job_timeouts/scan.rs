@@ -14,7 +14,9 @@ pub(super) fn check_file(
     let Some(source) = super::super::read_source(sources, path) else {
         return Vec::new();
     };
-    if crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID) {
+    if !opts.defer_suppression
+        && crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
+    {
         return Vec::new();
     }
     let mut findings = match serde_yaml::from_str::<Value>(&source) {
@@ -28,7 +30,9 @@ pub(super) fn check_file(
             target: None,
         }],
     };
-    super::super::suppress_rule_findings_with_source(&mut findings, &source);
+    if !opts.defer_suppression {
+        super::super::suppress_rule_findings_with_source(&mut findings, &source);
+    }
     findings
 }
 pub(super) fn check_parsed(

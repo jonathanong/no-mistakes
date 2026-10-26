@@ -37,6 +37,7 @@ pub(crate) struct AllowEntry {
 }
 
 struct CompiledOptions {
+    defer_suppression: bool,
     include: Vec<String>,
     max_minutes: Option<u64>,
     reject_step_exceeding_job: bool,
@@ -59,8 +60,19 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    check_with_files_and_sources_deferred(root, config, all_files, sources, false)
+}
+
+pub(crate) fn check_with_files_and_sources_deferred(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
     super::run_rule_applications(config, RULE_ID, |rule| {
         let mut compiled = compile_options(rule.try_rule_options()?);
+        compiled.defer_suppression = defer_suppression;
         compiled.partner_cap = effort::certified_cap(config, rule)?;
         let (selected, roots) =
             super::selected_rule_files_with_roots(root, config, rule, all_files)?;
@@ -72,6 +84,7 @@ pub(crate) fn check_with_files_and_sources(
 fn compile_options(opts: Options) -> CompiledOptions {
     let include = super::configured_includes(opts.include, DEFAULT_INCLUDE);
     CompiledOptions {
+        defer_suppression: false,
         include,
         max_minutes: opts.max_minutes,
         partner_cap: None,
@@ -102,3 +115,6 @@ mod tests;
 
 #[cfg(test)]
 mod effort_tests;
+
+#[cfg(test)]
+mod deferred_tests;

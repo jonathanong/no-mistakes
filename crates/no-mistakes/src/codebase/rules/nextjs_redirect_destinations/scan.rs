@@ -15,6 +15,7 @@ pub(super) struct ScanContext<'a> {
     pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
     pub(super) resolver: &'a super::PreparedConfigResolver<'a>,
     pub(super) analysis: EffectiveRuleAnalysis,
+    pub(super) defer_suppression: bool,
 }
 
 pub(super) fn scan_diagnostics(
@@ -46,6 +47,7 @@ fn scan_target(
         sources,
         resolver,
         analysis,
+        defer_suppression,
     } = *context;
     let Some(config_path) = resolve_config_path(target_root, files, opts.config_path.as_deref())
     else {
@@ -58,7 +60,7 @@ fn scan_target(
             return entry_failure(analysis, &rel, 1, format!("could not read config: {error}"));
         }
     };
-    if has_disable_file_comment(&source, RULE_ID) {
+    if !defer_suppression && has_disable_file_comment(&source, RULE_ID) {
         return AnalysisDiagnostics::default();
     }
     let app_root = resolved_app_root(target_root, opts.app_root.as_deref());
@@ -117,6 +119,7 @@ fn scan_target(
                 .as_ref()
                 .map(|(specifier, line)| (specifier.as_str(), *line)),
             analysis,
+            defer_suppression,
         },
     ));
     diagnostics

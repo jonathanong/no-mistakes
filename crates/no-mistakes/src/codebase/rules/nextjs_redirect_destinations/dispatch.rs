@@ -16,6 +16,7 @@ pub(super) fn collect(
     sources: &crate::codebase::ts_source::SourceStore,
     snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
     require_tracked_snapshot: bool,
+    defer_suppression: bool,
     resolver: &super::PreparedConfigResolver<'_>,
 ) -> Result<AnalysisDiagnostics> {
     let all: Result<Vec<AnalysisDiagnostics>> = config
@@ -48,6 +49,7 @@ pub(super) fn collect(
                         target_roots: &target_roots,
                         skip: &skip,
                         resolver,
+                        defer_suppression,
                     })
                 } else if require_tracked_snapshot {
                     Err(missing_tracked_inventory(root))
@@ -62,6 +64,7 @@ pub(super) fn collect(
                             sources,
                             analysis,
                             resolver,
+                            defer_suppression,
                         },
                     ))
                 }
@@ -76,6 +79,7 @@ pub(super) fn collect(
                         sources,
                         analysis,
                         resolver,
+                        defer_suppression,
                     },
                 ))
             }
@@ -90,6 +94,7 @@ pub(super) fn collect(
 
 struct TrackedScan<'a> {
     resolver: &'a super::PreparedConfigResolver<'a>,
+    defer_suppression: bool,
     root: &'a Path,
     config: &'a NoMistakesConfig,
     rule: &'a crate::config::v2::schema::RuleDef,
@@ -166,6 +171,7 @@ fn tracked(scan: TrackedScan<'_>) -> Result<AnalysisDiagnostics> {
                 sources: scan.sources,
                 analysis: scan.analysis,
                 resolver: scan.resolver,
+                defer_suppression: scan.defer_suppression,
             },
         ));
     }

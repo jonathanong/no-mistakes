@@ -46,6 +46,7 @@ pub(super) struct DelegateRequest<'a> {
     pub(super) include_rewrites: bool,
     pub(super) specifier: Option<(&'a str, usize)>,
     pub(super) analysis: EffectiveRuleAnalysis,
+    pub(super) defer_suppression: bool,
 }
 
 pub(super) fn append_delegated(request: &DelegateRequest<'_>) -> AnalysisDiagnostics {
@@ -95,7 +96,7 @@ pub(super) fn append_delegated(request: &DelegateRequest<'_>) -> AnalysisDiagnos
             return delegation_error(request, line, &delegated, "read", &error.to_string())
         }
     };
-    if has_disable_file_comment(&delegated_source, RULE_ID) {
+    if !request.defer_suppression && has_disable_file_comment(&delegated_source, RULE_ID) {
         return diagnostics;
     }
     let rel = relative_slash_path(request.root, &delegated);
