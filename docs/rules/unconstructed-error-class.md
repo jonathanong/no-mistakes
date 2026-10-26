@@ -226,6 +226,9 @@ extended config, does the same for ambient modules outside the analyzed file set
 That extended path is resolved the same way as the catalog, so a relative path
 that omits its json suffix, and a directory config, both load. A `types` entry that is already
 an analyzed file reuses that file's prepared facts.
+`types` inherited from a package `extends` is not read. A type-root package with
+`typesVersions` or `exports` stays advisory because that lookup does not select
+versioned or conditional entries.
 `declare module` bodies of the form `export = Namespace` supply that namespace's
 exported classes. A declared non-Error base is silent, a declared Error base still
 reports, and a specifier with no visible declaration stays advisory. Unset `types`
@@ -472,15 +475,9 @@ Reflection and some alias forms can still hide a dead class.
   remain supported. Distinct symlink spellings retain separate logical identities.
   An immutable constructor obtained by destructuring a default-imported object
   can resolve when its declaration member names a concrete class with `typeof`.
-  A bare construct signature does not identify class ancestry. Ambient module
-  specifiers are proved only from a declaration visible to the importing file:
-  an included project file, or a `types` entry on its tsconfig, including a
-  value inherited from a relative extended config. Relative `extends` paths
-  that omit a json suffix, and directory configs, resolve the same way as the catalog.
-  `export = Namespace` supplies
-  the namespace's exported classes. Unset `types` does not scan installed
-  packages. A declared non-Error base is silent, a declared Error base still
-  reports, and a missing declaration stays advisory. A choice between
+  A bare construct signature does not identify class ancestry. Ambient modules
+  require a visible declaration; see [How it works](#how-it-works) for tsconfig
+  `types` visibility and unsupported package configuration. A choice between
   a module's default export and its namespace can resolve when the default is a
   proven non-nullish class; genuinely unknown alternatives remain uncertain.
   Shadowed, reassigned, or otherwise unproven targets remain advisory unless

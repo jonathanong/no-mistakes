@@ -1,0 +1,1 @@
+{ "compilerOptions": { "types": ["fixture-conditional", "fixture-versioned"] }, "include": ["src/**/*.ts"] }

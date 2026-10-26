@@ -117,20 +117,15 @@ impl<'a> DeclarationResolver<'a> {
     }
 
     fn type_modules(&self) -> &ambient::AmbientModules {
-        if self.type_ambient.get().is_some() {
-            return self
-                .type_ambient
-                .get()
-                .expect("type-visible ambient modules were just initialized");
-        }
-        let modules = type_entries::visible_modules(
-            self.session,
-            self.root,
-            self.sources,
-            self.catalog,
-            self.facts,
-        );
-        self.type_ambient.get_or_init(|| modules)
+        self.type_ambient.get_or_init(|| {
+            type_entries::visible_modules(
+                self.session,
+                self.root,
+                self.sources,
+                self.catalog,
+                self.facts,
+            )
+        })
     }
 
     pub fn resolve(&self, specifier: &str, importer: &Path) -> Option<PathBuf> {

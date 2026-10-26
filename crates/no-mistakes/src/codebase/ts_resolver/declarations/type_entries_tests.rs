@@ -24,7 +24,10 @@ fn fixture() -> PathBuf {
 
 fn entry(root: &Path, name: &str) -> Option<PathBuf> {
     let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&[])));
-    package_entry(&root.join(name), &sources)
+    match package_entry(&root.join(name), &sources) {
+        super::PackageEntry::File(path) => Some(path),
+        super::PackageEntry::Missing | super::PackageEntry::Unsupported => None,
+    }
 }
 
 #[test]
@@ -47,7 +50,20 @@ fn type_root_package_entry_follows_manifest_types_then_index_files() {
     assert_eq!(entry(&root, "missing-types"), None);
     assert_eq!(entry(&root, "no-entry"), None);
     let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&[])));
-    assert_eq!(package_entry(&root.join("not-a-dir.txt"), &sources), None);
+    assert!(matches!(
+        package_entry(&root.join("not-a-dir.txt"), &sources),
+        super::PackageEntry::Missing
+    ));
+}
+
+#[test]
+fn conditional_type_root_packages_do_not_prove_the_legacy_types_entry() {
+    let root = fixture();
+    // The plain entry is deliberately usable: reading it would invent proof
+    // without selecting the package's versioned or conditional declaration.
+    for name in ["types-versions", "exports-field"] {
+        assert_eq!(entry(&root, name), None, "{name}");
+    }
 }
 
 fn sources() -> SourceStore {

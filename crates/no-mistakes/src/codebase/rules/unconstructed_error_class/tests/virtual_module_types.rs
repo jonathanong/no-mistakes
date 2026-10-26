@@ -1,6 +1,26 @@
 use super::*;
 
 #[test]
+fn conditional_type_roots_cannot_fall_through_to_benign_runtime_packages() {
+    let root = fixture()
+        .parent()
+        .unwrap()
+        .join("conditional-type-roots/fixture");
+    let report = diagnostic_report(&root);
+    assert!(reported_channel(&report, "rules").is_empty(), "{report}");
+    // Both legacy type entries and runtime fallbacks look benign. Neither can
+    // hide the Error base selected by an unsupported package configuration.
+    assert_eq!(
+        reported_channel(&report, "advisories"),
+        [
+            "src/conditional.ts:2 unanalyzable",
+            "src/versioned.ts:2 unanalyzable"
+        ],
+        "{report}"
+    );
+}
+
+#[test]
 fn tsconfig_visible_virtual_modules_prove_declared_bases_only() {
     let source = fixture()
         .parent()

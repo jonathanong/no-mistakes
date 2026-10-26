@@ -97,8 +97,10 @@ fn resolve_name(
         }
     };
     for type_root in roots {
-        if let Some(path) = package_entry(&type_root.join(name), sources) {
-            return Some(path);
+        match package_entry(&type_root.join(name), sources) {
+            PackageEntry::File(path) => return Some(path),
+            PackageEntry::Unsupported => return None,
+            PackageEntry::Missing => {}
         }
     }
     // The automatic `types` list does not search `node_modules` once `typeRoots`
@@ -118,27 +120,41 @@ fn default_type_roots(dir: &Path) -> Vec<PathBuf> {
         .collect()
 }
 
-fn package_entry(dir: &Path, sources: &SourceStore) -> Option<PathBuf> {
+enum PackageEntry {
+    File(PathBuf),
+    Missing,
+    Unsupported,
+}
+
+fn package_entry(dir: &Path, sources: &SourceStore) -> PackageEntry {
     if !dir.is_dir() {
-        return None;
+        return PackageEntry::Missing;
     }
     if let Ok(manifest) = sources.parse_json_path(&dir.join("package.json")) {
+        // This lookup cannot select versioned or conditional declarations.
+        // Reading a legacy entry could incorrectly prove a non-Error base.
+        if manifest.get("typesVersions").is_some() || manifest.get("exports").is_some() {
+            return PackageEntry::Unsupported;
+        }
         if let Some(relative) = manifest
             .get("types")
             .or_else(|| manifest.get("typings"))
             .and_then(|value| value.as_str())
         {
             let path = normalize_path(&dir.join(relative));
-            return sources.read_path(&path).ok().map(|_| path);
+            return sources
+                .read_path(&path)
+                .map(|_| PackageEntry::File(path))
+                .unwrap_or(PackageEntry::Missing);
         }
     }
     for name in ["index.d.ts", "index.d.mts", "index.d.cts"] {
         let path = normalize_path(&dir.join(name));
         if sources.read_path(&path).is_ok() {
-            return Some(path);
+            return PackageEntry::File(path);
         }
     }
-    None
+    PackageEntry::Missing
 }
 
 #[cfg(test)]
