@@ -20,24 +20,41 @@ describe.skipIf(process.platform !== "linux")("public context, options and neste
       expect(result.forcedCleanup).toBe(false);
     },
   );
-  it.each(["inherited", "non-enumerable"])(
-    "preserves native registrations when the SDK ignores %s timeout properties",
-    async (kind) => {
-      const result = await fixture(
-        fixtureTemplate("review-context-options.test-template-3.txt", [
-          kind === "inherited"
-            ? fixtureTemplate("review-context-options.test-extra-template-4.txt")
-            : fixtureTemplate("review-context-options.test-extra-template-3.txt"),
-          kind === "inherited"
-            ? fixtureTemplate("review-context-options.test-extra-template-2.txt")
-            : fixtureTemplate("review-context-options.test-extra-template-1.txt"),
-        ]),
-      );
-      expect(result.code, result.output).toBe(0);
-      expect(result.marker).toBe("continued");
-      expect(result.forcedCleanup).toBe(false);
-    },
-  );
+  it("rejects an enumerable inherited timeout that Vitest copies onto the task", async () => {
+    const result = await fixture(
+      fixtureTemplate("review-context-options.test-template-3.txt", [
+        fixtureTemplate("review-context-options.test-extra-template-4.txt"),
+        fixtureTemplate("review-context-options.test-extra-template-5.txt"),
+      ]),
+    );
+    expect(result.code, result.output).toBe(1);
+    expect(result.output).toContain(
+      "Vitest resolved test timeout must be positive, finite and at most 30000 ms",
+    );
+    expect(result.forcedCleanup).toBe(false);
+  });
+  it("reports a getter Vitest reads from an inherited timeout", async () => {
+    const result = await fixture(
+      fixtureTemplate("review-context-options.test-template-3.txt", [
+        fixtureTemplate("review-context-options.test-extra-template-5.txt"),
+        fixtureTemplate("review-context-options.test-extra-template-2.txt"),
+      ]),
+    );
+    expect(result.code, result.output).toBe(1);
+    expect(result.output).toContain("IGNORED_GETTER_READ");
+    expect(result.forcedCleanup).toBe(false);
+  });
+  it("preserves native registrations when the SDK ignores non-enumerable timeout properties", async () => {
+    const result = await fixture(
+      fixtureTemplate("review-context-options.test-template-3.txt", [
+        fixtureTemplate("review-context-options.test-extra-template-3.txt"),
+        fixtureTemplate("review-context-options.test-extra-template-1.txt"),
+      ]),
+    );
+    expect(result.code, result.output).toBe(0);
+    expect(result.marker).toBe("continued");
+    expect(result.forcedCleanup).toBe(false);
+  });
   it("preserves valid hooks on a returned replacement context", async () => {
     const result = await fixture(
       fixtureSource("review-context-options.test-2.txt"),

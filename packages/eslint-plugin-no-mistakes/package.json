@@ -25,7 +25,7 @@
     "@vitest/coverage-v8": "^5.0.5",
     "eslint": "^10.13.0",
     "oxlint": "^1.88.0",
-    "typescript": "^7.0.2",
+    "typescript": "^6.0.3",
     "vitest": "^5.0.5"
   },
   "peerDependencies": {
@@ -43,5 +43,6 @@
   },
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24"
-  }
+  },
+  "//": "typescript stays on 6.0.3. typescript-eslint does not support TypeScript 7. https://github.com/typescript-eslint/typescript-eslint/issues/10940"
 }

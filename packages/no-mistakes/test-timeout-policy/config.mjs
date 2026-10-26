@@ -14,7 +14,9 @@ export function assertTimeoutConfig(config, maximum = 30_000) {
 }
 /** Preserve SDK option/property semantics while capturing one validated deadline. */
 export function snapshotTimeoutOptions(options, label, maximum = 30_000, nullInherits = false) {
-  // Vitest copies registration options with object spread, ignoring inherited/hidden keys.
+  // Vitest 5.0.5 assignDefined copies enumerable keys with for-in, including
+  // inherited ones. Non-enumerable keys stay unread. Own enumerable timeouts are
+  // validated here; an inherited timeout is checked when the task timeout resolves.
   if (!Object.prototype.propertyIsEnumerable.call(options, "timeout")) return options;
   const timeout = Reflect.get(options, "timeout");
   if (timeout !== undefined && (timeout !== null || !nullInherits))
