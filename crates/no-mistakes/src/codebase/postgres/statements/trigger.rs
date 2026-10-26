@@ -1,7 +1,7 @@
 use super::{SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod};
 use crate::codebase::postgres::schema::relation_name;
 use sqlparser::ast::{
-    CreateTrigger, Spanned, Statement, TriggerEvent, TriggerObject, TriggerObjectKind,
+    CreateTrigger, DropTrigger, Spanned, Statement, TriggerEvent, TriggerObject, TriggerObjectKind,
     TriggerPeriod,
 };
 
@@ -51,12 +51,9 @@ fn from_trigger(
 
 pub(super) fn from_drop(
     tokens: &[sqlparser::tokenizer::TokenWithSpan],
-    statement: &Statement,
-) -> Option<SqlTriggerFact> {
-    let Statement::DropTrigger(drop) = statement else {
-        return None;
-    };
-    Some(SqlTriggerFact {
+    drop: &DropTrigger,
+) -> SqlTriggerFact {
+    SqlTriggerFact {
         table: drop
             .table_name
             .as_ref()
@@ -74,7 +71,7 @@ pub(super) fn from_drop(
         name: relation_name(&drop.trigger_name),
         removed: true,
         source_path: std::path::PathBuf::new(),
-    })
+    }
 }
 
 fn from_event(event: &TriggerEvent) -> SqlTriggerEvent {

@@ -64,3 +64,34 @@ fn drop_without_a_table_matches_the_trigger_name() {
     let found = installed::at(&triggers, &file.path, file.inserts[0].line);
     assert!(found.is_empty(), "{found:?}");
 }
+
+#[test]
+fn unpositioned_create_applies_beside_positioned_events() {
+    let created = positioned(
+        "CREATE TRIGGER items_before_insert BEFORE INSERT ON items FOR EACH ROW EXECUTE FUNCTION audit();",
+        "sql/001.sql",
+    );
+    let mut dropped = created.clone();
+    dropped.removed = true;
+    dropped.source_path = PathBuf::from("sql/002.sql");
+    let mut always = created.clone();
+    always.source_path.clear();
+    always.name = "other_trigger".into();
+    let mut ignored = always.clone();
+    ignored.removed = true;
+    ignored.name = "gone".into();
+    let mut file = extract_sql_statement_facts(
+        "INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING;",
+    );
+    file.path = PathBuf::from("sql/003.sql");
+    let triggers = [created, dropped, always, ignored];
+    let found = installed::at(&triggers, &file.path, file.inserts[0].line);
+    assert_eq!(
+        found
+            .iter()
+            .map(|trigger| trigger.name.as_str())
+            .collect::<Vec<_>>(),
+        ["other_trigger"],
+        "{found:?}"
+    );
+}

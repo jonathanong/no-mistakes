@@ -244,3 +244,18 @@ fn replaced_trigger_uses_the_definition_installed_at_the_insert() {
     let root = fixture("pass-trigger-replaced-before-insert");
     assert!(run(&root).is_empty());
 }
+
+#[test]
+fn unprepared_scan_still_flags_a_live_trigger() {
+    let root = fixture("fail-live-before-insert-trigger");
+    let files = sql_files(&root, &["001-trigger.sql", "002-insert.sql"]);
+    let sources = super::super::source_store_for_files(&files);
+    let findings =
+        check_with_files_and_sources(&root, &default_config(), &files, &sources).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("fires before conflict checks")),
+        "{findings:?}"
+    );
+}
