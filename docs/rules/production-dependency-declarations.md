@@ -38,8 +38,9 @@ rules:
 
 `workspaceRoots` is required and must list at least one root; it is not
 inferred from the check root, so an omitted or empty value is a configuration
-error. That finding is reported on the loaded config file, including a path
-passed with `--config`, at the rule entry's line. `allowedFields` and
+error. An omitted option is reported on the loaded config file, including a
+path passed with `--config`, at the rule entry's line. An explicit empty
+`workspaceRoots` list is reported on that option's line. `allowedFields` and
 `testFilePatterns` default to the values shown above when omitted.
 
 `workspaceRoots` also bounds which files the scan can see at all, including

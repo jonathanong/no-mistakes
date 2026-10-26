@@ -99,7 +99,7 @@ fn check_rule_application(
     }
 
     let mut source_files = HashSet::new();
-    for pattern in &options.source_globs {
+    for (index, pattern) in options.source_globs.iter().enumerate() {
         match super::matching_files(
             root,
             std::slice::from_ref(pattern),
@@ -108,14 +108,14 @@ fn check_rule_application(
         ) {
             Ok(matches) if matches.is_empty() => findings.push(config_finding(
                 anchor,
-                anchor.listed_line("sourceGlobs", &options.source_globs, pattern),
+                anchor.option_item_line("sourceGlobs", index),
                 &format!("sourceGlobs pattern `{pattern}` matched no files"),
                 Some(pattern.clone()),
             )),
             Ok(matches) => source_files.extend(matches),
             Err(error) => findings.push(config_finding(
                 anchor,
-                anchor.invalid_glob_line("sourceGlobs", &options.source_globs),
+                anchor.option_item_line("sourceGlobs", index),
                 &format!("invalid sourceGlobs pattern `{pattern}`: {error}"),
                 Some(pattern.clone()),
             )),
@@ -124,7 +124,7 @@ fn check_rule_application(
 
     let mut entrypoint_paths = Vec::new();
     let mut entrypoint_labels = Vec::new();
-    for configured in &options.entrypoints {
+    for (index, configured) in options.entrypoints.iter().enumerate() {
         let path = paths::resolve_entrypoint(root, configured);
         if path
             .as_ref()
@@ -132,7 +132,7 @@ fn check_rule_application(
         {
             findings.push(config_finding(
                 anchor,
-                anchor.listed_line("entrypoints", &options.entrypoints, configured),
+                anchor.option_item_line("entrypoints", index),
                 &format!("entrypoint `{configured}` does not exist"),
                 Some(configured.clone()),
             ));

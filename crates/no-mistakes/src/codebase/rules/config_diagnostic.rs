@@ -33,12 +33,9 @@ impl ConfigAnchor {
             .loaded_config_path
             .relative_to(root)
             .unwrap_or_else(|| FALLBACK_FILE.to_string());
-        // The request store owns the read. Callers outside that session parse
-        // the loaded file directly so both paths report the same line.
-        let locations = match sources {
-            Some(sources) => sources.config_locations(path),
-            None => read_locations(path),
-        };
+        // SourceStore owns the read. Without the request store the path is
+        // still reported and the line stays 1.
+        let locations = sources.and_then(|sources| sources.config_locations(path));
         // `rule_applications` borrows `config.rules`, so identity is the
         // authored sequence index. A clone is not an authored entry.
         let index = config
@@ -128,11 +125,6 @@ impl ConfigAnchor {
             .or_else(|| locations.line(&rule))
             .unwrap_or(1)
     }
-}
-
-fn read_locations(path: &Path) -> Option<Arc<ConfigLocations>> {
-    let source = std::fs::read_to_string(path).ok()?;
-    ConfigLocations::parse(&source, path).map(Arc::new)
 }
 
 #[cfg(test)]
