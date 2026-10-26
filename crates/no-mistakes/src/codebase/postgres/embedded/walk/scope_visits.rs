@@ -14,6 +14,7 @@ impl<'a> ScopeVisitor<'a> {
     }
 
     pub(super) fn walk_function_scope(&mut self, function: &ast::Function<'a>, flags: ScopeFlags) {
+        self.enter_plain_function(function.id.as_ref().map(|id| id.name.as_str()));
         self.push_scope();
         self.record_params(&function.params);
         // A named function expression shadows outer helpers only in its own
@@ -22,10 +23,10 @@ impl<'a> ScopeVisitor<'a> {
         if function.r#type == ast::FunctionType::FunctionExpression {
             if let Some(id) = &function.id {
                 self.bind_self_name(id.name.as_str());
+                self.alias_plain_self(id.name.as_str());
             }
         }
         self.enter_function();
-        self.enter_plain_function(function.id.as_ref().map(|id| id.name.as_str()));
         walk::walk_function(self, function, flags);
         self.leave_plain_function();
         self.leave_function();

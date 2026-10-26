@@ -6,30 +6,33 @@ use calls::walk_calls;
 use oxc_ast::ast::{Expression, ReturnStatement};
 use oxc_span::GetSpan;
 
+type FunctionKey = (u32, String);
+
 #[derive(Default)]
 pub(super) struct PlainState {
-    pub(super) pending_name: Option<String>,
-    names: Vec<Option<String>>,
-    reached: crate::fx::FxHashSet<String>,
+    pub(super) pending_name: Option<FunctionKey>,
+    names: Vec<Option<FunctionKey>>,
+    reached: crate::fx::FxHashSet<FunctionKey>,
     returns: Vec<DeferredReturn>,
     edges: Vec<ReturnEdge>,
+    aliases: crate::fx::FxHashMap<FunctionKey, FunctionKey>,
 }
 
 struct DeferredReturn {
-    owner: String,
+    owner: FunctionKey,
     line: u32,
     sql: String,
 }
 
 struct ReturnEdge {
-    owner: String,
-    calls: Vec<String>,
+    owner: FunctionKey,
+    calls: Vec<FunctionKey>,
 }
 
 impl ScopeVisitor<'_> {
     pub(super) fn enter_plain_function(&mut self, explicit: Option<&str>) {
         let pending = self.plain.pending_name.take();
-        let name = explicit.map(str::to_string).or(pending);
+        let name = pending.or_else(|| explicit.map(|name| self.plain_key(name)));
         self.plain.names.push(name);
     }
 
@@ -40,19 +43,19 @@ impl ScopeVisitor<'_> {
     pub(super) fn arm_plain_binding(
         &mut self,
         declaration: &oxc_ast::ast::VariableDeclarator<'_>,
-    ) -> Option<String> {
+    ) -> Option<FunctionKey> {
         let saved = self.plain.pending_name.take();
         if let (oxc_ast::ast::BindingPattern::BindingIdentifier(name), Some(init)) =
             (&declaration.id, &declaration.init)
         {
             if is_direct_function(init) {
-                self.plain.pending_name = Some(name.name.to_string());
+                self.plain.pending_name = Some(self.plain_key(name.name.as_str()));
             }
         }
         saved
     }
 
-    pub(super) fn restore_plain_binding(&mut self, saved: Option<String>) {
+    pub(super) fn restore_plain_binding(&mut self, saved: Option<FunctionKey>) {
         self.plain.pending_name = saved;
     }
 
@@ -99,10 +102,9 @@ impl ScopeVisitor<'_> {
     }
 
     pub(super) fn note_sql_expression(&mut self, expression: &Expression<'_>) {
-        let reached = &mut self.plain.reached;
-        walk_calls(expression, &mut |name| {
-            reached.insert(name.to_string());
-        });
+        let mut keys = Vec::new();
+        walk_calls(expression, &mut |name| keys.push(self.plain_key(name)));
+        self.plain.reached.extend(keys);
     }
 
     pub(super) fn flush_plain_returns(&mut self) {
@@ -130,18 +132,36 @@ impl ScopeVisitor<'_> {
             }
         }
     }
-
-    fn current_plain_name(&self) -> Option<&str> {
-        self.plain.names.last().and_then(|name| name.as_deref())
+    fn current_plain_name(&self) -> Option<&FunctionKey> {
+        self.plain.names.last().and_then(Option::as_ref)
     }
 
+    pub(super) fn alias_plain_self(&mut self, name: &str) {
+        if let Some(owner) = self.current_plain_name().cloned() {
+            let key = (
+                *self.member_query_proof.scope_ids.last().expect("scope"),
+                name.to_string(),
+            );
+            self.plain.aliases.insert(key, owner);
+        }
+    }
+
+    fn plain_key(&self, name: &str) -> FunctionKey {
+        let index = self
+            .scopes
+            .iter()
+            .rposition(|scope| scope.contains_key(name))
+            .unwrap_or(0);
+        let key = (self.member_query_proof.scope_ids[index], name.to_string());
+        self.plain.aliases.get(&key).cloned().unwrap_or(key)
+    }
     fn defer_plain_return(&mut self, start: u32, sql: String) {
         let Some(owner) = self.current_plain_name() else {
             return;
         };
         let line = crate::codebase::ts_source::byte_offset_to_line(self.source, start as usize);
         self.plain.returns.push(DeferredReturn {
-            owner: owner.to_string(),
+            owner: owner.clone(),
             line,
             sql,
         });
@@ -152,12 +172,12 @@ impl ScopeVisitor<'_> {
             return;
         };
         let mut calls = Vec::new();
-        walk_calls(argument, &mut |name| calls.push(name.to_string()));
+        walk_calls(argument, &mut |name| calls.push(self.plain_key(name)));
         if calls.is_empty() {
             return;
         }
         self.plain.edges.push(ReturnEdge {
-            owner: owner.to_string(),
+            owner: owner.clone(),
             calls,
         });
     }

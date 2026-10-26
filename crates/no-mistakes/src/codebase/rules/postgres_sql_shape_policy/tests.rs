@@ -424,3 +424,6 @@ mod predicate_escaping;
 #[cfg(test)]
 mod negated_keysets;
 mod semantic_zero;
+
+#[path = "plain_return_identity_tests.rs"]
+mod plain_return_identity;

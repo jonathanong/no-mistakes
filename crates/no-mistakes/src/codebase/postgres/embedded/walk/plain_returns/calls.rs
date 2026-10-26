@@ -40,6 +40,7 @@ pub(super) fn walk_calls(expression: &Expression<'_>, visit: &mut impl FnMut(&st
                 walk_calls(item, visit);
             }
         }
+        Expression::AwaitExpression(value) => walk_calls(&value.argument, visit),
         _ => {}
     }
 }
