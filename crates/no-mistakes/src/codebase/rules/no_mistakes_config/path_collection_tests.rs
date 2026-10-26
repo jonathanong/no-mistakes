@@ -75,3 +75,39 @@ rules:
         "an entry without files is not a path: {fields:?}"
     );
 }
+
+#[test]
+fn forbidden_dependency_paths_keep_globs_and_nested_exception_locations() {
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+rules:
+  - rule: forbidden-dependencies
+    options:
+      roots: ["backend/[as]*/**/*.mts", backend/api]
+      excludeRoots: [backend/**/*.test.mts]
+      forbiddenFiles: ["tests/[ab].mts"]
+      exceptions:
+        - roots: [ci/check-*.mts]
+          allowedFiles: ["tests/[ab].mts"]
+"#,
+    )
+    .unwrap();
+    let refs = super::paths::references(&config);
+    assert_eq!(refs.len(), 6);
+    for reference in &refs {
+        let expected = if reference.field.ends_with("allowedFiles[0]")
+            || reference.field.ends_with("forbiddenFiles[0]") {
+            super::paths::Kind::Glob
+        } else if reference.value == "backend/api" {
+            super::paths::Kind::Directory
+        } else {
+            super::paths::Kind::Selector
+        };
+        assert!(reference.kind == expected, "{}", reference.field);
+    }
+    assert_eq!(refs[4].field, "rules[0].options.exceptions[0].roots[0]");
+    assert_eq!(
+        refs[5].field,
+        "rules[0].options.exceptions[0].allowedFiles[0]"
+    );
+}

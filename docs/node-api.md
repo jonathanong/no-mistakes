@@ -3,6 +3,14 @@
 The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it for repeated structured queries without subprocess overhead.
 
+`check({ root, config })` and `{ type: "check", config }` reports in
+`analyzeProject()` honor the same `forbidden-dependencies` glob roots, root
+exclusions and per-root file exceptions as the CLI. Configure them in the YAML
+file selected by `config`; the exported `ForbiddenDependenciesOptions` and
+`ForbiddenDependencyException` types describe these rule options. Dependency
+resolution and transitive paths use the shared canonical graph. See the
+[rule's glob and exception contract](rules/forbidden-dependencies.md#glob-semantics).
+
 `check()` and check reports in `analyzeProject()` apply the shared
 `unanalyzable` policy to `github-actions-checkout-credentials`: unknown
 persistence or permissions, custom tokens, and malformed YAML report by

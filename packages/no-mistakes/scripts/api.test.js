@@ -15,6 +15,23 @@ require("./api-tests/declarations-audit");
 require("./api-tests/declarations-runtime");
 
 const { assert, test, readFileSync, join, packageRoot } = require("./api-tests/context");
+test("forbidden dependency selectors and origin exceptions have public option types", () => {
+  const declarations = readFileSync(join(packageRoot, "forbidden-dependency-types.d.ts"), "utf8");
+  assert.match(declarations, /export interface ForbiddenDependencyException \{/);
+  assert.match(declarations, /export interface ForbiddenDependenciesOptions \{/);
+  assert.match(declarations, /roots: string\[\];/);
+  assert.match(declarations, /excludeRoots\?: string\[\];/);
+  assert.match(declarations, /forbiddenModules\?: string\[\];/);
+  assert.match(declarations, /forbiddenFiles\?: string\[\];/);
+  assert.match(declarations, /relationships\?: Relationship\[\];/);
+  assert.match(declarations, /exceptions\?: ForbiddenDependencyException\[\];/);
+  assert.match(declarations, /allowedFiles: string\[\];/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/forbidden-dependency-types";/,
+  );
+});
+
 test("annotation literal helpers remain an exported option and verdict profile", () => {
   for (const file of ["postgres-query-annotation-types.d.ts", "check-report-types.d.ts"]) {
     assert.match(readFileSync(join(packageRoot, file), "utf8"), /sqlLiteralHelpers\?: string\[\];/);

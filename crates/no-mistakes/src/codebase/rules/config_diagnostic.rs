@@ -65,6 +65,28 @@ impl ConfigAnchor {
         self.located(key, Some(item))
     }
 
+    pub(crate) fn nested_option_item_line(
+        &self,
+        key: &str,
+        index: usize,
+        nested_key: &str,
+        item: usize,
+    ) -> usize {
+        let Some(rule) = self.index else { return 1 };
+        let path = ConfigPath::default()
+            .key("rules")
+            .index(rule)
+            .key("options")
+            .key(key)
+            .index(index)
+            .key(nested_key)
+            .index(item);
+        self.locations
+            .as_deref()
+            .and_then(|locations| locations.line(&path))
+            .unwrap_or_else(|| self.option_item_line(key, index))
+    }
+
     pub(crate) fn listed_line(&self, key: &str, values: &[String], value: &str) -> usize {
         match values.iter().position(|item| item == value) {
             Some(index) => self.option_item_line(key, index),

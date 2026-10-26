@@ -2,6 +2,56 @@ use super::*;
 use serde_json::{json, Value};
 use std::path::PathBuf;
 
+#[test]
+fn forbidden_dependency_globs_and_dependency_reports_share_one_graph() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/forbidden-dependencies-globs/fixture"),
+    );
+    let standalone: Value = serde_json::from_str(
+        &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({"root": root}),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    let options = super::options_test_support::parse_options::<AnalyzeProjectOptions>(
+        &json!({
+            "root": root,
+            "reports": [
+                { "type": "check", "includeSuppressed": true },
+                { "type": "dependencies", "files": ["backend/services/service.mts"],
+                  "relationships": ["import"] }
+            ]
+        })
+        .to_string(),
+    )
+    .unwrap();
+    let context = context::AnalyzeProjectContext::prepare(&options).unwrap();
+    let results = options
+        .reports
+        .iter()
+        .map(|request| {
+            super::options_test_support::report_value(
+                &run_report(request, &options, &context).unwrap(),
+            )
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(results[0]["rules"], standalone["rules"]);
+    assert_eq!(results[0]["rules"].as_array().unwrap().len(), 8);
+    assert!(results[0]["suppressed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|item| item["file"] == "web/suppressed.mts"));
+    assert!(results[1]["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|item| item["path"] == "shared/testing/helper.mts"));
+    assert_eq!(context.graph_build_count(), 1);
+}
+
 fn lazy_import_root() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

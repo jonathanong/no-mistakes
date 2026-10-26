@@ -1,0 +1,14 @@
+# Bracket filenames and directories remain literal source roots.
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: ["literal[entry.mts", "literal[dir", "app/[tenant]", "backend/api/routes/*.mts"]
+      excludeRoots: ["app/[tenant]/excluded.mts"]
+      forbiddenFiles: [tests/other.mts]
+      relationships: [import]
+      exceptions:
+        - roots: ["literal[dir"]
+          allowedFiles: [shared/testing/**]

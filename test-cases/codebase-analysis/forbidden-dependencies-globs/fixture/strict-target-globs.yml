@@ -1,0 +1,13 @@
+# Existing bracket paths must not turn target glob classes into literals.
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [backend/api/clean.mts]
+      forbiddenFiles: ["app/[tenant]/entry.mts"]
+      relationships: [import]
+      exceptions:
+        - roots: [backend/api/clean.mts]
+          allowedFiles: ["app/[tenant]/entry.mts"]

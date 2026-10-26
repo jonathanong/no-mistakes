@@ -19,6 +19,10 @@ fn a_config_without_a_loaded_path_stays_on_the_conventional_line() {
     assert_eq!(finding.file, ".no-mistakes.yml");
     assert_eq!(finding.line, 1);
     assert_eq!(anchor.option_item_line("extraGeneratedColumns", 0), 1);
+    assert_eq!(
+        anchor.nested_option_item_line("exceptions", 0, "roots", 0),
+        1
+    );
 }
 
 #[test]
@@ -40,6 +44,10 @@ fn a_loaded_path_without_a_source_store_keeps_line_one() {
         "message".to_string(),
         None,
         None,
+    );
+    assert_eq!(
+        anchor.nested_option_item_line("exceptions", 0, "roots", 0),
+        1
     );
     assert_eq!(finding.file, "check.yml");
     assert_eq!(finding.line, 1);

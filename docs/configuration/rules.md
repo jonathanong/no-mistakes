@@ -32,6 +32,13 @@ project-relative components alongside export-kind selections. Use a top-level
 `include` to restrict the entire Storybook application; see
 [`require-storybook-stories`](../rules/require-storybook-stories.md#options-and-defaults).
 
+[`forbidden-dependencies`](../rules/forbidden-dependencies.md#glob-semantics)
+accepts file/directory/glob `options.roots` and `options.excludeRoots`, plus
+glob `options.forbiddenFiles`. Its `options.exceptions` entries contain `roots`
+and `allowedFiles` for origin-specific file-target exceptions. Excluding a root
+removes it as an origin, while exceptions allow only matching reachable targets
+for that origin; neither prunes transitive dependency traversal.
+
 For [`postgres-require-query-annotation`](../rules/postgres-require-query-annotation.md),
 `options.unanalyzableSql` remains an alias for `options.unanalyzable`.
 `options.unanalyzable` inherits the repository `unanalyzable` policy and
