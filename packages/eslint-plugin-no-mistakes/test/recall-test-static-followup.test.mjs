@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, it } from "vitest";
 import { __dirname, fixture, lint, messages } from "./helpers.mjs";
@@ -79,41 +80,69 @@ describe("test rule static recall follow-up", () => {
       );
     }
   });
-  it("matches real Oxlint for the saved static-shape fixtures", () => {
-    for (const [rule, file] of [
-      ["no-vitest-sequential", "static-apply.test.ts"],
-      ["no-vitest-sequential", "static-apply-controls.test.ts"],
-      ["vitest-mock-test-file-naming", "static-aliases.test.ts"],
-      ["vitest-mock-test-file-naming", "static-aliases-controls.test.ts"],
-      ["test-no-error-message-matching", "static-runner.test.ts"],
-      ["test-no-error-message-matching", "static-runner-controls.test.ts"],
-      ["no-import-only-test-files", "require-alias.test.js"],
-      ["no-import-only-test-files", "forwarded.test.js"],
-      ["no-import-only-test-files", "require-alias-controls.test.js"],
-    ]) {
+  for (const rule of [
+    "no-import-only-test-files",
+    "no-vitest-sequential",
+    "postgres-no-correlated-sql-builder",
+    "react-no-nullish-react-node",
+    "test-no-error-message-matching",
+    "vitest-mock-test-file-naming",
+  ]) {
+    it(`matches type-aware Oxlint for every supported ${rule} fixture`, () => {
       const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", rule);
+      const files = readdirSync(root, { recursive: true })
+        .filter((file) => /\.[cm]?[jt]sx?$/.test(file))
+        // Oxlint itself aborts on this TDZ cycle, even with an empty config.
+        .filter(
+          (file) => rule !== "no-import-only-test-files" || file !== "require-alias-cycle.test.js",
+        )
+        .sort();
+      assert.ok(files.length > 0);
       const result = spawnSync(
         process.execPath,
         [
           resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+          "--type-aware",
           "--config",
           resolve(root, ".oxlintrc-static-followup.json"),
           "--format",
           "json",
-          resolve(root, file),
+          ...files.map((file) => resolve(root, file)),
         ],
-        { encoding: "utf8" },
+        { encoding: "utf8", timeout: 4000, maxBuffer: 4 * 1024 * 1024 },
       );
-      const expected = lint(fixture(`${rule}/${file}`), { [`no-mistakes/${rule}`]: "error" }, file);
-      assert.equal(result.status, expected.length ? 1 : 0, `${rule}/${file}: ${result.stderr}`);
+      assert.equal(result.error, undefined, `${rule}: ${result.error}`);
+      assert.equal(result.signal, null, `${rule}: ${result.stderr}`);
       const actual = JSON.parse(result.stdout).diagnostics.filter((item) =>
         item.code.includes(rule),
       );
-      assert.deepEqual(
-        actual.map((item) => item.labels[0].span.line),
-        expected.map((item) => item.line),
-        `${rule}/${file}`,
-      );
-    }
-  });
+      for (const file of files) {
+        const expected = lint(
+          fixture(`${rule}/${file}`),
+          { [`no-mistakes/${rule}`]: "error" },
+          resolve(root, file),
+          {},
+          /\.(cjs|cts)$/.test(file)
+            ? "commonjs"
+            : file === "captured-with.js"
+              ? "script"
+              : "module",
+        );
+        assert.ok(
+          expected.every((item) => !item.fatal),
+          `${rule}/${file}: invalid fixture mode`,
+        );
+        const lines = actual
+          .filter((item) => resolve(item.filename) === resolve(root, file))
+          .map((item) => item.labels[0].span.line)
+          .sort((a, b) => a - b);
+        assert.deepEqual(
+          lines,
+          expected.map((item) => item.line).sort((a, b) => a - b),
+          `${rule}/${file}`,
+        );
+      }
+      assert.equal(result.status, actual.length ? 1 : 0, `${rule}: ${result.stderr}`);
+    });
+  }
 });
