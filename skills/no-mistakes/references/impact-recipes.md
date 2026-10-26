@@ -56,7 +56,12 @@ no-mistakes playwright check --json
 no-mistakes check --format json
 ```
 
-`no-mistakes check` only runs rules configured in `.no-mistakes.yml`. Look for
+`no-mistakes check` only runs rules configured in `.no-mistakes.yml`.
+For protected lint rules, configure `forbidden-lint-suppressions` with explicit
+`files`, `ruleIds` or `rulePrefixes`, then run `check --root <root> --format json`.
+Fix the underlying lint violation when it reports a disabled ID. TypeScript
+suppression directives and blanket disables are opt-in; comments outside the
+configured scope and directive-looking strings are not findings. Look for
 `markdown-mermaid-validation` before relying on it to validate Mermaid fences;
 for Storybook coverage, look for a configured `require-storybook-stories` rule
 or use `react usages` to confirm story imports directly.

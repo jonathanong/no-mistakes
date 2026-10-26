@@ -182,3 +182,9 @@ in rule YAML for literal default-branch names. Separate credential and ref risks
 can produce separate rows on one checkout.
 
 The opt-in [coverage-producer-assertion-owner](../rules/coverage-producer-assertion-owner.md) rule checks configured coverage producers for reachable assertions; uncertain dispatch follows `unanalyzable`.
+
+The opt-in [forbidden-lint-suppressions](../rules/forbidden-lint-suppressions.md)
+check reports protected lint rule IDs disabled by real TS/JS comments in
+configured files. It shares the invocation's AST facts and returns ordinary
+rule findings with the directive line and offending ID. Blanket lint disables
+and TypeScript suppression directives require explicit options.

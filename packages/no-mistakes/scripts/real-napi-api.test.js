@@ -8,6 +8,7 @@ const { join, resolve } = require("node:path");
 const { setTimeout: delay } = require("node:timers/promises");
 const { Worker } = require("node:worker_threads");
 const test = globalThis.test || require("node:test").test;
+require("./api-tests/forbidden-lint-suppressions-native");
 require("./integration-route-coverage.test.js");
 require("./typescript-module-api.test.js");
 require("./conditional-workspace-api.test.js");

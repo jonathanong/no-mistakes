@@ -58,6 +58,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`file-extension-policy`](file-extension-policy.md)                           | Enforce allowed or banned extensions in configured scopes.                      |
 | [`finite-set-consistency`](finite-set-consistency.md)                         | Compare finite string sets from source, paths, and YAML selectors.              |
 | [`query-reached-per-item`](query-reached-per-item.md) | Flag per-item helper calls that reach configured effect sinks. |
+| [`forbidden-lint-suppressions`](forbidden-lint-suppressions.md) | Prevent selected comment directives from disabling protected lint rules. |
 | [`forbidden-calls`](forbidden-calls.md)                                       | Prevent configured roots from invoking selected functions.                      |
 | [`coverage-producer-assertion-owner`](coverage-producer-assertion-owner.md) | Require configured coverage producers to reach assertion owners. |
 | [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)     | Require paired step and nested action timeouts for configured `uses`.       |

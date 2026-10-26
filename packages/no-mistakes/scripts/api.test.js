@@ -56,3 +56,62 @@ test("coverage assertion owner options are public and bounded", () => {
     ),
   );
 });
+
+test("forbidden lint suppression options expose exact directive choices", () => {
+  const declaration = readFileSync(join(packageRoot, "lint-suppression-types.d.ts"), "utf8");
+  assert.match(declaration, /export type ForbiddenLintSuppressionDirective\s*=/);
+  assert.match(declaration, /export interface ForbiddenLintSuppressionsOptions/);
+  for (const directive of [
+    "eslint-disable",
+    "eslint-disable-line",
+    "eslint-disable-next-line",
+    "oxlint-disable",
+    "oxlint-disable-line",
+    "oxlint-disable-next-line",
+    "@ts-ignore",
+    "@ts-expect-error",
+  ]) {
+    assert.ok(declaration.includes(`"${directive}"`));
+  }
+  for (const field of [
+    "files: string[];",
+    "ruleIds?: string[];",
+    "rulePrefixes?: string[];",
+    "directives?: ForbiddenLintSuppressionDirective[];",
+    "banBlanketDisable?: boolean;",
+    "message?: string;",
+  ]) {
+    assert.ok(declaration.includes(field));
+  }
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes("./lint-suppression-types"),
+  );
+});
+
+test("forbidden lint suppression configuration compiles from the package root", () => {
+  const { createRequire } = require("node:module");
+  const dependencyRequire = createRequire(require.resolve("@storybook/react"));
+  const ts = dependencyRequire("typescript");
+  const repositoryRoot = join(packageRoot, "..", "..");
+  const program = ts.createProgram(
+    [join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts")],
+    {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      types: [],
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      baseUrl: repositoryRoot,
+      paths: { "no-mistakes": ["packages/no-mistakes/index.d.ts"] },
+      ignoreDeprecations: "6.0",
+    },
+  );
+  assert.deepEqual(
+    ts
+      .getPreEmitDiagnostics(program)
+      .map((row) => ts.flattenDiagnosticMessageText(row.messageText, "\n")),
+    [],
+  );
+});
