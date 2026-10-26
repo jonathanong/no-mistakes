@@ -180,7 +180,7 @@ fn signal_output_waits_for_a_delayed_writer_to_flush() {
         sent,
         pending: Vec::new(),
     }));
-    output.emit_signal("signal snapshot".to_string());
+    output.emit_signal("signal snapshot".to_string(), Instant::now);
     assert_eq!(received.try_recv().unwrap(), "signal snapshot");
 }
 
@@ -235,7 +235,7 @@ fn signal_output_retries_a_full_queue_then_uses_the_same_writer() {
         std::thread::sleep(Duration::from_millis(75));
         release.send(()).unwrap();
     });
-    output.emit_signal("signal".to_string());
+    output.emit_signal("signal".to_string(), Instant::now);
     releaser.join().unwrap();
     for expected in ["first", "queued", "signal"] {
         assert_eq!(
@@ -249,7 +249,7 @@ fn signal_output_retries_a_full_queue_then_uses_the_same_writer() {
 fn signal_output_full_queue_remains_bounded_when_writer_blocks() {
     let (output, release, received) = gated_output();
     let started = std::time::Instant::now();
-    output.emit_signal("signal".to_string());
+    output.emit_signal("signal".to_string(), Instant::now);
     assert!(started.elapsed() < Duration::from_secs(1));
     release.send(()).unwrap();
     assert_eq!(

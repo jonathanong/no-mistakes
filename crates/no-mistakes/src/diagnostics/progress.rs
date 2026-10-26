@@ -121,7 +121,7 @@ impl InvocationObserver {
     #[doc(hidden)]
     pub fn render_progress_signal_stderr(&self) {
         if let (Some(line), Some(output)) = (self.render_progress_text(), self.progress_output()) {
-            output.emit_signal(line);
+            output.emit_signal(line, || self.snapshot_clock().0);
         }
     }
 

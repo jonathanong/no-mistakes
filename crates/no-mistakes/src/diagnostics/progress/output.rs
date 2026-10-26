@@ -46,21 +46,20 @@ impl ProgressOutput {
 
     /// Give a termination snapshot one total bounded chance to enter and drain
     /// the same writer queue, even if a heartbeat currently occupies it.
-    pub(in crate::diagnostics) fn emit_signal(&self, text: String) {
-        let deadline = Instant::now() + SIGNAL_OUTPUT_WAIT;
+    pub(in crate::diagnostics) fn emit_signal(&self, text: String, clock: impl Fn() -> Instant) {
+        let deadline = clock() + SIGNAL_OUTPUT_WAIT;
         let (completed, receiver) = mpsc::channel();
         let mut message = Message { text, completed };
         loop {
             match self.sender.try_send(message) {
                 Ok(()) => {
-                    let _ =
-                        receiver.recv_timeout(deadline.saturating_duration_since(Instant::now()));
+                    let _ = receiver.recv_timeout(deadline.saturating_duration_since(clock()));
                     return;
                 }
                 Err(mpsc::TrySendError::Full(pending)) => message = pending,
                 Err(mpsc::TrySendError::Disconnected(_)) => return,
             }
-            let remaining = deadline.saturating_duration_since(Instant::now());
+            let remaining = deadline.saturating_duration_since(clock());
             if remaining.is_zero() {
                 return;
             }
