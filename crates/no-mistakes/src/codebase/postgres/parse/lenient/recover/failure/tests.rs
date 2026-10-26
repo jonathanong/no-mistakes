@@ -38,3 +38,17 @@ fn canonical_capture_ignores_chunks_without_code_or_source_tokens() {
     );
     assert!(crate::codebase::postgres::migration::recovery_failures(&parsed).is_empty());
 }
+
+#[test]
+fn publication_alter_and_drop_require_complete_grammar() {
+    let root =
+        crate::test_support::rule_fixture_root("postgres-ddl-unanalyzable").join("publication");
+    for (file, valid) in [("valid.sql", true), ("malformed.sql", false)] {
+        for line in std::fs::read_to_string(root.join(file)).unwrap().lines() {
+            let tokens = Tokenizer::new(&PostgreSqlDialect {}, line.trim_end_matches(';'))
+                .tokenize_with_location()
+                .unwrap();
+            assert_eq!(super::unsupported::valid(&tokens), valid, "{line}");
+        }
+    }
+}

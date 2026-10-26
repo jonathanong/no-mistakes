@@ -143,30 +143,31 @@ test(
   },
 );
 
-test(
-  "compiled checks preserve recall policies across CJS, ESM and project reports",
-  { skip: !compiled },
-  async () => {
-    const cjs = require("../index.js");
-    const esm = await import("../index.mjs");
-    const fixtures = join(__dirname, "../../../test-cases/rules");
-    for (const [scenario, config, findings, advisories, subdirectory = ""] of [
-      ["forbidden-calls/consumer-matrix", "configs/unknown-calls-default.yml", 1, 0],
-      ["forbidden-calls/consumer-matrix", "configs/unknown-calls-finding.yml", 1, 0],
-      ["forbidden-calls/consumer-matrix", "configs/unknown-calls-ignore.yml", 0, 0],
-      ["postgres-ddl-unanalyzable", "report.yml", 22, 0],
-      ["postgres-ddl-unanalyzable", "advise.yml", 0, 22],
-      ["postgres-ddl-unanalyzable", "ignore.yml", 0, 0],
-      ["postgres-ddl-unanalyzable", "narrow.yml", 2, 0],
-      ["postgres-ddl-unanalyzable", "report.yml", 3, 0, "unsupported-valid"],
-      ["postgres-ddl-unanalyzable", "positive.yml", 1, 0, "copy"],
-      ["postgres-ddl-unanalyzable", "report.yml", 69, 0, "procedural"],
-      ["postgres-ddl-unanalyzable", "default.yml", 44, 33, "unsupported-policy"],
-      ["postgres-ddl-unanalyzable", "report.yml", 77, 0, "unsupported-policy"],
-      ["postgres-ddl-unanalyzable", "advise.yml", 0, 77, "unsupported-policy"],
-      ["postgres-ddl-unanalyzable", "ignore.yml", 0, 0, "unsupported-policy"],
-      ["postgres-ddl-unanalyzable", "override.yml", 77, 0, "unsupported-policy"],
-    ]) {
+// Each scenario independently checks its CJS, ESM, and prepared-report contract.
+for (const [scenario, config, findings, advisories, subdirectory = ""] of [
+  ["forbidden-calls/consumer-matrix", "configs/unknown-calls-default.yml", 1, 0],
+  ["forbidden-calls/consumer-matrix", "configs/unknown-calls-finding.yml", 1, 0],
+  ["forbidden-calls/consumer-matrix", "configs/unknown-calls-ignore.yml", 0, 0],
+  ["postgres-ddl-unanalyzable", "report.yml", 22, 0],
+  ["postgres-ddl-unanalyzable", "advise.yml", 0, 22],
+  ["postgres-ddl-unanalyzable", "ignore.yml", 0, 0],
+  ["postgres-ddl-unanalyzable", "narrow.yml", 2, 0],
+  ["postgres-ddl-unanalyzable", "report.yml", 3, 0, "unsupported-valid"],
+  ["postgres-ddl-unanalyzable", "positive.yml", 1, 0, "copy"],
+  ["postgres-ddl-unanalyzable", "report.yml", 69, 0, "procedural"],
+  ["postgres-ddl-unanalyzable", "default.yml", 121, 77, "unsupported-policy"],
+  ["postgres-ddl-unanalyzable", "report.yml", 198, 0, "unsupported-policy"],
+  ["postgres-ddl-unanalyzable", "advise.yml", 0, 198, "unsupported-policy"],
+  ["postgres-ddl-unanalyzable", "ignore.yml", 0, 0, "unsupported-policy"],
+  ["postgres-ddl-unanalyzable", "override.yml", 198, 0, "unsupported-policy"],
+]) {
+  test(
+    `compiled recall policy: ${scenario}/${subdirectory || "root"}/${config}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const fixtures = join(__dirname, "../../../test-cases/rules");
       const options = { root: join(fixtures, scenario, "fixture", subdirectory), config };
       const report = await cjs.check(options);
       assert.deepEqual(await esm.check(options), report);
@@ -175,6 +176,49 @@ test(
       assert.deepEqual(report.warnings, []);
       assert.equal(report.rules.length, findings, config);
       assert.equal(report.advisories.length, advisories, config);
-    }
-  },
-);
+    },
+  );
+}
+
+for (const policy of ["default", "report", "ignore", "malformed"]) {
+  test(
+    `compiled PostgreSQL 17 DDL survey: ${policy} policy across eleven schema rules`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const root = join(
+        __dirname,
+        "../../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey",
+      );
+      const malformedCount = readFileSync(join(root, "malformed/001.sql"), "utf8")
+        .trim()
+        .split("\n").length;
+      const options = { root, config: `${policy}.yml` };
+      const report = await cjs.check(options);
+      assert.deepEqual(await esm.check(options), report);
+      const prepared = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
+      assert.deepEqual(prepared.reports[0].result, report);
+      assert.deepEqual(report.warnings, []);
+      const unanalyzable = (items) =>
+        items.filter(({ message }) => message.includes("could not be analyzed"));
+      const findings = unanalyzable(report.rules);
+      const advisories = unanalyzable(report.advisories);
+      if (policy === "malformed") {
+        assert.equal(findings.length, malformedCount * 11);
+        assert.deepEqual(advisories, []);
+      } else if (policy === "ignore") {
+        assert.deepEqual(findings, []);
+        assert.deepEqual(advisories, []);
+      } else {
+        const selected = policy === "report" ? findings : advisories;
+        assert.deepEqual(policy === "report" ? advisories : findings, []);
+        // Unsupported ALTER DOMAIN must retain one diagnostic per schema rule.
+        const rules = selected
+          .filter(({ file, line }) => file === "migrations/001.sql" && line === 5)
+          .map(({ rule }) => rule);
+        assert.equal(new Set(rules).size, 11);
+      }
+    },
+  );
+}

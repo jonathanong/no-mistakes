@@ -819,6 +819,14 @@ Node ESM/CJS parity, including decoded child spans and original wrapper
 provenance. Dynamic expressions remain explicitly unsupported; see the
 [PostgreSQL source API](postgres-source-api.md).
 
+The shared Rust/native parser and asynchronous Node APIs also recognize the
+selected PostgreSQL 17 DDL forms in the
+[schema migration guide](migrations/postgres-schema-unanalyzable.md), including
+default-privilege revocations, publication options, and metadata from the saved
+statement-family survey. Recognized unsupported metadata retains diagnostics
+and advises by default across the eleven schema rules; malformed top-level SQL
+continues to report. Explicit policies and report shapes are unchanged.
+
 Procedural `DO` occurrence kinds (`utility`, `controlFlow`, `dml`,
 `dynamicExecute`, `unknown`) have the same Rust/native and asynchronous Node
 ESM/CJS projection. Nested `dml` is source text, not execution.

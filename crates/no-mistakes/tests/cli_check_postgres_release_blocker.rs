@@ -52,11 +52,11 @@ fn schema_defaults_advise_for_valid_unsupported_sql_and_report_malformed_sql() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/unsupported-policy");
     for (config, findings, advisories) in [
-        ("default.yml", 44, 33),
-        ("report.yml", 77, 0),
-        ("advise.yml", 0, 77),
+        ("default.yml", 121, 77),
+        ("report.yml", 198, 0),
+        ("advise.yml", 0, 198),
         ("ignore.yml", 0, 0),
-        ("override.yml", 77, 0),
+        ("override.yml", 198, 0),
     ] {
         let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
             .args(["check", "--format", "json", "--root"])
@@ -80,16 +80,40 @@ fn schema_defaults_advise_for_valid_unsupported_sql_and_report_malformed_sql() {
         if config == "default.yml" {
             // All eleven rules preserve malformed SQL as failures, independently
             // of the advisory-only valid statements in the same migration.
-            assert!(report["rules"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .all(|finding| { (4..=7).contains(&finding["line"].as_u64().unwrap()) }));
+            assert!(report["rules"].as_array().unwrap().iter().all(|finding| {
+                if finding["file"].as_str().unwrap().ends_with("002.sql") {
+                    (6..=12).contains(&finding["line"].as_u64().unwrap())
+                } else {
+                    (4..=7).contains(&finding["line"].as_u64().unwrap())
+                }
+            }));
             assert!(report["advisories"]
                 .as_array()
                 .unwrap()
                 .iter()
-                .all(|finding| { (1..=3).contains(&finding["line"].as_u64().unwrap()) }));
+                .all(|finding| {
+                    if finding["file"].as_str().unwrap().ends_with("002.sql") {
+                        (2..=5).contains(&finding["line"].as_u64().unwrap())
+                    } else {
+                        (1..=3).contains(&finding["line"].as_u64().unwrap())
+                    }
+                }));
         }
     }
+}
+
+#[test]
+fn literal_execute_function_loop_has_no_schema_diagnostics() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/loop-policy");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .args(["--config", "default.yml"])
+        .output()
+        .unwrap();
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(output.status.success(), "{report}");
+    assert_eq!(report["rules"], serde_json::json!([]));
+    assert_eq!(report["advisories"], serde_json::json!([]));
 }

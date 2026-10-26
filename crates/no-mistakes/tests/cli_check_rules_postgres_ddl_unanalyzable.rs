@@ -2,6 +2,100 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[test]
+fn malformed_ddl_survey_still_reports_in_all_eleven_schema_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--format", "json", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join("malformed.yml"))
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(
+        report["advisories"].as_array().unwrap().is_empty(),
+        "{report}"
+    );
+    let count = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey/malformed/001.sql"
+    ))
+    .lines()
+    .count();
+    let mut by_line = std::collections::BTreeMap::<u64, Vec<&str>>::new();
+    for finding in report["rules"].as_array().unwrap() {
+        assert!(finding["message"]
+            .as_str()
+            .unwrap()
+            .contains("could not be analyzed"));
+        by_line
+            .entry(finding["line"].as_u64().unwrap())
+            .or_default()
+            .push(finding["rule"].as_str().unwrap());
+    }
+    assert_eq!(by_line.len(), count, "{report}");
+    for rules in by_line.values_mut() {
+        rules.sort_unstable();
+        rules.dedup();
+        assert_eq!(rules.len(), 11, "{report}");
+    }
+}
+
+#[test]
+fn postgres_17_ddl_family_survey_preserves_all_schema_rule_policies() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/docs-survey");
+    for policy in ["default", "report", "ignore"] {
+        let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+            .args(["check", "--format", "json", "--root"])
+            .arg(&root)
+            .arg("--config")
+            .arg(root.join(format!("{policy}.yml")))
+            .output()
+            .unwrap();
+        let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        let unanalyzable = |field: &str| {
+            report[field]
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|item| {
+                    item["message"]
+                        .as_str()
+                        .unwrap()
+                        .contains("could not be analyzed")
+                })
+                .collect::<Vec<_>>()
+        };
+        let findings = unanalyzable("rules");
+        let advisories = unanalyzable("advisories");
+        let expected = if policy == "report" {
+            assert!(advisories.is_empty(), "{report}");
+            findings
+        } else {
+            assert!(findings.is_empty(), "{report}");
+            advisories
+        };
+        if policy == "ignore" {
+            assert!(expected.is_empty(), "{report}");
+            continue;
+        }
+        // Each of the eleven rules must retain the unsupported ALTER DOMAIN
+        // diagnostic; accepting it by silently discarding the SQL is incorrect.
+        let mut rules = expected
+            .iter()
+            .filter(|item| item["file"] == "migrations/001.sql" && item["line"] == 5)
+            .map(|item| item["rule"].as_str().unwrap())
+            .collect::<Vec<_>>();
+        rules.sort_unstable();
+        rules.dedup();
+        assert_eq!(rules.len(), 11, "{policy}: {report}");
+    }
+}
+
+#[test]
 fn procedural_bodies_are_skipped_but_unknown_sql_and_top_level_siblings_report() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/procedural");

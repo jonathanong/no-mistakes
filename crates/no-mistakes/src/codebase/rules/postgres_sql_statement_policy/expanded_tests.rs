@@ -23,14 +23,7 @@ fn every_new_kind_and_pg_variants_are_reported() {
         .filter(|finding| finding.message.contains("could not be analyzed"))
         .map(|finding| finding.target.as_deref().unwrap())
         .collect();
-    assert_eq!(
-        unanalyzable,
-        vec![
-            "CREATE DATABASE scratch OWNER postgres TEMPLATE template0 ENCODING",
-            "ALTER DATABASE app SET statement_timeout = '1s'",
-            "ALTER SYSTEM SET statement_timeout = '2s'",
-        ]
-    );
+    assert!(unanalyzable.is_empty(), "{unanalyzable:?}");
     let definite: Vec<_> = findings
         .iter()
         .filter(|finding| !finding.message.contains("could not be analyzed"))

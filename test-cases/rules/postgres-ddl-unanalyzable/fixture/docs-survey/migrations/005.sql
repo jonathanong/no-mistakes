@@ -1,0 +1,16 @@
+ALTER PUBLICATION app RENAME TO renamed;
+ALTER PUBLICATION app OWNER TO owner_role;
+ALTER PUBLICATION app SET (publish = 'insert', publish_via_partition_root = true);
+ALTER PUBLICATION app SET TABLE public.accounts, public.events;
+ALTER PUBLICATION app ADD TABLE public.accounts;
+ALTER PUBLICATION app DROP TABLE public.accounts;
+DROP PUBLICATION IF EXISTS app, other_publication CASCADE;
+DROP PUBLICATION app RESTRICT;
+CREATE PROCEDURE myproc() LANGUAGE SQL AS 'SELECT 1';
+CREATE OPERATOR === (LEFTARG=integer,RIGHTARG=integer,FUNCTION=int4eq);
+DROP OPERATOR IF EXISTS === (integer,integer);
+CREATE PUBLICATION escaped_string WITH (publish = E'insert');
+CREATE PUBLICATION dollar_string WITH (publish = $$insert$$);
+CREATE PUBLICATION unicode_string WITH (publish = U&'insert');
+CREATE PUBLICATION implicit_boolean WITH (publish_via_partition_root);
+CREATE PUBLICATION other FOR TABLE public.select;

@@ -240,3 +240,15 @@ fn plain_locked_queries_keep_complete_asts_and_function_occurrences() {
 
 #[path = "body_recovery_tests.rs"]
 mod body_recovery_tests;
+
+#[test]
+fn literal_execute_loop_headers_require_complete_commands() {
+    let path = crate::test_support::rule_fixture_root("postgres-ddl-unanalyzable")
+        .join("loop-policy/malformed.sql");
+    for line in std::fs::read_to_string(path).unwrap().lines() {
+        let tokens = Tokenizer::new(&PostgreSqlDialect {}, line)
+            .tokenize_with_location()
+            .unwrap();
+        assert!(!BodyState::default().control_chunk(&tokens), "{line}");
+    }
+}
