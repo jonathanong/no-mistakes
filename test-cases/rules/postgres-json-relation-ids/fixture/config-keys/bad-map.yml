@@ -1,0 +1,1 @@
+rules: [{rule: postgres-json-relation-ids, options: {keyColumnMap: false}}]

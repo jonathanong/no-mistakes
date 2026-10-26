@@ -58,8 +58,8 @@ pub(super) fn arbiter_table(table: &SnapshotTable) -> ArbiterTable {
         indexes,
         bounded_indexes: table
             .indexes
-            .values()
-            .filter_map(super::super::bounded::from_snapshot)
+            .iter()
+            .filter_map(|(name, index)| super::super::bounded::from_snapshot(name, index))
             .collect(),
         unique_constraints,
     }

@@ -114,6 +114,7 @@ pub fn configure_prepared_postgres_plan(
         "postgres-bounded-statements",
         "postgres-sql-shape-policy",
         "postgres-no-generated-column-writes",
+        "postgres-json-relation-ids",
     ];
     plan.postgres_dml |= dml_rules
         .iter()
@@ -122,6 +123,10 @@ pub fn configure_prepared_postgres_plan(
     plan.postgres_bounds |= !config
         .rule_applications("postgres-bounded-statements")
         .is_empty();
+    plan.postgres_json_writes |= config
+        .rule_applications("postgres-json-relation-ids")
+        .iter()
+        .any(|rule| rule.options.get("idKeyPattern").is_some());
     plan.postgres_fragments |= !config
         .rule_applications("postgres-sql-shape-policy")
         .is_empty();

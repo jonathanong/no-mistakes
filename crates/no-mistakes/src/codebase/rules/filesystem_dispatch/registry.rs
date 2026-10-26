@@ -86,6 +86,7 @@ macro_rules! filesystem_rules {
             POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS => postgres_status_with_lifecycle_timestamps::check_with_files,
             POSTGRES_TABLE_SHAPE => postgres_table_shape::check_with_files,
             POSTGRES_IDEMPOTENT_INSERT => postgres_idempotent_insert::check_with_files,
+            POSTGRES_JSON_RELATION_IDS => postgres_json_relation_ids::check_with_files,
             LOCKFILE_ALLOWLIST => lockfile_allowlist::check_with_files,
             DOC_CONSISTENCY => doc_consistency::check_with_files,
             SHELLCHECK_RUNNER => shellcheck_runner::check_with_files,

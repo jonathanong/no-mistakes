@@ -82,6 +82,9 @@ pub(super) fn rebase_embedded_lines(
     for (i, insert) in facts.inserts.iter_mut().enumerate() {
         insert.line = physical_line(SqlFactSite::Insert(i), insert.line, 1);
     }
+    for (i, write) in facts.json_writes.iter_mut().enumerate() {
+        write.line = physical_line(SqlFactSite::JsonWrite(i), write.line, write.column_position);
+    }
     for (i, select) in facts.selects.iter_mut().enumerate() {
         select.line = physical_line(SqlFactSite::Select(i), select.line, 1);
         for (j, relation) in select.relations.iter_mut().enumerate() {

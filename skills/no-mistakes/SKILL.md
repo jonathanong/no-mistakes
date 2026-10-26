@@ -290,6 +290,12 @@ column-side casts and functions while allowing parameter casts and precomputed
 bounds. Literal SQL supports `effort: low`; see the rule's
 [analysis contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-transformed-uuid-predicates.md#analysis).
 
+To review row identifiers stored in top-level JSON keys or unique fingerprint
+columns, configure the advisory
+[`postgres-json-relation-ids`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-json-relation-ids.md)
+rule. It is silent with no configured patterns; use `schemaCatalogPath` when
+you configure `keyColumnMap` or `fingerprintNamePattern`.
+
 For test files that must always run in CI, enable the ESLint/Oxlint
 `no-mistakes/test-no-skips` rule in explicit flat-config `files` globs.
 It checks Vitest/Playwright modifiers and bound Vitest context `skip()` calls;

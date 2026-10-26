@@ -48,6 +48,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-sql-statement-policy",
             "postgres-no-generated-column-writes",
             "postgres-require-query-annotation",
+            "postgres-json-relation-ids",
         ]
     );
     assert_eq!(
@@ -69,6 +70,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-required-predicates",
             "postgres-explicit-columns",
             "postgres-bounded-statements",
+            "postgres-json-relation-ids",
         ]
     );
 }

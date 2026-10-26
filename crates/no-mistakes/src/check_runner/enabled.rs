@@ -110,6 +110,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         postgres_conflict_locations: false,
         postgres_general_locations: false,
         postgres_bounds: false,
+        postgres_json_writes: false,
         postgres_fragments: false,
         postgres_write_sql_include: Vec::new(),
         postgres_sql_include: Vec::new(),

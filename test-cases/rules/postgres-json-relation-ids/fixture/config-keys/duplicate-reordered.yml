@@ -1,0 +1,4 @@
+rules:
+  - options:
+      keyColumnMap: {accountId: account_id, accountId: other_id, accountId: third_id}
+    rule: postgres-json-relation-ids

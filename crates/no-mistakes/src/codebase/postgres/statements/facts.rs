@@ -3,7 +3,7 @@ use super::*;
 mod collect;
 mod inserts;
 mod lifecycle;
-mod locations;
+pub(super) mod locations;
 mod parse;
 mod policy;
 mod projection;
@@ -16,7 +16,8 @@ use lifecycle::LifecycleBuilder;
 pub use parse::extract_sql_statement_facts;
 pub(crate) use parse::{
     extract_from_parsed_with_recovered_placeholders, extract_sql_conflict_policy_facts,
-    extract_sql_statement_facts_with_bounds, extract_sql_statement_facts_with_location_demand,
+    extract_sql_statement_facts_with_bounds, extract_sql_statement_facts_with_json_writes,
+    extract_sql_statement_facts_with_location_demand,
     extract_sql_statement_facts_with_recovered_placeholders, extract_sql_variant_statement_facts,
 };
 use policy::table_keyword;
@@ -27,7 +28,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 mod prepared;
 use prepared::PreparedStatements;
-
 fn extract_from_parsed_and_sources(
     sql: &str,
     prepared_sql: &PreparedSql<'_>,
@@ -40,15 +40,13 @@ fn extract_from_parsed_and_sources(
     locations::work::general_fact_collection();
     let masked = fallback::mask_quoted_sql(sql);
     let insert_keyword_count = fallback::insert_keyword_count(&masked);
-    let mut writes = Vec::new();
+    let (mut writes, mut json_writes) = (Vec::new(), Vec::new());
     let mut locations = (sources.locations != SqlLocationDemand::None).then(|| {
         locations::Locations::new(placeholder_positions.unwrap_or_default(), sources.locations)
     });
-    let mut inserts = Vec::new();
+    let (mut inserts, mut returning_stars, mut bounds) = (Vec::new(), Vec::new(), Vec::new());
     let (mut selects, mut updates) = (Vec::new(), Vec::new());
     let (mut deletes, mut triggers) = (Vec::new(), Vec::new());
-    let mut returning_stars = Vec::new();
-    let mut bounds = Vec::new();
     let mut mutation_column_uses = Vec::new();
     let mut transformed_column_uses = Vec::new();
     let mut insert_n = 0usize;
@@ -110,6 +108,9 @@ fn extract_from_parsed_and_sources(
                 locations.collect(statement);
             }
             writes::collect(statement, &mut writes);
+            if sources.policy.collect_json_writes {
+                super::json_writes::collect(statement, &mut json_writes);
+            }
             super::transformed_predicates::collect(
                 statement,
                 placeholder_positions,
@@ -163,6 +164,7 @@ fn extract_from_parsed_and_sources(
         setting_uses,
         function_calls,
         writes,
+        json_writes,
         inserts,
         selects,
         updates,

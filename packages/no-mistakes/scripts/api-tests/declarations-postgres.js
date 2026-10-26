@@ -1,5 +1,61 @@
 const { assert, test, readFileSync, join, packageRoot } = require("./context");
 
+test("JSON relation ID rule configuration is exported with named option types", () => {
+  const declaration = readFileSync(
+    join(packageRoot, "postgres-json-relation-ids-types.d.ts"),
+    "utf8",
+  );
+  const exports = readFileSync(join(packageRoot, "types.d.ts"), "utf8");
+  assert.match(declaration, /export interface PostgresJsonRelationIdsOptions/);
+  assert.match(declaration, /export interface PostgresJsonRelationIdsAllowEntry/);
+  for (const field of [
+    "schemaCatalogPath?: string;",
+    "idKeyPattern?: string;",
+    "keyColumnMap?: Record<string, string>;",
+    "fingerprintNamePattern?: string;",
+    "allow?: PostgresJsonRelationIdsAllowEntry[];",
+    "include?: string[];",
+    "exclude?: string[];",
+    "sqlInclude?: string[];",
+    "importSpecifier?: string;",
+    "executorNames?: string[];",
+    "executorFactoryNames?: string[];",
+    "executorTypeNames?: string[];",
+    "trustedSqlTags?: { module: string; name: string }[];",
+  ]) {
+    assert.ok(declaration.includes(field), `missing public option field ${field}`);
+  }
+  assert.match(exports, /export type \* from "\.\/postgres-json-relation-ids-types"/);
+});
+
+test("JSON relation ID configuration and async check compile from the package root", () => {
+  const { createRequire } = require("node:module");
+  const dependencyRequire = createRequire(require.resolve("@storybook/react"));
+  const ts = dependencyRequire("typescript");
+  const repositoryRoot = join(packageRoot, "..", "..");
+  const program = ts.createProgram(
+    [join(repositoryRoot, "fixtures/node-api/postgres-json-relation-ids/public.mts")],
+    {
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      types: [],
+      target: ts.ScriptTarget.ESNext,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      baseUrl: repositoryRoot,
+      paths: { "no-mistakes": ["packages/no-mistakes/index.d.ts"] },
+      ignoreDeprecations: "6.0",
+    },
+  );
+  assert.deepEqual(
+    ts
+      .getPreEmitDiagnostics(program)
+      .map((row) => ts.flattenDiagnosticMessageText(row.messageText, "\n")),
+    [],
+  );
+});
+
 test("UUID predicate rule exports its catalog and effort configuration", () => {
   const types = readFileSync(join(packageRoot, "postgres-uuid-predicate-types.d.ts"), "utf8");
   const exports = readFileSync(join(packageRoot, "types.d.ts"), "utf8");

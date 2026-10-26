@@ -25,6 +25,7 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
     "postgres-sql-statement-policy",
     "postgres-no-generated-column-writes",
     "postgres-require-query-annotation",
+    "postgres-json-relation-ids",
 ];
 
 /// Rules whose `schemaCatalogPath` is loaded for the request.
@@ -49,6 +50,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-required-predicates",
     "postgres-explicit-columns",
     "postgres-bounded-statements",
+    "postgres-json-relation-ids",
 ];
 
 #[derive(Default, Deserialize)]

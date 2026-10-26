@@ -94,6 +94,7 @@ pub(super) fn collect(
                                 tokens: Some(statement_sources),
                                 schema: schema.as_ref().and_then(|entry| entry.as_ref().ok()).map(std::sync::Arc::as_ref),
                                 functions,
+                                collect_json_writes: plan.postgres_json_writes,
                             },
                         );
                         value.parse_failures = failures.iter()

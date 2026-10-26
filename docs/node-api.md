@@ -356,6 +356,11 @@ The async `check()` API accepts `PostgresRequireQueryAnnotationOptions.sqlLitera
 Import `PostgresNoTransformedUuidPredicatesOptions` to name its catalog, executor,
 and effort options. Both APIs preserve findings and non-failing advisories.
 
+The async `check()` API and `analyzeProject()` check reports also support
+[`postgres-json-relation-ids`](rules/postgres-json-relation-ids.md). Import
+`PostgresJsonRelationIdsOptions` and `PostgresJsonRelationIdsAllowEntry` to name
+its configuration. Its findings remain non-failing advisories in both APIs.
+
 Playwright file selection uses the same static string/RegExp/mixed-array config
 matchers as the CLI. `check()` and `check` reports in `analyzeProject()` retain scoped
 matcher uncertainty in their existing `warnings` field; see

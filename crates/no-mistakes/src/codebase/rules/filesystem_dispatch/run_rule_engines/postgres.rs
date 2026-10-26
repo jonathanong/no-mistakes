@@ -32,7 +32,10 @@ pub(super) fn run(
     let result = run_schema_rules(rule_id, root, config, files, sources, facts)
         .or_else(|| run_naming_and_query_rules(rule_id, root, config, files, sources, facts))?;
     Some(result.and_then(|mut findings| {
-        if crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(&rule_id) {
+        // This advisory judges literal JSON writes only; opaque SQL is explicitly out of scope.
+        if rule_id != POSTGRES_JSON_RELATION_IDS
+            && crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(&rule_id)
+        {
             if let Some(facts) = facts {
                 findings.extend(
                     crate::codebase::rules::postgres_undeclared_executors::check(
@@ -115,6 +118,14 @@ fn run_naming_and_query_rules(
     facts: Option<&CheckFactMap>,
 ) -> Option<Result<Vec<RuleFinding>>> {
     Some(match rule_id {
+        POSTGRES_JSON_RELATION_IDS => match facts {
+            Some(facts) => postgres_json_relation_ids::check_with_files_sources_and_facts(
+                root, config, files, sources, facts,
+            ),
+            None => postgres_json_relation_ids::check_with_files_and_sources(
+                root, config, files, sources,
+            ),
+        },
         POSTGRES_BOUNDED_STATEMENTS => bounded_statements(root, config, files, sources, facts),
         POSTGRES_EXPLICIT_COLUMNS => explicit_columns(root, config, files, sources, facts),
         POSTGRES_GENERATED_COLUMN_PREDICATES => {

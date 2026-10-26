@@ -1,0 +1,4 @@
+{"rules": [
+ {"rule":"postgres-no-offset", "options":{"keyColumnMap":{"accountId":"a", "accountId":"b"}}},
+ {"rule":"postgres-json-relation-ids", "options":{"keyColumnMap":{"accountId":"a"}}}
+]}

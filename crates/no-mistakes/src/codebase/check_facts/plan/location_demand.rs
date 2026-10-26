@@ -12,6 +12,7 @@ impl CheckFactPlan {
     }
     pub(crate) fn wants_full_sql_locations(&self) -> bool {
         self.postgres_exact_locations
+            || self.postgres_json_writes
             || (self.postgres_conflict_locations
                 && (self.postgres_general_locations || self.unclassified_sql_consumer()))
     }

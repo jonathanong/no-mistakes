@@ -74,6 +74,12 @@ selected view's cardinality contract; views without a policy remain unknown.
 See [catalog views](../rules/postgres-bounded-statements.md#catalog-views) for
 identity validation, examples and suppression.
 
+[`postgres-json-relation-ids`](../rules/postgres-json-relation-ids.md) is an
+opt-in advisory. It has no naming conventions enabled by default. Set
+`idKeyPattern` to inspect JSON identifier keys; set `fingerprintNamePattern`
+and `schemaCatalogPath` to inspect unique fingerprint columns. The schema
+catalog is also needed when `keyColumnMap` is configured.
+
 Helper and callback tracing still checks every recovered leading prefix.
 Grouped advice, including a `target` that may list several checks, is described
 in [SQL verdicts](../postgres-sql-verdicts.md).

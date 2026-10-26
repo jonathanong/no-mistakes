@@ -166,6 +166,8 @@
   "PostgresCompleteCatalog",
   "PostgresCompleteCatalogColumn",
   "PostgresCompleteCatalogTable",
+  "PostgresJsonRelationIdsAllowEntry",
+  "PostgresJsonRelationIdsOptions",
   "PostgresNoMutableSqlRegistryOptions",
   "PostgresNoTestStateMutationOptions",
   "PostgresNoTransformedUuidPredicatesOptions",
