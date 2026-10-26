@@ -155,3 +155,110 @@ fn unavailable_stderr_descriptor_does_not_block_progress_shutdown() {
         });
     assert!(status.success());
 }
+
+#[test]
+fn signal_output_waits_for_a_delayed_writer_to_flush() {
+    struct DelayedWriter {
+        sent: mpsc::Sender<String>,
+        pending: Vec<u8>,
+    }
+    impl Write for DelayedWriter {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            self.pending.extend_from_slice(bytes);
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> io::Result<()> {
+            std::thread::sleep(Duration::from_millis(75));
+            self.sent
+                .send(String::from_utf8(std::mem::take(&mut self.pending)).unwrap())
+                .unwrap();
+            Ok(())
+        }
+    }
+    let (sent, received) = mpsc::channel();
+    let output = ProgressOutput::start(Ok(DelayedWriter {
+        sent,
+        pending: Vec::new(),
+    }));
+    output.emit_signal("signal snapshot".to_string());
+    assert_eq!(received.try_recv().unwrap(), "signal snapshot");
+}
+
+struct GatedWriter {
+    started: mpsc::Sender<()>,
+    release: mpsc::Receiver<()>,
+    written: mpsc::Sender<String>,
+    first: bool,
+}
+
+impl Write for GatedWriter {
+    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        if self.first {
+            self.first = false;
+            self.started.send(()).unwrap();
+            self.release.recv().unwrap();
+        }
+        self.written
+            .send(String::from_utf8(bytes.to_vec()).unwrap())
+            .unwrap();
+        Ok(bytes.len())
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+fn gated_output() -> (
+    Arc<ProgressOutput>,
+    mpsc::Sender<()>,
+    mpsc::Receiver<String>,
+) {
+    let (started, waiting) = mpsc::channel();
+    let (release, blocked) = mpsc::channel();
+    let (written, received) = mpsc::channel();
+    let output = ProgressOutput::start(Ok(GatedWriter {
+        started,
+        release: blocked,
+        written,
+        first: true,
+    }));
+    output.emit("first".to_string());
+    waiting.recv_timeout(Duration::from_secs(1)).unwrap();
+    assert!(output.try_enqueue("queued".to_string()).is_some());
+    (output, release, received)
+}
+
+#[test]
+fn signal_output_retries_a_full_queue_then_uses_the_same_writer() {
+    let (output, release, received) = gated_output();
+    let releaser = std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(75));
+        release.send(()).unwrap();
+    });
+    output.emit_signal("signal".to_string());
+    releaser.join().unwrap();
+    for expected in ["first", "queued", "signal"] {
+        assert_eq!(
+            received.recv_timeout(Duration::from_secs(1)).unwrap(),
+            expected
+        );
+    }
+}
+
+#[test]
+fn signal_output_full_queue_remains_bounded_when_writer_blocks() {
+    let (output, release, received) = gated_output();
+    let started = std::time::Instant::now();
+    output.emit_signal("signal".to_string());
+    assert!(started.elapsed() < Duration::from_secs(1));
+    release.send(()).unwrap();
+    assert_eq!(
+        received.recv_timeout(Duration::from_secs(1)).unwrap(),
+        "first"
+    );
+    assert_eq!(
+        received.recv_timeout(Duration::from_secs(1)).unwrap(),
+        "queued"
+    );
+    assert!(received.recv_timeout(Duration::from_millis(50)).is_err());
+}
