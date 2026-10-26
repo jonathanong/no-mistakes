@@ -12,6 +12,15 @@ function annotation(node) {
   return node?.typeAnnotation?.typeAnnotation || null;
 }
 
+function memoizedProof(prove) {
+  const results = new WeakMap();
+  return (node, owner) => {
+    if (!node) return prove(node, owner);
+    if (!results.has(node)) results.set(node, prove(node, owner));
+    return results.get(node);
+  };
+}
+
 function createSourceTypes(targets, sources, receiverShape) {
   const declarations = createDeclarations(sources);
   function fresh(node, seen) {
@@ -148,7 +157,16 @@ function createSourceTypes(targets, sources, receiverShape) {
     }
     return null;
   }
-  return { ...declarations, target, targetType, property, valueType, receiverShape };
+  // Cache complete queries only. Recursive proofs retain their original depth
+  // budgets, and each configured file receives its own target-specific maps.
+  return {
+    ...declarations,
+    target: memoizedProof(target),
+    targetType: memoizedProof(targetType),
+    property,
+    valueType: memoizedProof(valueType),
+    receiverShape,
+  };
 }
 
 module.exports = { annotation, createSourceTypes };

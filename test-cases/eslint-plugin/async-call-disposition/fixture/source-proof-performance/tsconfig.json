@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noEmit": true,
+    "paths": {
+      "@bench/jobs": [
+        "./shared/jobs.ts"
+      ]
+    },
+    "lib": [
+      "ES2022"
+    ]
+  },
+  "include": [
+    "callers/**/*.ts",
+    "shared/**/*.ts"
+  ]
+}

@@ -6,14 +6,14 @@ const { unwrapExpression } = require("./async-ast");
 // Follow bounded static declarations. Missing source, cycles, and changing bindings
 // cannot establish the identity of a configured target or dependency type.
 function createDeclarations(sources) {
-  function exported(filename, name, seen = new Set(), budget = { remaining: 128 }) {
-    const key = `${filename}:${name}`;
-    if (budget.remaining-- <= 0 || seen.size >= 32 || seen.has(key)) return false;
-    seen = new Set(seen).add(key);
-    const source = sources.load(filename);
-    if (!source) return false;
-    const matches = [];
+  function exportIndex(source) {
+    if (source.exportIndex) return source.exportIndex;
+    const names = new Map();
     const stars = [];
+    function add(name, match) {
+      if (!names.has(name)) names.set(name, []);
+      names.get(name).push(match);
+    }
     for (const statement of source.ast.body) {
       if (statement.type === "ExportAllDeclaration") {
         if (!statement.exported) stars.push(statement.source.value);
@@ -21,24 +21,41 @@ function createDeclarations(sources) {
       }
       if (statement.type !== "ExportNamedDeclaration") continue;
       const declaration = statement.declaration;
-      if (declaration?.id?.name === name) matches.push({ local: declaration.id });
+      if (declaration?.id?.name) add(declaration.id.name, { local: declaration.id });
       if (declaration?.type === "VariableDeclaration")
         for (const item of declaration.declarations)
-          if (item.id.type === "Identifier" && item.id.name === name)
-            matches.push({ local: item.id });
+          if (item.id.type === "Identifier") add(item.id.name, { local: item.id });
       for (const item of statement.specifiers)
-        if ((item.exported.name ?? item.exported.value) === name)
-          matches.push({ local: item.local, source: statement.source });
+        add(item.exported.name ?? item.exported.value, {
+          local: item.local,
+          source: statement.source,
+        });
     }
+    const index = { names, stars };
+    source.exportIndex = index;
+    return index;
+  }
+
+  function exported(filename, name, seen = new Set(), budget = { remaining: 128 }) {
+    const key = `${filename}:${name}`;
+    if (budget.remaining-- <= 0 || seen.size >= 32 || seen.has(key)) return false;
+    seen = new Set(seen).add(key);
+    const source = sources.load(filename);
+    if (!source) return false;
+    const { names, stars } = exportIndex(source);
+    const matches = names.get(name) || [];
     if (matches.length > 1) return false;
     if (!matches.length) {
-      const candidates = stars.map((specifier) => {
+      const found = [];
+      for (const specifier of stars) {
+        // Bound resolution work too, including cached or unresolved branches.
+        if (budget.remaining <= 0) return false;
         const target = sources.resolve(specifier, filename);
-        return target ? exported(target, name, seen, budget) : false;
-      });
-      // An unreadable branch may also export this name; absence is not proof.
-      if (candidates.includes(false)) return false;
-      const found = candidates.filter(Boolean);
+        const candidate = target ? exported(target, name, seen, budget) : false;
+        // An unreadable branch may also export this name; absence is not proof.
+        if (candidate === false) return false;
+        if (candidate) found.push(candidate);
+      }
       return found.length > 1 ? false : found[0] || null;
     }
     const match = matches[0];

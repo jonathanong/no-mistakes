@@ -332,8 +332,16 @@ are reported; same-file proofs and explicitly configured `awaitingConsumers`
 contracts remain available. With TypeScript present and no typed
 program, the rule resolves the import using the nearest tsconfig and parses
 only the implementation module. Sources, resolution results, and failures are
-cached in memory for this lint context. Erased type declarations and type-only
-imports cannot hide runtime callback uses or sensitive global mutations.
+cached in memory. A verified one-shot Oxlint CLI invocation shares imported
+sources, tsconfig options, and resolver results across files. Editor/LSP,
+`--fix`, programmatic, and unknown hosts keep fresh per-file state because the
+JS plugin API exposes no lint-run boundary. Live host ASTs and target-specific
+proofs stay per file. Resolution follows only reachable imports, with a
+32-step depth limit and a 128-branch export-search budget; unrelated calls
+without a supported receiving type skip the source proof. See the
+[performance measurements](../development/async-source-proof-performance.md).
+Erased type declarations and type-only imports cannot hide runtime callback
+uses or sensitive global mutations.
 Missing bodies, unresolved imports,
 `noResolve`, writes, and escaping implementations remain unproven.
 That resolution follows only `import { name }` to one `export function`, one
