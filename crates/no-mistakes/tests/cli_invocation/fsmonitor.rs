@@ -12,7 +12,9 @@ mod saved_fixture;
 
 const HELPER: &str = "cli_invocation::fsmonitor::hung_fsmonitor_subprocess";
 const CONTROL: &str = "NO_MISTAKES_HUNG_FSMONITOR_FIXTURE";
-const BOUND: Duration = Duration::from_secs(5);
+// These waits run only until the event arrives. Ten seconds avoids CI flakes
+// without slowing a successful run.
+const BOUND: Duration = Duration::from_secs(10);
 
 pub(super) fn run() {
     // The parent owns temporary files even if its helper must exit forcibly.

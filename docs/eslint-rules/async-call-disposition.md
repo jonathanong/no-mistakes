@@ -322,8 +322,11 @@ this proof on their actual implementation, including in Oxlint's `--type-aware`
 mode, which does not expose a parser-owned TypeScript program to JS plugins.
 That fallback requires the optional `typescript` peer, version 5 or later for
 Bundler module resolution. `@typescript-eslint/parser` is optional; without it,
-`ts.createSourceFile` parses supported syntax and unsupported syntax stays
-unproven. Install `typescript` in the project to enable this proof. With older TypeScript or missing or
+`ts.createSourceFile` parses supported syntax. In TypeScript-only mode, an
+`enum`, a `class`, labels, and the other cases in
+`test-cases/eslint-plugin/async-call-disposition/fixture/optional-peers/unsupported/`
+stay unproven, while the same consumer is silent when the parser is installed.
+Install `typescript` in the project to enable this proof. With older TypeScript or missing or
 incompatible tooling, the cross-file proof is unproven. Calls that depend on it
 are reported; same-file proofs and explicitly configured `awaitingConsumers`
 contracts remain available. With TypeScript present and no typed

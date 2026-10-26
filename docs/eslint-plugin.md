@@ -71,10 +71,13 @@ The cross-file source proof requires the optional `typescript` peer, version 5
 or later. Install it with `npm install --save-dev typescript`.
 `@typescript-eslint/parser` is optional: when absent, the proof parses supported
 source syntax with `ts.createSourceFile`, without constructing a TypeScript
-program. Unsupported syntax remains unproven. With no TypeScript peer, missing
-or incompatible tooling, or an unsupported compiler version, dependent calls
-retain conservative findings. Same-file proofs and configured contracts still
-work without either optional peer.
+program. In TypeScript-only mode, an `enum`, a `class`, labels, and the other
+cases in
+`test-cases/eslint-plugin/async-call-disposition/fixture/optional-peers/unsupported/`
+stay unproven, while the same consumer is silent when the parser is installed.
+With no TypeScript peer, missing or incompatible tooling, or an unsupported
+compiler version, dependent calls retain conservative findings. Same-file
+proofs and configured contracts still work without either optional peer.
 
 ### `async-try-catch-return-await`
 
