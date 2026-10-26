@@ -114,6 +114,7 @@ fn uncertain_headers_preserve_only_independently_valid_actions() {
     for (name, actions) in [
         ("unsupported-header-truncate.sql", vec![5]),
         ("unsupported-header-truncate-loop-table.sql", vec![5]),
+        ("unsupported-header-nested-truncate.sql", vec![6]),
         ("invalid-header-truncate.sql", vec![5]),
         ("invalid-header-action.sql", vec![]),
     ] {
@@ -136,4 +137,22 @@ fn uncertain_headers_preserve_only_independently_valid_actions() {
             "{name}: {facts:#?}"
         );
     }
+}
+
+#[test]
+fn loop_boundary_recognition_keeps_incomplete_prefixes_and_empty_actions_distinct() {
+    use sqlparser::{dialect::PostgreSqlDialect, tokenizer::Tokenizer};
+    for name in ["boundary-invalid-label.sql", "boundary-if-without-then.sql"] {
+        let source = fixture(name);
+        let tokens = Tokenizer::new(&PostgreSqlDialect {}, &source)
+            .tokenize()
+            .unwrap();
+        assert_eq!(super::loop_action_start(&tokens), Ok(None), "{name}");
+    }
+    let source = fixture("boundary-header-only.sql");
+    let tokens = Tokenizer::new(&PostgreSqlDialect {}, &source)
+        .tokenize()
+        .unwrap();
+    // The boundary is EOF, so callers recover no SQL action from a bare header.
+    assert_eq!(super::loop_action_start(&tokens), Ok(Some(tokens.len())));
 }
