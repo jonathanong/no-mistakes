@@ -205,3 +205,9 @@ instances created by `new Pool()` or `new Client()`, and clients obtained from
 not report. Use an explicitly configured executor factory or an imported
 executor type annotation to declare those receivers. Direct named `query`
 imports and `pg.query()` on an imported namespace remain recognized.
+
+For example, `const pool = new Pool(); pool.query(sql)` is outside this
+selection. Pass the pool to `function run(db: Pool) { db.query(sql); }` and
+configure `executorTypeNames: ["Pool", "Client"]` alongside
+`importSpecifier: "pg"` to restore reporting. For a client from
+`await pool.connect()`, use a parameter annotated `db: Client` instead.
