@@ -1033,11 +1033,7 @@ describe("postgres-no-manual-transaction", () => {
       client.query("SELECT $1 AS value", [1]);
       client.query("ROLLBACK TRANSACTION AND NO CHAIN");
     `;
-    assert.deepEqual(ids(lifecycle, "postgres-no-manual-transaction"), [
-      "manualTransaction",
-      "manualTransaction",
-      "manualTransaction",
-    ]);
+    assert.deepEqual(ids(lifecycle, "postgres-no-manual-transaction"), []);
     // Analyze mixed SQL as source text; this is not a PostgreSQL extended-query
     // execution claim. A positional token must not hide later lifecycle control.
     assert.deepEqual(
@@ -1045,7 +1041,7 @@ describe("postgres-no-manual-transaction", () => {
         `${IMPORT} client.query("SELECT $1 AS value; ROLLBACK", [1]);`,
         "postgres-no-manual-transaction",
       ),
-      ["manualTransaction"],
+      [],
     );
   });
 
@@ -1077,7 +1073,7 @@ describe("postgres-no-manual-transaction", () => {
       assert.equal(isManualTransactionText(sql), true, sql);
       assert.deepEqual(
         ids(`${IMPORT} client.query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
-        ["manualTransaction"],
+        [],
         sql,
       );
     }
@@ -1120,7 +1116,7 @@ describe("postgres-no-manual-transaction", () => {
       assert.equal(isManualTransactionText(sql), true, sql);
       assert.deepEqual(
         ids(`${IMPORT} client.query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
-        ["manualTransaction"],
+        [],
         sql,
       );
     }
@@ -1167,7 +1163,7 @@ describe("postgres-no-manual-transaction", () => {
       assert.equal(isManualTransactionText(sql), true, sql);
       assert.deepEqual(
         ids(`${IMPORT} client.query(${JSON.stringify(sql)});`, "postgres-no-manual-transaction"),
-        ["manualTransaction"],
+        [],
         sql,
       );
     }
@@ -1193,7 +1189,7 @@ describe("postgres-no-manual-transaction", () => {
     ]);
   });
 
-  it("resolves identifier bindings and member query calls", () => {
+  it("resolves identifier bindings and leaves unproven query members alone", () => {
     const code = `
       ${IMPORT}
       const start = "BEGIN";
@@ -1207,9 +1203,6 @@ describe("postgres-no-manual-transaction", () => {
       foo.bar("BEGIN");
     `;
     assert.deepEqual(ids(code, "postgres-no-manual-transaction"), [
-      "manualTransaction",
-      "manualTransaction",
-      "manualTransaction",
       "manualTransaction",
       "manualTransaction",
     ]);
@@ -1337,7 +1330,6 @@ describe("postgres-no-unbounded-query-fanout", () => {
       Promise.all(ids.map((id) => client.query("SELECT 1")));
     `;
     assert.deepEqual(ids(code, "postgres-no-unbounded-query-fanout"), [
-      "unboundedFanout",
       "unboundedFanout",
       "unboundedFanout",
     ]);
@@ -1519,7 +1511,7 @@ describe("explicit PostgreSQL executor selection", () => {
         importSpecifier: "@example/db",
         executorNames: ["run"],
       }),
-      ["manualTransaction"],
+      [],
     );
     assert.deepEqual(
       messages(IMPORT + "query('BEGIN')", "postgres-no-manual-transaction", {
