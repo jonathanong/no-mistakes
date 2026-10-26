@@ -14,7 +14,7 @@ This repository is a huge token sink. Thus, contributions are welcomed.
    with `--jobs 2` and rewrites absolute paths, temp directories, process ids, and
    timings so the file is stable on Linux, macOS, and Windows. CI sets `INSTA_UPDATE=no`
    and fails when a snapshot is missing or changed. Regenerate on purpose with
-   `INSTA_UPDATE=1 cargo test -p no-mistakes --test suite_cli_rules <snapshot test>`
+   `INSTA_UPDATE=1 cargo test -p no-mistakes --test suite_cli_rules check_json_snapshot`
    or `cargo insta review`. In `packages/eslint-plugin-no-mistakes`, fixture
    diagnostics use Vitest `toMatchFileSnapshot` with relative paths and sorted
    findings. CI does not pass `-u`. Update with `pnpm exec vitest run <test> -u`
