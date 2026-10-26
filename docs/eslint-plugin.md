@@ -67,6 +67,15 @@ and `module.exports` stay unproven. A `require()` consumer stays unproven in
 either mode. Missing bodies, unresolved imports, `noResolve`, writes, and
 escaping implementations stay unproven. Unknown consumers keep reporting.
 
+The cross-file source proof requires the optional `typescript` peer, version 5
+or later. Install it with `npm install --save-dev typescript`.
+`@typescript-eslint/parser` is optional: when absent, the proof parses supported
+source syntax with `ts.createSourceFile`, without constructing a TypeScript
+program. Unsupported syntax remains unproven. With no TypeScript peer, missing
+or incompatible tooling, or an unsupported compiler version, dependent calls
+retain conservative findings. Same-file proofs and configured contracts still
+work without either optional peer.
+
 ### `async-try-catch-return-await`
 
 `handlers` is an array whose objects may set `sourceSpecifierPatterns?: string[]`

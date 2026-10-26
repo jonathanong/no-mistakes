@@ -113,7 +113,6 @@ function sourceScopes(ast, visitorKeys) {
       from: current,
       resolved,
       isWrite: () => writing,
-      isRead: () => !writing,
       isTypeReference: typeOnly,
       isValueReference: !typeOnly,
     };
@@ -152,7 +151,6 @@ function sourceScopes(ast, visitorKeys) {
   references(ast);
   return {
     scopeManager: { scopes, globalScope, acquire: (node) => owners.get(node) || null },
-    getScope: (node) => owners.get(node) || globalScope,
   };
 }
 

@@ -35,8 +35,11 @@ assert.deepEqual(lint("configured.js", [{
   callbackArgumentProperties: [{ argumentIndex: 0, propertyNames: ["enqueueEmail"] }],
 }]), []);
 assert.deepEqual(loads, { typescript: 0, "@typescript-eslint/parser": 0 });
-assert.deepEqual(lint("imported.js"), [[4, "disposition"], [6, "disposition"], [8, "disposition"]]);
+assert.deepEqual(lint("imported.js"), hasTypeScript ? [] : [[4, "disposition"], [6, "disposition"], [8, "disposition"]]);
 const missing = hasTypeScript ? "@typescript-eslint/parser" : "typescript";
 assert.equal(loads[missing], 1, "missing peers must be memoized per context");
-assert.deepEqual(lint("imported.js"), [[4, "disposition"], [6, "disposition"], [8, "disposition"]]);
+assert.deepEqual(lint("imported.js"), hasTypeScript ? [] : [[4, "disposition"], [6, "disposition"], [8, "disposition"]]);
 assert.equal(loads[missing], 2, "a new rule context retries optional peer loading");
+
+assert.deepEqual(lint("recall.js"), [3, 5, 7, 9, 12, 15].map((line) => [line, "disposition"]));
+assert.deepEqual(lint("unsupported.js"), [[3, "disposition"]]);

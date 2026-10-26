@@ -10,6 +10,7 @@ import { realDrop12 } from "./drop12-real.mjs";
 beforeAll(() => {
   realDrop12(false);
   realDrop12(true);
+  realDrop12(true, false);
 });
 const root = resolve(
   __dirname,

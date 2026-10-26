@@ -11,14 +11,16 @@ npm install --save-dev eslint-plugin-no-mistakes
 
 For `async-call-disposition` to inspect imported callback implementations when
 the linter does not provide a TypeScript program (including Oxlint's
-`--type-aware` mode), also install `typescript` and
-`@typescript-eslint/parser` in your project:
+`--type-aware` mode), also install `typescript` in your project:
 
 ```sh
-npm install --save-dev typescript @typescript-eslint/parser
+npm install --save-dev typescript
 ```
 
-These are optional peer dependencies. This fallback requires TypeScript 5 or
+`typescript` and `@typescript-eslint/parser` are optional peers, but only
+`typescript` is required for the cross-file proof. When the ESLint parser is
+absent, the proof parses supported syntax with `ts.createSourceFile`; unsupported
+syntax stays unproven. This fallback requires TypeScript 5 or
 later for Bundler module resolution. With older TypeScript or missing or
 incompatible tooling, calls that rely on this cross-file proof are reported as
 unproven. Same-file proofs and explicitly configured awaiting-consumer

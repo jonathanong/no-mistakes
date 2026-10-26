@@ -320,12 +320,13 @@ parameter replacement, forwarding, or capture in a nested function keep the
 callback unproven. Executable parameter defaults are inspected too. Resolvable named imports use
 this proof on their actual implementation, including in Oxlint's `--type-aware`
 mode, which does not expose a parser-owned TypeScript program to JS plugins.
-That fallback requires the optional `typescript` and `@typescript-eslint/parser`
-peer dependencies, with TypeScript 5 or later for Bundler module resolution.
-Install both in the project to enable it. With older TypeScript or missing or
+That fallback requires the optional `typescript` peer, version 5 or later for
+Bundler module resolution. `@typescript-eslint/parser` is optional; without it,
+`ts.createSourceFile` parses supported syntax and unsupported syntax stays
+unproven. Install `typescript` in the project to enable this proof. With older TypeScript or missing or
 incompatible tooling, the cross-file proof is unproven. Calls that depend on it
 are reported; same-file proofs and explicitly configured `awaitingConsumers`
-contracts remain available. With both dependencies present and no typed
+contracts remain available. With TypeScript present and no typed
 program, the rule resolves the import using the nearest tsconfig and parses
 only the implementation module. Sources, resolution results, and failures are
 cached in memory for this lint context. Missing bodies, unresolved imports,
@@ -423,8 +424,8 @@ It shares the existing
 source session in typed and untyped ESLint and in Oxlint, including
 `--type-aware`. It neither requests nor builds a TypeScript program. A consumer
 may import only its dependency type; it need not repeat the target import.
-As with the imported-body proof, optional proof peers must be installed for
-cross-file declarations. Without them, returning callbacks passed to unproven
+As with the imported-body proof, the optional TypeScript peer must be installed
+for cross-file declarations. Without it, returning callbacks passed to unproven
 slots still report; array aggregate disposition itself needs no proof peers.
 
 Fresh dependency literals can also establish harmless metadata reads. A field
