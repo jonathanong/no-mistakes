@@ -97,7 +97,6 @@ Passing `query.call` or `query.apply` as an unbound callback does not establish
 an executor invocation. Direct local callback bodies are also scanned for executor calls; that existing check does
 not need to recover SQL arguments through the callback's parameters.
 
-
 `Promise["all"]` and a no-expression ``Promise[`all`]`` are `Promise.all`.
 Static `.call` and literal-array `.apply` wrappers on both `Promise.all` and
 `map` retain the check, including optional calls, comma callees, and TypeScript
@@ -149,8 +148,12 @@ await Promise.all(ids.map((id) => query(sql, [id])));
 Executor import matching has no module default. Set `importSpecifier` explicitly
 to your database module to enable default `query`, `read`, and `write` names.
 Without a module, only explicit `executorNames` select named imports; explicit
-`query` also enables `.query` members. A configured module retains member matching
-even with custom executor names. See the [migration notes](../migrations/explicit-postgres-executors.md).
+`query` also enables broad `.query` member matching. With a configured module,
+the receiver must be proven by a configured import, scoped factory or imported
+executor type, or a stable alias of one. An unrelated `this.query` method stays
+outside the rule, including in `Promise.all(rows.map(...))`. Custom executor
+names do not remove that proof requirement. See the
+[migration notes](../migrations/explicit-postgres-executors.md).
 
 Omitting both `importSpecifier` and `executorNames` is a configuration error.
 Set `executorNames: []` explicitly to select no executor calls.

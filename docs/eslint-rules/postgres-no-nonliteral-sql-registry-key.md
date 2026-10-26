@@ -87,7 +87,15 @@ the rule does not validate that key at runtime.
 `importSpecifier` selects the module whose named imports are executors.
 `executorNames` defaults to `["query", "read", "write"]` when `importSpecifier`
 is set, and must be set (use `[]` for no calls) when `importSpecifier` is
-empty. Scoped factories and `trustedSqlTags` are not options of this rule.
+empty. `executorFactoryNames` and `executorTypeNames` support scoped executor
+receivers, matching the other PostgreSQL rules. Both default to `[]`.
+`trustedSqlTags` defaults to `[]` and is accepted for shared configuration;
+this rule still judges registry lookups in executor arguments.
+
+With `importSpecifier`, `.query` requires a proven configured import, scoped
+factory/type receiver, or stable alias. Unproven `this.query` and unrelated
+client methods stay outside the rule. Without a module, explicit
+`executorNames: ["query"]` retains broad member matching.
 
 ## Limits
 

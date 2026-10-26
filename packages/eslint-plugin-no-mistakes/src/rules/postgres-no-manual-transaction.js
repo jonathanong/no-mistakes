@@ -54,7 +54,8 @@ module.exports = Object.assign(
     {
       type: "problem",
       docs: {
-        description: "disallow manual BEGIN, COMMIT, and ROLLBACK executor calls",
+        description:
+          "disallow manual BEGIN, START TRANSACTION, COMMIT, and ROLLBACK executor calls",
         recommended: false,
       },
       schema: [
@@ -64,7 +65,7 @@ module.exports = Object.assign(
       ],
       messages: {
         manualTransaction:
-          "Do not execute BEGIN, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
+          "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle.",
       },
     },
     (context) => {

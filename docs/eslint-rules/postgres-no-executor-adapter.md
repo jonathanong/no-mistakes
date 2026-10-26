@@ -27,8 +27,7 @@ function load(query: QueryExecutor) {
   return query("SELECT id FROM orders");
 }
 load(read);
-const loadOptional = (query?: QueryExecutor) =>
-  query?.("SELECT id FROM orders");
+const loadOptional = (query?: QueryExecutor) => query?.("SELECT id FROM orders");
 loadOptional(read);
 function loadObject({ query }: { query: QueryExecutor }) {
   return query("SELECT id FROM orders");
@@ -68,7 +67,10 @@ may use a local alias of the configured type; an intersection must resolve to
 one unambiguous required field declaration:
 
 ```ts
-interface QueryOptions { query: QueryExecutor; limit?: number }
+interface QueryOptions {
+  query: QueryExecutor;
+  limit?: number;
+}
 function dispatch(options: QueryOptions) {
   return options.query("SELECT id FROM orders");
 }
@@ -343,6 +345,8 @@ run(0 ?? read, account);
   import, a scoped factory or typed parameter, or a `const` alias of one.
   An untyped `client.query` is not an executor. Without a module, `.query`
   matches every member only when `executorNames` includes `query`.
+  Manual-transaction, unbounded-fanout, and nonliteral-registry-key checks use
+  this same receiver boundary; a class method merely named `query` is not enough.
   `import * as db` matches `db.read` when `read` is an executor name and the
   module is `importSpecifier` (a subpath does not match). `const { read } = db`
   is that export. `const { query } = tx` is `tx.query` when `tx` is a proven
