@@ -10,6 +10,7 @@ export async function spreadArray(deps: any) { await consume(...deps); }
 export async function unawaited(deps: any) { consume(deps); }
 export async function rhs(deps: any) { await consume({ job: replacement ?? deps.job }); }
 export async function nested(deps: any) { await run(async () => await deps.job()); }
+// The explicit key is before the spread, so the source property is what gets awaited.
 export async function overwritten(deps: any) { await consume({ job: replacement, ...deps }); }
 export async function otherSpread(deps: any) { await consume({ ...deps, ...other }); }
 async function consume(deps: any) { await deps.job(); }

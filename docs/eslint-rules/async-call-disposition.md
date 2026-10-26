@@ -310,14 +310,22 @@ use of the selected property reaches an immediately awaited invocation, such as
 `await dependencies.enqueueBulkCrawlReferralLinks()`. The proof follows bounded
 same-file and imported helper calls, a defaulted dependency parameter, and
 `{ ...dependencies, otherField }` forwarding that preserves the selected property.
-It also follows a selected property through `??` into another fresh object.
+It also follows a selected property through `??` or `||` into another fresh object,
+including when an async builder in another module writes that `||` copy.
+`const { name = defaultImpl } = options` and `const { name } = options` count
+when that binding is placed on a fresh object. `{ name: defaultImpl, ...options }`
+counts because the spread overwrites the earlier default. An optional member
+counts only as the left operand of `??` or `||`, as in `options?.name ?? defaultImpl`.
 That copy may be a direct argument, a `const` binding, or the return value of the
 helper that builds it. The caller adopts the copy by awaiting that same property,
 or by passing the object to an awaited helper whose implementation awaits the
-property. Returning the copy does not adopt it. An await inside a closure that is
+property. An `if (condition) await helper(dependencies)` counts as that adoption.
+Returning the copy does not adopt it. An await inside a closure that is
 stored or returned does not adopt it either. Replacing the copied property, a
 helper call that is not awaited, an unknown helper, and a callback on the
-right-hand side of `??` stay unproven.
+right-hand side of `??` or `||` stay unproven. A property written after
+`...options` replaces the copied callback and stays unproven. A `let` binding,
+a rename, a nested pattern, a rest element, or a computed key stays unproven.
 Pure static property reads do not change this callback's disposition. Sibling
 assignments, updates, deletes, nested writes, and assignment-pattern or loop
 targets invalidate the supplied shape; runtime mutation cannot prove adoption. An

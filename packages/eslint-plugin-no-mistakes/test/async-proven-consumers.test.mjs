@@ -225,7 +225,8 @@ it.each([false, true])(
 it("keeps forwarding syntax narrow and rejects ambiguous implementations", () => {
   assert.deepEqual(
     reports("cross-file-forwarding.ts"),
-    [6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 18, 20, 21, 22, 24].map((line) => [line, "disposition"]),
+    // Line 15 is `{ job: replacement, ...deps }`: the spread keeps the supplied callback.
+    [6, 7, 8, 9, 10, 11, 12, 13, 16, 18, 20, 21, 22, 24].map((line) => [line, "disposition"]),
   );
 });
 
