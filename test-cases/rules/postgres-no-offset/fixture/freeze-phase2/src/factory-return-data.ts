@@ -18,3 +18,11 @@ export async function factoryReturnData(
   await tx(dynamicSql); // ADVISE_SECOND_FACTORY_QUERY
   opaque(tx); // ADVISE_FACTORY_EXECUTOR_ESCAPE
 }
+
+// Assigning SQL result data must not turn its binding into another executor.
+export async function assignedResultData() {
+  const tx = await beginTransaction(); // NON_SQL
+  let result; // NON_SQL
+  result = await tx(dynamicSql); // ADVISE_ASSIGNED_RESULT_SQL
+  opaque(result.rows[0].id); // NON_SQL
+}

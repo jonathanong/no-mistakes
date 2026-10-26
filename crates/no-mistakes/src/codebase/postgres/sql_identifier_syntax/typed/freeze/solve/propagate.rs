@@ -13,7 +13,7 @@ pub(super) fn bindings(
         for key in path {
             value = value.read(key.as_deref());
         }
-        if value.derived && writes.contains(id) {
+        if value.derived && value.present() && writes.contains(id) {
             value.broad = true;
             value.paths.clear();
         }
