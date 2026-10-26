@@ -97,3 +97,10 @@ rules:
       schemaCatalogPath: schema.json
       allowedTypes: [uuid]
       allowEnumTypes: true
+
+  - rule: postgres-json-relation-ids
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      # Exercise an existing unique text key without changing the generated catalog.
+      fingerprintNamePattern: '^email$'

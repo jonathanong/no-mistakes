@@ -53,7 +53,7 @@ errors. An empty `fingerprintNamePattern` is valid and matches every name. A
 map entry whose column is not a foreign key is valid configuration, but does
 not excuse a JSON key in a finding.
 
-## What it checks
+## What it catches
 
 For `INSERT` and `UPDATE` statements in selected migration SQL and statically
 recovered executed embedded SQL, the rule examines top-level keys written by
@@ -71,7 +71,7 @@ Separately, a `bytea` or `text` column whose name matches
 `fingerprintNamePattern` is reported for each unique constraint or unique index
 that includes it. A matching column outside a unique key is clean.
 
-## Valid examples
+## Valid example
 
 The examples use this excerpt from the configured catalog:
 
@@ -131,7 +131,7 @@ INSERT INTO invoice_revisions (id, invoice_id, changes)
 VALUES ($1, $2, '{"accountId": "a1"}'::jsonb);
 ```
 
-## Counterexamples
+## Counterexample
 
 Here the catalog also contains the fingerprint unique key:
 
@@ -220,3 +220,11 @@ Configure the rule and run `no-mistakes check --root . --format json`. Its
 findings are advisories and do not change the default check exit status. The
 async Node `check()` API and `analyzeProject()` check reports use the same
 configuration and advisory behavior. See [Node API mapping](../node-api.md).
+
+## Related rules
+
+[`postgres-fk-index`](postgres-fk-index.md) checks indexes for declared foreign
+keys; [`postgres-key-column-types`](postgres-key-column-types.md) checks their
+types. [`postgres-column-naming`](postgres-column-naming.md) enforces configured
+column naming policies. This rule covers references hidden in JSON or unique
+fingerprints that those declared-column checks cannot see.

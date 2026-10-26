@@ -22,6 +22,18 @@ fn catalog_rule_fixture_inventory_is_complete_without_a_database() {
 }
 
 #[test]
+fn committed_catalog_exercises_the_advisory_only_rule_without_a_database() {
+    let root = committed();
+    let (_, findings) = check(&root, &root.join(".no-mistakes.yml"));
+    let own: Vec<_> = findings
+        .iter()
+        .filter(|(rule, _, _)| rule == "postgres-json-relation-ids")
+        .collect();
+    assert_eq!(own.len(), 1, "{own:#?}");
+    assert!(own[0].2.contains("UNIQUE key accounts_email_key;"));
+}
+
+#[test]
 fn generated_catalog_is_stable_and_matches_the_committed_fixture() {
     let Some(database) = Database::create("fixture") else {
         return;
