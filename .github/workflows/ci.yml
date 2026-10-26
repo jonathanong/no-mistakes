@@ -349,6 +349,7 @@ jobs:
           packages/no-mistakes/scripts/vitest-project-setups-api.test.js
           tests/js/compiled-api-runtime.test.js
           packages/no-mistakes/scripts/annex-b-for-in-api.test.js
+          packages/no-mistakes/scripts/forbidden-dependencies-globs-api.test.js
           packages/no-mistakes/scripts/type-import-order-api.test.js
           packages/no-mistakes/scripts/planning-impact-cli.test.js
           packages/no-mistakes/scripts/postgres-source-api.test.js
@@ -552,7 +553,7 @@ jobs:
         run: |
           set -euo pipefail
           addon_path="$(node -e 'process.stdout.write(require("node:path").resolve("target/debug/no-mistakes.node"))')"
-          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run packages/no-mistakes/scripts/real-napi-api.test.js packages/no-mistakes/scripts/sql-verdicts-api.test.js packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js packages/no-mistakes/scripts/guarded-array-receiver-api.test.js --reporter=default --reporter=json --outputFile.json=target/native-api-tests.json --coverage=false
+          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run packages/no-mistakes/scripts/real-napi-api.test.js packages/no-mistakes/scripts/sql-verdicts-api.test.js packages/no-mistakes/scripts/postgres-procedural-occurrence-api.test.js packages/no-mistakes/scripts/postgres-procedural-loop-coverage-api.test.js packages/no-mistakes/scripts/guarded-array-receiver-api.test.js packages/no-mistakes/scripts/forbidden-dependencies-globs-api.test.js --reporter=default --reporter=json --outputFile.json=target/native-api-tests.json --coverage=false
 
       - name: Report real N-API test durations
         if: ${{ !cancelled() && steps.real-napi.outcome != 'skipped' }}
