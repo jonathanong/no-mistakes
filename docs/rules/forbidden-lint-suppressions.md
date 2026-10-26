@@ -70,6 +70,18 @@ directives: ["@ts-ignore", "@ts-expect-error"]
 Each selected TypeScript directive is reported with its directive name as the
 finding target. Lint `ruleIds` and `rulePrefixes` do not narrow that selection.
 
+For block comments, TypeScript directives must be on the final content line
+before `*/`. A leading JSDoc star is supported:
+
+```ts
+/**
+ * @ts-ignore */
+```
+
+Putting the closing `*/` on a separate following line does not create a
+TypeScript directive. Triple-slash forms are supported; adding a fourth slash
+does not create one. The finding still points to the directive's line.
+
 ## Valid example
 
 With `react/purity` protected, this unrelated suppression remains allowed:
