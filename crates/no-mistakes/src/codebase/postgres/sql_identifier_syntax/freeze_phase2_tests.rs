@@ -17,6 +17,7 @@ fn proven_freeze_preserves_actual_executor_consumers_and_factory_metadata() {
         "transfer-patterns.ts",
         "carrier-properties.ts",
         "intrinsic-disabled.ts",
+        "factory-return-data.ts",
     ];
     let mut expected_advice = BTreeSet::new();
     let mut expected_clear = BTreeSet::new();

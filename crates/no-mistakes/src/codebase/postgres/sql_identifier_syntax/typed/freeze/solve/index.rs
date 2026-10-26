@@ -5,7 +5,7 @@ type BindingProjection = (usize, Vec<Option<String>>);
 pub(super) struct Index {
     pub parents: FxHashMap<Span, Vec<Span>>,
     pub bindings: FxHashMap<usize, Vec<Span>>,
-    pub invokes: FxHashMap<usize, Vec<Span>>,
+    pub invokes: FxHashMap<usize, std::collections::BTreeSet<Span>>,
     pub outputs: FxHashMap<Span, Vec<BindingProjection>>,
     pub returns: FxHashMap<Span, Vec<usize>>,
     pub aliases: FxHashMap<usize, Vec<usize>>,
@@ -20,7 +20,9 @@ impl Index {
             }
             match node {
                 Node::Ref(id, _) => index.bindings.entry(*id).or_default().push(*at),
-                Node::Invoke(id) => index.invokes.entry(*id).or_default().push(*at),
+                Node::Invoke(id) => {
+                    index.invokes.entry(*id).or_default().insert(*at);
+                }
                 // Call dependencies must not become transport-traversal children.
                 Node::InvokeValue(callee) => index.parents.entry(*callee).or_default().push(*at),
                 _ => {}

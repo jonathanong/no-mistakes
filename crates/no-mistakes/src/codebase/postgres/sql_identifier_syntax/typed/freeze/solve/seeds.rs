@@ -4,7 +4,7 @@ pub(super) fn producer_functions(sources: &Sources<'_>, index: &Index) -> FxHash
     let mut functions = sources
         .producers
         .iter()
-        .map(|id| (*id, Taint::executor()))
+        .map(|id| (*id, executor(*id, sources.factories)))
         .collect::<FxHashMap<_, _>>();
     let mut initial_functions: VecDeque<_> = sources.producers.iter().copied().collect();
     while let Some(id) = initial_functions.pop_front() {
@@ -31,10 +31,22 @@ pub(super) fn apply_node_seeds(
         {
             value.join(Taint::producer(*id));
         } else {
-            value.join(Taint::executor());
+            let seed = match nodes.get(&at) {
+                Some(Node::Ref(id, _)) => executor(*id, sources.proven),
+                _ => Taint::executor(),
+            };
+            value.join(seed);
         }
     }
     if matches!(nodes.get(&at), Some(Node::Object(_))) {
         value.objects.insert((Vec::new(), at));
+    }
+}
+
+pub(super) fn executor(id: usize, proven: &FxHashSet<usize>) -> Taint {
+    if proven.contains(&id) {
+        Taint::contract_executor()
+    } else {
+        Taint::executor()
     }
 }

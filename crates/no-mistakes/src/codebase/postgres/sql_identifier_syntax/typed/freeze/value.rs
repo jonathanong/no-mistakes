@@ -10,6 +10,8 @@ pub(super) struct Taint {
     pub producers: BTreeSet<(Vec<String>, usize)>,
     pub objects: BTreeSet<(Vec<String>, Span)>,
     pub broad: bool,
+    pub widened_factory: bool,
+    pub unproven_executor: bool,
     pub derived: bool,
 }
 impl Taint {
@@ -18,7 +20,14 @@ impl Taint {
             paths: [Vec::new(), vec!["query".into()]].into(),
             open: [Vec::new()].into(),
             derived: true,
+            unproven_executor: true,
             ..Self::default()
+        }
+    }
+    pub fn contract_executor() -> Self {
+        Self {
+            unproven_executor: false,
+            ..Self::executor()
         }
     }
     pub fn latent(&self) -> bool {
@@ -31,7 +40,30 @@ impl Taint {
         self.broad || self.paths.contains(&Vec::new())
     }
     pub fn factory_value(&self) -> bool {
-        self.producers.iter().any(|(path, _)| path.is_empty())
+        !self.broad
+            && !self.widened_factory
+            && !self.executable()
+            && self.producers.iter().any(|(path, _)| path.is_empty())
+    }
+    pub fn executor_leaf(&self) -> bool {
+        !self.unproven_executor
+            && !self.broad
+            && !self.widened_factory
+            && self.producers.is_empty()
+            && self.objects.is_empty()
+            && self.paths.contains(&Vec::new())
+            && self
+                .paths
+                .iter()
+                .all(|path| path.is_empty() || path == &["query"])
+            && self.open.iter().all(Vec::is_empty)
+    }
+    pub fn widen(&mut self) {
+        self.widened_factory |= !self.producers.is_empty();
+        self.broad = true;
+        self.paths.clear();
+        self.open.clear();
+        self.producers.clear();
     }
     pub fn producer(id: usize) -> Self {
         Self {
@@ -43,6 +75,11 @@ impl Taint {
     pub fn join(&mut self, other: Self) -> bool {
         let before = self.clone();
         self.derived |= other.derived;
+        self.unproven_executor |= other.unproven_executor;
+        self.widened_factory |= other.widened_factory;
+        if self.broad || other.broad {
+            self.widened_factory |= !self.producers.is_empty() || !other.producers.is_empty();
+        }
         self.broad |= other.broad;
         if !self.broad {
             self.paths.extend(other.paths);
@@ -54,14 +91,12 @@ impl Taint {
             self.broad = true;
         }
         if self.broad {
-            self.paths.clear();
-            self.open.clear();
-            self.producers.clear();
+            self.widen();
         }
         if self.objects.len() > VARIANT_LIMIT {
             self.objects.clear();
             if self.present() {
-                self.broad = true;
+                self.widen();
             }
         }
         *self != before

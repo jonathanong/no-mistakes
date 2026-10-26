@@ -16,6 +16,26 @@ impl Tracker {
         }
         ids.get(&at).map_or(Node::Scalar, |id| Node::Ref(*id, at))
     }
+    pub(super) fn record_chain(
+        &mut self,
+        element: &oxc_ast::ast::ChainElement<'_>,
+        ids: &FxHashMap<Span, usize>,
+    ) -> Node {
+        use oxc_ast::ast::ChainElement;
+        // A chain element shares the wrapper span and has no expression callback.
+        match element {
+            ChainElement::StaticMemberExpression(value) => Node::Read(
+                span(value.object.span()),
+                Some(value.property.name.to_string()),
+            ),
+            ChainElement::ComputedMemberExpression(value) => {
+                Node::Read(span(value.object.span()), static_key(&value.expression))
+            }
+            ChainElement::TSNonNullExpression(value) => Node::Copy(span(value.expression.span())),
+            ChainElement::CallExpression(call) => self.record_call(call, ids),
+            _ => Node::Scalar,
+        }
+    }
     pub(super) fn record_call(
         &mut self,
         call: &CallExpression<'_>,

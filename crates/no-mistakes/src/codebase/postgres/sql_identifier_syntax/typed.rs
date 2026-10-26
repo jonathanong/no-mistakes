@@ -109,8 +109,15 @@ pub(super) fn collect(
         .union(&selection.factories)
         .copied()
         .collect();
+    let proven = visitor
+        .selected
+        .difference(&visitor.unsupported)
+        .copied()
+        .collect();
     let sources = freeze::Sources {
         initial: &initial,
+        proven: &proven,
+        factories: &selection.factories,
         writes: &visitor.writes,
         candidates: &facts.uses,
         data: &facts.data,

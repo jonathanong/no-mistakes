@@ -151,6 +151,7 @@ fn append_escapes(
     for (at, owner) in &syntax.aliases {
         if (selected.contains(owner) || typed.contains(owner))
             && !direct.contains(at)
+            && !selection.transports.contains(at)
             && !syntax
                 .metadata
                 .belongs_to(at, direct, &syntax.template_binds)

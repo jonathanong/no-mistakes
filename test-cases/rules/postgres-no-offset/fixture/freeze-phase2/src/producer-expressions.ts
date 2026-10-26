@@ -1,3 +1,4 @@
+import { beginTransaction } from "@example/db";
 import type { QueryExecutor } from "@example/executor-types";
 declare const statement: string;
 declare const query: QueryExecutor;
@@ -76,3 +77,11 @@ carrierAlias[query(statement)] = 0; // ADVISE_COMPUTED_KEY_SQL
 carrierAlias.run = query(statement); // ADVISE_RHS_SQL
 carrierAlias.run = opaque(query); // ADVISE_RHS_OPAQUE
 receiverFrom(query(statement)).run = 0; // ADVISE_RECEIVER_CALL_SQL
+
+// A possible executor call is not a definite factory-only transport.
+const mixedCallee = flag ? query : beginTransaction; // NON_SQL
+const mixedResult = mixedCallee(statement); // ADVISE_MIXED_CALLEE
+mixedResult(statement); // ADVISE_MIXED_RETURNED_RECEIVER
+
+// Optional invocation still executes the selected executor when present.
+query?.(statement); // ADVISE_OPTIONAL_QUERY

@@ -6,6 +6,8 @@ mod value;
 use value::{Field, Node, Taint};
 pub(super) struct Sources<'a> {
     pub initial: &'a FxHashSet<usize>,
+    pub proven: &'a FxHashSet<usize>,
+    pub factories: &'a FxHashSet<usize>,
     pub writes: &'a FxHashSet<usize>,
     pub candidates: &'a FxHashSet<Span>,
     pub data: &'a FxHashSet<Span>,

@@ -2,6 +2,7 @@ use super::*;
 use std::collections::VecDeque;
 mod evaluate;
 mod index;
+mod invoke;
 use index::Index;
 mod project;
 mod propagate;
@@ -29,11 +30,11 @@ impl Tracker {
     fn solve(self, sources: &Sources<'_>) -> Option<Proof> {
         let initial = sources.initial;
         let writes = sources.writes;
-        let index = Index::new(&self);
+        let mut index = Index::new(&self);
         let mut values = initial
             .iter()
             .filter(|id| !sources.producers.contains(id))
-            .map(|id| (*id, Taint::executor()))
+            .map(|id| (*id, seeds::executor(*id, sources.proven)))
             .collect::<FxHashMap<_, _>>();
         let mut functions = seeds::producer_functions(sources, &index);
         let mut facts = FxHashMap::<Span, Taint>::default();
@@ -44,7 +45,20 @@ impl Tracker {
             if work > WORK_LIMIT {
                 return None;
             }
-            let mut value = evaluate(self.nodes.get(&at)?, &facts, &values, &functions);
+            let mut value = evaluate(
+                self.nodes.get(&at)?,
+                &facts,
+                &values,
+                &functions,
+                &mut |id| {
+                    if index.invokes.entry(id).or_default().insert(at) {
+                        work += 1;
+                    }
+                },
+            );
+            if work > WORK_LIMIT {
+                return None;
+            }
             seeds::apply_node_seeds(&mut value, at, &self.nodes, sources);
             if !facts.entry(at).or_default().join(value) {
                 continue;

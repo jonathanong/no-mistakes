@@ -47,7 +47,7 @@ impl Tracker {
                 containers::object(object)
             }
             Expression::ArrayExpression(array) => containers::array(array),
-            Expression::ChainExpression(value) => Node::Copy(span(value.expression.span())),
+            Expression::ChainExpression(value) => self.record_chain(&value.expression, ids),
             Expression::CallExpression(call) => self.record_call(call, ids),
             _ => Node::Scalar,
         };

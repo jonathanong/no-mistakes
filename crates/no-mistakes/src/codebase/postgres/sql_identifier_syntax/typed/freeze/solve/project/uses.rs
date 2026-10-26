@@ -24,10 +24,16 @@ impl Tracker {
             };
             let receiver_tainted =
                 receiver.is_some_and(|(at, _)| facts.get(&at).is_some_and(Taint::present));
+            let executor_metadata = receiver.is_some_and(|(at, key)| {
+                facts.get(&at).is_some_and(Taint::executor_leaf)
+                    && key.is_some_and(|key| !matches!(key, "query" | "call" | "apply" | "bind"))
+            });
             let covered_method = receiver.is_some_and(|(at, key)| {
                 key.is_some_and(|key| self.method_checked(at, key, facts, sources))
             });
-            if !factory
+            if executor_metadata {
+                roots.push(*callee);
+            } else if !factory
                 && !covered_method
                 && (value.executable()
                     || (value.latent() && matches!(self.nodes.get(&member), Some(Node::Ref(_, _)))))

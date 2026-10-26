@@ -35,10 +35,7 @@ impl Taint {
                 .chain(self.producers.iter().map(|(path, _)| path))
                 .any(|path| path.len() > PATH_LIMIT)
             {
-                self.broad = true;
-                self.paths.clear();
-                self.open.clear();
-                self.producers.clear();
+                self.widen();
             }
         }
         self
@@ -48,10 +45,9 @@ impl Taint {
             return self;
         }
         let Some(key) = key else {
-            self.broad = self.present() || !self.open.is_empty();
-            self.paths.clear();
-            self.open.clear();
-            self.producers.clear();
+            if self.present() || !self.open.is_empty() {
+                self.widen();
+            }
             return self;
         };
         let open = self.latent();
