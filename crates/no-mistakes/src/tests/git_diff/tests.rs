@@ -342,11 +342,13 @@ fn stream_git_diff_rejects_a_non_utf8_path() {
 // output or crash the parser.
 #[test]
 fn stream_git_diff_handles_binary_changes_without_hunks() {
-    let dir = materialize_case("stream-binary");
+    // PNG-like bodies contain NUL bytes, which the committed-binary check rejects.
+    let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
     init_repo(root);
+    std::fs::write(root.join("image.png"), [0u8, 1, 2, 255, 0, 254]).unwrap();
     commit_all(root, "base");
-    copy_case_file(root, "stream-binary", "after-image.png", "image.png");
+    std::fs::write(root.join("image.png"), [9u8, 8, 7, 6, 5, 4]).unwrap();
     commit_all(root, "head");
 
     let diff = stream_git_diff(root, "HEAD~1", "HEAD").unwrap();
@@ -410,9 +412,12 @@ fn stream_git_diff_ignores_diff_noprefix_config() {
 // `Modified`.
 #[test]
 fn stream_git_diff_reports_hunkless_empty_and_binary_deletions() {
-    let dir = materialize_case("stream-hunkless-deletions");
+    // The binary body contains a NUL byte, which cannot be a committed fixture.
+    let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
     init_repo(root);
+    std::fs::write(root.join("empty.txt"), "").unwrap();
+    std::fs::write(root.join("bin.dat"), [0u8, 1, 2, 255]).unwrap();
     commit_all(root, "base");
     std::fs::remove_file(root.join("empty.txt")).unwrap();
     std::fs::remove_file(root.join("bin.dat")).unwrap();
