@@ -6,6 +6,9 @@ use std::sync::Arc;
 #[path = "tests/worker_process.rs"]
 mod worker_process;
 
+#[path = "tests/phase_owner.rs"]
+mod phase_owner;
+
 struct ReleasePhase<'a>(&'a AtomicUsize);
 
 impl Drop for ReleasePhase<'_> {
@@ -126,53 +129,13 @@ fn invocation_deadline_limits_command_without_extending_a_shorter_phase_timeout(
 
 #[test]
 fn expired_command_keeps_its_phase_when_the_invocation_limit_is_live() {
-    let _serial = super::super::deadline_test_lock()
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let limit = Deadline {
-        expires_at: clock::now() + Duration::from_secs(30),
-        timeout: Duration::from_secs(30),
-        owner: Some(std::thread::current().id()),
-        committed: false,
-    };
-    let previous_phase = current_phase();
-    set_timeout_phase("command");
-    let outcome = DeadlineGuard::install_for_invocation_with_deadline(
-        Some(Duration::ZERO),
-        Some(std::thread::current().id()),
-        Some(limit),
-    )
-    .map(|guard| {
-        // Other tests stream subprocess output concurrently; this deliberately
-        // expired test deadline must only affect its owning test thread.
-        let foreign_timeout = std::thread::spawn(remaining_timeout).join().unwrap();
-        assert_eq!(foreign_timeout.unwrap(), None);
-        let result = check_timeout();
-        drop(guard);
-        result
-    });
-    set_timeout_phase(previous_phase);
-    let error = outcome
-        .expect("live invocation limit must allow the command guard")
-        .expect_err("zero-duration native command must already be expired");
-    assert_eq!(
-        error.to_string(),
-        "command timed out after 0 seconds during command"
-    );
-    let expired = Deadline {
-        expires_at: clock::now(),
-        ..limit
-    };
-    let error = DeadlineGuard::install_for_invocation_with_deadline(
-        Some(Duration::from_secs(1)),
-        None,
-        Some(expired),
-    )
-    .err()
-    .expect("already-expired invocation must fail before publication");
-    assert_eq!(
-        error.to_string(),
-        "invocation deadline elapsed during lock acquisition"
+    // Other tests update the process-wide phase outside the deadline-test lock.
+    // Isolate this exact phase assertion while retaining its original deadlines.
+    worker_process::run_isolated(
+        module_path!(),
+        "expired_command_keeps_its_phase_when_the_invocation_limit_is_live",
+        "NO_MISTAKES_DEADLINE_PHASE_SUBPROCESS",
+        phase_owner::expired_command_body,
     );
 }
 

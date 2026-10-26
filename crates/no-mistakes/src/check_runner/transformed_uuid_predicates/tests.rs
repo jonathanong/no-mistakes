@@ -52,8 +52,8 @@ fn transformed_uuid_predicates_low_routes_uncertainty_without_losing_definite_fi
     let max = run(".no-mistakes.max.yml", None, false);
     for (config, findings, advisories) in [
         (".no-mistakes.low-report.yml", 11, 0),
-        (".no-mistakes.low-advise.yml", 10, 1),
-        (".no-mistakes.low-ignore.yml", 10, 0),
+        (".no-mistakes.low-advise.yml", 11, 0),
+        (".no-mistakes.low-ignore.yml", 11, 0),
     ] {
         let report = run(config, None, false);
         assert_eq!(report.rules.len(), findings, "{config}: {:?}", report.rules);
@@ -70,7 +70,15 @@ fn transformed_uuid_predicates_low_routes_uncertainty_without_losing_definite_fi
             .iter()
             .filter(|row| row.target.as_deref() != Some("unanalyzable"))
             .collect();
-        assert_eq!(definite.len(), 10);
+        assert_eq!(definite.len(), 11);
+        assert!(
+            definite.iter().any(|row| {
+                row.file == "helper-query.ts"
+                    && row.line == 4
+                    && row.target.as_deref() == Some("users.id")
+            }),
+            "helper SQL finding should retain its physical origin: {definite:#?}"
+        );
         for row in definite {
             assert!(max.rules.contains(row), "{row:?}");
         }

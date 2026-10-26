@@ -83,3 +83,4 @@ include!("domain_parity_tests/resolver_projection_parity.rs");
 include!("domain_parity_tests/resolver_projection_reentry.rs");
 
 include!("domain_parity_tests/constructor_resolution.rs");
+include!("domain_parity_tests/low_helper_recovery.rs");

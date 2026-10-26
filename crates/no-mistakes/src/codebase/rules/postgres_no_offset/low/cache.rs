@@ -1,4 +1,5 @@
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
+use crate::codebase::postgres::sql_identifier_syntax::helper_recovery::ApplicationKey;
 use crate::codebase::postgres::sql_identifier_syntax::literal_projection::{
     project_literals, LiteralProjection,
 };
@@ -6,7 +7,7 @@ use crate::codebase::postgres::sql_identifier_syntax::OffsetLiteral;
 use std::collections::BTreeMap;
 use std::path::Path;
 
-type Span = (u32, u32);
+type Span = (Option<ApplicationKey>, (u32, u32));
 pub(super) fn literals<'a>(
     file: &'a CheckFileFacts,
     facts: &CheckFactMap,

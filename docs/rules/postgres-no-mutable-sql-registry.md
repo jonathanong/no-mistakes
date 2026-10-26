@@ -184,8 +184,9 @@ to empty. `include` and `exclude` default to empty (all indexable files).
 Low effort never emits a cross-file write finding; it only emits unanalyzable
 diagnostics for unsupported inputs.
 
-`effort: low` does not request the call graph, helper evaluator, or
-mutation/provenance analysis. Other checks can still require that shared
+`effort: low` does not request the call graph, max-effort helper evaluator, or
+registry mutation/provenance analysis. It supports [bounded helper and builder
+recovery](../postgres-facts/low-helper-recovery.md) for complete SQL. Other checks can still require that shared
 preparation. At a directly imported named executor or a proven typed parameter,
 it accepts SQL written as a
 literal, or through one local `const` initialized with that literal. Direct
@@ -203,14 +204,14 @@ query(`SELECT id FROM app.users WHERE id = ${id}`);
 Exact imported `sql-template-strings` default/`SQL` tags also qualify. Their
 interpolations are bind values rather than SQL fragments. A one-local-constant
 builder must not be mutated or used outside the supported executor inputs;
-other tags and builder operations remain unanalyzable.
+other tags and unmodeled builder operations remain unanalyzable.
 
 A registry relation such as ``query(`SELECT id FROM ${tables.users}`)`` is
 unanalyzable at low effort, including when the registry uses `as const` or
 `Object.freeze`. A TypeScript const assertion does not freeze runtime members;
 a freeze does not establish the whole imported object's provenance or nested
-immutability. Helpers, aliases, and other indirect SQL also require maximum
-effort. Rewrite SQL as a literal at the executor call or one local literal
+immutability. Helpers outside the bounded low analysis, aliases, and other
+indirect SQL require maximum effort. Rewrite SQL as a literal at the executor call or one local literal
 `const`, or select `max` to inspect the cross-file registry. Typed parameter
 calls use the same SQL contract as named executors; erased type
 references create no findings. Defaulted typed parameters, typed callbacks and
@@ -241,7 +242,7 @@ works](../../README.md#how-analysis-works)), inputs this rule cannot prove are
 never treated as clean; they follow `options.unanalyzable`.
 
 - At low: a registry relation such as ``query(`SELECT id FROM
-  ${tables.users}`)``, helpers, aliases, namespace executor calls, and
+  ${tables.users}`)``, unmodeled helpers, aliases, namespace executor calls, and
   unsupported executor factories or unproven type receivers. At max the rule
   abstains on routes it cannot tie to one canonical producer (dynamic or
   conditional `require`, ambiguous re-exports) rather than reporting them.

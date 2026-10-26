@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "public",
+  "tables": {
+    "accounts": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        },
+        "name": {
+          "dataType": "text"
+        }
+      }
+    }
+  }
+}

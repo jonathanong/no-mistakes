@@ -1,0 +1,9 @@
+effort: low
+unanalyzable: advise
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorTypeNames: [QueryExecutor]
+      include: ['src/alias-boundary.mts']

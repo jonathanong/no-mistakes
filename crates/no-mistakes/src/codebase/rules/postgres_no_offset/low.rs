@@ -1,8 +1,7 @@
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::{
-    sql_identifier_syntax::{Input, SqlCall},
-    SqlObligationVerdict, SqlVerdictStatus,
+    sql_identifier_syntax::SqlCall, SqlObligationVerdict, SqlVerdictStatus,
 };
 use crate::codebase::rules::{PostgresFindings, RuleFinding};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
@@ -11,6 +10,8 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 mod cache;
+mod inputs;
+mod ownership;
 
 const REWRITE: &str = "pass valid SQL as a literal string or interpolation-free template directly to the imported executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL";
 
@@ -31,6 +32,13 @@ pub(super) fn scan(
         .cloned()
         .collect::<Vec<_>>();
     let mut findings = super::scan::scan(root, opts, &sql_files, context, sources)?;
+    let key =
+        crate::codebase::postgres::sql_identifier_syntax::helper_recovery::ApplicationKey::new(
+            &opts.embedded,
+            RULE_ID,
+            index,
+        );
+    let owners = ownership::Owners::new(files, facts, &key, sources)?;
     let observer = crate::diagnostics::current();
     for path in files
         .iter()
@@ -41,12 +49,7 @@ pub(super) fn scan(
             .ts
             .get(path)
             .ok_or_else(|| anyhow::anyhow!("{RULE_ID}: prepared facts missing for {rel}"))?;
-        let calls = file
-            .sql_identifier_syntax
-            .profiles
-            .iter()
-            .find(|(profile, _)| profile == &opts.embedded)
-            .map(|(_, calls)| calls.as_slice());
+        let calls = file.sql_identifier_syntax.calls_for(&key);
         let Some(calls) = calls else {
             if file.parse_error.is_some() || file.ts.parse_error.is_some() {
                 continue;
@@ -60,31 +63,20 @@ pub(super) fn scan(
             if let Some(observer) = &observer {
                 observer.increment("postgres.no_offset.low.calls", 1);
             }
-            let result = match &call.input {
-                Input::Sql { source_span, .. } => {
-                    literals.get(source_span).cloned().unwrap_or(Ok(None))
-                }
-                _ => Ok(None),
-            };
-            let is_unknown = !matches!(&result, Ok(Some(_)));
-            let invalid = result.is_err();
-            let offsets = result.ok().flatten();
-            if let Some(offsets) = &offsets {
-                for offset in offsets {
-                    ordinal += 1;
-                    let mut offset = *offset;
-                    if crate::codebase::ts_source::matching_disable_directive(
-                        &source,
-                        Some(call.line),
-                        RULE_ID,
-                    )
-                    .is_some()
-                    {
-                        offset.line = call.line as usize;
-                    }
-                    findings.push(super::scan::finding(&rel, &offset, ordinal));
-                }
-            } else if is_unknown && opts.fail_unanalyzable {
+            let inputs::Outcome {
+                unknown: is_unknown,
+                invalid,
+                violation: has_violation,
+            } = inputs::Inputs {
+                root,
+                path,
+                rel: &rel,
+                source: &source,
+                literals,
+                owners: &owners,
+            }
+            .evaluate(call, &key, &mut ordinal, &mut findings);
+            if is_unknown && opts.fail_unanalyzable {
                 findings.push(unknown(&rel, call));
             }
             if !context.wants_sql_verdicts() && !(is_unknown && opts.advise_unanalyzable) {
@@ -97,18 +89,20 @@ pub(super) fn scan(
                 subcheck: "offset".into(),
                 file: rel.clone(),
                 span: call.span,
-                status: match &offsets {
-                    None => SqlVerdictStatus::Abstain,
-                    Some(offsets) if offsets.is_empty() => SqlVerdictStatus::ProvenClear,
-                    Some(_) => SqlVerdictStatus::Violation,
+                status: if has_violation {
+                    SqlVerdictStatus::Violation
+                } else if is_unknown {
+                    SqlVerdictStatus::Abstain
+                } else {
+                    SqlVerdictStatus::ProvenClear
                 },
-                advisory: offsets.is_none() && opts.advise_unanalyzable,
+                advisory: is_unknown && opts.advise_unanalyzable,
                 evidence: None,
                 known_prefix: None,
                 helper_lines: Vec::new(),
                 residual_reasons: if invalid {
                     vec!["invalid-sql".into()]
-                } else if offsets.is_none() {
+                } else if is_unknown {
                     vec![format!("SQL is unanalyzable at effort low; {REWRITE}")]
                 } else {
                     Vec::new()
@@ -126,6 +120,15 @@ pub(super) fn scan(
 }
 
 fn unknown(file: &str, call: &SqlCall) -> RuleFinding {
-    RuleFinding { rule: RULE_ID.into(), file: file.into(), line: call.line as usize,
-        message: format!("{file}:{}: SQL is unanalyzable at effort low, so an OFFSET cannot be ruled out; {REWRITE}", call.line), import: None, target: Some("unanalyzable".into()) }
+    RuleFinding {
+        rule: RULE_ID.into(),
+        file: file.into(),
+        line: call.line as usize,
+        message: format!(
+            "{file}:{}: SQL is unanalyzable at effort low, so an OFFSET cannot be ruled out; {REWRITE}",
+            call.line
+        ),
+        import: None,
+        target: Some("unanalyzable".into()),
+    }
 }

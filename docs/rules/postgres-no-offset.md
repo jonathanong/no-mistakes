@@ -51,9 +51,10 @@ default or `SQL` bindings, including aliases and namespace members. Their
 interpolations become bind placeholders, not SQL fragments. One local constant
 qualifies only when its builder is not mutated or passed to an unmodeled use.
 SQL positions remain tied to the literal text, including multiline binds.
-Low does not evaluate JavaScript helpers or builders. Untagged interpolation,
-other SQL tags, computed SQL, further aliases, and executor forms without a direct ownership
-proof remain unanalyzable. JavaScript escapes in SQL literals are also
+Low also performs [bounded helper and builder recovery](../postgres-facts/low-helper-recovery.md).
+Unmodeled helpers, untagged dynamic interpolation, other SQL tags, computed SQL,
+further aliases, and executor forms without a direct ownership proof remain
+unanalyzable. JavaScript escapes in SQL literals are also
 unanalyzable at low; use an unescaped literal or select max. Low requires
 embedded literal SQL to parse completely; malformed embedded SQL follows the same
 uncertainty policy rather than being treated as clear.

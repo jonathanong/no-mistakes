@@ -6,7 +6,7 @@ use oxc_ast::ast::{
 use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
 
-impl<'a> Visit<'a> for Syntax {
+impl<'a> Visit<'a> for Syntax<'_> {
     fn visit_expression(&mut self, value: &Expression<'a>) {
         if !matches!(
             unwrap_ts_wrappers(value),
@@ -22,19 +22,13 @@ impl<'a> Visit<'a> for Syntax {
             self.template_binds.validate(&mut call.input);
         }
     }
-    fn visit_simple_assignment_target(
-        &mut self,
-        target: &oxc_ast::ast::SimpleAssignmentTarget<'a>,
-    ) {
+    fn visit_simple_assignment_target(&mut self, target: &SimpleAssignmentTarget<'a>) {
         self.template_binds.write(target);
-        // Only the receiver is a write; computed keys and RHS expressions keep their uses.
-        let receiver = match target {
-            SimpleAssignmentTarget::StaticMemberExpression(member) => Some(&member.object),
-            SimpleAssignmentTarget::ComputedMemberExpression(member) => Some(&member.object),
-            _ => None,
-        };
-        if let Some(Expression::Identifier(receiver)) = receiver.map(unwrap_ts_wrappers) {
-            self.metadata.assignment_receiver(span(receiver.span));
+        self.metadata.assignment_receiver(target);
+        if let Some(at) = template_binds::assignment_root(target) {
+            if let Some(id) = self.recovery_bindings.id(oxc_span::Span::new(at.0, at.1)) {
+                self.recovery.writes.insert(id);
+            }
         }
         walk::walk_simple_assignment_target(self, target);
     }
@@ -43,6 +37,9 @@ impl<'a> Visit<'a> for Syntax {
         target: &oxc_ast::ast::AssignmentTargetPropertyIdentifier<'a>,
     ) {
         self.template_binds.write_span(span(target.binding.span));
+        if let Some(id) = self.recovery_bindings.id(target.binding.span) {
+            self.recovery.writes.insert(id);
+        }
         walk::walk_assignment_target_property_identifier(self, target);
     }
     fn visit_static_member_expression(&mut self, value: &oxc_ast::ast::StaticMemberExpression<'a>) {
@@ -75,6 +72,14 @@ impl<'a> Visit<'a> for Syntax {
     }
     fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
         self.metadata.reference(span(value.span));
+        self.recovery.call(
+            value,
+            &helper_recovery::lower::Context {
+                source: self.source,
+                bindings: &self.recovery_bindings,
+                tags: &self.template_binds,
+            },
+        );
         let callee = chain(&value.callee);
         let selected = callee.as_ref().is_some_and(|(root, parts)| {
             (parts.len() == 1 && (self.targets.contains(root) || self.aliases.contains_key(root)))
@@ -152,7 +157,19 @@ impl<'a> Visit<'a> for Syntax {
         self.opaque_metadata(|this| walk::walk_class(this, value));
     }
     fn visit_function(&mut self, value: &Function<'a>, flags: ScopeFlags) {
+        let context = helper_recovery::lower::Context {
+            source: self.source,
+            bindings: &self.recovery_bindings,
+            tags: &self.template_binds,
+        };
+        self.recovery.function(value, &context);
+        self.recovery
+            .stack
+            .push(crate::codebase::dependencies::extract::CallableId(
+                value.span.start,
+            ));
         self.opaque_metadata(|this| walk::walk_function(this, value, flags));
+        self.recovery.stack.pop();
     }
     fn visit_arrow_function_expression(&mut self, value: &ArrowFunctionExpression<'a>) {
         self.opaque_metadata(|this| walk::walk_arrow_function_expression(this, value));

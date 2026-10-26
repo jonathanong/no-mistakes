@@ -1,5 +1,6 @@
 //! Distinguish known SQL data operands from opaque runtime executor escapes.
 use super::*;
+use oxc_ast::ast::SimpleAssignmentTarget;
 #[derive(Clone, Copy, Default)]
 pub(super) struct Context {
     call: Option<Span>,
@@ -63,8 +64,17 @@ impl Metadata {
             ..Default::default()
         }
     }
-    pub fn assignment_receiver(&mut self, at: Span) {
-        self.references.insert(at, Owner::AssignmentReceiver);
+    pub fn assignment_receiver(&mut self, target: &SimpleAssignmentTarget<'_>) {
+        // Only the receiver is a write; computed keys and RHS expressions keep their uses.
+        let receiver = match target {
+            SimpleAssignmentTarget::StaticMemberExpression(member) => Some(&member.object),
+            SimpleAssignmentTarget::ComputedMemberExpression(member) => Some(&member.object),
+            _ => None,
+        };
+        if let Some(Expression::Identifier(receiver)) = receiver.map(unwrap_ts_wrappers) {
+            self.references
+                .insert(span(receiver.span), Owner::AssignmentReceiver);
+        }
     }
     pub fn track_alias(&mut self, at: Span) {
         self.wanted.insert(at);
@@ -170,7 +180,7 @@ impl Metadata {
             .or_else(|| self.escape_arguments.get(at).copied())
     }
 }
-impl Syntax {
+impl Syntax<'_> {
     // Opaque invocations and deferred bodies own their uses independently of
     // the surrounding executor's data; those escapes remain unknown.
     pub(super) fn opaque_metadata(&mut self, visit: impl FnOnce(&mut Self)) {

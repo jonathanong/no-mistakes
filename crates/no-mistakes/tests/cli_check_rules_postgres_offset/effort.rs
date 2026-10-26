@@ -24,9 +24,26 @@ fn saved_offset_efforts_preserve_default_and_cli_overrides() {
     assert_eq!(low, report(".no-mistakes.max.yml", Some("low")));
     assert_eq!(max, report(".no-mistakes.low.yml", Some("max")));
     let advise = report(".no-mistakes.low-advise.yml", None);
+    // The closed build() helper now proves its OFFSET; only genuine residuals remain.
+    let residuals = advise["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| (row["file"].as_str().unwrap(), row["line"].as_u64().unwrap()))
+        .collect::<Vec<_>>();
     assert_eq!(
-        advise["advisories"].as_array().unwrap().len(),
-        3,
+        residuals,
+        [("src/query.ts", 11), ("src/query.ts", 12)],
+        "{advise}"
+    );
+    assert!(
+        advise["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|row| row["file"] == "src/query.ts"
+                && row["line"] == 8
+                && row["target"].as_str().unwrap().starts_with("offset")),
         "{advise}"
     );
     assert_eq!(

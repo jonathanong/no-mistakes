@@ -32,13 +32,13 @@ pub(super) fn collect(
     .visit_program(program);
 }
 
-struct Aliases<'a> {
+struct Aliases<'a, 'source> {
     sources: FxHashMap<Span, usize>,
     bindings: FxHashMap<Span, &'a ModuleBinding>,
-    syntax: &'a mut Syntax,
+    syntax: &'a mut Syntax<'source>,
 }
 
-impl<'a> Visit<'a> for Aliases<'_> {
+impl<'a> Visit<'a> for Aliases<'_, '_> {
     fn visit_variable_declaration(&mut self, value: &VariableDeclaration<'a>) {
         if value.kind.is_const() {
             for declaration in &value.declarations {

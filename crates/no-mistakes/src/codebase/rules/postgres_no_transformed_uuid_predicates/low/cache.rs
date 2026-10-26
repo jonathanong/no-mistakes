@@ -1,4 +1,5 @@
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
+use crate::codebase::postgres::sql_identifier_syntax::helper_recovery::ApplicationKey;
 use crate::codebase::postgres::sql_identifier_syntax::literal_projection::{
     project_literals, LiteralProjection,
 };
@@ -6,7 +7,7 @@ use crate::codebase::postgres::sql_identifier_syntax::TransformedLiteral;
 use std::collections::BTreeMap;
 use std::path::Path;
 
-type Span = (u32, u32);
+pub(super) type Span = (Option<ApplicationKey>, (u32, u32));
 pub(super) fn literals<'a>(
     file: &'a CheckFileFacts,
     facts: &CheckFactMap,
@@ -26,4 +27,51 @@ pub(super) fn literals<'a>(
             parse_metric: "postgres.no_transformed_uuid_predicates.low.literal_parses",
         },
     ))
+}
+
+pub(super) fn recovered_finding(
+    root: &Path,
+    caller: &Path,
+    sql: &crate::codebase::postgres::RecoveredSql,
+    use_: &crate::codebase::postgres::statements::SqlTransformedColumnUseFact,
+    table: &str,
+) -> crate::codebase::rules::RuleFinding {
+    let (origin, line) =
+        crate::codebase::postgres::sql_identifier_syntax::helper_recovery::Recovered::position(
+            sql,
+            use_.line,
+            use_.column_position,
+            caller,
+        );
+    let origin_rel = crate::codebase::ts_source::relative_slash_path(root, origin);
+    let mut relocated = use_.clone();
+    relocated.line = line;
+    super::super::scan::finding(&origin_rel, table, &relocated)
+}
+
+pub(super) fn mark_uncertain(
+    status: &mut crate::codebase::postgres::SqlVerdictStatus,
+    reasons: &mut Vec<String>,
+    invalid: bool,
+) {
+    if *status != crate::codebase::postgres::SqlVerdictStatus::Violation {
+        *status = crate::codebase::postgres::SqlVerdictStatus::Abstain;
+    }
+    reasons.push(if invalid {
+        "invalid-sql".into()
+    } else {
+        "SQL helper recovery has residual uncertainty".into()
+    });
+}
+
+pub(super) fn mark_input_unknown(
+    status: &mut crate::codebase::postgres::SqlVerdictStatus,
+    uncertain: &mut bool,
+    reasons: &mut Vec<String>,
+) {
+    if *status != crate::codebase::postgres::SqlVerdictStatus::Violation {
+        *status = crate::codebase::postgres::SqlVerdictStatus::Abstain;
+    }
+    *uncertain = true;
+    reasons.push("SQL is unanalyzable at effort low; pass a literal string or template directly to the imported executor, or through one local const; use effort max for inferred SQL".into());
 }

@@ -173,3 +173,15 @@ fn typed_executor_low_adopters_ignore_erased_uses_and_keep_statement_locations()
 
 #[path = "low_executor_transport_tests.rs"]
 mod low_executor_transport_tests;
+
+#[path = "low_helper_recovery_tests.rs"]
+mod low_helper_recovery_tests;
+
+#[path = "low_helper_acceptance_tests.rs"]
+mod low_helper_acceptance_tests;
+
+#[path = "upper_patch_tests.rs"]
+mod upper_patch_tests;
+
+#[path = "offset_execution_ownership_tests.rs"]
+mod offset_execution_ownership_tests;

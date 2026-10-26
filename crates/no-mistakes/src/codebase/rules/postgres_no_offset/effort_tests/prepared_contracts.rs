@@ -10,6 +10,9 @@ fn missing_prepared_inputs_fail_while_cached_parser_errors_remain_authoritative(
     assert!(missing.to_string().contains("prepared facts missing"));
     facts.ts.insert(path.clone(), file);
     let file = std::sync::Arc::get_mut(facts.ts.get_mut(&path).unwrap()).unwrap();
+    // Keep the recovered helper override: it cannot substitute for missing
+    // canonical syntax facts even though it contains a valid literal proof.
+    assert!(!file.sql_identifier_syntax.application_calls.is_empty());
     file.sql_identifier_syntax.profiles.clear();
     let projection =
         check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap_err();
@@ -65,4 +68,32 @@ fn mixed_invalid_sql_abstains_and_unavailable_max_statements_fall_back_to_litera
         check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap();
     crate::codebase::rules::suppress_rule_findings_with_sources(&root(), &mut findings, &sources);
     assert_eq!(findings, run(".no-mistakes.low-ignore.yml"));
+}
+
+#[test]
+fn stale_application_override_cannot_outlive_its_prepared_owner() {
+    let (_, _, sources, mut facts) = prepared(load(".no-mistakes.low-ignore.yml"));
+    let path = root().join("src/query.ts");
+    let source = sources.read_path(&path).unwrap();
+    let helper_call = source.find("query(build())").unwrap() as u32;
+    let file = std::sync::Arc::get_mut(facts.ts.get_mut(&path).unwrap()).unwrap();
+    let syntax = &mut file.sql_identifier_syntax;
+    let key = syntax.application_keys().into_iter().next().unwrap();
+    let input = |calls: &[crate::codebase::postgres::sql_identifier_syntax::SqlCall]| {
+        calls
+            .iter()
+            .find(|call| call.span.0 == helper_call)
+            .unwrap()
+            .input
+            .clone()
+    };
+    assert!(matches!(
+        input(syntax.calls_for(&key).unwrap()),
+        crate::codebase::postgres::sql_identifier_syntax::Input::Recovered(_)
+    ));
+    syntax.low_applications.clear();
+    assert!(matches!(
+        input(syntax.calls_for(&key).unwrap()),
+        crate::codebase::postgres::sql_identifier_syntax::Input::Unknown
+    ));
 }

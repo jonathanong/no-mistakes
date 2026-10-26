@@ -1,6 +1,6 @@
 use super::*;
 
-impl<'a> Visit<'a> for Constants<'_> {
+impl<'a> Visit<'a> for Constants<'_, '_> {
     fn visit_variable_declaration(&mut self, value: &VariableDeclaration<'a>) {
         if value.kind.is_const() {
             for declaration in &value.declarations {

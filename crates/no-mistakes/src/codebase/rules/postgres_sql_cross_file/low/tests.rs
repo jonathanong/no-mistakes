@@ -1,6 +1,6 @@
-use super::*;
+use super::{recovered::Relations, *};
 use crate::codebase::check_facts::CheckFileFacts;
-use sqlparser::ast::{Ident, ObjectNamePartFunction};
+use sqlparser::ast::{Ident, ObjectName, ObjectNamePart, ObjectNamePartFunction, Visitor};
 use std::{path::PathBuf, sync::Arc};
 
 #[test]

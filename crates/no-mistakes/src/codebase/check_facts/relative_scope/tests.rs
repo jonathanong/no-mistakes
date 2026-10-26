@@ -1,6 +1,5 @@
-use super::{
-    or_empty_tsconfig, project_relative_executor_scopes, remember_package_root, workspace_or_empty,
-};
+use super::setup::{or_empty_tsconfig, workspace_or_empty};
+use super::{project_relative_executor_scopes, remember_package_root};
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::{
     collect_check_facts_with_graph_files_playwright_and_sources,
