@@ -1,0 +1,29 @@
+{
+  "categories": {
+    "correctness": "off"
+  },
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../peers/before/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/async-call-disposition": [
+      "error",
+      {
+        "targets": [
+          {
+            "sourceSpecifierPatterns": [
+              "@bench/jobs"
+            ],
+            "calleeNamePatterns": [
+              "enqueue"
+            ]
+          }
+        ]
+      }
+    ],
+    "typescript/no-floating-promises": "error"
+  }
+}

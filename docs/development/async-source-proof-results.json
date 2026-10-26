@@ -1,0 +1,353 @@
+{
+  "baseline": "144e6caa627617090d0c2ede90ec363a6b5b58f5",
+  "candidate": "317255123a211a136cd9feb4ad06b116d0885fe4",
+  "workloads": {
+    "dense": {
+      "metadata": {
+        "baseline": "144e6caa627617090d0c2ede90ec363a6b5b58f5",
+        "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4",
+        "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+        "variant": "dense",
+        "callerLines": 91,
+        "callerBytes": 5600,
+        "jsxFiles": 0,
+        "callers": 4096,
+        "threads": 4,
+        "node": "v24.22.1",
+        "oxlint": "1.87.0",
+        "typescript": "6.0.3",
+        "parser": "8.71.1",
+        "checker": "/home/jong/.codex/worktrees/3bff/no-mistakes/node_modules/.pnpm/@oxlint-tsgolint+linux-x64@7.0.2005/node_modules/@oxlint-tsgolint/linux-x64/tsgolint"
+      },
+      "summary": {
+        "before": {
+          "wallSeconds": 22.13387406000402,
+          "userSeconds": 39.114762,
+          "systemSeconds": 1.532861,
+          "peakTreeRssKiB": 2085862.0,
+          "maxProcessRssKiB": 1357632.0
+        },
+        "after": {
+          "wallSeconds": 4.398040858563036,
+          "userSeconds": 8.291450999999999,
+          "systemSeconds": 1.3698899999999998,
+          "peakTreeRssKiB": 1737604.0,
+          "maxProcessRssKiB": 1362282.0
+        },
+        "absent": {
+          "wallSeconds": 4.5858453180408105,
+          "userSeconds": 8.5194695,
+          "systemSeconds": 1.3258955000000001,
+          "peakTreeRssKiB": 1651576.0,
+          "maxProcessRssKiB": 1361518.0
+        }
+      },
+      "runs": {
+        "before": [
+          {
+            "wallSeconds": 22.13601000700146,
+            "userSeconds": 39.081488,
+            "systemSeconds": 1.492037,
+            "peakTreeRssKiB": 1942940,
+            "maxProcessRssKiB": 1358156,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+            "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4"
+          },
+          {
+            "wallSeconds": 22.337299269041978,
+            "userSeconds": 39.416326,
+            "systemSeconds": 1.519327,
+            "peakTreeRssKiB": 2217124,
+            "maxProcessRssKiB": 1357108,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+            "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4"
+          },
+          {
+            "wallSeconds": 22.131738113006577,
+            "userSeconds": 39.148036,
+            "systemSeconds": 1.546395,
+            "peakTreeRssKiB": 2216948,
+            "maxProcessRssKiB": 1356068,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+            "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4"
+          },
+          {
+            "wallSeconds": 21.832305984920822,
+            "userSeconds": 37.342583,
+            "systemSeconds": 1.727322,
+            "peakTreeRssKiB": 1954776,
+            "maxProcessRssKiB": 1372992,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+            "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4"
+          }
+        ],
+        "after": [
+          {
+            "wallSeconds": 4.3987573850899935,
+            "userSeconds": 8.356086,
+            "systemSeconds": 1.150905,
+            "peakTreeRssKiB": 1730988,
+            "maxProcessRssKiB": 1356448,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+            "sourceHash": "01090507424fb71cb860d59a12ab3331c9a120cc120e35bf39bb16480b4261a0"
+          },
+          {
+            "wallSeconds": 4.4440898559987545,
+            "userSeconds": 8.226816,
+            "systemSeconds": 1.306161,
+            "peakTreeRssKiB": 1740100,
+            "maxProcessRssKiB": 1365300,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+            "sourceHash": "01090507424fb71cb860d59a12ab3331c9a120cc120e35bf39bb16480b4261a0"
+          },
+          {
+            "wallSeconds": 4.388344477047212,
+            "userSeconds": 8.569481,
+            "systemSeconds": 1.564155,
+            "peakTreeRssKiB": 1735108,
+            "maxProcessRssKiB": 1359264,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+            "sourceHash": "01090507424fb71cb860d59a12ab3331c9a120cc120e35bf39bb16480b4261a0"
+          },
+          {
+            "wallSeconds": 4.397324332036078,
+            "userSeconds": 8.189008,
+            "systemSeconds": 1.433619,
+            "peakTreeRssKiB": 1743440,
+            "maxProcessRssKiB": 1365312,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+            "sourceHash": "01090507424fb71cb860d59a12ab3331c9a120cc120e35bf39bb16480b4261a0"
+          }
+        ],
+        "absent": [
+          {
+            "wallSeconds": 4.63899924501311,
+            "userSeconds": 8.349618,
+            "systemSeconds": 1.289784,
+            "peakTreeRssKiB": 1655096,
+            "maxProcessRssKiB": 1368748,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+            "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4"
+          },
+          {
+            "wallSeconds": 4.567876511020586,
+            "userSeconds": 8.751937,
+            "systemSeconds": 1.362007,
+            "peakTreeRssKiB": 1648056,
+            "maxProcessRssKiB": 1355428,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+            "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4"
+          },
+          {
+            "wallSeconds": 4.603814125061035,
+            "userSeconds": 8.689321,
+            "systemSeconds": 1.470858,
+            "peakTreeRssKiB": 1661268,
+            "maxProcessRssKiB": 1367608,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+            "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4"
+          },
+          {
+            "wallSeconds": 4.532706755911931,
+            "userSeconds": 8.300852,
+            "systemSeconds": 1.2891219999999999,
+            "peakTreeRssKiB": 1638104,
+            "maxProcessRssKiB": 1353032,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "e0414b51599689e34df959a373db2812925ea3c634fcd97febebc3a1ca6cf0b2",
+            "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4"
+          }
+        ]
+      }
+    },
+    "sparse": {
+      "metadata": {
+        "baseline": "144e6caa627617090d0c2ede90ec363a6b5b58f5",
+        "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4",
+        "callers": 4096,
+        "threads": 4,
+        "node": "v24.22.1",
+        "oxlint": "1.87.0",
+        "typescript": "6.0.3",
+        "parser": "8.71.1",
+        "checker": "/home/jong/.codex/worktrees/3bff/no-mistakes/node_modules/.pnpm/@oxlint-tsgolint+linux-x64@7.0.2005/node_modules/@oxlint-tsgolint/linux-x64/tsgolint",
+        "variant": "sparse",
+        "callerLines": 9,
+        "callerBytes": 300,
+        "jsxFiles": 0,
+        "fixtureHash": "be9e3534c1502a222cfc1059062e570033271c9ba0dc7db2acbe51c7e67210f6"
+      },
+      "summary": {
+        "before": {
+          "wallSeconds": 18.3933213299606,
+          "userSeconds": 34.6080215,
+          "systemSeconds": 0.6114074999999999,
+          "peakTreeRssKiB": 679622.0,
+          "maxProcessRssKiB": 566204.0
+        },
+        "after": {
+          "wallSeconds": 0.7920518810278736,
+          "userSeconds": 1.458011,
+          "systemSeconds": 0.2324655,
+          "peakTreeRssKiB": 346954.0,
+          "maxProcessRssKiB": 226246.0
+        },
+        "absent": {
+          "wallSeconds": 0.6479695115122013,
+          "userSeconds": 1.1393365,
+          "systemSeconds": 0.22632999999999998,
+          "peakTreeRssKiB": 302886.0,
+          "maxProcessRssKiB": 200938.0
+        }
+      },
+      "runs": {
+        "before": [
+          {
+            "wallSeconds": 18.538050765986554,
+            "userSeconds": 35.034071,
+            "systemSeconds": 0.6240249999999999,
+            "peakTreeRssKiB": 686484,
+            "maxProcessRssKiB": 572404,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "be9e3534c1502a222cfc1059062e570033271c9ba0dc7db2acbe51c7e67210f6",
+            "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4"
+          },
+          {
+            "wallSeconds": 18.248591893934645,
+            "userSeconds": 34.181972,
+            "systemSeconds": 0.5987899999999999,
+            "peakTreeRssKiB": 672760,
+            "maxProcessRssKiB": 560004,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "be9e3534c1502a222cfc1059062e570033271c9ba0dc7db2acbe51c7e67210f6",
+            "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4"
+          }
+        ],
+        "after": [
+          {
+            "wallSeconds": 0.7791586440289393,
+            "userSeconds": 1.423464,
+            "systemSeconds": 0.237002,
+            "peakTreeRssKiB": 344268,
+            "maxProcessRssKiB": 223564,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "be9e3534c1502a222cfc1059062e570033271c9ba0dc7db2acbe51c7e67210f6",
+            "sourceHash": "01090507424fb71cb860d59a12ab3331c9a120cc120e35bf39bb16480b4261a0"
+          },
+          {
+            "wallSeconds": 0.8049451180268079,
+            "userSeconds": 1.492558,
+            "systemSeconds": 0.227929,
+            "peakTreeRssKiB": 349640,
+            "maxProcessRssKiB": 228928,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "be9e3534c1502a222cfc1059062e570033271c9ba0dc7db2acbe51c7e67210f6",
+            "sourceHash": "01090507424fb71cb860d59a12ab3331c9a120cc120e35bf39bb16480b4261a0"
+          }
+        ],
+        "absent": [
+          {
+            "wallSeconds": 0.6739621199667454,
+            "userSeconds": 1.163124,
+            "systemSeconds": 0.218154,
+            "peakTreeRssKiB": 314344,
+            "maxProcessRssKiB": 201616,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "be9e3534c1502a222cfc1059062e570033271c9ba0dc7db2acbe51c7e67210f6",
+            "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4"
+          },
+          {
+            "wallSeconds": 0.6219769030576572,
+            "userSeconds": 1.115549,
+            "systemSeconds": 0.234506,
+            "peakTreeRssKiB": 291428,
+            "maxProcessRssKiB": 200260,
+            "exitCode": 1,
+            "diagnosticCount": 4097,
+            "diagnosticHash": "f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff",
+            "fixtureHash": "be9e3534c1502a222cfc1059062e570033271c9ba0dc7db2acbe51c7e67210f6",
+            "sourceHash": "1f58ba68e930e4c9cfbc53f423b96551e5d8a900828ef49e7f3154071cbe44d4"
+          }
+        ]
+      }
+    }
+  },
+  "measurement": {
+    "denseOrder": [
+      "absent-2",
+      "after-2",
+      "before-2",
+      "before-3",
+      "after-3",
+      "absent-3",
+      "before-4",
+      "after-4",
+      "absent-4",
+      "absent-5",
+      "after-5",
+      "before-5"
+    ],
+    "sparseOrder": ["before-2", "after-2", "absent-2", "absent-3", "after-3", "before-3"],
+    "rssSamplingMilliseconds": 25,
+    "cache": "fresh process, warm OS page cache",
+    "cpu": "Core Ultra 7 270K Plus, 24 cores",
+    "memoryGiB": 64
+  },
+  "profile": {
+    "before": {
+      "reads": 12288,
+      "parses": 8192,
+      "resolveModuleName": 12288
+    },
+    "after": {
+      "reads": 3,
+      "parses": 2,
+      "resolveModuleName": 8192
+    }
+  }
+}
