@@ -19,3 +19,4 @@ ALTER VIEW;
 ALTER INDEX;
 ALTER INDEX scratch_renamed_idx;
 ALTER FUNCTION scratch_fn();
+CREATE UNIQUE TYPE invalid_modifier AS ENUM ('x');

@@ -90,7 +90,9 @@ test("handles an executor failure", async () => {
 
 For tests that require schema objects, create them in a migration before tests
 run. For a failure case, inject a throwing executor as shown above instead of
-executing DDL inside the test.
+executing DDL inside the test. Replace SQL sleeps with an awaited application
+signal or a controlled test clock. Move replication-role and server-setting
+setup into suite provisioning rather than changing it from an individual test.
 
 ## Suppression
 

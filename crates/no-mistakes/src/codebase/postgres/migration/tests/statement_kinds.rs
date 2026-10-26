@@ -42,6 +42,6 @@ fn classifies_modifiers_and_alter_object_kinds() {
             (16, "ALTER TYPE")
         ]
     );
-    // The final four ALTER statements are incomplete and have no kind.
+    // Incomplete ALTER statements and incompatible CREATE modifiers have no kind.
     assert!(facts.statement_kinds.iter().all(|kind| kind.line < 18));
 }

@@ -1,4 +1,6 @@
 use super::*;
+
+mod prefix_policy;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 
 #[test]
@@ -245,4 +247,20 @@ fn all_schema_object_families_and_nested_sleep_reach_the_rule() {
             "missing {target}: {findings:?}"
         );
     }
+}
+
+#[test]
+fn invalid_policy_and_missing_prepared_facts_propagate_actionable_errors() {
+    let root = fixture();
+    let mut config = config(false);
+    config.rules[0].options["unanalyzableSql"] = "maybe".into();
+    let error = check_with_files(&root, &config, &[]).unwrap_err();
+    assert!(error.to_string().contains("unanalyzableSql"), "{error}");
+    config.rules[0].options["unanalyzableSql"] = "fail".into();
+    let files = [root.join("tests/dynamic.test.ts")];
+    let sources = super::super::source_store_for_files(&files);
+    let error =
+        check_with_files_sources_and_facts(&root, &config, &files, &sources, &Default::default())
+            .unwrap_err();
+    assert!(error.to_string().contains("dynamic.test.ts"), "{error}");
 }
