@@ -40,29 +40,18 @@ function returnedFromFunction(fn, context, consumers) {
   const named = consumers.namedDisposition(fn);
   return named ?? true;
 }
+
 function isCallArgument(node) {
   node = node && unwrapTransparentParent(node);
   return Boolean(node?.parent?.type === "CallExpression" && node.parent.arguments.includes(node));
 }
+
 function isCallCallee(node) {
   return node?.parent?.type === "CallExpression" && node.parent.callee === node;
 }
+
 function isPromiseAllIterable(node, promiseAll) {
   return promiseAll.arguments[0] === node && (node.type === "ArrayExpression" || isMapCall(node));
-}
-function expressionReturnedFromCallback(node, fn) {
-  let current = node;
-  let returnStatement = null;
-  while (current && current !== fn) {
-    if (current.parent === fn && fn.body === current && fn.body.type !== "BlockStatement") {
-      return true;
-    }
-    if (current.parent?.type === "ReturnStatement") {
-      returnStatement = current.parent;
-    }
-    current = current.parent;
-  }
-  return Boolean(returnStatement);
 }
 
 function canReachPromiseAll(node, promiseAll, collectionRole) {
@@ -72,10 +61,11 @@ function canReachPromiseAll(node, promiseAll, collectionRole) {
     const parent = current.parent;
     if (parent?.type === "MemberExpression") return false;
     if (parent === promiseAll) return isPromiseAllIterable(current, promiseAll);
-    if (isFunction(parent)) {
-      if (collectionRole || !expressionReturnedFromCallback(node, parent) || !isMapCallback(parent))
+    if (isFunction(parent) || parent?.type === "ReturnStatement") {
+      const fn = isFunction(parent) ? parent : findContainingFunction(parent);
+      if (collectionRole || !isMapCallback(fn) || (isFunction(parent) && parent.body !== current))
         return false;
-      current = parent.parent;
+      current = unwrapTransparentParent(fn).parent;
       collectionRole = true;
       continue;
     }
@@ -92,15 +82,15 @@ function canReachPromiseAll(node, promiseAll, collectionRole) {
       collectionRole = false;
       continue;
     }
-    if (parent?.type === "ConditionalExpression" && parent.test === current) return false;
-    if (parent?.type === "ObjectExpression") return false;
+    // Only wrappers that preserve this exact value may reach an aggregate.
     if (
-      parent?.type === "CallExpression" &&
-      parent !== promiseAll &&
-      parent.arguments.includes(current)
-    ) {
+      !isTransparentExpression(parent) &&
+      !(
+        parent?.type === "ConditionalExpression" &&
+        (parent.consequent === current || parent.alternate === current)
+      )
+    )
       return false;
-    }
     current = parent;
   }
 }

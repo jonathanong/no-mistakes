@@ -55,4 +55,15 @@ export async function examples() {
   await Promise.all([...[1].map(() => [enqueueEmail()])]); // spread preserves mapper members
   deps.enqueueEmail(); // direct imported namespace drop
   enqueueEmail(); // direct import drop
+  // Unknown transformations and logical paths must not prove aggregate adoption.
+  await Promise.all([...(cond ? [enqueueEmail() + 1] : [])]);
+  await Promise.all([...(cond ? [(enqueueEmail(), 0)] : [])]);
+  await Promise.all([...(cond ? [typeof enqueueEmail()] : [])]);
+  await Promise.all([...(cond ? [enqueueEmail() && 0] : [])]);
+  await Promise.all([...(cond ? [enqueueEmail() || 0] : [])]);
+  await Promise.all([...(cond ? [enqueueEmail() ?? 0] : [])]);
+  await Promise.all([...(cond ? [0 && enqueueEmail()] : [])]);
+  await Promise.all([...(cond ? [!enqueueEmail()] : [])]);
+  await Promise.all([...(cond ? [`${enqueueEmail()}`] : [])]);
+  await Promise.all([...(cond ? [(cond = enqueueEmail())] : [])]);
 }
