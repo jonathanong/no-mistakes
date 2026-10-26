@@ -1,3 +1,4 @@
+use super::scan::check_package_json_with_sources;
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -5,156 +6,15 @@ use crate::config::v2::{
 };
 use std::path::Path;
 
-fn check_package_json(path: &Path, root: &Path) -> Vec<RuleFinding> {
-    let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
-    check_package_json_with_sources(path, root, &sources)
-}
-
-fn fixture(path: &str) -> std::path::PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/package-json-registry-only/fixture")
-        .join(path)
-}
-
-fn config_with_options(yaml: &str) -> NoMistakesConfig {
-    let mut config = NoMistakesConfig::default();
-    config.rules.push(RuleDef {
-        rule: RULE_ID.to_string(),
-        scope: Some(RuleScope::Repository),
-        options: serde_yaml::from_str(yaml).unwrap(),
-        ..Default::default()
-    });
-    config
-}
-
-// ── is_blocked_specifier tests ──────────────────────────────────────────────
-
-#[test]
-fn semver_range_is_allowed() {
-    assert!(!is_blocked_specifier("^4.17.21"));
-}
-
-#[test]
-fn workspace_is_allowed() {
-    assert!(!is_blocked_specifier("workspace:*"));
-}
-
-#[test]
-fn catalog_is_allowed() {
-    assert!(!is_blocked_specifier("catalog:"));
-}
-
-#[test]
-fn npm_alias_allowed() {
-    assert!(!is_blocked_specifier("npm:lodash@^4"));
-}
-
-#[test]
-fn file_specifier_blocked() {
-    assert!(is_blocked_specifier("file:../my-lib"));
-}
-
-#[test]
-fn link_specifier_blocked() {
-    assert!(is_blocked_specifier("link:../other"));
-}
-
-#[test]
-fn portal_specifier_blocked() {
-    assert!(is_blocked_specifier("portal:../pkg"));
-}
-
-#[test]
-fn patch_specifier_blocked() {
-    assert!(is_blocked_specifier("patch:lodash@4.17.21"));
-}
-
-#[test]
-fn git_specifier_blocked() {
-    assert!(is_blocked_specifier("git+https://github.com/foo/bar.git"));
-}
-
-#[test]
-fn github_shorthand_blocked() {
-    assert!(is_blocked_specifier("github:owner/repo"));
-}
-
-#[test]
-fn remaining_blocked_prefixes_and_npm_alias_versions() {
-    for spec in [
-        "git://github.com/foo/bar.git",
-        "git+ssh://git@github.com/foo/bar.git",
-        "bitbucket:owner/repo",
-        "gitlab:owner/repo",
-        "gist:abc123",
-        "npm:lodash@file:../bad",
-    ] {
-        assert!(is_blocked_specifier(spec), "{spec}");
-    }
-}
-
-#[test]
-fn owner_slash_repo_shorthand_blocked() {
-    assert!(is_blocked_specifier("owner/repo"));
-}
-
-#[test]
-fn scoped_package_allowed() {
-    assert!(!is_blocked_specifier("@scope/pkg"));
-}
-
-#[test]
-fn scoped_package_with_extra_slash_blocked() {
-    assert!(is_blocked_specifier("@scope/pkg/sub"));
-}
-
-#[test]
-fn npm_alias_scoped_package_blocked() {
-    // npm:@scope/pkg@version — exercises lines 78-79 (scoped npm: alias path).
-    assert!(is_blocked_specifier("npm:@scope/pkg@github:owner/repo"));
-}
-
-#[test]
-fn npm_alias_scoped_package_without_version_is_safe() {
-    // npm:@scope/pkg with no version — after_at.find('@') = None → version = "" → false.
-    assert!(!is_blocked_specifier("npm:@scope/pkg"));
-}
-
-#[test]
-fn http_url_blocked() {
-    assert!(is_blocked_specifier("http://example.com/pkg.tgz"));
-}
-
-#[test]
-fn https_url_blocked() {
-    assert!(is_blocked_specifier("https://example.com/pkg.tgz"));
-}
-
-// ── fixture tests ────────────────────────────────────────────────────────────
-
-#[test]
-fn pass_fixture_produces_no_findings() {
-    let root = fixture("pass");
-    let config = config_with_options("{}");
-    let files = vec![root.join("package.json")];
-    let findings = check_with_files(&root, &config, &files).unwrap();
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
-}
-
-#[test]
-fn fail_fixture_produces_findings() {
-    let root = fixture("fail");
-    let config = config_with_options("{}");
-    let files = vec![root.join("package.json")];
-    let findings = check_with_files(&root, &config, &files).unwrap();
-    assert!(!findings.is_empty(), "expected at least one finding");
-    assert!(
-        findings.iter().any(|f| f.message.contains("file:")),
-        "expected file: finding"
-    );
-}
-
-// ── inline check_package_json tests ─────────────────────────────────────────
+#[path = "tests/support.rs"]
+mod support;
+use support::*;
+#[path = "tests/inputs.rs"]
+mod inputs;
+#[path = "tests/pnpm12.rs"]
+mod pnpm12;
+#[path = "tests/specifiers.rs"]
+mod specifiers;
 
 fn write_package_json(dir: &Path, content: &str) -> PathBuf {
     let p = dir.join("package.json");
@@ -186,12 +46,6 @@ fn node_modules_excluded() {
     let files = vec![nm.join("package.json")];
     let findings = check_with_files(tmp.path(), &config, &files).unwrap();
     assert!(findings.is_empty(), "node_modules must be excluded");
-}
-
-#[test]
-fn unreadable_package_json_returns_empty() {
-    let findings = check_package_json(Path::new("/nonexistent/package.json"), Path::new("/"));
-    assert!(findings.is_empty());
 }
 
 #[test]
@@ -235,114 +89,6 @@ fn lockfile_path_filters_are_honored() {
     assert!(findings.is_empty());
 }
 
-fn pnpm12_rule_root(name: &str) -> std::path::PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/package-json-registry-only")
-        .join(name)
-}
-
-#[test]
-fn pnpm12_env_tarball_is_reported() {
-    // A first-document reader reports this package. A last-document reader misses it.
-    let root = pnpm12_rule_root("pnpm12-env-tarball");
-    let config = config_with_options("lockfile: pnpm-lock.yaml");
-    let findings = check_with_files(&root, &config, &[]).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(
-        findings[0].message.contains("config-plugin@1.0.0"),
-        "{findings:?}"
-    );
-    assert!(findings[0].message.contains("tarball"), "{findings:?}");
-    assert!(
-        !findings[0].message.contains("react@19.0.0"),
-        "{findings:?}"
-    );
-}
-
-fn issue_1035_root(name: &str) -> std::path::PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/rules/pnpm12-issue-1035")
-        .join(name)
-}
-
-#[test]
-fn issue_1035_exotic_tarball_in_the_project_document_is_reported() {
-    let root = issue_1035_root("exotic");
-    let config = config_with_options("lockfile: pnpm-lock.yaml");
-    let findings = check_with_files(&root, &config, &[]).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(
-        findings[0].message.contains("is-buffer@1.1.6"),
-        "{findings:?}"
-    );
-    assert!(findings[0].message.contains("tarball"), "{findings:?}");
-    assert!(!findings[0].message.contains("@pnpm/exe"), "{findings:?}");
-}
-
-#[test]
-fn issue_1035_registry_lockfile_has_no_findings() {
-    for variant in ["two-doc", "single-doc"] {
-        let findings = check_with_files(
-            &issue_1035_root(variant),
-            &config_with_options("lockfile: pnpm-lock.yaml"),
-            &[],
-        )
-        .unwrap();
-        assert!(findings.is_empty(), "{variant}: {findings:?}");
-    }
-}
-
-#[test]
-fn issue_1035_unreadable_lockfile_does_not_pass() {
-    let malformed = check_with_files(
-        &issue_1035_root("malformed"),
-        &config_with_options("lockfile: pnpm-lock.yaml"),
-        &[],
-    )
-    .unwrap();
-    assert!(
-        malformed[0].message.contains("could not be parsed"),
-        "{malformed:?}"
-    );
-    let non_env = check_with_files(
-        &issue_1035_root("non-env"),
-        &config_with_options("lockfile: pnpm-lock.yaml"),
-        &[],
-    )
-    .unwrap();
-    assert!(non_env[0].message.contains("non-env"), "{non_env:?}");
-}
-
-#[test]
-fn pnpm12_duplicate_key_is_reported_once() {
-    // The same non-registry key is in both documents. Diff identity stays a set;
-    // this rule must not emit two findings for one key and resolution.
-    let root = pnpm12_rule_root("pnpm12-duplicate-tarball");
-    let config = config_with_options("lockfile: pnpm-lock.yaml");
-    let findings = check_with_files(&root, &config, &[]).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(
-        findings[0].message.contains("config-plugin@1.0.0"),
-        "{findings:?}"
-    );
-    assert!(findings[0].message.contains("tarball"), "{findings:?}");
-}
-
-#[test]
-fn pnpm12_project_git_resolution_is_reported() {
-    // A first-document reader misses this package because it only sees the pnpm pin.
-    let root = pnpm12_rule_root("pnpm12-project-git");
-    let config = config_with_options("lockfile: pnpm-lock.yaml");
-    let findings = check_with_files(&root, &config, &[]).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(
-        findings[0].message.contains("github.com/org/repo"),
-        "{findings:?}"
-    );
-    assert!(findings[0].message.contains("repo"), "{findings:?}");
-    assert!(!findings[0].message.contains("pnpm@12.3.4"), "{findings:?}");
-}
-
 #[test]
 fn lockfile_registry_integrity_allowed() {
     let tmp = tempfile::tempdir().unwrap();
@@ -350,14 +96,6 @@ fn lockfile_registry_integrity_allowed() {
         "lockfileVersion: '9.0'\npackages:\n  acme-sample@4.17.21:\n    resolution:\n      integrity: sha512-abc\n";
     std::fs::write(tmp.path().join("pnpm-lock.yaml"), lockfile_content).unwrap();
     let config = config_with_options("lockfile: pnpm-lock.yaml");
-    let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
-    assert!(findings.is_empty());
-}
-
-#[test]
-fn missing_lockfile_is_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let config = config_with_options("lockfile: nonexistent.yaml");
     let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
     assert!(findings.is_empty());
 }
@@ -388,18 +126,6 @@ fn check_standalone_produces_no_findings_for_empty_dir() {
     let config = config_with_options("{}");
     let findings = check(tmp.path(), &config).unwrap();
     assert!(findings.is_empty());
-}
-
-#[test]
-fn invalid_json_in_package_json_is_skipped() {
-    // check_package_json returns Vec::new() on JSON parse error (line 120).
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_package_json(tmp.path(), "not json at all {{{");
-    let findings = check_package_json(&path, tmp.path());
-    assert!(
-        findings.is_empty(),
-        "invalid JSON should produce no findings"
-    );
 }
 
 #[test]

@@ -1,5 +1,6 @@
 use super::keys::yaml_top_level_key_line;
-use super::{finding, RuleFinding, FIX};
+use super::scan::finding;
+use super::{ClassifiedFinding, FIX};
 use crate::codebase::ts_source::SourceStore;
 use std::path::Path;
 
@@ -9,7 +10,7 @@ pub(super) fn included_override_findings(
     source: &str,
     sources: &SourceStore,
     files: &[std::path::PathBuf],
-) -> Vec<RuleFinding> {
+) -> Vec<ClassifiedFinding> {
     let root_yaml = crate::codebase::ts_resolver::normalize_path(&root.join("pnpm-workspace.yaml"));
     if crate::codebase::ts_resolver::normalize_path(path) != root_yaml {
         return Vec::new();
@@ -21,7 +22,8 @@ pub(super) fn included_override_findings(
     else {
         return Vec::new();
     };
-    let mut findings = Vec::new();
+    let (mut findings, failed_sources) =
+        super::unavailable_includes::collect(root, source, sources, files);
     let root_selected = files.iter().any(|candidate| {
         crate::codebase::ts_resolver::normalize_path(candidate)
             == crate::codebase::ts_resolver::normalize_path(path)
@@ -32,12 +34,12 @@ pub(super) fn included_override_findings(
             .iter()
             .any(|setting| setting == "overrides")
     {
-        findings.push(finding(
+        findings.push(ClassifiedFinding::Definite(finding(
             root,
             path,
             1,
             "setting \"overrides\" is claimed by more than one pnpm source",
-        ));
+        )));
     }
     if root_selected {
         for issue in resolved
@@ -45,7 +47,17 @@ pub(super) fn included_override_findings(
             .iter()
             .filter(|issue| issue.affects("overrides"))
         {
-            findings.push(finding(root, path, 1, issue.message.clone()));
+            // A selected source has a more precise read/parse diagnostic; retain
+            // independent invalid grants and escape errors on the selected root.
+            if failed_sources
+                .iter()
+                .any(|source| issue.message.contains(&format!("\"{source}\"")))
+            {
+                continue;
+            }
+            let mut note = finding(root, path, 1, issue.message.clone());
+            note.target = Some("unanalyzable".to_owned());
+            findings.push(ClassifiedFinding::Unanalyzable(note));
         }
     }
     for included in resolved.included_override_paths {
@@ -56,15 +68,17 @@ pub(super) fn included_override_findings(
         if !allowed {
             continue;
         }
-        let Ok(text) = sources.read_path(&included) else {
-            continue;
-        };
-        findings.push(finding(
+        // The resolver emitted this exact Doc.path only after reading it through
+        // this SourceStore, whose request-owned OnceLock retains that success.
+        let text = sources
+            .read_path(&included)
+            .expect("resolved pnpm include retains its successful source read");
+        findings.push(ClassifiedFinding::Definite(finding(
             root,
             &included,
             yaml_top_level_key_line(&text, "overrides"),
             format!("top-level \"overrides\" is banned. {FIX}"),
-        ));
+        )));
     }
     findings
 }

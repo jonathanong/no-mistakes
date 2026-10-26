@@ -1,0 +1,9 @@
+projects:
+  web: {root: web}
+  admin: {root: admin}
+rules:
+  - rule: package-json-registry-only
+    projects: [web, admin]
+    options:
+      # admin/pnpm-lock.yaml is deliberately absent: configured inputs are required per target root.
+      lockfile: pnpm-lock.yaml

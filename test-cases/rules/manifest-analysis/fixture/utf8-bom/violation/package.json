@@ -1,0 +1,1 @@
+﻿{"name":"@acme/violation","private":false,"overrides":{"acme":"1.0.0"},"dependencies":{"acme":"git+https://example.com/acme.git"}}

@@ -1,5 +1,5 @@
 use super::policy::ExcludeEntry;
-use super::{rel, RuleFinding, RULE_ID};
+use super::{rel, ClassifiedFinding, RuleFinding, RULE_ID};
 use crate::codebase::ts_source::SourceStore;
 use std::path::Path;
 
@@ -8,7 +8,7 @@ pub(super) fn included_exclude(
     workspace: &Path,
     sources: &SourceStore,
     fallback: Vec<ExcludeEntry>,
-) -> (Vec<ExcludeEntry>, Vec<RuleFinding>) {
+) -> (Vec<ExcludeEntry>, Vec<ClassifiedFinding>) {
     let Some(workspace_root) = workspace.parent() else {
         return (fallback, Vec::new());
     };
@@ -29,19 +29,21 @@ pub(super) fn included_exclude(
         .iter()
         .any(|setting| setting == "minimumReleaseAgeExclude")
     {
-        notes.push(finding(
+        notes.push(ClassifiedFinding::Definite(finding(
             file.clone(),
             format!(
                 "{file}: setting \"minimumReleaseAgeExclude\" is claimed by more than one pnpm source"
             ),
-        ));
+        )));
     }
     for issue in resolved
         .load_errors
         .iter()
         .filter(|issue| issue.affects("minimumReleaseAgeExclude"))
     {
-        notes.push(finding(file.clone(), format!("{file}: {}", issue.message)));
+        let mut note = finding(file.clone(), format!("{file}: {}", issue.message));
+        note.target = Some("unanalyzable".to_owned());
+        notes.push(ClassifiedFinding::Unanalyzable(note));
     }
     let exclude = match resolved.release_age_exclude {
         crate::codebase::workspaces::ReleaseAgeExclude::FromRoot => fallback,

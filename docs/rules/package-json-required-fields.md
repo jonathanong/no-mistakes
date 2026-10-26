@@ -112,12 +112,25 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 ### Unanalyzable inputs
 
-Following recall over precision, the intent is that nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)). Known gap: an unparseable or unreadable `package.json` is currently skipped without a finding ([#2659](https://github.com/jonathanong/no-mistakes/issues/2659)).
+A single leading UTF-8 byte order mark in `package.json` is accepted.
+
+Selected package manifests that cannot be read or parsed produce an
+`unanalyzable` diagnostic containing the file and error at line 1. Repair malformed
+JSON or restore read access so required fields can be checked.
+
+`options.unanalyzable` uses the shared analysis policy: `report` (default) emits a
+finding, `advise` emits an advisory, and `ignore` omits the uncertain result.
+Definite field violations remain findings under every policy. File suppression
+runs before policy routing: a malformed JSON file can carry a leading
+`// no-mistakes-disable-file package-json-required-fields` directive to suppress
+its read/parse diagnostic. A custom rule `message` prefixes these diagnostics.
 
 ## Suppression
 
-JSON cannot contain directives, so narrow the configuration for exceptional
-manifests. Exclude an intentional exception with a rule-level `exclude` glob.
+A malformed manifest can carry a leading
+`// no-mistakes-disable-file package-json-required-fields` directive. That
+suppresses its read/parse diagnostic. Exclude a stable exception with a
+rule-level `exclude` glob.
 
 ```yaml
 rules:
