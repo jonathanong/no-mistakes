@@ -16,7 +16,7 @@ not a timing claim about the downstream repository that reported 62–103 second
 ## Method
 
 Measurements use the real Oxlint `--type-aware --deny-warnings --threads=4`
-CLI, TypeScript 6.0.3, parser 8.71.2, Oxlint 1.88.0, tsgolint 7.0.2005, and Node
+CLI, TypeScript 6.0.3, parser 8.72.0, Oxlint 1.89.0, tsgolint 7.0.2005, and Node
 24.22.1 on Linux x86_64 (Core Ultra 7 270K Plus, 24 cores, 64 GB RAM).
 Optional peers are physically unavailable to the absent-plugin copy. The same
 native type-aware checker runs in all modes. Fixture/config and plugin-source
@@ -38,7 +38,7 @@ absolute temporary directory for each variant. The baseline is the merged-main
 commit before this optimization; the candidate is a committed optimization.
 
 ```sh
-node packages/eslint-plugin-no-mistakes/bench/source-proof.mjs prepare /tmp/nm-proof before 4096 dense 882f23456ed24b8595b03932c83a876ad78b8bd1
+node packages/eslint-plugin-no-mistakes/bench/source-proof.mjs prepare /tmp/nm-proof before 4096 dense 7e7087fc9b08e91d25f03d20555943285b2c4fd0
 node packages/eslint-plugin-no-mistakes/bench/source-proof.mjs candidate /tmp/nm-proof HEAD
 node packages/eslint-plugin-no-mistakes/bench/source-proof.mjs measure /tmp/nm-proof before-1
 node packages/eslint-plugin-no-mistakes/bench/source-proof.mjs measure /tmp/nm-proof after-1
@@ -59,25 +59,25 @@ Four balanced dense samples per mode (median; tree RSS in MiB):
 
 | Mode                  |     Wall | User CPU | System CPU | Peak tree RSS |
 | --------------------- | -------: | -------: | ---------: | ------------: |
-| Before, peers present | 23.191 s | 40.126 s |    1.763 s |     2,166 MiB |
-| After, peers present  |  4.462 s |  8.633 s |    1.211 s |     1,696 MiB |
-| Before, peers absent  |  4.614 s |  8.110 s |    1.257 s |     1,622 MiB |
+| Before, peers present | 22.672 s | 39.162 s |    1.600 s |     2,166 MiB |
+| After, peers present  |  4.522 s |  8.441 s |    1.396 s |     1,701 MiB |
+| Before, peers absent  |  4.688 s |  8.461 s |    1.455 s |     1,618 MiB |
 
-Wall time fell 80.8%; median peak tree RSS fell 21.7%. The optimized run was
-3.3% faster than the peers-absent control, meeting the approximately 10%
-wall-time target on this workload. Dense wall-time ranges were 22.272–23.838 s
-before, 4.439–4.504 s after, and 4.600–4.631 s absent. The Go checker dominates
-single-process RSS, which remained approximately 1,335 MiB in every mode.
+Wall time fell 80.1%; median peak tree RSS fell 21.5%. The optimized run was
+3.5% faster than the peers-absent control, meeting the approximately 10%
+wall-time target on this workload. Dense wall-time ranges were 22.207–22.880 s
+before, 4.439–4.656 s after, and 4.549–4.727 s absent. The Go checker dominates
+single-process RSS, which remained approximately 1,330 MiB in every mode.
 
 The sparse startup control used two balanced samples per mode:
 
 | Mode                  |     Wall | User CPU | System CPU | Peak tree RSS |
 | --------------------- | -------: | -------: | ---------: | ------------: |
-| Before, peers present | 18.527 s | 34.960 s |    0.652 s |       666 MiB |
-| After, peers present  |  0.842 s |  1.463 s |    0.235 s |       320 MiB |
-| Before, peers absent  |  0.608 s |  1.133 s |    0.199 s |       288 MiB |
+| Before, peers present | 19.605 s | 36.906 s |    0.668 s |       661 MiB |
+| After, peers present  |  0.962 s |  1.602 s |    0.330 s |       320 MiB |
+| Before, peers absent  |  0.621 s |  1.123 s |    0.242 s |       285 MiB |
 
-The sparse control retains approximately 234 ms / 38.6% startup overhead over
+The sparse control retains approximately 341 ms / 54.9% startup overhead over
 the absent run. Loading optional proof tooling still costs time and memory;
 the 10% result does not apply to every tiny or startup-dominated project.
 
@@ -93,9 +93,11 @@ The remaining resolution calls have distinct caller filename/specifier keys;
 TypeScript's shared resolver cache reuses their underlying directory lookups.
 All timed runs returned exit code 1 and the same 4,097 complete diagnostics,
 SHA-256 `f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff`.
-The before source revision was `882f23456`; the measured production candidate
-was `02b170dcc`. Both include the merged TypeScript-only fallback. Per-sample
-metrics, fixture/source hashes, versions, and exact ordering are saved in
+The before source revision was `7e7087fc9`; the measured production candidate
+was `fe28abf34`. Both include the corrected TypeScript peer range from #2804.
+These samples replace the earlier Oxlint 1.88 results after main upgraded
+Oxlint and the optional parser. Per-sample metrics, fixture/source hashes,
+versions, and exact ordering are saved in
 [the result artifact](async-source-proof-results.json).
 
 ## Cache ownership and bounds
