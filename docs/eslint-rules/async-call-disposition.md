@@ -111,6 +111,12 @@ function install(m, selected) {
 }
 ```
 
+Conditional branches and literal array spreads preserve adoption by an awaited
+`Promise.all`, `Promise.allSettled`, `Promise.race`, or `Promise.any`. For example,
+`await Promise.all([...(condition ? [enqueueEmail(id)] : [])])` handles the call.
+A nested array without a spread, a call in the condition, or a transformed value such as
+`enqueueEmail(id) + 1` does not. Dropping the aggregate still reports.
+
 A promise retained in an unchanged `const` binding counts when it is later
 explicitly disposed in the same block. An initially empty `const` array also
 counts when its promises are pushed and its direct `Promise.all`,
@@ -402,15 +408,24 @@ The source can also prove a directly returned target promise through an explicit
 consumer slot, including copies inside a stored handler. The slot's parameter or
 property must resolve to `typeof` a configured imported target. That target must
 be an exported async function, or declare a return of the built-in `Promise`.
+An imported return-type alias may resolve to that Promise through named or
+type-star reexports. Missing or ambiguous star branches remain unproven.
 Generators and a locally shadowed `Promise` do not qualify. An explicit callback
 annotation must preserve the same target identity; the annotation alone cannot
 prove an unknown receiving slot.
 
 This proof follows named imports, reexports, interfaces, type aliases, and the
-built-in `Partial`, `Required`, and `Readonly` wrappers. It shares the existing
+built-in `Partial`, `Required`, and `Readonly` wrappers. Tsconfig paths and
+inherited configuration use the same resolver as imported consumer bodies.
+Disjoint intersections of known property declarations preserve a selected slot;
+overlapping properties, unions, index signatures, and unknown constituents do not.
+It shares the existing
 source session in typed and untyped ESLint and in Oxlint, including
 `--type-aware`. It neither requests nor builds a TypeScript program. A consumer
 may import only its dependency type; it need not repeat the target import.
+As with the imported-body proof, optional proof peers must be installed for
+cross-file declarations. Without them, returning callbacks passed to unproven
+slots still report; array aggregate disposition itself needs no proof peers.
 
 Every visible forwarding use must preserve that target contract. An unknown or
 untyped destination, receiver mutation, an unsafe sibling method, a custom

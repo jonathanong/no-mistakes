@@ -1,21 +1,21 @@
 import { enqueueBulkCrawlReferralLinks } from '@queues/crawl-referral-links/enqueues';
-interface Dependencies { enqueue?: typeof enqueueBulkCrawlReferralLinks }
+interface Dependencies { enqueue: typeof enqueueBulkCrawlReferralLinks }
 type Options = Dependencies & { urlId?: string };
-export async function adopt(options: Options) { await options.enqueue!([], undefined); }
-export function drop(options: Options) { options.enqueue!([], undefined); }
+export function adopt(options: Options) { const handler = async () => { await options.enqueue([], undefined); }; return handler; }
+export function drop(options: Options) { options.enqueue([], undefined); }
 // These contracts deliberately exceed the bounded source projection.
-export async function overlap(options: Dependencies & { enqueue: typeof enqueueBulkCrawlReferralLinks }) { await options.enqueue!([], undefined); }
-export async function missing(options: {} & { urlId?: string }) { void options; }
-export async function opaque(options: Dependencies & Unknown) { await options.enqueue!([], undefined); }
-export async function union(options: Dependencies & ({ a: string } | { b: string })) { await options.enqueue!([], undefined); }
-export async function indexed(options: Dependencies & { [key: string]: unknown }) { await options.enqueue!([], undefined); }
+export function overlap(options: Dependencies & { enqueue: typeof enqueueBulkCrawlReferralLinks }) { const handler = async () => { await options.enqueue([], undefined); }; return handler; }
+export function missing(options: {} & { urlId?: string }) { void options; }
+export function opaque(options: Dependencies & Unknown) { const handler = async () => { await options.enqueue([], undefined); }; return handler; }
+export function union(options: Dependencies & ({ a: string } | { b: string })) { const handler = async () => { await options.enqueue([], undefined); }; return handler; }
+export function indexed(options: Dependencies & { [key: string]: unknown }) { const handler = async () => { await options.enqueue([], undefined); }; return handler; }
 interface Base { a?: string }
 interface Extended extends Base { b?: string }
-export async function extended(options: Dependencies & Extended) { await options.enqueue!([], undefined); }
+export function extended(options: Dependencies & Extended) { const handler = async () => { await options.enqueue([], undefined); }; return handler; }
 type Generic<T> = { value: T };
-export async function generic(options: Dependencies & Generic<string>) { await options.enqueue!([], undefined); }
+export function generic(options: Dependencies & Generic<string>) { const handler = async () => { await options.enqueue([], undefined); }; return handler; }
 declare const key: unique symbol;
-export async function computed(options: Dependencies & { [key]: string }) { await options.enqueue!([], undefined); }
+export function computed(options: Dependencies & { [key]: string }) { const handler = async () => { await options.enqueue([], undefined); }; return handler; }
 // Cyclic source contracts remain unproven even if a type checker rejects them too.
 type Cycle = Cycle & {};
-export async function cyclic(options: Dependencies & Cycle) { await options.enqueue!([], undefined); }
+export function cyclic(options: Dependencies & Cycle) { const handler = async () => { await options.enqueue([], undefined); }; return handler; }
