@@ -1,0 +1,7 @@
+
+jobs:
+  deploy:
+    steps:
+      # no-mistakes-disable-next-line github-actions-action-timeout-pair
+      - uses: aws-actions/configure-aws-credentials@v4
+        timeout-minutes: 2

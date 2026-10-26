@@ -1,0 +1,6 @@
+runs:
+  using: composite
+  steps:
+    - 1: ignored
+      run: echo
+      shell: bash

@@ -1,0 +1,12 @@
+tests:
+  playwright:
+    configs: missing.config.ts
+    projects:
+      empty:
+        include: [does-not-exist/**/*.ts]
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ playwright: true }]
+      targets: [{ global: setTimeout }]

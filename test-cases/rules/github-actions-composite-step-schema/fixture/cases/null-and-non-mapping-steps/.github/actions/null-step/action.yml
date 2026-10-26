@@ -1,0 +1,8 @@
+runs:
+  using: composite
+  steps:
+    - ~
+    - echo this is a string step
+    - name: Real Step
+      run: echo hi
+      shell: bash

@@ -1,0 +1,6 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ module: src/targets.mts }]
+      targets: [{ global: setTimeout }]

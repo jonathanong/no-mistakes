@@ -1,0 +1,5 @@
+runs:
+  using: composite
+  steps:
+    first:
+      run: echo

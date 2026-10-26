@@ -1,0 +1,4 @@
+runs:
+  using: composite
+  steps:
+    - uses: aws-actions/configure-aws-credentials@v4

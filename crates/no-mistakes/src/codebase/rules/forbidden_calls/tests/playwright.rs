@@ -7,14 +7,13 @@ fn fixture_root() -> PathBuf {
     )
 }
 
-fn fixture_findings(yaml: &str) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
-    let root = fixture_root();
-    let config = tempfile::Builder::new().suffix(".yml").tempfile()?;
-    std::fs::write(config.path(), yaml)?;
-    run_check(&root, Some(config.path()), None)
+fn fixture_findings(case: &str) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
+    run_check(
+        &fixture_root(),
+        Some(&super::forbidden_calls_case(case)),
+        None,
+    )
 }
-
-const PLAYWRIGHT_CONFIG: &str = "tests:\n  playwright:\n    configs: playwright.config.ts\n";
 
 #[test]
 fn playwright_roots_require_a_catalog() {
@@ -29,10 +28,7 @@ fn playwright_roots_require_a_catalog() {
 
 #[test]
 fn playwright_true_selects_only_playwright_tests() {
-    let findings = fixture_findings(&format!(
-        "{PLAYWRIGHT_CONFIG}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ playwright: true }}]\n      traversal: file\n      targets:\n        - global: setTimeout\n        - exact: page.waitForTimeout\n        - moduleExport: {{ module: node:timers, export: setTimeout }}\n",
-    ))
-    .unwrap();
+    let findings = fixture_findings("playwright-true-file-targets").unwrap();
 
     let mut files: Vec<_> = findings
         .iter()
@@ -51,10 +47,7 @@ fn playwright_true_selects_only_playwright_tests() {
 
 #[test]
 fn playwright_terminal_matches_typed_page_parameter() {
-    let findings = fixture_findings(&format!(
-        "{PLAYWRIGHT_CONFIG}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ playwright: true }}]\n      traversal: file\n      unknownCalls: ignore\n      targets:\n        - global: setTimeout\n        - terminal: waitForTimeout\n        - moduleExport: {{ module: node:timers, export: setTimeout }}\n",
-    ))
-    .unwrap();
+    let findings = fixture_findings("playwright-terminal-page").unwrap();
 
     assert!(findings
         .iter()
@@ -74,10 +67,7 @@ fn playwright_terminal_matches_typed_page_parameter() {
 #[test]
 fn named_playwright_roots_use_the_prepared_catalog() {
     // This case isolates named project selection and the configured target.
-    let findings = fixture_findings(&format!(
-        "{PLAYWRIGHT_CONFIG}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ playwright: [chromium] }}]\n      unknownCalls: ignore\n      targets: [{{ global: setTimeout }}]\n",
-    ))
-    .unwrap();
+    let findings = fixture_findings("playwright-named-chromium").unwrap();
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "e2e/sleep.spec.ts");
@@ -85,10 +75,7 @@ fn named_playwright_roots_use_the_prepared_catalog() {
 
 #[test]
 fn playwright_roots_still_reject_unknown_names() {
-    let error = fixture_findings(&format!(
-        "{PLAYWRIGHT_CONFIG}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ playwright: [missing] }}]\n      targets: [{{ global: setTimeout }}]\n",
-    ))
-    .unwrap_err();
+    let error = fixture_findings("playwright-unknown-project").unwrap_err();
 
     assert!(
         error.to_string().contains("names an unknown project"),
@@ -101,10 +88,7 @@ fn playwright_root_errors_when_no_files_match() {
     // Point `configs` at a missing file so runner discovery is skipped, then use
     // an explicit include that matches nothing. A missing config alone is an I/O
     // error, not the empty-collection diagnostic.
-    let error = fixture_findings(
-        "tests:\n  playwright:\n    configs: missing.config.ts\n    projects:\n      empty:\n        include: [does-not-exist/**/*.ts]\nrules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ playwright: true }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap_err();
+    let error = fixture_findings("playwright-no-files").unwrap_err();
 
     assert!(
         error

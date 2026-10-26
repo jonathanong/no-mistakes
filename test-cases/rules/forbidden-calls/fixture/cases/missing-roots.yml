@@ -1,0 +1,5 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      targets: [{ global: setTimeout }]

@@ -1,0 +1,6 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: missing.mts }]
+      targets: [{ global: setTimeout }]

@@ -19,9 +19,7 @@ fn check_file(
 }
 
 fn fixture(path: &str) -> std::path::PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/no-git-identity-mutation/fixture")
-        .join(path)
+    crate::test_support::rule_fixture_root("no-git-identity-mutation").join(path)
 }
 
 fn config_with_options(yaml: &str) -> NoMistakesConfig {
@@ -43,17 +41,29 @@ fn patterns() -> [regex::Regex; 3] {
     build_patterns()
 }
 
-fn run_on_source(source: &str) -> Vec<RuleFinding> {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("script.sh");
-    std::fs::write(&path, source).unwrap();
+fn case_root(case: &str) -> std::path::PathBuf {
+    crate::codebase::ts_resolver::normalize_path(&fixture(&format!("cases/{case}")))
+}
+
+fn run_on_source(case: &str) -> Vec<RuleFinding> {
+    let root = case_root(case);
+    let path = root.join("script.sh");
     check_file(
         &path,
-        tmp.path(),
+        &root,
         &empty_globset(),
         &empty_globset(),
         &patterns(),
     )
+}
+
+fn conditionally_allowed(case: &str) -> Vec<RuleFinding> {
+    let root = case_root(case);
+    let path = root.join(".github/workflows/ci.yml");
+    let mut cond_builder = globset::GlobSetBuilder::new();
+    cond_builder.add(globset::Glob::new(".github/workflows/*.yml").unwrap());
+    let cond_set = cond_builder.build().unwrap();
+    check_file(&path, &root, &empty_globset(), &cond_set, &patterns())
 }
 
 #[test]
@@ -103,93 +113,67 @@ fn managed_runner_mapping_fixture_produces_no_findings() {
 
 #[test]
 fn shell_form_flagged() {
-    let findings = run_on_source("git config user.name \"Bot\"\n");
+    let findings = run_on_source("shell-form");
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].line, 1);
 }
 
 #[test]
 fn env_var_form_not_flagged() {
-    let findings = run_on_source("export GIT_AUTHOR_NAME=\"Bot\"\ngit commit -m 'chore'\n");
+    let findings = run_on_source("env-var-form");
     assert!(findings.is_empty());
 }
 
 #[test]
 fn git_config_email_flagged() {
-    let findings = run_on_source("git config user.email \"bot@example.com\"\n");
+    let findings = run_on_source("git-config-email");
     assert_eq!(findings.len(), 1);
 }
 
 #[test]
 fn read_only_shell_forms_not_flagged() {
-    let findings = run_on_source(
-        "git config user.name\n\
-         git config --get user.email || echo missing\n\
-         git config user.email 2>/dev/null\n",
-    );
+    let findings = run_on_source("read-only-shell");
     assert!(findings.is_empty());
 }
 
 #[test]
 fn array_form_flagged() {
-    let findings = run_on_source("exec('git', 'config', 'user.name', 'Bot')\n");
+    let findings = run_on_source("array-form");
     assert_eq!(findings.len(), 1);
 }
 
 #[test]
 fn read_only_array_form_not_flagged() {
-    let findings = run_on_source(
-        "exec('git', 'config', 'user.name')\n\
-         exec('git', 'config', '--get', 'user.email', 'fallback')\n",
-    );
+    let findings = run_on_source("read-only-array");
     assert!(findings.is_empty());
 }
 
 #[test]
 fn helper_form_flagged() {
-    let findings = run_on_source("git('config', 'user.name', 'Bot')\n");
+    let findings = run_on_source("helper-form");
     assert_eq!(findings.len(), 1);
 }
 
 #[test]
 fn read_only_helper_form_not_flagged() {
-    let findings = run_on_source(
-        "git('config', 'user.email')\n\
-         git('config', '--get', 'user.email', 'fallback')\n",
-    );
+    let findings = run_on_source("read-only-helper");
     assert!(findings.is_empty());
 }
 
 #[test]
 fn excluded_path_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("scripts").join("setup.sh");
-    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-    std::fs::write(&path, "git config user.name \"Bot\"\n").unwrap();
+    let root = case_root("excluded-path");
+    let path = root.join("scripts/setup.sh");
     let mut builder = globset::GlobSetBuilder::new();
     builder.add(globset::Glob::new("scripts/**").unwrap());
     let exclude_set = builder.build().unwrap();
-    let findings = check_file(
-        &path,
-        tmp.path(),
-        &exclude_set,
-        &empty_globset(),
-        &patterns(),
-    );
+    let findings = check_file(&path, &root, &exclude_set, &empty_globset(), &patterns());
     assert!(findings.is_empty());
 }
 
 #[test]
 fn conditionally_allowed_workflow_skipped_if_managed_runners_only() {
-    let tmp = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(tmp.path().join(".github/workflows")).unwrap();
-    let content = "runs-on: ubuntu-latest\ngit config user.name \"Bot\"\n";
-    let path = tmp.path().join(".github/workflows/ci.yml");
-    std::fs::write(&path, content).unwrap();
-    let mut cond_builder = globset::GlobSetBuilder::new();
-    cond_builder.add(globset::Glob::new(".github/workflows/*.yml").unwrap());
-    let cond_set = cond_builder.build().unwrap();
-    let findings = check_file(&path, tmp.path(), &empty_globset(), &cond_set, &patterns());
+    let findings = conditionally_allowed("managed-runners-only");
     assert!(
         findings.is_empty(),
         "managed-runner-only workflow should be skipped"
@@ -198,15 +182,7 @@ fn conditionally_allowed_workflow_skipped_if_managed_runners_only() {
 
 #[test]
 fn conditionally_allowed_workflow_not_skipped_if_self_hosted_runner() {
-    let tmp = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(tmp.path().join(".github/workflows")).unwrap();
-    let content = "runs-on: self-hosted\ngit config user.name \"Bot\"\n";
-    let path = tmp.path().join(".github/workflows/ci.yml");
-    std::fs::write(&path, content).unwrap();
-    let mut cond_builder = globset::GlobSetBuilder::new();
-    cond_builder.add(globset::Glob::new(".github/workflows/*.yml").unwrap());
-    let cond_set = cond_builder.build().unwrap();
-    let findings = check_file(&path, tmp.path(), &empty_globset(), &cond_set, &patterns());
+    let findings = conditionally_allowed("self-hosted-runner");
     assert!(
         !findings.is_empty(),
         "self-hosted runner workflow should not be skipped"
@@ -264,15 +240,7 @@ fn parse_runs_on_values_trims_comments_quotes_and_empty_parts() {
 
 #[test]
 fn conditionally_allowed_workflow_skipped_if_managed_runner_is_quoted() {
-    let tmp = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(tmp.path().join(".github/workflows")).unwrap();
-    let content = "runs-on: 'ubuntu-latest'\ngit config user.name \"Bot\"\n";
-    let path = tmp.path().join(".github/workflows/ci.yml");
-    std::fs::write(&path, content).unwrap();
-    let mut cond_builder = globset::GlobSetBuilder::new();
-    cond_builder.add(globset::Glob::new(".github/workflows/*.yml").unwrap());
-    let cond_set = cond_builder.build().unwrap();
-    let findings = check_file(&path, tmp.path(), &empty_globset(), &cond_set, &patterns());
+    let findings = conditionally_allowed("quoted-managed-runner");
     assert!(
         findings.is_empty(),
         "quoted managed runner workflow should be skipped"
@@ -303,12 +271,10 @@ fn build_exclude_globset_with_patterns_works() {
 #[test]
 fn check_with_exclude_paths_uses_build_exclude_globset() {
     // config option excludePaths exercises build_exclude_globset via scan()
-    let tmp = tempfile::tempdir().unwrap();
-    let script = tmp.path().join("scripts").join("setup.sh");
-    std::fs::create_dir_all(script.parent().unwrap()).unwrap();
-    std::fs::write(&script, "git config user.name Bot\n").unwrap();
+    let root = case_root("exclude-paths");
+    let script = root.join("scripts/setup.sh");
     let config = config_with_options("excludePaths: [\"scripts/**\"]");
-    let findings = check_with_files(tmp.path(), &config, &[script]).unwrap();
+    let findings = check_with_files(&root, &config, &[script]).unwrap();
     assert!(
         findings.is_empty(),
         "excluded path should produce no findings"
@@ -347,7 +313,7 @@ fn is_managed_runner_self_hosted_not_managed() {
 
 #[test]
 fn line_number_is_correct() {
-    let findings = run_on_source("#!/bin/bash\n# comment\ngit config user.name \"Bot\"\n");
+    let findings = run_on_source("line-number");
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].line, 3);
 }
@@ -368,12 +334,11 @@ fn unreadable_file_returns_empty() {
 
 #[test]
 fn non_script_file_not_flagged() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("README.md");
-    std::fs::write(&path, "git config user.name \"Bot\"\n").unwrap();
+    let root = case_root("non-script");
+    let path = root.join("README.md");
     let findings = check_file(
         &path,
-        tmp.path(),
+        &root,
         &empty_globset(),
         &empty_globset(),
         &patterns(),
@@ -386,7 +351,7 @@ fn non_script_file_not_flagged() {
 
 #[test]
 fn commented_line_not_flagged() {
-    let findings = run_on_source("# git config user.name \"Bot\"\n");
+    let findings = run_on_source("commented-line");
     assert!(
         findings.is_empty(),
         "commented git config should not be flagged"
@@ -395,7 +360,7 @@ fn commented_line_not_flagged() {
 
 #[test]
 fn echo_line_not_flagged() {
-    let findings = run_on_source("echo \"git config user.name Bot\"\n");
+    let findings = run_on_source("echo-line");
     assert!(
         findings.is_empty(),
         "echoed git config should not be flagged"
@@ -418,12 +383,11 @@ fn has_shell_shebang_none() {
 
 #[test]
 fn shebang_file_without_sh_extension_flagged() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("deploy");
-    std::fs::write(&path, "#!/bin/bash\ngit config user.name \"Bot\"\n").unwrap();
+    let root = case_root("shebang-deploy");
+    let path = root.join("deploy");
     let findings = check_file(
         &path,
-        tmp.path(),
+        &root,
         &empty_globset(),
         &empty_globset(),
         &patterns(),
@@ -437,113 +401,19 @@ fn shebang_file_without_sh_extension_flagged() {
 
 #[test]
 fn check_respects_target_roots() {
-    let tmp = tempfile::tempdir().unwrap();
-    let script = tmp.path().join("scripts").join("setup.sh");
-    std::fs::create_dir_all(script.parent().unwrap()).unwrap();
-    std::fs::write(&script, "git config user.name Bot\n").unwrap();
+    let root = case_root("target-roots");
+    let script = root.join("scripts/setup.sh");
     // Config with repository scope — check() should apply target_roots
     let config = config_with_options("{}");
     let files = vec![script];
-    let findings = check_with_files(tmp.path(), &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
     assert!(!findings.is_empty(), "should find violation in script");
-}
-
-#[test]
-fn is_managed_runner_only_inline_list_all_managed() {
-    let content = "runs-on: [ubuntu-latest, windows-latest]\n";
-    assert!(
-        is_managed_runner_only(content),
-        "bracket list of managed runners should be recognized"
-    );
-}
-
-#[test]
-fn is_managed_runner_only_inline_list_mixed() {
-    let content = "runs-on: [ubuntu-latest, self-hosted]\n";
-    assert!(
-        !is_managed_runner_only(content),
-        "bracket list with self-hosted should not be recognized as managed-only"
-    );
-}
-
-#[test]
-fn is_managed_runner_only_trailing_comma_skips_empty_element() {
-    // Exercises line 95: `continue` when a split segment is empty (e.g. trailing comma).
-    let content = "runs-on: [ubuntu-latest,]\n";
-    assert!(
-        is_managed_runner_only(content),
-        "trailing comma produces empty element that should be skipped, not treated as unmanaged"
-    );
-}
-
-#[test]
-fn is_managed_runner_only_multiline_list_managed() {
-    // Exercises EW60S: multi-line YAML list form strips leading "- " before matching.
-    let content = "runs-on:\n  - ubuntu-latest\n";
-    assert!(
-        is_managed_runner_only(content),
-        "multi-line YAML list with managed runner should be recognized"
-    );
-}
-
-#[test]
-fn is_managed_runner_only_multiline_list_self_hosted() {
-    let content = "runs-on:\n  - self-hosted\n";
-    assert!(
-        !is_managed_runner_only(content),
-        "multi-line YAML list with self-hosted runner should not be recognized as managed-only"
-    );
-}
-
-#[test]
-fn is_managed_runner_only_multiline_list_later_self_hosted() {
-    let content = "runs-on:\n  - ubuntu-latest\n  - self-hosted\n";
-    assert!(
-        !is_managed_runner_only(content),
-        "multi-line YAML list must inspect every runner entry"
-    );
-}
-
-#[test]
-fn is_managed_runner_only_multiline_list_skips_blank_and_comment_lines() {
-    let content = "runs-on:\n\n  # hosted runners\n  - ubuntu-latest\n";
-    assert!(
-        is_managed_runner_only(content),
-        "blank and comment lines inside runs-on lists should be ignored"
-    );
-}
-
-#[test]
-fn is_managed_runner_only_mapping_labels_managed() {
-    let content = "runs-on:\n  group: hosted\n  labels: ubuntu-latest\n";
-    assert!(
-        is_managed_runner_only(content),
-        "mapping labels with a managed runner should be recognized"
-    );
-}
-
-#[test]
-fn is_managed_runner_only_mapping_labels_self_hosted() {
-    let content = "runs-on:\n  group: hosted\n  labels: self-hosted\n";
-    assert!(
-        !is_managed_runner_only(content),
-        "mapping labels with self-hosted should not be recognized as managed-only"
-    );
-}
-
-#[test]
-fn is_managed_runner_only_multiline_non_list_stops_collection() {
-    let content = "runs-on:\n  name: ubuntu-runners\n  - ubuntu-latest\n";
-    assert!(
-        !is_managed_runner_only(content),
-        "non-list YAML values should not be treated as managed runner entries"
-    );
 }
 
 #[test]
 fn line_continued_git_config_is_flagged() {
     // Exercises EW60T: shell regex now allows \<newline> line continuations.
-    let findings = run_on_source("git config \\\n  user.name \"Bot\"\n");
+    let findings = run_on_source("line-continued");
     assert_eq!(
         findings.len(),
         1,

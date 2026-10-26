@@ -28,6 +28,14 @@ fn fixture_root(subpath: &str) -> std::path::PathBuf {
     )
 }
 
+fn case_root(name: &str) -> std::path::PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &crate::test_support::rule_fixture_root("banned-renamed-files")
+            .join("cases")
+            .join(name),
+    )
+}
+
 #[test]
 fn pass_fixture_has_no_findings() {
     let root = fixture_root("pass");
@@ -137,38 +145,29 @@ fn opts_with_middleware() -> Options {
 
 #[test]
 fn banned_basename_in_scope_flagged() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("web")).unwrap();
+    let root = case_root("banned-basename-in-scope-flagged");
     let path = root.join("web/middleware.ts");
-    std::fs::write(&path, "export {};\n").unwrap();
     let opts = opts_with_middleware();
-    let findings = check_file(&path, root, &opts, &compiled(&opts));
+    let findings = check_file(&path, &root, &opts, &compiled(&opts));
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("rename"));
 }
 
 #[test]
 fn non_banned_name_passes() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("web")).unwrap();
+    let root = case_root("non-banned-name-passes");
     let path = root.join("web/proxy.ts");
-    std::fs::write(&path, "export {};\n").unwrap();
     let opts = opts_with_middleware();
-    let findings = check_file(&path, root, &opts, &compiled(&opts));
+    let findings = check_file(&path, &root, &opts, &compiled(&opts));
     assert!(findings.is_empty());
 }
 
 #[test]
 fn out_of_scope_path_not_flagged() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend")).unwrap();
+    let root = case_root("out-of-scope-path-not-flagged");
     let path = root.join("backend/middleware.ts");
-    std::fs::write(&path, "export {};\n").unwrap();
     let opts = opts_with_middleware();
-    let findings = check_file(&path, root, &opts, &compiled(&opts));
+    let findings = check_file(&path, &root, &opts, &compiled(&opts));
     assert!(
         findings.is_empty(),
         "out-of-scope path should not be flagged"
@@ -177,13 +176,10 @@ fn out_of_scope_path_not_flagged() {
 
 #[test]
 fn non_matching_extension_not_flagged() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("web")).unwrap();
+    let root = case_root("non-matching-extension-not-flagged");
     let path = root.join("web/middleware.py");
-    std::fs::write(&path, "# python\n").unwrap();
     let opts = opts_with_middleware();
-    let findings = check_file(&path, root, &opts, &compiled(&opts));
+    let findings = check_file(&path, &root, &opts, &compiled(&opts));
     assert!(findings.is_empty(), ".py should not be flagged");
 }
 
@@ -202,8 +198,7 @@ fn opts_compound() -> Options {
 
 #[test]
 fn compound_flags_single_and_multipart() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = case_root("compound-flags-single-and-multipart");
     let opts = opts_compound();
     let c = compiled(&opts);
     for name in [
@@ -212,9 +207,8 @@ fn compound_flags_single_and_multipart() {
         "webpack.config.dev.ts",
     ] {
         let path = root.join(name);
-        std::fs::write(&path, "export {};\n").unwrap();
         assert_eq!(
-            check_file(&path, root, &opts, &c).len(),
+            check_file(&path, &root, &opts, &c).len(),
             1,
             "{name} should be flagged in compound mode"
         );
@@ -224,23 +218,19 @@ fn compound_flags_single_and_multipart() {
 #[test]
 fn compound_does_not_match_unrelated_prefix() {
     // `webpack.configuration.js` shares a prefix but is not `webpack.config` + extensions.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = case_root("compound-does-not-match-unrelated-prefix");
     let opts = opts_compound();
     let path = root.join("webpack.configuration.js");
-    std::fs::write(&path, "export {};\n").unwrap();
-    assert!(check_file(&path, root, &opts, &compiled(&opts)).is_empty());
+    assert!(check_file(&path, &root, &opts, &compiled(&opts)).is_empty());
 }
 
 #[test]
 fn compound_still_respects_extensions() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = case_root("compound-still-respects-extensions");
     let opts = opts_compound();
     let path = root.join("webpack.config.prod.py");
-    std::fs::write(&path, "# python\n").unwrap();
     assert!(
-        check_file(&path, root, &opts, &compiled(&opts)).is_empty(),
+        check_file(&path, &root, &opts, &compiled(&opts)).is_empty(),
         ".py is not in extensions even in compound mode"
     );
 }
@@ -261,14 +251,12 @@ fn opts_regex(pattern: &str) -> Options {
 
 #[test]
 fn regex_matches_basename_ignoring_extensions_filter() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = case_root("regex-matches-basename-ignoring-extensions-filter");
     let opts = opts_regex(r"^jest\.config\..+");
     let c = compiled(&opts);
     let path = root.join("jest.config.cjs");
-    std::fs::write(&path, "module.exports = {};\n").unwrap();
     assert_eq!(
-        check_file(&path, root, &opts, &c).len(),
+        check_file(&path, &root, &opts, &c).len(),
         1,
         "regex matches even though .cjs is not in extensions"
     );
@@ -276,12 +264,10 @@ fn regex_matches_basename_ignoring_extensions_filter() {
 
 #[test]
 fn regex_non_match_passes() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = case_root("regex-non-match-passes");
     let opts = opts_regex(r"^jest\.config\..+");
     let path = root.join("vitest.config.ts");
-    std::fs::write(&path, "export default {};\n").unwrap();
-    assert!(check_file(&path, root, &opts, &compiled(&opts)).is_empty());
+    assert!(check_file(&path, &root, &opts, &compiled(&opts)).is_empty());
 }
 
 #[test]
@@ -301,11 +287,8 @@ fn invalid_regex_pattern_errors() {
 
 #[test]
 fn no_scope_matches_all_paths() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("anywhere")).unwrap();
+    let root = case_root("no-scope-matches-all-paths");
     let path = root.join("anywhere/middleware.ts");
-    std::fs::write(&path, "export {};\n").unwrap();
     let opts = Options {
         scope: None,
         banned_basenames: vec![BannedBasename {
@@ -315,20 +298,17 @@ fn no_scope_matches_all_paths() {
         }],
         extensions: vec![".ts".to_string()],
     };
-    let findings = check_file(&path, root, &opts, &compiled(&opts));
+    let findings = check_file(&path, &root, &opts, &compiled(&opts));
     assert_eq!(findings.len(), 1);
 }
 
 #[test]
 fn check_with_files_works() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("web")).unwrap();
+    let root = case_root("check-with-files-works");
     let path = root.join("web/middleware.mts");
-    std::fs::write(&path, "export {};\n").unwrap();
     let yaml = "scope: web\nbannedBasenames:\n  - name: middleware\n    message: rename it\nextensions: [\".mts\"]";
     let config = config_with_rule(yaml);
-    let findings = check_with_files(root, &config, &[path]).unwrap();
+    let findings = check_with_files(&root, &config, &[path]).unwrap();
     assert_eq!(findings.len(), 1);
 }
 
@@ -358,10 +338,8 @@ fn file_with_no_name_component_returns_empty() {
 fn file_with_no_dot_not_flagged_for_dot_extension() {
     // A file with no dot in its name: stem == filename, ext == ""
     // The dot_ext would be "." which won't match any extension like ".ts"
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = case_root("file-with-no-dot-not-flagged-for-dot-extension");
     let path = root.join("middleware"); // no extension — split_stem_ext returns ("middleware", "")
-    std::fs::write(&path, "#!/bin/bash\n").unwrap();
     let opts = Options {
         scope: None,
         banned_basenames: vec![BannedBasename {
@@ -371,7 +349,7 @@ fn file_with_no_dot_not_flagged_for_dot_extension() {
         }],
         extensions: vec![".ts".to_string()],
     };
-    let findings = check_file(&path, root, &opts, &compiled(&opts));
+    let findings = check_file(&path, &root, &opts, &compiled(&opts));
     assert!(
         findings.is_empty(),
         "file with no extension should not match banned ext '.ts'"

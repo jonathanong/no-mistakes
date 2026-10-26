@@ -1,0 +1,8 @@
+# no-mistakes-disable-file github-actions-composite-step-schema
+runs:
+  using: composite
+  steps:
+    - name: Hidden
+      timeout-minutes: 9
+      run: echo
+      shell: bash

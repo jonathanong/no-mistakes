@@ -1,5 +1,9 @@
 use super::*;
 
+fn case_root(name: &str) -> std::path::PathBuf {
+    fixture_root("fixture").join("cases").join(name)
+}
+
 #[test]
 fn unknown_presets_are_rejected() {
     let root = fixture_root("presets-fail");
@@ -92,10 +96,9 @@ rules:
 
 #[test]
 fn invalid_preset_config_surfaces_parse_errors() {
-    let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("sgconfig.yml");
-    std::fs::write(&path, ":\n  -").unwrap();
-    let findings = check_with_files(dir.path(), &config("presets: [sgconfig]"), &[path]).unwrap();
+    let root = case_root("invalid-sgconfig");
+    let path = root.join("sgconfig.yml");
+    let findings = check_with_files(&root, &config("presets: [sgconfig]"), &[path]).unwrap();
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(
         findings[0].message.contains("failed to parse YAML"),
@@ -105,41 +108,36 @@ fn invalid_preset_config_surfaces_parse_errors() {
 
 #[test]
 fn preset_scanning_surfaces_parse_and_glob_errors() {
-    let dir = tempfile::tempdir().unwrap();
-    let workflow = dir.path().join(".github/workflows/check.yml");
-    std::fs::create_dir_all(workflow.parent().unwrap()).unwrap();
-    std::fs::write(&workflow, ":\n  -").unwrap();
+    let invalid_yaml = case_root("pnpm-filter-invalid-yaml");
+    let workflow = invalid_yaml.join(".github/workflows/check.yml");
     let findings = check_with_files(
-        dir.path(),
+        &invalid_yaml,
         &config("presets: [pnpm-workspace-filters]"),
         std::slice::from_ref(&workflow),
     )
     .unwrap();
     assert!(findings[0].message.contains("failed to parse YAML"));
 
-    std::fs::write(
-        &workflow,
-        "jobs:\n  check:\n    steps:\n      - run: pnpm install --filter './{'\n",
-    )
-    .unwrap();
+    let bad_glob = case_root("pnpm-filter-bad-glob");
+    let workflow = bad_glob.join(".github/workflows/check.yml");
     assert!(check_with_files(
-        dir.path(),
+        &bad_glob,
         &config("presets: [pnpm-workspace-filters]"),
         std::slice::from_ref(&workflow),
     )
     .is_err());
 
-    let syncpack = dir.path().join(".syncpackrc.json");
-    std::fs::write(&syncpack, r#"{"source":["{"]}"#).unwrap();
+    let syncpack_root = case_root("syncpack-bad-glob");
+    let syncpack = syncpack_root.join(".syncpackrc.json");
     assert!(check_with_files(
-        dir.path(),
+        &syncpack_root,
         &config("presets: [syncpack]"),
         std::slice::from_ref(&syncpack),
     )
     .is_err());
 
-    let no_mistakes_path = dir.path().join(".no-mistakes.yml");
-    std::fs::write(&no_mistakes_path, "version: 2\n").unwrap();
+    let no_mistakes_root = case_root("no-mistakes-bad-glob");
+    let no_mistakes_path = no_mistakes_root.join(".no-mistakes.yml");
     let mut no_mistakes_config = config("presets: [no-mistakes]");
     no_mistakes_config.rules.push(RuleDef {
         rule: "package-json-workspace-coverage".to_string(),
@@ -148,7 +146,7 @@ fn preset_scanning_surfaces_parse_and_glob_errors() {
         ..Default::default()
     });
     assert!(check_with_files(
-        dir.path(),
+        &no_mistakes_root,
         &no_mistakes_config,
         std::slice::from_ref(&no_mistakes_path),
     )

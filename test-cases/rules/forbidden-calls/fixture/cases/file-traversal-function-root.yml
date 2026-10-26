@@ -1,0 +1,7 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ function: { file: src/selectors.mts, symbol: timeoutCall } }]
+      traversal: file
+      targets: [{ terminal: waitForTimeout }, { terminal: setTimeout }]

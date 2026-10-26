@@ -54,11 +54,12 @@ fn coverage_root() -> PathBuf {
     )
 }
 
-fn coverage_findings(yaml: &str) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
-    let root = coverage_root();
-    let config = tempfile::Builder::new().suffix(".yml").tempfile()?;
-    std::fs::write(config.path(), yaml)?;
-    run_check(&root, Some(config.path()), None)
+fn forbidden_calls_case(name: &str) -> PathBuf {
+    crate::test_support::rule_fixture_root("forbidden-calls").join(format!("cases/{name}.yml"))
+}
+
+fn coverage_findings(case: &str) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
+    run_check(&coverage_root(), Some(&forbidden_calls_case(case)), None)
 }
 
 mod config_validation;
@@ -230,18 +231,9 @@ fn aggregate_runner_keeps_distinct_same_line_occurrences() {
 
 #[test]
 fn traversal_limits_and_cycles_are_deterministic() {
-    let direct = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ function: { file: src/entry.mts, symbol: entry } }]\n      traversal: direct\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap();
-    let transitive = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ function: { file: src/entry.mts, symbol: entry } }]\n      traversal: transitive\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap();
-    let capped = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ function: { file: src/entry.mts, symbol: entry } }]\n      traversal: transitive\n      maxDepth: 1\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap();
+    let direct = coverage_findings("traversal-direct").unwrap();
+    let transitive = coverage_findings("traversal-transitive").unwrap();
+    let capped = coverage_findings("traversal-max-depth-1").unwrap();
 
     assert_eq!(direct.len(), 1, "{direct:#?}");
     assert_eq!(capped.len(), direct.len(), "{capped:#?}");
@@ -250,10 +242,7 @@ fn traversal_limits_and_cycles_are_deterministic() {
 
 #[test]
 fn file_and_module_roots_select_their_callable_sources() {
-    let findings = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/entry.mts }, { module: src/selectors.mts }]\n      traversal: file\n      unknownCalls: ignore\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap();
+    let findings = coverage_findings("file-and-module-roots").unwrap();
 
     assert!(findings
         .iter()
@@ -262,10 +251,8 @@ fn file_and_module_roots_select_their_callable_sources() {
         .iter()
         .all(|finding| finding.file != "src/selectors.mts"));
 
-    let error = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ module: src/targets.mts }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .expect_err("a module without callable sources must be rejected");
+    let error = coverage_findings("module-without-callable-source")
+        .expect_err("a module without callable sources must be rejected");
     assert!(
         error
             .to_string()
@@ -276,45 +263,40 @@ fn file_and_module_roots_select_their_callable_sources() {
 
 #[test]
 fn binding_aware_targets_distinguish_global_module_and_repository_calls() {
-    for (target, expected) in [
-        ("{ global: setTimeout }", 0),
-        ("{ exact: timers.setTimeout }", 1),
-        ("{ terminal: setTimeout }", 2),
+    for (case, target, expected) in [
+        ("selectors-global-set-timeout", "{ global: setTimeout }", 0),
         (
+            "selectors-exact-timers-set-timeout",
+            "{ exact: timers.setTimeout }",
+            1,
+        ),
+        (
+            "selectors-terminal-set-timeout",
+            "{ terminal: setTimeout }",
+            2,
+        ),
+        (
+            "selectors-module-export-set-timeout",
             "{ moduleExport: { module: node:timers, export: setTimeout } }",
             2,
         ),
         (
+            "selectors-function-repository-target",
             "{ function: { file: src/targets.mts, symbol: repositoryTarget } }",
             2,
         ),
     ] {
-        let findings = coverage_findings(&format!(
-            "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ file: src/selectors.mts }}]\n      traversal: file\n      unknownCalls: ignore\n      targets: [{target}]\n"
-        ))
-        .unwrap();
+        let findings = coverage_findings(case).unwrap();
         assert_eq!(findings.len(), expected, "{target}: {findings:#?}");
     }
 }
 
 #[test]
 fn construct_and_unknown_call_policies_are_explicit() {
-    let call = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/selectors.mts }]\n      traversal: file\n      invocations: [call]\n      unknownCalls: ignore\n      targets: [{ global: Date }]\n",
-    )
-    .unwrap();
-    let construct = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/selectors.mts }]\n      traversal: file\n      invocations: [construct]\n      unknownCalls: ignore\n      targets: [{ global: Date }]\n",
-    )
-    .unwrap();
-    let ignored = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ function: { file: src/selectors.mts, symbol: unknownCall } }]\n      unknownCalls: ignore\n      targets: [{ global: neverCalled }]\n",
-    )
-    .unwrap();
-    let reported = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ function: { file: src/selectors.mts, symbol: unknownCall } }]\n      unknownCalls: finding\n",
-    )
-    .unwrap();
+    let call = coverage_findings("invocations-call-date").unwrap();
+    let construct = coverage_findings("invocations-construct-date").unwrap();
+    let ignored = coverage_findings("unknown-calls-ignore").unwrap();
+    let reported = coverage_findings("unknown-calls-finding").unwrap();
 
     assert_eq!(call.len(), 1, "{call:#?}");
     assert_eq!(construct.len(), 1, "{construct:#?}");
@@ -324,10 +306,7 @@ fn construct_and_unknown_call_policies_are_explicit() {
 
 #[test]
 fn exact_selectors_match_unknown_member_calls_before_ignore() {
-    let findings = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ function: { file: src/selectors.mts, symbol: timeoutCall } }]\n      unknownCalls: ignore\n      targets: [{ exact: page.waitForTimeout }]\n",
-    )
-    .unwrap();
+    let findings = coverage_findings("exact-page-wait-for-timeout").unwrap();
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert!(
@@ -338,10 +317,7 @@ fn exact_selectors_match_unknown_member_calls_before_ignore() {
 
 #[test]
 fn named_vitest_roots_use_the_prepared_catalog() {
-    let findings = coverage_findings(
-        "tests:\n  vitest:\n    configs: vitest.config.ts\nrules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ vitest: [unit] }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap();
+    let findings = coverage_findings("vitest-named-unit").unwrap();
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "src/unit/timer.test.mts");
@@ -349,14 +325,8 @@ fn named_vitest_roots_use_the_prepared_catalog() {
 
 #[test]
 fn all_vitest_roots_and_default_call_invocations_are_inclusive() {
-    let vitest = coverage_findings(
-        "tests:\n  vitest:\n    configs: vitest.config.ts\nrules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ vitest: true }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap();
-    let default_calls = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/selectors.mts }]\n      traversal: file\n      unknownCalls: ignore\n      targets: [{ global: Date }]\n",
-    )
-    .unwrap();
+    let vitest = coverage_findings("vitest-all-roots").unwrap();
+    let default_calls = coverage_findings("default-date-calls").unwrap();
 
     assert_eq!(vitest.len(), 2, "{vitest:#?}");
     assert_eq!(default_calls.len(), 1, "{default_calls:#?}");
@@ -402,20 +372,14 @@ fn prepared_vitest_catalog_handles_unconfigured_and_unknown_projects() {
 
 #[test]
 fn malformed_selector_configuration_fails_through_the_public_runner() {
-    let error = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/selectors.mts }]\n      targets: [{ moduleExport: bad }]\n",
-    )
-    .unwrap_err();
+    let error = coverage_findings("malformed-module-export").unwrap_err();
 
     assert!(error.to_string().contains("invalid options"), "{error:#}");
 }
 
 #[test]
 fn application_path_filters_restrict_transitive_call_findings() {
-    let findings = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    include: [src/entry.mts]\n    options:\n      roots: [{ file: src/entry.mts }]\n      traversal: transitive\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap();
+    let findings = coverage_findings("include-restricts-transitive").unwrap();
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "src/entry.mts");
@@ -423,24 +387,15 @@ fn application_path_filters_restrict_transitive_call_findings() {
 
 #[test]
 fn ambiguous_selector_maps_are_rejected() {
-    let error = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/entry.mts }]\n      targets: [{ global: setTimeout, exact: window.setTimeout }]\n",
-    )
-    .unwrap_err();
+    let error = coverage_findings("ambiguous-selector-map").unwrap_err();
 
     assert!(error.to_string().contains("invalid options"), "{error:#}");
 }
 
 #[test]
 fn repeated_applications_and_invalid_roots_stay_separate() {
-    let findings = coverage_findings(
-        "rules:\n  - name: same\n    rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/entry.mts }]\n      targets: [{ global: setTimeout }]\n  - name: same\n    rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/entry.mts }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap();
-    let error = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: missing.mts }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap_err();
+    let findings = coverage_findings("repeated-applications").unwrap();
+    let error = coverage_findings("missing-file-root").unwrap_err();
 
     assert_eq!(findings.len(), 2, "{findings:#?}");
     assert_ne!(findings[0].message, findings[1].message);
@@ -451,13 +406,8 @@ fn repeated_applications_and_invalid_roots_stay_separate() {
 
 #[test]
 fn source_suppression_filters_call_findings_without_hiding_configuration_errors() {
-    let suppressed = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/suppressed.mts }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap();
-    let invalid = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      targets: [{ global: setTimeout }]\n",
-    );
+    let suppressed = coverage_findings("suppressed-source").unwrap();
+    let invalid = coverage_findings("missing-roots");
 
     assert!(suppressed.is_empty(), "{suppressed:#?}");
     assert!(

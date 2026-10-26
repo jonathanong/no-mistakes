@@ -3,24 +3,6 @@
 # Adding a path fails once this file is on the base revision.
 crates/no-mistakes/src/check_discovery/preserved_roots/tests.rs
 crates/no-mistakes/src/check_discovery/tests.rs
-crates/no-mistakes/src/codebase/rules/agents_md_max_size/tests.rs
-crates/no-mistakes/src/codebase/rules/banned_renamed_files/tests.rs
-crates/no-mistakes/src/codebase/rules/config_path_references/tests.rs
-crates/no-mistakes/src/codebase/rules/config_path_references/tests/preset_paths.rs
-crates/no-mistakes/src/codebase/rules/doc_consistency/tests.rs
-crates/no-mistakes/src/codebase/rules/file_extension_policy/tests.rs
-crates/no-mistakes/src/codebase/rules/filesystem_dispatch/tests/fixture_config.rs
-crates/no-mistakes/src/codebase/rules/forbidden_calls/tests.rs
-crates/no-mistakes/src/codebase/rules/forbidden_calls/tests/explicit_playwright.rs
-crates/no-mistakes/src/codebase/rules/forbidden_calls/tests/explicit_vitest.rs
-crates/no-mistakes/src/codebase/rules/forbidden_calls/tests/parse_errors.rs
-crates/no-mistakes/src/codebase/rules/forbidden_calls/tests/playwright.rs
-crates/no-mistakes/src/codebase/rules/github_actions_action_timeout_pair/tests/mod.rs
-crates/no-mistakes/src/codebase/rules/github_actions_action_timeout_pair/tests/review.rs
-crates/no-mistakes/src/codebase/rules/github_actions_composite_step_schema/tests.rs
-crates/no-mistakes/src/codebase/rules/github_actions_pinned_hash/tests.rs
-crates/no-mistakes/src/codebase/rules/no_empty_or_comments_only_files/tests.rs
-crates/no-mistakes/src/codebase/rules/no_git_identity_mutation/tests.rs
 crates/no-mistakes/src/codebase/rules/no_raw_ephemeral_port/tests.rs
 crates/no-mistakes/src/codebase/rules/package_json_registry_only/tests.rs
 crates/no-mistakes/src/codebase/rules/package_json_required_fields/tests.rs

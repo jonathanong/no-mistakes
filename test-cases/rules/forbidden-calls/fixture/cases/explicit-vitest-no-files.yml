@@ -1,0 +1,12 @@
+tests:
+  vitest:
+    configs: missing.config.ts
+    projects:
+      empty:
+        include: [does-not-exist/**/*.ts]
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ vitest: true }]
+      targets: [{ global: setTimeout }]

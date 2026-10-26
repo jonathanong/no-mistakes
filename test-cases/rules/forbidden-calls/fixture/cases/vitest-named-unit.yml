@@ -1,0 +1,9 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ vitest: [unit] }]
+      targets: [{ global: setTimeout }]

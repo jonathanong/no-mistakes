@@ -1,0 +1,6 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ function: { file: src/selectors.mts, symbol: unknownCall } }]
+      unknownCalls: finding

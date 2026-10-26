@@ -9,22 +9,17 @@ fn fixture_root() -> PathBuf {
     )
 }
 
-fn fixture_findings(yaml: &str) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
-    let root = fixture_root();
-    let config = tempfile::Builder::new().suffix(".yml").tempfile()?;
-    std::fs::write(config.path(), yaml)?;
-    run_check(&root, Some(config.path()), None)
+fn fixture_findings(case: &str) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
+    run_check(
+        &fixture_root(),
+        Some(&super::forbidden_calls_case(case)),
+        None,
+    )
 }
-
-const EXPLICIT_PROJECTS: &str =
-    "tests:\n  vitest:\n    projects:\n      custom:\n        include: [src/custom.spec.mts]\n";
 
 #[test]
 fn named_vitest_roots_include_explicit_projects() {
-    let findings = fixture_findings(&format!(
-        "{EXPLICIT_PROJECTS}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ vitest: [custom] }}]\n      targets: [{{ global: setTimeout }}]\n",
-    ))
-    .unwrap();
+    let findings = fixture_findings("explicit-vitest-named-custom").unwrap();
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "src/custom.spec.mts");
@@ -32,10 +27,7 @@ fn named_vitest_roots_include_explicit_projects() {
 
 #[test]
 fn all_vitest_roots_include_explicit_projects() {
-    let findings = fixture_findings(&format!(
-        "{EXPLICIT_PROJECTS}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ vitest: true }}]\n      targets: [{{ global: setTimeout }}]\n",
-    ))
-    .unwrap();
+    let findings = fixture_findings("explicit-vitest-all").unwrap();
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "src/custom.spec.mts");
@@ -43,10 +35,7 @@ fn all_vitest_roots_include_explicit_projects() {
 
 #[test]
 fn explicit_vitest_roots_still_reject_unknown_names() {
-    let error = fixture_findings(&format!(
-        "{EXPLICIT_PROJECTS}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ vitest: [missing] }}]\n      targets: [{{ global: setTimeout }}]\n",
-    ))
-    .unwrap_err();
+    let error = fixture_findings("explicit-vitest-unknown").unwrap_err();
 
     assert!(
         error.to_string().contains("names an unknown project"),
@@ -92,10 +81,7 @@ fn prepared_catalog_merges_explicit_projects_without_runner_configs() {
 fn vitest_root_errors_when_no_files_match() {
     // Skip runner discovery with a missing config, then use an include that
     // matches nothing so the empty-collection diagnostic stays distinct from I/O.
-    let error = fixture_findings(
-        "tests:\n  vitest:\n    configs: missing.config.ts\n    projects:\n      empty:\n        include: [does-not-exist/**/*.ts]\nrules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ vitest: true }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap_err();
+    let error = fixture_findings("explicit-vitest-no-files").unwrap_err();
 
     assert!(
         error.to_string().contains("Vitest root matched no files"),

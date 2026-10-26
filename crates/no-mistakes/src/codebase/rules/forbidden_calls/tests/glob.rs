@@ -14,10 +14,7 @@ fn validation_rejects_empty_glob_and_playwright_selectors() {
 
 #[test]
 fn glob_root_selects_matching_files_before_analysis() {
-    let findings = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ glob: src/unit/**/*.test.mts }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap();
+    let findings = coverage_findings("glob-unit-tests").unwrap();
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "src/unit/timer.test.mts");
@@ -25,10 +22,7 @@ fn glob_root_selects_matching_files_before_analysis() {
 
 #[test]
 fn glob_root_lists_union_matching_files() {
-    let findings = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ glob: [src/unit/**/*.test.mts, src/integration/**/*.test.mts] }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap();
+    let findings = coverage_findings("glob-unit-and-integration").unwrap();
 
     let mut files: Vec<_> = findings
         .iter()
@@ -43,10 +37,7 @@ fn glob_root_lists_union_matching_files() {
 
 #[test]
 fn glob_root_errors_when_no_files_match() {
-    let error = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ glob: src/missing/**/*.mts }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap_err();
+    let error = coverage_findings("glob-no-match").unwrap_err();
 
     assert!(
         error.to_string().contains("glob root matched no files"),
@@ -56,10 +47,7 @@ fn glob_root_errors_when_no_files_match() {
 
 #[test]
 fn glob_root_keeps_exclude_as_a_finding_filter() {
-    let findings = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    exclude: [src/integration/**]\n    options:\n      roots: [{ glob: src/**/*.test.mts }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap();
+    let findings = coverage_findings("glob-exclude-integration").unwrap();
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "src/unit/timer.test.mts");
@@ -67,10 +55,7 @@ fn glob_root_keeps_exclude_as_a_finding_filter() {
 
 #[test]
 fn malformed_glob_is_a_configuration_error() {
-    let error = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ glob: '[' }]\n      targets: [{ global: setTimeout }]\n",
-    )
-    .unwrap_err();
+    let error = coverage_findings("glob-malformed").unwrap_err();
 
     assert!(
         error.to_string().contains("invalid glob") || error.to_string().contains("unclosed"),

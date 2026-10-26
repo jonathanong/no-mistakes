@@ -1,0 +1,5 @@
+jobs:
+  build:
+    steps:
+      - timeout-minutes: 5
+        run: echo

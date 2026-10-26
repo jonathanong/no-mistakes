@@ -25,6 +25,14 @@ fn fixture_root(subpath: &str) -> std::path::PathBuf {
     )
 }
 
+fn case_root(name: &str) -> std::path::PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &crate::test_support::rule_fixture_root("file-extension-policy")
+            .join("cases")
+            .join(name),
+    )
+}
+
 #[test]
 fn pass_fixture_has_no_findings() {
     let root = fixture_root("pass");
@@ -91,41 +99,32 @@ fn make_scope(path: &str, exts: &[&str]) -> ScopeSpec {
 
 #[test]
 fn banned_extension_in_scope_flagged() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend")).unwrap();
+    let root = case_root("banned-extension-in-scope-flagged");
     let path = root.join("backend/index.js");
-    std::fs::write(&path, "module.exports = {};\n").unwrap();
     let allowlist = HashSet::new();
     let scopes = vec![make_scope("backend", &[".js", ".ts"])];
-    let findings = check_file(&path, root, &allowlist, &scopes);
+    let findings = check_file(&path, &root, &allowlist, &scopes);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains(".js"));
 }
 
 #[test]
 fn allowed_extension_passes() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend")).unwrap();
+    let root = case_root("allowed-extension-passes");
     let path = root.join("backend/index.mts");
-    std::fs::write(&path, "export {};\n").unwrap();
     let allowlist = HashSet::new();
     let scopes = vec![make_scope("backend", &[".js", ".ts"])];
-    let findings = check_file(&path, root, &allowlist, &scopes);
+    let findings = check_file(&path, &root, &allowlist, &scopes);
     assert!(findings.is_empty());
 }
 
 #[test]
 fn declaration_file_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend")).unwrap();
+    let root = case_root("declaration-file-skipped");
     let path = root.join("backend/types.d.ts");
-    std::fs::write(&path, "export type Foo = string;\n").unwrap();
     let allowlist = HashSet::new();
     let scopes = vec![make_scope("backend", &[".ts"])];
-    let findings = check_file(&path, root, &allowlist, &scopes);
+    let findings = check_file(&path, &root, &allowlist, &scopes);
     assert!(findings.is_empty(), ".d.ts should be exempt");
 }
 
@@ -143,28 +142,22 @@ fn declaration_file_variants_fixture_has_no_findings() {
 
 #[test]
 fn allowlisted_path_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend")).unwrap();
+    let root = case_root("allowlisted-path-skipped");
     let path = root.join("backend/legacy.js");
-    std::fs::write(&path, "// legacy\n").unwrap();
     let mut allowlist = HashSet::new();
     allowlist.insert("backend/legacy.js");
     let scopes = vec![make_scope("backend", &[".js"])];
-    let findings = check_file(&path, root, &allowlist, &scopes);
+    let findings = check_file(&path, &root, &allowlist, &scopes);
     assert!(findings.is_empty(), "allowlisted path should be skipped");
 }
 
 #[test]
 fn out_of_scope_path_not_flagged() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("scripts")).unwrap();
+    let root = case_root("out-of-scope-path-not-flagged");
     let path = root.join("scripts/build.js");
-    std::fs::write(&path, "// build\n").unwrap();
     let allowlist = HashSet::new();
     let scopes = vec![make_scope("backend", &[".js"])];
-    let findings = check_file(&path, root, &allowlist, &scopes);
+    let findings = check_file(&path, &root, &allowlist, &scopes);
     assert!(
         findings.is_empty(),
         "out-of-scope path should not be flagged"
@@ -173,13 +166,10 @@ fn out_of_scope_path_not_flagged() {
 
 #[test]
 fn check_with_files_works() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend")).unwrap();
+    let root = case_root("check-with-files-works");
     let path = root.join("backend/index.ts");
-    std::fs::write(&path, "export {};\n").unwrap();
     let config = config_with_rule("scopes:\n  - path: backend\n    bannedExtensions: [\".ts\"]");
-    let findings = check_with_files(root, &config, &[path]).unwrap();
+    let findings = check_with_files(&root, &config, &[path]).unwrap();
     assert_eq!(findings.len(), 1);
 }
 
@@ -187,14 +177,11 @@ fn check_with_files_works() {
 fn file_with_no_extension_has_empty_ext_and_is_not_flagged() {
     // file_extension returns "" when there is no dot, and banned_extensions
     // won't match "", so no finding is emitted.
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("backend")).unwrap();
+    let root = case_root("file-with-no-extension-has-empty-ext-and-is-not-flagged");
     let path = root.join("backend/Makefile"); // no dot
-    std::fs::write(&path, "all:\n\techo hi\n").unwrap();
     let allowlist = HashSet::new();
     let scopes = vec![make_scope("backend", &[".js", ".ts"])];
-    let findings = check_file(&path, root, &allowlist, &scopes);
+    let findings = check_file(&path, &root, &allowlist, &scopes);
     assert!(
         findings.is_empty(),
         "file with no extension should not match any banned extension"

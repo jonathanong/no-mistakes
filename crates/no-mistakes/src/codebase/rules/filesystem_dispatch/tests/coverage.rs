@@ -5,14 +5,16 @@ use super::*;
 /// config that omits those two rules, exercising the skip paths.
 #[test]
 fn dispatch_with_files_skips_disabled_rules() {
-    let fixture = all_rules_fixture();
     // Omit RUST_MAX_LINES_PER_FILE and RUST_NO_INLINE_TESTS from the config.
     let rules_without_rust: Vec<&str> = FILESYSTEM_RULE_IDS
         .iter()
         .copied()
         .filter(|&rule| rule != RUST_MAX_LINES_PER_FILE && rule != RUST_NO_INLINE_TESTS)
         .collect();
-    let config_path = write_config(fixture.path(), &rules_without_rust);
+    let (fixture, config_path) = super::fixture_config::prepared_rules(
+        "all-rules-without-rust-line-rules",
+        &rules_without_rust,
+    );
     let findings =
         run_filesystem_rules_with_files(fixture.path(), Some(&config_path), &[]).unwrap();
     assert!(findings.is_empty());

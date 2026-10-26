@@ -1,0 +1,7 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ function: { file: src/entry.mts, symbol: entry } }]
+      traversal: transitive
+      targets: [{ global: setTimeout }]

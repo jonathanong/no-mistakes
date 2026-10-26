@@ -28,6 +28,14 @@ fn config_with_rule(yaml: &str) -> NoMistakesConfig {
     config
 }
 
+fn case_root(name: &str) -> std::path::PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &crate::test_support::rule_fixture_root("agents-md-max-size")
+            .join("cases")
+            .join(name),
+    )
+}
+
 #[test]
 fn count_lines_empty() {
     assert_eq!(count_lines(""), 0);
@@ -55,29 +63,26 @@ fn count_lines_multibyte() {
 
 #[test]
 fn check_file_passes_within_limits() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("AGENTS.md");
-    std::fs::write(&path, "line1\nline2\n").unwrap();
-    let findings = check_file(&path, tmp.path(), 10, 1000);
+    let root = case_root("check-file-passes-within-limits");
+    let path = root.join("AGENTS.md");
+    let findings = check_file(&path, &root, 10, 1000);
     assert!(findings.is_empty());
 }
 
 #[test]
 fn check_file_fails_line_count() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("AGENTS.md");
-    std::fs::write(&path, "a\nb\nc\n").unwrap();
-    let findings = check_file(&path, tmp.path(), 2, 10000);
+    let root = case_root("check-file-fails-line-count");
+    let path = root.join("AGENTS.md");
+    let findings = check_file(&path, &root, 2, 10000);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("3 lines"));
 }
 
 #[test]
 fn check_file_fails_char_count() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("CLAUDE.md");
-    std::fs::write(&path, "hello world").unwrap();
-    let findings = check_file(&path, tmp.path(), 100, 5);
+    let root = case_root("check-file-fails-char-count");
+    let path = root.join("CLAUDE.md");
+    let findings = check_file(&path, &root, 100, 5);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("characters"));
     assert!(findings[0].message.contains("bytes"));
@@ -86,43 +91,38 @@ fn check_file_fails_char_count() {
 
 #[test]
 fn check_file_fails_both() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("AGENTS.md");
-    std::fs::write(&path, "abc\ndef\nghi\n").unwrap();
-    let findings = check_file(&path, tmp.path(), 1, 1);
+    let root = case_root("check-file-fails-both");
+    let path = root.join("AGENTS.md");
+    let findings = check_file(&path, &root, 1, 1);
     assert_eq!(findings.len(), 2);
 }
 
 #[test]
 fn check_file_respects_disable_file_comment() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("AGENTS.md");
-    let content = format!("// no-mistakes-disable-file {RULE_ID}\na\nb\nc\n");
-    std::fs::write(&path, content).unwrap();
-    let findings = check_file(&path, tmp.path(), 2, 10000);
+    let root = case_root("check-file-respects-disable-file-comment");
+    let path = root.join("AGENTS.md");
+    let findings = check_file(&path, &root, 2, 10000);
     assert!(findings.is_empty());
 }
 
 #[test]
 fn check_file_multibyte_chars() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("AGENTS.md");
-    std::fs::write(&path, "héllo").unwrap();
-    let findings = check_file(&path, tmp.path(), 100, 3);
+    let root = case_root("check-file-multibyte-chars");
+    let path = root.join("AGENTS.md");
+    let findings = check_file(&path, &root, 100, 3);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("5 characters"));
 }
 
 #[test]
 fn advisories_report_near_limit_files_without_findings() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("CLAUDE.md");
-    std::fs::write(&path, "hello world").unwrap();
+    let root = case_root("advisories-report-near-limit");
+    let path = root.join("CLAUDE.md");
     let config = config_with_rule("{maxChars: 20, advisoryCharsRemaining: 10}");
     let files = vec![path];
 
-    let findings = check_with_files(tmp.path(), &config, &files).unwrap();
-    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    let advisories = advisories_with_files(&root, &config, &files).unwrap();
 
     assert!(findings.is_empty());
     assert_eq!(advisories.len(), 1);
@@ -133,16 +133,14 @@ fn advisories_report_near_limit_files_without_findings() {
 
 #[test]
 fn checks_advisories_and_suppressions_share_one_source_read() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("CLAUDE.md");
-    std::fs::write(&path, "hello world").unwrap();
+    let root = case_root("checks-advisories-and-suppressions-share-one-source-read");
+    let path = root.join("CLAUDE.md");
     let config = config_with_rule("{maxChars: 20, advisoryCharsRemaining: 10}");
     let files = vec![path];
     let sources = super::super::source_store_for_files(&files);
 
-    let findings = check_with_files_and_sources(tmp.path(), &config, &files, &sources).unwrap();
-    let advisories =
-        advisories_with_files_and_sources(tmp.path(), &config, &files, &sources).unwrap();
+    let findings = check_with_files_and_sources(&root, &config, &files, &sources).unwrap();
+    let advisories = advisories_with_files_and_sources(&root, &config, &files, &sources).unwrap();
 
     assert!(findings.is_empty());
     assert_eq!(advisories.len(), 1);
@@ -170,14 +168,13 @@ fn prepared_scan_ignores_missing_source_files() {
 
 #[test]
 fn advisories_skip_over_limit_files() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("CLAUDE.md");
-    std::fs::write(&path, "hello world").unwrap();
+    let root = case_root("advisories-skip-over-limit-files");
+    let path = root.join("CLAUDE.md");
     let config = config_with_rule("{maxChars: 5, advisoryCharsRemaining: 10}");
     let files = vec![path];
 
-    let findings = check_with_files(tmp.path(), &config, &files).unwrap();
-    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    let advisories = advisories_with_files(&root, &config, &files).unwrap();
 
     assert_eq!(findings.len(), 1);
     assert!(advisories.is_empty());
@@ -185,13 +182,12 @@ fn advisories_skip_over_limit_files() {
 
 #[test]
 fn advisories_skip_files_outside_threshold() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("CLAUDE.md");
-    std::fs::write(&path, "hello").unwrap();
+    let root = case_root("advisories-skip-files-outside-threshold");
+    let path = root.join("CLAUDE.md");
     let config = config_with_rule("{maxChars: 20, advisoryCharsRemaining: 10}");
     let files = vec![path];
 
-    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+    let advisories = advisories_with_files(&root, &config, &files).unwrap();
 
     assert!(advisories.is_empty());
 }
@@ -210,60 +206,46 @@ fn advisories_skip_unreadable_files() {
 
 #[test]
 fn advisories_respect_disable_file_comment() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("CLAUDE.md");
-    std::fs::write(
-        &path,
-        format!("# no-mistakes-disable-file {RULE_ID}\nhello world"),
-    )
-    .unwrap();
+    let root = case_root("advisories-respect-disable-file-comment");
+    let path = root.join("CLAUDE.md");
     let config = config_with_rule("{maxChars: 100, advisoryCharsRemaining: 100}");
     let files = vec![path];
 
-    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+    let advisories = advisories_with_files(&root, &config, &files).unwrap();
 
     assert!(advisories.is_empty());
 }
 
 #[test]
 fn advisories_respect_line_suppressions() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("CLAUDE.md");
-    std::fs::write(
-        &path,
-        format!("# no-mistakes-disable-line {RULE_ID}\nhello world"),
-    )
-    .unwrap();
+    let root = case_root("advisories-respect-line-suppressions");
+    let path = root.join("CLAUDE.md");
     let config = config_with_rule("{maxChars: 100, advisoryCharsRemaining: 100}");
     let files = vec![path];
 
-    let advisories = advisories_with_files(tmp.path(), &config, &files).unwrap();
+    let advisories = advisories_with_files(&root, &config, &files).unwrap();
 
     assert!(advisories.is_empty());
 }
 
 #[test]
 fn check_uses_custom_options() {
-    let tmp = tempfile::tempdir().unwrap();
-    let agents_path = tmp.path().join("AGENTS.md");
-    std::fs::write(&agents_path, "a\nb\nc\n").unwrap();
+    let root = case_root("check-uses-custom-options");
     let config = config_with_rule("{maxLines: 5, maxChars: 1000}");
-    let findings = check(tmp.path(), &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty());
 }
 
 #[test]
 fn check_uses_custom_filenames() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("GEMINI.md");
-    std::fs::write(&path, "a\nb\nc\n").unwrap();
+    let root = case_root("check-uses-custom-filenames");
     // Without custom filename, GEMINI.md is not checked
     let config = config_with_rule("{maxLines: 2}");
-    let findings = check(tmp.path(), &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty(), "GEMINI.md not in default set");
     // With custom filename
     let config2 = config_with_rule("{maxLines: 2, filenames: [\"GEMINI.md\"]}");
-    let findings2 = check(tmp.path(), &config2).unwrap();
+    let findings2 = check(&root, &config2).unwrap();
     assert_eq!(findings2.len(), 1);
 }
 
@@ -286,18 +268,14 @@ fn check_file_skips_unreadable_file() {
 
 #[test]
 fn check_with_files_respects_roots() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = case_root("check-with-files-respects-roots");
     let sub = root.join("sub");
-    std::fs::create_dir_all(&sub).unwrap();
     let outside = root.join("AGENTS.md");
     let inside = sub.join("AGENTS.md");
-    std::fs::write(&outside, "a\nb\nc\n").unwrap();
-    std::fs::write(&inside, "a\nb\nc\n").unwrap();
     let sub_str = sub.to_str().unwrap();
     let config = config_with_rule(&format!("{{maxLines: 2, roots: [\"{sub_str}\"]}}"));
     let all_files = vec![outside, inside];
-    let findings = check_with_files(root, &config, &all_files).unwrap();
+    let findings = check_with_files(&root, &config, &all_files).unwrap();
     assert_eq!(
         findings.len(),
         1,
@@ -308,28 +286,22 @@ fn check_with_files_respects_roots() {
 
 #[test]
 fn check_with_files_normalizes_relative_roots() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = case_root("check-with-files-normalizes-relative-roots");
     let sub = root.join("sub");
-    std::fs::create_dir_all(&sub).unwrap();
     let outside = root.join("AGENTS.md");
     let inside = sub.join("AGENTS.md");
-    std::fs::write(&outside, "a\nb\nc\n").unwrap();
-    std::fs::write(&inside, "a\nb\nc\n").unwrap();
     let config = config_with_rule("{maxLines: 2, roots: [\"sub\"]}");
     let all_files = vec![outside, inside];
-    let findings = check_with_files(root, &config, &all_files).unwrap();
+    let findings = check_with_files(&root, &config, &all_files).unwrap();
     assert_eq!(findings.len(), 1, "relative root resolves relative to root");
     assert!(findings[0].file.contains("sub"));
 }
 
 #[test]
 fn check_sorts_findings_deterministically() {
-    let tmp = tempfile::tempdir().unwrap();
-    std::fs::write(tmp.path().join("AGENTS.md"), "a\nb\nc\n").unwrap();
-    std::fs::write(tmp.path().join("CLAUDE.md"), "x\ny\nz\n").unwrap();
+    let root = case_root("check-sorts-findings-deterministically");
     let config = config_with_rule("{maxLines: 1, maxChars: 1}");
-    let findings = check(tmp.path(), &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     // findings should be sorted by file then message
     for i in 1..findings.len() {
         let a = (&findings[i - 1].file, &findings[i - 1].message);

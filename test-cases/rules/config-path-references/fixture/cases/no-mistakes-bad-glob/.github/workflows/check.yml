@@ -1,0 +1,4 @@
+jobs:
+  check:
+    steps:
+      - run: pnpm install --filter './{'
