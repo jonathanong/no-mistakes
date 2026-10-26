@@ -45,9 +45,7 @@ const cases = [
       [`${proven}cross-file-hostile.ts`]: [
         5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35, 37, 39, 41, 44, 47, 50, 53, 56,
       ],
-      [`${proven}cross-file-forwarding.ts`]: [
-        6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 18, 20, 21, 22, 24,
-      ],
+      [`${proven}cross-file-forwarding.ts`]: [6, 7, 8, 9, 10, 11, 12, 13, 16, 18, 20, 21, 22, 24],
       [`${proven}cross-file-receivers.ts`]: [5, 7, 11, 13, 17, 22, 24, 30, 33, 39],
       [`${proven}cross-file-receiver-helper-chain.ts`]: [4, 19, 22, 26, 30, 34, 38, 42, 81, 84, 90],
       [`${proven}sibling-mutations.ts`]: [4, 6, 8, 10, 12, 14, 16, 18, 20, 24, 26, 28],
@@ -56,6 +54,9 @@ const cases = [
       [`${proven}dependency-copy/caller.ts`]: [
         72, 78, 84, 90, 96, 102, 108, 144, 150, 156, 162, 168, 174, 180, 186, 192, 198, 204, 210,
         216, 222, 228, 234, 240, 252, 264, 270, 276, 282, 288,
+      ],
+      [`${proven}dependency-copy-spellings/caller.ts`]: [
+        38, 50, 56, 68, 80, 86, 98, 104, 116, 122, 134, 140, 146, 152,
       ],
     },
   },
