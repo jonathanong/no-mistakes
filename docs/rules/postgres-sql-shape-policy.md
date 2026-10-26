@@ -20,6 +20,8 @@ when a same-file call reaches an executor argument, `.append` on a known SQL
 builder, or a trusted SQL tag interpolation. Another same-file function that
 returns that call counts. A return that is itself a trusted tag, known builder,
 or `.append` chain stays builder SQL. Other string returns are not fragments.
+This return reachability is same-file only; calls in other files do not make a
+string return a builder fragment.
 Builder recovery honors the same trusted-tag and lexical-shadow rules as
 executed SQL. Unresolved raw appended identifiers become a synthetic qualified
 outer reference, so a builder that may append an outer column is conservatively

@@ -4,6 +4,51 @@ const test = globalThis.test || require("node:test").test;
 
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
+for (const [state, expected] of [
+  ["live", 2],
+  ["dropped", 0],
+  ["replaced", 0],
+])
+  test(
+    `compiled application inserts use the final trigger state: ${state}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const root = join(
+        __dirname,
+        "../../../test-cases/rules/postgres-idempotent-insert/fixture",
+        `embedded-trigger-final-${state}`,
+      );
+      const options = { root, config: join(root, ".no-mistakes.yml"), includeSqlVerdicts: true };
+      const pending = cjs.check(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.check(options), report);
+      assert.equal(report.rules.length, expected);
+      if (expected) {
+        assert.deepEqual(
+          report.rules.map(({ file, line }) => [file, line]),
+          [
+            ["app/q.ts", 3],
+            ["lib/q.ts", 3],
+          ],
+        );
+        for (const finding of report.rules)
+          assert.match(finding.message, /fires before conflict checks/);
+      }
+      const triggers = report.sqlVerdicts.filter((row) => row.subcheck === "trigger-replay");
+      assert.equal(triggers.length, 2);
+      for (const row of triggers) assert.equal(row.status, expected ? "violation" : "proven-clear");
+      const batch = await cjs.analyzeProject({
+        root,
+        config: options.config,
+        reports: [{ type: "check", id: "check", includeSqlVerdicts: true }],
+      });
+      assert.deepEqual(batch.reports[0].result, report);
+    },
+  );
+
 const identifierCases = [
   ["fail-array-destructured-row", [[5, "id"]]],
   ["fail-array-destructured-row-elision", [[4, "schema"]]],
