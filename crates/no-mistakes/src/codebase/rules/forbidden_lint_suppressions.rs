@@ -59,8 +59,10 @@ pub(crate) fn check_with_files(
     files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     let sources = super::source_store_for_files(files);
-    let mut plan = crate::codebase::check_facts::CheckFactPlan::default();
-    plan.lint_suppression_paths = required_files(root, config, files)?;
+    let plan = crate::codebase::check_facts::CheckFactPlan {
+        lint_suppression_paths: required_files(root, config, files)?,
+        ..Default::default()
+    };
     let facts =
         crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
             root,
