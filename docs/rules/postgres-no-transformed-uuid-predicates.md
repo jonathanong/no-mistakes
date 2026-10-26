@@ -100,7 +100,11 @@ uncertainty. Independently parsed sibling statements remain analyzable.
 
 At `effort: low`, the rule analyzes supported literal SQL directly in SQL files
 and executor calls. Direct strings, interpolation-free templates, and one local
-constant are supported at named executors and proven typed parameters. Erased
+constant are supported at named executors and proven typed parameters. Exact
+imported `sql-template-strings` default/`SQL` tags also qualify: interpolations
+are bind values, and a local builder must have no mutation or unmodeled use.
+Defaulted typed parameters, typed callbacks and immutable configured factory
+bindings use the same ownership proof. Erased
 type references create no findings; dynamic SQL and runtime executor escapes
 are diagnosed at their own use. See [executor
 bindings](../postgres-facts/executor-bindings.md).

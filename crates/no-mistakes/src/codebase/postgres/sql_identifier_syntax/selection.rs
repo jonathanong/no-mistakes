@@ -4,6 +4,8 @@ use crate::codebase::ts_source::module_facts::TypeScriptModuleFacts;
 pub(super) struct Selection {
     pub selected: FxHashSet<usize>,
     pub namespaces: FxHashSet<usize>,
+    pub factories: FxHashSet<usize>,
+    pub transports: FxHashSet<Span>,
     pub runtime: FxHashSet<Span>,
     pub typed: FxHashSet<usize>,
     pub unsupported: FxHashSet<usize>,
@@ -13,6 +15,7 @@ impl Selection {
         let mut selected = FxHashSet::default();
         let mut namespaces = FxHashSet::default();
         let mut unsupported = FxHashSet::default();
+        let mut factories = FxHashSet::default();
         for import in &module.imports {
             let exact =
                 profile.import_specifier.is_empty() || import.specifier == profile.import_specifier;
@@ -51,12 +54,19 @@ impl Selection {
                     || profile.executor_type_names.contains(&binding.imported)
                 {
                     unsupported.insert(binding.binding_id);
+                    if !binding.type_only
+                        && profile.executor_factory_names.contains(&binding.imported)
+                    {
+                        factories.insert(binding.binding_id);
+                    }
                 }
             }
         }
         Self {
             selected,
             namespaces,
+            factories,
+            transports: FxHashSet::default(),
             typed: FxHashSet::default(),
             runtime: FxHashSet::default(),
             unsupported,

@@ -1,0 +1,28 @@
+effort: low
+unanalyzable: ignore
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorTypeNames: [QueryOptions]
+      include: ['src/query.mts', 'src/offset-line-disabled.mts', 'src/offset-file-disabled.mts']
+  - rule: postgres-no-unbounded-sql-identifier
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorTypeNames: [QueryOptions]
+      include: ['src/query.mts', 'src/identifier-line-disabled.mts', 'src/identifier-file-disabled.mts']
+  - rule: postgres-no-mutable-sql-registry
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorTypeNames: [QueryOptions]
+      include: ['src/query.mts', 'src/registry-line-disabled.mts', 'src/registry-file-disabled.mts']
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorTypeNames: [QueryOptions]
+      include: ['src/query.mts', 'src/uuid-line-disabled.mts', 'src/uuid-file-disabled.mts']
+      schemaCatalogPath: schema.json

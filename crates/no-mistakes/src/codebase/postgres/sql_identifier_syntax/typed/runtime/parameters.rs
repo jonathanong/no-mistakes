@@ -1,4 +1,5 @@
 use super::*;
+use oxc_ast::ast::FormalParameters;
 
 impl Runtime<'_> {
     pub(super) fn parameter_properties(&mut self, parameters: &FormalParameters<'_>) {

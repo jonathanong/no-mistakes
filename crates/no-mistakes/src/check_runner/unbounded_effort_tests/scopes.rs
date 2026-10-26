@@ -52,10 +52,12 @@ fn unbounded_effort_narrows_files_profiles_and_input_synthesis() {
 }
 
 #[test]
-fn unbounded_effort_scoped_executors_and_loaders_are_explicit_unknowns() {
+fn unbounded_effort_scoped_literals_are_clear_and_loaders_remain_unknown() {
     let report = run(".no-mistakes-scoped.yml", false);
+    // The saved fixture's historical label records the former factory false positive.
+    // Its configured immutable factory and directly typed literal calls are now proven.
     for (file, expected) in [
-        ("src/scoped.ts", vec![3]),
+        ("src/scoped.ts", Vec::new()),
         ("src/loaders.ts", vec![1, 4, 8]),
     ] {
         let lines = report

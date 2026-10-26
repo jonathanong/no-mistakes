@@ -200,6 +200,11 @@ query(statement);
 query(`SELECT id FROM app.users WHERE id = ${id}`);
 ```
 
+Exact imported `sql-template-strings` default/`SQL` tags also qualify. Their
+interpolations are bind values rather than SQL fragments. A one-local-constant
+builder must not be mutated or used outside the supported executor inputs;
+other tags and builder operations remain unanalyzable.
+
 A registry relation such as ``query(`SELECT id FROM ${tables.users}`)`` is
 unanalyzable at low effort, including when the registry uses `as const` or
 `Object.freeze`. A TypeScript const assertion does not freeze runtime members;
@@ -208,7 +213,12 @@ immutability. Helpers, aliases, and other indirect SQL also require maximum
 effort. Rewrite SQL as a literal at the executor call or one local literal
 `const`, or select `max` to inspect the cross-file registry. Typed parameter
 calls use the same SQL contract as named executors; erased type
-references create no findings. Unsupported executor factories and runtime
+references create no findings. Defaulted typed parameters, typed callbacks and
+supported immutable factory bindings use the same ownership contract in
+[executor bindings](../postgres-facts/executor-bindings.md). Companion receiver
+arguments are exempt only for helpers selected by `executorFactoryNames`;
+opaque helper uses remain unknown even when their callback is typed.
+Unsupported executor factories and runtime
 executor escapes are diagnosed at their configured binding reference. See
 [executor bindings](../postgres-facts/executor-bindings.md). A one-hop local
 executor alias (`const run = query`) remains

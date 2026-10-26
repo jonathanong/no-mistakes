@@ -1,11 +1,18 @@
 use super::*;
 
-pub(super) fn input(expression: &Expression<'_>, env: &mut FxHashMap<String, Span>) -> Input {
+pub(super) fn input(
+    expression: &Expression<'_>,
+    env: &mut FxHashMap<String, Span>,
+    tags: &template_binds::TemplateBinds,
+) -> Input {
     match unwrap_ts_wrappers(expression) {
+        Expression::TaggedTemplateExpression(value) => tags.input(value),
         Expression::StringLiteral(value) => Input::Sql {
             text: value.value.to_string(),
             source_span: span(value.span),
             holes: Vec::new(),
+            parameterized: None,
+            positions: Vec::new(),
         },
         Expression::TemplateLiteral(value) => {
             let mut text = String::new();
@@ -44,9 +51,19 @@ pub(super) fn input(expression: &Expression<'_>, env: &mut FxHashMap<String, Spa
                 text,
                 holes,
                 source_span: span(value.span),
+                parameterized: None,
+                positions: Vec::new(),
             }
         }
         Expression::Identifier(id) => Input::Reference(span(id.span)),
         _ => Input::Unknown,
     }
+}
+
+// Indirect receiver operations retain uncertainty without selecting data methods.
+pub(super) fn indirect_executor_call(parts: &[String]) -> bool {
+    parts.last().is_some_and(|name| {
+        (parts.len() > 2 && name == "query")
+            || (parts.len() >= 2 && matches!(name.as_str(), "call" | "apply" | "bind"))
+    })
 }

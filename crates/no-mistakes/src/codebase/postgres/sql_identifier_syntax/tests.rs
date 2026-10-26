@@ -175,10 +175,19 @@ fn low_typed_candidates_cannot_repair_missing_semantic_bindings() {
             .with_scoped_executors(&["createExecutor".into()], &["QueryExecutor".into()]);
         let module = ts.module_bindings.as_deref().unwrap();
         let selection = Selection::new(&profile, module);
-        let (selected, unsupported, _) =
-            typed::collect(program, module, &profile, &selection.unsupported);
+        let (selected, unsupported, _, _) =
+            typed::collect(program, module, &profile, &selection, &[]);
         assert!(selected.is_empty());
         assert!(unsupported.is_empty());
     })
     .unwrap();
 }
+
+#[path = "transport_shape_tests.rs"]
+mod transport_shape_tests;
+
+#[path = "producer_consumer_tests.rs"]
+mod producer_consumer_tests;
+
+#[path = "freeze_phase2_tests.rs"]
+mod freeze_phase2_tests;

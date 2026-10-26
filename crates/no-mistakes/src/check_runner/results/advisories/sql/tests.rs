@@ -55,7 +55,13 @@ fn groups_only_matching_calls_rules_applications_and_profiles() {
         no_mistakes::codebase::ts_source::FileInventory::from_paths(&[]),
     ));
     let mut advice = Vec::new();
-    merge_sql(&mut advice, Path::new("/missing"), &sources, &rows);
+    merge_sql(
+        &mut advice,
+        Path::new("/missing"),
+        &sources,
+        &CheckFactMap::default(),
+        &rows,
+    );
     assert_eq!(advice.len(), 6);
     assert!(advice.iter().all(|finding| finding.line == 1));
     assert!(advice.iter().all(|finding| {
@@ -66,7 +72,13 @@ fn groups_only_matching_calls_rules_applications_and_profiles() {
         .iter()
         .any(|finding| finding.message.contains("application #0")));
     let original = advice.clone();
-    merge_sql(&mut advice, Path::new("/missing"), &sources, &[]);
+    merge_sql(
+        &mut advice,
+        Path::new("/missing"),
+        &sources,
+        &CheckFactMap::default(),
+        &[],
+    );
     assert_eq!(advice, original);
 }
 
@@ -88,6 +100,7 @@ fn aggregation_sorts_and_deduplicates_all_residual_evidence() {
         &mut advice,
         Path::new("/missing"),
         &sources,
+        &CheckFactMap::default(),
         &[second.clone(), first.clone()],
     );
     assert_eq!(advice.len(), 1);
@@ -105,7 +118,113 @@ fn aggregation_sorts_and_deduplicates_all_residual_evidence() {
         &mut advice,
         Path::new("/missing"),
         &sources,
+        &CheckFactMap::default(),
         &[first, second],
     );
     assert_eq!(advice, expected);
+}
+
+#[test]
+fn low_display_locations_require_the_exact_rule_local_application() {
+    use no_mistakes::codebase::check_facts::{
+        collect_check_facts_with_graph_files_playwright_and_sources, CheckFactPlan,
+    };
+    use no_mistakes::codebase::postgres::configure_prepared_postgres_plan;
+    use no_mistakes::codebase::ts_source::FileInventory;
+    use std::sync::Arc;
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-offset/fixture/opaque-escape-sites");
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
+    let path = root.join("src/mixed.mts");
+    let mut config =
+        no_mistakes::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes-mixed.yml")))
+            .unwrap();
+    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
+        std::slice::from_ref(&path),
+    ))));
+    no_mistakes::codebase::rules::analysis_policy::prepare_rule_analysis(
+        &root,
+        &mut config,
+        std::slice::from_ref(&path),
+        &sources,
+    )
+    .unwrap();
+    let applications = config.rule_applications("postgres-no-offset");
+    for (application, effort) in applications.iter().zip([
+        no_mistakes::config::v2::Effort::Low,
+        no_mistakes::config::v2::Effort::Max,
+    ]) {
+        assert_eq!(
+            config.effective_rule_analysis(application).unwrap().effort,
+            effort
+        );
+    }
+    let mut plan = CheckFactPlan::default();
+    configure_prepared_postgres_plan(&root, &config, &mut plan).unwrap();
+    let facts = collect_check_facts_with_graph_files_playwright_and_sources(
+        &root,
+        vec![path.clone()],
+        Vec::new(),
+        plan,
+        None,
+        sources.clone(),
+    );
+    let source = sources.read_path(&path).unwrap();
+    let start = source.find("read, // MAX_SITE").unwrap() as u32;
+    let mut low = row();
+    low.rule = "postgres-no-offset".into();
+    low.profile = EmbeddedSqlOptions::configured("@example/db", &[]);
+    low.file = "src/mixed.mts".into();
+    low.span = (start, start + 4);
+    low.application = Some(SqlRuleApplication {
+        index: 0,
+        name: Some("low-helper".into()),
+    });
+    let mut max = low.clone();
+    max.application = Some(SqlRuleApplication {
+        index: 1,
+        name: Some("max-helper".into()),
+    });
+    // The preceding other-rule application makes the low scan global index 1,
+    // while its public verdict application index remains rule-local index 0.
+    assert_eq!(facts.prepared_low_sql_display_line(&root, &low), Some(3));
+    assert_eq!(facts.prepared_low_sql_display_line(&root, &max), None);
+    let mut wrong = low.clone();
+    wrong.rule = "postgres-no-unbounded-sql-identifier".into();
+    assert_eq!(facts.prepared_low_sql_display_line(&root, &wrong), None);
+    wrong = low.clone();
+    wrong.span = (0, 1);
+    assert_eq!(facts.prepared_low_sql_display_line(&root, &wrong), None);
+    wrong = low.clone();
+    wrong.file = "missing.mts".into();
+    assert_eq!(facts.prepared_low_sql_display_line(&root, &wrong), None);
+    let mut advice = Vec::new();
+    merge_sql(
+        &mut advice,
+        &root,
+        &sources,
+        &facts,
+        &[low.clone(), max.clone()],
+    );
+    assert_eq!(advice.len(), 2);
+    assert_eq!(
+        advice
+            .iter()
+            .find(|row| row.message.contains("low-helper"))
+            .unwrap()
+            .line,
+        3
+    );
+    assert_eq!(
+        advice
+            .iter()
+            .find(|row| row.message.contains("max-helper"))
+            .unwrap()
+            .line,
+        4
+    );
+    assert_eq!(
+        low.span, max.span,
+        "display projection must never rewrite verdict identity"
+    );
 }

@@ -23,6 +23,7 @@ pub(super) fn literals<'a>(
                 project: |statement| statement.offset_uses.clone(),
                 parse: |text| crate::codebase::postgres::sql_offset_facts(text).map_err(|_| ()),
                 rebase: |fact, base| fact.line += base - 1,
+                position: |fact| (fact.line, fact.column),
                 parse_metric: "postgres.no_offset.low.literal_parses",
             },
         )
