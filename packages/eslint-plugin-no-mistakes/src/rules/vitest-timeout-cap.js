@@ -2,6 +2,7 @@
 const { rule, options } = require("../helpers");
 const { isFunction, unwrapExpression } = require("./async-ast");
 const { resolveVariable, isReassigned } = require("./async-target-bindings");
+const { timeoutJustified } = require("./vitest-timeout-reasons");
 const { ruleSuppression } = require("../rule-suppression");
 const {
   resetBindingResolver,
@@ -39,6 +40,8 @@ module.exports = rule(
         "Vitest {{name}} must be positive; zero disables the timeout and negative values are invalid.",
       timeout:
         "Vitest {{name}} exceeds {{max}} ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+      reason:
+        "Vitest {{name}} exceeds {{max}} ms without a justification. Add an adjacent no-mistakes-timeout-reason: <explanation> comment describing the slow setup or wait.",
       unknown:
         "Vitest {{name}} cannot be statically resolved against the {{max}} ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
     },
@@ -72,6 +75,7 @@ module.exports = rule(
         return false;
       return callback(def.node.init, new Set([...seen, variable]));
     }
+    let registration;
     function check(entry, name, max, origin) {
       const node = origin || entry.origin;
       if (suppressed(node)) return;
@@ -80,6 +84,16 @@ module.exports = rule(
           context.report({ node, messageId: "invalid", data: { name } });
         else if (entry.value.value > max)
           context.report({ node, messageId: "timeout", data: { name, max } });
+        else if (
+          registration &&
+          entry.value.value > (option.defaultMax ?? 5000) &&
+          !timeoutJustified(context.sourceCode, entry, node, registration)
+        )
+          context.report({
+            node,
+            messageId: "reason",
+            data: { name, max: option.defaultMax ?? 5000 },
+          });
       } else if (option.unknownValues === "finding")
         context.report({ node, messageId: "unknown", data: { name, max } });
     }
@@ -113,6 +127,7 @@ module.exports = rule(
           const kind = overrideCall(original, context);
           if (!kind) continue;
           const node = original;
+          registration = original;
           const callArguments = invocationArguments(original, context);
           const max = option.overrideMax ?? 30000;
           if (kind === "test" || kind === "hook")

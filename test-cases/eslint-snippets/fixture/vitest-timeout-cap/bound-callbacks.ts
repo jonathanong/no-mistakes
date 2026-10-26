@@ -7,7 +7,7 @@ test('partial context unresolved', partial);
 test('spread binding unresolved', body.bind(...opaqueBinding));
 const row = (data, context) => { context.onTestFailed(() => {}, 0); };
 test.for([1])('bound row', row.bind(undefined));
-const legal = context => { context.onTestFinished(() => {}, 1); context.onTestFailed(() => {}, 30000); };
+const legal = context => { context.onTestFinished(() => {}, 1); context.onTestFailed(() => {}, /* no-mistakes-timeout-reason: isolated worker startup needs this budget */ 30000); };
 test('bounded', legal.bind(undefined));
 const normal = context => { context.onTestFinished(() => {}, 60000); };
 ordinary(normal.bind(undefined));

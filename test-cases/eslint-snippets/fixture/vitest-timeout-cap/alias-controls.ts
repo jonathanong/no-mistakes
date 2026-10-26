@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 const { setConfig: valid } = vi;
-valid({ testTimeout: 30000, hookTimeout: 1 });
+valid(/* no-mistakes-timeout-reason: isolated worker startup needs this budget */ { testTimeout: 30000, hookTimeout: 1 });
 function unrelated(vi: { setConfig(value: unknown): void }) {
   const { setConfig: update } = vi;
   update({ testTimeout: 60000 });
