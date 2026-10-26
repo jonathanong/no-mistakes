@@ -25,8 +25,11 @@ import {
   startParamAdoptThenReturn,
   startProto,
   startRead,
+  startReturnedClosure,
+  startReturnedObjectClosure,
   startRhs,
   startSafeSibling,
+  startStoredClosure,
   startSibling,
   startTwice,
   startUnawaitedCall,
@@ -267,3 +270,21 @@ const adoptedThenReturned = (entries: unknown, options: unknown) => {
   return enqueueEmail(entries, options);
 };
 await startParamAdoptThenReturn({ enqueueBulkCrawlReferralLinks: adoptedThenReturned });
+
+const returnedClosure = (entries: unknown, options: unknown) => {
+  record(entries);
+  return enqueueEmail(entries, options);
+};
+await startReturnedClosure({ enqueueBulkCrawlReferralLinks: returnedClosure });
+
+const returnedObjectClosure = (entries: unknown, options: unknown) => {
+  record(entries);
+  return enqueueEmail(entries, options);
+};
+await startReturnedObjectClosure({ enqueueBulkCrawlReferralLinks: returnedObjectClosure });
+
+const storedClosure = (entries: unknown, options: unknown) => {
+  record(entries);
+  return enqueueEmail(entries, options);
+};
+await startStoredClosure({ enqueueBulkCrawlReferralLinks: storedClosure });

@@ -15,8 +15,8 @@ const root = resolve(
 );
 const caller = resolve(root, "caller.ts");
 const expected = [
-  69, 75, 81, 87, 93, 99, 105, 141, 147, 153, 159, 165, 171, 177, 183, 189, 195, 201, 207, 213, 219,
-  225, 231, 237, 249, 261, 267,
+  72, 78, 84, 90, 96, 102, 108, 144, 150, 156, 162, 168, 174, 180, 186, 192, 198, 204, 210, 216,
+  222, 228, 234, 240, 252, 264, 270, 276, 282, 288,
 ];
 const targets = [{ sourceSpecifierPatterns: ["@app/jobs"], calleeNamePatterns: ["enqueueEmail"] }];
 

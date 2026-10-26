@@ -303,6 +303,33 @@ export async function startParamAdoptThenReturn(options: any) {
   return createSync(options);
 }
 
+// The await sits in a closure this function returns. Awaiting the function does not run it.
+export function startReturnedClosure(options: any) {
+  const callback = options.enqueueBulkCrawlReferralLinks ?? defaultImpl;
+  return async () => {
+    await callback([], {});
+  };
+}
+
+// Same escape when the copied object, rather than the callback alias, is closed over.
+export function startReturnedObjectClosure(options: any) {
+  const dependencies = {
+    enqueueBulkCrawlReferralLinks: options.enqueueBulkCrawlReferralLinks ?? defaultImpl,
+  };
+  return async () => {
+    await dependencies.enqueueBulkCrawlReferralLinks([], {});
+  };
+}
+
+// Invoking a stored closure later is still an escape: the await is not in this function.
+export async function startStoredClosure(options: any) {
+  const callback = options.enqueueBulkCrawlReferralLinks ?? defaultImpl;
+  const run = async () => {
+    await callback([], {});
+  };
+  await run();
+}
+
 declare function unknownCrawl(dependencies: unknown): Promise<void>;
 declare function unknownHelper(): Promise<void>;
 declare const dynamicKey: string;

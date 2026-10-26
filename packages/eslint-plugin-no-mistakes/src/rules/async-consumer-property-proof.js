@@ -185,9 +185,9 @@ function forwarded(
     property,
     context,
     shape,
-    { proveCall, receiverShape, propertyWritten, forward: forwarded, variable },
+    { proveCall, receiverShape, propertyWritten, forward: forwarded, lexicalCallback, variable },
     seen,
   );
 }
 
-module.exports = { propertyBodyAwaited, propertyWritten, forwarded };
+module.exports = { propertyBodyAwaited, propertyWritten, forwarded, lexicalCallback };

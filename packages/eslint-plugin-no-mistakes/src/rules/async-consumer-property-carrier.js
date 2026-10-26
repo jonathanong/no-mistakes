@@ -1,6 +1,6 @@
 "use strict";
 
-const { unwrapTransparentParent } = require("./async-ast");
+const { findContainingFunction, unwrapTransparentParent } = require("./async-ast");
 const { memberPropertyName, resolveVariable } = require("./async-target-bindings");
 
 const hiddenProperties = new Set(["__proto__", "constructor", "prototype"]);
@@ -39,9 +39,12 @@ function followConst(id, property, context, shape, api, seen) {
   seen.add(variable);
   const reads = variable.references.filter((ref) => !ref.init);
   if (reads.length === 0) return false;
+  // A stored or returned closure can await the copy without the caller ever running it.
+  const owner = findContainingFunction(id);
   let adopted = false;
   let returned = null;
   for (const ref of reads) {
+    if (!api.lexicalCallback(ref.identifier, owner)) return false;
     const mode = api.forward(
       unwrapTransparentParent(ref.identifier),
       property,

@@ -7,6 +7,7 @@ const { localFunction, bodyAwaited } = require("./async-consumer-local-proof");
 const { adoptReturned } = require("./async-consumer-property-carrier");
 const {
   forwarded,
+  lexicalCallback,
   propertyBodyAwaited,
   propertyWritten,
 } = require("./async-consumer-property-proof");
@@ -48,6 +49,7 @@ function createConsumerProof(context) {
           receiverShape,
           propertyWritten,
           forward: forwarded,
+          lexicalCallback,
           variable: noParameter,
         }) === true
       );
