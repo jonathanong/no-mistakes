@@ -70,9 +70,7 @@ fn page(body: &str) -> Page {
     let mut rule_titles = BTreeSet::new();
     for event in Parser::new(body) {
         if let Event::Start(Tag::Link { dest_url, .. }) = &event {
-            if let Some(id) = local_page(dest_url) {
-                links.insert(id.to_owned());
-            }
+            links.extend(local_page(dest_url).map(str::to_owned));
         }
         match event {
             Event::Start(Tag::Heading {
@@ -82,10 +80,8 @@ fn page(body: &str) -> Page {
                 heading = Some(Vec::new());
             }
             Event::End(TagEnd::Heading(HeadingLevel::H1)) => {
-                if let Some(events) = heading.take() {
-                    if let [Event::Code(id)] = events.as_slice() {
-                        rule_titles.insert(id.to_string());
-                    }
+                if let Some([Event::Code(id)]) = heading.take().as_deref() {
+                    rule_titles.insert(id.to_string());
                 }
             }
             event => {
