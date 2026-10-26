@@ -1,3 +1,2 @@
-export const statement = `INSERT INTO orders (details)
- -- no-mistakes-disable-next-line postgres-json-relation-ids
- VALUES (jsonb_build_object('accountId', $1))`;
+// no-mistakes-disable-next-line postgres-json-relation-ids
+export const statement = `INSERT INTO orders (details) VALUES (jsonb_build_object('accountId', $1))`;
