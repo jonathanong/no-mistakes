@@ -373,6 +373,9 @@ Enable this single-file ESLint/Oxlint rule with explicit `files` globs for
 Vitest configs/projects and test files. `defaultMax` defaults to `5000` ms for
 config/project `testTimeout` and `hookTimeout`; `overrideMax` defaults to
 `30000` ms for test/suite/hook overrides and `vi.setConfig` timeout defaults.
+Overrides above `defaultMax` require an adjacent
+`// no-mistakes-timeout-reason: <specific reason>` comment. Empty and placeholder
+reasons report; a reason never bypasses either cap or unknown-value policy.
 `configRoot` explicitly admits plain standalone configuration exports; enable it
 only for actual configuration-file scopes. Both caps must be positive finite numbers. `unknownValues` defaults to
 `ignore`; set `finding` to require statically recoverable timeout values.

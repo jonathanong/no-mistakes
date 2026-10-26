@@ -55,8 +55,10 @@ while ambiguous props or children remain checked. See
 The opt-in ESLint/Oxlint `vitest-timeout-cap` rule checks effective Vitest
 configuration and test/hook timeout overrides in files selected by ESLint
 `files` globs. Its defaults cap configuration timeouts at 5,000 ms and
-individual overrides at 30,000 ms; unresolved values can be ignored or treated
-as findings. It adds no `no-mistakes` CLI or N-API command. See
+individual overrides at 30,000 ms. Overrides above the default cap require an
+adjacent, non-placeholder `no-mistakes-timeout-reason` comment. ESLint and Oxlint
+use the same rule; unresolved values can be ignored or treated as findings.
+It adds no `no-mistakes` CLI or N-API command. See
 [Vitest timeout cap](eslint-rules/vitest-timeout-cap.md).
 
 Next.js redirect and rewrite checks recover immutable tuple maps and template
