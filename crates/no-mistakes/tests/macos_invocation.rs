@@ -18,3 +18,9 @@ const _: fn(&diagnostics::InvocationObserver) =
 #[allow(dead_code, unused_imports)]
 #[path = "../src/invocation.rs"]
 mod invocation;
+
+// Keep CLI-level lock/timeout regressions in the native macOS CI harness too;
+// the full suite_cli_queries harness otherwise runs only on Linux coverage CI.
+#[cfg(target_os = "macos")]
+#[path = "cli_invocation.rs"]
+mod cli_invocation;

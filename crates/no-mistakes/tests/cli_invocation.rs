@@ -4,6 +4,16 @@ use std::process::{Command, Output, Stdio};
 use std::time::{Duration, Instant};
 use wait_timeout::ChildExt;
 
+#[cfg(unix)]
+#[path = "cli_invocation/fsmonitor.rs"]
+mod fsmonitor;
+
+#[cfg(unix)]
+#[test]
+fn hung_fsmonitor_times_out_and_releases_the_invocation_lock() {
+    fsmonitor::run();
+}
+
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
 }
