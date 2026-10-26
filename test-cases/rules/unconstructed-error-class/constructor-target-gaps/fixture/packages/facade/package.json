@@ -1,0 +1,1 @@
+{"name":"@fixture/facade","version":"1.0.0","type":"module","exports":"./src/index.ts","dependencies":{"raw-constructors":"1","unhoisted-lib":"1","pg":"8"}}

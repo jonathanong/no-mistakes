@@ -18,6 +18,12 @@ uncertain. See
 Constructor proof consumes canonical call-site provenance and prepared binding
 facts. Declaration lookups use a session-owned resolver projection with the
 importer's selected tsconfig/catalog scope and shared source/fact stores.
+Conditional declaration entries use the importing file's proven static module
+context: `.mts`/`.mjs` selects `import`, `.cts`/`.cjs` selects `require`, and
+other extensions retain branch-agreement checks. The importer is part of the
+session lookup key. Primary source targets remain authoritative, and the
+re-exporter's dependency context selects declarations from its own installed
+packages.
 Resolving a facade does not build a second graph or widen ordinary import/call
 queries. Uncertain alternatives cannot be discarded merely because one candidate
 has a known class declaration.
