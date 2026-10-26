@@ -291,12 +291,44 @@ Without configuration, a stable same-file consumer can prove adoption when
 every use of its callback parameter is a direct invocation immediately awaited
 inside that consumer, including `result = await callback()`. Floating calls,
 parameter replacement, forwarding, or capture in a nested function keep the
-callback unproven. Executable parameter defaults are inspected too. With a
-parser-owned TypeScript program, resolvable imports can use the same proof on
-their actual implementation. Its module supplies cached stability facts; the
-rule does not enumerate other program files. Missing bodies or type
-information keep imports unproven; configure the contract when the lint host
-cannot expose the imported body.
+callback unproven. Executable parameter defaults are inspected too. Resolvable named imports use
+this proof on their actual implementation, including in Oxlint's `--type-aware`
+mode, which does not expose a parser-owned TypeScript program to JS plugins.
+Without that program, the rule resolves the import using the nearest tsconfig
+and parses only the implementation module. Sources, resolution results, and
+failures are cached in memory for this lint context. Missing bodies, unresolved
+imports, `noResolve`, writes, and escaping implementations remain unproven.
+
+A fresh object argument can also prove a dependency callback contract when every
+use of the selected property reaches an immediately awaited invocation, such as
+`await dependencies.enqueueBulkCrawlReferralLinks()`. The proof follows bounded
+same-file and imported helper calls, a defaulted dependency parameter, and
+`{ ...dependencies, otherField }` forwarding that preserves the selected property.
+It also follows a selected property through `??` into another fresh object.
+Pure static property reads do not change this callback's disposition. Sibling
+assignments, updates, deletes, nested writes, and assignment-pattern or loop
+targets invalidate the supplied shape; runtime mutation cannot prove adoption. An
+unrelated dependency method receives the same object as `this`, so its supplied
+function must be statically free of `this`, `eval`, and `arguments`. It also must
+not close over another supplied callback, including through stable aliases or
+transitive local helper calls:
+that closure could invoke the callback without handling its promise. Unknown
+helper calls, opaque property getters or non-function holders, or helper chains beyond the proof bound
+remain unproven. An absent
+optional method cannot escape that receiver. Custom `__proto__` properties are
+rejected because they can supply an apparently absent optional method. Accesses
+to `__proto__`, `constructor`, or `prototype` on the dependency parameter also
+keep the proof unproven. These field facts follow forwarding
+and form part of the in-memory proof cache key.
+
+Lexical callbacks passed directly to a call can contain these proven flows;
+stored or returned closures cannot. As with a directly awaited target call inside
+an async callback, this checks the callback's promise disposition when invoked,
+not whether the enclosing API invokes or awaits that lexical callback.
+Computed or duplicate argument properties, unknown forwarding calls, cycles,
+selected-property overrides, dynamic accesses, and whole-object escapes remain
+unproven. Merely returning a promise from a named callback does not establish
+adoption.
 
 Configured contracts trust the API rather than inspecting its body or inferring
 behavior from names. As with ordinary function and mock callback returns, the

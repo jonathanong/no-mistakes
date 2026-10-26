@@ -44,6 +44,7 @@
     "jscpd": "5.4.1",
     "oxfmt": "^0.72.0",
     "oxlint": "^1.87.0",
+    "oxlint-tsgolint": "7.0.2005",
     "playwright": "1.64.0",
     "pr-shepherd": "^1.0.0",
     "react": "19.3.0",
