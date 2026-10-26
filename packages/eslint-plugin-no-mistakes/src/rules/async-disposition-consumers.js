@@ -23,6 +23,7 @@ function createAwaitingConsumers(context, mappedArgumentDisposed) {
   const provenAwaitingConsumer = createConsumerProof(context);
 
   function returnsThroughConsumer(fn) {
+    if (provenAwaitingConsumer(fn)) return true;
     const callback = unwrapTransparentParent(fn);
     const target = matcher.resolveCallTarget(callback.parent);
     if (!target) return false;
