@@ -8,7 +8,7 @@ const DEFAULT_EXECUTOR_NAMES = ["query", "read", "write"];
 const DEFAULT_CHUNK_FUNCTION_NAMES = ["chunkArray"];
 const TRANSACTION_IMPORTS = new Set(["withTransaction", "withTransactionOptions"]);
 const QUERY_PROPERTY = "query";
-const TRANSACTION_COMMAND = /^\s*(?:BEGIN|COMMIT|ROLLBACK)\b/i;
+const TRANSACTION_COMMAND = /^\s*(?:BEGIN|START\s+TRANSACTION|COMMIT|ROLLBACK)\b/i;
 
 function executorOptionDefaults(options = {}) {
   if (!options.importSpecifier && !Array.isArray(options.executorNames)) {

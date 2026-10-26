@@ -5,6 +5,7 @@ const { ruleSuppression } = require("../rule-suppression");
 const {
   executorBindings,
   executorOptionDefaults,
+  executorOptionSchema,
   firstCallArgument,
   isDatabaseCall,
 } = require("./postgres-executor");
@@ -101,14 +102,7 @@ module.exports = rule(
       recommended: false,
     },
     schema: [
-      {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          importSpecifier: { type: "string" },
-          executorNames: { type: "array", items: { type: "string" } },
-        },
-      },
+      executorOptionSchema(),
     ],
     messages: {
       dynamicKey:

@@ -1,0 +1,14 @@
+{
+  "categories": { "correctness": "off" },
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/postgres-no-manual-transaction": ["error", { "importSpecifier": "pg", "executorFactoryNames": ["openTransaction"], "executorTypeNames": ["TxExecutor"] }],
+    "no-mistakes/postgres-no-unbounded-query-fanout": ["error", { "importSpecifier": "pg", "executorFactoryNames": ["openTransaction"], "executorTypeNames": ["TxExecutor"] }],
+    "no-mistakes/postgres-no-nonliteral-sql-registry-key": ["error", { "importSpecifier": "pg", "executorFactoryNames": ["openTransaction"], "executorTypeNames": ["TxExecutor"] }]
+  }
+}
