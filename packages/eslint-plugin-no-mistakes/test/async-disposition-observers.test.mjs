@@ -110,6 +110,8 @@ it.each([
   ],
   [false, "disposition-observer-clean-globals.ts", [6]],
   [true, "disposition-observer-clean-globals.ts", [6]],
+  [false, "disposition-observer-patterns.ts", [4, 6, 11, 16, 21, 26, 31]],
+  [true, "disposition-observer-patterns.ts", [4, 6, 11, 16, 21, 26, 31]],
   ...["global", "window", "self"].flatMap((holder) => [
     [false, `disposition-observer-${holder}.ts`, [3]],
     [true, `disposition-observer-${holder}.ts`, [3]],
@@ -161,6 +163,7 @@ it.each([
     [3, 8, 14, 20, 28, 31, 36, 41, 46, 52, 58, 72, 78, 84, 90, 96, 102],
   ],
   ["disposition-observer-clean-globals.ts", [6]],
+  ["disposition-observer-patterns.ts", [4, 6, 11, 16, 21, 26, 31]],
   ...["global", "window", "self"].map((holder) => [`disposition-observer-${holder}.ts`, [3]]),
   ["disposition-observer-alias-controls.ts", []],
   ["disposition-observer-holder-alias.ts", [5]],

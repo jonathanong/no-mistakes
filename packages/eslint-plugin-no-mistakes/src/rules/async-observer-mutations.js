@@ -7,6 +7,14 @@ const { resolveVariable, memberPropertyName } = require("./async-target-bindings
 function observerMutated(node, context, suffix = []) {
   function paths(value, seen = new Set()) {
     value = unwrapExpression(value);
+    if (value?.type === "ObjectPattern")
+      return value.properties.flatMap((property) =>
+        paths(property.type === "RestElement" ? property.argument : property.value, seen),
+      );
+    if (value?.type === "ArrayPattern")
+      return value.elements.flatMap((element) => paths(element, seen));
+    if (value?.type === "AssignmentPattern") return paths(value.left, seen);
+    if (value?.type === "RestElement") return paths(value.argument, seen);
     if (value?.type === "MemberExpression") {
       return paths(value.object, seen).map((base) => [...base, memberPropertyName(value) ?? "*"]);
     }
@@ -59,6 +67,7 @@ function observerMutated(node, context, suffix = []) {
     if (!value?.type || written) return;
     if (
       (value.type === "AssignmentExpression" && intersects(value.left)) ||
+      (["ForInStatement", "ForOfStatement"].includes(value.type) && intersects(value.left)) ||
       (value.type === "UpdateExpression" && intersects(value.argument)) ||
       (value.type === "UnaryExpression" &&
         value.operator === "delete" &&
