@@ -96,3 +96,71 @@ it("accepts unshadowed global assertions but requires observation", () => {
     [[6, "disposition"]],
   );
 });
+
+it.each([
+  [false, "disposition-observer-mutations.ts", [3, 8, 14, 20, 28, 31, 36, 41]],
+  [true, "disposition-observer-mutations.ts", [3, 8, 14, 20, 28, 31, 36, 41]],
+  [false, "disposition-observer-clean-globals.ts", [6]],
+  [true, "disposition-observer-clean-globals.ts", [6]],
+  [false, "disposition-observer-trusted-expect.ts", []],
+  [true, "disposition-observer-trusted-expect.ts", []],
+])("checks mutated observer identities (typed=%s, %s)", (typed, file, lines) => {
+  const filename = resolve(root, file);
+  const messages = new Linter({ cwd: dirname(filename) }).verify(
+    readFileSync(filename, "utf8"),
+    {
+      files: ["**/*.ts"],
+      languageOptions: {
+        parser: tsParser,
+        parserOptions: typed
+          ? {
+              project: resolve(root, "tsconfig.json"),
+              disallowAutomaticSingleRunInference: true,
+            }
+          : {},
+      },
+      plugins: { "no-mistakes": plugin },
+      rules: {
+        "no-mistakes/async-call-disposition": [
+          "error",
+          {
+            targets: [
+              { sourceSpecifierPatterns: ["@app/jobs"], calleeNamePatterns: ["enqueueEmail"] },
+            ],
+          },
+        ],
+      },
+    },
+    { filename },
+  );
+  assert.deepEqual(
+    messages.map(({ line, messageId }) => [line, messageId]),
+    lines.map((line) => [line, "disposition"]),
+  );
+});
+
+it.each([
+  ["disposition-observer-mutations.ts", [3, 8, 14, 20, 28, 31, 36, 41]],
+  ["disposition-observer-clean-globals.ts", [6]],
+  ["disposition-observer-trusted-expect.ts", []],
+])("checks observer identity mutations under real Oxlint (%s)", (file, lines) => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+      "--type-aware",
+      "--deny-warnings",
+      "--config",
+      resolve(root, ".oxlintrc-proven.json"),
+      "--format",
+      "json",
+      resolve(root, file),
+    ],
+    { encoding: "utf8" },
+  );
+  assert.equal(result.status, lines.length ? 1 : 0, result.stderr);
+  assert.deepEqual(
+    JSON.parse(result.stdout).diagnostics.map((item) => item.labels[0].span.line),
+    lines,
+  );
+});

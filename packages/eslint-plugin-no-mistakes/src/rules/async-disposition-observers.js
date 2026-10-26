@@ -3,6 +3,7 @@
 const { unwrapTransparentParent, unwrapExpression } = require("./async-ast");
 const { resolveVariable, isReassigned, memberPropertyName } = require("./async-target-bindings");
 const { localFunction } = require("./async-consumer-local-proof");
+const { observerMutated, globalObserverMutated } = require("./async-observer-mutations");
 const { propertiesWritten } = require("./async-disposition-mocks");
 
 function assertionExpression(node, context) {
@@ -29,6 +30,7 @@ function assertionExpression(node, context) {
       !["vitest", "@jest/globals"].includes(definition.parent.source.value))
   )
     return null;
+  if (!variable?.defs.length && globalObserverMutated("expect", context)) return null;
   const modifier = unwrapTransparentParent(call).parent;
   if (
     modifier?.type !== "MemberExpression" ||
@@ -75,6 +77,9 @@ function handledCatchStatement(node, context, origin) {
     memberPropertyName(callee) === "catch" &&
     !node.optional &&
     promiseChainFrom(node, origin) &&
+    !(origin.type === "Identifier" && propertiesWritten(origin, context)) &&
+    !observerMutated(origin, context) &&
+    !globalObserverMutated("Promise", context) &&
     (["ArrowFunctionExpression", "FunctionExpression"].includes(handler?.type) ||
       localFunction(handler, context)),
   );
