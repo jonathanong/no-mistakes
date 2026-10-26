@@ -1,5 +1,12 @@
 use super::{AnalysisDiagnostics, DelegateRequest};
-use crate::codebase::rules::{suppress_domain_findings_with_source_files, SuppressionTarget};
+use crate::codebase::rules::{
+    suppress_domain_findings_with_source_files, RuleFinding, SuppressionTarget,
+};
+
+struct EntryFinding<'a> {
+    finding: RuleFinding,
+    entry: &'a str,
+}
 
 pub(super) fn consume_entry_file_directive(
     request: &DelegateRequest<'_>,
@@ -15,21 +22,29 @@ pub(super) fn consume_entry_file_directive(
         ("filesystem", &mut diagnostics.findings),
         ("advisories", &mut diagnostics.advisories),
     ] {
+        let mut entries = findings
+            .drain(..)
+            .map(|finding| EntryFinding {
+                finding,
+                entry: entry.as_ref(),
+            })
+            .collect::<Vec<_>>();
         diagnostics
             .suppressed
             .extend(suppress_domain_findings_with_source_files(
                 request.root,
-                findings,
+                &mut entries,
                 request.sources,
-                |finding| SuppressionTarget {
+                |entry| SuppressionTarget {
                     domain,
-                    rule: &finding.rule,
-                    file: &finding.file,
-                    line: Some(finding.line),
-                    reason: &finding.message,
+                    rule: &entry.finding.rule,
+                    file: &entry.finding.file,
+                    line: Some(entry.finding.line),
+                    reason: &entry.finding.message,
                     identity: None,
                 },
-                |_| Some(entry.as_ref()),
+                |entry| Some(entry.entry),
             ));
+        findings.extend(entries.into_iter().map(|entry| entry.finding));
     }
 }
