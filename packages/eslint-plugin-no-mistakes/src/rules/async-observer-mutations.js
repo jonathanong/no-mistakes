@@ -1,37 +1,48 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
-const {
-  resolveVariable,
-  stableConstInitializer,
-  memberPropertyName,
-} = require("./async-target-bindings");
+const { resolveVariable, memberPropertyName } = require("./async-target-bindings");
 
 function observerMutated(node, context, suffix = []) {
-  function path(value, seen = new Set()) {
+  function paths(value, seen = new Set()) {
     value = unwrapExpression(value);
     if (value?.type === "MemberExpression") {
-      const base = path(value.object, seen);
-      return base && [...base, memberPropertyName(value) ?? "*"];
+      return paths(value.object, seen).map((base) => [...base, memberPropertyName(value) ?? "*"]);
     }
-    if (value?.type !== "Identifier") return null;
+    if (value?.type !== "Identifier") return [];
     const variable = resolveVariable(value, context);
-    const init = stableConstInitializer(value, context, seen);
-    return (init && path(init, seen)) || [variable?.defs.length ? variable : value.name];
+    if (!variable?.defs.length) return [[value.name]];
+    if (seen.has(variable)) return [[variable]];
+    const next = new Set(seen).add(variable);
+    const sources = variable.defs.map((def) => def.node.init).filter(Boolean);
+    for (const reference of variable.references) {
+      const assignment = reference.identifier.parent;
+      if (
+        reference.isWrite() &&
+        assignment.type === "AssignmentExpression" &&
+        assignment.left === reference.identifier
+      )
+        sources.push(assignment.right);
+    }
+    return [[variable], ...sources.flatMap((source) => paths(source, next))];
   }
-  const root = typeof node === "string" ? [node] : path(node);
-  if (!root) return false;
-  const observed = [...root, ...suffix];
+  const roots = typeof node === "string" ? [[node]] : paths(node);
+  if (!roots.length) return false;
+  const observed = roots.map((root) => [...root, ...suffix]);
   function intersects(target, property = []) {
-    const root = path(target);
-    const candidate = root && [...root, ...property];
-    return (
-      candidate &&
-      candidate[0] === observed[0] &&
-      candidate
-        .slice(1, Math.min(candidate.length, observed.length))
-        .every((part, index) => part === "*" || part === observed[index + 1])
-    );
+    return paths(target).some((root) => {
+      const candidate = [...root, ...property];
+      return observed.some(
+        (expected) =>
+          candidate[0] === expected[0] &&
+          candidate
+            .slice(1, Math.min(candidate.length, expected.length))
+            .every(
+              (part, index) =>
+                part === "*" || expected[index + 1] === "*" || part === expected[index + 1],
+            ),
+      );
+    });
   }
   let written = false;
   function visit(value) {
@@ -46,24 +57,35 @@ function observerMutated(node, context, suffix = []) {
       written = true;
     if (value.type === "CallExpression") {
       const callee = unwrapExpression(value.callee);
-      if (
-        callee?.type === "MemberExpression" &&
-        [
-          "assign",
-          "defineProperty",
-          "defineProperties",
-          "set",
-          "deleteProperty",
-          "setPrototypeOf",
-        ].includes(memberPropertyName(callee)) &&
-        intersects(
-          value.arguments[0],
-          ["defineProperty", "set", "deleteProperty"].includes(memberPropertyName(callee))
-            ? [value.arguments[1]?.value ?? "*"]
-            : [],
-        )
-      )
-        written = true;
+      let reflected = false;
+      for (const methodPath of paths(callee)) {
+        const method = methodPath.at(-1);
+        if (
+          methodPath.length === 2 &&
+          ["Object", "Reflect"].includes(methodPath[0]) &&
+          [
+            "assign",
+            "defineProperty",
+            "defineProperties",
+            "set",
+            "deleteProperty",
+            "setPrototypeOf",
+          ].includes(method)
+        ) {
+          reflected = true;
+          if (
+            intersects(
+              value.arguments[0],
+              ["defineProperty", "set", "deleteProperty"].includes(method)
+                ? [value.arguments[1]?.value ?? "*"]
+                : [],
+            )
+          )
+            written = true;
+        }
+      }
+      // An unknown callee can replace a handler through an escaped object.
+      if (!reflected && value.arguments.some((argument) => intersects(argument))) written = true;
     }
     for (const key of context.sourceCode.visitorKeys[value.type] || []) {
       const child = value[key];

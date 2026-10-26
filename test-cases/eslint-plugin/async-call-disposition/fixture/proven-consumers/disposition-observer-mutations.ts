@@ -42,3 +42,41 @@ async function dynamicCatch(key: string) {
   p[key] = () => {};
   p.catch(() => {});
 }
+async function mutableReflectAlias() {
+  const p = enqueueEmail();
+  let alias = p;
+  Reflect.set(alias, 'catch', () => {});
+  p.catch(() => {});
+}
+async function reflectFunctionAlias() {
+  const p = enqueueEmail();
+  const change = Reflect.set;
+  change(p, 'catch', () => {});
+  p.catch(() => {});
+}
+async function assignedCycleAlias() {
+  const p = enqueueEmail();
+  let first;
+  let second = first;
+  first = p;
+  second = first;
+  first = second;
+  const change = Reflect.set;
+  change(second, 'catch', () => {});
+  p.catch(() => {});
+}
+let mutableHolder = globalThis;
+const changeHolder = Reflect.set;
+changeHolder(mutableHolder, 'expect', () => ({}));
+async function unknownReflectAlias(change: any) {
+  const p = enqueueEmail();
+  const mutate = change;
+  mutate(p, 'catch', () => {});
+  p.catch(() => {});
+}
+async function unknownReflectionObject(api: any) {
+  const p = enqueueEmail();
+  const mutate = api.set;
+  mutate(p, 'irrelevant', () => {});
+  p.catch(() => {});
+}
