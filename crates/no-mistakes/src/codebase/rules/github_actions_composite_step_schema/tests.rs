@@ -1,4 +1,5 @@
-use super::scan::{contains_mapping_key, mapping_key_line, starts_block_scalar, yaml_parse_line};
+use super::scan::source_lines::{contains_mapping_key, starts_block_scalar};
+use super::scan::{mapping_key_line, yaml_parse_line};
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},

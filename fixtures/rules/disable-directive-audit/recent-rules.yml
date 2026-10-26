@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    include: [recent-rules.mts]
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    include: [recent-rules.mts]
