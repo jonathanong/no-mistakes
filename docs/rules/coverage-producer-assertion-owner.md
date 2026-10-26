@@ -105,7 +105,8 @@ reported even when another reachable call owns an assertion. Known globals
 retain the call graph's classification; external process calls need contracts.
 An unmodeled external call such as `node:fs` keeps the producer unanalyzable even
 when an assertion is also reached. Tip: set `unanalyzable: advise` while rolling
-out the rule to inspect these uncertain results without failing the check.
+out the rule, especially for producers that perform I/O, to inspect uncertain
+results without failing the check.
 
 ## Suppression
 
