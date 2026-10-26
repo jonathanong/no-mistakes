@@ -61,7 +61,10 @@ fn drop_without_a_table_matches_the_trigger_name() {
     );
     file.path = PathBuf::from("sql/003.sql");
     let triggers = [created, dropped];
-    let found = installed::at(&triggers, &file.path, file.inserts[0].line);
+    let found = installed::InstalledTriggers::new(&triggers)
+        .at(&file.path, file.inserts[0].line, "items")
+        .cloned()
+        .collect::<Vec<_>>();
     assert!(found.is_empty(), "{found:?}");
 }
 
@@ -85,7 +88,10 @@ fn unpositioned_create_applies_beside_positioned_events() {
     );
     file.path = PathBuf::from("sql/003.sql");
     let triggers = [created, dropped, always, ignored];
-    let found = installed::at(&triggers, &file.path, file.inserts[0].line);
+    let found = installed::InstalledTriggers::new(&triggers)
+        .at(&file.path, file.inserts[0].line, "items")
+        .cloned()
+        .collect::<Vec<_>>();
     assert_eq!(
         found
             .iter()
@@ -93,5 +99,62 @@ fn unpositioned_create_applies_beside_positioned_events() {
             .collect::<Vec<_>>(),
         ["other_trigger"],
         "{found:?}"
+    );
+}
+
+#[test]
+fn prepared_timeline_replays_events_once_across_repeated_insert_lookups() {
+    let triggers = [positioned(
+        "CREATE TRIGGER items_before_insert BEFORE INSERT ON items FOR EACH ROW EXECUTE FUNCTION audit();",
+        "sql/001.sql",
+    )];
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let prepared = crate::diagnostics::with_observer(Some(observer.clone()), || {
+        installed::InstalledTriggers::new(&triggers)
+    });
+    for _ in 0..100 {
+        let found = prepared
+            .at(std::path::Path::new("app/q.ts"), 1, "items")
+            .next()
+            .unwrap();
+        assert!(std::ptr::eq(found, &triggers[0]));
+    }
+    assert_eq!(
+        observer.snapshot().work["postgres.trigger.timeline_events"],
+        1
+    );
+}
+
+#[test]
+fn public_judge_prepares_once_and_disabled_checks_prepare_nothing() {
+    let triggers = [positioned(
+        "CREATE TRIGGER items_before_insert BEFORE INSERT ON items FOR EACH ROW EXECUTE FUNCTION audit();",
+        "sql/001.sql",
+    )];
+    let mut file = extract_sql_statement_facts(
+        "INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING;",
+    );
+    file.path = PathBuf::from("app/q.ts");
+    file.inserts = vec![file.inserts[0].clone(); 100];
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let findings = crate::diagnostics::with_observer(Some(observer.clone()), || {
+        judge_file(&file, &catalog(&triggers))
+    });
+    assert_eq!(findings.len(), 100);
+    assert_eq!(
+        observer.snapshot().work["postgres.trigger.timeline_builds"],
+        1
+    );
+    let disabled = Catalog {
+        check_triggers: false,
+        ..catalog(&triggers)
+    };
+    assert!(
+        crate::diagnostics::with_observer(Some(observer.clone()), || judge_file(&file, &disabled))
+            .is_empty()
+    );
+    assert_eq!(
+        observer.snapshot().work["postgres.trigger.timeline_builds"],
+        1
     );
 }

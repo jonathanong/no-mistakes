@@ -4,7 +4,9 @@ mod arbiter;
 mod convergence;
 mod generated;
 mod installed;
+pub(crate) use installed::InstalledTriggers;
 mod trigger;
+mod trigger_writes;
 mod verdicts;
 mod where_noop;
 pub(crate) use verdicts::judge_subcheck;
@@ -54,6 +56,17 @@ pub(crate) fn judge_file_with_sites(
     file: &SqlStatementFileFacts,
     catalog: &Catalog<'_>,
 ) -> Vec<(SqlFactSite, usize, String)> {
+    let installed = catalog
+        .check_triggers
+        .then(|| InstalledTriggers::new(catalog.triggers));
+    judge_file_with_prepared_triggers(file, catalog, installed.as_ref())
+}
+
+pub(crate) fn judge_file_with_prepared_triggers(
+    file: &SqlStatementFileFacts,
+    catalog: &Catalog<'_>,
+    installed: Option<&InstalledTriggers>,
+) -> Vec<(SqlFactSite, usize, String)> {
     let mut findings = Vec::new();
     if file.parse_failed && !file.parse_failures.is_empty() {
         findings.extend(
@@ -100,22 +113,27 @@ pub(crate) fn judge_file_with_sites(
         if !insert.executed {
             continue;
         }
-        let installed = installed::at(catalog.triggers, &file.path, insert.line);
-        let narrowed = Catalog {
-            triggers: &installed,
-            ..*catalog
-        };
-        if let Some(message) = judge_insert(insert, &narrowed) {
+        if let Some(message) = judge_insert(insert, catalog, installed, &file.path) {
             findings.push((SqlFactSite::Insert(index), insert.line.max(1), message));
         }
     }
     findings
 }
 
-fn judge_insert(insert: &SqlInsertFact, catalog: &Catalog<'_>) -> Option<String> {
+fn judge_insert(
+    insert: &SqlInsertFact,
+    catalog: &Catalog<'_>,
+    installed: Option<&InstalledTriggers<'_>>,
+    path: &std::path::Path,
+) -> Option<String> {
+    let triggers = || {
+        installed
+            .into_iter()
+            .flat_map(|prepared| prepared.at(path, insert.line, &insert.table))
+    };
     if insert.guarded_select {
         return if catalog.check_triggers {
-            trigger::judge_guarded_select(insert, catalog)
+            trigger::judge_guarded_select_with_triggers(insert, catalog, triggers())
         } else {
             None
         };
@@ -125,7 +143,7 @@ fn judge_insert(insert: &SqlInsertFact, catalog: &Catalog<'_>) -> Option<String>
     };
     if conflict.action == SqlOnConflictAction::DoNothing {
         return if catalog.check_triggers {
-            trigger::judge(insert, conflict, catalog)
+            trigger::judge_with_triggers(insert, conflict, catalog, triggers())
         } else {
             None
         };
@@ -150,7 +168,7 @@ fn judge_insert(insert: &SqlInsertFact, catalog: &Catalog<'_>) -> Option<String>
         }
     }
     if catalog.check_triggers {
-        if let Some(message) = trigger::judge(insert, conflict, catalog) {
+        if let Some(message) = trigger::judge_with_triggers(insert, conflict, catalog, triggers()) {
             return Some(message);
         }
     }

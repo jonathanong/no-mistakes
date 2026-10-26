@@ -1,8 +1,8 @@
 use super::{CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactPlan;
 use crate::codebase::postgres::{
-    collect_postgres_facts, judge_file_with_sites, EmbeddedSqlFileFacts, IdempotentCatalog,
-    SqlStatementFileFacts, SqlTriggerFact,
+    collect_postgres_facts, judge_file_with_prepared_triggers, EmbeddedSqlFileFacts,
+    IdempotentCatalog, InstalledTriggers, SqlStatementFileFacts, SqlTriggerFact,
 };
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Context;
@@ -30,7 +30,11 @@ pub(super) fn scan(
         &opts.embedded,
     )
     .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
-    let triggers = with_trigger_paths(facts.statements.iter());
+    let triggers = if opts.check_triggers {
+        with_trigger_paths(facts.statements.iter())
+    } else {
+        Vec::new()
+    };
     let catalog = IdempotentCatalog {
         schema: &facts.schema,
         triggers: &triggers,
@@ -42,6 +46,9 @@ pub(super) fn scan(
         check_generated: opts.check_generated,
         trigger_writes: &opts.trigger_writes,
     };
+    let installed = catalog
+        .check_triggers
+        .then(|| InstalledTriggers::new(catalog.triggers));
     Ok(collect_findings(
         root,
         opts,
@@ -49,6 +56,7 @@ pub(super) fn scan(
         facts.statements.iter(),
         sources,
         &catalog,
+        installed.as_ref(),
     ))
 }
 
@@ -59,6 +67,7 @@ fn collect_findings<'a>(
     statements: impl IntoIterator<Item = &'a SqlStatementFileFacts>,
     sources: &crate::codebase::ts_source::SourceStore,
     catalog: &IdempotentCatalog<'_>,
+    installed: Option<&InstalledTriggers<'_>>,
 ) -> crate::codebase::rules::PostgresFindings {
     let mut findings = crate::codebase::rules::PostgresFindings::default();
     let mut dedup = crate::codebase::rules::VariantFindingDedup::for_root(root, sources);
@@ -84,9 +93,9 @@ fn collect_findings<'a>(
         let judged = if file.parse_failed && !opts.fail_unanalyzable {
             let mut recoverable = file.clone();
             recoverable.parse_failed = false;
-            judge_file_with_sites(&recoverable, catalog)
+            judge_file_with_prepared_triggers(&recoverable, catalog, installed)
         } else {
-            judge_file_with_sites(file, catalog)
+            judge_file_with_prepared_triggers(file, catalog, installed)
         };
         let source = crate::codebase::rules::read_source(sources, &file.path);
         for (site, line, message) in judged {

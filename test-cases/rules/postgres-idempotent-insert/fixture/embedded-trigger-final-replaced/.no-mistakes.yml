@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      sqlInclude: ['sql/**/*.sql']
+      importSpecifier: '@example/db'
+      executorNames: [query]
+      checkConvergence: false
+      checkVolatility: false
+      checkArbiter: false
+      checkGenerated: false

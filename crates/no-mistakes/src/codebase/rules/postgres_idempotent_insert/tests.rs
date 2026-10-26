@@ -259,3 +259,70 @@ fn unprepared_scan_still_flags_a_live_trigger() {
         "{findings:?}"
     );
 }
+
+#[test]
+fn embedded_queries_use_final_trigger_state_regardless_of_path_order() {
+    for (state, expected) in [("live", 2), ("dropped", 0), ("replaced", 0)] {
+        let root = fixture(&format!("embedded-trigger-final-{state}"));
+        let files = [
+            root.join("app/q.ts"),
+            root.join("lib/q.ts"),
+            root.join("sql/001.sql"),
+        ];
+        let config = config_yaml(
+            "sqlInclude: ['sql/**/*.sql']\nimportSpecifier: '@example/db'\nexecutorNames: [query]",
+        );
+        let observer = crate::diagnostics::InvocationObserver::new(true);
+        let findings = crate::diagnostics::with_observer(Some(observer.clone()), || {
+            check_with_files(&root, &config, &files).unwrap()
+        });
+        assert_eq!(
+            observer.snapshot().work["postgres.trigger.timeline_builds"],
+            1
+        );
+        assert_eq!(findings.len(), expected, "{state}: {findings:?}");
+        for finding in &findings {
+            assert!(
+                finding.message.contains("fires before conflict checks"),
+                "{finding:?}"
+            );
+        }
+        let sources = super::super::source_store_for_files(&files);
+        let observer = crate::diagnostics::InvocationObserver::new(true);
+        let unprepared = crate::diagnostics::with_observer(Some(observer.clone()), || {
+            check_with_files_and_sources(&root, &config, &files, &sources).unwrap()
+        });
+        assert_eq!(
+            observer.snapshot().work["postgres.trigger.timeline_builds"],
+            1
+        );
+        assert_eq!(unprepared, findings, "{state}");
+    }
+}
+
+#[test]
+fn replacement_after_insert_does_not_change_the_installed_definition() {
+    let findings = run(&fixture("fail-trigger-replaced-after-insert"));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 2);
+    assert!(findings[0].message.contains("fires before conflict checks"));
+}
+
+#[test]
+fn drop_position_ignores_comments_strings_and_quoted_keyword_names() {
+    let root = fixture("pass-trigger-drop-keywords-in-comments");
+    let sql = std::fs::read_to_string(root.join("sql/001.sql")).unwrap();
+    let facts = crate::codebase::postgres::statements::extract_sql_statement_facts(&sql);
+    assert_eq!(facts.triggers[0].line, 1);
+    assert_eq!(facts.triggers[1].line, 4);
+    let findings = run(&root);
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn dropped_trigger_does_not_invalidate_a_surviving_triggers_noop_proof() {
+    let root = fixture("pass-trigger-dropped-rewriter");
+    let config = config_yaml("sqlInclude: ['sql/**/*.sql']\nreplaySafeTriggerFunctions: [normalize]\ntriggerWrittenColumns: {normalize: [b]}");
+    let findings = check_with_files(&root, &config, &[root.join("sql/001.sql")]).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}

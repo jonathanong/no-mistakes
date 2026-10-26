@@ -8,7 +8,15 @@ pub(super) fn judge_guarded_select(
     insert: &SqlInsertFact,
     catalog: &Catalog<'_>,
 ) -> Option<String> {
-    catalog.triggers.iter().find_map(|trigger| {
+    judge_guarded_select_with_triggers(insert, catalog, catalog.triggers.iter())
+}
+
+pub(super) fn judge_guarded_select_with_triggers<'a>(
+    insert: &SqlInsertFact,
+    catalog: &Catalog<'_>,
+    mut triggers: impl Iterator<Item = &'a SqlTriggerFact> + Clone,
+) -> Option<String> {
+    triggers.find_map(|trigger| {
         if !trigger.table.eq_ignore_ascii_case(&insert.table)
             || trigger.for_each_row
             || !fires_insert(trigger)
@@ -33,6 +41,15 @@ pub(super) fn judge(
     conflict: &SqlOnConflictFact,
     catalog: &Catalog<'_>,
 ) -> Option<String> {
+    judge_with_triggers(insert, conflict, catalog, catalog.triggers.iter())
+}
+
+pub(super) fn judge_with_triggers<'a>(
+    insert: &SqlInsertFact,
+    conflict: &SqlOnConflictFact,
+    catalog: &Catalog<'_>,
+    triggers: impl Iterator<Item = &'a SqlTriggerFact> + Clone,
+) -> Option<String> {
     let assigned: Vec<String> = conflict
         .assignments
         .iter()
@@ -46,9 +63,8 @@ pub(super) fn judge(
         }
         _ => Vec::new(),
     };
-    catalog
-        .triggers
-        .iter()
+    let applicable = triggers.clone();
+    triggers
         .filter(|trigger| trigger.table.eq_ignore_ascii_case(&insert.table))
         .find_map(|trigger| {
             unsafe_reason(
@@ -59,11 +75,12 @@ pub(super) fn judge(
                 catalog,
                 &generated_sources,
                 &arbiter_columns,
+                applicable.clone(),
             )
         })
 }
 
-fn unsafe_reason(
+fn unsafe_reason<'a>(
     trigger: &SqlTriggerFact,
     insert: &SqlInsertFact,
     conflict: &SqlOnConflictFact,
@@ -71,12 +88,13 @@ fn unsafe_reason(
     catalog: &Catalog<'_>,
     generated_sources: &[String],
     arbiter_columns: &[String],
+    triggers: impl Iterator<Item = &'a SqlTriggerFact> + Clone,
 ) -> Option<String> {
     let allowlisted = catalog
         .replay_safe
         .iter()
         .any(|name| name.eq_ignore_ascii_case(&trigger.function));
-    let writes = written_columns(trigger, catalog);
+    let writes = super::trigger_writes::written_columns(trigger, catalog);
     let applies = (trigger.for_each_row
         && (fires_insert(trigger) || fires_update(trigger, assigned)))
         || (!trigger.for_each_row
@@ -134,6 +152,7 @@ fn unsafe_reason(
             &trigger.table,
             catalog,
             &insert.assignments,
+            triggers,
         )
     {
         return None;
@@ -142,25 +161,6 @@ fn unsafe_reason(
         "ON CONFLICT DO UPDATE can re-fire trigger {}",
         trigger.function
     ))
-}
-
-fn written_columns(trigger: &SqlTriggerFact, catalog: &Catalog<'_>) -> Vec<String> {
-    if let Some((_, columns)) = catalog
-        .trigger_writes
-        .iter()
-        .find(|(name, _)| name.eq_ignore_ascii_case(&trigger.function))
-    {
-        return columns.clone();
-    }
-    trigger
-        .events
-        .iter()
-        .filter_map(|event| match event {
-            SqlTriggerEvent::Update { columns } if !columns.is_empty() => Some(columns.clone()),
-            _ => None,
-        })
-        .flatten()
-        .collect()
 }
 
 pub(super) fn fires_insert(trigger: &SqlTriggerFact) -> bool {

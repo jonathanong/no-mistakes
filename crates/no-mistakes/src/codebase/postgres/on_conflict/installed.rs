@@ -1,70 +1,119 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::codebase::postgres::statement_facts::SqlTriggerFact;
 
-/// Triggers installed at `insert_line` in `insert_path`.
-///
-/// Facts with an empty `source_path` are the unordered slices unit tests pass
-/// to `judge_file`. Those keep every create and ignore drops. Positioned facts
-/// honor path order, then line order, with a same-line create before a drop.
-pub(super) fn at(
-    triggers: &[SqlTriggerFact],
-    insert_path: &Path,
-    insert_line: usize,
-) -> Vec<SqlTriggerFact> {
-    if triggers
-        .iter()
-        .all(|trigger| trigger.source_path.as_os_str().is_empty())
-    {
-        return triggers
+struct Interval<'a> {
+    fact: &'a SqlTriggerFact,
+    start: usize,
+    end: usize,
+}
+
+/// Application-scoped installation intervals, grouped by target table.
+/// Queries borrow facts without rebuilding or cloning the trigger catalog.
+pub(crate) struct InstalledTriggers<'a> {
+    positions: Vec<(PathBuf, usize)>,
+    tables: crate::fx::FxHashMap<String, Vec<Interval<'a>>>,
+}
+
+impl<'a> InstalledTriggers<'a> {
+    pub(crate) fn new(triggers: &'a [SqlTriggerFact]) -> Self {
+        let mut events: Vec<_> = triggers
             .iter()
-            .filter(|trigger| !trigger.removed)
-            .cloned()
+            .filter(|trigger| !trigger.source_path.as_os_str().is_empty())
             .collect();
-    }
-    let mut events: Vec<&SqlTriggerFact> = triggers.iter().collect();
-    events.sort_by(|left, right| {
-        left.source_path
-            .cmp(&right.source_path)
-            .then(left.line.cmp(&right.line))
-            .then(left.removed.cmp(&right.removed))
-    });
-    let mut always = Vec::new();
-    let mut active = Vec::new();
-    for trigger in events {
-        if trigger.source_path.as_os_str().is_empty() {
-            if !trigger.removed {
-                always.push(trigger.clone());
-            }
-            continue;
-        }
-        if !earlier(trigger, insert_path, insert_line) {
-            continue;
-        }
-        if trigger.removed {
-            active.retain(|installed| !same_trigger(installed, trigger));
-        } else if let Some(installed) = active
-            .iter_mut()
-            .find(|installed| same_trigger(installed, trigger))
+        events.sort_by(|left, right| {
+            left.source_path
+                .cmp(&right.source_path)
+                .then(left.line.cmp(&right.line))
+                .then(left.removed.cmp(&right.removed))
+        });
+        if let Some(observer) = crate::diagnostics::current().filter(|observer| observer.verbose())
         {
-            *installed = trigger.clone();
-        } else {
-            active.push(trigger.clone());
+            observer.increment("postgres.trigger.timeline_builds", 1);
+            observer.increment("postgres.trigger.timeline_events", events.len() as u64);
         }
+        let mut prepared = Self {
+            positions: Vec::with_capacity(events.len()),
+            tables: crate::fx::FxHashMap::default(),
+        };
+        for fact in triggers
+            .iter()
+            .filter(|fact| fact.source_path.as_os_str().is_empty() && !fact.removed)
+        {
+            prepared
+                .tables
+                .entry(fact.table.to_ascii_lowercase())
+                .or_default()
+                .push(Interval {
+                    fact,
+                    start: 0,
+                    end: usize::MAX,
+                });
+        }
+        let mut active: crate::fx::FxHashMap<String, crate::fx::FxHashMap<String, usize>> =
+            Default::default();
+        for (index, event) in events.into_iter().enumerate() {
+            let position = index + 1;
+            prepared
+                .positions
+                .push((event.source_path.clone(), event.line));
+            let name = event.name.to_ascii_lowercase();
+            let table = event.table.to_ascii_lowercase();
+            let named = active.entry(name).or_default();
+            if event.removed && table.is_empty() {
+                for (table, slot) in named.drain() {
+                    prepared.tables.get_mut(&table).unwrap()[slot].end = position;
+                }
+                continue;
+            }
+            let intervals = prepared.tables.entry(table.clone()).or_default();
+            if let Some(slot) = named.remove(&table) {
+                intervals[slot].end = position;
+            }
+            if !event.removed {
+                named.insert(table, intervals.len());
+                intervals.push(Interval {
+                    fact: event,
+                    start: position,
+                    end: usize::MAX,
+                });
+            }
+        }
+        prepared
     }
-    always.extend(active);
-    always
-}
 
-fn earlier(trigger: &SqlTriggerFact, path: &Path, line: usize) -> bool {
-    match trigger.source_path.as_path().cmp(path) {
-        std::cmp::Ordering::Less => true,
-        std::cmp::Ordering::Equal => trigger.line < line,
-        std::cmp::Ordering::Greater => false,
+    pub(crate) fn final_state(&self) -> impl Iterator<Item = &SqlTriggerFact> {
+        self.tables
+            .values()
+            .flatten()
+            .filter(|interval| interval.end == usize::MAX)
+            .map(|interval| interval.fact)
     }
-}
 
-fn same_trigger(installed: &SqlTriggerFact, event: &SqlTriggerFact) -> bool {
-    installed.name.eq_ignore_ascii_case(&event.name)
-        && (event.table.is_empty() || installed.table.eq_ignore_ascii_case(&event.table))
+    pub(crate) fn at(
+        &self,
+        path: &Path,
+        line: usize,
+        table: &str,
+    ) -> impl Iterator<Item = &SqlTriggerFact> + Clone {
+        // SQL include patterns may select .psql or extensionless migrations.
+        // Embedded extraction only produces these JavaScript/TypeScript types.
+        let embedded = matches!(
+            path.extension().and_then(|ext| ext.to_str()),
+            Some("js" | "ts" | "mjs" | "mts" | "cjs" | "cts" | "tsx" | "jsx")
+        );
+        let position = if embedded {
+            self.positions.len()
+        } else {
+            self.positions.partition_point(|(event_path, event_line)| {
+                event_path.as_path() < path || (event_path == path && *event_line < line)
+            })
+        };
+        self.tables
+            .get(&table.to_ascii_lowercase())
+            .into_iter()
+            .flatten()
+            .filter(move |interval| interval.start <= position && position < interval.end)
+            .map(|interval| interval.fact)
+    }
 }

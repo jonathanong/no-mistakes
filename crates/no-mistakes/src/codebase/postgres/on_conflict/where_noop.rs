@@ -6,12 +6,13 @@ use crate::codebase::postgres::statement_facts::{
 };
 use crate::codebase::postgres::statements::form_is_stable;
 
-pub(super) fn where_proves_noop(
+pub(super) fn where_proves_noop<'a>(
     conflict: &SqlOnConflictFact,
     assigned: &[String],
     table: &str,
     catalog: &Catalog<'_>,
     insert_assignments: &[SqlAssignmentFact],
+    triggers: impl Iterator<Item = &'a SqlTriggerFact> + Clone,
 ) -> bool {
     if conflict.where_proof.disjunctive || assigned.is_empty() {
         return false;
@@ -25,7 +26,7 @@ pub(super) fn where_proves_noop(
             .any(|name| name.eq_ignore_ascii_case(column));
         proven
             && insert_value_is_stable(insert_assignments, column)
-            && !rewritten_by_applicable(catalog, table, assigned, column)
+            && !rewritten_by_applicable(catalog, table, assigned, column, triggers.clone())
             && conflict.assignments.iter().any(|assignment| {
                 assignment.column.eq_ignore_ascii_case(column)
                     && form_is_excluded(&assignment.form, column)
@@ -39,13 +40,14 @@ fn insert_value_is_stable(assignments: &[SqlAssignmentFact], column: &str) -> bo
     })
 }
 
-fn rewritten_by_applicable(
+fn rewritten_by_applicable<'a>(
     catalog: &Catalog<'_>,
     table: &str,
     assigned: &[String],
     column: &str,
+    mut triggers: impl Iterator<Item = &'a SqlTriggerFact>,
 ) -> bool {
-    catalog.triggers.iter().any(|trigger| {
+    triggers.any(|trigger| {
         trigger.table.eq_ignore_ascii_case(table)
             && mutates_proposed_row(trigger, assigned)
             && catalog.trigger_writes.iter().any(|(name, columns)| {
