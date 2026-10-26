@@ -27,6 +27,10 @@ const fixtures = [
     "holder-reflect",
     "holder-alias",
     "shadowed",
+    "eval",
+    "function",
+    "holder-eval",
+    "computed-holder",
   ].map((name) => `local-cached-map-${name}.ts`),
 ];
 for (const fixture of fixtures) {

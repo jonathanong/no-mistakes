@@ -17,6 +17,7 @@ function stableKey(key, fn, param, context) {
   if (key?.type === "Literal") return typeof key.value === "string";
   if (key?.type !== "Identifier") return false;
   const variable = resolveVariable(key, context);
+  if (!variable) return false;
   return (
     fn.params.some((item) => item !== param && resolveVariable(item, context) === variable) &&
     !variable.references.some((ref) => ref.isWrite())
@@ -26,7 +27,17 @@ function stableKey(key, fn, param, context) {
 function builtinMap(node, context) {
   if (resolveVariable(node, context)?.defs.length || propertiesWritten(node, context)) return false;
   // Global-holder writes can replace Map without mentioning its bare identifier.
-  const references = context.sourceCode.scopeManager.scopes.flatMap((scope) => scope.references);
+  const references = context.sourceCode.scopeManager.scopes
+    .flatMap((scope) => scope.references)
+    .filter((ref) => !(ref.isTypeReference && !ref.isValueReference));
+  if (
+    references.some(
+      (ref) =>
+        ["eval", "Function"].includes(ref.identifier.name) &&
+        !resolveVariable(ref.identifier, context)?.defs.length,
+    )
+  )
+    return false;
   const binding = resolveVariable(node, context);
   // Do not infer built-in semantics after the constructor/prototype escapes to
   // reflective APIs or unknown consumers, whose effects are not modeled here.
@@ -35,7 +46,6 @@ function builtinMap(node, context) {
       (ref) =>
         ref.identifier.name === "Map" &&
         resolveVariable(ref.identifier, context) === binding &&
-        !(ref.isTypeReference && !ref.isValueReference) &&
         !(
           ref.identifier.parent.type === "NewExpression" &&
           ref.identifier.parent.callee === ref.identifier
@@ -46,10 +56,12 @@ function builtinMap(node, context) {
   const holders = ["globalThis", "global", "window", "self"];
   return !references.some((ref) => {
     if (!holders.includes(ref.identifier.name)) return false;
+    if (resolveVariable(ref.identifier, context)?.defs.length) return false;
     if (propertiesWritten(ref.identifier, context)) return true;
     const member = ref.identifier.parent;
     if (member.type !== "MemberExpression" || member.object !== ref.identifier) return true;
     const name = member.computed ? member.property.value : member.property.name;
+    if (["eval", "Function"].includes(name)) return true;
     if (name !== "Map" && typeof name === "string") return false;
     return member.parent.type !== "NewExpression" || member.parent.callee !== member;
   });

@@ -101,9 +101,7 @@ module.exports = rule(
       description: "disallow a non-literal key into a const registry of SQL identifier strings",
       recommended: false,
     },
-    schema: [
-      executorOptionSchema(),
-    ],
+    schema: [executorOptionSchema()],
     messages: {
       dynamicKey:
         "{{registry}}[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default ({{rewrite}}). A runtime own-key check is not judged.",

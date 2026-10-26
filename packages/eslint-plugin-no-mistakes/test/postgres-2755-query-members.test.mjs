@@ -6,9 +6,13 @@ import { __dirname, fixture, lint } from "./helpers.mjs";
 
 const options = { importSpecifier: "pg" };
 function findings(name, rule, option = options, filename = "app.ts") {
-  return lint(fixture(`postgres-2755/${name}`), {
-    [`no-mistakes/${rule}`]: ["error", option],
-  }, filename).map(({ line, messageId, ruleId }) => [line, messageId, ruleId]);
+  return lint(
+    fixture(`postgres-2755/${name}`),
+    {
+      [`no-mistakes/${rule}`]: ["error", option],
+    },
+    filename,
+  ).map(({ line, messageId, ruleId }) => [line, messageId, ruleId]);
 }
 
 describe("PostgreSQL query member receiver proof", () => {
@@ -70,8 +74,8 @@ describe("PostgreSQL query member receiver proof", () => {
       { cwd: fixtureDir, encoding: "utf8" },
     );
     assert.equal(result.status, 1, result.stderr);
-    const actual = JSON.parse(result.stdout).diagnostics
-      .map((item) => [
+    const actual = JSON.parse(result.stdout)
+      .diagnostics.map((item) => [
         item.filename.replaceAll("\\", "/").split("/").at(-1),
         item.labels[0].span.line,
         item.code,

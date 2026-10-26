@@ -114,12 +114,18 @@ function executorCallResolver(bindings, context, options, propertyName, scopedEx
       });
       if (name && options.executorNames.includes(name) && namespaceImport(init, context, options))
         return { name };
-      return name === "query" && isProvenQueryMember({
-        type: "MemberExpression",
-        object: init,
-        property: property.key,
-        computed: property.computed,
-      }, context, bindings, options)
+      return name === "query" &&
+        isProvenQueryMember(
+          {
+            type: "MemberExpression",
+            object: init,
+            property: property.key,
+            computed: property.computed,
+          },
+          context,
+          bindings,
+          options,
+        )
         ? { name }
         : null;
     }

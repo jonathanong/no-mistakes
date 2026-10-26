@@ -54,12 +54,14 @@ enqueueEmail(user.id)
   .catch(() => undefined);
 ```
 
-Assertions require unshadowed global `expect` or a direct named `expect` import
+Assertions require global `expect` with no local declaration, or a direct named `expect` import
 from Vitest or Jest. The matcher must be awaited, returned, or otherwise handled;
-an unawaited assertion still reports. A terminal `.catch` statement counts when
+an assertion with no promise disposition still reports. A terminal `.catch` statement counts when
 its handler is a stable function and the chain contains only standard promise
 methods. Missing handlers, opaque calls in the chain, and promises dropped inside
 a handler remain reported.
+Visible replacement of an observer or an escape to an unknown mutator also
+keeps the promise unproven.
 
 A callback's return also counts for `vi.fn`, `jest.fn`, and
 `mockImplementation` / `mockImplementationOnce` on a known `vi.spyOn`,
@@ -347,7 +349,7 @@ async function cached(callback, key) {
 ```
 
 The key must be a string literal or an unchanged parameter. Extra effects,
-cache aliases or escapes, replacement values, mismatched keys, unawaited reads,
+cache aliases or escapes, replacement values, mismatched keys, reads that are not awaited,
 and visible Map constructor/prototype mutations keep the consumer unproven.
 
 A fresh object argument can also prove a dependency callback contract when every

@@ -1,4 +1,30 @@
 import { enqueueEmail } from "@app/jobs";
+type OrdinaryFunction = Function; // Erased types do not replace the Map constructor.
+void globalThis.Math; // Reading an unrelated global does not replace Map.
+void new globalThis.Map();
+
+async function shadowedHolder(callback: () => Promise<unknown>, window: string) {
+  const cache = new Map();
+  if (!cache.has(window)) cache.set(window, callback());
+  return await cache.get(window);
+}
+const localHolderJob = () => enqueueEmail(1); // accepted: window is a local key, not a global holder.
+await shadowedHolder(localHolderJob, "k");
+
+async function expressionKey(callback: () => Promise<unknown>) {
+  const cache = new Map();
+  if (!cache.has("prefix-k")) cache.set("prefix-" + "k", callback());
+  return await cache.get("prefix-k");
+}
+const expressionKeyJob = () => enqueueEmail(1); // report
+await expressionKey(expressionKeyJob);
+async function unknownKey(callback: () => Promise<unknown>) {
+  const cache = new Map();
+  if (!cache.has(runtimeCacheKey)) cache.set(runtimeCacheKey, callback());
+  return await cache.get(runtimeCacheKey);
+}
+const unknownKeyJob = () => enqueueEmail(1); // report
+await unknownKey(unknownKeyJob);
 
 declare function unknownConsumer(callback: () => Promise<unknown>): Promise<unknown>;
 declare function sideEffect(value?: unknown): void;
