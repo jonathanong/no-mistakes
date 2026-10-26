@@ -49,7 +49,8 @@ node packages/eslint-plugin-no-mistakes/bench/source-proof.mjs profile /tmp/nm-p
 Repeat timings in reverse order, then repeat the balanced sequence. Replace
 `dense` with `sparse` in a separate directory to measure the startup-heavy
 control. `candidate` reads the requested Git revision, not mutable worktree
-sources. Results and metadata remain under the supplied temporary directory;
+sources. Identical before/after archives are rejected before Oxlint runs,
+including when `candidate` is omitted after an explicit baseline. Results and metadata remain under the supplied temporary directory;
 the analyzer itself writes no persistent cache.
 
 ## Results

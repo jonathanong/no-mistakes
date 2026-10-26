@@ -36,6 +36,15 @@ export function hashSources(source) {
   visit(source);
   return hash.digest("hex");
 }
+export function candidateSourceHash(root) {
+  const candidate = hashSources(resolve(root, "peers/after/src"));
+  assert.notEqual(
+    candidate,
+    hashSources(resolve(root, "peers/before/src")),
+    "before and after source archives must differ; install a distinct candidate first",
+  );
+  return candidate;
+}
 export function archiveSources(revision, destination) {
   rmSync(destination, { recursive: true, force: true });
   mkdirSync(destination, { recursive: true });

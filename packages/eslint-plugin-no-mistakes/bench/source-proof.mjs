@@ -4,7 +4,13 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { prepare, oxlint, hashSources, archiveSources } from "./source-proof-prepare.mjs";
+import {
+  prepare,
+  oxlint,
+  hashSources,
+  archiveSources,
+  candidateSourceHash,
+} from "./source-proof-prepare.mjs";
 const here = dirname(fileURLToPath(import.meta.url));
 const [
   action,
@@ -19,12 +25,17 @@ if (action === "prepare") {
   console.log(JSON.stringify(prepare(root, Number(count), variant, baseline), null, 2));
 } else if (action === "candidate") {
   archiveSources(label, resolve(root, "peers/after/src"));
-  console.log(hashSources(resolve(root, "peers/after/src")));
+  console.log(candidateSourceHash(root));
 } else {
   const metadata = JSON.parse(readFileSync(resolve(root, "metadata.json"), "utf8"));
   const workload = resolve(root, "workload");
   const mode = label.split("-")[0];
   assert.ok(["before", "after", "absent"].includes(mode));
+  // Check before running Oxlint: prepare deliberately starts both archives alike.
+  const sourceHash =
+    mode === "after"
+      ? candidateSourceHash(root)
+      : hashSources(resolve(root, mode === "absent" ? "absent/plugin/src" : "peers/before/src"));
   const output = resolve(root, "results");
   mkdirSync(output, { recursive: true });
   const env = {
@@ -69,9 +80,7 @@ if (action === "prepare") {
   else writeFileSync(expected, signature);
   metrics.diagnosticHash = createHash("sha256").update(signature).digest("hex");
   metrics.fixtureHash = hashSources(workload);
-  metrics.sourceHash = hashSources(
-    resolve(root, mode === "absent" ? "absent/plugin/src" : `peers/${mode}/src`),
-  );
+  metrics.sourceHash = sourceHash;
   if (action === "profile") {
     metrics.profile = readFileSync(resolve(output, `${label}.stderr`), "utf8")
       .split("\n")
