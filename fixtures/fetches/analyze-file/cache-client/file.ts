@@ -1,0 +1,1 @@
+'use client'; fetch('/api/cache')

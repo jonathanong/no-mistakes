@@ -1,14 +1,20 @@
 use crate::fetches::pipeline::cache::Cache;
 use no_mistakes::fetch::file_analysis::analyze_file;
 use std::collections::{HashMap, HashSet};
-use std::fs;
-use tempfile::tempdir;
+use std::path::PathBuf;
+use tempfile::TempDir;
+
+fn saved(name: &str) -> TempDir {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/fetches/analyze-file")
+        .join(name);
+    crate::test_support::materialize_saved_fixture(&source)
+}
 
 #[test]
 fn test_analyze_file_cache_hit() {
-    let dir = tempdir().unwrap();
+    let dir = saved("cache-hit");
     let file = dir.path().join("file.ts");
-    fs::write(&file, "fetch('/api/cache')").unwrap();
 
     let mut cache = Cache {
         files: HashMap::new(),
@@ -46,9 +52,8 @@ fn test_analyze_file_cache_hit() {
 
 #[test]
 fn test_analyze_file_cache_hit_reuses_client_state() {
-    let dir = tempdir().unwrap();
+    let dir = saved("cache-client");
     let file = dir.path().join("file.ts");
-    fs::write(&file, "'use client'; fetch('/api/cache')").unwrap();
 
     let mut cache = Cache {
         files: HashMap::new(),
@@ -89,9 +94,8 @@ fn test_analyze_file_cache_hit_reuses_client_state() {
 
 #[test]
 fn test_analyze_file_cache_hit_reuses_client_state_with_client_flag() {
-    let dir = tempdir().unwrap();
+    let dir = saved("cache-client");
     let file = dir.path().join("file.ts");
-    fs::write(&file, "'use client'; fetch('/api/cache')").unwrap();
 
     let mut cache = Cache {
         files: HashMap::new(),

@@ -2,7 +2,15 @@ use crate::fetches::pipeline::cache::Cache;
 use no_mistakes::fetch::file_analysis::analyze_file;
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use tempfile::tempdir;
+use std::path::PathBuf;
+use tempfile::{tempdir, TempDir};
+
+fn saved(name: &str) -> TempDir {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/fetches/analyze-file")
+        .join(name);
+    crate::test_support::materialize_saved_fixture(&source)
+}
 
 #[test]
 fn test_analyze_file_not_exists() {
@@ -29,9 +37,8 @@ fn test_analyze_file_not_exists() {
 
 #[test]
 fn test_analyze_file_already_visited() {
-    let dir = tempdir().unwrap();
+    let dir = saved("already-visited");
     let file = dir.path().join("file.ts");
-    fs::write(&file, "").unwrap();
 
     let mut visited = HashSet::new();
     visited.insert((file.canonicalize().unwrap(), false, false));
@@ -82,21 +89,8 @@ fn test_analyze_file_read_error() {
 
 #[test]
 fn test_route_reaches_target_client_file() {
-    let dir = tempdir().unwrap();
+    let dir = saved("route-client");
     let file = dir.path().join("client.ts");
-    fs::write(
-        &file,
-        "
-            'use client';
-            import { helper } from './helper';
-            helper();
-            export {};
-            ",
-    )
-    .unwrap();
-
-    let helper = dir.path().join("helper.ts");
-    fs::write(&helper, "export const helper = () => fetch('/api/helper');").unwrap();
 
     let mut cache = Cache {
         files: HashMap::new(),
@@ -120,13 +114,7 @@ fn test_route_reaches_target_client_file() {
 
 #[test]
 fn test_analyze_file_imported_file_parse_error_is_propagated() {
-    let root = tempdir().unwrap();
-    fs::write(
-        root.path().join("file.ts"),
-        "import { helper } from './helper';\nhelper();",
-    )
-    .unwrap();
-    fs::write(root.path().join("helper.ts"), "export const = invalid;").unwrap();
+    let root = saved("parse-error");
 
     let mut cache = Cache {
         files: HashMap::new(),

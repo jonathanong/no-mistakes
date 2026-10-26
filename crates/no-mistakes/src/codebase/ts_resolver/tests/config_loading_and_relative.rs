@@ -43,11 +43,9 @@ fn find_tsconfig_finds_in_dir() {
 
 #[test]
 fn find_tsconfig_finds_in_parent() {
-    let dir = TempDir::new().unwrap();
-    let p = dir.path().join("tsconfig.json");
-    write(&p, "{}");
-    let child = dir.path().join("sub").join("dir");
-    std::fs::create_dir_all(&child).unwrap();
+    let root = fixture("find-tsconfig-parent");
+    let p = root.join("tsconfig.json");
+    let child = root.join("sub").join("dir");
     assert_eq!(find_tsconfig(&child), Some(p));
 }
 
@@ -154,17 +152,15 @@ fn unresolved_explicit_non_javascript_extension_does_not_append_ts_extension() {
 
 #[test]
 fn resolves_relative_parent() {
-    let dir = TempDir::new().unwrap();
-    let target = dir.path().join("lib.mts");
-    write(&target, "");
-    // Create the src directory so ../lib.mts resolves through an existing parent.
-    let src = dir.path().join("src");
-    std::fs::create_dir_all(&src).unwrap();
-    let importer = src.join("main.mts");
+    let root = fixture("relative-parent");
+    let target = normalize_path(&root.join("lib.mts"));
+    // `src` exists so ../lib.mts resolves through an existing parent. The
+    // importer file itself is absent; `.gitkeep` only keeps that directory.
+    let importer = root.join("src").join("main.mts");
     let tc = TsConfig {
-        dir: dir.path().to_path_buf(),
+        dir: root.clone(),
         paths: vec![],
-        paths_dir: dir.path().to_path_buf(),
+        paths_dir: root,
         base_url: None,
     };
     assert_eq!(resolve_import("../lib.mts", &importer, &tc), Some(target));
