@@ -17,7 +17,7 @@ const {
 const { dispositionOptionsSchema } = require("./async-schema");
 const { createTargetMatcher } = require("./async-targets");
 const { createAwaitingConsumers } = require("./async-disposition-consumers");
-const { promiseTypedTargetCall } = require("./async-promise-handoff");
+const { createPromiseHandoff } = require("./async-promise-handoff");
 
 function isDisposed(node, context, consumers, seen = new Set()) {
   if (seen.has(node)) return false;
@@ -57,10 +57,19 @@ module.exports = rule(
   },
   (context) => {
     const matcher = createTargetMatcher(context);
-    const consumers = createAwaitingConsumers(context, (fn, argument) =>
-      mappedArgumentDisposed(fn, argument, context, consumers, (value) =>
-        isDisposed(value, context, consumers),
-      ),
+    const sourceFacts = { typed: new WeakMap(), sources: null };
+    const { promiseSlotHandoff, promiseTypedTargetCall } = createPromiseHandoff(
+      context,
+      sourceFacts,
+    );
+    const consumers = createAwaitingConsumers(
+      context,
+      (fn, argument) =>
+        mappedArgumentDisposed(fn, argument, context, consumers, (value) =>
+          isDisposed(value, context, consumers),
+        ),
+      sourceFacts,
+      promiseSlotHandoff,
     );
     const suppressed = ruleSuppression(context, "async-call-disposition");
     if (!matcher.hasTargets) return {};
@@ -77,7 +86,7 @@ module.exports = rule(
       ),
       CallExpression(node) {
         if (suppressed(node)) return;
-        if (!matcher.isTargetCall(node) && !promiseTypedTargetCall(node, context)) return;
+        if (!matcher.isTargetCall(node) && !promiseTypedTargetCall(node)) return;
         if (isDisposed(node, context, consumers)) return;
         context.report({
           node,
