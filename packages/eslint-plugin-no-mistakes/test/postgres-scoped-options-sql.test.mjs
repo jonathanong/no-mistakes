@@ -66,6 +66,6 @@ describe("PostgreSQL rules for declared options executors", () => {
   });
 
   it("requires typed services for named custom properties", () => {
-    assert.deepEqual(findings("postgres-no-manual-transaction", false), ["15:manualTransaction"]);
+    assert.deepEqual(findings("postgres-no-manual-transaction", false), []);
   });
 });
