@@ -16,7 +16,7 @@ not a timing claim about the downstream repository that reported 62–103 second
 ## Method
 
 Measurements use the real Oxlint `--type-aware --deny-warnings --threads=4`
-CLI, TypeScript 6.0.3, parser 8.71.1, Oxlint 1.87.0, tsgolint 7.0.2005, and Node
+CLI, TypeScript 6.0.3, parser 8.71.2, Oxlint 1.88.0, tsgolint 7.0.2005, and Node
 24.22.1 on Linux x86_64 (Core Ultra 7 270K Plus, 24 cores, 64 GB RAM).
 Optional peers are physically unavailable to the absent-plugin copy. The same
 native type-aware checker runs in all modes. Fixture/config and plugin-source
@@ -34,11 +34,11 @@ in CI; deterministic work-count and diagnostic assertions do.
 ## Reproduction
 
 Run from the repository root with the pinned dependencies installed. Use a new
-absolute temporary directory for each variant. The baseline is the release
+absolute temporary directory for each variant. The baseline is the merged-main
 commit before this optimization; the candidate is a committed optimization.
 
 ```sh
-node packages/eslint-plugin-no-mistakes/bench/source-proof.mjs prepare /tmp/nm-proof before 4096 dense 144e6caa627617090d0c2ede90ec363a6b5b58f5
+node packages/eslint-plugin-no-mistakes/bench/source-proof.mjs prepare /tmp/nm-proof before 4096 dense 882f23456ed24b8595b03932c83a876ad78b8bd1
 node packages/eslint-plugin-no-mistakes/bench/source-proof.mjs candidate /tmp/nm-proof HEAD
 node packages/eslint-plugin-no-mistakes/bench/source-proof.mjs measure /tmp/nm-proof before-1
 node packages/eslint-plugin-no-mistakes/bench/source-proof.mjs measure /tmp/nm-proof after-1
@@ -58,25 +58,25 @@ Four balanced dense samples per mode (median; tree RSS in MiB):
 
 | Mode                  |     Wall | User CPU | System CPU | Peak tree RSS |
 | --------------------- | -------: | -------: | ---------: | ------------: |
-| Before, peers present | 22.134 s | 39.115 s |    1.533 s |     2,037 MiB |
-| After, peers present  |  4.398 s |  8.291 s |    1.370 s |     1,697 MiB |
-| Before, peers absent  |  4.586 s |  8.519 s |    1.326 s |     1,613 MiB |
+| Before, peers present | 23.191 s | 40.126 s |    1.763 s |     2,166 MiB |
+| After, peers present  |  4.462 s |  8.633 s |    1.211 s |     1,696 MiB |
+| Before, peers absent  |  4.614 s |  8.110 s |    1.257 s |     1,622 MiB |
 
-Wall time fell 80.1%; median peak tree RSS fell 16.7%. The optimized run was
-4.1% faster than the peers-absent control, meeting the approximately 10%
-wall-time target on this workload. Dense wall-time ranges were 21.832–22.337 s
-before, 4.388–4.444 s after, and 4.533–4.639 s absent. The Go checker dominates
-single-process RSS, which remained approximately 1,330 MiB in every mode.
+Wall time fell 80.8%; median peak tree RSS fell 21.7%. The optimized run was
+3.3% faster than the peers-absent control, meeting the approximately 10%
+wall-time target on this workload. Dense wall-time ranges were 22.272–23.838 s
+before, 4.439–4.504 s after, and 4.600–4.631 s absent. The Go checker dominates
+single-process RSS, which remained approximately 1,335 MiB in every mode.
 
 The sparse startup control used two balanced samples per mode:
 
 | Mode                  |     Wall | User CPU | System CPU | Peak tree RSS |
 | --------------------- | -------: | -------: | ---------: | ------------: |
-| Before, peers present | 18.393 s | 34.608 s |    0.611 s |       664 MiB |
-| After, peers present  |  0.792 s |  1.458 s |    0.232 s |       339 MiB |
-| Before, peers absent  |  0.648 s |  1.139 s |    0.226 s |       296 MiB |
+| Before, peers present | 18.527 s | 34.960 s |    0.652 s |       666 MiB |
+| After, peers present  |  0.842 s |  1.463 s |    0.235 s |       320 MiB |
+| Before, peers absent  |  0.608 s |  1.133 s |    0.199 s |       288 MiB |
 
-The sparse control retains approximately 144 ms / 22.2% startup overhead over
+The sparse control retains approximately 234 ms / 38.6% startup overhead over
 the absent run. Loading optional proof tooling still costs time and memory;
 the 10% result does not apply to every tiny or startup-dominated project.
 
@@ -92,8 +92,8 @@ The remaining resolution calls have distinct caller filename/specifier keys;
 TypeScript's shared resolver cache reuses their underlying directory lookups.
 All timed runs returned exit code 1 and the same 4,097 complete diagnostics,
 SHA-256 `f4263f39174c93e17ba05fb0cd670e76fb871bb1c1e265cf2207b7d3c256b2ff`.
-The before source revision was `144e6caa6`; the measured production candidate
-was `317255123` (identical source to the integrated `407cd0cab`). Per-sample
+The before source revision was `882f23456`; the measured production candidate
+was `02b170dcc`. Both include the merged TypeScript-only fallback. Per-sample
 metrics, fixture/source hashes, versions, and exact ordering are saved in
 [the result artifact](async-source-proof-results.json).
 
