@@ -18,6 +18,8 @@ pub(crate) enum Input {
         text: String,
         source_span: Span,
         holes: Vec<(String, Option<String>)>,
+        parameterized: Option<usize>,
+        positions: Vec<super::EmbeddedSqlSourcePosition>,
     },
     Reference(Span),
     Unknown,
@@ -33,6 +35,7 @@ pub(crate) type TransformedLiteral =
     std::result::Result<Option<Vec<super::statements::SqlTransformedColumnUseFact>>, ()>;
 #[derive(Default)]
 pub(crate) struct FileFacts {
+    pub low_applications: Vec<(EmbeddedSqlOptions, String, usize)>,
     pub profiles: Vec<(EmbeddedSqlOptions, Vec<SqlCall>)>,
     pub transformed_literals:
         std::sync::OnceLock<std::collections::BTreeMap<Span, TransformedLiteral>>,
@@ -45,6 +48,9 @@ struct Call {
 }
 #[derive(Default)]
 struct Syntax {
+    template_binds: template_binds::TemplateBinds,
+    safe_parameterized: FxHashSet<Span>,
+    metadata: metadata::Metadata,
     targets: FxHashSet<Span>,
     namespace_targets: FxHashMap<Span, FxHashSet<String>>,
     typed_targets: FxHashSet<Span>,
@@ -75,98 +81,24 @@ fn chain(expression: &Expression<'_>) -> Option<(Span, Vec<String>)> {
         _ => None,
     }
 }
+mod constants;
 mod input;
+mod template_binds;
 use input::input;
-impl<'a> Visit<'a> for Syntax {
-    fn visit_static_member_expression(&mut self, value: &oxc_ast::ast::StaticMemberExpression<'a>) {
-        if let Some((root, parts)) = chain(&value.object) {
-            if parts.len() == 1 && self.namespace_targets.contains_key(&root) {
-                self.namespace_members
-                    .insert(root, value.property.name.to_string());
-            }
-        }
-        walk::walk_static_member_expression(self, value);
-    }
-    fn visit_computed_member_expression(
-        &mut self,
-        value: &oxc_ast::ast::ComputedMemberExpression<'a>,
-    ) {
-        if let Some((root, parts)) = chain(&value.object) {
-            if parts.len() == 1 && self.namespace_targets.contains_key(&root) {
-                if let Expression::StringLiteral(key) = unwrap_ts_wrappers(&value.expression) {
-                    self.namespace_members.insert(root, key.value.to_string());
-                }
-            }
-        }
-        walk::walk_computed_member_expression(self, value);
-    }
-    fn visit_call_expression(&mut self, value: &CallExpression<'a>) {
-        let callee = chain(&value.callee);
-        let selected = callee.as_ref().is_some_and(|(root, parts)| {
-            (parts.len() == 1 && (self.targets.contains(root) || self.aliases.contains_key(root)))
-                || (parts.len() == 2
-                    && self
-                        .namespace_targets
-                        .get(root)
-                        .is_some_and(|names| names.contains(&parts[1])))
-                || (self.loose_query
-                    && parts.len() > 1
-                    && parts.last().is_some_and(|name| name == "query"))
-        });
-        if selected {
-            self.calls.push(Call {
-                span: span(value.span),
-                input: if callee.as_ref().is_some_and(|(root, parts)| {
-                    (parts.len() == 1 && self.targets.contains(root))
-                        || (parts.len() == 2
-                            && parts[1] == "query"
-                            && self.typed_targets.contains(root))
-                }) {
-                    value
-                        .arguments
-                        .first()
-                        .and_then(|arg| arg.as_expression())
-                        .map_or(Input::Unknown, |value| {
-                            input(value, &mut self.env_references)
-                        })
-                } else {
-                    Input::Unknown
-                },
-                callee,
-            });
-        }
-        walk::walk_call_expression(self, value);
-    }
-}
+mod metadata;
+mod syntax_walk;
+
 struct Constants<'s> {
     wanted: &'s FxHashSet<Span>,
     syntax: &'s mut Syntax,
 }
-impl<'a> Visit<'a> for Constants<'_> {
-    fn visit_variable_declaration(&mut self, value: &VariableDeclaration<'a>) {
-        if value.kind.is_const() {
-            for declaration in &value.declarations {
-                if let BindingPattern::BindingIdentifier(binding) = &declaration.id {
-                    if !self.wanted.contains(&span(binding.span)) {
-                        continue;
-                    }
-                    let value = declaration.init.as_ref().map_or(Input::Unknown, |value| {
-                        input(value, &mut self.syntax.env_references)
-                    });
-                    if matches!(value, Input::Sql { .. }) {
-                        self.syntax.constants.insert(span(binding.span), value);
-                    }
-                }
-            }
-        }
-        walk::walk_variable_declaration(self, value);
-    }
-}
+
 mod selection;
 mod typed;
 use selection::Selection;
 mod project;
 pub(crate) use project::collect;
+pub(crate) use project::collect_with_types;
 
 mod invalid;
 pub(crate) use invalid::collect_invalid;
@@ -175,3 +107,21 @@ pub(crate) mod plan;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod template_bind_tests;
+
+#[cfg(test)]
+mod metadata_tests;
+
+#[cfg(test)]
+mod runtime_span_tests;
+
+#[cfg(test)]
+mod escape_site_tests;
+
+#[cfg(test)]
+mod low_max_bind_parity_tests;
+
+#[cfg(test)]
+mod typed_computed_parameter_tests;

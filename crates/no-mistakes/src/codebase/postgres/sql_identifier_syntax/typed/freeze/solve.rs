@@ -1,0 +1,106 @@
+use super::*;
+use std::collections::VecDeque;
+mod evaluate;
+mod index;
+mod invoke;
+use index::Index;
+mod project;
+mod propagate;
+mod seeds;
+use evaluate::evaluate;
+const WORK_LIMIT: usize = 100_000;
+impl Tracker {
+    pub fn finish(mut self, sources: &Sources<'_>) -> Proof {
+        if !self.enabled {
+            return Proof::default();
+        }
+        let valid = self.clean
+            && !self.global_escape
+            && self.globals == self.candidates
+            && !self.write_roots.iter().any(|at| self.globals.contains(at));
+        if !valid {
+            for node in self.nodes.values_mut() {
+                if matches!(node, Node::Freeze(_)) {
+                    *node = Node::Scalar;
+                }
+            }
+        }
+        self.solve(sources).unwrap_or_default()
+    }
+    fn solve(self, sources: &Sources<'_>) -> Option<Proof> {
+        let initial = sources.initial;
+        let writes = sources.writes;
+        let mut index = Index::new(&self);
+        let mut values = initial
+            .iter()
+            .filter(|id| !sources.producers.contains(id))
+            .map(|id| (*id, seeds::executor(*id, sources.proven)))
+            .collect::<FxHashMap<_, _>>();
+        let mut functions = seeds::producer_functions(sources, &index);
+        let mut facts = FxHashMap::<Span, Taint>::default();
+        let mut queue: VecDeque<_> = self.order.iter().copied().collect();
+        let mut work = 0;
+        while let Some(at) = queue.pop_front() {
+            work += 1;
+            if work > WORK_LIMIT {
+                return None;
+            }
+            let mut value = evaluate(
+                self.nodes.get(&at)?,
+                &facts,
+                &values,
+                &functions,
+                &mut |id| {
+                    if index.invokes.entry(id).or_default().insert(at) {
+                        work += 1;
+                    }
+                },
+            );
+            if work > WORK_LIMIT {
+                return None;
+            }
+            seeds::apply_node_seeds(&mut value, at, &self.nodes, sources);
+            if !facts.entry(at).or_default().join(value) {
+                continue;
+            }
+            queue.extend(index.parents.get(&at).into_iter().flatten().copied());
+            propagate::bindings(at, &facts, &index, writes, &mut values, &mut queue);
+            let mut pending = VecDeque::new();
+            for id in index.returns.get(&at).into_iter().flatten() {
+                if functions.entry(*id).or_default().join(facts[&at].clone()) {
+                    pending.push_back(*id);
+                }
+            }
+            while let Some(id) = pending.pop_front() {
+                work += 1;
+                if work > WORK_LIMIT {
+                    return None;
+                }
+                if writes.contains(&id) && functions[&id].derived {
+                    let mut value = functions[&id].clone();
+                    value.broad = true;
+                    value.paths.clear();
+                    if values.entry(id).or_default().join(value) {
+                        queue.extend(index.bindings.get(&id).into_iter().flatten().copied());
+                    }
+                }
+                queue.extend(index.invokes.get(&id).into_iter().flatten().copied());
+                queue.extend(index.bindings.get(&id).into_iter().flatten().copied());
+                for alias in index.aliases.get(&id).into_iter().flatten() {
+                    let value = functions[&id].clone();
+                    if functions.entry(*alias).or_default().join(value) {
+                        pending.push_back(*alias);
+                    }
+                }
+            }
+        }
+        if self.barriers.iter().any(|at| {
+            facts
+                .get(at)
+                .is_some_and(|value| value.derived && value.present())
+        }) {
+            return None;
+        }
+        Some(self.project(values, functions, facts, sources))
+    }
+}

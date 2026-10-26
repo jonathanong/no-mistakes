@@ -1,0 +1,32 @@
+effort: low
+unanalyzable: advise
+rules:
+  - rule: postgres-no-offset
+    name: low-offset
+    scope: repository
+    options:
+      effort: low
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']
+  - rule: postgres-no-unbounded-sql-identifier
+    name: low-identifier
+    scope: repository
+    options:
+      effort: low
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']
+  - rule: postgres-no-mutable-sql-registry
+    name: low-registry
+    scope: repository
+    options:
+      effort: low
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']
+  - rule: postgres-no-transformed-uuid-predicates
+    name: low-uuid
+    scope: repository
+    options:
+      effort: low
+      importSpecifier: '@example/db'
+      include: ['src/query.mts']
+      schemaCatalogPath: schema.json

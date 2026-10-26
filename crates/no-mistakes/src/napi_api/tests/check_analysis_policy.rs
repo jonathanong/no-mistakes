@@ -161,3 +161,40 @@ fn low_typed_executors_keep_statement_lines_in_the_public_check_api() {
         }
     }
 }
+
+#[test]
+fn low_executor_transports_preserve_native_callsite_advisories() {
+    let root = crate::test_support::rule_fixture_root("postgres-no-offset")
+        .join("low-executor-transports");
+    let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();
+    let expected = source
+        .lines()
+        .enumerate()
+        .filter_map(|(index, line)| line.contains("// ADVISE").then_some(index + 1))
+        .collect::<Vec<_>>();
+    let options = serde_json::json!({"root":root,"config":root.join(".no-mistakes-low.yml")});
+    let report: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    )
+    .unwrap();
+    for rule in [
+        "postgres-no-offset",
+        "postgres-no-unbounded-sql-identifier",
+        "postgres-no-mutable-sql-registry",
+    ] {
+        let mut actual = report["advisories"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|row| row["rule"] == rule)
+            .map(|row| row["line"].as_u64().unwrap() as usize)
+            .collect::<Vec<_>>();
+        actual.sort_unstable();
+        actual.dedup();
+        assert_eq!(actual, expected, "{rule}: {report}");
+    }
+    assert!(
+        report["warnings"].as_array().unwrap().is_empty(),
+        "{report}"
+    );
+}

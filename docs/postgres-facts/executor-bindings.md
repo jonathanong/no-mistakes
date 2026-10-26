@@ -25,13 +25,37 @@ bindings destructured from an inline object parameter type. Their SQL uses the
 same literal/one-local-constant contract as named executors. Type annotations,
 type aliases, and `typeof` type queries are erased uses and never create SQL
 findings. Dynamic or unsupported SQL is reported at its executor call; passing
-a configured executor as a runtime value remains an unknown escape at that use.
+a configured executor through an unmodeled runtime use remains an unknown escape.
+An unresolved computed parameter key preserves unknown uses of its bound names;
+literal SQL at those calls does not establish executor ownership.
+
+For low SQL-structure checks, a typed parameter may default to a configured
+executor export. Typed callback parameters keep the same literal-SQL contract.
+For a wrapper declared in `executorFactoryNames`, passing a known receiver
+alongside that callback is transport, not another SQL statement. Helpers outside
+that configured set retain uncertainty for any executor passed to them. A configured
+factory result bound to an immutable `const`, `using`,
+or `await using` local is checked at its actual executor calls. Reassignment
+and unsupported defaults remain uncertain. Imported type identities can come
+from another module when explicitly declared in `effects.postgres.typedExecutors`
+and selected by `executorTypeNames`; matching only a type's spelling is insufficient.
+
+Receiver values used as proven SQL bind data or direct executor metadata do not
+create another SQL obligation. An ordinary aggregate or property read of an
+executor-bearing options value is not an escape by itself. Passing an executor,
+or an aggregate that contains it, to an opaque or unproven helper retains
+uncertainty at that invocation. A global-looking intrinsic call is still opaque
+until the analysis proves no local binding or mutation overrides it. Configured callback
+and factory wrappers transport executor values; their callback parameter
+headers do not create extra SQL obligations.
+
 An assertion (`as T` or `<T>value`) or `satisfies T` with a possible configured
-executor type retains an unknown at its runtime operand. A function, arrow, or
-method with such a return type retains an unknown at each returned value. The
-type header by itself is erased, and these unknowns do not prove SQL passed to
-a later call through the produced value. Nested functions use their own return
-type; ambient declarations have no returned value to report.
+executor type does not create a SQL obligation by itself. The low pass carries
+supported same-file returned and asserted values into a direct invocation when
+it can prove the binding. A function return header alone is erased, and neither
+the header nor a producer result proves SQL passed to a later call safe. Nested
+functions use their own return type; ambient declarations have no returned value
+to report. Arbitrary object mutation and cross-file value flow remain opaque.
 For the SQL-structure low rules, indirect annotations (such as local type aliases
 or interfaces derived from a configured type, generic constraints/defaults,
 intersections, and array/rest or nested binding patterns) retain unknown runtime

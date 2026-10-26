@@ -9,7 +9,7 @@ impl Typed {
         }
     }
 
-    fn unknown_bindings(&mut self, pattern: &BindingPattern<'_>) {
+    pub(super) fn unknown_bindings(&mut self, pattern: &BindingPattern<'_>) {
         match pattern {
             BindingPattern::BindingIdentifier(binding) => {
                 if let Some(id) = self.bindings.get(&span(binding.span)) {

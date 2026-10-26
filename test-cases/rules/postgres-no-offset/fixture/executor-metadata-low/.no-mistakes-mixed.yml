@@ -1,0 +1,16 @@
+effort: low
+unanalyzable: advise
+rules:
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: '@example/db'
+      executorNames: [read]
+      executorTypeNames: [QueryOptions]
+      include: ['src/mixed.mts']
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      importSpecifier: '@other/db'
+      executorNames: [other]
+      include: ['src/mixed.mts']
