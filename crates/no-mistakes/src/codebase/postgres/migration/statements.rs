@@ -1,15 +1,14 @@
-use super::line_containing;
 use crate::codebase::postgres::types::{SqlSchemaFileFacts, SqlStatementKind};
 use sqlparser::ast::{ObjectType, Statement};
 
-pub(super) fn record(sql: &str, statement: &Statement, facts: &mut SqlSchemaFileFacts) {
+pub(super) fn record(line: usize, statement: &Statement, facts: &mut SqlSchemaFileFacts) {
     super::super::function_calls::collect(statement, &mut facts.function_calls);
-    let Some((kind, parts)) = kind_and_parts(statement) else {
+    let Some((kind, _parts)) = kind_and_parts(statement) else {
         return;
     };
     facts.statement_kinds.push(SqlStatementKind {
         kind: kind.to_string(),
-        line: line_containing(sql, parts),
+        line,
     });
 }
 
@@ -37,10 +36,16 @@ pub(super) use policy::record as record_new;
 pub(crate) use policy::SUPPORTED_KINDS;
 
 /// Reuse the prepared AST and the existing recursive routine projection.
-pub(crate) fn policy_facts(sql: &str, statements: &[Statement]) -> SqlSchemaFileFacts {
+pub(crate) fn policy_facts(
+    sql: &str,
+    statements: &[Statement],
+    tokens: &[&[sqlparser::tokenizer::TokenWithSpan]],
+) -> SqlSchemaFileFacts {
     let mut facts = SqlSchemaFileFacts::default();
-    for statement in statements {
-        record(sql, statement, &mut facts);
+    for (index, statement) in statements.iter().enumerate() {
+        let locations =
+            super::locating::Locations::new(tokens.get(index).copied().unwrap_or_default());
+        record(locations.statement_line(statement), statement, &mut facts);
     }
     record_new(sql, &mut facts);
     for dynamic in super::dynamic::schema_bodies(sql)
@@ -52,11 +57,24 @@ pub(crate) fn policy_facts(sql: &str, statements: &[Statement]) -> SqlSchemaFile
                 &dynamic.sql,
             ),
         );
+        let sources: Vec<_> = located
+            .iter()
+            .map(|located| {
+                located
+                    .source
+                    .clone()
+                    .or_else(|| located.chunk_tokens.clone())
+            })
+            .collect();
+        let tokens: Vec<_> = sources
+            .iter()
+            .map(|source| source.as_deref().unwrap_or_default())
+            .collect();
         let parsed: Vec<_> = located
             .into_iter()
             .map(|located| located.statement)
             .collect();
-        let mut nested = policy_facts(&dynamic.sql, &parsed);
+        let mut nested = policy_facts(&dynamic.sql, &parsed, &tokens);
         nested.function_calls.extend(functions);
         super::dynamic::remap_fact_lines(&mut nested, &dynamic);
         facts.statement_kinds.extend(nested.statement_kinds);

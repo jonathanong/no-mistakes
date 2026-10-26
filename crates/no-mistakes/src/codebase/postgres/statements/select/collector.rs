@@ -140,7 +140,7 @@ impl Collector<'_, '_, '_> {
         nested::collect_at(sql, select, ctes, in_insert_select, positions, out);
         let relations = super::super::predicates::select_relations(sql, select, ctes, positions);
         let shapes = shapes::collect(select);
-        let line = super::line::select_line(sql, select, &tables);
+        let line = super::line::select_line(select, &tables);
         let star_projections = if in_exists {
             Vec::new()
         } else {

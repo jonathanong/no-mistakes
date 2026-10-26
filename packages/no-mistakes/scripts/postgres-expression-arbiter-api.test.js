@@ -5,6 +5,42 @@ const test = globalThis.test || require("node:test").test;
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
 test(
+  "compiled PostgreSQL locations match across worker counts and prepared reports",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    for (const relative of [
+      "test-cases/rules/postgres-fk-index/fixture/statement-spans",
+      "fixtures/rules/postgres-migration-statement-lines",
+    ]) {
+      const root = join(__dirname, "../../..", relative);
+      const report = await cjs.check({ root });
+      assert.ok(report.rules.length > 0);
+      for (const jobs of [1, 4]) {
+        const parallel = await cjs.check({ root, jobs });
+        // The native process pool is fixed; its resize warning is not a finding.
+        delete parallel.jobsPoolWarning;
+        assert.deepEqual(parallel, report);
+      }
+      assert.deepEqual(await esm.check({ root }), report);
+      const prepared = await cjs.analyzeProject({ root, reports: [{ type: "check" }] });
+      assert.deepEqual(prepared.reports[0].result, report);
+      if (relative.includes("postgres-fk-index")) {
+        const repeated = report.rules.filter(({ file }) => file === "repeated.sql");
+        assert.deepEqual(
+          repeated.map(({ target, line }) => [target, line]),
+          [
+            ["Attribute.personId", 1],
+            ["Session.personId", 2],
+          ],
+        );
+      }
+    }
+  },
+);
+
+test(
   "compiled schema rules accept release-blocker DDL with explicit report policy",
   { skip: !compiled },
   async () => {

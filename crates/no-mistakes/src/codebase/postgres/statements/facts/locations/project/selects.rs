@@ -16,7 +16,11 @@ pub(super) fn collect(
             .enumerate()
             .find(|(n, node)| {
                 !used[*n]
-                    && node.at.0 == fact.line
+                    && (node.at.0 == fact.line
+                        || node.relations.iter().any(|relation| {
+                            Some(&relation.table) == fact.tables.first()
+                                && relation.at.0 == fact.line
+                        }))
                     && node.predicate == fact.predicate_sql
                     && fact.tables.iter().all(|table| {
                         node.relations
@@ -28,7 +32,18 @@ pub(super) fn collect(
                 used[n] = true;
                 node
             });
-        let at = node.map_or((fact.line, 1), |node| node.at);
+        let at = node.map_or((fact.line, 1), |node| {
+            if node.at.0 == fact.line {
+                node.at
+            } else {
+                node.relations
+                    .iter()
+                    .find(|relation| {
+                        Some(&relation.table) == fact.tables.first() && relation.at.0 == fact.line
+                    })
+                    .map_or((fact.line, 1), |relation| relation.at)
+            }
+        });
         out.insert(Site::Select(i), at.0, at.1);
         let mut relations = FxHashMap::default();
         for (j, relation) in fact.relations.iter().enumerate() {

@@ -7,7 +7,8 @@ mod dynamic;
 mod dynamic_merge;
 mod identifiers;
 mod indexes;
-mod lines;
+mod locating;
+pub(crate) use locating::statement_keyword_line;
 mod predicate;
 mod recovery;
 mod statements;
@@ -30,11 +31,30 @@ fn extract_located_migration_facts(
 ) -> SqlSchemaFileFacts {
     let unanalyzable_statements = recovery_failures(&parsed);
     let (located, functions) = super::parse::partition_function_sources(parsed);
+    let sources: Vec<_> = located
+        .iter()
+        .map(|located| {
+            located
+                .source
+                .clone()
+                .or_else(|| located.chunk_tokens.clone())
+        })
+        .collect();
+    let tokens: Vec<_> = sources
+        .iter()
+        .map(|source| source.as_deref().unwrap_or_default())
+        .collect();
     let statements: Vec<_> = located
         .into_iter()
         .map(|located| located.statement)
         .collect();
-    extract_from_parsed_with_failures(sql, &statements, &functions, &unanalyzable_statements)
+    extract_from_parsed_with_failures(
+        sql,
+        &statements,
+        &functions,
+        &unanalyzable_statements,
+        &tokens,
+    )
 }
 
 pub(crate) fn extract_from_parsed_with_failures(
@@ -42,8 +62,9 @@ pub(crate) fn extract_from_parsed_with_failures(
     statements: &[Statement],
     functions: &[super::SqlFunctionCallFact],
     failures: &[super::types::SqlUnanalyzableStatement],
+    tokens: &[&[sqlparser::tokenizer::TokenWithSpan]],
 ) -> SqlSchemaFileFacts {
-    let mut facts = extract_parsed_migration_facts(sql, statements, failures);
+    let mut facts = extract_parsed_migration_facts(sql, statements, failures, tokens);
     facts.function_calls.extend_from_slice(functions);
     facts
 }
@@ -54,6 +75,7 @@ fn extract_parsed_migration_facts(
     sql: &str,
     statements: &[Statement],
     failures: &[super::types::SqlUnanalyzableStatement],
+    tokens: &[&[sqlparser::tokenizer::TokenWithSpan]],
 ) -> SqlSchemaFileFacts {
     let mut facts = SqlSchemaFileFacts {
         unanalyzable_statements: failures
@@ -72,46 +94,40 @@ fn extract_parsed_migration_facts(
         ..Default::default()
     };
     statements::record_new(sql, &mut facts);
-    let mut create_index_n = 0usize;
-    let mut drop_index_n = 0usize;
-    let mut drop_table_n = 0usize;
     let mut identifier_locations = identifiers::Locations::new(sql);
     facts
         .declared_identifiers
         .extend(identifier_locations.unparsed_declarations());
     let mut table_positions = table_events::Positions::new(sql);
-    for statement in statements {
+    for (index, statement) in statements.iter().enumerate() {
+        let locations = locating::Locations::new(tokens.get(index).copied().unwrap_or_default());
         facts
             .declared_identifiers
             .extend(identifiers::collect(&mut identifier_locations, statement));
-        statements::record(sql, statement, &mut facts);
+        let line = locations.statement_line(statement);
+        statements::record(line, statement, &mut facts);
         table_events::record(statement, &mut table_positions, &mut facts.table_events);
         match statement {
             Statement::CreateIndex(index) => {
-                create_index_n += 1;
-                facts
-                    .indexes
-                    .push(indexes::from_create_index(sql, create_index_n, index));
+                facts.indexes.push(indexes::from_create_index(line, index));
             }
             Statement::Drop {
                 object_type: ObjectType::Index,
                 names,
                 ..
             } => {
-                drop_index_n += 1;
                 facts
                     .dropped_indexes
-                    .extend(indexes::from_drop_index(sql, drop_index_n, names));
+                    .extend(indexes::from_drop_index(line, names));
             }
             Statement::Drop {
                 object_type: ObjectType::Table,
                 names,
                 ..
             } => {
-                drop_table_n += 1;
                 facts
                     .dropped_tables
-                    .extend(indexes::from_drop_table(sql, drop_table_n, names));
+                    .extend(indexes::from_drop_table(line, names));
             }
             Statement::CreateTable(table) => {
                 let table_name = relation_name(&table.name);
@@ -120,14 +136,14 @@ fn extract_parsed_migration_facts(
                     table,
                 ));
                 constraints::collect_create_table_fks(
-                    sql,
+                    line,
                     &table_name,
                     table,
                     &mut facts.foreign_keys,
                 );
             }
             Statement::AlterTable(alter) => {
-                constraints::collect_alter_table(sql, alter, &mut facts)
+                constraints::collect_alter_table(line, alter, &mut facts)
             }
             _ => {}
         }
@@ -155,20 +171,6 @@ pub(super) fn qualified_relation(name: &ObjectName) -> String {
 
 pub(super) fn leading_index_column(column: &sqlparser::ast::IndexColumn) -> Option<String> {
     index_column_name(column)
-}
-
-pub(super) fn line_containing(source: &str, parts: &[&str]) -> usize {
-    source
-        .lines()
-        .enumerate()
-        .find(|(_, line)| {
-            let lower = line.to_ascii_lowercase();
-            parts
-                .iter()
-                .all(|part| lower.contains(&part.to_ascii_lowercase()))
-        })
-        .map(|(index, _)| index + 1)
-        .unwrap_or(1)
 }
 
 #[cfg(test)]

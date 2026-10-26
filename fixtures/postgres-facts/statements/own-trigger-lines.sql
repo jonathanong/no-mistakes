@@ -1,0 +1,8 @@
+-- OR REPLACE and multiline heads make lexical CREATE TRIGGER ordinals unreliable.
+CREATE OR REPLACE TRIGGER changed AFTER UPDATE ON items
+FOR EACH ROW EXECUTE FUNCTION changed();
+CREATE
+TRIGGER changed_again AFTER UPDATE ON items
+FOR EACH ROW EXECUTE FUNCTION changed();
+CREATE TRIGGER final_change AFTER UPDATE ON items
+FOR EACH ROW EXECUTE FUNCTION changed();

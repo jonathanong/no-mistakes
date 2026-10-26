@@ -6,7 +6,6 @@ pub(super) struct FactOut<'a> {
         &'a crate::fx::FxHashMap<sqlparser::tokenizer::Location, SqlConflictArbiter>,
     pub(super) insert_sources: &'a super::lines::InsertSources<'a>,
     pub(super) insert_n: &'a mut usize,
-    pub(super) trigger_n: &'a mut usize,
     pub(super) inserts: &'a mut Vec<SqlInsertFact>,
     pub(super) selects: &'a mut Vec<SqlSelectFact>,
     pub(super) updates: &'a mut Vec<Vec<SqlRelationPredicateFact>>,
@@ -18,6 +17,7 @@ pub(super) struct FactOut<'a> {
 
 pub(super) fn collect_one(
     sql: &str,
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
     statement: &Statement,
     placeholder_positions: super::value::PlaceholderPositions<'_>,
     table_cursor: Option<&mut bounds::TableTokenCursor>,
@@ -46,8 +46,7 @@ pub(super) fn collect_one(
         }
     }
     if matches!(statement, Statement::CreateTrigger(_)) {
-        *out.trigger_n += 1;
-        if let Some(fact) = trigger::from_statement(sql, statement, *out.trigger_n) {
+        if let Some(fact) = trigger::from_statement(tokens, statement) {
             out.triggers.push(fact);
         }
     }

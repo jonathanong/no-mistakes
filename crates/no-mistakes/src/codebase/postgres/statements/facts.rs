@@ -52,13 +52,12 @@ fn extract_from_parsed_and_sources(
     let mut mutation_column_uses = Vec::new();
     let mut transformed_column_uses = Vec::new();
     let mut insert_n = 0usize;
-    let mut trigger_n = 0usize;
     let tokens = Tokens::with_prepared(sql, prepared_sql.tokens());
     let has_table_token = tokens.all().iter().any(table_keyword);
     let need_table_tokens = collect_bounds || has_table_token;
     let table_index = need_table_tokens.then(|| bounds::TableTokenIndex::new(tokens.all()));
     let mut recovered_indexes = HashMap::new();
-    let insert_sources = super::lines::InsertSources::new(sql);
+    let insert_sources = super::lines::InsertSources::with_tokens(sql, &tokens);
     let policy_arbiters: crate::fx::FxHashMap<_, _> = prepared_sql
         .policy_arbiters()
         .iter()
@@ -68,7 +67,6 @@ fn extract_from_parsed_and_sources(
         policy_arbiters: &policy_arbiters,
         insert_sources: &insert_sources,
         insert_n: &mut insert_n,
-        trigger_n: &mut trigger_n,
         inserts: &mut inserts,
         selects: &mut selects,
         updates: &mut updates,
@@ -119,6 +117,7 @@ fn extract_from_parsed_and_sources(
             );
             collect_one(
                 sql,
+                sources.location_tokens(index, tokens.all()),
                 statement,
                 placeholder_positions,
                 table_cursor.as_mut(),

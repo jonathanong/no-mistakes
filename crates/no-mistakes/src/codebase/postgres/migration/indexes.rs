@@ -6,8 +6,7 @@ use crate::codebase::postgres::types::{
 use sqlparser::ast::{ColumnOption, IndexColumn, IndexType, ObjectName, TableConstraint};
 
 pub(super) fn from_create_index(
-    sql: &str,
-    occurrence: usize,
+    line: usize,
     index: &sqlparser::ast::CreateIndex,
 ) -> SqlCreateIndexMetadata {
     let name = index.name.as_ref().map(qualified_relation);
@@ -34,24 +33,16 @@ pub(super) fn from_create_index(
             .predicate
             .as_ref()
             .map(super::predicate::predicate_key),
-        line: super::lines::nth_create_index_line(sql, occurrence),
+        line,
     }
 }
 
-pub(super) fn from_drop_index(
-    sql: &str,
-    occurrence: usize,
-    names: &[ObjectName],
-) -> Vec<SqlDropIndexMetadata> {
-    drop_names(names, super::lines::nth_drop_index_line(sql, occurrence))
+pub(super) fn from_drop_index(line: usize, names: &[ObjectName]) -> Vec<SqlDropIndexMetadata> {
+    drop_names(names, line)
 }
 
-pub(super) fn from_drop_table(
-    sql: &str,
-    occurrence: usize,
-    names: &[ObjectName],
-) -> Vec<SqlDropIndexMetadata> {
-    drop_names(names, super::lines::nth_drop_table_line(sql, occurrence))
+pub(super) fn from_drop_table(line: usize, names: &[ObjectName]) -> Vec<SqlDropIndexMetadata> {
+    drop_names(names, line)
 }
 
 fn drop_names(names: &[ObjectName], line: usize) -> Vec<SqlDropIndexMetadata> {
