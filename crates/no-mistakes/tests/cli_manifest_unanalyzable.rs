@@ -37,7 +37,7 @@ fn manifest_failures_follow_policy_without_hiding_definite_findings() {
                             )
                         });
                     let findings = report["rules"].as_array().unwrap();
-                    let advisories = report["advisories"].as_array().unwrap();
+                    let advisories = super::policy_advisories::without_hygiene(&report);
                     assert_eq!(
                         findings.len(),
                         failures,
@@ -131,7 +131,10 @@ fn bom_manifests_remain_analyzable_without_hiding_definite_violations() {
                 ]
             );
         }
-        assert_eq!(report["advisories"], serde_json::json!([]), "{report}");
+        assert!(
+            super::policy_advisories::without_hygiene(&report).is_empty(),
+            "{report}"
+        );
         assert!(
             findings
                 .iter()

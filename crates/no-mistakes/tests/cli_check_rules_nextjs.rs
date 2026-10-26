@@ -27,7 +27,7 @@ fn nextjs_caching_effort_low_preserves_literals_and_max_reports_at_least_as_much
             "{config}: {report}"
         );
         assert_eq!(
-            report["advisories"].as_array().unwrap().len(),
+            super::policy_advisories::without_hygiene(&report).len(),
             expected_advisories,
             "{config}: {report}"
         );

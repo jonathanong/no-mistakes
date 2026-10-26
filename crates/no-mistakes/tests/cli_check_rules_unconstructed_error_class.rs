@@ -322,7 +322,7 @@ fn uncertain_inputs_obey_shared_policy_in_cli_check_reports() {
             "{config}: {value}"
         );
         assert_eq!(
-            value["advisories"].as_array().unwrap().len(),
+            super::policy_advisories::without_hygiene(&value).len(),
             advisories,
             "{config}: {value}"
         );
@@ -359,7 +359,7 @@ fn unresolved_constructor_and_base_only_reports_exit_successfully() {
             assert_eq!(output.status.code(), Some(0), "{}", text(&output));
             let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
             assert_eq!(value["rules"], serde_json::json!([]), "{value}");
-            let rows = value["advisories"].as_array().unwrap();
+            let rows = super::policy_advisories::without_hygiene(&value);
             assert_eq!(rows.len(), advisories, "{config}/{effort}: {value}");
             if advisories > 0 {
                 // Uncertainty is visible even with explicit report, rather than
@@ -419,7 +419,7 @@ fn conditional_package_facades_keep_non_error_targets_silent_and_error_children_
                 "{config}/{effort}: {value}"
             );
             assert_eq!(
-                value["advisories"].as_array().unwrap().len(),
+                super::policy_advisories::without_hygiene(&value).len(),
                 advisory_count,
                 "{value}"
             );

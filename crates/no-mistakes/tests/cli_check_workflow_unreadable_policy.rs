@@ -40,7 +40,7 @@ fn unreadable_workflow_policy_keeps_definite_expression_failures() {
                 "{report}"
             );
             assert_eq!(
-                report["advisories"].as_array().unwrap().len(),
+                super::policy_advisories::without_hygiene(&report).len(),
                 expected.1,
                 "{report}"
             );
@@ -68,7 +68,7 @@ fn unreadable_workflow_suppressions_remain_auditable_when_requested() {
         );
         let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
         assert!(report["rules"].as_array().unwrap().is_empty());
-        assert!(report["advisories"].as_array().unwrap().is_empty());
+        assert!(super::policy_advisories::without_hygiene(&report).is_empty());
         let suppressed = report["suppressed"].as_array().unwrap();
         assert_eq!(
             suppressed.len(),

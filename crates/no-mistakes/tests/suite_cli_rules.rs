@@ -8,6 +8,8 @@ mod cli_shellcheck_policy;
 mod git_tracked_rule;
 #[path = "common/gitignore_fixture.rs"]
 mod gitignore_fixture;
+#[path = "common/policy_advisories.rs"]
+mod policy_advisories;
 #[path = "common/saved_fixture.rs"]
 mod saved_fixture;
 

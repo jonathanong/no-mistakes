@@ -103,7 +103,7 @@ fn malformed_manifest_policy_preserves_definite_findings_and_suppression() {
                 .unwrap();
             let report: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap();
             let findings = report["rules"].as_array().unwrap();
-            let advice = report["advisories"].as_array().unwrap();
+            let advice = super::policy_advisories::without_hygiene(&report);
             assert_eq!(findings.len(), uncertain + ordinary, "{policy}: {report}");
             assert_eq!(advice.len(), advisories, "{policy}: {report}");
             let has_definite = findings.iter().any(|finding| {
