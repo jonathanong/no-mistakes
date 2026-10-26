@@ -1,0 +1,6 @@
+{
+  "name": "typescript",
+  "version": "6.1.0",
+  "main": "index.cjs",
+  "private": true
+}
