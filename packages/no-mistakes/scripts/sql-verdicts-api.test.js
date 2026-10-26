@@ -6,6 +6,7 @@ const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node")
 
 for (const name of [
   "class-method",
+  "class-field-arrow",
   "this-method",
   "object-method",
   "property-function",

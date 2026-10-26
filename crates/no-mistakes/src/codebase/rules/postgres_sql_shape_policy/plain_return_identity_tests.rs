@@ -72,6 +72,7 @@ fn unkeyable_member_returns_keep_conservative_recall() {
     let root = fixture("returned-member-owners");
     for name in [
         "class-method",
+        "class-field-arrow",
         "this-method",
         "object-method",
         "property-function",
