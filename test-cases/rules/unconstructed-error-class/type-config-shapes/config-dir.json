@@ -1,0 +1,6 @@
+{
+  "extends": "${configDir}/parent-roots.json",
+  "compilerOptions": {
+    "types": ["from-config-dir"]
+  }
+}

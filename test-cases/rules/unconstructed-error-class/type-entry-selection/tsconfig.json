@@ -1,0 +1,5 @@
+{
+  "compilerOptions": {
+    "types": ["./present.d.ts", "./sub/../present.d.ts", "./missing.d.ts", "spec:missing"]
+  }
+}

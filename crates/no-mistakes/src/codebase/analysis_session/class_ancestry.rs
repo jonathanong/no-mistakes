@@ -106,7 +106,7 @@ impl AnalysisSession {
         Arc::clone(cell.get_or_init(|| Arc::new(resolution::prepare(self, request))))
     }
 
-    fn declaration_facts(&self, root: &Path, path: &Path) -> Arc<TsFileFacts> {
+    pub(crate) fn declaration_facts(&self, root: &Path, path: &Path) -> Arc<TsFileFacts> {
         let cell = self
             .class_declaration_facts
             .entry(path.to_path_buf())

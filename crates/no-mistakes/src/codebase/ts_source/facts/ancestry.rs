@@ -15,6 +15,8 @@ pub struct AncestryFacts {
     pub declaration_aliases: Vec<(String, String)>,
     pub namespace_bodies: Vec<NamespaceBody>,
     pub export_assignment: Option<String>,
+    /// `(module specifier, namespace identifier)` for `export =` inside `declare module`.
+    pub ambient_module_assignments: Vec<(String, String)>,
     pub constructor_expressions: Vec<(u32, String)>,
 }
 
@@ -170,9 +172,7 @@ impl<'a> Visit<'a> for Collector<'_> {
     }
 
     fn visit_ts_export_assignment(&mut self, assignment: &TSExportAssignment<'a>) {
-        if let Expression::Identifier(identifier) = &assignment.expression {
-            self.facts.export_assignment = Some(identifier.name.to_string());
-        }
+        external::record_assignment(self, assignment);
         walk::walk_ts_export_assignment(self, assignment);
     }
 

@@ -1,0 +1,1 @@
+{ "types": "index.d.ts", "exports": { ".": { "types": "./selected.d.ts" } } }

@@ -1,4 +1,13 @@
 impl TsConfigCatalog {
+    /// Catalog order matches `resolver_scope_index_for`.
+    pub(crate) fn config_paths(&self) -> Vec<(usize, PathBuf)> {
+        self.configs
+            .iter()
+            .enumerate()
+            .map(|(index, config)| (index, config.path.clone()))
+            .collect()
+    }
+
     fn selection(&self, importing_file: &Path) -> Option<usize> {
         if self.forced {
             return (!self.configs.is_empty()).then_some(0);

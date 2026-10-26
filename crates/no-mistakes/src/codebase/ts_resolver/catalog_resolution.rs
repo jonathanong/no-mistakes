@@ -1,3 +1,22 @@
+/// Resolve a relative or absolute `extends` value the way the catalog does.
+/// `${configDir}` expands first. A directory loads `tsconfig.json`. A
+/// file without a json suffix gets one.
+pub(crate) fn resolve_extended_config(dir: &Path, raw: &str) -> PathBuf {
+    let raw = expand_config_dir(raw, dir);
+    let candidate = PathBuf::from(&raw);
+    let candidate = if candidate.is_absolute() { candidate } else { dir.join(candidate) };
+    let candidate = normalize_path(&candidate);
+    if candidate.is_dir() {
+        candidate.join("tsconfig.json")
+    } else if candidate.is_file() || candidate.extension() == Some(std::ffi::OsStr::new("json")) {
+        candidate
+    } else {
+        let mut json = candidate.into_os_string();
+        json.push(".json");
+        PathBuf::from(json)
+    }
+}
+
 impl CatalogBuilder<'_> {
     fn resolve_extends(&self, dir: &Path, raw: &str) -> Result<PathBuf, String> {
         let raw = expand_config_dir(raw, dir);
@@ -9,21 +28,7 @@ impl CatalogBuilder<'_> {
     }
 
     fn resolve_config_value(&self, dir: &Path, raw: &str) -> Result<PathBuf, String> {
-        let raw = expand_config_dir(raw, dir);
-        let candidate = PathBuf::from(&raw);
-        let candidate = if candidate.is_absolute() { candidate } else { dir.join(candidate) };
-        let candidate = normalize_path(&candidate);
-        Ok(if candidate.is_dir() {
-            candidate.join("tsconfig.json")
-        } else if candidate.is_file()
-            || candidate.extension() == Some(std::ffi::OsStr::new("json"))
-        {
-            candidate
-        } else {
-            let mut json = candidate.into_os_string();
-            json.push(".json");
-            PathBuf::from(json)
-        })
+        Ok(resolve_extended_config(dir, raw))
     }
 
     fn resolve_package_extends(&self, dir: &Path, raw: &str) -> Result<PathBuf, String> {

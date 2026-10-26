@@ -22,7 +22,19 @@ Package members declared as
 `typeof NamedClass` can supply concrete class identity, including a base chain
 that proves a class is not an Error. A construct signature alone does not prove
 that ancestry. Included ambient module declarations also supply base-class proof
-within the importing project. Nullish constructor choices narrow only when the selected class
+within the importing project.
+
+The [#2753 follow-up](https://github.com/jonathanong/no-mistakes/issues/2753)
+resolves ambient modules that a project's tsconfig `types` list makes visible,
+including relative declaration files and packages, and values inherited from a
+relative extended config. That path resolves like the catalog, including a
+path that omits its json suffix. A `types` entry already in the analyzed set reuses its
+prepared facts. A `declare module` that uses `export = Namespace`
+supplies that namespace's exported classes. A declared non-Error base is silent.
+A declared Error base still reports. A specifier with no visible declaration
+stays advisory. No module name is special-cased. Unset `types` does not scan
+installed packages, and this proof does not add those files to ordinary import
+or call query results. Nullish constructor choices narrow only when the selected class
 value is provably non-nullish; unknown alternatives remain uncertain.
 
 Declaration proof does not add package files to ordinary import/call query

@@ -14,7 +14,7 @@ mod mode;
 #[path = "package_paths.rs"]
 mod paths;
 
-pub(super) fn resolve_in_context(
+pub(crate) fn resolve_in_context(
     specifier: &str,
     importer: &Path,
     consumer_root: &Path,

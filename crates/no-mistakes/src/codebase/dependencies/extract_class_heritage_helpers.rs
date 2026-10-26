@@ -1,3 +1,6 @@
+/// Synthetic ancestry marker; never a source call target.
+pub(crate) const DYNAMIC_BASE_CALLEE: &str = "<unknown>";
+
 /// Preserve declared ancestry, including a dynamic base with unknown identity.
 /// Constructing a derived class also constructs its statically named base.
 /// This synthetic transition is never a source call for call-based checks.
@@ -21,7 +24,7 @@ fn record_class_base_construction(
         // Preserve the existing class-expression boundary; this fallback is
         // for declarations whose dynamic ancestry used to disappear entirely.
         None if class.r#type == oxc_ast::ast::ClassType::ClassExpression => return,
-        None => ("<unknown>".to_string(), CallTargetIdentity::Unknown),
+        None => (DYNAMIC_BASE_CALLEE.to_string(), CallTargetIdentity::Unknown),
     };
     collector
         .class_declaration_lines

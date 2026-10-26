@@ -1,0 +1,13 @@
+{
+  // Relative names resolve beside this file, not the extending tsconfig.
+  // The child names this file without `.json`; catalog resolution appends it.
+  // `dist/` is never discovered, so that declaration is visible only through `types`.
+  // `../types/local-export.d.ts` is also an included project file.
+  "compilerOptions": {
+    "types": [
+      "../dist/worker-configuration.d.ts",
+      "../types/local-export.d.ts",
+      "@fixture/runtime-types"
+    ]
+  }
+}

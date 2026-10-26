@@ -110,8 +110,8 @@ escape is the class's only uncertainty.
 Namespace-escape-only uncertainty keeps the shared policy: `report` fails,
 `advise` advises, and `ignore` omits it. Definite unused Error classes remain
 failures under every policy. Known constructor targets reuse the prepared
-resolver, including path aliases and usable package declarations, and credit
-the actual class.
+resolver, including path aliases, usable package declarations, and
+tsconfig-visible ambient modules, and credit the actual class.
 Immutable aliases and package constructor facades can resolve through shared
 binding facts and concrete `typeof` class declarations. Unknown alternatives
 remain uncertain; declaration proof does not broaden ordinary query scope.

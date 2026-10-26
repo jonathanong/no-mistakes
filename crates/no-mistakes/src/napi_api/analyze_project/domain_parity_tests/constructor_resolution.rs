@@ -180,3 +180,27 @@ fn constructor_resolution_workspace_exports_match_check_and_analyze_project() {
     assert_eq!(positive["rules"], json!([]), "{positive}");
     assert_eq!(positive["advisories"], json!([]), "{positive}");
 }
+
+#[test]
+fn constructor_resolution_virtual_module_types_match_check_and_analyze_project() {
+    let root = constructor_resolution_fixture("virtual-module-types");
+    let report = recall_check_report(&root, ".no-mistakes.yml");
+    assert_eq!(
+        constructor_resolution_targets(&report, "rules"),
+        [
+            "src/generated.ts:3 UnusedGenerated",
+            "src/local.ts:3 UnusedLocal",
+            "src/runtime.ts:4 UnusedRuntime",
+            "src/runtime.ts:8 UnusedDirect",
+        ],
+        "{report}"
+    );
+    assert_eq!(
+        constructor_resolution_targets(&report, "advisories"),
+        [
+            "src/ambiguous.ts:2 unanalyzable",
+            "src/missing.ts:2 unanalyzable",
+        ],
+        "{report}"
+    );
+}

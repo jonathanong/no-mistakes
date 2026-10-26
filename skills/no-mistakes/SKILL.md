@@ -102,8 +102,11 @@ policy. Known constructor targets reuse the prepared resolver, including
 path aliases, workspace root/wildcard exports and re-exports, and usable package
 declarations, and credit the actual class even outside the rule include.
 Immutable constructor aliases and declaration members typed `typeof NamedClass`
-retain the concrete class identity. Included ambient module declarations can
-prove a non-Error base; a bare constructor signature cannot. Known non-Error
+retain the concrete class identity. Included ambient module declarations and
+tsconfig-visible ambient modules, including `export =` namespaces, can prove a
+non-Error base; a bare constructor signature cannot. Unset `types` does not
+scan installed packages. A relative `extends` path, including one that omits
+its json suffix, resolves the same way as the catalog. Known non-Error
 globals are quiet; shadowed names resolve independently.
 Typed constant facades follow the immutable initializer through export barrels.
 Declarations use the re-exporting package's dependency context. Static imports

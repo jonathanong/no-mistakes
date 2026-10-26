@@ -1,0 +1,6 @@
+{
+  "extends": "@fixture/missing",
+  "compilerOptions": {
+    "types": ["kept"]
+  }
+}

@@ -220,7 +220,20 @@ unresolved or conflicting exports retain uncertainty.
 The importer selects its own tsconfig resolver scope. Immutable constructor
 aliases and destructured facades reuse prepared binding facts; package members
 declared as `typeof NamedClass` can identify that class. Included ambient module
-declarations can prove a non-Error base without a path mapping. A nullish constructor
+declarations can prove a non-Error base without a path mapping. A `types` entry
+visible to the importing file's tsconfig, including one inherited from a relative
+extended config, does the same for ambient modules outside the analyzed file set.
+That extended path is resolved the same way as the catalog, so a relative path
+that omits its json suffix, and a directory config, both load. A `types` entry that is already
+an analyzed file reuses that file's prepared facts.
+`types` inherited from a package `extends` is not read. A type-root package with
+`typesVersions` or `exports` stays advisory because that lookup does not select
+versioned or conditional entries.
+`declare module` bodies of the form `export = Namespace` supply that namespace's
+exported classes. A declared non-Error base is silent, a declared Error base still
+reports, and a specifier with no visible declaration stays advisory. Unset `types`
+does not scan installed packages, and no module name is special-cased.
+A nullish constructor
 choice is narrowed only when its selected class value is provably non-nullish.
 An annotated constant such as `export const Config: new (...) => Raw = Raw`
 follows its immutable runtime initializer through re-exports and `export *`;
@@ -462,7 +475,9 @@ Reflection and some alias forms can still hide a dead class.
   remain supported. Distinct symlink spellings retain separate logical identities.
   An immutable constructor obtained by destructuring a default-imported object
   can resolve when its declaration member names a concrete class with `typeof`.
-  A bare construct signature does not identify class ancestry. A choice between
+  A bare construct signature does not identify class ancestry. Ambient modules
+  require a visible declaration; see [How it works](#how-it-works) for tsconfig
+  `types` visibility and unsupported package configuration. A choice between
   a module's default export and its namespace can resolve when the default is a
   proven non-nullish class; genuinely unknown alternatives remain uncertain.
   Shadowed, reassigned, or otherwise unproven targets remain advisory unless
@@ -471,8 +486,10 @@ Reflection and some alias forms can still hide a dead class.
   or a computed/conditional base) have unknown ancestry and follow
   `options.unanalyzable`: `report` fails, `advise` emits an advisory, and
   `ignore` omits them. This also applies to statically named descendants of
-  these dynamic bases. Statically named unresolved bases, including type-only
-  imports, remain advisory under `report` and `advise`. An Error argument does
+  these dynamic bases. Even `mixin(NonErrorBase)` fails under default `report`;
+  use a statically named base or set `options.unanalyzable: advise` while
+  rewriting dynamic ancestry. Statically named unresolved bases, including
+  type-only imports, remain advisory under `report` and `advise`. An Error argument does
   not prove a factory returns an
   Error constructor. Rewrite the base as a statically named class or analyzable
   import. Known construction or subclassing still satisfies such a class.
