@@ -55,14 +55,13 @@ pub(super) fn judge_with_triggers<'a>(
         .iter()
         .map(|assignment| assignment.column.clone())
         .collect();
-    let generated_sources =
+    let mut arbiter_sources =
         super::generated::arbiter_source_columns(insert, conflict, catalog.schema);
-    let arbiter_columns = match &conflict.arbiter {
-        SqlConflictArbiter::Columns(columns) | SqlConflictArbiter::Expressions { columns, .. } => {
-            columns.clone()
-        }
-        _ => Vec::new(),
-    };
+    if let SqlConflictArbiter::Columns(columns) | SqlConflictArbiter::Expressions { columns, .. } =
+        &conflict.arbiter
+    {
+        arbiter_sources.extend(columns.iter().cloned());
+    }
     let applicable = triggers.clone();
     triggers
         .filter(|trigger| trigger.table.eq_ignore_ascii_case(&insert.table))
@@ -73,8 +72,7 @@ pub(super) fn judge_with_triggers<'a>(
                 conflict,
                 &assigned,
                 catalog,
-                &generated_sources,
-                &arbiter_columns,
+                &arbiter_sources,
                 applicable.clone(),
             )
         })
@@ -86,8 +84,7 @@ fn unsafe_reason<'a>(
     conflict: &SqlOnConflictFact,
     assigned: &[String],
     catalog: &Catalog<'_>,
-    generated_sources: &[String],
-    arbiter_columns: &[String],
+    arbiter_sources: &[String],
     triggers: impl Iterator<Item = &'a SqlTriggerFact> + Clone,
 ) -> Option<String> {
     let allowlisted = catalog
@@ -106,12 +103,9 @@ fn unsafe_reason<'a>(
     }
     if allowlisted
         && writes.iter().any(|column| {
-            generated_sources
+            arbiter_sources
                 .iter()
                 .any(|source| source.eq_ignore_ascii_case(column))
-                || arbiter_columns
-                    .iter()
-                    .any(|arbiter| arbiter.eq_ignore_ascii_case(column))
         })
     {
         return Some(format!(
