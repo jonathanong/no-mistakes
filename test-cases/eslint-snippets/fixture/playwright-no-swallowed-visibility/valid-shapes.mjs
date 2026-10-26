@@ -116,3 +116,14 @@ export async function destructured(locator) {
     return false;
   }
 }
+
+// The await is not the try's result. A later throw can reach the same boolean
+// catch, so this is not a swallowed state check.
+export async function unusedAwait(locator) {
+  try {
+    await locator.isVisible();
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -3,8 +3,8 @@
 ## Why
 
 `locator.isVisible()` resolves `false` when the element is absent. It rejects
-when the call itself fails (the locator is detached, the page is closed, or
-the call times out). `await locator.isVisible().catch(() => false)` and
+when the call itself fails (the locator is detached or the page is closed).
+`await locator.isVisible().catch(() => false)` and
 `try { return await locator.isVisible() } catch { return false }` turn that
 failure into a boolean, so the test treats a broken locator as "not visible"
 and keeps going.
@@ -78,8 +78,10 @@ async function nested(locator) {
 
 A named handler is not inspected, including one in the same file. The rule
 only proves an inline function, or a `try`/`catch` whose `try` returns an
-await of a configured state method or a name bound to that await. `!0` and
-`!1` count as booleans. A rejection that is not awaited inside that `try` is
+await of a configured state method or a name bound to that await. An awaited
+state call that the `try` does not return is not that result, so the boolean
+`catch` is not proof the rejection replaced the check. `!0` and `!1` count
+as booleans. A rejection that is not awaited inside that `try` is
 not caught, so it is not reported. A later assignment to the bound name is
 not the state check. A nested `try` with its own `catch` owns the await
 inside that nested body, so the outer boolean is not evidence. An inner
