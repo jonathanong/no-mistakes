@@ -15,6 +15,11 @@ rules:
 Common fields: `name`, `rule`, `message`, `enabled`, `projects`, `tests`,
 `scope`, `include`, `exclude`, and rule-specific `options`.
 
+The repository setting `reportUnusedDisableDirectives: advise | report | ignore`
+audits disable comments independently of rule applications. Its default is
+non-failing advice; unused comments and unknown or disabled rule names are
+reported separately. See [suppression hygiene](suppressions.md).
+
 Rules are opt-in. Top-level `include` and `exclude` filters narrow each rule
 application within its selected projects. Shared project scope filtering accepts
 paths relative to either the repository root or the selected project root; a

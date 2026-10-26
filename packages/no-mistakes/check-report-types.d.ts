@@ -28,6 +28,7 @@ export interface CheckReport {
    * Omitted when zero. Not a failure and not part of `warnings`.
    */
   unprovenMemberQuerySql?: number;
+  /** Non-failing advice, including default unused/invalid disable-directive diagnostics. */
   advisories: RuleFinding[];
   /** Present only when `includeSqlVerdicts` is requested, including an empty array. */
   sqlVerdicts?: SqlObligationVerdict[];
