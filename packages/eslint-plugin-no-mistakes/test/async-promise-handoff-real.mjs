@@ -22,6 +22,13 @@ const ruleCode = "no-mistakes(async-call-disposition)";
 const proven = "proven-consumers/";
 const cases = [
   {
+    config: "promise-handoff-alias/.oxlintrc.json",
+    lines: {
+      "promise-handoff-alias/caller.ts": [15],
+      "promise-handoff-alias/consumer.ts": [6],
+    },
+  },
+  {
     config: "promise-handoff/.oxlintrc.json",
     files: readdirSync(handoff)
       .filter((name) => name.endsWith(".ts"))
