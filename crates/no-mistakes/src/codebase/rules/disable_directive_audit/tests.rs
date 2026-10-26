@@ -1,6 +1,6 @@
 use super::*;
 
-fn root() -> PathBuf {
+pub(super) fn root() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/rules/disable-directive-audit"),

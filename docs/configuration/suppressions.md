@@ -40,8 +40,27 @@ check. Fix a misspelled rule ID or remove a comment for a disabled rule.
 The audit scans the union of declared rule applications' project or repository
 roots, narrowed by their top-level `include` and `exclude`. It includes disabled
 applications so their stale exceptions remain visible. Rule-specific input
-options are not reinterpreted as audit file filters. A known rule outside its
-enabled application scope is reported as disabled or out of scope.
+options are not reinterpreted as audit file filters. This means a directive in
+a file skipped by a rule's own `exclude` option (or an option such as
+`sqlInclude`) can still be reported as unused: the audit selects files from the
+declared roots and top-level filters, not from that rule's input options. A
+known rule outside its enabled application scope is reported as disabled or out
+of scope.
+
+Each directive names one rule ID. Put separate directives on separate lines
+when a file needs exceptions for multiple rules:
+
+```ts
+// no-mistakes-disable-file rule-a: legacy exception
+// no-mistakes-disable-file rule-b: same legacy exception
+doSomething();
+```
+
+Comma-separated rule IDs are not supported. For example,
+`no-mistakes-disable-next-line rule-a, rule-b` does not match `rule-a`: the
+comma is not a valid separator between the rule ID and an optional reason.
+`rule-b` is not matched either. The `no-mistakes-disable-file` and
+`no-mistakes-disable-line` forms follow the same one-rule grammar.
 
 The result describes this invocation. It does not establish whether an
 exception would be needed under a different configuration.
