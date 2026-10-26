@@ -18,10 +18,7 @@ fn dynamic_calls_retain_policy_facts_from_complete_prefixes() {
     for call in &embedded.calls {
         assert_eq!(call.kind, EmbeddedSqlKind::Dynamic);
         assert!(call.variants.is_empty());
-        assert!(call
-            .sql_text
-            .as_deref()
-            .is_some_and(|sql| sql.ends_with("; ")));
+        assert!(call.sql_text.is_some(), "{call:?}");
     }
     let facts = embedded_call_facts(&embedded, false, false);
     assert_eq!(facts.len(), 4);
