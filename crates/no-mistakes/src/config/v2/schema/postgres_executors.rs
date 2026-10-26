@@ -3,6 +3,7 @@ use anyhow::Result;
 use serde_yaml::Value;
 
 pub(crate) const RULE_IDS: &[&str] = &[
+    "postgres-no-test-state-mutation",
     "postgres-bounded-statements",
     "postgres-explicit-columns",
     "postgres-generated-column-predicates",

@@ -13,6 +13,8 @@ ignorePaths:
   - "test-cases/**"
   - "crates/**/target/**"
 words:
+  - UNLOGGED
+  - indexdef
   - ABBA
   - Actix
   - ANALYSE

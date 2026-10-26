@@ -104,6 +104,7 @@ pub fn configure_prepared_postgres_plan(
         .iter()
         .any(|id| *id != "postgres-conflict-ordering" && !config.rule_applications(id).is_empty());
     let dml_rules = [
+        "postgres-no-test-state-mutation",
         "postgres-idempotent-insert",
         "postgres-required-predicates",
         "postgres-no-offset",

@@ -91,6 +91,14 @@ fn run_schema_rules(
         POSTGRES_REQUIRE_NAMED_CONSTRAINTS => {
             prepared_schema::require_named_constraints(root, config, files, sources, facts)
         }
+        POSTGRES_NO_TEST_STATE_MUTATION => match facts {
+            Some(facts) => postgres_no_test_state_mutation::check_with_files_sources_and_facts(
+                root, config, files, sources, facts,
+            ),
+            None => postgres_no_test_state_mutation::check_with_files_and_sources(
+                root, config, files, sources,
+            ),
+        },
         POSTGRES_SQL_STATEMENT_POLICY => {
             prepared_schema::sql_statement_policy(root, config, files, sources, facts)
         }

@@ -81,6 +81,7 @@ macro_rules! filesystem_rules {
             POSTGRES_REQUIRED_PREDICATES => postgres_required_predicates::check_with_files,
             POSTGRES_SQL_SHAPE_POLICY => postgres_sql_shape_policy::check_with_files,
             POSTGRES_SQL_STATEMENT_POLICY => postgres_sql_statement_policy::check_with_files,
+            POSTGRES_NO_TEST_STATE_MUTATION => postgres_no_test_state_mutation::check_with_files,
             POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS => postgres_status_with_lifecycle_timestamps::check_with_files,
             POSTGRES_TABLE_SHAPE => postgres_table_shape::check_with_files,
             POSTGRES_IDEMPOTENT_INSERT => postgres_idempotent_insert::check_with_files,

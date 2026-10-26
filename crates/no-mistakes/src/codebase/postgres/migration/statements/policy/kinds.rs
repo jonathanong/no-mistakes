@@ -98,6 +98,7 @@ pub(super) fn new_kind(code: &[&TokenWithSpan]) -> Option<&'static str> {
                 "ROWS",
                 "SECURITY",
                 "LEAKPROOF",
+                "SUPPORT",
             ]
             .iter()
             .any(|action| word(token, action))

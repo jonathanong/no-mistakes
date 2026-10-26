@@ -12,6 +12,8 @@ use std::path::{Path, PathBuf};
 #[serde(default, rename_all = "camelCase")]
 struct Options {
     include: Vec<String>,
+    test_globs: Vec<String>,
+    helper_roots: Vec<String>,
     exclude: Vec<String>,
     import_specifier: Option<String>,
     executor_names: Vec<String>,
@@ -36,7 +38,15 @@ pub(crate) fn check(
         if policy == Unanalyzable::Ignore && !facts.wants_sql_verdicts() {
             continue;
         }
-        let opts: Options = rule.try_rule_options()?;
+        let mut opts: Options = rule.try_rule_options()?;
+        if rule_id == "postgres-no-test-state-mutation" {
+            opts.include = opts
+                .test_globs
+                .iter()
+                .chain(&opts.helper_roots)
+                .cloned()
+                .collect();
+        }
         let Some(specifier) = opts.import_specifier.filter(|value| !value.is_empty()) else {
             // An unscoped/disabled profile cannot prove a configured-module type.
             continue;

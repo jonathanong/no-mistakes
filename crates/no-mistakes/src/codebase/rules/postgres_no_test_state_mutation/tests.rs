@@ -156,3 +156,93 @@ fn a_definite_variant_mutation_survives_an_allowed_alternative() {
         "{findings:?}"
     );
 }
+
+#[test]
+fn advice_and_ignore_retain_definite_mutations_and_record_residuals() {
+    let root = fixture();
+    let files = vec![
+        root.join("tests/variants.test.ts"),
+        root.join("tests/dynamic.test.ts"),
+        root.join("tests/malformed.test.ts"),
+    ];
+    let sources = super::super::source_store_for_files(&files);
+    for mode in ["fail", "advise", "ignore"] {
+        let mut config = config(false);
+        config.rules[0].name = Some("test-database".into());
+        config.rules[0].options["unanalyzableSql"] = mode.into();
+        let facts = crate::codebase::postgres::prepare_rule_sql_facts(
+            &root,
+            &files,
+            Arc::clone(&sources),
+            &config,
+            &[RULE_ID],
+        )
+        .unwrap()
+        .with_fresh_sql_verdicts();
+        let findings =
+            check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();
+        assert!(findings
+            .iter()
+            .any(|finding| finding.target.as_deref() == Some("CREATE TABLE")));
+        assert_eq!(
+            findings
+                .iter()
+                .any(|finding| finding.target.as_deref() == Some("unanalyzable-sql")),
+            mode == "fail"
+        );
+        let verdicts = facts.sql_verdicts();
+        assert!(!verdicts.is_empty());
+        assert!(verdicts
+            .iter()
+            .any(|verdict| verdict.status == crate::codebase::postgres::SqlVerdictStatus::Abstain));
+        assert!(verdicts.iter().any(|verdict| verdict.advisory) == (mode == "advise"));
+    }
+}
+
+#[test]
+fn all_schema_object_families_and_nested_sleep_reach_the_rule() {
+    let root = fixture();
+    let findings = check_with_files(
+        &root,
+        &config(false),
+        &[root.join("tests/operations.test.ts")],
+    )
+    .unwrap();
+    for target in [
+        "CREATE DATABASE",
+        "ALTER DATABASE",
+        "DROP DATABASE",
+        "CREATE SCHEMA",
+        "ALTER SCHEMA",
+        "DROP SCHEMA",
+        "CREATE TABLE",
+        "ALTER TABLE",
+        "DROP TABLE",
+        "CREATE VIEW",
+        "ALTER VIEW",
+        "DROP VIEW",
+        "CREATE TRIGGER",
+        "ALTER TRIGGER",
+        "DROP TRIGGER",
+        "CREATE FUNCTION",
+        "ALTER FUNCTION",
+        "DROP FUNCTION",
+        "CREATE PROCEDURE",
+        "ALTER PROCEDURE",
+        "DROP PROCEDURE",
+        "CREATE INDEX",
+        "ALTER INDEX",
+        "DROP INDEX",
+        "CREATE TYPE",
+        "ALTER TYPE",
+        "DROP TYPE",
+        "pg_sleep",
+    ] {
+        assert!(
+            findings
+                .iter()
+                .any(|finding| finding.target.as_deref() == Some(target)),
+            "missing {target}: {findings:?}"
+        );
+    }
+}

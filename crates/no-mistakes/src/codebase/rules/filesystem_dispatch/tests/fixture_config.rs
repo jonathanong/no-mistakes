@@ -11,7 +11,12 @@ pub(super) fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::
             let executor_option = if crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id)
                 || matches!(*id, POSTGRES_IDEMPOTENT_INSERT | POSTGRES_REQUIRE_QUERY_ANNOTATION)
             { "      executorNames: []\n" } else { "" };
-            if *id == PRODUCTION_DEPENDENCY_DECLARATIONS {
+            if *id == POSTGRES_NO_TEST_STATE_MUTATION {
+                format!(
+                    "  - rule: {id}\n    scope: repository\n    options:\n{}",
+                    include_str!("../../../../../../../fixtures/rules/filesystem-dispatch/all-rules/test-state-options.yml")
+                )
+            } else if *id == PRODUCTION_DEPENDENCY_DECLARATIONS {
                 format!(
                     "  - rule: {id}\n    scope: repository\n    options:\n      \
                      workspaceRoots: [\".\"]\n"

@@ -42,6 +42,7 @@ pub fn has_sql_advice(config: &crate::config::v2::NoMistakesConfig) -> bool {
         return true;
     }
     const RULES: &[&str] = &[
+        "postgres-no-test-state-mutation",
         "postgres-bounded-statements",
         "postgres-conflict-ordering",
         "postgres-explicit-columns",

@@ -38,6 +38,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-required-predicates",
             "postgres-generated-column-predicates",
             "postgres-explicit-columns",
+            "postgres-no-test-state-mutation",
             "postgres-bounded-statements",
             "postgres-no-offset",
         "postgres-no-transformed-uuid-predicates",

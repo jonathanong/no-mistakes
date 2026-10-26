@@ -1,10 +1,5 @@
 //! Opt-in `reportUnmatchedExecutorNames` pass shared by the embedded-SQL rules.
 //!
-//! A configured `executorFactoryNames` / `executorTypeNames` entry that no
-//! scanned file imports from `importSpecifier` silently disables checking for
-//! every query run through that executor. The per-file facts already record
-//! which configured names each file imported; this pass only aggregates them.
-
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
 use crate::codebase::check_facts::CheckFactMap;
@@ -21,6 +16,8 @@ use std::sync::Arc;
 #[serde(default, rename_all = "camelCase")]
 struct Options {
     include: Vec<String>,
+    test_globs: Vec<String>,
+    helper_roots: Vec<String>,
     exclude: Vec<String>,
     import_specifier: String,
     executor_names: Vec<String>,
@@ -44,7 +41,6 @@ impl Options {
     }
 }
 
-/// Whether any application of `rule_id` opts in to unmatched-name reporting.
 pub(crate) fn is_requested(config: &NoMistakesConfig, rule_id: &str) -> Result<bool> {
     for rule in config.rule_applications(rule_id) {
         if rule
@@ -57,9 +53,7 @@ pub(crate) fn is_requested(config: &NoMistakesConfig, rule_id: &str) -> Result<b
     Ok(false)
 }
 
-/// One finding per configured name that no scanned file imported, for every
-/// opted-in application of `rule_id`. Reuses `facts` when the caller owns the
-/// request-scoped fact map; otherwise prepares one standalone.
+/// Report configured names absent from all selected imports.
 pub(crate) fn check(
     root: &Path,
     config: &NoMistakesConfig,
@@ -90,7 +84,15 @@ pub(crate) fn check(
     let config_file = super::no_mistakes_config::config_rel(root, all_files);
     let mut findings = Vec::new();
     for rule in config.rule_applications(rule_id) {
-        let opts: Options = rule.try_rule_options()?;
+        let mut opts: Options = rule.try_rule_options()?;
+        if rule_id == "postgres-no-test-state-mutation" {
+            opts.include = opts
+                .test_globs
+                .iter()
+                .chain(&opts.helper_roots)
+                .cloned()
+                .collect();
+        }
         if !opts.report_unmatched_executor_names {
             continue;
         }

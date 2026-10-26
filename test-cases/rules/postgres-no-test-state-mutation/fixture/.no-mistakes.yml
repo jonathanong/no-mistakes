@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    options:
+      testGlobs: ['tests/**/*.test.ts']
+      helperRoots: ['helpers/**']
+      importSpecifier: '@example/db'

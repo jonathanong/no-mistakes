@@ -64,6 +64,7 @@ pub(in super::super) fn sql_policy_rule(rule: &str) -> bool {
             | "postgres-required-predicates"
             | "postgres-sql-shape-policy"
             | "postgres-sql-statement-policy"
+            | "postgres-no-test-state-mutation"
             | "postgres-no-mutable-sql-registry"
             | "postgres-no-unbounded-sql-identifier"
     )

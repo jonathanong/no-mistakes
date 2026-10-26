@@ -13,5 +13,5 @@ export interface PostgresNoTestStateMutationOptions {
   trustedSqlTags?: { module: string; name: string }[];
   unanalyzable?: Unanalyzable;
   /** Legacy spelling; `fail` is accepted as `report`. */
-  unanalyzableSql?: Unanalyzable | "fail";
+  unanalyzableSql?: "fail" | "ignore" | "advise";
 }

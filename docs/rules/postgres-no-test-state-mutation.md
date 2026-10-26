@@ -25,6 +25,8 @@ rules:
 
 `testGlobs` is required and has no default test filename convention. It selects
 test entry files within the rule's project and `include`/`exclude` scope.
+Both option arrays contain repository-relative globs, including when a rule
+references a project (for example `backend/tests/**/*.test.ts`).
 `helperRoots` defaults to empty; it names helper module globs included alongside
 the selected test entries. The rule checks the union of matching test and
 helper files. Imported helper-built SQL passed to a test executor is also
@@ -65,6 +67,7 @@ reported. Ordinary DML in test setup is allowed by this rule.
 ## Counterexample
 
 ```ts
+// tests/users.test.ts
 import { query } from "@example/db";
 
 test("rejects a missing table", async () => {
@@ -78,6 +81,7 @@ Dropping the table changes shared database state and may break later tests.
 ## Valid example and fix
 
 ```ts
+// tests/users.test.ts
 test("handles an executor failure", async () => {
   const query = async () => { throw new Error("database unavailable"); };
   await expect(loadUsers({ query })).rejects.toThrow("database unavailable");

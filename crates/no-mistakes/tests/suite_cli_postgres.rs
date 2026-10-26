@@ -93,3 +93,6 @@ mod executed_postgres_source_api;
 mod postgres_catalog_real;
 #[path = "postgres_embedded_statement_api.rs"]
 mod postgres_embedded_statement_api;
+
+#[path = "cli_check_rules_postgres_test_state.rs"]
+mod cli_check_rules_postgres_test_state;

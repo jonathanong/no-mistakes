@@ -157,7 +157,7 @@ fn finding(file: &str, line: usize, operation: &str) -> RuleFinding {
         file: file.into(),
         line,
         message: format!(
-            "{file}:{line}: executed test SQL uses {operation}; keep tests isolated and perform schema setup outside the test transaction"
+            "{file}:{line}: executed test SQL uses {operation}; keep tests isolated: run migrations before the suite or inject a throwing executor for failure tests"
         ),
         import: None,
         target: Some(operation.into()),

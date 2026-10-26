@@ -5,13 +5,14 @@ A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configurat
 Flags configured PostgreSQL statement kinds and settings in matching SQL files
 and configured JavaScript/TypeScript executor calls. Use this to keep tests,
 helpers, or seed files from changing shared database state or bypassing
-constraints. The rule recognizes 23 statement kinds: `CREATE TABLE`,
+constraints. The rule recognizes 29 statement kinds: `CREATE TABLE`,
 `ALTER TABLE`, `CREATE INDEX`, `CREATE VIEW`, `TRUNCATE`, `DROP INDEX`,
 `DROP VIEW`, `CREATE DATABASE`, `DROP DATABASE`, `ALTER DATABASE`,
 `ALTER SYSTEM`, `CREATE SCHEMA`, `ALTER SCHEMA`, `DROP SCHEMA`,
 `CREATE TRIGGER`, `DROP TRIGGER`, `CREATE FUNCTION`, `CREATE PROCEDURE`,
-`DROP FUNCTION`, `DROP PROCEDURE`, `DROP TABLE`, `CREATE TYPE`, and `DROP
-TYPE`. `CREATE UNIQUE INDEX` counts as `CREATE INDEX`; materialized views
+`DROP FUNCTION`, `DROP PROCEDURE`, `DROP TABLE`, `CREATE TYPE`, `DROP TYPE`,
+`ALTER VIEW`, `ALTER TRIGGER`, `ALTER FUNCTION`, `ALTER PROCEDURE`,
+`ALTER INDEX`, and `ALTER TYPE`. `CREATE UNIQUE INDEX` counts as `CREATE INDEX`; materialized views
 count as `CREATE VIEW` / `DROP VIEW`; and `CREATE TEMP TABLE` counts as
 `CREATE TABLE`. `ALTER TABLE` also covers `ENABLE` and `DISABLE TRIGGER`.
 `CREATE OR REPLACE FUNCTION` and `CREATE OR REPLACE PROCEDURE` map to their
