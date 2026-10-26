@@ -604,7 +604,7 @@ jobs:
           path.write_text(text.replace(old, new, 1))
           PY
           free -h || true
-          if [ "$RUNNER_OS" = Linux ]; then
+          if [ "$RUNNER_OS" = Linux ] && [ -x /usr/bin/time ]; then
             # Log peak RSS so a future kill is diagnosable.
             /usr/bin/time -v env NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes
           else
