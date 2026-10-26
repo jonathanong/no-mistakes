@@ -35,3 +35,12 @@ in a view, XML table columns, `TABLESAMPLE` with a null repeatable seed,
 recursive CTE `SEARCH`, and a whole-row cast in a CTE-backed `MERGE` receive
 the same syntax-based recognition. Recognition validates the original clauses
 before checking a parser copy; malformed variants remain findings.
+
+PostgreSQL array slices have lower and upper bounds, without a stride. Targets
+such as `a[1:2:3]` remain findings; use a valid slice such as `a[1:2]`, an
+individual index such as `a[1]`, or `a[:]` for the full slice.
+
+Column `STORAGE` and `COMPRESSION` modifiers can be combined with a table access
+method, for example `CREATE TABLE k (a int STORAGE plain) USING heap`. Complete a
+`USING` clause with its method, or omit that clause. A range partition key must
+name an expression, for example `PARTITION BY RANGE (a)`, rather than `RANGE ()`.

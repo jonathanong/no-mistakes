@@ -32,10 +32,10 @@ pub(super) fn valid(source: Option<&[TokenWithSpan]>) -> bool {
     let Some(after_name) = pg_ident::table_head(&tokens) else {
         return false;
     };
-    if tokens.get(after_name) == Some(&Token::LParen) {
-        if !column_clauses(&tokens, after_name) || !table_tail(&tokens, after_name) {
-            return false;
-        }
+    if tokens.get(after_name) == Some(&Token::LParen)
+        && (!column_clauses(&tokens, after_name) || !table_tail(&tokens, after_name))
+    {
+        return false;
     }
     partition_columns(&tokens, after_name)
 }
