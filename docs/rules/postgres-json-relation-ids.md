@@ -73,9 +73,30 @@ that includes it. A matching column outside a unique key is clean.
 
 ## Valid examples
 
+The examples use this excerpt from the configured catalog:
+
+```json
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "accounts": {"columns": {"id": {"dataType": "uuid"}}},
+    "orders": {
+      "columns": {"id": {"dataType": "uuid"}, "account_id": {"dataType": "uuid"}, "details": {"dataType": "jsonb"}},
+      "foreignKeys": {"orders_account_fkey": {"columns": ["account_id"], "referencedTable": "accounts", "referencedColumns": ["id"]}}
+    },
+    "invoices": {
+      "columns": {"id": {"dataType": "uuid"}, "account_id": {"dataType": "uuid"}, "number": {"dataType": "text"}, "fingerprint_sha256": {"dataType": "bytea"}}
+    }
+  }
+}
+```
+
 The JSON value duplicates an actual foreign key in the same `INSERT`:
 
 ```sql
+-- db/orders.sql
 CREATE TABLE orders (
   id uuid PRIMARY KEY,
   account_id uuid NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
@@ -91,6 +112,7 @@ Here `keyColumnMap.accountId` is `account_id`, and the catalog confirms that
 the JSON identifier has a relational counterpart.
 
 ```sql
+-- db/invoices.sql
 CREATE TABLE invoices (
   id uuid PRIMARY KEY,
   account_id uuid NOT NULL REFERENCES accounts (id),
@@ -103,6 +125,7 @@ CREATE TABLE invoices (
 The fingerprint column is not part of a unique key, so check 2 is clean.
 
 ```sql
+-- db/history.sql
 -- This table's history document is explicitly excepted by configuration.
 INSERT INTO invoice_revisions (id, invoice_id, changes)
 VALUES ($1, $2, '{"accountId": "a1"}'::jsonb);
@@ -110,10 +133,32 @@ VALUES ($1, $2, '{"accountId": "a1"}'::jsonb);
 
 ## Counterexamples
 
+Here the catalog also contains the fingerprint unique key:
+
+```json
+// db/schema.json
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "accounts": {"columns": {"id": {"dataType": "uuid"}}},
+    "orders": {
+      "columns": {"id": {"dataType": "uuid"}, "account_id": {"dataType": "uuid"}, "details": {"dataType": "jsonb"}},
+      "foreignKeys": {"orders_account_fkey": {"columns": ["account_id"], "referencedTable": "accounts", "referencedColumns": ["id"]}}
+    },
+    "invoices": {
+      "columns": {"id": {"dataType": "uuid"}, "account_id": {"dataType": "uuid"}, "number": {"dataType": "text"}, "fingerprint_sha256": {"dataType": "bytea"}},
+      "uniqueConstraints": {"invoices_fingerprint_key": {"columns": ["fingerprint_sha256"]}}
+    }
+  }
+}
+```
+
 `accountId` matches the configured pattern, but there is no same-row mapped
 foreign key write:
 
 ```sql
+-- db/orders.sql
 INSERT INTO orders (id, details)
 VALUES ($1, jsonb_build_object('accountId', $2::text, 'total', 10));
 ```
@@ -122,6 +167,7 @@ The advisory identifies `orders.details` and recommends writing the mapped
 foreign-key column or adding a reasoned exception.
 
 ```sql
+-- db/invoices.sql
 CREATE TABLE invoices (
   id uuid PRIMARY KEY,
   account_id uuid NOT NULL REFERENCES accounts (id),
