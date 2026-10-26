@@ -53,12 +53,14 @@ pub(super) fn graph_rule_findings(
                 forbidden_dependencies::check_with_prepared_facts_and_graph(
                     root,
                     config,
-                    config_path,
+                    forbidden_dependencies::PreparedConfig {
+                        path: config_path,
+                        sources,
+                    },
                     shared,
                     prepared_graph,
                     inferred_roots,
                     dependency_graph.expect("forbidden-dependencies requires canonical graph"),
-                    sources,
                 )
             },
         )?);

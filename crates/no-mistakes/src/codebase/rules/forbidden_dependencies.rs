@@ -13,7 +13,7 @@ mod config_check;
 mod helpers;
 mod shared;
 pub(crate) use config_check::check_with_config;
-pub(crate) use shared::check_with_prepared_facts_and_graph;
+pub(crate) use shared::{check_with_prepared_facts_and_graph, PreparedConfig};
 
 pub const RULE_ID: &str = "forbidden-dependencies";
 
@@ -84,24 +84,39 @@ fn union_allowed_set(opts_list: &[Options]) -> Option<HashSet<EdgeKind>> {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
+struct ApplicationScope<'a> {
+    inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    file_universe: Option<&'a crate::fx::PathSet>,
+    sources: Option<&'a SourceStore>,
+}
+
+fn application_scope<'a>(
+    inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    file_universe: Option<&'a crate::fx::PathSet>,
+    sources: Option<&'a SourceStore>,
+) -> ApplicationScope<'a> {
+    ApplicationScope {
+        inferred_roots,
+        file_universe,
+        sources,
+    }
+}
+
 fn check_rule_application(
     root: &Path,
     config: &NoMistakesConfig,
     rule: &crate::config::v2::schema::RuleDef,
     opts: &Options,
     graph: &DepGraph,
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-    file_universe: Option<&crate::fx::PathSet>,
-    sources: Option<&SourceStore>,
+    scope: ApplicationScope<'_>,
 ) -> Result<Vec<RuleFinding>> {
-    let anchor = ConfigAnchor::resolve(root, config, sources, rule);
+    let anchor = ConfigAnchor::resolve(root, config, scope.sources, rule);
     let (module_matcher, file_matcher) = match helpers::config_matchers(&anchor, opts) {
         Ok(matchers) => matchers,
         Err(findings) => return Ok(findings),
     };
     let allowed = relationship_filter(&opts.relationships);
-    let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
+    let mut inferred_roots = scope.inferred_roots.cloned().unwrap_or_default();
     let source_filter = super::path_filter::RulePathFilter::new_with_inferred(
         root,
         config,
@@ -126,7 +141,7 @@ fn check_rule_application(
             .to_string_lossy()
             .replace('\\', "/");
         let root_node = NodeId::file(resolved_path);
-        let entries = match file_universe {
+        let entries = match scope.file_universe {
             Some(universe) => {
                 graph.deps_of_in_file_universe(&[root_node], None, allowed.as_ref(), universe)
             }

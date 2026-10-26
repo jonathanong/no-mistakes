@@ -1,4 +1,4 @@
-use super::{check_rule_application, union_allowed_set, Options, RULE_ID};
+use super::{application_scope, check_rule_application, union_allowed_set, Options, RULE_ID};
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, GraphFiles};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_resolver::TsConfig;
@@ -49,7 +49,12 @@ fn check_with_config_tsconfig_and_files(
     let mut findings = Vec::new();
     for (rule, opts) in applications.iter().zip(opts_list.iter()) {
         findings.extend(check_rule_application(
-            root, config, rule, opts, &graph, None, None, None,
+            root,
+            config,
+            rule,
+            opts,
+            &graph,
+            application_scope(None, None, None),
         )?);
     }
     crate::codebase::rules::sort_findings(&mut findings);

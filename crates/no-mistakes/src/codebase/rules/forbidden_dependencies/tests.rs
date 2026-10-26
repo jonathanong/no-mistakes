@@ -62,9 +62,7 @@ fn check_application(root: &Path, opts: &Options, graph: &DepGraph) -> Result<Ve
         &config.rules[0],
         opts,
         graph,
-        None,
-        None,
-        None,
+        application_scope(None, None, None),
     )
 }
 
@@ -429,9 +427,7 @@ fn source_filter_excludes_matching_forbidden_root() {
         &config.rules[0],
         &opts,
         &graph,
-        None,
-        None,
-        None,
+        application_scope(None, None, None),
     )
     .unwrap();
 

@@ -70,12 +70,14 @@ pub(crate) fn check_with_files_and_sources(
             scan::scan_with_sources(
                 root,
                 &target_roots,
-                &opts,
                 &files,
-                &source_filter,
-                sources,
-                (&lockfile_importers, &selections),
-                &anchor,
+                scan::ScanInput {
+                    opts: &opts,
+                    source_filter: &source_filter,
+                    sources,
+                    preparation: (&lockfile_importers, &selections),
+                    anchor: &anchor,
+                },
             )
         })
         .collect();

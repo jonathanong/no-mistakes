@@ -51,12 +51,14 @@ pub(super) fn check_with_prepared_facts_and_session(
     check_with_prepared_facts_and_graph(
         root,
         config,
-        config_path,
+        PreparedConfig {
+            path: config_path,
+            sources: None,
+        },
         shared,
         prepared_graph,
         None,
         &graph,
-        None,
     )
 }
 

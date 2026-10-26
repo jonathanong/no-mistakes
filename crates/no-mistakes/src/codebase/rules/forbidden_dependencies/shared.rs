@@ -1,4 +1,4 @@
-use super::{check_rule_application, union_allowed_set, Options, RULE_ID};
+use super::{application_scope, check_rule_application, union_allowed_set, Options, RULE_ID};
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
@@ -34,16 +34,19 @@ pub(super) fn validate_shared_graph_plan(
     Ok(())
 }
 
-#[allow(clippy::too_many_arguments)]
+pub(crate) struct PreparedConfig<'a> {
+    pub(crate) path: Option<&'a Path>,
+    pub(crate) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
+}
+
 pub(crate) fn check_with_prepared_facts_and_graph(
     root: &Path,
     config: &NoMistakesConfig,
-    config_path: Option<&Path>,
+    prepared: PreparedConfig<'_>,
     shared: &crate::codebase::check_facts::CheckFactMap,
     prepared_graph: Option<&crate::codebase::dependencies::graph::PreparedGraphConfig>,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     graph: &DepGraph,
-    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<RuleFinding>> {
     let applications = config.rule_applications(RULE_ID);
     if applications.is_empty() {
@@ -54,7 +57,7 @@ pub(crate) fn check_with_prepared_facts_and_graph(
         .map(|rule| rule.try_rule_options())
         .collect::<Result<_>>()?;
     let plan = GraphBuildPlan::from_allowed(union_allowed_set(&opts_list).as_ref());
-    validate_shared_graph_plan(root, config_path, shared, prepared_graph, plan)?;
+    validate_shared_graph_plan(root, prepared.path, shared, prepared_graph, plan)?;
     let file_universe = shared
         .graph_file_universe()
         .iter()
@@ -68,9 +71,7 @@ pub(crate) fn check_with_prepared_facts_and_graph(
             rule,
             opts,
             graph,
-            inferred_roots,
-            Some(&file_universe),
-            sources,
+            application_scope(inferred_roots, Some(&file_universe), prepared.sources),
         )?);
     }
     crate::codebase::rules::sort_findings(&mut findings);

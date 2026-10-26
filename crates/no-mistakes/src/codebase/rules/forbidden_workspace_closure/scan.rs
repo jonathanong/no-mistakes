@@ -6,17 +6,30 @@ use globset::{Glob, GlobSet, GlobSetBuilder};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-#[allow(clippy::too_many_arguments)]
+pub(super) struct ScanInput<'a> {
+    pub(super) opts: &'a options::Options,
+    pub(super) source_filter: &'a super::super::path_filter::RulePathFilter,
+    pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
+    pub(super) preparation: (
+        &'a lockfile::LockfileImporterCache,
+        &'a selection::SelectionCache,
+    ),
+    pub(super) anchor: &'a ConfigAnchor,
+}
+
 pub(super) fn scan_with_sources(
     root: &Path,
     target_roots: &[PathBuf],
-    opts: &options::Options,
     files: &[PathBuf],
-    source_filter: &super::super::path_filter::RulePathFilter,
-    sources: &crate::codebase::ts_source::SourceStore,
-    preparation: (&lockfile::LockfileImporterCache, &selection::SelectionCache),
-    anchor: &ConfigAnchor,
+    input: ScanInput<'_>,
 ) -> Result<Vec<RuleFinding>> {
+    let ScanInput {
+        opts,
+        source_filter,
+        sources,
+        preparation,
+        anchor,
+    } = input;
     let (lockfile_importers, selections) = preparation;
     let selection = selections.get_or_compute(root, target_roots, files, sources)?;
     let workspace = &selection.workspace;
