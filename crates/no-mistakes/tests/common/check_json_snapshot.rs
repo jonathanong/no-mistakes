@@ -228,10 +228,11 @@ fn sort_value(value: &mut Value) {
     }
 }
 
-fn rules_path(kind: &str, name: &str) -> PathBuf {
+fn rules_path(rule: &str, kind: &str, name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/rules/agents-md-max-size")
+            .join("../../test-cases/rules")
+            .join(rule)
             .join(kind)
             .join(name),
     )
@@ -284,18 +285,18 @@ fn agents_md_max_size_json_matches_snapshot() {
         &[
             (
                 "pass",
-                rules_path("fixture", "pass"),
-                rules_path("configs", "pass.yml"),
+                rules_path("agents-md-max-size", "fixture", "pass"),
+                rules_path("agents-md-max-size", "configs", "pass.yml"),
             ),
             (
                 "fail",
-                rules_path("fixture", "fail"),
-                rules_path("configs", "fail.yml"),
+                rules_path("agents-md-max-size", "fixture", "fail"),
+                rules_path("agents-md-max-size", "configs", "fail.yml"),
             ),
             (
                 "disabled",
-                rules_path("fixture", "fail"),
-                rules_path("configs", "disabled.yml"),
+                rules_path("agents-md-max-size", "fixture", "fail"),
+                rules_path("agents-md-max-size", "configs", "disabled.yml"),
             ),
         ],
     );

@@ -129,6 +129,8 @@ function oxlintDiagnostics(configName, files, typeAware) {
   if (typeAware) args.splice(1, 0, "--type-aware", "--deny-warnings");
   args.push(...files.map((file) => resolve(root, file)));
   const result = spawnSync(process.execPath, args, { encoding: "utf8" });
+  // Real Oxlint must exit 1 on these fixtures. Exit 0 would snapshot a silent miss.
+  assert.equal(result.status, 1, result.stderr);
   const payload = JSON.parse(result.stdout || "null");
   assert.ok(payload && Array.isArray(payload.diagnostics), result.stderr);
   return {
@@ -148,26 +150,43 @@ function oxlintDiagnostics(configName, files, typeAware) {
 }
 
 const eslintCases = [
+  // Resolves tsconfig paths and inherited compiler options without broad file discovery.
   ["alias/caller.ts", "untyped"],
+  // Follows bounded property-sensitive wrapper and handler forwarding.
   ["cross-file-chain.ts", "typed"],
   ["cross-file-chain.ts", "untyped"],
+  // Keeps forwarding syntax narrow and rejects ambiguous implementations.
+  // Line 15 is `{ job: replacement, ...deps }`: the spread keeps the supplied callback.
   ["cross-file-forwarding.ts", "untyped"],
+  // Rejects unsafe imported dependency contracts and resolves reexports.
   ["cross-file-hostile.ts", "typed"],
   ["cross-file-hostile.ts", "untyped"],
+  // Rejects initial and forwarded custom dependency prototypes.
   ["cross-file-prototypes.ts", "typed"],
   ["cross-file-prototypes.ts", "untyped"],
+  // Does not let sibling callbacks inspect the dependency receiver and caches by supplied shape.
   ["cross-file-receivers.ts", "untyped"],
+  // Proves automatic imported callbacks and DI properties.
   ["cross-file.ts", "typed"],
   ["cross-file.ts", "untyped"],
+  // Proves resolvable imported consumer bodies.
   ["imported.ts", "typed"],
+  // Proves imported bodies without parser type information.
   ["imported.ts", "untyped"],
+  // Fails closed: invalid compiler configuration.
   ["invalid-config/caller.ts", "untyped"],
+  // Fails closed: invalid compiler options.
   ["invalid-options/caller.ts", "untyped"],
+  // Proves same-file awaited callback invocations.
   ["local.ts", "typed"],
   ["local.ts", "untyped"],
+  // Fails closed: missing tsconfig extends.
   ["missing-extends/caller.ts", "untyped"],
+  // Fails closed: noResolve compiler option.
   ["no-resolve/caller.ts", "untyped"],
+  // Accepts only configured fresh dependency properties.
   ["properties.ts", "properties"],
+  // Does not infer dependency contracts without configuration.
   ["properties.ts", "untyped"],
 ].sort((left, right) => left[0].localeCompare(right[0]) || left[1].localeCompare(right[1]));
 
@@ -182,9 +201,11 @@ it("snapshots proven-consumer fixture diagnostics", async () => {
       mode,
     })),
     oxlint: [
+      // Matches real Oxlint for local proofs and configured imported or DI consumers.
       oxlintDiagnostics(".oxlintrc.json", ["imported.ts"], false),
       oxlintDiagnostics(".oxlintrc.json", ["local.ts"], false),
       oxlintDiagnostics(".oxlintrc.json", ["properties.ts"], false),
+      // Proves cross-file consumers in real type-aware Oxlint without configured contracts.
       oxlintDiagnostics(".oxlintrc-proven.json", ["cross-file-chain.ts", "cross-file.ts"], true),
     ],
   });
