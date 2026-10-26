@@ -6,6 +6,7 @@ const {
   retainedCollection,
 } = require("./async-disposition-bindings");
 const { callbackReturnsNormally, isMapCall, isMapCallback } = require("./async-disposition-flow");
+const { assertionExpression, handledCatchStatement } = require("./async-disposition-observers");
 const { returnsThroughMock } = require("./async-disposition-mocks");
 const {
   findContainingFunction,
@@ -15,7 +16,7 @@ const {
   unwrapTransparentParent,
 } = require("./async-ast");
 
-function directlyDisposed(node, context, consumers) {
+function directlyDisposed(node, context, consumers, origin = node) {
   const expression = unwrapTransparentParent(node);
   const parent = expression.parent;
   if (parent?.type === "ReturnStatement") {
@@ -27,6 +28,7 @@ function directlyDisposed(node, context, consumers) {
     return returnedFromFunction(parent, context, consumers);
   }
   return (
+    handledCatchStatement(expression, context, origin) ||
     parent?.type === "AwaitExpression" ||
     (parent?.type === "UnaryExpression" && parent.operator === "void")
   );
@@ -103,7 +105,7 @@ function canReachPromiseAll(node, promiseAll, collectionRole) {
 }
 
 function observedExpression(node, context) {
-  let current = node;
+  let current = assertionExpression(node, context) || node;
   while (current.parent) {
     const parent = current.parent;
     if (isTransparentExpression(parent)) {
@@ -138,7 +140,7 @@ function promiseAllDisposed(node, context, consumers, collectionRole = false) {
     if (isPromiseAllCall(current, context) && canReachPromiseAll(node, current, collectionRole)) {
       return (
         directlyDisposed(current, context, consumers) ||
-        directlyDisposed(observedExpression(current, context), context, consumers) ||
+        directlyDisposed(observedExpression(current, context), context, consumers, current) ||
         promiseAllDisposed(current, context, consumers)
       );
     }

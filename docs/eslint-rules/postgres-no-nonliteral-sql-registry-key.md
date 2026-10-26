@@ -87,7 +87,16 @@ the rule does not validate that key at runtime.
 `importSpecifier` selects the module whose named imports are executors.
 `executorNames` defaults to `["query", "read", "write"]` when `importSpecifier`
 is set, and must be set (use `[]` for no calls) when `importSpecifier` is
-empty. Scoped factories and `trustedSqlTags` are not options of this rule.
+empty. `executorFactoryNames` and `executorTypeNames` support scoped executor
+receivers, matching the other PostgreSQL rules. Both default to `[]`.
+`trustedSqlTags` defaults to `[]` and is accepted for shared configuration;
+each entry has `module` and `name`. This rule still judges registry lookups in
+executor arguments.
+
+With `importSpecifier`, `.query` requires a proven configured import, scoped
+factory/type receiver, or stable alias. Unproven `this.query` and unrelated
+client methods stay outside the rule. Without a module, explicit
+`executorNames: ["query"]` retains broad member matching.
 
 ## Limits
 
@@ -157,3 +166,16 @@ initializer whose executor call was suppressed.
 [`postgres-no-correlated-sql-builder`](postgres-no-correlated-sql-builder.md)
 covers repeated appends. [`postgres-no-executor-adapter`](postgres-no-executor-adapter.md)
 covers forwarding the executor instead of the SQL text.
+
+With `importSpecifier: "pg"`, receiver identity must still be proven. Queries on
+instances created by `new Pool()` or `new Client()`, and clients obtained from
+`pool.connect()`, are not recognized from the constructor import alone and do
+not report. Use an explicitly configured executor factory or an imported
+executor type annotation to declare those receivers. Direct named `query`
+imports and `pg.query()` on an imported namespace remain recognized.
+
+For example, `const pool = new Pool(); pool.query(sql)` is outside this
+selection. Pass the pool to `function run(db: Pool) { db.query(sql); }` and
+configure `executorTypeNames: ["Pool", "Client"]` alongside
+`importSpecifier: "pg"` to restore reporting. For a client from
+`await pool.connect()`, use a parameter annotated `db: Client` instead.

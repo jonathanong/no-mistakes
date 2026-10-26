@@ -1,0 +1,36 @@
+{
+  "categories": {
+    "correctness": "off"
+  },
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "no-mistakes/async-call-disposition": [
+      "error",
+      {
+        "targets": [
+          {
+            "sourceSpecifierPatterns": ["@app/jobs"],
+            "calleeNamePatterns": ["enqueue"]
+          }
+        ]
+      }
+    ],
+    "no-mistakes/postgres-no-manual-transaction": [
+      "error",
+      {
+        "importSpecifier": "pg"
+      }
+    ],
+    "no-mistakes/postgres-no-unbounded-query-fanout": [
+      "error",
+      {
+        "importSpecifier": "pg"
+      }
+    ]
+  }
+}

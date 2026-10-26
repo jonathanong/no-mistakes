@@ -256,7 +256,10 @@ shared executor configuration validates; this rule still reads every tagged temp
 Opt-in. Not in `configs.recommended` or `configs.strict`. No autofix and no
 editor suggestion. `importSpecifier` selects the executor module.
 `executorNames` defaults to `["query", "read", "write"]` when that module is
-set. A non-literal key into a `const` object of identifier strings, used as
+set. `executorFactoryNames` and `executorTypeNames` also identify scoped
+receivers; both default to `[]`. `trustedSqlTags` accepts shared `module` /
+`name` entries and defaults to `[]`. With a module, `.query` needs a proven
+receiver. A non-literal key into a `const` object of identifier strings, used as
 that executor's SQL argument, suggests a switch with one `return` per entry
 and a throwing `default`. See
 [the rule reference](eslint-rules/postgres-no-nonliteral-sql-registry-key.md).

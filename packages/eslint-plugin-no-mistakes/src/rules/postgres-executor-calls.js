@@ -2,6 +2,7 @@
 
 const { resolveVariable, unwrapTs } = require("./postgres-query-text");
 const { isScopedMember } = require("./postgres-scoped-executors");
+const { isProvenQueryMember } = require("./postgres-no-executor-adapter-member");
 
 function immutableDefinition(identifier, context) {
   const variable = resolveVariable(identifier, context);
@@ -76,7 +77,9 @@ function executorCallResolver(bindings, context, options, propertyName, scopedEx
       ) {
         return { name };
       }
-      return bindings.queryMembers && name === "query" ? { name } : null;
+      return name === "query" && isProvenQueryMember(node, context, bindings, options)
+        ? { name }
+        : null;
     }
     if (node.type !== "Identifier") return null;
     if (!resolveVariable(node, context) && bindings.has(node.name)) return { name: node.name };
@@ -111,7 +114,20 @@ function executorCallResolver(bindings, context, options, propertyName, scopedEx
       });
       if (name && options.executorNames.includes(name) && namespaceImport(init, context, options))
         return { name };
-      return bindings.queryMembers && name === "query" ? { name } : null;
+      return name === "query" &&
+        isProvenQueryMember(
+          {
+            type: "MemberExpression",
+            object: init,
+            property: property.key,
+            computed: property.computed,
+          },
+          context,
+          bindings,
+          options,
+        )
+        ? { name }
+        : null;
     }
     if (def.node.id.type !== "Identifier") return null;
     if (init.type === "ArrowFunctionExpression" || init.type === "FunctionExpression")

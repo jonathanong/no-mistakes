@@ -1,6 +1,7 @@
 "use strict";
 const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { resolveVariable, stableConstInitializer } = require("./async-target-bindings");
+const { cachedBodyAwaited } = require("./async-consumer-cache-proof");
 const { propertiesWritten } = require("./async-disposition-mocks");
 
 function localFunction(id, context, seen = new Set()) {
@@ -54,6 +55,7 @@ function bodyAwaited(fn, index, context) {
     fn.params.some((p) => p.type === "RestElement")
   )
     return false;
+  if (cachedBodyAwaited(fn, param, context)) return true;
   const variable = resolveVariable(param, context);
   const reads = variable?.references.filter((ref) => !ref.init) || [];
   return (

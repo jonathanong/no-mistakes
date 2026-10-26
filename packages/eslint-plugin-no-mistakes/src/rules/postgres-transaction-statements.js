@@ -3,7 +3,7 @@
 // PostgreSQL accepts high-bit identifier bytes in dollar-quote tags, not only ASCII.
 const IDENTIFIER_CONTINUATION = /[a-z0-9_$\u0080-\uffff]/i;
 const DOLLAR_DELIMITER = /^\$(?:[a-z_\u0080-\uffff][a-z0-9_\u0080-\uffff]*)?\$/i;
-const TRANSACTION_COMMAND = /^\s*(?:BEGIN|COMMIT|ROLLBACK)\b/i;
+const TRANSACTION_COMMAND = /^\s*(?:BEGIN|START\s+TRANSACTION|COMMIT|ROLLBACK)\b/i;
 const SAVEPOINT_ROLLBACK =
   /^\s*ROLLBACK(?:\s+(?:WORK|TRANSACTION))?\s+TO(?:\s+SAVEPOINT)?\s+(?!SAVEPOINT\s*$)(?:[a-z_\u0080-\uffff][a-z0-9_$\u0080-\uffff]*|"(?:[^"]|"")+")\s*$/i;
 
@@ -96,10 +96,10 @@ function transactionStatements(text) {
 function isManualTransactionText(text) {
   if (typeof text !== "string") return false;
   const { statements, malformed } = transactionStatements(text);
-  if (malformed && /\b(?:BEGIN|COMMIT|ROLLBACK)\b/i.test(text)) return true;
+  if (malformed && /\b(?:BEGIN|START\s+TRANSACTION|COMMIT|ROLLBACK)\b/i.test(text)) return true;
   return statements.some(
     (statement) => TRANSACTION_COMMAND.test(statement) && !SAVEPOINT_ROLLBACK.test(statement),
   );
 }
 
-module.exports = { isManualTransactionText };
+module.exports = { isManualTransactionText, TRANSACTION_COMMAND };

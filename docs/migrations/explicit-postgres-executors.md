@@ -87,6 +87,10 @@ parameters therefore do not become SQL candidates merely because the file uses
 PostgreSQL elsewhere. Without `importSpecifier`, explicit
 `executorNames: [query]` opts into broad member matching.
 
+With `importSpecifier: "pg"`, `new Pool()` and `new Client()` instances also
+need explicit receiver proof; pass them through parameters annotated `Pool` or
+`Client` and configure `executorTypeNames: ["Pool", "Client"]`.
+
 ### Release note: member-query selection
 
 This is a breaking change: `importSpecifier` alone no longer treats every

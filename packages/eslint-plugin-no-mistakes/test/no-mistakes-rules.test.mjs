@@ -136,7 +136,7 @@ describe("async-call-disposition", () => {
       "utf8",
     );
     const snippets = [...doc.matchAll(/```ts\n([\s\S]*?)```/g)];
-    assert.equal(snippets.length, 7);
+    assert.equal(snippets.length, 9);
     for (const [index, snippet] of snippets.entries()) {
       const code = `import { enqueueEmail } from "@app/jobs";\n${snippet[1].replace(/import \{ enqueueEmail \} from "@app\/jobs";\n/g, "")}`;
       assert.deepEqual(

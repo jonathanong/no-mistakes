@@ -43,6 +43,26 @@ function returnToCaller(user) {
 }
 ```
 
+Awaited test assertions also adopt their promise, including a retained `const`:
+
+```ts
+await expect(enqueueEmail(user.id)).rejects.toThrow("unavailable");
+const pending = enqueueEmail(user.id);
+await expect(pending).resolves.toBeUndefined();
+enqueueEmail(user.id)
+  .then(() => undefined)
+  .catch(() => undefined);
+```
+
+Assertions require global `expect` with no local declaration, or a direct named `expect` import
+from Vitest or Jest. The matcher must be awaited, returned, or otherwise handled;
+an assertion with no promise disposition still reports. A terminal `.catch` statement counts when
+its handler is a stable function and the chain contains only standard promise
+methods. Missing handlers, opaque calls in the chain, and promises dropped inside
+a handler remain reported.
+Visible replacement of an observer or an escape to an unknown mutator also
+keeps the promise unproven.
+
 A callback's return also counts for `vi.fn`, `jest.fn`, and
 `mockImplementation` / `mockImplementationOnce` on a known `vi.spyOn`,
 `jest.spyOn`, `vi.fn`, `jest.fn`, or `vi.mocked` result. These APIs pass the implementation's
@@ -310,6 +330,27 @@ That resolution follows only `import { name }` to one `export function`, one
 stay unproven without a program. A `require()` consumer stays unproven in
 either mode, because both proofs accept only one ES import binding. Configure
 `awaitingConsumers` when the imported body cannot be proven.
+
+Inline callbacks use the same proven-consumer contract as named callbacks.
+For example, `adopt(() => enqueueEmail(id))` is accepted when `adopt` awaits
+every invocation of its callback parameter. Passing that same callback to an
+unknown consumer still reports.
+
+A narrow local cache also proves adoption when the complete consumer body
+creates a fresh built-in `Map`, conditionally stores `callback()` for one key,
+and finishes with `return await cache.get(key)`:
+
+```ts
+async function cached(callback, key) {
+  const cache = new Map();
+  if (!cache.has(key)) cache.set(key, callback());
+  return await cache.get(key);
+}
+```
+
+The key must be a string literal or an unchanged parameter. Extra effects,
+cache aliases or escapes, replacement values, mismatched keys, reads that are not awaited,
+and visible Map constructor/prototype mutations keep the consumer unproven.
 
 A fresh object argument can also prove a dependency callback contract when every
 use of the selected property reaches an immediately awaited invocation, such as

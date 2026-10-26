@@ -22,7 +22,7 @@ function createAwaitingConsumers(context, mappedArgumentDisposed) {
   const namedResults = new WeakMap();
   const provenAwaitingConsumer = createConsumerProof(context);
 
-  function returnsThroughConsumer(fn) {
+  function configuredConsumer(fn) {
     const callback = unwrapTransparentParent(fn);
     const target = matcher.resolveCallTarget(callback.parent);
     if (!target) return false;
@@ -35,6 +35,10 @@ function createAwaitingConsumers(context, mappedArgumentDisposed) {
         consumer.indexes.includes(index) &&
         targetMatches(consumer.targets, target.source, target.calleeName),
     );
+  }
+
+  function returnsThroughConsumer(fn) {
+    return configuredConsumer(fn) || provenAwaitingConsumer(fn);
   }
 
   function propertyThroughConsumer(argument) {
@@ -84,7 +88,7 @@ function createAwaitingConsumers(context, mappedArgumentDisposed) {
           context,
           (argument) =>
             returnsThroughMock(argument, context) ||
-            returnsThroughConsumer(argument) ||
+            configuredConsumer(argument) ||
             propertyThroughConsumer(argument) ||
             provenAwaitingConsumer(argument, context) ||
             mappedArgumentDisposed(fn, argument),

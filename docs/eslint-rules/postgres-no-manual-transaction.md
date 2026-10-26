@@ -2,7 +2,7 @@
 
 ## Why
 
-Scattered `BEGIN`, `COMMIT`, and `ROLLBACK` calls make transaction ownership,
+Scattered `BEGIN`, `START TRANSACTION`, `COMMIT`, and `ROLLBACK` calls make transaction ownership,
 cleanup, and nesting difficult to audit.
 
 ## Disallowed
@@ -11,6 +11,7 @@ cleanup, and nesting difficult to audit.
 import { query } from "@example/db";
 
 await query("BEGIN");
+await query("START TRANSACTION");
 await query("COMMIT");
 ```
 
@@ -37,7 +38,7 @@ await withTransaction(async (tx) => {
 
 `SAVEPOINT`, `RELEASE SAVEPOINT`, and complete `ROLLBACK [WORK|TRANSACTION]
 TO [SAVEPOINT] name` statements keep the existing transaction open and are not
-whole-transaction control. A later `BEGIN`, `COMMIT`, or whole `ROLLBACK` in the
+whole-transaction control. A later `BEGIN`, `START TRANSACTION`, `COMMIT`, or whole `ROLLBACK` in the
 same call is still rejected. Quoted identifiers, doubled quotes, escape strings, dollar-quoted bodies (including non-ASCII identifier tags) and
 nested block comments preserve statement boundaries. Malformed or ambiguous
 quoting containing transaction commands fails closed; plain-string backslash
@@ -188,8 +189,25 @@ await query("BEGIN");
 Executor import matching has no module default. Set `importSpecifier` explicitly
 to your database module to enable default `query`, `read`, and `write` names.
 Without a module, only explicit `executorNames` select named imports; explicit
-`query` also enables `.query` members. A configured module retains member matching
-even with custom executor names. See the [migration notes](../migrations/explicit-postgres-executors.md).
+`query` also enables broad `.query` member matching. With a configured module,
+the receiver must be proven by a configured import, scoped factory or imported
+executor type, or a stable alias of one. An unrelated `this.query` method remains
+outside the rule, even if another function imports `pg`. Custom executor names
+do not remove that receiver-proof requirement. See the
+[migration notes](../migrations/explicit-postgres-executors.md).
 
 Omitting both `importSpecifier` and `executorNames` is a configuration error.
 Set `executorNames: []` explicitly to select no executor calls.
+
+With `importSpecifier: "pg"`, receiver identity must still be proven. Queries on
+instances created by `new Pool()` or `new Client()`, and clients obtained from
+`pool.connect()`, are not recognized from the constructor import alone and do
+not report. Use an explicitly configured executor factory or an imported
+executor type annotation to declare those receivers. Direct named `query`
+imports and `pg.query()` on an imported namespace remain recognized.
+
+For example, `const pool = new Pool(); pool.query(sql)` is outside this
+selection. Pass the pool to `function run(db: Pool) { db.query(sql); }` and
+configure `executorTypeNames: ["Pool", "Client"]` alongside
+`importSpecifier: "pg"` to restore reporting. For a client from
+`await pool.connect()`, use a parameter annotated `db: Client` instead.

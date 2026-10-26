@@ -5,6 +5,7 @@ const { ruleSuppression } = require("../rule-suppression");
 const {
   executorBindings,
   executorOptionDefaults,
+  executorOptionSchema,
   firstCallArgument,
   isDatabaseCall,
 } = require("./postgres-executor");
@@ -100,16 +101,7 @@ module.exports = rule(
       description: "disallow a non-literal key into a const registry of SQL identifier strings",
       recommended: false,
     },
-    schema: [
-      {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          importSpecifier: { type: "string" },
-          executorNames: { type: "array", items: { type: "string" } },
-        },
-      },
-    ],
+    schema: [executorOptionSchema()],
     messages: {
       dynamicKey:
         "{{registry}}[key] can select an inherited property, so this lookup is not a finite SQL identifier. Return each entry from a switch with a throwing default ({{rewrite}}). A runtime own-key check is not judged.",
