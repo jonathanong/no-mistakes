@@ -1,0 +1,141 @@
+{
+  "baseline": "ff448f7b340af306a6fa6496c90dc132449ada1a",
+  "configurations": 1090,
+  "identicalToBaseline": 1083,
+  "statuses": {
+    "0": 330,
+    "1": 724,
+    "2": 36
+  },
+  "workerCounts": [
+    "default",
+    1,
+    4
+  ],
+  "workerOutputDifferences": 0,
+  "postgresRulesObserved": [
+    "postgres-array-columns",
+    "postgres-bounded-statements",
+    "postgres-column-naming",
+    "postgres-column-requires-trigger",
+    "postgres-conflict-ordering",
+    "postgres-constraint-validate",
+    "postgres-duplicate-function-body",
+    "postgres-explicit-columns",
+    "postgres-finite-text-columns",
+    "postgres-fk-index",
+    "postgres-generated-column-predicates",
+    "postgres-idempotent-insert",
+    "postgres-identifier-length",
+    "postgres-key-column-types",
+    "postgres-lock-ordering",
+    "postgres-no-add-column",
+    "postgres-no-generated-column-writes",
+    "postgres-no-mutable-sql-registry",
+    "postgres-no-offset",
+    "postgres-no-transformed-uuid-predicates",
+    "postgres-no-unbounded-sql-identifier",
+    "postgres-object-naming",
+    "postgres-redundant-index",
+    "postgres-require-fk-on-delete",
+    "postgres-require-named-constraints",
+    "postgres-require-query-annotation",
+    "postgres-required-comments",
+    "postgres-required-predicates",
+    "postgres-sql-shape-policy",
+    "postgres-sql-statement-policy",
+    "postgres-status-with-lifecycle-timestamps",
+    "postgres-table-shape"
+  ],
+  "baselineChanges": [
+    {
+      "root": "fixtures/rules/postgres-migration-statement-lines",
+      "config": ".no-mistakes.yml",
+      "key": "f7e2f492b5eb8b42",
+      "beforeFindings": 29,
+      "afterFindings": 42,
+      "beforeAdvisories": 0,
+      "afterAdvisories": 0,
+      "beforeStatus": 1,
+      "afterStatus": 1
+    },
+    {
+      "root": "test-cases/rules/postgres-constraint-validate/fixture/fail-set-null-columns",
+      "config": ".no-mistakes.yml",
+      "key": "07020c5ce4ca144e",
+      "beforeFindings": 2,
+      "afterFindings": 2,
+      "beforeAdvisories": 0,
+      "afterAdvisories": 0,
+      "beforeStatus": 1,
+      "afterStatus": 1
+    },
+    {
+      "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/recursive-heads",
+      "config": "low.yml",
+      "key": "1db5b4c877cbe6ed",
+      "beforeFindings": 66,
+      "afterFindings": 67,
+      "beforeAdvisories": 22,
+      "afterAdvisories": 22,
+      "beforeStatus": 1,
+      "afterStatus": 1
+    },
+    {
+      "root": "test-cases/rules/postgres-ddl-unanalyzable/fixture/recursive-heads",
+      "config": "report.yml",
+      "key": "4d3f528eb59a51a8",
+      "beforeFindings": 66,
+      "afterFindings": 67,
+      "beforeAdvisories": 22,
+      "afterAdvisories": 22,
+      "beforeStatus": 1,
+      "afterStatus": 1
+    },
+    {
+      "root": "test-cases/rules/postgres-fk-index/fixture/statement-spans",
+      "config": ".no-mistakes.yml",
+      "key": "3d51ae11a500b113",
+      "beforeFindings": 9,
+      "afterFindings": 6,
+      "beforeAdvisories": 0,
+      "afterAdvisories": 0,
+      "beforeStatus": 1,
+      "afterStatus": 1
+    },
+    {
+      "root": "test-cases/rules/postgres-no-add-column/fixture/qualified-repeat",
+      "config": ".no-mistakes.yml",
+      "key": "731230bd4de939ca",
+      "beforeFindings": 2,
+      "afterFindings": 2,
+      "beforeAdvisories": 0,
+      "afterAdvisories": 0,
+      "beforeStatus": 1,
+      "afterStatus": 1
+    },
+    {
+      "root": "test-cases/rules/postgres-required-predicates/fixture/fail",
+      "config": ".no-mistakes.yml",
+      "key": "c1414b27dc1b8de4",
+      "beforeFindings": 7,
+      "afterFindings": 7,
+      "beforeAdvisories": 0,
+      "afterAdvisories": 0,
+      "beforeStatus": 1,
+      "afterStatus": 1
+    }
+  ],
+  "coverage": {
+    "lines": 99.32,
+    "functions": 99.34,
+    "regions": 98.54,
+    "changedMeasuredLines": 289,
+    "changedCoveredLines": 288,
+    "functionsAboveCrap30": 0
+  },
+  "binaries": {
+    "baseline": "7b9d673c7b2f96c9240253803ca48976e13dd2d4244f253859e36de8e6a376f1",
+    "candidate": "75bc279e318fee847f3f08076170a5cb9dfa7eb5083b72756345c8c1a2395018"
+  }
+}

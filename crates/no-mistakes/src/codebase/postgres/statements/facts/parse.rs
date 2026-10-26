@@ -134,6 +134,7 @@ fn extract_sql_statement_facts_with_placeholder_positions(
                 chunks: &chunks,
                 orphans: &orphans,
             };
+            let policy_sources = super::sources::policy_tokens(&located);
             let (statements, sources): (Vec<_>, Vec<_>) = located
                 .into_iter()
                 .map(|located| (located.statement, located.source))
@@ -149,6 +150,7 @@ fn extract_sql_statement_facts_with_placeholder_positions(
                     tokens: Some(&sources),
                     recovery: Some(&recovery),
                     policy: super::StatementPolicySources {
+                        tokens: Some(&policy_sources),
                         schema: None,
                         functions: &functions,
                     },

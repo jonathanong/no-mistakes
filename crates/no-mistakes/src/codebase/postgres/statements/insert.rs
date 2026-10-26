@@ -43,7 +43,7 @@ pub(super) fn from_insert_prepared(
     };
     SqlInsertFact {
         table,
-        line: sources.line(n),
+        line: sources.line(insert, n),
         executed,
         guarded_select: insert
             .source
@@ -88,7 +88,7 @@ fn insert_assignments(
     n: usize,
     positions: super::value::PlaceholderPositions<'_>,
 ) -> Vec<super::SqlAssignmentFact> {
-    if has_overriding_user_value(sources, n) {
+    if has_overriding_user_value(sources, insert, n) {
         return Vec::new();
     }
     let set: Vec<_> = insert
@@ -103,8 +103,12 @@ fn insert_assignments(
     }
 }
 
-fn has_overriding_user_value(sources: &super::lines::InsertSources<'_>, n: usize) -> bool {
-    let masked = super::fallback::mask_quoted_sql(sources.source(n));
+fn has_overriding_user_value(
+    sources: &super::lines::InsertSources<'_>,
+    insert: &Insert,
+    n: usize,
+) -> bool {
+    let masked = super::fallback::mask_quoted_sql(sources.for_insert(insert, n));
     let tokens = masked
         .split_whitespace()
         .map(str::to_ascii_lowercase)

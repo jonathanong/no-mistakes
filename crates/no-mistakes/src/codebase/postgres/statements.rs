@@ -65,6 +65,8 @@ mod coverage_more_tests;
 #[cfg(test)]
 mod coverage_tests;
 #[cfg(test)]
+mod line_tests;
+#[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod value_ast_tests;

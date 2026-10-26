@@ -14,7 +14,19 @@ pub(super) fn collect(
 ) {
     let (statement_kinds, setting_uses, mut function_calls) = policy.schema.map_or_else(
         || {
-            let facts = crate::codebase::postgres::migration::policy_facts(sql, statements);
+            let tokens: Vec<_> = statements
+                .iter()
+                .enumerate()
+                .map(|(index, _)| {
+                    policy
+                        .tokens
+                        .and_then(|sources| sources.get(index))
+                        .and_then(Option::as_deref)
+                        .unwrap_or_else(|| prepared_sql.tokens())
+                })
+                .collect();
+            let facts =
+                crate::codebase::postgres::migration::policy_facts(sql, statements, &tokens);
             (
                 facts.statement_kinds,
                 facts.setting_uses,
