@@ -108,3 +108,32 @@ fn loop_compatibility_does_not_accept_top_level_procedural_sql() {
         .iter()
         .any(|failure| failure.schema_unanalyzable && !failure.procedural_body));
 }
+
+#[test]
+fn uncertain_headers_preserve_only_independently_valid_actions() {
+    for (name, actions) in [
+        ("unsupported-header-truncate.sql", vec![5]),
+        ("unsupported-header-truncate-loop-table.sql", vec![5]),
+        ("invalid-header-truncate.sql", vec![5]),
+        ("invalid-header-action.sql", vec![]),
+    ] {
+        let facts = extract_migration_facts(&fixture(name));
+        assert_eq!(facts.unanalyzable_statements.len(), 1, "{name}: {facts:#?}");
+        let failure = &facts.unanalyzable_statements[0];
+        assert!(
+            failure.schema_unanalyzable && failure.procedural_body,
+            "{name}: {failure:#?}"
+        );
+        assert_eq!(failure.line, 4, "{name}: {failure:#?}");
+        assert_eq!(
+            facts
+                .statement_kinds
+                .iter()
+                .filter(|item| item.kind == "TRUNCATE")
+                .map(|item| item.line)
+                .collect::<Vec<_>>(),
+            actions,
+            "{name}: {facts:#?}"
+        );
+    }
+}

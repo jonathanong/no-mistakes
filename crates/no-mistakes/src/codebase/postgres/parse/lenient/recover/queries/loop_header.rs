@@ -91,3 +91,22 @@ pub(in super::super) fn loop_action_start(tokens: &[Token]) -> Result<Option<usi
     }
     Ok(action)
 }
+
+/// Failed headers remain uncertain; only an independently parsed SQL suffix is usable.
+pub(in super::super) fn fallback_action_start(tokens: &[Token]) -> Option<usize> {
+    let mut at = next(tokens, 0);
+    loop {
+        let end = control_end(tokens, at, "LOOP")?;
+        at = next(tokens, end + 1);
+        let start = skip_label(tokens, at);
+        let first = tokens.get(start)?;
+        // Scan only adjacent nested headers, never identifiers in the SQL action.
+        if !["FOR", "WHILE", "FOREACH", "LOOP"]
+            .iter()
+            .any(|name| word(first, name))
+        {
+            return Some(at);
+        }
+        at = start;
+    }
+}

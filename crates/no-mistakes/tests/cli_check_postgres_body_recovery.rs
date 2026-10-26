@@ -134,3 +134,38 @@ fn incomplete_labels_and_conditional_boundaries_remain_findings() {
         .all(|row| row["file"] == "malformed-boundaries.sql"));
     assert_eq!(report["advisories"], serde_json::json!([]));
 }
+
+#[test]
+fn uncertain_loop_headers_keep_definite_actions_under_both_policies() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-ddl-unanalyzable/fixture/query-loops");
+    for (config, findings, advisories) in [
+        ("uncertain-header-default.yml", 3, 8),
+        ("uncertain-header-report.yml", 11, 0),
+    ] {
+        let (success, report) = check(&root, config);
+        assert!(!success, "{config}: {report}");
+        let rows = report["rules"].as_array().unwrap();
+        let notes = report["advisories"].as_array().unwrap();
+        assert_eq!(rows.len(), findings, "{config}: {report}");
+        assert_eq!(notes.len(), advisories, "{config}: {report}");
+        let mut definite = rows
+            .iter()
+            .filter_map(|row| {
+                let line = row["line"].as_u64().unwrap();
+                [6, 13, 20].contains(&line).then_some(line)
+            })
+            .collect::<Vec<_>>();
+        definite.sort_unstable();
+        assert_eq!(definite, [6, 13, 20], "{config}: {report}");
+        let mut headers = std::collections::BTreeMap::new();
+        for row in rows.iter().chain(notes) {
+            assert_eq!(row["file"], "uncertain-header-actions.sql");
+            let line = row["line"].as_u64().unwrap();
+            if [5, 12, 19, 26].contains(&line) {
+                *headers.entry(line).or_insert(0) += 1;
+            }
+        }
+        assert_eq!(headers, [(5, 2), (12, 2), (19, 2), (26, 2)].into());
+    }
+}

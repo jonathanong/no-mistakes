@@ -11,3 +11,4 @@ BEGIN
 END;
 $$;
 CREATE TABLE following_query_loop (id bigint);
+-- Labels before IF are invalid, while the guarded action remains recoverable.

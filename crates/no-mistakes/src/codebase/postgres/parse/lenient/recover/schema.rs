@@ -133,7 +133,11 @@ pub(super) fn recover(
     use sqlparser::{dialect::PostgreSqlDialect, parser::Parser, tokenizer::TokenWithSpan};
     // A row-lock UPDATE belongs to the validated loop header, never its action.
     let action = if procedural_body {
-        super::queries::loop_action_start(tokens).ok()?
+        match super::queries::loop_action_start(tokens) {
+            Ok(action) => action,
+            // Keep definite suffix facts while the caller retains header uncertainty.
+            Err(()) => super::queries::loop_header::fallback_action_start(tokens),
+        }
     } else {
         None
     };

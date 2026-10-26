@@ -4,7 +4,7 @@ use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
 use sqlparser::parser::Parser;
 use sqlparser::tokenizer::{Token, TokenWithSpan, Word};
-mod loop_header;
+pub(super) mod loop_header;
 pub(super) use loop_header::loop_action_start;
 
 pub(super) fn recover(
@@ -162,3 +162,7 @@ mod action_tests;
 #[cfg(test)]
 #[path = "queries/loop_matrix_tests.rs"]
 mod loop_matrix_tests;
+
+#[cfg(test)]
+#[path = "queries/nested_merge_tests.rs"]
+mod nested_merge_tests;
