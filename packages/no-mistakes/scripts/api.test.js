@@ -116,3 +116,20 @@ test("forbidden lint suppression configuration compiles from the package root", 
     [],
   );
 });
+
+test("production export test-only options require explicit production and test scope", () => {
+  const declaration = readFileSync(
+    join(packageRoot, "production-exports-test-only-types.d.ts"),
+    "utf8",
+  );
+  assert.match(declaration, /export interface ProductionExportsOnlyUsedByTestsOptions/);
+  assert.match(declaration, /productionRoots: string\[\];/);
+  assert.match(declaration, /testGlobs\?: string\[\];/);
+  assert.match(declaration, /testHelperRoots\?: string\[\];/);
+  assert.match(declaration, /unanalyzable\?: Unanalyzable;/);
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      "./production-exports-test-only-types",
+    ),
+  );
+});

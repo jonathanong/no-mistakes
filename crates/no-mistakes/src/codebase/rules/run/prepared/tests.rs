@@ -184,3 +184,17 @@ fn independent_playwright_runs_with_prepared_rules() {
         .iter()
         .any(|finding| finding.rule == crate::playwright::rules::PLAYWRIGHT_COVERAGE));
 }
+
+#[test]
+fn production_export_rule_requests_shared_symbol_selectors_and_full_universe() {
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.rules.push(crate::config::v2::schema::RuleDef {
+        rule: crate::codebase::rules::PRODUCTION_EXPORTS_ONLY_USED_BY_TESTS.to_string(),
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        ..Default::default()
+    });
+    let plan = try_canonical_graph_plan(&config).unwrap().unwrap();
+    assert!(plan.symbol_import_selectors);
+    assert!(canonical_graph_requires_full_file_universe(&config));
+    assert!(super::super::any_codebase_rule_enabled(&config));
+}

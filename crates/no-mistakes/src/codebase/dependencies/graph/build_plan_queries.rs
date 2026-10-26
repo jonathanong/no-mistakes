@@ -15,18 +15,25 @@ impl GraphBuildPlan {
 
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
-            imports: self.imports || self.route_imports || self.workspace || self.assets,
+            module_bindings: self.symbol_import_selectors,
+            source: self.symbol_import_selectors,
+            imports: self.imports
+                || self.route_imports
+                || self.workspace
+                || self.assets
+                || self.symbol_import_selectors,
             function_calls: self.calls
                 || self.extends
                 || self.imports
                 || self.workspace
                 || self.assets
+                || self.symbol_import_selectors
                 || self.symbols
                 || self.resources,
             call_eligibility: self.assertion_owners,
             value_flow: self.calls,
             resources: self.resources,
-            symbols: self.symbols || self.queues,
+            symbols: self.symbols || self.symbol_import_selectors || self.queues,
             react: self.react,
             route_refs: self.routes,
             backend_routes: self.routes || self.http,

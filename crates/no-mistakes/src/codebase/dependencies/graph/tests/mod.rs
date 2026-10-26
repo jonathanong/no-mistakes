@@ -190,3 +190,5 @@ mod guarded_parameter_identity;
 
 #[path = "template_value_provenance.rs"]
 mod template_value_provenance;
+
+mod symbol_import_selectors;

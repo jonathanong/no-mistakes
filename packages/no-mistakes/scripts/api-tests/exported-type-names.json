@@ -264,6 +264,7 @@
   "PostgresSqlWrapperKind",
   "PostgresUnanalyzableSql",
   "PostgresUuidPredicateUnanalyzableSql",
+  "ProductionExportsOnlyUsedByTestsOptions",
   "ProjectDeadlineEvidence",
   "ProjectOptions",
   "QueryDiagnostics",

@@ -2,6 +2,9 @@ use super::{EdgeKind, VitestSetupField};
 
 pub(super) const fn key(kind: EdgeKind) -> (u8, u8) {
     match kind {
+        EdgeKind::SymbolImport => (65, 0),
+        EdgeKind::SymbolReexport => (66, 0),
+        EdgeKind::SymbolImportUnknown => (67, 0),
         EdgeKind::Call
         | EdgeKind::AssertionOwner
         | EdgeKind::Extends

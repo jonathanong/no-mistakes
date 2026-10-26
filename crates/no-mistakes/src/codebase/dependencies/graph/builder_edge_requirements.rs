@@ -4,7 +4,7 @@ fn require_core_edge_facts(plan: GraphBuildPlan, facts: Option<&dyn TsFactLookup
     if plan.route_imports && facts.is_none() {
         anyhow::bail!("TS import facts are required for route-import edges");
     }
-    if plan.symbols && facts.is_none() {
+    if (plan.symbols || plan.symbol_import_selectors) && facts.is_none() {
         anyhow::bail!("TS symbol facts are required when symbol edges are requested");
     }
     if plan.calls && facts.is_none() {

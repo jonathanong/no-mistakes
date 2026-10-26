@@ -191,3 +191,6 @@ line, while line and next-line directives require an exact finding location.
 Each rule page says when a file-level directive is the practical option. Prefer
 repairing the input or narrowing rule configuration: a suppression intentionally
 hides future regressions in the selected scope.
+
+For production APIs retained only by tests, use
+[`production-exports-only-used-by-tests`](production-exports-only-used-by-tests.md).

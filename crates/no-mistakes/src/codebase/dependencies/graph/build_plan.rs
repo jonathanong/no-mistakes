@@ -33,6 +33,8 @@ pub struct GraphBuildPlan {
     pub resources: bool,
     pub react: bool,
     pub symbols: bool,
+    /// Opt-in syntactic symbol consumers and re-export relays.
+    pub symbol_import_selectors: bool,
     pub dotnet: bool,
     pub swift: bool,
     pub terraform: bool,
@@ -69,6 +71,7 @@ impl GraphBuildPlan {
             resources: true,
             react: true,
             symbols: false,
+            symbol_import_selectors: false,
             dotnet: true,
             swift: true,
             terraform: true,
@@ -145,6 +148,7 @@ impl GraphBuildPlan {
             resources: allowed.contains(&EdgeKind::Resource),
             react: allowed.contains(&EdgeKind::ReactRender),
             symbols: false,
+            symbol_import_selectors: false,
             dotnet: allowed.contains(&EdgeKind::DotnetUsing)
                 || allowed.contains(&EdgeKind::DotnetReference)
                 || allowed.contains(&EdgeKind::DotnetProjectDependency)
@@ -184,6 +188,7 @@ impl GraphBuildPlan {
         self.resources |= other.resources;
         self.react |= other.react;
         self.symbols |= other.symbols;
+        self.symbol_import_selectors |= other.symbol_import_selectors;
         self.dotnet |= other.dotnet;
         self.swift |= other.swift;
         self.terraform |= other.terraform;
@@ -191,5 +196,4 @@ impl GraphBuildPlan {
         self.trpc |= other.trpc;
     }
 }
-
 include!("build_plan_queries.rs");

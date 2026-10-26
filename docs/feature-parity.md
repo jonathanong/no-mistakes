@@ -935,3 +935,5 @@ TS/JS [forbidden lint suppression checks](rules/forbidden-lint-suppressions.md)
 use AST comment facts through CLI and async Node `check()`/`analyzeProject()`.
 Configured file globs, exact rule IDs, literal rule prefixes, and opt-in blanket
 or TypeScript directive bans have the same finding locations and targets.
+
+TS/JS production export consumers can be checked with explicit test/helper scope through [`production-exports-only-used-by-tests`](rules/production-exports-only-used-by-tests.md), available through CLI and async Node check reports. Static named aliases and re-exports preserve symbol ownership; dynamic or unresolved relationships follow the shared uncertainty policy.

@@ -1,0 +1,38 @@
+[
+  {
+    "scenario": "fail",
+    "identical": true,
+    "status": 1,
+    "reportSha256": "723f8a2850e370ec26393a59c37cb861818368f282f683f8f1b477560f1de4c3"
+  },
+  {
+    "scenario": "pass",
+    "identical": true,
+    "status": 0,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "scenario": "suppressed",
+    "identical": true,
+    "status": 0,
+    "reportSha256": "0c81f3b0dafacbff4e9fc6e5c750671cb8fe7e77ad5cbcaac844f703b5e96059"
+  },
+  {
+    "scenario": "bounded",
+    "identical": true,
+    "status": 1,
+    "reportSha256": "31f66af031becdc14c898dd5136c18cd579f6da42fa0a570ba9a2c25b81fe416"
+  },
+  {
+    "scenario": "uncertain",
+    "identical": true,
+    "status": 1,
+    "reportSha256": "4b7dab4f2df45c125ffaae29d63079d1f16d0e7eabc3cb484b6fdb98d423cfa8"
+  },
+  {
+    "scenario": "unsupported-modules",
+    "identical": true,
+    "status": 1,
+    "reportSha256": "1745a525352a17ba6fe1e1de97415dd487a489c5a81584d6b588d09c68856307"
+  }
+]

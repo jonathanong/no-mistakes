@@ -74,6 +74,7 @@ pub use super::postgres_sql_statement_policy::RULE_ID as POSTGRES_SQL_STATEMENT_
 pub use super::postgres_status_with_lifecycle_timestamps::RULE_ID as POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS;
 pub use super::postgres_table_shape::RULE_ID as POSTGRES_TABLE_SHAPE;
 pub use super::production_dependency_declarations::RULE_ID as PRODUCTION_DEPENDENCY_DECLARATIONS;
+pub use super::production_exports_test_only::RULE_ID as PRODUCTION_EXPORTS_ONLY_USED_BY_TESTS;
 pub use super::query_reached_per_item::RULE_ID as QUERY_REACHED_PER_ITEM;
 pub use super::require_files_in_subdirs::RULE_ID as REQUIRE_FILES_IN_SUBDIRS;
 pub use super::require_storybook_stories::RULE_ID as REQUIRE_STORYBOOK_STORIES;

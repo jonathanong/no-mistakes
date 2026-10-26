@@ -1,0 +1,64 @@
+{
+  "baseline": "144e6caa627617090d0c2ede90ec363a6b5b58f5",
+  "rust": {
+    "libraryPassed": 13720,
+    "libraryIgnored": 3,
+    "binaryPassed": 465,
+    "integrationPassed": 1434
+  },
+  "native": {
+    "passed": 622,
+    "suites": 21
+  },
+  "coveragePercent": {
+    "lines": 99.3,
+    "functions": 99.35,
+    "regions": 98.53
+  },
+  "crap": {
+    "functionsAnalyzed": 16401,
+    "above30": 0
+  },
+  "determinism": {
+    "workerCounts": [
+      1,
+      4,
+      0
+    ],
+    "scenarios": 6,
+    "differences": 0
+  },
+  "legacyQueryComparisons": {
+    "command": "dependents --format json",
+    "entries": [
+      "src/link.mts",
+      "src/link.mts#createLinkPost",
+      "src/request.mts#getRequestClientInfo"
+    ],
+    "root": "test-cases/rules/production-exports-only-used-by-tests/fixture/fail",
+    "stdoutStderrStatusIdentical": true
+  },
+  "resolveCheck": {
+    "newDeclarationsAndTestModule": "all resolve",
+    "preExistingUnresolvedFiles": [
+      "packages/no-mistakes/scripts/real-napi-api.test.js",
+      "packages/no-mistakes/types.d.ts"
+    ],
+    "baselineIdentical": true
+  },
+  "artifactSha256": {
+    "baseline": "43807345dd0fbd9510669578eb14066e497981d2788a585afa56a52ea47d129e",
+    "candidate": "4367475f5a6afa65caf1abd0c45d87f31f93f79da8c85cb84b5772f042d28b43"
+  },
+  "javascript": {
+    "passed": 2477,
+    "skipped": 946,
+    "maxWorkers": 4,
+    "coveragePercent": {
+      "statements": 99.03,
+      "branches": 98.08,
+      "functions": 99.52,
+      "lines": 99.75
+    }
+  }
+}
