@@ -32,6 +32,7 @@ scenarios.push({
   files: {
     "syntax.js": [],
     "heritage.js": [],
+    "type-shadow.js": [4, 6, 8, 12],
     "recall.js": [3, 5, 7, 9, 12, 15],
     "unsupported.js": [3],
   },

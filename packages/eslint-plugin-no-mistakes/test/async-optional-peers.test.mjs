@@ -131,6 +131,7 @@ it("loads a packed plugin with TypeScript-only, absent, and incompatible proof p
         join(root, "recall.js"),
         join(root, "syntax.js"),
         join(root, "heritage.js"),
+        join(root, "type-shadow.js"),
         join(root, "unsupported.js"),
       ],
       root,
@@ -152,6 +153,11 @@ it("loads a packed plugin with TypeScript-only, absent, and incompatible proof p
           "no-mistakes(async-call-disposition)",
         ]),
         ["unsupported.js", 3, "no-mistakes(async-call-disposition)"],
+        ...[4, 6, 8, 12].map((line) => [
+          "type-shadow.js",
+          line,
+          "no-mistakes(async-call-disposition)",
+        ]),
       ].sort(),
     );
     run(process.execPath, [runner, eslint, "typescript"], root);

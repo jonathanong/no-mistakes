@@ -48,4 +48,35 @@ function write(node) {
   );
 }
 
-module.exports = { isReference, write };
+// Runtime references skip erased type bindings; type positions keep lexical lookup.
+function valueBinding(variable) {
+  return Boolean(variable?.defs.some((definition) => definition.type !== "Type"));
+}
+function lookup(current, name, typeOnly = false) {
+  let fallback = null;
+  while (current) {
+    const variable = current.variables.find((item) => item.name === name);
+    if (variable && (typeOnly || valueBinding(variable))) return variable;
+    fallback ||= variable;
+    current = current.upper;
+  }
+  return fallback;
+}
+function scopeViews(owners, typePositions) {
+  const views = new WeakMap();
+  function view(scope) {
+    if (!scope) return null;
+    if (!views.has(scope))
+      views.set(scope, {
+        ...scope,
+        upper: view(scope.upper),
+        variables: scope.variables.filter(
+          (variable) => valueBinding(variable) || !valueBinding(lookup(scope.upper, variable.name)),
+        ),
+      });
+    return views.get(scope);
+  }
+  return (node) => (typePositions.get(node) ? owners.get(node) : view(owners.get(node)));
+}
+
+module.exports = { isReference, write, lookup, scopeViews };

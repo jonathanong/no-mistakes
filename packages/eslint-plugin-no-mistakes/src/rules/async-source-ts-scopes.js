@@ -1,11 +1,12 @@
 "use strict";
-const { isReference, write } = require("./async-source-ts-references");
+const { isReference, write, lookup, scopeViews } = require("./async-source-ts-references");
 
 // Build only lexical definitions/references required by the existing proof engine.
 // Two walks preserve hoisting, shadowing, captures, and writes before declarations.
 function sourceScopes(ast, visitorKeys) {
   const scopes = [];
   const owners = new WeakMap();
+  const typePositions = new WeakMap();
   const bindings = new WeakSet();
   function scope(upper, type) {
     const result = { upper, type, variables: [], references: [], through: [] };
@@ -96,17 +97,9 @@ function sourceScopes(ast, visitorKeys) {
     each(node, (child) => declarations(child, current));
   }
   declarations(ast, globalScope);
-  function lookup(current, name) {
-    while (current) {
-      const variable = current.variables.find((item) => item.name === name);
-      if (variable) return variable;
-      current = current.upper;
-    }
-    return null;
-  }
   function add(identifier, init, writing, typeOnly) {
     const current = owners.get(identifier);
-    const resolved = lookup(current, identifier.name);
+    const resolved = lookup(current, identifier.name, typeOnly);
     const reference = {
       identifier,
       init,
@@ -132,6 +125,7 @@ function sourceScopes(ast, visitorKeys) {
     else if (pattern.type === "ArrayPattern") pattern.elements.forEach(initializations);
   }
   function references(node, typeOnly = false) {
+    typePositions.set(node, typeOnly);
     if (node.type === "Identifier" && isReference(node, bindings))
       add(node, false, write(node), typeOnly);
     if (
@@ -151,7 +145,7 @@ function sourceScopes(ast, visitorKeys) {
   }
   references(ast);
   return {
-    scopeManager: { scopes, globalScope, acquire: (node) => owners.get(node) || null },
+    scopeManager: { scopes, globalScope, acquire: scopeViews(owners, typePositions) },
   };
 }
 
