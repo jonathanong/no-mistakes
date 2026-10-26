@@ -42,3 +42,5 @@ enqueueEmail().then(() => {}).unknownMethod().catch(() => {});
 enqueueEmail().catch(() => {}).finally(() => {}).catch(onRejected);
 enqueueEmail().catch(unknownHandler);
 enqueueEmail().catch?.(onRejected);
+await expect(enqueueEmail()).resolves.unknown?.();
+await expect(enqueueEmail()).resolves?.unknown();

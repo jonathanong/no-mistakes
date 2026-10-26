@@ -43,8 +43,10 @@ function assertionExpression(node, context) {
   const assertion = matcher?.parent;
   return matcher?.type === "MemberExpression" &&
     matcher.object === modifier &&
+    !matcher.optional &&
     assertion?.type === "CallExpression" &&
-    assertion.callee === matcher
+    assertion.callee === matcher &&
+    !assertion.optional
     ? assertion
     : null;
 }
