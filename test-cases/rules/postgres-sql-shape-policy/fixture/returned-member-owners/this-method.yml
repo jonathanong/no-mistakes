@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      include: ['src/this-method.ts']
+      importSpecifier: '@example/db'
+      unanalyzableSql: ignore
+      bannedShapes: [literal-limit]

@@ -14,7 +14,12 @@ impl<'a> ScopeVisitor<'a> {
     }
 
     pub(super) fn walk_function_scope(&mut self, function: &ast::Function<'a>, flags: ScopeFlags) {
-        self.enter_plain_function(function.id.as_ref().map(|id| id.name.as_str()));
+        // Expression names are private self-references, not externally callable keys.
+        let declaration_name = (function.r#type != ast::FunctionType::FunctionExpression)
+            .then_some(function.id.as_ref())
+            .flatten()
+            .map(|id| id.name.as_str());
+        self.enter_plain_function(declaration_name);
         self.push_scope();
         self.record_params(&function.params);
         // A named function expression shadows outer helpers only in its own

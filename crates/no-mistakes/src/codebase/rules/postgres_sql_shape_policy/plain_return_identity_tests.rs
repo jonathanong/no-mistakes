@@ -66,3 +66,51 @@ fn shadowed_call_never_reports_unused_outer_non_sql_return() {
         "{findings:#?}"
     );
 }
+
+#[test]
+fn unkeyable_member_returns_keep_conservative_recall() {
+    let root = fixture("returned-member-owners");
+    for name in [
+        "class-method",
+        "this-method",
+        "object-method",
+        "property-function",
+        "named-property-function",
+        "unused-method",
+    ] {
+        let path = root.join(format!("src/{name}.ts"));
+        let source = std::fs::read_to_string(&path).unwrap();
+        let facts = extract_embedded_sql_from_source(
+            &path,
+            &source,
+            &EmbeddedSqlOptions::configured("@example/db", &[]),
+        );
+        // Member owners are conservative; the unused lexical helpers stay filtered.
+        assert_eq!(
+            facts
+                .fragments
+                .iter()
+                .map(|fragment| fragment.line)
+                .collect::<Vec<_>>(),
+            [4],
+            "{name}: {facts:#?}",
+        );
+        let findings = check_with_files(
+            &root,
+            &serde_yaml::from_str(
+                &std::fs::read_to_string(root.join(format!("{name}.yml"))).unwrap(),
+            )
+            .unwrap(),
+            &[path],
+        )
+        .unwrap();
+        assert_eq!(
+            findings
+                .iter()
+                .map(|finding| (finding.target.as_deref(), finding.line))
+                .collect::<Vec<_>>(),
+            [(Some("literal-limit"), 4)],
+            "{name}: {findings:#?}",
+        );
+    }
+}

@@ -1,8 +1,9 @@
 mod calls;
+mod literals;
 
 use super::{resolve, ScopeVisitor};
-use crate::codebase::ts_source::unwrap_ts_wrappers;
 use calls::walk_calls;
+use literals::{is_direct_function, is_plain_literal};
 use oxc_ast::ast::{Expression, ReturnStatement};
 use oxc_span::GetSpan;
 
@@ -156,15 +157,17 @@ impl ScopeVisitor<'_> {
         self.plain.aliases.get(&key).cloned().unwrap_or(key)
     }
     fn defer_plain_return(&mut self, start: u32, sql: String) {
-        let Some(owner) = self.current_plain_name() else {
-            return;
-        };
         let line = crate::codebase::ts_source::byte_offset_to_line(self.source, start as usize);
-        self.plain.returns.push(DeferredReturn {
-            owner: owner.clone(),
-            line,
-            sql,
-        });
+        if let Some(owner) = self.current_plain_name() {
+            self.plain.returns.push(DeferredReturn {
+                owner: owner.clone(),
+                line,
+                sql,
+            });
+        } else {
+            // Member calls have no lexical callable key: retain recall conservatively.
+            self.push_fragment(line, Some(sql), None, None);
+        }
     }
 
     fn note_returned_calls(&mut self, argument: &Expression<'_>) {
@@ -180,20 +183,5 @@ impl ScopeVisitor<'_> {
             owner: owner.clone(),
             calls,
         });
-    }
-}
-
-fn is_direct_function(expression: &Expression<'_>) -> bool {
-    matches!(
-        unwrap_ts_wrappers(expression),
-        Expression::FunctionExpression(_) | Expression::ArrowFunctionExpression(_)
-    )
-}
-
-fn is_plain_literal(expression: &Expression<'_>) -> bool {
-    match unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(_) => true,
-        Expression::TemplateLiteral(template) => template.expressions.is_empty(),
-        _ => false,
     }
 }
