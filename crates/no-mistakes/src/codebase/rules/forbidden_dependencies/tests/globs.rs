@@ -108,6 +108,26 @@ exceptions:
 }
 
 #[test]
+fn a_clean_exception_root_still_has_a_real_forbidden_import_edge() {
+    let (root, config, graph) = setup();
+    let source = "ci/check-coverage-scope.mts";
+    let target = "test-helpers/vitest-config/index.mts";
+    let entries = graph.deps_of(&[NodeId::file(root.join(source))], None, None);
+    assert!(entries
+        .iter()
+        .any(|entry| entry.node == NodeId::file(root.join(target))));
+    let mut opts: Options = config.rules[0].try_rule_options().unwrap();
+    let allowed = check_application(&root, &opts, &graph).unwrap();
+    assert!(allowed.iter().all(|finding| finding.file != source));
+    // Removing the exception proves the root and target were selected by the boundary.
+    opts.exceptions.clear();
+    let forbidden = check_application(&root, &opts, &graph).unwrap();
+    assert!(forbidden
+        .iter()
+        .any(|finding| { finding.file == source && finding.target.as_deref() == Some(target) }));
+}
+
+#[test]
 fn bracket_globs_select_roots_and_literal_directory_exclusions_still_apply() {
     let (root, _, graph) = setup();
     let opts = serde_yaml::from_str::<Options>(

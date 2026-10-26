@@ -16,7 +16,10 @@ rules:
       forbiddenFiles:
         - shared/testing/**/*.{ts,mts}
         - tests/**
+        - "**/test-helpers/**"
       relationships: [import]
       exceptions:
         - roots: [ci/check-coverage.mts]
           allowedFiles: [shared/testing/coverage.mts]
+        - roots: [ci/check-coverage-scope.mts]
+          allowedFiles: [test-helpers/vitest-config/**]
