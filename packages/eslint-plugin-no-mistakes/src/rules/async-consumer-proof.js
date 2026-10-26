@@ -4,13 +4,20 @@ const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { importedAwaited } = require("./async-consumer-imported-proof");
 const { localFunction, bodyAwaited } = require("./async-consumer-local-proof");
-const { propertyBodyAwaited } = require("./async-consumer-property-proof");
+const { adoptReturned } = require("./async-consumer-property-carrier");
+const {
+  forwarded,
+  lexicalCallback,
+  propertyBodyAwaited,
+  propertyWritten,
+} = require("./async-consumer-property-proof");
 const { createReceiverProof } = require("./async-consumer-receivers");
 
 function createConsumerProof(context) {
   const results = new WeakMap();
   const sourceFacts = { typed: new WeakMap(), sources: null };
   const receiverShape = createReceiverProof(sourceFacts);
+  const noParameter = Object.create(null);
   let depth = 0;
   return function provenAwaitingConsumer(argument) {
     let value = unwrapTransparentParent(argument);
@@ -32,8 +39,27 @@ function createConsumerProof(context) {
       property = entry.key.name ?? entry.key.value;
       value = unwrapTransparentParent(object);
     }
-    return proveCall(value.parent, value.parent?.arguments?.indexOf(value), property, context);
+    const call = value.parent;
+    const mode = proveCall(call, call?.arguments?.indexOf(value), property, context);
+    // A returned dependencies object still has to be awaited by this caller.
+    if (mode?.returned) {
+      return (
+        adoptReturned(call, mode, property, context, {
+          proveCall,
+          receiverShape,
+          propertyWritten,
+          forward: forwarded,
+          lexicalCallback,
+          variable: noParameter,
+        }) === true
+      );
+    }
+    return mode === true;
   };
+
+  function withAsync(fn, mode) {
+    return mode?.returned ? { ...mode, async: Boolean(fn.async) } : mode;
+  }
 
   function proveBody(fn, index, owner, property, shape) {
     return property === null
@@ -65,19 +91,20 @@ function createConsumerProof(context) {
       // Mark before recursion: cyclic forwarding cannot establish a contract.
       slots.set(key, false);
       depth++;
-      slots.set(
-        key,
-        proveBody(
-          localFunction(unwrapExpression(call.callee), owner),
+      const localFn = localFunction(unwrapExpression(call.callee), owner);
+      let mode = false;
+      if (localFn) mode = withAsync(localFn, proveBody(localFn, index, owner, property, shape));
+      if (!mode) {
+        mode = importedAwaited(
+          call,
           index,
           owner,
+          sourceFacts,
           property,
-          shape,
-        ) ||
-          importedAwaited(call, index, owner, sourceFacts, property, (fn, index, owner, property) =>
-            proveBody(fn, index, owner, property, shape),
-          ),
-      );
+          (fn, index, owner, property) => proveBody(fn, index, owner, property, shape),
+        );
+      }
+      slots.set(key, mode || false);
       depth--;
     }
     return slots.get(key);
