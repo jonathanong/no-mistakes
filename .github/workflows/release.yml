@@ -569,7 +569,7 @@ jobs:
           set -euo pipefail
           free -h
           df -h /
-          avail_gb=$(df --output=avail -BG / | tail -1 | tr -dc '0-9')
+          avail_gb=$(( $(df --output=avail -B1 / | tail -1 | tr -dc '0-9') / 1073741824 ))
           size_gb=16
           if [ "$avail_gb" -lt $((size_gb + 4)) ]; then
             size_gb=$((avail_gb - 4))
