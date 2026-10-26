@@ -18,6 +18,27 @@ function resolveVariable(node, context) {
   return findVariable(context.sourceCode.getScope(node), node.name);
 }
 
+// Erased declarations cannot shadow runtime globals such as Function or Map.
+function resolveRuntimeVariable(node, context) {
+  let scope = context.sourceCode.getScope(node);
+  while (scope) {
+    const variable = scope.variables.find((item) => item.name === node.name);
+    if (
+      variable?.defs.some(
+        (definition) =>
+          !["Type", "TypeParameter"].includes(definition.type) &&
+          !(
+            definition.type === "ImportBinding" &&
+            (definition.node.importKind === "type" || definition.parent.importKind === "type")
+          ),
+      )
+    )
+      return variable;
+    scope = scope.upper;
+  }
+  return null;
+}
+
 function isLocalRequire(id, context) {
   const variable = resolveVariable(id, context);
   return Boolean(variable?.defs.some((def) => def.type && def.type !== "ImplicitGlobalVariable"));
@@ -100,5 +121,6 @@ module.exports = {
   namespaceSourceFromInit,
   recordObjectPatternBindings,
   resolveVariable,
+  resolveRuntimeVariable,
   stableConstInitializer,
 };

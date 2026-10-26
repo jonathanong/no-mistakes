@@ -20,7 +20,7 @@ const aggregateLines = [
 const range = (first, last) =>
   Array.from({ length: last - first + 1 }, (_, index) => first + index);
 
-export function realDrop12(installed) {
+export function realDrop12(installed, parserInstalled = true) {
   // Copy the plugin outside the workspace so missing peers are physically absent.
   // Only dependency layout is generated; every analyzed source/config is saved.
   const isolated = mkdtempSync(resolve(tmpdir(), "no-mistakes-drop12-"));
@@ -32,7 +32,9 @@ export function realDrop12(installed) {
     const probe = resolve(isolated, "peer-probe.cjs");
     cpSync(resolve(fixtures, "aggregate-spreads/peer-probe.cjs"), probe);
     if (installed) {
-      for (const name of ["typescript", "@typescript-eslint/parser"]) {
+      for (const name of parserInstalled
+        ? ["typescript", "@typescript-eslint/parser"]
+        : ["typescript"]) {
         const target = resolve(isolated, "node_modules", name);
         mkdirSync(dirname(target), { recursive: true });
         symlinkSync(dirname(require.resolve(`${name}/package.json`)), target, "junction");
@@ -91,7 +93,11 @@ export function realDrop12(installed) {
             ...process.env,
             NODE_PATH: "",
             NODE_OPTIONS: `--require=${JSON.stringify(probe)}`,
-            NO_MISTAKES_TEST_PEERS: installed ? "present" : "absent",
+            NO_MISTAKES_TEST_PEERS: installed
+              ? parserInstalled
+                ? "present"
+                : "typescript"
+              : "absent",
             OXLINT_TSGOLINT_PATH: checker,
           },
         },
@@ -120,5 +126,8 @@ export function realDrop12(installed) {
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   realDrop12(false);
   realDrop12(true);
-  process.stdout.write("Drop12: real type-aware Oxlint passed with and without proof peers\n");
+  realDrop12(true, false);
+  process.stdout.write(
+    "Drop12: real type-aware Oxlint passed with both peers, TypeScript only, and no peers\n",
+  );
 }

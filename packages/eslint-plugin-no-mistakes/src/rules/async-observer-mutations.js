@@ -2,7 +2,10 @@
 
 const { isPromiseMethodCall } = require("./async-disposition-bindings");
 const { unwrapExpression } = require("./async-ast");
-const { resolveVariable, memberPropertyName } = require("./async-target-bindings");
+const {
+  resolveRuntimeVariable: resolveVariable,
+  memberPropertyName,
+} = require("./async-target-bindings");
 
 function observerMutated(node, context, suffix = []) {
   function paths(value, seen = new Set()) {

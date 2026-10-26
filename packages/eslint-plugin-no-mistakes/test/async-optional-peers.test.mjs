@@ -37,7 +37,7 @@ function runNpm(args, cwd) {
   return run(process.execPath, [cli, ...args], cwd);
 }
 
-it("loads a packed plugin and conservatively lints consumers with optional proof peers absent", () => {
+it("loads a packed plugin with TypeScript-only, absent, and incompatible proof peers", () => {
   // Physical installation outside the repository prevents workspace peers from
   // accidentally making an absent-peer consumer appear to work.
   const root = mkdtempSync(join(tmpdir(), "no-mistakes-optional-peers-"));
@@ -116,6 +116,62 @@ it("loads a packed plugin and conservatively lints consumers with optional proof
       dirname(require.resolve("typescript/package.json")),
       join(root, "node_modules/typescript"),
       { recursive: true },
+    );
+    const typedOutput = run(
+      process.execPath,
+      [
+        oxlint,
+        "--type-aware",
+        "--deny-warnings",
+        "--format",
+        "json",
+        "--config",
+        join(root, ".oxlintrc.json"),
+        join(root, "imported.js"),
+        join(root, "recall.js"),
+        join(root, "syntax.js"),
+        join(root, "heritage.js"),
+        join(root, "type-shadow.js"),
+        join(root, "global-value.js"),
+        ...[
+          "global-type.js",
+          "global-type-import.js",
+          "global-type-specifier.js",
+          "global-type-local.ts",
+        ].map((file) => join(root, file)),
+        join(root, "unsupported.js"),
+      ],
+      root,
+      1,
+      { OXLINT_TSGOLINT_PATH: checker },
+    );
+    assert.deepEqual(
+      JSON.parse(typedOutput)
+        .diagnostics.map((item) => [
+          item.filename.split(/[\\/]/).at(-1),
+          item.labels[0].span.line,
+          item.code,
+        ])
+        .sort(),
+      [
+        ...[3, 5, 7, 9, 12, 15].map((line) => [
+          "recall.js",
+          line,
+          "no-mistakes(async-call-disposition)",
+        ]),
+        ["unsupported.js", 3, "no-mistakes(async-call-disposition)"],
+        ...["global-type.js", "global-type-import.js", "global-type-specifier.js"].map((file) => [
+          file,
+          3,
+          "no-mistakes(async-call-disposition)",
+        ]),
+        ["global-type-local.ts", 9, "no-mistakes(async-call-disposition)"],
+        ...[4, 6, 8, 12].map((line) => [
+          "type-shadow.js",
+          line,
+          "no-mistakes(async-call-disposition)",
+        ]),
+      ].sort(),
     );
     run(process.execPath, [runner, eslint, "typescript"], root);
     rmSync(join(root, "node_modules/typescript"), { recursive: true });
