@@ -154,7 +154,7 @@ fn default_visitor_hooks_and_non_identifier_attrs_are_exercised() {
         fn visit_jsx_opening(&mut self, opening: &JSXOpeningElement) {
             self.tag = jsx_identifier_name(opening).map(str::to_string);
             self.dynamic = find_string_attr(opening, "dynamic")
-                .map(|(present, value)| (present, value.map(str::to_string)));
+                .map(|(present, value)| (present, value.map(std::borrow::Cow::into_owned)));
             self.missing = find_string_attr(opening, "missing").is_none();
         }
     }
@@ -181,11 +181,11 @@ fn jsx_attr_helpers_cover_empty_and_non_string_values() {
     impl Visitor for Grab {
         fn visit_jsx_opening(&mut self, opening: &JSXOpeningElement) {
             self.empty = find_string_attr(opening, "empty")
-                .map(|(present, value)| (present, value.map(str::to_string)));
+                .map(|(present, value)| (present, value.map(std::borrow::Cow::into_owned)));
             self.number = find_string_attr(opening, "number")
-                .map(|(present, value)| (present, value.map(str::to_string)));
+                .map(|(present, value)| (present, value.map(std::borrow::Cow::into_owned)));
             self.element = find_string_attr(opening, "element")
-                .map(|(present, value)| (present, value.map(str::to_string)));
+                .map(|(present, value)| (present, value.map(std::borrow::Cow::into_owned)));
             self.spread_seen |= find_string_attr(opening, "spread").is_none();
         }
     }
@@ -238,7 +238,8 @@ fn visits_import_declarations() {
     struct Imports(Vec<String>);
     impl Visitor for Imports {
         fn visit_import(&mut self, import: &oxc_ast::ast::ImportDeclaration) {
-            self.0.push(import.source.value.to_string());
+            self.0
+                .push(crate::ast::js_literal(&import.source).into_owned());
         }
     }
 

@@ -1,6 +1,7 @@
 use super::QueueVisitor;
-use crate::queue::extract_helpers::{binding_name, static_string};
-use oxc_ast::ast::{Expression, VariableDeclarator};
+use crate::ast::js_literal;
+use crate::queue::extract_helpers::{binding_name, literal_expr, static_string};
+use oxc_ast::ast::{Argument, Expression, VariableDeclarator};
 use oxc_ast_visit::walk;
 
 impl<'a> QueueVisitor<'a> {
@@ -37,5 +38,17 @@ impl<'a> QueueVisitor<'a> {
             super::super::extract_factory::note_alias(self, &name, id.name.as_str());
         }
         walk::walk_variable_declarator(self, decl);
+    }
+}
+
+impl QueueVisitor<'_> {
+    pub fn literal_arg(&self, arg: &Argument<'_>) -> Option<String> {
+        match arg {
+            Argument::StringLiteral(value) => Some(js_literal(&value).into_owned()),
+            Argument::Identifier(id) => self.const_strings.get(id.name.as_str()).cloned(),
+            _ => arg
+                .as_expression()
+                .and_then(|expr| literal_expr(expr, &self.const_strings)),
+        }
     }
 }

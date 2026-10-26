@@ -44,10 +44,10 @@ pub fn try_extract_fetch<'a>(
     if let Some(Argument::ObjectExpression(obj)) = expr.arguments.get(1) {
         for prop in &obj.properties {
             if let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(p) = prop {
-                if let Some(name) = p.key.static_name() {
+                if let Some(name) = crate::ast::property_key_name(&p.key) {
                     if name.as_ref() == "method" {
                         if let Expression::StringLiteral(s) = &p.value {
-                            method = s.value.to_string();
+                            method = crate::ast::js_literal(&s).into_owned();
                         }
                     }
                 }

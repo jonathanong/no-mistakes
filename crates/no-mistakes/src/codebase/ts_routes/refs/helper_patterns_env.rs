@@ -1,6 +1,6 @@
 fn helper_param_env<'a>(
     params: &'a oxc_ast::ast::FormalParameters<'a>,
-    defs: &HashMap<&'a str, HelperDef<'a>>,
+    defs: &HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     provided: &HashMap<String, Vec<String>>,
     depth: usize,

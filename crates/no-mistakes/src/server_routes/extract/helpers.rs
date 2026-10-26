@@ -51,10 +51,11 @@ pub(super) fn first_object_prefix(args: &[Argument<'_>]) -> Option<String> {
     };
     for property in &object.properties {
         if let ObjectPropertyKind::ObjectProperty(property) = property {
-            if let (Some("prefix"), Expression::StringLiteral(value)) =
-                (property.key.static_name().as_deref(), &property.value)
-            {
-                return Some(value.value.as_str().to_string());
+            if let (Some("prefix"), Expression::StringLiteral(value)) = (
+                crate::ast::property_key_name(&property.key).as_deref(),
+                &property.value,
+            ) {
+                return Some(crate::ast::js_literal(&value).into_owned());
             }
         }
     }

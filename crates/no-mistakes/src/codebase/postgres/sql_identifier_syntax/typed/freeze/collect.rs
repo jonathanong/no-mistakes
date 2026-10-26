@@ -123,7 +123,7 @@ fn freeze_object(call: &CallExpression<'_>, ids: &FxHashMap<Span, usize>) -> Opt
 }
 fn static_key(expression: &Expression<'_>) -> Option<String> {
     match unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(key) => Some(key.value.to_string()),
+        Expression::StringLiteral(key) => Some(crate::ast::js_literal(&key).into_owned()),
         Expression::NumericLiteral(key) => numeric_key(key.value),
         _ => None,
     }
@@ -137,7 +137,7 @@ fn property_key(key: &oxc_ast::ast::PropertyKey<'_>) -> Option<String> {
     use oxc_ast::ast::PropertyKey;
     match key {
         PropertyKey::StaticIdentifier(value) => Some(value.name.to_string()),
-        PropertyKey::StringLiteral(value) => Some(value.value.to_string()),
+        PropertyKey::StringLiteral(value) => Some(crate::ast::js_literal(&value).into_owned()),
         PropertyKey::NumericLiteral(value) => numeric_key(value.value),
         PropertyKey::NullLiteral(_) => Some("null".into()),
         _ => None,

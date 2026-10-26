@@ -18,7 +18,7 @@ pub(in crate::integration_tests::test_config) fn sourced_reexport(
                 continue;
             }
             return Some(ImportBinding {
-                source: export.source.value.to_string(),
+                source: crate::ast::js_literal(&export.source).into_owned(),
                 imported: specifier.local.name().to_string(),
             });
         }

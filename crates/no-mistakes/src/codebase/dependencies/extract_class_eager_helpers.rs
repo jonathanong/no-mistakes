@@ -44,7 +44,7 @@ fn walk_class_with_scoped_methods<'a>(
                 &method.key,
             );
             if let Some(name) = crate::codebase::ts_source::static_property_key_name(&method.key) {
-                collector.record_aggregate_callable_member_id(class_id, name, method_id);
+                collector.record_aggregate_callable_member_id(class_id, &name, method_id);
             }
             if method.r#static {
                 if let Some(name) =
@@ -65,7 +65,7 @@ fn walk_class_with_scoped_methods<'a>(
                             method_id,
                         );
                     } else {
-                        collector.record_class_member_callable_id(class_id, name, method_id);
+                        collector.record_class_member_callable_id(class_id, &name, method_id);
                     }
                 }
             }

@@ -16,7 +16,7 @@ pub(super) fn configured_namespaces(
         };
         if import.import_kind == ImportOrExportKind::Type
             || !super::super::scoped_bindings::from_configured_module(
-                import.source.value.as_str(),
+                crate::ast::js_literal(&import.source).as_ref(),
                 &options.import_specifier,
             )
         {
@@ -26,7 +26,7 @@ pub(super) fn configured_namespaces(
             if let ImportDeclarationSpecifier::ImportNamespaceSpecifier(namespace) = specifier {
                 names.insert(
                     namespace.local.name.to_string(),
-                    import.source.value.to_string(),
+                    crate::ast::js_literal(&import.source).into_owned(),
                 );
             }
         }
@@ -46,7 +46,7 @@ pub(super) fn configured_values(
         };
         if import.import_kind == ImportOrExportKind::Type
             || (!options.import_specifier.is_empty()
-                && import.source.value.as_str() != options.import_specifier)
+                && crate::ast::js_literal(&import.source).as_ref() != options.import_specifier)
         {
             continue;
         }
@@ -62,8 +62,8 @@ pub(super) fn configured_values(
             names.insert(
                 named.local.name.to_string(),
                 (
-                    import.source.value.to_string(),
-                    named.imported.name().to_string(),
+                    crate::ast::js_literal(&import.source).into_owned(),
+                    crate::ast::module_export_name(&named.imported).to_string(),
                 ),
             );
         }

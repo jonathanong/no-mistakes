@@ -8,13 +8,14 @@ impl Evaluator {
     ) -> Value {
         let mut value = String::new();
         for (index, quasi) in template.quasis.iter().enumerate() {
-            let Some(text) = quasi.value.cooked.as_ref() else {
+            let Some(_) = quasi.value.cooked.as_ref() else {
                 return Value::Unknown;
             };
+            let text = crate::ast::template_quasi_text(quasi);
             if value.len().saturating_add(text.len()) > 65536 {
                 return Value::Unknown;
             }
-            value.push_str(text.as_str());
+            value.push_str(&text);
             if let Some(expr) = template.expressions.get(index) {
                 let Value::String(part) = self.expression(expr, env, depth) else {
                     return Value::Unknown;

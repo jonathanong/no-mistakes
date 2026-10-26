@@ -117,7 +117,7 @@ fn add_router_binding_pattern<'a>(
         }
         BindingPattern::ObjectPattern(obj) => {
             for prop in &obj.properties {
-                let Some(key) = prop.key.static_name() else {
+                let Some(key) = crate::ast::property_key_name(&prop.key) else {
                     continue;
                 };
                 if !matches!(key.as_ref(), "push" | "replace" | "prefetch") {

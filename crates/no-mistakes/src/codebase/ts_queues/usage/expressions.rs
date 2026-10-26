@@ -22,7 +22,9 @@ fn scan_expr(
                             if let ArrayExpressionElement::ObjectExpression(obj) = el {
                                 for prop in &obj.properties {
                                     if let ObjectPropertyKind::ObjectProperty(p) = prop {
-                                        if p.key.static_name().as_deref() == Some("name") {
+                                        if crate::ast::property_key_name(&p.key).as_deref()
+                                            == Some("name")
+                                        {
                                             let job = literal_str_expr(&p.value);
                                             let line = byte_offset_to_line(
                                                 source,
@@ -94,7 +96,8 @@ fn scan_expr(
             if let Some(expression) = arrow.body.as_expression() {
                 scan_expr(expression, source, namespace_imports, usage);
             } else {
-                for s in crate::ast::arrow_function_body_statements(&arrow.body).unwrap_or_default() {
+                for s in crate::ast::arrow_function_body_statements(&arrow.body).unwrap_or_default()
+                {
                     scan_stmt(s, source, namespace_imports, usage);
                 }
             }
@@ -124,7 +127,7 @@ fn extract_member_call<'a>(call: &'a CallExpression) -> Option<(String, &'a str)
 
 fn literal_str(arg: &Argument) -> Option<String> {
     if let Argument::StringLiteral(s) = arg {
-        return Some(s.value.as_str().to_string());
+        return Some(crate::ast::js_literal(&s).into_owned());
     }
     if let Some(e) = arg.as_expression() {
         return literal_str_expr(e);
@@ -134,7 +137,7 @@ fn literal_str(arg: &Argument) -> Option<String> {
 
 fn literal_str_expr(expr: &Expression) -> Option<String> {
     if let Expression::StringLiteral(s) = expr {
-        return Some(s.value.as_str().to_string());
+        return Some(crate::ast::js_literal(&s).into_owned());
     }
     None
 }

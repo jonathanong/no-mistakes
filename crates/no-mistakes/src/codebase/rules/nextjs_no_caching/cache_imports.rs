@@ -8,7 +8,7 @@ pub(super) struct CacheImportEffects {
 }
 
 pub(super) fn effects(import: &ImportDeclaration<'_>) -> Option<CacheImportEffects> {
-    if import.source.value.as_str() != "next/cache" {
+    if crate::ast::js_literal(&import.source).as_ref() != "next/cache" {
         return None;
     }
     let Some(specifiers) = import.specifiers.as_ref() else {
@@ -44,9 +44,9 @@ fn apply_specifier(specifier: &ImportDeclarationSpecifier<'_>, effects: &mut Cac
             ));
         }
         ImportDeclarationSpecifier::ImportSpecifier(spec) => {
-            let imported = spec.imported.name();
+            let imported = crate::ast::module_export_name(&spec.imported);
             if banned_next_cache_import(&imported) {
-                if imported.as_str() == "unstable_cache" {
+                if imported.as_ref() == "unstable_cache" {
                     effects
                         .unstable_cache_bindings
                         .push(spec.local.name.as_str().to_string());

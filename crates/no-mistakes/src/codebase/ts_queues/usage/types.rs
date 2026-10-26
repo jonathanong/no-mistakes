@@ -51,7 +51,7 @@ pub fn extract_queue_usage_from_program<'a>(program: &Program<'a>, source: &str)
     let mut namespace_imports: HashMap<String, String> = HashMap::new(); // local → specifier
     for stmt in &program.body {
         if let Statement::ImportDeclaration(import_decl) = stmt {
-            let src = import_decl.source.value.as_str();
+            let src = crate::ast::js_literal(&import_decl.source);
             if let Some(specifiers) = &import_decl.specifiers {
                 for spec in specifiers {
                     match spec {
@@ -73,7 +73,7 @@ pub fn extract_queue_usage_from_program<'a>(program: &Program<'a>, source: &str)
     // Also include bindings from default imports (less common for queues, but handle for robustness).
     for stmt in &program.body {
         if let Statement::ImportDeclaration(import_decl) = stmt {
-            let src = import_decl.source.value.as_str();
+            let src = crate::ast::js_literal(&import_decl.source);
             if let Some(specifiers) = &import_decl.specifiers {
                 for spec in specifiers {
                     if let ImportDeclarationSpecifier::ImportDefaultSpecifier(s) = spec {

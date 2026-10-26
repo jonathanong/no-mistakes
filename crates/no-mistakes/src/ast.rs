@@ -3,15 +3,19 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::{ArrowFunctionBody, FunctionBody, Program, Statement};
 use oxc_parser::{Parser, ParserReturn};
 use oxc_span::SourceType;
-use std::cell::RefCell;
-use std::path::Path;
-use std::sync::Arc;
+use std::{cell::RefCell, path::Path, sync::Arc};
 
 mod expression;
+mod js_string;
+mod module_names;
 #[cfg(any(test, feature = "test-instrumentation"))]
 mod parse_count;
 mod parsed_cache;
 pub use expression::{binary_concat_path_text, expression_path, span_text, template_literal_text};
+pub(crate) use js_string::{
+    computed_property_name, js_literal, js_literal_has_lone_surrogate, member_property_name,
+    module_export_name, property_key_name, template_quasi_text,
+};
 #[cfg(any(test, feature = "test-instrumentation"))]
 pub use parse_count::{begin_parse_count, begin_parse_count_this_thread, finish_parse_count};
 pub(crate) use parsed_cache::{legacy_symbols_share_standard_parse, ParsedProgramCache};
@@ -37,8 +41,7 @@ pub(crate) fn current_request_parse_cache() -> Option<ParsedProgramCache> {
     REQUEST_PARSE_CACHES.with(|caches| caches.borrow().last().cloned())
 }
 
-/// Oxc 0.143 represents concise arrow bodies as expressions rather than an
-/// empty `FunctionBody`. Callers that scan statements must ignore those bodies.
+/// Statement scans ignore concise arrow expressions, which have no `FunctionBody`.
 pub(crate) fn arrow_function_body<'a>(
     body: &'a ArrowFunctionBody<'a>,
 ) -> Option<&'a FunctionBody<'a>> {
@@ -59,9 +62,7 @@ pub(crate) fn request_parse_cache_active() -> bool {
 }
 
 /// Drop programs retained by the current request parse cache.
-///
-/// Public so the CLI binary's check runner can release extract ASTs after
-/// fact collection. Library callers already share this crate.
+/// Public so the CLI check runner can release ASTs after fact collection.
 #[doc(hidden)]
 pub fn clear_request_parse_cache() {
     if let Some(cache) = current_request_parse_cache() {
@@ -92,7 +93,6 @@ pub fn with_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
 }
 
 /// Install a parse cache owned by this call.
-///
 /// Unlike [`with_request_parse_cache`], this never clones a cache already on
 /// the worker. Nested Rayon work on the shared pool can otherwise inherit
 /// another request's path-keyed programs.
@@ -104,9 +104,7 @@ pub fn with_owned_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
 }
 
 /// The single production entrypoint for invoking the OXC parser.
-///
-/// Keeping observation here makes both successful and failed parses visible to
-/// request-scoped instrumentation. Source-only compatibility APIs should pass a
+/// Observation here covers successes and failures. Source-only APIs should pass a
 /// stable, extension-bearing relative sentinel path.
 pub(crate) fn parse<'a>(
     path: &Path,
@@ -118,7 +116,10 @@ pub(crate) fn parse<'a>(
     parse_count::record_parse_path(path);
     #[cfg(not(any(test, feature = "test-instrumentation")))]
     let _ = path;
-    Parser::new(allocator, source, source_type).parse()
+    module_names::enforce(
+        Parser::new(allocator, source, source_type).parse(),
+        allocator,
+    )
 }
 
 pub fn with_program<T>(
@@ -136,8 +137,7 @@ pub fn with_program<T>(
         .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 
-/// Parse strictly while reporting only a physical parser invocation through
-/// `on_parse`.
+/// Parse strictly, reporting physical parser invocations through `on_parse`.
 pub(crate) fn with_program_observed<T>(
     path: &Path,
     source: Arc<str>,

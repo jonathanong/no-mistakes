@@ -10,14 +10,7 @@ pub fn span_text(source: &str, span: Span) -> &str {
 pub fn template_literal_text(template: &TemplateLiteral<'_>, source: &str) -> String {
     let mut text = String::new();
     for (index, quasi) in template.quasis.iter().enumerate() {
-        text.push_str(
-            quasi
-                .value
-                .cooked
-                .as_ref()
-                .unwrap_or(&quasi.value.raw)
-                .as_str(),
-        );
+        text.push_str(&super::template_quasi_text(quasi));
         if let Some(expression) = template.expressions.get(index) {
             text.push_str("${");
             text.push_str(span_text(source, expression.span()));
@@ -46,7 +39,7 @@ pub fn binary_concat_path_text(expression: &BinaryExpression<'_>, source: &str) 
 
 fn append_concat_operand(text: &mut String, expression: &Expression<'_>, source: &str) {
     match expression {
-        Expression::StringLiteral(literal) => text.push_str(literal.value.as_str()),
+        Expression::StringLiteral(literal) => text.push_str(&super::js_literal(literal)),
         Expression::TemplateLiteral(template) => {
             text.push_str(&template_literal_text(template, source));
         }

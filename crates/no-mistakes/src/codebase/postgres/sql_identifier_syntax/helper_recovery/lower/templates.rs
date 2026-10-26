@@ -9,12 +9,13 @@ use oxc_span::GetSpan;
 pub(super) fn lower(scope: &mut Scope<'_>, template: &TemplateLiteral<'_>, binds: bool) -> Expr {
     let mut pieces = Vec::new();
     for quasi in &template.quasis {
-        let Some(cooked) = &quasi.value.cooked else {
+        let Some(_) = &quasi.value.cooked else {
             return Expr::Opaque;
         };
+        let cooked = crate::ast::template_quasi_text(quasi);
         if !super::super::super::literal_projection::literal_matches(
             quasi.value.raw.as_str(),
-            cooked,
+            &cooked,
         ) {
             return Expr::Opaque;
         }

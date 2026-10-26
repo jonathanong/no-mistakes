@@ -165,7 +165,7 @@ fn exported_member_options<T>(
                 continue;
             }
             let binding = ImportBinding {
-                source: export.source.value.to_string(),
+                source: crate::ast::js_literal(&export.source).into_owned(),
                 imported: member.to_string(),
             };
             let options = imported_options_from_base(&binding, path, parent, ops)?;

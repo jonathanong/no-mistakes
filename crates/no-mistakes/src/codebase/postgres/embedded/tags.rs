@@ -168,16 +168,11 @@ fn trusted_named_tag(source: &str, imported: &str, tag: &TrustedSqlTag) -> bool 
 }
 
 pub(super) fn quasi_text<'a>(
-    quasi: &'a oxc_ast::ast::TemplateElement<'a>,
+    quasi: &oxc_ast::ast::TemplateElement<'a>,
     use_raw: bool,
-) -> &'a str {
+) -> std::borrow::Cow<'a, str> {
     if use_raw {
-        return quasi.value.raw.as_str();
+        return std::borrow::Cow::Borrowed(quasi.value.raw.as_str());
     }
-    quasi
-        .value
-        .cooked
-        .as_ref()
-        .map(|cooked| cooked.as_str())
-        .unwrap_or(quasi.value.raw.as_str())
+    crate::ast::template_quasi_text(quasi)
 }

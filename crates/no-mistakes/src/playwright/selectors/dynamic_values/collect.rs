@@ -2,7 +2,7 @@ use oxc_ast::ast::{Expression, Program, Statement};
 
 pub fn collect_string_leaves(expression: &Expression<'_>) -> Vec<String> {
     match expression {
-        Expression::StringLiteral(lit) => vec![lit.value.to_string()],
+        Expression::StringLiteral(lit) => vec![crate::ast::js_literal(&lit).into_owned()],
         Expression::ConditionalExpression(cond) => {
             let mut values = collect_string_leaves(&cond.consequent);
             values.extend(collect_string_leaves(&cond.alternate));
@@ -43,7 +43,7 @@ pub fn collect_object_string_values(expr: &Expression<'_>) -> Vec<String> {
                 continue;
             }
             if let Expression::StringLiteral(lit) = &prop.value {
-                values.push(lit.value.to_string());
+                values.push(crate::ast::js_literal(&lit).into_owned());
             }
         }
     }
@@ -166,7 +166,7 @@ where
                         &assignment.left
                     {
                         if let Expression::StringLiteral(lit) = &assignment.right {
-                            collector(ident.name.as_str(), lit.value.as_str());
+                            collector(ident.name.as_str(), crate::ast::js_literal(&lit).as_ref());
                         }
                     }
                 }

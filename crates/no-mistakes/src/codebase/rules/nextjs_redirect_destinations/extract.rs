@@ -146,7 +146,7 @@ impl<'a> Visit<'a> for BodyFinder<'a, '_> {
         if self.body_found {
             return;
         }
-        if static_property_key_name(&property.key) == Some(self.name)
+        if static_property_key_name(&property.key).as_deref() == Some(self.name)
             && self.collect_from_expression(&property.value)
         {
             return;
@@ -158,7 +158,7 @@ impl<'a> Visit<'a> for BodyFinder<'a, '_> {
         if self.body_found {
             return;
         }
-        if static_property_key_name(&method.key) == Some(self.name) {
+        if static_property_key_name(&method.key).as_deref() == Some(self.name) {
             self.body_found = true;
             let value = self.evaluator().function(&method.value, &self.environment);
             self.collect(value);
@@ -171,7 +171,7 @@ impl<'a> Visit<'a> for BodyFinder<'a, '_> {
         if self.body_found {
             return;
         }
-        if static_property_key_name(&property.key) == Some(self.name) {
+        if static_property_key_name(&property.key).as_deref() == Some(self.name) {
             if let Some(value) = property.value.as_ref() {
                 if self.collect_from_expression(value) {
                     return;

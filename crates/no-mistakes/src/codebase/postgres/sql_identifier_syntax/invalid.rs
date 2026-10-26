@@ -16,11 +16,9 @@ pub(crate) fn collect_invalid(
                     continue;
                 };
                 let exact = profile.import_specifier.is_empty()
-                    || import.source.value.as_str() == profile.import_specifier;
+                    || crate::ast::js_literal(&import.source).as_ref() == profile.import_specifier;
                 let scoped = exact
-                    || import
-                        .source
-                        .value
+                    || crate::ast::js_literal(&import.source)
                         .starts_with(&format!("{}/", profile.import_specifier));
                 if !scoped {
                     continue;
@@ -31,19 +29,19 @@ pub(crate) fn collect_invalid(
                     .flatten()
                     .any(|binding| match binding {
                         ImportDeclarationSpecifier::ImportSpecifier(named) => {
-                            let name = named.imported.name();
+                            let name = crate::ast::module_export_name(&named.imported);
                             (exact
                                 && !import.import_kind.is_type()
                                 && !named.import_kind.is_type()
                                 && profile
                                     .executor_names
                                     .iter()
-                                    .any(|target| target == name.as_str()))
+                                    .any(|target| target == name.as_ref()))
                                 || profile
                                     .executor_factory_names
                                     .iter()
                                     .chain(&profile.executor_type_names)
-                                    .any(|target| target == name.as_str())
+                                    .any(|target| target == name.as_ref())
                         }
                         ImportDeclarationSpecifier::ImportNamespaceSpecifier(_) => {
                             !profile.import_specifier.is_empty()

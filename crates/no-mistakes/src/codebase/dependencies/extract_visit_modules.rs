@@ -8,7 +8,7 @@ fn visit_import_declaration_with_scope(
         .as_ref()
         .is_none_or(|specifiers| specifiers.is_empty());
     collector.push_with_side_effect(
-        import.source.value.as_str(),
+        crate::ast::js_literal(&import.source).as_ref(),
         kind,
         import.span.start as usize,
         side_effect_only,
@@ -28,7 +28,7 @@ fn visit_export_all_declaration_with_scope(
         ImportKind::Static
     };
     collector.push_reexport(
-        export.source.value.as_str(),
+        crate::ast::js_literal(&export.source).as_ref(),
         kind,
         export.span.start as usize,
     );
@@ -38,7 +38,7 @@ fn visit_export_all_declaration_with_scope(
     if !export.export_kind.is_type() {
         if let Some(exported) = export.exported.as_ref().and_then(module_export_name_name) {
             collector.call_export_bindings.push(ExportedBinding {
-                specifier: Some(export.source.value.to_string()),
+                specifier: Some(crate::ast::js_literal(&export.source).into_owned()),
                 // `*` cannot be an ECMAScript export name. It distinguishes
                 // the namespace object from a normal named re-export.
                 local: "*".to_string(),
@@ -47,7 +47,7 @@ fn visit_export_all_declaration_with_scope(
         } else {
             collector
                 .star_reexport_specifiers
-                .push(export.source.value.to_string());
+                .push(crate::ast::js_literal(&export.source).into_owned());
         }
     }
 }
@@ -97,7 +97,7 @@ fn computed_import_specifier(expr: &Expression<'_>) -> String {
         Expression::TemplateLiteral(template) => {
             let mut specifier = String::new();
             for (i, quasi) in template.quasis.iter().enumerate() {
-                specifier.push_str(quasi.value.cooked.as_ref().unwrap_or(&quasi.value.raw));
+                specifier.push_str(crate::ast::template_quasi_text(quasi).as_ref());
                 if i < template.expressions.len() {
                     specifier.push_str("${}");
                 }
@@ -114,7 +114,7 @@ fn computed_import_specifier(expr: &Expression<'_>) -> String {
 
 fn visit_ts_import_type_with_scope(collector: &mut ImportCollector, import: &TSImportType<'_>) {
     collector.push(
-        import.source.value.as_str(),
+        crate::ast::js_literal(&import.source).as_ref(),
         ImportKind::Type,
         import.span.start as usize,
     );

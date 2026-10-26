@@ -1,8 +1,11 @@
 use super::*;
+
+mod commonjs;
+pub(super) use commonjs::commonjs_reference;
 pub(super) fn from(value: &ExportFromDeclaration<'_>, facts: &mut TypeScriptModuleFacts) {
     if value.specifiers.is_empty() {
         facts.exports.push(ModuleExport {
-            specifier: Some(value.source.value.to_string()),
+            specifier: Some(crate::ast::js_literal(&value.source).into_owned()),
             local: String::new(),
             exported: String::new(),
             type_only: value.export_kind.is_type(),
@@ -11,7 +14,7 @@ pub(super) fn from(value: &ExportFromDeclaration<'_>, facts: &mut TypeScriptModu
     }
     for specifier in &value.specifiers {
         facts.exports.push(ModuleExport {
-            specifier: Some(value.source.value.to_string()),
+            specifier: Some(crate::ast::js_literal(&value.source).into_owned()),
             local: name(&specifier.local),
             exported: name(&specifier.exported),
             type_only: value.export_kind.is_type() || specifier.export_kind.is_type(),
@@ -21,7 +24,7 @@ pub(super) fn from(value: &ExportFromDeclaration<'_>, facts: &mut TypeScriptModu
 }
 pub(super) fn all(value: &ExportAllDeclaration<'_>, facts: &mut TypeScriptModuleFacts) {
     facts.exports.push(ModuleExport {
-        specifier: Some(value.source.value.to_string()),
+        specifier: Some(crate::ast::js_literal(&value.source).into_owned()),
         local: "*".into(),
         exported: value
             .exported
@@ -159,46 +162,6 @@ fn default_local(identifier: &IdentifierReference<'_>, semantic: &Semantic<'_>) 
     } else {
         String::new()
     }
-}
-
-pub(super) fn commonjs_reference(
-    value: &IdentifierReference<'_>,
-    node_id: oxc_semantic::NodeId,
-    semantic: &Semantic<'_>,
-    facts: &mut TypeScriptModuleFacts,
-) {
-    if value.name != "module" && value.name != "exports" {
-        return;
-    }
-    let reference = semantic.scoping().get_reference(
-        value
-            .reference_id
-            .get()
-            .expect("semantic CommonJS reference"),
-    );
-    if !reference.is_value()
-        || reference.flags().is_value_as_type()
-        || loads::has_runtime_binding(reference, semantic)
-    {
-        return;
-    }
-    if value.name == "module" {
-        let property = match loads::unwrapped_parent(node_id, semantic) {
-            Some(AstKind::StaticMemberExpression(member)) => Some(member.property.name.as_str()),
-            Some(AstKind::ComputedMemberExpression(member)) => {
-                member.static_property_name().map(|name| name.as_str())
-            }
-            _ => None,
-        };
-        if property.is_some_and(|name| name != "exports") {
-            return;
-        }
-    }
-    unsupported(
-        facts,
-        value.span,
-        "CommonJS module/export objects are unsupported",
-    );
 }
 
 #[cfg(test)]

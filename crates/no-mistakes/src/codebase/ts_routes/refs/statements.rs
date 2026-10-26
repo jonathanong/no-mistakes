@@ -4,7 +4,7 @@ fn is_use_router_call(expr: &Expression) -> bool {
             Expression::Identifier(id) => id.name.as_str() == "useRouter",
             other => other
                 .as_member_expression()
-                .and_then(|m| m.static_property_name())
+                .and_then(|m| crate::ast::member_property_name(m))
                 .map(|n| n == "useRouter")
                 .unwrap_or(false),
         }

@@ -126,7 +126,7 @@ impl<'a> NextjsCachingVisitor<'a> {
         for specifier in &export.specifiers {
             if let Some(message) = self
                 .segment_config_bindings
-                .get(specifier.local.name().as_str())
+                .get(crate::ast::module_export_name(&specifier.local).as_ref())
             {
                 self.push(specifier.span.start, message.clone());
             }

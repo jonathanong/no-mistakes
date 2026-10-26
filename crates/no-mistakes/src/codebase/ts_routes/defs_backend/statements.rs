@@ -55,37 +55,36 @@ fn collect_from_statement(
                 results,
             );
         }
-        Statement::ExportDeclaration(export) => {
-                match &export.declaration {
-                    oxc_ast::ast::Declaration::VariableDeclaration(var_decl) => {
-                        let register_object_in_scope = register_object_in_scope
-                            && !var_decl.declarations.iter().any(|decl| {
-                                binding_pattern_contains_name(&decl.id, register_object)
-                            });
-                        for d in &var_decl.declarations {
-                            if let Some(init) = &d.init {
-                                collect_from_expression(
-                                    init,
-                                    source,
-                                    register_object,
-                                    register_object_in_scope,
-                                    results,
-                                );
-                            }
-                        }
-                    }
-                    oxc_ast::ast::Declaration::FunctionDeclaration(func) => {
-                        collect_from_function_body(
-                            func,
+        Statement::ExportDeclaration(export) => match &export.declaration {
+            oxc_ast::ast::Declaration::VariableDeclaration(var_decl) => {
+                let register_object_in_scope = register_object_in_scope
+                    && !var_decl
+                        .declarations
+                        .iter()
+                        .any(|decl| binding_pattern_contains_name(&decl.id, register_object));
+                for d in &var_decl.declarations {
+                    if let Some(init) = &d.init {
+                        collect_from_expression(
+                            init,
                             source,
                             register_object,
                             register_object_in_scope,
                             results,
                         );
                     }
-                    _ => {}
                 }
-        }
+            }
+            oxc_ast::ast::Declaration::FunctionDeclaration(func) => {
+                collect_from_function_body(
+                    func,
+                    source,
+                    register_object,
+                    register_object_in_scope,
+                    results,
+                );
+            }
+            _ => {}
+        },
         _ => {}
     }
 }
@@ -124,9 +123,8 @@ fn collect_from_expression(
 ) {
     if let Expression::CallExpression(call) = expr {
         if let Some(member) = call.callee.as_member_expression().filter(|member| {
-            member
-                .static_property_name()
-                .is_some_and(|verb| HTTP_VERBS.contains(&verb))
+            crate::ast::member_property_name(member)
+                .is_some_and(|verb| HTTP_VERBS.contains(&verb.as_ref()))
         }) {
             let line = byte_offset_to_line(source, call.span.start as usize);
             if register_object_in_scope {

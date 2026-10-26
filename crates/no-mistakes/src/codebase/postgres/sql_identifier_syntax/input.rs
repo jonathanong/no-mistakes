@@ -8,7 +8,7 @@ pub(super) fn input(
     match unwrap_ts_wrappers(expression) {
         Expression::TaggedTemplateExpression(value) => tags.input(value),
         Expression::StringLiteral(value) => Input::Sql {
-            text: value.value.to_string(),
+            text: crate::ast::js_literal(&value).into_owned(),
             source_span: span(value.span),
             holes: Vec::new(),
             parameterized: None,
@@ -22,15 +22,16 @@ pub(super) fn input(
                 part.value
                     .cooked
                     .as_ref()
-                    .is_some_and(|text| text.contains(&prefix))
+                    .is_some_and(|_| crate::ast::template_quasi_text(part).contains(&prefix))
             }) {
                 prefix.push('_');
             }
             for (index, quasi) in value.quasis.iter().enumerate() {
-                let Some(cooked) = &quasi.value.cooked else {
+                let Some(_) = &quasi.value.cooked else {
                     return Input::Unknown;
                 };
-                text.push_str(cooked);
+                let cooked = crate::ast::template_quasi_text(quasi);
+                text.push_str(&cooked);
                 if let Some(expression) = value.expressions.get(index) {
                     // Placeholder identity preserves which SQL position owns each input.
                     let placeholder = format!("{prefix}{index}");

@@ -68,7 +68,7 @@ pub(super) fn workspace_exported_options(
                     if !specifier.export_kind.is_type() && specifier.exported.name() == exported {
                         return imported_workspace_options(
                             &ImportBinding {
-                                source: export.source.value.to_string(),
+                                source: crate::ast::js_literal(&export.source).into_owned(),
                                 imported: specifier.local.name().to_string(),
                             },
                             ctx,
@@ -81,7 +81,7 @@ pub(super) fn workspace_exported_options(
                     && export.exported.is_none()
                     && !export.export_kind.is_type() =>
             {
-                star_sources.push(export.source.value.to_string());
+                star_sources.push(crate::ast::js_literal(&export.source).into_owned());
             }
             _ => {}
         }

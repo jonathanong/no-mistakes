@@ -20,7 +20,7 @@ pub(super) fn binding_name(pattern: &BindingPattern<'_>) -> Option<String> {
 pub(super) fn export_name(name: &ModuleExportName<'_>) -> String {
     match name {
         ModuleExportName::IdentifierName(id) => id.name.as_str().to_string(), ModuleExportName::IdentifierReference(id) => id.name.as_str().to_string(),
-        ModuleExportName::StringLiteral(value) => value.value.as_str().to_string(),
+        ModuleExportName::StringLiteral(value) => crate::ast::js_literal(&value).into_owned(),
     }
 }
 
@@ -30,7 +30,7 @@ pub(super) fn is_queue_package(source: &str) -> bool {
 
 pub(super) fn static_string(expr: &Expression<'_>) -> Option<String> {
     match expr {
-        Expression::StringLiteral(value) => Some(value.value.as_str().to_string()),
+        Expression::StringLiteral(value) => Some(crate::ast::js_literal(&value).into_owned()),
         Expression::TemplateLiteral(template) => no_substitution_template(template),
         _ => None,
     }
@@ -73,7 +73,8 @@ fn no_substitution_template(template: &TemplateLiteral<'_>) -> Option<String> {
     }
     let mut text = String::new();
     for quasi in &template.quasis {
-        text.push_str(quasi.value.cooked.as_deref()?);
+        quasi.value.cooked?;
+        text.push_str(crate::ast::template_quasi_text(quasi).as_ref());
     }
     Some(text)
 }

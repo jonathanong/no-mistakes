@@ -60,7 +60,7 @@ pub(super) fn record_flow(
     let mut raw_job = None;
     for property in &object.properties {
         if let ObjectPropertyKind::ObjectProperty(property) = property {
-            match property.key.static_name().as_deref() {
+            match crate::ast::property_key_name(&property.key).as_deref() {
                 Some("queueName") => queue = literal_expr(&property.value, consts),
                 Some("name") => {
                     raw_job = Some(span(source, property.value.span()));
@@ -100,7 +100,7 @@ fn record_bulk_items(
 ) {
     for property in &object.properties {
         if let ObjectPropertyKind::ObjectProperty(property) = property {
-            if property.key.static_name().as_deref() == Some("name") {
+            if crate::ast::property_key_name(&property.key).as_deref() == Some("name") {
                 let (job, job_import) =
                     literal_or_import(&property.value, consts, &facts.string_imports);
                 facts.producers.push(ProducerSite {

@@ -89,3 +89,14 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn importe
     ctx.seen.remove(&path);
     result
 }
+
+pub(super) fn member_ops() -> members::MemberOps<Options> {
+    members::MemberOps {
+        expression_options,
+        imported_options,
+        exported_options: exports::exported_options,
+        expression_object: objects::expression_object,
+        import_bindings: super::import_bindings,
+        default_identifier_reexport: true,
+    }
+}

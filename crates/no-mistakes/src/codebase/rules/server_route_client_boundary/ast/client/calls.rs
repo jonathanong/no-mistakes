@@ -16,8 +16,8 @@ impl ClientHttpVisitor<'_> {
     }
 
     fn client_call_member(&self, member: &MemberExpression<'_>) -> bool {
-        member.static_property_name().is_some_and(|name| {
-            is_client_method_name(name) || is_client_named_callee("undici", name)
+        crate::ast::member_property_name(member).is_some_and(|name| {
+            is_client_method_name(&name) || is_client_named_callee("undici", &name)
         }) && self.client_expr(member.object())
     }
 }

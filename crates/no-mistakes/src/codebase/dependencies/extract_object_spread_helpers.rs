@@ -1,7 +1,4 @@
-fn recorded_call_callee(
-    collector: &ImportCollector,
-    call: &CallExpression<'_>,
-) -> Option<String> {
+fn recorded_call_callee(collector: &ImportCollector, call: &CallExpression<'_>) -> Option<String> {
     let callee = object_literal_spread_call_callee(collector, call)
         .or_else(|| simple_callee_name(&call.callee))?;
     Some(normalize_function_prototype_call_apply(collector, callee))
@@ -44,7 +41,8 @@ fn object_literal_member_target(
                 }
             }
             ObjectPropertyKind::ObjectProperty(property) => {
-                if crate::codebase::ts_source::static_property_key_name(&property.key) != Some(member)
+                if crate::codebase::ts_source::static_property_key_name(&property.key).as_deref()
+                    != Some(member)
                 {
                     continue;
                 }
@@ -67,7 +65,9 @@ fn known_object_spread_source(
     let name = identifier.name.as_str();
     let binding_scope = collector.callee_binding_scope(name)?;
     if collector.has_reassigned_callable_at(binding_scope, name)
-        || collector.class_id_for_binding(binding_scope, name).is_some()
+        || collector
+            .class_id_for_binding(binding_scope, name)
+            .is_some()
     {
         return None;
     }
@@ -86,7 +86,9 @@ fn object_source_has_member(
         || collector.has_object_setter_member(source_id, member)
         || collector
             .callee_binding_scope(source)
-            .and_then(|scope| collector.indexed_callable_alias(scope, &format!("{source}.{member}")))
+            .and_then(|scope| {
+                collector.indexed_callable_alias(scope, &format!("{source}.{member}"))
+            })
             .is_some()
 }
 

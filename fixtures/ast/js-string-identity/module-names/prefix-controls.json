@@ -1,0 +1,323 @@
+[
+  {
+    "source": "",
+    "span": null,
+    "limit": 0
+  },
+  {
+    "source": ";",
+    "span": null,
+    "limit": 1
+  },
+  {
+    "source": "}",
+    "span": null,
+    "limit": 1
+  },
+  {
+    "source": "declare const",
+    "span": null,
+    "limit": 13
+  },
+  {
+    "source": "export declare const",
+    "span": null,
+    "limit": 20
+  },
+  {
+    "source": "import value from \"pkg\";",
+    "span": null,
+    "limit": 24
+  },
+  {
+    "source": "namespace 7 {}",
+    "span": null,
+    "limit": 14
+  },
+  {
+    "source": "namespace N;",
+    "span": null,
+    "limit": 12
+  },
+  {
+    "source": "namespace class {}",
+    "span": null,
+    "limit": 18
+  },
+  {
+    "source": "namespace N {",
+    "span": null,
+    "limit": 13
+  },
+  {
+    "source": "namespace N {}",
+    "span": null,
+    "limit": 14
+  },
+  {
+    "source": "// fake \"\\u{D800}\\u{DC00}\"",
+    "span": null,
+    "limit": 26
+  },
+  {
+    "source": "/* unterminated \"\\u{D800}\\u{DC00}\"",
+    "span": null,
+    "limit": 34
+  },
+  {
+    "source": "export {,};",
+    "span": null,
+    "limit": 11
+  },
+  {
+    "source": "import {value};",
+    "span": null,
+    "limit": 15
+  },
+  {
+    "source": "import {\"ordinary\"} from \"pkg\";",
+    "span": null,
+    "limit": 31
+  },
+  {
+    "source": "import {value as \"alias\"} from \"pkg\";",
+    "span": null,
+    "limit": 37
+  },
+  {
+    "source": "import {value as class} from \"pkg\";",
+    "span": null,
+    "limit": 35
+  },
+  {
+    "source": "export {value other};",
+    "span": null,
+    "limit": 21
+  },
+  {
+    "source": "export {\"ordinary\"};",
+    "span": null,
+    "limit": 20
+  },
+  {
+    "source": "export {value} namespace N { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": null,
+    "limit": 70
+  },
+  {
+    "source": "export * namespace;",
+    "span": null,
+    "limit": 19
+  },
+  {
+    "source": "export * from ordinary;",
+    "span": null,
+    "limit": 23
+  },
+  {
+    "source": "export * as ordinary from \"pkg\";",
+    "span": null,
+    "limit": 32
+  },
+  {
+    "source": "import {} from \"pkg\"; export {};",
+    "span": null,
+    "limit": 32
+  },
+  {
+    "source": "export {\"ordinary\" as renamed} from \"pkg\";",
+    "span": null,
+    "limit": 42
+  },
+  {
+    "source": "export {value, other};",
+    "span": null,
+    "limit": 22
+  },
+  {
+    "source": "namespace N { export {value as \"line\nbreak\"}; }",
+    "span": null,
+    "limit": 47
+  },
+  {
+    "source": "namespace N { export {value as \"\\q\"}; }",
+    "span": null,
+    "limit": 39
+  },
+  {
+    "source": "namespace N { export {value as \"\\u{not}\"}; }",
+    "span": null,
+    "limit": 44
+  },
+  {
+    "source": "const fake = \"namespace N { export { value as \\\"\\\\u{D800}\\\\u{DC00}\\\" }; }\";",
+    "span": null,
+    "limit": 75
+  },
+  {
+    "source": "/namespace N { export bad }/;",
+    "span": null,
+    "limit": 29
+  },
+  {
+    "source": "`namespace N { export { value as \"\\u{D800}\\u{DC00}\" }; }`;",
+    "span": null,
+    "limit": 58
+  },
+  {
+    "source": "\"namespace N { export { value as \\\"\\u{D800}\\u{DC00}\\\" }; }\";",
+    "span": null,
+    "limit": 60
+  },
+  {
+    "source": "namespace N { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": [
+      32,
+      50
+    ],
+    "limit": 55
+  },
+  {
+    "source": "declare namespace N.X { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": [
+      42,
+      60
+    ],
+    "limit": 65
+  },
+  {
+    "source": "export declare namespace N { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": [
+      47,
+      65
+    ],
+    "limit": 70
+  },
+  {
+    "source": "namespace N { import {value as local} from \"pkg\"; export { local as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": [
+      68,
+      86
+    ],
+    "limit": 91
+  },
+  {
+    "source": "export {value as ordinary};namespace N { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": [
+      59,
+      77
+    ],
+    "limit": 82
+  },
+  {
+    "source": "namespace Empty{}; /* ignored */ namespace N { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": [
+      65,
+      83
+    ],
+    "limit": 88
+  },
+  {
+    "source": "namespace N { export {\"ordinary\" as renamed} from \"pkg\"; export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": [
+      75,
+      93
+    ],
+    "limit": 98
+  },
+  {
+    "source": "namespace N { export * as ordinary from \"pkg\"; export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": [
+      65,
+      83
+    ],
+    "limit": 88
+  },
+  {
+    "source": "namespace N { import {\"ordinary\" as value} from \"pkg\"; export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": [
+      73,
+      91
+    ],
+    "limit": 96
+  },
+  {
+    "source": "namespace N { export {value, other}; export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": [
+      55,
+      73
+    ],
+    "limit": 78
+  },
+  {
+    "source": "namespace N { export {value as \"escaped\\\"quote\\\\\"}; export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": [
+      70,
+      88
+    ],
+    "limit": 93
+  },
+  {
+    "source": "namespace N { export {value as \"\\uD800\\\r\n\\uDC00\"}; }",
+    "span": [
+      31,
+      48
+    ],
+    "limit": 52
+  },
+  {
+    "source": "namespace N { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": null,
+    "limit": 32
+  },
+  {
+    "source": "namespace N { export { value as \"\\u{D800}\\u{DC00}\" }; }",
+    "span": null,
+    "limit": 56
+  },
+  {
+    "source": "namespace N { export {value as \"unterminated",
+    "span": null,
+    "limit": 44
+  },
+  {
+    "source": "namespace N { export {value as \"trailing\\",
+    "span": null,
+    "limit": 41
+  },
+  {
+    "source": "export {value /",
+    "span": null,
+    "limit": 15
+  },
+  {
+    "source": "import {value} from ordinary;",
+    "span": null,
+    "limit": 29
+  },
+  {
+    "source": "export * as {",
+    "span": null,
+    "limit": 13
+  },
+  {
+    "source": "export * from \"pkg\" namespace N {}",
+    "span": null,
+    "limit": 34
+  },
+  {
+    "source": "declare namespace class {}",
+    "span": null,
+    "limit": 26
+  },
+  {
+    "source": "export namespace class {}",
+    "span": null,
+    "limit": 25
+  },
+  {
+    "source": "export declare namespace class {}",
+    "span": null,
+    "limit": 33
+  }
+]

@@ -36,7 +36,7 @@ pub(super) fn inline_require_callee<'a>(
         return None;
     };
     if let Some(module) = require_module(&member.object) {
-        return match import_binding(module, member.property.name.as_str()) {
+        return match import_binding(&module, member.property.name.as_str()) {
             Some(Binding::FsMethod(kind) | Binding::GlobMethod(kind)) => Some(("require", kind)),
             _ => None,
         };
@@ -45,7 +45,7 @@ pub(super) fn inline_require_callee<'a>(
         return None;
     };
     let module = require_module(&promises.object)?;
-    if !matches!(module, "fs" | "node:fs") || promises.property.name != "promises" {
+    if !matches!(module.as_ref(), "fs" | "node:fs") || promises.property.name != "promises" {
         return None;
     }
     Some(("require", fs_promise_method(member.property.name.as_str())?))
@@ -54,5 +54,5 @@ pub(super) fn inline_require_callee<'a>(
 pub(super) fn inline_require_file_url_to_path(callee: &Expression<'_>) -> bool {
     matches!(callee, Expression::StaticMemberExpression(member)
         if member.property.name == "fileURLToPath"
-            && matches!(require_module(&member.object), Some("url" | "node:url")))
+            && matches!(require_module(&member.object).as_deref(), Some("url" | "node:url")))
 }

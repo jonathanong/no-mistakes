@@ -10,15 +10,15 @@ pub(super) fn quasi(visitor: &ScopeVisitor<'_>, quasi: &TemplateElement<'_>) -> 
     let decoded = tags::quasi_text(quasi, false);
     Recovered {
         value: ValueKind::Sql,
-        sql: decoded.into(),
+        sql: decoded.to_string(),
         origins: source_positions::origins::piece(
             raw,
-            decoded,
+            &decoded,
             quasi.span.start,
             quasi.value.cooked.is_none(),
         ),
         line,
-        positions: source_positions::piece(raw, decoded, line, quasi.value.cooked.is_none()),
+        positions: source_positions::piece(raw, &decoded, line, quasi.value.cooked.is_none()),
         fragment: true,
         choices: Vec::new(),
         append_sites: Vec::new(),

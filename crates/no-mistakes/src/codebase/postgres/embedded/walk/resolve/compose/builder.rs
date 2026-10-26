@@ -45,7 +45,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn is_builder_append(
 }
 fn recover(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>, dynamic: bool) -> Option<String> {
     match unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             unpublished_sql_text(expr)
         }
@@ -106,4 +106,25 @@ pub(in crate::codebase::postgres::embedded::walk) fn builder_binding_recovered(
         line: binding.line,
         positions: binding.sql_source_positions,
     })
+}
+
+/// Statement-level `query.append(fragment)` looks up a bound SQLStatement.
+/// Dynamic or missing bindings fail closed. `chain::resolve_expr` still
+/// has no `Identifier` case, so same-file helpers cannot smuggle a parameter
+/// through this path when inlined.
+pub(super) fn recovered_binding_sql(name: &str, visitor: &ScopeVisitor<'_>) -> Option<String> {
+    let binding = visitor.lookup(name)?;
+    match binding.kind {
+        // A tagged-template const is immutable but not a string. Splicing it
+        // would treat an SQLStatement object as SQL text.
+        EmbeddedSqlKind::ImmutableLocal
+            if !visitor.literal_objects.is_text_const(&visitor.scopes, name) =>
+        {
+            None
+        }
+        EmbeddedSqlKind::ImmutableLocal | EmbeddedSqlKind::Composed | EmbeddedSqlKind::Inline => {
+            binding.sql
+        }
+        EmbeddedSqlKind::Dynamic => None,
+    }
 }

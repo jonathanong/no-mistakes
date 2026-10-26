@@ -4,7 +4,7 @@ fn collect_import_bindings<'a>(stmts: &'a [Statement<'a>]) -> RouterBindings<'a>
         let Statement::ImportDeclaration(import) = stmt else {
             continue;
         };
-        if import.source.value.as_str() != "next/navigation" {
+        if crate::ast::js_literal(&import.source).as_ref() != "next/navigation" {
             mark_shadowed_fetch_import(import, &mut bindings);
             continue;
         }
@@ -15,7 +15,7 @@ fn collect_import_bindings<'a>(stmts: &'a [Statement<'a>]) -> RouterBindings<'a>
             let ImportDeclarationSpecifier::ImportSpecifier(specifier) = specifier else {
                 continue;
             };
-            if specifier.imported.name().as_str() == "redirect" {
+            if crate::ast::module_export_name(&specifier.imported).as_ref() == "redirect" {
                 bindings.redirects.insert(specifier.local.name.as_str());
             }
         }
@@ -23,7 +23,10 @@ fn collect_import_bindings<'a>(stmts: &'a [Statement<'a>]) -> RouterBindings<'a>
     bindings
 }
 
-fn mark_shadowed_fetch_import(import: &oxc_ast::ast::ImportDeclaration<'_>, bindings: &mut RouterBindings<'_>) {
+fn mark_shadowed_fetch_import(
+    import: &oxc_ast::ast::ImportDeclaration<'_>,
+    bindings: &mut RouterBindings<'_>,
+) {
     let Some(specifiers) = &import.specifiers else {
         return;
     };

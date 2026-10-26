@@ -2,19 +2,21 @@ use crate::server_routes::model::Binding;
 use crate::server_routes::types::Framework;
 use oxc_ast::ast::{Argument, Expression};
 
-pub(super) fn server_module_from_require<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
+pub(super) fn server_module_from_require<'a>(
+    expr: &'a Expression<'a>,
+) -> Option<std::borrow::Cow<'a, str>> {
     match expr {
         Expression::ParenthesizedExpression(expr) => server_module_from_require(&expr.expression),
         Expression::StaticMemberExpression(member) => {
             let source = server_module_from_require(&member.object)?;
             let property = member.property.name.as_str();
-            (property == "default" || commonjs_property_is_framework(source, property))
+            (property == "default" || commonjs_property_is_framework(source.as_ref(), property))
                 .then_some(source)
         }
         Expression::CallExpression(call) => match &call.callee {
             Expression::Identifier(id) if id.name.as_str() == "require" => {
                 match call.arguments.first() {
-                    Some(Argument::StringLiteral(value)) => Some(value.value.as_str()),
+                    Some(Argument::StringLiteral(value)) => Some(crate::ast::js_literal(value)),
                     _ => None,
                 }
             }

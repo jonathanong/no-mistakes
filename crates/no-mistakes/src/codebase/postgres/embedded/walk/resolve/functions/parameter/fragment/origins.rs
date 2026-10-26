@@ -20,7 +20,7 @@ pub(super) fn collect(expr: &Expression<'_>, source: &str, sql: &str) -> Vec<u32
         let raw = &source[quasi.span.start as usize..quasi.span.end as usize];
         out.extend(source_positions::origins::piece(
             raw,
-            tags::quasi_text(quasi, raw_mode),
+            &tags::quasi_text(quasi, raw_mode),
             quasi.span.start,
             raw_mode || quasi.value.cooked.is_none(),
         ));

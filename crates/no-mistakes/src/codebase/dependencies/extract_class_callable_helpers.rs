@@ -71,7 +71,8 @@ fn class_method_callable_id(class: &Class<'_>, method: &MethodDefinition<'_>) ->
                     && candidate.r#static == method.r#static
                     && candidate.value.body.is_some()
                     && crate::codebase::ts_source::static_property_key_name(&candidate.key)
-                        == Some(name) =>
+                        .as_deref()
+                        == Some(name.as_ref()) =>
             {
                 Some(CallableId(candidate.value.span.start))
             }
@@ -93,7 +94,7 @@ fn walk_class_method_with_scope<'a>(
     collector.push_function_scope(Some(class_name.to_string()), class_id);
     let name = crate::codebase::ts_source::static_property_key_name(&method.key);
     let pushed = name.is_some();
-    collector.push_function_scope(name.map(str::to_string), method_id);
+    collector.push_function_scope(name.as_deref().map(str::to_string), method_id);
     if let Some(scope) = collector.current_function() {
         collector.callable_scopes.insert(scope);
     }

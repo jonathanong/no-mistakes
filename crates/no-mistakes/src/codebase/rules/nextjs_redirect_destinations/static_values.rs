@@ -47,7 +47,9 @@ impl Evaluator {
         self.remaining -= 1;
         let depth = depth + 1;
         match unwrap_ts_wrappers(expr) {
-            Expression::StringLiteral(literal) => Value::String(literal.value.to_string()),
+            Expression::StringLiteral(literal) => {
+                Value::String(crate::ast::js_literal(&literal).into_owned())
+            }
             Expression::Identifier(ident) if !self.literals_only => env
                 .get(ident.name.as_str())
                 .cloned()

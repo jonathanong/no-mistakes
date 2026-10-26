@@ -26,10 +26,10 @@ pub(super) fn record_import(
     let Some(specifiers) = &import.specifiers else {
         return;
     };
-    let source = import.source.value.as_str();
+    let source = crate::ast::js_literal(&import.source);
     let trusted = source == TRUSTED_SQL_TAG_MODULE;
     for specifier in specifiers {
-        record_specifier(specifier, trusted, source, trusted_sql_tags, shadows);
+        record_specifier(specifier, trusted, &source, trusted_sql_tags, shadows);
     }
 }
 
@@ -46,8 +46,8 @@ fn record_specifier(
                 return;
             }
             let local = named.local.name.as_str();
-            let imported = named.imported.name();
-            if matches_trusted_sql_import(source, imported.as_str(), trusted_sql_tags) {
+            let imported = crate::ast::module_export_name(&named.imported);
+            if matches_trusted_sql_import(source, imported.as_ref(), trusted_sql_tags) {
                 if trusted {
                     shadows.imported.insert_template_strings(local.to_string());
                 } else {
@@ -55,11 +55,11 @@ fn record_specifier(
                 }
                 return;
             }
-            if trusted && imported.as_str() == "default" {
+            if trusted && imported.as_ref() == "default" {
                 shadows.imported.insert_template_strings(local.to_string());
                 return;
             }
-            if trusted && imported.as_str() == "sql" && local.eq_ignore_ascii_case("sql") {
+            if trusted && imported.as_ref() == "sql" && local.eq_ignore_ascii_case("sql") {
                 shadows.imported.insert_template_strings(local.to_string());
                 return;
             }

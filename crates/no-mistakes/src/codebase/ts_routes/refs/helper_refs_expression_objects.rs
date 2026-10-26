@@ -78,7 +78,10 @@ fn collect_helper_refs_from_array_expression<'a>(
 fn property_key_is_route_href(key: &PropertyKey<'_>) -> bool {
     match key {
         PropertyKey::StaticIdentifier(id) => matches!(id.name.as_str(), "href" | "to" | "pathname"),
-        PropertyKey::StringLiteral(s) => matches!(s.value.as_str(), "href" | "to" | "pathname"),
+        PropertyKey::StringLiteral(s) => matches!(
+            crate::ast::js_literal(&s).as_ref(),
+            "href" | "to" | "pathname"
+        ),
         _ => false,
     }
 }

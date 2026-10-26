@@ -9,7 +9,7 @@ pub fn required_string(expression: &Expression<'_>, source: &str, name: &str) ->
 
 pub fn optional_string(expression: &Expression<'_>, source: &str) -> Option<String> {
     match expression {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             Some(ast::template_literal_text(template, source))
         }

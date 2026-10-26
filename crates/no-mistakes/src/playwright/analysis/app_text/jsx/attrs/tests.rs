@@ -37,7 +37,9 @@ impl<'a> Visit<'a> for AttrVisitor<'_> {
 
 fn case_name(opening: &JSXOpeningElement<'_>) -> Option<String> {
     find_attr(opening, "data-case").and_then(|attribute| match attribute.value.as_ref()? {
-        oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => Some(literal.value.to_string()),
+        oxc_ast::ast::JSXAttributeValue::StringLiteral(literal) => {
+            Some(crate::ast::js_literal(&literal).into_owned())
+        }
         _ => None,
     })
 }

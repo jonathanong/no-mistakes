@@ -57,12 +57,19 @@ pub(super) fn apply_template(
     template.apply(&literals)
 }
 
-fn literal_argument<'a>(expression: &'a Expression<'a>) -> Option<(&'a str, u32)> {
+fn literal_argument<'a>(
+    expression: &'a Expression<'a>,
+) -> Option<(std::borrow::Cow<'a, str>, u32)> {
     match unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(literal) => Some((literal.value.as_str(), literal.span.start)),
+        Expression::StringLiteral(literal) => {
+            Some((crate::ast::js_literal(&literal), literal.span.start))
+        }
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
-            let cooked = template.quasis.first()?.value.cooked.as_ref()?;
-            Some((cooked.as_str(), template.span.start))
+            template.quasis.first()?.value.cooked.as_ref()?;
+            Some((
+                crate::ast::template_quasi_text(template.quasis.first()?),
+                template.span.start,
+            ))
         }
         _ => None,
     }

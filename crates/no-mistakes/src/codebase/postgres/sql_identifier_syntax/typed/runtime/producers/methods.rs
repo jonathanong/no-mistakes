@@ -40,7 +40,7 @@ impl Methods {
                             .as_ref()
                             .is_some_and(|ty| possible::contains(possible, &ty.type_annotation))
                         {
-                            if let Some(name) = method.key.static_name() {
+                            if let Some(name) = crate::ast::property_key_name(&method.key) {
                                 self.known.insert((id, vec![name.to_string()]));
                             }
                         }

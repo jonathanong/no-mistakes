@@ -28,7 +28,7 @@ impl LiteralArg {
 
     fn splice<'a>(&'a self, caller: &Path) -> Spliced<'a> {
         Spliced {
-            text: &self.text,
+            text: std::borrow::Cow::Borrowed(&self.text),
             at: (self.line > 0).then(|| Marker {
                 line: self.line,
                 path: Some(caller.to_path_buf()),

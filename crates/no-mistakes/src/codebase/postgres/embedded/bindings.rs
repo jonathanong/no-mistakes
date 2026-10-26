@@ -22,7 +22,7 @@ pub(super) fn sql_statement_type_bindings(program: &Program<'_>) -> HashSet<Stri
         let Statement::ImportDeclaration(import) = statement else {
             continue;
         };
-        if import.source.value.as_str() != SQL_TEMPLATE_STRINGS {
+        if crate::ast::js_literal(&import.source).as_ref() != SQL_TEMPLATE_STRINGS {
             continue;
         }
         let Some(specifiers) = &import.specifiers else {
@@ -81,7 +81,7 @@ fn collect_import_bindings(
 ) {
     if import.import_kind == ImportOrExportKind::Type
         || (!options.import_specifier.is_empty()
-            && import.source.value.as_str() != options.import_specifier)
+            && crate::ast::js_literal(&import.source).as_ref() != options.import_specifier)
     {
         return;
     }
@@ -107,7 +107,7 @@ fn collect_import_bindings(
 }
 
 fn module_export_name(name: &ModuleExportName<'_>) -> String {
-    name.name().as_str().to_string()
+    crate::ast::module_export_name(name).into_owned()
 }
 
 /// True when `call` is a bound direct executor or an explicitly broad `.query`
@@ -160,13 +160,7 @@ fn static_query_key(expr: &Expression<'_>) -> bool {
         Expression::TemplateLiteral(template)
             if template.expressions.is_empty() && template.quasis.len() == 1 =>
         {
-            template.quasis[0]
-                .value
-                .cooked
-                .as_ref()
-                .map(|cooked| cooked.as_str())
-                .unwrap_or(template.quasis[0].value.raw.as_str())
-                == QUERY_PROPERTY
+            crate::ast::template_quasi_text(&template.quasis[0]) == QUERY_PROPERTY
         }
         _ => false,
     }

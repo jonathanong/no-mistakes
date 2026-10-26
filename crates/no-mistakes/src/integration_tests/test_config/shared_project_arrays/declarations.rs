@@ -81,7 +81,7 @@ pub(in crate::integration_tests::test_config) fn export_from_options<T>(
         (!specifier.export_kind.is_type() && specifier.exported.name() == exported).then(|| {
             (ops.imported_options)(
                 &ImportBinding {
-                    source: export.source.value.to_string(),
+                    source: crate::ast::js_literal(&export.source).into_owned(),
                     imported: specifier.local.name().to_string(),
                 },
                 ctx,

@@ -65,7 +65,7 @@ fn exported_object_options(
                     if !specifier.export_kind.is_type() && specifier.exported.name() == exported {
                         return imported_object_options_from(
                             &ImportBinding {
-                                source: export.source.value.to_string(),
+                                source: crate::ast::js_literal(&export.source).into_owned(),
                                 imported: specifier.local.name().to_string(),
                             },
                             path,
@@ -79,7 +79,7 @@ fn exported_object_options(
                     && export.exported.is_none()
                     && !export.export_kind.is_type() =>
             {
-                export_all_sources.push(export.source.value.to_string());
+                export_all_sources.push(crate::ast::js_literal(&export.source).into_owned());
             }
             _ => {}
         }

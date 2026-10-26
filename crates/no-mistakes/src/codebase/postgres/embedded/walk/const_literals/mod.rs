@@ -67,7 +67,7 @@ fn object_members(expr: &Expression<'_>) -> Option<Members> {
             return None;
         }
         let value = match unwrap_ts_wrappers(&property.value) {
-            Expression::StringLiteral(literal) => literal.value.to_string(),
+            Expression::StringLiteral(literal) => crate::ast::js_literal(&literal).into_owned(),
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => unpublished_sql_text(&property.value)?,
             _ => return None,
         };
@@ -107,7 +107,7 @@ impl ScopeVisitor<'_> {
         if depth == 0 { return None; }
         let mut out = String::new();
         for (index, quasi) in template.quasis.iter().enumerate() {
-            out.push_str(tags::quasi_text(quasi, false));
+            out.push_str(&tags::quasi_text(quasi, false));
             if let Some(expr) = template.expressions.get(index) {
                 out.push_str(&self.spliced_piece(expr, depth, index as u32 + 1)?);
             }
@@ -116,7 +116,7 @@ impl ScopeVisitor<'_> {
     }
     fn spliced_piece(&self, expr: &Expression<'_>, depth: u8, placeholder: u32) -> Option<String> {
         match unwrap_ts_wrappers(expr) {
-            Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+            Expression::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => unpublished_sql_text(expr),
             Expression::TemplateLiteral(template) => self.spliced_template(template, depth - 1),
             Expression::Identifier(ident) => super::imported::constants::identifier_piece(self, ident),

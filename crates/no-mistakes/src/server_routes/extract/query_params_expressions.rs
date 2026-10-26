@@ -9,13 +9,28 @@ fn collect_query_params_from_expression(
             collect_query_params_from_call_expression(call, params, named_handlers, state);
         }
         Expression::StaticMemberExpression(member) => {
-            collect_query_params_from_static_member_expression(member, params, named_handlers, state);
+            collect_query_params_from_static_member_expression(
+                member,
+                params,
+                named_handlers,
+                state,
+            );
         }
         Expression::ComputedMemberExpression(member) => {
-            collect_query_params_from_computed_member_expression(member, params, named_handlers, state);
+            collect_query_params_from_computed_member_expression(
+                member,
+                params,
+                named_handlers,
+                state,
+            );
         }
         Expression::ChainExpression(chain) => {
-            collect_query_params_from_chain_element(&chain.expression, params, named_handlers, state);
+            collect_query_params_from_chain_element(
+                &chain.expression,
+                params,
+                named_handlers,
+                state,
+            );
         }
         Expression::AssignmentExpression(assign) => {
             collect_query_params_from_expression(&assign.right, params, named_handlers, state);
@@ -41,7 +56,12 @@ fn collect_query_params_from_expression(
         Expression::ObjectExpression(object) => {
             for property in &object.properties {
                 if let ObjectPropertyKind::ObjectProperty(property) = property {
-                    collect_query_params_from_expression(&property.value, params, named_handlers, state);
+                    collect_query_params_from_expression(
+                        &property.value,
+                        params,
+                        named_handlers,
+                        state,
+                    );
                 }
             }
         }
@@ -100,8 +120,9 @@ fn collect_query_params_from_member_expression(
     named_handlers: &HashMap<String, BTreeSet<String>>,
     state: &mut QueryParamState,
 ) {
-    if let Some(property) = member.static_property_name() {
-        if expression_is_query_object(member.object(), &state.query_aliases) && property != "query" {
+    if let Some(property) = crate::ast::member_property_name(member) {
+        if expression_is_query_object(member.object(), &state.query_aliases) && property != "query"
+        {
             params.insert(property.to_string());
         }
     }
@@ -163,7 +184,7 @@ fn computed_query_param_name(
         return None;
     }
     match &member.expression {
-        Expression::StringLiteral(value) => Some(value.value.as_str().to_string()),
+        Expression::StringLiteral(value) => Some(crate::ast::js_literal(&value).into_owned()),
         _ => None,
     }
 }

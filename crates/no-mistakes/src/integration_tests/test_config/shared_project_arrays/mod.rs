@@ -182,7 +182,7 @@ pub(super) fn add_es_import_bindings(
         bindings.insert(
             local,
             ImportBinding {
-                source: import.source.value.to_string(),
+                source: crate::ast::js_literal(&import.source).into_owned(),
                 imported,
             },
         );

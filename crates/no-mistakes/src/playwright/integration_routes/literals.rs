@@ -3,14 +3,12 @@ use oxc_ast::ast::Argument;
 
 pub(super) fn literal(argument: &Argument<'_>) -> Option<String> {
     match argument {
-        Argument::StringLiteral(value) => Some(value.value.to_string()),
-        Argument::TemplateLiteral(value) if value.expressions.is_empty() => value
-            .quasis
-            .first()?
-            .value
-            .cooked
-            .as_ref()
-            .map(ToString::to_string),
+        Argument::StringLiteral(value) => Some(crate::ast::js_literal(&value).into_owned()),
+        Argument::TemplateLiteral(value) if value.expressions.is_empty() => {
+            let quasi = value.quasis.first()?;
+            quasi.value.cooked?;
+            Some(crate::ast::template_quasi_text(quasi).into_owned())
+        }
         _ => None,
     }
 }

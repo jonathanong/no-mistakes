@@ -1,6 +1,6 @@
 fn evaluate_template_literal<'a>(
     tpl: &'a TemplateLiteral<'a>,
-    defs: &HashMap<&'a str, HelperDef<'a>>,
+    defs: &HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &HashMap<String, Vec<String>>,
     depth: usize,
@@ -10,10 +10,10 @@ fn evaluate_template_literal<'a>(
         let cooked = quasi
             .value
             .cooked
-            .map(|value| value.as_str())
-            .unwrap_or("");
+            .map(|_| crate::ast::template_quasi_text(quasi))
+            .unwrap_or(std::borrow::Cow::Borrowed(""));
         for value in &mut values {
-            value.push_str(cooked);
+            value.push_str(&cooked);
         }
         if let Some(expr) = tpl.expressions.get(index) {
             let expr_values =

@@ -28,12 +28,17 @@ impl ServerRouteVisitor<'_> {
 
     pub(super) fn literal_arg(&self, arg: &Argument<'_>) -> Option<String> {
         match arg {
-            Argument::StringLiteral(value) => Some(value.value.as_str().to_string()),
+            Argument::StringLiteral(value) => Some(crate::ast::js_literal(&value).into_owned()),
             Argument::TemplateLiteral(template) if template.expressions.is_empty() => Some(
                 template
                     .quasis
                     .iter()
-                    .filter_map(|quasi| quasi.value.cooked.as_deref())
+                    .filter_map(|quasi| {
+                        quasi
+                            .value
+                            .cooked
+                            .map(|_| crate::ast::template_quasi_text(quasi))
+                    })
                     .collect::<Vec<_>>()
                     .join(""),
             ),
@@ -55,7 +60,9 @@ impl ServerRouteVisitor<'_> {
 
     fn literal_element(&self, element: &ArrayExpressionElement<'_>) -> Option<String> {
         match element {
-            ArrayExpressionElement::StringLiteral(value) => Some(value.value.as_str().to_string()),
+            ArrayExpressionElement::StringLiteral(value) => {
+                Some(crate::ast::js_literal(&value).into_owned())
+            }
             ArrayExpressionElement::TemplateLiteral(template)
                 if template.expressions.is_empty() =>
             {
@@ -63,7 +70,12 @@ impl ServerRouteVisitor<'_> {
                     template
                         .quasis
                         .iter()
-                        .filter_map(|quasi| quasi.value.cooked.as_deref())
+                        .filter_map(|quasi| {
+                            quasi
+                                .value
+                                .cooked
+                                .map(|_| crate::ast::template_quasi_text(quasi))
+                        })
                         .collect::<Vec<_>>()
                         .join(""),
                 )

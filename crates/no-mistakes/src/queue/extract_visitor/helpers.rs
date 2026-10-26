@@ -1,7 +1,6 @@
 use super::QueueVisitor;
-use crate::queue::extract_helpers::{
-    export_name, is_queue_package, literal_expr, processor_specifier,
-};
+use crate::ast::js_literal;
+use crate::queue::extract_helpers::{export_name, is_queue_package, processor_specifier};
 use crate::queue::extract_model::{ImportBinding, WorkerSite};
 use crate::queue::source::line_number;
 use oxc_ast::ast::{
@@ -11,7 +10,7 @@ use oxc_span::GetSpan;
 
 impl QueueVisitor<'_> {
     pub(super) fn register_import(&mut self, import: &ImportDeclaration<'_>) {
-        let source = import.source.value.as_str().to_string();
+        let source = js_literal(&import.source).into_owned();
         if let Some(specifiers) = &import.specifiers {
             for specifier in specifiers {
                 match specifier {
@@ -186,16 +185,6 @@ impl QueueVisitor<'_> {
                         .any(|frame| frame.object.as_deref() == Some(object.name.as_str()))
             }
             _ => false,
-        }
-    }
-
-    pub fn literal_arg(&self, arg: &Argument<'_>) -> Option<String> {
-        match arg {
-            Argument::StringLiteral(value) => Some(value.value.as_str().to_string()),
-            Argument::Identifier(id) => self.const_strings.get(id.name.as_str()).cloned(),
-            _ => arg
-                .as_expression()
-                .and_then(|expr| literal_expr(expr, &self.const_strings)),
         }
     }
 }

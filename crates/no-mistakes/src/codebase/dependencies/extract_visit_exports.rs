@@ -1,5 +1,9 @@
 impl ImportCollector {
-    fn record_local_export_binding(&mut self, local: impl Into<String>, exported: impl Into<String>) {
+    fn record_local_export_binding(
+        &mut self,
+        local: impl Into<String>,
+        exported: impl Into<String>,
+    ) {
         let binding = ExportedBinding {
             specifier: None,
             local: local.into(),
@@ -16,8 +20,8 @@ impl ImportCollector {
             for specifier in &export.specifiers {
                 self.value_flow.type_exports.push(ExportedBinding {
                     specifier: None,
-                    local: specifier.local.name().to_string(),
-                    exported: specifier.exported.name().to_string(),
+                    local: crate::ast::module_export_name(&specifier.local).into_owned(),
+                    exported: crate::ast::module_export_name(&specifier.exported).into_owned(),
                 });
             }
         }
@@ -51,14 +55,14 @@ impl ImportCollector {
         if self.collect_value_flow {
             for specifier in &export.specifiers {
                 self.value_flow.type_exports.push(ExportedBinding {
-                    specifier: Some(export.source.value.to_string()),
-                    local: specifier.local.name().to_string(),
-                    exported: specifier.exported.name().to_string(),
+                    specifier: Some(crate::ast::js_literal(&export.source).into_owned()),
+                    local: crate::ast::module_export_name(&specifier.local).into_owned(),
+                    exported: crate::ast::module_export_name(&specifier.exported).into_owned(),
                 });
             }
         }
         self.push_reexport(
-            export.source.value.as_str(),
+            crate::ast::js_literal(&export.source).as_ref(),
             export_named_declaration_kind(export),
             export.span.start as usize,
         );
@@ -70,7 +74,7 @@ impl ImportCollector {
                         module_export_name_name(&specifier.exported),
                     ) {
                         self.call_export_bindings.push(ExportedBinding {
-                            specifier: Some(export.source.value.to_string()),
+                            specifier: Some(crate::ast::js_literal(&export.source).into_owned()),
                             local: local.to_string(),
                             exported: exported.to_string(),
                         });

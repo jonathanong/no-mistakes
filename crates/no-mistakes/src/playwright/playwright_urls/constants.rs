@@ -53,7 +53,7 @@ fn const_string(semantic: &Semantic<'_>, symbol: SymbolId) -> Option<(u32, Strin
         return None;
     }
     let value = match &declaration.init {
-        Some(Expression::StringLiteral(literal)) => literal.value.to_string(),
+        Some(Expression::StringLiteral(literal)) => crate::ast::js_literal(&literal).into_owned(),
         Some(Expression::TemplateLiteral(template)) if template.expressions.is_empty() => {
             crate::ast::template_literal_text(template, "")
         }
@@ -87,14 +87,7 @@ fn fold_template(
     }
     let mut text = String::new();
     for (index, quasi) in template.quasis.iter().enumerate() {
-        text.push_str(
-            quasi
-                .value
-                .cooked
-                .as_ref()
-                .unwrap_or(&quasi.value.raw)
-                .as_str(),
-        );
+        text.push_str(&crate::ast::template_quasi_text(quasi));
         if let Some(part) = parts.get(index) {
             text.push_str(part);
         }

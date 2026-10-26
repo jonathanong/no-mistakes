@@ -40,7 +40,9 @@ pub(super) fn classify_init(
         return (unpublished_sql_text(expr), EmbeddedSqlKind::Dynamic);
     }
     match unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(literal) => kind_for_const(literal.value.to_string(), is_const),
+        Expression::StringLiteral(literal) => {
+            kind_for_const(crate::ast::js_literal(&literal).into_owned(), is_const)
+        }
         Expression::TaggedTemplateExpression(_) => {
             kind_for_const(unpublished_sql_text(expr).unwrap_or_default(), is_const)
         }
@@ -84,7 +86,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn static_fragment(
         return super::super::head_calls::text(expr, visitor);
     }
     match unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             unpublished_sql_text(expr)
         }
@@ -92,7 +94,9 @@ pub(in crate::codebase::postgres::embedded::walk) fn static_fragment(
         Expression::TaggedTemplateExpression(_) => unpublished_sql_text(expr),
         Expression::BinaryExpression(_) => composed_sql(expr, visitor).map(|(text, _)| text),
         Expression::CallExpression(_) => resolve_chain(expr, visitor),
-        Expression::Identifier(ident) => recovered_binding_sql(ident.name.as_str(), visitor),
+        Expression::Identifier(ident) => {
+            builder::recovered_binding_sql(ident.name.as_str(), visitor)
+        }
         Expression::StaticMemberExpression(member) => visitor.spliced_member(member, 1),
         Expression::TemplateLiteral(template) => visitor.spliced_template(template, 8),
         _ => None,
@@ -179,27 +183,6 @@ pub(in crate::codebase::postgres::embedded::walk) fn tag_shadowed(
     visitor: &ScopeVisitor<'_>,
 ) -> bool {
     visitor.shadowed_locally(name) || visitor.functions.is_tag_shadowed(name)
-}
-
-/// Statement-level `query.append(fragment)` looks up a bound SQLStatement.
-/// Dynamic or missing bindings fail closed. `chain::resolve_expr` still
-/// has no `Identifier` case, so same-file helpers cannot smuggle a parameter
-/// through this path when inlined.
-fn recovered_binding_sql(name: &str, visitor: &ScopeVisitor<'_>) -> Option<String> {
-    let binding = visitor.lookup(name)?;
-    match binding.kind {
-        // A tagged-template const is immutable but not a string. Splicing it
-        // would treat an SQLStatement object as SQL text.
-        EmbeddedSqlKind::ImmutableLocal
-            if !visitor.literal_objects.is_text_const(&visitor.scopes, name) =>
-        {
-            None
-        }
-        EmbeddedSqlKind::ImmutableLocal | EmbeddedSqlKind::Composed | EmbeddedSqlKind::Inline => {
-            binding.sql
-        }
-        EmbeddedSqlKind::Dynamic => None,
-    }
 }
 
 pub(super) fn recovered_builder_binding_sql(

@@ -10,23 +10,24 @@ use std::collections::HashMap;
 
 impl<'a> ResourceVisitor<'a> {
     pub(super) fn register_import(&mut self, import: &ImportDeclaration<'_>) {
-        let module = import.source.value.as_str();
+        let module = crate::ast::js_literal(&import.source);
         let Some(specifiers) = &import.specifiers else {
             return;
         };
         for specifier in specifiers {
             let (local, imported) = match specifier {
                 ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => {
-                    (s.local.name.as_str(), "default")
+                    (s.local.name.as_str(), std::borrow::Cow::Borrowed("default"))
                 }
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(s) => {
-                    (s.local.name.as_str(), "*")
+                    (s.local.name.as_str(), std::borrow::Cow::Borrowed("*"))
                 }
-                ImportDeclarationSpecifier::ImportSpecifier(s) => {
-                    (s.local.name.as_str(), s.imported.name().as_str())
-                }
+                ImportDeclarationSpecifier::ImportSpecifier(s) => (
+                    s.local.name.as_str(),
+                    crate::ast::module_export_name(&s.imported),
+                ),
             };
-            self.declare_binding(local, import_binding(module, imported));
+            self.declare_binding(local, import_binding(&module, &imported));
         }
     }
 
@@ -90,7 +91,7 @@ impl<'a> ResourceVisitor<'a> {
             return;
         };
         let mut bindings = HashMap::new();
-        register_require_binding(&declarator.id, module, &mut bindings);
+        register_require_binding(&declarator.id, &module, &mut bindings);
         for name in binding_names(&declarator.id) {
             self.declare_binding(&name, bindings.remove(&name));
         }

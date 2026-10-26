@@ -53,7 +53,9 @@ impl ServerRouteVisitor<'_> {
     }
 
     pub(super) fn client_http_module_from_expr(&self, expr: &Expression<'_>) -> bool {
-        if server_module_from_require(expr).is_some_and(is_client_http_module) {
+        if server_module_from_require(expr)
+            .is_some_and(|source| is_client_http_module(source.as_ref()))
+        {
             return true;
         }
         match expr {
@@ -132,8 +134,8 @@ impl ServerRouteVisitor<'_> {
             Expression::CallExpression(call) => self.inline_commonjs_binding(call),
             Expression::StaticMemberExpression(member) => {
                 let source = server_module_from_require(&member.object)?;
-                commonjs_property_is_framework(source, member.property.name.as_str())
-                    .then(|| commonjs_framework_binding(source))
+                commonjs_property_is_framework(source.as_ref(), member.property.name.as_str())
+                    .then(|| commonjs_framework_binding(source.as_ref()))
                     .flatten()
             }
             _ => None,
@@ -150,7 +152,7 @@ impl ServerRouteVisitor<'_> {
         let Some(Argument::StringLiteral(source)) = call.arguments.first() else {
             return None;
         };
-        commonjs_framework_binding(source.value.as_str())
+        commonjs_framework_binding(crate::ast::js_literal(&source).as_ref())
     }
 
     fn member_binding(&self, member: &StaticMemberExpression<'_>) -> Option<Binding> {
@@ -158,8 +160,8 @@ impl ServerRouteVisitor<'_> {
             return Some(Binding::new(Framework::Express, None));
         }
         let source = server_module_from_require(&member.object)?;
-        commonjs_property_is_framework(source, member.property.name.as_str())
-            .then(|| commonjs_framework_binding(source))
+        commonjs_property_is_framework(source.as_ref(), member.property.name.as_str())
+            .then(|| commonjs_framework_binding(source.as_ref()))
             .flatten()
     }
 

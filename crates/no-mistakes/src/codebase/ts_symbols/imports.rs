@@ -24,20 +24,29 @@ fn process_statement(
 }
 
 fn process_import_declaration(import: &ImportDeclaration<'_>, source: &str, out: &mut FileSymbols) {
-    let src = import.source.value.as_str();
+    let src = crate::ast::js_literal(&import.source);
     let is_type = import.import_kind.is_type();
     if let Some(specifiers) = &import.specifiers {
         for spec in specifiers {
             let (imported, local, span, is_specifier_type) = match spec {
-                ImportDeclarationSpecifier::ImportSpecifier(s) => {
-                    (s.imported.name().to_string(), s.local.name.as_str().to_string(), s.span, s.import_kind.is_type())
-                }
-                ImportDeclarationSpecifier::ImportNamespaceSpecifier(s) => {
-                    ("*".to_string(), s.local.name.as_str().to_string(), s.span, false)
-                }
-                ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => {
-                    ("default".to_string(), s.local.name.as_str().to_string(), s.span, false)
-                }
+                ImportDeclarationSpecifier::ImportSpecifier(s) => (
+                    crate::ast::module_export_name(&s.imported).into_owned(),
+                    s.local.name.as_str().to_string(),
+                    s.span,
+                    s.import_kind.is_type(),
+                ),
+                ImportDeclarationSpecifier::ImportNamespaceSpecifier(s) => (
+                    "*".to_string(),
+                    s.local.name.as_str().to_string(),
+                    s.span,
+                    false,
+                ),
+                ImportDeclarationSpecifier::ImportDefaultSpecifier(s) => (
+                    "default".to_string(),
+                    s.local.name.as_str().to_string(),
+                    s.span,
+                    false,
+                ),
             };
             out.imports.push(NamedImport {
                 source: src.to_string(),

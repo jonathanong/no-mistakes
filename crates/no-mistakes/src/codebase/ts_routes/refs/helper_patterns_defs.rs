@@ -1,14 +1,13 @@
 fn insert_default_arrow_helper_def<'a>(
-    defs: &mut HashMap<&'a str, HelperDef<'a>>,
+    defs: &mut HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
     arrow: &'a oxc_ast::ast::ArrowFunctionExpression<'a>,
 ) {
     if let Some(body) = crate::ast::arrow_function_body(&arrow.body) {
         insert_default_helper_def(defs, &arrow.params, body);
     } else if let Some(expression) = arrow.body.as_expression() {
         defs.insert(
-            "default",
+            std::borrow::Cow::Borrowed("default"),
             HelperDef {
-                name: "default",
                 params: &arrow.params,
                 body: None,
                 expression: Some(expression),
@@ -19,7 +18,7 @@ fn insert_default_arrow_helper_def<'a>(
 
 fn collect_helper_defs_from_var_decl<'a>(
     var_decl: &'a oxc_ast::ast::VariableDeclaration<'a>,
-    defs: &mut HashMap<&'a str, HelperDef<'a>>,
+    defs: &mut HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
 ) {
     for decl in &var_decl.declarations {
         let Some(name) = binding_identifier_name(&decl.id) else {
@@ -32,9 +31,8 @@ fn collect_helper_defs_from_var_decl<'a>(
             Expression::ArrowFunctionExpression(arrow) => {
                 if let Some(body) = crate::ast::arrow_function_body(&arrow.body) {
                     defs.insert(
-                        name,
+                        std::borrow::Cow::Borrowed(name),
                         HelperDef {
-                            name,
                             params: &arrow.params,
                             body: Some(body),
                             expression: None,
@@ -42,9 +40,8 @@ fn collect_helper_defs_from_var_decl<'a>(
                     );
                 } else if let Some(expression) = arrow.body.as_expression() {
                     defs.insert(
-                        name,
+                        std::borrow::Cow::Borrowed(name),
                         HelperDef {
-                            name,
                             params: &arrow.params,
                             body: None,
                             expression: Some(expression),
@@ -55,9 +52,8 @@ fn collect_helper_defs_from_var_decl<'a>(
             Expression::FunctionExpression(func) => {
                 if let Some(body) = &func.body {
                     defs.insert(
-                        name,
+                        std::borrow::Cow::Borrowed(name),
                         HelperDef {
-                            name,
                             params: &func.params,
                             body: Some(body),
                             expression: None,

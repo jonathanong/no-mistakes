@@ -4,7 +4,7 @@ use oxc_ast::ast::{ArrayExpressionElement, Expression, PropertyKey};
 pub(in crate::integration_tests) fn property_key_name(key: &PropertyKey<'_>) -> Option<String> {
     match key {
         PropertyKey::StaticIdentifier(identifier) => Some(identifier.name.to_string()),
-        PropertyKey::StringLiteral(literal) => Some(literal.value.to_string()),
+        PropertyKey::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
         _ => None,
     }
 }
@@ -14,7 +14,7 @@ pub(in crate::integration_tests) fn optional_string(
     source: &str,
 ) -> Option<String> {
     match expression {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             Some(ast::template_literal_text(template, source))
         }
@@ -49,7 +49,7 @@ pub(in crate::integration_tests) fn inferred_string_or_array(
     for element in &array.elements {
         match element {
             ArrayExpressionElement::StringLiteral(literal) => {
-                values.push(literal.value.to_string())
+                values.push(crate::ast::js_literal(&literal).into_owned())
             }
             ArrayExpressionElement::TemplateLiteral(template)
                 if template.expressions.is_empty() =>

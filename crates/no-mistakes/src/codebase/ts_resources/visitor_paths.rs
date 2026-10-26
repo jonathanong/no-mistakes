@@ -56,7 +56,7 @@ impl<'a> ResourceVisitor<'a> {
             let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(property) = property else {
                 return Err(());
             };
-            let Some(key) = property.key.static_name() else {
+            let Some(key) = crate::ast::property_key_name(&property.key) else {
                 return Err(());
             };
             if key.as_ref() == "cwd" {
@@ -69,7 +69,7 @@ impl<'a> ResourceVisitor<'a> {
     fn static_resource_expression(&self, expression: &Expression<'_>) -> Option<ResourcePath> {
         match expression {
             Expression::StringLiteral(value) => Some(ResourcePath {
-                value: value.value.to_string(),
+                value: crate::ast::js_literal(&value).into_owned(),
                 base: ResourcePathBase::AnalysisRoot,
             }),
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
@@ -77,14 +77,7 @@ impl<'a> ResourceVisitor<'a> {
                     value: template
                         .quasis
                         .iter()
-                        .map(|quasi| {
-                            quasi
-                                .value
-                                .cooked
-                                .as_ref()
-                                .unwrap_or(&quasi.value.raw)
-                                .as_ref()
-                        })
+                        .map(|quasi| crate::ast::template_quasi_text(quasi))
                         .collect(),
                     base: ResourcePathBase::AnalysisRoot,
                 })

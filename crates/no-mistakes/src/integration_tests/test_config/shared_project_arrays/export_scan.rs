@@ -84,7 +84,7 @@ pub(in crate::integration_tests::test_config) fn exported_options_lookup<T>(
                     && export.exported.is_none()
                     && !export.export_kind.is_type() =>
             {
-                export_all_sources.push(export.source.value.to_string());
+                export_all_sources.push(crate::ast::js_literal(&export.source).into_owned());
             }
             Statement::ExportDefaultDeclaration(export) if exported == "default" => {
                 return (ops.default_options)(&export.declaration, &mut ctx).map(Some);

@@ -114,7 +114,7 @@ pub(super) fn note_export_from(visitor: &mut QueueVisitor<'_>, decl: &ExportFrom
     if decl.export_kind.is_type() {
         return;
     }
-    let specifier = decl.source.value.as_str();
+    let specifier = crate::ast::js_literal(&decl.source);
     for spec in &decl.specifiers {
         if spec.export_kind.is_type() {
             continue;
@@ -137,7 +137,7 @@ pub(super) fn note_export_all(visitor: &mut QueueVisitor<'_>, decl: &ExportAllDe
     visitor
         .facts
         .star_exports
-        .push(decl.source.value.to_string());
+        .push(crate::ast::js_literal(&decl.source).into_owned());
 }
 pub(super) fn note_exported_declaration(
     visitor: &mut QueueVisitor<'_>,

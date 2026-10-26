@@ -148,7 +148,9 @@ fn frame_from_pattern(pattern: &BindingPattern<'_>) -> Option<JobFrame> {
         BindingPattern::ObjectPattern(object) => {
             let mut frame = JobFrame::default();
             for property in &object.properties {
-                let Some(key) = property.key.static_name().filter(|_| !property.computed) else {
+                let Some(key) =
+                    crate::ast::property_key_name(&property.key).filter(|_| !property.computed)
+                else {
                     continue;
                 };
                 let Some(name) = bound_ident(&property.value) else {

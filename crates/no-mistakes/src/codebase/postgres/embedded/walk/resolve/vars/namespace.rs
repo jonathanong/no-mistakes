@@ -14,7 +14,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn bind_query_property(
         return;
     }
     for property in &object.properties {
-        if property.key.static_name().as_deref() != Some("query") {
+        if crate::ast::property_key_name(&property.key).as_deref() != Some("query") {
             continue;
         }
         let BindingPattern::BindingIdentifier(local) = &property.value else {

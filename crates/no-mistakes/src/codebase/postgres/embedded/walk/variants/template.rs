@@ -151,16 +151,17 @@ fn join(
     Some(result)
 }
 
-fn member<'a>(expr: &'a Expression<'a>) -> Option<(&'a Expression<'a>, &'a str)> {
+fn member<'a>(expr: &'a Expression<'a>) -> Option<(&'a Expression<'a>, std::borrow::Cow<'a, str>)> {
     match unwrap_ts_wrappers(expr) {
-        Expression::StaticMemberExpression(member) => {
-            Some((&member.object, member.property.name.as_str()))
-        }
+        Expression::StaticMemberExpression(member) => Some((
+            &member.object,
+            std::borrow::Cow::Borrowed(member.property.name.as_str()),
+        )),
         Expression::ComputedMemberExpression(member) => {
             let Expression::StringLiteral(property) = unwrap_ts_wrappers(&member.expression) else {
                 return None;
             };
-            Some((&member.object, property.value.as_str()))
+            Some((&member.object, crate::ast::js_literal(&property)))
         }
         _ => None,
     }

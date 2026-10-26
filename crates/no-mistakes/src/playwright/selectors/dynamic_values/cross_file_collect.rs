@@ -5,7 +5,7 @@ fn collect_from_default_export(kind: &ExportDefaultDeclarationKind<'_>, values: 
                 if let ObjectPropertyKind::ObjectProperty(p) = prop {
                     if !p.computed {
                         if let Expression::StringLiteral(lit) = &p.value {
-                            values.push(lit.value.to_string());
+                            values.push(crate::ast::js_literal(&lit).into_owned());
                         }
                     }
                 }
@@ -19,7 +19,8 @@ fn collect_from_default_export(kind: &ExportDefaultDeclarationKind<'_>, values: 
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
             if let Some(expression) = arrow.body.as_expression() {
                 values.extend(collect_string_leaves(expression));
-            } else if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body) {
+            } else if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body)
+            {
                 collect_returns_from_function_body(statements, values);
             }
         }
@@ -121,15 +122,19 @@ fn find_import_info(local_name: &str, program: &Program<'_>) -> Option<(String, 
                     if named.local.name == local_name =>
                 {
                     Some((
-                        import.source.value.to_string(),
-                        named.imported.name().to_string(),
+                        crate::ast::js_literal(&import.source).into_owned(),
+                        crate::ast::module_export_name(&named.imported).to_string(),
                         false,
                     ))
                 }
                 ImportDeclarationSpecifier::ImportDefaultSpecifier(default)
                     if default.local.name == local_name =>
                 {
-                    Some((import.source.value.to_string(), "default".to_string(), true))
+                    Some((
+                        crate::ast::js_literal(&import.source).into_owned(),
+                        "default".to_string(),
+                        true,
+                    ))
                 }
                 _ => None,
             })

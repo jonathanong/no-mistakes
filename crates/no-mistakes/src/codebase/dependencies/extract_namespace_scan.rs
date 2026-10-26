@@ -65,7 +65,7 @@ fn require_import_specifier(statement: &Statement<'_>) -> Option<String> {
         TSModuleReference::ExternalModuleReference(reference)
             if !declaration.import_kind.is_type() =>
         {
-            Some(reference.expression.value.to_string())
+            Some(crate::ast::js_literal(&reference.expression).into_owned())
         }
         _ => None,
     }
@@ -181,25 +181,4 @@ fn scan_namespace_statement(
         },
         _ => {}
     }
-}
-
-fn add_namespace_member(
-    collector: &mut ImportCollector,
-    class: &Class<'_>,
-    namespace: &str,
-    exported: bool,
-) {
-    let Some(name) = class.id.as_ref().filter(|_| !class.declare) else {
-        return;
-    };
-    let id = CallableId(class.span.start);
-    let path = format!("{namespace}.{}", name.name);
-    collector.namespace.member_ids.insert(id);
-    collector.namespace.names.insert(name.name.to_string());
-    collector.namespace.classes.insert(path.clone());
-    collector
-        .namespace
-        .facts
-        .members
-        .push(NamespaceMember { path, id, exported });
 }

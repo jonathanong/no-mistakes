@@ -1,6 +1,6 @@
 fn evaluate_helper_body<'a>(
     body: &'a oxc_ast::ast::FunctionBody<'a>,
-    defs: &HashMap<&'a str, HelperDef<'a>>,
+    defs: &HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &mut HashMap<String, Vec<String>>,
     depth: usize,
@@ -43,13 +43,8 @@ fn evaluate_helper_body<'a>(
                 }
             }
             Statement::IfStatement(_) => {
-                let evaluation = evaluate_helper_return_statement(
-                    stmt,
-                    defs,
-                    imported_helpers,
-                    env,
-                    depth + 1,
-                );
+                let evaluation =
+                    evaluate_helper_return_statement(stmt, defs, imported_helpers, env, depth + 1);
                 returns.extend(evaluation.values);
                 if !evaluation.can_continue {
                     break;
@@ -69,26 +64,16 @@ fn evaluate_helper_body<'a>(
                 }
             }
             Statement::TryStatement(try_stmt) => {
-                let evaluation = evaluate_helper_try_statement(
-                    try_stmt,
-                    defs,
-                    imported_helpers,
-                    env,
-                    depth + 1,
-                );
+                let evaluation =
+                    evaluate_helper_try_statement(try_stmt, defs, imported_helpers, env, depth + 1);
                 returns.extend(evaluation.values);
                 if !evaluation.can_continue {
                     break;
                 }
             }
             Statement::BlockStatement(_) => {
-                let evaluation = evaluate_helper_return_statement(
-                    stmt,
-                    defs,
-                    imported_helpers,
-                    env,
-                    depth + 1,
-                );
+                let evaluation =
+                    evaluate_helper_return_statement(stmt, defs, imported_helpers, env, depth + 1);
                 returns.extend(evaluation.values);
                 if !evaluation.can_continue {
                     break;

@@ -73,9 +73,10 @@ impl ScopeCollector {
                     let TSSignature::TSPropertySignature(property) = member else {
                         return Vec::new();
                     };
-                    let (Some(key), Some(annotation)) =
-                        (property.key.static_name(), &property.type_annotation)
-                    else {
+                    let (Some(key), Some(annotation)) = (
+                        crate::ast::property_key_name(&property.key),
+                        &property.type_annotation,
+                    ) else {
                         return Vec::new();
                     };
                     self.annotation_paths(&annotation.type_annotation, &format!("{path}.{key}"))

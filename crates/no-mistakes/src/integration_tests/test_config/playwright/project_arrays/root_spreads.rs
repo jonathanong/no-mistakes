@@ -164,7 +164,7 @@ fn exported_project_options(
                 continue;
             }
             let binding = ImportBinding {
-                source: export.source.value.to_string(),
+                source: crate::ast::js_literal(&export.source).into_owned(),
                 imported: exported.to_string(),
             };
             if let Some(result) = imported_project_options(&binding, path, parent)? {

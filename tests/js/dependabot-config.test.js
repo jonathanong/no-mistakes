@@ -52,3 +52,24 @@ test("every Dependabot update excludes test fixture manifests", () => {
     }
   }
 });
+
+test("OXC dependencies are aligned and updated as one dedicated group", () => {
+  const source = readFileSync(join(repoRoot, ".github", "dependabot.yml"), "utf8");
+  const cargo = source
+    .split("  - package-ecosystem: cargo\n")[1]
+    ?.split("  - package-ecosystem:")[0];
+  assert.ok(cargo, "Cargo updates must be configured");
+  const oxc = cargo.split("      oxc-dependencies:\n")[1]?.split("      rust-dependencies:")[0];
+  assert.ok(oxc, "OXC crates need a dedicated group");
+  assert.deepEqual(sequenceValues(oxc, "patterns"), ["oxc_*"]);
+  const otherRust = cargo.split("      rust-dependencies:\n")[1];
+  assert.ok(otherRust, "Other Rust dependencies keep their existing group");
+  assert.ok(sequenceValues(otherRust, "exclude-patterns").includes("oxc_*"));
+
+  const manifest = readFileSync(join(repoRoot, "crates", "no-mistakes", "Cargo.toml"), "utf8");
+  const dependencies = [...manifest.matchAll(/^(oxc_\w+)\s*=\s*"([^"]+)"/gm)];
+  assert.ok(dependencies.some(([, name]) => name === "oxc_semantic"));
+  const versions = new Set(dependencies.map(([, , version]) => version));
+  assert.equal(versions.size, 1, "All shared OXC AST/string types must use the same release");
+  assert.ok(![...versions][0].startsWith("="), "The temporary migration pin must be removed");
+});

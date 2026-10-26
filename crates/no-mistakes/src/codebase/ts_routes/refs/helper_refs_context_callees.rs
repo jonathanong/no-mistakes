@@ -26,7 +26,9 @@ fn route_helper_context_summary(
 ) -> RouteHelperContextSummary {
     match expr {
         Expression::StringLiteral(s) => RouteHelperContextSummary {
-            patterns: vec![normalize_next_pathname_pattern(s.value.as_str())],
+            patterns: vec![normalize_next_pathname_pattern(
+                crate::ast::js_literal(&s).as_ref(),
+            )],
             refs: Vec::new(),
         },
         Expression::CallExpression(call) => {
@@ -80,7 +82,8 @@ fn route_helper_context_summary(
         }
         Expression::LogicalExpression(logical) => {
             let left = route_helper_context_summary(&logical.left, helper_bindings, local_helpers);
-            let right = route_helper_context_summary(&logical.right, helper_bindings, local_helpers);
+            let right =
+                route_helper_context_summary(&logical.right, helper_bindings, local_helpers);
             merge_route_helper_context_summaries(left, right)
         }
         Expression::ObjectExpression(obj) => {
@@ -146,8 +149,8 @@ fn route_helper_template_context_summary(
         let cooked = quasi
             .value
             .cooked
-            .map(|value| value.as_str())
-            .unwrap_or("");
+            .map(|_| crate::ast::template_quasi_text(quasi))
+            .unwrap_or(std::borrow::Cow::Borrowed(""));
         summary = concat_route_helper_context_summaries(
             summary,
             RouteHelperContextSummary {

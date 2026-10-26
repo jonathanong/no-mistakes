@@ -73,7 +73,7 @@ fn template_origins(
         let decoded = super::super::tags::quasi_text(quasi, raw_mode);
         origins.extend(piece(
             raw,
-            decoded,
+            &decoded,
             quasi.span.start,
             raw_mode || quasi.value.cooked.is_none(),
         ));

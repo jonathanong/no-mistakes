@@ -8,7 +8,7 @@ struct ImportCollector {
 
 impl<'a> Visit<'a> for ImportCollector {
     fn visit_import_declaration(&mut self, import: &ImportDeclaration<'a>) {
-        let specifier = import.source.value.as_str().to_string();
+        let specifier = crate::ast::js_literal(&import.source).into_owned();
         let Some(specifiers) = import.specifiers.as_deref() else {
             self.side_effects.push(specifier);
             return;

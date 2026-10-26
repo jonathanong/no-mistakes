@@ -38,7 +38,7 @@ fn append_expr(
     match expr {
         Expression::StringLiteral(literal) => {
             let raw = &source[literal.span.start as usize + 1..literal.span.end as usize - 1];
-            out.append(raw, literal.value.as_str(), line, false);
+            out.append(raw, crate::ast::js_literal(&literal).as_ref(), line, false);
             true
         }
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {

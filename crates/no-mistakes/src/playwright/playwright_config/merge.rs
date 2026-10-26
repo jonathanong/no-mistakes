@@ -79,7 +79,7 @@ pub(super) fn parse_options(
                 let oxc_ast::ast::ObjectPropertyKind::ObjectProperty(property) = property else {
                     return None;
                 };
-                (property.key.static_name().as_deref() == Some(name))
+                (crate::ast::property_key_name(&property.key).as_deref() == Some(name))
                     .then_some(property.span().start)
             })
             .unwrap_or(object.span().start)

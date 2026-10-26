@@ -1,3 +1,5 @@
+use crate::ast::js_literal;
+use crate::ast::template_quasi_text;
 mod bindings;
 mod commonjs;
 mod helpers;
@@ -53,7 +55,7 @@ pub(super) struct ServerRouteVisitor<'a> {
 
 impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
     fn visit_import_declaration(&mut self, import: &oxc_ast::ast::ImportDeclaration<'a>) {
-        let source = import.source.value.as_str().to_string();
+        let source = js_literal(&import.source).into_owned();
         if let Some(specifiers) = &import.specifiers {
             for specifier in specifiers {
                 self.record_import(&source, specifier);
@@ -65,7 +67,7 @@ impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
     fn visit_variable_declarator(&mut self, decl: &oxc_ast::ast::VariableDeclarator<'a>) {
         let init = decl.init.as_ref();
         let commonjs_source = init.and_then(|init| commonjs::server_module_from_require(init));
-        if let Some(source) = commonjs_source {
+        if let Some(source) = commonjs_source.as_deref() {
             self.record_commonjs_pattern(&decl.id, source);
         }
         if let Some(init) = init {
@@ -82,7 +84,7 @@ impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
             if self.client_http_module_from_expr(init) || self.client_http_from_expr(init) {
                 self.client_http_names.insert(name.clone());
             }
-            if let Some(source) = commonjs_source {
+            if let Some(source) = commonjs_source.as_deref() {
                 self.record_commonjs_module(&name, source);
             }
             if let Some(binding) = self.binding_from_expr(init) {
@@ -147,7 +149,7 @@ pub(super) fn module_export_name(name: &ModuleExportName<'_>) -> String {
     match name {
         ModuleExportName::IdentifierName(id) => id.name.to_string(),
         ModuleExportName::IdentifierReference(id) => id.name.to_string(),
-        ModuleExportName::StringLiteral(value) => value.value.to_string(),
+        ModuleExportName::StringLiteral(value) => js_literal(&value).into_owned(),
     }
 }
 
@@ -160,12 +162,12 @@ fn default_export_name(decl: &ExportDefaultDeclarationKind<'_>) -> Option<String
 
 pub(super) fn const_string(expr: &Expression<'_>) -> Option<String> {
     match expr {
-        Expression::StringLiteral(value) => Some(value.value.as_str().to_string()),
+        Expression::StringLiteral(value) => Some(js_literal(&value).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => Some(
             template
                 .quasis
                 .iter()
-                .filter_map(|quasi| quasi.value.cooked.as_deref())
+                .filter_map(|quasi| quasi.value.cooked.map(|_| template_quasi_text(quasi)))
                 .collect::<Vec<_>>()
                 .join(""),
         ),

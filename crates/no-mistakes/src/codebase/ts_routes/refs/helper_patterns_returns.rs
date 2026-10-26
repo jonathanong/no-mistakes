@@ -22,17 +22,18 @@ impl HelperStatementEvaluation {
 
 fn evaluate_helper_return_statement<'a>(
     stmt: &'a Statement<'a>,
-    defs: &HashMap<&'a str, HelperDef<'a>>,
+    defs: &HashMap<std::borrow::Cow<'a, str>, HelperDef<'a>>,
     imported_helpers: &RouteHelperBindings,
     env: &mut HashMap<String, Vec<String>>,
     depth: usize,
 ) -> HelperStatementEvaluation {
     match stmt {
-        Statement::ReturnStatement(ret) => HelperStatementEvaluation::returning(ret
-            .argument
-            .as_ref()
-            .map(|expr| evaluate_route_expression(expr, defs, imported_helpers, env, depth + 1))
-            .unwrap_or_default()),
+        Statement::ReturnStatement(ret) => HelperStatementEvaluation::returning(
+            ret.argument
+                .as_ref()
+                .map(|expr| evaluate_route_expression(expr, defs, imported_helpers, env, depth + 1))
+                .unwrap_or_default(),
+        ),
         Statement::VariableDeclaration(var_decl) => {
             for decl in &var_decl.declarations {
                 let (Some(name), Some(init)) = (binding_identifier_name(&decl.id), &decl.init)
@@ -46,20 +47,21 @@ fn evaluate_helper_return_statement<'a>(
         }
         Statement::ExpressionStatement(expr_stmt) => {
             if let Expression::AssignmentExpression(assignment) = &expr_stmt.expression {
-                apply_helper_assignment_expression(assignment, defs, imported_helpers, env, depth + 1);
+                apply_helper_assignment_expression(
+                    assignment,
+                    defs,
+                    imported_helpers,
+                    env,
+                    depth + 1,
+                );
             }
             HelperStatementEvaluation::continuing()
         }
         Statement::BlockStatement(block) => {
             let mut values = Vec::new();
             for stmt in &block.body {
-                let evaluation = evaluate_helper_return_statement(
-                    stmt,
-                    defs,
-                    imported_helpers,
-                    env,
-                    depth + 1,
-                );
+                let evaluation =
+                    evaluate_helper_return_statement(stmt, defs, imported_helpers, env, depth + 1);
                 values.extend(evaluation.values);
                 if !evaluation.can_continue {
                     return HelperStatementEvaluation::returning(values);

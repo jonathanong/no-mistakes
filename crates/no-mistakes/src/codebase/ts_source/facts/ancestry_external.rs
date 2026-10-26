@@ -3,7 +3,7 @@ use super::*;
 pub(super) fn visit<'a>(collector: &mut Collector<'_>, module: &TSExternalModuleDeclaration<'a>) {
     let prior = collector
         .external_module
-        .replace(module.id.value.to_string());
+        .replace(crate::ast::js_literal(&module.id).into_owned());
     if collector.global_modules
         && prior.is_none()
         && collector.function_depth == 0
@@ -19,7 +19,7 @@ pub(super) fn visit<'a>(collector: &mut Collector<'_>, module: &TSExternalModule
             collector
                 .facts
                 .ambient_modules
-                .push((module.id.value.to_string(), exported));
+                .push((crate::ast::js_literal(&module.id).into_owned(), exported));
         }
     }
     walk::walk_ts_external_module_declaration(collector, module);

@@ -31,6 +31,11 @@ A default-export expression has an empty `local` name when its identifier does
 not resolve to a binding in the selected file. No AST or raw source is
 returned. Ambient declarations are not runtime values.
 The facts do not prove that an imported value exists in another module.
+Decoded literal and static-name identities retain their existing representation
+across parser upgrades, including lone surrogate escapes; they are not converted
+through diagnostic display text. Source spans remain offsets into the original
+UTF-8 bytes. See the [parser boundary](../architecture.md#literal-identity-at-the-parser-boundary).
+
 
 Check `complete` and `diagnostics` before relying on a module. Non-literal module
 loads, shadowed or indirect `require`, direct `eval`, `with`, TypeScript import-equals and legacy

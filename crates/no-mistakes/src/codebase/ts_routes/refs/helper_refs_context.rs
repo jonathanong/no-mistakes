@@ -54,7 +54,7 @@ fn member_is_route_context(
     member: &oxc_ast::ast::MemberExpression<'_>,
     router_bindings: &RouterBindings<'_>,
 ) -> bool {
-    let Some(property) = member.static_property_name() else {
+    let Some(property) = crate::ast::member_property_name(member) else {
         return false;
     };
     if property == "fetch" {
@@ -124,6 +124,6 @@ fn route_helper_callee_name_from_member(
         Expression::Identifier(id) => id.name.as_str(),
         _ => return None,
     };
-    let property = member.static_property_name()?;
+    let property = crate::ast::member_property_name(member)?;
     Some(format!("{object}.{property}"))
 }

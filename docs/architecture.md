@@ -45,6 +45,27 @@ JavaScript-family, explicit module-kind, and declaration inputs do not. Legacy
 results remain isolated to list-symbols output, while graph and check facts
 retain extension-based semantics.
 
+### Literal identity at the parser boundary
+
+OXC strings can contain lone UTF-16 surrogates that Rust strings cannot hold.
+Shared AST helpers preserve the established fact and report identity: lone
+surrogates use U+FFFD followed by four lowercase hexadecimal digits, and a real
+U+FFFD uses the same marker followed by its own four hexadecimal digits when
+that string contains a lone surrogate.
+Source spelling is retained for legacy braced and separated surrogate escapes;
+spans continue to point into the original UTF-8 source.
+
+Ordinary UTF-8 values borrow arena storage. Compatibility conversion allocates
+only when the prior string representation requires it. Consumers use the shared
+literal, template, property, and module-name helpers rather than diagnostic
+formatting or dropping values without a UTF-8 view. The parser gateway also keeps
+legacy fatal module-name diagnostics before facts are extracted. These adapters
+reuse the parsed source and AST without another parse or persistent state.
+
+OXC dependencies share one release and one Dependabot group, including
+`oxc_semantic`. Upgrades must preserve saved fixture outputs and pass the existing
+CPU and memory benchmark gates.
+
 No state is trusted across invocations. Persistent graph caches, daemons,
 databases, and filesystem cache directories are intentionally outside the
 architecture. If a future feature needs speedups, prefer reducing the per-run

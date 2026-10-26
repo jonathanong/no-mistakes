@@ -23,3 +23,21 @@ pub fn find_queue_name_from_program(
 ) -> Option<String> {
     find_queue_factory_facts_from_program(program, "", factory_specifier, factory_function).1
 }
+
+fn resolve_queue_name(
+    call: &oxc_ast::ast::CallExpression<'_>,
+    const_strings: &HashMap<String, String>,
+) -> String {
+    match call.arguments.first() {
+        Some(oxc_ast::ast::Argument::StringLiteral(s)) => crate::ast::js_literal(&s).into_owned(),
+        Some(oxc_ast::ast::Argument::Identifier(id)) => const_strings
+            .get(id.name.as_str())
+            .cloned()
+            .unwrap_or_else(|| "<unknown>".to_string()),
+        _ => "<unknown>".to_string(),
+    }
+}
+
+fn module_export_name_str(name: &ModuleExportName) -> String {
+    crate::ast::module_export_name(name).into_owned()
+}

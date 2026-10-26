@@ -26,14 +26,14 @@ enum Constant<'a> {
     Null,
     Boolean(bool),
     Number(f64),
-    Text(&'a str),
+    Text(std::borrow::Cow<'a, str>),
 }
 fn constant<'a>(expression: &'a Expression<'a>) -> Option<Constant<'a>> {
     match unwrap_ts_wrappers(expression) {
         Expression::NullLiteral(_) => Some(Constant::Null),
         Expression::BooleanLiteral(value) => Some(Constant::Boolean(value.value)),
         Expression::NumericLiteral(value) => Some(Constant::Number(value.value)),
-        Expression::StringLiteral(value) => Some(Constant::Text(value.value.as_str())),
+        Expression::StringLiteral(value) => Some(Constant::Text(crate::ast::js_literal(&value))),
         _ => None,
     }
 }

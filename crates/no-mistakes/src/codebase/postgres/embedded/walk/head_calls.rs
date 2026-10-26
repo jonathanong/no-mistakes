@@ -19,7 +19,7 @@ pub(super) fn text(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> Option<
     }
     match head {
         Expression::Identifier(name) => visitor.lookup(name.name.as_str())?.sql,
-        Expression::StringLiteral(value) => Some(value.value.to_string()),
+        Expression::StringLiteral(value) => Some(crate::ast::js_literal(&value).into_owned()),
         Expression::TemplateLiteral(value) => {
             Some(tags::quasi_text(value.quasis.first()?, false).to_string())
         }

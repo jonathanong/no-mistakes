@@ -4,7 +4,7 @@ pub(super) fn client_module_expr(expr: &Expression<'_>) -> bool {
     client_module_source(expr).is_some()
 }
 
-fn client_module_source<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
+fn client_module_source<'a>(expr: &'a Expression<'a>) -> Option<std::borrow::Cow<'a, str>> {
     match expr {
         Expression::ParenthesizedExpression(expr) => client_module_source(&expr.expression),
         Expression::CallExpression(call) => match &call.callee {
@@ -13,7 +13,7 @@ fn client_module_source<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
                 .first()
                 .and_then(Argument::as_expression)
                 .and_then(|expr| match expr {
-                    Expression::StringLiteral(source) => Some(source.value.as_str()),
+                    Expression::StringLiteral(source) => Some(crate::ast::js_literal(&source)),
                     _ => None,
                 })
                 .filter(|source| is_client_http_module(source)),

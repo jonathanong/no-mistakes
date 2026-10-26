@@ -51,9 +51,9 @@ fn classify_import(
     options: &EmbeddedSqlOptions,
     classified: &mut ImportClassification,
 ) {
-    let source = import.source.value.as_str();
-    let confirmed = from_configured_module(source, &options.import_specifier);
-    let relative = is_relative(source);
+    let source = crate::ast::js_literal(&import.source);
+    let confirmed = from_configured_module(&source, &options.import_specifier);
+    let relative = is_relative(&source);
     let Some(specifiers) = &import.specifiers else {
         return;
     };
@@ -61,12 +61,12 @@ fn classify_import(
         let ImportDeclarationSpecifier::ImportSpecifier(named) = specifier else {
             continue;
         };
-        let imported = named.imported.name();
+        let imported = crate::ast::module_export_name(&named.imported);
         let local = named.local.name.to_string();
         let type_only = import.import_kind == ImportOrExportKind::Type
             || named.import_kind == ImportOrExportKind::Type;
-        let factory = !type_only && contains(&options.executor_factory_names, imported.as_str());
-        let type_import = contains(&options.executor_type_names, imported.as_str());
+        let factory = !type_only && contains(&options.executor_factory_names, imported.as_ref());
+        let type_import = contains(&options.executor_type_names, imported.as_ref());
         if !factory {
             if !options.import_specifier.is_empty() && (confirmed || relative) {
                 let owner = relative.then(|| {

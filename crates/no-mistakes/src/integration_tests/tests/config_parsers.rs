@@ -30,7 +30,7 @@ fn required_string_or_array(
     for element in &array.elements {
         match element {
             ArrayExpressionElement::StringLiteral(literal) => {
-                values.push(literal.value.to_string())
+                values.push(crate::ast::js_literal(&literal).into_owned())
             }
             ArrayExpressionElement::TemplateLiteral(template)
                 if template.expressions.is_empty() =>

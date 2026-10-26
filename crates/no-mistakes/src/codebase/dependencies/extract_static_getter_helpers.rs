@@ -18,7 +18,7 @@ fn visit_computed_member_expression_with_getters<'a>(
     if let Expression::StringLiteral(property) =
         crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression)
     {
-        collector.note_selected_member(&member.object, property.value.as_str());
+        collector.note_selected_member(&member.object, crate::ast::js_literal(&property).as_ref());
     }
     if let Some(name) = simple_computed_member_name(member) {
         record_static_getter_read(collector, member.span.start, &name);
@@ -156,7 +156,12 @@ fn visit_update_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     update: &oxc_ast::ast::UpdateExpression<'a>,
 ) {
-    collector.record_callable_assignment(update.argument.as_assignment_target(), None, false, update.span.end);
+    collector.record_callable_assignment(
+        update.argument.as_assignment_target(),
+        None,
+        false,
+        update.span.end,
+    );
     collector.record_replacement_target(
         update.argument.as_assignment_target(),
         ValueExpression::Unknown,

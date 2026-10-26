@@ -52,7 +52,9 @@ pub(super) fn selector_argument_literals(
         .enumerate()
         .filter(|(index, _)| matches!(mode, SelectorArgumentMode::All) || *index == 0)
         .filter_map(|(_, argument)| match argument {
-            oxc_ast::ast::Argument::StringLiteral(literal) => Some(literal.value.to_string()),
+            oxc_ast::ast::Argument::StringLiteral(literal) => {
+                Some(crate::ast::js_literal(&literal).into_owned())
+            }
             oxc_ast::ast::Argument::TemplateLiteral(template) => {
                 Some(ast::template_literal_text(template.as_ref(), source))
             }
@@ -85,8 +87,8 @@ pub(super) fn extract_test_id_argument(
 
     let matcher = match argument {
         oxc_ast::ast::Argument::StringLiteral(literal) => Some((
-            literal.value.to_string(),
-            SelectorMatcher::Exact(literal.value.to_string()),
+            crate::ast::js_literal(&literal).into_owned(),
+            SelectorMatcher::Exact(crate::ast::js_literal(&literal).into_owned()),
         )),
         oxc_ast::ast::Argument::TemplateLiteral(template) => {
             let value = ast::template_literal_text(template, source);

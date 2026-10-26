@@ -1,9 +1,14 @@
 use super::call_shapes::callee_static_member_name;
+use crate::ast::js_literal;
+
 use crate::playwright::analysis::text_types::{
     normalize_locator_text, LocatorKind, PlaywrightTextLocator,
 };
 use crate::playwright::ast;
+use options::{object_bool_property, object_has_unsupported_role_filters, BoolProperty};
 use oxc_ast::ast::{Argument, CallExpression, Expression, ObjectPropertyKind, PropertyKey};
+
+mod options;
 
 pub(super) fn extract_text_locator_call(
     call: &CallExpression<'_>,
@@ -82,7 +87,7 @@ fn text_arg(argument: &Argument<'_>, source: &str) -> Option<String> {
 
 fn argument_string(argument: &Argument<'_>, source: &str) -> Option<String> {
     match argument {
-        Argument::StringLiteral(literal) => Some(literal.value.to_string()),
+        Argument::StringLiteral(literal) => Some(js_literal(&literal).into_owned()),
         Argument::TemplateLiteral(template) if template.expressions.is_empty() => {
             Some(ast::template_literal_text(template, source))
         }
@@ -101,12 +106,15 @@ fn object_string_property(argument: &Argument<'_>, name: &str, source: &str) -> 
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             continue;
         };
-        if property.computed || property.method || property_key_name(&property.key) != Some(name) {
+        if property.computed
+            || property.method
+            || property_key_name(&property.key).as_deref() != Some(name)
+        {
             continue;
         }
         match &property.value {
             Expression::StringLiteral(literal) => {
-                value = normalize_locator_text(literal.value.as_str());
+                value = normalize_locator_text(js_literal(&literal).as_ref());
             }
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
                 value = normalize_locator_text(&ast::template_literal_text(template, source));
@@ -122,7 +130,7 @@ fn object_string_property(argument: &Argument<'_>, name: &str, source: &str) -> 
 
 fn expression_string(expression: &Expression<'_>, source: &str) -> Option<String> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::StringLiteral(literal) => Some(js_literal(&literal).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             Some(ast::template_literal_text(template, source))
         }
@@ -130,73 +138,12 @@ fn expression_string(expression: &Expression<'_>, source: &str) -> Option<String
     }
 }
 
-fn expression_bool(expression: &Expression<'_>) -> Option<bool> {
-    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
-        Expression::BooleanLiteral(literal) => Some(literal.value),
-        _ => None,
-    }
-}
-
-enum BoolProperty {
-    Missing,
-    Value(bool),
-    Unknown,
-}
-
-fn object_bool_property(argument: &Argument<'_>, name: &str) -> BoolProperty {
-    let Argument::ObjectExpression(object) = argument else {
-        return BoolProperty::Missing;
-    };
-    let mut value = BoolProperty::Missing;
-    for property in &object.properties {
-        let ObjectPropertyKind::ObjectProperty(property) = property else {
-            return BoolProperty::Unknown;
-        };
-        if property.computed || property.method || property_key_name(&property.key) != Some(name) {
-            if property.computed || property.method {
-                return BoolProperty::Unknown;
-            }
-            continue;
-        }
-        if let Some(bool_value) = expression_bool(&property.value) {
-            value = BoolProperty::Value(bool_value);
-        } else {
-            value = BoolProperty::Unknown;
-        }
-    }
-    value
-}
-
-fn object_has_unsupported_role_filters(argument: &Argument<'_>) -> bool {
-    let Argument::ObjectExpression(object) = argument else {
-        return false;
-    };
-    object.properties.iter().any(|property| {
-        let ObjectPropertyKind::ObjectProperty(property) = property else {
-            return true;
-        };
-        if property.computed || property.method {
-            return true;
-        }
-        matches!(
-            property_key_name(&property.key),
-            Some(
-                "checked"
-                    | "selected"
-                    | "pressed"
-                    | "expanded"
-                    | "disabled"
-                    | "level"
-                    | "description"
-            )
-        )
-    })
-}
-
-fn property_key_name<'a>(key: &'a PropertyKey<'a>) -> Option<&'a str> {
+fn property_key_name<'a>(key: &PropertyKey<'a>) -> Option<std::borrow::Cow<'a, str>> {
     match key {
-        PropertyKey::StaticIdentifier(identifier) => Some(identifier.name.as_str()),
-        PropertyKey::StringLiteral(literal) => Some(literal.value.as_str()),
+        PropertyKey::StaticIdentifier(identifier) => {
+            Some(std::borrow::Cow::Borrowed(identifier.name.as_str()))
+        }
+        PropertyKey::StringLiteral(literal) => Some(js_literal(&literal)),
         _ => None,
     }
 }

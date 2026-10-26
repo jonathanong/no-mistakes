@@ -1,9 +1,12 @@
 use crate::playwright::ast;
 use oxc_ast::ast::{
     Argument, AssignmentTarget, BindingPattern, ExportDefaultDeclarationKind, Expression,
-    ObjectExpression, ObjectPropertyKind, Program, PropertyKey, Statement,
+    ObjectExpression, Program, Statement,
 };
 use std::collections::{BTreeMap, BTreeSet};
+
+mod properties;
+pub use properties::{project_objects, property_expression};
 
 pub fn default_export_object<'a>(program: &'a Program<'a>) -> Option<&'a ObjectExpression<'a>> {
     let bindings = top_level_object_bindings(program);
@@ -163,50 +166,4 @@ fn identifier_config_object<'a>(
         .and_then(|expression| expression_config_object(expression, bindings, seen));
     seen.remove(name);
     object
-}
-
-pub fn property_expression<'a>(
-    object: &'a ObjectExpression<'a>,
-    name: &str,
-) -> Option<&'a Expression<'a>> {
-    for property in &object.properties {
-        let ObjectPropertyKind::ObjectProperty(property) = property else {
-            continue;
-        };
-        if property.computed || property.method {
-            continue;
-        }
-        if property_key_name(&property.key).as_deref() == Some(name) {
-            return Some(&property.value);
-        }
-    }
-    None
-}
-
-fn property_key_name(key: &PropertyKey<'_>) -> Option<String> {
-    match key {
-        PropertyKey::StaticIdentifier(identifier) => Some(identifier.name.to_string()),
-        PropertyKey::StringLiteral(literal) => Some(literal.value.to_string()),
-        _ => None,
-    }
-}
-
-pub fn project_objects<'a>(root: &'a ObjectExpression<'a>) -> Vec<&'a ObjectExpression<'a>> {
-    let Some(Expression::ArrayExpression(projects)) = property_expression(root, "projects") else {
-        return Vec::new();
-    };
-    projects
-        .elements
-        .iter()
-        .filter_map(array_element_object)
-        .collect()
-}
-
-fn array_element_object<'a>(
-    element: &'a oxc_ast::ast::ArrayExpressionElement<'a>,
-) -> Option<&'a ObjectExpression<'a>> {
-    match element {
-        oxc_ast::ast::ArrayExpressionElement::ObjectExpression(object) => Some(object),
-        _ => None,
-    }
 }

@@ -17,7 +17,7 @@ pub(super) fn exported_star_options(
             continue;
         }
         let import = ImportBinding {
-            source: export.source.value.to_string(),
+            source: crate::ast::js_literal(&export.source).into_owned(),
             imported: exported.to_string(),
         };
         let Some(options) = imported_options(&import, parent)? else {

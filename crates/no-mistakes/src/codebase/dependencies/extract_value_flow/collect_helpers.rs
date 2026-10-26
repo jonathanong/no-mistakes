@@ -59,7 +59,7 @@ impl ImportCollector {
                     if let oxc_ast::ast::TSLiteral::StringLiteral(key) = &literal.literal {
                         return ValueType::Member(
                             Box::new(self.annotation_shape(&indexed.object_type)),
-                            key.value.to_string(),
+                            crate::ast::js_literal(&key).into_owned(),
                         );
                     }
                 }

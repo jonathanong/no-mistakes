@@ -96,7 +96,9 @@ fn story_pattern_from_element(
     source: &str,
 ) -> Option<String> {
     match element {
-        ArrayExpressionElement::StringLiteral(literal) => Some(literal.value.to_string()),
+        ArrayExpressionElement::StringLiteral(literal) => {
+            Some(crate::ast::js_literal(&literal).into_owned())
+        }
         ArrayExpressionElement::TemplateLiteral(template) if template.expressions.is_empty() => {
             Some(crate::ast::template_literal_text(template, source))
         }
@@ -133,7 +135,7 @@ fn object_string_property(
 
 fn optional_string(expression: &Expression<'_>, source: &str) -> Option<String> {
     match parenthesized_expression(expression) {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             Some(crate::ast::template_literal_text(template, source))
         }
