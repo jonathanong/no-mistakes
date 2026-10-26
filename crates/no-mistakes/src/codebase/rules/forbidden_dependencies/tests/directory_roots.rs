@@ -40,8 +40,7 @@ fn absolute_directory_roots_preserve_the_prepared_file_universe() {
         &config.rules[0],
         &opts,
         &graph,
-        None,
-        Some(&universe),
+        application_scope(None, Some(&universe), None),
     )
     .unwrap();
     assert_eq!(findings.len(), 1);

@@ -140,6 +140,7 @@ pub(super) fn graph_rules(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk>
         prepared_graph: req.prepared_graph,
         dependency_graph: req.dependency_graph,
         inferred_roots: req.inferred_roots,
+        sources: Some(req.sources),
         prepared_vitest_projects: req.prepared_vitest_projects,
         prepared_playwright_projects: req.prepared_playwright_projects,
     })?;

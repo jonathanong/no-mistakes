@@ -1,9 +1,11 @@
 use super::RuleFinding;
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, NodeId};
 use crate::codebase::dependencies::{relationship_filter, EdgeKind, RelationshipArg};
+use crate::codebase::rules::config_diagnostic::ConfigAnchor;
+use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use helpers::{build_globset, edge_kind_str, repro_command, resolve_root_paths};
+use helpers::{edge_kind_str, repro_command, resolve_root_paths};
 use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 
@@ -11,7 +13,7 @@ mod config_check;
 mod helpers;
 mod shared;
 pub(crate) use config_check::check_with_config;
-pub(crate) use shared::check_with_prepared_facts_and_graph;
+pub(crate) use shared::{check_with_prepared_facts_and_graph, PreparedConfig};
 
 pub const RULE_ID: &str = "forbidden-dependencies";
 
@@ -82,58 +84,39 @@ fn union_allowed_set(opts_list: &[Options]) -> Option<HashSet<EdgeKind>> {
     }
 }
 
+struct ApplicationScope<'a> {
+    inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    file_universe: Option<&'a crate::fx::PathSet>,
+    sources: Option<&'a SourceStore>,
+}
+
+fn application_scope<'a>(
+    inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    file_universe: Option<&'a crate::fx::PathSet>,
+    sources: Option<&'a SourceStore>,
+) -> ApplicationScope<'a> {
+    ApplicationScope {
+        inferred_roots,
+        file_universe,
+        sources,
+    }
+}
+
 fn check_rule_application(
     root: &Path,
     config: &NoMistakesConfig,
     rule: &crate::config::v2::schema::RuleDef,
     opts: &Options,
     graph: &DepGraph,
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-    file_universe: Option<&crate::fx::PathSet>,
+    scope: ApplicationScope<'_>,
 ) -> Result<Vec<RuleFinding>> {
-    if opts.roots.is_empty()
-        || (opts.forbidden_modules.is_empty() && opts.forbidden_files.is_empty())
-    {
-        return Ok(vec![RuleFinding {
-            rule: RULE_ID.to_string(),
-            file: ".no-mistakes.yml".to_string(),
-            line: 1,
-            message: format!(
-                "{RULE_ID}: each rule entry requires at least one root and \
-                 one forbiddenModules or forbiddenFiles entry"
-            ),
-            import: None,
-            target: None,
-        }]);
-    }
-    let module_matcher = match build_globset(&opts.forbidden_modules) {
-        Ok(m) => m,
-        Err(e) => {
-            return Ok(vec![RuleFinding {
-                rule: RULE_ID.to_string(),
-                file: ".no-mistakes.yml".to_string(),
-                line: 1,
-                message: format!("{RULE_ID}: invalid glob pattern in forbiddenModules: {e}"),
-                import: None,
-                target: None,
-            }]);
-        }
-    };
-    let file_matcher = match build_globset(&opts.forbidden_files) {
-        Ok(m) => m,
-        Err(e) => {
-            return Ok(vec![RuleFinding {
-                rule: RULE_ID.to_string(),
-                file: ".no-mistakes.yml".to_string(),
-                line: 1,
-                message: format!("{RULE_ID}: invalid glob pattern in forbiddenFiles: {e}"),
-                import: None,
-                target: None,
-            }]);
-        }
+    let anchor = ConfigAnchor::resolve(root, config, scope.sources, rule);
+    let (module_matcher, file_matcher) = match helpers::config_matchers(&anchor, opts) {
+        Ok(matchers) => matchers,
+        Err(findings) => return Ok(findings),
     };
     let allowed = relationship_filter(&opts.relationships);
-    let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
+    let mut inferred_roots = scope.inferred_roots.cloned().unwrap_or_default();
     let source_filter = super::path_filter::RulePathFilter::new_with_inferred(
         root,
         config,
@@ -158,7 +141,7 @@ fn check_rule_application(
             .to_string_lossy()
             .replace('\\', "/");
         let root_node = NodeId::file(resolved_path);
-        let entries = match file_universe {
+        let entries = match scope.file_universe {
             Some(universe) => {
                 graph.deps_of_in_file_universe(&[root_node], None, allowed.as_ref(), universe)
             }

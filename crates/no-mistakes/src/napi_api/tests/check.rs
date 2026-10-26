@@ -7,6 +7,8 @@ mod check_config_locations;
 mod check_parse_failure_locations;
 #[path = "check_tsconfig_alias_locations.rs"]
 mod check_tsconfig_alias_locations;
+#[path = "config_diagnostic_locations.rs"]
+mod config_diagnostic_locations;
 
 #[path = "check_playwright_patterns.rs"]
 mod check_playwright_patterns;

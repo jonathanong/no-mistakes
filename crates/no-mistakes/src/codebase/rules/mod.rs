@@ -127,6 +127,7 @@ pub mod workspace_package_cycles;
 
 mod byte_prefilter;
 mod catalog_rule;
+mod config_diagnostic;
 mod configured_root;
 mod entrypoints;
 #[doc(hidden)]

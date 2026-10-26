@@ -1,0 +1,4 @@
+# The rule key stays on line 3; a missing option must not be reported at line 1.
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
