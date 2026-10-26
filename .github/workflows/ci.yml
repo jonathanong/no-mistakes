@@ -645,7 +645,7 @@ jobs:
 
       - name: Install cargo-llvm-cov
         timeout-minutes: 5
-        uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
         with:
           tool: cargo-llvm-cov
 
@@ -709,7 +709,7 @@ jobs:
 
       - name: Install cargo-crap
         timeout-minutes: 5
-        uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+        uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
         with:
           tool: cargo-crap
 
@@ -1183,7 +1183,7 @@ jobs:
         # A cache hit finishes quickly. The first run on this runner, and the
         # first run after a libc6 update, installs valgrind and libc6-dbg.
         timeout-minutes: 6
-        uses: CodSpeedHQ/action@f842b9a3ffe213dbb81768fd7f7eeb4dfcf1c369 # v5.4.2
+        uses: CodSpeedHQ/action@821a40cd6c80e3cfe387caf55668287addd808da # v5.5.0
         with:
           mode: ${{ matrix.mode }}
           # actions/cache versions entries by path, so this also keys the cache by libc6.
@@ -1203,7 +1203,7 @@ jobs:
       - name: Run unique frontend lifecycle memory controls
         if: ${{ env.BENCHMARK_SELECTED == 'true' && matrix.mode == 'memory' && matrix.benchmark-shard == 'language-frontends' }}
         timeout-minutes: 6
-        uses: CodSpeedHQ/action@f842b9a3ffe213dbb81768fd7f7eeb4dfcf1c369 # v5.4.2
+        uses: CodSpeedHQ/action@821a40cd6c80e3cfe387caf55668287addd808da # v5.5.0
         with:
           mode: memory
           runner-version: "5.4.0"
@@ -1282,7 +1282,7 @@ jobs:
       - name: Measure the declared eight fresh processes
         id: samples
         timeout-minutes: 6
-        uses: CodSpeedHQ/action@f842b9a3ffe213dbb81768fd7f7eeb4dfcf1c369 # v5.4.2
+        uses: CodSpeedHQ/action@821a40cd6c80e3cfe387caf55668287addd808da # v5.5.0
         env:
           TMPDIR: ${{ runner.temp }}/frontend-lifecycle-smoke/profiles
           CODSPEED_SKIP_UPLOAD: "true"
