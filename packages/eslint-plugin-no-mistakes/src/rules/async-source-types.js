@@ -20,15 +20,26 @@ function createSourceTypes(targets, sources, receiverShape) {
   function builtin(id, owner) {
     return id?.type === "Identifier" && !resolveVariable(id, owner)?.defs.length;
   }
+  function promiseType(type, owner, seen = new Set()) {
+    const next = fresh(type, seen);
+    if (!next) return false;
+    if (type.type === "TSTypeAliasDeclaration")
+      return promiseType(type.typeAnnotation, owner, next);
+    if (type.type !== "TSTypeReference") return false;
+    if (type.typeName.name === "Promise" && builtin(type.typeName, owner)) return true;
+    // Generic aliases need substitution, so only follow aliases without arguments.
+    if ((type.typeArguments?.params || type.typeParameters?.params)?.length) return false;
+    const resolved = declarations.declaration(type.typeName, owner);
+    return Boolean(
+      resolved &&
+      !resolved.node.typeParameters?.params?.length &&
+      promiseType(resolved.node, resolved.context, next),
+    );
+  }
   function promise(fn, owner) {
     if (fn.generator) return false;
     if (fn.async) return true;
-    const type = fn.returnType?.typeAnnotation;
-    return (
-      type?.type === "TSTypeReference" &&
-      type.typeName.name === "Promise" &&
-      builtin(type.typeName, owner)
-    );
+    return promiseType(fn.returnType?.typeAnnotation, owner);
   }
   function target(id, owner, seen = new Set()) {
     const next = fresh(id, seen);
@@ -55,6 +66,14 @@ function createSourceTypes(targets, sources, receiverShape) {
   function property(type, owner, name, seen = new Set()) {
     const next = fresh(type, seen);
     if (!next) return null;
+    if (type.type === "TSIntersectionType") {
+      const members = objectMembers(type, owner, seen);
+      const matches = members?.filter(({ node }) => (node.key.name ?? node.key.value) === name);
+      // Every constituent must be known; overlapping declarations stay unproven.
+      return matches?.length === 1
+        ? { type: annotation(matches[0].node), context: matches[0].context }
+        : null;
+    }
     if (type.type === "TSTypeAliasDeclaration")
       return property(type.typeAnnotation, owner, name, next);
     if (type.type === "TSTypeReference") {
@@ -79,6 +98,29 @@ function createSourceTypes(targets, sources, receiverShape) {
     // Extending interfaces and merged declarations require a fuller type model.
     if (matches.length !== 1 || type.extends?.length) return null;
     return { type: annotation(matches[0]), context: owner };
+  }
+  function objectMembers(type, owner, seen) {
+    const next = fresh(type, seen);
+    if (!next || type.typeParameters?.params?.length) return null;
+    if (type.type === "TSTypeAliasDeclaration")
+      return objectMembers(type.typeAnnotation, owner, next);
+    if (type.type === "TSTypeReference") {
+      if (type.typeArguments?.params?.length) return null;
+      const declaration = declarations.declaration(type.typeName, owner);
+      return declaration && objectMembers(declaration.node, declaration.context, next);
+    }
+    if (type.type === "TSIntersectionType") {
+      const parts = type.types.map((part) => objectMembers(part, owner, next));
+      return parts.every(Boolean) ? parts.flat() : null;
+    }
+    const members = type.type === "TSTypeLiteral" ? type.members : type.body?.body;
+    if (
+      !members ||
+      type.extends?.length ||
+      members.some((node) => node.type !== "TSPropertySignature" || node.computed)
+    )
+      return null;
+    return members.map((node) => ({ node, context: owner }));
   }
   function valueType(value, owner, seen = new Set()) {
     const next = fresh(value, seen);

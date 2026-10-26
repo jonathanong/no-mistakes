@@ -12,7 +12,6 @@ const {
   findContainingFunction,
   isFunction,
   isTransparentExpression,
-  unwrapExpression,
   unwrapTransparentParent,
 } = require("./async-ast");
 
@@ -55,21 +54,6 @@ function isPromiseAllIterable(node, promiseAll) {
   return promiseAll.arguments[0] === node && (node.type === "ArrayExpression" || isMapCall(node));
 }
 
-function expressionReturnedFromCallback(node, fn) {
-  let current = node;
-  let returnStatement = null;
-  while (current && current !== fn) {
-    if (current.parent === fn && fn.body === current && fn.body.type !== "BlockStatement") {
-      return true;
-    }
-    if (current.parent?.type === "ReturnStatement") {
-      returnStatement = current.parent;
-    }
-    current = current.parent;
-  }
-  return Boolean(returnStatement);
-}
-
 function canReachPromiseAll(node, promiseAll, collectionRole) {
   let current = node;
   // The caller supplies an ancestor aggregate; every path reaches it or rejects.
@@ -77,29 +61,36 @@ function canReachPromiseAll(node, promiseAll, collectionRole) {
     const parent = current.parent;
     if (parent?.type === "MemberExpression") return false;
     if (parent === promiseAll) return isPromiseAllIterable(current, promiseAll);
-    if (isFunction(parent)) {
-      if (!expressionReturnedFromCallback(node, parent) || !isMapCallback(parent)) {
+    if (isFunction(parent) || parent?.type === "ReturnStatement") {
+      const fn = isFunction(parent) ? parent : findContainingFunction(parent);
+      if (collectionRole || !isMapCallback(fn) || (isFunction(parent) && parent.body !== current))
         return false;
-      }
-      current = parent.parent;
+      current = unwrapTransparentParent(fn).parent;
       collectionRole = true;
       continue;
     }
     if (parent?.type === "ArrayExpression") {
-      // A mapper collection differs from a configured async target named map.
-      if (collectionRole && isMapCall(unwrapExpression(current))) return false;
-      if (parent.parent !== promiseAll || promiseAll.arguments[0] !== parent) return false;
+      if (collectionRole) return false;
       current = parent;
+      collectionRole = true;
       continue;
     }
-    if (parent?.type === "ObjectExpression") return false;
-    if (
-      parent?.type === "CallExpression" &&
-      parent !== promiseAll &&
-      parent.arguments.includes(current)
-    ) {
-      return false;
+    if (parent?.type === "SpreadElement") {
+      // Spreading consumes a collection; unspread collections stay nested.
+      if (!collectionRole || parent.parent?.type !== "ArrayExpression") return false;
+      current = parent;
+      collectionRole = false;
+      continue;
     }
+    // Only wrappers that preserve this exact value may reach an aggregate.
+    if (
+      !isTransparentExpression(parent) &&
+      !(
+        parent?.type === "ConditionalExpression" &&
+        (parent.consequent === current || parent.alternate === current)
+      )
+    )
+      return false;
     current = parent;
   }
 }

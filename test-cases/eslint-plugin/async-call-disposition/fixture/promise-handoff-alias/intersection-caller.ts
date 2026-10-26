@@ -1,0 +1,13 @@
+import { enqueueBulkCrawlReferralLinks as enqueue } from '@queues/crawl-referral-links/enqueues';
+import { adopt, drop, overlap, missing, opaque, union, indexed, extended, generic, computed, cyclic } from './intersection-consumers';
+const safe = () => enqueue([], undefined); void adopt({ enqueue: safe });
+const dropped = () => enqueue([], undefined); drop({ enqueue: dropped });
+const duplicate = () => enqueue([], undefined); void overlap({ enqueue: duplicate });
+const absent = () => enqueue([], undefined); void missing({ enqueue: absent });
+const unknown = () => enqueue([], undefined); void opaque({ enqueue: unknown });
+const mixed = () => enqueue([], undefined); void union({ enqueue: mixed });
+const dynamic = () => enqueue([], undefined); void indexed({ enqueue: dynamic });
+const inherited = () => enqueue([], undefined); void extended({ enqueue: inherited });
+const parameterized = () => enqueue([], undefined); void generic({ enqueue: parameterized });
+const symbolic = () => enqueue([], undefined); void computed({ enqueue: symbolic });
+const recursive = () => enqueue([], undefined); void cyclic({ enqueue: recursive });

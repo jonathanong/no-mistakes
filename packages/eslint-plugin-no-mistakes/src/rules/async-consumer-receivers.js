@@ -8,11 +8,13 @@ const {
 const { logicalCopyLeft } = require("./async-consumer-copy-spellings");
 const { localFunction } = require("./async-consumer-local-proof");
 const { importedFunction } = require("./async-consumer-imported-proof");
+const { CLOSED, createDataFacts } = require("./async-handoff-data");
 
 // Another dependency method receives the same object as `this`. Only ignore that
 // invocation when its supplied function cannot inspect or escape its receiver.
 function createReceiverProof(state) {
   const facts = new WeakMap();
+  const dataFacts = createDataFacts();
   function safe(value, context, parameter, inherited, supplied) {
     value = unwrapExpression(value);
     const copied = logicalCopyLeft(value);
@@ -120,7 +122,7 @@ function createReceiverProof(state) {
       ![...supplied].some((callback) => proof.functions.has(callback))
     );
   }
-  return function shape(object, context, parameter = null, inherited = new Map()) {
+  function shape(object, context, parameter = null, inherited = new Map()) {
     const result = new Map();
     // A this-free sibling can still close over a supplied callback and invoke it
     // without adopting its promise. Resolve stable aliases to the same identity.
@@ -129,17 +131,31 @@ function createReceiverProof(state) {
       if (entry.type !== "Property") continue;
       const value = unwrapExpression(entry.value);
       const fn = value.type === "Identifier" ? localFunction(value, context) : value;
-      if (fn) supplied.add(fn);
+      if (
+        fn &&
+        ["ArrowFunctionExpression", "FunctionExpression", "FunctionDeclaration"].includes(fn.type)
+      )
+        supplied.add(fn);
     }
     for (const entry of object.properties) {
       if (entry.type === "SpreadElement") {
         for (const [name, safe] of inherited) result.set(name, safe);
       } else {
         const name = entry.key.name ?? entry.key.value;
-        result.set(name, safe(entry.value, context, parameter, inherited, supplied));
+        const value = unwrapExpression(entry.value);
+        result.set(
+          name,
+          dataFacts.date(value, context, supplied)
+            ? "date"
+            : safe(entry.value, context, parameter, inherited, supplied),
+        );
       }
     }
+    if (dataFacts.closed(object, context, inherited)) result.set(CLOSED, true);
+    else result.delete(CLOSED);
     return result;
-  };
+  }
+  shape.dataFacts = dataFacts;
+  return shape;
 }
 module.exports = { createReceiverProof };
