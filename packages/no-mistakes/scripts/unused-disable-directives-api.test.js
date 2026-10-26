@@ -24,7 +24,9 @@ for (const [config, failures, advice] of [
       assert.equal(expected.rules.length, failures);
       assert.equal(expected.advisories.length, advice);
       assert.equal(expected.suppressed, undefined);
-      const diagnostics = [...expected.rules, ...expected.advisories];
+      const diagnostics = [...expected.rules, ...expected.advisories].sort(
+        (a, b) => a.line - b.line,
+      );
       assert.ok(diagnostics.every((finding) => finding.file === "web/app/stale.ts"));
       if (diagnostics.length) {
         assert.deepEqual(

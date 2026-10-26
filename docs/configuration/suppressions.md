@@ -20,7 +20,8 @@ reportUnusedDisableDirectives: advise
 `unused-disable-directive` means the named check rule is enabled but the
 comment hid nothing. `invalid-disable-directive` separately identifies an
 unknown rule name or a known rule that is disabled. Use the canonical rule ID,
-not a rule application's `name`.
+not a rule application's `name`. The structured finding's `target` contains
+that ID; its `rule` identifies the hygiene diagnostic.
 
 For example, with `postgres-explicit-columns` enabled for this SQL file:
 
@@ -36,8 +37,14 @@ the comment line. Remove it. If a justified exception stopped matching after
 a finding moved, place it at the reported statement instead and rerun the
 check. Fix a misspelled rule ID or remove a comment for a disabled rule.
 
-The result describes this invocation's configured check scope. It does not
-establish whether an exception would be needed under a different configuration.
+The audit scans the union of declared rule applications' project or repository
+roots, narrowed by their top-level `include` and `exclude`. It includes disabled
+applications so their stale exceptions remain visible. Rule-specific input
+options are not reinterpreted as audit file filters. A known rule outside its
+enabled application scope is reported as disabled or out of scope.
+
+The result describes this invocation. It does not establish whether an
+exception would be needed under a different configuration.
 These diagnostics are added after suppression filtering; another disable
 comment cannot hide them. Configure `ignore` to turn the audit off.
 

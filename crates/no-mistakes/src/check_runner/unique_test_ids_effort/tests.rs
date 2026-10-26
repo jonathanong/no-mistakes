@@ -27,18 +27,21 @@ fn run(
     effort: Option<Effort>,
 ) -> crate::check_runner::CheckResults {
     let config_path = config.map(|name| root.join(name));
-    run_all_with_options(
-        root.to_path_buf(),
-        config_path,
-        None,
-        false,
-        false,
-        AnalysisOptions {
-            effort,
-            include_sql_verdicts: false,
-        },
+    crate::test_support::policy_advisories(
+        run_all_with_options(
+            root.to_path_buf(),
+            config_path,
+            None,
+            false,
+            false,
+            AnalysisOptions {
+                effort,
+                include_sql_verdicts: false,
+            },
+        )
+        .unwrap_or_else(|error| panic!("{}: {error}", root.display())),
+        "playwright-",
     )
-    .unwrap_or_else(|error| panic!("{}: {error}", root.display()))
 }
 
 fn read(root: &Path, file: &str) -> String {

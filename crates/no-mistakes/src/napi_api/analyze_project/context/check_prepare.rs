@@ -1,5 +1,4 @@
 include!("check_prepare_graph.rs");
-
 impl SharedCheckContext {
     fn prepare(
         root: &Path,
@@ -172,7 +171,7 @@ impl SharedCheckContext {
         };
         let supplemental_call_site_files =
             fact_demand.supplemental_call_site_files(&fact_files, &graph_files);
-        let fs_files = if filesystem_rules_enabled {
+        let fs_files = if filesystem_rules_enabled || config.audits_disable_directives() {
             discovered
         } else {
             Default::default()

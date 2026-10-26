@@ -16,7 +16,10 @@ fn pnpm_declaration_context_cannot_prove_a_hoisted_non_error_base() {
                 .to_string(),
         ))
         .unwrap();
-        let report: serde_json::Value = serde_json::from_str(&json).unwrap();
+        let report: serde_json::Value = crate::test_support::policy_advisory_json(
+            serde_json::from_str(&json).unwrap(),
+            "unconstructed-error-class",
+        );
         assert_eq!(
             report["rules"].as_array().unwrap().len(),
             failures,

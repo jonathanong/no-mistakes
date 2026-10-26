@@ -17,6 +17,8 @@ mod check_playwright_patterns;
 mod check_suppression;
 #[path = "check_suppression_audit.rs"]
 mod check_suppression_audit;
+#[path = "check_unused_disable_directives.rs"]
+mod check_unused_disable_directives;
 
 fn static_check_fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

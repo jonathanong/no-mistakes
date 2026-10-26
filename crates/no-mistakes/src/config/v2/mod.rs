@@ -17,7 +17,7 @@ pub use discover::{find_config_root, load_v2_config, load_v2_config_from_visible
 pub use frontend_apps::{
     frontend_apps, frontend_apps_lenient, frontend_apps_or_default, FrontendApp,
 };
-pub use schema::NoMistakesConfig;
+pub use schema::{DisableDirectivePolicy, NoMistakesConfig};
 pub use view::ConfigView;
 
 #[cfg(test)]

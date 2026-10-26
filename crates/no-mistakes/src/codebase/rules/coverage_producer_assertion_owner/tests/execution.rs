@@ -9,8 +9,10 @@ fn generator_creation_and_unsupported_consumption_abstain_under_every_policy() {
         let input = crate::napi_api::options::test_json_arg(serde_json::json!({
             "root": root, "config": root.join(format!("generators-{policy}.yml"))
         }));
-        let report: serde_json::Value =
-            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+        let report: serde_json::Value = crate::test_support::policy_advisory_json(
+            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap(),
+            "coverage-producer-assertion-owner",
+        );
         assert_eq!(
             report["rules"].as_array().unwrap().len(),
             expected_findings,
@@ -49,8 +51,10 @@ fn generator_contracts_do_not_emit_executable_ownership_edges() {
             "files": ["src/producers.mts#generatorContract", "src/producers.mts#generatorContractOwner"],
             "relationships": ["assertion-owner"] }]
     });
-    let report: serde_json::Value =
-        serde_json::from_str(&crate::napi_api::analyze_project_json_impl(input).unwrap()).unwrap();
+    let report: serde_json::Value = crate::test_support::policy_advisory_json(
+        serde_json::from_str(&crate::napi_api::analyze_project_json_impl(input).unwrap()).unwrap(),
+        "coverage-producer-assertion-owner",
+    );
     assert_eq!(
         report["reports"][0]["result"]["files"],
         serde_json::json!([]),
@@ -69,8 +73,10 @@ fn import_forms_and_external_calls_preserve_uncertainty_policy() {
         let input = crate::napi_api::options::test_json_arg(serde_json::json!({
             "root": root, "config": root.join(format!("import-forms-{policy}.yml"))
         }));
-        let report: serde_json::Value =
-            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+        let report: serde_json::Value = crate::test_support::policy_advisory_json(
+            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap(),
+            "coverage-producer-assertion-owner",
+        );
         let findings = report[channel].as_array().unwrap();
         let mut targets = findings
             .iter()

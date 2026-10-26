@@ -9,15 +9,18 @@ fn root() -> PathBuf {
 
 fn run(config: &str) -> crate::check_runner::CheckResults {
     let root = root();
-    run_all_with_sql_verdicts(
-        root.clone(),
-        Some(root.join(config)),
-        None,
-        false,
-        false,
-        false,
+    crate::test_support::policy_advisories(
+        run_all_with_sql_verdicts(
+            root.clone(),
+            Some(root.join(config)),
+            None,
+            false,
+            false,
+            false,
+        )
+        .unwrap_or_else(|error| panic!("{config}: {error}")),
+        "postgres-require-query-annotation",
     )
-    .unwrap_or_else(|error| panic!("{config}: {error}"))
 }
 
 fn marked_lines(source: &str, marker: &str) -> Vec<usize> {
@@ -80,7 +83,10 @@ fn low_observer_is_optional_and_does_not_prepare_annotation_profiles() {
     let observer = no_mistakes::diagnostics::InvocationObserver::new(true);
     let with = {
         let _guard = no_mistakes::diagnostics::InvocationGuard::install(Arc::clone(&observer));
-        run_all_with_sql_verdicts(root, Some(path), None, false, false, false).unwrap()
+        crate::test_support::policy_advisories(
+            run_all_with_sql_verdicts(root, Some(path), None, false, false, false).unwrap(),
+            "postgres-require-query-annotation",
+        )
     };
     assert_eq!(without.rules, with.rules);
     assert_eq!(without.advisories, with.advisories);

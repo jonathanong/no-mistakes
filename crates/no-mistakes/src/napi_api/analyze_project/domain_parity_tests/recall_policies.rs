@@ -57,7 +57,7 @@ fn postgres_ddl_recovery_policies_match_standalone_checks() {
             "{config}"
         );
         assert_eq!(
-            standalone["advisories"].as_array().unwrap().len(),
+            standalone["advisories"].as_array().unwrap().iter().filter(|row| row["rule"].as_str().unwrap().starts_with("postgres-")).count(),
             advisories,
             "{config}"
         );

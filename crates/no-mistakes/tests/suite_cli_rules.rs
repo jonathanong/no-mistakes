@@ -86,6 +86,8 @@ mod cli_check_rules_unconstructed_error_class;
 mod cli_check_rules_version_pin;
 #[path = "cli_check_rules_workflow_topology.rs"]
 mod cli_check_rules_workflow_topology;
+#[path = "cli_check_unused_disable_directives.rs"]
+mod cli_check_unused_disable_directives;
 
 #[path = "cli_check_git_identity_prefixes.rs"]
 mod cli_check_git_identity_prefixes;

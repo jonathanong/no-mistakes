@@ -11,15 +11,18 @@ fn run(mode: &str) -> super::CheckResults {
 fn run_with_evidence(mode: &str, evidence: bool) -> super::CheckResults {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/postgres-no-mutable-sql-registry/fixture/effort-low");
-    run_all_with_sql_verdicts(
-        root.clone(),
-        Some(root.join(format!(".no-mistakes-{mode}.yml"))),
-        None,
-        false,
-        false,
-        evidence,
+    crate::test_support::policy_advisories(
+        run_all_with_sql_verdicts(
+            root.clone(),
+            Some(root.join(format!(".no-mistakes-{mode}.yml"))),
+            None,
+            false,
+            false,
+            evidence,
+        )
+        .unwrap(),
+        "postgres-no-mutable-sql-registry",
     )
-    .unwrap()
 }
 
 fn lines(rows: &[RuleFinding]) -> Vec<usize> {

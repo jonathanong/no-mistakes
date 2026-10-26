@@ -20,13 +20,16 @@ fn transformed_uuid_predicates_public_check_routes_both_channels() {
         (".no-mistakes.low-advise.yml", 11, 0),
         (".no-mistakes.low-ignore.yml", 11, 0),
     ] {
-        let report: serde_json::Value = serde_json::from_str(
-            &check_json_impl(crate::napi_api::options::test_json_arg(
-                json!({"root": root, "config": root.join(config)}).to_string(),
-            ))
+        let report: serde_json::Value = crate::test_support::policy_advisory_json(
+            serde_json::from_str(
+                &check_json_impl(crate::napi_api::options::test_json_arg(
+                    json!({"root": root, "config": root.join(config)}).to_string(),
+                ))
+                .unwrap(),
+            )
             .unwrap(),
-        )
-        .unwrap();
+            "postgres-no-transformed-uuid-predicates",
+        );
         assert_eq!(
             report["rules"].as_array().unwrap().len(),
             findings,
@@ -56,20 +59,23 @@ fn transformed_uuid_predicates_analyze_project_matches_check_effort_override() {
     let root = root();
     for effort in ["low", "max"] {
         let config = root.join(".no-mistakes.low-advise.yml");
-        let check: serde_json::Value = serde_json::from_str(
-            &check_json_impl(crate::napi_api::options::test_json_arg(
-                json!({"root": root, "config": config, "effort": effort}).to_string(),
-            ))
+        let check: serde_json::Value = crate::test_support::policy_advisory_json(
+            serde_json::from_str(
+                &check_json_impl(crate::napi_api::options::test_json_arg(
+                    json!({"root": root, "config": config, "effort": effort}).to_string(),
+                ))
+                .unwrap(),
+            )
             .unwrap(),
-        )
-        .unwrap();
-        let project: serde_json::Value = serde_json::from_str(
+            "postgres-no-transformed-uuid-predicates",
+        );
+        let project: serde_json::Value = crate::test_support::policy_advisory_json(serde_json::from_str(
             &crate::napi_api::analyze_project::analyze_project_json_impl(
                 crate::napi_api::options::test_json_arg(
                     json!({"root": root, "config": config, "reports": [{"type": "check", "effort": effort}]}).to_string(),
                 ),
             ).unwrap(),
-        ).unwrap();
+        ).unwrap(), "postgres-no-transformed-uuid-predicates");
         assert_eq!(project["reports"][0]["result"], check);
     }
 }
@@ -78,11 +84,11 @@ fn transformed_uuid_predicates_analyze_project_matches_check_effort_override() {
 fn transformed_uuid_predicates_public_raw_sql_advice_does_not_fail() {
     let root = root();
     for effort in ["low", "max"] {
-        let report: serde_json::Value = serde_json::from_str(
+        let report: serde_json::Value = crate::test_support::policy_advisory_json(serde_json::from_str(
             &check_json_impl(crate::napi_api::options::test_json_arg(
                 json!({"root": root, "config": root.join(".no-mistakes.raw-advice.yml"), "effort": effort}).to_string(),
             )).unwrap(),
-        ).unwrap();
+        ).unwrap(), "postgres-no-transformed-uuid-predicates");
         assert_eq!(report["rules"], json!([]));
         assert_eq!(
             report["advisories"].as_array().unwrap().len(),

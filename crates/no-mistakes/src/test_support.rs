@@ -20,3 +20,6 @@ pub(crate) fn rule_fixture_root(rule: &str) -> std::path::PathBuf {
         .join(rule)
         .join("fixture")
 }
+
+mod policy_advisories;
+pub(crate) use policy_advisories::{policy_advisories, policy_advisory_json};

@@ -11,18 +11,21 @@ fn fixture() -> PathBuf {
 
 fn run(config: &str, effort: Option<Effort>, verdicts: bool) -> super::CheckResults {
     let root = fixture();
-    run_all_with_options(
-        root.clone(),
-        Some(root.join(config)),
-        None,
-        false,
-        false,
-        AnalysisOptions {
-            effort,
-            include_sql_verdicts: verdicts,
-        },
+    crate::test_support::policy_advisories(
+        run_all_with_options(
+            root.clone(),
+            Some(root.join(config)),
+            None,
+            false,
+            false,
+            AnalysisOptions {
+                effort,
+                include_sql_verdicts: verdicts,
+            },
+        )
+        .unwrap(),
+        "postgres-no-transformed-uuid-predicates",
     )
-    .unwrap()
 }
 
 #[test]

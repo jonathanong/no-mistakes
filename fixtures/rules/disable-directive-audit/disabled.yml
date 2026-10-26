@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-no-offset
+    enabled: false
+    scope: repository
+    include: [source.sql]
+    options:
+      include: 42 # Disabled options must never be validated.

@@ -61,7 +61,8 @@ pub(super) fn run_all_with_session_options(
         needs_shared_facts,
         filesystem_rules_enabled,
         no_mistakes::playwright::rules::configured(config),
-    ) {
+    ) && !config.audits_disable_directives()
+    {
         fact_collection::release_extract_programs(&session);
         let mut results = empty_results([None]);
         results
@@ -121,7 +122,8 @@ pub(super) fn run_all_with_session_options(
             discovered,
             graph_files,
             needs_shared_facts,
-            filesystem_rules_enabled,
+            filesystem_rules_enabled: filesystem_rules_enabled
+                || config.audits_disable_directives(),
             fact_demand: &fact_demand,
             plan,
             playwright_fact_plan,
@@ -162,7 +164,7 @@ pub(super) fn run_all_with_session_options(
             tsconfig_gate_project_inputs: prepared.tsconfig_gate_project_inputs.as_ref(),
             // Ordinary checks preserve each domain's early suppression path;
             // only audit requests need cross-domain suppression accounting.
-            defer_suppression: include_suppressed,
+            defer_suppression: include_suppressed || config.audits_disable_directives(),
         });
     no_mistakes::invocation::check_timeout()?;
     results::finalize_domain_checks(results::FinalizeInput {

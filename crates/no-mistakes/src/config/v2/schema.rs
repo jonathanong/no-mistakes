@@ -47,6 +47,8 @@ pub struct NoMistakesConfig {
     pub unanalyzable: Option<super::Unanalyzable>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub unanalyzable_sql: Option<super::Unanalyzable>,
+    /// Policy for stale, unknown, or disabled suppression directives.
+    pub report_unused_disable_directives: DisableDirectivePolicy,
     #[serde(skip)]
     pub effort_override: Option<super::Effort>,
     #[serde(skip)]
@@ -166,3 +168,20 @@ pub enum StringOrList {
 }
 
 include!("schema/rules.rs");
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, Default, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum DisableDirectivePolicy {
+    #[default]
+    Advise,
+    Report,
+    Ignore,
+}
+
+impl NoMistakesConfig {
+    /// Suppression hygiene is bounded to explicitly declared rule applications.
+    pub fn audits_disable_directives(&self) -> bool {
+        self.report_unused_disable_directives != DisableDirectivePolicy::Ignore
+            && !self.rules.is_empty()
+    }
+}

@@ -12,18 +12,21 @@ fn fixture() -> PathBuf {
 }
 
 fn run(root: &Path, config: Option<&str>, effort: Option<Effort>) -> super::CheckResults {
-    run_all_with_options(
-        root.to_path_buf(),
-        config.map(|name| root.join(name)),
-        None,
-        false,
-        false,
-        AnalysisOptions {
-            effort,
-            include_sql_verdicts: false,
-        },
+    crate::test_support::policy_advisories(
+        run_all_with_options(
+            root.to_path_buf(),
+            config.map(|name| root.join(name)),
+            None,
+            false,
+            false,
+            AnalysisOptions {
+                effort,
+                include_sql_verdicts: false,
+            },
+        )
+        .unwrap(),
+        "playwright-",
     )
-    .unwrap()
 }
 
 fn targets(results: &super::CheckResults) -> Vec<&str> {

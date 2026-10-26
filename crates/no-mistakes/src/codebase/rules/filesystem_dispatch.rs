@@ -107,7 +107,7 @@ pub(super) const VERSION_PIN_CONSISTENCY: &str = version_pin_consistency::RULE_I
 
 macro_rules! define_filesystem_rule_ids {
     ($($id:expr => $call:path),* $(,)?) => {
-        const FILESYSTEM_RULE_IDS: &[&str] = &[
+        pub(super) const FILESYSTEM_RULE_IDS: &[&str] = &[
             $($id,)*
             MARKDOWN_CHILD_LINKS,
             MARKDOWN_LINK_DISPLAY_TEXT,
