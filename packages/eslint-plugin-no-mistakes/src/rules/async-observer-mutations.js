@@ -55,6 +55,13 @@ function observerMutated(node, context, suffix = []) {
         intersects(value.argument))
     )
       written = true;
+    if (
+      (value.type === "Property" &&
+        value.parent.type === "ObjectExpression" &&
+        intersects(value.value)) ||
+      (value.type === "ArrayExpression" && value.elements.some((element) => intersects(element)))
+    )
+      written = true;
     if (value.type === "CallExpression") {
       const callee = unwrapExpression(value.callee);
       let reflected = false;
@@ -98,7 +105,12 @@ function observerMutated(node, context, suffix = []) {
 }
 
 function globalObserverMutated(name, context) {
-  return observerMutated(name, context) || observerMutated("globalThis", context, [name]);
+  return (
+    observerMutated(name, context) ||
+    ["globalThis", "global", "window", "self"].some((holder) =>
+      observerMutated(holder, context, [name]),
+    )
+  );
 }
 
 module.exports = { observerMutated, globalObserverMutated };

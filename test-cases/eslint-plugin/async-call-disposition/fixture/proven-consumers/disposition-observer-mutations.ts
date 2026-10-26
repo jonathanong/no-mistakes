@@ -80,3 +80,15 @@ async function unknownReflectionObject(api: any) {
   mutate(p, 'irrelevant', () => {});
   p.catch(() => {});
 }
+async function opaqueHolder() {
+  const p = enqueueEmail();
+  const box = { p };
+  Reflect.set(box.p, 'catch', () => {});
+  p.catch(() => {});
+}
+async function opaqueArray() {
+  const p = enqueueEmail();
+  const box = [p];
+  Reflect.set(box[0], 'catch', () => {});
+  p.catch(() => {});
+}
