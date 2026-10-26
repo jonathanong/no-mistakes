@@ -402,6 +402,8 @@ mod check_storybook_effort;
 #[path = "check_unconstructed_error.rs"]
 mod check_unconstructed_error;
 
+#[path = "check_json_relation_ids.rs"]
+mod check_json_relation_ids;
 #[path = "check_offset_effort.rs"]
 mod check_offset_effort;
 

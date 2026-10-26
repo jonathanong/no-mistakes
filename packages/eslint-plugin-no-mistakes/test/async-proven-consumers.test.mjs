@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { dirname, isAbsolute, resolve } from "node:path";
 import { Linter } from "eslint";
 import tsParser from "@typescript-eslint/parser";
-import { it } from "vitest";
+import { expect, it } from "vitest";
 import { __dirname, plugin } from "./helpers.mjs";
 
 const root = resolve(
@@ -19,10 +20,65 @@ const propertyConsumer = {
     { argumentIndex: 0, propertyNames: ["enqueueEmail", "enqueueEmailCallback"] },
   ],
 };
-function reports(name, typed = false, awaitingConsumers, parser = tsParser) {
+
+// File snapshots keep fixture-relative paths and a fixed order. Absolute paths
+// and diagnostic order would change across machines and worker counts.
+const slashRoot = root.replaceAll("\\", "/").replace(/\/$/, "");
+const tempRoots = [tmpdir(), process.env.TEMP, process.env.TMP, process.env.TMPDIR]
+  .filter(Boolean)
+  .map((item) => item.replaceAll("\\", "/").replace(/\/$/, ""))
+  .sort((left, right) => right.length - left.length);
+
+function normalizeText(text) {
+  let value = String(text).replaceAll("\\", "/");
+  if (slashRoot) value = value.replaceAll(slashRoot, "<root>");
+  for (const prefix of tempRoots) value = value.replaceAll(prefix, "<temp>");
+  return value
+    .replace(
+      /(?<![A-Za-z0-9_>])(?:[A-Za-z]:)?(?:\/private\/var\/folders|\/var\/folders)\/[^/\s]+\/[^/\s]+\/T(?:\/\S*)?/gi,
+      "<temp>",
+    )
+    .replace(
+      /(?<![A-Za-z0-9_>])(?:[A-Za-z]:)?\/Users\/[^/\s]+\/AppData\/Local\/Temp(?:\/\S*)?/gi,
+      "<temp>",
+    )
+    .replace(/(?<![A-Za-z0-9_>])(?:\/private\/tmp|\/var\/tmp|\/tmp)(?:\/\S*)?/gi, "<temp>")
+    .replace(/\b(pid|ppid)\s*[:=]\s*\d+\b/gi, "$1 <pid>")
+    .replace(/\b\d+(?:\.\d+)?\s*(?:ms|us|µs|ns)\b/gi, "<timing>");
+}
+
+function relativeFile(filename) {
+  const absolute = isAbsolute(filename) ? filename : resolve(process.cwd(), filename);
+  const slash = normalizeText(absolute);
+  return slash.startsWith("<root>/") ? slash.slice("<root>/".length) : slash;
+}
+
+function compareDiagnostics(left, right) {
+  return (
+    left.file.localeCompare(right.file) ||
+    left.line - right.line ||
+    left.column - right.column ||
+    String(left.messageId || left.code).localeCompare(String(right.messageId || right.code))
+  );
+}
+
+function sortValue(value) {
+  if (Array.isArray(value)) return value.map(sortValue);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, sortValue(value[key])]),
+    );
+  }
+  return value;
+}
+
+function verify(name, typed = false, awaitingConsumers, parser = tsParser) {
   const filename = resolve(root, name);
-  return new Linter({ cwd: dirname(filename) })
-    .verify(
+  return {
+    filename,
+    messages: new Linter({ cwd: dirname(filename) }).verify(
       readFileSync(filename, "utf8"),
       {
         files: ["**/*.ts"],
@@ -36,21 +92,128 @@ function reports(name, typed = false, awaitingConsumers, parser = tsParser) {
         rules: { "no-mistakes/async-call-disposition": ["error", { targets, awaitingConsumers }] },
       },
       { filename },
-    )
-    .map(({ line, messageId }) => [line, messageId]);
+    ),
+  };
 }
-it.each([false, true])("proves same-file awaited callback invocations (typed=%s)", (typed) => {
-  assert.deepEqual(
-    reports("local.ts", typed),
-    [16, 19, 25, 27, 31, 38, 43, 50, 56, 64].map((line) => [line, "disposition"]),
+
+function reports(name, typed = false, awaitingConsumers, parser = tsParser) {
+  return verify(name, typed, awaitingConsumers, parser).messages.map(({ line, messageId }) => [
+    line,
+    messageId,
+  ]);
+}
+
+function eslintDiagnostics(file, mode) {
+  const typed = mode === "typed";
+  const awaitingConsumers = mode === "properties" ? [propertyConsumer] : undefined;
+  const { filename, messages } = verify(file, typed, awaitingConsumers);
+  return messages
+    .map((item) => ({
+      column: item.column,
+      file: relativeFile(item.filename || filename),
+      line: item.line,
+      message: normalizeText(item.message),
+      messageId: item.messageId,
+    }))
+    .sort(compareDiagnostics);
+}
+
+function oxlintDiagnostics(configName, files, typeAware) {
+  const args = [
+    resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+    "--config",
+    resolve(root, configName),
+    "--format",
+    "json",
+  ];
+  if (typeAware) args.splice(1, 0, "--type-aware", "--deny-warnings");
+  args.push(...files.map((file) => resolve(root, file)));
+  const result = spawnSync(process.execPath, args, { encoding: "utf8" });
+  // Real Oxlint must exit 1 on these fixtures. Exit 0 would snapshot a silent miss.
+  assert.equal(result.status, 1, result.stderr);
+  const payload = JSON.parse(result.stdout || "null");
+  assert.ok(payload && Array.isArray(payload.diagnostics), result.stderr);
+  return {
+    diagnostics: payload.diagnostics
+      .map((item) => ({
+        code: item.code,
+        column: item.labels?.[0]?.span?.column ?? null,
+        file: relativeFile(item.filename),
+        line: item.labels?.[0]?.span?.line ?? null,
+        message: normalizeText(item.message ?? ""),
+      }))
+      .sort(compareDiagnostics),
+    files: [...files].sort(),
+    status: result.status,
+    typeAware,
+  };
+}
+
+const eslintCases = [
+  // Resolves tsconfig paths and inherited compiler options without broad file discovery.
+  ["alias/caller.ts", "untyped"],
+  // Follows bounded property-sensitive wrapper and handler forwarding.
+  ["cross-file-chain.ts", "typed"],
+  ["cross-file-chain.ts", "untyped"],
+  // Keeps forwarding syntax narrow and rejects ambiguous implementations.
+  // Line 15 is `{ job: replacement, ...deps }`: the spread keeps the supplied callback.
+  ["cross-file-forwarding.ts", "untyped"],
+  // Rejects unsafe imported dependency contracts and resolves reexports.
+  ["cross-file-hostile.ts", "typed"],
+  ["cross-file-hostile.ts", "untyped"],
+  // Rejects initial and forwarded custom dependency prototypes.
+  ["cross-file-prototypes.ts", "typed"],
+  ["cross-file-prototypes.ts", "untyped"],
+  // Does not let sibling callbacks inspect the dependency receiver and caches by supplied shape.
+  ["cross-file-receivers.ts", "untyped"],
+  // Proves automatic imported callbacks and DI properties.
+  ["cross-file.ts", "typed"],
+  ["cross-file.ts", "untyped"],
+  // Proves resolvable imported consumer bodies.
+  ["imported.ts", "typed"],
+  // Proves imported bodies without parser type information.
+  ["imported.ts", "untyped"],
+  // Fails closed: invalid compiler configuration.
+  ["invalid-config/caller.ts", "untyped"],
+  // Fails closed: invalid compiler options.
+  ["invalid-options/caller.ts", "untyped"],
+  // Proves same-file awaited callback invocations.
+  ["local.ts", "typed"],
+  ["local.ts", "untyped"],
+  // Fails closed: missing tsconfig extends.
+  ["missing-extends/caller.ts", "untyped"],
+  // Fails closed: noResolve compiler option.
+  ["no-resolve/caller.ts", "untyped"],
+  // Accepts only configured fresh dependency properties.
+  ["properties.ts", "properties"],
+  // Does not infer dependency contracts without configuration.
+  ["properties.ts", "untyped"],
+].sort((left, right) => left[0].localeCompare(right[0]) || left[1].localeCompare(right[1]));
+
+// One test lints every proven-consumer fixture, including type-aware programs
+// and Oxlint processes. That exceeds the 5s JavaScript testTimeout when CI
+// workers are saturated. 30s matches other process-spawning plugin tests.
+it("snapshots proven-consumer fixture diagnostics", async () => {
+  const document = sortValue({
+    eslint: eslintCases.map(([file, mode]) => ({
+      diagnostics: eslintDiagnostics(file, mode),
+      file,
+      mode,
+    })),
+    oxlint: [
+      // Matches real Oxlint for local proofs and configured imported or DI consumers.
+      oxlintDiagnostics(".oxlintrc.json", ["imported.ts"], false),
+      oxlintDiagnostics(".oxlintrc.json", ["local.ts"], false),
+      oxlintDiagnostics(".oxlintrc.json", ["properties.ts"], false),
+      // Proves cross-file consumers in real type-aware Oxlint without configured contracts.
+      oxlintDiagnostics(".oxlintrc-proven.json", ["cross-file-chain.ts", "cross-file.ts"], true),
+    ],
+  });
+  await expect(`${JSON.stringify(document, null, 2)}\n`).toMatchFileSnapshot(
+    "snapshots/async-call-disposition-proven-consumers.snap",
   );
-});
-it("proves resolvable imported consumer bodies", () => {
-  assert.deepEqual(
-    reports("imported.ts", true),
-    [7, 9, 11, 13, 17, 19, 21, 23, 25, 28, 30, 32].map((line) => [line, "disposition"]),
-  );
-});
+}, 30_000);
+
 it("does not enumerate the parser program outside the resolved implementation", () => {
   const parser = {
     ...tsParser,
@@ -68,24 +231,7 @@ it("does not enumerate the parser program outside the resolved implementation", 
   };
   assert.deepEqual(reports("imported.ts", true, undefined, parser), reports("imported.ts", true));
 });
-it("proves imported bodies without parser type information", () => {
-  assert.deepEqual(
-    reports("imported.ts"),
-    [7, 9, 11, 13, 17, 19, 21, 23, 25, 28, 30, 32].map((line) => [line, "disposition"]),
-  );
-});
-it("accepts only configured fresh dependency properties", () => {
-  assert.deepEqual(
-    reports("properties.ts", false, [propertyConsumer]),
-    [7, 9, 11, 13, 15, 18, 20, 24, 28].map((line) => [line, "disposition"]),
-  );
-});
-it("does not infer dependency contracts without configuration", () => {
-  assert.deepEqual(
-    reports("properties.ts"),
-    [3, 5, 7, 9, 11, 13, 15, 18, 20, 24, 26, 28].map((line) => [line, "disposition"]),
-  );
-});
+
 it("validates exact dependency property contracts", () => {
   for (const callbackArgumentProperties of [
     [],
@@ -99,143 +245,7 @@ it("validates exact dependency property contracts", () => {
     );
   }
 });
-it("matches real Oxlint for local proofs and configured imported or DI consumers", () => {
-  for (const [name, lines] of [
-    ["local.ts", [16, 19, 25, 27, 31, 38, 43, 50, 56, 64]],
-    ["imported.ts", [7, 9, 11, 13, 17, 19, 21, 23, 25, 28, 30, 32]],
-    ["properties.ts", [7, 9, 11, 13, 15, 18, 20, 24, 28]],
-  ]) {
-    const result = spawnSync(
-      process.execPath,
-      [
-        resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-        "--config",
-        resolve(root, ".oxlintrc.json"),
-        "--format",
-        "json",
-        resolve(root, name),
-      ],
-      { encoding: "utf8" },
-    );
-    assert.equal(result.status, 1, result.stderr);
-    const findings = JSON.parse(result.stdout).diagnostics;
-    assert.deepEqual(
-      findings.map((item) => [item.labels[0].span.line, item.code]),
-      lines.map((line) => [line, "no-mistakes(async-call-disposition)"]),
-    );
-  }
-});
 
-it.each([false, true])(
-  "proves automatic imported callbacks and DI properties (typed=%s)",
-  (typed) => {
-    assert.deepEqual(reports("cross-file.ts", typed), [[7, "disposition"]]);
-  },
-);
-it("proves cross-file consumers in real type-aware Oxlint without configured contracts", () => {
-  const result = spawnSync(
-    process.execPath,
-    [
-      resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-      "--type-aware",
-      "--deny-warnings",
-      "--config",
-      resolve(root, ".oxlintrc-proven.json"),
-      "--format",
-      "json",
-      resolve(root, "cross-file.ts"),
-      resolve(root, "cross-file-chain.ts"),
-    ],
-    { encoding: "utf8" },
-  );
-  assert.equal(result.status, 1, result.stderr);
-  assert.deepEqual(
-    JSON.parse(result.stdout)
-      .diagnostics.map((item) => [
-        item.filename.replaceAll("\\", "/").split("/").at(-1),
-        item.labels[0].span.line,
-        item.code,
-      ])
-      .sort(),
-    [
-      ["cross-file.ts", 7],
-      ...[5, 7, 9, 11, 13, 15, 17].map((line) => ["cross-file-chain.ts", line]),
-    ]
-      .map(([name, line]) => [name, line, "no-mistakes(async-call-disposition)"])
-      .sort(),
-  );
-});
-
-it.each([false, true])(
-  "rejects unsafe imported dependency contracts and resolves reexports (typed=%s)",
-  (typed) => {
-    assert.deepEqual(
-      reports("cross-file-hostile.ts", typed),
-      [
-        5,
-        7,
-        9,
-        11,
-        13,
-        15,
-        17,
-        19,
-        21,
-        23,
-        25,
-        27,
-        29,
-        31,
-        33,
-        35,
-        37,
-        39,
-        41,
-        ...(typed ? [] : [44]),
-        47,
-        50,
-        53,
-        56,
-        ...(typed ? [62] : []),
-      ].map((line) => [line, "disposition"]),
-    );
-  },
-);
-
-it("resolves tsconfig paths and inherited compiler options without broad file discovery", () => {
-  assert.deepEqual(reports("alias/caller.ts"), []);
-});
-it.each(["no-resolve", "invalid-config", "missing-extends", "invalid-options"])(
-  "fails closed with %s compiler configuration",
-  (directory) => {
-    assert.deepEqual(reports(`${directory}/caller.ts`), [[3, "disposition"]]);
-  },
-);
-
-it.each([false, true])(
-  "follows bounded property-sensitive wrapper and handler forwarding (typed=%s)",
-  (typed) => {
-    assert.deepEqual(
-      reports("cross-file-chain.ts", typed),
-      [5, 7, 9, 11, 13, 15, 17].map((line) => [line, "disposition"]),
-    );
-  },
-);
-
-it("keeps forwarding syntax narrow and rejects ambiguous implementations", () => {
-  assert.deepEqual(
-    reports("cross-file-forwarding.ts"),
-    // Line 15 is `{ job: replacement, ...deps }`: the spread keeps the supplied callback.
-    [6, 7, 8, 9, 10, 11, 12, 13, 16, 18, 20, 21, 22, 24].map((line) => [line, "disposition"]),
-  );
-});
-
-it("does not let sibling callbacks inspect the dependency receiver and caches by supplied shape", () => {
-  assert.deepEqual(
-    reports("cross-file-receivers.ts"),
-    [5, 7, 11, 13, 17, 22, 24, 30, 33, 39].map((line) => [line, "disposition"]),
-  );
-});
 it.each(["noResolve", "missingMap"])(
   "preserves parser-owned %s refusal without syntactic fallback",
   (mode) => {
@@ -262,16 +272,5 @@ it.each(["noResolve", "missingMap"])(
       reports("imported.ts", true, undefined, parser),
       [3, 5, 7, 9, 11, 13, 17, 19, 21, 23, 25, 28, 30, 32].map((line) => [line, "disposition"]),
     );
-  },
-);
-
-it.each([false, true])(
-  "rejects initial and forwarded custom dependency prototypes (typed=%s)",
-  (typed) => {
-    assert.deepEqual(reports("cross-file-prototypes.ts", typed), [
-      [3, "disposition"],
-      [5, "disposition"],
-      [7, "disposition"],
-    ]);
   },
 );

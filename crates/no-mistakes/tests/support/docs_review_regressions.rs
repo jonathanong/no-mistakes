@@ -1,5 +1,27 @@
 use std::path::PathBuf;
 
+#[test]
+fn json_relation_ids_document_configuration_advisories_and_rewrites() {
+    let page = read_root("docs/rules/postgres-json-relation-ids.md");
+    for needle in [
+        "schemaCatalogPath",
+        "idKeyPattern",
+        "keyColumnMap",
+        "fingerprintNamePattern",
+        "advisory",
+        "jsonb_build_object",
+        "UNIQUE",
+        "REFERENCES",
+        "no-mistakes-disable-file",
+        "no-mistakes-disable-line",
+        "no-mistakes-disable-next-line",
+    ] {
+        assert!(page.contains(needle), "missing {needle}");
+    }
+    assert!(read_root("docs/rules/README.md").contains("(postgres-json-relation-ids.md)"));
+    assert!(read_root("docs/node-api.md").contains("PostgresJsonRelationIdsOptions"));
+}
+
 fn read_root(path: &str) -> String {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
     std::fs::read_to_string(root.join(path)).unwrap()

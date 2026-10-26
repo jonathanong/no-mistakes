@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: postgres-json-relation-ids
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      idKeyPattern: '(^id$|Id$|_id$)'
+      keyColumnMap:
+        accountId: account_id
+      fingerprintNamePattern: '_sha256$'
+      sqlInclude: ['db/**/*.sql']
+      importSpecifier: '@example/db'
+      allow:
+        - object: 'table:invoice_revisions'
+          reason: 'append-only history document'

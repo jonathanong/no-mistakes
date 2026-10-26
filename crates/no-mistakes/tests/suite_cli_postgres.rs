@@ -1,5 +1,8 @@
 //! Cli postgres integration tests, linked in one harness.
 
+#[path = "cli_check_rules_postgres_json_relation_ids.rs"]
+mod cli_check_rules_postgres_json_relation_ids;
+
 #[path = "cli_check_postgres_statement_lines.rs"]
 mod cli_check_postgres_statement_lines;
 

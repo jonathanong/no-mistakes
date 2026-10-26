@@ -130,6 +130,11 @@ requires explicit `testGlobs` and optionally selects helper files with
 `ALTER SYSTEM`, replication-role settings, and `pg_sleep`. SQL used only as
 assertion data or in production migrations outside those globs is not selected.
 
+The opt-in [postgres-json-relation-ids](../rules/postgres-json-relation-ids.md)
+rule reports JSON identifier keys without a same-row foreign key and unique
+fingerprint columns as non-failing advisories. Configure its patterns
+explicitly; with no options it reports nothing.
+
 Rules must be explicitly configured. See [no-mistakes rules](../rules/README.md)
 and [configuration](../configuration/README.md).
 `path-regex-capture` matches visible symlink paths, including directory-target

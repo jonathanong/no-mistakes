@@ -96,6 +96,7 @@ const FILESYSTEM_RULE_IDS: &[&str] = &[
     rules::POSTGRES_GENERATED_COLUMN_PREDICATES,
     rules::POSTGRES_SQL_SHAPE_POLICY,
     rules::POSTGRES_IDEMPOTENT_INSERT,
+    rules::POSTGRES_JSON_RELATION_IDS,
     rules::TSCONFIG_ALIAS_FOLDER_MAPPING,
     rules::TSCONFIG_FILE_COVERAGE,
     rules::TSCONFIG_GATE_COVERAGE,
@@ -131,6 +132,14 @@ pub(crate) fn run_filesystem_rules_check_with_facts(
         },
     );
     let diagnostics = findings?;
+    let diagnostics = if rules::ADVISORY_RULE_IDS
+        .iter()
+        .any(|rule| rule_configured(config, rule))
+    {
+        rules::advisory_rules::partition_findings(diagnostics)
+    } else {
+        diagnostics
+    };
     Ok(CheckTask {
         findings: diagnostics.findings,
         pre_suppressed: diagnostics.suppressed,

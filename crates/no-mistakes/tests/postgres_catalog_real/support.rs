@@ -169,20 +169,29 @@ pub fn check(root: &Path, config: &Path) -> (Output, Vec<(String, String, String
         .output()
         .unwrap();
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap_or_default();
+    // Include advisory-only catalog rules, without folding unrelated hygiene advice
+    // into the existing rule assertions.
     let findings = report["rules"]
         .as_array()
-        .map(|rules| {
-            rules
-                .iter()
-                .map(|finding| {
-                    (
-                        finding["rule"].as_str().unwrap().to_string(),
-                        finding["file"].as_str().unwrap().to_string(),
-                        finding["message"].as_str().unwrap().to_string(),
-                    )
-                })
-                .collect()
+        .into_iter()
+        .flatten()
+        .chain(
+            report["advisories"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter(|finding| {
+                    no_mistakes::codebase::rules::ADVISORY_RULE_IDS
+                        .contains(&finding["rule"].as_str().unwrap_or_default())
+                }),
+        )
+        .map(|finding| {
+            (
+                finding["rule"].as_str().unwrap().to_string(),
+                finding["file"].as_str().unwrap().to_string(),
+                finding["message"].as_str().unwrap().to_string(),
+            )
         })
-        .unwrap_or_default();
+        .collect();
     (output, findings)
 }

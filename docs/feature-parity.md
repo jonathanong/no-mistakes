@@ -107,6 +107,13 @@ the prepared TS/JS and SQL facts across CLI `check`, async Node `check()`, and
 and production migrations outside the declared test scope, stay out of this
 rule.
 
+The opt-in `postgres-json-relation-ids` check inspects selected migration SQL
+and executed embedded SQL for JSON identifier keys without a same-row foreign
+key, plus unique fingerprint columns. CLI `check`, async Node `check()`, and
+`analyzeProject()` check reports share its catalog-backed analysis and
+non-failing advisory results. Patterns are explicit; see the
+[rule contract](rules/postgres-json-relation-ids.md).
+
 Import-aware executed SQL extraction follows named private callables returned
 from nested branches of exported factories through the same Rust and async Node
 ESM/CJS API. Static callable wrappers and cyclic return references retain their

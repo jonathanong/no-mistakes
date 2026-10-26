@@ -7,6 +7,8 @@ mod cli_check_production_exports_test_only;
 mod cli_shellcheck_policy;
 
 // Share stateless fixture helpers across the modules in this harness.
+#[path = "common/check_json_snapshot.rs"]
+mod check_json_snapshot;
 #[path = "common/git_tracked_rule.rs"]
 mod git_tracked_rule;
 #[path = "common/gitignore_fixture.rs"]

@@ -16,6 +16,9 @@ pub(super) fn collect(
     super::work::full_projection();
     let mut out = SqlVariantLocations::default();
     out.insert(Site::Origin, 1, 1);
+    for (i, fact) in facts.json_writes.iter().enumerate() {
+        out.insert(Site::JsonWrite(i), fact.line, fact.column_position);
+    }
     for (i, fact) in facts.transformed_column_uses.iter().enumerate() {
         out.insert(Site::TransformedColumn(i), fact.line, fact.column_position);
     }

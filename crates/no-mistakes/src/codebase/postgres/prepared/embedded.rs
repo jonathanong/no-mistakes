@@ -60,12 +60,14 @@ pub(super) fn collect(
                     if let Some(observer) = &observer {
                         observer.increment("postgres.prepared.statement_projections", 1);
                     }
-                    let statements = super::super::collect::dml::embedded_call_facts_with_demand(
-                        file,
-                        plan.postgres_bounds,
-                        !plan.postgres_dml,
-                        demand,
-                    );
+                    let statements =
+                        super::super::collect::dml::embedded_call_facts_with_json_writes(
+                            file,
+                            plan.postgres_bounds,
+                            !plan.postgres_dml,
+                            demand,
+                            plan.postgres_json_writes,
+                        );
                     if let Some(observer) = &observer {
                         observer.increment(
                             "postgres.prepared.statement_records",

@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-no-offset
+    options: false
+  - options: [one, two]
+    rule: postgres-no-offset
+  - rule: postgres-json-relation-ids
+    options: null
+  - options:
+      schemaCatalogPath: schema.json
+      keyColumnMap: {accountId: account_id, accountId: other_id}
+    rule: postgres-json-relation-ids

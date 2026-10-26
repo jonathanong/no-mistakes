@@ -10,3 +10,5 @@ pub(crate) fn statement_extraction() {}
 
 #[inline(always)]
 pub(crate) fn general_fact_collection() {}
+#[inline]
+pub(crate) fn json_key_walk() {}

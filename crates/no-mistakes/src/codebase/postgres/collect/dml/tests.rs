@@ -1,6 +1,6 @@
+use super::rebase::rebase_embedded_lines;
 mod variant_metadata;
 mod variants;
-use super::rebase_embedded_lines;
 use crate::codebase::postgres::embedded::{
     EmbeddedSqlCall, EmbeddedSqlKind, EmbeddedSqlSourcePosition,
 };

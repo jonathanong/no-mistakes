@@ -79,6 +79,22 @@ graph. Details:
   justification in `.ast-grep/inline-fixture-write-allowlist.txt`. Existing
   violations are listed in `.ast-grep/inline-fixture-write-baseline.txt`; that
   list can only shrink. Do not add fixture content writes to an allowlisted file.
+- Rule output tests commit file snapshots and review those diffs like code.
+  Rust `check --format json` goes through
+  `crates/no-mistakes/tests/common/check_json_snapshot.rs`. The helper runs a
+  saved fixture at `--jobs 1` and `--jobs 2`, then stores one normalized
+  report. Normalization rewrites absolute paths to `<root>`, temporary
+  directories to `<temp>`, process ids to `<pid>`, and timings to `<timing>`,
+  uses `/` separators, and sorts arrays so Linux, macOS, and Windows agree.
+  CI sets `INSTA_UPDATE=no` (quoted in `.github/workflows/ci.yml` and
+  `release.yml`); a missing or changed `.snap` fails. Regenerate only on
+  purpose with `INSTA_UPDATE=1 cargo test -p no-mistakes --test suite_cli_rules check_json_snapshot`
+  or `cargo insta review`, then commit the `.snap`.
+  ESLint plugin fixture diagnostics use Vitest `toMatchFileSnapshot` with
+  fixture-relative `/` paths and sorted findings. CI runs `vitest run` and
+  does not pass `-u`. Update with `pnpm exec vitest run <test> -u` only when
+  the new output is intended. `agents-md-max-size` and
+  `async-call-disposition` proven-consumers are the examples.
 - After broad mechanical renames, run `rg` for the old names before the first
   compile to catch stragglers.
 - After editing nearby test arguments or fixture paths, re-read the exact diff
@@ -127,6 +143,11 @@ in that PR.
   plus `crates/no-mistakes/tests/docs_coverage.rs` when adding a CLI command
   or rule page. Update and run
   `crates/no-mistakes/src/main/diagnostics_args_tests.rs` for new CLI leaves.
+- **Rule snapshots** — new or changed rule output includes a committed `.snap`
+  (`*.snap text eol=lf`). Rust `check --format json` goes through
+  `check_json_snapshot` for a saved fixture. ESLint plugin fixture diagnostics
+  use Vitest `toMatchFileSnapshot`. Review that diff like code. Regenerate only
+  with `INSTA_UPDATE=1` or `vitest run -u`.
 
 ## Agent Best Practices
 

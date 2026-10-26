@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-json-relation-ids
+    scope: repository
+    include: ['db/positional-missing-ordinals.sql']
+    options:
+      schemaCatalogPath: schema-missing-ordinals.json
+      idKeyPattern: 'Id$'
+      keyColumnMap: {accountId: account_id}
+      sqlInclude: ['db/positional-missing-ordinals.sql']

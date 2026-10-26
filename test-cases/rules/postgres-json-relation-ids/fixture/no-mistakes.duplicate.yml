@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-json-relation-ids
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      keyColumnMap:
+        accountId: account_id
+        accountId: alternate_id

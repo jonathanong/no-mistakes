@@ -20,6 +20,7 @@ pub enum SqlFactSite {
     Setting(usize),
     Function(usize),
     Write(usize),
+    JsonWrite(usize),
     WriteColumn(usize, String),
     Insert(usize),
     Select(usize),

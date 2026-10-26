@@ -10,6 +10,7 @@ mod facts;
 mod fallback;
 mod insert;
 mod insert_source;
+mod json_writes;
 mod limit;
 mod lines;
 mod mutations;
@@ -27,7 +28,8 @@ mod writes;
 pub use crate::codebase::postgres::statement_facts::*;
 pub(crate) use facts::{
     extract_from_parsed_with_recovered_placeholders, extract_sql_conflict_policy_facts,
-    extract_sql_statement_facts_with_bounds, extract_sql_statement_facts_with_location_demand,
+    extract_sql_statement_facts_with_bounds, extract_sql_statement_facts_with_json_writes,
+    extract_sql_statement_facts_with_location_demand,
     extract_sql_statement_facts_with_recovered_placeholders, extract_sql_variant_statement_facts,
     project_bounds, StatementPolicySources,
 };

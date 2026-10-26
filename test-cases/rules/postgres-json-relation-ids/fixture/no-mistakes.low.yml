@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-json-relation-ids
+    scope: repository
+    include: ['db/fail.sql']
+    options:
+      idKeyPattern: '(^id$|Id$|_id$)'
+      sqlInclude: ['db/fail.sql']

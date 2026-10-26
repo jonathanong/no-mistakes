@@ -1,0 +1,7 @@
+// JSONC comments and trailing commas stay accepted.
+{"rules":[
+ {"options":{},"rule":"postgres-json-relation-ids"},
+ {"rule":"postgres-json-relation-ids","options":{"keyColumnMap":{"accountId":"a","orderId":"b"}}},
+ {"rule":"postgres-json-relation-ids","options":{"idKeyPattern":"Id$"}},
+ {},
+],}

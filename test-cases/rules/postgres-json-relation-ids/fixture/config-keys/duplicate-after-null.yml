@@ -1,0 +1,8 @@
+rules:
+  - options: null
+    rule: postgres-no-offset
+  - options:
+      keyColumnMap:
+        accountId: account_id
+        accountId: alternate_id
+    rule: postgres-json-relation-ids

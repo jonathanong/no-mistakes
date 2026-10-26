@@ -4,15 +4,16 @@ use sqlparser::ast::{visit_expressions, visit_expressions_mut};
 use sqlparser::ast::{BinaryOperator, Expr, ObjectNamePart, Statement, Value};
 use std::ops::ControlFlow;
 
-/// Catalog key evidence consumed only by the row-bounded evaluator.
+/// Prepared catalog key evidence shared by bounded proofs and schema policies.
 #[derive(Debug, Clone)]
 pub(crate) struct BoundedUniqueIndex {
+    pub(crate) name: String,
     pub(crate) keys: Vec<Expr>,
     pub(crate) predicate: Vec<Expr>,
     pub(crate) nulls_not_distinct: bool,
 }
 
-pub(super) fn from_snapshot(index: &SnapshotIndex) -> Option<BoundedUniqueIndex> {
+pub(super) fn from_snapshot(name: &str, index: &SnapshotIndex) -> Option<BoundedUniqueIndex> {
     let supported = (index.unique || index.primary)
         && index.valid
         && index.ready
@@ -65,6 +66,7 @@ pub(super) fn from_snapshot(index: &SnapshotIndex) -> Option<BoundedUniqueIndex>
         return None;
     }
     Some(BoundedUniqueIndex {
+        name: name.to_string(),
         keys,
         predicate: conjuncts,
         nulls_not_distinct,
