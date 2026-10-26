@@ -62,6 +62,8 @@ export function realDrop12(installed) {
         "shadowed-date.ts": installed ? [3, 4] : [3],
         "array-prototype.ts": installed ? [3, 7] : [3],
         "pipeline.ts": installed ? [37] : [],
+        "snapshot-coercion.ts": [3],
+        "snapshot-parameters.ts": installed ? [12, 18, 24, 30] : [5, 12, 18, 24, 30],
       },
     };
     for (const [name, files] of Object.entries(cases)) {

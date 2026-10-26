@@ -432,7 +432,9 @@ known to be absent can be checked or optionally read without invoking a supplied
 callback. A fresh built-in `Date` with proven primitive inputs supports zero-argument
 `getTime()` and `toISOString()` reads, including a fresh-Date nullish fallback.
 Timestamp constants from built-in `Date.parse`/`Date.UTC` and literal tuple loops
-can establish those inputs. Date annotations, unknown holders, getters, aliased
+can establish those inputs. A timestamp from an unknown input must be evaluated
+before the supplied const callbacks are created in the same block; a later
+snapshot remains unproven. Date annotations, unknown holders, getters, aliased
 or escaped Date instances, and Object/Date/Array prototype mutation do not
 establish this proof.
 
