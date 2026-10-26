@@ -1,7 +1,6 @@
-use super::{resolve, scope, BindingState, ScopeVisitor};
+use super::{scope, BindingState, ScopeVisitor};
 use oxc_ast::ast::{ReturnStatement, TryStatement};
 use oxc_ast_visit::{walk, Visit};
-use oxc_span::GetSpan;
 use std::collections::HashMap;
 
 impl ScopeVisitor<'_> {
@@ -73,21 +72,13 @@ pub(super) fn returned<'a>(visitor: &mut ScopeVisitor<'a>, statement: &ReturnSta
     // Returning a builder is treated as an escape below; an IIFE's result
     // needs the state it had just before that.
     visitor.capture_iife(statement);
-    let fragment = statement.argument.as_ref().and_then(|argument| {
-        resolve::builder_fragment(argument, visitor).map(|sql| (argument.span().start, sql))
-    });
-    if let Some((start, sql)) = fragment {
-        visitor.push_fragment(
-            crate::codebase::ts_source::byte_offset_to_line(visitor.source, start as usize),
-            Some(sql),
-            statement.argument.as_ref(),
-            None,
-        );
+    let suppress = visitor.consume_return(statement);
+    if suppress {
         visitor.suppress_nested_builder_fragments += 1;
-        walk::walk_return_statement(visitor, statement);
+    }
+    walk::walk_return_statement(visitor, statement);
+    if suppress {
         visitor.suppress_nested_builder_fragments -= 1;
-    } else {
-        walk::walk_return_statement(visitor, statement);
     }
     visitor.invalidate_execution_variants();
 }

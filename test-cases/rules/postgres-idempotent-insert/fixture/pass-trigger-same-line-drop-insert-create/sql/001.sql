@@ -1,0 +1,3 @@
+CREATE TRIGGER t BEFORE INSERT ON items FOR EACH ROW EXECUTE FUNCTION audit();
+-- The drop precedes this INSERT; the later CREATE must not reactivate it yet.
+DROP TRIGGER t ON items; INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING; CREATE TRIGGER t BEFORE INSERT ON items FOR EACH ROW EXECUTE FUNCTION audit();

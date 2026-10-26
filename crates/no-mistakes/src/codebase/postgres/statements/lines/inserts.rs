@@ -61,6 +61,21 @@ impl<'a> InsertSources<'a> {
         }
     }
 
+    pub(in crate::codebase::postgres::statements) fn column(
+        &self,
+        insert: &Insert,
+        n: usize,
+    ) -> usize {
+        if self.tokens.is_some() {
+            insert.insert_token.0.span.start.column.max(1) as usize
+        } else {
+            self.pairs().get(n.saturating_sub(1)).map_or(1, |word| {
+                let line_start = self.sql[..word.start].rfind('\n').map_or(0, |at| at + 1);
+                self.sql[line_start..word.start].chars().count() + 1
+            })
+        }
+    }
+
     fn pairs(&self) -> &[Word] {
         self.pairs
             .get_or_init(|| keyword_pair_words(self.sql, "insert", "into"))

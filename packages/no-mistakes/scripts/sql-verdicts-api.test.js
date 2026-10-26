@@ -4,6 +4,129 @@ const test = globalThis.test || require("node:test").test;
 
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
+for (const name of [
+  "class-method",
+  "class-field-arrow",
+  "this-method",
+  "object-method",
+  "property-function",
+  "named-property-function",
+  "unused-method",
+  "method-forwarding",
+])
+  test(
+    `compiled returned SQL retains conservative member recall: ${name}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const root = join(
+        __dirname,
+        "../../../test-cases/rules/postgres-sql-shape-policy/fixture/returned-member-owners",
+      );
+      const options = { root, config: join(root, `${name}.yml`) };
+      const pending = cjs.check(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(
+        report.rules.map(({ file, line, target }) => [file, line, target]),
+        [[`src/${name}.ts`, 4, "literal-limit"]],
+      );
+      const prepared = await cjs.analyzeProject({
+        ...options,
+        reports: [{ type: "check", id: "check" }],
+      });
+      assert.deepEqual(prepared.reports[0].result, report);
+    },
+  );
+
+for (const [state, expected] of [
+  ["live", 2],
+  ["dropped", 0],
+  ["replaced", 0],
+])
+  test(
+    `compiled application inserts use the final trigger state: ${state}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const root = join(
+        __dirname,
+        "../../../test-cases/rules/postgres-idempotent-insert/fixture",
+        `embedded-trigger-final-${state}`,
+      );
+      const options = { root, config: join(root, ".no-mistakes.yml"), includeSqlVerdicts: true };
+      const pending = cjs.check(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.check(options), report);
+      assert.equal(report.rules.length, expected);
+      if (expected) {
+        assert.deepEqual(
+          report.rules.map(({ file, line }) => [file, line]),
+          [
+            ["app/q.ts", 3],
+            ["lib/q.ts", 3],
+          ],
+        );
+        for (const finding of report.rules)
+          assert.match(finding.message, /fires before conflict checks/);
+      }
+      const triggers = report.sqlVerdicts.filter((row) => row.subcheck === "trigger-replay");
+      assert.equal(triggers.length, 2);
+      for (const row of triggers) assert.equal(row.status, expected ? "violation" : "proven-clear");
+      const batch = await cjs.analyzeProject({
+        root,
+        config: options.config,
+        reports: [{ type: "check", id: "check", includeSqlVerdicts: true }],
+      });
+      assert.deepEqual(batch.reports[0].result, report);
+    },
+  );
+
+test(
+  "compiled SQL returns retain callable bindings, await, and lexical shadows",
+  { skip: !compiled },
+  async () => {
+    const cjs = require("../index.js");
+    const esm = await import("../index.mjs");
+    const root = join(
+      __dirname,
+      "../../../test-cases/rules/postgres-sql-shape-policy/fixture/returned-call-identities",
+    );
+    const options = { root, config: join(root, ".no-mistakes.yml") };
+    const pending = cjs.check(options);
+    assert.ok(pending instanceof Promise);
+    const report = await pending;
+    assert.deepEqual(await esm.check(options), report);
+    assert.deepEqual(
+      report.rules.map(({ file, line, target }) => [file, line, target]),
+      [
+        ["src/await.ts", 3, "literal-limit"],
+        ["src/named.ts", 3, "literal-limit"],
+        ["src/recursive.ts", 6, "literal-limit"],
+        ["src/shadow-edge.ts", 5, "literal-limit"],
+        ["src/shadow.ts", 5, "literal-limit"],
+      ],
+    );
+    const batch = await cjs.analyzeProject({
+      ...options,
+      reports: [{ type: "check", id: "check" }],
+    });
+    assert.deepEqual(batch.reports[0].result, report);
+    const strict = await cjs.check({ root, config: join(root, "strict.yml") });
+    assert.deepEqual(
+      strict.rules.map(({ file, line }) => [file, line]),
+      [
+        ["src/shadow.ts", 5],
+        ["src/shadow.ts", 6],
+      ],
+    );
+  },
+);
+
 const identifierCases = [
   ["fail-array-destructured-row", [[5, "id"]]],
   ["fail-array-destructured-row-elision", [[4, "schema"]]],

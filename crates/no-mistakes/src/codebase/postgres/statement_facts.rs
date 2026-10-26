@@ -97,12 +97,12 @@ pub struct SqlStatementFileFacts {
     pub has_top_level_not_exists: bool,
     pub origin_line: usize,
 }
-
 /// One executed `INSERT` recovered from PostgreSQL SQL.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlInsertFact {
     pub table: String,
     pub line: usize,
+    pub column: usize,
     pub executed: bool,
     pub on_conflict: Option<SqlOnConflictFact>,
     pub guarded_select: bool,
@@ -168,7 +168,6 @@ pub struct SqlConflictWhereProof {
     pub null_and_excluded_not_null: Vec<String>,
     pub disjunctive: bool,
 }
-
 /// One `CREATE TRIGGER`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlTriggerFact {
@@ -178,6 +177,10 @@ pub struct SqlTriggerFact {
     pub for_each_row: bool,
     pub events: Vec<SqlTriggerEvent>,
     pub line: usize,
+    pub column: usize,
+    pub name: String,
+    pub removed: bool,
+    pub source_path: PathBuf,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

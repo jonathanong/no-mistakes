@@ -8,7 +8,17 @@ converges. Optional follow-on proofs (volatility, arbiter identity, triggers,
 generated-arbiter sources) default on and can be disabled.
 
 The rule consumes dual-source statement facts plus schema facts for generated
-columns and `CREATE TRIGGER`. Unparseable fragments with more than one
+columns and `CREATE TRIGGER`. For `INSERT` statements in selected SQL files, a
+trigger applies only when its `CREATE TRIGGER` is strictly earlier in
+lexicographic path order and then statement order, and no intervening `DROP TRIGGER`
+of that name on that table has removed it. A drop after the insert leaves it
+in force for that insert. This treats path order as migration
+order; filenames such as `9_*.sql` and `10_*.sql` sort lexicographically, so
+zero-pad migration numbers when they must match execution order. Embedded
+application `INSERT`s have no migration-file position and are checked against
+the final trigger state after all selected SQL files: the latest `CREATE OR
+REPLACE` wins, and a later `DROP` removes the trigger.
+Unparseable fragments with more than one
 `INSERT` fail closed. A recovered `INSERT` keeps expression conflict-key
 dependencies when a malformed neighboring statement forces SQL recovery.
 Each complete

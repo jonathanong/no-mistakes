@@ -54,6 +54,7 @@ impl ScopeVisitor<'_> {
         ) {
             for expression in &template.quasi.expressions {
                 self.allow_builder_value(expression);
+                self.note_sql_expression(expression);
             }
         }
         walk::walk_tagged_template_expression(self, template);

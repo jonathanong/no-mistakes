@@ -39,6 +39,16 @@ pub(crate) fn statement_keyword_line(
     keyword: &str,
     anchor: sqlparser::tokenizer::Location,
 ) -> usize {
+    statement_keyword_position(tokens, keyword, anchor)
+        .line
+        .max(1) as usize
+}
+
+pub(crate) fn statement_keyword_position(
+    tokens: &[TokenWithSpan],
+    keyword: &str,
+    anchor: sqlparser::tokenizer::Location,
+) -> sqlparser::tokenizer::Location {
     let before = tokens.partition_point(|token| token.span.start <= anchor);
     let start = tokens[..before]
         .iter()
@@ -47,5 +57,5 @@ pub(crate) fn statement_keyword_line(
     tokens.get(start..before).and_then(|tokens| tokens.iter().rev().find(|token| {
             matches!(&token.token, Token::Word(word) if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(keyword))
         }))
-            .map_or(anchor.line.max(1) as usize, |token| token.span.start.line as usize)
+            .map_or(anchor, |token| token.span.start)
 }

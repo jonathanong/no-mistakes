@@ -381,8 +381,49 @@ fn full_select_builder_fragments_are_analyzed_without_wrapping() {
     assert_eq!(findings.len(), 1, "{findings:#?}");
 }
 
+#[test]
+fn ignores_string_returns_that_never_reach_sql() {
+    let root = fixture("pass-non-sql-string-returns");
+    let file = root.join("src/returns.ts");
+    let findings = check_with_files(&root, &config_yaml("{}"), &[file]).unwrap();
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn string_returns_that_reach_sql_still_fail_closed() {
+    let root = fixture("fail-returned-sql-fragment");
+    let file = root.join("src/operators.ts");
+    let source = std::fs::read_to_string(&file).unwrap();
+    let extension_line = source
+        .lines()
+        .position(|line| line.contains("return '.mjs'"))
+        .expect("extension return")
+        + 1;
+    let findings = check_with_files(
+        &root,
+        &config_yaml("importSpecifier: \"@example/db\"\n"),
+        std::slice::from_ref(&file),
+    )
+    .unwrap();
+    assert!(
+        findings.iter().any(|finding| finding
+            .message
+            .contains("builder SQL is not statically recoverable")),
+        "{findings:#?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.line != extension_line),
+        "{findings:#?}"
+    );
+}
+
 mod predicate_escaping;
 
 #[cfg(test)]
 mod negated_keysets;
 mod semantic_zero;
+
+#[path = "plain_return_identity_tests.rs"]
+mod plain_return_identity;

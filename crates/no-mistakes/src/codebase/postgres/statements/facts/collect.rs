@@ -50,6 +50,9 @@ pub(super) fn collect_one(
             out.triggers.push(fact);
         }
     }
+    if let Statement::DropTrigger(drop) = statement {
+        out.triggers.push(trigger::from_drop(tokens, drop));
+    }
     if let Statement::Query(query) = statement {
         collect_query_inserts(
             out.insert_sources,

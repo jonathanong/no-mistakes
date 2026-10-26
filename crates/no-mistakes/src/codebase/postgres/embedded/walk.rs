@@ -14,6 +14,7 @@ mod imported;
 mod loop_visits;
 mod namespace_imports;
 mod observability;
+mod plain_returns;
 mod reference_escapes;
 pub(crate) mod resolve;
 mod scope;
@@ -22,18 +23,14 @@ mod state;
 mod undeclared;
 mod undeclared_receivers;
 mod variants;
+mod visitor_hooks;
 pub(super) use state::{collect_calls, BindingState, ScopeVisitor};
-
 impl<'a> Visit<'a> for ScopeVisitor<'a> {
+    fn enter_node(&mut self, kind: oxc_ast::AstKind<'a>) {
+        self.note_plain_member(kind);
+    }
     fn visit_program(&mut self, program: &ast::Program<'a>) {
-        self.push_scope();
-        resolve::hoist_vars(&program.body, self);
-        resolve::record_statements(&program.body, self);
-        walk::walk_program(self, program);
-        if !self.head_calls_only {
-            imported::constants::snapshot_exports(self, program);
-        }
-        self.pop_scope();
+        self.walk_program_scope(program);
     }
 
     fn visit_block_statement(&mut self, block: &ast::BlockStatement<'a>) {
@@ -78,16 +75,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         &mut self,
         arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     ) {
-        self.push_scope();
-        self.record_params(&arrow.params);
-        self.enter_function();
-        if let Some(result) = arrow.body.as_expression() {
-            // A concise return can expose a receiver to later property writes.
-            self.revoke_query_receiver(result);
-        }
-        walk::walk_arrow_function_expression(self, arrow);
-        self.leave_function();
-        self.pop_scope();
+        self.walk_arrow_scope(arrow);
     }
 
     fn visit_variable_declarator(&mut self, declaration: &ast::VariableDeclarator<'a>) {
@@ -95,12 +83,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_update_expression(&mut self, expression: &oxc_ast::ast::UpdateExpression<'a>) {
-        if let oxc_ast::ast::SimpleAssignmentTarget::AssignmentTargetIdentifier(id) =
-            &expression.argument
-        {
-            self.mark_dynamic(id.name.as_str());
-        }
-        walk::walk_update_expression(self, expression);
+        self.walk_update_binding(expression);
     }
 
     fn visit_assignment_expression(&mut self, assign: &ast::AssignmentExpression<'a>) {
@@ -147,12 +130,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         walk::walk_expression(self, expression);
     }
     fn visit_static_member_expression(&mut self, member: &ast::StaticMemberExpression<'a>) {
-        let reads = self.literal_objects.read_spans.len();
-        self.exempt_literal_read(&member.object);
-        self.with_builder_receiver(&member.object, member.property.name == "text", |visitor| {
-            walk::walk_static_member_expression(visitor, member)
-        });
-        self.literal_objects.read_spans.truncate(reads);
+        self.walk_literal_member(member);
     }
     fn visit_computed_member_expression(&mut self, member: &ast::ComputedMemberExpression<'a>) {
         self.with_builder_receiver(&member.object, matches!(crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression), ast::Expression::StringLiteral(name) if name.value == "text"), |visitor| {
@@ -192,12 +170,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_for_of_statement(&mut self, statement: &oxc_ast::ast::ForOfStatement<'a>) {
-        self.push_scope();
-        resolve::bind_for_statement_left(&statement.left, self);
-        self.with_append_loop(statement.span.start, |visitor| {
-            walk::walk_for_of_statement(visitor, statement)
-        });
-        self.pop_scope();
+        self.walk_for_of_scope(statement);
     }
 
     fn visit_while_statement(&mut self, statement: &oxc_ast::ast::WhileStatement<'a>) {

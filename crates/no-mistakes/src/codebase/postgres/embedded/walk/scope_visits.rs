@@ -14,6 +14,12 @@ impl<'a> ScopeVisitor<'a> {
     }
 
     pub(super) fn walk_function_scope(&mut self, function: &ast::Function<'a>, flags: ScopeFlags) {
+        // Expression names are private self-references, not externally callable keys.
+        let declaration_name = (function.r#type != ast::FunctionType::FunctionExpression)
+            .then_some(function.id.as_ref())
+            .flatten()
+            .map(|id| id.name.as_str());
+        self.enter_plain_function(declaration_name, function.span.start);
         self.push_scope();
         self.record_params(&function.params);
         // A named function expression shadows outer helpers only in its own
@@ -22,10 +28,12 @@ impl<'a> ScopeVisitor<'a> {
         if function.r#type == ast::FunctionType::FunctionExpression {
             if let Some(id) = &function.id {
                 self.bind_self_name(id.name.as_str());
+                self.alias_plain_self(id.name.as_str());
             }
         }
         self.enter_function();
         walk::walk_function(self, function, flags);
+        self.leave_plain_function();
         self.leave_function();
         self.pop_scope();
     }
@@ -50,9 +58,26 @@ impl<'a> ScopeVisitor<'a> {
         // Class static blocks are also independent var ownership boundaries.
         self.push_scope();
         self.enter_function();
+        self.enter_plain_function(None, block.span.start);
         resolve::hoist_vars(&block.body, self);
         resolve::record_statements(&block.body, self);
         walk::walk_static_block(self, block);
+        self.leave_plain_function();
+        self.leave_function();
+        self.pop_scope();
+    }
+
+    pub(super) fn walk_arrow_scope(&mut self, arrow: &ast::ArrowFunctionExpression<'a>) {
+        self.push_scope();
+        self.record_params(&arrow.params);
+        self.enter_function();
+        self.enter_plain_function(None, arrow.span.start);
+        if let Some(result) = arrow.body.as_expression() {
+            // A concise return can expose a receiver to later property writes.
+            self.revoke_query_receiver(result);
+        }
+        walk::walk_arrow_function_expression(self, arrow);
+        self.leave_plain_function();
         self.leave_function();
         self.pop_scope();
     }

@@ -1,7 +1,7 @@
 use super::{SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod};
 use crate::codebase::postgres::schema::relation_name;
 use sqlparser::ast::{
-    CreateTrigger, Spanned, Statement, TriggerEvent, TriggerObject, TriggerObjectKind,
+    CreateTrigger, DropTrigger, Spanned, Statement, TriggerEvent, TriggerObject, TriggerObjectKind,
     TriggerPeriod,
 };
 
@@ -19,6 +19,11 @@ fn from_trigger(
     tokens: &[sqlparser::tokenizer::TokenWithSpan],
     trigger: &CreateTrigger,
 ) -> SqlTriggerFact {
+    let location = crate::codebase::postgres::migration::statement_keyword_position(
+        tokens,
+        "CREATE",
+        trigger.name.span().start,
+    );
     SqlTriggerFact {
         table: relation_name(&trigger.table_name),
         function: trigger
@@ -38,11 +43,38 @@ fn from_trigger(
                 | Some(TriggerObjectKind::For(TriggerObject::Row))
         ),
         events: trigger.events.iter().map(from_event).collect(),
-        line: crate::codebase::postgres::migration::statement_keyword_line(
-            tokens,
-            "CREATE",
-            trigger.name.span().start,
-        ),
+        line: location.line.max(1) as usize,
+        column: location.column.max(1) as usize,
+        name: relation_name(&trigger.name),
+        removed: false,
+        source_path: std::path::PathBuf::new(),
+    }
+}
+
+pub(super) fn from_drop(
+    tokens: &[sqlparser::tokenizer::TokenWithSpan],
+    drop: &DropTrigger,
+) -> SqlTriggerFact {
+    let location = crate::codebase::postgres::migration::statement_keyword_position(
+        tokens,
+        "DROP",
+        drop.trigger_name.span().start,
+    );
+    SqlTriggerFact {
+        table: drop
+            .table_name
+            .as_ref()
+            .map(relation_name)
+            .unwrap_or_default(),
+        function: String::new(),
+        period: SqlTriggerPeriod::Other,
+        for_each_row: false,
+        events: Vec::new(),
+        line: location.line.max(1) as usize,
+        column: location.column.max(1) as usize,
+        name: relation_name(&drop.trigger_name),
+        removed: true,
+        source_path: std::path::PathBuf::new(),
     }
 }
 

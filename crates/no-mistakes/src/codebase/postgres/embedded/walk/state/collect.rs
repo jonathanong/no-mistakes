@@ -81,8 +81,10 @@ pub(crate) fn collect_calls<'a>(
         declaring_const: false,
         clause_unions: crate::fx::fx_set(),
         exported_constants: Default::default(),
+        plain: Default::default(),
     };
     visitor.visit_program(program);
+    visitor.flush_plain_returns();
     visitor.downgrade_escaped_member_calls();
     if !head_calls_only {
         visitor.finish_const_splices();

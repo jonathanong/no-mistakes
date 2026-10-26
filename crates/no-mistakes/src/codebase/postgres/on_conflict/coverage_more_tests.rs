@@ -67,6 +67,7 @@ fn arbiter_self_assignments_are_safe() {
     let insert = SqlInsertFact {
         table: "items".into(),
         line: 1,
+        column: 1,
         executed: true,
         on_conflict: None,
         guarded_select: false,
