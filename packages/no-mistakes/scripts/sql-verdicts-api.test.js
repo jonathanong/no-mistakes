@@ -4,6 +4,42 @@ const test = globalThis.test || require("node:test").test;
 
 const compiled = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node");
 
+for (const name of [
+  "class-method",
+  "this-method",
+  "object-method",
+  "property-function",
+  "named-property-function",
+  "unused-method",
+  "method-forwarding",
+])
+  test(
+    `compiled returned SQL retains conservative member recall: ${name}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const root = join(
+        __dirname,
+        "../../../test-cases/rules/postgres-sql-shape-policy/fixture/returned-member-owners",
+      );
+      const options = { root, config: join(root, `${name}.yml`) };
+      const pending = cjs.check(options);
+      assert.ok(pending instanceof Promise);
+      const report = await pending;
+      assert.deepEqual(await esm.check(options), report);
+      assert.deepEqual(
+        report.rules.map(({ file, line, target }) => [file, line, target]),
+        [[`src/${name}.ts`, 4, "literal-limit"]],
+      );
+      const prepared = await cjs.analyzeProject({
+        ...options,
+        reports: [{ type: "check", id: "check" }],
+      });
+      assert.deepEqual(prepared.reports[0].result, report);
+    },
+  );
+
 for (const [state, expected] of [
   ["live", 2],
   ["dropped", 0],

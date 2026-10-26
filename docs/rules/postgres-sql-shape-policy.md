@@ -15,15 +15,21 @@ The rule consumes dual-source statement facts (`CheckFactPlan.postgres_dml`),
 including recoverable SQL returned from builders and fragments appended to a
 known SQL builder (a recovered SQL binding or a parameter typed
 `SQLStatement`). Arbitrary `.append(...)` receivers are not SQL builders.
-A string or empty template returned from a named function is builder SQL only
+A string or empty template returned from a function declaration or a
+variable-bound function is builder SQL only
 when a same-file call reaches an executor argument, `.append` on a known SQL
 builder, or a trusted SQL tag interpolation. Another same-file function that
 returns that call counts. A return that is itself a trusted tag, known builder,
-or `.append` chain stays builder SQL. Other string returns are not fragments.
-This return reachability is same-file only; calls in other files do not make a
-string return a builder fragment.
-Calls use their lexical function binding, including named function expressions
-and awaited calls; a shadowed name does not reach an outer function's return.
+or `.append` chain stays builder SQL. Calls use their lexical binding, including
+bound named function expressions and awaited calls; a shadowed name does not
+reach an outer function's return.
+This reachability filter is same-file only. Imported helpers use the existing
+cross-file recovery path.
+Returns without a known callable binding, such as class methods and
+function-valued object properties, are kept conservatively, along with helpers
+they return. This preserves findings for `this.q()` and `helpers.h()`, but unused
+method/property bodies can also report. Use a named helper or a variable-bound
+function when unused returns should be excluded.
 Builder recovery honors the same trusted-tag and lexical-shadow rules as
 executed SQL. Unresolved raw appended identifiers become a synthetic qualified
 outer reference, so a builder that may append an outer column is conservatively
