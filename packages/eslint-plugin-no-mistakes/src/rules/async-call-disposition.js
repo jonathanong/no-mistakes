@@ -17,6 +17,7 @@ const {
 const { dispositionOptionsSchema } = require("./async-schema");
 const { createTargetMatcher } = require("./async-targets");
 const { createAwaitingConsumers } = require("./async-disposition-consumers");
+const { promiseTypedTargetCall } = require("./async-promise-handoff");
 
 function isDisposed(node, context, consumers, seen = new Set()) {
   if (seen.has(node)) return false;
@@ -75,8 +76,9 @@ module.exports = rule(
         ]),
       ),
       CallExpression(node) {
-        if (!matcher.isTargetCall(node) || suppressed(node) || isDisposed(node, context, consumers))
-          return;
+        if (suppressed(node)) return;
+        if (!matcher.isTargetCall(node) && !promiseTypedTargetCall(node, context)) return;
+        if (isDisposed(node, context, consumers)) return;
         context.report({
           node,
           messageId: "disposition",

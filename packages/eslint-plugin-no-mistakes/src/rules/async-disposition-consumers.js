@@ -5,6 +5,7 @@ const { createConsumerProof } = require("./async-consumer-proof");
 const { namedCallbackDisposition } = require("./async-disposition-callbacks");
 const { propertiesWritten, returnsThroughMock } = require("./async-disposition-mocks");
 const { compileTargets, targetMatches } = require("./async-patterns");
+const { promiseSlotHandoff } = require("./async-promise-handoff");
 const { createTargetMatcher } = require("./async-targets");
 
 function createAwaitingConsumers(context, mappedArgumentDisposed) {
@@ -87,6 +88,7 @@ function createAwaitingConsumers(context, mappedArgumentDisposed) {
             returnsThroughConsumer(argument) ||
             propertyThroughConsumer(argument) ||
             provenAwaitingConsumer(argument, context) ||
+            promiseSlotHandoff(argument, context) ||
             mappedArgumentDisposed(fn, argument),
         ),
       );
