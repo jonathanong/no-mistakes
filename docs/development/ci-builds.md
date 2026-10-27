@@ -30,6 +30,8 @@ reports with the sibling compiled CLI, including SQL advisory aggregation.
 The Linux JavaScript job builds the CLI before the addon so both artifacts are
 available to these parity tests, as in the native platform matrix.
 
+<!-- cspell:ignore pkgcfg -->
+
 The native macOS and Windows jobs also run `suite_cli_postgres` tests matching
 `cli_postgres_snapshot_` and `cli_mrf_snapshot_`, and `suite_cli_package_config`
 tests matching `cli_pkgcfg_snapshot_`. These replay the committed PostgreSQL,
