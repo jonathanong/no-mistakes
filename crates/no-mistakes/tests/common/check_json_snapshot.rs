@@ -1,9 +1,9 @@
 //! Normalized `check --format json` snapshots.
 //!
-//! Absolute paths, temp directories, process ids, and timings are rewritten
-//! before the snapshot is stored. Arrays are sorted so `--jobs` cannot change
-//! the committed file. The redaction tokens are part of the contract: dropping
-//! them would make Linux, macOS, and Windows snapshots diverge.
+//! Absolute paths, temp directories, process ids, timings, and CR line endings
+//! are rewritten before the snapshot is stored. Arrays are sorted so `--jobs`
+//! cannot change the committed file. The redaction tokens are part of the
+//! contract: dropping them would make Linux, macOS, and Windows snapshots diverge.
 
 use serde_json::Value;
 use std::path::{Path, PathBuf};
@@ -143,16 +143,53 @@ fn is_timing_key(key: &str) -> bool {
 }
 
 fn normalize_text(text: &str, roots: &[String]) -> String {
-    let mut text = text.replace('\\', "/");
+    // Windows checkouts embed CR in SQL that the report quotes. Fold it before
+    // any path compare so the committed snapshot stays LF.
+    let mut text = text.replace("\r\n", "\n").replace('\r', "\n");
+    text = text.replace('\\', "/");
     for root in roots {
         let root = root.trim_end_matches('/');
         if !root.is_empty() {
             text = text.replace(root, "<root>");
         }
     }
+    // Config findings sit outside the fixture root. Replace the checkout first:
+    // a worktree under /tmp would otherwise become <temp>.
+    for root in repo_roots() {
+        text = replace_path_prefix(&text, root, "<repo>");
+    }
     let text = redact_temp(&text);
     let text = pids().replace_all(&text, "$1 <pid>");
     timings().replace_all(&text, "<timing>").into_owned()
+}
+
+fn repo_roots() -> &'static [String] {
+    static ROOTS: OnceLock<Vec<String>> = OnceLock::new();
+    ROOTS.get_or_init(|| {
+        let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let repo = manifest.ancestors().nth(2).unwrap_or(manifest);
+        root_variants(repo)
+    })
+}
+
+fn replace_path_prefix(text: &str, root: &str, token: &str) -> String {
+    let root = root.trim_end_matches('/');
+    if root.is_empty() {
+        return text.to_string();
+    }
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(index) = rest.find(root) {
+        let after = index + root.len();
+        let boundary = rest[after..].chars().next();
+        let at_boundary =
+            boundary.is_none_or(|ch| !ch.is_ascii_alphanumeric() && ch != '_' && ch != '-');
+        out.push_str(&rest[..index]);
+        out.push_str(if at_boundary { token } else { root });
+        rest = &rest[after..];
+    }
+    out.push_str(rest);
+    out
 }
 
 fn redact_temp(text: &str) -> String {
@@ -236,6 +273,27 @@ pub fn rules_path(rule: &str, kind: &str, name: &str) -> PathBuf {
             .join(kind)
             .join(name),
     )
+}
+
+#[test]
+fn normalization_keeps_repo_paths_and_cr_line_endings_stable() {
+    let repo = repo_roots()
+        .iter()
+        .max_by_key(|item| item.len())
+        .expect("repo root");
+    let config = format!("{repo}/test-cases/rules/example.yml");
+    let raw = serde_json::json!({
+        "file": config,
+        "message": "line\r\nnext\r",
+    })
+    .to_string();
+    let normalized = normalize_report(&raw, &[]);
+    assert!(
+        normalized.contains("<repo>/test-cases/rules/example.yml"),
+        "{normalized}"
+    );
+    assert!(!normalized.contains("<temp>"), "{normalized}");
+    assert!(normalized.contains("line\\nnext\\n"), "{normalized}");
 }
 
 #[test]

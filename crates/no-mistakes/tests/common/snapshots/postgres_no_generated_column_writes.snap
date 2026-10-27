@@ -1280,7 +1280,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": "<temp>",
+          "file": "<repo>/test-cases/rules/postgres-no-generated-column-writes/configs/fixture-stale-extra.yml",
           "import": "items.created_at",
           "line": 16,
           "message": "stale extraGeneratedColumns entry: `items.created_at` is already a generated column in schema SQL",
@@ -1591,7 +1591,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "react": [],
       "rules": [
         {
-          "file": "<temp>",
+          "file": "<repo>/test-cases/rules/postgres-no-generated-column-writes/configs/trigger-stale.yml",
           "import": "touched_at",
           "line": 9,
           "message": "stale triggerMaintainedColumns entry: `touched_at` matches no column in schema SQL",
