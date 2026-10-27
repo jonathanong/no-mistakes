@@ -4,6 +4,11 @@ use std::cell::Cell;
 thread_local! {
     static LEGACY: Cell<bool> = const { Cell::new(false) };
     static PROBES: Cell<usize> = const { Cell::new(0) };
+    static ORIGIN_VISITS: Cell<usize> = const { Cell::new(0) };
+}
+
+pub(super) fn origin_visit() {
+    ORIGIN_VISITS.with(|count| count.set(count.get() + 1));
 }
 
 pub(super) fn probe() {
@@ -26,7 +31,10 @@ pub(super) fn legacy_prefix(
     for env in 0..base {
         probe();
         if let Some(origins) = captured.get(&env) {
-            found.pending_env.extend(origins.values().copied());
+            found.pending_env.extend(origins.values().map(|origin| {
+                origin_visit();
+                *origin
+            }));
         }
         probe();
         if let Some(bindings) = mapped.get(&env) {
@@ -51,8 +59,9 @@ fn compare(
     });
     assert_eq!(old_probes, 2 * base);
     assert_eq!(
-        FxHashSet::from_iter(old.pending_env),
-        FxHashSet::from_iter(new.pending_env)
+        // Rooted prefix edges may now be absent from the pending queue.
+        FxHashSet::from_iter(old.pending_env.into_iter().chain(0..base)),
+        FxHashSet::from_iter(new.pending_env.into_iter().chain(0..base))
     );
     assert_eq!(
         FxHashSet::from_iter(old.pending_args),
@@ -129,3 +138,6 @@ impl Drop for Guard {
 
 #[path = "tests/fixture.rs"]
 mod fixture;
+
+#[path = "tests/origin_roots.rs"]
+mod origin_roots;

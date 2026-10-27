@@ -21,6 +21,8 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
         return;
     }
     let roots = (0..scopes.len()).collect::<Vec<_>>();
+    let empty_captures = CapturedBindings::default();
+    let captured = capture_edges_for_all_roots(captured, scopes.len(), &empty_captures);
     // Peek at existing summaries; cold snapshots keep the shared raw visitor.
     let reachable = reachable::collect_warm_from_roots(
         scopes,
@@ -41,6 +43,25 @@ pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn p
         .extras
         .retain(|id, _| reachable.arguments.contains(id));
     prune_mutations(state, &reachable.arguments, &reachable.identities);
+}
+
+fn capture_edges_for_all_roots<'a>(
+    captured: &'a CapturedBindings,
+    scope_count: usize,
+    empty: &'a CapturedBindings,
+) -> &'a CapturedBindings {
+    // Every valid environment is already a root here. Preserve the old walk
+    // for malformed owners/origins rather than hiding an invalid state.
+    if captured.iter().all(|(owner, origins)| {
+        *owner < scope_count
+            && origins
+                .max_origin()
+                .is_none_or(|origin| origin < scope_count)
+    }) {
+        empty
+    } else {
+        captured
+    }
 }
 
 pub(in crate::codebase::postgres::query_annotation::evaluate::alternatives) fn prune_mutations(
@@ -97,3 +118,7 @@ mod tests;
 #[cfg(test)]
 #[path = "state/summary_tests.rs"]
 mod summary_tests;
+
+#[cfg(test)]
+#[path = "state/tests/origin_roots.rs"]
+mod origin_roots;

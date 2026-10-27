@@ -40,7 +40,11 @@ pub(super) fn auxiliary_prefix(
     legacy_dispatch!(found, base, mapped, captured);
     // Both tables remain live inputs: Scope identity does not track their writes.
     visit_prefix(captured, base, |origins| {
-        found.pending_env.extend(origins.values().copied());
+        // Prefix::seed already roots every environment below base. A warm
+        // immutable summary can prove that none of these name edges add work.
+        if origins.max_origin().is_some_and(|origin| origin >= base) {
+            extend_origins!(found, origins);
+        }
     });
     visit_prefix(mapped, base, |bindings| {
         found
