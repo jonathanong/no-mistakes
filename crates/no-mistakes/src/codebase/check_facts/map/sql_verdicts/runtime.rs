@@ -16,11 +16,11 @@ pub trait SqlFactContext: Sync {
         None
     }
     #[doc(hidden)]
-    fn embedded_sql<'a>(
-        &'a self,
+    fn embedded_sql(
+        &self,
         path: &Path,
         profile: &EmbeddedSqlOptions,
-    ) -> anyhow::Result<&'a EmbeddedSqlFileFacts> {
+    ) -> anyhow::Result<&EmbeddedSqlFileFacts> {
         if let Some((rule, index)) = self.low_sql_application() {
             return crate::codebase::postgres::sql_identifier_syntax::statement_policy::projection(
                 self.prepared(),
@@ -34,11 +34,11 @@ pub trait SqlFactContext: Sync {
         self.prepared().embedded_sql(path, profile)
     }
     #[doc(hidden)]
-    fn postgres_statements<'a>(
-        &'a self,
+    fn postgres_statements(
+        &self,
         path: &Path,
         profile: Option<&EmbeddedSqlOptions>,
-    ) -> anyhow::Result<&'a [SqlStatementFileFacts]> {
+    ) -> anyhow::Result<&[SqlStatementFileFacts]> {
         if let (Some(profile), Some((rule, index))) = (profile, self.low_sql_application()) {
             return crate::codebase::postgres::sql_identifier_syntax::statement_policy::projection(
                 self.prepared(),
