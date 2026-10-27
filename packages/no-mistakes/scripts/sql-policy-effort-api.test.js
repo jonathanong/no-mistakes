@@ -30,10 +30,36 @@ function assertSemantics(report, policy) {
   const uncertain = report.rules.filter((finding) => finding.target === "unanalyzable");
   assert.equal(uncertain.length, policy === "report" ? 4 : 0);
   assert.equal(report.advisories.length, policy === "advise" ? 4 : 0);
-  for (const finding of [...uncertain, ...report.advisories]) {
-    assert.equal(finding.file, "src/queries.ts");
-    assert.ok([25, 26].includes(finding.line), JSON.stringify(finding));
-    assert.equal(finding.target, "unanalyzable");
+  for (const [index, rule] of rules.entries()) {
+    const targets = [
+      "returning-star, select-star",
+      "relation:accounts:predicate:deleted_at IS NULL",
+    ];
+    for (const [rows, expectedTarget, enabled] of [
+      [uncertain, "unanalyzable", policy === "report"],
+      [report.advisories, targets[index], policy === "advise"],
+    ]) {
+      assert.deepEqual(
+        rows
+          .filter((finding) => finding.rule === rule)
+          .map(({ file, line, target }) => ({ file, line, target })),
+        enabled
+          ? [25, 26].map((line) => ({ file: "src/queries.ts", line, target: expectedTarget }))
+          : [],
+      );
+    }
+  }
+}
+
+function assertLowRewrite(report, selectedRules = rules) {
+  const residual = [...report.rules, ...report.advisories].filter(
+    (finding) => finding.target !== "accounts" && selectedRules.includes(finding.rule),
+  );
+  assert.ok(residual.length > 0);
+  for (const finding of residual) {
+    assert.match(finding.message, /effort low/);
+    assert.match(finding.message, /literal string/);
+    assert.match(finding.message, /one local const/);
   }
 }
 
@@ -58,6 +84,7 @@ for (const policy of ["report", "advise", "ignore"]) {
       assert.ok(pending instanceof Promise);
       const low = await pending;
       assertSemantics(low, policy);
+      if (policy !== "ignore") assertLowRewrite(low);
       assert.deepEqual(await esm.check(options), low);
       assert.deepEqual(cliCheck(cli, options.config), low);
       const max = await cjs.check({ ...options, effort: "max" });
@@ -106,13 +133,19 @@ test(
     const options = { root, config };
     const mixed = await cjs.check(options);
     assertSemantics(mixed, "advise");
+    assertLowRewrite(mixed, [rules[0]]);
     const low = await cjs.check({ root, config: join(root, "low-advise.yml") });
     const max = await cjs.check({ root, config: join(root, "low-advise.yml"), effort: "max" });
     for (const field of ["rules", "advisories"]) {
-      assert.deepEqual(mixed[field], [
-        ...low[field].filter((finding) => finding.rule === rules[0]),
-        ...max[field].filter((finding) => finding.rule === rules[1]),
-      ]);
+      for (const [rule, expected] of [
+        [rules[0], low],
+        [rules[1], max],
+      ]) {
+        assert.deepEqual(
+          mixed[field].filter((finding) => finding.rule === rule),
+          expected[field].filter((finding) => finding.rule === rule),
+        );
+      }
     }
     assert.deepEqual(await esm.check(options), mixed);
     assert.deepEqual(cliCheck(cli, config), mixed);
