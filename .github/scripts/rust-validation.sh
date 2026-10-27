@@ -13,4 +13,15 @@ if [[ $# != 1 ]]; then
   echo 'Expected exactly one validation mode' >&2
   exit 2
 fi
-exec cargo test --locked --workspace --all-features "${extra[@]}"
+if [[ "$1" != test ]]; then
+  exec cargo test --locked --workspace --all-features "${extra[@]}"
+fi
+
+# Always collect a fresh execution inventory: inherited references could hide
+# a snapshot whose last test has been deleted. Keep coverage's cargo scope intact.
+references=$(mktemp)
+trap 'rm -f -- "$references"' EXIT
+export INSTA_SNAPSHOT_REFERENCES_FILE="$references"
+cargo test --locked --workspace --all-features "${extra[@]}"
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+node "$script_dir/rust-snapshot-references.cjs" "$references"

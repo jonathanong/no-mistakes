@@ -1,0 +1,2 @@
+member/snapshots/used.snap
+member/snapshots/orphan.snap

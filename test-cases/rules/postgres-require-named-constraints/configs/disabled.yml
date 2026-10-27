@@ -1,3 +1,4 @@
+version: 2
 rules:
   - rule: postgres-require-named-constraints
     scope: repository

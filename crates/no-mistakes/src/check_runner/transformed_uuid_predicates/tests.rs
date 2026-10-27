@@ -27,10 +27,40 @@ fn run(config: &str, effort: Option<Effort>, verdicts: bool) -> super::CheckResu
     )
 }
 
+// Physical origins of the violating operands in the saved SQL and builder cases.
+// The JOIN has two transformed UUID operands, so its line occurs twice.
+const EXPECTED_LOCATIONS: &[(&str, usize)] = &[
+    ("helper-query.ts", 4),
+    ("query.ts", 5),
+    ("queries.sql", 3),
+    ("queries.sql", 4),
+    ("queries.sql", 5),
+    ("queries.sql", 6),
+    ("queries.sql", 10),
+    ("queries.sql", 10),
+    ("queries.sql", 15),
+    ("queries.sql", 25),
+    ("queries.sql", 28),
+];
+
 #[test]
 fn transformed_uuid_predicates_max_is_default_and_preserves_rewrite_messages() {
     let max = run(".no-mistakes.max.yml", None, false);
-    assert_eq!(max.rules.len(), 11, "{:?}", max.rules);
+    let mut actual: Vec<_> = max
+        .rules
+        .iter()
+        .map(|row| {
+            assert_eq!(
+                row.rule,
+                no_mistakes::codebase::rules::postgres_no_transformed_uuid_predicates::RULE_ID
+            );
+            (row.file.as_str(), row.line)
+        })
+        .collect();
+    let mut expected = EXPECTED_LOCATIONS.to_vec();
+    actual.sort_unstable();
+    expected.sort_unstable();
+    assert_eq!(actual, expected, "{:?}", max.rules);
     assert_eq!(max.rules, run(".no-mistakes.yml", None, false).rules);
     assert_eq!(
         max.rules,
@@ -53,9 +83,9 @@ fn transformed_uuid_predicates_max_is_default_and_preserves_rewrite_messages() {
 fn transformed_uuid_predicates_low_routes_uncertainty_without_losing_definite_findings() {
     let max = run(".no-mistakes.max.yml", None, false);
     for (config, findings, advisories) in [
-        (".no-mistakes.low-report.yml", 11, 0),
-        (".no-mistakes.low-advise.yml", 11, 0),
-        (".no-mistakes.low-ignore.yml", 11, 0),
+        (".no-mistakes.low-report.yml", EXPECTED_LOCATIONS.len(), 0),
+        (".no-mistakes.low-advise.yml", EXPECTED_LOCATIONS.len(), 0),
+        (".no-mistakes.low-ignore.yml", EXPECTED_LOCATIONS.len(), 0),
     ] {
         let report = run(config, None, false);
         assert_eq!(report.rules.len(), findings, "{config}: {:?}", report.rules);
@@ -72,7 +102,7 @@ fn transformed_uuid_predicates_low_routes_uncertainty_without_losing_definite_fi
             .iter()
             .filter(|row| row.target.as_deref() != Some("unanalyzable"))
             .collect();
-        assert_eq!(definite.len(), 11);
+        assert_eq!(definite.len(), EXPECTED_LOCATIONS.len());
         assert!(
             definite.iter().any(|row| {
                 row.file == "helper-query.ts"

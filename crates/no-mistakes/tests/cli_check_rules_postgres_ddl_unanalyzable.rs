@@ -2,13 +2,23 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn configured_rule_ids(root: &std::path::Path, config: &str) -> std::collections::BTreeSet<String> {
-    no_mistakes::config::v2::load_v2_config(root, Some(&root.join(config)))
-        .unwrap()
-        .rules
-        .into_iter()
-        .filter(|rule| rule.enabled)
-        .map(|rule| rule.rule)
-        .collect()
+    let expected: std::collections::BTreeSet<String> =
+        no_mistakes::config::v2::load_v2_config(root, Some(&root.join(config)))
+            .unwrap()
+            .rules
+            .into_iter()
+            .filter(|rule| rule.enabled)
+            .map(|rule| rule.rule)
+            .collect();
+    assert!(
+        !expected.is_empty(),
+        "{config}: expected schema rules must not be empty"
+    );
+    assert!(
+        expected.contains("postgres-constraint-validate"),
+        "{config}: schema rule inventory lost its constraint-validation sentinel"
+    );
+    expected
 }
 
 fn assert_configured_rule_set(

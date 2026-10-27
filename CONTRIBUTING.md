@@ -13,7 +13,12 @@ This repository is a huge token sink. Thus, contributions are welcomed.
    `crates/no-mistakes/tests/common/check_json_snapshot.rs`, which compares `--jobs 1`
    with `--jobs 2` and rewrites absolute paths, temp directories, process ids, and
    timings so the file is stable on Linux, macOS, and Windows. CI sets `INSTA_UPDATE=no`
-   and fails when a snapshot is missing or changed. Text-format coverage for
+   and fails when a snapshot is missing or changed. The shared full Rust test
+   command (`bash .github/scripts/rust-validation.sh test`) also collects
+   executed snapshot references and rejects orphan `.snap` files in workspace
+   packages. Remove obsolete snapshots when deleting or renaming their tests;
+   filtered test runs cannot establish the full reference inventory.
+   Text-format coverage for
    `agents-md-max-size` moved into that JSON snapshot: the empty pass, the
    over-limit message, the rule id, and the disabled skip. Regenerate on purpose with
    `INSTA_UPDATE=1 cargo test -p no-mistakes --test suite_cli_rules check_json_snapshot`
@@ -24,7 +29,7 @@ This repository is a huge token sink. Thus, contributions are welcomed.
 3. Annotate which AI harness + model was used, `Co-Authored-By` is preferred
 4. Maintain 98% project and patch test coverage
 
-<!-- cspell:ignore rustup Clippy -->
+<!-- cspell:ignore rustup Clippy INSTA insta -->
 Development, CI, release builds, and benchmarks use the latest stable Rust.
 Run `rustup update stable` before local validation; `rust-toolchain.toml` selects
 that channel and installs Clippy and rustfmt. Workflows select `toolchain: stable`
