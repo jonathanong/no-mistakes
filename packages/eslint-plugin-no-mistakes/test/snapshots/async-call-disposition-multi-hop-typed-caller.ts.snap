@@ -1,0 +1,37 @@
+[
+  {
+    "file": "multi-hop/typed-caller.ts",
+    "line": 13,
+    "column": 10,
+    "messageId": "disposition",
+    "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+  },
+  {
+    "file": "multi-hop/typed-caller.ts",
+    "line": 18,
+    "column": 10,
+    "messageId": "disposition",
+    "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+  },
+  {
+    "file": "multi-hop/typed-caller.ts",
+    "line": 23,
+    "column": 10,
+    "messageId": "disposition",
+    "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+  },
+  {
+    "file": "multi-hop/typed-caller.ts",
+    "line": 28,
+    "column": 10,
+    "messageId": "disposition",
+    "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+  },
+  {
+    "file": "multi-hop/typed-caller.ts",
+    "line": 34,
+    "column": 3,
+    "messageId": "disposition",
+    "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+  }
+]

@@ -18,7 +18,8 @@
               "@app/jobs"
             ],
             "calleeNamePatterns": [
-              "enqueueEmail"
+              "enqueueEmail",
+              "enqueueBatch"
             ]
           }
         ]

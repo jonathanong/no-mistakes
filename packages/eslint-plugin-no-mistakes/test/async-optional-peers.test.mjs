@@ -129,6 +129,7 @@ it("loads a packed plugin with TypeScript-only, absent, and incompatible proof p
         join(root, ".oxlintrc.json"),
         join(root, "imported.js"),
         join(root, "recall.js"),
+        join(root, "multi-hop/typed-caller.ts"),
         join(root, "syntax.js"),
         join(root, "heritage.js"),
         join(root, "type-shadow.js"),
@@ -157,6 +158,11 @@ it("loads a packed plugin with TypeScript-only, absent, and incompatible proof p
       [
         ...[3, 5, 7, 9, 12, 15].map((line) => [
           "recall.js",
+          line,
+          "no-mistakes(async-call-disposition)",
+        ]),
+        ...[13, 18, 23, 28, 34].map((line) => [
+          "typed-caller.ts",
           line,
           "no-mistakes(async-call-disposition)",
         ]),

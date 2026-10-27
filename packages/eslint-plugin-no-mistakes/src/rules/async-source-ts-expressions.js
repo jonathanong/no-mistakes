@@ -1,12 +1,26 @@
 "use strict";
+const { templateLiteral } = require("./async-source-ts-templates");
 
 function expression(node, api) {
   const { ts, convert: c, make: m, list, fn, property } = api;
   const kind = ts.SyntaxKind;
   if (ts.isIdentifier(node)) return m(node, "Identifier", { name: node.text });
-  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node))
-    return m(node, "Literal", { value: node.text });
+  if (ts.isStringLiteral(node)) return m(node, "Literal", { value: node.text });
+  if (ts.isTemplateExpression(node) || ts.isNoSubstitutionTemplateLiteral(node))
+    return templateLiteral(node, api);
+  if (ts.isTaggedTemplateExpression(node))
+    return m(node, "TaggedTemplateExpression", {
+      tag: c(node.tag),
+      quasi: templateLiteral(node.template, api),
+      typeArguments: typeArguments(node, api),
+    });
   if (ts.isNumericLiteral(node)) return m(node, "Literal", { value: Number(node.text) });
+  if (ts.isRegularExpressionLiteral(node)) {
+    const end = node.text.lastIndexOf("/");
+    const pattern = node.text.slice(1, end);
+    const flags = node.text.slice(end + 1);
+    return m(node, "Literal", { value: new RegExp(pattern, flags), regex: { pattern, flags } });
+  }
   if ([kind.TrueKeyword, kind.FalseKeyword, kind.NullKeyword].includes(node.kind))
     return m(node, "Literal", {
       value: node.kind === kind.NullKeyword ? null : node.kind === kind.TrueKeyword,

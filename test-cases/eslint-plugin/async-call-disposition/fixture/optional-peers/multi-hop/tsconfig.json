@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "strict": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "paths": { "@app/jobs": ["./jobs.ts"], "@app/types": ["./types.ts"], "@app/handler": ["./handler.ts"] }
+  },
+  "include": ["*.js", "*.ts"]
+}
