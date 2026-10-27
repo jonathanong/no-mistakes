@@ -33,6 +33,8 @@ include!("files_config_routes.rs");
 include!("edge_maps.rs");
 include!("fact_lookup.rs");
 
+include!("selector_import_sites.rs");
+include!("selector_mock_imports.rs");
 include!("builder.rs");
 include!("builder_class_ancestry.rs");
 include!("builder_session.rs");

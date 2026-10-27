@@ -3,7 +3,7 @@ fn collect_symbol_edges_for_core(
     facts: Option<&dyn TsFactLookup>,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-) -> Vec<Edge> {
+) -> (Vec<Edge>, SelectorImportSites) {
     let mut selectors = if edge_inputs.plan.symbol_import_selectors {
         collect_symbol_import_selectors(
             edge_inputs,
@@ -12,12 +12,12 @@ fn collect_symbol_edges_for_core(
             workspace,
         )
     } else {
-        Vec::new()
+        (Vec::new(), fx_map())
     };
     if !edge_inputs.plan.symbols {
         return selectors;
     }
-    selectors.extend(collect_symbol_edges(
+    selectors.0.extend(collect_symbol_edges(
         edge_inputs.root,
         SymbolGraphFiles {
             indexable: edge_inputs.graph_files.indexable(),

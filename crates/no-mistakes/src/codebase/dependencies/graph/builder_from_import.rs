@@ -22,6 +22,7 @@ impl DepGraph {
             effective_edges: OnceLock::new(),
             parse_errors: HashMap::new(),
             resource_edge_details: fx_map(),
+            selector_import_sites: fx_map(),
             resource_diagnostics: Vec::new(),
         };
         record_graph_observability(&graph, session);

@@ -71,10 +71,13 @@ fn opaque_literal_selectors_only_make_their_target_modules_uncertain() {
     assert!(found
         .iter()
         .any(|row| row.file == "src/definite.mts" && row.target.as_deref() == Some("onlyTests")));
-    for file in ["src/namespace.mts", "src/dynamic.mts"] {
-        assert!(found
-            .iter()
-            .any(|row| row.file == file && row.target.as_deref() == Some("unanalyzable")));
+    for (line, specifier) in [(2, "./namespace.mjs"), (4, "./dynamic.mjs")] {
+        assert!(found.iter().any(|row| {
+            row.file == "src/consumer.mts"
+                && row.line == line
+                && row.message.contains(specifier)
+                && row.target.as_deref() == Some("unanalyzable")
+        }));
     }
 }
 

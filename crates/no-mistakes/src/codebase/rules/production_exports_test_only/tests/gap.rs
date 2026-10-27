@@ -185,7 +185,7 @@ fn module_gap_messages_cover_symbol_reexport_and_binding_sites() {
         );
     }
 
-    let forward = crate::fx::FxHashMap::from_iter([
+    let mut forward = crate::fx::FxHashMap::from_iter([
         edge(
             &named_file,
             NodeId::module(format!("{}#absent", resolved.display())),
@@ -202,6 +202,12 @@ fn module_gap_messages_cover_symbol_reexport_and_binding_sites() {
         edge(&bound, NodeId::module("./bound.mjs")),
         edge(&bound_missing_source, NodeId::module("./unlocated.mjs")),
     ]);
+    // Import-only/manual graphs can also retain an unresolved re-export module
+    // without symbol provenance, so its source specifier must locate the site.
+    forward
+        .get_mut(&NodeId::file(&reexport_file))
+        .unwrap()
+        .push((NodeId::module("./other.mjs"), EdgeKind::SymbolImportUnknown));
     let found = incomplete_sources(
         &from_typed_maps(path("."), forward, Default::default()),
         &facts,
@@ -212,6 +218,12 @@ fn module_gap_messages_cover_symbol_reexport_and_binding_sites() {
     assert_gap(&found, &named_file, 3, "from `@scope/pkg`");
     assert_gap(&found, &reexport_file, 4, "unresolved symbol `gone`");
     assert_gap(&found, &reexport_file, 4, "from `./other.mjs`");
+    assert_gap(
+        &found,
+        &reexport_file,
+        4,
+        "unresolved module selector `./other.mjs`",
+    );
     assert_gap(&found, &bare, 1, "unresolved symbol `missing`");
     assert_gap(&found, &bare, 1, "from `/abs/x.mts`");
     assert_gap(&found, &side, 6, "unresolved module selector `./side.mjs`");
@@ -243,4 +255,27 @@ fn assert_gap(found: &[(PathBuf, usize, String)], file: &Path, line: usize, mess
             .any(|row| row.0 == file && row.1 == line && row.2.contains(message)),
         "missing {message} at {line} in {found:?}"
     );
+}
+
+#[test]
+fn manual_unknown_edges_without_source_evidence_report_the_missing_provenance() {
+    let root = Path::new("/tmp/nm-2797-gap");
+    let graph = from_typed_maps(root.to_path_buf(), Default::default(), Default::default());
+    let unknown = std::collections::BTreeSet::from([(
+        path("consumer.mts"),
+        NodeId::file(path("source.mts")),
+    )]);
+    let (file, line, reason) =
+        super::super::selector_advisories::for_export(root, &graph, &unknown, "value").unwrap();
+    assert_eq!(file, path("consumer.mts"));
+    assert_eq!(line, 1);
+    assert!(reason.contains("consumer.mts"));
+    assert!(reason.contains("missing prepared selector provenance"));
+    assert!(super::super::selector_advisories::for_export(
+        root,
+        &graph,
+        &Default::default(),
+        "value"
+    )
+    .is_none());
 }

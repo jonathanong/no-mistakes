@@ -6,7 +6,7 @@ fn collect_symbol_import_selectors(
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-) -> Vec<Edge> {
+) -> (Vec<Edge>, SelectorImportSites) {
     let export_edges: FxHashMap<_, _> = input
         .graph_files
         .indexable()
@@ -34,16 +34,16 @@ fn collect_symbol_import_selectors(
         .flatten()
         .filter_map(|(from, to, _)| matches!(from, NodeId::File(_)).then_some(to.clone()))
         .collect();
-    input
+    let chunks: Vec<_> = input
         .graph_files
         .indexable()
         .par_iter()
-        .flat_map(|path| {
+        .map(|path| {
             let Some(file_facts) = facts.get_ts_facts(path) else {
-                return Vec::new();
+                return (Vec::new(), fx_map());
             };
             let Some(symbols) = file_facts.symbols.as_ref() else {
-                return Vec::new();
+                return (Vec::new(), fx_map());
             };
             let inputs = ExportEdgeInputs {
                 path,
@@ -65,7 +65,14 @@ fn collect_symbol_import_selectors(
                 &exported,
             )
         })
-        .collect()
+        .collect();
+    let mut edges = Vec::new();
+    let mut sites = fx_map();
+    for (file_edges, file_sites) in chunks {
+        edges.extend(file_edges);
+        sites.extend(file_sites);
+    }
+    (edges, sites)
 }
 
 fn selector_target(inputs: &ExportEdgeInputs<'_>, source: &str) -> Option<PathBuf> {
@@ -102,7 +109,14 @@ fn paths_alias_owns(inputs: &ExportEdgeInputs<'_>, source: &str) -> bool {
     inputs.resolver.matches_paths_alias(source, inputs.path)
 }
 
-fn selector_unknown(inputs: &ExportEdgeInputs<'_>, source: &str, edges: &mut Vec<Edge>) {
+fn selector_unknown(
+    inputs: &ExportEdgeInputs<'_>,
+    source: &str,
+    line: usize,
+    reason: &'static str,
+    edges: &mut Vec<Edge>,
+    sites: &mut SelectorImportSites,
+) {
     let target = if let Some(target) = selector_target(inputs, source) {
         // Assets cannot own TS/JS production exports.
         if !is_indexable(&target) {
@@ -124,6 +138,16 @@ fn selector_unknown(inputs: &ExportEdgeInputs<'_>, source: &str, edges: &mut Vec
         // External packages are outside this repository's export catalog.
         return;
     };
+    push_selector_site(
+        inputs,
+        target.clone(),
+        SelectorImportSite {
+            line: line.max(1),
+            specifier: source.to_owned(),
+            reason,
+        },
+        sites,
+    );
     edges.push((
         NodeId::file_in(inputs.interner, inputs.path),
         target,
@@ -135,13 +159,17 @@ fn selector_unknown_symbol(
     inputs: &ExportEdgeInputs<'_>,
     file: &Path,
     name: &str,
+    site: SelectorImportSite,
     edges: &mut Vec<Edge>,
+    sites: &mut SelectorImportSites,
 ) {
     // A known file with no concrete export (including ambiguous/default stars)
     // cannot be attached to an owning export, so preserve a global diagnostic.
+    let target = NodeId::module(format!("{}#{name}", file.display()));
+    push_selector_site(inputs, target.clone(), site, sites);
     edges.push((
         NodeId::file_in(inputs.interner, inputs.path),
-        NodeId::module(format!("{}#{name}", file.display())),
+        target,
         EdgeKind::SymbolImportUnknown,
     ));
 }

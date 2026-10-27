@@ -220,3 +220,41 @@ fn semantic_type_import_records_distinguish_multiline_declarations_and_same_line
         EdgeKind::SymbolImportUnknown
     ));
 }
+
+#[test]
+fn every_unknown_selector_edge_retains_its_prepared_source_evidence() {
+    let (_dir, graph) = fixture_graph(true);
+    let mut reasons = std::collections::BTreeSet::new();
+    let unknowns: Vec<_> = graph
+        .edges
+        .edges()
+        .iter()
+        .filter(|edge| edge.kind == EdgeKind::SymbolImportUnknown)
+        .collect();
+    assert!(!unknowns.is_empty());
+    for edge in unknowns {
+        let importer = edge.from.as_file().unwrap();
+        let sites = graph.unknown_selector_sites(importer, &edge.to);
+        assert!(!sites.is_empty(), "missing source evidence for {edge:?}");
+        for site in sites {
+            assert!(
+                site.line > 0 && !site.specifier.is_empty() && !site.reason.is_empty(),
+                "{site:?}"
+            );
+            reasons.insert(site.reason);
+        }
+    }
+    for reason in [
+        "namespace selector",
+        "namespace re-export selector",
+        "type import selector",
+        "dynamic or require selector",
+        "unresolved named selector",
+        "unresolved re-export selector",
+    ] {
+        assert!(
+            reasons.contains(reason),
+            "missing constructor coverage: {reason}"
+        );
+    }
+}

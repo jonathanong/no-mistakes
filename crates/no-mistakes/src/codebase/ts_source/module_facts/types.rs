@@ -83,6 +83,8 @@ pub struct ModuleDiagnostic {
 #[derive(Debug, Clone, Default, Serialize)]
 pub struct TypeScriptModuleFacts {
     #[serde(skip)]
+    pub(crate) mock_import_spans: Vec<ModuleSpan>,
+    #[serde(skip)]
     pub(crate) call_arguments:
         Option<std::sync::Arc<crate::fx::FxHashMap<u32, super::arguments::ArgumentValues>>>,
     pub imports: Vec<ModuleImport>,

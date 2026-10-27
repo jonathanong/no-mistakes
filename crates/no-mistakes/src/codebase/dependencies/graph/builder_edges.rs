@@ -7,6 +7,7 @@ struct EdgeMaps<'a> {
     forward: &'a mut EdgeMap,
     reverse: &'a mut EdgeMap,
     resource_edge_details: &'a mut ResourceEdgeDetails,
+    selector_import_sites: &'a mut SelectorImportSites,
     resource_diagnostics: &'a mut Vec<ResourceGraphDiagnostic>,
     callable_export_resolutions: &'a mut FxHashMap<(PathBuf, String), ExportedCallableResolution>,
     module_files: &'a mut FxHashMap<String, FxHashSet<PathBuf>>,
@@ -32,6 +33,7 @@ fn collect_and_merge_all_edges(
         forward,
         reverse,
         resource_edge_details,
+        selector_import_sites,
         resource_diagnostics,
         callable_export_resolutions,
         module_files,
@@ -40,7 +42,7 @@ fn collect_and_merge_all_edges(
     } = maps;
     require_core_edge_facts(edge_inputs.plan, facts)?;
     crate::invocation::check_timeout()?;
-    let core = collect_independent_core_edges(
+    let mut core = collect_independent_core_edges(
         edge_inputs,
         facts,
         resolution.resolver,
@@ -48,6 +50,7 @@ fn collect_and_merge_all_edges(
         parsed_imports,
         workspace,
     );
+    selector_import_sites.extend(std::mem::take(&mut core.symbols.1));
     merge_independent_core_edges(forward, reverse, core);
     if edge_inputs.plan.calls || edge_inputs.plan.extends {
         // Call targets and class bases follow workspace package names exactly
@@ -60,7 +63,7 @@ fn collect_and_merge_all_edges(
             facts.expect("call plan requires TS facts"),
             &call_resolver,
             callable_export_resolutions,
-        module_files,
+            module_files,
         );
         merge_edges(forward, reverse, pass.edges);
         resolved_call_sites.extend(pass.sites);
@@ -76,9 +79,10 @@ fn collect_and_merge_all_edges(
             forward,
             reverse,
             resource_edge_details,
+            selector_import_sites,
             resource_diagnostics,
             callable_export_resolutions,
-        module_files,
+            module_files,
             resolved_call_sites,
             class_declarations,
         },

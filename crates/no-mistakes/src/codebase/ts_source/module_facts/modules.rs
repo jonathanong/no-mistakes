@@ -6,6 +6,7 @@ use oxc_span::GetSpan;
 mod exports;
 mod imports;
 mod loads;
+mod mocks;
 
 pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts) {
     let mut inline_bindings = facts
@@ -37,7 +38,12 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
             AstKind::ExportDefaultDeclaration(value) if root_module => {
                 exports::default(value, semantic, facts)
             }
-            AstKind::ImportExpression(value) => loads::dynamic(value, facts),
+            AstKind::ImportExpression(value) => {
+                if mocks::typed_mock_import(value, node.id(), semantic) {
+                    facts.mock_import_spans.push(value.span.into());
+                }
+                loads::dynamic(value, facts);
+            }
             AstKind::CallExpression(value) => loads::require(value, semantic, facts),
             AstKind::IdentifierReference(value) => {
                 loads::indirect(value, node.id(), semantic, facts);

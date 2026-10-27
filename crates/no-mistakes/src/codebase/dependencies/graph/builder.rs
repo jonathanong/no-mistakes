@@ -22,6 +22,7 @@ pub struct DepGraph {
     effective_edges: OnceLock<EdgeIndex<NodeId, EdgeKind>>,
     parse_errors: HashMap<PathBuf, String>,
     resource_edge_details: ResourceEdgeDetails,
+    selector_import_sites: SelectorImportSites,
     resource_diagnostics: Vec<ResourceGraphDiagnostic>,
 }
 

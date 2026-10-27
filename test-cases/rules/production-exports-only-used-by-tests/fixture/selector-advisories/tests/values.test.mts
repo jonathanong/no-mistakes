@@ -1,0 +1,10 @@
+import { productionValue } from "../src/proven.mjs";
+import { uncertainValue } from "../src/candidate.mjs";
+import { testOnlyValue } from "../src/plain.mjs";
+import { packageValue } from "@fixture/kit";
+import { mockedValue } from "../src/mocked.mjs";
+void [productionValue, uncertainValue, testOnlyValue, packageValue, mockedValue];
+import { firstValue } from "../src/first.mjs";
+import { secondValue } from "../src/second.mjs";
+import { mockOnlyValue } from "../src/mock-only.mjs";
+void [firstValue, secondValue, mockOnlyValue];
