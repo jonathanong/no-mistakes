@@ -328,7 +328,15 @@ this proof on their actual implementation, including in Oxlint's `--type-aware`
 mode, which does not expose a parser-owned TypeScript program to JS plugins.
 That fallback requires the optional `typescript` peer, version 5 or later for
 Bundler module resolution. `@typescript-eslint/parser` is optional; without it,
-`ts.createSourceFile` parses supported syntax. In TypeScript-only mode, an
+`ts.createSourceFile` parses supported syntax. In TypeScript-only mode, a
+tagged template (including its interpolated expressions) preserves the runtime
+proof through imported wrappers, `??` defaults, and awaited dependency properties
+in another module. Template tags and interpolations remain executable uses:
+passing the callback to a tag or dropping its promise there is still reported. An
+implementation's reachable type barrels may contain tuples, conditional,
+inferred, mapped, indexed-access, and import types without hiding its runtime
+body. These types are preserved as syntax; they do not establish new target or
+awaiting contracts. An
 `enum`, a `class`, labels, and the other cases in
 `test-cases/eslint-plugin/async-call-disposition/fixture/optional-peers/unsupported/`
 stay unproven, while the same consumer is silent when the parser is installed.

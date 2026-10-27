@@ -1,9 +1,12 @@
 "use strict";
 const { typeArguments } = require("./async-source-ts-expressions");
+const { compositeType } = require("./async-source-ts-types");
 
 function declaration(node, api) {
   const { ts, convert: c, make: m, list, fn, annotation, modifiers, property } = api;
   const kind = ts.SyntaxKind;
+  const composite = compositeType(node, api);
+  if (composite) return composite;
   if (
     ts.isFunctionDeclaration(node) ||
     ts.isVariableStatement(node) ||

@@ -58,6 +58,7 @@ function sourceScopes(ast, visitorKeys) {
       define(node.id, current, "Type", node, node.parent);
       current = scope(current, "type");
     }
+    if (["TSConditionalType", "TSMappedType"].includes(node.type)) current = scope(current, "type");
     if (functions.has(node.type)) {
       current = scope(current, "function");
       if (node.type === "FunctionExpression") define(node.id, current, "FunctionName", node, node);

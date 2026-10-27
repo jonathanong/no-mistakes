@@ -19,11 +19,11 @@ Module._load = function (name, ...args) {
 const plugin = require("eslint-plugin-no-mistakes");
 assert.deepEqual(loads, { typescript: 0, "@typescript-eslint/parser": 0 });
 const targets = [{ sourceSpecifierPatterns: ["@app/jobs"], calleeNamePatterns: ["enqueueEmail"] }];
-function lint(name, awaitingConsumers) {
+function lint(name, awaitingConsumers, configuredTargets = targets) {
   const filename = join(__dirname, name);
   return new Linter({ cwd: __dirname }).verify(readFileSync(filename, "utf8"), {
     plugins: { "no-mistakes": plugin },
-    rules: { "no-mistakes/async-call-disposition": ["error", { targets, awaitingConsumers }] },
+    rules: { "no-mistakes/async-call-disposition": ["error", { targets: configuredTargets, awaitingConsumers }] },
   }, { filename }).map(({ messageId, line }) => [line, messageId]);
 }
 assert.deepEqual(lint("local.js"), []);
@@ -44,3 +44,10 @@ assert.equal(loads[missing], 2, "a new rule context retries optional peer loadin
 assert.deepEqual(lint("recall.js"), [3, 5, 7, 9, 12, 15].map((line) => [line, "disposition"]));
 assert.deepEqual(lint("unsupported.js"), [[3, "disposition"]]);
 assert.deepEqual(lint("unsupported-enum.js"), [[3, "disposition"]]);
+
+// The packed consumer has TypeScript but no parser. Keep the complete imported
+// chain and a dropped-callback control so a missing finding cannot pass silently.
+assert.deepEqual(lint("multi-hop/caller.js", undefined, [{
+  sourceSpecifierPatterns: ["@app/jobs"],
+  calleeNamePatterns: ["enqueueBatch"],
+}]), (hasTypeScript ? [13, 18, 23, 28] : [8, 13, 18, 23, 28]).map((line) => [line, "disposition"]));

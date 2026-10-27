@@ -1,0 +1,30 @@
+[
+  {
+    "file": "multi-hop/caller.js",
+    "line": 13,
+    "column": 10,
+    "messageId": "disposition",
+    "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+  },
+  {
+    "file": "multi-hop/caller.js",
+    "line": 18,
+    "column": 10,
+    "messageId": "disposition",
+    "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+  },
+  {
+    "file": "multi-hop/caller.js",
+    "line": 23,
+    "column": 10,
+    "messageId": "disposition",
+    "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+  },
+  {
+    "file": "multi-hop/caller.js",
+    "line": 28,
+    "column": 10,
+    "messageId": "disposition",
+    "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+  }
+]
