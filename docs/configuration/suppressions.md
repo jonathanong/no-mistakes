@@ -64,6 +64,7 @@ comma is not a valid separator between the rule ID and an optional reason.
 
 The result describes this invocation. It does not establish whether an
 exception would be needed under a different configuration.
+
 Markdown and MDX code fences, indented code, and inline code are examples rather
 than live comments. Only HTML comments outside those code regions participate
 in their audit. Rust strings, raw strings, and block-comment contents likewise
