@@ -262,37 +262,7 @@ jobs:
     assert_eq!(findings[0].line, expected);
 }
 
-#[test]
-fn wrapper_identity_uses_project_target_root() {
-    // Include globs are project-relative; wrapper identity must use that same
-    // target root or packages/app/.github/actions/setup-aws is not a wrapper.
-    let root = super::case_root("wrapper-project-target");
-    let path = root.join("packages/app/.github/actions/setup-aws/action.yml");
-    let config = NoMistakesConfig {
-        projects: [(
-            "app".to_string(),
-            crate::config::v2::schema::Project {
-                root: Some("packages/app".to_string()),
-                ..Default::default()
-            },
-        )]
-        .into(),
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            projects: vec!["app".to_string()],
-            options: serde_yaml::from_str(OPTIONS).unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    };
-    let findings = check_with_files(&root, &config, std::slice::from_ref(&path)).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(
-        findings[0].message.contains("action-timeout-s"),
-        "{findings:?}"
-    );
-    assert!(!findings[0].message.contains("nests a configured action"));
-}
+// Output cases moved to cli_gha_snapshot_action_timeout_pair.
 
 #[test]
 fn disable_next_line_on_uses_is_kept_when_deferred() {

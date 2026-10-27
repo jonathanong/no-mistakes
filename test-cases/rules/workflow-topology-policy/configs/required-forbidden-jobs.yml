@@ -1,0 +1,7 @@
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    enabled: true
+    options:
+      requiredJobs: [".github/workflows/pipeline.yml#ghost"]
+      forbiddenJobs: [".github/workflows/pipeline.yml#build"]

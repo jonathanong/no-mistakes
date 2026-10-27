@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-pinned-hash
+    scope: repository
+    include:
+      - .github/workflows/next-line-fail.yml
+    options: {}

@@ -1,8 +1,6 @@
-use super::*;
-
 #[test]
 fn check_reports_invalid_concurrency_policy_options() {
-    let error = check_with_files(
+    let error = super::super::prepare::check_with_files(
         &super::fixture("needs-basic"),
         &super::config(
             r#"
@@ -30,21 +28,4 @@ fn malformed_concurrency_policy_does_not_fall_back_to_the_default() {
     assert!(error.contains("concurrencyPolicy"), "{error}");
 }
 
-#[test]
-fn empty_concurrency_policy_keeps_existing_findings_unchanged() {
-    let findings = super::run(&super::fixture("needs-basic"), "concurrencyPolicy: {}\n");
-    assert!(
-        findings
-            .iter()
-            .all(|finding| !finding.message.contains("concurrency")),
-        "{findings:?}"
-    );
-    let baseline = super::run(
-        &super::fixture("needs-basic"),
-        r#"
-jobInventory:
-  .github/workflows/pipeline.yml: [build, test, deploy]
-"#,
-    );
-    assert!(baseline.is_empty(), "{baseline:?}");
-}
+// Output cases moved to cli_gha_snapshot_workflow_topology.

@@ -12,15 +12,6 @@ fn check(rel: &str, source: &str) -> Vec<RuleFinding> {
     check_source(rel, source)
 }
 
-fn step_of(message: &str) -> usize {
-    message
-        .split("step ")
-        .nth(1)
-        .and_then(|rest| rest.split([' ', '`']).next())
-        .and_then(|step| step.parse().ok())
-        .unwrap_or(0)
-}
-
 fn spec_of(message: &str) -> String {
     message
         .split(" in `")
@@ -32,19 +23,6 @@ fn spec_of(message: &str) -> String {
 
 fn nth_line(text: &str, line: usize) -> &str {
     text.lines().nth(line - 1).expect("line")
-}
-
-fn identity(finding: &RuleFinding) -> String {
-    let file = Path::new(&finding.file)
-        .file_name()
-        .and_then(|name| name.to_str())
-        .unwrap_or("");
-    format!(
-        "{file}:{}:{}:{}",
-        finding.target.as_deref().unwrap_or(""),
-        step_of(&finding.message),
-        spec_of(&finding.message)
-    )
 }
 
 fn fixture_root(scenario: &str) -> PathBuf {
@@ -381,6 +359,3 @@ jobs:
 
 #[path = "parser_edges_tests.rs"]
 mod parser_edges_tests;
-
-#[path = "saved_fixtures_tests.rs"]
-mod saved_fixtures_tests;

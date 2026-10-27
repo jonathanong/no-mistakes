@@ -1,0 +1,7 @@
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      allow:
+        - step: ".github/workflows/ci.yml#build#1/frontend"
+          reason: "Covered by an external deadline."

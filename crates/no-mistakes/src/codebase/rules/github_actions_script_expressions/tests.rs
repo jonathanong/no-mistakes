@@ -5,9 +5,6 @@ use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
 use std::path::Path;
 
-#[path = "fixture_tests.rs"]
-mod fixture_tests;
-
 const WORKFLOW: &str = ".github/workflows/ci.yml";
 const ACTION: &str = ".github/actions/build/action.yml";
 

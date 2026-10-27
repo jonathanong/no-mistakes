@@ -1,0 +1,8 @@
+rules:
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    options:
+      allow:
+        - file: .github/workflows/ci.test.mts
+          text: "timeout-minutes: 20"
+          reason: pins fromJSON branch values the timeout rule cannot resolve

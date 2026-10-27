@@ -1,0 +1,11 @@
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    enabled: true
+    options:
+      forbiddenDirectEdges:
+        - [".github/workflows/pipeline.yml#build", ".github/workflows/pipeline.yml#test"]
+      requiredTransitiveEdges:
+        - [".github/workflows/pipeline.yml#build", ".github/workflows/pipeline.yml#ghost"]
+      forbiddenTransitiveEdges:
+        - [".github/workflows/pipeline.yml#build", ".github/workflows/pipeline.yml#deploy"]

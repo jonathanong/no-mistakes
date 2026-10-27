@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-pinned-hash
+    scope: repository
+    include:
+      - .github/workflows/with-block-uses-pass.yml
+    options: {}

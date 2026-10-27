@@ -1,0 +1,9 @@
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      allow:
+        - step: ".github/workflows/ci.yml#removed#checkout"
+          reason: "Former exception."
+        - step: ".github/workflows/ci.yml#removed#checkout"
+          reason: "Duplicate former exception."

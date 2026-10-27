@@ -1,0 +1,1124 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "alias_keys_cap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 22,
+          "message": ".github/workflows/ci.yml: job \"visible\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "visible"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "alias_keys_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 22,
+          "message": ".github/workflows/ci.yml: job \"visible\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "visible"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow_over_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: job \"coverage\" timeout-minutes is 20, exceeding its allowlisted max of 15",
+          "rule": "github-actions-job-timeouts",
+          "target": "coverage"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow_raises_cap": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allow_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"above\" timeout-minutes is 11, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "above"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 113,
+          "message": ".github/workflows/ci.yml: job \"parallel-without-caller-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "parallel-without-caller-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 24,
+          "message": ".github/workflows/ci.yml: job \"conditional-matrix-composite\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "conditional-matrix-composite"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 3,
+          "message": ".github/workflows/ci.yml: job \"equal\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "equal"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 37,
+          "message": ".github/workflows/ci.yml: job \"overflow\" timeout-minutes is 18446744073709551615, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "overflow"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 45,
+          "message": ".github/workflows/ci.yml: job \"no-steps\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "no-steps"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 47,
+          "message": ".github/workflows/ci.yml: job \"empty-steps\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "empty-steps"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 50,
+          "message": ".github/workflows/ci.yml: job \"single-step\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "single-step"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 55,
+          "message": ".github/workflows/ci.yml: job \"malformed-steps\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "malformed-steps"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 58,
+          "message": ".github/workflows/ci.yml: job \"malformed-step\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "malformed-step"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 64,
+          "message": ".github/workflows/ci.yml: job \"missing-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "missing-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 70,
+          "message": ".github/workflows/ci.yml: job \"expression-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "expression-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 77,
+          "message": ".github/workflows/ci.yml: job \"string-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "string-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 84,
+          "message": ".github/workflows/ci.yml: job \"boolean-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "boolean-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 91,
+          "message": ".github/workflows/ci.yml: job \"negative-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "negative-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 98,
+          "message": ".github/workflows/ci.yml: job \"float-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "float-step-timeout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow_sum_max": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"above\" timeout-minutes is 11, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "above"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 113,
+          "message": ".github/workflows/ci.yml: job \"parallel-without-caller-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "parallel-without-caller-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 24,
+          "message": ".github/workflows/ci.yml: job \"conditional-matrix-composite\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "conditional-matrix-composite"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 3,
+          "message": ".github/workflows/ci.yml: job \"equal\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "equal"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 37,
+          "message": ".github/workflows/ci.yml: job \"overflow\" timeout-minutes is 18446744073709551615, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "overflow"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 45,
+          "message": ".github/workflows/ci.yml: job \"no-steps\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "no-steps"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 47,
+          "message": ".github/workflows/ci.yml: job \"empty-steps\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "empty-steps"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 50,
+          "message": ".github/workflows/ci.yml: job \"single-step\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "single-step"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 55,
+          "message": ".github/workflows/ci.yml: job \"malformed-steps\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "malformed-steps"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 58,
+          "message": ".github/workflows/ci.yml: job \"malformed-step\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "malformed-step"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 64,
+          "message": ".github/workflows/ci.yml: job \"missing-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "missing-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 70,
+          "message": ".github/workflows/ci.yml: job \"expression-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "expression-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 77,
+          "message": ".github/workflows/ci.yml: job \"string-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "string-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 84,
+          "message": ".github/workflows/ci.yml: job \"boolean-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "boolean-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 91,
+          "message": ".github/workflows/ci.yml: job \"negative-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "negative-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 98,
+          "message": ".github/workflows/ci.yml: job \"float-step-timeout\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "float-step-timeout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow_without_max": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exceeds_with_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"test\" step \"slow\" timeout-minutes is 20, exceeding its job timeout of 10",
+          "rule": "github-actions-job-timeouts",
+          "target": "test"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit_scalar_cap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 38,
+          "message": ".github/workflows/ci.yml: job \"visible#colon:job\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "visible#colon:job"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 46,
+          "message": ".github/workflows/ci.yml: job \"normal\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "normal"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 57,
+          "message": ".github/workflows/ci.yml: job \"following\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "following"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit_scalar_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 38,
+          "message": ".github/workflows/ci.yml: job \"visible#colon:job\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "visible#colon:job"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 46,
+          "message": ".github/workflows/ci.yml: job \"normal\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "normal"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 57,
+          "message": ".github/workflows/ci.yml: job \"following\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "following"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 18,
+          "message": ".github/workflows/ci.yml: job \"real#job\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "real#job"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "flow_alias_cap": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "flow_alias_sum": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_match": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_miss": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "indented_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 53,
+          "message": ".github/workflows/ci.yml: job \"visible#colon:job\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "visible#colon:job"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 60,
+          "message": ".github/workflows/ci.yml: job \"anchored\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "anchored"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "inline_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 3,
+          "message": ".github/workflows/ci.yml: job \"inline\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "inline"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 2,
+          "message": ".github/workflows/ci.yml: invalid YAML (did not find expected node content at line 2 column 1, while parsing a flow node)",
+          "rule": "github-actions-job-timeouts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "map_alias_cap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 2,
+          "message": ".github/workflows/ci.yml: job \"mapped\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "mapped"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "map_alias_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 2,
+          "message": ".github/workflows/ci.yml: job \"mapped\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "mapped"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_timeout": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: job \"test\" has no timeout-minutes (defaults to GitHub's 6-hour ceiling); add a literal number",
+          "rule": "github-actions-job-timeouts",
+          "target": "test"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiline_cap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 2,
+          "message": ".github/workflows/ci.yml: job \"multi line\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "multi line"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiline_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 2,
+          "message": ".github/workflows/ci.yml: job \"multi line\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "multi line"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "no_cap": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "over_cap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: job \"test\" timeout-minutes is 30, over the 10-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "test"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_cap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 51,
+          "message": ".github/workflows/ci.yml: job \"visible#colon:job\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "visible#colon:job"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 58,
+          "message": ".github/workflows/ci.yml: job \"anchored\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "anchored"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 51,
+          "message": ".github/workflows/ci.yml: job \"visible#colon:job\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "visible#colon:job"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 58,
+          "message": ".github/workflows/ci.yml: job \"anchored\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "anchored"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reusable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "root_alias_cap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 3,
+          "message": ".github/workflows/ci.yml: job \"root-alias\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "root-alias"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root_alias_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 3,
+          "message": ".github/workflows/ci.yml: job \"root-alias\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "root-alias"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stale_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": "stale github-actions-job-timeouts allow entry `.github/workflows/ci.yml#missing`",
+          "rule": "github-actions-job-timeouts",
+          "target": ".github/workflows/ci.yml#missing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "step_exceeds": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"test\" step \"slow\" timeout-minutes is 20, exceeding its job timeout of 10",
+          "rule": "github-actions-job-timeouts",
+          "target": "test"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "step_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"above\" timeout-minutes is 11, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "above"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 24,
+          "message": ".github/workflows/ci.yml: job \"conditional-matrix-composite\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "conditional-matrix-composite"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 3,
+          "message": ".github/workflows/ci.yml: job \"equal\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "equal"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "step_sum_and_exceeds": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"above\" timeout-minutes is 11, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "above"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 24,
+          "message": ".github/workflows/ci.yml: job \"conditional-matrix-composite\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "conditional-matrix-composite"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 3,
+          "message": ".github/workflows/ci.yml: job \"equal\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "equal"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: job \"boolean-step-timeout\" step \"step #1\" timeout-minutes has no supported literal upper bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "boolean-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: job \"expression-step-timeout\" step \"step #1\" timeout-minutes has no supported literal upper bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "expression-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: job \"float-step-timeout\" step \"step #1\" timeout-minutes has no supported literal upper bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "float-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: job \"negative-step-timeout\" step \"step #1\" timeout-minutes has no supported literal upper bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "negative-step-timeout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: job \"string-step-timeout\" step \"step #1\" timeout-minutes has no supported literal upper bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "string-step-timeout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "step_sum_disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "step_sum_false": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "step_sum_off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "step_sum_suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "tags_cap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 17,
+          "message": ".github/workflows/ci.yml: job \"custom\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "custom"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 24,
+          "message": ".github/workflows/ci.yml: job \"1\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "1"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 52,
+          "message": ".github/workflows/ci.yml: job \"3\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "3"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 59,
+          "message": ".github/workflows/ci.yml: job \"4\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "4"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 66,
+          "message": ".github/workflows/ci.yml: job \"map\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "map"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 73,
+          "message": ".github/workflows/ci.yml: job \"seq\" timeout-minutes is 10, over the 9-minute cap",
+          "rule": "github-actions-job-timeouts",
+          "target": "seq"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "tags_sum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 17,
+          "message": ".github/workflows/ci.yml: job \"custom\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "custom"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 24,
+          "message": ".github/workflows/ci.yml: job \"1\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "1"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 52,
+          "message": ".github/workflows/ci.yml: job \"3\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "3"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 59,
+          "message": ".github/workflows/ci.yml: job \"4\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "4"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 66,
+          "message": ".github/workflows/ci.yml: job \"map\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "map"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 73,
+          "message": ".github/workflows/ci.yml: job \"seq\" timeout-minutes is 10, at or above its step timeout sum of 10 (largest step timeout: 6); choose a job timeout below the step sum and high enough for the largest step plus overhead so the job deadline provides a tighter total runtime bound",
+          "rule": "github-actions-job-timeouts",
+          "target": "seq"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "within_cap": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

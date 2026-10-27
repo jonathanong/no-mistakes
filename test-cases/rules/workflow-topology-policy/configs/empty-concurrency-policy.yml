@@ -1,0 +1,6 @@
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    enabled: true
+    options:
+      concurrencyPolicy: {}

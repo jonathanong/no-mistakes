@@ -1,0 +1,13 @@
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    enabled: true
+    options:
+      exactCallerJobs:
+        .github/workflows/reusable.yml: [".github/workflows/ci.yml#missing"]
+      unlockedWorkflowReasons:
+        .github/workflows/ci.yml: locked
+      requiredArtifactEdges:
+        - from: ".github/workflows/ci.yml#build"
+          to: ".github/workflows/ci.yml#consume"
+          name: build-ubuntu-latest

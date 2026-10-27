@@ -1,0 +1,9 @@
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      allow:
+        - step: ".github/workflows/ci.yml#build#dynamic"
+          reason: "First."
+        - step: ".github/workflows/ci.yml#build#dynamic"
+          reason: "Second."

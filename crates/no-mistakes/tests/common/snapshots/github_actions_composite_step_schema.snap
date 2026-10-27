@@ -1,0 +1,379 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowed_keys_drop_uses": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/custom/action.yml",
+          "line": 5,
+          "message": "composite action step \"Custom\" sets \"uses\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
+          "rule": "github-actions-composite-step-schema",
+          "target": "uses"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allowed_keys_keep_timeout": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "block_scalar": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "block_scalar_and_key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/my-action/action.yml",
+          "line": 9,
+          "message": "composite action step \"Run\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
+          "rule": "github-actions-composite-step-schema",
+          "target": "timeout-minutes"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_include_skips_workflow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "description": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_file_invalid": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_next_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "docker": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty_name_fallback": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/empty-name/action.yml",
+          "line": 6,
+          "message": "composite action step \"fallback\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
+          "rule": "github-actions-composite-step-schema",
+          "target": "timeout-minutes"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "extra_forbidden_env": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/env-step/action.yml",
+          "line": 5,
+          "message": "composite action step \"actions/checkout@main\" sets \"env\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
+          "rule": "github-actions-composite-step-schema",
+          "target": "env"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "flow_style_timeout": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/flow/action.yml",
+          "line": 4,
+          "message": "composite action step \"Flow\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
+          "rule": "github-actions-composite-step-schema",
+          "target": "timeout-minutes"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_root_action_yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "action.yaml",
+          "line": 5,
+          "message": "composite action step \"only-id\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
+          "rule": "github-actions-composite-step-schema",
+          "target": "timeout-minutes"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "invalid_yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/my-action/action.yml",
+          "line": 2,
+          "message": ".github/actions/my-action/action.yml: invalid YAML (did not find expected ',' or '}' at line 2 column 1, while parsing a flow mapping at line 1 column 34)",
+          "rule": "github-actions-composite-step-schema"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "label_fallback": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/labels/action.yml",
+          "line": 5,
+          "message": "composite action step \"actions/checkout@main\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
+          "rule": "github-actions-composite-step-schema",
+          "target": "timeout-minutes"
+        },
+        {
+          "file": ".github/actions/labels/action.yml",
+          "line": 8,
+          "message": "composite action step \"step #2\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
+          "rule": "github-actions-composite-step-schema",
+          "target": "timeout-minutes"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_or_non_array_steps": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "null_and_non_mapping_steps": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "numeric_key": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "quoted_using": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/quoted/action.yml",
+          "line": 6,
+          "message": "composite action step \"step #1\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
+          "rule": "github-actions-composite-step-schema",
+          "target": "timeout-minutes"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scalar_and_missing_runs": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "timeout_minutes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/my-action/action.yml",
+          "line": 7,
+          "message": "composite action step \"Do something\" sets \"timeout-minutes\", which GitHub does not support on composite-action steps; remove it and set it on the calling workflow step instead.",
+          "rule": "github-actions-composite-step-schema",
+          "target": "timeout-minutes"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

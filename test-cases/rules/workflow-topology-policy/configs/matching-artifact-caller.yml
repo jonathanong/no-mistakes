@@ -1,0 +1,12 @@
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    enabled: true
+    options:
+      requiredArtifactEdges:
+        - from: ".github/workflows/ci.yml#build"
+          to: ".github/workflows/ci.yml#consume"
+          name: build-ubuntu-latest
+          match: pattern
+      exactCallerJobs:
+        .github/workflows/reusable.yml: [".github/workflows/ci.yml#reusable"]

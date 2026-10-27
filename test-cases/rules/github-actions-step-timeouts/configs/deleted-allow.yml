@@ -1,0 +1,9 @@
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      allow:
+        - step: ".github/workflows/deleted.yml#build#checkout"
+          reason: "Former exception."
+        - step: ".github/workflows/deleted.yml#build#checkout"
+          reason: "Duplicate former exception."

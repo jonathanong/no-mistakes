@@ -1,0 +1,1254 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "branch-ref": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml:1: `uses: dtolnay/rust-toolchain@stable` — `stable` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "build-metadata-comment": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "comment-uses": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "docker-ref": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "double-quoted-tag": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml:1: `uses: actions/checkout@v6.0.2` — `v6.0.2` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "double-quoted-uses": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml:11: `uses: actions/setup-node@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 13,
+          "message": ".github/workflows/ci.yml:13: `uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `# main` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml:7: `uses: actions/checkout@v6.0.2` — `v6.0.2` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 9,
+          "message": ".github/workflows/ci.yml:9: `uses: dtolnay/rust-toolchain@stable` — `stable` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail-excluded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "local-action": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "local-action-pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "major-only-comment": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "numeric-version-comment": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pinned-version-comment": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reusable-workflow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml:1: `uses: my-org/my-repo/.github/workflows/build.yml@main` — `main` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sha-bad-comment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml:1: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `# main` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "sha-without-comment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml:1: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-alias-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/alias-fail.yml",
+          "line": 3,
+          "message": ".github/workflows/alias-fail.yml:3: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-aliased-steps-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/aliased-steps-fail.yml",
+          "line": 10,
+          "message": ".github/workflows/aliased-steps-fail.yml:10: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-anchor-flow-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/anchor-flow-fail.yml",
+          "line": 1,
+          "message": ".github/workflows/anchor-flow-fail.yml:1: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-anchor-key-same-line-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/anchor-key-same-line-fail.yml",
+          "line": 6,
+          "message": ".github/workflows/anchor-key-same-line-fail.yml:6: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-anchor-step-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/anchor-step-fail.yml",
+          "line": 6,
+          "message": ".github/workflows/anchor-step-fail.yml:6: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/anchor-step-fail.yml",
+          "line": 7,
+          "message": ".github/workflows/anchor-step-fail.yml:7: `uses: actions/setup-node@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-anchored-env-uses-pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "shapes-anchored-flow-steps-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/anchored-flow-steps-fail.yml",
+          "line": 10,
+          "message": ".github/workflows/anchored-flow-steps-fail.yml:10: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-bare-dash-step-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/bare-dash-step-fail.yml",
+          "line": 6,
+          "message": ".github/workflows/bare-dash-step-fail.yml:6: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/bare-dash-step-fail.yml",
+          "line": 8,
+          "message": ".github/workflows/bare-dash-step-fail.yml:8: `uses: actions/setup-node@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-block-chomp-comment-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/block-chomp-comment-fail.yml",
+          "line": 6,
+          "message": ".github/workflows/block-chomp-comment-fail.yml:6: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/block-chomp-comment-fail.yml",
+          "line": 9,
+          "message": ".github/workflows/block-chomp-comment-fail.yml:9: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-block-header-comment-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/block-header-comment-fail.yml",
+          "line": 4,
+          "message": ".github/workflows/block-header-comment-fail.yml:4: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/block-header-comment-fail.yml",
+          "line": 7,
+          "message": ".github/workflows/block-header-comment-fail.yml:7: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-block-script-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/block-script-fail.yml",
+          "line": 11,
+          "message": ".github/workflows/block-script-fail.yml:11: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/block-script-fail.yml",
+          "line": 8,
+          "message": ".github/workflows/block-script-fail.yml:8: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-comment-before-value-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/comment-before-value-fail.yml",
+          "line": 10,
+          "message": ".github/workflows/comment-before-value-fail.yml:10: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-dedup-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/dedup-fail.yml",
+          "line": 1,
+          "message": ".github/workflows/dedup-fail.yml:1: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/dedup-fail.yml",
+          "line": 2,
+          "message": ".github/workflows/dedup-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-echo-ref-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/echo-ref-fail.yml",
+          "line": 5,
+          "message": ".github/workflows/echo-ref-fail.yml:5: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-escaped-comment-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/escaped-comment-fail.yml",
+          "line": 3,
+          "message": ".github/workflows/escaped-comment-fail.yml:3: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-flow-break-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/flow-break-fail.yml",
+          "line": 3,
+          "message": ".github/workflows/flow-break-fail.yml:3: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-flow-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/flow-fail.yml",
+          "line": 1,
+          "message": ".github/workflows/flow-fail.yml:1: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-flow-hash-comment-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/flow-hash-comment-fail.yml",
+          "line": 3,
+          "message": ".github/workflows/flow-hash-comment-fail.yml:3: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-flow-pass": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/flow-pass.yml",
+          "line": 8,
+          "message": ".github/workflows/flow-pass.yml:8: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-flow-with-break-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/flow-with-break-fail.yml",
+          "line": 11,
+          "message": ".github/workflows/flow-with-break-fail.yml:11: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-folded-flow-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/folded-flow-fail.yml",
+          "line": 1,
+          "message": ".github/workflows/folded-flow-fail.yml:1: `uses: actions/checkout@v4 continued` — `v4 continued` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-folded-quote-comment-pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "shapes-job-named-env-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/job-named-env-fail.yml",
+          "line": 5,
+          "message": ".github/workflows/job-named-env-fail.yml:5: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/job-named-env-fail.yml",
+          "line": 8,
+          "message": ".github/workflows/job-named-env-fail.yml:8: `uses: actions/setup-node@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-job-named-env-workflow-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/job-named-env-workflow-fail.yml",
+          "line": 5,
+          "message": ".github/workflows/job-named-env-workflow-fail.yml:5: `uses: owner/repo/.github/workflows/reuse.yml@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/job-named-env-workflow-fail.yml",
+          "line": 7,
+          "message": ".github/workflows/job-named-env-workflow-fail.yml:7: `uses: owner/repo/.github/workflows/other.yml@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-job-named-steps-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/job-named-steps-fail.yml",
+          "line": 4,
+          "message": ".github/workflows/job-named-steps-fail.yml:4: `uses: owner/repo/.github/workflows/reuse.yml@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/job-named-steps-fail.yml",
+          "line": 6,
+          "message": ".github/workflows/job-named-steps-fail.yml:6: `uses: owner/repo/.github/workflows/reuse.yml@v3` — `v3` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-mapping-alias-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/mapping-alias-fail.yml",
+          "line": 16,
+          "message": ".github/workflows/mapping-alias-fail.yml:16: `uses: actions/checkout@v3` — `v3` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/mapping-alias-fail.yml",
+          "line": 8,
+          "message": ".github/workflows/mapping-alias-fail.yml:8: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-matrix-next-line-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/matrix-next-line-fail.yml",
+          "line": 12,
+          "message": ".github/workflows/matrix-next-line-fail.yml:12: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-matrix-uses-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/matrix-uses-fail.yml",
+          "line": 17,
+          "message": ".github/workflows/matrix-uses-fail.yml:17: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/matrix-uses-fail.yml",
+          "line": 9,
+          "message": ".github/workflows/matrix-uses-fail.yml:9: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-multi-doc-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/multi-doc-fail.yml",
+          "line": 1,
+          "message": ".github/workflows/multi-doc-fail.yml:1: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/multi-doc-fail.yml",
+          "line": 3,
+          "message": ".github/workflows/multi-doc-fail.yml:3: `uses: actions/setup-node@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-multi-doc-flow-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/multi-doc-flow-fail.yml",
+          "line": 1,
+          "message": ".github/workflows/multi-doc-flow-fail.yml:1: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-nested-uses-pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "shapes-next-line-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/next-line-fail.yml",
+          "line": 2,
+          "message": ".github/workflows/next-line-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-next-line-pass": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/next-line-pass.yml",
+          "line": 3,
+          "message": ".github/workflows/next-line-pass.yml:3: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-numeric-job-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/numeric-job-fail.yml",
+          "line": 5,
+          "message": ".github/workflows/numeric-job-fail.yml:5: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-plain-apostrophe-comment-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/plain-apostrophe-comment-fail.yml",
+          "line": 4,
+          "message": ".github/workflows/plain-apostrophe-comment-fail.yml:4: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-plain-apostrophe-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/plain-apostrophe-fail.yml",
+          "line": 3,
+          "message": ".github/workflows/plain-apostrophe-fail.yml:3: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-plain-hash-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/plain-hash-fail.yml",
+          "line": 2,
+          "message": ".github/workflows/plain-hash-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-quote-escape-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/quote-escape-fail.yml",
+          "line": 2,
+          "message": ".github/workflows/quote-escape-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-quoted-escape-key-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/quoted-escape-key-fail.yml",
+          "line": 2,
+          "message": ".github/workflows/quoted-escape-key-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-quoted-key-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/quoted-key-fail.yml",
+          "line": 1,
+          "message": ".github/workflows/quoted-key-fail.yml:1: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-same-indent-steps-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/same-indent-steps-fail.yml",
+          "line": 10,
+          "message": ".github/workflows/same-indent-steps-fail.yml:10: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/same-indent-steps-fail.yml",
+          "line": 11,
+          "message": ".github/workflows/same-indent-steps-fail.yml:11: `uses: actions/setup-node@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-same-line-uses-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/same-line-uses-fail.yml",
+          "line": 2,
+          "message": ".github/workflows/same-line-uses-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-space-before-colon-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/space-before-colon-fail.yml",
+          "line": 2,
+          "message": ".github/workflows/space-before-colon-fail.yml:2: `uses: actions/checkout@v4` — `v4` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        },
+        {
+          "file": ".github/workflows/space-before-colon-fail.yml",
+          "line": 3,
+          "message": ".github/workflows/space-before-colon-fail.yml:3: `uses: actions/checkout@v3` — `v3` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-with-block-uses-pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "shapes-with-comment-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/with-comment-fail.yml",
+          "line": 5,
+          "message": ".github/workflows/with-comment-fail.yml:5: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd` — trailing comment must be `# v1.2.3` or `# 1.87.0`, got `` (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shapes-with-uses-pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "short-sha": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml:1: `uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83d` — `de0fac2e4500dabe0009e67214ff5f5447ce83d` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "single-quoted-uses": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "tag-ref": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml:1: `uses: actions/checkout@v6.0.2` — `v6.0.2` is not a 40-char commit SHA (pin with `owner/repo@<40-char-sha> # v1.2.3`)",
+          "rule": "github-actions-pinned-hash"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "uppercase-sha": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

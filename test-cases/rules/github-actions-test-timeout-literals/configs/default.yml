@@ -1,0 +1,4 @@
+rules:
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    options: {}

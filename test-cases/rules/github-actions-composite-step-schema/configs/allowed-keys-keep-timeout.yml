@@ -1,0 +1,9 @@
+rules:
+  - rule: github-actions-composite-step-schema
+    scope: repository
+    options:
+      allowedKeys:
+        - name
+        - timeout-minutes
+        - run
+        - shell

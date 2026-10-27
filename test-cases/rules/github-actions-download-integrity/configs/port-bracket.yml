@@ -1,0 +1,9 @@
+rules:
+  - rule: github-actions-download-integrity
+    scope: repository
+    options:
+      trustedHosts:
+        - 'Example.Invalid:443'
+        - '[::1]'
+      downloadHelpers:
+        - ci_fetch

@@ -1,5 +1,4 @@
 use super::support::{self, concurrency};
-use crate::codebase::rules::run_filesystem_rules;
 use crate::codebase::rules::sort_findings;
 use crate::codebase::workflow_topology::load_workflow_topology;
 use crate::codebase::workflow_topology::model::{ConcurrencyValue, WorkflowTopology};
@@ -260,44 +259,7 @@ fn flag_on_reports_collisions_through_the_rule() {
     );
 }
 
-fn fixture_messages(name: &str) -> Vec<String> {
-    let root = super::fixture(&format!("group-collisions/{name}"));
-    run_filesystem_rules(&root, Some(&root.join(".no-mistakes.yml")))
-        .unwrap()
-        .into_iter()
-        .map(|finding| finding.message)
-        .collect()
-}
-
-#[test]
-fn group_collision_fixture_passes_when_groups_are_partitioned() {
-    let found = fixture_messages("pass");
-    assert!(found.is_empty(), "{found:?}");
-}
-
-#[test]
-fn group_collision_fixture_reports_each_shared_group() {
-    let first = fixture_messages("fail");
-    let second = fixture_messages("fail");
-    assert_eq!(first, second);
-    assert_eq!(
-        first,
-        vec![
-            collision(
-                "${{ github.ref }}",
-                ".github/workflows/a.yml, .github/workflows/b.yml"
-            ),
-            collision(
-                "${{ github.workflow }}-${{ github.ref }}",
-                ".github/workflows/ci.yml, .github/workflows/ci.yml#build"
-            ),
-            collision(
-                "shared",
-                ".github/workflows/one.yml, .github/workflows/two.yml"
-            ),
-        ]
-    );
-}
+// Output cases moved to cli_gha_snapshot_workflow_topology.
 
 #[test]
 fn mermaid_keeps_one_lock_per_expression_while_the_rule_collides() {
@@ -324,5 +286,4 @@ fn mermaid_keeps_one_lock_per_expression_while_the_rule_collides() {
         2,
         "{diagram}"
     );
-    assert_eq!(fixture_messages("fail").len(), 3);
 }

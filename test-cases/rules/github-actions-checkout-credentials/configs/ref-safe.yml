@@ -1,0 +1,7 @@
+rules:
+  - rule: github-actions-checkout-credentials
+    scope: repository
+    include:
+      - .github/workflows/base-safe.yml
+      - .github/workflows/no-checkout.yml
+      - .github/workflows/base-repository.yml

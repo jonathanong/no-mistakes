@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    options:
+      include:
+        - .github/workflows/ci.test.mts

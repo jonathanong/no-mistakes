@@ -1,0 +1,11 @@
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    enabled: true
+    options:
+      jobInventory:
+        .github/workflows/missing.yml: [job]
+      forbiddenDirectEdges:
+        - [".github/workflows/pipeline.yml#ghost", ".github/workflows/pipeline.yml#build"]
+      requiredTransitiveEdges:
+        - [".github/workflows/pipeline.yml#build", ".github/workflows/pipeline.yml#deploy"]

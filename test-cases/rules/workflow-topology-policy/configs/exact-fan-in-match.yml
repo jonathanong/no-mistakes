@@ -1,0 +1,7 @@
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    enabled: true
+    options:
+      exactFanIns:
+        ".github/workflows/pipeline.yml#test": [".github/workflows/pipeline.yml#build"]

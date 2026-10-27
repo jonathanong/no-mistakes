@@ -1,0 +1,17 @@
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    enabled: true
+    options:
+      requiredArtifactEdges:
+        - from: ".github/workflows/pipeline.yml#build"
+          to: ".github/workflows/pipeline.yml#test"
+          name: dist
+          match: prefix
+        - from: ".github/workflows/pipeline.yml#ghost"
+          to: ".github/workflows/pipeline.yml#test"
+          name: dist
+      stepOrders:
+        - jobId: ".github/workflows/pipeline.yml#ghost"
+          steps:
+            - name: build

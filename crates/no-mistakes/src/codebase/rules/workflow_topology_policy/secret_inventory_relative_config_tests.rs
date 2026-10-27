@@ -2,6 +2,8 @@ use crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs;
 use crate::codebase::ts_source::VisiblePathSnapshot;
 use std::path::Path;
 
+// Kept: `check --config` is absolute, so this relative path is not a snapshot case.
+
 #[test]
 fn unused_declarations_resolve_a_relative_config_path_against_root() {
     let root = super::fixture("unused");

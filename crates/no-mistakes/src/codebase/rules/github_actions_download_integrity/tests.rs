@@ -159,113 +159,7 @@ jobs:
     assert!(replaced.is_empty(), "{replaced:?}");
 }
 
-#[test]
-fn saved_fail_fixtures_report_unverified_downloads() {
-    let (root, config, files) = load_fixture("fail");
-    let findings = super::check_with_files(&root, &config, &files).unwrap();
-    let messages: Vec<_> = findings
-        .iter()
-        .map(|finding| finding.message.clone())
-        .collect();
-    assert!(
-        messages.iter().any(|message| message.contains("a.tgz")),
-        "{messages:?}"
-    );
-    assert!(
-        messages.iter().any(|message| message.contains("b.tgz")),
-        "{messages:?}"
-    );
-    assert!(
-        messages.iter().any(|message| message.contains("c.tgz")),
-        "{messages:?}"
-    );
-    assert!(
-        messages
-            .iter()
-            .any(|message| message.contains("compact.tgz")),
-        "{messages:?}"
-    );
-    assert!(
-        messages.iter().any(|message| message.contains("tool.tgz")),
-        "{messages:?}"
-    );
-    for url in [
-        "tool-$VERSION.tgz",
-        "tool-${VERSION}",
-        "${{ inputs.version }}",
-        "$(uname -m)",
-        "sudo.tgz",
-        "envcmd.tgz",
-        "then.sh",
-        "subshell.sh",
-        "brace.sh",
-        "bang.tgz",
-        "after-heredoc.tgz",
-        "herestring.tgz",
-        "shift.tgz",
-        "comment-apostrophe.tgz",
-        "after-quote.tgz",
-        "trailing-comment.tgz",
-        "after-trailing.tgz",
-        "comment-shift.tgz",
-        "after-arith.tgz",
-    ] {
-        assert!(
-            messages.iter().any(|message| message.contains(url)),
-            "{url} missing from {messages:?}"
-        );
-    }
-    assert!(
-        messages
-            .iter()
-            .all(|message| !message.contains("api.github.com")),
-        "{messages:?}"
-    );
-    assert!(
-        messages.iter().all(|message| !message.contains(".sha256")),
-        "{messages:?}"
-    );
-}
-
-#[test]
-fn option_fixtures_replace_hosts_and_add_helpers() {
-    let (root, config, files) = load_fixture("helpers");
-    let findings = super::check_with_files(&root, &config, &files).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(
-        findings[0].message.contains("ci_download_to"),
-        "{findings:?}"
-    );
-    assert!(
-        findings[0].message.contains("example.invalid"),
-        "{findings:?}"
-    );
-
-    let (root, config, files) = load_fixture("empty-hosts");
-    let findings = super::check_with_files(&root, &config, &files).unwrap();
-    assert_eq!(findings.len(), 2, "{findings:?}");
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("api.github.com")),
-        "{findings:?}"
-    );
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("127.0.0.1")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn saved_pass_and_abstain_fixtures_are_silent() {
-    for scenario in ["pass", "abstain"] {
-        let (root, config, files) = load_fixture(scenario);
-        let findings = super::check_with_files(&root, &config, &files).unwrap();
-        assert!(findings.is_empty(), "{scenario}: {findings:?}");
-    }
-}
+// Output cases moved to cli_gha_snapshot_download_integrity.
 
 #[test]
 fn suppression_directives_hide_file_line_and_next_line() {
@@ -296,22 +190,6 @@ fn config_with_options(options: &str) -> NoMistakesConfig {
     let mut config = enabled_config();
     config.rules[0].options = serde_yaml::from_str(options).unwrap();
     config
-}
-
-fn download_url(message: &str) -> &str {
-    let marker = "downloads `";
-    let start = message.find(marker).unwrap_or(0) + marker.len();
-    let rest = message.get(start..).unwrap_or(message);
-    let end = rest.find('`').unwrap_or(rest.len());
-    &rest[..end]
-}
-
-fn target_for<'a>(findings: &'a [RuleFinding], url: &str) -> &'a str {
-    findings
-        .iter()
-        .find(|finding| download_url(&finding.message) == url)
-        .and_then(|finding| finding.target.as_deref())
-        .unwrap_or("")
 }
 
 #[test]
@@ -355,16 +233,7 @@ fn bad_host_and_helper_options_name_the_entry() {
 
 #[test]
 fn port_and_bracket_hosts_replace_the_defaults() {
-    let (root, _, files) = load_fixture("fail");
-    let config = config_with_options(
-        "trustedHosts:\n  - 'Example.Invalid:443'\n  - '[::1]'\ndownloadHelpers: [ci_fetch]\n",
-    );
-    let findings = super::check_with_files(&root, &config, &files).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(
-        findings[0].message.contains("api.github.com"),
-        "{findings:?}"
-    );
+    // Output cases moved to cli_gha_snapshot_download_integrity.
     let silenced = check_source(
         WORKFLOW,
         "on: push\njobs:\n  build:\n    steps:\n      - run: 'curl -fsSL https://[::1]/silent.tgz'\n",
@@ -411,66 +280,5 @@ jobs:
             .starts_with("- name:"),
         "{}",
         lines[runs[1].item_line - 1]
-    );
-}
-
-#[test]
-fn edge_fixtures_cover_unresolved_shell_and_job_shapes() {
-    let (root, config, files) = load_fixture("edges");
-    let findings = super::check_with_files(&root, &config, &files).unwrap();
-    let mut urls: Vec<&str> = findings
-        .iter()
-        .map(|finding| download_url(&finding.message))
-        .collect();
-    let mut expected = vec![
-        "https://[::1]",
-        "https://[::1]:9/v6.tgz",
-        "https://user:pw@example.invalid/auth.tgz",
-        "https://example.invalid/bad-marker.tgz",
-        "https://example.invalid/bare.tgz",
-        "https://example.invalid/bool.tgz",
-        "https://example.invalid/commented.tgz",
-        "https://example.invalid/complex.tgz",
-        "https://example.invalid/continued.tgz",
-        "https://example.invalid/dashed.tgz",
-        "https://example.invalid/dynamic.tgz",
-        "https://example.invalid/empty-assign.tgz",
-        "https://example.invalid/file{1}.sha256",
-        "https://example.invalid/flow.tgz",
-        "https://example.invalid/inline.tgz",
-        "https://example.invalid/kept-after.tgz",
-        "https://example.invalid/no-reason.tgz",
-        "https://example.invalid/num.tgz",
-        "https://example.invalid/quoted-nl.tgz",
-        "https://example.invalid/spaced-assign.tgz",
-        "https://example.invalid/stuck-skip.tgz",
-        "https://example.invalid/trailing-junk.tgz",
-        "https://example.invalid/unclosed.tgz",
-    ];
-    urls.sort_unstable();
-    expected.sort_unstable();
-    assert_eq!(urls, expected);
-
-    let flow = findings
-        .iter()
-        .find(|finding| finding.file.ends_with("flow.yml"))
-        .unwrap();
-    assert_eq!(flow.line, 1, "{flow:?}");
-    let num = findings
-        .iter()
-        .find(|finding| download_url(&finding.message).ends_with("num.tgz"))
-        .unwrap();
-    assert_ne!(num.line, 1, "{num:?}");
-    assert_eq!(
-        target_for(&findings, "https://example.invalid/num.tgz"),
-        "7"
-    );
-    assert_eq!(
-        target_for(&findings, "https://example.invalid/bool.tgz"),
-        "true"
-    );
-    assert_eq!(
-        target_for(&findings, "https://example.invalid/complex.tgz"),
-        "job"
     );
 }
