@@ -68,14 +68,28 @@ exception would be needed under a different configuration.
 
 Markdown and MDX code fences, indented code, and inline code are examples rather
 than live comments. Only HTML comments outside those code regions participate
-in their audit. Rust strings, raw strings, and block-comment contents likewise
-do not create audit directives; genuine supported line comments still do.
+in their audit. Rust strings and raw strings likewise do not create audit
+directives. Ordinary Rust block comments (`/* ... */`) are ignored, including
+their contents; genuine supported line comments still do.
 
-Rust documentation comments (`///` and `//!`) are also documentation, not
-suppression comments. A directive written in one is reported as
-`invalid-disable-directive` because its placement is ineffective, even when the
-named rule ID is valid and enabled. Move a real exception to a plain `//`
-comment at the code location where it should apply:
+Rust documentation comments (`///`, `//!`, `/** ... */`, and `/*! ... */`)
+are documentation, not suppression comments. A directive written in one is
+reported as `invalid-disable-directive` because its placement is ineffective,
+even when the named rule ID is valid and enabled. The finding's `target` is the
+named rule ID and its `rule` is `invalid-disable-directive`. Move a real
+exception to a plain `//` comment at the code location where it should apply:
+
+This applies to both line and block documentation forms, whether they document
+an item (`///`, `/** ... */`) or a module (`//!`, `/*! ... */`). For example,
+each directive below is documentation and cannot suppress the rule:
+
+```rust
+//! no-mistakes-disable-next-line some-rule: module docs, ineffective
+/*! no-mistakes-disable-next-line some-rule: module docs, ineffective */
+
+/// no-mistakes-disable-next-line some-rule: documentation, ineffective
+fn line_docs() {}
+```
 
 ```rust
 /// no-mistakes-disable-next-line some-rule: this does not suppress the check
@@ -85,18 +99,32 @@ fn example() {}
 fn legacy_example() {}
 ```
 
+For block documentation comments, the same distinction applies. A directive
+outside a fenced example is invalid, but an ordinary block comment containing
+the same text is ignored:
+
+```rust
+/** no-mistakes-disable-next-line some-rule: ineffective documentation directive */
+fn documented_api() {}
+
+/* no-mistakes-disable-next-line some-rule: ordinary comment, ignored */
+fn ordinary_comment() {}
+```
+
 Fenced examples inside Rust documentation comments remain documentation and
 are ignored by the audit. This lets docs show directive syntax without creating
 an ineffective-directive finding:
 
-```rust
-/// Example syntax:
-/// ```rust
-/// // no-mistakes-disable-next-line some-rule: example only
-/// fn example() {}
-/// ```
-fn documented_api() {}
-```
+````rust
+/**
+ * Example syntax:
+ * ```rust
+ * // no-mistakes-disable-next-line some-rule: example only
+ * fn example() {}
+ * ```
+ */
+fn documented_block_api() {}
+````
 
 Exclude test data with the rule application's top-level `exclude`, for example
 `exclude: ["fixtures/**", "test-cases/**"]`. Apply those exclusions to every
