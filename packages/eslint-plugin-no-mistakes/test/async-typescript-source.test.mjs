@@ -40,6 +40,7 @@ scenarios.push({
     "global-value.js": [],
     "recall.js": [3, 5, 7, 9, 12, 15],
     "unsupported.js": [3],
+    "unsupported-enum.js": [3],
   },
 });
 it.each(scenarios)("keeps source proof and recall with only TypeScript ($name)", (scenario) => {

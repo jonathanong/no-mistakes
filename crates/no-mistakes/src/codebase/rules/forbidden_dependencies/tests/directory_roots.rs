@@ -21,31 +21,45 @@ fn directory_roots_are_recursive_filtered_and_deduplicated() {
 }
 
 #[test]
-fn absolute_directory_roots_preserve_the_prepared_file_universe() {
+fn literal_roots_intersect_the_prepared_file_universe() {
     let root = fixture("forbidden-dependencies-directory");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let mut opts: Options = config.rules[0].try_rule_options().unwrap();
-    opts.roots = vec![root.join("web/app").to_string_lossy().into_owned()];
     let tsconfig = resolve_tsconfig(&root, None).unwrap();
     let graph =
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
-    // The graph is deliberately broader than the request's inventory.
-    let universe = [root.join("web/app/page.ts")]
-        .into_iter()
-        .collect::<crate::fx::PathSet>();
-    let findings = check_rule_application(
-        &root,
-        &config,
-        &config.rules[0],
-        &opts,
-        &graph,
-        application_scope(None, Some(&universe), None),
-    )
-    .unwrap();
-    assert_eq!(findings.len(), 1);
-    assert_eq!(findings[0].file, "web/app/page.ts");
-    assert_eq!(findings[0].target.as_deref(), Some("fs"));
+    // Existing literal paths must not reopen files omitted from the prepared request.
+    for literal in ["web/app", "web/app/page.ts"] {
+        for absolute in [false, true] {
+            let mut opts: Options = config.rules[0].try_rule_options().unwrap();
+            opts.roots = vec![if absolute {
+                root.join(literal).to_string_lossy().into_owned()
+            } else {
+                literal.to_string()
+            }];
+            for include_page in [true, false] {
+                let universe = if include_page {
+                    [root.join("web/app/page.ts")].into_iter().collect()
+                } else {
+                    crate::fx::PathSet::default()
+                };
+                let findings = check_rule_application(
+                    &root,
+                    &config,
+                    &config.rules[0],
+                    &opts,
+                    &graph,
+                    application_scope(None, Some(&universe), None),
+                )
+                .unwrap();
+                assert_eq!(findings.len(), usize::from(include_page), "{literal}");
+                if include_page {
+                    assert_eq!(findings[0].file, "web/app/page.ts");
+                    assert_eq!(findings[0].target.as_deref(), Some("fs"));
+                }
+            }
+        }
+    }
 }
 
 #[test]

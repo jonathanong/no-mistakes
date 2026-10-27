@@ -67,6 +67,15 @@ SQL printed in an assertion message, stored in a snapshot, or compared as data
 (for example `pg_indexes.indexdef`) does not reach an executor and is not
 reported. Ordinary DML in test setup is allowed by this rule.
 
+`SELECT ... INTO` is not flagged, including forms that create a new table.
+The rule does not classify that statement as one of the mutations listed above.
+
+An imported string constant passed directly to a configured executor, such as
+`query(importedSql)`, is reported as unanalyzable rather than classified as a
+definite mutation. This differs from an imported helper function whose literal
+SQL return value can be recovered. The `unanalyzable` policy described above
+controls that report.
+
 ## Counterexample
 
 ```ts

@@ -47,9 +47,11 @@ import specifiers: the shared resolver resolves imports first, and the rule
 matches their canonical graph file paths.
 
 Root patterns expand only over the request's discovered graph files; they do
-not walk the filesystem or widen the configured project/include scope. A valid
-pattern with no matches selects nothing. Literal file and directory roots,
-including absolute paths, retain their existing behavior. Overlapping selectors
+not walk the filesystem or widen the configured project/include scope. Literal
+(non-glob) file and directory roots, including absolute paths, also intersect
+the prepared file universe: an existing path outside that universe selects
+nothing, and a directory selects only its files already in that universe.
+A valid pattern with no matches selects nothing. Overlapping selectors
 select each origin once. Use `excludeRoots` or the rule's top-level `exclude`
 to remove test files as origins; excluding an origin does not remove that file
 as a reachable forbidden target. Use explicit exclusions rather than `!` patterns.

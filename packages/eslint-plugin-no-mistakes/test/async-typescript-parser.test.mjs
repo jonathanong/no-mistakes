@@ -10,6 +10,7 @@ const { parseTypeScript } = require("../src/rules/async-source-ts-parser");
 const root = resolve(fixture, "optional-peers/unsupported");
 it.each([
   "class.ts",
+  "enum.ts",
   "this.ts",
   "using.ts",
   "modifier.ts",

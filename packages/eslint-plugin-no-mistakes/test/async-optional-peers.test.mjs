@@ -140,6 +140,7 @@ it("loads a packed plugin with TypeScript-only, absent, and incompatible proof p
           "global-type-local.ts",
         ].map((file) => join(root, file)),
         join(root, "unsupported.js"),
+        join(root, "unsupported-enum.js"),
       ],
       root,
       1,
@@ -160,6 +161,7 @@ it("loads a packed plugin with TypeScript-only, absent, and incompatible proof p
           "no-mistakes(async-call-disposition)",
         ]),
         ["unsupported.js", 3, "no-mistakes(async-call-disposition)"],
+        ["unsupported-enum.js", 3, "no-mistakes(async-call-disposition)"],
         ...["global-type.js", "global-type-import.js", "global-type-specifier.js"].map((file) => [
           file,
           3,
