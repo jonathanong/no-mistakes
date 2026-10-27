@@ -11,6 +11,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "cannot analyze production export importers: unresolved symbol `Absent` from `../src/missing-member.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import type * as Present from \"../src/missing-member.mjs\";",
           "target": "unanalyzable"
         },
         {
@@ -18,6 +19,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "cannot analyze production export importers: unresolved module selector `../src/does-not-exist.mjs` prevents complete per-symbol analysis; use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import type { Gone } from \"../src/does-not-exist.mjs\";",
           "target": "unanalyzable"
         },
         {
@@ -25,6 +27,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "cannot analyze production export importers: symbol consumers of `wholeModuleValue` include an unknown import selector: other/whole-module.mts:2 `../src/whole-module.mjs` (type import selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export type Whole = typeof import(\"../src/whole-module.mjs\");",
           "target": "unanalyzable"
         },
         {
@@ -32,6 +35,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "cannot analyze production export importers: symbol consumers of `WholeNamespaceType` include an unknown import selector: other/whole-namespace.mts:2 `../src/whole-namespace.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import type * as Whole from \"../src/whole-namespace.mjs\";",
           "target": "unanalyzable"
         }
       ],
@@ -45,6 +49,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "production export `ChainTestOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export interface ChainTestOnly { id: string }",
           "target": "ChainTestOnly"
         },
         {
@@ -52,6 +57,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "production export `PresentType` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export interface PresentType { id: string }",
           "target": "PresentType"
         },
         {
@@ -59,6 +65,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "production export `mixedTestOnlyValue` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const mixedTestOnlyValue = 2;",
           "target": "mixedTestOnlyValue"
         },
         {
@@ -66,6 +73,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "production export `NamedTestOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export interface NamedTestOnly { id: string }",
           "target": "NamedTestOnly"
         },
         {
@@ -73,6 +81,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "production export `QualifiedTestOnly` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export interface QualifiedTestOnly { id: string }",
           "target": "QualifiedTestOnly"
         },
         {
@@ -80,6 +89,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "production export `Square` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export interface Square { side: number }",
           "target": "Square"
         }
       ],

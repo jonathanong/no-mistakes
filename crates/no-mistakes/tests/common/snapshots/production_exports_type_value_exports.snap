@@ -11,6 +11,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 1,
           "message": "cannot analyze production export importers: type-only references to `undeterminedDefault` (src/prod-default.mts:1) cannot be classified because its export kind (value or type) is undetermined; use explicit named imports and statically analyzable exports",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "import type undeterminedDefault from \"./default.mjs\";",
           "target": "unanalyzable"
         }
       ],
@@ -24,6 +25,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "production export `testOnlyDefault` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export default function testOnlyDefault() { return 2; }",
           "target": "testOnlyDefault"
         },
         {
@@ -31,6 +33,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 2,
           "message": "production export `fnImportType` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function fnImportType() { return 1; }",
           "target": "fnImportType"
         },
         {
@@ -38,6 +41,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 3,
           "message": "production export `constInline` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const constInline = 2;",
           "target": "constInline"
         },
         {
@@ -45,6 +49,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 4,
           "message": "production export `fnQualified` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function fnQualified() { return 3; }",
           "target": "fnQualified"
         },
         {
@@ -52,6 +57,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 5,
           "message": "production export `fnImportQualified` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function fnImportQualified() { return 4; }",
           "target": "fnImportQualified"
         },
         {
@@ -59,6 +65,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 6,
           "message": "production export `fnNamespace` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function fnNamespace() { return 5; }",
           "target": "fnNamespace"
         },
         {
@@ -66,6 +73,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 7,
           "message": "production export `fnChain` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export function fnChain() { return 6; }",
           "target": "fnChain"
         },
         {
@@ -73,6 +81,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 8,
           "message": "production export `letValue` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export let letValue = 7;",
           "target": "letValue"
         },
         {
@@ -80,6 +89,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "production export `varValue` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export var varValue = 8;",
           "target": "varValue"
         }
       ],
