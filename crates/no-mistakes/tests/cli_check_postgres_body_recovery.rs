@@ -22,8 +22,11 @@ fn assert_configured_rule_set(root: &Path, config: &str, actual: Vec<String>, co
         .filter(|rule| rule.enabled)
         .map(|rule| rule.rule)
         .collect::<std::collections::BTreeSet<_>>();
+    assert_eq!(actual.len(), expected.len(), "{context}");
     assert_eq!(
-        actual.into_iter().collect::<std::collections::BTreeSet<_>>(),
+        actual
+            .into_iter()
+            .collect::<std::collections::BTreeSet<_>>(),
         expected,
         "{context}"
     );

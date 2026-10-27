@@ -305,7 +305,12 @@ fn original_heads_and_rejected_branch_locations_survive_cli_preparation() {
         } else {
             std::collections::BTreeSet::new()
         };
-        let actual_warnings = warnings
+        assert_eq!(
+            warnings.len(),
+            expected_warnings.len(),
+            "{config}: {warnings:?}"
+        );
+        let actual_warnings: std::collections::BTreeSet<_> = warnings
             .iter()
             .map(|warning| {
                 warning
