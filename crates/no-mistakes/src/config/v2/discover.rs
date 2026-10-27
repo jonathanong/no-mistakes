@@ -24,6 +24,7 @@ mod deprecations;
 mod json_relation_map_keys;
 use deprecations::emit_v2_deprecation_warnings;
 mod path_globs;
+mod rule_keys;
 mod validation;
 use validation::validate_v2_config;
 mod swift_commands;
@@ -144,6 +145,7 @@ fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {
 /// warning for a revision that is not its active configuration.
 pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMistakesConfig> {
     json_relation_map_keys::validate(source, path)?;
+    rule_keys::validate(source, path)?;
     let mut config = parse_config::<NoMistakesConfig>(source, path)?;
     validate_v2_config(&config, path).map_err(|error| path_globs::annotate(error, source, path))?;
     super::postgres_project_scope::materialize(&mut config)?;

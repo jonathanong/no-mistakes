@@ -111,15 +111,14 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     let mut filesystem_rules = completed.filesystem_rules;
     let audit_directives = config.audits_disable_directives();
     let retain_suppression = include_suppressed || audit_directives;
-    let advisories = advisories::collect(
+    let mut advisories = advisories::collect(
         filesystem_rules_enabled,
         retain_suppression,
         root,
         config,
         filesystem_files,
         sources,
-    );
-    let mut advisories = advisories?;
+    )?;
     advisories::merge_sql(&mut advisories, root, sources, facts, &sql_verdicts);
     advisories.extend(std::mem::take(&mut rules.advisories));
     advisories.extend(std::mem::take(&mut filesystem_rules.advisories));
@@ -165,6 +164,8 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     // filesystem findings in that domain order. Preserve it while retaining
     // the distinct adapter identity in optional suppression accounting.
     rules.findings.extend(filesystem_rules.findings);
+    let (rules_out, codebase_out) = (&mut rules.findings, &mut codebase.findings);
+    advisories::demote(config, rules_out, codebase_out, &mut advisories);
     Ok(CheckResults {
         timings: vec![
             ("discover", discover_duration),

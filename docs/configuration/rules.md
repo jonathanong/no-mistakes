@@ -13,7 +13,41 @@ rules:
 ```
 
 Common fields: `name`, `rule`, `message`, `enabled`, `projects`, `tests`,
-`scope`, `include`, `exclude`, and rule-specific `options`.
+`scope`, `include`, `exclude`, `severity`, and rule-specific `options`.
+
+Config loading rejects any other key on a rule entry, so a misspelled or
+unsupported key never passes by being ignored. The error names the rule, the
+key and the file line, and lists the supported keys:
+
+```text
+.no-mistakes.yml:4: rules[0] (rule `banned-paths`) has unknown key `level`.
+Supported keys: name, rule, message, enabled, projects, tests, scope, include,
+exclude, options, severity. ...
+```
+
+### Severity
+
+`severity: error | advisory` defaults to `error`, which fails `check` when the
+rule reports findings. At `advisory` the findings are still reported, in the
+non-failing `advisories` list (and the `advisory` lines of human output), and
+do not affect the exit code. Use it to stage a rule on a repository that is not
+clean yet: enable it as `advisory`, burn the findings down, then remove the key
+or set `error`. Any other value is a config error listing `error` and
+`advisory`.
+
+```yaml
+rules:
+  - rule: unique-exports
+    scope: repository
+    severity: advisory
+```
+
+Severity is applied after suppression directives, to the findings the rule
+puts in the `rules` and `codebase` sections of the check report. When a rule
+has several enabled applications, its findings are advisory only if every
+application is `advisory`; one `error` application keeps the rule failing.
+Findings of the `react`, `queues` and `integration` sections, warnings, and
+`reportUnusedDisableDirectives` diagnostics keep their own failure policies.
 
 The repository setting `reportUnusedDisableDirectives: advise | report | ignore`
 audits disable comments independently of rule applications. Its default is

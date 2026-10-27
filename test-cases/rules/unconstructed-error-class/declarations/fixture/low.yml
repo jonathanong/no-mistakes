@@ -3,4 +3,5 @@ rules:
   - rule: unconstructed-error-class
     scope: repository
     include: [src/**]
-    effort: low
+    options:
+      effort: low

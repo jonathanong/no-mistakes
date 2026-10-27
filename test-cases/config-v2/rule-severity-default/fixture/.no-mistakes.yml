@@ -1,0 +1,5 @@
+rules:
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+    options:
+      extensions: [".ts"]

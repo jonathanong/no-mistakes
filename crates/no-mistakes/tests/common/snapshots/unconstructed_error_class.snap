@@ -1828,7 +1828,9 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "ImportedError"
         }
       ],
-      "warnings": []
+      "warnings": [
+        "unconstructed-error-class: requested effort low; effective effort max because this rule has no low implementation"
+      ]
     }
   },
   "declarations_max": {

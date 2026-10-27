@@ -86,6 +86,10 @@ and [`postgres-required-predicates`](../rules/postgres-required-predicates.md#ef
 also support `low` with the bounded SQL helper subset. Unsupported shapes follow
 the shared unanalyzable policy; selected `.sql` files retain their existing
 analysis. See the [bounded helper contract](../postgres-facts/low-helper-recovery.md).
+A rule application with `severity: advisory` reports its findings under
+`advisories` and does not affect the exit code; see
+[rule severity](../configuration/rules.md#severity). An unknown key on a rule
+entry is a configuration error.
 `--include-suppressed` is opt-in and adds deterministic directive accounting to
 JSON/YAML output without changing the default report schema.
 `unprovenMemberQuerySql` is an optional count of member `.query` calls that were not proven, omitted when zero, and not a failure.

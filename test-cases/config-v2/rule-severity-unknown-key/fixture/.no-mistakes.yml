@@ -1,0 +1,7 @@
+rules:
+  - rule: no-empty-or-comments-only-files
+    # `serverity` is a typo; an unknown key must fail instead of being ignored.
+    serverity: advisory
+    scope: repository
+    options:
+      extensions: [".ts"]

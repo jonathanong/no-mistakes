@@ -1,0 +1,13 @@
+# One error application keeps the rule failing even beside an advisory one.
+rules:
+  - rule: no-empty-or-comments-only-files
+    name: staged
+    severity: advisory
+    scope: repository
+    options:
+      extensions: [".ts"]
+  - rule: no-empty-or-comments-only-files
+    name: enforced
+    scope: repository
+    options:
+      extensions: [".ts"]

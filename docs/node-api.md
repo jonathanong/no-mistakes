@@ -50,6 +50,12 @@ const { analyzeProject } = require("no-mistakes");
 
 ## CLI Mapping
 
+A rule application with `severity: advisory` (see
+[rule applications](configuration/rules.md#severity)) moves that rule's
+findings from `CheckReport.rules` and `CheckReport.codebase` to
+`CheckReport.advisories` in `check()` and `analyzeProject()`. The finding shape
+is unchanged; only the list, and therefore the failure decision, differs.
+
 `check()` and `analyzeProject()` reports with `type: "check"` audit unused
 no-mistakes disable comments using the selected configuration's
 `reportUnusedDisableDirectives` setting. The default `advise` puts
