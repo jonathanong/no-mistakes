@@ -62,14 +62,14 @@ follows `unanalyzable`.
 recovery; SQL-template interpolations in configured bind templates are values,
 not SQL text. Unsupported shapes follow `unanalyzable`, and selected `.sql`
 files retain their existing checks. See the
-[bounded helper contract](../../docs/postgres-facts/low-helper-recovery.md).
+[bounded helper contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-facts/low-helper-recovery.md).
 `postgres-explicit-columns` and `postgres-required-predicates` also support
 `low` for literal SQL and the bounded helper subset; unsupported or residual
 inputs follow `unanalyzable`. See the
-[explicit-columns](../../docs/rules/postgres-explicit-columns.md#effort) and
-[required-predicates](../../docs/rules/postgres-required-predicates.md#effort)
+[explicit-columns](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-explicit-columns.md#effort) and
+[required-predicates](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-required-predicates.md#effort)
 Effort sections and the
-[bounded helper contract](../../docs/postgres-facts/low-helper-recovery.md).
+[bounded helper contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-facts/low-helper-recovery.md).
 If a low-effort rule's required partner check is missing or outside its
 configured scope, the check warns and falls back to `max` for that rule.
 JSON reports include `analysisFallbacks` for these partner fallbacks and omit
