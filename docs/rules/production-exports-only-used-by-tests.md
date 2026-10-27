@@ -72,12 +72,16 @@ A type-only reference (`import type { X }`, an inline `type` specifier,
 is a proven selector rather than an unknown one. It is never a runtime use, so
 what it means depends on the export's kind:
 
-- Value exports (`function`, `const`, `let`, `var`): a type-only reference does
-  **not** count as a production consumer. If tests call the export at runtime,
-  it is reported as test-only even when production mentions it in a type
-  position.
-- Type exports (`interface`, `type` alias, `enum`): a type reference keeps the
-  export consumed.
+- Value exports (`function`, `const`, `let`, `var`, `enum`): a type-only
+  reference does **not** count as a production consumer. If tests use the
+  export at runtime, it is reported as test-only even when production mentions
+  it in a type position. An enum is a runtime object like a class, but unlike a
+  class its members can only come from the enum itself (a string enum accepts
+  no literals), so production that only names the type is fed values by
+  callers, and only tests exercise the enum. An enum referenced only as a type,
+  by production and tests alike, has no runtime consumer and is not reported.
+- Type exports (`interface`, `type` alias): a type reference keeps the export
+  consumed.
 - Classes: a type-position use counts as production use, because the class type
   is part of the production API.
 - Default exports and any export whose kind cannot be determined: the

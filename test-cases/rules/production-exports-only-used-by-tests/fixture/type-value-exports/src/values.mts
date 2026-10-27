@@ -7,7 +7,11 @@ export function fnNamespace() { return 5; }
 export function fnChain() { return 6; }
 export let letValue = 7;
 export var varValue = 8;
+// An enum is a runtime object: a type reference is not a production use. Status
+// is used at runtime only by tests and typed in production, so it is reported.
+export enum Status { On, Off }
+// Typed everywhere and never read at runtime: no consumer, so not reported.
+export enum TypeOnlyLevel { Low = "low" }
 // Type-like exports: a type reference keeps them consumed.
 export class KlassType { id = 1; }
 export interface IFace { id: number }
-export enum Status { On, Off }
