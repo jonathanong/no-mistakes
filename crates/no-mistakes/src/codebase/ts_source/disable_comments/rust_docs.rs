@@ -1,40 +1,89 @@
-//! Audit Rust line documentation without making it an effective suppression.
+//! Audit Rust documentation without making it an effective suppression.
 use super::super::{DisableDirective, NamedDisableDirective};
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag};
+use std::ops::Range;
 
-pub(super) fn directives(comments: &str) -> Vec<NamedDisableDirective> {
+pub(super) fn directives(
+    comments: &str,
+    source: &str,
+    blocks: &[Range<usize>],
+) -> Vec<NamedDisableDirective> {
+    let mut docs = Vec::new();
+    let mut offset = 0;
+    for line in comments.split_inclusive('\n') {
+        if let Some(start) = line.find("//") {
+            let comment = &line[start..];
+            if (comment.starts_with("///") && !comment.starts_with("////"))
+                || comment.starts_with("//!")
+            {
+                docs.push((offset + start..offset + line.len(), comment.as_bytes()[2]));
+            }
+        }
+        offset += line.len();
+    }
+    docs.extend(blocks.iter().map(|range| {
+        let kind = if source.as_bytes()[range.start + 2] == b'!' {
+            b'!'
+        } else {
+            b'/'
+        };
+        (range.clone(), kind)
+    }));
+    docs.sort_by_key(|(range, _)| range.start);
     let mut found = Vec::new();
     let mut group = Vec::new();
     let mut kind = None;
-    for (index, line) in comments.trim_start_matches('\u{FEFF}').lines().enumerate() {
-        // The Rust lexer retained only genuine comments. A trailing doc
-        // comment belongs to the following item, even after code on this line.
-        let comment_start = line.find("//");
-        let comment = comment_start.map(|start| &line[start..]);
-        let doc = comment.and_then(|comment| {
-            if comment.starts_with("///") && !comment.starts_with("////") {
-                Some((b'/', &comment[3..]))
-            } else {
-                comment.strip_prefix("//!").map(|body| (b'!', body))
-            }
-        });
-        let has_code = !line[..comment_start.unwrap_or(line.len())]
-            .trim()
-            .is_empty();
-        // Rustdoc joins attributes across blank lines and ordinary comments;
-        // those physical gaps must not terminate an open example fence.
-        if has_code || doc.is_some_and(|(next, _)| kind != Some(next)) {
+    let mut previous = 0;
+    let mut line = 1;
+    for (range, next) in docs {
+        if kind != Some(next) || has_code(&comments[previous..range.start]) {
             collect(&group, &mut found);
             group.clear();
-            kind = None;
         }
-        if let Some((next, body)) = doc {
-            kind = Some(next);
-            group.push(((index + 1) as u32, body));
+        kind = Some(next);
+        let text = &source[range.clone()];
+        let block = text.starts_with("/*");
+        let body = if block {
+            text[3..].strip_suffix("*/").unwrap_or(&text[3..])
+        } else {
+            &text[3..]
+        };
+        line += source[previous..range.start]
+            .bytes()
+            .filter(|byte| *byte == b'\n')
+            .count() as u32;
+        for (index, body) in body.lines().enumerate() {
+            let body = if block && index > 0 {
+                body.trim_start().strip_prefix('*').unwrap_or(body)
+            } else {
+                body
+            };
+            group.push((line + index as u32, body));
         }
+        line += text.bytes().filter(|byte| *byte == b'\n').count() as u32;
+        previous = range.end;
     }
     collect(&group, &mut found);
     found
+}
+
+fn has_code(mut gap: &str) -> bool {
+    loop {
+        gap = gap.trim_start_matches(['\u{FEFF}', ' ', '\t', '\r', '\n']);
+        if let Some(comment) = gap.strip_prefix("/*") {
+            let Some(end) = comment.find("*/") else {
+                return false;
+            };
+            gap = &comment[end + 2..];
+        } else if let Some(comment) = gap.strip_prefix("//") {
+            let Some(end) = comment.find('\n') else {
+                return false;
+            };
+            gap = &comment[end..];
+        } else {
+            return !gap.is_empty();
+        }
+    }
 }
 
 fn collect(lines: &[(u32, &str)], found: &mut Vec<NamedDisableDirective>) {
