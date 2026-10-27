@@ -12,15 +12,31 @@ fn root() -> PathBuf {
     ))
 }
 fn prepare(mixed: bool) -> (CheckFactMap, crate::config::v2::NoMistakesConfig) {
-    prepare_mode(mixed, false)
+    prepare_mode(mixed, Policies::Pair)
 }
-fn prepare_mode(mixed: bool, legacy: bool) -> (CheckFactMap, crate::config::v2::NoMistakesConfig) {
+enum Policies {
+    Pair,
+    LegacyOnly,
+    PairWithLegacy,
+}
+fn prepare_mode(
+    mixed: bool,
+    policies: Policies,
+) -> (CheckFactMap, crate::config::v2::NoMistakesConfig) {
     let root = root();
     let mut config =
         crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
-    if legacy {
-        config.rules.truncate(1);
-        config.rules[0].rule = "postgres-no-offset".into();
+    match policies {
+        Policies::LegacyOnly => {
+            config.rules.truncate(1);
+            config.rules[0].rule = "postgres-no-offset".into();
+        }
+        Policies::PairWithLegacy => {
+            let mut legacy = config.rules[0].clone();
+            legacy.rule = "postgres-no-offset".into();
+            config.rules.push(legacy);
+        }
+        Policies::Pair => {}
     }
     if mixed {
         let mut max = config.rules[0].clone();
@@ -33,6 +49,7 @@ fn prepare_mode(mixed: bool, legacy: bool) -> (CheckFactMap, crate::config::v2::
     let files = [
         "src/query.mts",
         "src/helpers.mts",
+        "src/malformed.mts",
         "schema.sql",
         "tsconfig.json",
     ]
@@ -263,11 +280,150 @@ fn direct_helper_argument_suppression_keeps_exact_caller_line() {
 
 #[test]
 fn existing_low_policies_keep_the_original_single_cache_shape() {
-    let (facts, _) = prepare_mode(false, true);
+    let (facts, _) = prepare_mode(false, Policies::LegacyOnly);
     let path = root().join("src/query.mts");
     let file = &facts.ts[&path];
     assert!(file.sql_identifier_syntax.policy_projection.get().is_none());
     assert!(!super::super::literal_projection::recovered_statements(file).is_empty());
     assert!(file.sql_identifier_syntax.recovered_raw.get().is_none());
     assert!(file.sql_identifier_syntax.policy_direct.get().is_none());
+}
+
+#[test]
+fn mixed_low_policies_share_raw_parses_without_clearing_invalid_legacy_inputs() {
+    for legacy_first in [false, true] {
+        let (facts, _) = prepare_mode(false, Policies::PairWithLegacy);
+        let path = root().join("src/query.mts");
+        let file = &facts.ts[&path];
+        let observer = crate::diagnostics::InvocationObserver::new(true);
+        crate::diagnostics::with_observer(Some(Arc::clone(&observer)), || {
+            if legacy_first {
+                super::super::literal_projection::recovered_statements(file);
+            }
+            let context = facts
+                .for_sql_application_with_advice(0, None)
+                .with_low_sql(EXPLICIT);
+            let statements = context
+                .postgres_statements(&path, Some(&profile()))
+                .unwrap();
+            assert!(statements
+                .iter()
+                .any(|statement| statement.parse_failed && !statement.selects.is_empty()));
+            let parses = observer
+                .snapshot()
+                .work
+                .get("postgres.low.recovered_parses")
+                .copied()
+                .unwrap_or(0);
+            let legacy = super::super::literal_projection::recovered_statements(file);
+            assert_eq!(
+                observer
+                    .snapshot()
+                    .work
+                    .get("postgres.low.recovered_parses")
+                    .copied()
+                    .unwrap_or(0),
+                parses
+            );
+            assert!(parses > 0);
+            let key = super::super::helper_recovery::ApplicationKey::new(
+                &profile(),
+                "postgres-no-offset",
+                0,
+            );
+            let raw = super::super::literal_projection::recovered::raw_statements(file);
+            let invalid = raw
+                .iter()
+                .filter(|((application, _), _)| application == &key)
+                .flat_map(|(key, rows)| {
+                    rows.iter()
+                        .enumerate()
+                        .filter(|(_, row)| row.parse_failed)
+                        .map(move |(index, _)| (key, index))
+                })
+                .collect::<Vec<_>>();
+            assert!(!invalid.is_empty());
+            assert!(invalid
+                .into_iter()
+                .all(|(key, index)| legacy[key][index].is_err()));
+        });
+    }
+}
+
+#[test]
+fn malformed_owner_retains_parse_failure_without_trusting_recovered_ast() {
+    let (facts, _) = prepare(false);
+    let path = root().join("src/malformed.mts");
+    let file = &facts.ts[&path];
+    assert!(file.parse_error.is_some() || file.ts.parse_error.is_some());
+    let context = facts
+        .for_sql_application_with_advice(0, None)
+        .with_low_sql(EXPLICIT);
+    assert!(context
+        .embedded_sql(&path, &profile())
+        .unwrap()
+        .calls
+        .is_empty());
+    assert!(context
+        .postgres_statements(&path, Some(&profile()))
+        .unwrap()
+        .is_empty());
+}
+
+#[test]
+fn opaque_helper_and_unknown_carrier_keep_residual_uncertainty() {
+    let (mut facts, _) = prepare(false);
+    facts.enable_sql_verdicts();
+    let path = root().join("src/query.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let context = facts
+        .for_sql_application_with_advice(0, None)
+        .with_low_sql(EXPLICIT);
+    let embedded = context.embedded_sql(&path, &profile()).unwrap();
+    let opaque_line = source
+        .lines()
+        .position(|line| line.contains("OPAQUE_RETURN"))
+        .unwrap() as u32
+        + 1;
+    assert!(embedded
+        .calls
+        .iter()
+        .any(|call| call.line == opaque_line && call.is_unanalyzable()));
+    let key = super::super::helper_recovery::ApplicationKey::new(&profile(), EXPLICIT, 0);
+    assert!(facts.ts[&path].sql_identifier_syntax.calls_for(&key).unwrap().iter().any(|call| {
+        matches!(&call.input, super::super::Input::Recovered(proof) if proof.alternatives.is_empty() && !proof.complete())
+    }));
+    let statements = context
+        .postgres_statements(&path, Some(&profile()))
+        .unwrap();
+    crate::codebase::postgres::record_sql_policy_verdicts(
+        crate::codebase::postgres::SqlPolicyVerdictContext {
+            facts: &context,
+            embedded,
+            statements,
+        },
+        EXPLICIT,
+        "src/query.mts",
+        &profile(),
+        &["stars".into()],
+        true,
+        |_, _, _| crate::codebase::postgres::SqlBranchJudgment::clear(),
+    );
+    let carrier_line = source
+        .lines()
+        .position(|line| line.contains("OPAQUE_CARRIER"))
+        .unwrap() as u32
+        + 1;
+    for line in [opaque_line, carrier_line] {
+        let span = embedded
+            .calls
+            .iter()
+            .position(|call| call.line == line)
+            .map(|index| embedded.call_spans[index])
+            .unwrap();
+        assert!(facts
+            .sql_verdicts()
+            .iter()
+            .any(|row| row.span == span && row.status == SqlVerdictStatus::Abstain));
+    }
 }

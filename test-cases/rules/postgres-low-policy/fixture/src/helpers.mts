@@ -12,3 +12,6 @@ export function invalid() {
   // Keep the parsed first statement when the following SQL is invalid.
   return "SELECT * FROM account; SELECT FROM";
 }
+
+export function opaque() { return unknownSql(); }
+export function opaqueCarrier(executor: unknown) { unknownSql(); }
