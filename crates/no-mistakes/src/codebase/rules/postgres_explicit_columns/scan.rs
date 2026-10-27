@@ -63,9 +63,7 @@ pub(super) fn scan(
                     sql_finding(
                         &rel,
                         line,
-                        &prepared.sql_unanalyzable_message(
-                            "SQL could not be analyzed for explicit columns",
-                        ),
+                        "SQL could not be analyzed for explicit columns",
                         "unanalyzable",
                     ),
                 );

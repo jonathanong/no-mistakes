@@ -53,7 +53,8 @@ function assertSemantics(report, policy) {
 
 function assertLowRewrite(report, selectedRules = rules) {
   const residual = [...report.rules, ...report.advisories].filter(
-    (finding) => finding.target !== "accounts" && selectedRules.includes(finding.rule),
+    // A dynamic SQL shape needs a rewrite; malformed SQL needs a syntax fix.
+    (finding) => finding.line === 25 && selectedRules.includes(finding.rule),
   );
   assert.ok(residual.length > 0);
   for (const finding of residual) {
@@ -71,6 +72,29 @@ function cliCheck(cli, config, effort) {
   assert.equal(child.status, 1, child.stderr);
   return JSON.parse(child.stdout);
 }
+
+test("compiled raw SQL reports stay identical at low and max", { skip: !compiled }, async () => {
+  const { cjs, esm, cli } = await context();
+  const options = { root, config: join(root, "raw.yml") };
+  const low = await cjs.check({ ...options, effort: "low" });
+  const max = await cjs.check({ ...options, effort: "max" });
+  assert.deepEqual(low, max);
+  assert.equal(low.rules.length, 4);
+  for (const rule of rules) {
+    assert.deepEqual(
+      low.rules
+        .filter((finding) => finding.rule === rule)
+        .map(({ file, line, target }) => ({ file, line, target })),
+      [
+        { file: "raw.sql", line: 1, target: "accounts" },
+        { file: "raw.sql", line: 2, target: "unanalyzable" },
+      ],
+    );
+  }
+  assert.deepEqual(await esm.check({ ...options, effort: "low" }), low);
+  assert.deepEqual(cliCheck(cli, options.config, "low"), low);
+  assert.deepEqual(cliCheck(cli, options.config, "max"), max);
+});
 
 // Separate policy tests keep each native test below the runner's duration gate.
 for (const policy of ["report", "advise", "ignore"]) {

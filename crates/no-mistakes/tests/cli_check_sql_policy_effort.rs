@@ -95,7 +95,8 @@ fn assert_low_rewrite(report: &Value, rule: Option<&str>) {
         .unwrap()
         .iter()
         .chain(report["advisories"].as_array().unwrap())
-        .filter(|row| row["target"] != "accounts" && rule.is_none_or(|rule| row["rule"] == rule))
+        // The dynamic SQL shape needs a rewrite; malformed SQL needs a syntax fix.
+        .filter(|row| row["line"] == 25 && rule.is_none_or(|rule| row["rule"] == rule))
         .collect();
     assert!(!rows.is_empty(), "{report}");
     for row in rows {
@@ -139,6 +140,36 @@ fn default_and_explicit_max_keep_identical_json_and_exit_status() {
     assert_eq!(default.stderr, invocation.stderr);
     let report = serde_json::from_slice(&default.stdout).unwrap();
     assert_semantics(&report, "report");
+}
+
+#[test]
+fn raw_sql_keeps_identical_findings_and_syntax_diagnostics_at_both_efforts() {
+    let low = check("raw.yml", Some("low"));
+    let max = check("raw.yml", Some("max"));
+    assert_eq!(low.status.code(), Some(1));
+    assert_eq!(max.status.code(), low.status.code());
+    assert_eq!(low.stdout, max.stdout);
+    assert_eq!(low.stderr, max.stderr);
+    let value: Value = serde_json::from_slice(&low.stdout).unwrap();
+    let rows = value["rules"].as_array().unwrap();
+    assert_eq!(rows.len(), 4, "{value}");
+    for rule in ["postgres-explicit-columns", "postgres-required-predicates"] {
+        let actual: Vec<_> = rows
+            .iter()
+            .filter(|row| row["rule"] == rule)
+            .map(|row| {
+                (
+                    row["file"].as_str().unwrap(),
+                    row["line"].as_u64().unwrap(),
+                    row["target"].as_str().unwrap(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            actual,
+            [("raw.sql", 1, "accounts"), ("raw.sql", 2, "unanalyzable")]
+        );
+    }
 }
 
 #[test]

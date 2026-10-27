@@ -1,0 +1,34 @@
+version: 2
+effort: low
+unanalyzable: report
+rules:
+- rule: postgres-explicit-columns
+  scope: repository
+  options:
+    importSpecifier: '@example/db'
+    executorNames:
+    - query
+    include:
+    - raw.sql
+    schemaCatalogPath: schema.json
+    relations:
+    - accounts
+    maxColumns: 0
+    checkReturning: true
+    sqlInclude:
+    - raw.sql
+- rule: postgres-required-predicates
+  scope: repository
+  options:
+    importSpecifier: '@example/db'
+    executorNames:
+    - query
+    include:
+    - raw.sql
+    relations:
+    - table: accounts
+      require:
+      - deleted_at IS NULL
+    sqlInclude:
+    - raw.sql
+reportUnusedDisableDirectives: ignore

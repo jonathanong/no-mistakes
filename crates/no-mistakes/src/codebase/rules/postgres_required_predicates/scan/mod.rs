@@ -84,9 +84,7 @@ pub(super) fn scan(
                     check::sql_finding(
                         &rel,
                         line,
-                        &context.sql_unanalyzable_message(
-                            "SQL could not be analyzed for required predicates",
-                        ),
+                        "SQL could not be analyzed for required predicates",
                         Some("unanalyzable"),
                         None,
                     ),

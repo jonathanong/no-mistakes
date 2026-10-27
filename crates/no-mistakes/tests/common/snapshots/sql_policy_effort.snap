@@ -195,14 +195,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/queries.ts",
           "line": 26,
-          "message": "src/queries.ts:26: SQL could not be analyzed for explicit columns; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "message": "src/queries.ts:26: SQL could not be analyzed for explicit columns",
           "rule": "postgres-explicit-columns",
           "target": "unanalyzable"
         },
         {
           "file": "src/queries.ts",
           "line": 26,
-          "message": "src/queries.ts:26: SQL could not be analyzed for required predicates; SQL is unanalyzable at effort low; pass valid SQL as a literal string or interpolation-free template directly to the configured executor or through one local const; remove JavaScript escapes or use effort max for inferred SQL",
+          "message": "src/queries.ts:26: SQL could not be analyzed for required predicates",
           "rule": "postgres-required-predicates",
           "target": "unanalyzable"
         },
