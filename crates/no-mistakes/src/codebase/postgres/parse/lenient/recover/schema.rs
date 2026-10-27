@@ -98,6 +98,7 @@ fn utility_start(tokens: &[Token], index: usize) -> bool {
             && (word(1, "INDEX")
                 || word(1, "UNIQUE") && word(2, "INDEX")
                 || word(1, "TYPE")
+                || word(1, "SCHEMA")
                 || word(1, "TRIGGER")
                 || word(1, "TEXT") && word(2, "SEARCH")
                 || word(1, "OR") && word(2, "REPLACE") && word(3, "TRIGGER"));

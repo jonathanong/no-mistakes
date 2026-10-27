@@ -8,6 +8,7 @@ pub(super) use assignment::{comma_parts as assignment_parts, target as assignmen
 mod commands;
 mod declaration;
 mod labels;
+mod ranges;
 use labels::unlabeled;
 mod sql;
 
@@ -66,9 +67,9 @@ pub(super) fn filter_body(
 
 impl BodyState {
     pub(crate) fn control_chunk(&mut self, tokens: &[TokenWithSpan]) -> bool {
-        let code: Vec<_> = tokens
+        let normalized = ranges::normalize(tokens);
+        let code: Vec<_> = normalized
             .iter()
-            .map(|token| &token.token)
             .filter(|token| !matches!(token, Token::Whitespace(_) | Token::SemiColon))
             .collect();
         self.control(unlabeled(&code))

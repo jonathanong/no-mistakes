@@ -12,7 +12,7 @@ fn recursive_view_heads_match_canonical_facts_messages_and_targets() {
             1,
             "CREATE OR REPLACE TEMPORARY RECURSIVE VIEW replacement AS",
         ),
-        (4, 9, "CREATE RECURSIVE VIEW malformed ( x ) AS"),
+        (4, 9, "CREATE RECURSIVE VIEW malformed (x) AS"),
         (9, 5, "CREATE RECURSIVE VIEW nested AS SELECT 1"),
         (18, 1, "CREATE RECURSIVE VIEW suppressed AS SELECT 1"),
         (19, 1, "CREATE RECURSIVE VIEW"),

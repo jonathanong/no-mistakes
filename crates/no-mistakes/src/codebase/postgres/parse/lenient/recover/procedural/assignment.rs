@@ -19,6 +19,8 @@ pub(super) fn expression(code: &[&Token]) -> bool {
 
 fn parsed(code: &[&Token]) -> Option<Expr> {
     (!code.is_empty()).then_some(())?;
+    // A procedural range delimiter cannot occur inside an SQL expression.
+    (!code.iter().any(|token| super::ranges::marker(token))).then_some(())?;
     let tokens = code.iter().map(|token| (**token).clone()).collect();
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens(tokens);
     let expression = parser.parse_expr().ok()?;

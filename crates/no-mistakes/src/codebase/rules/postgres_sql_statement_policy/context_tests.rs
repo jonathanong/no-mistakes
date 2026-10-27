@@ -40,7 +40,7 @@ fn every_new_category_survives_do_function_and_static_execute_recovery() {
             (3, "CREATE DATABASE scratch TEMPLATE template0"),
             (5, "ALTER DATABASE app SET statement_timeout = '1s'"),
             (6, "ALTER SYSTEM SET statement_timeout = '2s'"),
-            (13, "CREATE OR REPLACE PROCEDURE empty_proc ( ) LANGUAGE"),
+            (13, "CREATE OR REPLACE PROCEDURE empty_proc() LANGUAGE"),
             (21, "CREATE DATABASE scratch TEMPLATE template0"),
             (23, "ALTER DATABASE app SET statement_timeout = '1s'"),
             (24, "ALTER SYSTEM SET statement_timeout = '2s'"),

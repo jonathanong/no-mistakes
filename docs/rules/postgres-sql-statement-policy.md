@@ -226,6 +226,11 @@ not that PostgreSQL accepts the SQL. Successfully parsed body statements still
 contribute facts and rule findings. At the top level, only these complete forms
 advise. Malformed and unrecognized statements retain findings.
 
+- Complete `CREATE EXTENSION [IF NOT EXISTS] name` with optional `WITH`,
+  `SCHEMA`, `VERSION`, and `CASCADE` options; each option may occur at most once.
+- `CREATE USER name [WITH]` with boolean login, inheritance, role/database
+  creation, superuser, replication, or row-security bypass flags. Other user
+  options still require separate parser support.
 - `REFRESH MATERIALIZED VIEW [CONCURRENTLY] view [WITH [NO] DATA]`
 - `CREATE PUBLICATION name FOR ALL TABLES`
 - `CREATE PUBLICATION name FOR TABLE table [, table ...]`
@@ -238,6 +243,13 @@ may be schema-qualified; `name`, `role`, `schema`, and `grantee` may not.
 prefix with extra tokens is not recognized. Explicit rule or
 repository `unanalyzable` policies override these defaults. See the
 [schema diagnostic migration](../migrations/postgres-schema-unanalyzable.md).
+
+`CREATE SCHEMA` is recovered inside `DO` and PL/pgSQL bodies just as at the top
+level. Integer `FOR` ranges accept compact `..` delimiters and expression bounds,
+including `1..array_length(parts, 1) - 1`. Malformed bounds remain unanalyzable;
+diagnostic heads retain the original punctuation rather than spelling `..` as
+separate dots. Recognized forms do not exempt actual table, constraint, or
+statement-policy violations.
 
 ## Suppression
 

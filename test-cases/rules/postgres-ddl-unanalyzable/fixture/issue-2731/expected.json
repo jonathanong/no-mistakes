@@ -112,7 +112,7 @@
     [
       3,
       1,
-      "FROBULATE FETCH FIRST ( 1 + 1 )"
+      "FROBULATE FETCH FIRST (1 + 1)"
     ],
     [
       4,
@@ -122,12 +122,12 @@
     [
       5,
       1,
-      "FROBULATE GENERATED ALWAYS AS ( 1 ) VIRTUAL"
+      "FROBULATE GENERATED ALWAYS AS (1) VIRTUAL"
     ],
     [
       6,
       1,
-      "FROBULATE ON DELETE SET NULL ( a )"
+      "FROBULATE ON DELETE SET NULL (a)"
     ],
     [
       8,
@@ -137,7 +137,7 @@
     [
       10,
       1,
-      "FROBULATE GROUP BY DISTINCT ROLLUP ( x )"
+      "FROBULATE GROUP BY DISTINCT ROLLUP(x)"
     ],
     [
       11,
@@ -149,17 +149,17 @@
     [
       2,
       1,
-      "FROBULATE GROUP BY DISTINCT ROLLUP ( 0x1F )"
+      "FROBULATE GROUP BY DISTINCT ROLLUP(0x1F)"
     ],
     [
       4,
       1,
-      "FROBULATE GROUP BY DISTINCT CUBE ( 0b101 )"
+      "FROBULATE GROUP BY DISTINCT CUBE(0b101)"
     ],
     [
       5,
       1,
-      "FROBULATE GROUP BY DISTINCT ROLLUP ( 0o17 )"
+      "FROBULATE GROUP BY DISTINCT ROLLUP(0o17)"
     ]
   ],
   "copy-before-head.sql": [

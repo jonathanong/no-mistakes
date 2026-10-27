@@ -1,6 +1,7 @@
 //! Complete utility statements which do not contribute schema facts.
 use super::cursor::Cursor;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
+mod create;
 mod declaration;
 mod maintenance;
 mod privileges;
@@ -18,6 +19,7 @@ pub(super) fn valid(original: &[TokenWithSpan]) -> bool {
         .collect();
     [
         maintenance::valid,
+        create::valid,
         declaration::valid,
         privileges::valid,
         session::valid,

@@ -414,3 +414,6 @@ mod check_payload_effort;
 mod check_finite_set_effort;
 #[path = "check_transformed_uuid_predicates.rs"]
 mod check_transformed_uuid_predicates;
+
+#[path = "check_postgres_utility.rs"]
+mod check_postgres_utility;

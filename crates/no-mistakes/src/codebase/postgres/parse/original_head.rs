@@ -78,6 +78,7 @@ fn restore(
             let mut head = String::new();
             let mut count = 0;
             let mut at = at;
+            let mut previous_end = None;
             while count < 8 {
                 let Some(token) = tokens.get(at) else { break };
                 if token.terminal {
@@ -95,10 +96,11 @@ fn restore(
                     continue;
                 };
                 let value = sql.get(start..end)?;
-                if !head.is_empty() {
+                if !head.is_empty() && previous_end != Some(start) {
                     head.push(' ');
                 }
                 head.push_str(value);
+                previous_end = Some(end);
                 count += 1;
                 // The lexer can split a radix literal into adjacent `0` and `x1F`,
                 // `b101`, or `o77` tokens. It remains one source lexeme in a head.
@@ -120,6 +122,7 @@ fn restore(
                                 .is_some_and(|c| matches!(c, 'x' | 'X' | 'b' | 'B' | 'o' | 'O'))
                             {
                                 head.push_str(tail);
+                                previous_end = Some(tail_end);
                                 at += 1;
                             }
                         }
