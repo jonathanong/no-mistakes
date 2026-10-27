@@ -9,21 +9,21 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "inner.rs",
           "line": 1,
-          "message": "directive in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "message": "directive for `rust-no-inline-tests` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "invalid-disable-directive",
           "target": "rust-no-inline-tests"
         },
         {
           "file": "line.rs",
           "line": 1,
-          "message": "directive in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "message": "directive for `rust-no-inline-tests` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "invalid-disable-directive",
           "target": "rust-no-inline-tests"
         },
         {
           "file": "outer.rs",
           "line": 1,
-          "message": "directive in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "message": "directive for `rust-no-inline-tests` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "invalid-disable-directive",
           "target": "rust-no-inline-tests"
         }
@@ -86,7 +86,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "inner.rs",
           "line": 1,
-          "message": "directive in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "message": "directive for `rust-no-inline-tests` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "invalid-disable-directive",
           "target": "rust-no-inline-tests"
         },
@@ -99,14 +99,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "line.rs",
           "line": 1,
-          "message": "directive in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "message": "directive for `rust-no-inline-tests` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "invalid-disable-directive",
           "target": "rust-no-inline-tests"
         },
         {
           "file": "outer.rs",
           "line": 1,
-          "message": "directive in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "message": "directive for `rust-no-inline-tests` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead; remove or correct the comment so suppressions cannot hide stale rule intent",
           "rule": "invalid-disable-directive",
           "target": "rust-no-inline-tests"
         },

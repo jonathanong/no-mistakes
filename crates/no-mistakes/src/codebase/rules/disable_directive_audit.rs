@@ -153,7 +153,7 @@ impl PreparedDisableDirectives {
             let (rule, detail) = match comment.status {
                 DirectiveStatus::Enabled => ("unused-disable-directive", format!("directive for `{}` suppressed no findings in this invocation", comment.rule)),
                 DirectiveStatus::Disabled => ("invalid-disable-directive", format!("directive names disabled or out-of-scope rule `{}`", comment.rule)),
-                DirectiveStatus::IneffectivePlacement => ("invalid-disable-directive", "directive in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead".to_owned()),
+                DirectiveStatus::IneffectivePlacement => ("invalid-disable-directive", format!("directive for `{}` in a Rust documentation comment cannot suppress findings; use a plain `//` comment instead", comment.rule)),
                 DirectiveStatus::Unknown => ("invalid-disable-directive", format!("directive names unknown rule `{}`", comment.rule)),
             };
             Some(RuleFinding {
