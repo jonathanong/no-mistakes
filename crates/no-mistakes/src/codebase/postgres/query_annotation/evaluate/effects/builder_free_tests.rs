@@ -156,4 +156,6 @@ fn builder_free_catalogs_skip_actual_container_visits_cold_and_warm_without_capt
     assert!(new.invalidated_builders.contains(&id(&spec, "builder")));
 }
 
+mod dense_cache;
 mod mixed;
+mod scope_cache;
