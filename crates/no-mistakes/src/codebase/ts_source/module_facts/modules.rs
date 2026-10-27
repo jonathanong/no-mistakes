@@ -20,12 +20,15 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
     for node in semantic.nodes().iter() {
         let root_module = matches!(semantic.nodes().parent_kind(node.id()), AstKind::Program(_));
         match node.kind() {
-            AstKind::ImportDeclaration(value) if root_module => imports::collect(value, facts),
+            AstKind::ImportDeclaration(value) if root_module => {
+                imports::collect(value, semantic, facts)
+            }
             AstKind::TSImportType(value) => facts.imports.push(ModuleImport {
                 specifier: crate::ast::js_literal(&value.source).into_owned(),
                 type_only: true,
                 span: value.span.into(),
                 bindings: Vec::new(),
+                qualifier: imports::qualifier_root(value),
             }),
             AstKind::ExportFromDeclaration(value) if root_module => exports::from(value, facts),
             AstKind::ExportAllDeclaration(value) if root_module => exports::all(value, facts),

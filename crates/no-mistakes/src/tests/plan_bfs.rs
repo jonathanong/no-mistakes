@@ -178,6 +178,8 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::SymbolImport
         | EdgeKind::SymbolReexport
         | EdgeKind::SymbolImportUnknown
+        | EdgeKind::SymbolTypeImport
+        | EdgeKind::SymbolTypeReexport
         | EdgeKind::Import
         | EdgeKind::TypeImport
         | EdgeKind::DynamicImport

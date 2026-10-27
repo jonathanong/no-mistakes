@@ -73,6 +73,7 @@ fn module_import(specifier: &str, start: u32) -> ModuleImport {
             end: start + 1,
         },
         bindings: Vec::new(),
+        qualifier: None,
     }
 }
 

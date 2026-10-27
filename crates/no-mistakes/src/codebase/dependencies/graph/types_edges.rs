@@ -24,6 +24,10 @@ pub enum EdgeKind {
     SymbolReexport,
     /// Opt-in import whose symbol selector cannot be established.
     SymbolImportUnknown,
+    /// Opt-in type-only named/default import consumer (never a runtime use).
+    SymbolTypeImport,
+    /// Opt-in type-only re-export alias or star relay.
+    SymbolTypeReexport,
     /// Type-only import (`import type ...`).
     TypeImport,
     /// Runtime dynamic import (`import("...")`).
@@ -139,21 +143,15 @@ pub enum VitestSetupField {
 }
 
 include!("types_vitest_setup_field.rs");
+include!("types_edges_symbol.rs");
 
 impl EdgeKind {
-    pub fn as_str(&self) -> &'static str {
-        self.as_core_str().unwrap_or_else(|| self.as_domain_str())
-    }
-
     fn as_core_str(&self) -> Option<&'static str> {
         match self {
             Self::Call => Some("call"),
             Self::AssertionOwner => Some("assertion-owner"),
             Self::Extends => Some("extends"),
             Self::Import => Some("import"),
-            Self::SymbolImport => Some("symbol-import"),
-            Self::SymbolReexport => Some("symbol-reexport"),
-            Self::SymbolImportUnknown => Some("symbol-import-unknown"),
             Self::TypeImport => Some("type-import"),
             Self::DynamicImport => Some("dynamic-import"),
             Self::ConditionalDynamicImport => Some("conditional-dynamic-import"),

@@ -7,6 +7,8 @@ fn edge_kind_str_all_variants() {
         (EdgeKind::SymbolImport, "symbol-import"),
         (EdgeKind::SymbolReexport, "symbol-reexport"),
         (EdgeKind::SymbolImportUnknown, "symbol-import-unknown"),
+        (EdgeKind::SymbolTypeImport, "symbol-type-import"),
+        (EdgeKind::SymbolTypeReexport, "symbol-type-reexport"),
     ] {
         assert_eq!(kind.as_str(), name);
         assert_eq!(serde_json::to_value(kind).unwrap(), name);
@@ -133,6 +135,8 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::SymbolImport => {}
             EdgeKind::SymbolReexport => {}
             EdgeKind::SymbolImportUnknown => {}
+            EdgeKind::SymbolTypeImport => {}
+            EdgeKind::SymbolTypeReexport => {}
             EdgeKind::Import => {}
             EdgeKind::TypeImport => {}
             EdgeKind::DynamicImport => {}

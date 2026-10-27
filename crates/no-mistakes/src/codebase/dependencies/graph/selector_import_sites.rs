@@ -71,7 +71,7 @@ fn collect_selector_relay_edges(
     sites: &mut SelectorImportSites,
 ) {
     let relay_sites = relay_selector_site_index(&inputs);
-    for (from, to, _) in relay_edges {
+    for (from, to, relay_kind) in relay_edges {
         let NodeId::Symbol {
             symbol: export_name,
             ..
@@ -90,7 +90,20 @@ fn collect_selector_relay_edges(
                     selector_unknown_symbol(&inputs, file.as_ref(), symbol, site, edges, sites);
                 }
             }
-            edges.push((from, to, EdgeKind::SymbolReexport));
+            // Each relay edge already says whether its own export (or star) is
+            // type-only; a type-only `export type *` must not retag value relays.
+            let type_only = matches!(relay_kind, EdgeKind::TypeImport | EdgeKind::WorkspaceTypeImport)
+                || inputs
+                    .symbols
+                    .exports
+                    .iter()
+                    .any(|export| export.is_type_only && export.name == **export_name);
+            let kind = if type_only {
+                EdgeKind::SymbolTypeReexport
+            } else {
+                EdgeKind::SymbolReexport
+            };
+            edges.push((from, to, kind));
         } else if matches!(to, NodeId::File(_)) {
             for mut site in relay_sites
                 .get(export_name.as_ref())

@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: production-exports-only-used-by-tests
+    scope: repository
+    options:
+      productionRoots: [src]
+      testGlobs: ["tests/**/*.test.mts"]
+      # Advise keeps the unresolved type selectors visible next to findings.
+      unanalyzable: advise

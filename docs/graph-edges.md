@@ -835,6 +835,8 @@ no separate rule graph or second parsing pass is built.
 | --- | --- | --- |
 | `symbol-import` | `SymbolImport` | A static import selects a particular exported symbol; aliases, default imports and type-only imports retain selector identity. |
 | `symbol-reexport` | `SymbolReexport` | A static named, local-alias, or star re-export forwards an exported symbol to its origin. Forwarding alone does not establish a production consumer. |
+| `symbol-type-import` | `SymbolTypeImport` | A type-only reference (`import type`, an inline `type` specifier, `import("x").Name`, `import type * as ns` members) selects an exported symbol. It never proves runtime use of a value export. |
+| `symbol-type-reexport` | `SymbolTypeReexport` | A type-only named or star re-export forwards a symbol; consumers reached through it are type-only. |
 | `symbol-import-unknown` | `SymbolImportUnknown` | A module or symbol consumer cannot be resolved statically. It records uncertainty rather than proving production or test-only use. |
 
 The rule follows symbol forwarding before classifying consumer files against

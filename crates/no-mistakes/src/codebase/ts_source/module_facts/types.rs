@@ -49,6 +49,10 @@ pub struct ModuleImportBinding {
     pub type_only: bool,
     pub binding_id: usize,
     pub span: ModuleSpan,
+    /// Members read through a `import type * as ns` binding, or `None` when
+    /// any use of the namespace is not a plain `ns.Member` type reference.
+    #[serde(skip)]
+    pub(crate) namespace_members: Option<Vec<String>>,
 }
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -57,6 +61,9 @@ pub struct ModuleImport {
     pub type_only: bool,
     pub span: ModuleSpan,
     pub bindings: Vec<ModuleImportBinding>,
+    /// Leading export name of an `import("x").Name` type reference.
+    #[serde(skip)]
+    pub(crate) qualifier: Option<String>,
 }
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]

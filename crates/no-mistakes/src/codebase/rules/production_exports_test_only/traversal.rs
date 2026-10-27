@@ -2,6 +2,7 @@ use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::codebase::ts_symbols::ExportKind;
 use crate::fx::{fx_set, FxHashSet};
 use std::collections::{BTreeSet, VecDeque};
 use std::path::{Path, PathBuf};
@@ -10,15 +11,51 @@ use std::path::{Path, PathBuf};
 pub(super) struct Consumers {
     pub(super) files: BTreeSet<PathBuf>,
     pub(super) unknown: BTreeSet<(PathBuf, NodeId)>,
+    /// Importers reaching the export only through type-only references.
+    pub(super) typed: BTreeSet<(PathBuf, NodeId)>,
+}
+
+impl Consumers {
+    /// A type reference is not a runtime use of a value export, but the class,
+    /// interface, alias or enum type is part of the production API. An export
+    /// whose kind cannot be determined keeps its type-only importers as an
+    /// advisory instead of silently dropping or counting them.
+    pub(super) fn settle(
+        &mut self,
+        kind: &ExportKind,
+        is_test: impl Fn(&Path) -> bool,
+    ) -> BTreeSet<(PathBuf, NodeId)> {
+        let typed = std::mem::take(&mut self.typed);
+        match kind {
+            ExportKind::Function | ExportKind::Const | ExportKind::Let | ExportKind::Var => {
+                BTreeSet::new()
+            }
+            ExportKind::Class
+            | ExportKind::TypeAlias
+            | ExportKind::Interface
+            | ExportKind::Enum => {
+                self.files.extend(typed.into_iter().map(|(file, _)| file));
+                BTreeSet::new()
+            }
+            ExportKind::Default | ExportKind::ReExport { .. } => {
+                // Test files are never production consumers, so their type
+                // references only need to count as test use of the export.
+                let (tests, production): (BTreeSet<_>, BTreeSet<_>) =
+                    typed.into_iter().partition(|(file, _)| is_test(file));
+                self.files.extend(tests.into_iter().map(|(file, _)| file));
+                production
+            }
+        }
+    }
 }
 
 pub(super) fn consumers(graph: &DepGraph, file: &Path, name: &str) -> Consumers {
     let start = NodeId::symbol(file, name);
-    let mut visited: FxHashSet<NodeId> = fx_set();
-    let mut queue = VecDeque::from([start.clone()]);
-    visited.insert(start);
+    let mut visited: FxHashSet<(NodeId, bool)> = fx_set();
+    let mut queue = VecDeque::from([(start.clone(), false)]);
+    visited.insert((start, false));
     let mut result = Consumers::default();
-    while let Some(node) = queue.pop_front() {
+    while let Some((node, typed)) = queue.pop_front() {
         let file = node
             .as_file()
             .expect("selector relay nodes have source files");
@@ -39,12 +76,19 @@ pub(super) fn consumers(graph: &DepGraph, file: &Path, name: &str) -> Consumers 
         };
         for (importer, kind) in edges {
             match kind {
-                EdgeKind::SymbolImport => {
+                EdgeKind::SymbolImport | EdgeKind::SymbolTypeImport => {
                     let path = importer.as_file().expect("selector importers are files");
-                    result.files.insert(path.to_path_buf());
+                    if typed || *kind == EdgeKind::SymbolTypeImport {
+                        result.typed.insert((path.to_path_buf(), node.clone()));
+                    } else {
+                        result.files.insert(path.to_path_buf());
+                    }
                 }
-                EdgeKind::SymbolReexport if visited.insert(importer.clone()) => {
-                    queue.push_back(importer.clone());
+                EdgeKind::SymbolReexport | EdgeKind::SymbolTypeReexport => {
+                    let typed = typed || *kind == EdgeKind::SymbolTypeReexport;
+                    if visited.insert((importer.clone(), typed)) {
+                        queue.push_back((importer.clone(), typed));
+                    }
                 }
                 _ => {}
             }

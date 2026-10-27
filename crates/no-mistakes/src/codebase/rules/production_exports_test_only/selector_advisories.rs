@@ -51,3 +51,35 @@ pub(super) fn for_export(
         format!("symbol consumers of `{name}` include an unknown import selector: {detail}"),
     ))
 }
+
+/// Type-only importers of an export whose value-or-type kind is unknown.
+pub(super) fn undetermined(
+    root: &Path,
+    graph: &DepGraph,
+    typed: &BTreeSet<(PathBuf, NodeId)>,
+    name: &str,
+) -> (PathBuf, usize, String) {
+    let mut evidence = BTreeSet::new();
+    for (importer, target) in typed {
+        let path = relative_slash_path(root, importer);
+        let line = graph
+            .unknown_selector_sites(importer, target)
+            .first()
+            .map_or(1, |site| site.line);
+        evidence.insert((importer.clone(), line, format!("{path}:{line}")));
+    }
+    let (file, line, _) = evidence.first().cloned().expect("typed importers exist");
+    let sites = evidence
+        .into_iter()
+        .map(|(_, _, site)| site)
+        .collect::<Vec<_>>()
+        .join(", ");
+    (
+        file,
+        line,
+        format!(
+            "type-only references to `{name}` ({sites}) cannot be classified because its export kind \
+             (value or type) is undetermined"
+        ),
+    )
+}

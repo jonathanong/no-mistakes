@@ -1,0 +1,10 @@
+import type { NamedTestOnly } from "../src/named.mjs";
+import type { ChainTestOnly } from "../src/chain-barrel.mjs";
+import { mixedTestOnlyValue } from "../src/mixed.mjs";
+import type * as Shapes from "../src/shapes.mjs";
+import type { QualifiedTestOnly } from "../src/qualified.mjs";
+import { wholeModuleValue } from "../src/whole-module.mjs";
+import type { WholeNamespaceType } from "../src/whole-namespace.mjs";
+import type { PresentType } from "../src/missing-member.mjs";
+export type Seen = [NamedTestOnly, ChainTestOnly, Shapes.Square, QualifiedTestOnly, WholeNamespaceType, PresentType];
+export const used = [mixedTestOnlyValue, wholeModuleValue];

@@ -403,3 +403,34 @@ fn commonjs_object_uses_and_global_defaults_do_not_claim_complete_local_exports(
         }
     }
 }
+
+#[test]
+fn type_namespace_members_and_import_qualifiers_are_projected() {
+    let result = report(&["type-namespaces.ts"]);
+    let module = &result.modules[0];
+    let members = |specifier: &str| {
+        module
+            .facts
+            .imports
+            .iter()
+            .find(|import| import.specifier == specifier)
+            .and_then(|import| import.bindings[0].namespace_members.clone())
+    };
+    // Only `ns.Member` left operands name members; escaping or unused
+    // namespaces and runtime namespace imports project nothing.
+    assert_eq!(
+        members("./a"),
+        Some(vec!["X".into(), "y".into(), "Sub".into()])
+    );
+    assert_eq!(members("./b"), None);
+    assert_eq!(members("./c"), None);
+    assert_eq!(members("./e"), None);
+    let qualifiers: Vec<_> = module
+        .facts
+        .imports
+        .iter()
+        .filter(|import| import.bindings.is_empty())
+        .map(|import| import.qualifier.clone())
+        .collect();
+    assert_eq!(qualifiers, [Some("P".to_string()), None]);
+}

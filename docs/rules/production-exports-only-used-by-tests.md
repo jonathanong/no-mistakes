@@ -42,7 +42,8 @@ createLinkPost();
 Compliant example: a production module statically imports `createLinkPost`, whether
 or not tests also import it. Named aliases and static re-exports preserve the
 symbol relationship; a barrel alone does not establish production consumption.
-Default exports and type-only imports/exports participate. A static named import
+Default exports participate, and type-only references follow the rules in
+[Type-only references](#type-only-references). A static named import
 counts as a consumer even when its local binding is unused.
 
 ```ts
@@ -62,6 +63,63 @@ Fix: remove an unnecessary export and test through a production entrypoint, move
 the test-only implementation to a configured helper root, or add a genuine
 production consumer. There is no automatic fix because moving or removing public
 APIs requires a design decision.
+
+## Type-only references
+
+A type-only reference (`import type { X }`, an inline `type` specifier,
+`import("x").X`, `typeof import("x").x`, `import type * as ns` members such as
+`typeof ns.x`, and a type-only re-export chain) names the export it reads, so it
+is a proven selector rather than an unknown one. It is never a runtime use, so
+what it means depends on the export's kind:
+
+- Value exports (`function`, `const`, `let`, `var`): a type-only reference does
+  **not** count as a production consumer. If tests call the export at runtime,
+  it is reported as test-only even when production mentions it in a type
+  position.
+- Type exports (`interface`, `type` alias, `enum`): a type reference keeps the
+  export consumed.
+- Classes: a type-position use counts as production use, because the class type
+  is part of the production API.
+- Default exports and any export whose kind cannot be determined: the
+  type-only importers are reported as an unanalyzable advisory, never silently
+  counted or dropped.
+
+Reported (value export, type-only production reference, runtime test use):
+
+```ts
+// src/values.mts
+export function parse() {}
+// src/types.mts
+import type { parse } from "./values.mjs";
+export type Parse = typeof parse;
+// tests/values.test.mts
+import { parse } from "../src/values.mjs";
+parse();
+```
+
+Not reported (type export, class, or a runtime production import):
+
+```ts
+import type { Options } from "./options.mjs"; // interface or type alias
+import type { Client } from "./client.mjs"; // class: the type is public API
+import { parse } from "./values.mjs"; // runtime use
+```
+
+An `import type * as ns` counts exactly the members read as `ns.Member`;
+`import("x").A.B` consumes `A`.
+
+Still unresolved (reported or advised per `unanalyzable`):
+
+```ts
+export type Whole = typeof import("./shapes.mjs"); // bare module type, no member name
+import type * as Shapes from "./shapes.mjs";
+export type All = typeof Shapes; // namespace escapes as a whole
+export type Gone = Shapes.Absent; // member the module does not export
+import type { Gone } from "./missing.mjs"; // module that does not resolve
+```
+
+Rewrite these with explicit named type imports. An unused `import type * as ns`
+also stays unresolved because it names no member.
 
 ## Options and defaults
 
