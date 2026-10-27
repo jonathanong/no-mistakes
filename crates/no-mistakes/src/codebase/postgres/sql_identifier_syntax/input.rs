@@ -8,7 +8,7 @@ pub(super) fn input(
     match unwrap_ts_wrappers(expression) {
         Expression::TaggedTemplateExpression(value) => tags.input(value),
         Expression::StringLiteral(value) => Input::Sql {
-            text: crate::ast::js_literal(&value).into_owned(),
+            text: crate::ast::js_literal(value).into_owned(),
             source_span: span(value.span),
             holes: Vec::new(),
             parameterized: None,

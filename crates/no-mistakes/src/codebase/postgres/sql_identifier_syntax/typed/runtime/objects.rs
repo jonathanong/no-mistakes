@@ -111,7 +111,7 @@ fn executor_callee(callee: &Expression<'_>, read: Span) -> bool {
         {
             contains(span(member.object.span()), read)
         }
-        Expression::ComputedMemberExpression(member) if matches!(unwrap_ts_wrappers(&member.expression), Expression::StringLiteral(key) if executor_member(crate::ast::js_literal(&key).as_ref())) => {
+        Expression::ComputedMemberExpression(member) if matches!(unwrap_ts_wrappers(&member.expression), Expression::StringLiteral(key) if executor_member(crate::ast::js_literal(key).as_ref())) => {
             contains(span(member.object.span()), read)
         }
         _ => span(callee.span()) == read,

@@ -152,7 +152,7 @@ impl ServerRouteVisitor<'_> {
         let Some(Argument::StringLiteral(source)) = call.arguments.first() else {
             return None;
         };
-        commonjs_framework_binding(crate::ast::js_literal(&source).as_ref())
+        commonjs_framework_binding(crate::ast::js_literal(source).as_ref())
     }
 
     fn member_binding(&self, member: &StaticMemberExpression<'_>) -> Option<Binding> {

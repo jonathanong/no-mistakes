@@ -28,7 +28,7 @@ impl ServerRouteVisitor<'_> {
 
     pub(super) fn literal_arg(&self, arg: &Argument<'_>) -> Option<String> {
         match arg {
-            Argument::StringLiteral(value) => Some(crate::ast::js_literal(&value).into_owned()),
+            Argument::StringLiteral(value) => Some(crate::ast::js_literal(value).into_owned()),
             Argument::TemplateLiteral(template) if template.expressions.is_empty() => Some(
                 template
                     .quasis
@@ -61,7 +61,7 @@ impl ServerRouteVisitor<'_> {
     fn literal_element(&self, element: &ArrayExpressionElement<'_>) -> Option<String> {
         match element {
             ArrayExpressionElement::StringLiteral(value) => {
-                Some(crate::ast::js_literal(&value).into_owned())
+                Some(crate::ast::js_literal(value).into_owned())
             }
             ArrayExpressionElement::TemplateLiteral(template)
                 if template.expressions.is_empty() =>

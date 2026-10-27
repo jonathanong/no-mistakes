@@ -54,7 +54,7 @@ fn is_builder(visitor: &ScopeVisitor<'_>, name: &str) -> bool {
 fn value(visitor: &ScopeVisitor<'_>, expression: &Expression<'_>, nested: bool) -> Option<SiteArg> {
     Some(match unwrap_ts_wrappers(expression) {
         Expression::StringLiteral(literal) => SiteArg::Literal(LiteralArg {
-            text: crate::ast::js_literal(&literal).into_owned(),
+            text: crate::ast::js_literal(literal).into_owned(),
             line: byte_offset_to_line(visitor.source, literal.span.start as usize),
             origin: literal.span.start + 1,
         }),
@@ -113,7 +113,7 @@ fn object_literal(
         }
         let key = match &property.key {
             PropertyKey::StaticIdentifier(ident) => ident.name.to_string(),
-            PropertyKey::StringLiteral(literal) => crate::ast::js_literal(&literal).into_owned(),
+            PropertyKey::StringLiteral(literal) => crate::ast::js_literal(literal).into_owned(),
             _ => return None,
         };
         props.push((key, value(visitor, &property.value, false)?));

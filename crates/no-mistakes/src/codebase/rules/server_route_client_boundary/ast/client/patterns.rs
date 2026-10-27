@@ -95,11 +95,11 @@ impl ClientHttpVisitor<'_> {
     }
 
     fn add_client_binding_for_property(&mut self, key: Option<&str>, names: Vec<String>) {
-        if key.as_deref().is_some_and(is_client_method_name) {
+        if key.is_some_and(is_client_method_name) {
             for name in names {
                 self.add_client_callee_name(name);
             }
-        } else if key.as_deref().is_some_and(is_client_factory_member) {
+        } else if key.is_some_and(is_client_factory_member) {
             for name in names {
                 self.add_client_factory_callee_name(name);
             }
@@ -143,6 +143,6 @@ impl ClientHttpVisitor<'_> {
 fn module_export_name(name: &ModuleExportName<'_>) -> String {
     match name {
         ModuleExportName::IdentifierName(id) => id.name.to_string(), ModuleExportName::IdentifierReference(id) => id.name.to_string(),
-        ModuleExportName::StringLiteral(value) => crate::ast::js_literal(&value).into_owned(),
+        ModuleExportName::StringLiteral(value) => crate::ast::js_literal(value).into_owned(),
     }
 }

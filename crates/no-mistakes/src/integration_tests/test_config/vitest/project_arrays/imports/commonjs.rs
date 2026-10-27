@@ -26,7 +26,7 @@ pub(in crate::integration_tests::test_config::vitest::project_arrays) fn direct_
         return None;
     };
     Some(ImportBinding {
-        source: crate::ast::js_literal(&source).into_owned(),
+        source: crate::ast::js_literal(source).into_owned(),
         imported: "default".to_string(),
     })
 }

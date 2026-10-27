@@ -102,7 +102,7 @@ fn collect_const_string_bindings(stmts: &[Statement<'_>]) -> HashMap<String, Str
             if let Some(Expression::StringLiteral(s)) = &decl.init {
                 map.insert(
                     id.name.as_str().to_string(),
-                    crate::ast::js_literal(&s).into_owned(),
+                    crate::ast::js_literal(s).into_owned(),
                 );
             }
         }

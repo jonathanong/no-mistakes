@@ -18,7 +18,7 @@ fn visit_computed_member_expression_with_getters<'a>(
     if let Expression::StringLiteral(property) =
         crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression)
     {
-        collector.note_selected_member(&member.object, crate::ast::js_literal(&property).as_ref());
+        collector.note_selected_member(&member.object, crate::ast::js_literal(property).as_ref());
     }
     if let Some(name) = simple_computed_member_name(member) {
         record_static_getter_read(collector, member.span.start, &name);

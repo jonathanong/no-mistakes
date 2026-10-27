@@ -95,7 +95,7 @@ impl ScopeVisitor<'_> {
         };
         callee.name == "require"
             && super::super::scoped_bindings::from_configured_module(
-                crate::ast::js_literal(&module).as_ref(),
+                crate::ast::js_literal(module).as_ref(),
                 &self.configured_module,
             )
     }

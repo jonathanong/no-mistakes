@@ -122,7 +122,7 @@ fn collect_from_jsx_element<'a>(
 
         let pattern = match &attr.value {
             Some(JSXAttributeValue::StringLiteral(s)) => {
-                Some(crate::ast::js_literal(&s).into_owned())
+                Some(crate::ast::js_literal(s).into_owned())
             }
             Some(JSXAttributeValue::ExpressionContainer(container)) => {
                 extract_pattern_from_jsx_expression(&container.expression)

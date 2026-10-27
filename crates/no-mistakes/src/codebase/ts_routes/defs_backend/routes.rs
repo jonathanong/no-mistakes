@@ -33,7 +33,7 @@ fn direct_route_arg(
 
 fn route_arg(arg: Option<&Argument>) -> Option<String> {
     match arg? {
-        Argument::StringLiteral(s) => Some(crate::ast::js_literal(&s).into_owned()),
+        Argument::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Argument::TemplateLiteral(tpl) if tpl.expressions.is_empty() => {
             Some(static_template_literal(tpl))
         }

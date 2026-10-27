@@ -59,7 +59,7 @@ fn insert_new(scopes: &mut [ConstMap], name: &str, value: StaticValue) {
 pub(super) fn static_value(expr: &Expression<'_>, scopes: &[ConstMap]) -> Option<StaticValue> {
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(StaticValue::String(
-            crate::ast::js_literal(&literal).into_owned(),
+            crate::ast::js_literal(literal).into_owned(),
         )),
         Expression::BooleanLiteral(literal) => Some(StaticValue::Bool(literal.value)),
         Expression::NumericLiteral(literal) => Some(StaticValue::Number(literal.value)),

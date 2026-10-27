@@ -199,7 +199,7 @@ pub fn test_callback_identity(call: &CallExpression<'_>) -> Option<String> {
 
 fn first_string_arg(arg: &Argument<'_>) -> Option<String> {
     match arg {
-        Argument::StringLiteral(s) => Some(crate::ast::js_literal(&s).into_owned()),
+        Argument::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Argument::TemplateLiteral(t) if t.expressions.is_empty() => t
             .quasis
             .first()

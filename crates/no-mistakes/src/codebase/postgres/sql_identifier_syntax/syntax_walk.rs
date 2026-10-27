@@ -61,7 +61,7 @@ impl<'a> Visit<'a> for Syntax<'_> {
             if parts.len() == 1 && self.namespace_targets.contains_key(&root) {
                 if let Expression::StringLiteral(key) = unwrap_ts_wrappers(&value.expression) {
                     self.namespace_members
-                        .insert(root, crate::ast::js_literal(&key).into_owned());
+                        .insert(root, crate::ast::js_literal(key).into_owned());
                 }
             }
         }

@@ -152,8 +152,7 @@ pub(super) fn array_options(
                     if let Expression::StringLiteral(project_config) =
                         unwrap_ts_wrappers(expression)
                     {
-                        for path in string_project_paths(js_literal(&project_config).as_ref(), ctx)
-                        {
+                        for path in string_project_paths(js_literal(project_config).as_ref(), ctx) {
                             if string_paths.included.contains(&path)
                                 && !excluded_paths.contains(&path)
                                 && parsed_string_paths.insert(path.clone())
@@ -165,7 +164,7 @@ pub(super) fn array_options(
                             }
                         }
                         for root in string_projects::string_project_roots(
-                            js_literal(&project_config).as_ref().trim_start_matches('!'),
+                            js_literal(project_config).as_ref().trim_start_matches('!'),
                             ctx,
                         ) {
                             if string_roots.included.contains(&root)

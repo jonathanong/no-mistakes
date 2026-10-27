@@ -184,7 +184,7 @@ fn computed_query_param_name(
         return None;
     }
     match &member.expression {
-        Expression::StringLiteral(value) => Some(crate::ast::js_literal(&value).into_owned()),
+        Expression::StringLiteral(value) => Some(crate::ast::js_literal(value).into_owned()),
         _ => None,
     }
 }

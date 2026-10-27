@@ -55,10 +55,10 @@ fn jsx_attr_value<'a>(
 ) -> (bool, Option<std::borrow::Cow<'a, str>>) {
     match value {
         None => (true, None),
-        Some(JSXAttributeValue::StringLiteral(s)) => (true, Some(crate::ast::js_literal(&s))),
+        Some(JSXAttributeValue::StringLiteral(s)) => (true, Some(crate::ast::js_literal(s))),
         Some(JSXAttributeValue::ExpressionContainer(c)) => match c.expression.as_expression() {
             Some(expr) => match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
-                Expression::StringLiteral(s) => (true, Some(crate::ast::js_literal(&s))),
+                Expression::StringLiteral(s) => (true, Some(crate::ast::js_literal(s))),
                 _ => (true, None),
             },
             None => (true, None),

@@ -10,7 +10,7 @@ pub(super) fn lower(scope: &mut Scope<'_, '_>, expr: &Expression<'_>) -> Expr {
     let node = unwrap_ts_wrappers(expr);
     match node {
         Expression::StringLiteral(literal) => {
-            literal_text(scope, node, crate::ast::js_literal(&literal).into_owned())
+            literal_text(scope, node, crate::ast::js_literal(literal).into_owned())
         }
         Expression::NumericLiteral(_) => Expr::Num,
         Expression::BooleanLiteral(literal) => Expr::Bool(literal.value),

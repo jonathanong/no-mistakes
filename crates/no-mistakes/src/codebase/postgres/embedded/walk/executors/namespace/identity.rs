@@ -56,7 +56,7 @@ impl ScopeVisitor<'_> {
                     .and_then(|arg| arg.as_expression())
                     .and_then(|arg| match arg {
                         Expression::StringLiteral(value) => {
-                            Some(crate::ast::js_literal(&value).into_owned())
+                            Some(crate::ast::js_literal(value).into_owned())
                         }
                         _ => None,
                     });
@@ -84,7 +84,7 @@ impl ScopeVisitor<'_> {
                     .filter_map(|origin| match origin {
                         Origin::Module(module) => Some(Origin::Export(
                             module,
-                            crate::ast::js_literal(&property).into_owned(),
+                            crate::ast::js_literal(property).into_owned(),
                         )),
                         _ => None,
                     })

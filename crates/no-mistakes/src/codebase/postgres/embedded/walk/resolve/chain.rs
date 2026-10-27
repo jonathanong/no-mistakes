@@ -33,7 +33,7 @@ pub(super) fn resolve_expr(
         Expression::StringLiteral(literal) => Some(RecoveredSql::literal(
             expr,
             source,
-            crate::ast::js_literal(&literal).into_owned(),
+            crate::ast::js_literal(literal).into_owned(),
         )),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => Some(
             RecoveredSql::literal(expr, source, unpublished_sql_text(expr)?),

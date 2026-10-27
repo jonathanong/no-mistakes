@@ -29,7 +29,7 @@ fn child_texts(
             }
             oxc_ast::ast::JSXChild::ExpressionContainer(container) => match &container.expression {
                 oxc_ast::ast::JSXExpression::StringLiteral(literal) => {
-                    current.push_str(crate::ast::js_literal(&literal).as_ref());
+                    current.push_str(crate::ast::js_literal(literal).as_ref());
                 }
                 oxc_ast::ast::JSXExpression::NumericLiteral(literal) => {
                     current.push_str(&literal.value.to_string());

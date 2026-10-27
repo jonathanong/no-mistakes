@@ -166,7 +166,7 @@ impl ScopeVisitor<'_> {
 
 fn static_method_name<'e>(expression: &'e Expression<'e>) -> Option<std::borrow::Cow<'e, str>> {
     match unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(key) => Some(crate::ast::js_literal(&key)),
+        Expression::StringLiteral(key) => Some(crate::ast::js_literal(key)),
         Expression::TemplateLiteral(template)
             if template.expressions.is_empty() && template.quasis.len() == 1 =>
         {

@@ -15,7 +15,7 @@ fn string_or_template_arg(args: &[Argument], index: usize) -> Option<String> {
 fn string_or_template_literal(expr: &Expression) -> Option<String> {
     let expr = unwrap_ts_wrappers(expr);
     match expr {
-        Expression::StringLiteral(s) => Some(crate::ast::js_literal(&s).into_owned()),
+        Expression::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Expression::TemplateLiteral(tl) => {
             // Concatenate quasi strings (static parts), replacing interpolations with "".
             let parts: Vec<_> = tl
@@ -32,7 +32,7 @@ fn string_or_template_literal(expr: &Expression) -> Option<String> {
 fn literal_string(expr: &Expression) -> Option<String> {
     let expr = unwrap_ts_wrappers(expr);
     if let Expression::StringLiteral(s) = expr {
-        Some(crate::ast::js_literal(&s).into_owned())
+        Some(crate::ast::js_literal(s).into_owned())
     } else {
         None
     }

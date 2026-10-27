@@ -45,7 +45,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn is_builder_append(
 }
 fn recover(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>, dynamic: bool) -> Option<String> {
     match unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(literal).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             unpublished_sql_text(expr)
         }

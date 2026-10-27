@@ -131,7 +131,7 @@ fn expression_path(expression: &Expression<'_>) -> Option<(String, ValueMutation
 }
 pub(in super::super) fn static_key(expression: &Expression<'_>) -> Option<String> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(literal).into_owned()),
         Expression::NumericLiteral(literal) => Some(literal.value.to_string()),
         _ => None,
     }

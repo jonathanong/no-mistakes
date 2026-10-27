@@ -41,7 +41,7 @@ pub(super) fn classify_init(
     }
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => {
-            kind_for_const(crate::ast::js_literal(&literal).into_owned(), is_const)
+            kind_for_const(crate::ast::js_literal(literal).into_owned(), is_const)
         }
         Expression::TaggedTemplateExpression(_) => {
             kind_for_const(unpublished_sql_text(expr).unwrap_or_default(), is_const)
@@ -86,7 +86,7 @@ pub(in crate::codebase::postgres::embedded::walk) fn static_fragment(
         return super::super::head_calls::text(expr, visitor);
     }
     match unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(literal).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             unpublished_sql_text(expr)
         }

@@ -53,7 +53,7 @@ impl Patterns {
     fn literal(&mut self, expression: &Expression<'_>, source: &str, location: &PatternWarning) {
         match unwrap_ts_wrappers(expression) {
             Expression::StringLiteral(value) => {
-                self.glob(crate::ast::js_literal(&value).into_owned(), location)
+                self.glob(crate::ast::js_literal(value).into_owned(), location)
             }
             Expression::TemplateLiteral(value) if value.expressions.is_empty() => {
                 self.glob(crate::ast::template_literal_text(value, source), location);

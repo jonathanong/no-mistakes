@@ -59,7 +59,7 @@ fn is_listen_callee(callee: &Expression<'_>) -> bool {
         Expression::ComputedMemberExpression(member) => {
             match unwrap_ts_wrappers(&member.expression) {
                 Expression::StringLiteral(literal) => {
-                    crate::ast::js_literal(&literal).as_ref() == "listen"
+                    crate::ast::js_literal(literal).as_ref() == "listen"
                 }
                 Expression::TemplateLiteral(template) => {
                     template.expressions.is_empty()

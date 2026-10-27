@@ -67,7 +67,7 @@ fn object_members(expr: &Expression<'_>) -> Option<Members> {
             return None;
         }
         let value = match unwrap_ts_wrappers(&property.value) {
-            Expression::StringLiteral(literal) => crate::ast::js_literal(&literal).into_owned(),
+            Expression::StringLiteral(literal) => crate::ast::js_literal(literal).into_owned(),
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => unpublished_sql_text(&property.value)?,
             _ => return None,
         };
@@ -116,7 +116,7 @@ impl ScopeVisitor<'_> {
     }
     fn spliced_piece(&self, expr: &Expression<'_>, depth: u8, placeholder: u32) -> Option<String> {
         match unwrap_ts_wrappers(expr) {
-            Expression::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
+            Expression::StringLiteral(literal) => Some(crate::ast::js_literal(literal).into_owned()),
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => unpublished_sql_text(expr),
             Expression::TemplateLiteral(template) => self.spliced_template(template, depth - 1),
             Expression::Identifier(ident) => super::imported::constants::identifier_piece(self, ident),

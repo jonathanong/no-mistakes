@@ -95,7 +95,7 @@ pub(super) fn require_module<'a>(expr: &'a Expression<'a>) -> Option<std::borrow
         return None;
     }
     match call.arguments.first() {
-        Some(Argument::StringLiteral(value)) => Some(crate::ast::js_literal(&value)),
+        Some(Argument::StringLiteral(value)) => Some(crate::ast::js_literal(value)),
         _ => None,
     }
 }

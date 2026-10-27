@@ -74,7 +74,7 @@ fn clause(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>, depth: u8, constrai
     let expr = unwrap_ts_wrappers(expr);
     let line = byte_offset_to_line(visitor.source, expr.span().start as usize);
     match expr {
-        Expression::StringLiteral(literal) => text(visitor, expr, crate::ast::js_literal(&literal).into_owned(), line),
+        Expression::StringLiteral(literal) => text(visitor, expr, crate::ast::js_literal(literal).into_owned(), line),
         Expression::TemplateLiteral(template) => recover(visitor, template, depth - 1, constraints),
         Expression::Identifier(_) => constant(visitor, expr, constraints),
         Expression::ConditionalExpression(branch) => conditional(visitor, branch, depth, constraints),

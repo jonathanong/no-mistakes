@@ -133,7 +133,7 @@ impl Projector<'_, '_> {
         }
         match expression.get_inner_expression() {
             Expression::StringLiteral(value) if crate::ast::js_literal(value).len() <= 4096 => {
-                ArgumentValue::Scalar(Value::String(crate::ast::js_literal(&value).into_owned()))
+                ArgumentValue::Scalar(Value::String(crate::ast::js_literal(value).into_owned()))
             }
             Expression::NumericLiteral(value) => serde_json::Number::from_f64(value.value)
                 .map_or(ArgumentValue::Unknown, |value| {

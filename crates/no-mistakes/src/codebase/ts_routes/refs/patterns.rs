@@ -101,7 +101,7 @@ fn fetch_method(arguments: &oxc_allocator::Vec<Argument>) -> Option<String> {
 fn first_arg_pattern(arguments: &oxc_allocator::Vec<Argument>) -> Option<String> {
     let first = arguments.first()?;
     match first {
-        Argument::StringLiteral(s) => Some(crate::ast::js_literal(&s).into_owned()),
+        Argument::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Argument::TemplateLiteral(tpl) => Some(normalize_template(tpl)),
         _ => {
             if let Some(expr) = first.as_expression() {
@@ -116,7 +116,7 @@ fn first_arg_pattern(arguments: &oxc_allocator::Vec<Argument>) -> Option<String>
 fn extract_pattern_from_expression(expr: &Expression) -> Option<String> {
     match expr {
         Expression::StringLiteral(s) => Some(normalize_next_pathname_pattern(
-            crate::ast::js_literal(&s).as_ref(),
+            crate::ast::js_literal(s).as_ref(),
         )),
         Expression::TemplateLiteral(tpl) => Some(normalize_template(tpl)),
         Expression::ObjectExpression(obj) => object_route_pattern(obj),

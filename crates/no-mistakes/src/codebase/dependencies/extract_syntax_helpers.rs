@@ -56,7 +56,7 @@ fn simple_computed_member_name(
         return None;
     };
     let property = match crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression) {
-        Expression::StringLiteral(property) => crate::ast::js_literal(&property),
+        Expression::StringLiteral(property) => crate::ast::js_literal(property),
         _ => return None,
     };
     Some(format!("{}.{property}", object.name.as_str()))
@@ -154,7 +154,7 @@ fn is_require_resolve_callee(expr: &Expression<'_>) -> bool {
 
 pub(crate) fn static_import_specifier(expr: &Expression<'_>) -> Option<String> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(s) => Some(crate::ast::js_literal(&s).into_owned()),
+        Expression::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             let mut specifier = String::new();
             for quasi in &template.quasis {
@@ -168,7 +168,7 @@ pub(crate) fn static_import_specifier(expr: &Expression<'_>) -> Option<String> {
 
 fn static_path_argument(arg: &Argument<'_>) -> Option<String> {
     match arg {
-        Argument::StringLiteral(s) => Some(crate::ast::js_literal(&s).into_owned()),
+        Argument::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Argument::TemplateLiteral(tl) if tl.expressions.is_empty() => {
             Some(crate::codebase::ts_routes::refs::normalize_template(tl))
         }

@@ -62,7 +62,7 @@ fn literal_argument<'a>(
 ) -> Option<(std::borrow::Cow<'a, str>, u32)> {
     match unwrap_ts_wrappers(expression) {
         Expression::StringLiteral(literal) => {
-            Some((crate::ast::js_literal(&literal), literal.span.start))
+            Some((crate::ast::js_literal(literal), literal.span.start))
         }
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             template.quasis.first()?.value.cooked.as_ref()?;

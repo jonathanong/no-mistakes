@@ -63,7 +63,7 @@ fn name(value: &ModuleExportName<'_>) -> String {
     match value {
         ModuleExportName::IdentifierName(value) => value.name.to_string(),
         ModuleExportName::IdentifierReference(value) => value.name.to_string(),
-        ModuleExportName::StringLiteral(value) => crate::ast::js_literal(&value).into_owned(),
+        ModuleExportName::StringLiteral(value) => crate::ast::js_literal(value).into_owned(),
     }
 }
 fn unsupported(facts: &mut TypeScriptModuleFacts, span: oxc_span::Span, message: &str) {

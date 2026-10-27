@@ -123,7 +123,7 @@ mod shape {
 
     fn string_label(test: &Expression<'_>) -> Option<String> {
         match unwrap_ts_wrappers(test) {
-            Expression::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
+            Expression::StringLiteral(literal) => Some(crate::ast::js_literal(literal).into_owned()),
             _ => None,
         }
     }

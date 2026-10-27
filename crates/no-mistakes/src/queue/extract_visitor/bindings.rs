@@ -44,7 +44,7 @@ impl<'a> QueueVisitor<'a> {
 impl QueueVisitor<'_> {
     pub fn literal_arg(&self, arg: &Argument<'_>) -> Option<String> {
         match arg {
-            Argument::StringLiteral(value) => Some(js_literal(&value).into_owned()),
+            Argument::StringLiteral(value) => Some(js_literal(value).into_owned()),
             Argument::Identifier(id) => self.const_strings.get(id.name.as_str()).cloned(),
             _ => arg
                 .as_expression()

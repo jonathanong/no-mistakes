@@ -161,7 +161,7 @@ fn member<'a>(expr: &'a Expression<'a>) -> Option<(&'a Expression<'a>, std::borr
             let Expression::StringLiteral(property) = unwrap_ts_wrappers(&member.expression) else {
                 return None;
             };
-            Some((&member.object, crate::ast::js_literal(&property)))
+            Some((&member.object, crate::ast::js_literal(property)))
         }
         _ => None,
     }

@@ -69,7 +69,7 @@ impl<'a> ResourceVisitor<'a> {
     fn static_resource_expression(&self, expression: &Expression<'_>) -> Option<ResourcePath> {
         match expression {
             Expression::StringLiteral(value) => Some(ResourcePath {
-                value: crate::ast::js_literal(&value).into_owned(),
+                value: crate::ast::js_literal(value).into_owned(),
                 base: ResourcePathBase::AnalysisRoot,
             }),
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => {

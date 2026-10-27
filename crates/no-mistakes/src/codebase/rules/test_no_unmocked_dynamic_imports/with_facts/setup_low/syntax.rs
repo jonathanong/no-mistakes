@@ -87,7 +87,7 @@ pub(super) fn literal_arg(argument: &Argument<'_>) -> Option<String> {
 
 pub(super) fn literal_expr(expression: &Expression<'_>) -> Option<String> {
     match expression {
-        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
+        Expression::StringLiteral(literal) => Some(crate::ast::js_literal(literal).into_owned()),
         Expression::TemplateLiteral(template) => static_template(template),
         _ => None,
     }

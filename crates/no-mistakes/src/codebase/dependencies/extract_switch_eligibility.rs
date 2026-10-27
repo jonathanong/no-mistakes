@@ -11,7 +11,7 @@ fn switch_literal<'b>(expression: &'b Expression<'_>) -> Option<SwitchLiteral<'b
         Expression::BooleanLiteral(value) => Some(SwitchLiteral::Boolean(value.value)),
         Expression::NumericLiteral(value) => Some(SwitchLiteral::Number(value.value)),
         Expression::StringLiteral(value) => Some(SwitchLiteral::String(
-            crate::ast::js_literal(&value),
+            crate::ast::js_literal(value),
             crate::ast::js_literal_has_lone_surrogate(value),
         )),
         Expression::NullLiteral(_) => Some(SwitchLiteral::Null),

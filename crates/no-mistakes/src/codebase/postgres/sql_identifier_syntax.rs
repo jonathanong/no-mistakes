@@ -90,7 +90,7 @@ fn chain(expression: &Expression<'_>) -> Option<(Span, Vec<String>)> {
                 return None;
             };
             let (root, mut parts) = chain(&value.object)?;
-            parts.push(crate::ast::js_literal(&key).into_owned());
+            parts.push(crate::ast::js_literal(key).into_owned());
             Some((root, parts))
         }
         _ => None,

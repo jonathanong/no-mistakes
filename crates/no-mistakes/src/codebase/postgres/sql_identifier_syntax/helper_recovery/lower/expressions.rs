@@ -15,7 +15,7 @@ pub(super) fn lower(scope: &mut Scope<'_>, node: &Expression<'_>) -> Expr {
             if raw.is_none_or(|raw| {
                 !super::super::super::literal_projection::literal_matches(
                     raw,
-                    crate::ast::js_literal(&value).as_ref(),
+                    crate::ast::js_literal(value).as_ref(),
                 )
             }) {
                 return Expr::Opaque;
@@ -23,7 +23,7 @@ pub(super) fn lower(scope: &mut Scope<'_>, node: &Expression<'_>) -> Expr {
             Expr::Lit(RecoveredSql::literal(
                 node,
                 scope.ctx.source,
-                crate::ast::js_literal(&value).into_owned(),
+                crate::ast::js_literal(value).into_owned(),
             ))
         }
         Expression::BooleanLiteral(value) => Expr::Bool(value.value),
@@ -57,7 +57,7 @@ pub(super) fn lower(scope: &mut Scope<'_>, node: &Expression<'_>) -> Expr {
             };
             Expr::Member(
                 Box::new(scope.expression(&value.object)),
-                crate::ast::js_literal(&key).into_owned(),
+                crate::ast::js_literal(key).into_owned(),
             )
         }
         Expression::ObjectExpression(_)

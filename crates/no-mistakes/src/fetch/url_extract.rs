@@ -6,8 +6,8 @@ use oxc_span::GetSpan;
 pub fn extract_url_from_argument(arg: &Argument, source: &str) -> UrlExtraction {
     match arg {
         Argument::StringLiteral(s) => UrlExtraction {
-            path: crate::ast::js_literal(&s).into_owned(),
-            raw_path: crate::ast::js_literal(&s).into_owned(),
+            path: crate::ast::js_literal(s).into_owned(),
+            raw_path: crate::ast::js_literal(s).into_owned(),
             is_dynamic: false,
             is_unsupported: false,
         },

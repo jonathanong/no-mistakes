@@ -45,7 +45,7 @@ impl<'a> Visit<'a> for LiteralVisitor<'a> {
 
     fn visit_string_literal(&mut self, literal: &oxc_ast::ast::StringLiteral<'a>) {
         self.literals
-            .push(crate::ast::js_literal(&literal).into_owned());
+            .push(crate::ast::js_literal(literal).into_owned());
     }
 
     fn visit_reg_exp_literal(&mut self, literal: &oxc_ast::ast::RegExpLiteral<'a>) {
@@ -125,7 +125,7 @@ pub fn argument_literals(
     static_templates: &FxHashMap<u32, String>,
 ) -> Vec<String> {
     match argument {
-        Argument::StringLiteral(literal) => vec![crate::ast::js_literal(&literal).into_owned()],
+        Argument::StringLiteral(literal) => vec![crate::ast::js_literal(literal).into_owned()],
         Argument::TemplateLiteral(template) => {
             vec![template_text(template, source, static_templates)]
         }

@@ -5,7 +5,7 @@ fn collect_from_default_export(kind: &ExportDefaultDeclarationKind<'_>, values: 
                 if let ObjectPropertyKind::ObjectProperty(p) = prop {
                     if !p.computed {
                         if let Expression::StringLiteral(lit) = &p.value {
-                            values.push(crate::ast::js_literal(&lit).into_owned());
+                            values.push(crate::ast::js_literal(lit).into_owned());
                         }
                     }
                 }

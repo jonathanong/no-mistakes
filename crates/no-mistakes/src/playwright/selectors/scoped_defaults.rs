@@ -110,7 +110,7 @@ fn initializer_string(initializer: Option<&oxc_ast::ast::Expression<'_>>) -> Opt
 fn expression_string(expression: &oxc_ast::ast::Expression<'_>) -> Option<String> {
     match expression {
         oxc_ast::ast::Expression::StringLiteral(literal) => {
-            Some(crate::ast::js_literal(&literal).into_owned())
+            Some(crate::ast::js_literal(literal).into_owned())
         }
         _ => None,
     }

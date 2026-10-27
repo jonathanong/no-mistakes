@@ -14,7 +14,7 @@ fn query_param_from_call(call: &oxc_ast::ast::CallExpression<'_>) -> Option<Stri
     if property == "get" && !member_object_is_url_search_params(member.object()) {
         return None;
     }
-    Some(crate::ast::js_literal(&value).into_owned())
+    Some(crate::ast::js_literal(value).into_owned())
 }
 
 fn expression_is_query_object(expr: &Expression<'_>, query_aliases: &BTreeSet<String>) -> bool {

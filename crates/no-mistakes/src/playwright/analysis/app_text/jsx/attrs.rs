@@ -20,13 +20,13 @@ pub(crate) fn attr_exists_at_runtime(opening: &JSXOpeningElement<'_>, name: &str
 
 pub(crate) fn aria_bool_attr(opening: &JSXOpeningElement<'_>, name: &str) -> Option<bool> {
     find_attr(opening, name).and_then(|attribute| match attribute.value.as_ref()? {
-        JSXAttributeValue::StringLiteral(literal) => match js_literal(&literal).as_ref() {
+        JSXAttributeValue::StringLiteral(literal) => match js_literal(literal).as_ref() {
             "true" => Some(true),
             "false" => Some(false),
             _ => None,
         },
         JSXAttributeValue::ExpressionContainer(container) => match &container.expression {
-            JSXExpression::StringLiteral(literal) => match js_literal(&literal).as_ref() {
+            JSXExpression::StringLiteral(literal) => match js_literal(literal).as_ref() {
                 "true" => Some(true),
                 "false" => Some(false),
                 _ => None,

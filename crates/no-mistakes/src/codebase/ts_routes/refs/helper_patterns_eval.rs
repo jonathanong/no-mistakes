@@ -31,7 +31,7 @@ fn evaluate_route_expression<'a>(
     }
     match expr {
         Expression::StringLiteral(s) => vec![normalize_next_pathname_pattern(
-            crate::ast::js_literal(&s).as_ref(),
+            crate::ast::js_literal(s).as_ref(),
         )],
         Expression::TemplateLiteral(tpl) => {
             evaluate_template_literal(tpl, defs, imported_helpers, env, depth)

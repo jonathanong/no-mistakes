@@ -33,7 +33,7 @@ fn constant<'a>(expression: &'a Expression<'a>) -> Option<Constant<'a>> {
         Expression::NullLiteral(_) => Some(Constant::Null),
         Expression::BooleanLiteral(value) => Some(Constant::Boolean(value.value)),
         Expression::NumericLiteral(value) => Some(Constant::Number(value.value)),
-        Expression::StringLiteral(value) => Some(Constant::Text(crate::ast::js_literal(&value))),
+        Expression::StringLiteral(value) => Some(Constant::Text(crate::ast::js_literal(value))),
         _ => None,
     }
 }

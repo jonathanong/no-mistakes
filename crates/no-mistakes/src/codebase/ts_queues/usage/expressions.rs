@@ -127,7 +127,7 @@ fn extract_member_call<'a>(call: &'a CallExpression) -> Option<(String, &'a str)
 
 fn literal_str(arg: &Argument) -> Option<String> {
     if let Argument::StringLiteral(s) = arg {
-        return Some(crate::ast::js_literal(&s).into_owned());
+        return Some(crate::ast::js_literal(s).into_owned());
     }
     if let Some(e) = arg.as_expression() {
         return literal_str_expr(e);
@@ -137,7 +137,7 @@ fn literal_str(arg: &Argument) -> Option<String> {
 
 fn literal_str_expr(expr: &Expression) -> Option<String> {
     if let Expression::StringLiteral(s) = expr {
-        return Some(crate::ast::js_literal(&s).into_owned());
+        return Some(crate::ast::js_literal(s).into_owned());
     }
     None
 }

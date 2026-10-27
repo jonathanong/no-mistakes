@@ -51,7 +51,7 @@ fn literal_constant(
 
 fn literal_sql(expression: &Expression<'_>) -> Option<String> {
     let sql = match expression {
-        Expression::StringLiteral(literal) => crate::ast::js_literal(&literal).into_owned(),
+        Expression::StringLiteral(literal) => crate::ast::js_literal(literal).into_owned(),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => template
             .quasis
             .iter()

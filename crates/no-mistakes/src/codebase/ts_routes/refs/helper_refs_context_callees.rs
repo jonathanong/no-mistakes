@@ -27,7 +27,7 @@ fn route_helper_context_summary(
     match expr {
         Expression::StringLiteral(s) => RouteHelperContextSummary {
             patterns: vec![normalize_next_pathname_pattern(
-                crate::ast::js_literal(&s).as_ref(),
+                crate::ast::js_literal(s).as_ref(),
             )],
             refs: Vec::new(),
         },

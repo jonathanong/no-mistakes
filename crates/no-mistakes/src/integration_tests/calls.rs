@@ -67,7 +67,7 @@ fn is_skipped_describe_path(path: &[String]) -> bool {
 
 fn string_arg(argument: &Argument<'_>) -> Option<String> {
     match argument {
-        Argument::StringLiteral(literal) => Some(crate::ast::js_literal(&literal).into_owned()),
+        Argument::StringLiteral(literal) => Some(crate::ast::js_literal(literal).into_owned()),
         Argument::TemplateLiteral(template) if template.expressions.is_empty() => template
             .quasis
             .first()

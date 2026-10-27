@@ -53,7 +53,7 @@ fn const_string(semantic: &Semantic<'_>, symbol: SymbolId) -> Option<(u32, Strin
         return None;
     }
     let value = match &declaration.init {
-        Some(Expression::StringLiteral(literal)) => crate::ast::js_literal(&literal).into_owned(),
+        Some(Expression::StringLiteral(literal)) => crate::ast::js_literal(literal).into_owned(),
         Some(Expression::TemplateLiteral(template)) if template.expressions.is_empty() => {
             crate::ast::template_literal_text(template, "")
         }

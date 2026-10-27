@@ -47,7 +47,7 @@ pub fn try_extract_fetch<'a>(
                 if let Some(name) = crate::ast::property_key_name(&p.key) {
                     if name.as_ref() == "method" {
                         if let Expression::StringLiteral(s) = &p.value {
-                            method = crate::ast::js_literal(&s).into_owned();
+                            method = crate::ast::js_literal(s).into_owned();
                         }
                     }
                 }

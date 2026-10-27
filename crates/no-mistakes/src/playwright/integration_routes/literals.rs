@@ -3,7 +3,7 @@ use oxc_ast::ast::Argument;
 
 pub(super) fn literal(argument: &Argument<'_>) -> Option<String> {
     match argument {
-        Argument::StringLiteral(value) => Some(crate::ast::js_literal(&value).into_owned()),
+        Argument::StringLiteral(value) => Some(crate::ast::js_literal(value).into_owned()),
         Argument::TemplateLiteral(value) if value.expressions.is_empty() => {
             let quasi = value.quasis.first()?;
             quasi.value.cooked?;

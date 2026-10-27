@@ -22,7 +22,7 @@ pub fn property_expression<'a>(
 fn property_key_name(key: &PropertyKey<'_>) -> Option<String> {
     match key {
         PropertyKey::StaticIdentifier(identifier) => Some(identifier.name.to_string()),
-        PropertyKey::StringLiteral(literal) => Some(js_literal(&literal).into_owned()),
+        PropertyKey::StringLiteral(literal) => Some(js_literal(literal).into_owned()),
         _ => None,
     }
 }

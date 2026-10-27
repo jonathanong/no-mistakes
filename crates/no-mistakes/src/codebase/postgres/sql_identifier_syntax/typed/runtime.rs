@@ -107,7 +107,7 @@ impl<'a> Visit<'a> for Runtime<'_> {
             self.record(
                 &member.object,
                 false,
-                crate::ast::js_literal(&key).as_ref(),
+                crate::ast::js_literal(key).as_ref(),
                 member.span,
             );
         }
@@ -130,7 +130,7 @@ impl<'a> Visit<'a> for Runtime<'_> {
 fn field_name(key: &oxc_ast::ast::PropertyKey<'_>) -> Option<(bool, String)> {
     match key {
         oxc_ast::ast::PropertyKey::PrivateIdentifier(name) => Some((true, name.name.to_string())),
-        _ => crate::ast::property_key_name(&key).map(|name| (false, name.to_string())),
+        _ => crate::ast::property_key_name(key).map(|name| (false, name.to_string())),
     }
 }
 impl Runtime<'_> {

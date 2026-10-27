@@ -149,7 +149,7 @@ pub(super) fn module_export_name(name: &ModuleExportName<'_>) -> String {
     match name {
         ModuleExportName::IdentifierName(id) => id.name.to_string(),
         ModuleExportName::IdentifierReference(id) => id.name.to_string(),
-        ModuleExportName::StringLiteral(value) => js_literal(&value).into_owned(),
+        ModuleExportName::StringLiteral(value) => js_literal(value).into_owned(),
     }
 }
 
@@ -162,7 +162,7 @@ fn default_export_name(decl: &ExportDefaultDeclarationKind<'_>) -> Option<String
 
 pub(super) fn const_string(expr: &Expression<'_>) -> Option<String> {
     match expr {
-        Expression::StringLiteral(value) => Some(js_literal(&value).into_owned()),
+        Expression::StringLiteral(value) => Some(js_literal(value).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => Some(
             template
                 .quasis

@@ -19,7 +19,7 @@ fn object_route_pattern(obj: &oxc_ast::ast::ObjectExpression) -> Option<String> 
 fn property_key_name<'a>(key: &'a PropertyKey<'_>) -> Option<std::borrow::Cow<'a, str>> {
     match key {
         PropertyKey::StaticIdentifier(id) => Some(std::borrow::Cow::Borrowed(id.name.as_str())),
-        PropertyKey::StringLiteral(s) => Some(crate::ast::js_literal(&s)),
+        PropertyKey::StringLiteral(s) => Some(crate::ast::js_literal(s)),
         _ => None,
     }
 }

@@ -167,7 +167,7 @@ fn accepts_typed_import_specifier(call: &CallExpression<'_>) -> bool {
 
 fn string_arg(arg: &Argument<'_>) -> Option<String> {
     match arg {
-        Argument::StringLiteral(s) => Some(crate::ast::js_literal(&s).into_owned()),
+        Argument::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Argument::TemplateLiteral(t) => static_template(t),
         _ => None,
     }
@@ -175,7 +175,7 @@ fn string_arg(arg: &Argument<'_>) -> Option<String> {
 
 fn string_expr(expr: &Expression<'_>) -> Option<String> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(s) => Some(crate::ast::js_literal(&s).into_owned()),
+        Expression::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Expression::TemplateLiteral(t) => static_template(t),
         _ => None,
     }

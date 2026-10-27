@@ -3,7 +3,7 @@ use oxc_ast::ast::{Argument, Expression, NewExpression};
 
 pub(super) fn static_string(arg: &Argument<'_>) -> Option<String> {
     match arg {
-        Argument::StringLiteral(s) => Some(crate::ast::js_literal(&s).into_owned()),
+        Argument::StringLiteral(s) => Some(crate::ast::js_literal(s).into_owned()),
         Argument::TemplateLiteral(template) if template.expressions.is_empty() => Some(
             template
                 .quasis

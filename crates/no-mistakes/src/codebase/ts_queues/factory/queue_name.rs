@@ -29,7 +29,7 @@ fn resolve_queue_name(
     const_strings: &HashMap<String, String>,
 ) -> String {
     match call.arguments.first() {
-        Some(oxc_ast::ast::Argument::StringLiteral(s)) => crate::ast::js_literal(&s).into_owned(),
+        Some(oxc_ast::ast::Argument::StringLiteral(s)) => crate::ast::js_literal(s).into_owned(),
         Some(oxc_ast::ast::Argument::Identifier(id)) => const_strings
             .get(id.name.as_str())
             .cloned()

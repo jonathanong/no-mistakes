@@ -49,7 +49,7 @@ pub(super) fn for_expression_with_offset(
     match expr {
         Expression::StringLiteral(literal) => {
             let raw = &source[literal.span.start as usize + 1..literal.span.end as usize - 1];
-            out.append(raw, crate::ast::js_literal(&literal).as_ref(), line, false);
+            out.append(raw, crate::ast::js_literal(literal).as_ref(), line, false);
         }
         Expression::TemplateLiteral(template) => {
             template_positions(template, source, line, &mut out, false)

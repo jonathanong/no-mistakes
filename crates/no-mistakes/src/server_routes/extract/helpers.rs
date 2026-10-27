@@ -55,7 +55,7 @@ pub(super) fn first_object_prefix(args: &[Argument<'_>]) -> Option<String> {
                 crate::ast::property_key_name(&property.key).as_deref(),
                 &property.value,
             ) {
-                return Some(crate::ast::js_literal(&value).into_owned());
+                return Some(crate::ast::js_literal(value).into_owned());
             }
         }
     }

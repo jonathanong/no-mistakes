@@ -20,7 +20,7 @@ pub(super) fn binding_name(pattern: &BindingPattern<'_>) -> Option<String> {
 pub(super) fn export_name(name: &ModuleExportName<'_>) -> String {
     match name {
         ModuleExportName::IdentifierName(id) => id.name.as_str().to_string(), ModuleExportName::IdentifierReference(id) => id.name.as_str().to_string(),
-        ModuleExportName::StringLiteral(value) => crate::ast::js_literal(&value).into_owned(),
+        ModuleExportName::StringLiteral(value) => crate::ast::js_literal(value).into_owned(),
     }
 }
 
@@ -30,7 +30,7 @@ pub(super) fn is_queue_package(source: &str) -> bool {
 
 pub(super) fn static_string(expr: &Expression<'_>) -> Option<String> {
     match expr {
-        Expression::StringLiteral(value) => Some(crate::ast::js_literal(&value).into_owned()),
+        Expression::StringLiteral(value) => Some(crate::ast::js_literal(value).into_owned()),
         Expression::TemplateLiteral(template) => no_substitution_template(template),
         _ => None,
     }

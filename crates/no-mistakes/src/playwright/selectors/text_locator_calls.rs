@@ -87,7 +87,7 @@ fn text_arg(argument: &Argument<'_>, source: &str) -> Option<String> {
 
 fn argument_string(argument: &Argument<'_>, source: &str) -> Option<String> {
     match argument {
-        Argument::StringLiteral(literal) => Some(js_literal(&literal).into_owned()),
+        Argument::StringLiteral(literal) => Some(js_literal(literal).into_owned()),
         Argument::TemplateLiteral(template) if template.expressions.is_empty() => {
             Some(ast::template_literal_text(template, source))
         }
@@ -114,7 +114,7 @@ fn object_string_property(argument: &Argument<'_>, name: &str, source: &str) -> 
         }
         match &property.value {
             Expression::StringLiteral(literal) => {
-                value = normalize_locator_text(js_literal(&literal).as_ref());
+                value = normalize_locator_text(js_literal(literal).as_ref());
             }
             Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
                 value = normalize_locator_text(&ast::template_literal_text(template, source));
@@ -130,7 +130,7 @@ fn object_string_property(argument: &Argument<'_>, name: &str, source: &str) -> 
 
 fn expression_string(expression: &Expression<'_>, source: &str) -> Option<String> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
-        Expression::StringLiteral(literal) => Some(js_literal(&literal).into_owned()),
+        Expression::StringLiteral(literal) => Some(js_literal(literal).into_owned()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             Some(ast::template_literal_text(template, source))
         }
@@ -143,7 +143,7 @@ fn property_key_name<'a>(key: &PropertyKey<'a>) -> Option<std::borrow::Cow<'a, s
         PropertyKey::StaticIdentifier(identifier) => {
             Some(std::borrow::Cow::Borrowed(identifier.name.as_str()))
         }
-        PropertyKey::StringLiteral(literal) => Some(js_literal(&literal)),
+        PropertyKey::StringLiteral(literal) => Some(js_literal(literal)),
         _ => None,
     }
 }
