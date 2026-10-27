@@ -26,6 +26,8 @@ fn dynamic_import_selectors_record_only_proven_forms() {
         vec!["B"],
         vec!["C", "D"],
         vec!["default"],
+        vec!["default"],
+        vec!["default"],
         vec!["E", "F"],
         vec!["G"],
     ];

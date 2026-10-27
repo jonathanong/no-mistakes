@@ -37,6 +37,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "production-exports-only-used-by-tests",
           "sourceLine": "export const missingMember = import(\"./absent-target.mjs\").then((mod) => mod.absent);",
           "target": "unanalyzable"
+        },
+        {
+          "file": "src/wrapper-consumer.mts",
+          "line": 5,
+          "message": "cannot analyze production export importers: symbol consumers of `Retried` include an unknown import selector: src/wrapper-consumer.mts:5 `./retried.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const retried = retry(() => import(\"./retried.mjs\")).then((mod) => mod.Retried);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/wrapper-consumer.mts",
+          "line": 8,
+          "message": "cannot analyze production export importers: symbol consumers of `Wrapped` include an unknown import selector: src/wrapper-consumer.mts:8 `./wrapped.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "return await wrap(() => import(\"./wrapped.mjs\"));",
+          "target": "unanalyzable"
         }
       ],
       "codebase": [],

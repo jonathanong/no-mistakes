@@ -46,9 +46,23 @@ fn loader_default(
     function: &ArrowFunctionExpression<'_>,
     semantic: &Semantic<'_>,
 ) -> Option<Vec<String>> {
-    let (_, AstKind::CallExpression(call)) = parent(arrow, semantic)? else {
+    let (call_id, AstKind::CallExpression(call)) = parent(arrow, semantic)? else {
         return None;
     };
+    // The wrapper's own result may be unwrapped or chained (`retry(...).then`,
+    // `await wrap(...)`, `outer(wrap(...))`), so the module is not its default.
+    if matches!(
+        parent(call_id, semantic)?.1,
+        AstKind::StaticMemberExpression(_)
+            | AstKind::ComputedMemberExpression(_)
+            | AstKind::PrivateFieldExpression(_)
+            | AstKind::ChainExpression(_)
+            | AstKind::AwaitExpression(_)
+            | AstKind::CallExpression(_)
+            | AstKind::NewExpression(_)
+    ) {
+        return None;
+    }
     (function.is_expression() && call.arguments.iter().any(|a| a.span() == function.span))
         .then(|| vec!["default".to_string()])
 }

@@ -331,6 +331,8 @@ fn dynamic_imports_check_json_snapshot() {
             "src/unknown-consumer.mts",
             "src/unresolved-consumer.mts",
             "src/unresolved-consumer.mts",
+            "src/wrapper-consumer.mts",
+            "src/wrapper-consumer.mts",
         ],
         "{report}"
     );
