@@ -101,8 +101,6 @@ function imported(node, context, namespace = false, seen = new Set()) {
         else if (def.node.type === "ImportDefaultSpecifier")
           importedName = source === "@playwright/test" ? "test" : null;
         else importedName = importSpecifierName(def.node);
-      } else {
-        continue;
       }
     } else if (def.type === "Variable") {
       const declaration = def.node;
