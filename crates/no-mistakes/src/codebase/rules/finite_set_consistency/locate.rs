@@ -39,14 +39,16 @@ pub(super) fn set_line(spec: &SetSpec, source: &str) -> usize {
     }
 }
 
-/// JSON documents (opening brace or bracket) use the token walker; one it
-/// cannot parse before resolving any segment falls back to the YAML line scan.
+/// JSON documents (opening brace or bracket) use the token walker. When it
+/// stops on text it cannot parse, the YAML line scan also runs and the deeper
+/// (later) line wins, so this is never less precise than the line scan alone.
 fn key_line(source: &str, path: &[String]) -> usize {
     if source.trim_start().starts_with(['{', '[']) {
         let (line, parsed) = json_walk::json_key_line(source, path);
-        if parsed || line > 1 {
+        if parsed {
             return line;
         }
+        return line.max(yaml_walk::yaml_key_line(source, path));
     }
     yaml_walk::yaml_key_line(source, path)
 }

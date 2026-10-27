@@ -167,6 +167,25 @@ fn json_walk_skips_comments_scalars_and_nested_values() {
 }
 
 #[test]
+fn json_walk_empty_path_and_numeric_string_keys() {
+    // Selector `[]` yields an empty path; it names no key, so the answer is line 1.
+    let selector = |source| set_line(&spec("yaml-string-selector", "[]", ""), source);
+    assert_eq!(selector("{\"a\":1}"), 1);
+    assert_eq!(selector("[\n  1\n]"), 1);
+    // A numeric segment matches an object key spelled as that number.
+    assert_eq!(yaml("0.k", "{\n  \"0\": {\n    \"k\": 1\n  }\n}\n"), 3);
+}
+
+#[test]
+fn json_walk_stop_never_loses_precision_to_the_line_scan() {
+    // Unquoted nested key is unparseable JSON; the line scan resolves it exactly.
+    let source = "{\n  \"a\": {\n    b: 1\n  }\n}\n";
+    assert_eq!(yaml("a.b", source), 3);
+    // The walker's deeper ancestor line is kept when the line scan stops sooner.
+    assert_eq!(yaml("a.z", source), 2);
+}
+
+#[test]
 fn json_walk_never_guesses_in_malformed_text() {
     assert_eq!(yaml("b", "{\n  \"a\": \"x"), 1);
     assert_eq!(yaml("b", "{\n  \"a\" 1\n}"), 1);

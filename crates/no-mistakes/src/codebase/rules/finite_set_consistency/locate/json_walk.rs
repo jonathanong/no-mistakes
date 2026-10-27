@@ -10,6 +10,10 @@ struct Walker<'a> {
 
 /// The line of the deepest segment resolved and whether the walk parsed cleanly.
 pub(super) fn json_key_line(source: &str, path: &[String]) -> (usize, bool) {
+    // An empty path (e.g. selector `[]`) names no key; every walk below indexes `path[0]`.
+    if path.is_empty() {
+        return (1, true);
+    }
     let mut walker = Walker {
         bytes: source.as_bytes(),
         pos: 0,
