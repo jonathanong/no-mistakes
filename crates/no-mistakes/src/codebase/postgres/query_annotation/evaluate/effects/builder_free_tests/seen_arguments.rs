@@ -97,7 +97,7 @@ fn dense_in_progress_arguments_must_not_use_the_completed_scope_guard() {
         .insert(b, vec![Value::Arguments(a), Value::Arguments(c)]);
     e.argument_objects.insert(a, vec![shared.clone()]);
     e.argument_objects.insert(c, vec![builder(&spec, "sparse")]);
-    let cold = e.collect_builder_ids(&[shared.clone()], std::mem::drop);
+    let cold = e.collect_builder_ids(std::slice::from_ref(&shared), std::mem::drop);
     assert_eq!(cold, FxHashSet::from_iter([a, b, c, d]));
     for slots in e.argument_objects.values() {
         slots.references();
