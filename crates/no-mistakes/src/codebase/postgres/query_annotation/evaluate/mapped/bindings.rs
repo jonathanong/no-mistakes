@@ -1,3 +1,4 @@
+mod refresh;
 use super::{Environment, Evaluator, Value};
 use crate::codebase::postgres::query_annotation::Function;
 use crate::fx::FxHashMap;
@@ -174,22 +175,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     .entry(name.clone())
                     .or_default()
                     .insert(frame);
-            }
-        }
-    }
-
-    pub(in crate::codebase::postgres::query_annotation::evaluate) fn refresh_captured_bindings(
-        &mut self,
-    ) {
-        for (frame, bindings) in &self.captured_bindings {
-            for (name, origin) in bindings {
-                let value = self.scopes[*origin].get(name).unwrap_or(&Value::Unknown);
-                // A missing binding must still acquire Unknown; equal writes
-                // would detach shared scopes and invalidate their indexes.
-                if self.scopes[*frame].get(name) != Some(value) {
-                    let value = value.clone();
-                    self.scopes[*frame].insert(name.clone(), value);
-                }
             }
         }
     }

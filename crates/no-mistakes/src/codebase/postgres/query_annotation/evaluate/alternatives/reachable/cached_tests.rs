@@ -3,7 +3,11 @@ use crate::codebase::postgres::query_annotation::evaluate::ArgumentObjects;
 use std::collections::BTreeMap;
 
 fn callback(env: usize) -> Value {
-    Value::Function(tests::saved_function(), "reads.mts".into(), env)
+    Value::Function(
+        tests::saved_function(),
+        std::path::PathBuf::from("reads.mts").into(),
+        env,
+    )
 }
 
 fn compare(

@@ -2,7 +2,7 @@ import { read } from '@data-stores/psql'
 import sql from 'sql-template-strings'
 // Aliases stay reference-bearing so binding pruning cannot erase the batching workload.
 const query = sql`/* batched */ SELECT 1`
-const alias0 = query
+let alias0 = query
 const alias1 = query
 const alias2 = query
 const alias3 = query
@@ -34,6 +34,6 @@ const alias28 = query
 const alias29 = query
 const alias30 = query
 const alias31 = query
-const joined = unknownCondition ? query : query
+const joined = unknownCondition ? (alias0 = 0, query) : (alias0 = 0, query) // Rebind an unused alias so batching compares changed scopes.
 read(query)
 read(sql`SELECT 2`) // unsafe-query

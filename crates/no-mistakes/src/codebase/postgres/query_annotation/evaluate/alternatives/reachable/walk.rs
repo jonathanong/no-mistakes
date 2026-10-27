@@ -31,7 +31,7 @@ pub(super) fn collect<const WARM: bool>(
         while let Some(env) = found.pending_env.pop() {
             if found.environments.insert(env) {
                 if let Some(origins) = captured.get(&env) {
-                    found.pending_env.extend(origins.values().copied());
+                    extend_capture_edges!(found, origins);
                 }
                 let cached = WARM.then(|| scopes[env].cached_references()).flatten();
                 if let Some(edges) = cached {

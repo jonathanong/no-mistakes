@@ -18,7 +18,7 @@ fn function() -> Value {
             arrow: false,
             self_name: None,
         }),
-        "helper.mts".into(),
+        std::path::PathBuf::from("helper.mts").into(),
         7,
     )
 }
@@ -70,7 +70,7 @@ fn frozen_derived_oracle_matches_all_variant_pairs_and_function_fields() {
     ));
     values.push(Value::Function(
         summary.clone(),
-        "different.mts".into(),
+        std::path::PathBuf::from("different.mts").into(),
         env,
     ));
     values.push(Value::Function(summary.clone(), path.clone(), env + 1));

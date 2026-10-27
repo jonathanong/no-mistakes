@@ -13,12 +13,18 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         depth: u8,
         generic: bool,
     ) -> Value {
+        if let Some(value) = self.readonly_alternatives(arms, path, env, depth, generic) {
+            return value;
+        }
         let precise_records = self.files[path].facts.precise_records;
         let scopes = self.scopes.clone();
         let seen = self.active_callback_functions.clone();
         let executions = self.active_callback_executions.clone();
         let mut joined_seen = seen.clone();
-        let captured = self.captured_bindings.clone();
+        let original_captures_empty = self.captured_bindings.is_empty();
+        let captured_prefix_unchanged =
+            super::super::captures::prefix_is_unchanged(&self.captured_bindings, scopes.len());
+        let captured = (!captured_prefix_unchanged).then(|| self.captured_bindings.clone());
         let mut joined_scopes: Option<Vec<Scope>> = None;
         let mut modules = self.modules.clone();
         self.begin_alternative_module_snapshot(scopes.len());
@@ -60,9 +66,11 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             self.argument_extra_slots.extend(extra_slots.clone());
             self.restore_builder_updates(None, updates.clone(), original_ids);
             self.remove_alternative_captured_readers(scopes.len());
-            self.captured_bindings
-                .retain(|frame, _| *frame >= scopes.len());
-            self.captured_bindings.extend(captured.clone());
+            if let Some(captured) = &captured {
+                self.captured_bindings
+                    .retain(|frame, _| *frame >= scopes.len());
+                self.captured_bindings.extend(captured.clone());
+            }
             self.invalidated_builders.clone_from(&original);
             self.deleted_argument_slots.clone_from(&deleted);
             self.definite_deleted_argument_slots.clone_from(&definite);
@@ -93,7 +101,11 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
                 let mut comparisons = scopes
                     .iter()
                     .zip(&self.scopes)
-                    .filter(|(before, _)| !precise_records && before.contains_reference())
+                    .filter(|(before, after)| {
+                        !precise_records
+                            && before.contains_reference()
+                            && !super::values::unchanged_without_arguments(before, after)
+                    })
                     .peekable();
                 // Peek retains the first eligible scope without a second scan.
                 if comparisons.peek().is_some() {
@@ -168,7 +180,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
             if arm_index + 1 == arms.len()
                 && self.can_reuse_final_live(
                     scopes.len(),
-                    captured.is_empty(),
+                    original_captures_empty,
                     original.is_empty() && changed.is_empty(),
                     &indices.indices,
                 )
@@ -181,3 +193,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         include!("run_finish.inc")
     }
 }
+
+#[cfg(test)]
+#[path = "run/capture_prefix_tests.rs"]
+mod capture_prefix_tests;

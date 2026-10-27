@@ -1,10 +1,12 @@
+mod seen;
+pub(super) use seen::CallbackSet;
 mod dependencies;
 mod imports;
 mod memo;
 mod state;
 mod values;
 use super::{calls::scopes, Environment, Evaluator, Value};
-use crate::fx::{FxHashMap, FxHashSet};
+use crate::fx::FxHashMap;
 use std::path::{Path, PathBuf};
 
 #[derive(Default)]
@@ -25,9 +27,9 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn opaque_callbacks_with_roots(&mut self, arguments: &[Value], depth: u8) {
         let outermost = self.active_callback_functions.is_none();
         self.active_callback_functions
-            .get_or_insert_with(FxHashSet::default);
+            .get_or_insert_with(CallbackSet::default);
         self.active_callback_executions
-            .get_or_insert_with(FxHashSet::default);
+            .get_or_insert_with(CallbackSet::default);
         let mut state = CallbackState::default();
         self.callback_values(arguments, depth, &mut state);
         // Only objects reached by this consumer participate. Each revisit

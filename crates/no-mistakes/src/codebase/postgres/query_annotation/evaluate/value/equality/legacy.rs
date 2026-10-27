@@ -43,7 +43,7 @@ impl From<&Value> for Legacy {
             Value::Possible(a) => Self::Possible(a.iter().map(Self::from).collect()),
             Value::Arguments(a) => Self::Arguments(*a),
             Value::Array(a) => Self::Array(*a),
-            Value::Function(a, b, c) => Self::Function(a.clone(), b.clone(), *c),
+            Value::Function(a, b, c) => Self::Function(a.clone(), b.as_ref().clone(), *c),
             Value::Number(a) => Self::Number(*a),
             Value::Boolean(a) => Self::Boolean(*a),
             Value::Failure(a) => Self::Failure(a),

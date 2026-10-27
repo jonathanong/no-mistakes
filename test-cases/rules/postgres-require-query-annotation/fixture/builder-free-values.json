@@ -1,0 +1,13 @@
+{
+  "comment": "Builder-free immutable catalog DAGs include callbacks whose captured environments must not be traversed by the builder collector. Mutable argument identities remain separate live inputs.",
+  "depth": 10,
+  "fanout": 2,
+  "prefix": "/* builder collection */ SELECT 1",
+  "builder": 7,
+  "argument": 100,
+  "array": 101,
+  "deleted": 8,
+  "sparse": 9,
+  "replacement": 11,
+  "scopeNameCount": 5000
+}

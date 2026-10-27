@@ -1,11 +1,29 @@
 use super::*;
-use std::ops::DerefMut;
 
-// Legacy full-remap test oracles mutate their owned maps directly. Production
-// exposes only the guarded origin remap, never an unconstrained mutable view.
-impl DerefMut for CapturedOrigins {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        Arc::make_mut(&mut self.0)
+impl CapturedOrigins {
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn strong_count_probe(
+        &self,
+    ) -> impl Fn() -> usize {
+        let weak = Arc::downgrade(&self.0);
+        move || weak.strong_count()
+    }
+
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn insert_origin(
+        &mut self,
+        name: String,
+        origin: Environment,
+    ) {
+        let origins = Arc::make_mut(&mut self.0);
+        origins.bindings.insert(name, origin);
+        origins.max_origin.take();
+        origins.refresh = Default::default();
+    }
+
+    pub(in crate::codebase::postgres::query_annotation::evaluate) fn reserve_origins(
+        &mut self,
+        capacity: usize,
+    ) {
+        Arc::make_mut(&mut self.0).bindings.reserve(capacity);
     }
 }
 
@@ -107,4 +125,60 @@ fn identity_empty_and_unshared_remaps_preserve_buffers_until_a_real_change() {
     unique.remap(&FxHashMap::from_iter([(2, 1)]));
     assert_eq!(unique["owner"], 1);
     assert_eq!(unique.get_key_value("owner").unwrap().0.as_ptr(), pointer);
+}
+
+#[test]
+fn cached_prefix_guard_rejects_private_and_out_of_range_origins() {
+    let mut bindings: CapturedBindings =
+        FxHashMap::from_iter([(1, FxHashMap::from_iter([("name".into(), 0)]).into())]);
+    assert!(prefix_is_unchanged(&bindings, 2));
+    assert!(
+        !prefix_is_unchanged(&bindings, 1),
+        "owner at base is private"
+    );
+
+    let mut out_of_range: CapturedOrigins = FxHashMap::from_iter([("name".into(), 99)]).into();
+    assert!(
+        out_of_range.0.max_origin.get().is_none(),
+        "construction is cold"
+    );
+    assert_eq!(out_of_range.max_origin(), Some(99));
+    assert_eq!(out_of_range.0.max_origin.get(), Some(&Some(99)));
+    assert!(!prefix_is_unchanged(
+        &FxHashMap::from_iter([(0, out_of_range.clone())]),
+        2
+    ));
+    out_of_range.remap(&FxHashMap::from_iter([(99, 1)]));
+    assert_eq!(out_of_range.max_origin(), Some(1));
+    assert_eq!(out_of_range.0.max_origin.get(), Some(&Some(1)));
+    bindings.insert(0, out_of_range);
+    assert!(prefix_is_unchanged(&bindings, 2));
+
+    let private: CapturedOrigins = FxHashMap::from_iter([("name".into(), 99)]).into();
+    assert!(!prefix_is_unchanged(
+        &FxHashMap::from_iter([(2, private.clone())]),
+        2
+    ));
+    assert!(
+        private.0.max_origin.get().is_none(),
+        "private owner short-circuits"
+    );
+}
+
+#[test]
+fn origin_cache_is_lazy_shared_and_ignored_by_logical_equality() {
+    let cold: CapturedOrigins = FxHashMap::from_iter([("name".into(), 99)]).into();
+    let clone = cold.clone();
+    assert!(Arc::ptr_eq(&cold.0, &clone.0));
+    assert!(cold.0.max_origin.get().is_none());
+
+    assert_eq!(clone.max_origin(), Some(99));
+    assert_eq!(cold.0.max_origin.get(), Some(&Some(99)));
+    let separately_constructed: CapturedOrigins =
+        FxHashMap::from_iter([("name".into(), 99)]).into();
+    assert!(separately_constructed.0.max_origin.get().is_none());
+    assert_eq!(
+        cold, separately_constructed,
+        "cache warmth is not semantic state"
+    );
 }

@@ -18,7 +18,7 @@ fn saved_function() -> Value {
     else {
         panic!("saved callback summary");
     };
-    Value::Function(function, path, 0)
+    Value::Function(function, path.into(), 0)
 }
 
 fn assert_matches_scan(scope: &Scope) {

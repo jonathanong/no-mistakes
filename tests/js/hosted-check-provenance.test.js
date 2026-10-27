@@ -29,6 +29,15 @@ test("source provenance rejects substituted main baselines and mismatched identi
   invalid.baseline.refs.baseline.kind = "main";
   invalid.candidate.refs.baseline.kind = "main";
   assert.throws(() => validateBuildPair(invalid), /latest stable release tag/);
+  const explicit = fixture("source-pair.json");
+  explicit.baseline.refs.candidate.kind = "commit";
+  explicit.baseline.refs.candidate.ref = explicit.baseline.refs.candidate.commit;
+  explicit.candidate.refs.candidate.kind = "commit";
+  explicit.candidate.refs.candidate.ref = explicit.candidate.refs.candidate.commit;
+  assert.equal(validateBuildPair(explicit), explicit);
+  explicit.baseline.refs.candidate.ref = "refs/heads/main";
+  explicit.candidate.refs.candidate.ref = "refs/heads/main";
+  assert.throws(() => validateBuildPair(explicit), /main or an exact immutable commit/);
   assert.throws(
     () =>
       validateBuildPair({

@@ -104,7 +104,9 @@ fn saved_unchanged_branches_match_legacy_state_and_reduce_actual_binding_visits(
         let expected = if whole_sql {
             prefix
         } else {
-            Value::Aggregate(vec![prefix.clone(), prefix].into())
+            // Sequence arms retain their handled-effect wrapper in legacy mode.
+            let value = Value::Evaluated(Box::new(prefix), true);
+            Value::Aggregate(vec![value.clone(), value].into())
         };
         assert!(
             new.scopes[new_env]["retained"] == expected,

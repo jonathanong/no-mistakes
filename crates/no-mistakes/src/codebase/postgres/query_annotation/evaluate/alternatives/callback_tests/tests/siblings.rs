@@ -94,8 +94,7 @@ fn opaque_callback_siblings_each_execute_the_reader_against_their_own_state() {
         discarded,
         function.params.clone(),
     );
-    evaluator.active_callback_functions =
-        Some(crate::fx::FxHashSet::from_iter([key, discarded_key]));
+    evaluator.active_callback_functions = Some([key, discarded_key].into_iter().collect());
     evaluator.active_callback_executions = evaluator.active_callback_functions.clone();
     evaluator.prune_snapshot_state();
     assert_eq!(

@@ -11,6 +11,7 @@ mod merge;
 pub(super) mod modules;
 mod prune;
 mod reachable;
+mod readonly;
 mod run;
 mod updates;
 mod values;

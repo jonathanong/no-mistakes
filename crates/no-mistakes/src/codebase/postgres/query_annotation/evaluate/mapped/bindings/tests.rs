@@ -62,7 +62,7 @@ fn equal_capture_refresh_keeps_shared_bindings_and_builder_indexes() {
         .captured_bindings
         .get_mut(&1)
         .unwrap()
-        .insert("missing".into(), 0);
+        .insert_origin("missing".into(), 0);
     evaluator.refresh_captured_bindings();
     assert!(evaluator.scopes[1].get("missing") == Some(&Value::Unknown));
     assert!(!std::ptr::eq(&*evaluator.scopes[1], &*scope));

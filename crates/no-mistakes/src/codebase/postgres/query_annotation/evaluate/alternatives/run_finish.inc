@@ -6,9 +6,11 @@
         self.argument_extra_slots = joined_extras.unwrap_or(extra_slots);
         self.restore_builder_updates(joined_updates, updates, original_ids);
         self.remove_alternative_captured_readers(scopes.len());
-        self.captured_bindings
-            .retain(|frame, _| *frame >= scopes.len());
-        self.captured_bindings.extend(captured);
+        if let Some(captured) = captured {
+            self.captured_bindings
+                .retain(|frame, _| *frame >= scopes.len());
+            self.captured_bindings.extend(captured);
+        }
         self.add_alternative_captured_readers(scopes.len());
         self.rebuild_mapped_argument_owners();
         if let Some(joined) = joined_scopes {

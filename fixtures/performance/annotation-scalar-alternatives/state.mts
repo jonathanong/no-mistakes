@@ -1,0 +1,83 @@
+import { read } from '@data-stores/psql'
+import sql from 'sql-template-strings'
+// Retain unrelated builder/array state before scalar alternatives.
+export const query = sql`/* retained */ SELECT 1`
+const unrelated = [
+  { value: 0, query },
+  { value: 1, query },
+  { value: 2, query },
+  { value: 3, query },
+  { value: 4, query },
+  { value: 5, query },
+  { value: 6, query },
+  { value: 7, query },
+  { value: 8, query },
+  { value: 9, query },
+  { value: 10, query },
+  { value: 11, query },
+  { value: 12, query },
+  { value: 13, query },
+  { value: 14, query },
+  { value: 15, query },
+  { value: 16, query },
+  { value: 17, query },
+  { value: 18, query },
+  { value: 19, query },
+  { value: 20, query },
+  { value: 21, query },
+  { value: 22, query },
+  { value: 23, query },
+  { value: 24, query },
+  { value: 25, query },
+  { value: 26, query },
+  { value: 27, query },
+  { value: 28, query },
+  { value: 29, query },
+  { value: 30, query },
+  { value: 31, query },
+  { value: 32, query },
+  { value: 33, query },
+  { value: 34, query },
+  { value: 35, query },
+  { value: 36, query },
+  { value: 37, query },
+  { value: 38, query },
+  { value: 39, query },
+  { value: 40, query },
+  { value: 41, query },
+  { value: 42, query },
+  { value: 43, query },
+  { value: 44, query },
+  { value: 45, query },
+  { value: 46, query },
+  { value: 47, query },
+  { value: 48, query },
+  { value: 49, query },
+  { value: 50, query },
+  { value: 51, query },
+  { value: 52, query },
+  { value: 53, query },
+  { value: 54, query },
+  { value: 55, query },
+  { value: 56, query },
+  { value: 57, query },
+  { value: 58, query },
+  { value: 59, query },
+  { value: 60, query },
+  { value: 61, query },
+  { value: 62, query },
+  { value: 63, query },
+]
+const left = '/* selected */ SELECT 2'
+const right = '/* selected */ SELECT 3'
+const record = { exact: left, nested: { exact: right } }
+const exactArray = [left, right]
+const args = { field: true, count: 4 }
+const nullish = args.field ?? false
+const logical = args.count || 7
+// Constructor arms must preserve concrete values without snapshotting unrelated heap state.
+const chosenRecord = unknownCondition ? { exact: left } : { exact: right }
+const chosenEmpty = unknownCondition ? { enabled: true } : {}
+export const selected = unknownCondition ? left : right
+const literal = unknownCondition ? 'literal left' : 'literal right'
+function callback() { return left }

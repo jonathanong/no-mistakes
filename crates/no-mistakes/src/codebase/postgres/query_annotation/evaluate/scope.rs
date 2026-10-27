@@ -35,6 +35,8 @@ impl Eq for Bindings {}
 /// Any write detaches the bindings and invalidates the index before mutation.
 #[derive(Clone, Default, Eq, PartialEq)]
 pub(in crate::codebase::postgres::query_annotation) struct Scope(Arc<Bindings>);
+mod state;
+pub(super) use state::StateWeak;
 
 #[cfg(not(test))]
 #[macro_use]
@@ -59,6 +61,14 @@ impl Scope {
             })
             .iter()
             .map(|name| (name, &self.0.values[name]))
+    }
+
+    /// Borrow an existing ordered selection without scanning or cloning names.
+    pub(super) fn cached_reference_bindings(&self) -> Option<impl Iterator<Item = &Value>> {
+        self.0
+            .reference_binding_names
+            .get()
+            .map(|names| names.iter().map(move |name| &self.0.values[name]))
     }
 
     /// Argument/array identities remain references even when their current arena is empty.

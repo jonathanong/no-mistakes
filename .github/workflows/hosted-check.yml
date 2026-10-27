@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "23 8 * * *"
   workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: "Optional exact no-mistakes commit SHA to measure instead of current main"
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -52,6 +58,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           HOSTED_HARNESS_COMMIT: ${{ github.workflow_sha }}
+          HOSTED_CANDIDATE_SHA: ${{ inputs.candidate_sha }}
         shell: bash
         run: |
           set -euo pipefail
