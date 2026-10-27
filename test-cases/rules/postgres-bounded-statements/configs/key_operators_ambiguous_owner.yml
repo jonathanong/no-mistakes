@@ -1,0 +1,10 @@
+# public.customer_accounts and public.owner_jobs must both remain
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalog-ambiguous-owner.json
+      executorNames: []
+      sqlInclude: [sql/key-operators.sql]
+      include: [sql/key-operators.sql]

@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: lifecycle-catalog.json
+      executorNames: []
+      sqlInclude: [lifecycle-control.sql]
+      include: [lifecycle-control.sql]

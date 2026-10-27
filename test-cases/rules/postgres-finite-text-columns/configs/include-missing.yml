@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-finite-text-columns
+    scope: repository
+    message: replace this with a lookup table
+    include:
+      - missing.json
+    options:
+      schemaCatalogPath: schema.json

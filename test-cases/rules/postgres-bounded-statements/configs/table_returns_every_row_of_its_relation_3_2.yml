@@ -1,0 +1,10 @@
+# tables that must remain: accounts
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [cases/table_returns_every_row_of_its_relation_3.sql]
+      include: [cases/table_returns_every_row_of_its_relation_3.sql]

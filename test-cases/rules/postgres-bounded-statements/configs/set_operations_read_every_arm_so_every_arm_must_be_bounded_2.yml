@@ -1,0 +1,10 @@
+# tables that must remain: orders
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [cases/set_operations_read_every_arm_so_every_arm_must_be_bounded.sql]
+      include: [cases/set_operations_read_every_arm_so_every_arm_must_be_bounded.sql]

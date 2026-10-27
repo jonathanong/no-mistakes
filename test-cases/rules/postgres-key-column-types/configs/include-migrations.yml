@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-key-column-types
+    scope: repository
+    include:
+      - "migrations/**"
+    options:
+      schemaCatalogPath: schema.json
+      allowedTypes: [uuid]

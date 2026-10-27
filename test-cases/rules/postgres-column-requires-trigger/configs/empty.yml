@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: postgres-column-requires-trigger
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json

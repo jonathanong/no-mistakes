@@ -1,6 +1,5 @@
 use super::*;
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::postgres::SchemaCatalog;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
@@ -28,270 +27,17 @@ pub(super) fn config_yaml(yaml: &str) -> NoMistakesConfig {
     }
 }
 
-const SQL: &str =
-    "sqlInclude: [\"sql/**/*.sql\"]\nschemaCatalogPath: schema.json\nrelations: [accounts]\n";
-
-fn messages(root: &str, yaml: &str, files: &[&str]) -> Vec<String> {
-    let root = fixture(root);
-    let paths: Vec<PathBuf> = files.iter().map(|file| root.join(file)).collect();
-    check_with_files(&root, &config_yaml(yaml), &paths)
-        .unwrap()
-        .into_iter()
-        .map(|finding| finding.message)
-        .collect()
-}
-
 #[test]
-fn helper_sql_findings_point_to_each_original_literal_in_standalone_and_prepared_checks() {
-    let root = fixture("helper-provenance");
-    let files: Vec<PathBuf> = [
-        "src/helper.mts",
-        "src/single.mts",
-        "src/composed.mts",
-        "src/imported-source.mts",
-        "src/imported-other.mts",
-        "src/imported-caller.mts",
-    ]
-    .iter()
-    .map(|file| root.join(file))
-    .collect();
-    let config = config_yaml(
-        "importSpecifier: '@example/db'\nschemaCatalogPath: schema.json\nmaxColumns: 0\ninclude: ['src/**/*.mts']\n",
-    );
-    let locations = |findings: Vec<crate::codebase::rules::RuleFinding>| {
-        let mut locations: Vec<_> = findings
-            .into_iter()
-            .map(|finding| (finding.file, finding.line))
-            .collect();
-        locations.sort();
-        locations
-    };
-    let expected = vec![
-        ("src/composed.mts".to_string(), 7),
-        ("src/composed.mts".to_string(), 16),
-        ("src/helper.mts".to_string(), 12),
-        ("src/imported-other.mts".to_string(), 4),
-        ("src/imported-source.mts".to_string(), 6),
-        ("src/imported-source.mts".to_string(), 11),
-        ("src/imported-source.mts".to_string(), 20),
-        ("src/imported-source.mts".to_string(), 32),
-        ("src/single.mts".to_string(), 7),
-    ];
-    assert_eq!(
-        locations(check_with_files(&root, &config, &files).unwrap()),
-        expected
-    );
-
-    let sources = super::super::source_store_for_files(&files);
-    let mut suppressed = check_with_files(&root, &config, &files).unwrap();
-    super::super::suppress_rule_findings_with_sources(&root, &mut suppressed, &sources);
-    assert!(!locations(suppressed).contains(&("src/imported-source.mts".to_string(), 32)));
-    let prepared = crate::codebase::postgres::prepare_rule_sql_facts(
-        &root,
-        &files,
-        Arc::clone(&sources),
-        &config,
-        &[RULE_ID],
-    )
-    .unwrap();
-    let findings =
-        check_with_files_sources_and_facts(&root, &config, &files, &sources, &prepared).unwrap();
-    assert_eq!(locations(findings), expected);
-
-    // An exported SQL builder contributes only when its executor caller is in
-    // the requested inventory; declarations alone are not executed queries.
-    let without_caller: Vec<_> = files
-        .iter()
-        .filter(|path| !path.ends_with("imported-caller.mts"))
-        .cloned()
-        .collect();
-    assert_eq!(
-        locations(check_with_files(&root, &config, &without_caller).unwrap()),
-        expected
-            .into_iter()
-            .filter(|(file, _)| !file.starts_with("src/imported-"))
-            .collect::<Vec<_>>()
-    );
-}
-
-#[test]
-fn invalid_examples_are_reported() {
-    let found = messages(
-        "fail",
-        SQL,
-        &[
-            "sql/star.sql",
-            "sql/join.sql",
-            "sql/returning.sql",
-            "sql/cte.sql",
-            "sql/accounts.sql",
-        ],
-    );
-    let body = found.join("\n");
-    assert!(
-        body.contains("SELECT * reads all 40 columns of orders (limit 12)"),
-        "{body}"
-    );
-    assert!(
-        body.contains("RETURNING * returns all 40 columns of orders (limit 12)"),
-        "{body}"
-    );
-    assert!(
-        body.contains("SELECT * reads all columns of accounts, which is configured in relations"),
-        "{body}"
-    );
-    assert_eq!(
-        found
-            .iter()
-            .filter(|message| message.contains("40 columns of orders"))
-            .count(),
-        4
-    );
-}
-
-#[test]
-fn valid_examples_are_quiet() {
-    let files = [
-        "sql/columns.sql",
-        "sql/tags.sql",
-        "sql/exists.sql",
-        "sql/count.sql",
-        "sql/json.sql",
-        "sql/cte.sql",
-        "sql/missing.sql",
-    ];
-    assert!(messages("pass", SQL, &files).is_empty());
-}
-
-#[test]
-fn standalone_table_is_an_explicit_columns_violation() {
-    let found = messages("fail", SQL, &["sql/standalone-table.sql"]);
-    assert_eq!(found.len(), 1, "{found:?}");
-    assert!(
-        found[0].contains("SELECT * reads all columns of accounts"),
-        "{found:?}"
-    );
-}
-
-#[test]
-fn table_set_arms_are_explicit_columns_violations() {
-    let found = messages(
-        "fail",
-        SQL,
-        &["sql/table-right-arm.sql", "sql/table-left-arm.sql"],
-    );
-    assert_eq!(found.len(), 2, "{found:?}");
-    assert!(found
-        .iter()
-        .all(|message| message.contains("SELECT * reads all columns of accounts")));
-}
-
-#[test]
-fn max_columns_zero_reports_narrow_tables_and_skips_views() {
-    let found = messages(
-        "max-zero",
-        "sqlInclude: [\"sql/**/*.sql\"]\nschemaCatalogPath: schema.json\nmaxColumns: 0\n",
-        &["sql/tags.sql", "sql/view.sql"],
-    );
-    let body = found.join("\n");
-    assert!(
-        body.contains("SELECT * reads every column of tags, including columns added later"),
-        "{body}"
-    );
-    assert!(!body.contains("view_public_tags"), "{body}");
-}
-
-#[test]
-fn edges_cover_joins_qualification_and_returning_switch() {
-    let wide = messages("edges", SQL, &["sql/join-wide.sql", "sql/qualified.sql"]);
-    let body = wide.join("\n");
-    assert!(body.contains("40 columns of orders"), "{body}");
-    assert!(body.contains("20 columns of shipments"), "{body}");
-    assert_eq!(
-        wide.iter()
-            .filter(|message| message.contains("orders"))
-            .count(),
-        2
-    );
-    assert!(messages("edges", SQL, &["sql/cte-alias.sql", "sql/json-upper.sql"]).is_empty());
-    assert!(messages(
-        "edges",
-        "sqlInclude: [\"sql/**/*.sql\"]\nschemaCatalogPath: schema.json\ncheckReturning: false\n",
-        &["sql/returning-only.sql"],
-    )
-    .is_empty());
-    let listed = messages(
-        "edges",
-        "sqlInclude: [\"sql/**/*.sql\"]\nschemaCatalogPath: schema.json\nallowWholeRowFunctions: []\n",
-        &["sql/json-upper.sql"],
-    );
-    assert!(
-        listed.join("\n").contains("40 columns of orders"),
-        "{listed:?}"
-    );
-}
-
-#[test]
-fn default_sql_include_leaves_sql_files_unscanned() {
-    assert!(messages(
-        "edges",
-        "schemaCatalogPath: schema.json\n",
-        &["sql/qualified.sql"]
-    )
-    .is_empty());
-}
-
-#[test]
-fn repeated_scans_match() {
-    let first = messages("fail", SQL, &["sql/star.sql"]);
-    let second = messages("fail", SQL, &["sql/star.sql"]);
-    assert_eq!(first, second);
-}
-
-#[test]
-fn suppression_directives_hide_stars() {
-    let root = fixture("suppress");
-    let files = ["sql/next-line.sql", "sql/line.sql", "sql/file.sql"];
-    let paths: Vec<PathBuf> = files.iter().map(|file| root.join(file)).collect();
-    let mut findings = check_with_files(&root, &config_yaml(SQL), &paths).unwrap();
-    assert_eq!(findings.len(), 3, "{findings:?}");
-    let sources = super::super::source_store_for_files(&paths);
-    super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
-fn prepared_catalog_is_preferred_when_present() {
+fn prepared_catalog_errors_when_the_fact_entry_is_broken_or_missing() {
     let root = fixture("edges");
     let sql = root.join("sql/qualified.sql");
     let sources = super::super::source_store_for_files(&[root.join("schema.json"), sql.clone()]);
-    let catalog = SchemaCatalog::load(&root, "schema.json", &sources).unwrap();
-    let mut facts = crate::codebase::postgres::prepare_rule_sql_facts(
-        &root,
-        std::slice::from_ref(&sql),
-        Arc::clone(&sources),
-        &config_yaml(SQL),
-        &[RULE_ID],
-    )
-    .unwrap();
-    facts
-        .postgres_schema_catalogs
-        .insert("missing/schema.json".to_string(), Ok(Arc::new(catalog)));
-    let yaml = "sqlInclude: [\"sql/**/*.sql\"]\nschemaCatalogPath: missing/schema.json\n";
-    let findings = check_with_files_sources_and_facts(
-        &root,
-        &config_yaml(yaml),
-        std::slice::from_ref(&sql),
-        &sources,
-        &facts,
-    )
-    .unwrap();
-    assert!(findings[0].message.contains("40 columns of public.orders"));
     let mut broken = CheckFactMap::default();
     broken.postgres_schema_catalogs.insert(
         "missing/schema.json".to_string(),
         Err(Arc::<str>::from("catalog broke")),
     );
+    let yaml = "sqlInclude: [\"sql/**/*.sql\"]\nschemaCatalogPath: missing/schema.json\n";
     let error = check_with_files_sources_and_facts(
         &root,
         &config_yaml(yaml),
@@ -304,7 +50,9 @@ fn prepared_catalog_is_preferred_when_present() {
     assert!(error.contains("catalog broke"), "{error}");
     let missing = check_with_files_sources_and_facts(
         &root,
-        &config_yaml(SQL),
+        &config_yaml(
+            "sqlInclude: [\"sql/**/*.sql\"]\nschemaCatalogPath: schema.json\nrelations: [accounts]\n",
+        ),
         std::slice::from_ref(&sql),
         &sources,
         &CheckFactMap::default(),

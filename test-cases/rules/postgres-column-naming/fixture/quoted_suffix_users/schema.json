@@ -1,0 +1,24 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "lines": {
+      "columns": {
+        "user_id": {
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "fk": {
+          "columns": [
+            "user_id"
+          ],
+          "referencedTable": "\"Users\"",
+          "referencedColumns": [
+            "id"
+          ]
+        }
+      }
+    }
+  }
+}

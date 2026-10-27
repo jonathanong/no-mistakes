@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      foreignKeys:
+        targetMatch: last-word
+        singular: { people: person, aliases: alias, statuses: status }
+        targetNames:
+          - tablePattern: '^archived_(.+)_snapshots$'
+            name: '$1'

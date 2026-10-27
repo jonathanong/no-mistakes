@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [sql/temporary-permanent-view-node-rename.sql]
+      include: [sql/temporary-permanent-view-node-rename.sql]

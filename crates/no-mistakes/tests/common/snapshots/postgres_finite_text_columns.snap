@@ -1,0 +1,708 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allow_stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-finite-text-columns allow entry: column:payments.missing",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:payments.missing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "composite_foreign_keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 34,
+          "message": "schema.json: column:accounts.plan_type: text column name matches (^|_)(status|state|kind|type|source|category|mode|channel)$, which marks a fixed set of values; use an enum type or a foreign key to a lookup table, or add an allow entry with a reason",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:accounts.plan_type"
+        },
+        {
+          "file": "schema.json",
+          "line": 9,
+          "message": "schema.json: column:order_links.link_kind: text column holds a fixed set of values ('order') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:order_links.link_kind"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 15,
+          "message": "schema.json: column:accounts.generated_status: replace this with a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:accounts.generated_status"
+        },
+        {
+          "file": "schema.json",
+          "line": 19,
+          "message": "schema.json: column:accounts.bounded_state: replace this with a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:accounts.bounded_state"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:accounts.quoted_kind: replace this with a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:accounts.quoted_kind"
+        },
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:accounts.status: replace this with a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:accounts.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 9,
+          "message": "schema.json: column:accounts.peer_status: replace this with a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:accounts.peer_status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_name_patterns": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "file_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "generated": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:entities.status: text column holds a fixed set of values ('on') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:entities.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore_archive": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_misses_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "jobs_scope": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:jobs.scope: text column holds a fixed set of values ('global', 'tenant') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:jobs.scope"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "labels_quoted": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:labels.Kind: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:labels.Kind"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "labels_varying": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:labels.kind: character varying column holds a fixed set of values ('open') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:labels.kind"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "line_disable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 7,
+          "message": "schema.json: column:invoices.state: text column holds a fixed set of values ('paid') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:invoices.state"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "long_peers": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 18,
+          "message": "schema.json: column:t1.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t0.status, t2.status, t3.status, t4.status, t5.status and 1 more have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:t1.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 30,
+          "message": "schema.json: column:t2.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t0.status, t1.status, t3.status, t4.status, t5.status and 1 more have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:t2.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 42,
+          "message": "schema.json: column:t3.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t0.status, t1.status, t2.status, t4.status, t5.status and 1 more have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:t3.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 54,
+          "message": "schema.json: column:t4.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t0.status, t1.status, t2.status, t3.status, t5.status and 1 more have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:t4.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:t0.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t1.status, t2.status, t3.status, t4.status, t5.status and 1 more have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:t0.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 66,
+          "message": "schema.json: column:t5.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t0.status, t1.status, t2.status, t3.status, t4.status and 1 more have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:t5.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 78,
+          "message": "schema.json: column:t6.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; t0.status, t1.status, t2.status, t3.status, t4.status and 1 more have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:t6.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "long_values": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:invoices.status: text column holds a fixed set of values ('v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', … (2 more)) enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:invoices.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "next_line_disable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 8,
+          "message": "schema.json: column:invoices.state: text column holds a fixed set of values ('paid') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:invoices.state"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "null_kind": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "null_kind_name": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:accounts.kind: text column name matches (^|_)(status|state|kind|type|source|category|mode|channel)$, which marks a fixed set of values; use an enum type or a foreign key to a lookup table, or add an allow entry with a reason",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:accounts.kind"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "orders_nullable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:orders.kind: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:orders.kind"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "partitioned": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 7,
+          "message": "schema.json: column:parts.status: TEXT column holds a fixed set of values ('open') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:parts.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "payments_single": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:payments.currency: text column holds a fixed set of values ('USD') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:payments.currency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "peer_multiple": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 18,
+          "message": "schema.json: column:b.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; a.status, c.status and d.status have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:b.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 30,
+          "message": "schema.json: column:c.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; a.status, b.status and d.status have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:c.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 42,
+          "message": "schema.json: column:d.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; a.status, b.status and c.status have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:d.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:a.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; b.status, c.status and d.status have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:a.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "peer_pair": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 18,
+          "message": "schema.json: column:invoices.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; bills.status has the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:invoices.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:bills.status: text column holds a fixed set of values ('a', 'b') enforced by CHECK; use an enum type or a foreign key to a lookup table; invoices.status has the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:bills.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pinned_name": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:accounts.status: text column holds a fixed set of values ('draft') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:accounts.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "prepared_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "review_followups": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 19,
+          "message": "schema.json: column:accounts.bounded_state: varchar(12) column holds a fixed set of values ('open', 'closed') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:accounts.bounded_state"
+        },
+        {
+          "file": "schema.json",
+          "line": 22,
+          "message": "schema.json: column:accounts.quoted_kind: text column holds a fixed set of values ('O''Reilly') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:accounts.quoted_kind"
+        },
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:accounts.status: text column holds a fixed set of values ('sent') enforced by CHECK; use an enum type or a foreign key to a lookup table; accounts.peer_status has the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:accounts.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 9,
+          "message": "schema.json: column:accounts.peer_status: text column holds a fixed set of values ('sent') enforced by CHECK; use an enum type or a foreign key to a lookup table; accounts.status has the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:accounts.peer_status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shared_values": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 18,
+          "message": "schema.json: column:bills.state: text column holds a fixed set of values ('paid', 'draft', 'sent') enforced by CHECK; use an enum type or a foreign key to a lookup table; invoices.status and quotes.status have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:bills.state"
+        },
+        {
+          "file": "schema.json",
+          "line": 30,
+          "message": "schema.json: column:quotes.status: text column holds a fixed set of values ('sent', 'paid', 'draft') enforced by CHECK; use an enum type or a foreign key to a lookup table; bills.state and invoices.status have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:quotes.status"
+        },
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:invoices.status: text column holds a fixed set of values ('draft', 'sent', 'paid') enforced by CHECK; use an enum type or a foreign key to a lookup table; bills.state and quotes.status have the same values and can share the type",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:invoices.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shipments": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:shipments.state: text column holds a fixed set of values ('new', 'sent', 'lost') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:shipments.state"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "skip_generated": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "stale_custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-finite-text-columns allow entry: column:payments.missing",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:payments.missing"
+        },
+        {
+          "file": "schema.json",
+          "line": 7,
+          "message": "schema.json: column:payments.status: use a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:payments.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "two_checks": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:invoices.status: text column holds a fixed set of values ('sent', 'paid') enforced by CHECK; use an enum type or a foreign key to a lookup table",
+          "rule": "postgres-finite-text-columns",
+          "target": "column:invoices.status"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "valid_columns": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

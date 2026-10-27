@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-array-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allow:
+        - object: column:orders.coupon_ids
+          reason: tried to keep the array

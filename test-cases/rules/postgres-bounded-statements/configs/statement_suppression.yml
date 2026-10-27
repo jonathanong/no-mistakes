@@ -1,0 +1,11 @@
+# line directives must suppress their statements; only unsuppressed statement lines remain
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [sql/suppress.sql]
+      include: [sql/suppress.sql]
+      exclude: ["src/**"]

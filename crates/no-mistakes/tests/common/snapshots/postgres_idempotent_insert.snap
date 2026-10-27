@@ -1,0 +1,523 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled_insert": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/disabled.sql",
+          "line": 2,
+          "message": "sql/disabled.sql:2: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled_insert_suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "do_nothing": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "drop_keywords_in_comments": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dropped_trigger_keeps_noop_proof": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic_insert": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: executed INSERT SQL is not statically recoverable",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_insert_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "embedded_insert": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_scan_disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "embedded_skipped": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "embedded_trigger_dropped": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "embedded_trigger_live": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "app/q.ts",
+          "line": 3,
+          "message": "app/q.ts:3: BEFORE INSERT trigger audit fires before conflict checks",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        },
+        {
+          "file": "lib/q.ts",
+          "line": 3,
+          "message": "lib/q.ts:3: BEFORE INSERT trigger audit fires before conflict checks",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded_trigger_replaced": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude_insert": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_insert": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_missing": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "insert_without_conflict": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "later_trigger_dropped": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "live_before_insert_trigger": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/002-insert.sql",
+          "line": 1,
+          "message": "sql/002-insert.sql:1: BEFORE INSERT trigger audit fires before conflict checks",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "not_exists": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "partial_where": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "psql_insert": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/disabled.sql",
+          "line": 1,
+          "message": "directive for `postgres-idempotent-insert` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-idempotent-insert"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.psql",
+          "line": 1,
+          "message": "sql/001.psql:1: INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "same_line_create_insert_drop": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: BEFORE INSERT trigger audit fires before conflict checks",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "same_line_drop_insert_create": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "trigger_dropped_after_insert": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 6,
+          "message": "sql/001.sql:6: BEFORE INSERT trigger audit fires before conflict checks",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trigger_dropped_before_insert": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "trigger_replaced_after_insert": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 2,
+          "message": "sql/001.sql:2: BEFORE INSERT trigger audit fires before conflict checks",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trigger_replaced_before_insert": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unparseable_flagged": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/unparseable.sql",
+          "line": 1,
+          "message": "sql/unparseable.sql:1: INSERT could not be proven replay-safe",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        },
+        {
+          "file": "sql/unparseable.sql",
+          "line": 1,
+          "message": "sql/unparseable.sql:1: SQL statement `not a valid INSERT INTO statement` could not be analyzed for postgres-idempotent-insert (unsupported or unparseable SQL). For an intentional statement, use `-- no-mistakes-disable-next-line postgres-idempotent-insert: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-idempotent-insert",
+          "target": "not a valid INSERT INTO statement"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unparseable_ignored": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "volatile_update": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 1,
+          "message": "sql/001.sql:1: seen = a volatile value (now) re-applies on every replay",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "volatile_where_proof": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/001.sql",
+          "line": 3,
+          "message": "sql/001.sql:3: ON CONFLICT DO UPDATE can re-fire trigger audit",
+          "rule": "postgres-idempotent-insert",
+          "target": "insert"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

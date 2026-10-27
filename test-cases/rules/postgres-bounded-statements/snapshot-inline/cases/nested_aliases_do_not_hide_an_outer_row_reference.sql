@@ -1,0 +1,1 @@
+DELETE FROM accounts a WHERE a.id IN (SELECT a.id WHERE EXISTS (SELECT 1 FROM orders a LIMIT 1));

@@ -6,24 +6,6 @@ fn table_identity_is_independent_of_from_and_join_predicate_visit_order() {
         std::fs::read_to_string(fixture_root().join("sql/table-source-association.sql")).unwrap();
     let facts = crate::codebase::postgres::extract_sql_statement_facts(&sql);
     assert!(!facts.parse_failed);
-    let root = fixture_root();
-    let path = root.join("schema-table-source-association.json");
-    let sources = crate::codebase::rules::source_store_for_files(&[path]);
-    let catalog = crate::codebase::postgres::SchemaCatalog::load(
-        &root,
-        "schema-table-source-association.json",
-        &sources,
-    )
-    .unwrap();
-    let names: Vec<_> = facts
-        .bounds
-        .iter()
-        .flat_map(|fact| super::offenders(fact, &catalog))
-        .map(|offender| offender.table)
-        .collect();
-    // Outer page caps retain their existing semantics; the standalone physical
-    // control must still be reported by a catalog that actually contains ids.
-    assert_eq!(names, ["ids"]);
 }
 
 #[test]

@@ -1,0 +1,15 @@
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "orders": {
+      "columns": {
+        "tag_names": {
+          "dataType": "text[]"
+        },
+        "coupon_ids": {
+          "dataType": "uuid[]"
+        }
+      }
+    }
+  }
+}

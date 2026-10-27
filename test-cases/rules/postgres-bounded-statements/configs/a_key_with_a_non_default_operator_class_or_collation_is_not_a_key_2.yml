@@ -1,0 +1,10 @@
+# tables that must remain: labels
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [cases/a_key_with_a_non_default_operator_class_or_collation_is_not_a_key.sql]
+      include: [cases/a_key_with_a_non_default_operator_class_or_collation_is_not_a_key.sql]

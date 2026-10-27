@@ -1,0 +1,10 @@
+# tables that must remain: orders
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [cases/fetch_with_ties_and_foreign_aggregates_do_not_cap_3.sql]
+      include: [cases/fetch_with_ties_and_foreign_aggregates_do_not_cap_3.sql]

@@ -1,0 +1,18 @@
+CREATE TABLE orders (
+  id uuid PRIMARY KEY,
+  created_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id)) STORED,
+  stored_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id)) STORED,
+  note_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(note_id)) STORED,
+  other_at timestamptz GENERATED ALWAYS AS (lower(note_id)) STORED,
+  pair_at timestamptz GENERATED ALWAYS AS (uuid_extract_timestamp(id, note_id)) STORED,
+  note_id uuid
+);
+
+CREATE TABLE invoices (
+  id uuid PRIMARY KEY,
+  created_at timestamptz
+);
+
+CREATE TABLE tags (
+  id uuid PRIMARY KEY
+);

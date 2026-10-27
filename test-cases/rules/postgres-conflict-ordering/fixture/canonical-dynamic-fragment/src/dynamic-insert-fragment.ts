@@ -1,0 +1,5 @@
+import { query } from "@example/db";
+
+declare const conflictClause: string;
+
+query(`INSERT INTO items (id) SELECT id FROM input ${conflictClause}`);

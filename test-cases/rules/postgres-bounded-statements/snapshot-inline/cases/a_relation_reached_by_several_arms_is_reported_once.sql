@@ -1,0 +1,1 @@
+SELECT * FROM orders UNION ALL SELECT * FROM accounts UNION ALL SELECT * FROM orders;

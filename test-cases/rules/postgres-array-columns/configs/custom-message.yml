@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: postgres-array-columns
+    scope: repository
+    message: store the values in a child table
+    options:
+      schemaCatalogPath: schema.json

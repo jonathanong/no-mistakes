@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: postgres-key-column-types
+    scope: repository
+    message: review this key
+    options:
+      schemaCatalogPath: schema.json
+      allowedTypes: [uuid]

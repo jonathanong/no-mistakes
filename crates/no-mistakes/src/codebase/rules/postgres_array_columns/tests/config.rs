@@ -1,4 +1,14 @@
-use super::support::expect_err;
+use super::super::compile::compile;
+use super::super::Options;
+
+fn expect_err(yaml: &str, snippet: &str) {
+    let options: Options = serde_yaml::from_str(yaml).unwrap();
+    let error = match compile(&options, None) {
+        Err(error) => error.to_string(),
+        Ok(_) => panic!("expected config error containing {snippet}"),
+    };
+    assert!(error.contains(snippet), "{error}");
+}
 
 #[test]
 fn every_option_error_is_reported() {

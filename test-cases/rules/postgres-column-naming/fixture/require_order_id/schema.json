@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "audit_rows": {
+      "columns": {
+        "order_id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}

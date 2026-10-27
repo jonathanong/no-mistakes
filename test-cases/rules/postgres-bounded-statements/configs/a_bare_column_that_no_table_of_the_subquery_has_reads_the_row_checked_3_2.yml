@@ -1,0 +1,10 @@
+# tables that must remain: accounts
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [cases/a_bare_column_that_no_table_of_the_subquery_has_reads_the_row_checked_3.sql]
+      include: [cases/a_bare_column_that_no_table_of_the_subquery_has_reads_the_row_checked_3.sql]

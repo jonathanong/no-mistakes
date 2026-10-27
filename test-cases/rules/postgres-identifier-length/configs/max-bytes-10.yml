@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: postgres-identifier-length
+    scope: repository
+    options:
+      maxBytes: 10

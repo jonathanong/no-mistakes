@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "labels": {
+      "columns": {
+        "names": {
+          "dataType": "character varying[]"
+        }
+      }
+    }
+  }
+}

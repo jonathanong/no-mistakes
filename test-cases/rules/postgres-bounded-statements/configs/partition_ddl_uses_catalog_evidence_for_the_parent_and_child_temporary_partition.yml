@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-partition-search-path-evidence.json
+      executorNames: []
+      sqlInclude: [sql/temporary-partition-conditional-rejected.sql]
+      include: [sql/temporary-partition-conditional-rejected.sql]

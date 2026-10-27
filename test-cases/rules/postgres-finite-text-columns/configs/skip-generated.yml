@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: postgres-finite-text-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      skipGeneratedColumns: true

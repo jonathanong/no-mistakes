@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-generated-column-predicates
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      sqlInclude: ["sql/**/*.sql"]
+      functions: [other_fn]
+      requireArgumentIsPrimaryKey: false

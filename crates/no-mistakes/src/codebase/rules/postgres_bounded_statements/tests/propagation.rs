@@ -1,10 +1,13 @@
-use super::offenders;
+use super::super::evaluate::offenders;
 use crate::codebase::postgres::{extract_sql_statement_facts, SchemaCatalog};
 use crate::codebase::ts_source::{FileInventory, SourceStore};
 use std::{path::PathBuf, sync::Arc};
 
 #[test]
 fn prepared_keys_preserve_reversed_chains_and_unseeded_cycles() {
+    // The 256-step scripts overflow the CLI's 1MB Windows stack, so this
+    // in-process count is the check that those chains stay bounded or report
+    // one finding per cycle step.
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/performance/postgres-bounds");
     for size in [16, 64, 256] {

@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-finite-text-columns
+    scope: repository
+    message: use a lookup table
+    options:
+      schemaCatalogPath: schema.json
+      allow:
+        - object: column:payments.currency
+          reason: provider-owned
+        - object: column:payments.missing
+          reason: obsolete

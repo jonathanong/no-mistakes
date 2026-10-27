@@ -1,0 +1,10 @@
+# these statements must stay bounded
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/unique_index_shapes-schema.json
+      executorNames: []
+      sqlInclude: [split/partial_column_nullguard-bounded.sql]
+      include: [split/partial_column_nullguard-bounded.sql]

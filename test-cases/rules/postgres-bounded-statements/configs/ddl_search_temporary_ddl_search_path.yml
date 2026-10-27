@@ -1,0 +1,10 @@
+# unbounded statement indexes 0 4 6 7 9 10 must remain findings
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-search-path-evidence.json
+      executorNames: []
+      sqlInclude: [sql/temporary-ddl-search-path.sql]
+      include: [sql/temporary-ddl-search-path.sql]

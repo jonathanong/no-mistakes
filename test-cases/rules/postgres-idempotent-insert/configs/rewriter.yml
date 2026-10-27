@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      importSpecifier: "@example/db"
+      sqlInclude: ["sql/**/*.sql"]
+      replaySafeTriggerFunctions: [normalize]
+      triggerWrittenColumns: {normalize: [b]}

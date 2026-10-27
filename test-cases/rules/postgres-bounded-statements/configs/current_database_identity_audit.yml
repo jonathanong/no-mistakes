@@ -1,0 +1,10 @@
+# unbounded statement indexes differ by database; Audit.Database
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/current-db-audit.json
+      executorNames: []
+      sqlInclude: [copied/temporary-current-database.sql]
+      include: [copied/temporary-current-database.sql]

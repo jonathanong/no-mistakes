@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      skipGeneratedColumns: false
+      typeRules:
+        - types: [date]
+          namePattern: _on$
+          hint: day
+      nameTypeRules:
+        - namePattern: _at$
+          types: ['timestamp with time zone']
+          hint: time

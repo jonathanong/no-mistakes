@@ -1,0 +1,10 @@
+# tables that must remain: orders, accounts
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-cte-returning.json
+      executorNames: []
+      sqlInclude: [sql/cte-returning/unbounded-update.sql]
+      include: [sql/cte-returning/unbounded-update.sql]

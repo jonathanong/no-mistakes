@@ -1,0 +1,10 @@
+# tables that must remain: order_lines
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [cases/a_whole_unique_key_pinned_to_a_value_bounds_a_relation_4.sql]
+      include: [cases/a_whole_unique_key_pinned_to_a_value_bounds_a_relation_4.sql]

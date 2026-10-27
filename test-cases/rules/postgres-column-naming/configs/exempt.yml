@@ -1,0 +1,15 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      foreignKeys:
+        requireForeignKey:
+          types: [uuid]
+          namePattern: '_id$'
+          exempt:
+            - namePattern: '^cursor_'
+              reason: 'Keyset cursors may point at rows that are already deleted'
+            - namePattern: '(^|_)(device|session)_id$'
+              reason: 'Device and session ids are issued in signed tokens, not stored in a table'

@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: postgres-finite-text-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allow:
+        - object: column:payments.currency
+          reason: ISO code pinned by the payments provider
+        - object: column:payments.missing
+          reason: leftover

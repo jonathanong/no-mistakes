@@ -1,0 +1,379 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "character_varying_allowed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.tag_names: store the values in a child table",
+          "rule": "postgres-array-columns",
+          "target": "column:orders.tag_names"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_never_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "enum_elements": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "external_enum_domain": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:domain_arrays.values: column is an array (priority[]); store the values as child rows or an enum, or add an allow entry with a reason",
+          "rule": "postgres-array-columns",
+          "target": "column:domain_arrays.values"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_misses_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "integer_multidimensional_allowed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "mixed_case_uuid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.coupon_ids: column is a Uuid[] array; model each reference as a child row with a foreign key (Uuid arrays cannot be allowlisted)",
+          "rule": "postgres-array-columns",
+          "target": "column:orders.coupon_ids"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multidimensional_integer": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:metrics.buckets: column is an array (integer[][]); store the values as child rows or an enum, or add an allow entry with a reason",
+          "rule": "postgres-array-columns",
+          "target": "column:metrics.buckets"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested_uuid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.coupon_ids: column is a uuid[] array; model each reference as a child row with a foreign key (uuid arrays cannot be allowlisted)",
+          "rule": "postgres-array-columns",
+          "target": "column:orders.coupon_ids"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "non_array": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "oauth_redirect_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "prepared_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "schema_qualified_enum_array": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:reports.kinds: column is an array (audit.report_types[]); store the values as child rows or an enum, or add an allow entry with a reason",
+          "rule": "postgres-array-columns",
+          "target": "column:reports.kinds"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "smallint_element": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "spaced_element_type": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:labels.names: column is an array (character varying[]); store the values as child rows or an enum, or add an allow entry with a reason",
+          "rule": "postgres-array-columns",
+          "target": "column:labels.names"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stale_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-array-columns allow entry: column:accounts.missing",
+          "rule": "postgres-array-columns",
+          "target": "column:accounts.missing"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "text_array": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.tag_names: column is an array (text[]); store the values as child rows or an enum, or add an allow entry with a reason",
+          "rule": "postgres-array-columns",
+          "target": "column:orders.tag_names"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "uuid_allow_does_not_excuse": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.coupon_ids: allow entry column:orders.coupon_ids cannot excuse a uuid[] column",
+          "rule": "postgres-array-columns",
+          "target": "column:orders.coupon_ids"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.coupon_ids: column is a uuid[] array; model each reference as a child row with a foreign key (uuid arrays cannot be allowlisted)",
+          "rule": "postgres-array-columns",
+          "target": "column:orders.coupon_ids"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.tag_names: column is an array (text[]); store the values as child rows or an enum, or add an allow entry with a reason",
+          "rule": "postgres-array-columns",
+          "target": "column:orders.tag_names"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "uuid_never_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:orders.coupon_ids: column is a uuid[] array; model each reference as a child row with a foreign key (uuid arrays cannot be allowlisted)",
+          "rule": "postgres-array-columns",
+          "target": "column:orders.coupon_ids"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "weekday_enum": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: column:shipments.weekdays: column is an array (weekday[]); store the values as child rows or an enum, or add an allow entry with a reason",
+          "rule": "postgres-array-columns",
+          "target": "column:shipments.weekdays"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "weekday_enum_allowed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

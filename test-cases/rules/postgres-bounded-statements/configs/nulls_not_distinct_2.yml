@@ -1,0 +1,10 @@
+# tables that must remain: plain_contacts
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/unique_index_shapes-schema.json
+      executorNames: []
+      sqlInclude: [split/nulls_not_distinct-2.sql]
+      include: [split/nulls_not_distinct-2.sql]

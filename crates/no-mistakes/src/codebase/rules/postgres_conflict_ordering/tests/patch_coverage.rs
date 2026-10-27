@@ -105,13 +105,6 @@ fn scan(
 }
 
 #[test]
-fn opaque_inline_sql_continues_after_the_unanalyzable_finding() {
-    let findings = scan(&compiled("fail"), vec![call(None, Vec::new())]).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable-sql"));
-}
-
-#[test]
 fn missing_statement_facts_for_an_insert_without_variants() {
     let insert_sql = insert_sql();
     // A text-less call is a chunk boundary. The later insert still has to

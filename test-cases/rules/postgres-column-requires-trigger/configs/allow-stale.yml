@@ -1,0 +1,14 @@
+version: 2
+rules:
+  - rule: postgres-column-requires-trigger
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      requirements:
+        - column: updated_at
+          function: fn_touch_updated_at
+      allow:
+        - object: table:import_rows
+          reason: updated_at is written explicitly by the importer
+        - object: table:order_events
+          reason: not a finding

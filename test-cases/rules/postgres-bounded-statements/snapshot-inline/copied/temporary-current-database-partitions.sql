@@ -1,0 +1,21 @@
+-- Database conditions must survive partition detach, reattach, rollback, and rename.
+CREATE TEMP TABLE "Audit.Database".pg_temp.accounts (id bigint) PARTITION BY RANGE (id);
+CREATE TEMP TABLE "Audit.Database".pg_temp.orders PARTITION OF accounts FOR VALUES FROM (0) TO (10);
+SELECT * FROM orders;
+ALTER TABLE accounts DETACH PARTITION orders;
+DROP TABLE accounts;
+SELECT * FROM orders;
+CREATE TEMP TABLE "Audit.Database".pg_temp.accounts (id bigint) PARTITION BY RANGE (id);
+ALTER TABLE accounts ATTACH PARTITION orders FOR VALUES FROM (0) TO (10);
+DROP TABLE accounts;
+SELECT * FROM orders;
+CREATE TEMP TABLE "Audit.Database".pg_temp.accounts (id bigint) PARTITION BY RANGE (id);
+CREATE TEMP TABLE orders PARTITION OF accounts FOR VALUES FROM (0) TO (10);
+BEGIN;
+DROP TABLE accounts;
+SELECT * FROM orders;
+ROLLBACK;
+SELECT * FROM orders;
+ALTER TABLE accounts RENAME TO helper;
+DROP TABLE helper;
+SELECT * FROM orders;

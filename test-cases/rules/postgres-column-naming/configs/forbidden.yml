@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      forbiddenColumnNames:
+        - pattern: '(^|_)table(_name)?$'
+          hint: 'a column must not name a table; use one table per target, or an enum'

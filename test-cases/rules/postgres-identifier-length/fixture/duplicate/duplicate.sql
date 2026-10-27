@@ -1,0 +1,2 @@
+CREATE INDEX duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ON accounts (id);
+CREATE INDEX duplicate_namexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ON accounts (id);

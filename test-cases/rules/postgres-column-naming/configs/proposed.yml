@@ -1,0 +1,65 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: db/schema.json
+      typeRules:
+        - types: ['timestamp with time zone', 'timestamp without time zone']
+          namePattern: '_at$'
+          hint: 'end timestamp columns in _at'
+        - types: ['date']
+          namePattern: '(^day|_on)$'
+          hint: 'name date columns day or end them in _on'
+        - types: ['boolean']
+          namePattern: '(^|_)(is|has|can|should)_'
+          hint: 'name boolean columns as a predicate: is_, has_, can_ or should_'
+      nameTypeRules:
+        - namePattern: '_at$'
+          types: ['timestamp with time zone']
+          hint: 'a column ending in _at holds a timestamp with time zone'
+        - namePattern: '^cursor_.*_id$'
+          types: [uuid]
+          hint: "a keyset cursor holds the swept table's uuid primary key"
+      skipGeneratedColumns: false
+      ignoreTablePatterns: ['^link__']
+      forbiddenColumnNames:
+        - pattern: '(^|_)table(_name)?$'
+          hint: 'a column must not name a table; use one table per target, or an enum'
+      foreignKeys:
+        targetSuffixes:
+          - tables: [users, deleted_user_identities]
+            suffixes: ['_user_id', '_by_id']
+        reservedSuffixes:
+          - suffix: '_user_id'
+            types: [uuid]
+            tables: [users, deleted_user_identities]
+          - suffix: '_by_id'
+            types: [uuid]
+            tables: [users, deleted_user_identities]
+          - suffix: '_url'
+            types: [text, 'character varying']
+            tables: [links]
+            hint: 'store the URL in links and reference it with a <name>_link_id column'
+        targetMatch: last-word
+        targetNames:
+          - tablePattern: '^archived_(.+)_snapshots$'
+            name: '$1'
+        checkSelfReferences: false
+        singular: { people: person, aliases: alias, statuses: status }
+        followCompositeForeignKeys: true
+        requireForeignKey:
+          types: [uuid]
+          namePattern: '_id$'
+          exempt:
+            - namePattern: '^cursor_'
+              reason: 'Keyset cursors may point at rows that are already deleted'
+            - namePattern: '(^|_)(device|session)_id$'
+              reason: 'Device and session ids are issued in signed tokens, not stored in a table'
+      allow:
+        - object: 'column:sessions.expires'
+          reason: 'Name mirrors an external protocol field'
+        - object: 'column:links.url'
+          reason: 'The URL registry itself; every other URL references this row'
+        - object: 'column:export_jobs.runner_job_id'
+          reason: 'Id assigned by the external job runner; there is no local row'

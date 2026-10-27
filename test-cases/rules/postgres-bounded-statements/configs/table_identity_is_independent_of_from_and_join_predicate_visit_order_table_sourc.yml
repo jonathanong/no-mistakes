@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema-table-source-association.json
+      executorNames: []
+      sqlInclude: [sql/table-source-association.sql]
+      include: [sql/table-source-association.sql]

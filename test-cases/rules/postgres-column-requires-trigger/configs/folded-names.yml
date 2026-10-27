@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: postgres-column-requires-trigger
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      requirements:
+        - column: updated_at
+          function: public.Fn_Touch
+        - column: updated_at
+          function: 'public."Touch"'
+        - column: updated_at
+          function: 'public."touch.updated"'

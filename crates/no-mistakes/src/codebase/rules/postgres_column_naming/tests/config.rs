@@ -1,4 +1,11 @@
-use super::support::expect_err;
+fn expect_err(yaml: &str, snippet: &str) {
+    let options: super::super::Options = serde_yaml::from_str(yaml).unwrap();
+    let error = match super::super::compile::compile(&options, None) {
+        Err(error) => error.to_string(),
+        Ok(_) => panic!("expected a config error containing {snippet}"),
+    };
+    assert!(error.contains(snippet), "{error}");
+}
 
 #[test]
 fn unknown_option_keys_are_rejected() {
@@ -191,10 +198,4 @@ fn every_option_error_is_reported() {
     ] {
         expect_err(yaml, snippet);
     }
-}
-
-#[test]
-fn numeric_typmods_with_negative_scale_match_the_base_type() {
-    let yaml = "schemaCatalogPath: schema.json\ntypeRules:\n  - types: [numeric]\n    namePattern: _amount$\n";
-    assert!(super::support::fixture_messages(yaml, "signed-numeric-typmod.json").is_empty());
 }

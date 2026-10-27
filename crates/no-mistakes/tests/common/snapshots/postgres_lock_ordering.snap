@@ -1,0 +1,876 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "disabled_comment": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exclude_lock": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail_abba": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 4,
+          "message": "src/lock.ts:4: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_catalog_interpolated": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 7,
+          "message": "src/lock.ts:7: multi-row FOR UPDATE locks a relation whose name is interpolated, so its schema-catalog key order cannot be checked; write the relation name literally, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "unresolved-relation"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_catalog_join": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 4,
+          "message": "src/lock.ts:4: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_catalog_lateral": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 18,
+          "message": "src/lock.ts:18: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 30,
+          "message": "src/lock.ts:30: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 6,
+          "message": "src/lock.ts:6: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_catalog_multi_target": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 6,
+          "message": "src/lock.ts:6: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_catalog_multi_target_unresolved": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 6,
+          "message": "src/lock.ts:6: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_catalog_order": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 4,
+          "message": "src/lock.ts:4: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_catalog_qualified_other": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 4,
+          "message": "src/lock.ts:4: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_catalog_schema_qualified": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 4,
+          "message": "src/lock.ts:4: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_join_pinned": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 18,
+          "message": "src/lock.ts:18: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 29,
+          "message": "src/lock.ts:29: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 40,
+          "message": "src/lock.ts:40: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 52,
+          "message": "src/lock.ts:52: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 7,
+          "message": "src/lock.ts:7: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_key_strengths": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 11,
+          "message": "src/lock.ts:11: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 7,
+          "message": "src/lock.ts:7: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_multi_target": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 10,
+          "message": "src/lock.ts:10: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 6,
+          "message": "src/lock.ts:6: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_pinned_key_prefix": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 10,
+          "message": "src/lock.ts:10: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 15,
+          "message": "src/lock.ts:15: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 20,
+          "message": "src/lock.ts:20: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 25,
+          "message": "src/lock.ts:25: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 30,
+          "message": "src/lock.ts:30: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 35,
+          "message": "src/lock.ts:35: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 5,
+          "message": "src/lock.ts:5: multi-row FOR UPDATE ORDER BY must begin with a valid schema-catalog unique-key order; add the catalog key prefix, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_unique_key_no_catalog": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 5,
+          "message": "src/lock.ts:5: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail_unique_key_partial": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 11,
+          "message": "src/lock.ts:11: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 16,
+          "message": "src/lock.ts:16: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 21,
+          "message": "src/lock.ts:21: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 30,
+          "message": "src/lock.ts:30: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 39,
+          "message": "src/lock.ts:39: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 48,
+          "message": "src/lock.ts:48: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 6,
+          "message": "src/lock.ts:6: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_lock": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/disabled.ts",
+          "line": 4,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-lock-ordering"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 4,
+          "message": "src/lock.ts:4: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "include_missing": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/disabled.ts",
+          "line": 4,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-lock-ordering"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_lock": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "one_bad": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/query.ts",
+          "line": 2,
+          "message": "src/query.ts:2: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ordered_locks": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "other_executor": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/disabled.ts",
+          "line": 4,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-lock-ordering"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parsed_equality_lock": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_catalog_lateral": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_catalog_multi_target": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_catalog_of_alias": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_catalog_unqualified": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_directive": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_join_pinned": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_key_strengths": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_multi_target": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_order": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_pinned_key_prefix": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_skip": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_sql_comment": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass_unique_key_filter": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "too_far": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 9,
+          "message": "src/lock.ts:9: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 16,
+          "message": "src/lock.ts:16: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        },
+        {
+          "file": "src/lock.ts",
+          "line": 6,
+          "message": "src/lock.ts:6: executed SQL is not statically recoverable, so a FOR UPDATE lock and its row order cannot be checked for ABBA deadlocks; pass a SQL literal or trusted tagged template, add a `deadlock-safe` comment, or set unanalyzableSql: ignore",
+          "rule": "postgres-lock-ordering",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable_ignored": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/lock.ts",
+          "line": 27,
+          "message": "directive for `postgres-lock-ordering` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "postgres-lock-ordering"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 16,
+          "message": "src/lock.ts:16: multi-row FOR UPDATE without ORDER BY or SKIP LOCKED can deadlock (ABBA); add ORDER BY, use SKIP LOCKED, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "lock-ordering"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unparseable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 4,
+          "message": "src/lock.ts:4: keep FOR UPDATE SQL parseable so lock ordering can be checked, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "unparseable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unparseable_open": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/lock.ts",
+          "line": 4,
+          "message": "src/lock.ts:4: keep FOR UPDATE SQL parseable so lock ordering can be checked, or add a `deadlock-safe` comment",
+          "rule": "postgres-lock-ordering",
+          "target": "unparseable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

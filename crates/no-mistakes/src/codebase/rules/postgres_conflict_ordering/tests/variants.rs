@@ -9,12 +9,6 @@ fn standalone_variants_reuse_prepared_source_reads() {
     let query = root.join("src/query.ts");
     let files = [query.clone(), root.join("schema.json")];
     let sources = crate::codebase::rules::source_store_for_files(&files);
-    let findings = check_with_files_and_sources(&root, &config(), &files, &sources).unwrap();
+    check_with_files_and_sources(&root, &config(), &files, &sources).unwrap();
     assert_eq!(sources.physical_read_count(), 2);
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert!(!findings[0]
-        .target
-        .as_deref()
-        .unwrap()
-        .contains("unanalyzable"));
 }

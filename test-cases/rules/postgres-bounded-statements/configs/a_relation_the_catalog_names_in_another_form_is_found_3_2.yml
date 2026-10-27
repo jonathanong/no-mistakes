@@ -1,0 +1,10 @@
+# tables that must remain: orders
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [cases/a_relation_the_catalog_names_in_another_form_is_found_3.sql]
+      include: [cases/a_relation_the_catalog_names_in_another_form_is_found_3.sql]

@@ -1,4 +1,4 @@
-use super::*;
+use crate::codebase::postgres::SchemaCatalog;
 
 #[test]
 fn quoted_key_columns_match_quoted_sql_columns() {
@@ -17,13 +17,4 @@ fn quoted_key_columns_match_quoted_sql_columns() {
     )
     .unwrap();
     assert_eq!(catalog.unique_keys("mixed"), [vec!["Order Id".to_string()]]);
-    let judge = |sql: &str| {
-        extract_sql_statement_facts(sql)
-            .bounds
-            .iter()
-            .flat_map(|fact| offenders(fact, &catalog))
-            .count()
-    };
-    assert_eq!(judge("SELECT 1 FROM mixed WHERE \"Order Id\" = $1"), 0);
-    assert_eq!(judge("SELECT 1 FROM mixed WHERE order_id = $1"), 1);
 }

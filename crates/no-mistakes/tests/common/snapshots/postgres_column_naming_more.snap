@@ -1,0 +1,727 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "assignee_reserved_and_target": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 5,
+          "message": "schema.json: column:tasks.assignee_user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this column references teams",
+          "rule": "postgres-column-naming",
+          "target": "column:tasks.assignee_user_id"
+        },
+        {
+          "file": "schema.json",
+          "line": 5,
+          "message": "schema.json: column:tasks.assignee_user_id: foreign key to teams must end in team_id (for example assignee_user_team_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:tasks.assignee_user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bare_suffix_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 21,
+          "message": "schema.json: column:audits.xuser_id: foreign key to users must end in _user_id (for example xuser_user_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:audits.xuser_id"
+        },
+        {
+          "file": "schema.json",
+          "line": 35,
+          "message": "schema.json: column:markers.user: foreign key to users must end in _user_id (for example user_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:markers.user"
+        },
+        {
+          "file": "schema.json",
+          "line": 7,
+          "message": "schema.json: column:orders.owner_id: foreign key to users must end in _user_id (for example owner_user_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:orders.owner_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bare_suffix_fail_allow_referenced": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 21,
+          "message": "schema.json: column:audits.xuser_id: foreign key to users must end in _user_id (for example xuser_user_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:audits.xuser_id"
+        },
+        {
+          "file": "schema.json",
+          "line": 35,
+          "message": "schema.json: column:markers.user: foreign key to users must end in _user_id (for example user_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:markers.user"
+        },
+        {
+          "file": "schema.json",
+          "line": 7,
+          "message": "schema.json: column:orders.owner_id: foreign key to users must end in _user_id (for example owner_user_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:orders.owner_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bare_suffix_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "composite_follow_dead_end": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 8,
+          "message": "schema.json: column:seat_grants.user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this column is part of a composite foreign key to account_seats, which does not lead to users or deleted_user_identities",
+          "rule": "postgres-column-naming",
+          "target": "column:seat_grants.user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "composite_leading_targets": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "composite_without_follow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 8,
+          "message": "schema.json: column:line_grants.user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this column is only part of a composite foreign key to account_members",
+          "rule": "postgres-column-naming",
+          "target": "column:line_grants.user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "follow_cycle": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 31,
+          "message": "schema.json: column:b.user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this column is part of a composite foreign key to a, which does not lead to users or deleted_user_identities",
+          "rule": "postgres-column-naming",
+          "target": "column:b.user_id"
+        },
+        {
+          "file": "schema.json",
+          "line": 8,
+          "message": "schema.json: column:a.user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this column is part of a composite foreign key to b, which does not lead to users or deleted_user_identities",
+          "rule": "postgres-column-naming",
+          "target": "column:a.user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "follow_either_target": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "follow_renames": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "follow_two_hops": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignored_table_stale_exempt": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-column-naming requireForeignKey exempt entry: ^only_on_link",
+          "rule": "postgres-column-naming",
+          "target": "^only_on_link"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "natural_key_default_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 21,
+          "message": "schema.json: column:repair_markers.delivery_key: foreign key to delivery_records must end in record_delivery_key (for example delivery_key_record_delivery_key)",
+          "rule": "postgres-column-naming",
+          "target": "column:repair_markers.delivery_key"
+        },
+        {
+          "file": "schema.json",
+          "line": 35,
+          "message": "schema.json: column:recommendation_hosts.post_id: foreign key to post_recommendations must end in recommendation_post_id (for example post_id_recommendation_post_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:recommendation_hosts.post_id"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:audits.source_delivery_key: foreign key to delivery_records must end in record_delivery_key (for example source_record_delivery_key)",
+          "rule": "postgres-column-naming",
+          "target": "column:audits.source_delivery_key"
+        },
+        {
+          "file": "schema.json",
+          "line": 7,
+          "message": "schema.json: column:provider_follows.provider_user_id: foreign key to provider_accounts must end in account_provider_user_id (for example provider_user_id_account_provider_user_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:provider_follows.provider_user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "natural_key_default_fail_explicit_off": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 21,
+          "message": "schema.json: column:repair_markers.delivery_key: foreign key to delivery_records must end in record_delivery_key (for example delivery_key_record_delivery_key)",
+          "rule": "postgres-column-naming",
+          "target": "column:repair_markers.delivery_key"
+        },
+        {
+          "file": "schema.json",
+          "line": 35,
+          "message": "schema.json: column:recommendation_hosts.post_id: foreign key to post_recommendations must end in recommendation_post_id (for example post_id_recommendation_post_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:recommendation_hosts.post_id"
+        },
+        {
+          "file": "schema.json",
+          "line": 49,
+          "message": "schema.json: column:audits.source_delivery_key: foreign key to delivery_records must end in record_delivery_key (for example source_record_delivery_key)",
+          "rule": "postgres-column-naming",
+          "target": "column:audits.source_delivery_key"
+        },
+        {
+          "file": "schema.json",
+          "line": 7,
+          "message": "schema.json: column:provider_follows.provider_user_id: foreign key to provider_accounts must end in account_provider_user_id (for example provider_user_id_account_provider_user_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:provider_follows.provider_user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "natural_key_default_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "natural_key_fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 21,
+          "message": "schema.json: column:bookmarks.item_id: foreign key to articles must end in article_id (for example item_article_id)",
+          "rule": "postgres-column-naming",
+          "target": "column:bookmarks.item_id"
+        },
+        {
+          "file": "schema.json",
+          "line": 35,
+          "message": "schema.json: column:audits.xdelivery_key: foreign key to delivery_records must end in record_delivery_key (for example xdelivery_key_record_delivery_key)",
+          "rule": "postgres-column-naming",
+          "target": "column:audits.xdelivery_key"
+        },
+        {
+          "file": "schema.json",
+          "line": 7,
+          "message": "schema.json: column:orders.currency: foreign key to currencies must end in currency_code (for example currency_code)",
+          "rule": "postgres-column-naming",
+          "target": "column:orders.currency"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "natural_key_pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "natural_key_pass_full_name": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "require_exempt_matches": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "require_foreign_key_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "require_generated_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "require_order_id": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:audit_rows.order_id: uuid column name matches _id$ but the column is not part of any foreign key; add a foreign key, or an exempt pattern or allow entry with a reason",
+          "rule": "postgres-column-naming",
+          "target": "column:audit_rows.order_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "require_position_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "require_reserved_column_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "require_uuid_array_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "require_without_rule_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reserved_any_type": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:sessions.reviewer_user_id: _user_id is reserved for foreign keys to users; this text column has no foreign key",
+          "rule": "postgres-column-naming",
+          "target": "column:sessions.reviewer_user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reserved_blocks_require": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:sessions.reviewer_user_id: _user_id is reserved for foreign keys to users; this uuid column has no foreign key",
+          "rule": "postgres-column-naming",
+          "target": "column:sessions.reviewer_user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reserved_github_user_id_text_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reserved_links_url": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:links.url: _url is reserved for foreign keys to links; this text column has no foreign key; store the URL in links and reference it with a <name>_link_id column",
+          "rule": "postgres-column-naming",
+          "target": "column:links.url"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reserved_page_url": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:bookmarks.page_url: _url is reserved for foreign keys to links; this text column has no foreign key; store the URL in links and reference it with a <name>_link_id column",
+          "rule": "postgres-column-naming",
+          "target": "column:bookmarks.page_url"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reserved_page_url_id_passes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reserved_reviewer_user_id": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:sessions.reviewer_user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this uuid column has no foreign key",
+          "rule": "postgres-column-naming",
+          "target": "column:sessions.reviewer_user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reserved_user_id": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 6,
+          "message": "schema.json: column:sessions.user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this uuid column has no foreign key",
+          "rule": "postgres-column-naming",
+          "target": "column:sessions.user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reserved_wrong_target": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 5,
+          "message": "schema.json: column:tasks.assignee_user_id: _user_id is reserved for foreign keys to users or deleted_user_identities; this column references teams",
+          "rule": "postgres-column-naming",
+          "target": "column:tasks.assignee_user_id"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stale_cursor_exempt": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-column-naming requireForeignKey exempt entry: ^cursor_",
+          "rule": "postgres-column-naming",
+          "target": "^cursor_"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stale_cursor_exempt_fixture": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-column-naming requireForeignKey exempt entry: ^cursor_",
+          "rule": "postgres-column-naming",
+          "target": "^cursor_"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stale_never_exempt": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-column-naming requireForeignKey exempt entry: ^never$",
+          "rule": "postgres-column-naming",
+          "target": "^never$"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

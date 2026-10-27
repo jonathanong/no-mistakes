@@ -1,0 +1,1 @@
+SELECT * FROM orders LIMIT NULLIF(1, 1);

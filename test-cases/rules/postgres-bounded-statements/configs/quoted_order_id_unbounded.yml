@@ -1,0 +1,10 @@
+# mixed must remain
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/quoted-order-id.json
+      executorNames: []
+      sqlInclude: [cases/quoted_order_id_unbounded.sql]
+      include: [cases/quoted_order_id_unbounded.sql]

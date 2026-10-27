@@ -1,0 +1,10 @@
+# tables that must remain: accounts
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [cases/a_dml_target_is_a_physical_relation_even_when_a_cte_shares_its_name.sql]
+      include: [cases/a_dml_target_is_a_physical_relation_even_when_a_cte_shares_its_name.sql]

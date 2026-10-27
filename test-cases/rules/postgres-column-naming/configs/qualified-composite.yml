@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      foreignKeys:
+        targetMatch: last-word
+        reservedSuffixes:
+          - suffix: '_user_id'
+            types: [uuid]
+            tables: [users]
+        followCompositeForeignKeys: true

@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      typeRules:
+        - types: ['character varying']
+          namePattern: '(_name|_label)$'
+      nameTypeRules:
+        - namePattern: '_label$'
+          types: ['character varying']

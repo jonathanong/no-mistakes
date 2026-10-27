@@ -1,0 +1,10 @@
+# every statement in this file must stay bounded
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/schema-qualified.json
+      executorNames: []
+      sqlInclude: [grouped/bounded-catalogs_schema_qualified.sql]
+      include: [grouped/bounded-catalogs_schema_qualified.sql]

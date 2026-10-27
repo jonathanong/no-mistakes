@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: postgres-array-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      neverAllowElementTypes: []
+      allow:
+        - object: column:orders.coupon_ids
+          reason: this project stores uuid lists

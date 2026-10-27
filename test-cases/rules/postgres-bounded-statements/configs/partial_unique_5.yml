@@ -1,0 +1,10 @@
+# tables that must remain: partial_docs
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: catalogs/unique_index_shapes-schema.json
+      executorNames: []
+      sqlInclude: [split/partial_unique-5.sql]
+      include: [split/partial_unique-5.sql]

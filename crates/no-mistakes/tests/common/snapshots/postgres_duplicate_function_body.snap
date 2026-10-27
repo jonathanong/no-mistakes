@@ -1,0 +1,1365 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allow_suppresses_and_stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_reject_invoices_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_orders_update, fn_reject_refunds_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_reject_invoices_update"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_reject_refunds_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_invoices_update, fn_reject_orders_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_reject_refunds_update"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-duplicate-function-body allow entry: function:fn_orders_audit",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_orders_audit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "array_return_splits": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_int: function body duplicates 1 other function(s) after normalizing names and literals: fn_int_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_int"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_int_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_int. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_int_copy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "atomic_if_clause": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_if: function body duplicates 1 other function(s) after normalizing names and literals: fn_if_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_if"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_if_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_if. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_if_copy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "atomic_language": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_atomic_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_atomic_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_atomic_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_atomic_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_atomic_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_atomic_b"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "clause_boundaries": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_atomic(): function body duplicates 1 other function(s) after normalizing names and literals: fn_atomic_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_atomic()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_atomic_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_atomic(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_atomic_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_send(): function body duplicates 1 other function(s) after normalizing names and literals: fn_send_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_send()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_send_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_send(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_send_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_set(): function body duplicates 1 other function(s) after normalizing names and literals: fn_set_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_set()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_set_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_set(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_set_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_text(integer): function body duplicates 1 other function(s) after normalizing names and literals: fn_text_copy(integer). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_text(integer)"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_text_copy(integer): function body duplicates 1 other function(s) after normalizing names and literals: fn_text(integer). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_text_copy(integer)"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_u(): function body duplicates 1 other function(s) after normalizing names and literals: fn_u_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_u()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_u_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_u(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_u_copy()"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "cluster_above_five": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_01: function body duplicates 6 other function(s) after normalizing names and literals: fn_02, fn_03, fn_04, fn_05, fn_06 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_01"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_02: function body duplicates 6 other function(s) after normalizing names and literals: fn_01, fn_03, fn_04, fn_05, fn_06 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_02"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_03: function body duplicates 6 other function(s) after normalizing names and literals: fn_01, fn_02, fn_04, fn_05, fn_06 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_03"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_04: function body duplicates 6 other function(s) after normalizing names and literals: fn_01, fn_02, fn_03, fn_05, fn_06 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_04"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_05: function body duplicates 6 other function(s) after normalizing names and literals: fn_01, fn_02, fn_03, fn_04, fn_06 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_05"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_06: function body duplicates 6 other function(s) after normalizing names and literals: fn_01, fn_02, fn_03, fn_04, fn_05 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_06"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_07: function body duplicates 6 other function(s) after normalizing names and literals: fn_01, fn_02, fn_03, fn_04, fn_05 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_07"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "comment_security": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "comments_and_costs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_atomic_gap(): function body duplicates 1 other function(s) after normalizing names and literals: fn_atomic_gap_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_atomic_gap()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_atomic_gap_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_atomic_gap(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_atomic_gap_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_cost_low(): function body duplicates 1 other function(s) after normalizing names and literals: fn_cost_low_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_cost_low()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_cost_low_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_cost_low(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_cost_low_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_eend(): function body duplicates 1 other function(s) after normalizing names and literals: fn_eend_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_eend()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_eend_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_eend(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_eend_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_lang_sql(): function body duplicates 1 other function(s) after normalizing names and literals: fn_lang_sql_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_lang_sql()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_lang_sql_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_lang_sql(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_lang_sql_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_outer(): function body duplicates 1 other function(s) after normalizing names and literals: fn_outer_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_outer()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_outer_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_outer(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_outer_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_path_stable(): function body duplicates 1 other function(s) after normalizing names and literals: fn_path_stable_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_path_stable()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_path_stable_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_path_stable(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_path_stable_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_type_stable(): function body duplicates 1 other function(s) after normalizing names and literals: fn_type_stable_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_type_stable()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_type_stable_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_type_stable(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_type_stable_copy()"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "concat_bodies": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "copied_raise_cluster": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_reject_invoices_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_orders_update, fn_reject_refunds_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_reject_invoices_update"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_reject_orders_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_invoices_update, fn_reject_refunds_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_reject_orders_update"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_reject_refunds_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_invoices_update, fn_reject_orders_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_reject_refunds_update"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_01: merge the copies",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_01"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_02: merge the copies",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_02"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_03: merge the copies",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_03"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_04: merge the copies",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_04"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_05: merge the copies",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_05"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_06: merge the copies",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_06"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_07: merge the copies",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_07"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dollar_path": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "escape_default": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "escape_strings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_escape_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_escape_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_escape_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_escape_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_escape_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_escape_b"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "event_default_string": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "hex_escape": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_skips_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "kept_identifier": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "leakproof_splits": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_not: function body duplicates 1 other function(s) after normalizing names and literals: fn_plain. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_not"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_plain: function body duplicates 1 other function(s) after normalizing names and literals: fn_not. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_plain"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "min_tokens_splits_rejects": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "named_arguments_split_copies": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_left: function body duplicates 1 other function(s) after normalizing names and literals: fn_left_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_left"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_left_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_left. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_left_copy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "newline_search_path": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_tenant_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_tenant_a_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_tenant_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_tenant_a_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_tenant_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_tenant_a_copy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "normalize_identifiers_off": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_audit(integer): function body duplicates 1 other function(s) after normalizing names and literals: fn_audit(text). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_audit(integer)"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_audit(text): function body duplicates 1 other function(s) after normalizing names and literals: fn_audit(integer). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_audit(text)"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_dollar_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_dollar_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_dollar_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_dollar_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_dollar_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_dollar_b"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_nolang_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_nolang_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_nolang_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_nolang_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_nolang_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_nolang_b"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_semi_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_semi_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_semi_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_semi_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_semi_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_semi_b"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "normalize_raise_off_splits_rejects": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "out_params": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parallel_splits": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_safe: function body duplicates 1 other function(s) after normalizing names and literals: fn_safe_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_safe"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_safe_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_safe. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_safe_copy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "parameter_names_not_volatility": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_param(integer): function body duplicates 1 other function(s) after normalizing names and literals: fn_param_copy(integer). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_param(integer)"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_param_copy(integer): function body duplicates 1 other function(s) after normalizing names and literals: fn_param(integer). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_param_copy(integer)"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "planner_estimates": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_bang(): function body duplicates 1 other function(s) after normalizing names and literals: fn_bang_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_bang()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_bang_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_bang(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_bang_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_op_a(): function body duplicates 1 other function(s) after normalizing names and literals: fn_op_a_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_op_a()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_op_a_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_op_a(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_op_a_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_rows_one(): function body duplicates 1 other function(s) after normalizing names and literals: fn_rows_one_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_rows_one()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_rows_one_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_rows_one(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_rows_one_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_support_one(): function body duplicates 1 other function(s) after normalizing names and literals: fn_support_one_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_support_one()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_support_one_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_support_one(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_support_one_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_table_int(): function body duplicates 1 other function(s) after normalizing names and literals: fn_table_int_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_table_int()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_table_int_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_table_int(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_table_int_copy()"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_bodies": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_quote_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_quote_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_quote_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_quote_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_quote_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_quote_b"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "quoted_return": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "quoted_search_path": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_quoted_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_quoted_a_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_quoted_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_quoted_a_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_quoted_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_quoted_a_copy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "return_contract_splits_copies": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_int: function body duplicates 1 other function(s) after normalizing names and literals: fn_int_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_int"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_int_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_int. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_int_copy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "return_expressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_ret_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_ret_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_ret_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_ret_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_ret_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_ret_b"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "search_path_splits": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_tenant_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_tenant_a_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_tenant_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_tenant_a_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_tenant_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_tenant_a_copy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "security_definer_in_body": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_definer_sql: function body duplicates 1 other function(s) after normalizing names and literals: fn_definer_sql_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_definer_sql"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_definer_sql_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_definer_sql. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_definer_sql_copy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "security_definer_not_invoker": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_definer: function body duplicates 1 other function(s) after normalizing names and literals: fn_definer_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_definer"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_definer_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_definer. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_definer_copy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "security_path_clause": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_path: function body duplicates 1 other function(s) after normalizing names and literals: fn_path_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_path"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_path_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_path. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_path_copy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "strict_not_called_on_null": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_called: function body duplicates 1 other function(s) after normalizing names and literals: fn_default_word. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_called"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_default_word: function body duplicates 1 other function(s) after normalizing names and literals: fn_called. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_default_word"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_strict: function body duplicates 1 other function(s) after normalizing names and literals: fn_strict_long. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_strict"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_strict_long: function body duplicates 1 other function(s) after normalizing names and literals: fn_strict. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_strict_long"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trigger_events_separate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_event_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_event_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one event trigger function; event triggers cannot take arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_event_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_event_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_event_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one event trigger function; event triggers cannot take arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_event_b"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unicode_and_search_path": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_alpha(): function body duplicates 1 other function(s) after normalizing names and literals: fn_alpha_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_alpha()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_alpha_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_alpha(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_alpha_copy()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_cafe(): function body duplicates 1 other function(s) after normalizing names and literals: fn_cafe_copy(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_cafe()"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_cafe_copy(): function body duplicates 1 other function(s) after normalizing names and literals: fn_cafe(). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_cafe_copy()"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "valid_shapes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_audit(integer): function body duplicates 1 other function(s) after normalizing names and literals: fn_audit(text). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_audit(integer)"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_audit(text): function body duplicates 1 other function(s) after normalizing names and literals: fn_audit(integer). Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_audit(text)"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_body: function body duplicates 1 other function(s) after normalizing names and literals: fn_title. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_body"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_dollar_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_dollar_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_dollar_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_dollar_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_dollar_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_dollar_b"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_nolang_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_nolang_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_nolang_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_nolang_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_nolang_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_nolang_b"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_semi_a: function body duplicates 1 other function(s) after normalizing names and literals: fn_semi_b. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_semi_a"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_semi_b: function body duplicates 1 other function(s) after normalizing names and literals: fn_semi_a. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_semi_b"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_title: function body duplicates 1 other function(s) after normalizing names and literals: fn_body. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_title"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "volatility_splits_copies": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_immutable: function body duplicates 1 other function(s) after normalizing names and literals: fn_immutable_copy. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_immutable"
+        },
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: function:fn_immutable_copy: function body duplicates 1 other function(s) after normalizing names and literals: fn_immutable. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments",
+          "rule": "postgres-duplicate-function-body",
+          "target": "function:fn_immutable_copy"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

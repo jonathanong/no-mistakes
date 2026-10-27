@@ -1,0 +1,7 @@
+version: 2
+rules:
+  - rule: postgres-duplicate-function-body
+    scope: repository
+    message: merge the copies
+    options:
+      schemaCatalogPath: schema.json

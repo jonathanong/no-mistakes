@@ -1,0 +1,10 @@
+# tables that must remain: orders
+version: 2
+rules:
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: [cases/join_using_bounds_like_on_3.sql]
+      include: [cases/join_using_bounds_like_on_3.sql]

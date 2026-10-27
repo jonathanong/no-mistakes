@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "sessions": {
+      "columns": {
+        "reviewer_user_id": {
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}

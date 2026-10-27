@@ -1,0 +1,15 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "schema": "app",
+  "enums": {
+    "shared.priority": {"values": ["low", "high"]}
+  },
+  "tables": {
+    "domain_arrays": {
+      "columns": {
+        "values": {"dataType": "priority[]"}
+      }
+    }
+  }
+}
