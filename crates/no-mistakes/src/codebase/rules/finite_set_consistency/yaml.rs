@@ -42,6 +42,21 @@ pub(super) fn extract_yaml_string_selector(source: &str, selector: &str) -> BTre
         .collect()
 }
 
+/// Mapping keys and sequence indexes of a selector, in order, for locating the
+/// selected key in the source text. `[]` segments are skipped.
+pub(super) fn selector_key_path(selector: &str) -> Option<Vec<String>> {
+    Some(
+        parse_selector(selector)?
+            .into_iter()
+            .filter_map(|segment| match segment {
+                SelectorSegment::Key(key) => Some(key),
+                SelectorSegment::Index(index) => Some(index.to_string()),
+                SelectorSegment::Each => None,
+            })
+            .collect(),
+    )
+}
+
 enum SelectorSegment {
     Key(String),
     Index(usize),

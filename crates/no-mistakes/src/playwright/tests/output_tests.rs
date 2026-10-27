@@ -126,6 +126,7 @@ fn text_printers_cover_routes_and_selectors() {
             attribute: "data-testid".to_string(),
             value: "missing".to_string(),
             file: "web/app/other.tsx".to_string(),
+            line: 2,
         }],
         fetch_apis: vec![],
     };

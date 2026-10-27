@@ -80,11 +80,13 @@ fn config_set_extractors_cover_edge_cases() {
 fn comparison_modes_cover_defaults_custom_messages_and_unknown_modes() {
     let left = ExtractedSet {
         file: "left.ts".to_string(),
+        line: 1,
         values: BTreeSet::from(["api".to_string(), "web".to_string()]),
         issues: Vec::new(),
     };
     let right = ExtractedSet {
         file: "right.md".to_string(),
+        line: 1,
         values: BTreeSet::from(["api".to_string()]),
         issues: Vec::new(),
     };

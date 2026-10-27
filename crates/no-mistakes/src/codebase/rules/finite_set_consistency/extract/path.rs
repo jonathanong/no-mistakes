@@ -52,6 +52,7 @@ pub(in super::super) fn extract_path_regex_set(
         }
     }
     Ok(ExtractedSet {
+        line: 1,
         file: match spec.file.is_empty() {
             true => ".".to_string(),
             false => spec.file.clone(),

@@ -87,7 +87,7 @@ pub(super) fn unique(
             Some(RuleFinding {
                 rule: rule.to_string(),
                 file: selector.file.clone(),
-                line: 1,
+                line: selector.line,
                 message: format!(
                     "selector [{}=\"{}\"] is duplicated; Playwright selectors must be unique",
                     selector.attribute, selector.value

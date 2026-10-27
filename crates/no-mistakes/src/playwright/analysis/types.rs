@@ -64,6 +64,7 @@ pub(crate) struct DuplicateSelector {
     pub(crate) attribute: String,
     pub(crate) value: String,
     pub(crate) file: String,
+    pub(crate) line: usize,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize)]
