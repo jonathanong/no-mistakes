@@ -3,6 +3,40 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[test]
+fn cli_audit_ignores_examples_and_excluded_data_but_keeps_real_comments() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/suppression-comment-boundaries");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["check", "--root"])
+        .arg(&root)
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(report["rules"], serde_json::json!([]), "{report}");
+    assert_eq!(
+        report["advisories"].as_array().unwrap().len(),
+        2,
+        "{report}"
+    );
+    let locations: Vec<_> = report["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| {
+            assert_eq!(row["rule"], "unused-disable-directive", "{report}");
+            (row["file"].as_str().unwrap(), row["line"].as_u64().unwrap())
+        })
+        .collect();
+    assert_eq!(locations, [("README.md", 9), ("source.rs", 1)]);
+}
+
+#[test]
 fn cli_hygiene_modes_preserve_suppression_and_choose_exit_status() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/unused-disable-directives");

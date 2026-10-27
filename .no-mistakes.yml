@@ -78,8 +78,13 @@ checks:
 rules:
   - rule: github-actions-pinned-hash
     scope: repository
+    # Fixture directives describe rules that this repository does not enable.
+    exclude: &fixture_excludes
+      - "fixtures/**"
+      - "test-cases/**"
   - rule: rust-max-lines-per-file
     scope: repository
+    exclude: *fixture_excludes
     options:
       srcMax: 200
       testMax: 500
@@ -87,6 +92,7 @@ rules:
       excludes: [test-cases/rules/file-input-analysis/]
   - rule: rust-no-inline-tests
     scope: repository
+    exclude: *fixture_excludes
     options:
       excludes:
         - test-cases/
@@ -94,11 +100,13 @@ rules:
         - crates/no-mistakes/src/codebase/dependencies/graph/builder_core/body.rs
   - rule: rust-no-inline-allows
     scope: repository
+    exclude: *fixture_excludes
     options:
       excludes:
         - test-cases/
   - rule: agents-md-max-size
     scope: repository
+    exclude: *fixture_excludes
     options:
       maxLines: 200
       maxChars: 12000

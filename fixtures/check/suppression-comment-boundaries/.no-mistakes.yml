@@ -1,0 +1,4 @@
+rules:
+  - rule: rust-max-lines-per-file
+    scope: repository
+    exclude: ["fixtures/**", "test-cases/**"]

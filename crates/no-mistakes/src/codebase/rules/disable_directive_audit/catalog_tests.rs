@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::ts_source::disable_directives;
 
 #[test]
 fn known_catalog_covers_every_declared_rule_and_registered_executor_rule() {

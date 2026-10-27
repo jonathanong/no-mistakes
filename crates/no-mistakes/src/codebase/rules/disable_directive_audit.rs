@@ -3,7 +3,7 @@ use super::suppression::{SuppressionDirective, SuppressionDirectiveKind};
 use super::{RuleFinding, SuppressedFinding};
 mod consumed;
 use crate::codebase::ts_source::{
-    disable_directives, relative_slash_path, DisableDirective, SourceStore,
+    disable_directives_for_path, relative_slash_path, DisableDirective, SourceStore,
 };
 use crate::config::v2::{DisableDirectivePolicy, NoMistakesConfig};
 use anyhow::Result;
@@ -81,10 +81,7 @@ impl PreparedDisableDirectives {
                     return Vec::new();
                 };
                 let file = relative_slash_path(root, path);
-                let markdown = path.extension().is_some_and(|ext| {
-                    ext.eq_ignore_ascii_case("md") || ext.eq_ignore_ascii_case("markdown")
-                });
-                disable_directives(&source, !markdown)
+                disable_directives_for_path(&source, path)
                     .into_iter()
                     .map(|named| {
                         let status = if enabled.contains(named.rule.as_str()) {
