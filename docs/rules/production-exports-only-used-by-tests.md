@@ -101,6 +101,11 @@ tests, so symbols they import remain production consumers.
 Dynamic or unresolved module/symbol relationships cannot prove exclusive test
 consumption. Uncertain analysis follows `unanalyzable`: `report` creates a failing
 finding, `advise` creates a non-failing advisory, and `ignore` omits uncertainty.
+Unresolved module advisories name the specifier and the import line. Unknown-symbol
+uncertainty names the specifier, the symbol, and that import line. Workspace
+package `exports` resolutions use the shared prepared resolver, the same projection
+as resolve-check and ordinary import classification, so a visible source entry
+stays selected when the TypeScript resolver target is not a visible graph file.
 Fix unresolved imports and replace dynamic module selection with static imports
 so the consumer relationship can be established. Definite violations remain
 findings under every policy.

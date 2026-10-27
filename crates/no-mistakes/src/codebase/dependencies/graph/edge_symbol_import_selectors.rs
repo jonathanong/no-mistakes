@@ -69,12 +69,52 @@ fn collect_symbol_import_selectors(
 }
 
 fn selector_target(inputs: &ExportEdgeInputs<'_>, source: &str) -> Option<PathBuf> {
+    let classification =
+        inputs
+            .resolver
+            .classify_import(source, inputs.path, inputs.workspace, inputs.graph_files);
+    // `preferred_path` keeps an invisible TS target and never consults the
+    // workspace exports entry. Match resolve-check: a visible resolver path,
+    // otherwise the prepared workspace source unless a paths alias owns it.
+    if let Some(path) = visible_selector_path(inputs, classification.resolver_path()) {
+        return Some(path);
+    }
+    let workspace = visible_selector_path(inputs, classification.workspace_path());
+    if workspace.is_some()
+        && classification.resolver_path().is_none()
+        && paths_alias_owns(inputs, source)
+    {
+        return None;
+    }
+    workspace
+}
+
+fn visible_selector_path(inputs: &ExportEdgeInputs<'_>, path: Option<&Path>) -> Option<PathBuf> {
+    path.and_then(|path| inputs.graph_files.visible_path(path))
+        .map(Path::to_path_buf)
+}
+
+/// A paths rewrite that drops the specifier is an alias, not a baseUrl join.
+fn paths_alias_owns(inputs: &ExportEdgeInputs<'_>, source: &str) -> bool {
+    if source.starts_with(['.', '/', '#']) {
+        return false;
+    }
     inputs
         .resolver
-        .classify_import(source, inputs.path, inputs.workspace, inputs.graph_files)
-        .preferred_path()
-        .and_then(|path| inputs.graph_files.visible_path(path))
-        .map(Path::to_path_buf)
+        .resolution_candidates(source, inputs.path)
+        .iter()
+        .any(|candidate| !candidate_contains_specifier(candidate, source))
+}
+
+fn candidate_contains_specifier(candidate: &Path, specifier: &str) -> bool {
+    let text = candidate.to_string_lossy();
+    let needle = format!("/{specifier}");
+    text.match_indices(&needle).any(|(index, _)| {
+        matches!(
+            text[index + needle.len()..].chars().next(),
+            None | Some('.' | '/')
+        )
+    })
 }
 
 fn selector_unknown(inputs: &ExportEdgeInputs<'_>, source: &str, edges: &mut Vec<Edge>) {

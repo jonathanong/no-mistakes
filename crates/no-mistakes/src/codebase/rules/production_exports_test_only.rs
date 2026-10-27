@@ -163,3 +163,5 @@ mod nextjs_tests;
 mod tests;
 #[cfg(test)]
 mod work_tests;
+#[cfg(test)]
+mod workspace_exports_tests;

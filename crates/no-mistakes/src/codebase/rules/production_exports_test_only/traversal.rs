@@ -1,6 +1,8 @@
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
+use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::codebase::ts_symbols::ExportKind;
 use crate::fx::{fx_set, FxHashSet};
 use std::collections::{BTreeSet, VecDeque};
 use std::path::{Path, PathBuf};
@@ -95,20 +97,99 @@ pub(super) fn incomplete_sources(
             incomplete.push((file.clone(), import.line as usize,
                 "computed import target prevents complete per-symbol analysis; use a literal named import".to_owned()));
         }
-        if graph
-            .dependencies_of_node(&NodeId::file(file))
-            .is_some_and(|edges| {
-                edges.iter().any(|(target, kind)| {
-                    *kind == EdgeKind::SymbolImportUnknown && target.as_file().is_none()
-                })
-            })
-        {
-            incomplete.push((
-                file.clone(),
-                1,
-                "unresolved module selector prevents complete per-symbol analysis".to_owned(),
-            ));
-        }
+        push_module_selector_gaps(file, ts, graph, &mut incomplete);
     }
     incomplete
+}
+
+fn push_module_selector_gaps(
+    file: &Path,
+    ts: &TsFileFacts,
+    graph: &DepGraph,
+    incomplete: &mut Vec<(PathBuf, usize, String)>,
+) {
+    let Some(edges) = graph.dependencies_of_node(&NodeId::file(file)) else {
+        return;
+    };
+    let mut seen = BTreeSet::new();
+    for (target, kind) in edges {
+        if *kind != EdgeKind::SymbolImportUnknown {
+            continue;
+        }
+        let NodeId::Module(module) = target else {
+            continue;
+        };
+        let (line, message) = module_gap_message(ts, module);
+        if seen.insert((line, message.clone())) {
+            incomplete.push((file.to_path_buf(), line, message));
+        }
+    }
+}
+
+fn module_gap_message(ts: &TsFileFacts, module: &str) -> (usize, String) {
+    if let Some((resolved, symbol)) = module
+        .rsplit_once('#')
+        .filter(|(path, _)| Path::new(path).is_absolute())
+    {
+        let (specifier, line) = import_site(ts, symbol, true).unwrap_or((resolved.to_owned(), 1));
+        return (
+            line,
+            format!(
+                "unresolved symbol `{symbol}` from `{specifier}` prevents complete per-symbol analysis"
+            ),
+        );
+    }
+    (
+        import_site(ts, module, false).map_or(1, |(_, line)| line),
+        format!("unresolved module selector `{module}` prevents complete per-symbol analysis"),
+    )
+}
+
+fn import_site(ts: &TsFileFacts, key: &str, symbol: bool) -> Option<(String, usize)> {
+    if let Some(symbols) = ts.symbols.as_ref() {
+        if let Some(import) = symbols.imports.iter().find(|import| {
+            if symbol {
+                import.imported == key
+            } else {
+                import.source == key
+            }
+        }) {
+            return Some((import.source.clone(), import.line.max(1) as usize));
+        }
+        if let Some(export) = symbols.exports.iter().find(|export| match &export.kind {
+            ExportKind::ReExport { source, imported } => {
+                if symbol {
+                    imported == key
+                } else {
+                    source == key
+                }
+            }
+            _ => false,
+        }) {
+            let ExportKind::ReExport { source, .. } = &export.kind else {
+                return None;
+            };
+            return Some((source.clone(), export.line.max(1) as usize));
+        }
+    }
+    if symbol {
+        return None;
+    }
+    if let Some(import) = ts.imports.iter().find(|import| import.specifier == key) {
+        return Some((key.to_owned(), import.line.max(1) as usize));
+    }
+    let import = ts
+        .module_bindings
+        .as_ref()?
+        .imports
+        .iter()
+        .find(|import| import.specifier == key)?;
+    Some((
+        key.to_owned(),
+        crate::codebase::ts_source::byte_offset_to_line(
+            ts.source.as_deref()?,
+            import.span.start as usize,
+        )
+        .max(1) as usize,
+    ))
 }
