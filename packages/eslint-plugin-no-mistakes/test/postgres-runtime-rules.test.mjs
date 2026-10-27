@@ -36,6 +36,11 @@ const {
   unwrapTs,
 } = helpers;
 
+const executorRules = Object.keys(plugin.rules).filter(
+  (name) =>
+    name.startsWith("postgres-") && plugin.rules[name].meta.schema?.[0]?.properties?.executorNames,
+);
+
 const recorded = [];
 function recordIds(code, rule, option, filename, expected) {
   recorded.push({
@@ -43,6 +48,7 @@ function recordIds(code, rule, option, filename, expected) {
     code,
     option: { importSpecifier: "@example/db", ...option },
     filename,
+    expected,
     empty: expected.length === 0,
   });
 }
@@ -52,6 +58,7 @@ function recordMessages(code, rule, option, filename, expected) {
     code,
     option,
     filename,
+    expected,
     empty: expected.length === 0,
   });
 }
@@ -104,11 +111,7 @@ describe("plugin exports", () => {
 describe("postgres runtime helpers", () => {
   it("rejects missing executor selection for every runtime rule", () => {
     assert.throws(() => executorOptionDefaults(), /set importSpecifier.*executorNames: \[\]/);
-    for (const rule of Object.keys(plugin.rules).filter(
-      (name) =>
-        name.startsWith("postgres-") &&
-        plugin.rules[name].meta.schema?.[0]?.properties?.executorNames,
-    )) {
+    for (const rule of executorRules) {
       assert.throws(() => messages(IMPORT + 'query("BEGIN");', rule), /set importSpecifier/);
       recordMessages(IMPORT + 'query("BEGIN");', rule, { executorNames: [] }, "fixture.jsx", []);
     }
@@ -1572,7 +1575,12 @@ describe("explicit PostgreSQL executor selection", () => {
 });
 
 it("snapshots postgres runtime rule diagnostics", async () => {
-  if (recorded.length < 30) throw new Error(`recorded ${recorded.length} runtime diagnostics`);
+  // Registry-derived cases grow automatically; the other 91 scenarios are fixed.
+  assert.equal(
+    recorded.length,
+    91 + executorRules.length,
+    "Run the complete runtime file before updating snapshots",
+  );
   const byRule = new Map();
   for (const item of recorded) {
     if (!byRule.has(item.rule)) byRule.set(item.rule, { valid: [], invalid: [] });
@@ -1586,7 +1594,18 @@ it("snapshots postgres runtime rule diagnostics", async () => {
   }
   const doc = {};
   for (const [rule, suite] of byRule) {
-    doc[rule] = snapshotSuite(rule, languageOptions, suite);
+    const rows = snapshotSuite(rule, languageOptions, suite);
+    const cases = recorded.filter((item) => item.rule === rule);
+    const ordered = [...cases.filter((item) => item.empty), ...cases.filter((item) => !item.empty)];
+    assert.deepEqual(
+      rows.map((row) =>
+        row.findings
+          .filter((finding) => finding.ruleId === `no-mistakes/${rule}`)
+          .map((finding) => finding.messageId),
+      ),
+      ordered.map((item) => item.expected),
+    );
+    doc[rule] = rows;
   }
   await expect(snapshotDocument(doc)).toMatchFileSnapshot("snapshots/postgres-runtime-rules.snap");
 }, 30_000);

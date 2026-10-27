@@ -48,7 +48,7 @@ function check(code, option = DB, filename = "app.ts") {
 
 const recorded = [];
 function recordDiagnostic(code, option, filename, expected) {
-  recorded.push({ code, option, filename, empty: expected.length === 0 });
+  recorded.push({ code, option, filename, expected, empty: expected.length === 0 });
 }
 
 const languageOptions = {
@@ -1057,7 +1057,8 @@ describe("postgres-no-executor-adapter", () => {
 });
 
 it("snapshots postgres-no-executor-adapter diagnostics", async () => {
-  if (recorded.length < 80) throw new Error(`recorded ${recorded.length} adapter diagnostics`);
+  // A filtered or failed earlier test must not write a reduced snapshot with -u.
+  assert.equal(recorded.length, 136, "Run the complete adapter file before updating snapshots");
   const valid = [];
   const invalid = [];
   for (const item of recorded) {
@@ -1069,9 +1070,20 @@ it("snapshots postgres-no-executor-adapter diagnostics", async () => {
     };
     (item.empty ? valid : invalid).push(entry);
   }
-  await expect(
-    snapshotDocument(
-      snapshotSuite("postgres-no-executor-adapter", languageOptions, { valid, invalid }),
+  const rows = snapshotSuite(RULE, languageOptions, { valid, invalid });
+  const ordered = [
+    ...recorded.filter((item) => item.empty),
+    ...recorded.filter((item) => !item.empty),
+  ];
+  assert.deepEqual(
+    rows.map((row) =>
+      row.findings
+        .filter((finding) => finding.ruleId === `no-mistakes/${RULE}`)
+        .map((finding) => finding.messageId),
     ),
-  ).toMatchFileSnapshot("snapshots/postgres-no-executor-adapter.snap");
+    ordered.map((item) => item.expected),
+  );
+  await expect(snapshotDocument(rows)).toMatchFileSnapshot(
+    "snapshots/postgres-no-executor-adapter.snap",
+  );
 }, 30_000);
