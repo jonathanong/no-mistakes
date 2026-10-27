@@ -306,9 +306,10 @@ fn rust_doc_directives_are_invalid_without_suppressing_findings_or_fenced_exampl
     config.rules[0].include = vec!["rust-docs.rs".into()];
     config.rules[0].enabled = true;
     config.rules[0].options = serde_yaml::Value::Null;
-    let sources = super::super::source_store_for_files(&[file.clone()]);
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&file));
     let prepared =
-        PreparedDisableDirectives::prepare(&root, &config, &[file.clone()], &sources).unwrap();
+        PreparedDisableDirectives::prepare(&root, &config, std::slice::from_ref(&file), &sources)
+            .unwrap();
     let findings = prepared.findings(&[]);
     let invalid: Vec<_> = findings
         .iter()
