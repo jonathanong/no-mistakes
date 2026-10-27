@@ -15,5 +15,5 @@ const a9 = { x: a8, y: a8 }
 const a10 = { x: a9, y: a9 }
 const a11 = { x: a10, y: a10 }
 const a12 = { x: a11, y: a11 }
-const joined = unknownCondition ? a12 : a12
+const joined = unknownCondition ? (0, a12) : (0, a12) // Sequence arms deliberately exercise the full join/traversal path.
 read(q)

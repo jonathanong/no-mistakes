@@ -36,8 +36,8 @@ const scalar31 = 31
 const callback = () => sql`SELECT 3`
 const query = sql`/* indexed */ SELECT 1`
 const holder = { query }
-const joined = unknownCondition ? holder : holder
-const selected = unknownCondition ? callback : callback
+const joined = unknownCondition ? (0, holder) : (0, holder) // Sequence arms deliberately exercise the full join/traversal path.
+const selected = unknownCondition ? (0, callback) : (0, callback)
 read(joined.query)
 read(callback()) // unsafe-query
 read(sql`SELECT 2`) // unsafe-query

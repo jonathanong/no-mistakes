@@ -34,6 +34,6 @@ const alias28 = query
 const alias29 = query
 const alias30 = query
 const alias31 = query
-const joined = unknownCondition ? query : query
+const joined = unknownCondition ? (0, query) : (0, query) // Sequence arms deliberately exercise the full join/traversal path.
 read(query)
 read(sql`SELECT 2`) // unsafe-query

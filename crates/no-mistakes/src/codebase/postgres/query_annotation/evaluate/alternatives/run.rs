@@ -13,7 +13,7 @@ impl<F: Fn(&str, &Path) -> Option<std::path::PathBuf>> Evaluator<'_, F> {
         depth: u8,
         generic: bool,
     ) -> Value {
-        if let Some(value) = self.scalar_alternatives(arms, path, env, depth, generic) {
+        if let Some(value) = self.readonly_alternatives(arms, path, env, depth, generic) {
             return value;
         }
         let precise_records = self.files[path].facts.precise_records;

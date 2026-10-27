@@ -70,6 +70,11 @@ const unrelated = [
 ]
 const left = '/* selected */ SELECT 2'
 const right = '/* selected */ SELECT 3'
+const record = { exact: left, nested: { exact: right } }
+const exactArray = [left, right]
+const args = { field: true, count: 4 }
+const nullish = args.field ?? false
+const logical = args.count || 7
 export const selected = unknownCondition ? left : right
 const literal = unknownCondition ? 'literal left' : 'literal right'
 function callback() { return left }
