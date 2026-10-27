@@ -28,7 +28,6 @@ fn load_tsconfig_follows_extends_from_subdir() {
         r#"{"compilerOptions": {"paths": {"@core/*": ["./packages/core/src/*"]}}}"#,
     );
     let sub = root.path().join("apps").join("web");
-    std::fs::create_dir_all(&sub).unwrap();
     let child_p = sub.join("tsconfig.json");
     write(&child_p, r#"{"extends": "../../tsconfig.base.json"}"#);
 
@@ -170,7 +169,6 @@ fn load_tsconfig_extends_array_inherits_paths_and_base_url_independently() {
 fn load_tsconfig_extends_directory_appends_tsconfig_json() {
     let dir = TempDir::new().unwrap();
     let subdir = dir.path().join("base");
-    std::fs::create_dir_all(&subdir).unwrap();
     let base_p = subdir.join("tsconfig.json");
     write(
         &base_p,

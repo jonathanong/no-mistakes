@@ -362,14 +362,9 @@ fn fixture_workspace_conditional_exports() {
 
 #[test]
 fn dir_without_package_json_ignored() {
-    let dir = TempDir::new().unwrap();
-    let root = dir.path();
-    write(
-        &root.join("package.json"),
-        r#"{"workspaces": ["packages/*"]}"#,
-    );
-    // Create dir without package.json.
-    std::fs::create_dir_all(root.join("packages/no-pkg")).unwrap();
-    let map = load(root).unwrap();
+    // `.gitkeep` keeps `packages/no-pkg` in git. The directory has no package.json.
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/workspaces/dir-without-package-json");
+    let map = load(&root).unwrap();
     assert!(map.packages.is_empty());
 }

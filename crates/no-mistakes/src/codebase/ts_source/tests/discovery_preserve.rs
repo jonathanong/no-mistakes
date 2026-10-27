@@ -52,9 +52,11 @@ fn preserving_roots_from_visible_reuses_the_supplied_snapshot() {
     git_add_all(dir.path());
     let visible = crate::codebase::ts_source::discover_visible_paths(dir.path());
 
-    // Runtime creation is the invariant under test: both filtered views must
-    // reuse the earlier snapshot instead of rediscovering this late file.
-    std::fs::write(dir.path().join("fixtures/app/src/late.rs"), "").unwrap();
+    // The late file is absent from the snapshot. Copying it in afterwards is
+    // the mutation under test: both filtered views must keep the snapshot.
+    let late = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/ts-source/late-file/late.rs");
+    std::fs::copy(late, dir.path().join("fixtures/app/src/late.rs")).unwrap();
     git_add_all(dir.path());
     for skip in [&["fixtures".to_string()][..], &[][..]] {
         let files = crate::codebase::ts_source::discover_files_preserving_roots_from_visible(
