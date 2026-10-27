@@ -80,6 +80,7 @@ what it means depends on the export's kind:
   no literals), so production that only names the type is fed values by
   callers, and only tests exercise the enum. An enum referenced only as a type,
   by production and tests alike, has no runtime consumer and is not reported.
+  `const enum` and `declare enum` follow the same rule as `enum`.
 - Type exports (`interface`, `type` alias): a type reference keeps the export
   consumed.
 - Classes: a type-position use counts as production use, because the class type

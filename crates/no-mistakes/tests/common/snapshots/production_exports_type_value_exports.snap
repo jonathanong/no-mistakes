@@ -46,6 +46,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/values.mts",
+          "line": 14,
+          "message": "production export `ConstStatus` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "sourceLine": "export const enum ConstStatus { On = 1, Off = 2 }",
+          "target": "ConstStatus"
+        },
+        {
+          "file": "src/values.mts",
           "line": 2,
           "message": "production export `fnImportType` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
           "rule": "production-exports-only-used-by-tests",

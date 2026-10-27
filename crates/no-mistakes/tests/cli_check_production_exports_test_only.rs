@@ -264,7 +264,7 @@ fn type_references_do_not_consume_value_exports_snapshot() {
     assert_eq!(output.status.code(), Some(1), "{report}");
     // Type-position references to functions, const, let and var never count as
     // production use (enums included: `Status` is reported, `TypeOnlyLevel` has
-    // no runtime consumer at all); classes and interfaces keep counting.
+    // no runtime consumer at all); classes, interfaces and aliases keep counting.
     let mut targets: Vec<_> = report["rules"]
         .as_array()
         .unwrap()
@@ -275,6 +275,7 @@ fn type_references_do_not_consume_value_exports_snapshot() {
     assert_eq!(
         targets,
         [
+            "ConstStatus",
             "Status",
             "constInline",
             "fnChain",
