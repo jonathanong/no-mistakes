@@ -58,6 +58,7 @@ pub(crate) fn from_raw_maps(
         effective_edges: std::sync::OnceLock::new(),
         parse_errors: HashMap::new(),
         resource_edge_details: fx_map(),
+        selector_import_sites: fx_map(),
         resource_diagnostics: Vec::new(),
     }
 }
@@ -78,6 +79,7 @@ pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap)
         effective_edges: std::sync::OnceLock::new(),
         parse_errors: HashMap::new(),
         resource_edge_details: fx_map(),
+        selector_import_sites: fx_map(),
         resource_diagnostics: Vec::new(),
     }
 }

@@ -78,6 +78,7 @@
             effective_edges: OnceLock::new(),
             parse_errors,
             resource_edge_details,
+            selector_import_sites,
             resource_diagnostics,
         };
         if plan.assertion_owners {

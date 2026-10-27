@@ -152,6 +152,33 @@ conservatively when the target cannot be resolved. Ordinary external packages
 and non-code assets are outside the production TS/JS export catalog.
 Namespace imports and namespace re-exports are module-wide uncertainty in this
 projection; use explicit named imports and re-exports to establish each consumer.
+When an export has a known production consumer, an additional unknown selector
+cannot make it exclusively test-consumed, so it produces no per-export uncertainty
+diagnostic. This also applies when the production import reaches the definition
+through static `export *` chains or workspace package barrels.
+
+For an export with only known test consumers, an attached unknown selector follows
+`unanalyzable`. The diagnostic points to the importing file and import line, names
+the module specifier, and explains why that selector prevents proof of exclusive
+test consumption. When one importer selects several modules, each diagnostic
+retains the corresponding selector's specifier and line. Multiple uncertain
+importers of the same export share one diagnostic listing all matching import
+sites, with the first site in deterministic order as its primary location.
+Rewrite that import or re-export with explicit names. A literal import in
+`vi.mock(import("./module"), factory)` with an imported Vitest `vi` binding and
+a static replacement factory is an erased module-promise type carrier. It does
+not create an unknown selector; its ordinary module dependency edge is retained.
+Local objects named `vi`, arbitrary aliases such as
+`mockApi.mock`, and genuine dynamic imports alongside a mock retain uncertainty.
+Factories receiving parameters (including `importOriginal`) or executing opaque
+calls such as `vi.importActual`, constructors, tagged templates, or dynamic imports
+also retain uncertainty because they may load the actual source. Optional calls,
+factory references, and bindings from other modules are not static replacements.
+A factory returning a literal replacement object, including function-valued
+properties, can establish a static replacement when it has no parameters and is
+not a generator. The return must be the arrow expression or the sole return statement in a block;
+captured replacement values and member reads retain uncertainty.
+An unrelated plain export with only test consumers still produces its ordinary finding.
 
 ## Suppression and custom messages
 

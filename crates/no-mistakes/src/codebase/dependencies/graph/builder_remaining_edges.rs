@@ -36,6 +36,7 @@ fn collect_remaining_edges(
         forward,
         reverse,
         resource_edge_details,
+        selector_import_sites: _,
         resource_diagnostics,
         callable_export_resolutions: _,
         module_files: _,

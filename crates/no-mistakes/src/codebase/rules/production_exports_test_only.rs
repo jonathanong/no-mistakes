@@ -1,6 +1,8 @@
 //! Production exports whose syntactic consumers all belong to configured tests.
 mod config;
 mod nextjs;
+mod selector_advisories;
+mod selector_gaps;
 mod traversal;
 
 use super::analysis_policy::AnalysisDiagnostics;
@@ -75,20 +77,21 @@ pub(crate) fn check_with_graph(
                         continue;
                     }
                     let consumers = traversal::consumers(graph, file, name);
+                    if consumers.files.iter().any(|file| !options.test(file)) {
+                        continue;
+                    }
                     if !consumers.unknown.is_empty() {
-                        chunk.unanalyzable(
-                            policy,
-                            uncertain(
-                                &root,
-                                application,
-                                file,
-                                export.line as usize,
-                                &format!(
-                                    "symbol consumers of `{}` include an unknown import selector",
-                                    export.name
-                                ),
-                            ),
-                        );
+                        if let Some((importer, line, reason)) = selector_advisories::for_export(
+                            &root,
+                            graph,
+                            &consumers.unknown,
+                            &export.name,
+                        ) {
+                            chunk.unanalyzable(
+                                policy,
+                                uncertain(&root, application, &importer, line, &reason),
+                            );
+                        }
                     } else if !consumers.files.is_empty()
                         && consumers.files.iter().all(|file| options.test(file))
                     {

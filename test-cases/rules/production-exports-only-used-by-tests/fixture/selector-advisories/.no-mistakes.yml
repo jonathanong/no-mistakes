@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: production-exports-only-used-by-tests
+    scope: repository
+    options:
+      productionRoots: [src, packages/kit/src]
+      testGlobs: ["tests/**/*.test.mts"]
+      unanalyzable: advise

@@ -1,0 +1,54 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "selector_advisories": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "other/candidate.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: symbol consumers of `uncertainValue` include an unknown import selector: other/candidate.mts:2 `../src/candidate.mjs` (namespace selector), other/z-candidate.mts:2 `../src/candidate.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "other/pair.mts",
+          "line": 2,
+          "message": "cannot analyze production export importers: symbol consumers of `firstValue` include an unknown import selector: other/pair.mts:2 `../src/first.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "other/pair.mts",
+          "line": 4,
+          "message": "cannot analyze production export importers: symbol consumers of `secondValue` include an unknown import selector: other/pair.mts:4 `../src/second.mjs` (namespace selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/mock-only.mts",
+          "line": 1,
+          "message": "production export `mockOnlyValue` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "target": "mockOnlyValue"
+        },
+        {
+          "file": "src/plain.mts",
+          "line": 1,
+          "message": "production export `testOnlyValue` is imported only by configured tests or test helpers; move it into a configured test-helper root or remove its export. Production APIs should serve production code",
+          "rule": "production-exports-only-used-by-tests",
+          "target": "testOnlyValue"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

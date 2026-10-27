@@ -83,3 +83,120 @@ fn production_exports_test_only_ignores_production_consumers_and_suppressions() 
         assert!(report["rules"].as_array().unwrap().is_empty(), "{body}");
     }
 }
+
+#[test]
+fn selector_advisories_check_json_snapshot() {
+    let output = check("selector-advisories");
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(output.status.code(), Some(1), "{report}");
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 2, "{report}");
+    for target in ["testOnlyValue", "mockOnlyValue"] {
+        assert!(
+            findings.iter().any(|item| item["target"] == target),
+            "{report}"
+        );
+    }
+    let advisories = report["advisories"].as_array().unwrap();
+    assert_eq!(advisories.len(), 3, "{report}");
+    for (file, line, specifier, other) in [
+        (
+            "other/candidate.mts",
+            2,
+            "../src/candidate.mjs",
+            "../src/proven.mjs",
+        ),
+        ("other/pair.mts", 2, "../src/first.mjs", "../src/second.mjs"),
+        ("other/pair.mts", 4, "../src/second.mjs", "../src/first.mjs"),
+    ] {
+        let advisory = advisories
+            .iter()
+            .find(|item| {
+                item["file"]
+                    .as_str()
+                    .unwrap()
+                    .replace('\\', "/")
+                    .ends_with(file)
+                    && item["line"] == line
+            })
+            .unwrap_or_else(|| panic!("missing advisory at {file}:{line}: {report}"));
+        let detail = advisory.to_string();
+        assert!(detail.contains(specifier), "{report}");
+        assert!(!detail.contains(other), "{report}");
+        assert!(detail.contains("namespace"), "{report}");
+        if file == "other/candidate.mts" {
+            assert!(detail.contains("other/candidate.mts:2"), "{report}");
+            assert!(detail.contains("other/z-candidate.mts:2"), "{report}");
+        }
+    }
+    let root = crate::check_json_snapshot::rules_path(RULE, "fixture", "selector-advisories");
+    crate::check_json_snapshot::assert_saved_fixture(
+        "production_exports_selector_advisories",
+        &[(
+            "selector_advisories",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
+    );
+}
+
+#[test]
+fn mock_controls_check_json_snapshot() {
+    let output = check("mock-controls");
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(output.status.success(), "{report}");
+    assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
+    let advisories = report["advisories"].as_array().unwrap();
+    // Each real module load can conceal production consumption.
+    for (file, specifier) in [
+        ("other/local.mts", "../src/local.mjs"),
+        ("other/alias.mts", "../src/alias.mjs"),
+        ("other/shared.mts", "../src/shared.mjs"),
+        ("other/original.mts", "../src/original.mjs"),
+        ("other/actual.mts", "../src/actual.mjs"),
+        ("other/constructor.mts", "../src/constructor.mjs"),
+        ("other/tagged.mts", "../src/tagged.mjs"),
+        ("other/nested-import.mts", "../src/nested-import.mjs"),
+        ("other/unbound.mts", "../src/unbound.mjs"),
+        ("other/wrong-binding.mts", "../src/wrong-binding.mjs"),
+        ("other/local-binding.mts", "../src/local-binding.mjs"),
+        ("other/optional.mts", "../src/optional.mjs"),
+        ("other/reference.mts", "../src/reference.mjs"),
+        ("other/opaque-member.mts", "../src/opaque-member.mjs"),
+        ("other/opaque-reference.mts", "../src/opaque-reference.mjs"),
+        ("other/generator.mts", "../src/generator.mjs"),
+        ("other/shadowed.mts", "../src/shadowed.mjs"),
+        ("other/opaque-call.mts", "../src/opaque-call.mjs"),
+        ("other/getter.mts", "../src/getter.mjs"),
+        ("other/bare-callee.mts", "../src/bare-callee.mjs"),
+        ("other/other-method.mts", "../src/other-method.mjs"),
+        ("other/nested-callee.mts", "../src/nested-callee.mjs"),
+        (
+            "other/multiple-statements.mts",
+            "../src/multiple-statements.mjs",
+        ),
+        ("other/spread.mts", "../src/spread.mjs"),
+        (
+            "other/captured-property.mts",
+            "../src/captured-property.mjs",
+        ),
+    ] {
+        assert!(
+            advisories.iter().any(|item| {
+                item["file"]
+                    .as_str()
+                    .unwrap()
+                    .replace('\\', "/")
+                    .ends_with(file)
+                    && item["line"] == 3
+                    && item.to_string().contains(specifier)
+            }),
+            "missing selector provenance for {file}: {report}"
+        );
+    }
+    let root = crate::check_json_snapshot::rules_path(RULE, "fixture", "mock-controls");
+    crate::check_json_snapshot::assert_saved_fixture(
+        "production_exports_mock_controls",
+        &[("mock_controls", root.clone(), root.join(".no-mistakes.yml"))],
+    );
+}

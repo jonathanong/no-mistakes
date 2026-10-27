@@ -4,7 +4,7 @@ struct CoreIndependentEdges {
     workspace: Vec<Edge>,
     package: Vec<Edge>,
     assets: Vec<Edge>,
-    symbols: Vec<Edge>,
+    symbols: (Vec<Edge>, SelectorImportSites),
     tests: Vec<Edge>,
 }
 
@@ -67,7 +67,12 @@ fn collect_independent_core_edges(
                                         traced_parallel_edges(
                                             observer.clone(),
                                             "graph.package",
-                                            || collect_package_edges_for_core(edge_inputs, workspace),
+                                            || {
+                                                collect_package_edges_for_core(
+                                                    edge_inputs,
+                                                    workspace,
+                                                )
+                                            },
                                         )
                                     },
                                 )
@@ -134,22 +139,26 @@ fn collect_independent_core_edges(
     }
 }
 
-fn traced_parallel_edges(
+fn traced_parallel_edges<T: Default + Send>(
     observer: Option<std::sync::Arc<crate::diagnostics::InvocationObserver>>,
     label: &'static str,
-    collect: impl FnOnce() -> Vec<Edge> + Send,
-) -> Vec<Edge> {
+    collect: impl FnOnce() -> T + Send,
+) -> T {
     with_observer_and_timing(observer, crate::diagnostics::TimingKind::Parallel, || {
         collect_unless_timed_out(|| crate::perf_trace::trace(label, collect))
     })
 }
 
-fn merge_independent_core_edges(forward: &mut EdgeMap, reverse: &mut EdgeMap, edges: CoreIndependentEdges) {
+fn merge_independent_core_edges(
+    forward: &mut EdgeMap,
+    reverse: &mut EdgeMap,
+    edges: CoreIndependentEdges,
+) {
     merge_edges(forward, reverse, edges.imports);
     merge_edges(forward, reverse, edges.route_imports);
     merge_edges(forward, reverse, edges.workspace);
     merge_edges(forward, reverse, edges.package);
     merge_edges(forward, reverse, edges.assets);
-    merge_edges(forward, reverse, edges.symbols);
+    merge_edges(forward, reverse, edges.symbols.0);
     merge_edges(forward, reverse, edges.tests);
 }

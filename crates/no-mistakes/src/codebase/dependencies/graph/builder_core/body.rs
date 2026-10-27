@@ -93,9 +93,9 @@
             .map(|lookup| lookup as &dyn TsFactLookup)
             .or(facts)
             .or_else(|| owned_facts.as_ref().map(|facts| facts as &dyn TsFactLookup));
-
         let mut forward: EdgeMap = EdgeMap::default();
         let mut reverse: EdgeMap = EdgeMap::default();
+        let mut selector_import_sites = fx_map();
         let mut resource_edge_details: ResourceEdgeDetails = fx_map();
         let mut resource_diagnostics = Vec::new();
         let mut module_files = fx_map();
@@ -106,13 +106,11 @@
         let mut resolved_call_sites = Vec::new();
         let mut class_declarations = Vec::new();
         let files = graph_files.indexable();
-
         for file in files {
             forward
                 .entry(NodeId::file_in(&edge_inputs.interner, file))
                 .or_default();
         }
-
         let parsed_imports = parsed_imports_for_plan(plan, files, facts)?;
         crate::invocation::check_timeout()?;
         let needs_workspace = plan.imports
@@ -160,6 +158,7 @@
                 forward: &mut forward,
                 reverse: &mut reverse,
                 resource_edge_details: &mut resource_edge_details,
+                selector_import_sites: &mut selector_import_sites,
                 resource_diagnostics: &mut resource_diagnostics,
                 callable_export_resolutions: &mut callable_export_resolutions,
                 module_files: &mut module_files,
