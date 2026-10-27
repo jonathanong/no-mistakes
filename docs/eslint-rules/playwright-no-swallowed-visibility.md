@@ -97,8 +97,7 @@ The rule does not follow these shapes:
 - Named catch handlers, even a same-file function that returns a boolean.
 - Aliases of the state method or its promise, and intervening promise chains
   such as `locator.isVisible().then(transform).catch(() => false)`.
-- Computed method names such as `locator[name]()`, unless the member name is
-  a literal matching a configured method.
+- Dynamic computed method names such as `locator[name]()`.
 - A `try` that discards the awaited state result, returns a different value,
   or returns the promise without awaiting it.
 - A state result returned through a destructured or reassigned binding, or
