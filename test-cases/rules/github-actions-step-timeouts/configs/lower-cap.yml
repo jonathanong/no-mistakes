@@ -1,0 +1,9 @@
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      maxMinutes: 30
+      allow:
+        - step: ".github/workflows/ci.yml#build#slow"
+          reason: "This step has a stricter deadline."
+          maxMinutes: 10

@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      include:
+        - other/*.yml

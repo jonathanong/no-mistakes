@@ -1,0 +1,126 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allow_matching": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allow_unscanned_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "custom_include": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_without_matches": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "restated_literals": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 10,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "target": "expect(job?.['timeout-minutes']).toContain(\"&& '45'\")"
+        },
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 14,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "target": "expect(job.timeoutMinutes).toEqual(8)"
+        },
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 2,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "target": "expect(workflowSource).toContain('timeout-minutes: 15')"
+        },
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 6,
+          "message": ".github/workflows/ci.test.mts: duplicates a timeout-minutes value; delete the assertion or add a reasoned allow entry",
+          "rule": "github-actions-test-timeout-literals",
+          "target": "expect(step?.['timeout-minutes']).toBe(10)"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "stale_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.test.mts",
+          "line": 1,
+          "message": "stale github-actions-test-timeout-literals allow entry `.github/workflows/ci.test.mts#timeout-minutes: 99`",
+          "rule": "github-actions-test-timeout-literals",
+          "target": ".github/workflows/ci.test.mts#timeout-minutes: 99"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

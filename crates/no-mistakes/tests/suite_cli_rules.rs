@@ -95,6 +95,28 @@ mod cli_check_rules_version_pin;
 mod cli_check_rules_workflow_topology;
 #[path = "cli_check_unused_disable_directives.rs"]
 mod cli_check_unused_disable_directives;
+#[path = "cli_gha_snapshot_action_timeout_pair.rs"]
+mod cli_gha_snapshot_action_timeout_pair;
+#[path = "cli_gha_snapshot_checkout_credentials.rs"]
+mod cli_gha_snapshot_checkout_credentials;
+#[path = "cli_gha_snapshot_composite_step_schema.rs"]
+mod cli_gha_snapshot_composite_step_schema;
+#[path = "cli_gha_snapshot_docker_host_ports.rs"]
+mod cli_gha_snapshot_docker_host_ports;
+#[path = "cli_gha_snapshot_download_integrity.rs"]
+mod cli_gha_snapshot_download_integrity;
+#[path = "cli_gha_snapshot_job_timeouts.rs"]
+mod cli_gha_snapshot_job_timeouts;
+#[path = "cli_gha_snapshot_pinned_hash.rs"]
+mod cli_gha_snapshot_pinned_hash;
+#[path = "cli_gha_snapshot_script_expressions.rs"]
+mod cli_gha_snapshot_script_expressions;
+#[path = "cli_gha_snapshot_step_timeouts.rs"]
+mod cli_gha_snapshot_step_timeouts;
+#[path = "cli_gha_snapshot_test_timeout_literals.rs"]
+mod cli_gha_snapshot_test_timeout_literals;
+#[path = "cli_gha_snapshot_workflow_topology.rs"]
+mod cli_gha_snapshot_workflow_topology;
 
 #[path = "cli_check_git_identity_prefixes.rs"]
 mod cli_check_git_identity_prefixes;

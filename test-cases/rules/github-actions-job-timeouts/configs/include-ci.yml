@@ -1,0 +1,7 @@
+rules:
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
+      include:
+        - .github/workflows/ci.yml
+      maxMinutes: 10

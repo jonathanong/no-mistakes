@@ -1,0 +1,1473 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "artifact-edge-and-step-job-missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "required artifact edge missing: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#test: dist [prefix]",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "required artifact edge missing: .github/workflows/pipeline.yml#ghost -> .github/workflows/pipeline.yml#test: dist",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "step-order job missing: .github/workflows/pipeline.yml#ghost",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "caller-allowlist-missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "caller allowlist missing: .github/workflows/reusable.yml",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "caller allowlist stale: .github/workflows/ci.yml",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "caller-allowlist-stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "caller allowlist stale: .github/workflows/missing.yml",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "caller-mismatch-stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "caller allowlist mismatch: .github/workflows/reusable.yml: expected .github/workflows/ci.yml#missing, got .github/workflows/ci.yml#reusable",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "lock intent missing: .github/workflows/follow-up.yml",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "lock intent missing: .github/workflows/reusable.yml",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "unlocked reason stale: .github/workflows/ci.yml",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "concurrency-intent-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "concurrency cancellation mismatch: .github/workflows/ci.yml: expected conditional, got cancel-running",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "concurrency intent missing: .github/workflows/lint.yml",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "concurrency pending mismatch: .github/workflows/release.yml#publish: expected fifo, got coalesce-latest",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "concurrency scope mismatch: .github/workflows/deploy.yml: expected , got sha",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "concurrency-intent-pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty-concurrency-policy": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exact-fan-in-match": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "exact-fan-in-mismatch": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "exact fan-in mismatch: .github/workflows/pipeline.yml#deploy: expected .github/workflows/pipeline.yml#build, got .github/workflows/pipeline.yml#test",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "exact fan-in target missing: .github/workflows/pipeline.yml#ghost",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "forbidden-and-transitive-edges": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "forbidden direct edge present: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#test",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "forbidden transitive edge present: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#deploy",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "required transitive edge missing: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#ghost",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "group-collisions-fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "concurrency group collision: ${{ github.ref }}: .github/workflows/a.yml, .github/workflows/b.yml",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "concurrency group collision: ${{ github.workflow }}-${{ github.ref }}: .github/workflows/ci.yml, .github/workflows/ci.yml#build",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "concurrency group collision: shared: .github/workflows/one.yml, .github/workflows/two.yml",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "group-collisions-pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "inventory-mismatch-stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "job inventory mismatch: .github/workflows/pipeline.yml: expected build, got build, deploy, test",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "workflow inventory stale: .github/workflows/missing.yml",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "inventory-missing-and-edges": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "workflow inventory missing: .github/workflows/pipeline.yml",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "workflow inventory stale: .github/workflows/missing.yml",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "job-inventory-baseline": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "lock-intent-missing-stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "lock intent missing: .github/workflows/pipeline.yml",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "unlocked reason stale: .github/workflows/missing.yml",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "matching-artifact-caller": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "matching-inventory-edges": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "required-direct-edge-missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "required direct edge missing: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#missing",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "required-forbidden-jobs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "forbidden job present: .github/workflows/pipeline.yml#build",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "required job missing: .github/workflows/pipeline.yml#ghost",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-ambiguous-unused": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 1,
+          "message": "secret inventory analysis incomplete: unused declaration location is unavailable or ambiguous; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-caller-undeclared": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 6,
+          "message": "undeclared secret MISSING_SOURCE; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-composite": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "actions/example/action.yml",
+          "line": 7,
+          "message": "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": "actions/example/action.yml",
+          "line": 9,
+          "message": "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-custom-builtins": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 7,
+          "message": "undeclared secret GITHUB_TOKEN; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-custom-builtins-declared": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "secret-cycle": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/a.yml",
+          "line": 1,
+          "message": "secret inventory analysis incomplete: reusable call cycle; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-dotted-local-action": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/deploy/action.yml",
+          "line": 4,
+          "message": "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-dynamic": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 14,
+          "message": "secret inventory analysis incomplete: job environment is not a literal name; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 17,
+          "message": "undeclared secret NOT_LISTED; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 3,
+          "message": "secret inventory analysis incomplete: dynamic selector or whole secrets context; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": "secret inventory analysis incomplete: dynamic selector or whole secrets context; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 9,
+          "message": "secret inventory analysis incomplete: dynamic selector or whole secrets context; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-environments": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 15,
+          "message": "undeclared secret ENV_ONLY; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 14,
+          "message": "unused declared secret ENV_UNUSED in Prod; remove its name or add a statically resolved reference",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 8,
+          "message": "unused declared secret SHARED in repository; remove its name or add a statically resolved reference",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-hybrid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 1,
+          "message": "secret inventory analysis incomplete: reusable contract also has direct triggers; secret sources depend on the trigger; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-hyphenated-contexts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 7,
+          "message": "unused declared secret UNUSED in repository; remove its name or add a statically resolved reference",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-inherit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 4,
+          "message": "secret inventory analysis incomplete: reusable call inherits secrets; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-malformed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 1,
+          "message": "secret inventory analysis incomplete: document unavailable: did not find expected node content at line 3 column 1, while parsing a flow node; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": "actions/broken/action.yml",
+          "line": 1,
+          "message": "secret inventory analysis incomplete: document unavailable: did not find expected node content at line 2 column 1, while parsing a flow node; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-malformed-bindings": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 12,
+          "message": "secret inventory analysis incomplete: reusable secret bindings are not a static mapping or inherit; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 15,
+          "message": "secret inventory analysis incomplete: reusable secret bindings are not a static mapping or inherit; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 19,
+          "message": "secret inventory analysis incomplete: reusable secret bindings are not a static mapping or inherit; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 5,
+          "message": "secret inventory analysis incomplete: reusable secret bindings are not a static mapping or inherit; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": "secret inventory analysis incomplete: reusable secret bindings are not a static mapping or inherit; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-malformed-job": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 3,
+          "message": "secret inventory analysis incomplete: job must be a mapping; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-malformed-jobs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 2,
+          "message": "secret inventory analysis incomplete: jobs must be a mapping; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-noncallable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 4,
+          "message": "secret inventory analysis incomplete: reusable call cannot be resolved locally; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-queued-env": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 5,
+          "message": "undeclared secret ENV_ONLY; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 12,
+          "message": "unused declared secret OTHER_UNUSED in stage; remove its name or add a statically resolved reference",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-quoted-index": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": "undeclared secret FOO; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 9,
+          "message": "secret inventory analysis incomplete: dynamic selector or whole secrets context; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-remote": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 7,
+          "message": "unused declared secret UNUSED in repository; remove its name or add a statically resolved reference",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-remote-visible": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 15,
+          "message": "undeclared secret ALSO_MISSING; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": "undeclared secret MISSING; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-repeated": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 10,
+          "message": "undeclared secret REPEATED; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 7,
+          "message": "undeclared secret REPEATED; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": "undeclared secret REPEATED; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 9,
+          "message": "undeclared secret OTHER; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-repository-declared": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 10,
+          "message": "undeclared secret BARE; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 13,
+          "message": "undeclared secret MULTILINE; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": "undeclared secret MISSING; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-repository-disabled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "secret-repository-empty": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 10,
+          "message": "undeclared secret BARE; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 13,
+          "message": "undeclared secret MULTILINE; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 6,
+          "message": "undeclared secret allowed; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": "undeclared secret MISSING; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-repository-null": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "secret-repository-strict-builtin": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 10,
+          "message": "undeclared secret BARE; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 13,
+          "message": "undeclared secret MULTILINE; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 7,
+          "message": "undeclared secret GITHUB_TOKEN; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": "undeclared secret MISSING; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-reusable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 7,
+          "message": "unused declared secret UNUSED in repository; remove its name or add a statically resolved reference",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-reusable-undeclared": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/reusable.yml",
+          "line": 16,
+          "message": "undeclared secret MISSING; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/reusable.yml",
+          "line": 21,
+          "message": "undeclared secret ALSO_MISSING; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-root-action": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "action.yml",
+          "line": 5,
+          "message": "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-scanner": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 11,
+          "message": "undeclared secret BARE; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 7,
+          "message": "undeclared secret REAL; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 8,
+          "message": "undeclared secret BRACKET; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 9,
+          "message": "undeclared secret THREE; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-top-level": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "secret-unknown-contract": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 12,
+          "message": "secret inventory analysis incomplete: job environment is not a literal name; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 14,
+          "message": "secret inventory analysis incomplete: reusable secret has no declared contract source; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 14,
+          "message": "undeclared secret OTHER; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 9,
+          "message": "secret inventory analysis incomplete: reusable secret has no declared contract source; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-unreferenced-action": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "actions/inner/action.yml",
+          "line": 6,
+          "message": "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": "actions/outer/action.yml",
+          "line": 6,
+          "message": "composite actions cannot access the secrets context directly; pass the value explicitly through inputs or env",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-unresolved": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 4,
+          "message": "secret inventory analysis incomplete: reusable call cannot be resolved locally; declarations cannot be proven unused",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-unused": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 12,
+          "message": "unused declared secret UNUSED_ENV in Stage; remove its name or add a statically resolved reference",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 9,
+          "message": "unused declared secret UNUSED_REPO in repository; remove its name or add a statically resolved reference",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-with-input-if": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 10,
+          "message": "undeclared secret BARE; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 8,
+          "message": "unused declared secret UNUSED in repository; remove its name or add a statically resolved reference",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "secret-workflow-environment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/check.yml",
+          "line": 4,
+          "message": "undeclared secret WORKFLOW_MISSING; declare its name in secretInventory.repository or the selected environment inventory",
+          "rule": "workflow-topology-policy"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 7,
+          "message": "unused declared secret UNUSED in repository; remove its name or add a statically resolved reference",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "step-order-labeled": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "step-order-missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "required ordered step missing: .github/workflows/pipeline.yml#build: actions/checkout@v4",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "step-order-pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "step-order-reversed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "required step order invalid: .github/workflows/pipeline.yml#build: first",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "step-order-unlabeled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "required ordered step missing: .github/workflows/pipeline.yml#empty: <step>",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unlocked-reason-empty": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows",
+          "line": 1,
+          "message": "unlocked reason empty: .github/workflows/pipeline.yml",
+          "rule": "workflow-topology-policy"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

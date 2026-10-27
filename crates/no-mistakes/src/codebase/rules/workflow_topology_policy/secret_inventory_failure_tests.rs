@@ -2,16 +2,7 @@ use super::*;
 use crate::codebase::ci_workflows::ParsedWorkflowSet;
 use std::sync::Arc;
 
-#[test]
-fn ambiguous_unused_locations_block_all_unused_reports_including_unambiguous_names() {
-    let findings = run("ambiguous-unused", ".no-mistakes.yml").unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].file, ".no-mistakes.yml");
-    assert_eq!(findings[0].line, 1);
-    assert!(findings[0]
-        .message
-        .contains("unused declaration location is unavailable or ambiguous"));
-}
+// Output cases moved to cli_gha_snapshot_workflow_topology.
 
 #[test]
 fn unknown_config_path_is_explicitly_incomplete() {

@@ -1,0 +1,9 @@
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    enabled: true
+    options:
+      stepOrders:
+        - jobId: ".github/workflows/pipeline.yml#build"
+          steps:
+            - uses: actions/checkout@v4

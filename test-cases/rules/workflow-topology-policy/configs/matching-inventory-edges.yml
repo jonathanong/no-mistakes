@@ -1,0 +1,9 @@
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    enabled: true
+    options:
+      jobInventory:
+        .github/workflows/pipeline.yml: [build, test, deploy]
+      requiredDirectEdges:
+        - [".github/workflows/pipeline.yml#build", ".github/workflows/pipeline.yml#test"]

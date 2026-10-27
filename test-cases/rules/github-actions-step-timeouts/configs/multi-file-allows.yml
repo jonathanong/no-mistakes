@@ -1,0 +1,11 @@
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      allow:
+        - step: ".github/workflows/ci.yml#build#dynamic"
+          reason: "Bounded by the matrix."
+        - step: ".github/workflows/ci.yml#build#dynamic"
+          reason: "Duplicate exception."
+        - step: ".github/workflows/release.yml#publish#dynamic"
+          reason: "Bounded by the matrix."

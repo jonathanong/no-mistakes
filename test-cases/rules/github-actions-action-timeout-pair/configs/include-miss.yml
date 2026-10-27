@@ -1,0 +1,8 @@
+rules:
+  - rule: github-actions-action-timeout-pair
+    scope: repository
+    options:
+      include:
+        - nope.yml
+      uses:
+        - ./.github/actions/setup-aws

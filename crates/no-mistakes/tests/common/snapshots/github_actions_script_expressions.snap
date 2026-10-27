@@ -1,0 +1,193 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allowlist": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml:8: `${{ github.sha }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ github.sha }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "github.sha"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/pack/action.yml",
+          "line": 11,
+          "message": ".github/actions/pack/action.yml:11: `${{ inputs.name }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ inputs.name }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "inputs.name"
+        },
+        {
+          "file": ".github/actions/pack/action.yml",
+          "line": 14,
+          "message": ".github/actions/pack/action.yml:14: `${{ github.actor }}` in an `actions/github-script` `script` is expanded before JavaScript parses the script. Pass the value through `env` and read `process.env`.",
+          "rule": "github-actions-script-expressions",
+          "target": "github.actor"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml:11: `${{ secrets.TOKEN }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ secrets.TOKEN }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "secrets.TOKEN"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 12,
+          "message": ".github/workflows/ci.yml:12: `${{ inputs.name }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ inputs.name }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "inputs.name"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 13,
+          "message": ".github/workflows/ci.yml:13: `${{ vars.FOO }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ vars.FOO }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "vars.FOO"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 14,
+          "message": ".github/workflows/ci.yml:14: `${{ env.FOO }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ env.FOO }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "env.FOO"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 18,
+          "message": ".github/workflows/ci.yml:18: `${{ github.event.issue.title }}` in an `actions/github-script` `script` is expanded before JavaScript parses the script. Pass the value through `env` and read `process.env`.",
+          "rule": "github-actions-script-expressions",
+          "target": "github.event.issue.title"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 20,
+          "message": ".github/workflows/ci.yml:20: `${{ steps.id.outputs.value }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ steps.id.outputs.value }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "steps.id.outputs.value"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": ".github/workflows/ci.yml:21: `${{ github.sha || 'unknown' }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ github.sha || 'unknown' }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "github.sha || 'unknown'"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 22,
+          "message": ".github/workflows/ci.yml:22: `${{ job.services.redis.ports[6379] }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ job.services.redis.ports[6379] }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "job.services.redis.ports[6379]"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 25,
+          "message": ".github/workflows/ci.yml:25: `${{ github.actor }}` in an `actions/github-script` `script` is expanded before JavaScript parses the script. Pass the value through `env` and read `process.env`.",
+          "rule": "github-actions-script-expressions",
+          "target": "github.actor"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml:7: `${{ github.ref }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ github.ref }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "github.ref"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml:8: `${{ github.actor }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ github.actor }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "github.actor"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 9,
+          "message": ".github/workflows/ci.yml:9: `${{ github.event.head_commit.message }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ github.event.head_commit.message }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "github.event.head_commit.message"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml:10: `${{ github.event.head_commit.message }}` in a `run` script is expanded before the shell parses the script. Pass the value through `env` and read it as data (`env: VALUE: ${{ github.event.head_commit.message }}`, then `run: echo \"$VALUE\"`).",
+          "rule": "github-actions-script-expressions",
+          "target": "github.event.head_commit.message"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/alias.yml",
+          "line": 1,
+          "message": ".github/workflows/alias.yml: script expressions could not be aligned to source locations. Rewrite anchors, aliases, and flow-style steps into ordinary block-style `run` or `with.script` bodies so this rule can judge them.",
+          "rule": "github-actions-script-expressions"
+        },
+        {
+          "file": ".github/workflows/flow.yml",
+          "line": 1,
+          "message": ".github/workflows/flow.yml: script expressions could not be aligned to source locations. Rewrite anchors, aliases, and flow-style steps into ordinary block-style `run` or `with.script` bodies so this rule can judge them.",
+          "rule": "github-actions-script-expressions"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

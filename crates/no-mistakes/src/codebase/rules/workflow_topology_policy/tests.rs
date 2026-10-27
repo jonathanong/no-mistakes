@@ -1,15 +1,13 @@
-use super::prepare::check_with_files;
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,
 };
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 mod concurrency_behavior;
 mod concurrency_collisions;
 mod concurrency_config;
-mod concurrency_fixture;
 mod support;
 
 fn fixture(name: &str) -> PathBuf {
@@ -32,12 +30,4 @@ fn config(yaml: &str) -> NoMistakesConfig {
     }
 }
 
-fn run(root: &Path, yaml: &str) -> Vec<RuleFinding> {
-    check_with_files(root, &config(yaml), &[]).unwrap()
-}
-
-mod caller_cases;
 mod concurrency_entrypoints;
-mod graph_cases;
-mod inventory_cases;
-mod step_cases;

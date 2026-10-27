@@ -1,0 +1,8 @@
+rules:
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+    options:
+      allow:
+        - file: .github/workflows/missing.test.mts
+          text: "timeout-minutes: 20"
+          reason: other file

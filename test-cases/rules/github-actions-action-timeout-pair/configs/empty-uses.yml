@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-action-timeout-pair
+    scope: repository
+    options:
+      uses: []
+      stepTimeoutMinutes: 2

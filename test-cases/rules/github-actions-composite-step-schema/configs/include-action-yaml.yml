@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-composite-step-schema
+    scope: repository
+    options:
+      include:
+        - action.yaml

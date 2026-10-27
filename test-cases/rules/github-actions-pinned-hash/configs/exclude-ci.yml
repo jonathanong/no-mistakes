@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-pinned-hash
+    scope: repository
+    options:
+      excludePaths:
+        - .github/workflows/ci.yml

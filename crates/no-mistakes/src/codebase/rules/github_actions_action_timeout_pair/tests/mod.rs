@@ -57,62 +57,11 @@ fn parsed(rel: &str, source: &str, yaml: &str) -> Vec<RuleFinding> {
     scan::check_parsed(rel, rel, source, &value, &opts)
 }
 
-#[test]
-fn pass_fixture_has_no_findings() {
-    let root = fixture("pass");
-    assert!(run(
-        &root,
-        OPTIONS,
-        &[
-            ".github/workflows/ci.yml",
-            ".github/actions/setup-aws/action.yml",
-        ]
-    )
-    .is_empty());
-}
+// Output cases moved to cli_gha_snapshot_action_timeout_pair.
 
 #[test]
-fn fail_step_requires_literal_timeout_minutes() {
-    let findings = run(
-        &fixture("fail-step"),
-        OPTIONS,
-        &[".github/workflows/ci.yml"],
-    );
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0].message.contains("timeout-minutes: 2"));
-}
-
-#[test]
-fn fail_nested_rejects_quoted_nested_timeout() {
-    let findings = run(
-        &fixture("fail-nested"),
-        OPTIONS,
-        &[".github/workflows/ci.yml"],
-    );
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0].message.contains("action-timeout-s: 90"));
-    assert!(findings[0].message.contains("bare number"));
-}
-
-#[test]
-fn fail_composite_rejects_nested_matching_uses() {
-    let findings = run(
-        &fixture("fail-composite"),
-        OPTIONS,
-        &[".github/actions/other-composite/action.yml"],
-    );
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0].message.contains("nests a configured action"));
-}
-
-#[test]
-fn empty_uses_is_silent() {
-    assert!(run(
-        &fixture("fail-step"),
-        "uses: []\nstepTimeoutMinutes: 2\n",
-        &[".github/workflows/ci.yml"],
-    )
-    .is_empty());
+fn empty_file_list_is_silent() {
+    // CLI discovery cannot pass an empty explicit file list.
     assert!(run(&fixture("fail-step"), OPTIONS, &[]).is_empty());
 }
 
@@ -238,12 +187,7 @@ fn unreadable_and_include_misses_are_silent() {
     let sources = super::super::source_store_for_files(&[]);
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
     assert!(scan::check_file(&root, &missing, &opts, &sources, false).is_empty());
-    assert!(run(
-        &root,
-        "include: [\"nope.yml\"]\nuses: [\"./.github/actions/setup-aws\"]\n",
-        &[".github/workflows/ci.yml"]
-    )
-    .is_empty());
+    // Output cases moved to cli_gha_snapshot_action_timeout_pair.
 }
 
 #[test]

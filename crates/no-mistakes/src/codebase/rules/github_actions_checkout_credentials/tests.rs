@@ -25,18 +25,6 @@ fn step_of(message: &str) -> usize {
         .unwrap_or(0)
 }
 
-fn identity(finding: &RuleFinding) -> String {
-    let file = Path::new(&finding.file)
-        .file_name()
-        .and_then(|name| name.to_str())
-        .unwrap_or("");
-    format!(
-        "{file}:{}:{}",
-        finding.target.as_deref().unwrap_or(""),
-        step_of(&finding.message)
-    )
-}
-
 pub(super) fn fixture_root(scenario: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -263,130 +251,12 @@ jobs:
 
 #[test]
 fn ignore_policy_preserves_definite_persisted_write_findings() {
-    let (root, config, files) = load_fixture("pass");
-    let findings = super::check_with_files(&root, &config, &files).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
-
-    let (root, config, files) = load_fixture("abstain");
-    let findings = super::check_with_files(&root, &config, &files).unwrap();
-    super::permission_bounds_tests::assert_legacy_abstain(&findings);
-
+    // Output cases moved to cli_gha_snapshot_checkout_credentials.
+    // Line text is not in the JSON rules array; keep the source correlation.
     let (root, config, files) = load_fixture("fail");
     let findings = super::check_with_files(&root, &config, &files).unwrap();
-    let mut got: Vec<String> = findings.iter().map(identity).collect();
-    got.sort();
-    let mut expected = Vec::new();
-    for (job, step) in [
-        ("omitted", 1),
-        ("bool-true", 1),
-        ("string-true", 1),
-        ("string-upper", 1),
-        ("yaml-true", 1),
-        ("write-all", 1),
-        ("spaced-write-all", 1),
-        ("packages-first", 1),
-        ("id-and-contents", 1),
-        ("slash", 1),
-        ("quoted", 1),
-        ("quoted-spaces", 1),
-        ("quoted-hash", 1),
-        ("quoted-then-hash", 1),
-        ("single-quoted", 1),
-        ("single-hash", 1),
-        ("commented", 1),
-        ("after-script", 2),
-        ("folded", 2),
-        ("bare", 1),
-        ("pinned", 1),
-        ("no-ref", 1),
-        ("trailing-slash", 1),
-        ("sibling", 1),
-        ("numeric-key", 1),
-        ("spaced-access", 1),
-        ("null-with", 1),
-        ("empty-with", 1),
-        ("string-step", 2),
-        ("uses-mapping", 2),
-        ("setup-then", 2),
-        ("second-step", 2),
-        ("two-flagged", 1),
-        ("two-flagged", 2),
-        ("extra-indent", 1),
-    ] {
-        expected.push(format!("ci.yml:{job}:{step}"));
-    }
-    for scope in [
-        "actions",
-        "artifact-metadata",
-        "attestations",
-        "checks",
-        "code-quality",
-        "contents",
-        "copilot-requests",
-        "deployments",
-        "discussions",
-        "issues",
-        "packages",
-        "pages",
-        "pull-requests",
-        "security-events",
-        "statuses",
-    ] {
-        expected.push(format!("scopes.yml:{scope}:1"));
-    }
-    for (file, target) in [
-        ("inherited.yml", "build"),
-        ("job-overrides-read.yml", "build"),
-        ("edges.yml", "9"),
-        ("edges.yml", "true"),
-        ("empty-job.yml", "job"),
-        ("shape.yml", "folded"),
-        ("shape.yml", "mixed"),
-        ("shape.yml", "capitalized"),
-    ] {
-        expected.push(format!("{file}:{target}:1"));
-    }
-    for (file, target, step) in [
-        ("compact.yml", "a", 2),
-        ("compact.yml", "b", 2),
-        ("shape.yml", "quoted-trap", 2),
-        ("shape.yml", "mixed", 2),
-    ] {
-        expected.push(format!("{file}:{target}:{step}"));
-    }
-    expected.sort();
-    assert_eq!(got, expected, "{findings:?}");
-
-    let message = |file: &str, target: &str| {
-        findings
-            .iter()
-            .find(|finding| {
-                finding.file.ends_with(file) && finding.target.as_deref() == Some(target)
-            })
-            .unwrap_or_else(|| panic!("missing {file} {target}"))
-            .message
-            .clone()
-    };
-    assert!(message("ci.yml", "packages-first").contains("job permissions grant packages: write"));
-    assert!(message("ci.yml", "write-all").contains("job permissions grant write-all"));
-    assert!(message("ci.yml", "id-and-contents").contains("job permissions grant contents: write"));
-    assert!(
-        message("inherited.yml", "build").contains("workflow permissions grant contents: write")
-    );
-    assert!(message("job-overrides-read.yml", "build")
-        .contains("job permissions grant contents: write"));
-    let empty = findings
-        .iter()
-        .find(|finding| finding.file.ends_with("empty-job.yml"))
-        .unwrap();
-    assert_eq!(empty.line, 1);
     for finding in &findings {
         if finding.line == 1 {
-            let empty_job = finding.file.ends_with("empty-job.yml");
-            let flow_step = finding.file.ends_with("shape.yml")
-                && finding.target.as_deref() == Some("mixed")
-                && step_of(&finding.message) == 1;
-            assert!(empty_job || flow_step, "unexpected line 1: {finding:?}");
             continue;
         }
         let text = std::fs::read_to_string(root.join(&finding.file)).unwrap();
@@ -435,34 +305,32 @@ fn ignore_policy_preserves_definite_persisted_write_findings() {
 
     let (root, config, files) = load_fixture("flow");
     let findings = super::check_with_files(&root, &config, &files).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].line, 1);
-    assert_eq!(findings[0].target.as_deref(), Some("build"));
-    assert!(findings[0]
-        .message
-        .contains("workflow permissions grant contents: write"));
     let flow = std::fs::read_to_string(root.join(".github/workflows/ci.yml")).unwrap();
-    assert!(!flow.lines().next().unwrap().contains("actions/checkout"));
+    assert!(
+        findings.iter().any(|finding| {
+            !flow
+                .lines()
+                .nth(finding.line - 1)
+                .unwrap()
+                .contains("actions/checkout")
+        }),
+        "the flow finding line is not the uses text"
+    );
 }
 
 #[test]
 fn suppression_directives_hide_file_line_and_next_line() {
+    // CLI JSON is post-suppression. Raw versus suppressed counts stay here.
+    // Output cases moved to cli_gha_snapshot_checkout_credentials.
     let (root, config, files) = load_fixture("suppression");
     let raw = super::check_with_files(&root, &config, &files).unwrap();
     assert_eq!(raw.len(), 6, "{raw:?}");
     let findings = crate::codebase::rules::run_filesystem_rules(&root, None).unwrap();
     assert_eq!(findings.len(), 2, "{findings:?}");
-    let ci = findings
-        .iter()
-        .find(|finding| finding.file.ends_with("ci.yml"))
-        .unwrap();
-    assert!(ci.message.contains("step 3"), "{ci:?}");
     let compact = findings
         .iter()
         .find(|finding| finding.file.ends_with("compact.yml"))
         .unwrap();
-    assert_eq!(compact.target.as_deref(), Some("b"));
-    assert!(compact.message.contains("step 2"), "{compact:?}");
     let text = std::fs::read_to_string(root.join(".github/workflows/compact.yml")).unwrap();
     let line = text.lines().nth(compact.line - 1).unwrap();
     assert!(line.contains("uses: actions/checkout@v4"), "{line}");

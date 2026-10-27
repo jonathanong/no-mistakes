@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-checkout-credentials
+    scope: repository
+    options:
+      effort: low
+      unanalyzable: report

@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-script-expressions
+    scope: repository
+    options:
+      constantContexts:
+        - '^github\.ref$'

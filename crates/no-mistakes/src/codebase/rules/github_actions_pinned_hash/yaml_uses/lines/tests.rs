@@ -380,72 +380,10 @@ fn hash_inside_a_flow_value_keeps_the_version_comment() {
     assert_eq!(super::super::version_comment(line), "# v6.0.2");
     let embedded = "- { name: foo#bar, uses: actions/checkout@sha }";
     assert_eq!(super::super::version_comment(embedded), "");
-
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes");
-    let mut config = crate::config::v2::NoMistakesConfig::default();
-    config.rules.push(crate::config::v2::schema::RuleDef {
-        rule: super::super::super::RULE_ID.to_string(),
-        scope: Some(crate::config::v2::schema::RuleScope::Repository),
-        ..Default::default()
-    });
-    let file = root.join(".github/workflows/flow-hash-comment-fail.yml");
-    let findings = super::super::super::check_with_files(&root, &config, &[file]).unwrap();
-    let lines: Vec<_> = findings.iter().map(|finding| finding.line).collect();
-    assert_eq!(lines, vec![3], "{findings:?}");
-    assert!(
-        findings[0].message.contains("actions/checkout@v4"),
-        "{findings:?}"
-    );
-    assert!(
-        findings
-            .iter()
-            .all(|finding| !finding.message.contains("trailing comment")),
-        "{findings:?}"
-    );
+    // Output cases moved to cli_gha_snapshot_pinned_hash.
 }
 
-#[test]
-fn job_named_env_reports_the_reusable_workflow() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes");
-    let mut config = crate::config::v2::NoMistakesConfig::default();
-    config.rules.push(crate::config::v2::schema::RuleDef {
-        rule: super::super::super::RULE_ID.to_string(),
-        scope: Some(crate::config::v2::schema::RuleScope::Repository),
-        ..Default::default()
-    });
-    let file = root.join(".github/workflows/job-named-env-workflow-fail.yml");
-    let findings = super::super::super::check_with_files(&root, &config, &[file]).unwrap();
-    let lines: Vec<_> = findings.iter().map(|finding| finding.line).collect();
-    assert_eq!(lines, vec![5, 7], "{findings:?}");
-    assert!(
-        findings
-            .iter()
-            .all(|finding| !finding.message.contains("actions/checkout")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn anchored_flow_sequence_keeps_the_later_action_line() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes");
-    let mut config = crate::config::v2::NoMistakesConfig::default();
-    config.rules.push(crate::config::v2::schema::RuleDef {
-        rule: super::super::super::RULE_ID.to_string(),
-        scope: Some(crate::config::v2::schema::RuleScope::Repository),
-        ..Default::default()
-    });
-    let file = root.join(".github/workflows/anchored-flow-steps-fail.yml");
-    let findings = super::super::super::check_with_files(&root, &config, &[file]).unwrap();
-    let lines: Vec<_> = findings.iter().map(|finding| finding.line).collect();
-    assert_eq!(lines, vec![10], "{findings:?}");
-    assert!(
-        findings[0].message.contains("actions/checkout@v4"),
-        "{findings:?}"
-    );
-}
+// Output cases moved to cli_gha_snapshot_pinned_hash.
 
 #[test]
 fn anchor_key_on_the_dash_line_is_still_a_step() {
@@ -459,14 +397,7 @@ fn anchor_key_on_the_dash_line_is_still_a_step() {
     let classified = action_uses_lines(&lines);
     assert_eq!(classified.lines, vec![5], "{classified:?}");
     assert!(!classified.rejected_uses[4], "{classified:?}");
-
-    let findings = yaml_shape_findings("anchor-key-same-line-fail.yml");
-    let found: Vec<_> = findings.iter().map(|finding| finding.line).collect();
-    assert_eq!(found, vec![6], "{findings:?}");
-    assert!(
-        findings[0].message.contains("actions/checkout@v4"),
-        "{findings:?}"
-    );
+    // Output cases moved to cli_gha_snapshot_pinned_hash.
 }
 
 #[test]
@@ -494,49 +425,7 @@ fn nested_anchor_input_does_not_shift_the_pinned_step() {
         "      - uses: actions/setup-node@v4",
     ];
     assert_eq!(action_uses_lines(&flow).lines, vec![7], "{flow:?}");
-
-    let findings = yaml_shape_findings("anchored-env-uses-pass.yml");
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
-pub(super) fn yaml_shape_findings(name: &str) -> Vec<super::super::super::RuleFinding> {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes");
-    let mut config = crate::config::v2::NoMistakesConfig::default();
-    config.rules.push(crate::config::v2::schema::RuleDef {
-        rule: super::super::super::RULE_ID.to_string(),
-        scope: Some(crate::config::v2::schema::RuleScope::Repository),
-        ..Default::default()
-    });
-    let file = root.join(".github/workflows").join(name);
-    super::super::super::check_with_files(&root, &config, &[file]).unwrap()
+    // Output cases moved to cli_gha_snapshot_pinned_hash.
 }
 
 mod continued;
-
-#[test]
-fn matrix_next_line_value_does_not_steal_the_step_comment() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/github-actions-pinned-hash/fixture/yaml-shapes");
-    let mut config = crate::config::v2::NoMistakesConfig::default();
-    config.rules.push(crate::config::v2::schema::RuleDef {
-        rule: super::super::super::RULE_ID.to_string(),
-        scope: Some(crate::config::v2::schema::RuleScope::Repository),
-        ..Default::default()
-    });
-    let file = root.join(".github/workflows/matrix-next-line-fail.yml");
-    let findings = super::super::super::check_with_files(&root, &config, &[file]).unwrap();
-    let lines: Vec<_> = findings.iter().map(|finding| finding.line).collect();
-    assert_eq!(lines, vec![12], "{findings:?}");
-    assert!(
-        findings[0].message.contains("actions/checkout@v4"),
-        "{findings:?}"
-    );
-    assert!(
-        findings.iter().all(|finding| {
-            !finding.message.contains("trailing comment")
-                && !finding.message.contains("ubuntu-latest")
-        }),
-        "{findings:?}"
-    );
-}

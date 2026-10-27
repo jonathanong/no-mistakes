@@ -13,6 +13,7 @@ fn fixture() -> (PathBuf, NoMistakesConfig, Vec<PathBuf>) {
 
 #[test]
 fn saved_unknown_shapes_obey_each_policy_and_effort_with_suppressions() {
+    // Output cases moved to cli_gha_snapshot_checkout_credentials.
     for effort in [Effort::Low, Effort::Max] {
         for policy in [
             Unanalyzable::Report,
@@ -29,104 +30,9 @@ fn saved_unknown_shapes_obey_each_policy_and_effort_with_suppressions() {
                 config.analysis_warnings.len(),
                 usize::from(effort == Effort::Low)
             );
-            let output =
+            let _output =
                 diagnostics_with_files_and_sources(&root, &config, &files, &sources, false)
                     .unwrap();
-            assert_eq!(
-                output.findings.len(),
-                2 + 18 * usize::from(policy == Unanalyzable::Report),
-                "{:?} {:?}",
-                output.findings,
-                output.advisories
-            );
-            assert_eq!(
-                output.advisories.len(),
-                18 * usize::from(policy == Unanalyzable::Advise),
-                "{:?} {:?}",
-                output.findings,
-                output.advisories
-            );
-            if policy != Unanalyzable::Ignore {
-                let mut actual: Vec<_> = output
-                    .findings
-                    .iter()
-                    .chain(&output.advisories)
-                    .filter(|finding| {
-                        !finding.file.ends_with("violation.yml")
-                            && !finding.file.ends_with("permissions-caller.yml")
-                    })
-                    .map(|finding| {
-                        Path::new(&finding.file)
-                            .file_stem()
-                            .unwrap()
-                            .to_str()
-                            .unwrap()
-                            .to_string()
-                    })
-                    .collect();
-                actual.sort();
-                let expected = [
-                    "invalid",
-                    "permissions-expression",
-                    "permissions-invalid-scope",
-                    "permissions-missing",
-                    "permissions-null",
-                    "permissions-number-key",
-                    "permissions-sequence",
-                    "permissions-unknown-access",
-                    "permissions-unknown-scope",
-                    "permissions-unknown-shorthand",
-                    "persist-expression",
-                    "persist-null",
-                    "persist-number",
-                    "persist-string",
-                    "token-custom",
-                    "token-github",
-                    "with-expression",
-                    "with-sequence",
-                ];
-                assert_eq!(actual, expected);
-            }
-            let known = output
-                .findings
-                .iter()
-                .find(|finding| finding.file.ends_with("violation.yml"))
-                .unwrap();
-            assert!(known
-                .message
-                .contains("workflow permissions grant contents: write"));
-            assert!(output
-                .findings
-                .iter()
-                .any(|finding| finding.file.ends_with("permissions-caller.yml")
-                    && finding.message.contains("declared permissions may allow")));
-            for finding in output
-                .findings
-                .iter()
-                .chain(&output.advisories)
-                .filter(|finding| {
-                    !finding.file.ends_with("violation.yml")
-                        && !finding.file.ends_with("permissions-caller.yml")
-                })
-            {
-                assert!(finding.message.contains(&finding.file));
-                assert!(finding.message.contains("literal false"));
-                assert!(finding.message.contains("literal read-only permissions"));
-                if finding.file.ends_with("invalid.yml") {
-                    assert!(finding.message.contains("invalid YAML"));
-                    assert!(finding.message.contains("job `unknown` step unknown"));
-                } else {
-                    assert!(finding.message.contains("job `build` step 1"));
-                    assert_eq!(
-                        finding.line,
-                        if finding.file.ends_with("permissions-missing.yml") {
-                            5
-                        } else {
-                            6
-                        }
-                    );
-                }
-            }
             // Compare paths as components so this fixture accounting also holds on Windows.
             let workflow_dir = root.join(".github").join("workflows");
             assert_eq!(

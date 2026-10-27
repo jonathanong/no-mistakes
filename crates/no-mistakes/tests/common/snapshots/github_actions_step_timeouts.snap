@@ -1,0 +1,2494 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "alias-name-parallel": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "alias-name-parallel-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "aliased-job": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"alt-test\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#alt-test#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "aliased-job-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "aliased-parallel-step": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "aliased-parallel-step-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "allow_invalid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml: stale github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#bool`",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#bool"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml: stale github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#quoted`",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#quoted"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml: stale github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#zero`",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#zero"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"bool\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#bool"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 13,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"dynamic\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#dynamic"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 16,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"quoted\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#quoted"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 19,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"huge\" timeout-minutes is 400, over the 360-minute cap",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#huge"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"zero\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#zero"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "anchored-flow-steps": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 5,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "anchored-flow-steps-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "anchored-job": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "anchored-job-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "anchored-keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "anchored-keys-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "anchored-root-flow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 3,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "anchored-root-flow-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "bad-yaml": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: invalid YAML (did not find expected node content at line 4 column 1, while parsing a flow node)",
+          "rule": "github-actions-step-timeouts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bad_yaml_duplicate": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml: duplicate github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#checkout`",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#checkout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: invalid YAML (did not find expected node content at line 4 column 1, while parsing a flow node)",
+          "rule": "github-actions-step-timeouts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "blank_stale": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml: stale github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#absent`",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#absent"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: allow entry `.github/workflows/ci.yml#build#dynamic` needs a reason",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#dynamic"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bom-jobs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bom-jobs-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "commented-document-block-root": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "commented-document-block-root-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "commented-document-root-flow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "commented-document-root-flow-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "commented-job": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "commented-job-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "decorated-keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml: job \"alt\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#alt#1/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "decorated-keys-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "deleted_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/deleted.yml",
+          "line": 1,
+          "message": ".github/workflows/deleted.yml: duplicate github-actions-step-timeouts allow entry `.github/workflows/deleted.yml#build#checkout`",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/deleted.yml#build#checkout"
+        },
+        {
+          "file": ".github/workflows/deleted.yml",
+          "line": 1,
+          "message": ".github/workflows/deleted.yml: stale github-actions-step-timeouts allow entry `.github/workflows/deleted.yml#build#checkout`",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/deleted.yml#build#checkout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disable-file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "disable-line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "document-root-flow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 3,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "document-root-flow-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "duplicate-job-name": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "duplicate-job-name-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "duplicate_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml: duplicate github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#dynamic`",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#dynamic"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "duplicate_incomplete": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml#build",
+          "line": 1,
+          "message": ".github/workflows/ci.yml#build: malformed github-actions-step-timeouts allow selector; expected file#job#step",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit-inline-parallel": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit-inline-parallel-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "explicit-job-key": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit-job-key-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "explicit-parallel": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit-parallel-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "explicit-structural-keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "explicit-structural-keys-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "flow-all": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 2,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "flow-all-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "flow-jobs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 2,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "flow-jobs-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "flow-parallel": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "flow-parallel-alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/1"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "flow-parallel-alias-suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "flow-parallel-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "flow-step-mapping": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "flow-step-mapping-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "flow-steps": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 5,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "flow-steps-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "github_ceiling": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"bool\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#bool"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 13,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"dynamic\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#dynamic"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 16,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"quoted\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#quoted"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 19,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"huge\" timeout-minutes is 400, over the 360-minute cap",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#huge"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"zero\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#zero"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "hash_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "include_miss": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "incomplete_selector": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml#build",
+          "line": 1,
+          "message": ".github/workflows/ci.yml#build: malformed github-actions-step-timeouts allow selector; expected file#job#step",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "indented-root": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "indented-root-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "indentless": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "indentless-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "lower_cap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"slow\" timeout-minutes is 20, over the 10-minute cap",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#slow"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "matrix-steps": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "matrix-steps-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"checkout\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#checkout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 9,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed-job-shapes": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 13,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multi-jobs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"beta\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#beta#1"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 14,
+          "message": ".github/workflows/ci.yml: job \"gamma\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#gamma#1"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"alpha\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#alpha#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multi_file_allows": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml: duplicate github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#dynamic`",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#dynamic"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiline-flow-job": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiline-flow-job-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "multiline-flow-parallel": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 9,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiline-flow-parallel-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "multiline-flow-steps": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiline-flow-steps-key-suppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 5,
+          "message": "directive for `github-actions-step-timeouts` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "github-actions-step-timeouts"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiline-flow-steps-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "multiline-next-line-flow-jobs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiline-next-line-flow-jobs-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "multiline-parallel": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiline-parallel-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "multiline-root-flow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "multiline-root-flow-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "named-flow-parallel": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "named-flow-parallel-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "nested": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 13,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested-flow-comment": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 9,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested-flow-comment-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "nested-flow-parallel": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "nested-flow-parallel-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "nested-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "next-line-alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"alt\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#alt#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "next-line-alias-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "next-line-anchored-flow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 5,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "next-line-anchored-flow-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "next-line-flow-jobs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 2,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "next-line-flow-jobs-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "next-line-flow-parallel": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "next-line-flow-parallel-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "next-line-flow-steps": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 5,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "next-line-flow-steps-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "next-line-job-anchor": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "next-line-job-anchor-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no-jobs": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "no_jobs_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml: duplicate github-actions-step-timeouts allow entry `.github/workflows/ci.yml#removed#checkout`",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#removed#checkout"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml: stale github-actions-step-timeouts allow entry `.github/workflows/ci.yml#removed#checkout`",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#removed#checkout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "over_cap": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"bool\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#bool"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 13,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"dynamic\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#dynamic"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 16,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"quoted\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#quoted"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 19,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"huge\" timeout-minutes is 400, over the 10-minute cap",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#huge"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"zero\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#zero"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "parallel": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 7,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"frontend\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/frontend"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "parallel-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "parallel_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "reasoned_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "root-flow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 3,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root-flow-job-alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root-flow-job-alias-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "root-flow-jobs-alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root-flow-jobs-alias-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "root-flow-next-line-job-alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root-flow-next-line-job-alias-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "root-flow-next-line-jobs-alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root-flow-next-line-jobs-alias-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "root-flow-next-line-steps": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 4,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root-flow-next-line-steps-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "root-flow-step-alias": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #1\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "root-flow-step-alias-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "root-flow-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "same-line-multiline-flow-jobs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 3,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "same-line-multiline-flow-jobs-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "spaced-flow-keys": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "spaced-flow-keys-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "spaced-flow-parallel": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 8,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#1/2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "spaced-flow-parallel-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "stale_literal": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 1,
+          "message": ".github/workflows/ci.yml: stale github-actions-step-timeouts allow entry `.github/workflows/ci.yml#build#checkout`",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#checkout"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trailing-space-flow-job": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 6,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "trailing-space-flow-job-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "wait-invalid": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" timeout-minutes must be a positive literal number (expressions need a reasoned allow entry)",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 12,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #3\" timeout-minutes is 361, over the 360-minute cap",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#3"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "wait-missing": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 11,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #3\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#3"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "wait-valid": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "within_cap": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "yaml-directive-root-flow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 5,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"step #2\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "target": ".github/workflows/ci.yml#build#2"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "yaml-directive-root-flow-suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

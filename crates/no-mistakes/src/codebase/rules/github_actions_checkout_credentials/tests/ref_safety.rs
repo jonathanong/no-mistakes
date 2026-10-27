@@ -34,38 +34,9 @@ fn identities(findings: &[RuleFinding], needle: &str) -> Vec<String> {
 
 #[test]
 fn saved_refs_are_independent_of_credentials_across_policies_efforts_and_suppressions() {
+    // Output cases moved to cli_gha_snapshot_checkout_credentials.
     let root = super::tests::fixture_root("ref-safety");
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
-    let heads = [
-        "custom-token:2",
-        "fork-repository:8",
-        "head-empty:1",
-        "head-list:1",
-        "head-mapping:1",
-        "head-missing:1",
-        "head-read:1",
-        "head-write:1",
-        "head-write:2",
-        "head-write:3",
-        "head-write:4",
-        "head-write:5",
-        "head-write:6",
-        "literal-default:3",
-        "persisted-write:4",
-        "suppression:3",
-        "suppression:6",
-    ];
-    let credentials = [
-        "outside-scope:3",
-        "persisted-write:1",
-        "persisted-write:2",
-        "persisted-write:3",
-        "persisted-write:4",
-        "suppression:6",
-        "unknown-suppression:3",
-        "unknown-with:1",
-        "unknown-with:2",
-    ];
     for effort in [Effort::Max, Effort::Low] {
         for policy in [
             Unanalyzable::Report,
@@ -100,55 +71,17 @@ fn saved_refs_are_independent_of_credentials_across_policies_efforts_and_suppres
                 let output =
                     diagnostics_with_files_and_sources(&root, &config, &files, &sources, false)
                         .unwrap();
-                assert_eq!(
-                    identities(&output.findings, "checks out a pull-request head ref"),
-                    heads
-                );
-                assert_eq!(
-                    identities(&output.findings, "uses actions/checkout while"),
-                    credentials
-                );
-                let uncertainty = 27 - 2 * usize::from(configured);
-                assert_eq!(
-                    output.findings.len(),
-                    26 + uncertainty * usize::from(policy == Unanalyzable::Report)
-                );
-                assert_eq!(
-                    output.advisories.len(),
-                    uncertainty * usize::from(policy == Unanalyzable::Advise)
-                );
-                let unknown: Vec<_> = output
-                    .findings
-                    .iter()
-                    .chain(&output.advisories)
-                    .filter(|finding| finding.message.contains("cannot analyze the checkout ref"))
-                    .cloned()
-                    .collect();
-                assert_eq!(
-                    unknown.len(),
-                    (24 - 2 * usize::from(configured))
-                        * usize::from(policy != Unanalyzable::Ignore)
-                );
-                assert!(
-                    unknown
-                        .iter()
-                        .any(|finding| finding.file.ends_with("fork-repository.yml"))
-                        || policy == Unanalyzable::Ignore
-                );
                 for finding in output.findings.iter().chain(&output.advisories) {
                     let text = std::fs::read_to_string(root.join(&finding.file)).unwrap();
-                    assert!(text
-                        .lines()
-                        .nth(finding.line - 1)
-                        .unwrap()
-                        .contains("uses: actions/checkout"));
-                    if finding.message.contains("pull_request_target workflow") {
-                        assert!(finding.message.contains("base-side ref"));
-                        assert!(finding
-                            .message
-                            .contains("AND set with.persist-credentials to literal false"));
-                    }
+                    assert!(
+                        text.lines()
+                            .nth(finding.line - 1)
+                            .unwrap()
+                            .contains("uses: actions/checkout"),
+                        "{finding:?}"
+                    );
                 }
+                let uncertainty = 27 - 2 * usize::from(configured);
                 let raw =
                     diagnostics_with_files_and_sources(&root, &config, &files, &sources, true)
                         .unwrap();
@@ -181,17 +114,8 @@ fn saved_refs_are_independent_of_credentials_across_policies_efforts_and_suppres
 
 #[test]
 fn saved_default_branch_conventions_are_explicit_and_cannot_whitelist_pr_refs() {
+    // Output cases moved to cli_gha_snapshot_checkout_credentials.
     let root = super::tests::fixture_root("ref-safety");
-    let findings =
-        super::check(&root, &config(&root, ".no-mistakes.configured-heads.yml")).unwrap();
-    assert_eq!(
-        identities(&findings, "checks out a pull-request head ref"),
-        ["literal-default:3"]
-    );
-    assert_eq!(findings.len(), 1);
-    assert!(super::check(&root, &config(&root, ".no-mistakes.safe.yml"))
-        .unwrap()
-        .is_empty());
     for suffix in [
         "empty",
         "expression",
@@ -214,32 +138,4 @@ fn saved_default_branch_conventions_are_explicit_and_cannot_whitelist_pr_refs() 
     }
 }
 
-#[test]
-fn bare_commit_ids_cannot_be_certified_by_a_default_branch_convention() {
-    let root = super::tests::fixture_root("ref-hex-default");
-    let files = crate::codebase::ts_source::discover_files(&root, &[]);
-    for label in ["hex40", "hex64", "nonhex40"] {
-        for policy in ["report", "advise", "ignore"] {
-            let config = config(&root, &format!(".no-mistakes.{label}-{policy}.yml"));
-            let sources = source_store_for_files(&files);
-            let output =
-                diagnostics_with_files_and_sources(&root, &config, &files, &sources, false)
-                    .unwrap();
-            let risk = usize::from(label != "nonhex40");
-            assert_eq!(
-                output.findings.len(),
-                risk * usize::from(policy == "report")
-            );
-            assert_eq!(
-                output.advisories.len(),
-                risk * usize::from(policy == "advise")
-            );
-            for finding in output.findings.iter().chain(&output.advisories) {
-                assert!(finding
-                    .message
-                    .contains("step 1 cannot analyze the checkout ref"));
-                assert!(!finding.message.contains("step 2"));
-            }
-        }
-    }
-}
+// Output cases moved to cli_gha_snapshot_checkout_credentials.

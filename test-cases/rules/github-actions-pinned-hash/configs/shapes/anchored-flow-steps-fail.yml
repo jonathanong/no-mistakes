@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-pinned-hash
+    scope: repository
+    include:
+      - .github/workflows/anchored-flow-steps-fail.yml
+    options: {}

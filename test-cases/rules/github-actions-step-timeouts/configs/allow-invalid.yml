@@ -1,0 +1,11 @@
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      allow:
+        - step: ".github/workflows/ci.yml#build#zero"
+          reason: "Test deliberate invalid input."
+        - step: ".github/workflows/ci.yml#build#bool"
+          reason: "Test deliberate invalid input."
+        - step: ".github/workflows/ci.yml#build#quoted"
+          reason: "Test deliberate invalid input."

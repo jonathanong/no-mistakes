@@ -93,20 +93,7 @@ fn saved_fixture_keeps_declared_bounds_and_optional_unspecified_assumptions() {
 
     let off = saved_config(&root, ".no-mistakes.off.yml");
     let off_findings = super::super::super::check_with_files(&root, &off, &files).unwrap();
-    assert_eq!(
-        finding_ids(&off_findings),
-        vec![
-            "callable-write.yml:build".to_string(),
-            "write.yml:build".to_string()
-        ]
-    );
     assert_checkout_lines(&root, &off_findings);
-    assert!(off_findings[0]
-        .message
-        .contains("workflow permissions grant contents: write"));
-    assert!(!off_findings[0]
-        .message
-        .contains("assumeWriteWhenUnspecified"));
 
     let visible = crate::codebase::ts_source::discover_files(&root, &[]);
     assert!(
@@ -114,37 +101,25 @@ fn saved_fixture_keeps_declared_bounds_and_optional_unspecified_assumptions() {
         "filtered run must see suppressed.yml, got {visible:?}"
     );
     // null-permissions.yml and persist-false.yml are covered by their ABSENCE
-    // from the expected findings below (and above): they must stay silent.
+    // from the raw findings above: they must stay silent.
     // Do not drop them from the fixture or the file list.
+    // Output cases moved to cli_gha_snapshot_checkout_credentials.
+    // check_with_files defers suppression, so the raw list still includes
+    // suppressed.yml. The CLI report does not.
     let filtered =
         crate::codebase::rules::run_filesystem_rules(&root, Some(&root.join(".no-mistakes.yml")))
             .unwrap();
-    assert_eq!(
-        finding_ids(&filtered),
-        vec![
-            "callable-write.yml:build".to_string(),
-            "callable.yml:build".to_string(),
-            "missing.yml:build".to_string(),
-            "write.yml:build".to_string(),
-        ]
-    );
     assert!(filtered
         .iter()
         .all(|finding| !finding.file.ends_with("suppressed.yml")));
+    assert_eq!(filtered.len() + 1, findings.len());
 
-    // Option-OFF parity through the same filesystem entry point.
     let filtered_off = crate::codebase::rules::run_filesystem_rules(
         &root,
         Some(&root.join(".no-mistakes.off.yml")),
     )
     .unwrap();
-    assert_eq!(
-        finding_ids(&filtered_off),
-        vec![
-            "callable-write.yml:build".to_string(),
-            "write.yml:build".to_string()
-        ]
-    );
+    assert_eq!(finding_ids(&filtered_off), finding_ids(&off_findings));
 }
 
 #[test]

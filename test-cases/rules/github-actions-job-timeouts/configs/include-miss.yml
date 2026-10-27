@@ -1,0 +1,6 @@
+rules:
+  - rule: github-actions-job-timeouts
+    scope: repository
+    options:
+      include:
+        - nope.yml

@@ -1,0 +1,7 @@
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      allow:
+        - step: ".github/workflows/release#nightly.yml#build#dynamic"
+          reason: "Matrix value is bounded."

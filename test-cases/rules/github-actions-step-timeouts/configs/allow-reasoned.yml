@@ -1,0 +1,11 @@
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      maxMinutes: 10
+      allow:
+        - step: ".github/workflows/ci.yml#build#dynamic"
+          reason: "The matrix bounds this value."
+        - step: ".github/workflows/ci.yml#build#2"
+          reason: "Slow external service."
+          maxMinutes: 20
