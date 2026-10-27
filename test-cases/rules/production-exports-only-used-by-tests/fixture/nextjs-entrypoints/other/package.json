@@ -2,6 +2,6 @@
   "name": "other",
   "private": true,
   "dependencies": {
-    "next": "15.0.0"
+    "next": "15.5.28"
   }
 }
