@@ -256,3 +256,49 @@ fn type_imports_check_json_snapshot() {
         &[("type_imports", root.clone(), root.join(".no-mistakes.yml"))],
     );
 }
+
+#[test]
+fn type_references_do_not_consume_value_exports_snapshot() {
+    let output = check("type-value-exports");
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(output.status.code(), Some(1), "{report}");
+    // Type-position references to functions, const, let and var never count as
+    // production use; classes, interfaces and enums keep counting.
+    let mut targets: Vec<_> = report["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|item| item["target"].as_str().unwrap())
+        .collect();
+    targets.sort_unstable();
+    assert_eq!(
+        targets,
+        [
+            "constInline",
+            "fnChain",
+            "fnImportQualified",
+            "fnImportType",
+            "fnNamespace",
+            "fnQualified",
+            "letValue",
+            "varValue",
+        ],
+        "{report}"
+    );
+    // A default export's value-or-type kind is undetermined, so it is advised.
+    let advisories = report["advisories"].as_array().unwrap();
+    assert_eq!(advisories.len(), 1, "{report}");
+    assert!(
+        advisories[0].to_string().contains("undeterminedDefault"),
+        "{report}"
+    );
+    let root = crate::check_json_snapshot::rules_path(RULE, "fixture", "type-value-exports");
+    crate::check_json_snapshot::assert_saved_fixture(
+        "production_exports_type_value_exports",
+        &[(
+            "type_value_exports",
+            root.clone(),
+            root.join(".no-mistakes.yml"),
+        )],
+    );
+}

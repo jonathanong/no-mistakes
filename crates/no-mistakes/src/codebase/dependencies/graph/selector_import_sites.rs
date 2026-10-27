@@ -90,7 +90,17 @@ fn collect_selector_relay_edges(
                     selector_unknown_symbol(&inputs, file.as_ref(), symbol, site, edges, sites);
                 }
             }
-            edges.push((from, to, EdgeKind::SymbolReexport));
+            let type_only = inputs
+                .symbols
+                .exports
+                .iter()
+                .any(|export| export.is_type_only && (export.name == **export_name || export.name == "*"));
+            let kind = if type_only {
+                EdgeKind::SymbolTypeReexport
+            } else {
+                EdgeKind::SymbolReexport
+            };
+            edges.push((from, to, kind));
         } else if matches!(to, NodeId::File(_)) {
             for mut site in relay_sites
                 .get(export_name.as_ref())

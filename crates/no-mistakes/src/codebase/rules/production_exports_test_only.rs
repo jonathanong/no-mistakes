@@ -76,7 +76,8 @@ pub(crate) fn check_with_graph(
                     if nextjs::consumed_export(file, &nextjs_roots, name) {
                         continue;
                     }
-                    let consumers = traversal::consumers(graph, file, name);
+                    let mut consumers = traversal::consumers(graph, file, name);
+                    let undetermined = consumers.settle(&export.kind);
                     if consumers.files.iter().any(|file| !options.test(file)) {
                         continue;
                     }
@@ -92,6 +93,17 @@ pub(crate) fn check_with_graph(
                                 uncertain(&root, application, &importer, line, &reason),
                             );
                         }
+                    } else if !undetermined.is_empty() {
+                        let (importer, line, reason) = selector_advisories::undetermined(
+                            &root,
+                            graph,
+                            &undetermined,
+                            &export.name,
+                        );
+                        chunk.unanalyzable(
+                            policy,
+                            uncertain(&root, application, &importer, line, &reason),
+                        );
                     } else if !consumers.files.is_empty()
                         && consumers.files.iter().all(|file| options.test(file))
                     {

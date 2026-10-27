@@ -101,7 +101,11 @@ fn collect_symbol_import_selectors_file(
             edges.push((
                 NodeId::file_in(inputs.interner, inputs.path),
                 symbol,
-                EdgeKind::SymbolImport,
+                if import.is_type_only {
+                    EdgeKind::SymbolTypeImport
+                } else {
+                    EdgeKind::SymbolImport
+                },
             ));
         }
     }

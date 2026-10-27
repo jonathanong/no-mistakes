@@ -24,6 +24,10 @@ pub enum EdgeKind {
     SymbolReexport,
     /// Opt-in import whose symbol selector cannot be established.
     SymbolImportUnknown,
+    /// Opt-in type-only named/default import consumer (never a runtime use).
+    SymbolTypeImport,
+    /// Opt-in type-only re-export alias or star relay.
+    SymbolTypeReexport,
     /// Type-only import (`import type ...`).
     TypeImport,
     /// Runtime dynamic import (`import("...")`).
@@ -154,6 +158,8 @@ impl EdgeKind {
             Self::SymbolImport => Some("symbol-import"),
             Self::SymbolReexport => Some("symbol-reexport"),
             Self::SymbolImportUnknown => Some("symbol-import-unknown"),
+            Self::SymbolTypeImport => Some("symbol-type-import"),
+            Self::SymbolTypeReexport => Some("symbol-type-reexport"),
             Self::TypeImport => Some("type-import"),
             Self::DynamicImport => Some("dynamic-import"),
             Self::ConditionalDynamicImport => Some("conditional-dynamic-import"),

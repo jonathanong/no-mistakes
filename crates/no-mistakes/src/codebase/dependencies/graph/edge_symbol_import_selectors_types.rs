@@ -33,7 +33,7 @@ fn push_type_selector(
     edges.push((
         NodeId::file_in(inputs.interner, inputs.path),
         symbol,
-        EdgeKind::SymbolImport,
+        EdgeKind::SymbolTypeImport,
     ));
 }
 
