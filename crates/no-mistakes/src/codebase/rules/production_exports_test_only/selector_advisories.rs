@@ -14,7 +14,16 @@ pub(super) fn for_export(
         let path = relative_slash_path(root, importer);
         let sites = graph.unknown_selector_sites(importer, target);
         if sites.is_empty() {
-            evidence.insert((importer.clone(), 1, format!("{path}: missing prepared selector provenance prevents locating its import site")));
+            evidence.insert((
+                importer.clone(),
+                1,
+                format!(
+                    "{path}: missing prepared selector provenance: \
+                     the graph lacks the import line, module specifier, and selector reason; \
+                     rebuild analysis with symbol import selector facts and their source evidence, \
+                     or replace the import/re-export with explicit names"
+                ),
+            ));
         }
         for site in sites {
             evidence.insert((

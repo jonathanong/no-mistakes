@@ -91,6 +91,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": "other/no-factory.mts",
+          "line": 3,
+          "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/no-factory.mts:3 `../src/no-factory.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",
+          "rule": "production-exports-only-used-by-tests",
+          "target": "unanalyzable"
+        },
+        {
           "file": "other/opaque-call.mts",
           "line": 3,
           "message": "cannot analyze production export importers: symbol consumers of `value` include an unknown import selector: other/opaque-call.mts:3 `../src/opaque-call.mjs` (dynamic or require selector); use explicit named imports and statically analyzable exports",

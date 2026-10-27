@@ -168,6 +168,9 @@ Rewrite that import or re-export with explicit names. A literal import in
 `vi.mock(import("./module"), factory)` with an imported Vitest `vi` binding and
 a static replacement factory is an erased module-promise type carrier. It does
 not create an unknown selector; its ordinary module dependency edge is retained.
+A one-argument `vi.mock(import("./module"))` remains uncertain: without a static
+replacement factory, the mock may load the actual module. Supply a static
+replacement factory to establish that the import is only a type carrier.
 Local objects named `vi`, arbitrary aliases such as
 `mockApi.mock`, and genuine dynamic imports alongside a mock retain uncertainty.
 Factories receiving parameters (including `importOriginal`) or executing opaque

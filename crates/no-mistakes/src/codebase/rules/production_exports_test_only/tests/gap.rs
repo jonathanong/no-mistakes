@@ -271,6 +271,9 @@ fn manual_unknown_edges_without_source_evidence_report_the_missing_provenance() 
     assert_eq!(line, 1);
     assert!(reason.contains("consumer.mts"));
     assert!(reason.contains("missing prepared selector provenance"));
+    assert!(reason.contains("import line, module specifier, and selector reason"));
+    assert!(reason.contains("rebuild analysis with symbol import selector facts"));
+    assert!(reason.contains("replace the import/re-export with explicit names"));
     assert!(super::super::selector_advisories::for_export(
         root,
         &graph,
