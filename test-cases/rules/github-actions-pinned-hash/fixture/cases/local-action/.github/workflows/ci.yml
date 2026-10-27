@@ -1,0 +1,1 @@
+      - uses: ./.github/actions/my-action

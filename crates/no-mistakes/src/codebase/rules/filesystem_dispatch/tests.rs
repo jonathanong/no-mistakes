@@ -1,15 +1,14 @@
 use super::*;
 
 mod fixture_config;
-use fixture_config::{all_rules_fixture, write_config};
+use fixture_config::prepared_rules;
 
 /// Cover all dispatch branches via `run_filesystem_rules_with_files`.
 /// Passing an empty file list means no rule actually does I/O on files —
 /// they just enter their dispatch branch and return Ok(empty).
 #[test]
 fn dispatch_with_files_covers_all_rule_branches() {
-    let fixture = all_rules_fixture();
-    let config_path = write_config(fixture.path(), FILESYSTEM_RULE_IDS);
+    let (fixture, config_path) = prepared_rules("all-rules", FILESYSTEM_RULE_IDS);
     let findings =
         run_filesystem_rules_with_files(fixture.path(), Some(&config_path), &[]).unwrap();
     // Empty file list → no findings; but all dispatch branches have been entered.
@@ -24,8 +23,7 @@ fn dispatch_with_files_covers_all_rule_branches() {
 /// discover_files returns nothing, so no findings are emitted.
 #[test]
 fn dispatch_standalone_covers_all_rule_branches() {
-    let fixture = all_rules_fixture();
-    let config_path = write_config(fixture.path(), FILESYSTEM_RULE_IDS);
+    let (fixture, config_path) = prepared_rules("all-rules", FILESYSTEM_RULE_IDS);
     let findings = run_filesystem_rules(fixture.path(), Some(&config_path)).unwrap();
     assert!(
         findings.is_empty(),

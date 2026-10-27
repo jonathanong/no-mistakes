@@ -9,9 +9,7 @@ use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 
 pub(super) fn fixture(path: &str) -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/github-actions-composite-step-schema/fixture")
-        .join(path)
+    crate::test_support::rule_fixture_root("github-actions-composite-step-schema").join(path)
 }
 
 fn config_with_options(yaml: &str) -> NoMistakesConfig {
@@ -37,13 +35,8 @@ fn run_on_files(root: &Path, files: &[PathBuf], yaml: &str) -> Vec<RuleFinding> 
     check_with_files(root, &config_with_options(yaml), files).unwrap()
 }
 
-fn write_action(root: &Path, relative: &str, content: &str) -> PathBuf {
-    let path = root.join(relative);
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).unwrap();
-    }
-    std::fs::write(&path, content).unwrap();
-    path
+fn case_root(case: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(&fixture(&format!("cases/{case}")))
 }
 
 #[test]
@@ -148,25 +141,17 @@ fn check_entry_point_discovers_fail_fixture() {
 
 #[test]
 fn default_include_skips_workflow_yaml() {
-    let tmp = tempfile::tempdir().unwrap();
-    let workflow = write_action(
-        tmp.path(),
-        ".github/workflows/ci.yml",
-        "jobs:\n  build:\n    steps:\n      - timeout-minutes: 5\n        run: echo\n",
-    );
-    let findings = run_on_files(tmp.path(), &[workflow], "{}");
+    let root = case_root("default-include-skips-workflow");
+    let workflow = root.join(".github/workflows/ci.yml");
+    let findings = run_on_files(&root, &[workflow], "{}");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn include_override_can_scan_root_action_yaml() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_action(
-        tmp.path(),
-        "action.yaml",
-        "runs:\n  using: composite\n  steps:\n    - id: only-id\n      timeout-minutes: 1\n      run: echo\n      shell: bash\n",
-    );
-    let findings = run_on_files(tmp.path(), &[path], "include: [action.yaml]");
+    let root = case_root("include-override-root-action");
+    let path = root.join("action.yaml");
+    let findings = run_on_files(&root, &[path], "include: [action.yaml]");
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(
         findings[0].message.contains("step \"only-id\""),
@@ -177,27 +162,19 @@ fn include_override_can_scan_root_action_yaml() {
 
 #[test]
 fn extra_forbidden_keys_can_ban_an_allowed_key() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_action(
-        tmp.path(),
-        ".github/actions/env-step/action.yml",
-        "runs:\n  using: composite\n  steps:\n    - uses: actions/checkout@main\n      env:\n        FOO: bar\n",
-    );
-    let findings = run_on_files(tmp.path(), &[path], "extraForbiddenKeys: [env]");
+    let root = case_root("extra-forbidden-env");
+    let path = root.join(".github/actions/env-step/action.yml");
+    let findings = run_on_files(&root, &[path], "extraForbiddenKeys: [env]");
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].target.as_deref(), Some("env"));
 }
 
 #[test]
 fn allowed_keys_override_replaces_defaults() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_action(
-        tmp.path(),
-        ".github/actions/custom/action.yml",
-        "runs:\n  using: composite\n  steps:\n    - name: Custom\n      timeout-minutes: 3\n      run: echo\n      shell: bash\n",
-    );
+    let root = case_root("allowed-keys-keeps-timeout");
+    let path = root.join(".github/actions/custom/action.yml");
     let findings = run_on_files(
-        tmp.path(),
+        &root,
         &[path],
         "allowedKeys: [name, timeout-minutes, run, shell]",
     );
@@ -206,35 +183,18 @@ fn allowed_keys_override_replaces_defaults() {
 
 #[test]
 fn allowed_keys_override_flags_default_keys_that_were_dropped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_action(
-        tmp.path(),
-        ".github/actions/custom/action.yml",
-        "runs:\n  using: composite\n  steps:\n    - name: Custom\n      uses: actions/checkout@main\n",
-    );
-    let findings = run_on_files(tmp.path(), &[path], "allowedKeys: [name]");
+    let root = case_root("allowed-keys-drops-uses");
+    let path = root.join(".github/actions/custom/action.yml");
+    let findings = run_on_files(&root, &[path], "allowedKeys: [name]");
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].target.as_deref(), Some("uses"));
 }
 
 #[test]
 fn label_falls_back_to_uses_then_step_number() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_action(
-        tmp.path(),
-        ".github/actions/labels/action.yml",
-        "\
-runs:
-  using: composite
-  steps:
-    - uses: actions/checkout@main
-      timeout-minutes: 2
-    - run: echo unlabeled
-      shell: bash
-      timeout-minutes: 3
-",
-    );
-    let findings = run_on_files(tmp.path(), &[path], "{}");
+    let root = case_root("label-fallback");
+    let path = root.join(".github/actions/labels/action.yml");
+    let findings = run_on_files(&root, &[path], "{}");
     assert_eq!(findings.len(), 2, "{findings:?}");
     assert!(
         findings[0]
@@ -252,13 +212,9 @@ runs:
 
 #[test]
 fn empty_name_falls_back_to_id() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_action(
-        tmp.path(),
-        ".github/actions/empty-name/action.yml",
-        "runs:\n  using: composite\n  steps:\n    - name: \"  \"\n      id: fallback\n      timeout-minutes: 1\n      run: echo\n      shell: bash\n",
-    );
-    let findings = run_on_files(tmp.path(), &[path], "{}");
+    let root = case_root("empty-name-fallback");
+    let path = root.join(".github/actions/empty-name/action.yml");
+    let findings = run_on_files(&root, &[path], "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(
         findings[0].message.contains("step \"fallback\""),
@@ -269,98 +225,52 @@ fn empty_name_falls_back_to_id() {
 
 #[test]
 fn disable_file_comment_skips_findings() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_action(
-        tmp.path(),
-        ".github/actions/suppressed/action.yml",
-        "# no-mistakes-disable-file github-actions-composite-step-schema\n\
-         runs:\n  using: composite\n  steps:\n    - name: Hidden\n      timeout-minutes: 9\n      run: echo\n      shell: bash\n",
-    );
-    let findings = run_on_files(tmp.path(), &[path], "{}");
+    let root = case_root("disable-file");
+    let path = root.join(".github/actions/suppressed/action.yml");
+    let findings = run_on_files(&root, &[path], "{}");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn disable_file_comment_skips_invalid_yaml() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_action(
-        tmp.path(),
-        ".github/actions/bad/action.yml",
-        "# no-mistakes-disable-file github-actions-composite-step-schema\nruns: {using: composite, steps: [{{invalid}\n",
-    );
-    let findings = run_on_files(tmp.path(), &[path], "{}");
+    let root = case_root("disable-file-invalid");
+    let path = root.join(".github/actions/bad/action.yml");
+    let findings = run_on_files(&root, &[path], "{}");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn missing_or_non_array_steps_are_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let missing = write_action(
-        tmp.path(),
-        ".github/actions/no-steps/action.yml",
-        "name: No Steps\nruns:\n  using: composite\n",
-    );
-    let mapping = write_action(
-        tmp.path(),
-        ".github/actions/map-steps/action.yml",
-        "runs:\n  using: composite\n  steps:\n    first:\n      run: echo\n",
-    );
-    let findings = run_on_files(tmp.path(), &[missing, mapping], "{}");
+    let root = case_root("missing-or-non-array-steps");
+    let missing = root.join(".github/actions/no-steps/action.yml");
+    let mapping = root.join(".github/actions/map-steps/action.yml");
+    let findings = run_on_files(&root, &[missing, mapping], "{}");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn scalar_and_missing_runs_are_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let scalar = write_action(
-        tmp.path(),
-        ".github/actions/scalar/action.yml",
-        "just-a-scalar-value\n",
-    );
-    let no_runs = write_action(
-        tmp.path(),
-        ".github/actions/no-runs/action.yml",
-        "name: Incomplete\ndescription: no runs key\n",
-    );
-    let node = write_action(
-        tmp.path(),
-        ".github/actions/js/action.yml",
-        "runs:\n  using: node20\n  main: index.js\n  timeout-minutes: 5\n",
-    );
-    let findings = run_on_files(tmp.path(), &[scalar, no_runs, node], "{}");
+    let root = case_root("scalar-and-missing-runs");
+    let scalar = root.join(".github/actions/scalar/action.yml");
+    let no_runs = root.join(".github/actions/no-runs/action.yml");
+    let node = root.join(".github/actions/js/action.yml");
+    let findings = run_on_files(&root, &[scalar, no_runs, node], "{}");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn null_and_non_mapping_steps_are_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_action(
-        tmp.path(),
-        ".github/actions/null-step/action.yml",
-        "\
-runs:
-  using: composite
-  steps:
-    - ~
-    - echo this is a string step
-    - name: Real Step
-      run: echo hi
-      shell: bash
-",
-    );
-    let findings = run_on_files(tmp.path(), &[path], "{}");
+    let root = case_root("null-and-non-mapping-steps");
+    let path = root.join(".github/actions/null-step/action.yml");
+    let findings = run_on_files(&root, &[path], "{}");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn non_string_mapping_keys_are_ignored() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_action(
-        tmp.path(),
-        ".github/actions/numeric-key/action.yml",
-        "runs:\n  using: composite\n  steps:\n    - 1: ignored\n      run: echo\n      shell: bash\n",
-    );
-    let findings = run_on_files(tmp.path(), &[path], "{}");
+    let root = case_root("numeric-key");
+    let path = root.join(".github/actions/numeric-key/action.yml");
+    let findings = run_on_files(&root, &[path], "{}");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
@@ -374,44 +284,27 @@ fn unreadable_file_produces_no_findings() {
 
 #[test]
 fn invalid_include_glob_is_an_error() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_action(
-        tmp.path(),
-        ".github/actions/ok/action.yml",
-        "runs:\n  using: composite\n  steps: []\n",
-    );
-    let err =
-        check_with_files(tmp.path(), &config_with_options("include: ['[']"), &[path]).unwrap_err();
+    let root = case_root("invalid-include-glob");
+    let path = root.join(".github/actions/ok/action.yml");
+    let err = check_with_files(&root, &config_with_options("include: ['[']"), &[path]).unwrap_err();
     assert!(err.to_string().contains("unclosed"), "{err:#}");
 }
 
 #[test]
 fn using_must_be_the_string_composite() {
-    let tmp = tempfile::tempdir().unwrap();
-    let quoted = write_action(
-        tmp.path(),
-        ".github/actions/quoted/action.yml",
-        "runs:\n  using: \"composite\"\n  steps:\n    - run: echo\n      shell: bash\n      timeout-minutes: 1\n",
-    );
-    let sequence = write_action(
-        tmp.path(),
-        ".github/actions/seq-using/action.yml",
-        "runs:\n  using: [composite]\n  steps:\n    - run: echo\n      timeout-minutes: 1\n",
-    );
-    let findings = run_on_files(tmp.path(), &[quoted, sequence], "{}");
+    let root = case_root("using-must-be-composite");
+    let quoted = root.join(".github/actions/quoted/action.yml");
+    let sequence = root.join(".github/actions/seq-using/action.yml");
+    let findings = run_on_files(&root, &[quoted, sequence], "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(findings[0].file.contains("quoted"), "{findings:?}");
 }
 
 #[test]
 fn flow_style_timeout_still_flags_from_parsed_keys() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = write_action(
-        tmp.path(),
-        ".github/actions/flow/action.yml",
-        "runs:\n  using: composite\n  steps:\n    - {name: Flow, timeout-minutes: 4, run: echo, shell: bash}\n",
-    );
-    let findings = run_on_files(tmp.path(), &[path], "{}");
+    let root = case_root("flow-style-timeout");
+    let path = root.join(".github/actions/flow/action.yml");
+    let findings = run_on_files(&root, &[path], "{}");
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].target.as_deref(), Some("timeout-minutes"));
 }

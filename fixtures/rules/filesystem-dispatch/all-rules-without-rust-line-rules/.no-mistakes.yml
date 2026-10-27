@@ -1,0 +1,255 @@
+rules:
+  - rule: agents-md-max-size
+    scope: repository
+  - rule: github-actions-action-timeout-pair
+    scope: repository
+  - rule: github-actions-composite-step-schema
+    scope: repository
+  - rule: github-actions-job-timeouts
+    scope: repository
+  - rule: github-actions-step-timeouts
+    scope: repository
+  - rule: github-actions-pinned-hash
+    scope: repository
+  - rule: github-actions-script-expressions
+    scope: repository
+  - rule: github-actions-checkout-credentials
+    scope: repository
+  - rule: github-actions-docker-host-ports
+    scope: repository
+  - rule: github-actions-download-integrity
+    scope: repository
+  - rule: github-actions-test-timeout-literals
+    scope: repository
+  - rule: version-pin-consistency
+    scope: repository
+  - rule: config-path-references
+    scope: repository
+  - rule: csharp-max-lines-per-file
+    scope: repository
+  - rule: csharp-no-async-void-delegate
+    scope: repository
+  - rule: finite-set-consistency
+    scope: repository
+  - rule: forbidden-lint-suppressions
+    scope: repository
+    options:
+      files: ['**/*.{js,jsx,ts,tsx}']
+      ruleIds: [react/purity]
+  - rule: forbidden-workspace-closure
+    scope: repository
+  - rule: declared-payload-compatibility
+    scope: repository
+  - rule: structured-config-policy
+    scope: repository
+  - rule: swift-no-raw-print
+    scope: repository
+  - rule: swift-viewmodel-main-actor
+    scope: repository
+  - rule: tsconfig-alias-folder-mapping
+    scope: repository
+  - rule: tsconfig-file-coverage
+    scope: repository
+  - rule: no-git-identity-mutation
+    scope: repository
+  - rule: no-sparse-checkout
+    scope: repository
+  - rule: no-test-git-sha
+    scope: repository
+  - rule: no-mistakes-config
+    scope: repository
+  - rule: no-raw-ephemeral-port
+    scope: repository
+  - rule: markdown-eval-tests
+    scope: repository
+  - rule: package-json-registry-only
+    scope: repository
+  - rule: package-json-nested-workspace-coverage
+    scope: repository
+  - rule: package-json-required-fields
+    scope: repository
+  - rule: package-json-workspace-coverage
+    scope: repository
+  - rule: pnpm-overrides-ban
+    scope: repository
+  - rule: pnpm-release-age-policy
+    scope: repository
+  - rule: production-dependency-declarations
+    scope: repository
+    options:
+      workspaceRoots: ["."]
+  - rule: workspace-package-cycles
+    scope: repository
+  - rule: required-companion-imports
+    scope: repository
+  - rule: require-test-per-subdir
+    scope: repository
+  - rule: require-files-in-subdirs
+    scope: repository
+  - rule: strict-package-layout
+    scope: repository
+  - rule: required-local-docs
+    scope: repository
+  - rule: required-doc-section
+    scope: repository
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+  - rule: nextjs-redirect-destinations
+    scope: repository
+  - rule: vitest-test-correspondence
+    scope: repository
+  - rule: file-extension-policy
+    scope: repository
+  - rule: banned-paths
+    scope: repository
+  - rule: banned-renamed-files
+    scope: repository
+  - rule: integration-test-no-mocks
+    scope: repository
+  - rule: test-email-domain-policy
+    scope: repository
+  - rule: test-no-dependency-pins
+    scope: repository
+  - rule: postgres-constraint-validate
+    scope: repository
+  - rule: postgres-column-requires-trigger
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-required-comments
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-duplicate-function-body
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+  - rule: postgres-explicit-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+  - rule: postgres-generated-column-predicates
+    scope: repository
+    options:
+      executorNames: []
+  - rule: postgres-conflict-ordering
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+  - rule: postgres-no-add-column
+    scope: repository
+  - rule: postgres-finite-text-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-fk-index
+    scope: repository
+  - rule: postgres-redundant-index
+    scope: repository
+  - rule: postgres-no-generated-column-writes
+    scope: repository
+    options:
+      executorNames: []
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      executorNames: []
+  - rule: postgres-no-offset
+    scope: repository
+    options:
+      executorNames: []
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+  - rule: postgres-identifier-length
+    scope: repository
+  - rule: postgres-array-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-key-column-types
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allowedTypes: [uuid]
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-object-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-require-fk-on-delete
+    scope: repository
+  - rule: postgres-require-named-constraints
+    scope: repository
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      executorNames: []
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      executorNames: []
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      executorNames: []
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      executorNames: []
+  - rule: postgres-no-test-state-mutation
+    scope: repository
+    options:
+      testGlobs: ['specs/**/*.ts']
+      executorNames: []
+  - rule: postgres-status-with-lifecycle-timestamps
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      statusColumns: [status]
+  - rule: postgres-table-shape
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      executorNames: []
+  - rule: lockfile-allowlist
+    scope: repository
+  - rule: doc-consistency
+    scope: repository
+  - rule: shellcheck-runner
+    scope: repository
+  - rule: markdown-child-links
+    scope: repository
+  - rule: markdown-link-display-text
+    scope: repository
+  - rule: markdown-mermaid-validation
+    scope: repository
+  - rule: markdown-reachability
+    scope: repository
+  - rule: markdown-structure-budget
+    scope: repository
+  - rule: rust-no-inline-allows
+    scope: repository
+  - rule: vitest-project-mapping
+    scope: repository
+  - rule: vitest-ci-path-coverage
+    scope: repository
+  - rule: tsconfig-gate-coverage
+    scope: repository
+  - rule: workflow-topology-policy
+    scope: repository

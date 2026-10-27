@@ -1,0 +1,10 @@
+tests:
+  playwright:
+    configs: playwright.config.ts
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ playwright: [chromium] }]
+      unknownCalls: ignore
+      targets: [{ global: setTimeout }]

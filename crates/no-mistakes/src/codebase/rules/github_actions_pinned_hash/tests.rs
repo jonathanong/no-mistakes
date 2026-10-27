@@ -42,22 +42,20 @@ fn config_with_options(yaml: &str) -> NoMistakesConfig {
     config
 }
 
-fn run_on_workflow(content: &str) -> Vec<RuleFinding> {
-    let tmp = tempfile::tempdir().unwrap();
-    let wf_dir = tmp.path().join(".github/workflows");
-    std::fs::create_dir_all(&wf_dir).unwrap();
-    let path = wf_dir.join("ci.yml");
-    std::fs::write(&path, content).unwrap();
+fn case_root(name: &str) -> std::path::PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &crate::test_support::rule_fixture_root("github-actions-pinned-hash")
+            .join("cases")
+            .join(name),
+    )
+}
+
+fn run_on_workflow(name: &str) -> Vec<RuleFinding> {
+    let root = case_root(name);
+    let path = root.join(".github/workflows/ci.yml");
     let (uses_re, sha_re, version_re) = build_patterns();
     let exclude_set = build_exclude_globset(&[]);
-    check_file(
-        &path,
-        tmp.path(),
-        &exclude_set,
-        &uses_re,
-        &sha_re,
-        &version_re,
-    )
+    check_file(&path, &root, &exclude_set, &uses_re, &sha_re, &version_re)
 }
 
 #[test]
@@ -93,54 +91,44 @@ fn local_action_pass_fixture_produces_no_findings() {
 
 #[test]
 fn correctly_pinned_passes() {
-    let findings = run_on_workflow(
-        "      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2\n",
-    );
+    let findings = run_on_workflow("pinned-version-comment");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn double_quoted_uses_passes() {
-    let findings = run_on_workflow(
-        "      - uses: \"actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd\" # v6.0.2\n",
-    );
+    let findings = run_on_workflow("double-quoted-uses");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn single_quoted_uses_passes() {
-    let findings = run_on_workflow(
-        "      - uses: 'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd' # v6.0.2\n",
-    );
+    let findings = run_on_workflow("single-quoted-uses");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn double_quoted_tag_ref_flagged() {
-    let findings = run_on_workflow("      - uses: \"actions/checkout@v6.0.2\" # v6.0.2\n");
+    let findings = run_on_workflow("double-quoted-tag");
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("not a 40-char commit SHA"));
 }
 
 #[test]
 fn build_metadata_version_comment_passes() {
-    let findings = run_on_workflow(
-        "      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v1.0.0-beta+build.1\n",
-    );
+    let findings = run_on_workflow("build-metadata-comment");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn uppercase_sha_passes() {
-    let findings = run_on_workflow(
-        "      - uses: actions/checkout@DE0FAC2E4500DABE0009E67214FF5F5447CE83DD # v6.0.2\n",
-    );
+    let findings = run_on_workflow("uppercase-sha");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn tag_ref_flagged() {
-    let findings = run_on_workflow("      - uses: actions/checkout@v6.0.2\n");
+    let findings = run_on_workflow("tag-ref");
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].line, 1);
     assert!(findings[0].message.contains("not a 40-char commit SHA"));
@@ -148,81 +136,63 @@ fn tag_ref_flagged() {
 
 #[test]
 fn branch_ref_flagged() {
-    let findings = run_on_workflow("      - uses: dtolnay/rust-toolchain@stable\n");
+    let findings = run_on_workflow("branch-ref");
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("not a 40-char commit SHA"));
 }
 
 #[test]
 fn sha_without_comment_flagged() {
-    let findings = run_on_workflow(
-        "      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd\n",
-    );
+    let findings = run_on_workflow("sha-without-comment");
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("trailing comment must be"));
 }
 
 #[test]
 fn sha_with_bad_comment_flagged() {
-    let findings = run_on_workflow(
-        "      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # main\n",
-    );
+    let findings = run_on_workflow("sha-bad-comment");
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("trailing comment must be"));
 }
 
 #[test]
 fn sha_with_version_comment_passes() {
-    let findings = run_on_workflow(
-        "      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2\n",
-    );
+    let findings = run_on_workflow("pinned-version-comment");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn major_only_version_comment_passes() {
-    let findings = run_on_workflow(
-        "      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2\n",
-    );
+    let findings = run_on_workflow("major-only-comment");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn numeric_version_comment_passes() {
     // Rust versions like 1.87.0 (no v prefix) must also pass
-    let findings = run_on_workflow(
-        "      - uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0\n",
-    );
+    let findings = run_on_workflow("numeric-version-comment");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn local_action_exempt() {
-    let findings = run_on_workflow("      - uses: ./.github/actions/my-action\n");
+    let findings = run_on_workflow("local-action");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn docker_ref_exempt() {
-    let findings = run_on_workflow("      - uses: docker://alpine:3.20\n");
+    let findings = run_on_workflow("docker-ref");
     assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
 fn non_workflow_yaml_not_checked() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("config.yml");
-    std::fs::write(&path, "      - uses: actions/checkout@v6.0.2\n").unwrap();
+    let root = case_root("non-workflow-yaml");
+    let path = root.join("config.yml");
     let (uses_re, sha_re, version_re) = build_patterns();
     let exclude_set = build_exclude_globset(&[]);
-    let findings = check_file(
-        &path,
-        tmp.path(),
-        &exclude_set,
-        &uses_re,
-        &sha_re,
-        &version_re,
-    );
+    let findings = check_file(&path, &root, &exclude_set, &uses_re, &sha_re, &version_re);
     assert!(
         findings.is_empty(),
         "non-workflow yaml should not be checked"
@@ -232,8 +202,7 @@ fn non_workflow_yaml_not_checked() {
 #[test]
 fn short_sha_flagged() {
     // 39-char SHA (one short) must fail
-    let findings =
-        run_on_workflow("      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83d\n");
+    let findings = run_on_workflow("short-sha");
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("not a 40-char commit SHA"));
 }
@@ -270,7 +239,7 @@ fn multiple_violations_reported() {
 #[test]
 fn reusable_workflow_uses_field_checked() {
     // `uses:` at job level (reusable workflows) should also be checked
-    let findings = run_on_workflow("    uses: my-org/my-repo/.github/workflows/build.yml@main\n");
+    let findings = run_on_workflow("reusable-workflow");
     assert_eq!(findings.len(), 1);
 }
 
@@ -287,21 +256,11 @@ fn check_entry_point_uses_discovery() {
 #[test]
 fn non_yaml_extension_not_checked() {
     // A file with a non-yml/yaml extension in .github/workflows/ must be skipped
-    let tmp = tempfile::tempdir().unwrap();
-    let wf_dir = tmp.path().join(".github/workflows");
-    std::fs::create_dir_all(&wf_dir).unwrap();
-    let path = wf_dir.join("ci.sh");
-    std::fs::write(&path, "uses: actions/checkout@v6.0.2\n").unwrap();
+    let root = case_root("non-yaml-extension");
+    let path = root.join(".github/workflows/ci.sh");
     let (uses_re, sha_re, version_re) = build_patterns();
     let exclude_set = build_exclude_globset(&[]);
-    let findings = check_file(
-        &path,
-        tmp.path(),
-        &exclude_set,
-        &uses_re,
-        &sha_re,
-        &version_re,
-    );
+    let findings = check_file(&path, &root, &exclude_set, &uses_re, &sha_re, &version_re);
     assert!(
         findings.is_empty(),
         "non-yaml extension should not be checked"
@@ -311,21 +270,11 @@ fn non_yaml_extension_not_checked() {
 #[test]
 fn composite_action_yaml_extension_checked() {
     // .github/actions/**/action.yaml (note: .yaml not .yml) must be checked
-    let tmp = tempfile::tempdir().unwrap();
-    let action_dir = tmp.path().join(".github/actions/my-action");
-    std::fs::create_dir_all(&action_dir).unwrap();
-    let path = action_dir.join("action.yaml");
-    std::fs::write(&path, "      - uses: actions/checkout@v6.0.2\n").unwrap();
+    let root = case_root("composite-action-yaml");
+    let path = root.join(".github/actions/my-action/action.yaml");
     let (uses_re, sha_re, version_re) = build_patterns();
     let exclude_set = build_exclude_globset(&[]);
-    let findings = check_file(
-        &path,
-        tmp.path(),
-        &exclude_set,
-        &uses_re,
-        &sha_re,
-        &version_re,
-    );
+    let findings = check_file(&path, &root, &exclude_set, &uses_re, &sha_re, &version_re);
     assert_eq!(findings.len(), 1, "composite action.yaml must be checked");
 }
 
@@ -385,7 +334,7 @@ fn aliased_steps_and_job_named_env_are_checked() {
 fn uses_line_not_matching_regex_skipped() {
     // A line containing "uses:" but not as a YAML step key must not produce findings.
     // The regex requires `^\s*-?\s*uses:\s+<value>`, so bare `uses:` with nothing after is skipped.
-    let findings = run_on_workflow("      # uses: some comment reference\n");
+    let findings = run_on_workflow("comment-uses");
     assert!(findings.is_empty(), "{findings:?}");
 }
 

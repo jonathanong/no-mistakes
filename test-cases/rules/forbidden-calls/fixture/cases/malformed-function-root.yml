@@ -1,0 +1,6 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ function: { file: src/broken.mts, symbol: broken } }]
+      targets: [{ global: setTimeout }]

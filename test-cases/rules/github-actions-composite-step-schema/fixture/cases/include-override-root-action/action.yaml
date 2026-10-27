@@ -1,0 +1,7 @@
+runs:
+  using: composite
+  steps:
+    - id: only-id
+      timeout-minutes: 1
+      run: echo
+      shell: bash

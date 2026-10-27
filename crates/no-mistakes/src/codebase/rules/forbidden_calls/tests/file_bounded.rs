@@ -63,10 +63,7 @@ fn file_traversal_filters_each_root_file_once_before_scanning_calls() {
 #[test]
 fn file_traversal_keeps_function_roots_scoped_within_a_selected_file() {
     use super::*;
-    let findings = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ function: { file: src/selectors.mts, symbol: timeoutCall } }]\n      traversal: file\n      targets: [{ terminal: waitForTimeout }, { terminal: setTimeout }]\n",
-    )
-    .unwrap();
+    let findings = coverage_findings("file-traversal-function-root").unwrap();
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].import.as_deref(), Some("page.waitForTimeout"));
 }

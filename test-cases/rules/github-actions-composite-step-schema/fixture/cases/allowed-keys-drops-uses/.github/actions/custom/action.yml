@@ -1,0 +1,5 @@
+runs:
+  using: composite
+  steps:
+    - name: Custom
+      uses: actions/checkout@main

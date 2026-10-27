@@ -1,0 +1,8 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    include: [src/entry.mts]
+    options:
+      roots: [{ file: src/entry.mts }]
+      traversal: transitive
+      targets: [{ global: setTimeout }]

@@ -4,10 +4,7 @@ use crate::codebase::dependencies::graph::{ResolvedCallSite, ResolvedCallTarget}
 
 #[test]
 fn terminal_selectors_match_typed_parameter_member_calls() {
-    let findings = coverage_findings(
-        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ function: { file: src/selectors.mts, symbol: timeoutCall } }]\n      unknownCalls: ignore\n      targets: [{ terminal: waitForTimeout }]\n",
-    )
-    .unwrap();
+    let findings = coverage_findings("terminal-wait-for-timeout").unwrap();
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert!(

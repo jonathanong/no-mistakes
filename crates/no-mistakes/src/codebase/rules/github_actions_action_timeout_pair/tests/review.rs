@@ -1,26 +1,24 @@
 use super::*;
 use std::path::PathBuf;
 
-fn written_ci(source: &str) -> (tempfile::TempDir, PathBuf) {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join(".github/workflows/ci.yml");
-    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-    std::fs::write(&path, source).unwrap();
-    (tmp, path)
+fn written_ci(name: &str) -> (PathBuf, PathBuf) {
+    let root = super::case_root(name);
+    let path = root.join(".github/workflows/ci.yml");
+    (root, path)
 }
 
-fn scan_written(source: &str, defer_suppression: bool) -> Vec<RuleFinding> {
-    let (tmp, path) = written_ci(source);
+fn scan_written(name: &str, defer_suppression: bool) -> Vec<RuleFinding> {
+    let (root, path) = written_ci(name);
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
-    scan::check_file(tmp.path(), &path, &opts, &sources, defer_suppression)
+    scan::check_file(&root, &path, &opts, &sources, defer_suppression)
 }
 
-fn check_written(source: &str, defer_suppression: bool) -> Vec<RuleFinding> {
-    let (tmp, path) = written_ci(source);
+fn check_written(name: &str, defer_suppression: bool) -> Vec<RuleFinding> {
+    let (root, path) = written_ci(name);
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&path));
     check_with_files_and_sources(
-        tmp.path(),
+        &root,
         &config(OPTIONS),
         std::slice::from_ref(&path),
         &sources,
@@ -28,15 +26,6 @@ fn check_written(source: &str, defer_suppression: bool) -> Vec<RuleFinding> {
     )
     .unwrap()
 }
-
-const DISABLED_THIRD_PARTY: &str = "\
-# no-mistakes-disable-file github-actions-action-timeout-pair
-jobs:
-  deploy:
-    steps:
-      - uses: aws-actions/configure-aws-credentials@v4
-        timeout-minutes: 2
-";
 
 #[test]
 fn missing_nested_timeout_is_on_the_violating_step() {
@@ -218,12 +207,12 @@ runs:
 
 #[test]
 fn disable_file_comment_is_kept_when_deferred() {
-    let suppressed = scan_written(DISABLED_THIRD_PARTY, false);
+    let suppressed = scan_written("disabled-third-party", false);
     assert!(suppressed.is_empty(), "{suppressed:?}");
-    let deferred = scan_written(DISABLED_THIRD_PARTY, true);
+    let deferred = scan_written("disabled-third-party", true);
     assert_eq!(deferred.len(), 1, "{deferred:?}");
-    assert!(check_written(DISABLED_THIRD_PARTY, false).is_empty());
-    assert_eq!(check_written(DISABLED_THIRD_PARTY, true).len(), 1);
+    assert!(check_written("disabled-third-party", false).is_empty());
+    assert_eq!(check_written("disabled-third-party", true).len(), 1);
 }
 
 #[test]
@@ -277,16 +266,8 @@ jobs:
 fn wrapper_identity_uses_project_target_root() {
     // Include globs are project-relative; wrapper identity must use that same
     // target root or packages/app/.github/actions/setup-aws is not a wrapper.
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp
-        .path()
-        .join("packages/app/.github/actions/setup-aws/action.yml");
-    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-    std::fs::write(
-        &path,
-        "runs:\n  using: composite\n  steps:\n    - uses: aws-actions/configure-aws-credentials@v4\n",
-    )
-    .unwrap();
+    let root = super::case_root("wrapper-project-target");
+    let path = root.join("packages/app/.github/actions/setup-aws/action.yml");
     let config = NoMistakesConfig {
         projects: [(
             "app".to_string(),
@@ -304,7 +285,7 @@ fn wrapper_identity_uses_project_target_root() {
         }],
         ..Default::default()
     };
-    let findings = check_with_files(tmp.path(), &config, std::slice::from_ref(&path)).unwrap();
+    let findings = check_with_files(&root, &config, std::slice::from_ref(&path)).unwrap();
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(
         findings[0].message.contains("action-timeout-s"),
@@ -315,17 +296,13 @@ fn wrapper_identity_uses_project_target_root() {
 
 #[test]
 fn disable_next_line_on_uses_is_kept_when_deferred() {
-    let source = r#"
-jobs:
-  deploy:
-    steps:
-      # no-mistakes-disable-next-line github-actions-action-timeout-pair
-      - uses: aws-actions/configure-aws-credentials@v4
-        timeout-minutes: 2
-"#;
-    let suppressed = scan_written(source, false);
+    let source = std::fs::read_to_string(
+        super::case_root("disable-next-line").join(".github/workflows/ci.yml"),
+    )
+    .unwrap();
+    let suppressed = scan_written("disable-next-line", false);
     assert!(suppressed.is_empty(), "{suppressed:?}");
-    let deferred = scan_written(source, true);
+    let deferred = scan_written("disable-next-line", true);
     assert_eq!(deferred.len(), 1, "{deferred:?}");
     let expected = source
         .lines()

@@ -1,0 +1,7 @@
+runs:
+  using: composite
+  steps:
+    - name: Custom
+      timeout-minutes: 3
+      run: echo
+      shell: bash

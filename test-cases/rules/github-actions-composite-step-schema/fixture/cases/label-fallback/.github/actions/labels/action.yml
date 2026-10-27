@@ -1,0 +1,8 @@
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@main
+      timeout-minutes: 2
+    - run: echo unlabeled
+      shell: bash
+      timeout-minutes: 3

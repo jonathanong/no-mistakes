@@ -191,4 +191,6 @@ fn is_read_only_config_match(matched: &str) -> bool {
 #[cfg(test)]
 mod prefix_tests;
 #[cfg(test)]
+mod runner_tests;
+#[cfg(test)]
 mod tests;

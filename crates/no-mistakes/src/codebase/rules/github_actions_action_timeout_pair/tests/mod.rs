@@ -26,6 +26,14 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
+fn case_root(name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &crate::test_support::rule_fixture_root("github-actions-action-timeout-pair")
+            .join("cases")
+            .join(name),
+    )
+}
+
 fn config(yaml: &str) -> NoMistakesConfig {
     NoMistakesConfig {
         rules: vec![RuleDef {
@@ -110,12 +118,11 @@ fn empty_uses_is_silent() {
 
 #[test]
 fn invalid_yaml_is_skipped() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("ci.yml");
-    std::fs::write(&path, "jobs: {broken: [{{").unwrap();
+    let root = case_root("invalid-yaml");
+    let path = root.join("ci.yml");
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
-    assert!(scan::check_file(tmp.path(), &path, &opts, &sources, false).is_empty());
+    assert!(scan::check_file(&root, &path, &opts, &sources, false).is_empty());
 }
 
 #[test]
@@ -217,17 +224,11 @@ jobs:
 
 #[test]
 fn disable_file_comment_skips() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join(".github/workflows/ci.yml");
-    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-    std::fs::write(
-        &path,
-        "# no-mistakes-disable-file github-actions-action-timeout-pair\njobs:\n  deploy:\n    steps:\n      - uses: ./.github/actions/setup-aws\n",
-    )
-    .unwrap();
+    let root = case_root("disable-file-comment");
+    let path = root.join(".github/workflows/ci.yml");
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
-    assert!(scan::check_file(tmp.path(), &path, &opts, &sources, false).is_empty());
+    assert!(scan::check_file(&root, &path, &opts, &sources, false).is_empty());
 }
 
 #[test]

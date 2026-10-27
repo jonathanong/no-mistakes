@@ -1,0 +1,4 @@
+runs:
+  using: composite
+  steps:
+    - {name: Flow, timeout-minutes: 4, run: echo, shell: bash}

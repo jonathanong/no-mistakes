@@ -1,0 +1,1 @@
+    uses: my-org/my-repo/.github/workflows/build.yml@main

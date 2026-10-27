@@ -1,0 +1,6 @@
+runs:
+  using: "composite"
+  steps:
+    - run: echo
+      shell: bash
+      timeout-minutes: 1

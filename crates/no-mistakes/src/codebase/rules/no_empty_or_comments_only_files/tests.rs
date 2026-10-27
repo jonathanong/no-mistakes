@@ -25,6 +25,14 @@ fn fixture(path: &str) -> std::path::PathBuf {
     )
 }
 
+fn case_root(name: &str) -> std::path::PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &crate::test_support::rule_fixture_root("no-empty-or-comments-only-files")
+            .join("cases")
+            .join(name),
+    )
+}
+
 #[test]
 fn pass_fixture_has_no_findings() {
     let root = fixture("pass");
@@ -73,95 +81,84 @@ fn sort_fixture_findings_are_sorted() {
 
 #[test]
 fn empty_file_detected() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("empty.ts");
-    std::fs::write(&path, "").unwrap();
-    let findings = check_file(&path, tmp.path());
+    let root = case_root("empty-file-detected");
+    let path = root.join("empty.ts");
+    let findings = check_file(&path, &root);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("empty"));
 }
 
 #[test]
 fn whitespace_only_file_detected() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("ws.ts");
-    std::fs::write(&path, "   \n   \n").unwrap();
-    let findings = check_file(&path, tmp.path());
+    let root = case_root("whitespace-only-file-detected");
+    let path = root.join("ws.ts");
+    let findings = check_file(&path, &root);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("empty"));
 }
 
 #[test]
 fn js_line_comment_only() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("a.ts");
-    std::fs::write(&path, "// comment\n").unwrap();
-    let findings = check_file(&path, tmp.path());
+    let root = case_root("js-line-comment-only");
+    let path = root.join("a.ts");
+    let findings = check_file(&path, &root);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("only comments"));
 }
 
 #[test]
 fn js_block_comment_only() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("a.ts");
-    std::fs::write(&path, "/* block comment */\n").unwrap();
-    let findings = check_file(&path, tmp.path());
+    let root = case_root("js-block-comment-only");
+    let path = root.join("a.ts");
+    let findings = check_file(&path, &root);
     assert_eq!(findings.len(), 1);
 }
 
 #[test]
 fn js_real_content_passes() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("a.ts");
-    std::fs::write(&path, "// comment\nexport const x = 1;\n").unwrap();
-    let findings = check_file(&path, tmp.path());
+    let root = case_root("js-real-content-passes");
+    let path = root.join("a.ts");
+    let findings = check_file(&path, &root);
     assert!(findings.is_empty());
 }
 
 #[test]
 fn sql_dash_comment_only() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("query.sql");
-    std::fs::write(&path, "-- drop table\n").unwrap();
-    let findings = check_file(&path, tmp.path());
+    let root = case_root("sql-dash-comment-only");
+    let path = root.join("query.sql");
+    let findings = check_file(&path, &root);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("only comments"));
 }
 
 #[test]
 fn sql_real_content_passes() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("query.sql");
-    std::fs::write(&path, "SELECT 1;\n").unwrap();
-    assert!(check_file(&path, tmp.path()).is_empty());
+    let root = case_root("sql-real-content-passes");
+    let path = root.join("query.sql");
+    assert!(check_file(&path, &root).is_empty());
 }
 
 #[test]
 fn html_comment_only() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("doc.md");
-    std::fs::write(&path, "<!-- comment -->\n").unwrap();
-    let findings = check_file(&path, tmp.path());
+    let root = case_root("html-comment-only");
+    let path = root.join("doc.md");
+    let findings = check_file(&path, &root);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("only comments"));
 }
 
 #[test]
 fn html_real_content_passes() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("doc.md");
-    std::fs::write(&path, "# Title\n<!-- note -->\n").unwrap();
-    assert!(check_file(&path, tmp.path()).is_empty());
+    let root = case_root("html-real-content-passes");
+    let path = root.join("doc.md");
+    assert!(check_file(&path, &root).is_empty());
 }
 
 #[test]
 fn intentionally_empty_path_is_exempt() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("empty.ts");
-    std::fs::write(&path, "").unwrap();
+    let root = case_root("intentionally-empty-path-is-exempt");
     let config = config_with_rule("{extensions: [\".ts\"], intentionallyEmpty: [\"empty.ts\"]}");
-    let findings = check(tmp.path(), &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty(), "exempt path should be skipped");
 }
 
@@ -175,11 +172,10 @@ fn unreadable_file_reports_unanalyzable_input() {
 
 #[test]
 fn check_with_files_works() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("only_comment.ts");
-    std::fs::write(&path, "// comment\n").unwrap();
+    let root = case_root("check-with-files-works");
+    let path = root.join("only_comment.ts");
     let config = config_with_rule("{extensions: [\".ts\"]}");
-    let findings = check_with_files(tmp.path(), &config, &[path]).unwrap();
+    let findings = check_with_files(&root, &config, &[path]).unwrap();
     assert_eq!(findings.len(), 1);
 }
 
@@ -187,11 +183,10 @@ fn check_with_files_works() {
 fn default_extensions_used_when_extensions_empty() {
     // When no extensions are configured, effective_extensions returns DEFAULT_EXTENSIONS.
     // A .ts file with only a comment should still be flagged.
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("only_comment.ts");
-    std::fs::write(&path, "// comment only\n").unwrap();
+    let root = case_root("default-extensions-used-when-extensions-empty");
+    let path = root.join("only_comment.ts");
     let config = config_with_rule("{}"); // empty options → default extensions
-    let findings = check_with_files(tmp.path(), &config, &[path]).unwrap();
+    let findings = check_with_files(&root, &config, &[path]).unwrap();
     assert_eq!(
         findings.len(),
         1,
@@ -201,46 +196,41 @@ fn default_extensions_used_when_extensions_empty() {
 
 #[test]
 fn unknown_extension_treated_as_raw_content() {
-    let tmp = tempfile::tempdir().unwrap();
-    let content_path = tmp.path().join("data.xml");
-    std::fs::write(&content_path, "some content").unwrap();
+    let root = case_root("unknown-extension-treated-as-raw-content");
+    let content_path = root.join("data.xml");
     assert!(
-        check_file(&content_path, tmp.path()).is_empty(),
+        check_file(&content_path, &root).is_empty(),
         "unknown ext should pass"
     );
-    let empty_path = tmp.path().join("empty.xml");
-    std::fs::write(&empty_path, "   ").unwrap();
-    let findings = check_file(&empty_path, tmp.path());
+    let empty_path = root.join("empty.xml");
+    let findings = check_file(&empty_path, &root);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("empty"));
 }
 
 #[test]
 fn mjs_line_comment_only_flagged() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("a.mjs");
-    std::fs::write(&path, "// comment\n").unwrap();
-    let findings = check_file(&path, tmp.path());
+    let root = case_root("mjs-line-comment-only-flagged");
+    let path = root.join("a.mjs");
+    let findings = check_file(&path, &root);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("only comments"));
 }
 
 #[test]
 fn md_html_comment_only_flagged() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("doc.md");
-    std::fs::write(&path, "<!-- only a comment -->\n").unwrap();
-    let findings = check_file(&path, tmp.path());
+    let root = case_root("md-html-comment-only-flagged");
+    let path = root.join("doc.md");
+    let findings = check_file(&path, &root);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("only comments"));
 }
 
 #[test]
 fn unterminated_block_comment_is_comments_only() {
-    let tmp = tempfile::tempdir().unwrap();
-    let path = tmp.path().join("a.ts");
-    std::fs::write(&path, "/* unterminated block comment").unwrap();
-    let findings = check_file(&path, tmp.path());
+    let root = case_root("unterminated-block-comment-is-comments-only");
+    let path = root.join("a.ts");
+    let findings = check_file(&path, &root);
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("only comments"));
 }

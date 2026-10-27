@@ -1,0 +1,5 @@
+runs:
+  using: [composite]
+  steps:
+    - run: echo
+      timeout-minutes: 1

@@ -9,22 +9,17 @@ fn fixture_root() -> PathBuf {
     )
 }
 
-fn fixture_findings(yaml: &str) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
-    let root = fixture_root();
-    let config = tempfile::Builder::new().suffix(".yml").tempfile()?;
-    std::fs::write(config.path(), yaml)?;
-    run_check(&root, Some(config.path()), None)
+fn fixture_findings(case: &str) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
+    run_check(
+        &fixture_root(),
+        Some(&super::forbidden_calls_case(case)),
+        None,
+    )
 }
-
-const EXPLICIT_PROJECTS: &str =
-    "tests:\n  playwright:\n    projects:\n      custom:\n        include: [src/custom.spec.ts]\n";
 
 #[test]
 fn named_playwright_roots_include_explicit_projects() {
-    let findings = fixture_findings(&format!(
-        "{EXPLICIT_PROJECTS}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ playwright: [custom] }}]\n      targets: [{{ global: setTimeout }}]\n",
-    ))
-    .unwrap();
+    let findings = fixture_findings("explicit-playwright-named-custom").unwrap();
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "src/custom.spec.ts");
@@ -32,10 +27,7 @@ fn named_playwright_roots_include_explicit_projects() {
 
 #[test]
 fn all_playwright_roots_include_explicit_projects() {
-    let findings = fixture_findings(&format!(
-        "{EXPLICIT_PROJECTS}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ playwright: true }}]\n      targets: [{{ global: setTimeout }}]\n",
-    ))
-    .unwrap();
+    let findings = fixture_findings("explicit-playwright-all").unwrap();
 
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].file, "src/custom.spec.ts");
@@ -43,10 +35,7 @@ fn all_playwright_roots_include_explicit_projects() {
 
 #[test]
 fn explicit_playwright_roots_still_reject_unknown_names() {
-    let error = fixture_findings(&format!(
-        "{EXPLICIT_PROJECTS}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ playwright: [missing] }}]\n      targets: [{{ global: setTimeout }}]\n",
-    ))
-    .unwrap_err();
+    let error = fixture_findings("explicit-playwright-unknown").unwrap_err();
 
     assert!(
         error.to_string().contains("names an unknown project"),

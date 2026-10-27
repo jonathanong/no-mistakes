@@ -259,29 +259,11 @@ fn literal_references_outside_the_repository_do_not_exist_for_this_rule() {
 
 #[test]
 fn literal_references_ignore_untracked_files_and_directories() {
-    let root = tempfile::tempdir().unwrap();
-    let config = root.path().join("config.yml");
-    std::fs::write(&config, "paths: []\n").unwrap();
-    std::fs::write(root.path().join("untracked.json"), "{}\n").unwrap();
-    std::fs::create_dir(root.path().join("untracked-dir")).unwrap();
-    std::fs::write(root.path().join("untracked-dir/file.json"), "{}\n").unwrap();
+    let root = fixture_root("fixture").join("cases/untracked-literals");
+    let config = root.join("config.yml");
 
-    assert!(!reference_exists(
-        root.path(),
-        &config,
-        &Options::default(),
-        "untracked.json",
-        &[]
-    )
-    .unwrap());
-    assert!(!reference_exists(
-        root.path(),
-        &config,
-        &Options::default(),
-        "untracked-dir",
-        &[],
-    )
-    .unwrap());
+    assert!(!reference_exists(&root, &config, &Options::default(), "untracked.json", &[]).unwrap());
+    assert!(!reference_exists(&root, &config, &Options::default(), "untracked-dir", &[],).unwrap());
 }
 
 #[test]

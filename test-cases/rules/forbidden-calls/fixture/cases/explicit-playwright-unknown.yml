@@ -1,0 +1,11 @@
+tests:
+  playwright:
+    projects:
+      custom:
+        include: [src/custom.spec.ts]
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ playwright: [missing] }]
+      targets: [{ global: setTimeout }]

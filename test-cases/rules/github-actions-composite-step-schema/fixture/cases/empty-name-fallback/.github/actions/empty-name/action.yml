@@ -1,0 +1,8 @@
+runs:
+  using: composite
+  steps:
+    - name: "  "
+      id: fallback
+      timeout-minutes: 1
+      run: echo
+      shell: bash

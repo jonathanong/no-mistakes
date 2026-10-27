@@ -1,0 +1,5 @@
+# no-mistakes-disable-file github-actions-action-timeout-pair
+jobs:
+  deploy:
+    steps:
+      - uses: ./.github/actions/setup-aws
