@@ -172,6 +172,11 @@ when building their immutable reference summary. Mutations invalidate the
 summary. Mutable captures, mapped arguments and sparse slots remain live inputs
 to each arm walk. These work ledgers are created only by the request observer.
 
+`postgres.annotation.scalar_alternatives` counts joins whose arms are proven
+scalar literals or existing local scalar reads. These joins do not snapshot
+evaluator state or walk the inherited heap. Other expressions keep the full
+branch path, including calls, imports, member reads, and mutations.
+
 File-scoped forbidden call checks report `forbidden_calls.path_filter_checks`
 once per selected file instead of once per call occurrence.
 
