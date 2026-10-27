@@ -109,8 +109,11 @@ export function snapshotSuite(rule, languageOptions, suite) {
         options: options ?? undefined,
         rule,
       });
-      // RuleTester required this rule to report on invalid cases and stay
-      // silent on valid ones. Parse errors have no ruleId, so they do not count.
+      // RuleTester rejects parsing failures before checking rule diagnostics.
+      if (findings.some((finding) => finding.fatal)) {
+        throw new Error(`${kind} ${rule} case ${filename ?? "<input>"} failed to parse`);
+      }
+      // Nonfatal diagnostics from other rules do not satisfy this rule's guard.
       const reported = findings.filter((item) => item.ruleId === `no-mistakes/${rule}`);
       if (
         (kind === "invalid" && reported.length === 0) ||

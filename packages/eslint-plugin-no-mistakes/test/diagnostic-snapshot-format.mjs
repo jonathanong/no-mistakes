@@ -3,6 +3,7 @@ import { isAbsolute, relative } from "node:path";
 import { __dirname } from "./helpers.mjs";
 import { resolve } from "node:path";
 
+const packageRoot = resolve(__dirname, "..").replaceAll("\\", "/");
 const repoRoot = resolve(__dirname, "../../..").replaceAll("\\", "/");
 const tempRoots = [tmpdir(), process.env.TEMP, process.env.TMP, process.env.TMPDIR]
   .filter(Boolean)
@@ -13,6 +14,7 @@ const tempRoots = [tmpdir(), process.env.TEMP, process.env.TMP, process.env.TMPD
 // and diagnostic order would change across machines and worker counts.
 export function normalizeDiagnosticText(text) {
   let value = String(text).replaceAll("\\", "/");
+  value = value.replaceAll(packageRoot, "<root>");
   if (repoRoot) value = value.replaceAll(repoRoot, "<root>");
   for (const prefix of tempRoots) value = value.replaceAll(prefix, "<temp>");
   return (
@@ -40,6 +42,8 @@ export function relativeDiagnosticFile(filename, fallback = "") {
   const sameName = slash === fallbackSlash || slash.endsWith(`/${fallbackSlash}`);
   if (fallbackSlash && !isAbsolute(fallbackSlash) && sameName) return fallbackSlash;
   if (!isAbsolute(slash)) return slash;
+  const fromPackage = relative(packageRoot, slash).replaceAll("\\", "/");
+  if (fromPackage && !fromPackage.startsWith("..") && !isAbsolute(fromPackage)) return fromPackage;
   const fromRepo = relative(repoRoot, slash).replaceAll("\\", "/");
   if (fromRepo !== "" && !fromRepo.startsWith("..") && !isAbsolute(fromRepo)) return fromRepo;
   for (const prefix of tempRoots) {
@@ -83,6 +87,7 @@ export function snapshotDocument(value) {
 export function eslintFindings(messages, fallbackFile = "") {
   return messages
     .map((item) => ({
+      ...(item.fatal ? { fatal: true } : {}),
       column: item.column,
       endColumn: item.endColumn ?? null,
       endLine: item.endLine ?? null,
