@@ -16,12 +16,25 @@ pub(super) fn prefix_is_unchanged(bindings: &CapturedBindings, base: Environment
     })
 }
 
-#[derive(Clone, Debug, Default)]
+mod refresh;
+
+#[derive(Debug, Default)]
 struct OriginMap {
     bindings: FxHashMap<String, Environment>,
     // Clones share this cache with the immutable origin map; branch-free runs
     // pay no scan unless an alternative actually needs the prefix proof.
     max_origin: OnceLock<Option<Environment>>,
+    refresh: std::sync::Mutex<Option<refresh::State>>,
+}
+
+impl Clone for OriginMap {
+    fn clone(&self) -> Self {
+        Self {
+            bindings: self.bindings.clone(),
+            max_origin: self.max_origin.clone(),
+            refresh: Default::default(),
+        }
+    }
 }
 
 impl PartialEq for OriginMap {
@@ -50,6 +63,7 @@ impl CapturedOrigins {
                 }
             }
             origins.max_origin.take();
+            origins.refresh = Default::default();
         }
     }
 
@@ -66,6 +80,7 @@ impl From<FxHashMap<String, Environment>> for CapturedOrigins {
         Self(Arc::new(OriginMap {
             bindings: origins,
             max_origin: OnceLock::new(),
+            refresh: Default::default(),
         }))
     }
 }

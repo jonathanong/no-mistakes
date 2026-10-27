@@ -16,6 +16,7 @@ impl CapturedOrigins {
         let origins = Arc::make_mut(&mut self.0);
         origins.bindings.insert(name, origin);
         origins.max_origin.take();
+        origins.refresh = Default::default();
     }
 
     pub(in crate::codebase::postgres::query_annotation::evaluate) fn reserve_origins(

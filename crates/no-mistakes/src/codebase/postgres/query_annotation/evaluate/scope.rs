@@ -35,6 +35,8 @@ impl Eq for Bindings {}
 /// Any write detaches the bindings and invalidates the index before mutation.
 #[derive(Clone, Default, Eq, PartialEq)]
 pub(in crate::codebase::postgres::query_annotation) struct Scope(Arc<Bindings>);
+mod state;
+pub(super) use state::StateWeak;
 
 #[cfg(not(test))]
 #[macro_use]
