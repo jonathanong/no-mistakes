@@ -12,6 +12,7 @@ pub(super) mod modules;
 mod prune;
 mod reachable;
 mod run;
+mod scalar;
 mod updates;
 mod values;
 
