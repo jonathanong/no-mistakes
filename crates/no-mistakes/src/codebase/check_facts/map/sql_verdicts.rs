@@ -112,22 +112,12 @@ impl CheckFactMap {
             sink: self.sql_verdicts.as_deref(),
             index,
             name,
+            low_rule: None,
         }
     }
 }
-/// Borrow prepared facts and keep verdict routing local to a rule application.
-#[doc(hidden)]
-pub trait SqlFactContext: Sync {
-    fn prepared(&self) -> &CheckFactMap;
-    fn record_sql_verdict(&self, verdict: SqlObligationVerdict);
-    #[doc(hidden)]
-    fn record_sql_advisory(&self, advisory: SqlObligationVerdict) {
-        self.prepared().record_sql_advisory(advisory);
-    }
-    fn wants_sql_verdicts(&self) -> bool {
-        self.prepared().wants_sql_verdicts()
-    }
-}
+mod runtime;
+pub use runtime::SqlFactContext;
 
 impl SqlFactContext for CheckFactMap {
     fn prepared(&self) -> &CheckFactMap {
@@ -145,9 +135,13 @@ pub struct SqlApplicationFacts<'a> {
     sink: Option<&'a Mutex<Vec<SqlObligationVerdict>>>,
     index: usize,
     name: Option<&'a str>,
+    low_rule: Option<String>,
 }
 
 impl SqlFactContext for SqlApplicationFacts<'_> {
+    fn low_sql_application(&self) -> Option<(&str, usize)> {
+        self.low_rule.as_deref().map(|rule| (rule, self.index))
+    }
     fn prepared(&self) -> &CheckFactMap {
         self.facts
     }
@@ -155,6 +149,7 @@ impl SqlFactContext for SqlApplicationFacts<'_> {
         let Some(sink) = self.sink else {
             return;
         };
+        runtime::explain_low(&mut verdict, self.low_rule.is_some());
         verdict.application = Some(crate::codebase::postgres::SqlRuleApplication {
             index: self.index,
             name: self.name.map(str::to_string),
@@ -162,6 +157,7 @@ impl SqlFactContext for SqlApplicationFacts<'_> {
         sink.lock().unwrap().push(verdict);
     }
     fn record_sql_advisory(&self, mut advisory: SqlObligationVerdict) {
+        runtime::explain_low(&mut advisory, self.low_rule.is_some());
         advisory.application = Some(crate::codebase::postgres::SqlRuleApplication {
             index: self.index,
             name: self.name.map(str::to_string),

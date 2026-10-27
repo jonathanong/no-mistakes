@@ -31,6 +31,8 @@ pub fn configure_prepared_postgres_plan(
                 "postgres-no-unbounded-sql-identifier",
                 "postgres-no-mutable-sql-registry",
                 "postgres-no-offset",
+                "postgres-explicit-columns",
+                "postgres-required-predicates",
                 "postgres-no-transformed-uuid-predicates",
             ]
             .contains(&rule.rule.as_str())

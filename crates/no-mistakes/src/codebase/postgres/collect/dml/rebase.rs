@@ -1,7 +1,7 @@
 use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::{EmbeddedSqlCall, EmbeddedSqlKind, SqlStatementFileFacts};
 
-pub(super) fn rebase_embedded_lines(
+pub(crate) fn rebase_embedded_lines(
     facts: &mut SqlStatementFileFacts,
     call: &EmbeddedSqlCall,
     variant: bool,

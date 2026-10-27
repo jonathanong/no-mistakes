@@ -4,7 +4,7 @@ use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::postgres::SqlStatementFileFacts;
 use std::{collections::BTreeMap, path::Path};
 
-mod recovered;
+pub(super) mod recovered;
 pub(crate) use recovered::{recovered_statements, RecoveredStatements};
 
 type Literal<T> = Result<Option<Vec<T>>, ()>;
@@ -106,10 +106,27 @@ pub(crate) fn project_literals<T: Clone>(
                                 }
                             }
                         }
-                        if let Some(observer) = &observer {
-                            observer.increment(projection.parse_metric, 1);
-                        }
-                        let mut facts = (projection.parse)(text)?;
+                        let shared = super::statement_policy::direct::selected(file, profile)
+                            .then(|| {
+                                super::statement_policy::direct::literals(file, facts, path, source)
+                            })
+                            .and_then(|literals| literals.get(&(profile.clone(), *source_span)))
+                            .and_then(Option::as_ref);
+                        let mut facts = if let Some(shared) = shared {
+                            if shared.facts.parse_failed {
+                                return Err(());
+                            }
+                            let projected = (projection.project)(&shared.facts);
+                            if shared.mapped {
+                                return Ok(Some(projected));
+                            }
+                            projected
+                        } else {
+                            if let Some(observer) = &observer {
+                                observer.increment(projection.parse_metric, 1);
+                            }
+                            (projection.parse)(text)?
+                        };
                         let base = crate::codebase::ts_source::byte_offset_to_line(
                             source,
                             source_span.0 as usize,

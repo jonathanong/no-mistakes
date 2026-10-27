@@ -69,6 +69,29 @@ pub(super) fn collect(
     } else {
         sql_identifier_syntax::collect_with_types(program, ts, source, &profiles, &typed)
     };
+    register(root, path, plan, &mut facts);
+    facts
+}
+pub(super) fn invalid(
+    root: &Path,
+    path: &Path,
+    source: &str,
+    program: &Program<'_>,
+    plan: &CheckFactPlan,
+) -> sql_identifier_syntax::FileFacts {
+    let mut facts =
+        sql_identifier_syntax::collect_invalid(program, source, &profiles(root, path, plan));
+    if policy_selected(root, path, plan) {
+        register(root, path, plan, &mut facts);
+    }
+    facts
+}
+fn register(
+    root: &Path,
+    path: &Path,
+    plan: &CheckFactPlan,
+    facts: &mut sql_identifier_syntax::FileFacts,
+) {
     facts.low_applications = plan
         .sql_identifier_profiles
         .iter()
@@ -82,14 +105,12 @@ pub(super) fn collect(
                 })
         })
         .collect();
-    facts
 }
-pub(super) fn invalid(
-    root: &Path,
-    path: &Path,
-    source: &str,
-    program: &Program<'_>,
-    plan: &CheckFactPlan,
-) -> sql_identifier_syntax::FileFacts {
-    sql_identifier_syntax::collect_invalid(program, source, &profiles(root, path, plan))
+pub(super) fn policy_selected(root: &Path, path: &Path, plan: &CheckFactPlan) -> bool {
+    plan.sql_identifier_profiles.values().any(|scans| {
+        scans.iter().any(|scan| {
+            sql_identifier_syntax::statement_policy::supports(&scan.rule)
+                && scan.includes(root, path)
+        })
+    })
 }
