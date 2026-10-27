@@ -179,6 +179,13 @@ files (empty `checkedPathPatterns` checks every file).
 `scrollHelper?: string` (default `""`; interpolated into the report message
 when set).
 
+### `playwright-no-swallowed-visibility`
+
+Opt-in. Not enabled by `configs.recommended` or `configs.strict`. `methods`
+replaces the default `isVisible`, `isHidden`, `isEnabled`, and `isChecked`
+list. `message` replaces the report text. File scope stays on the flat-config
+`files` glob. See [the rule reference](eslint-rules/playwright-no-swallowed-visibility.md).
+
 ### `playwright-require-exported-component-attribute`
 
 `attributes?: string[]` (default `["data-pw"]`), `componentNamePattern?: string`,
