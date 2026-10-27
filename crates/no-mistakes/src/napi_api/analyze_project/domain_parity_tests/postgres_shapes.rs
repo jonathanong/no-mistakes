@@ -101,7 +101,37 @@ fn prepared_postgres_unique_index_shapes_match_standalone() {
         })))
         .unwrap(),
     );
-    assert_eq!(standalone["rules"].as_array().unwrap().len(), 24);
+    // Registry of violating physical statements, independently matching the
+    // saved catalog's expression, partial-predicate, and null-safety cases.
+    let cases: &[(&str, &[u64])] = &[
+        ("expression-unique.sql", &[4, 5, 8]),
+        ("index-guards.sql", &[2, 4, 6]),
+        ("joins-and-conjunctions.sql", &[3, 5, 7, 10, 11, 13]),
+        ("nulls-not-distinct.sql", &[3]),
+        ("nullsafe-expressions.sql", &[3]),
+        ("partial-column-nullguard.sql", &[3]),
+        ("partial-expression-unique.sql", &[2, 4, 5, 6]),
+        ("partial-unique.sql", &[3, 4, 5, 6, 7]),
+    ];
+    let mut expected: Vec<_> = cases
+        .iter()
+        .flat_map(|(file, lines)| lines.iter().map(move |line| (*file, *line)))
+        .collect();
+    let mut actual: Vec<_> = standalone["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| {
+            assert_eq!(
+                row["rule"],
+                crate::codebase::rules::postgres_bounded_statements::RULE_ID
+            );
+            (row["file"].as_str().unwrap(), row["line"].as_u64().unwrap())
+        })
+        .collect();
+    expected.sort_unstable();
+    actual.sort_unstable();
+    assert_eq!(actual, expected);
     assert_eq!(standalone["warnings"], json!([]));
     assert_eq!(aggregate["reports"][0]["result"], standalone);
 }
@@ -123,15 +153,21 @@ fn prepared_postgres_catalog_bounds_match_standalone() {
         let standalone = parse_json(
             crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
                 json!({"root": root, "config": config, "includeSqlVerdicts": true}),
-            )).unwrap(),
+            ))
+            .unwrap(),
         );
         let aggregate = parse_json(
             analyze_project_json_impl(crate::napi_api::options::test_json_arg(json!({
                 "root": root, "config": config,
                 "reports": [{"type": "check", "includeSqlVerdicts": true}]
-            }))).unwrap(),
+            })))
+            .unwrap(),
         );
-        assert_eq!(standalone["rules"].as_array().unwrap().len(), expected, "{config}");
+        assert_eq!(
+            standalone["rules"].as_array().unwrap().len(),
+            expected,
+            "{config}"
+        );
         assert_eq!(aggregate["reports"][0]["result"], standalone, "{config}");
     }
 }

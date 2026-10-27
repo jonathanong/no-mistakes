@@ -1,8 +1,10 @@
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
-const { readFileSync, existsSync } = require("node:fs");
+const { readFileSync, existsSync, cpSync, mkdtempSync, renameSync, rmSync } = require("node:fs");
+const { tmpdir } = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
+const { unreferencedSnapshots, snapshotFiles } = require("./rust-snapshot-references.cjs");
 
 const root = path.resolve(__dirname, "../..");
 const fixture = path.join(root, "test-cases/rust-validation/fixture/bin");
@@ -42,6 +44,76 @@ test("invalid modes and additional arguments fail before invoking cargo", () => 
   }
 });
 test("cargo failures propagate", () => assert.equal(run(["test"], "17").status, 17));
+test("orphan snapshot audit failures propagate after successful tests", () => {
+  const result = spawnSync("bash", [".github/scripts/rust-validation.sh", "test"], {
+    cwd: root,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      PATH: `${fixture}${path.delimiter}${process.env.PATH}`,
+      RUST_VALIDATION_FIXTURE_STATUS: "0",
+      RUST_VALIDATION_FIXTURE_SNAPSHOT_STATUS: "19",
+    },
+  });
+  assert.equal(result.status, 19, result.stderr);
+});
+
+const snapshotFixture = path.join(root, "test-cases/rust-snapshot-references/fixture");
+const snapshotCases = JSON.parse(readFileSync(path.join(snapshotFixture, "cases.json"), "utf8"));
+for (const scenario of snapshotCases) {
+  test(`snapshot references: ${scenario.name}`, () => {
+    const absolute = (files) => files.map((file) => path.join(snapshotFixture, file));
+    assert.deepEqual(
+      unreferencedSnapshots(absolute(scenario.files), absolute(scenario.references), [
+        path.join(snapshotFixture, "member"),
+      ]),
+      absolute(scenario.expected),
+    );
+  });
+}
+test("release archives retain orphan auditing and ignore generated snapshots", () => {
+  const archive = mkdtempSync(path.join(tmpdir(), "rust-snapshot-archive-"));
+  try {
+    cpSync(snapshotFixture, archive, { recursive: true });
+    renameSync(path.join(archive, ".gitignore.fixture"), path.join(archive, ".gitignore"));
+    renameSync(path.join(archive, "ignored.snap.fixture"), path.join(archive, "ignored.snap"));
+    const files = snapshotFiles(archive);
+    const relative = (items) =>
+      items.map((file) => path.relative(archive, file).split(path.sep).join("/")).sort();
+    assert.deepEqual(relative(files), [
+      "member/snapshots/orphan.snap",
+      "member/snapshots/used.snap",
+      "outside/snapshots/fixture.snap",
+    ]);
+    assert.deepEqual(
+      relative(
+        unreferencedSnapshots(
+          files,
+          [path.join(archive, "member/snapshots/used.snap")],
+          [path.join(archive, "member")],
+        ),
+      ),
+      ["member/snapshots/orphan.snap"],
+    );
+    const audit = (references) =>
+      spawnSync(
+        process.execPath,
+        [path.join(__dirname, "rust-snapshot-references.cjs"), path.join(archive, references)],
+        { cwd: archive, encoding: "utf8" },
+      );
+    const orphan = audit("orphan-references.txt");
+    assert.equal(orphan.status, 1, orphan.stderr);
+    assert.match(
+      orphan.stderr,
+      /Unreferenced Rust snapshots[\s\S]*member\/snapshots\/orphan\.snap/,
+    );
+    const complete = audit("all-references.txt");
+    assert.equal(complete.status, 0, complete.stderr);
+    assert.equal(existsSync(path.join(archive, ".git")), false);
+  } finally {
+    rmSync(archive, { recursive: true, force: true });
+  }
+});
 test("development and test profiles omit debugger symbols by default", () => {
   const manifest = readFileSync(path.join(root, "Cargo.toml"), "utf8");
   for (const profile of ["dev", "test"]) {
@@ -86,7 +158,10 @@ test("CI, release, and pre-push Clippy validate the locked all-feature workspace
 
 test("CI Clippy also builds default-feature test targets", () => {
   const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  assert.match(workflow, /run: cargo clippy --locked -p no-mistakes --all-targets -- -D warnings\n/);
+  assert.match(
+    workflow,
+    /run: cargo clippy --locked -p no-mistakes --all-targets -- -D warnings\n/,
+  );
 });
 
 test("pre-push Clippy uses the workflow scope", () => {

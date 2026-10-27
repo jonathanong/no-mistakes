@@ -1,6 +1,9 @@
 use super::{run_all_with_options, AnalysisOptions, CheckResults};
 use no_mistakes::config::v2::Effort;
 use std::path::PathBuf;
+#[path = "parse_failure_locations_tests/registry.rs"]
+mod registry;
+use registry::assert_failure_locations;
 const RULES: &[&str] = &[
     "postgres-no-transformed-uuid-predicates",
     "postgres-generated-column-predicates",
@@ -83,7 +86,7 @@ fn assert_idempotent_insert_and_schema_findings(
 fn parse_failure_locations_report_each_statement_for_every_raw_sql_consumer() {
     for effort in [Effort::Low, Effort::Max] {
         let report = run(".no-mistakes.failures.yml", effort);
-        assert_eq!(report.rules.len(), 16, "{:?}", report.rules);
+        assert_failure_locations(&report, &[3, 6]);
         for rule in RULES.iter().filter(|rule| **rule != RULES[1]) {
             assert_eq!(
                 finding_lines(&report, rule),
@@ -102,7 +105,7 @@ fn parse_failure_locations_next_line_suppressions_apply_independently() {
     for effort in [Effort::Low, Effort::Max] {
         assert!(run(".no-mistakes.suppressed.yml", effort).rules.is_empty());
         let report = run(".no-mistakes.one-suppressed.yml", effort);
-        assert_eq!(report.rules.len(), 8, "{:?}", report.rules);
+        assert_failure_locations(&report, &[6]);
         assert!(report.rules.iter().all(|row| row.line == 6));
         assert_eq!(finding_lines(&report, RULES[1]), [6, 6]);
         assert_idempotent_insert_and_schema_findings(&report, &[], &[6]);

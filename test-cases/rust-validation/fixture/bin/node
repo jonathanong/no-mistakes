@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# The command-scope tests fake execution; the reference checker has real tests.
+[[ "$#" == 2 && "$1" == */rust-snapshot-references.cjs && -f "$2" ]] || exit 2
+exit "${RUST_VALIDATION_FIXTURE_SNAPSHOT_STATUS:-0}"

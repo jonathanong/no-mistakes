@@ -1,5 +1,7 @@
+version: 2
 rules:
   - rule: postgres-require-fk-on-delete
     scope: repository
+    include: ["migrations/001.sql"]
     options:
       sqlInclude: ["migrations/001.sql"]

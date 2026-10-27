@@ -25,6 +25,17 @@ fn known_catalog_covers_every_declared_rule_and_registered_executor_rule() {
         !declared.is_empty(),
         "the rule declaration inventory must not become empty"
     );
+    // Independent sentinels keep a partial declaration scan from passing just
+    // because one unrelated rule still matches the extraction expression.
+    for rule in [
+        crate::codebase::rules::agents_md_max_size::RULE_ID,
+        crate::codebase::rules::postgres_constraint_validate::RULE_ID,
+    ] {
+        assert!(
+            declared.contains(rule),
+            "declaration inventory lost `{rule}`"
+        );
+    }
     for rule in declared
         .iter()
         .map(String::as_str)

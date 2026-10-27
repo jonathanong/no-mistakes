@@ -89,15 +89,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "omitted_on_delete": {
     "exitCode": 1,
     "report": {
-      "advisories": [
-        {
-          "file": "migrations/disabled.sql",
-          "line": 1,
-          "message": "directive for `postgres-require-fk-on-delete` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
-          "rule": "unused-disable-directive",
-          "target": "postgres-require-fk-on-delete"
-        }
-      ],
+      "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "all snapshots referenced, including duplicate execution",
+    "files": ["member/snapshots/used.snap"],
+    "references": ["member/snapshots/used.snap", "member/snapshots/used.snap"],
+    "expected": []
+  },
+  {
+    "name": "deleted test leaves an orphan snapshot",
+    "files": ["member/snapshots/used.snap", "member/snapshots/orphan.snap"],
+    "references": ["member/snapshots/used.snap"],
+    "expected": ["member/snapshots/orphan.snap"]
+  },
+  {
+    "name": "no snapshot executions cannot silently pass",
+    "files": ["member/snapshots/used.snap"],
+    "references": [],
+    "expected": ["member/snapshots/used.snap"]
+  },
+  {
+    "name": "deleted tracked snapshot need not be staged",
+    "files": ["member/snapshots/used.snap", "member/snapshots/deleted.snap"],
+    "references": ["member/snapshots/used.snap"],
+    "expected": []
+  },
+  {
+    "name": "saved fixtures outside workspace packages are ignored",
+    "files": ["outside/snapshots/fixture.snap", "member/snapshots/used.snap"],
+    "references": ["member/snapshots/used.snap"],
+    "expected": []
+  }
+]

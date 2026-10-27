@@ -22,6 +22,14 @@ fn assert_configured_rule_set(root: &Path, config: &str, actual: Vec<String>, co
         .filter(|rule| rule.enabled)
         .map(|rule| rule.rule)
         .collect::<std::collections::BTreeSet<_>>();
+    assert!(
+        !expected.is_empty(),
+        "{config}: expected schema rules must not be empty"
+    );
+    assert!(
+        expected.contains("postgres-constraint-validate"),
+        "{config}: schema rule inventory lost its constraint-validation sentinel"
+    );
     assert_eq!(actual.len(), expected.len(), "{context}");
     assert_eq!(
         actual
