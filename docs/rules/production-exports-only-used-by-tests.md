@@ -79,6 +79,23 @@ Classify every relevant test/helper explicitly to avoid treating it as productio
 The check uses prepared TS/JS facts and the shared graph within the ordinary
 `check` request; it does not launch a test runner or infer runtime coverage.
 
+## Next.js entrypoints
+
+A configured project with `type: nextjs` treats its framework entrypoint files as
+production consumers of the exports they declare. Next.js loads those files, so an
+export imported only by tests is not test-only. The convention is the App Router
+set under `app/` or `src/app/` (`page`, `layout`, `loading`, `error`,
+`global-error`, `not-found`, `template`, `default`, `route`, `manifest`, `robots`,
+`sitemap`, `icon`, `apple-icon`, `opengraph-image`, `twitter-image`), plus
+`middleware` and `instrumentation` at the project root or `src/`, and `next.config`
+at the project root. Only code extensions count. The inventory is shared with
+[`unique-exports`](unique-exports.md); this rule does not keep a second filename
+list. A `next` package dependency does not qualify — the project `type` must be
+`nextjs`, and the file must sit under that project's effective root. The same
+filenames outside that project, and non-entrypoint modules inside it, are still
+reported when only tests import them. Entrypoint files are not reclassified as
+tests, so symbols they import remain production consumers.
+
 ## Incomplete analysis
 
 Dynamic or unresolved module/symbol relationships cannot prove exclusive test

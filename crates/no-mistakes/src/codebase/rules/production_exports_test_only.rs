@@ -1,5 +1,6 @@
 //! Production exports whose syntactic consumers all belong to configured tests.
 mod config;
+mod nextjs;
 mod traversal;
 
 use super::analysis_policy::AnalysisDiagnostics;
@@ -37,6 +38,7 @@ pub(crate) fn check_with_graph(
         let filter = RulePathFilter::new(&root, config, application)?;
         let policy = config.effective_rule_analysis(application)?.unanalyzable;
         let files = facts.graph_file_universe();
+        let nextjs_roots = nextjs::project_roots(&root, config);
         for (file, line, reason) in &incomplete {
             diagnostics.unanalyzable(policy, uncertain(&root, application, file, *line, reason));
         }
@@ -49,6 +51,10 @@ pub(crate) fn check_with_graph(
             })
             .map(|file| {
                 let mut chunk = AnalysisDiagnostics::default();
+                // Next.js loads these files, so their exports are not test-only.
+                if nextjs::is_entrypoint(file, &nextjs_roots) {
+                    return chunk;
+                }
                 let Some(ts) = facts.get_ts_facts(file) else {
                     return chunk;
                 };
@@ -151,6 +157,8 @@ fn uncertain(
     }
 }
 
+#[cfg(test)]
+mod nextjs_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

@@ -1,3 +1,5 @@
+use std::path::Path;
+
 pub(super) fn is_framework_export(rel: &str, name: &str, is_nextjs_project: bool) -> bool {
     if !is_nextjs_project {
         return false;
@@ -19,13 +21,87 @@ pub(super) fn is_framework_export(rel: &str, name: &str, is_nextjs_project: bool
     }
 }
 
-fn convention_stem(file_name: &str) -> &str {
-    for extension in [".tsx", ".ts", ".jsx", ".js", ".mts", ".cts", ".mjs", ".cjs"] {
-        if let Some(stem) = file_name.strip_suffix(extension) {
-            return stem;
-        }
+/// Framework-owned file relative to a Next.js project root.
+///
+/// `path` counts only when it sits under `project_root` and matches the App
+/// Router file convention, root or `src/` middleware/instrumentation, or a
+/// root `next.config` code file. Callers decide which roots are `type: nextjs`.
+pub(crate) fn is_framework_entrypoint_file(path: &Path, project_root: &Path) -> bool {
+    let path = crate::codebase::ts_resolver::normalize_path(path);
+    let project_root = crate::codebase::ts_resolver::normalize_path(project_root);
+    if !path.starts_with(&project_root) {
+        return false;
     }
-    file_name
+    let rel = crate::codebase::ts_source::relative_slash_path(&project_root, &path);
+    is_entrypoint_rel(&rel)
+}
+
+fn is_entrypoint_rel(rel: &str) -> bool {
+    let rel = rel.replace('\\', "/");
+    let rel = rel.trim_start_matches("./");
+    let rel = rel.trim_start_matches('/');
+    let (parent, file_name) = match rel.rsplit_once('/') {
+        Some((parent, file_name)) => (parent, file_name),
+        None => ("", rel),
+    };
+    if is_next_config(file_name) {
+        return parent.is_empty();
+    }
+    let Some(stem) = code_stem(file_name) else {
+        return false;
+    };
+    if matches!(stem, "middleware" | "instrumentation") {
+        return parent.is_empty() || parent == "src";
+    }
+    is_app_entry_stem(stem) && under_app(parent)
+}
+
+fn under_app(parent: &str) -> bool {
+    parent == "app"
+        || parent.starts_with("app/")
+        || parent == "src/app"
+        || parent.starts_with("src/app/")
+}
+
+fn is_next_config(file_name: &str) -> bool {
+    let Some(extension) = file_name.strip_prefix("next.config.") else {
+        return false;
+    };
+    matches!(extension, "js" | "mjs" | "cjs" | "ts" | "mts" | "cts")
+}
+
+fn is_app_entry_stem(stem: &str) -> bool {
+    matches!(
+        stem,
+        "page"
+            | "layout"
+            | "loading"
+            | "error"
+            | "global-error"
+            | "not-found"
+            | "template"
+            | "default"
+            | "route"
+            | "manifest"
+            | "robots"
+            | "sitemap"
+            | "icon"
+            | "apple-icon"
+            | "opengraph-image"
+            | "twitter-image"
+    )
+}
+
+const CODE_EXTENSIONS: &[&str] = &[".tsx", ".ts", ".jsx", ".js", ".mts", ".cts", ".mjs", ".cjs"];
+
+fn code_stem(file_name: &str) -> Option<&str> {
+    CODE_EXTENSIONS
+        .iter()
+        .find_map(|extension| file_name.strip_suffix(extension))
+}
+
+fn convention_stem(file_name: &str) -> &str {
+    code_stem(file_name).unwrap_or(file_name)
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
