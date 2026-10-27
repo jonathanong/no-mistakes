@@ -43,3 +43,4 @@ assert.equal(loads[missing], 2, "a new rule context retries optional peer loadin
 
 assert.deepEqual(lint("recall.js"), [3, 5, 7, 9, 12, 15].map((line) => [line, "disposition"]));
 assert.deepEqual(lint("unsupported.js"), [[3, "disposition"]]);
+assert.deepEqual(lint("unsupported-enum.js"), [[3, "disposition"]]);
