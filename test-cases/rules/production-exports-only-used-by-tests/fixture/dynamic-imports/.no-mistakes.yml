@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: production-exports-only-used-by-tests
+    scope: repository
+    options:
+      productionRoots: [src]
+      testGlobs: ["tests/**/*.test.mts"]
+      # Advise keeps the one unproven dynamic selector visible.
+      unanalyzable: advise

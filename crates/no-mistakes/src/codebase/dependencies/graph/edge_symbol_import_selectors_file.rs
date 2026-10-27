@@ -125,12 +125,29 @@ fn collect_symbol_import_selectors_file(
     }
     collect_type_import_selectors(&inputs, file_facts, exported, &mut edges, &mut sites);
     let mock_sites = typed_mock_import_sites(file_facts);
+    let proven_sites = proven_dynamic_selectors(file_facts);
     for import in &file_facts.imports {
         if !import.computed
             && import.kind == ImportKind::Dynamic
             && mock_sites.contains(&(import.specifier.as_str(), import.line))
         {
             continue;
+        }
+        if !import.computed && import.kind == ImportKind::Dynamic {
+            let proven = proven_sites.get(&(import.specifier.as_str(), import.line));
+            if proven.is_some_and(|names| {
+                push_dynamic_selectors(
+                    &inputs,
+                    &import.specifier,
+                    import.line as usize,
+                    names,
+                    exported,
+                    &mut edges,
+                    &mut sites,
+                )
+            }) {
+                continue;
+            }
         }
         if import.computed
             || matches!(

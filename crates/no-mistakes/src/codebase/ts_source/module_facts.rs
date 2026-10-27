@@ -100,6 +100,9 @@ pub(crate) fn extract_from_semantic(
 mod tests;
 
 #[cfg(test)]
+mod selector_tests;
+
+#[cfg(test)]
 mod argument_tests;
 
 #[cfg(test)]

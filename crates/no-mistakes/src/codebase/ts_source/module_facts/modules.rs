@@ -7,6 +7,7 @@ mod exports;
 mod imports;
 mod loads;
 mod mocks;
+mod selectors;
 
 pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts) {
     let mut inline_bindings = facts
@@ -44,6 +45,11 @@ pub(super) fn collect(semantic: &Semantic<'_>, facts: &mut TypeScriptModuleFacts
             AstKind::ImportExpression(value) => {
                 if mocks::typed_mock_import(value, node.id(), semantic) {
                     facts.mock_import_spans.push(value.span.into());
+                }
+                if let Some(names) = selectors::proven(node.id(), semantic) {
+                    facts
+                        .dynamic_import_selectors
+                        .push((value.span.start, names));
                 }
                 loads::dynamic(value, facts);
             }

@@ -91,6 +91,9 @@ pub struct ModuleDiagnostic {
 pub struct TypeScriptModuleFacts {
     #[serde(skip)]
     pub(crate) mock_import_spans: Vec<ModuleSpan>,
+    /// Start offset and export names of dynamic imports with proven selectors.
+    #[serde(skip)]
+    pub(crate) dynamic_import_selectors: Vec<(u32, Vec<String>)>,
     #[serde(skip)]
     pub(crate) call_arguments:
         Option<std::sync::Arc<crate::fx::FxHashMap<u32, super::arguments::ArgumentValues>>>,

@@ -64,6 +64,28 @@ the test-only implementation to a configured helper root, or add a genuine
 production consumer. There is no automatic fix because moving or removing public
 APIs requires a design decision.
 
+## Dynamic imports
+
+A dynamic `import("./x")` with a literal specifier is a runtime production
+consumer of the exports it provably reads. These forms are recognized:
+
+| Form | Consumed export |
+| --- | --- |
+| `import("./x").then((m) => m.Name)` (also a `function` callback with a sole `return m.Name`) | `Name` |
+| `import("./x").then(({ Name, Other: o }) => ...)` | `Name`, `Other` |
+| `dynamic(() => import("./x"))`, `lazy(() => import("./x"))` (an expression-bodied arrow passed directly as a call argument) | `default` |
+| `const m = await import("./x")` where every use of `m` is `m.Name` | `Name` |
+| `const { Name } = await import("./x")` | `Name` |
+
+Everything else keeps the "unknown import selector" advisory: computed or
+optional member reads (`m[key]`, `m?.Name`), a rest element or computed key in a
+destructuring pattern, a namespace that escapes (passed to a call, exported, or
+reassigned), a callback passed by reference, a stored loader
+(`const load = () => import("./x")`), a block-bodied arrow, and a dynamic import
+sharing a line and specifier with an unproven one. A proven name the target does
+not export, or a specifier that does not resolve, is also still reported.
+Rewrite the import into one of the forms above, or use a static import.
+
 ## Type-only references
 
 A type-only reference (`import type { X }`, an inline `type` specifier,
