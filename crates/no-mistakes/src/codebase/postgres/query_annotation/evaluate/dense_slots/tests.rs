@@ -19,7 +19,7 @@ fn callback(env: usize) -> Value {
     else {
         panic!("saved dense helper function");
     };
-    Value::Function(function, path, env)
+    Value::Function(function, path.into(), env)
 }
 
 fn copied(observer: &InvocationObserver) -> u64 {

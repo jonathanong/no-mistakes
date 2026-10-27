@@ -153,7 +153,7 @@ pub(in crate::codebase::postgres::query_annotation) enum Value {
     Possible(Values),
     Arguments(u64),
     Array(u64),
-    Function(Arc<Function>, PathBuf, Environment),
+    Function(Arc<Function>, Arc<PathBuf>, Environment),
     Number(i64),
     Boolean(bool),
     Failure(&'static str),
@@ -186,6 +186,8 @@ impl Value {
     }
 }
 
+#[cfg(test)]
+mod function_path_tests;
 #[cfg(test)]
 mod tests;
 

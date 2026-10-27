@@ -80,7 +80,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 Expr::Function(function) => {
                     self.scopes[env].insert(
                         name.clone(),
-                        Value::Function(std::sync::Arc::clone(function), path.to_path_buf(), env),
+                        Value::Function(
+                            std::sync::Arc::clone(function),
+                            path.to_path_buf().into(),
+                            env,
+                        ),
                     );
                 }
                 Expr::Unknown => {

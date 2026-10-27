@@ -28,7 +28,7 @@ pub(super) fn saved() -> State {
         })
         .expect("saved factory summary");
     let prefix = Value::Prefix(spec["prefix"].as_str().unwrap().into(), true, Some(20));
-    let callback = Value::Function(function, path, 0);
+    let callback = Value::Function(function, path.into(), 0);
     let mut value = Value::Possible(vec![prefix, callback, Value::Arguments(7)].into());
     for _ in 0..6 {
         value = Value::Aggregate(vec![value.clone(), value].into());

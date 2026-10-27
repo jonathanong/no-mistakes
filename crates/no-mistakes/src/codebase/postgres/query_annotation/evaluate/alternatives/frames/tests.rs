@@ -14,7 +14,7 @@ fn function_value(env: Environment) -> Value {
             arrow: false,
             self_name: None,
         }),
-        "helper.ts".into(),
+        std::path::PathBuf::from("helper.ts").into(),
         env,
     )
 }

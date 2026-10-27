@@ -44,7 +44,7 @@ fn free_tree(spec: &serde_json::Value) -> Value {
         .unwrap();
     let mut value = Value::Record(
         vec![
-            Value::Function(function, path, 0),
+            Value::Function(function, path.into(), 0),
             Value::Prefix(spec["prefix"].as_str().unwrap().into(), true, None),
             Value::Number(3),
             Value::Boolean(true),

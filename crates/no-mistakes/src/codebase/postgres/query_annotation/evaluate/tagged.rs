@@ -91,7 +91,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         let name = if tag == "String.raw" { "String" } else { tag };
         let legacy = self.files[path].facts.legacy_tag_spans.get(name).is_some_and(|start| {
             let local = self.scopes[*env].get(name);
-            local.is_none() || matches!(local, Some(Value::Function(function, owner, _)) if owner == path && function.start == *start)
+            local.is_none() || matches!(local, Some(Value::Function(function, owner, _)) if owner.as_path() == path && function.start == *start)
         });
         if !trusted && !legacy {
             self.invalidate_opaque_builders(&values);

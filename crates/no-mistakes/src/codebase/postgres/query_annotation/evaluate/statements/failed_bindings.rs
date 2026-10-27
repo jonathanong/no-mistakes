@@ -19,7 +19,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             Expr::Function(function) => {
                 let mut function = std::sync::Arc::clone(function);
                 std::sync::Arc::make_mut(&mut function).supported = false;
-                Value::Function(function, path.to_path_buf(), env)
+                Value::Function(function, path.to_path_buf().into(), env)
             }
             Expr::Name(name) => match self.scopes[env].get(name) {
                 Some(Value::Function(function, owner, captured)) => {
