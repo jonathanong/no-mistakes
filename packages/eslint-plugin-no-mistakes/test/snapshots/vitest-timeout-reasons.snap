@@ -2,6 +2,26 @@
   "vitest-timeout-cap": [
     {
       "file": "fixture.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "requireReason": false
+        }
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "requireReason": false
+        }
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
       "findings": [
         {
           "column": 27,
@@ -903,6 +923,117 @@
       "kind": "invalid",
       "options": [
         {}
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 34,
+          "endLine": 42,
+          "file": "fixture.test.ts",
+          "line": 42,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 28,
+          "endColumn": 29,
+          "endLine": 44,
+          "file": "fixture.test.ts",
+          "line": 44,
+          "message": "Vitest timeout must be positive; zero disables the timeout and negative values are invalid.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "requireReason": false
+        }
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 34,
+          "endLine": 42,
+          "file": "fixture.test.ts",
+          "line": 42,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 28,
+          "endColumn": 29,
+          "endLine": 44,
+          "file": "fixture.test.ts",
+          "line": 44,
+          "message": "Vitest timeout must be positive; zero disables the timeout and negative values are invalid.",
+          "messageId": "invalid",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 46,
+          "endLine": 47,
+          "file": "fixture.test.ts",
+          "line": 47,
+          "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "requireReason": false,
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "fixture.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 20,
+          "endLine": 32,
+          "file": "fixture.test.ts",
+          "line": 32,
+          "message": "Vitest testTimeout exceeds 5000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 20,
+          "endLine": 34,
+          "file": "fixture.test.ts",
+          "line": 34,
+          "message": "Vitest hookTimeout exceeds 5000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "requireReason": false
+        }
       ]
     }
   ]
