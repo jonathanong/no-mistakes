@@ -1,0 +1,3 @@
+rules:
+  - rule: unique-exports
+    1: numeric

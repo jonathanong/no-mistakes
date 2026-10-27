@@ -52,6 +52,10 @@ run `no-mistakes playwright check --json` and the focused Playwright test plan.
 For package additions, compare direct importers with each nearest
 `package.json` and verify that each importer declares the dependency directly.
 
+A rule entry with `severity: advisory` reports its findings under `advisories`
+without failing; read them anyway, and switch the rule to `error` once clean.
+Rule entries reject unknown keys.
+
 Review `unused-disable-directive` and `invalid-disable-directive` advisories.
 Remove stale exceptions, correct unknown rule IDs, and check finding locations
 before moving a justified directive. Repository

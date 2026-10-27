@@ -3,6 +3,9 @@
 #[path = "cli_check_production_exports_test_only.rs"]
 mod cli_check_production_exports_test_only;
 
+#[path = "cli_check_rule_severity.rs"]
+mod cli_check_rule_severity;
+
 #[path = "cli_shellcheck_policy.rs"]
 mod cli_shellcheck_policy;
 

@@ -20,6 +20,35 @@ pub struct RuleDef {
     pub exclude: Vec<String>,
     #[serde(default = "empty_options")]
     pub options: serde_yaml::Value,
+    /// `error` (default) fails `check`; `advisory` reports the findings as
+    /// non-failing advisories.
+    #[serde(skip_serializing_if = "RuleSeverity::is_error")]
+    pub severity: RuleSeverity,
+}
+
+impl RuleDef {
+    /// Every key a rule entry accepts. Config loading rejects anything else.
+    pub const SUPPORTED_KEYS: &'static [&'static str] = &[
+        "name", "rule", "message", "enabled", "projects", "tests", "scope", "include", "exclude",
+        "options", "severity",
+    ];
+}
+
+/// Staged-rollout severity of a rule application.
+#[derive(Debug, Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum RuleSeverity {
+    /// Findings fail the run (exit 1). This is the default.
+    #[default]
+    Error,
+    /// Findings are still reported, but as non-failing advisories.
+    Advisory,
+}
+
+impl RuleSeverity {
+    fn is_error(&self) -> bool {
+        *self == Self::Error
+    }
 }
 
 impl Default for RuleDef {
@@ -36,6 +65,7 @@ impl Default for RuleDef {
             include: Vec::new(),
             exclude: Vec::new(),
             options: empty_options(),
+            severity: RuleSeverity::Error,
         }
     }
 }

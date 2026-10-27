@@ -1,0 +1,5 @@
+# unique-exports reports through the `codebase` section; advisory moves it to `advisories`.
+rules:
+  - rule: unique-exports
+    scope: repository
+    severity: advisory

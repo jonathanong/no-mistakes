@@ -73,6 +73,16 @@ impl NoMistakesConfig {
             .collect()
     }
 
+    /// True when every enabled application of `rule_id` is `severity: advisory`.
+    /// Any `error` application keeps the rule failing, so recall never drops.
+    pub fn rule_is_advisory(&self, rule_id: &str) -> bool {
+        let applications = self.rule_applications(rule_id);
+        !applications.is_empty()
+            && applications
+                .iter()
+                .all(|rule| rule.severity == super::RuleSeverity::Advisory)
+    }
+
     pub fn rule_configured(&self, rule_id: &str) -> bool {
         !self.rule_applications(rule_id).is_empty()
     }

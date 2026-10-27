@@ -1,6 +1,8 @@
 use anyhow::Result;
 mod sql;
 pub(super) use sql::merge_sql;
+mod severity;
+pub(super) use severity::demote;
 #[cfg(test)]
 mod tests;
 

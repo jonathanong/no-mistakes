@@ -1,0 +1,4 @@
+rules:
+  - rule: unique-exports
+    severity: advisory
+    enabled: true
