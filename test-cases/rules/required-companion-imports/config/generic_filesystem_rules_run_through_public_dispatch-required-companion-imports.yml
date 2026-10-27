@@ -1,0 +1,12 @@
+
+rules:
+  - rule: required-companion-imports
+    scope: repository
+    options:
+      sourceDirs: [src/components]
+      directChildOnly: true
+      sourceExtensions: [.tsx]
+      excludeBasenames: [Internal.tsx, Button.stories.tsx, Card.stories.tsx]
+      companionGlobs: ["{sourceDir}/{sourceStem}.stories.tsx"]
+      specifierTemplate: "@/components/{sourceStem}"
+      stripSourcePrefix: src/

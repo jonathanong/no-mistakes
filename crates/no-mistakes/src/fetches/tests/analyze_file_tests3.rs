@@ -2,14 +2,19 @@ use crate::fetches::pipeline::cache::Cache;
 use crate::fetches::report::types::FetchSide;
 use no_mistakes::fetch::file_analysis::analyze_file;
 use std::collections::{HashMap, HashSet};
-use std::fs;
-use tempfile::tempdir;
+use std::path::PathBuf;
+
+fn fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/nextjs-fetches")
+        .join(name)
+        .join("fixture")
+}
 
 #[test]
 fn test_analyze_file_use_server_overrides_inherited_client_state() {
-    let dir = tempdir().unwrap();
-    let file = dir.path().join("helper.ts");
-    fs::write(&file, "'use server';\nfetch('/api/server');").unwrap();
+    let root = fixture("analyze-file-use-server-overrides-client");
+    let file = root.join("helper.ts");
 
     let mut cache = Cache {
         files: HashMap::new(),
@@ -19,7 +24,7 @@ fn test_analyze_file_use_server_overrides_inherited_client_state() {
     let mut fetches = Vec::new();
     let is_client = analyze_file(
         &file,
-        dir.path(),
+        &root,
         &mut visited,
         &mut fetches,
         &mut cache,
@@ -34,11 +39,8 @@ fn test_analyze_file_use_server_overrides_inherited_client_state() {
 
 #[test]
 fn test_analyze_file_imported_file_is_analyzed() {
-    let dir = tempdir().unwrap();
-    let helper = dir.path().join("helper.ts");
-    fs::write(&helper, "export const helper = () => fetch('/api/helper');").unwrap();
-    let file = dir.path().join("file.ts");
-    fs::write(&file, "import { helper } from './helper';\nhelper();").unwrap();
+    let root = fixture("analyze-file-imported-helper");
+    let file = root.join("file.ts");
 
     let mut cache = Cache {
         files: HashMap::new(),
@@ -48,7 +50,7 @@ fn test_analyze_file_imported_file_is_analyzed() {
     let mut fetches = Vec::new();
     analyze_file(
         &file,
-        dir.path(),
+        &root,
         &mut visited,
         &mut fetches,
         &mut cache,
@@ -63,15 +65,8 @@ fn test_analyze_file_imported_file_is_analyzed() {
 
 #[test]
 fn test_analyze_file_ignores_unused_imported_helper() {
-    let dir = tempdir().unwrap();
-    let helper = dir.path().join("helper.ts");
-    fs::write(&helper, "export const helper = () => fetch('/api/helper');").unwrap();
-    let file = dir.path().join("file.ts");
-    fs::write(
-        &file,
-        "import { helper } from './helper';\nfetch('/api/file');",
-    )
-    .unwrap();
+    let root = fixture("analyze-file-unused-imported-helper");
+    let file = root.join("file.ts");
 
     let mut cache = Cache {
         files: HashMap::new(),
@@ -81,7 +76,7 @@ fn test_analyze_file_ignores_unused_imported_helper() {
     let mut fetches = Vec::new();
     analyze_file(
         &file,
-        dir.path(),
+        &root,
         &mut visited,
         &mut fetches,
         &mut cache,
@@ -96,11 +91,8 @@ fn test_analyze_file_ignores_unused_imported_helper() {
 
 #[test]
 fn test_analyze_file_side_effect_import_is_analyzed() {
-    let dir = tempdir().unwrap();
-    let helper = dir.path().join("helper.ts");
-    fs::write(&helper, "fetch('/api/helper');").unwrap();
-    let file = dir.path().join("file.ts");
-    fs::write(&file, "import './helper';\nfetch('/api/file');").unwrap();
+    let root = fixture("analyze-file-side-effect-import");
+    let file = root.join("file.ts");
 
     let mut cache = Cache {
         files: HashMap::new(),
@@ -110,7 +102,7 @@ fn test_analyze_file_side_effect_import_is_analyzed() {
     let mut fetches = Vec::new();
     analyze_file(
         &file,
-        dir.path(),
+        &root,
         &mut visited,
         &mut fetches,
         &mut cache,

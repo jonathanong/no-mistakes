@@ -1,7 +1,5 @@
 use super::helpers::with_run_args_env;
-use std::fs;
 use std::path::PathBuf;
-use tempfile::tempdir;
 
 fn fixture(category: &str, name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -118,15 +116,10 @@ fn test_with_run_args_state_resumes_panic() {
 
 #[test]
 fn test_run_and_main_are_exercised_with_test_argv() {
-    let root = tempdir().unwrap();
-    fs::create_dir(root.path().join("app/page.tsx").parent().unwrap()).unwrap();
-    fs::write(root.path().join("app/page.tsx"), "fetch('/api/page');").unwrap();
+    let root = fixture("nextjs-fetches", "app-page-fetch");
 
     {
-        let next_value = format!(
-            "fetches\x1f--root\x1f{}\x1f--json",
-            root.path().to_string_lossy()
-        );
+        let next_value = format!("fetches\x1f--root\x1f{}\x1f--json", root.to_string_lossy());
         let _run_args = with_run_args_env(Some(next_value.to_string()), None);
         assert!(crate::fetches::cli::run_cli().is_ok());
     }

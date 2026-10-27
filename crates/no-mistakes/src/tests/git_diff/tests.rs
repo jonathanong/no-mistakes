@@ -22,18 +22,28 @@ fn commit_all(root: &Path, message: &str) {
     git(&["commit", "-q", "-m", message], root);
 }
 
+fn case_dir(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/tests-plan-from-git-diff")
+        .join(name)
+}
+
+fn materialize_case(name: &str) -> tempfile::TempDir {
+    crate::test_support::materialize_saved_fixture(&case_dir(name).join("initial"))
+}
+
+fn copy_case_file(root: &Path, name: &str, file: &str, dest: &str) {
+    std::fs::copy(case_dir(name).join(file), root.join(dest)).unwrap();
+}
+
 /// Base/head repo mirroring the issue's fixture shape: a selector literal
 /// change, a same-content rename, and a deletion — enough to exercise
 /// modified/renamed/deleted facts and (for the equivalence test) a plain
 /// piped `git diff` in the same invocation.
 fn two_commit_repo() -> tempfile::TempDir {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize_case("stream-two-commit");
     let root = dir.path();
     init_repo(root);
-    std::fs::create_dir_all(root.join("src")).unwrap();
-    std::fs::write(root.join("src/helper.ts"), "export const x = 1;\n").unwrap();
-    std::fs::write(root.join("src/helper.test.ts"), "test old\n").unwrap();
-    std::fs::write(root.join("src/removed.ts"), "export const gone = 1;\n").unwrap();
     commit_all(root, "base");
 
     git(
@@ -122,15 +132,14 @@ fn stream_git_diff_reports_not_a_repository_outside_a_git_root() {
 // "no merge base" once history is truncated, even though both refs verify.
 #[test]
 fn stream_git_diff_reports_shallow_history_when_merge_base_is_truncated() {
-    let origin_dir = tempfile::tempdir().unwrap();
+    let origin_dir = materialize_case("stream-shallow-history");
     let origin = origin_dir.path();
     init_repo(origin);
-    std::fs::write(origin.join("f.txt"), "a\n").unwrap();
     commit_all(origin, "c1");
-    std::fs::write(origin.join("f.txt"), "a\nb\n").unwrap();
+    copy_case_file(origin, "stream-shallow-history", "f-c2.txt", "f.txt");
     commit_all(origin, "c2");
     git(&["checkout", "-q", "-b", "feature"], origin);
-    std::fs::write(origin.join("f.txt"), "a\nb\nc\n").unwrap();
+    copy_case_file(origin, "stream-shallow-history", "f-c3.txt", "f.txt");
     commit_all(origin, "c3-feature");
 
     let shallow_dir = tempfile::tempdir().unwrap();
@@ -244,14 +253,12 @@ fn classify_git_diff_failure_propagates_a_deadline_timeout_from_the_repo_root_pr
 // Git's forced C-quoted path grammar back to the repository path.
 #[test]
 fn stream_git_diff_handles_spaces_and_non_ascii_paths() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize_case("stream-spaces-non-ascii");
     let root = dir.path();
     init_repo(root);
     let path = "src/héllo world.ts";
-    std::fs::create_dir_all(root.join("src")).unwrap();
-    std::fs::write(root.join(path), "export const x = 1;\n").unwrap();
     commit_all(root, "base");
-    std::fs::write(root.join(path), "export const x = 2;\n").unwrap();
+    copy_case_file(root, "stream-spaces-non-ascii", "after.ts", path);
     commit_all(root, "head");
 
     let diff = stream_git_diff(root, "HEAD~1", "HEAD").unwrap();
@@ -261,6 +268,7 @@ fn stream_git_diff_handles_spaces_and_non_ascii_paths() {
 
 #[test]
 fn stream_git_diff_decodes_tabs_and_newlines_in_paths() {
+    // Tab and newline path names are not portable committed fixtures.
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
     init_repo(root);
@@ -334,6 +342,7 @@ fn stream_git_diff_rejects_a_non_utf8_path() {
 // output or crash the parser.
 #[test]
 fn stream_git_diff_handles_binary_changes_without_hunks() {
+    // PNG-like bodies contain NUL bytes, which the committed-binary check rejects.
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
     init_repo(root);
@@ -356,10 +365,9 @@ fn stream_git_diff_handles_binary_changes_without_hunks() {
 fn stream_git_diff_handles_mode_only_changes() {
     use std::os::unix::fs::PermissionsExt;
 
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize_case("stream-mode-only");
     let root = dir.path();
     init_repo(root);
-    std::fs::write(root.join("script.sh"), "echo hi\n").unwrap();
     commit_all(root, "base");
     let mut perms = std::fs::metadata(root.join("script.sh"))
         .unwrap()
@@ -384,13 +392,12 @@ fn stream_git_diff_handles_mode_only_changes() {
 // --dst-prefix=b/` on the invocation must win over repo config.
 #[test]
 fn stream_git_diff_ignores_diff_noprefix_config() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize_case("stream-noprefix");
     let root = dir.path();
     init_repo(root);
     git(&["config", "diff.noprefix", "true"], root);
-    std::fs::write(root.join("x.txt"), "one\n").unwrap();
     commit_all(root, "base");
-    std::fs::write(root.join("x.txt"), "two\n").unwrap();
+    copy_case_file(root, "stream-noprefix", "after-x.txt", "x.txt");
     commit_all(root, "head");
 
     let diff = stream_git_diff(root, "HEAD~1", "HEAD").unwrap();
@@ -405,6 +412,7 @@ fn stream_git_diff_ignores_diff_noprefix_config() {
 // `Modified`.
 #[test]
 fn stream_git_diff_reports_hunkless_empty_and_binary_deletions() {
+    // The binary body contains a NUL byte, which cannot be a committed fixture.
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
     init_repo(root);
@@ -432,14 +440,12 @@ fn stream_git_diff_reports_hunkless_empty_and_binary_deletions() {
 // with a trailing tab, since the path contains whitespace) must win.
 #[test]
 fn stream_git_diff_handles_a_path_containing_the_header_split_delimiter() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize_case("stream-header-split");
     let root = dir.path();
     init_repo(root);
-    std::fs::create_dir_all(root.join("a b")).unwrap();
     let path = "a b/file.ts";
-    std::fs::write(root.join(path), "one\n").unwrap();
     commit_all(root, "base");
-    std::fs::write(root.join(path), "two\n").unwrap();
+    copy_case_file(root, "stream-header-split", "after-file.ts", path);
     commit_all(root, "head");
 
     let diff = stream_git_diff(root, "HEAD~1", "HEAD").unwrap();
@@ -454,12 +460,10 @@ fn stream_git_diff_handles_a_path_containing_the_header_split_delimiter() {
 // `---`/`+++` preference (which doesn't apply here — there's no hunk).
 #[test]
 fn stream_git_diff_resolves_hunkless_deletion_with_an_ambiguous_path() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize_case("stream-ambiguous-deletion");
     let root = dir.path();
     init_repo(root);
-    std::fs::create_dir_all(root.join("a b")).unwrap();
     let path = "a b/empty.txt";
-    std::fs::write(root.join(path), "").unwrap();
     commit_all(root, "base");
     std::fs::remove_file(root.join(path)).unwrap();
     commit_all(root, "head");
@@ -472,12 +476,11 @@ fn stream_git_diff_resolves_hunkless_deletion_with_an_ambiguous_path() {
 
 #[test]
 fn stream_git_diff_handles_a_path_starting_with_a_dash() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize_case("stream-leading-dash");
     let root = dir.path();
     init_repo(root);
-    std::fs::write(root.join("-weird.ts"), "export const x = 1;\n").unwrap();
     commit_all(root, "base");
-    std::fs::write(root.join("-weird.ts"), "export const x = 2;\n").unwrap();
+    copy_case_file(root, "stream-leading-dash", "after.ts", "-weird.ts");
     commit_all(root, "head");
 
     let diff = stream_git_diff(root, "HEAD~1", "HEAD").unwrap();

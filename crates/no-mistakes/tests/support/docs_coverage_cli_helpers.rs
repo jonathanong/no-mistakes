@@ -238,33 +238,9 @@ fn parses_inline_optional_subcommand_fixture() {
 
 #[test]
 fn inventories_the_requested_source_tree_without_git_commands() {
-    let source =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/docs-coverage/source-tree");
-    let fixture = tempfile::tempdir().expect("create source inventory fixture");
-    for entry in WalkBuilder::new(&source)
-        .hidden(false)
-        .ignore(false)
-        .git_ignore(false)
-        .git_global(false)
-        .git_exclude(false)
-        .require_git(false)
-        .parents(false)
-        .build()
-        .map(Result::unwrap)
-        .filter(|entry| entry.path() != source)
-    {
-        let relative = entry.path().strip_prefix(&source).unwrap();
-        let target = fixture.path().join(relative);
-        if entry
-            .file_type()
-            .is_some_and(|file_type| file_type.is_dir())
-        {
-            std::fs::create_dir_all(&target).unwrap();
-        } else {
-            std::fs::create_dir_all(target.parent().unwrap()).unwrap();
-            std::fs::copy(entry.path(), &target).unwrap();
-        }
-    }
+    // Copy out of the repo so the inventory walk does not inherit this
+    // checkout's gitignore. saved_fixture is the suite's copy helper.
+    let fixture = super::saved_fixture::materialize("docs-coverage", "source-tree");
     assert_eq!(
         rust_sources(fixture.path()),
         vec![fixture.path().join("nested/command.rs")]

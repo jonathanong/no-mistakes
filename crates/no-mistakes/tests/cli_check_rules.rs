@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn bin() -> PathBuf {
@@ -31,26 +31,41 @@ fn markdown_report_fixture() -> PathBuf {
     )
 }
 
-fn check(root: &PathBuf, yaml: &str) -> Output {
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(config.path(), yaml).unwrap();
+fn config(rule: &str, name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules")
+        .join(rule)
+        .join("config")
+        .join(name)
+}
+
+fn check(root: &Path, config: &Path) -> Output {
     Command::new(bin())
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
-        .arg(config.path())
+        .arg(config)
         .output()
         .unwrap()
-}
-
-fn check_fixture_config(root: &PathBuf, name: &str) -> Output {
-    let yaml = std::fs::read_to_string(root.join(name)).unwrap();
-    check(root, &yaml)
 }
 
 fn stdout(o: &Output) -> String {
     String::from_utf8_lossy(&o.stdout).into_owned()
 }
+
+const STORYBOOK_COMMENTS: &str = "require_storybook_stories_respects_no_mistakes_comments.yml";
+const RUST_MAX_UNDER: &str = "rust_max_lines_per_file_passes_under_limit.yml";
+const RUST_MAX_OVER: &str = "rust_max_lines_per_file_fails_over_limit.yml";
+const RUST_MAX_DISABLED: &str = "rust_max_lines_per_file_disabled_skips.yml";
+const RUST_INLINE_TESTS: &str = "rust_no_inline_tests_passes_out_of_line.yml";
+const RUST_INLINE_TESTS_DISABLED: &str = "rust_no_inline_tests_disabled_skips.yml";
+const RUST_ALLOWS: &str = "rust_no_inline_allows_passes_without_allow_attributes.yml";
+const SERVER_ROUTE: &str = "server_route_client_boundary_passes_when_separated.yml";
+const REQUIRE_TEST_SUBDIR: &str = "require_test_per_subdir_fails_for_missing_test.yml";
+const NEXTJS_API_ROUTES: &str = "nextjs_no_api_routes_fails_for_app_and_pages_routes.yml";
+const NEXTJS_CACHING: &str = "nextjs_no_caching_fails_for_cache_features.yml";
+const DEPENDENCY_PINS: &str = "test_no_dependency_pins_fails_for_exact_pins.yml";
+const DEPENDENCY_PINS_JSON: &str = "test_no_dependency_pins_json_has_rule_id.yml";
 
 #[test]
 fn markdown_rules_check_json_reports_both_rule_ids() {
@@ -103,14 +118,14 @@ fn markdown_rules_check_json_reports_both_rule_ids() {
 #[test]
 fn server_route_client_boundary_passes_when_separated() {
     let root = fixture("server-route-client-boundary", "pass");
-    let out = check_fixture_config(&root, "check-config.yml");
+    let out = check(&root, &config("server-route-client-boundary", SERVER_ROUTE));
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 
 #[test]
 fn server_route_client_boundary_fails_for_client_in_route_folder() {
     let root = fixture("server-route-client-boundary", "fail");
-    let out = check_fixture_config(&root, "check-config.yml");
+    let out = check(&root, &config("server-route-client-boundary", SERVER_ROUTE));
     assert!(!out.status.success(), "expected exit 1");
     assert!(
         stdout(&out).contains("server-route-client-boundary"),
@@ -127,7 +142,10 @@ fn server_route_client_boundary_fails_for_client_in_route_folder() {
 #[test]
 fn require_test_per_subdir_fails_for_missing_test() {
     let root = fixture("require-test-per-subdir", "fail");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(
+        &root,
+        &config("require-test-per-subdir", REQUIRE_TEST_SUBDIR),
+    );
     let body = stdout(&out);
 
     assert!(!out.status.success(), "expected exit 1");
@@ -140,19 +158,7 @@ fn require_storybook_stories_respects_no_mistakes_comments() {
     let root = fixture("require-storybook-stories", "comments");
     let out = check(
         &root,
-        r#"
-version: 2
-projects:
-  web:
-    type: nextjs
-    root: "."
-rules:
-  - rule: require-storybook-stories
-    projects: [web]
-    options:
-      stories: ["stories/**/*.stories.tsx"]
-      include_all_react_named_exports: true
-"#,
+        &config("require-storybook-stories", STORYBOOK_COMMENTS),
     );
 
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
@@ -163,7 +169,7 @@ rules:
 #[test]
 fn nextjs_no_api_routes_fails_for_app_and_pages_routes() {
     let root = codebase_fixture("no-nextjs-api-routes");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config("nextjs-no-api-routes", NEXTJS_API_ROUTES));
     let body = stdout(&out);
 
     assert!(!out.status.success(), "expected exit 1");
@@ -175,7 +181,7 @@ fn nextjs_no_api_routes_fails_for_app_and_pages_routes() {
 #[test]
 fn nextjs_no_caching_fails_for_cache_features() {
     let root = codebase_fixture("no-nextjs-caching");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config("nextjs-no-caching", NEXTJS_CACHING));
     let body = stdout(&out);
 
     assert!(!out.status.success(), "expected exit 1");
@@ -191,20 +197,14 @@ fn nextjs_no_caching_fails_for_cache_features() {
 #[test]
 fn rust_max_lines_per_file_passes_under_limit() {
     let root = fixture("rust-max-lines-per-file", "pass");
-    let out = check(
-        &root,
-        "rules:\n  - rule: rust-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 20\n",
-    );
+    let out = check(&root, &config("rust-max-lines-per-file", RUST_MAX_UNDER));
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 
 #[test]
 fn rust_max_lines_per_file_fails_over_limit() {
     let root = fixture("rust-max-lines-per-file", "fail");
-    let out = check(
-        &root,
-        "rules:\n  - rule: rust-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 3\n",
-    );
+    let out = check(&root, &config("rust-max-lines-per-file", RUST_MAX_OVER));
     assert!(!out.status.success(), "expected exit 1");
     assert!(stdout(&out).contains("code lines"), "{}", stdout(&out));
     assert!(stdout(&out).contains("big.rs"), "{}", stdout(&out));
@@ -213,10 +213,7 @@ fn rust_max_lines_per_file_fails_over_limit() {
 #[test]
 fn rust_max_lines_per_file_disabled_skips() {
     let root = fixture("rust-max-lines-per-file", "fail");
-    let out = check(
-        &root,
-        "rules:\n  - rule: rust-max-lines-per-file\n    enabled: false\n    scope: repository\n    options:\n      srcMax: 3\n",
-    );
+    let out = check(&root, &config("rust-max-lines-per-file", RUST_MAX_DISABLED));
     assert!(
         out.status.success(),
         "disabled rule must not fail: {}",
@@ -227,17 +224,12 @@ fn rust_max_lines_per_file_disabled_skips() {
 #[test]
 fn rust_max_lines_per_file_json_has_rule_id() {
     let root = fixture("rust-max-lines-per-file", "fail");
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(
-        config.path(),
-        "rules:\n  - rule: rust-max-lines-per-file\n    scope: repository\n    options:\n      srcMax: 3\n",
-    )
-    .unwrap();
+    let config_path = config("rust-max-lines-per-file", RUST_MAX_OVER);
     let out = Command::new(bin())
         .args(["check", "--root"])
         .arg(&root)
         .arg("--config")
-        .arg(config.path())
+        .arg(&config_path)
         .args(["--format", "json"])
         .output()
         .unwrap();
@@ -266,20 +258,14 @@ fn no_git_identity_mutation_fails_for_identity_config() {
 #[test]
 fn rust_no_inline_tests_passes_out_of_line() {
     let root = fixture("rust-no-inline-tests", "pass");
-    let out = check(
-        &root,
-        "rules:\n  - rule: rust-no-inline-tests\n    scope: repository\n",
-    );
+    let out = check(&root, &config("rust-no-inline-tests", RUST_INLINE_TESTS));
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 
 #[test]
 fn rust_no_inline_tests_fails_inline_block() {
     let root = fixture("rust-no-inline-tests", "fail");
-    let out = check(
-        &root,
-        "rules:\n  - rule: rust-no-inline-tests\n    scope: repository\n",
-    );
+    let out = check(&root, &config("rust-no-inline-tests", RUST_INLINE_TESTS));
     assert!(!out.status.success(), "expected exit 1");
     assert!(stdout(&out).contains("inline"), "{}", stdout(&out));
     assert!(stdout(&out).contains("lib.rs"), "{}", stdout(&out));
@@ -288,10 +274,7 @@ fn rust_no_inline_tests_fails_inline_block() {
 #[test]
 fn rust_no_inline_tests_fails_cfg_test_helper_item() {
     let root = fixture("rust-no-inline-tests", "fail-helper");
-    let out = check(
-        &root,
-        "rules:\n  - rule: rust-no-inline-tests\n    scope: repository\n",
-    );
+    let out = check(&root, &config("rust-no-inline-tests", RUST_INLINE_TESTS));
     assert!(!out.status.success(), "expected exit 1");
     assert!(
         stdout(&out).contains("inline #[cfg(test)] item"),
@@ -306,7 +289,7 @@ fn rust_no_inline_tests_disabled_skips() {
     let root = fixture("rust-no-inline-tests", "fail");
     let out = check(
         &root,
-        "rules:\n  - rule: rust-no-inline-tests\n    enabled: false\n    scope: repository\n",
+        &config("rust-no-inline-tests", RUST_INLINE_TESTS_DISABLED),
     );
     assert!(
         out.status.success(),
@@ -318,17 +301,12 @@ fn rust_no_inline_tests_disabled_skips() {
 #[test]
 fn rust_no_inline_tests_json_has_rule_id() {
     let root = fixture("rust-no-inline-tests", "fail");
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(
-        config.path(),
-        "rules:\n  - rule: rust-no-inline-tests\n    scope: repository\n",
-    )
-    .unwrap();
+    let config_path = config("rust-no-inline-tests", RUST_INLINE_TESTS);
     let out = Command::new(bin())
         .args(["check", "--root"])
         .arg(&root)
         .arg("--config")
-        .arg(config.path())
+        .arg(&config_path)
         .args(["--format", "json"])
         .output()
         .unwrap();
@@ -345,20 +323,14 @@ fn rust_no_inline_tests_json_has_rule_id() {
 #[test]
 fn rust_no_inline_allows_passes_without_allow_attributes() {
     let root = fixture("rust-no-inline-allows", "pass");
-    let out = check(
-        &root,
-        "rules:\n  - rule: rust-no-inline-allows\n    scope: repository\n",
-    );
+    let out = check(&root, &config("rust-no-inline-allows", RUST_ALLOWS));
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 
 #[test]
 fn rust_no_inline_allows_fails_inline_allow() {
     let root = fixture("rust-no-inline-allows", "fail");
-    let out = check(
-        &root,
-        "rules:\n  - rule: rust-no-inline-allows\n    scope: repository\n",
-    );
+    let out = check(&root, &config("rust-no-inline-allows", RUST_ALLOWS));
     assert!(!out.status.success(), "expected exit 1");
     assert!(
         stdout(&out).contains("allow(dead_code)"),
@@ -371,15 +343,10 @@ fn rust_no_inline_allows_fails_inline_allow() {
 #[test]
 fn rust_no_inline_allows_filesystem_runner_discovers_files() {
     let root = fixture("rust-no-inline-allows", "fail");
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(
-        config.path(),
-        "rules:\n  - rule: rust-no-inline-allows\n    scope: repository\n",
-    )
-    .unwrap();
+    let config_path = config("rust-no-inline-allows", RUST_ALLOWS);
 
     let findings =
-        no_mistakes::codebase::rules::run_filesystem_rules(&root, Some(config.path())).unwrap();
+        no_mistakes::codebase::rules::run_filesystem_rules(&root, Some(&config_path)).unwrap();
 
     assert!(findings
         .iter()
@@ -412,7 +379,7 @@ fn rust_no_inline_allows_filesystem_runner_accepts_absolute_roots() {
 #[test]
 fn test_no_dependency_pins_fails_for_exact_pins() {
     let root = fixture("test-no-dependency-pins", "fail");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config("test-no-dependency-pins", DEPENDENCY_PINS));
     let body = stdout(&out);
 
     assert!(!out.status.success(), "expected exit 1");
@@ -432,24 +399,19 @@ fn test_no_dependency_pins_fails_for_exact_pins() {
 #[test]
 fn test_no_dependency_pins_passes_for_negatives_and_suppressions() {
     let root = fixture("test-no-dependency-pins", "pass");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config("test-no-dependency-pins", DEPENDENCY_PINS));
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 
 #[test]
 fn test_no_dependency_pins_json_has_rule_id() {
     let root = fixture("test-no-dependency-pins", "fail");
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(
-        config.path(),
-        "rules:\n  - rule: test-no-dependency-pins\n    scope: repository\n",
-    )
-    .unwrap();
+    let config_path = config("test-no-dependency-pins", DEPENDENCY_PINS_JSON);
     let out = Command::new(bin())
         .args(["check", "--root"])
         .arg(&root)
         .arg("--config")
-        .arg(config.path())
+        .arg(&config_path)
         .args(["--format", "json"])
         .output()
         .unwrap();

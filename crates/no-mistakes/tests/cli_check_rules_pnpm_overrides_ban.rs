@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn bin() -> PathBuf {
@@ -13,21 +13,22 @@ fn fixture(scenario: &str) -> PathBuf {
     )
 }
 
-fn check(root: &PathBuf, yaml: &str) -> Output {
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(config.path(), yaml).unwrap();
+fn config(rule: &str, name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules")
+        .join(rule)
+        .join("config")
+        .join(name)
+}
+
+fn check(root: &Path, config: &Path) -> Output {
     Command::new(bin())
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
-        .arg(config.path())
+        .arg(config)
         .output()
         .unwrap()
-}
-
-fn check_fixture_config(root: &PathBuf, name: &str) -> Output {
-    let yaml = std::fs::read_to_string(root.join(name)).unwrap();
-    check(root, &yaml)
 }
 
 fn stdout(output: &Output) -> String {
@@ -39,7 +40,10 @@ const RULE: &str = "pnpm-overrides-ban";
 #[test]
 fn pnpm_overrides_ban_fails_workspace_overrides() {
     let root = fixture("fail-workspace");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(
+        &root,
+        &config(RULE, "pnpm_overrides_ban_fails_workspace_overrides.yml"),
+    );
     let body = stdout(&out);
     assert!(!out.status.success(), "expected exit 1: {body}");
     assert!(body.contains(RULE), "{body}");
@@ -50,7 +54,10 @@ fn pnpm_overrides_ban_fails_workspace_overrides() {
 #[test]
 fn pnpm_overrides_ban_passes_package_extensions() {
     let root = fixture("pass");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(
+        &root,
+        &config(RULE, "pnpm_overrides_ban_fails_workspace_overrides.yml"),
+    );
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 

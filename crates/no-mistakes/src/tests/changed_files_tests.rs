@@ -1,5 +1,13 @@
 use super::*;
 
+fn materialize_case(name: &str) -> tempfile::TempDir {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/tests-plan-from-git-diff")
+        .join(name)
+        .join("initial");
+    crate::test_support::materialize_saved_fixture(&source)
+}
+
 #[test]
 fn git_name_status_preserves_deleted_and_renamed_paths() {
     let changed =
@@ -53,8 +61,7 @@ fn git_name_status_nul_format_preserves_newlines_spaces_unicode_and_leading_dash
 #[cfg(unix)]
 #[test]
 fn manual_symlink_keeps_lexical_inventory_path_and_resolves_analysis_target() {
-    let root = tempfile::tempdir().unwrap();
-    fs::write(root.path().join("target.ts"), "export const value = 1;\n").unwrap();
+    let root = materialize_case("manual-symlink-target");
     std::os::unix::fs::symlink("target.ts", root.path().join("alias.ts")).unwrap();
     let canonical_root = root.path().canonicalize().unwrap();
 
@@ -144,10 +151,9 @@ fn refspec_rejects_missing_base_before_three_dots() {
 // same stable diagnostic code the primary streaming path reports.
 #[test]
 fn combined_mode_git_failure_reports_a_stable_diagnostic_code() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = materialize_case("bad-ref-commit");
     let root = dir.path();
     crate::test_support::git_init(root);
-    fs::write(root.join("f.txt"), "one\n").unwrap();
     crate::test_support::git_commit_all(root, "base");
 
     let error = get_git_changed_files(root, "not-a-real-ref", Some("HEAD")).unwrap_err();

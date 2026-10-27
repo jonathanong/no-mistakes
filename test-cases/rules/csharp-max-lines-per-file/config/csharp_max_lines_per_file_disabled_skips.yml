@@ -1,0 +1,6 @@
+rules:
+  - rule: csharp-max-lines-per-file
+    enabled: false
+    scope: repository
+    options:
+      srcMax: 3

@@ -1,0 +1,7 @@
+
+tests:
+  vitest:
+    configs: vitest.config.mts
+rules:
+  - rule: vitest-project-mapping
+    scope: repository

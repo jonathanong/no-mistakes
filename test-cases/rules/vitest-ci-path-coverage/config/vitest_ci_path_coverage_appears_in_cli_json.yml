@@ -1,0 +1,22 @@
+projects:
+  ts-shared:
+    root: ts-shared
+
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        ts-shared:
+          - "**"
+
+rules:
+  - rule: vitest-ci-path-coverage
+    scope: repository
+    options:
+      includeVitestProjectGlobs: false
+      projectFilters:
+        ts-shared: [backend]
+      workflows:
+        - path: .github/workflows/ci.yml
+          job: detect-changes
+          stepId: filter

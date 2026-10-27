@@ -3,6 +3,9 @@
 // Share stateless fixture helpers across the modules in this harness.
 #[path = "common/gitignore_fixture.rs"]
 mod gitignore_fixture;
+#[allow(dead_code)]
+#[path = "common/saved_fixture.rs"]
+mod saved_fixture;
 
 #[path = "cli.rs"]
 mod cli;

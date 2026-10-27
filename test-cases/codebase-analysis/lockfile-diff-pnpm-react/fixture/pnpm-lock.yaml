@@ -1,0 +1,5 @@
+lockfileVersion: '9.0'
+
+packages:
+  react@18.2.0:
+    resolution: {integrity: sha512-v1}

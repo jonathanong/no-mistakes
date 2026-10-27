@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn bin() -> PathBuf {
@@ -13,15 +13,20 @@ fn fixture(dir: &str) -> PathBuf {
     )
 }
 
-fn check_fixture_config(root: &PathBuf, name: &str) -> Output {
-    let yaml = std::fs::read_to_string(root.join(name)).unwrap();
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(config.path(), yaml).unwrap();
+fn config(rule: &str, name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules")
+        .join(rule)
+        .join("config")
+        .join(name)
+}
+
+fn check(root: &Path, config: &Path) -> Output {
     Command::new(bin())
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
-        .arg(config.path())
+        .arg(config)
         .output()
         .unwrap()
 }
@@ -30,17 +35,22 @@ fn stdout(output: &Output) -> String {
     String::from_utf8_lossy(&output.stdout).into_owned()
 }
 
+const RULE: &str = "postgres-no-generated-column-writes";
+
 #[test]
 fn postgres_no_generated_column_writes_fails_for_each_dml_shape() {
     let root = fixture("fixture");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(
+        &root,
+        &config(
+            RULE,
+            "postgres_no_generated_column_writes_fails_for_each_dml_shape.yml",
+        ),
+    );
     let body = stdout(&out);
 
     assert!(!out.status.success(), "expected exit 1");
-    assert!(
-        body.contains("postgres-no-generated-column-writes"),
-        "{body}"
-    );
+    assert!(body.contains(RULE), "{body}");
     assert!(body.contains("fail-update.ts"), "{body}");
     assert!(body.contains("fail-insert-cols.ts"), "{body}");
     assert!(body.contains("fail-insert-columnless.ts"), "{body}");
@@ -62,17 +72,20 @@ fn postgres_no_generated_column_writes_json_has_rule_id() {
         .output()
         .unwrap();
     let body = stdout(&out);
-    assert!(
-        body.contains("postgres-no-generated-column-writes"),
-        "{body}"
-    );
+    assert!(body.contains(RULE), "{body}");
     assert!(!out.status.success());
 }
 
 #[test]
 fn postgres_no_generated_column_writes_flags_trigger_maintained_columns() {
     let root = fixture("fixture-trigger-maintained");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(
+        &root,
+        &config(
+            RULE,
+            "postgres_no_generated_column_writes_flags_trigger_maintained_columns.yml",
+        ),
+    );
     let body = stdout(&out);
     assert!(!out.status.success(), "expected exit 1: {body}");
     assert!(
@@ -105,10 +118,7 @@ fn postgres_no_generated_column_writes_filesystem_runner_discovers_files() {
     let body = format!("{findings:?}");
 
     assert!(!findings.is_empty(), "expected findings");
-    assert!(
-        body.contains("postgres-no-generated-column-writes"),
-        "{body}"
-    );
+    assert!(body.contains(RULE), "{body}");
     assert!(
         findings.iter().any(|finding| {
             finding.rule == no_mistakes::codebase::rules::POSTGRES_NO_GENERATED_COLUMN_WRITES

@@ -7,8 +7,7 @@ use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::mpsc;
 use std::sync::Arc;
 
-#[path = "../common/saved_fixture.rs"]
-mod saved_fixture;
+use crate::saved_fixture;
 
 const HELPER: &str = "cli_invocation::fsmonitor::hung_fsmonitor_subprocess";
 const CONTROL: &str = "NO_MISTAKES_HUNG_FSMONITOR_FIXTURE";

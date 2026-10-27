@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn bin() -> PathBuf {
@@ -13,14 +13,20 @@ fn fixture(scenario: &str) -> PathBuf {
     )
 }
 
-fn check(root: &PathBuf, yaml: &str) -> Output {
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(config.path(), yaml).unwrap();
+fn config(rule: &str, name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules")
+        .join(rule)
+        .join("config")
+        .join(name)
+}
+
+fn check(root: &Path, config: &Path) -> Output {
     Command::new(bin())
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
-        .arg(config.path())
+        .arg(config)
         .output()
         .unwrap()
 }
@@ -34,7 +40,7 @@ fn swift_no_raw_print_cli_fails() {
     let root = fixture("fail");
     let out = check(
         &root,
-        "rules:\n  - rule: swift-no-raw-print\n    scope: repository\n",
+        &config("swift-no-raw-print", "swift_no_raw_print_cli_fails.yml"),
     );
     assert!(!out.status.success(), "expected exit 1");
     assert!(
@@ -50,7 +56,7 @@ fn swift_no_raw_print_cli_passes() {
     let root = fixture("pass");
     let out = check(
         &root,
-        "rules:\n  - rule: swift-no-raw-print\n    scope: repository\n",
+        &config("swift-no-raw-print", "swift_no_raw_print_cli_fails.yml"),
     );
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
@@ -68,7 +74,10 @@ fn swift_viewmodel_main_actor_cli_fails() {
     let root = viewmodel_fixture("fail");
     let out = check(
         &root,
-        "rules:\n  - rule: swift-viewmodel-main-actor\n    scope: repository\n",
+        &config(
+            "swift-viewmodel-main-actor",
+            "swift_viewmodel_main_actor_cli_fails.yml",
+        ),
     );
     assert!(!out.status.success(), "expected exit 1");
     assert!(
@@ -88,7 +97,10 @@ fn swift_viewmodel_main_actor_cli_passes() {
     let root = viewmodel_fixture("pass");
     let out = check(
         &root,
-        "rules:\n  - rule: swift-viewmodel-main-actor\n    scope: repository\n",
+        &config(
+            "swift-viewmodel-main-actor",
+            "swift_viewmodel_main_actor_cli_fails.yml",
+        ),
     );
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }

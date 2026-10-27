@@ -1,0 +1,3 @@
+rules:
+  - rule: swift-viewmodel-main-actor
+    scope: repository

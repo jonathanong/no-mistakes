@@ -1,9 +1,7 @@
 use crate::fetches::cli::Cli;
 use crate::fetches::pipeline::run::{run_with_base_root, run_with_base_root_and_session};
 use no_mistakes::cli::Format;
-use std::fs;
 use std::path::PathBuf;
-use tempfile::tempdir;
 
 fn fixture(category: &str, name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -101,10 +99,7 @@ fn prepared_fetch_run_reuses_the_session_for_target_matching_and_traversal() {
 
 #[test]
 fn test_run_with_base_root_errors_when_route_target_matcher_fails() {
-    let root = tempdir().unwrap();
-    fs::create_dir(root.path().join("app")).unwrap();
-    fs::write(root.path().join("app/page.tsx"), "export const = invalid;").unwrap();
-    fs::write(root.path().join("app/target.ts"), "fetch('/api/target');").unwrap();
+    let root = fixture("nextjs-fetches", "route-target-matcher-parse-error");
 
     let cli = Cli {
         root: PathBuf::from("."),
@@ -114,21 +109,13 @@ fn test_run_with_base_root_errors_when_route_target_matcher_fails() {
         targets: vec!["app/target.ts".to_string()],
     };
 
-    let err = run_with_base_root(root.path(), &cli).err().unwrap();
+    let err = run_with_base_root(&root, &cli).err().unwrap();
     assert!(err.to_string().contains("parse") || err.to_string().contains("expected"));
 }
 
 #[test]
 fn test_run_with_base_root_errors_when_layout_target_matcher_fails() {
-    let root = tempdir().unwrap();
-    fs::create_dir(root.path().join("app")).unwrap();
-    fs::write(root.path().join("app/page.tsx"), "export {}").unwrap();
-    fs::write(
-        root.path().join("app/layout.tsx"),
-        "import { helper } from './target'; const = invalid;",
-    )
-    .unwrap();
-    fs::write(root.path().join("app/target.ts"), "export {}").unwrap();
+    let root = fixture("nextjs-fetches", "layout-target-matcher-parse-error");
 
     let cli = Cli {
         root: PathBuf::from("."),
@@ -138,15 +125,13 @@ fn test_run_with_base_root_errors_when_layout_target_matcher_fails() {
         targets: vec!["app/target.ts".to_string()],
     };
 
-    let err = run_with_base_root(root.path(), &cli).err().unwrap();
+    let err = run_with_base_root(&root, &cli).err().unwrap();
     assert!(err.to_string().contains("parse") || err.to_string().contains("expected"));
 }
 
 #[test]
 fn test_run_with_base_root_errors_when_route_analysis_fails() {
-    let root = tempdir().unwrap();
-    fs::create_dir(root.path().join("app")).unwrap();
-    fs::write(root.path().join("app/page.tsx"), "export const = invalid;").unwrap();
+    let root = fixture("nextjs-fetches", "route-analysis-parse-error");
 
     let cli = Cli {
         root: PathBuf::from("."),
@@ -156,20 +141,13 @@ fn test_run_with_base_root_errors_when_route_analysis_fails() {
         targets: vec![],
     };
 
-    let err = run_with_base_root(root.path(), &cli).err().unwrap();
+    let err = run_with_base_root(&root, &cli).err().unwrap();
     assert!(err.to_string().contains("parse") || err.to_string().contains("expected"));
 }
 
 #[test]
 fn test_run_with_base_root_errors_when_layout_analysis_fails() {
-    let root = tempdir().unwrap();
-    fs::create_dir(root.path().join("app")).unwrap();
-    fs::write(root.path().join("app/page.tsx"), "fetch('/api/page');").unwrap();
-    fs::write(
-        root.path().join("app/layout.tsx"),
-        "export const = invalid;",
-    )
-    .unwrap();
+    let root = fixture("nextjs-fetches", "layout-analysis-parse-error");
 
     let cli = Cli {
         root: PathBuf::from("."),
@@ -179,15 +157,13 @@ fn test_run_with_base_root_errors_when_layout_analysis_fails() {
         targets: vec![],
     };
 
-    let err = run_with_base_root(root.path(), &cli).err().unwrap();
+    let err = run_with_base_root(&root, &cli).err().unwrap();
     assert!(err.to_string().contains("parse") || err.to_string().contains("expected"));
 }
 
 #[test]
 fn test_run_with_base_root_errors_when_target_is_unmatched() {
-    let root = tempdir().unwrap();
-    fs::create_dir(root.path().join("app")).unwrap();
-    fs::write(root.path().join("app/page.tsx"), "fetch('/api/page');").unwrap();
+    let root = fixture("nextjs-fetches", "app-page-fetch");
 
     let cli = Cli {
         root: PathBuf::from("."),
@@ -197,7 +173,7 @@ fn test_run_with_base_root_errors_when_target_is_unmatched() {
         targets: vec!["app/missing.ts".to_string()],
     };
 
-    let err = run_with_base_root(root.path(), &cli).err().unwrap();
+    let err = run_with_base_root(&root, &cli).err().unwrap();
     let message = err.to_string();
     assert!(message.contains("Error: targets not found"));
     assert!(message.contains("app/missing.ts"));
@@ -205,26 +181,7 @@ fn test_run_with_base_root_errors_when_target_is_unmatched() {
 
 #[test]
 fn test_run_with_base_root_sorts_duplicates_and_unsupported_entries() {
-    let root = tempdir().unwrap();
-    fs::create_dir_all(root.path().join("app/about")).unwrap();
-    fs::write(
-        root.path().join("app/page.tsx"),
-        "
-            fetch(`/api/${route}/users`);
-            fetch('/api/duplicate');
-            fetch('/api/duplicate');
-            ",
-    )
-    .unwrap();
-    fs::write(
-        root.path().join("app/about/page.tsx"),
-        "
-            fetch(`/api/${about}/users`);
-            fetch('/api/other');
-            fetch('/api/other');
-            ",
-    )
-    .unwrap();
+    let root = fixture("nextjs-fetches", "sorts-duplicates-and-unsupported");
 
     let cli = Cli {
         root: PathBuf::from("."),
@@ -233,7 +190,7 @@ fn test_run_with_base_root_sorts_duplicates_and_unsupported_entries() {
         json: false,
         targets: vec![],
     };
-    let report = run_with_base_root(root.path(), &cli).unwrap();
+    let report = run_with_base_root(&root, &cli).unwrap();
 
     assert_eq!(report.unsupported.len(), 2);
     assert_eq!(report.unsupported[0].route, "/");

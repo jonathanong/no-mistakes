@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
 fn bin() -> PathBuf {
@@ -13,21 +13,22 @@ fn fixture(scenario: &str) -> PathBuf {
     )
 }
 
-fn check(root: &PathBuf, yaml: &str) -> Output {
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(config.path(), yaml).unwrap();
+fn config(rule: &str, name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules")
+        .join(rule)
+        .join("config")
+        .join(name)
+}
+
+fn check(root: &Path, config: &Path) -> Output {
     Command::new(bin())
         .args(["check", "--root"])
         .arg(root)
         .arg("--config")
-        .arg(config.path())
+        .arg(config)
         .output()
         .unwrap()
-}
-
-fn check_fixture_config(root: &PathBuf, name: &str) -> Output {
-    let yaml = std::fs::read_to_string(root.join(name)).unwrap();
-    check(root, &yaml)
 }
 
 fn stdout(o: &Output) -> String {
@@ -35,11 +36,13 @@ fn stdout(o: &Output) -> String {
 }
 
 const RULE: &str = "postgres-no-offset";
+const OFFSET: &str = "postgres_no_offset_fails_for_offset_clause.yml";
+const OFFSET_SQL: &str = "postgres_no_offset_flags_sql_files.yml";
 
 #[test]
 fn postgres_no_offset_fails_for_offset_clause() {
     let root = fixture("fail");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config(RULE, OFFSET));
     let body = stdout(&out);
     assert!(!out.status.success(), "expected exit 1: {body}");
     assert!(body.contains(RULE), "{body}");
@@ -50,7 +53,7 @@ fn postgres_no_offset_fails_for_offset_clause() {
 #[test]
 fn postgres_no_offset_fails_for_interpolated_offset() {
     let root = fixture("fail-placeholder");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config(RULE, OFFSET));
     let body = stdout(&out);
     assert!(!out.status.success(), "expected exit 1: {body}");
     assert!(body.contains(RULE), "{body}");
@@ -59,7 +62,7 @@ fn postgres_no_offset_fails_for_interpolated_offset() {
 #[test]
 fn postgres_no_offset_passes_with_limit_only() {
     let root = fixture("pass-limit");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config(RULE, OFFSET));
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 
@@ -108,7 +111,7 @@ fn parameter_builder_is_shared_by_annotation_and_offset_rules() {
 #[test]
 fn postgres_no_offset_passes_prose_offset() {
     let root = fixture("pass-prose");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config(RULE, OFFSET));
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 
@@ -131,7 +134,7 @@ fn postgres_no_offset_json_has_rule_id() {
 #[test]
 fn postgres_no_offset_flags_sql_files() {
     let root = fixture("fail-sql");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config(RULE, OFFSET_SQL));
     let body = stdout(&out);
     assert!(!out.status.success(), "expected exit 1: {body}");
     assert!(body.contains(RULE), "{body}");
@@ -142,14 +145,14 @@ fn postgres_no_offset_flags_sql_files() {
 #[test]
 fn postgres_no_offset_passes_materialized_cte() {
     let root = fixture("pass-sql");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config(RULE, OFFSET_SQL));
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 
 #[test]
 fn postgres_no_offset_ignores_sql_when_sql_include_is_empty() {
     let root = fixture("pass-default");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let out = check(&root, &config(RULE, OFFSET));
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
 
