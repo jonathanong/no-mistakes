@@ -20,7 +20,7 @@ unsupported key never passes by being ignored. The error names the rule, the
 key and the file line, and lists the supported keys:
 
 ```text
-.no-mistakes.yml:4: rules[0] (rule `banned-paths`) has unknown key `serverity`.
+.no-mistakes.yml:4: rules[0] (rule `banned-paths`) has unknown key `level`.
 Supported keys: name, rule, message, enabled, projects, tests, scope, include,
 exclude, options, severity. ...
 ```
