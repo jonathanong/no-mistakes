@@ -1,7 +1,4 @@
-use super::super::{
-    FORBIDDEN_LINT_SUPPRESSIONS, POSTGRES_KEY_COLUMN_TYPES, POSTGRES_NO_TEST_STATE_MUTATION,
-    POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS, PRODUCTION_DEPENDENCY_DECLARATIONS,
-};
+use super::super::*;
 use crate::codebase::postgres::{PREPARED_EMBEDDED_SQL_RULE_IDS, SCHEMA_CATALOG_RULE_IDS};
 
 /// Copy the saved schema and option snippets. The rule list itself is rendered
@@ -24,41 +21,32 @@ pub(super) fn prepared_rules(rules: &[&str]) -> (tempfile::TempDir, std::path::P
     (fixture, config_path)
 }
 
-/// `production-dependency-declarations` requires `workspaceRoots`. Schema-catalog
-/// and embedded-SQL rules take the options those registries already declare.
-fn options_block(id: &str) -> String {
-    if id == POSTGRES_NO_TEST_STATE_MUTATION {
-        return include_str!(
-            "../../../../../../../fixtures/rules/filesystem-dispatch/all-rules/test-state-options.yml"
-        )
-        .to_string();
-    }
-    if id == PRODUCTION_DEPENDENCY_DECLARATIONS {
-        return "      workspaceRoots: [\".\"]\n".to_string();
-    }
-    if id == FORBIDDEN_LINT_SUPPRESSIONS {
-        return include_str!(
-            "../../../../../../../fixtures/rules/filesystem-dispatch/all-rules/lint-suppression-options.yml"
-        )
-        .to_string();
-    }
-    if id == POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS {
-        return include_str!(
-            "../../../../../../../fixtures/rules/filesystem-dispatch/all-rules/status-lifecycle-options.yml"
-        )
-        .to_string();
-    }
+// Exceptional options live beside the rule's registry entry; shared SQL
+// requirements continue to come from the corresponding SQL registries.
+macro_rules! fixture_options {
+    ($id:expr; $($rule:expr => $call:path => $options:expr),* $(,)?) => {
+        [$(( $rule, $options ),)*]
+            .into_iter()
+            .find_map(|(rule, options)| (rule == $id).then_some(options))
+            .unwrap_or("")
+    };
+}
 
+fn options_block(id: &str) -> String {
+    macro_rules! declared_options {
+        ($($entry:tt)*) => { fixture_options!(id; $($entry)*) };
+    }
+    let declared = crate::filesystem_rules!(declared_options);
+    let declared_keys: serde_yaml::Value = serde_yaml::from_str(declared).unwrap();
     let mut options = String::new();
-    if SCHEMA_CATALOG_RULE_IDS.contains(&id) {
+    if SCHEMA_CATALOG_RULE_IDS.contains(&id) && declared_keys.get("schemaCatalogPath").is_none() {
         options.push_str("      schemaCatalogPath: schema.json\n");
     }
-    if id == POSTGRES_KEY_COLUMN_TYPES {
-        options.push_str("      allowedTypes: [uuid]\n");
-    }
-    if PREPARED_EMBEDDED_SQL_RULE_IDS.contains(&id) {
+    if PREPARED_EMBEDDED_SQL_RULE_IDS.contains(&id) && declared_keys.get("executorNames").is_none()
+    {
         options.push_str("      executorNames: []\n");
     }
+    options.push_str(declared);
     options
 }
 
@@ -74,4 +62,34 @@ fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
     let config_path = dir.join(".no-mistakes.yml");
     std::fs::write(&config_path, yaml).unwrap();
     config_path
+}
+
+#[test]
+fn registry_declared_options_support_new_required_options() {
+    // A newly registered rule supplies its options without a renderer ID branch.
+    let options = fixture_options!("future-rule";
+        "future-rule" => unused::check => "      requiredSetting: enabled\n",
+    );
+    let yaml: serde_yaml::Value = serde_yaml::from_str(options).unwrap();
+    assert_eq!(yaml["requiredSetting"].as_str(), Some("enabled"));
+    assert_eq!(
+        fixture_options!("default-rule";
+            "default-rule" => unused::check => "",
+        ),
+        ""
+    );
+}
+
+#[test]
+fn registry_options_keep_shared_sql_requirements_unique() {
+    for id in FILESYSTEM_RULE_IDS {
+        let options = options_block(id);
+        let parsed: serde_yaml::Value = serde_yaml::from_str(&options).unwrap();
+        if SCHEMA_CATALOG_RULE_IDS.contains(id) {
+            assert_eq!(parsed["schemaCatalogPath"].as_str(), Some("schema.json"));
+        }
+        if PREPARED_EMBEDDED_SQL_RULE_IDS.contains(id) {
+            assert_eq!(parsed["executorNames"].as_sequence().unwrap().len(), 0);
+        }
+    }
 }
