@@ -447,42 +447,8 @@ fn default_exported_string_constants_are_spliced() {
     );
 }
 
-#[test]
-fn namespace_constants_report_precise_findings_at_both_efforts() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/postgres-required-predicates/variants/namespace-const-sql");
-    let mut expected = unanalyzable(&[16, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 31, 35]);
-    // Whole-query constants retain the declaration's location for the missing predicate.
-    expected.push(("src/constants.mts".to_string(), 5, "orders".to_string()));
-    expected.sort();
-    for effort in ["low", "max"] {
-        let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
-            .args(["check", "--format", "json", "--root"])
-            .arg(&root)
-            .arg("--config")
-            .arg(root.join(".no-mistakes.yml"))
-            .args(["--effort", effort])
-            .output()
-            .unwrap();
-        let report: serde_json::Value = serde_json::from_slice(&output.stdout)
-            .unwrap_or_else(|error| panic!("{error}: {}", String::from_utf8_lossy(&output.stderr)));
-        assert_eq!(output.status.code(), Some(1), "{effort}: {report}");
-        let mut findings: Findings = report["rules"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .map(|finding| {
-                (
-                    finding["file"].as_str().unwrap().to_string(),
-                    finding["line"].as_u64().unwrap(),
-                    finding["target"].as_str().unwrap().to_string(),
-                )
-            })
-            .collect();
-        findings.sort();
-        assert_eq!(findings, expected, "{effort}: {report}");
-    }
-}
+#[path = "cli_check_rules_postgres_imported_helpers/namespace_constants.rs"]
+mod namespace_constants;
 
 #[path = "cli_check_rules_postgres_imported_helpers/namespace_fragments.rs"]
 mod namespace_fragments;
